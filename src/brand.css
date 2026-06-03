@@ -1,0 +1,183 @@
+/* Salt Basin Net Works — Strategic Operator brand tokens.
+   Canonical palette per the brand operating standard. */
+:root {
+  /* Core palette */
+  --sb-navy:        #1B2A3B;  /* Slate Navy — primary dark background */
+  --sb-navy-deep:   #111928;  /* Deeper navy for surfaces / topbars */
+  --sb-navy-soft:   #2D3A4E;  /* Lighter navy for chrome */
+  --sb-cream:       #F5F0E8;  /* Warm Cream — primary text on dark */
+  --sb-ivory:       #FBF6F0;  /* Ivory — light backgrounds */
+  --sb-linen:       #F0E4D4;  /* Warm linen */
+  --sb-gold:        #C4843A;  /* Terracotta Gold — accents, headlines */
+  --sb-gold-warm:   #a86d3a;  /* Hover state for gold */
+  --sb-teal:        #4A7C8E;  /* Steel Teal — secondary accent */
+  --sb-teal-deep:   #4A6670;  /* Muted teal for body sublabels */
+  --sb-sage:        #B5C4C1;  /* Sage — body text on dark */
+  --sb-taupe:       #D4B896;  /* Borders, subtle dividers */
+  --sb-dusty:       #8B9BAE;  /* Muted blue-gray text */
+  --sb-plum:        #7A6E8E;  /* Faith section accent */
+  --sb-green:       #A8B89A;  /* Live status indicator */
+
+  /* Risk badges (per brand standard) */
+  --sb-risk-critical: #C44A4A;
+  --sb-risk-high:     #C4843A;
+  --sb-risk-low:      #A8B89A;
+
+  /* Typography */
+  --sb-font-display: 'Cormorant Garamond', Georgia, serif;
+  --sb-font-label:   'Jost', system-ui, sans-serif;
+  --sb-font-body:    'DM Sans', system-ui, sans-serif;
+
+  /* Spacing */
+  --sb-radius: 2px;
+  --sb-border: 0.5px;
+}
+
+/* Background → text color maps used by block renderer */
+.sb-bg-navy   { background: var(--sb-navy);   color: var(--sb-cream); }
+.sb-bg-ivory  { background: var(--sb-ivory);  color: var(--sb-navy); }
+.sb-bg-linen  { background: var(--sb-linen);  color: var(--sb-navy); }
+.sb-bg-teal   { background: var(--sb-teal);   color: var(--sb-cream); }
+.sb-bg-cream  { background: var(--sb-cream);  color: var(--sb-navy); }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--sb-font-body);
+  background: var(--sb-navy);
+  color: var(--sb-cream);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Brand primitives */
+.sb-eyebrow {
+  font-family: var(--sb-font-label);
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--sb-gold);
+}
+.sb-display {
+  font-family: var(--sb-font-display);
+  font-weight: 300;
+}
+.sb-label {
+  font-family: var(--sb-font-label);
+  font-size: 0.68rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.sb-gold-rule {
+  width: 48px;
+  height: 1.5px;
+  background: var(--sb-gold);
+}
+
+/* Button primitives */
+.sb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 2rem;
+  font-family: var(--sb-font-body);
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: var(--sb-radius);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.sb-btn-gold {
+  background: var(--sb-gold);
+  color: var(--sb-ivory);
+}
+.sb-btn-gold:hover { background: var(--sb-gold-warm); }
+.sb-btn-outline {
+  background: transparent;
+  border: var(--sb-border) solid rgba(232, 221, 208, 0.35);
+  color: var(--sb-cream);
+}
+.sb-btn-outline:hover {
+  border-color: var(--sb-gold);
+  color: var(--sb-gold);
+}
+.sb-btn-outline-dark {
+  background: transparent;
+  border: var(--sb-border) solid var(--sb-taupe);
+  color: var(--sb-teal);
+}
+.sb-btn-outline-dark:hover {
+  border-color: var(--sb-gold);
+  color: var(--sb-gold);
+}
+
+/* Status badges */
+.sb-badge {
+  display: inline-block;
+  font-size: 0.6rem;
+  padding: 2px 8px;
+  border-radius: var(--sb-radius);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.sb-badge-live  { background: rgba(168, 184, 154, 0.2); color: var(--sb-green); }
+.sb-badge-draft { background: rgba(139, 155, 174, 0.15); color: var(--sb-dusty); }
+.sb-badge-soon  { background: rgba(196, 132, 58, 0.18); color: var(--sb-gold); }
+
+/* Toast */
+.sb-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  background: var(--sb-navy-deep);
+  border: var(--sb-border) solid var(--sb-gold);
+  color: var(--sb-cream);
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--sb-radius);
+  font-size: 0.85rem;
+  z-index: 9999;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  animation: sb-toast-in 0.18s ease;
+}
+@keyframes sb-toast-in {
+  from { transform: translateY(8px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+/* Form primitives */
+.sb-input {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  background: var(--sb-navy);
+  border: var(--sb-border) solid rgba(139, 155, 174, 0.25);
+  border-radius: var(--sb-radius);
+  color: var(--sb-cream);
+  font-family: var(--sb-font-body);
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 0.18s;
+}
+.sb-input:focus { border-color: var(--sb-gold); }
+.sb-input-light {
+  background: white;
+  color: var(--sb-navy);
+  border-color: var(--sb-taupe);
+}
+.sb-textarea { resize: vertical; min-height: 75px; line-height: 1.6; }
+
+/* Status banner (admin preview only) */
+.sb-status-banner {
+  border-top: 1px dashed;
+  border-bottom: 1px dashed;
+  padding: 0.4rem 1.5rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.sb-status-banner.draft { border-color: var(--sb-dusty); background: rgba(139,155,174,0.1); color: var(--sb-dusty); }
+.sb-status-banner.soon  { border-color: var(--sb-gold);  background: rgba(196,132,58,0.08); color: var(--sb-gold); }

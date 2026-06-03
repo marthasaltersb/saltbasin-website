@@ -1,0 +1,48 @@
+# Render service manifest. Connect this repo in the Render dashboard and it
+# will auto-create the service from this file.
+#
+# Free tier notes:
+#   • Web service spins down after 15 min of inactivity; first request after
+#     wakeup is slow (~30 s cold start).
+#   • Disk is ephemeral on the free tier — SQLite data and uploaded photos are
+#     wiped on each deploy. The app reseeds default content on boot, so the
+#     site is never broken, but your edits won't persist.
+#   • To make data persistent, uncomment the `disk:` block at the bottom and
+#     pick a paid plan ($7/mo for 1 GB at time of writing).
+
+services:
+  - type: web
+    name: saltbasin-website
+    runtime: node
+    plan: free
+    branch: main
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 22.13.0           # Render's node:sqlite-compatible version
+      - key: PORT
+        value: 10000              # Render expects services to bind PORT
+      # ── Required secrets — set values in the Render dashboard ──
+      - key: SESSION_SECRET
+        generateValue: true       # Render generates a long random string
+      - key: ADMIN_EMAIL
+        sync: false               # Prompt for value on first deploy
+      - key: ADMIN_INITIAL_PASSWORD
+        sync: false               # Prompt for value on first deploy
+      # ── Optional — leave blank until Phase 3 agent is wired ──
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      # ── Optional — only needed if frontend is hosted on a different domain ──
+      # - key: FRONTEND_ORIGIN
+      #   value: https://saltbasin.net
+
+    # Uncomment for $7/mo persistent storage. Required if you want SQLite data
+    # and uploaded images to survive redeploys.
+    # disk:
+    #   name: salt-basin-data
+    #   mountPath: /opt/render/project/src/server/data
+    #   sizeGB: 1

@@ -1,0 +1,54 @@
+import React, { useEffect, useState } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { api } from './lib/api.js';
+import PublicSite from './components/PublicSite.jsx';
+import LandingGate from './components/LandingGate.jsx';
+import LoginPage from './components/admin/LoginPage.jsx';
+import AdminShell from './components/admin/AdminShell.jsx';
+import SignupPage from './components/SignupPage.jsx';
+import MemberDashboard from './components/MemberDashboard.jsx';
+import PublicProfile from './components/PublicProfile.jsx';
+
+function PublicRoute() {
+  const [status, setStatus] = useState(null);
+  useEffect(() => {
+    api.landingStatus().then(setStatus).catch(() => setStatus({ enabled: false, unlocked: true }));
+  }, []);
+  if (!status) return null;
+  if (status.enabled && !status.unlocked) {
+    return <LandingGate status={status} onUnlocked={() => setStatus({ ...status, unlocked: true })} />;
+  }
+  return <PublicSite />;
+}
+
+function RequireAdmin({ children }) {
+  const [state, setState] = useState({ loading: true, user: null });
+  useEffect(() => {
+    api.me().then(({ user }) => setState({ loading: false, user })).catch(() =>
+      setState({ loading: false, user: null })
+    );
+  }, []);
+  if (state.loading) return null;
+  if (!state.user) return <Navigate to="/admin/login" replace />;
+  return children;
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/admin/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
+      <Route path="/member" element={<MemberDashboard />} />
+      <Route path="/u/:slug" element={<PublicProfile />} />
+      <Route
+        path="/admin/*"
+        element={
+          <RequireAdmin>
+            <AdminShell />
+          </RequireAdmin>
+        }
+      />
+      <Route path="/*" element={<PublicRoute />} />
+    </Routes>
+  );
+}

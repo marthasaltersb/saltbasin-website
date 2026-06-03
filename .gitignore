@@ -1,0 +1,8 @@
+node_modules
+dist
+.env
+server/data/salt-basin.db
+server/data/salt-basin.db-*
+server/data/uploads/
+*.log
+.DS_Store
