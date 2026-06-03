@@ -1,0 +1,42 @@
+# Netlify configuration for Salt Basin Net Works.
+#
+# This file makes Netlify serve the React frontend at saltbasin.net, and
+# proxies any /api/* or /uploads/* request through to the Node backend hosted
+# on Render. Frontend code stays same-origin — no CORS, no cross-site cookies.
+#
+# Edit BACKEND_URL below if your Render service has a different name. The
+# default assumes you used `saltbasin-website` (matches render.yaml).
+
+[build]
+  command  = "npm install && npm run build"
+  publish  = "dist"
+
+[build.environment]
+  NODE_VERSION = "22.13.0"
+
+# ── API proxy ──────────────────────────────────────────────────────────────
+# Any browser request to /api/* on saltbasin.net hits Netlify's edge, which
+# silently fetches the same path from the Render backend and streams the
+# response back. The browser never sees the Render URL.
+
+[[redirects]]
+  from   = "/api/*"
+  to     = "https://saltbasin-website.onrender.com/api/:splat"
+  status = 200
+  force  = true
+
+[[redirects]]
+  from   = "/uploads/*"
+  to     = "https://saltbasin-website.onrender.com/uploads/:splat"
+  status = 200
+  force  = true
+
+# ── SPA fallback ──────────────────────────────────────────────────────────
+# React Router owns client-side routes like /admin, /consulting/founder, etc.
+# This catch-all serves index.html for any path that doesn't match a static
+# file, so React Router can pick it up. Must come LAST.
+
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
