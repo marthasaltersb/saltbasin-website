@@ -40,9 +40,10 @@ services:
       # - key: FRONTEND_ORIGIN
       #   value: https://saltbasin.net
 
-    # Uncomment for $7/mo persistent storage. Required if you want SQLite data
-    # and uploaded images to survive redeploys.
-    # disk:
-    #   name: salt-basin-data
-    #   mountPath: /opt/render/project/src/server/data
-    #   sizeGB: 1
+    # Persistent storage so leads, uploaded photos, and member profiles survive
+    # redeploys. Requires the Starter plan ($7/mo) or higher — the free plan
+    # ignores this block (no disk attaches, data still resets on each deploy).
+    disk:
+      name: salt-basin-data
+      mountPath: /opt/render/project/src/server/data
+      sizeGB: 1

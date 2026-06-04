@@ -74,6 +74,16 @@ CREATE TABLE IF NOT EXISTS lead_messages (
   created_at INTEGER NOT NULL DEFAULT (strftime('%s','now') * 1000)
 );
 
+CREATE TABLE IF NOT EXISTS lead_activity (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  lead_id INTEGER NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+  source TEXT NOT NULL,           -- which form/CTA fired
+  message TEXT,                   -- optional message at time of submission
+  created_at INTEGER NOT NULL DEFAULT (strftime('%s','now') * 1000)
+);
+CREATE INDEX IF NOT EXISTS idx_lead_activity_lead ON lead_activity(lead_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_leads_email ON leads(email);
+
 CREATE TABLE IF NOT EXISTS member_profiles (
   user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
   slug TEXT NOT NULL UNIQUE,
@@ -97,6 +107,7 @@ addColumnIfMissing('leads', 'public_id', 'TEXT');
 addColumnIfMissing('leads', 'access_token', 'TEXT');
 addColumnIfMissing('leads', 'answers', 'TEXT');
 addColumnIfMissing('leads', 'updated_at', "INTEGER NOT NULL DEFAULT (strftime('%s','now') * 1000)");
+addColumnIfMissing('leads', 'converted_user_id', 'INTEGER');  // set when lead → member
 
 export function getJSON(table, id) {
   const row = db.prepare(`SELECT data FROM ${table} WHERE id = ?`).get(id);

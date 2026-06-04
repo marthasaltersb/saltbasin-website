@@ -31,8 +31,12 @@ function uniqueSlugFor(base) {
 }
 
 // Public signup — creates a member + their starter profile.
+// Optional `fromLeadPublicId` + `fromLeadToken`: converts an existing lead
+// record. We use the lead's saved name/answers to enrich the profile and mark
+// the lead as converted (so admin can see the lineage).
 router.post('/signup', async (req, res) => {
-  const { email, password, displayName, requestedSlug } = req.body || {};
+  const { email, password, displayName, requestedSlug, fromLeadPublicId, fromLeadToken } =
+    req.body || {};
   const created = await createMember(email, password, displayName);
   if (created.error) return res.status(400).json({ error: created.error });
 
@@ -42,6 +46,18 @@ router.post('/signup', async (req, res) => {
   db.prepare(
     'INSERT INTO member_profiles (user_id, slug, draft, published) VALUES (?, ?, ?, NULL)'
   ).run(created.id, slug, JSON.stringify(profile));
+
+  // Link an existing lead if the signup came from /signup?fromLead=...
+  if (fromLeadPublicId && fromLeadToken) {
+    const lead = db
+      .prepare('SELECT id, access_token FROM leads WHERE public_id = ?')
+      .get(fromLeadPublicId);
+    if (lead && lead.access_token === fromLeadToken) {
+      db.prepare(
+        'UPDATE leads SET converted_user_id = ?, updated_at = ? WHERE id = ?'
+      ).run(created.id, Date.now(), lead.id);
+    }
+  }
 
   // Auto-login.
   const { token } = createSession(created.id);

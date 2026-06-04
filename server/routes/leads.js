@@ -38,7 +38,12 @@ function rateLimited(ip) {
   return arr.length > 5;
 }
 
-// ── Public: create a lead ──
+// ── Public: create or merge a lead ──
+// If the email already exists, we MERGE: same lead record, log a new activity
+// row for this submission, return the existing publicId + token. Note: this
+// means anyone who knows an email can reach that lead's URL. For Phase 1 this
+// trade-off is acceptable (only their own intake answers are exposed). To
+// harden later, swap this for a magic-link-via-email flow.
 router.post('/', (req, res) => {
   const { source, email, name, message } = req.body || {};
   if (!isValidSource(source)) return res.status(400).json({ error: 'invalid source' });
@@ -46,27 +51,54 @@ router.post('/', (req, res) => {
     return res.status(400).json({ error: 'valid email required' });
   if (rateLimited(req.ip)) return res.status(429).json({ error: 'slow down a moment' });
 
-  const publicId = newPublicId();
-  const accessToken = newToken();
-  const result = db
+  const normEmail = email.trim().toLowerCase();
+  const trimmedName = name?.slice(0, 200) || null;
+  const trimmedMsg = message?.slice(0, 2000) || null;
+
+  const existing = db
     .prepare(
-      `INSERT INTO leads (source, email, name, message, public_id, access_token)
-       VALUES (?, ?, ?, ?, ?, ?)`
+      `SELECT id, public_id, access_token, name FROM leads WHERE email = ?`
     )
-    .run(
-      source,
-      email.trim().toLowerCase(),
-      name?.slice(0, 200) || null,
-      message?.slice(0, 2000) || null,
-      publicId,
-      accessToken
-    );
+    .get(normEmail);
+
+  let leadId, publicId, accessToken, isExisting;
+  if (existing) {
+    leadId = existing.id;
+    publicId = existing.public_id;
+    accessToken = existing.access_token;
+    isExisting = true;
+    // Don't overwrite a name they previously gave us with empty; do update if
+    // they're providing a more complete value this time.
+    if (trimmedName && !existing.name) {
+      db.prepare('UPDATE leads SET name = ?, updated_at = ? WHERE id = ?')
+        .run(trimmedName, Date.now(), leadId);
+    } else {
+      db.prepare('UPDATE leads SET updated_at = ? WHERE id = ?').run(Date.now(), leadId);
+    }
+  } else {
+    publicId = newPublicId();
+    accessToken = newToken();
+    const result = db
+      .prepare(
+        `INSERT INTO leads (source, email, name, message, public_id, access_token)
+         VALUES (?, ?, ?, ?, ?, ?)`
+      )
+      .run(source, normEmail, trimmedName, trimmedMsg, publicId, accessToken);
+    leadId = Number(result.lastInsertRowid);
+    isExisting = false;
+  }
+
+  // Always log activity — first submission, dupe, or repeated CTA click.
+  db.prepare('INSERT INTO lead_activity (lead_id, source, message) VALUES (?, ?, ?)')
+    .run(leadId, source, trimmedMsg);
+
   res.json({
     ok: true,
-    leadId: Number(result.lastInsertRowid),
+    leadId,
     publicId,
     token: accessToken,
     leadUrl: `/lead/${publicId}?t=${accessToken}`,
+    existing: isExisting,
   });
 });
 
@@ -76,7 +108,7 @@ function getLeadByPublic(req) {
   const token = req.query.t;
   const row = db
     .prepare(
-      `SELECT id, source, email, name, message, public_id, access_token, answers, created_at, updated_at
+      `SELECT id, source, email, name, message, public_id, access_token, answers, created_at, updated_at, converted_user_id
        FROM leads WHERE public_id = ?`
     )
     .get(publicId);
@@ -100,6 +132,12 @@ function getLeadByPublic(req) {
 router.get('/public/:publicId', (req, res) => {
   const { lead, error, status } = getLeadByPublic(req);
   if (error) return res.status(status).json({ error });
+  const activity = db
+    .prepare(
+      `SELECT id, source, message, created_at FROM lead_activity
+       WHERE lead_id = ? ORDER BY created_at ASC, id ASC`
+    )
+    .all(lead.id);
   res.json({
     publicId: lead.public_id,
     source: lead.source,
@@ -107,8 +145,10 @@ router.get('/public/:publicId', (req, res) => {
     name: lead.name,
     message: lead.message,
     answers: lead.answers ? JSON.parse(lead.answers) : {},
+    activity,
     createdAt: lead.created_at,
     updatedAt: lead.updated_at,
+    convertedUserId: lead.converted_user_id || null,
   });
 });
 
