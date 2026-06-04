@@ -24,57 +24,57 @@ function cookieOptions(maxAgeMs) {
   };
 }
 
-export function createSession(userId) {
+export async function createSession(userId) {
   const token = newToken();
   const expires = Date.now() + SESSION_TTL_MS;
-  db.prepare('INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)').run(
-    token,
-    userId,
-    expires
-  );
+  await db
+    .prepare('INSERT INTO sessions (token, user_id, expires_at) VALUES ($1, $2, $3)')
+    .run(token, userId, expires);
   return { token, expires };
 }
 
-export function destroySession(token) {
+export async function destroySession(token) {
   if (!token) return;
-  db.prepare('DELETE FROM sessions WHERE token = ?').run(token);
+  await db.prepare('DELETE FROM sessions WHERE token = $1').run(token);
 }
 
-export function getUserFromCookie(req) {
+export async function getUserFromCookie(req) {
   const token = req.cookies?.[ADMIN_COOKIE];
   if (!token) return null;
-  const row = db
+  const row = await db
     .prepare(
       `SELECT u.id, u.email, u.role, s.expires_at
        FROM sessions s JOIN users u ON u.id = s.user_id
-       WHERE s.token = ?`
+       WHERE s.token = $1`
     )
     .get(token);
   if (!row) return null;
-  if (row.expires_at < Date.now()) {
-    destroySession(token);
+  if (Number(row.expires_at) < Date.now()) {
+    await destroySession(token);
     return null;
   }
-  return { id: row.id, email: row.email, role: row.role };
+  return { id: Number(row.id), email: row.email, role: row.role };
 }
 
 export async function login(email, password) {
-  const row = db
-    .prepare('SELECT id, password_hash, role FROM users WHERE email = ?')
+  const row = await db
+    .prepare('SELECT id, password_hash, role FROM users WHERE email = $1')
     .get(email.toLowerCase());
   if (!row) return null;
   const ok = await bcrypt.compare(password, row.password_hash);
   if (!ok) return null;
-  return { id: row.id, role: row.role };
+  return { id: Number(row.id), role: row.role };
 }
 
 export async function changePassword(userId, currentPassword, newPassword) {
-  const row = db.prepare('SELECT password_hash FROM users WHERE id = ?').get(userId);
+  const row = await db
+    .prepare('SELECT password_hash FROM users WHERE id = $1')
+    .get(userId);
   if (!row) return false;
   const ok = await bcrypt.compare(currentPassword, row.password_hash);
   if (!ok) return false;
   const hash = await bcrypt.hash(newPassword, 10);
-  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hash, userId);
+  await db.prepare('UPDATE users SET password_hash = $1 WHERE id = $2').run(hash, userId);
   return true;
 }
 
@@ -86,42 +86,45 @@ export function clearAdminCookie(res) {
 }
 
 // ── Landing gate ──
-export function isLandingUnlocked(req) {
-  const config = getJSON('config_state', 'published') || {};
+export async function isLandingUnlocked(req) {
+  const config = (await getJSON('config_state', 'published')) || {};
   if (!config?.prelaunch?.enabled) return true;
   const token = req.cookies?.[LANDING_COOKIE];
   if (!token) return false;
-  const row = db.prepare('SELECT expires_at FROM landing_sessions WHERE token = ?').get(token);
+  const row = await db
+    .prepare('SELECT expires_at FROM landing_sessions WHERE token = $1')
+    .get(token);
   if (!row) return false;
-  if (row.expires_at < Date.now()) {
-    db.prepare('DELETE FROM landing_sessions WHERE token = ?').run(token);
+  if (Number(row.expires_at) < Date.now()) {
+    await db.prepare('DELETE FROM landing_sessions WHERE token = $1').run(token);
     return false;
   }
   return true;
 }
 
-export function unlockLanding(res, providedPassword) {
-  // Compare against PUBLISHED config — public visitors don't know about drafts.
-  const config = getJSON('config_state', 'published') || {};
+export async function unlockLanding(res, providedPassword) {
+  const config = (await getJSON('config_state', 'published')) || {};
   const expected = config?.prelaunch?.password;
   if (!expected || providedPassword !== expected) return false;
   const token = newToken();
   const expires = Date.now() + LANDING_TTL_MS;
-  db.prepare('INSERT INTO landing_sessions (token, expires_at) VALUES (?, ?)').run(token, expires);
+  await db
+    .prepare('INSERT INTO landing_sessions (token, expires_at) VALUES ($1, $2)')
+    .run(token, expires);
   res.cookie(LANDING_COOKIE, token, cookieOptions(LANDING_TTL_MS));
   return true;
 }
 
-export function requireAdmin(req, res, next) {
-  const user = getUserFromCookie(req);
+export async function requireAdmin(req, res, next) {
+  const user = await getUserFromCookie(req);
   if (!user) return res.status(401).json({ error: 'unauthorized' });
   if (user.role !== 'admin') return res.status(403).json({ error: 'admin only' });
   req.user = user;
   next();
 }
 
-export function requireUser(req, res, next) {
-  const user = getUserFromCookie(req);
+export async function requireUser(req, res, next) {
+  const user = await getUserFromCookie(req);
   if (!user) return res.status(401).json({ error: 'unauthorized' });
   req.user = user;
   next();
@@ -132,11 +135,13 @@ export async function createMember(email, password, displayName) {
     return { error: 'email and 8+ char password required' };
   }
   const lower = email.toLowerCase();
-  const exists = db.prepare('SELECT 1 FROM users WHERE email = ?').get(lower);
+  const exists = await db.prepare('SELECT 1 FROM users WHERE email = $1').get(lower);
   if (exists) return { error: 'email already registered' };
   const hash = await bcrypt.hash(password, 10);
-  const result = db
-    .prepare('INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)')
+  const result = await db
+    .prepare(
+      'INSERT INTO users (email, password_hash, role) VALUES ($1, $2, $3) RETURNING id'
+    )
     .run(lower, hash, 'member');
   return { id: Number(result.lastInsertRowid), email: lower, displayName };
 }

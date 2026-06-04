@@ -21,20 +21,20 @@ router.post('/login', async (req, res) => {
   if (!email || !password) return res.status(400).json({ error: 'email and password required' });
   const user = await login(email, password);
   if (!user) return res.status(401).json({ error: 'invalid credentials' });
-  const { token } = createSession(user.id);
+  const { token } = await createSession(user.id);
   setAdminCookie(res, token);
   res.json({ ok: true, user: { id: user.id, role: user.role, email } });
 });
 
-router.post('/logout', (req, res) => {
+router.post('/logout', async (req, res) => {
   const token = req.cookies?.[ADMIN_COOKIE];
-  destroySession(token);
+  await destroySession(token);
   clearAdminCookie(res);
   res.json({ ok: true });
 });
 
-router.get('/me', (req, res) => {
-  const user = getUserFromCookie(req);
+router.get('/me', async (req, res) => {
+  const user = await getUserFromCookie(req);
   res.json({ user });
 });
 
@@ -48,20 +48,19 @@ router.post('/change-password', requireAdmin, async (req, res) => {
   res.json({ ok: true });
 });
 
-// Landing gate
-router.get('/landing-gate/status', (req, res) => {
-  const config = getJSON('config_state', 'published') || {};
+router.get('/landing-gate/status', async (req, res) => {
+  const config = (await getJSON('config_state', 'published')) || {};
   res.json({
     enabled: !!config?.prelaunch?.enabled,
-    unlocked: isLandingUnlocked(req),
+    unlocked: await isLandingUnlocked(req),
     headline: config?.prelaunch?.headline || 'Coming Soon',
     subhead: config?.prelaunch?.subhead || '',
   });
 });
 
-router.post('/landing-gate/unlock', (req, res) => {
+router.post('/landing-gate/unlock', async (req, res) => {
   const { password } = req.body || {};
-  const ok = unlockLanding(res, password);
+  const ok = await unlockLanding(res, password);
   if (!ok) return res.status(401).json({ error: 'invalid password' });
   res.json({ ok: true });
 });

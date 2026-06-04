@@ -20,20 +20,19 @@ function slugify(s) {
     .slice(0, 40);
 }
 
-function uniqueSlugFor(base) {
+async function uniqueSlugFor(base) {
   let slug = base || 'operator';
   let n = 0;
-  while (db.prepare('SELECT 1 FROM member_profiles WHERE slug = ?').get(slug)) {
+  while (true) {
+    const exists = await db.prepare('SELECT 1 FROM member_profiles WHERE slug = $1').get(slug);
+    if (!exists) return slug;
     n += 1;
     slug = `${base}-${n}`;
   }
-  return slug;
 }
 
-// Public signup — creates a member + their starter profile.
-// Optional `fromLeadPublicId` + `fromLeadToken`: converts an existing lead
-// record. We use the lead's saved name/answers to enrich the profile and mark
-// the lead as converted (so admin can see the lineage).
+// Public signup — creates a member + their starter profile, optionally linking
+// an incoming lead conversion via fromLeadPublicId + fromLeadToken.
 router.post('/signup', async (req, res) => {
   const { email, password, displayName, requestedSlug, fromLeadPublicId, fromLeadToken } =
     req.body || {};
@@ -41,35 +40,36 @@ router.post('/signup', async (req, res) => {
   if (created.error) return res.status(400).json({ error: created.error });
 
   const base = slugify(requestedSlug || displayName || email.split('@')[0]);
-  const slug = uniqueSlugFor(base);
+  const slug = await uniqueSlugFor(base);
   const profile = defaultMemberProfile({ displayName, email });
-  db.prepare(
-    'INSERT INTO member_profiles (user_id, slug, draft, published) VALUES (?, ?, ?, NULL)'
-  ).run(created.id, slug, JSON.stringify(profile));
+  await db
+    .prepare(
+      'INSERT INTO member_profiles (user_id, slug, draft, published) VALUES ($1, $2, $3, NULL)'
+    )
+    .run(created.id, slug, JSON.stringify(profile));
 
-  // Link an existing lead if the signup came from /signup?fromLead=...
   if (fromLeadPublicId && fromLeadToken) {
-    const lead = db
-      .prepare('SELECT id, access_token FROM leads WHERE public_id = ?')
+    const lead = await db
+      .prepare('SELECT id, access_token FROM leads WHERE public_id = $1')
       .get(fromLeadPublicId);
     if (lead && lead.access_token === fromLeadToken) {
-      db.prepare(
-        'UPDATE leads SET converted_user_id = ?, updated_at = ? WHERE id = ?'
-      ).run(created.id, Date.now(), lead.id);
+      await db
+        .prepare(
+          'UPDATE leads SET converted_user_id = $1, updated_at = $2 WHERE id = $3'
+        )
+        .run(created.id, Date.now(), Number(lead.id));
     }
   }
 
-  // Auto-login.
-  const { token } = createSession(created.id);
+  const { token } = await createSession(created.id);
   setAdminCookie(res, token);
 
   res.json({ ok: true, slug, user: { id: created.id, email: created.email, role: 'member' } });
 });
 
-// Current member: read their draft profile.
-router.get('/me/profile', requireUser, (req, res) => {
-  const row = db
-    .prepare('SELECT slug, draft, published FROM member_profiles WHERE user_id = ?')
+router.get('/me/profile', requireUser, async (req, res) => {
+  const row = await db
+    .prepare('SELECT slug, draft, published FROM member_profiles WHERE user_id = $1')
     .get(req.user.id);
   if (!row) return res.status(404).json({ error: 'no profile for this user' });
   res.json({
@@ -79,48 +79,60 @@ router.get('/me/profile', requireUser, (req, res) => {
   });
 });
 
-router.put('/me/profile', requireUser, (req, res) => {
+router.put('/me/profile', requireUser, async (req, res) => {
   const incoming = req.body;
   if (!incoming || typeof incoming !== 'object' || !incoming.profile) {
     return res.status(400).json({ error: 'expected { profile, version }' });
   }
-  const result = db
+  const result = await db
     .prepare(
-      'UPDATE member_profiles SET draft = ?, updated_at = ? WHERE user_id = ?'
+      'UPDATE member_profiles SET draft = $1, updated_at = $2 WHERE user_id = $3 RETURNING user_id'
     )
     .run(JSON.stringify(incoming), Date.now(), req.user.id);
-  if (result.changes === 0) return res.status(404).json({ error: 'no profile' });
+  if (!result.lastInsertRowid && result.changes === 0) {
+    return res.status(404).json({ error: 'no profile' });
+  }
   res.json({ ok: true });
 });
 
-router.post('/me/profile/publish', requireUser, (req, res) => {
-  const row = db.prepare('SELECT draft FROM member_profiles WHERE user_id = ?').get(req.user.id);
+router.post('/me/profile/publish', requireUser, async (req, res) => {
+  const row = await db
+    .prepare('SELECT draft FROM member_profiles WHERE user_id = $1')
+    .get(req.user.id);
   if (!row) return res.status(404).json({ error: 'no profile' });
-  db.prepare(
-    'UPDATE member_profiles SET published = draft, updated_at = ? WHERE user_id = ?'
-  ).run(Date.now(), req.user.id);
+  await db
+    .prepare(
+      'UPDATE member_profiles SET published = draft, updated_at = $1 WHERE user_id = $2'
+    )
+    .run(Date.now(), req.user.id);
   res.json({ ok: true });
 });
 
-// Public profile read by slug — published only.
-router.get('/:slug', (req, res) => {
-  const row = db
-    .prepare('SELECT published FROM member_profiles WHERE slug = ?')
+router.get('/:slug', async (req, res) => {
+  const row = await db
+    .prepare('SELECT published FROM member_profiles WHERE slug = $1')
     .get(req.params.slug);
   if (!row || !row.published) return res.status(404).json({ error: 'profile not published' });
   res.json(JSON.parse(row.published));
 });
 
-// Admin: list members.
-router.get('/', requireAdmin, (req, res) => {
-  const rows = db
+router.get('/', requireAdmin, async (req, res) => {
+  const rows = await db
     .prepare(
-      `SELECT u.id, u.email, u.created_at, m.slug, m.published IS NOT NULL AS published, m.updated_at
+      `SELECT u.id, u.email, u.created_at, m.slug,
+              (m.published IS NOT NULL) AS published, m.updated_at
        FROM users u LEFT JOIN member_profiles m ON m.user_id = u.id
        WHERE u.role = 'member' ORDER BY u.id DESC`
     )
     .all();
-  res.json({ members: rows });
+  res.json({
+    members: rows.map((r) => ({
+      ...r,
+      id: Number(r.id),
+      created_at: Number(r.created_at),
+      updated_at: r.updated_at ? Number(r.updated_at) : null,
+    })),
+  });
 });
 
 export default router;

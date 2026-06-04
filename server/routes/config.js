@@ -4,7 +4,6 @@ import { requireAdmin, isLandingUnlocked } from '../auth.js';
 
 const router = Router();
 
-// Public-safe slice of config — what gets exposed to non-authed visitors.
 function publicConfig(config) {
   if (!config) return null;
   return {
@@ -19,23 +18,25 @@ function publicConfig(config) {
   };
 }
 
-router.get('/public', (req, res) => {
-  if (!isLandingUnlocked(req)) return res.status(403).json({ error: 'landing gate locked' });
-  const config = getJSON('config_state', 'published') || {};
+router.get('/public', async (req, res) => {
+  if (!(await isLandingUnlocked(req))) {
+    return res.status(403).json({ error: 'landing gate locked' });
+  }
+  const config = (await getJSON('config_state', 'published')) || {};
   res.json(publicConfig(config));
 });
 
-router.get('/draft', requireAdmin, (req, res) => {
-  const config = getJSON('config_state', 'draft') || {};
+router.get('/draft', requireAdmin, async (req, res) => {
+  const config = (await getJSON('config_state', 'draft')) || {};
   res.json(config);
 });
 
-router.put('/draft', requireAdmin, (req, res) => {
+router.put('/draft', requireAdmin, async (req, res) => {
   const incoming = req.body;
   if (!incoming || typeof incoming !== 'object') {
     return res.status(400).json({ error: 'expected config object' });
   }
-  setJSON('config_state', 'draft', incoming);
+  await setJSON('config_state', 'draft', incoming);
   res.json({ ok: true, updatedAt: Date.now() });
 });
 

@@ -17,7 +17,7 @@ import uploadsRouter, { uploadsDir } from './routes/uploads.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProd = process.env.NODE_ENV === 'production';
 
-ensureSeeded();
+await ensureSeeded();
 
 const app = express();
 
