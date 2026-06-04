@@ -1,0 +1,73 @@
+name: Verify Render Auto-Deploy
+
+# Runs after every push to main. Waits 3 minutes (Render's typical reaction
+# time) then checks if Render created a deploy for the new commit. If not, it
+# files a GitHub Issue so the missed deploy doesn't go unnoticed.
+#
+# Same secrets as render-deploy-monitor.yml: RENDER_API_KEY + RENDER_SERVICE_ID
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Wait for Render to react
+        run: sleep 180
+
+      - name: Check Render for a deploy of this commit
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          if [ -z "$RENDER_API_KEY" ] || [ -z "$RENDER_SERVICE_ID" ]; then
+            echo "::error::RENDER_API_KEY or RENDER_SERVICE_ID secret missing."
+            exit 1
+          fi
+
+          deploys=$(curl -sS \
+            -H "Authorization: Bearer $RENDER_API_KEY" \
+            -H "Accept: application/json" \
+            "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys?limit=10")
+
+          # Count deploys whose commit matches the just-pushed sha
+          matches=$(echo "$deploys" | jq -r --arg sha "$COMMIT_SHA" \
+            '[.[] | select(.deploy.commit.id == $sha)] | length')
+
+          if [ "$matches" -gt 0 ]; then
+            echo "Render is deploying $COMMIT_SHA ($matches matching deploy(s))."
+            exit 0
+          fi
+
+          short_sha=$(echo "$COMMIT_SHA" | cut -c1-7)
+
+          # Ensure label exists
+          gh label create deploy-missed \
+            --repo "${{ github.repository }}" \
+            --color FFA500 \
+            --description "Render did not auto-deploy a pushed commit" \
+            --force 2>/dev/null || true
+
+          gh issue create \
+            --repo "${{ github.repository }}" \
+            --title "Render missed auto-deploy for $short_sha" \
+            --label "deploy-missed" \
+            --body "Commit [\`$short_sha\`](https://github.com/${{ github.repository }}/commit/$COMMIT_SHA) was pushed to \`main\` but Render had not started a deploy 3 minutes later.
+
+          This usually means Render's GitHub webhook didn't fire. Common causes: Render outage, webhook delivery delay, or auto-deploy was disabled in the service settings.
+
+          ### Force a fresh deploy now
+          \`\`\`
+          node scripts/trigger-render-deploy.mjs
+          \`\`\`
+
+          Or click **Manual Deploy → Deploy latest commit** in the Render dashboard.
+
+          _Auto-filed by the Verify Render Auto-Deploy workflow._"

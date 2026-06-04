@@ -1,0 +1,98 @@
+name: Render Deploy Monitor
+
+# Polls Render every 5 minutes. If the most recent deploy is in a failure
+# state, opens a GitHub Issue (deduped by deploy_id so we don't spam). You
+# automatically get an email from GitHub for every new issue if you watch the
+# repo — which you do by default as the owner.
+#
+# Requires these GitHub Actions secrets (Settings → Secrets and variables →
+# Actions → New repository secret):
+#   RENDER_API_KEY     — same as in your .env
+#   RENDER_SERVICE_ID  — same as in your .env (the `srv-...` id)
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'  # every 5 minutes
+  workflow_dispatch:        # manual trigger via Actions tab
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Check most recent Render deploy
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -z "$RENDER_API_KEY" ] || [ -z "$RENDER_SERVICE_ID" ]; then
+            echo "::error::RENDER_API_KEY or RENDER_SERVICE_ID secret missing."
+            exit 1
+          fi
+
+          response=$(curl -sS \
+            -H "Authorization: Bearer $RENDER_API_KEY" \
+            -H "Accept: application/json" \
+            "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys?limit=1")
+
+          status=$(echo "$response" | jq -r '.[0].deploy.status // "unknown"')
+          deploy_id=$(echo "$response" | jq -r '.[0].deploy.id // "unknown"')
+          finished=$(echo "$response" | jq -r '.[0].deploy.finishedAt // ""')
+          commit_sha=$(echo "$response" | jq -r '.[0].deploy.commit.id // "unknown"')
+          commit_msg=$(echo "$response" | jq -r '.[0].deploy.commit.message // ""' | head -1)
+
+          echo "Latest deploy $deploy_id is $status"
+
+          case "$status" in
+            build_failed|update_failed|canceled|deactivated)
+              # Already-open issue for this deploy?
+              existing=$(gh issue list \
+                --repo "${{ github.repository }}" \
+                --label "deploy-failure" \
+                --state all \
+                --search "$deploy_id in:title" \
+                --limit 1 \
+                --json number \
+                --jq '.[0].number // empty')
+
+              if [ -n "$existing" ]; then
+                echo "Issue #$existing already tracks $deploy_id — skipping."
+                exit 0
+              fi
+
+              # Make sure the label exists (idempotent)
+              gh label create deploy-failure \
+                --repo "${{ github.repository }}" \
+                --color BB0000 \
+                --description "Render deploy failed" \
+                --force 2>/dev/null || true
+
+              short_sha=$(echo "$commit_sha" | cut -c1-7)
+              gh issue create \
+                --repo "${{ github.repository }}" \
+                --title "Render deploy failed — $short_sha ($deploy_id)" \
+                --label "deploy-failure" \
+                --body "**Status:** \`$status\`
+              **Deploy ID:** \`$deploy_id\`
+              **Finished:** \`$finished\`
+              **Commit:** [\`$short_sha\`](https://github.com/${{ github.repository }}/commit/$commit_sha) — $commit_msg
+
+              ### View on Render
+              - Events: https://dashboard.render.com
+              - Deploy log: trace the deploy id in your service's Events tab.
+
+              ### Recovery
+              - If the failure was transient, trigger a fresh deploy:
+                \`\`\`
+                node scripts/trigger-render-deploy.mjs
+                \`\`\`
+              - If the failure is code-related, fix in a new commit and push.
+
+              _Auto-filed by the Render Deploy Monitor workflow._"
+              ;;
+            *)
+              echo "Deploy is healthy. No issue created."
+              ;;
+          esac
