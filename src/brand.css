@@ -181,3 +181,129 @@ body {
 }
 .sb-status-banner.draft { border-color: var(--sb-dusty); background: rgba(139,155,174,0.1); color: var(--sb-dusty); }
 .sb-status-banner.soon  { border-color: var(--sb-gold);  background: rgba(196,132,58,0.08); color: var(--sb-gold); }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Mobile layer
+   ─────────────────────────────────────────────────────────────────────────
+   The site is desktop-first. These rules collapse desktop two-column grids
+   to a single stack on phones (≤768px) and shrink the headline typography
+   so a 5.5rem hero doesn't blow off the screen. Inline `gridTemplateColumns`
+   styles on block components target classed selectors so the values can be
+   overridden here without touching every block.
+*/
+
+/* Responsive grid utilities — apply these classes to swap an inline grid
+   layout for one that stacks on mobile. */
+.sb-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+.sb-grid-2col-balanced {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+.sb-grid-2col-pitch {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+.sb-grid-2col-photo {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 4rem;
+  align-items: start;
+}
+.sb-grid-wheel {
+  display: grid;
+  grid-template-columns: minmax(380px, 480px) 1fr;
+  gap: 2rem;
+  align-items: stretch;
+}
+
+@media (max-width: 768px) {
+  body { font-size: 15px; }
+
+  /* All two-column grids stack */
+  .sb-grid-2col,
+  .sb-grid-2col-balanced,
+  .sb-grid-2col-pitch,
+  .sb-grid-2col-photo,
+  .sb-grid-wheel {
+    grid-template-columns: 1fr !important;
+    gap: 2rem !important;
+  }
+
+  /* Photo-side blocks: photo first, text second, but smaller */
+  .sb-grid-2col-photo > :first-child {
+    max-width: 240px;
+    margin: 0 auto;
+  }
+
+  /* Section padding shrinks */
+  section { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
+
+  /* Headline scaling */
+  .sb-display { letter-spacing: 0.05em !important; }
+  h1.sb-display { font-size: 2.5rem !important; line-height: 1.1 !important; }
+  h2.sb-display { font-size: 1.75rem !important; line-height: 1.15 !important; }
+  h3.sb-display { font-size: 1.2rem !important; }
+
+  /* Footer flex wrap looks reasonable already; just tighten copy */
+  footer { padding: 1.75rem 1.25rem !important; }
+
+  /* Hero ring decoration eats horizontal space — hide on phones */
+  .sb-hero-rings { display: none !important; }
+
+  /* The wheel container can scale its content via a CSS variable */
+  .sb-wheel-frame { --sb-wheel-scale: 0.78; }
+}
+
+@media (max-width: 480px) {
+  .sb-wheel-frame { --sb-wheel-scale: 0.68; }
+  h1.sb-display { font-size: 2.1rem !important; }
+}
+
+/* ─ Public nav mobile drawer ─ */
+.sb-nav-hamburger { display: none; }
+.sb-nav-list { display: flex; }
+
+@media (max-width: 768px) {
+  .sb-nav-hamburger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: transparent;
+    border: 0.5px solid rgba(232,221,208,0.3);
+    border-radius: var(--sb-radius);
+    color: var(--sb-cream);
+    cursor: pointer;
+    font-size: 1.1rem;
+  }
+  .sb-nav-list { display: none; }
+  .sb-nav-list.open {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--sb-navy-deep);
+    border-top: 0.5px solid rgba(232,221,208,0.12);
+    padding: 0.5rem 1rem 1rem;
+    gap: 0 !important;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.4);
+  }
+  .sb-nav-list.open > li {
+    width: 100%;
+    border-bottom: 0.5px dashed rgba(232,221,208,0.12);
+    padding: 0.75rem 0;
+  }
+  .sb-nav-list.open > li:last-child { border-bottom: none; }
+}

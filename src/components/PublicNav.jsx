@@ -29,6 +29,13 @@ const NAV = [
 
 export default function PublicNav({ site }) {
   const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Close the drawer whenever the route changes (after clicking a nav item).
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname, location.hash]);
+
   return (
     <nav
       style={{
@@ -40,7 +47,7 @@ export default function PublicNav({ site }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '1rem 2.5rem',
+        padding: '1rem 1.25rem',
         zIndex: 100,
       }}
     >
@@ -48,9 +55,9 @@ export default function PublicNav({ site }) {
         <div
           className="sb-display"
           style={{
-            fontSize: '1.4rem',
+            fontSize: '1.25rem',
             fontWeight: 500,
-            letterSpacing: '0.18em',
+            letterSpacing: '0.16em',
             textTransform: 'uppercase',
             color: 'var(--sb-cream)',
           }}
@@ -60,7 +67,7 @@ export default function PublicNav({ site }) {
         <div
           style={{
             fontFamily: 'var(--sb-font-label)',
-            fontSize: '0.58rem',
+            fontSize: '0.55rem',
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
             color: 'var(--sb-gold)',
@@ -69,20 +76,41 @@ export default function PublicNav({ site }) {
           Net Works · {site?.tagline}
         </div>
       </Link>
-      <ul style={{ display: 'flex', gap: '1.5rem', listStyle: 'none', alignItems: 'center' }}>
+
+      {/* Hamburger — only visible on mobile (CSS media query handles show/hide) */}
+      <button
+        className="sb-nav-hamburger"
+        onClick={() => setMobileOpen((o) => !o)}
+        aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+      >
+        {mobileOpen ? '✕' : '☰'}
+      </button>
+
+      <ul
+        className={`sb-nav-list${mobileOpen ? ' open' : ''}`}
+        style={{ gap: '1.5rem', listStyle: 'none', alignItems: 'center', margin: 0, padding: 0 }}
+      >
         {NAV.map((item) => (
-          <NavItem key={item.label} item={item} pathname={location.pathname} />
+          <NavItem
+            key={item.label}
+            item={item}
+            pathname={location.pathname}
+            isMobile={mobileOpen}
+          />
         ))}
       </ul>
     </nav>
   );
 }
 
-function NavItem({ item, pathname }) {
+function NavItem({ item, pathname, isMobile }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const closeTimer = useRef(null);
   const hasChildren = !!item.children?.length;
+  // When the mobile drawer is open, expand submenus inline (no hover, no
+  // floating panel) so the whole nav fits in one column.
+  const inlineMode = !!isMobile;
 
   useEffect(() => {
     function onDocClick(e) {
@@ -133,21 +161,31 @@ function NavItem({ item, pathname }) {
           <span style={{ fontSize: '0.6rem', opacity: 0.8 }}>▾</span>
         )}
       </Link>
-      {hasChildren && open && (
+      {hasChildren && (open || inlineMode) && (
         <div
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 8px)',
-            right: 0,
-            minWidth: 240,
-            background: 'var(--sb-navy-deep)',
-            border: '0.5px solid rgba(196,132,58,0.4)',
-            borderTop: '2px solid var(--sb-gold)',
-            borderRadius: 'var(--sb-radius)',
-            padding: '0.5rem 0',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-            zIndex: 200,
-          }}
+          style={
+            inlineMode
+              ? {
+                  marginTop: '0.5rem',
+                  paddingLeft: '0.75rem',
+                  borderLeft: '0.5px dashed rgba(196,132,58,0.4)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }
+              : {
+                  position: 'absolute',
+                  top: 'calc(100% + 8px)',
+                  right: 0,
+                  minWidth: 240,
+                  background: 'var(--sb-navy-deep)',
+                  border: '0.5px solid rgba(196,132,58,0.4)',
+                  borderTop: '2px solid var(--sb-gold)',
+                  borderRadius: 'var(--sb-radius)',
+                  padding: '0.5rem 0',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                  zIndex: 200,
+                }
+          }
         >
           {item.children.map((child) =>
             child.to ? (

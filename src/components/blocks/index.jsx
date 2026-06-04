@@ -249,16 +249,7 @@ function AboutBlock({ section }) {
       id={section.id}
       style={{ background: BG_VAR[section.bg] || 'var(--sb-ivory)', padding: '5rem 2rem' }}
     >
-      <div
-        style={{
-          maxWidth: 1000,
-          margin: '0 auto',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1.4fr',
-          gap: '4rem',
-          alignItems: 'start',
-        }}
-      >
+      <div className="sb-grid-2col-photo" style={{ maxWidth: 1000, margin: '0 auto' }}>
         <div
           style={{
             background: 'var(--sb-cream)',
@@ -464,16 +455,7 @@ function TwoColBlock({ section }) {
         padding: '5rem 2rem',
       }}
     >
-      <div
-        style={{
-          maxWidth: 1000,
-          margin: '0 auto',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '4rem',
-          alignItems: 'center',
-        }}
-      >
+      <div className="sb-grid-2col" style={{ maxWidth: 1000, margin: '0 auto', gap: '4rem' }}>
         <div>
           {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
           <div
@@ -714,15 +696,7 @@ function ContactBlock({ section, config }) {
       id={section.id}
       style={{ background: BG_VAR[section.bg] || 'var(--sb-linen)', padding: '5rem 2rem' }}
     >
-      <div
-        style={{
-          maxWidth: 1000,
-          margin: '0 auto',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '4rem',
-        }}
-      >
+      <div className="sb-grid-2col" style={{ maxWidth: 1000, margin: '0 auto', gap: '4rem' }}>
         <div>
           {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
           <h2
@@ -1268,16 +1242,7 @@ function JoinNetworkBlock({ section }) {
       id={section.id}
       style={{ background: BG_VAR[section.bg] || 'var(--sb-cream)', padding: '5rem 2rem' }}
     >
-      <div
-        style={{
-          maxWidth: 1100,
-          margin: '0 auto',
-          display: 'grid',
-          gridTemplateColumns: '1.1fr 1fr',
-          gap: '3rem',
-          alignItems: 'center',
-        }}
-      >
+      <div className="sb-grid-2col-pitch" style={{ maxWidth: 1100, margin: '0 auto' }}>
         <div>
           {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
           <h2 className="sb-display" style={{ fontSize: '2.4rem', color: 'var(--sb-navy)', marginBottom: '0.75rem' }}>
@@ -1342,16 +1307,7 @@ function ForCompaniesBlock({ section }) {
       id={section.id}
       style={{ background: BG_VAR[section.bg] || 'var(--sb-ivory)', padding: '5rem 2rem' }}
     >
-      <div
-        style={{
-          maxWidth: 1100,
-          margin: '0 auto',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1.1fr',
-          gap: '3rem',
-          alignItems: 'center',
-        }}
-      >
+      <div className="sb-grid-2col-pitch" style={{ maxWidth: 1100, margin: '0 auto' }}>
         <div
           style={{
             background: 'var(--sb-navy)',
@@ -1601,14 +1557,30 @@ const NICHE_SOLUTIONS = [
   },
 ];
 
+// Track viewport width so child grids can pick a layout. Returns 0 during SSR.
+function useViewportWidth() {
+  const [w, setW] = React.useState(
+    typeof window === 'undefined' ? 1200 : window.innerWidth
+  );
+  React.useEffect(() => {
+    const onResize = () => setW(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  return w;
+}
+
 function IndustryWheelBlock({ section }) {
   const f = section.fields || {};
   const [selected, setSelected] = React.useState(null);
   const [niche, setNiche] = React.useState('pe');
+  const viewportWidth = useViewportWidth();
 
-  // Position 8 nodes around the wheel
-  const wheelSize = 360;
-  const radius = wheelSize / 2 - 30;
+  // Wheel scales down on smaller screens so it fits and the node labels stay
+  // legible. Phone (≤ 480) gets 260px, tablet (≤ 768) gets 320, desktop 360.
+  const wheelSize = viewportWidth <= 480 ? 260 : viewportWidth <= 768 ? 320 : 360;
+  const nodeSize = viewportWidth <= 480 ? 58 : viewportWidth <= 768 ? 64 : 72;
+  const radius = wheelSize / 2 - nodeSize / 2 - 6;
   const center = wheelSize / 2;
   const nodes = INDUSTRIES.map((ind, i) => {
     const angle = (Math.PI * 2 * i) / INDUSTRIES.length - Math.PI / 2;
@@ -1645,15 +1617,7 @@ function IndustryWheelBlock({ section }) {
         )}
 
         {/* TOP ROW: Wheel | Right panel (Tech default / Dashboard on select) */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(380px, 480px) 1fr',
-            gap: '2rem',
-            alignItems: 'stretch',
-            marginBottom: '2rem',
-          }}
-        >
+        <div className="sb-grid-wheel" style={{ marginBottom: '2rem' }}>
           {/* WHEEL */}
           <PanelCard title="Industries Served · click any to focus">
             <div style={{ position: 'relative', width: wheelSize, height: wheelSize, margin: '0 auto' }}>
@@ -1682,10 +1646,10 @@ function IndustryWheelBlock({ section }) {
                 onClick={() => setSelected(null)}
                 style={{
                   position: 'absolute',
-                  left: center - 36,
-                  top: center - 36,
-                  width: 72,
-                  height: 72,
+                  left: center - nodeSize / 2,
+                  top: center - nodeSize / 2,
+                  width: nodeSize,
+                  height: nodeSize,
                   borderRadius: '50%',
                   background: 'var(--sb-navy)',
                   color: 'var(--sb-gold)',
@@ -1693,7 +1657,7 @@ function IndustryWheelBlock({ section }) {
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontFamily: 'var(--sb-font-display)',
-                  fontSize: '0.9rem',
+                  fontSize: nodeSize >= 70 ? '0.9rem' : '0.78rem',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
                   cursor: 'pointer',
@@ -1715,10 +1679,10 @@ function IndustryWheelBlock({ section }) {
                     onClick={() => setSelected(n.key)}
                     style={{
                       position: 'absolute',
-                      left: n.x - 36,
-                      top: n.y - 36,
-                      width: 72,
-                      height: 72,
+                      left: n.x - nodeSize / 2,
+                      top: n.y - nodeSize / 2,
+                      width: nodeSize,
+                      height: nodeSize,
                       borderRadius: '50%',
                       background: isSelected ? 'var(--sb-gold)' : 'white',
                       color: isSelected ? 'var(--sb-ivory)' : 'var(--sb-navy)',
@@ -1730,10 +1694,10 @@ function IndustryWheelBlock({ section }) {
                       justifyContent: 'center',
                       cursor: 'pointer',
                       fontFamily: 'var(--sb-font-body)',
-                      fontSize: '0.58rem',
+                      fontSize: nodeSize >= 70 ? '0.58rem' : '0.52rem',
                       letterSpacing: '0.05em',
                       textTransform: 'uppercase',
-                      padding: '0 4px',
+                      padding: '0 3px',
                       transition: 'all 0.18s',
                       boxShadow: isSelected ? '0 4px 14px rgba(196,132,58,0.35)' : '0 1px 3px rgba(0,0,0,0.06)',
                       zIndex: isSelected ? 3 : 1,
@@ -2378,28 +2342,15 @@ function AboutIntroBlock({ section, config }) {
     >
       {/* Hidden anchor for the Home nav dropdown */}
       <div id="about-intro" style={{ position: 'absolute', top: 0 }} />
-      <div
-        style={{
-          maxWidth: 1240,
-          margin: '0 auto',
-          display: 'grid',
-          gridTemplateColumns: '1.05fr 1fr',
-          gap: '3rem',
-          alignItems: 'center',
-        }}
-      >
+      <div className="sb-grid-2col-balanced" style={{ maxWidth: 1240, margin: '0 auto' }}>
         {/* LEFT — Face of the Founder */}
         <div>
           <div className="sb-eyebrow" style={{ marginBottom: '1rem' }}>
             {f.leftEyebrow || 'Face of the Founder'}
           </div>
           <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '180px 1fr',
-              gap: '1.5rem',
-              alignItems: 'center',
-            }}
+            className="sb-grid-2col-photo"
+            style={{ gap: '1.5rem' }}
           >
             {f.photoUrl ? (
               <img
