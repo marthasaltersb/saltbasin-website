@@ -2,6 +2,7 @@
 // public-facing markup. `mode` is 'public' or 'preview' so admin previews can
 // show draft/soon banners that the real public site never sees.
 import React from 'react';
+import { InlineDataNotice } from '../DataNotice.jsx';
 
 const BG_VAR = {
   ivory: 'var(--sb-ivory)',
@@ -718,23 +719,26 @@ function ContactBlock({ section, config }) {
             </div>
           </div>
         </div>
-        <form
-          style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
-          onSubmit={(e) => {
-            e.preventDefault();
-            alert('Contact submissions ship in Phase 5 — for now, reach out via the links above.');
-          }}
-        >
-          <input className="sb-input sb-input-light" placeholder="Your Name" />
-          <input className="sb-input sb-input-light" placeholder="Email" />
-          <textarea
-            className="sb-input sb-input-light sb-textarea"
-            placeholder="Message"
-          />
-          <button type="submit" className="sb-btn sb-btn-gold" style={{ justifyContent: 'center' }}>
-            Send Message
-          </button>
-        </form>
+        <div>
+          <InlineDataNotice dark={false} compact style={{ marginBottom: '1rem' }} />
+          <form
+            style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
+            onSubmit={(e) => {
+              e.preventDefault();
+              alert('Contact submissions ship in Phase 5 — for now, reach out via the links above.');
+            }}
+          >
+            <input className="sb-input sb-input-light" placeholder="Your Name" />
+            <input className="sb-input sb-input-light" placeholder="Email" />
+            <textarea
+              className="sb-input sb-input-light sb-textarea"
+              placeholder="Message"
+            />
+            <button type="submit" className="sb-btn sb-btn-gold" style={{ justifyContent: 'center' }}>
+              Send Message
+            </button>
+          </form>
+        </div>
       </div>
     </section>
   );
@@ -1193,28 +1197,31 @@ function LeadCaptureForm({ source, ctaLabel, placeholder, thanks, dark, message 
   }
 
   return (
-    <form
-      onSubmit={submit}
-      style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', maxWidth: 520 }}
-    >
-      <input
-        type="email"
-        required
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder={placeholder}
-        className={dark ? 'sb-input' : 'sb-input sb-input-light'}
-        style={{ flex: 1, minWidth: 220 }}
-      />
-      <button type="submit" className="sb-btn sb-btn-gold" disabled={submitting}>
-        {submitting ? '…' : ctaLabel}
-      </button>
-      {error && (
-        <div style={{ width: '100%', color: 'var(--sb-risk-critical)', fontSize: '0.78rem' }}>
-          {error}
-        </div>
-      )}
-    </form>
+    <div style={{ maxWidth: 520 }}>
+      <InlineDataNotice dark={dark} compact style={{ marginBottom: '0.75rem' }} />
+      <form
+        onSubmit={submit}
+        style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}
+      >
+        <input
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder={placeholder}
+          className={dark ? 'sb-input' : 'sb-input sb-input-light'}
+          style={{ flex: 1, minWidth: 220 }}
+        />
+        <button type="submit" className="sb-btn sb-btn-gold" disabled={submitting}>
+          {submitting ? '…' : ctaLabel}
+        </button>
+        {error && (
+          <div style={{ width: '100%', color: 'var(--sb-risk-critical)', fontSize: '0.78rem' }}>
+            {error}
+          </div>
+        )}
+      </form>
+    </div>
   );
 }
 

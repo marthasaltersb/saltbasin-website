@@ -9,6 +9,7 @@ import SignupPage from './components/SignupPage.jsx';
 import MemberDashboard from './components/MemberDashboard.jsx';
 import PublicProfile from './components/PublicProfile.jsx';
 import LeadView from './components/LeadView.jsx';
+import DataNotice from './components/DataNotice.jsx';
 
 function PublicRoute() {
   const [status, setStatus] = useState(null);
@@ -42,6 +43,7 @@ export default function App() {
       <Route path="/member" element={<MemberDashboard />} />
       <Route path="/u/:slug" element={<PublicProfile />} />
       <Route path="/lead/:publicId" element={<LeadView />} />
+      <Route path="/data-notice" element={<DataNotice />} />
       <Route
         path="/admin/*"
         element={

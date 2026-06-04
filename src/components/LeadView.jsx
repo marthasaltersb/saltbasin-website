@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import PublicFooter from './PublicFooter.jsx';
+import { InlineDataNotice } from './DataNotice.jsx';
 import { api } from '../lib/api.js';
 
 const SOURCE_LABELS = {
@@ -306,9 +307,10 @@ export default function LeadView() {
             <div className="sb-eyebrow" style={{ color: 'var(--sb-gold)', marginBottom: '0.4rem' }}>
               Tell me more about your situation
             </div>
-            <h2 className="sb-display" style={{ fontSize: '1.6rem', color: 'var(--sb-cream)', marginBottom: '1.5rem', letterSpacing: '0.02em' }}>
+            <h2 className="sb-display" style={{ fontSize: '1.6rem', color: 'var(--sb-cream)', marginBottom: '1rem', letterSpacing: '0.02em' }}>
               The faster I know, the better I can route.
             </h2>
+            <InlineDataNotice dark style={{ marginBottom: '1.5rem' }} />
 
             <Field
               label="Your name"

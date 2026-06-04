@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { InlineDataNotice } from './DataNotice.jsx';
 
 export default function SignupPage() {
   const nav = useNavigate();
@@ -118,6 +119,8 @@ export default function SignupPage() {
             Sign up to claim a Salt Basin operator profile. You'll be auto-logged in and taken to your dashboard.
           </p>
         )}
+
+        <InlineDataNotice dark style={{ marginBottom: '1.25rem' }} />
 
         <Field label="Display Name" value={form.displayName} onChange={(v) => update('displayName', v)} placeholder="Full name as you want it shown" />
         <Field label="Email" type="email" value={form.email} onChange={(v) => update('email', v)} placeholder="you@email.com" required />

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 export default function PublicFooter({ config }) {
   const site = config?.site || {};
@@ -89,8 +90,23 @@ export default function PublicFooter({ config }) {
           </div>
         )}
 
-        <div style={{ fontSize: '0.72rem', color: 'var(--sb-dusty)', opacity: 0.6 }}>
-          {site.copyrightLine || '© Salt Basin Net Works'}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.35rem' }}>
+          <Link
+            to="/data-notice"
+            style={{
+              fontFamily: 'var(--sb-font-label)',
+              fontSize: '0.65rem',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: 'var(--sb-gold)',
+              textDecoration: 'none',
+            }}
+          >
+            Data & Security Notice
+          </Link>
+          <div style={{ fontSize: '0.72rem', color: 'var(--sb-dusty)', opacity: 0.6 }}>
+            {site.copyrightLine || '© Salt Basin Net Works'}
+          </div>
         </div>
       </div>
     </footer>
