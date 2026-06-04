@@ -55,10 +55,22 @@ CREATE TABLE IF NOT EXISTS landing_sessions (
 
 CREATE TABLE IF NOT EXISTS leads (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  source TEXT NOT NULL,           -- 'joinNetwork' | 'forCompanies' | 'assessments' | 'contact'
+  source TEXT NOT NULL,           -- arbitrary string: 'joinNetwork', 'forCompanies', or any future form key
   email TEXT NOT NULL,
   name TEXT,
   message TEXT,
+  public_id TEXT UNIQUE,          -- short URL-safe identifier shown to the lead
+  access_token TEXT,              -- proof of ownership for the lead-facing URL
+  answers TEXT,                   -- JSON: { role, company, timeline, notes, ...future fields }
+  created_at INTEGER NOT NULL DEFAULT (strftime('%s','now') * 1000),
+  updated_at INTEGER NOT NULL DEFAULT (strftime('%s','now') * 1000)
+);
+
+CREATE TABLE IF NOT EXISTS lead_messages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  lead_id INTEGER NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+  role TEXT NOT NULL,             -- 'user' or 'assistant'
+  content TEXT NOT NULL,
   created_at INTEGER NOT NULL DEFAULT (strftime('%s','now') * 1000)
 );
 
@@ -71,6 +83,20 @@ CREATE TABLE IF NOT EXISTS member_profiles (
   updated_at INTEGER NOT NULL DEFAULT (strftime('%s','now') * 1000)
 );
 `);
+
+// Idempotent migrations for older databases that may have shipped earlier
+// versions of the leads table. CREATE TABLE IF NOT EXISTS won't add new
+// columns to an existing table, so we add missing ones explicitly.
+function addColumnIfMissing(table, name, definition) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all();
+  if (!cols.some((c) => c.name === name)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${name} ${definition}`);
+  }
+}
+addColumnIfMissing('leads', 'public_id', 'TEXT');
+addColumnIfMissing('leads', 'access_token', 'TEXT');
+addColumnIfMissing('leads', 'answers', 'TEXT');
+addColumnIfMissing('leads', 'updated_at', "INTEGER NOT NULL DEFAULT (strftime('%s','now') * 1000)");
 
 export function getJSON(table, id) {
   const row = db.prepare(`SELECT data FROM ${table} WHERE id = ?`).get(id);

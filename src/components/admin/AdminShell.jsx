@@ -7,6 +7,7 @@ import Sidebar from './Sidebar.jsx';
 import EditorPane from './EditorPane.jsx';
 import PreviewPane from './PreviewPane.jsx';
 import ConfigPanel from './ConfigPanel.jsx';
+import LeadsPanel from './LeadsPanel.jsx';
 
 const STATUS_CYCLE = ['live', 'draft', 'soon'];
 
@@ -248,6 +249,7 @@ export default function AdminShell() {
             items={[
               { val: 'content', label: 'Content' },
               { val: 'config', label: 'Config' },
+              { val: 'leads', label: 'Leads' },
             ]}
             active={tab}
             onChange={setTab}
@@ -273,7 +275,9 @@ export default function AdminShell() {
       </div>
 
       <div style={styles.workspace}>
-        {tab === 'content' ? (
+        {tab === 'leads' ? (
+          <LeadsPanel />
+        ) : tab === 'content' ? (
           <>
             <Sidebar
               site={draft}
@@ -307,14 +311,16 @@ export default function AdminShell() {
         )}
       </div>
 
-      <PublishBar
-        dirty={dirty}
-        siteDirty={siteDirty}
-        configDirty={configDirty}
-        onSave={save}
-        onDiscard={discard}
-        onPublish={publish}
-      />
+      {tab !== 'leads' && (
+        <PublishBar
+          dirty={dirty}
+          siteDirty={siteDirty}
+          configDirty={configDirty}
+          onSave={save}
+          onDiscard={discard}
+          onPublish={publish}
+        />
+      )}
 
       {pageModal && (
         <PageModal

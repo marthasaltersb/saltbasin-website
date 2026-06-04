@@ -1169,7 +1169,6 @@ function AssessmentsBlock({ section }) {
 function LeadCaptureForm({ source, ctaLabel, placeholder, thanks, dark, message }) {
   const [email, setEmail] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
-  const [done, setDone] = React.useState(false);
   const [error, setError] = React.useState('');
 
   async function submit(e) {
@@ -1183,31 +1182,16 @@ function LeadCaptureForm({ source, ctaLabel, placeholder, thanks, dark, message 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ source, email, message }),
       });
-      if (!res.ok) throw new Error((await res.json()).error || 'Submit failed');
-      setDone(true);
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || 'Submit failed');
+      // Take the lead to their own record. They can bookmark and return.
+      window.location.assign(body.leadUrl);
     } catch (err) {
       setError(err.message);
-    } finally {
       setSubmitting(false);
     }
   }
 
-  if (done) {
-    return (
-      <div
-        style={{
-          padding: '1rem 1.25rem',
-          background: dark ? 'rgba(168,184,154,0.15)' : 'rgba(168,184,154,0.2)',
-          border: `0.5px solid ${dark ? 'rgba(168,184,154,0.4)' : 'var(--sb-green)'}`,
-          borderRadius: 'var(--sb-radius)',
-          color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)',
-          fontSize: '0.9rem',
-        }}
-      >
-        ✓ {thanks}
-      </div>
-    );
-  }
   return (
     <form
       onSubmit={submit}
