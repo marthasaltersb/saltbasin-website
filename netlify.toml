@@ -25,11 +25,9 @@
   status = 200
   force  = true
 
-[[redirects]]
-  from   = "/uploads/*"
-  to     = "https://saltbasin-website.onrender.com/uploads/:splat"
-  status = 200
-  force  = true
+# /uploads/* used to proxy to Render's disk. Now that uploads live on Supabase
+# Storage and the upload API returns absolute Supabase CDN URLs, the browser
+# fetches images directly from Supabase — no proxy needed here.
 
 # ── SPA fallback ──────────────────────────────────────────────────────────
 # React Router owns client-side routes like /admin, /consulting/founder, etc.

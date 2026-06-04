@@ -49,17 +49,21 @@ app.use('/api/leads', leadsRouter);
 app.use('/api/members', membersRouter);
 app.use('/api/uploads', uploadsRouter);
 
-// Serve uploaded files. Long-cache headers since filenames are random hashes
-// (immutable for the life of the file).
-app.use(
-  '/uploads',
-  express.static(uploadsDir, {
-    maxAge: '7d',
-    immutable: true,
-  })
-);
+// Uploaded files now live on Supabase Storage at <SUPABASE_URL>/storage/v1/object/public/uploads/<file>.
+// The returned URL from POST /api/uploads is already absolute, so the browser
+// fetches the file directly from Supabase's CDN — Express never proxies it.
 
-app.get('/api/health', (req, res) => res.json({ ok: true, ts: Date.now() }));
+app.get('/api/health', async (req, res) => {
+  // Tiny SELECT 1 against Postgres so this endpoint keeps both Render and
+  // Supabase active (the keepalive workflow pings here every 13 minutes).
+  try {
+    const { db } = await import('./db.js');
+    await db.prepare('SELECT 1 AS ok').get();
+    res.json({ ok: true, ts: Date.now(), db: 'ok' });
+  } catch (e) {
+    res.status(500).json({ ok: false, ts: Date.now(), db: 'err' });
+  }
+});
 
 // Stub routes for later phases — keep them returning 501 so the front-end can
 // feature-detect without crashing.
