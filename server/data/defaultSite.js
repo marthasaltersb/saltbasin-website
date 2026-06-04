@@ -348,15 +348,15 @@ export const defaultSite = {
             a1Title: 'Q2R Readiness Score',
             a1Desc:
               'Score your lead-to-cash flow against the eight critical control points. Diagnoses leakage, deal-desk drag, and RevRec risk.',
-            a1Price: '$249',
+            a1Price: '',
             a2Title: 'RevOps Maturity Assessment',
             a2Desc:
               'Pipeline, forecast, attribution, territory, and tooling — graded against fast-growth benchmarks. Identifies the wedge that buys back the most velocity.',
-            a2Price: '$299',
+            a2Price: '',
             a3Title: 'AI-Adoption Readiness',
             a3Desc:
               'Where AI lifts your team next, and where it does not yet. Operating-model readout, talent and tooling map, 90-day pilot plan.',
-            a3Price: '$199',
+            a3Price: '',
             notifyLabel: 'Notify Me at Launch',
           },
         },

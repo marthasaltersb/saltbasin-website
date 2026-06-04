@@ -1145,9 +1145,11 @@ function AssessmentsBlock({ section }) {
               >
                 Soon
               </div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--sb-gold)', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
-                {a.price}
-              </div>
+              {a.price && (
+                <div style={{ fontSize: '0.7rem', color: 'var(--sb-gold)', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
+                  {a.price}
+                </div>
+              )}
               <h3
                 className="sb-display"
                 style={{ fontSize: '1.25rem', color: 'var(--sb-cream)', marginBottom: '0.6rem', letterSpacing: '0.02em' }}
