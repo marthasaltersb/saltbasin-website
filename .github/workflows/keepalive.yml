@@ -10,7 +10,12 @@ name: Keepalive
 
 on:
   schedule:
-    - cron: '*/13 * * * *'  # every 13 minutes
+    # Every 10 minutes — leaves a 5-minute safety buffer against Render's
+    # 15-minute spin-down. GitHub Actions cron can be delayed during peak
+    # load, so we err on the side of more frequent pings. For redundancy
+    # against GH Actions outages, also configure UptimeRobot (free) to ping
+    # /api/health every 5 minutes.
+    - cron: '*/10 * * * *'
   workflow_dispatch:        # also runs on demand via the Actions tab
 
 jobs:

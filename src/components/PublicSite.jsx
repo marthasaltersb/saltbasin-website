@@ -41,7 +41,7 @@ export default function PublicSite() {
       </div>
     );
   }
-  if (!site || !config) return null;
+  if (!site || !config) return <ColdStartLoader />;
 
   // Full path slug — supports nested like 'consulting/founder'
   const requestedSlug = params['*'] || '';
@@ -83,6 +83,94 @@ function NotFound() {
         Not Found
       </h1>
       <p style={{ color: 'var(--sb-sage)' }}>That page doesn't exist (yet).</p>
+    </div>
+  );
+}
+
+// Branded loading state shown during the initial API fetch. On a warm server
+// this flashes for ~300ms and is invisible. On a cold-started Render service
+// it shows for 20–30 seconds while the container wakes up, so the visitor
+// sees the brand instead of a blank screen.
+function ColdStartLoader() {
+  const [elapsedSec, setElapsedSec] = React.useState(0);
+  React.useEffect(() => {
+    const start = Date.now();
+    const id = setInterval(() => setElapsedSec(Math.floor((Date.now() - start) / 1000)), 500);
+    return () => clearInterval(id);
+  }, []);
+  const slow = elapsedSec >= 3; // show the explainer once we're definitely on a cold start
+  return (
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'var(--sb-navy)',
+        color: 'var(--sb-cream)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'column',
+        padding: '2rem',
+        textAlign: 'center',
+      }}
+    >
+      <div
+        className="sb-display"
+        style={{
+          fontSize: '2rem',
+          letterSpacing: '0.18em',
+          textTransform: 'uppercase',
+          color: 'var(--sb-cream)',
+          marginBottom: '0.4rem',
+        }}
+      >
+        Salt Basin
+      </div>
+      <div
+        style={{
+          fontFamily: 'var(--sb-font-label)',
+          fontSize: '0.65rem',
+          letterSpacing: '0.22em',
+          textTransform: 'uppercase',
+          color: 'var(--sb-gold)',
+          marginBottom: '2rem',
+        }}
+      >
+        Net Works · Bottom Lines with a Rising Tide
+      </div>
+
+      {/* Three-dot pulse */}
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem' }}>
+        {[0, 0.2, 0.4].map((delay, i) => (
+          <div
+            key={i}
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: 'var(--sb-gold)',
+              animation: 'sb-toast-in 1.1s ease infinite',
+              animationDelay: `${delay}s`,
+              opacity: 0.6,
+            }}
+          />
+        ))}
+      </div>
+
+      {slow && (
+        <div
+          style={{
+            maxWidth: 460,
+            fontSize: '0.82rem',
+            color: 'var(--sb-sage)',
+            lineHeight: 1.7,
+            opacity: 0.8,
+          }}
+        >
+          The site is waking up — this is a small Render free-tier quirk that adds
+          a few seconds on the first visit after idle. Hold tight, content is
+          loading in {elapsedSec}s.
+        </div>
+      )}
     </div>
   );
 }
