@@ -8,6 +8,7 @@ import EditorPane from './EditorPane.jsx';
 import PreviewPane from './PreviewPane.jsx';
 import ConfigPanel from './ConfigPanel.jsx';
 import LeadsPanel from './LeadsPanel.jsx';
+import NetWorksPanel from './NetWorksPanel.jsx';
 
 const STATUS_CYCLE = ['live', 'draft', 'soon'];
 
@@ -266,9 +267,10 @@ export default function AdminShell() {
         >
           <TabToggle
             items={[
-              { val: 'content', label: 'Content' },
-              { val: 'config', label: 'Config' },
+              { val: 'content', label: 'My Profile' },
               { val: 'leads', label: 'Leads' },
+              { val: 'networks', label: 'Net Works' },
+              { val: 'config', label: 'Config' },
             ]}
             active={tab}
             onChange={setTab}
@@ -308,6 +310,8 @@ export default function AdminShell() {
       <div className="sb-admin-workspace" style={styles.workspace}>
         {tab === 'leads' ? (
           <LeadsPanel />
+        ) : tab === 'networks' ? (
+          <NetWorksPanel />
         ) : tab === 'content' ? (
           <>
             <div className={`sb-admin-sidebar${sidebarOpen ? '' : ' collapsed'}`}>
@@ -352,7 +356,7 @@ export default function AdminShell() {
         )}
       </div>
 
-      {tab !== 'leads' && (
+      {tab !== 'leads' && tab !== 'networks' && (
         <PublishBar
           dirty={dirty}
           siteDirty={siteDirty}

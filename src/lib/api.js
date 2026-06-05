@@ -51,4 +51,7 @@ export const api = {
   getDraftConfig: () => request('/api/config/draft'),
   saveDraftConfig: (config) =>
     request('/api/config/draft', { method: 'PUT', body: JSON.stringify(config) }),
+
+  // Net Works (admin: list all members)
+  listMembers: () => request('/api/members/'),
 };

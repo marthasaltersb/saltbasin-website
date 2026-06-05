@@ -48,6 +48,12 @@ async function logToDb({ leadId, to, from, subject, html, text, provider, status
   }
 }
 
+// Public: lets the admin "Test email" button verify Resend is wired without
+// touching real lead records.
+export async function dispatchRaw({ to, subject, html, text }) {
+  return dispatch({ to, subject, html, text });
+}
+
 async function dispatch({ leadId, to, subject, html, text }) {
   const fromAddr = await configuredFrom();
 
@@ -128,6 +134,58 @@ Salt Basin Net Works
     subject: `Your Salt Basin lead record · #${publicIdFromUrl(leadUrl)}`,
     html, text,
   });
+}
+
+// ── Template: Notify Betsy when a new lead lands ──
+export async function sendNewLeadAlert({ leadId, source, leadEmail, leadName, leadPhone, leadMessage, leadUrl, isExisting, ctaLocation }) {
+  // Pull config to determine whether to send + where.
+  let cfg = {};
+  try {
+    const row = await db.prepare(`SELECT data FROM config_state WHERE id = $1`).get('published');
+    cfg = row ? JSON.parse(row.data) : {};
+  } catch { /* ignore */ }
+
+  const enabled = cfg?.email?.notifyOnNewLead !== false;  // default: enabled
+  if (!enabled) return { ok: true, skipped: 'disabled' };
+
+  const recipient = cfg?.email?.notifyTo || process.env.ADMIN_EMAIL;
+  if (!recipient) return { ok: false, error: 'no notification recipient configured' };
+
+  const verb = isExisting ? 'New activity on existing lead' : 'New lead submitted';
+  const subjLine = `[Salt Basin] ${verb} via ${friendlySource(source)} — ${leadEmail}`;
+  const fullUrl = `${publicBaseUrl()}${leadUrl}`;
+
+  const lines = [
+    verb + ':',
+    '',
+    `  Email:    ${leadEmail}`,
+    leadName  ? `  Name:     ${leadName}` : null,
+    leadPhone ? `  Phone:    ${leadPhone}` : null,
+    `  Source:   ${friendlySource(source)}${ctaLocation ? ' (' + ctaLocation + ')' : ''}`,
+    leadMessage ? '' : null,
+    leadMessage ? `  Message:  ${leadMessage}` : null,
+    '',
+    `  Lead URL: ${fullUrl}`,
+    '',
+    '— Salt Basin lead notifier',
+  ].filter((l) => l !== null);
+
+  const text = lines.join('\n');
+  const html = `
+    <p><strong>${verb}</strong></p>
+    <table style="border-collapse:collapse;font-size:0.9rem;">
+      <tr><td style="padding:4px 12px 4px 0;color:#4A6670;">Email:</td><td><a href="mailto:${leadEmail}" style="color:#C4843A;">${leadEmail}</a></td></tr>
+      ${leadName  ? `<tr><td style="padding:4px 12px 4px 0;color:#4A6670;">Name:</td><td>${leadName}</td></tr>` : ''}
+      ${leadPhone ? `<tr><td style="padding:4px 12px 4px 0;color:#4A6670;">Phone:</td><td>${leadPhone}</td></tr>` : ''}
+      <tr><td style="padding:4px 12px 4px 0;color:#4A6670;">Source:</td><td>${friendlySource(source)}${ctaLocation ? ` <span style="color:#8B9BAE;">(${ctaLocation})</span>` : ''}</td></tr>
+      ${leadMessage ? `<tr><td style="padding:4px 12px 4px 0;color:#4A6670;vertical-align:top;">Message:</td><td style="white-space:pre-wrap;">${leadMessage}</td></tr>` : ''}
+    </table>
+    <p style="margin-top:1rem;">
+      <a href="${fullUrl}" style="display:inline-block;padding:0.5rem 1.1rem;background:#C4843A;color:#FBF6F0;text-decoration:none;border-radius:2px;font-size:0.85rem;">View lead →</a>
+    </p>
+    <p style="font-size:0.75rem;color:#8B9BAE;margin-top:1.25rem;">— Salt Basin lead notifier</p>
+  `;
+  return dispatch({ leadId, to: recipient, subject: subjLine, html, text });
 }
 
 function publicBaseUrl() {

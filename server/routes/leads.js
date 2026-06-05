@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { db } from '../db.js';
 import { requireAdmin } from '../auth.js';
-import { sendLeadConfirmation } from '../lib/email.js';
+import { sendLeadConfirmation, sendNewLeadAlert, dispatchRaw } from '../lib/email.js';
 
 const router = Router();
 
@@ -245,8 +245,7 @@ router.post('/', async (req, res) => {
     )
     .run(leadId, source, ctaLoc, trimmedMsg);
 
-  // Send confirmation email (Resend if configured; console stub otherwise).
-  // Also writes a row to lead_emails so admin + lead see the history.
+  // Send confirmation email to the lead (Resend if configured; console stub otherwise).
   const leadUrl = `/lead/${publicId}`;
   if (accessPassword) {
     sendLeadConfirmation({
@@ -256,8 +255,22 @@ router.post('/', async (req, res) => {
       leadUrl,
       password: accessPassword,
       source,
-    }).catch((e) => console.error('[email] send failed:', e.message));
+    }).catch((e) => console.error('[email] confirmation failed:', e.message));
   }
+
+  // Notify Betsy in parallel. Fires on every new lead AND on activity for an
+  // existing lead (so she knows about repeat engagement, too).
+  sendNewLeadAlert({
+    leadId,
+    source,
+    leadEmail: normEmail,
+    leadName: trimmedName,
+    leadPhone: normPhone,
+    leadMessage: trimmedMsg,
+    leadUrl,
+    isExisting,
+    ctaLocation: ctaLoc,
+  }).catch((e) => console.error('[email] alert failed:', e.message));
 
   res.json({
     ok: true,

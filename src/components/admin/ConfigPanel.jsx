@@ -144,6 +144,24 @@ export default function ConfigPanel({ config, onChange }) {
           </div>
         </div>
 
+        {/* New-lead notifications to admin */}
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>New-Lead Notifications</div>
+          <Toggle
+            label="Email me when a new lead lands"
+            checked={config?.email?.notifyOnNewLead !== false}
+            onChange={(v) => patch('email.notifyOnNewLead', v)}
+            help="When on, every new lead (and every activity on an existing lead) fires an email to the address below."
+          />
+          <Field
+            label="Notification recipient (defaults to ADMIN_EMAIL env var)"
+            value={config?.email?.notifyTo}
+            onChange={(v) => patch('email.notifyTo', v)}
+            placeholder="betsy@saltbasin.net"
+          />
+          <SendTestEmail />
+        </div>
+
         {/* BestyStaff persona */}
         <div style={styles.card}>
           <div style={styles.cardTitle}>BestyStaff Agent (Phase 5)</div>
@@ -177,7 +195,67 @@ export default function ConfigPanel({ config, onChange }) {
   );
 }
 
-function Field({ label, value, onChange, long, type = 'text' }) {
+function SendTestEmail() {
+  const [to, setTo] = React.useState('');
+  const [sending, setSending] = React.useState(false);
+  const [result, setResult] = React.useState(null);
+  async function send() {
+    if (!to.includes('@')) return;
+    setSending(true);
+    setResult(null);
+    try {
+      const res = await fetch('/api/config/test-email', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to }),
+      });
+      const body = await res.json();
+      setResult({ ok: res.ok, body });
+    } catch (e) {
+      setResult({ ok: false, body: { error: e.message } });
+    } finally {
+      setSending(false);
+    }
+  }
+  return (
+    <div style={{ marginTop: '0.75rem', padding: '0.75rem 0.85rem', background: 'rgba(196,132,58,0.06)', border: '0.5px dashed rgba(196,132,58,0.3)', borderRadius: 'var(--sb-radius)' }}>
+      <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.6rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--sb-gold)', marginBottom: 6 }}>
+        Send test email
+      </div>
+      <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <input
+          className="sb-input"
+          type="email"
+          value={to}
+          onChange={(e) => setTo(e.target.value)}
+          placeholder="your.email@domain.com"
+          style={{ flex: 1, fontSize: '0.8rem' }}
+        />
+        <button onClick={send} disabled={sending || !to.includes('@')} className="sb-btn sb-btn-gold" style={{ fontSize: '0.7rem', padding: '0.45rem 0.95rem' }}>
+          {sending ? 'Sending…' : 'Send'}
+        </button>
+      </div>
+      {result && (
+        <div style={{
+          marginTop: '0.5rem', padding: '0.5rem 0.7rem',
+          background: result.ok ? 'rgba(168,184,154,0.15)' : 'rgba(196,75,75,0.12)',
+          borderRadius: 'var(--sb-radius)',
+          fontSize: '0.78rem', color: result.ok ? 'var(--sb-green)' : 'var(--sb-risk-critical)',
+        }}>
+          {result.ok ? (
+            result.body?.stub
+              ? '✓ Stubbed (RESEND_API_KEY not set) — content logged to server console + DB. Set the key in Render env to deliver for real.'
+              : `✓ Sent via Resend (id: ${result.body?.id || '?'})`
+          ) : (
+            '✗ ' + (result.body?.error || 'failed')
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Field({ label, value, onChange, long, type = 'text', placeholder }) {
   return (
     <div style={styles.fieldGroup}>
       <label style={styles.fieldLabel}>{label}</label>
@@ -193,6 +271,7 @@ function Field({ label, value, onChange, long, type = 'text' }) {
           type={type}
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
         />
       )}
     </div>

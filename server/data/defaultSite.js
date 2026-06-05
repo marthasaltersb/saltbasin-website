@@ -536,5 +536,7 @@ export const defaultConfig = {
     fromName: 'Betsy at Salt Basin',
     fromAddress: 'betsy@saltbasin.net',
     replyTo: 'betsy@saltbasin.net',
+    notifyOnNewLead: true,
+    notifyTo: null, // null = falls back to ADMIN_EMAIL env var
   },
 };
