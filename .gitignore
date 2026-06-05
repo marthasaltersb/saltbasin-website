@@ -1,6 +1,8 @@
 node_modules
 dist
 .env
+.env.*
+.admin-password-*.txt
 server/data/salt-basin.db
 server/data/salt-basin.db-*
 server/data/uploads/
