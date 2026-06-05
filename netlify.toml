@@ -10,6 +10,17 @@
 [build]
   command  = "npm install && npm run build"
   publish  = "dist"
+  # Skip the build (and thus the credit consumption) when the latest commit
+  # touches nothing the frontend bundle depends on. Per Netlify's contract:
+  # ignore script exits 0 = SKIP the build, exits non-zero = BUILD.
+  #
+  # We use `git diff --quiet` which exits 0 when there are no differences
+  # in the listed paths between the last successfully deployed commit and
+  # the current one. Frontend-relevant paths only:
+  #   src/, public/, index.html, vite.config.js, netlify.toml, package*.json
+  # Backend (server/), tooling (scripts/), CI (.github/), and docs (*.md)
+  # are excluded — those changes auto-deploy through Render, not Netlify.
+  ignore   = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- src/ public/ index.html vite.config.js netlify.toml package.json package-lock.json"
 
 [build.environment]
   NODE_VERSION = "22.13.0"
