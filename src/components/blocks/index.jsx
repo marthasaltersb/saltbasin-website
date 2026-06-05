@@ -721,23 +721,7 @@ function ContactBlock({ section, config }) {
         </div>
         <div>
           <InlineDataNotice dark={false} compact style={{ marginBottom: '1rem' }} />
-          <form
-            style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
-            onSubmit={(e) => {
-              e.preventDefault();
-              alert('Contact submissions ship in Phase 5 — for now, reach out via the links above.');
-            }}
-          >
-            <input className="sb-input sb-input-light" placeholder="Your Name" />
-            <input className="sb-input sb-input-light" placeholder="Email" />
-            <textarea
-              className="sb-input sb-input-light sb-textarea"
-              placeholder="Message"
-            />
-            <button type="submit" className="sb-btn sb-btn-gold" style={{ justifyContent: 'center' }}>
-              Send Message
-            </button>
-          </form>
+          <ContactForm />
         </div>
       </div>
     </section>
@@ -1169,6 +1153,78 @@ function AssessmentsBlock({ section }) {
         />
       </div>
     </section>
+  );
+}
+
+// Full-fields contact form used on the Contact block. Submits a lead with
+// source='contact' and redirects to the lead view (same flow as the other
+// CTAs, so leads land on a record they can return to and update).
+function ContactForm() {
+  const [name, setName] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [message, setMessage] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState('');
+
+  async function submit(e) {
+    e.preventDefault();
+    if (!email) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source: 'contact', email, name, message }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || 'Submission failed');
+      window.location.assign(body.leadUrl);
+    } catch (err) {
+      setError(err.message);
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <form
+      onSubmit={submit}
+      style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
+    >
+      <input
+        className="sb-input sb-input-light"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Your Name"
+      />
+      <input
+        className="sb-input sb-input-light"
+        type="email"
+        required
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Email"
+      />
+      <textarea
+        className="sb-input sb-input-light sb-textarea"
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder="What's on your mind?"
+      />
+      <button
+        type="submit"
+        className="sb-btn sb-btn-gold"
+        style={{ justifyContent: 'center' }}
+        disabled={submitting}
+      >
+        {submitting ? 'Sending…' : 'Send Message'}
+      </button>
+      {error && (
+        <div style={{ color: 'var(--sb-risk-critical)', fontSize: '0.85rem' }}>
+          {error}
+        </div>
+      )}
+    </form>
   );
 }
 

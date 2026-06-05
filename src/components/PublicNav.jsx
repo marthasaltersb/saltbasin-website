@@ -30,11 +30,21 @@ const NAV = [
 export default function PublicNav({ site }) {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [authUser, setAuthUser] = useState(null);
 
   // Close the drawer whenever the route changes (after clicking a nav item).
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname, location.hash]);
+
+  // Detect whether someone's already signed in. The nav button reflects this
+  // so the visitor doesn't see "Sign In" when they're already logged in.
+  useEffect(() => {
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => setAuthUser(d.user || null))
+      .catch(() => {});
+  }, [location.pathname]);
 
   return (
     <nav
@@ -98,8 +108,63 @@ export default function PublicNav({ site }) {
             isMobile={mobileOpen}
           />
         ))}
+        <li>
+          <AuthButton user={authUser} />
+        </li>
       </ul>
     </nav>
+  );
+}
+
+// Top-right sign-in pill. When logged out: routes to /admin/login.
+// When logged in: shows the user's email handle + routes to their dashboard
+// (admin or member, depending on role).
+function AuthButton({ user }) {
+  if (user) {
+    const target = user.role === 'admin' ? '/admin' : '/member';
+    const handle = (user.email || '').split('@')[0];
+    return (
+      <Link
+        to={target}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.4rem',
+          padding: '0.45rem 0.95rem',
+          background: 'var(--sb-gold)',
+          color: 'var(--sb-ivory)',
+          borderRadius: 'var(--sb-radius)',
+          fontSize: '0.72rem',
+          fontWeight: 500,
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          textDecoration: 'none',
+        }}
+      >
+        {handle} ↗
+      </Link>
+    );
+  }
+  return (
+    <Link
+      to="/admin/login"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        padding: '0.45rem 0.95rem',
+        background: 'transparent',
+        color: 'var(--sb-cream)',
+        border: '0.5px solid rgba(232,221,208,0.35)',
+        borderRadius: 'var(--sb-radius)',
+        fontSize: '0.72rem',
+        fontWeight: 500,
+        letterSpacing: '0.08em',
+        textTransform: 'uppercase',
+        textDecoration: 'none',
+      }}
+    >
+      Sign In
+    </Link>
   );
 }
 
