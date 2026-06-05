@@ -234,6 +234,38 @@ export default function LeadView() {
               </div>
             </PanelCard>
 
+            {lead.emails?.length > 0 && (
+              <PanelCard title={`Emails to you · ${lead.emails.length}`}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                  {lead.emails.map((e) => (
+                    <div key={e.id} style={{ background: 'var(--sb-navy-deep)', border: '0.5px solid rgba(196,132,58,0.18)', borderLeft: '3px solid var(--sb-gold)', borderRadius: 'var(--sb-radius)', padding: '0.75rem 0.9rem' }}>
+                      <div style={{ fontSize: '0.62rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--sb-gold)', marginBottom: 3 }}>
+                        {new Date(e.sentAt).toLocaleString()}
+                        {e.provider === 'console' && (
+                          <span style={{ marginLeft: 6, color: 'var(--sb-dusty)' }}>· dev stub (not delivered yet)</span>
+                        )}
+                        {e.status === 'failed' && (
+                          <span style={{ marginLeft: 6, color: 'var(--sb-risk-critical)' }}>· failed</span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--sb-cream)', marginBottom: 3 }}>
+                        <strong>{e.subject}</strong>
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--sb-sage)', marginBottom: 4 }}>
+                        from <span style={{ color: 'var(--sb-gold)' }}>{e.from}</span> · to <span style={{ color: 'var(--sb-cream)' }}>{e.to}</span>
+                      </div>
+                      {e.body && (
+                        <details style={{ marginTop: 6 }}>
+                          <summary style={{ fontSize: '0.72rem', color: 'var(--sb-dusty)', cursor: 'pointer' }}>view body</summary>
+                          <pre style={{ marginTop: 6, padding: '0.6rem', background: 'var(--sb-navy)', borderRadius: 'var(--sb-radius)', fontSize: '0.72rem', color: 'var(--sb-sage)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{e.body}</pre>
+                        </details>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </PanelCard>
+            )}
+
             {lead.priorNotes?.length > 0 && (
               <PanelCard title={`Prior inquiries · ${lead.priorNotes.length} merged record${lead.priorNotes.length === 1 ? '' : 's'}`}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>

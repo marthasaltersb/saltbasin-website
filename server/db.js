@@ -140,6 +140,22 @@ async function bootstrap() {
       created_at  BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
     );
 
+    CREATE TABLE IF NOT EXISTS lead_emails (
+      id          BIGSERIAL PRIMARY KEY,
+      lead_id     BIGINT NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+      to_email    TEXT NOT NULL,
+      from_email  TEXT NOT NULL,
+      subject     TEXT NOT NULL,
+      body_text   TEXT,
+      body_html   TEXT,
+      provider    TEXT NOT NULL,             -- 'resend' or 'console'
+      status      TEXT NOT NULL,             -- 'sent', 'stubbed', 'failed'
+      provider_id TEXT,                      -- external id (Resend message id)
+      error       TEXT,
+      sent_at     BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_lead_emails_lead ON lead_emails (lead_id, sent_at DESC);
+
     CREATE TABLE IF NOT EXISTS lead_activity (
       id            BIGSERIAL PRIMARY KEY,
       lead_id       BIGINT NOT NULL REFERENCES leads(id) ON DELETE CASCADE,

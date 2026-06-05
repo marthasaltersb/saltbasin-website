@@ -120,6 +120,30 @@ export default function ConfigPanel({ config, onChange }) {
           ))}
         </div>
 
+        {/* Email identity */}
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Outbound Email Identity</div>
+          <Field
+            label="From name (shown to recipients)"
+            value={config?.email?.fromName}
+            onChange={(v) => patch('email.fromName', v)}
+          />
+          <Field
+            label="From address"
+            value={config?.email?.fromAddress}
+            onChange={(v) => patch('email.fromAddress', v)}
+          />
+          <Field
+            label="Reply-to (optional, defaults to from address)"
+            value={config?.email?.replyTo}
+            onChange={(v) => patch('email.replyTo', v)}
+          />
+          <div style={{ fontSize: '0.72rem', color: 'var(--sb-dusty)', marginTop: '0.5rem', lineHeight: 1.55 }}>
+            Used on lead confirmation emails. Visible to leads in their lead record's email history.
+            Until <code style={{ color: 'var(--sb-gold)' }}>RESEND_API_KEY</code> is set in Render env, emails are stubbed (logged to console + DB but not delivered).
+          </div>
+        </div>
+
         {/* BestyStaff persona */}
         <div style={styles.card}>
           <div style={styles.cardTitle}>BestyStaff Agent (Phase 5)</div>

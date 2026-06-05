@@ -51,11 +51,11 @@ const HOME_SECTIONS = [
       intro:
         'Cross-vertical experience across high-growth and PE-backed environments. Click any industry on the wheel for a client snapshot; categorized domains and niche solutions are full-width below.',
       handsOn:
-        'Salesforce:salesforce, Salesforce CPQ:salesforce, Conga CPQ:, Zuora Billing:zuora, NetSuite:oracle, TIBCO BusinessWorks:tibco',
+        'Salesforce:salesforce, Salesforce CPQ:salesforce, Conga CPQ:, Zuora Billing:zuora',
       integrationDesign:
-        'SAP:sap, Oracle Financials:oracle, Stripe:stripe, Snowflake:snowflake, MuleSoft:mulesoft, Boomi:boomi',
+        'SAP:sap, Oracle Financials:oracle, NetSuite:oracle, NetSuite Zone Billing:, Avalara:, Adaptive Insights:, Informatica:informatica, Stripe:stripe, Snowflake:snowflake, MuleSoft:mulesoft, Boomi:boomi',
       adjacent:
-        'HubSpot:hubspot, Tableau:tableau, Looker:looker, PowerBI:powerbi, dbt:dbt, Workday:workday',
+        'TIBCO BusinessWorks:tibco, HubSpot:hubspot, Tableau:tableau, Looker:looker, PowerBI:powerbi, dbt:dbt, Workday:workday',
     },
   },
   {
@@ -531,5 +531,10 @@ export const defaultConfig = {
     membersEnabled: true,
     networkPitch:
       "Salt Basin Net Works is an opt-in network of senior operators — consultants and lead-to-cash experts — building the next chapter on their own terms.",
+  },
+  email: {
+    fromName: 'Betsy at Salt Basin',
+    fromAddress: 'betsy@saltbasin.net',
+    replyTo: 'betsy@saltbasin.net',
   },
 };

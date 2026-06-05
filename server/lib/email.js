@@ -1,13 +1,14 @@
 // Outbound email abstraction.
 //
-// Right now the only provider is Resend (https://resend.com). If
-// RESEND_API_KEY is set in env, sends real email. If not, logs the rendered
-// content to stdout — local dev works without an account, prod still warns
-// loudly so we know we're not delivering.
+// If RESEND_API_KEY is set in env, sends real email via Resend.
+// If not, logs to stdout — local dev works without an account.
 //
-// Adding a new email template = a new exported function below that calls
-// `dispatch(...)`. Future templates: lead verification code, member welcome,
-// admin daily-digest, etc.
+// Every dispatch also writes a row to lead_emails so the email log is
+// visible in the lead view AND admin lead detail. The "from" address is
+// configurable via the Salt Basin config (defaults to env var, then to a
+// reasonable hardcoded default).
+
+import { db } from '../db.js';
 
 const RESEND_API = 'https://api.resend.com/emails';
 
@@ -15,11 +16,42 @@ function isResendConfigured() {
   return !!process.env.RESEND_API_KEY;
 }
 
-async function dispatch({ to, subject, html, text, from }) {
-  const fromAddr = from || process.env.EMAIL_FROM || 'Salt Basin <noreply@saltbasin.net>';
+async function configuredFrom() {
+  // 1. Published Salt Basin config (admin-editable)
+  try {
+    const row = await db.prepare(`SELECT data FROM config_state WHERE id = $1`).get('published');
+    const cfg = row ? JSON.parse(row.data) : null;
+    if (cfg?.email?.fromName && cfg?.email?.fromAddress) {
+      return `${cfg.email.fromName} <${cfg.email.fromAddress}>`;
+    }
+    if (cfg?.email?.fromAddress) return cfg.email.fromAddress;
+  } catch {
+    /* ignore */
+  }
+  // 2. Env var
+  if (process.env.EMAIL_FROM) return process.env.EMAIL_FROM;
+  // 3. Reasonable default
+  return 'Salt Basin Net Works <noreply@saltbasin.net>';
+}
+
+async function logToDb({ leadId, to, from, subject, html, text, provider, status, providerId, error }) {
+  if (!leadId) return;
+  try {
+    await db
+      .prepare(
+        `INSERT INTO lead_emails (lead_id, to_email, from_email, subject, body_text, body_html, provider, status, provider_id, error)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
+      )
+      .run(leadId, to, from, subject, text || null, html || null, provider, status, providerId || null, error || null);
+  } catch (e) {
+    console.error('[email] failed to write lead_emails row:', e.message);
+  }
+}
+
+async function dispatch({ leadId, to, subject, html, text }) {
+  const fromAddr = await configuredFrom();
+
   if (!isResendConfigured()) {
-    // Console fallback. Lets local dev test the full flow without a Resend
-    // account, and surfaces clearly in prod logs if we forgot to wire it.
     console.log('───────────────────────────────────────────────');
     console.log('[email · DEV STUB · RESEND_API_KEY not set]');
     console.log(`  to:       ${to}`);
@@ -28,28 +60,37 @@ async function dispatch({ to, subject, html, text, from }) {
     console.log('  ── text ──');
     console.log((text || '').split('\n').map((l) => '  ' + l).join('\n'));
     console.log('───────────────────────────────────────────────');
-    return { ok: true, stub: true };
+    await logToDb({ leadId, to, from: fromAddr, subject, html, text, provider: 'console', status: 'stubbed' });
+    return { ok: true, stub: true, from: fromAddr };
   }
 
-  const res = await fetch(RESEND_API, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ from: fromAddr, to, subject, html, text }),
-  });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    console.error('[email] Resend failed:', res.status, body);
-    return { ok: false, error: body };
+  try {
+    const res = await fetch(RESEND_API, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ from: fromAddr, to, subject, html, text }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const errStr = body?.message || JSON.stringify(body);
+      console.error('[email] Resend failed:', res.status, body);
+      await logToDb({ leadId, to, from: fromAddr, subject, html, text, provider: 'resend', status: 'failed', error: errStr });
+      return { ok: false, error: body };
+    }
+    await logToDb({ leadId, to, from: fromAddr, subject, html, text, provider: 'resend', status: 'sent', providerId: body.id });
+    return { ok: true, id: body.id, from: fromAddr };
+  } catch (e) {
+    await logToDb({ leadId, to, from: fromAddr, subject, html, text, provider: 'resend', status: 'failed', error: e.message });
+    return { ok: false, error: e.message };
   }
-  return { ok: true, id: body.id };
 }
 
 // ── Templates ──
 
-export async function sendLeadConfirmation({ toEmail, toName, leadUrl, password, source }) {
+export async function sendLeadConfirmation({ leadId, toEmail, toName, leadUrl, password, source }) {
   const greeting = toName ? `Hi ${toName.split(' ')[0]},` : 'Hi,';
   const fullUrl = `${publicBaseUrl()}${leadUrl}`;
   const text = `${greeting}
@@ -59,7 +100,7 @@ I received your submission via ${friendlySource(source)} on Salt Basin Net Works
   ${fullUrl}
   password: ${password}
 
-Bookmark the URL and save the password somewhere safe — you can return any time to add more context or update what you have shared with me. The more you tell me up front, the faster I can route.
+Bookmark the URL and save the password somewhere safe — you can return any time to add more context or update what you have shared with me.
 
 Real talk on data security: I am still hardening this platform's security. Treat anything you share here like a LinkedIn DM until I have certified more. Full notice: ${publicBaseUrl()}/data-notice
 
@@ -73,7 +114,7 @@ Salt Basin Net Works
       <a href="${fullUrl}" style="color:#C4843A;text-decoration:underline;">${fullUrl}</a><br/>
       password: <strong>${password}</strong>
     </p>
-    <p>Bookmark the URL and save the password somewhere safe — you can return any time to add more context or update what you have shared with me. The more you tell me up front, the faster I can route.</p>
+    <p>Bookmark the URL and save the password somewhere safe — you can return any time to add more context or update what you have shared with me.</p>
     <hr style="border:none;border-top:0.5px solid #D4B896;margin:1.5rem 0;"/>
     <p style="font-size:0.85rem;color:#4A6670;">
       <strong>Real talk on data security:</strong> I am still hardening this platform's security. Treat anything you share here like a LinkedIn DM until I have certified more.
@@ -81,10 +122,14 @@ Salt Basin Net Works
     </p>
     <p>— Betsy<br/><em>Salt Basin Net Works</em></p>
   `;
-  return dispatch({ to: toEmail, subject: `Your Salt Basin lead record · #${publicIdFromUrl(leadUrl)}`, html, text });
+  return dispatch({
+    leadId,
+    to: toEmail,
+    subject: `Your Salt Basin lead record · #${publicIdFromUrl(leadUrl)}`,
+    html, text,
+  });
 }
 
-// ── Helpers ──
 function publicBaseUrl() {
   return process.env.PUBLIC_BASE_URL || 'https://saltbasin.net';
 }
@@ -98,6 +143,7 @@ function friendlySource(s) {
     forCompanies: 'For Companies',
     assessments: 'Assessments notification',
     contact: 'Contact form',
+    references: 'References request',
   };
   return map[s] || s;
 }

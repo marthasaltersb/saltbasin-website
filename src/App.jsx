@@ -10,7 +10,7 @@ import MemberDashboard from './components/MemberDashboard.jsx';
 import PublicProfile from './components/PublicProfile.jsx';
 import LeadView from './components/LeadView.jsx';
 import DataNotice from './components/DataNotice.jsx';
-import { ResumeOutput, CaseStudyOutput, ProposalOutput } from './components/Output.jsx';
+import { ResumeOutput, CaseStudyOutput, ProposalOutput, OnePagerOutput } from './components/Output.jsx';
 
 function PublicRoute() {
   const [status, setStatus] = useState(null);
@@ -48,6 +48,7 @@ export default function App() {
       <Route path="/output/resume" element={<ResumeOutput />} />
       <Route path="/output/case-study/:slug" element={<CaseStudyOutput />} />
       <Route path="/output/proposal/:type" element={<ProposalOutput />} />
+      <Route path="/output/one-pager" element={<OnePagerOutput />} />
       <Route
         path="/admin/*"
         element={

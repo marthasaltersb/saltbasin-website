@@ -246,9 +246,11 @@ router.post('/', async (req, res) => {
     .run(leadId, source, ctaLoc, trimmedMsg);
 
   // Send confirmation email (Resend if configured; console stub otherwise).
+  // Also writes a row to lead_emails so admin + lead see the history.
   const leadUrl = `/lead/${publicId}`;
   if (accessPassword) {
     sendLeadConfirmation({
+      leadId,
       toEmail: normEmail,
       toName: trimmedName,
       leadUrl,
@@ -361,6 +363,12 @@ router.get('/public/:publicId', async (req, res) => {
     return res.status(status).json({ error, needsPassword });
   }
   const activity = await fetchActivity(Number(lead.id));
+  const emails = await db
+    .prepare(
+      `SELECT id, to_email, from_email, subject, body_text, provider, status, sent_at
+       FROM lead_emails WHERE lead_id = $1 ORDER BY sent_at DESC LIMIT 50`
+    )
+    .all(Number(lead.id));
   res.json({
     publicId: lead.public_id,
     source: lead.source,
@@ -372,6 +380,16 @@ router.get('/public/:publicId', async (req, res) => {
     priorNotes: lead.prior_notes ? JSON.parse(lead.prior_notes) : [],
     mergedFromCount: lead.merged_from_ids ? JSON.parse(lead.merged_from_ids).length : 0,
     activity,
+    emails: emails.map((e) => ({
+      id: Number(e.id),
+      to: e.to_email,
+      from: e.from_email,
+      subject: e.subject,
+      body: e.body_text,
+      provider: e.provider,
+      status: e.status,
+      sentAt: Number(e.sent_at),
+    })),
     createdAt: Number(lead.created_at),
     updatedAt: Number(lead.updated_at),
     convertedUserId: lead.converted_user_id ? Number(lead.converted_user_id) : null,
