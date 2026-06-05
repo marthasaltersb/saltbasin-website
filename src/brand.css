@@ -268,6 +268,39 @@ body {
   h1.sb-display { font-size: 2.1rem !important; }
 }
 
+/* ── Admin shell mobile layout ──
+   The admin workspace is a 3-column desktop layout (sidebar + editor + preview).
+   On mobile, we collapse the sidebar behind a toggle and stack the panels. */
+.sb-admin-mobile-toggle { display: none; }
+@media (max-width: 900px) {
+  .sb-admin-workspace { flex-direction: column !important; overflow-y: auto !important; }
+  .sb-admin-sidebar {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-right: none !important;
+    border-bottom: 0.5px solid rgba(196,132,58,0.18);
+  }
+  .sb-admin-sidebar.collapsed { display: none !important; }
+  .sb-admin-editor { width: 100% !important; border-right: none !important; }
+  .sb-admin-preview { width: 100% !important; min-width: 0 !important; border-top: 0.5px solid rgba(196,132,58,0.18); }
+  .sb-admin-mobile-toggle {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 36px; height: 36px;
+    background: transparent;
+    border: 0.5px solid rgba(232,221,208,0.3);
+    border-radius: var(--sb-radius);
+    color: var(--sb-cream);
+    cursor: pointer;
+    font-size: 1rem;
+    margin-right: 0.5rem;
+  }
+  .sb-admin-topbar-actions { gap: 0.35rem !important; flex-wrap: wrap; }
+  .sb-admin-topbar-actions .sb-btn { padding: 0.3rem 0.65rem !important; font-size: 0.6rem !important; }
+  .sb-admin-topbar-actions .sb-toggle-hide-mobile { display: none !important; }
+}
+
 /* ─ Public nav mobile drawer ─ */
 .sb-nav-hamburger { display: none; }
 .sb-nav-list { display: flex; }

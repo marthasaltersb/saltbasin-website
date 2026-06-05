@@ -27,6 +27,9 @@ export default function AdminShell() {
 
   const [currentPageKey, setCurrentPageKey] = useState('home');
   const [currentSectionId, setCurrentSectionId] = useState(null);
+  // On desktop the sidebar is always visible; on mobile it slides over.
+  // Default starts visible so first-time users can find pages.
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const [pageModal, setPageModal] = useState(null);
   const [sectionModal, setSectionModal] = useState(null);
@@ -219,32 +222,48 @@ export default function AdminShell() {
   return (
     <div style={styles.shell}>
       <div style={styles.topbar}>
-        <div>
-          <div
-            className="sb-display"
-            style={{
-              fontSize: '1.1rem',
-              fontWeight: 500,
-              letterSpacing: '0.15em',
-              textTransform: 'uppercase',
-              color: 'var(--sb-cream)',
-            }}
-          >
-            Salt Basin Net Works
-          </div>
-          <div
-            style={{
-              fontSize: '0.6rem',
-              letterSpacing: '0.18em',
-              textTransform: 'uppercase',
-              color: 'var(--sb-gold)',
-              marginTop: 1,
-            }}
-          >
-            Site Management Console
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          {tab === 'content' && (
+            <button
+              type="button"
+              className="sb-admin-mobile-toggle"
+              onClick={() => setSidebarOpen((v) => !v)}
+              aria-label={sidebarOpen ? 'Hide pages list' : 'Show pages list'}
+            >
+              {sidebarOpen ? '✕' : '☰'}
+            </button>
+          )}
+          <div>
+            <div
+              className="sb-display"
+              style={{
+                fontSize: '1.1rem',
+                fontWeight: 500,
+                letterSpacing: '0.15em',
+                textTransform: 'uppercase',
+                color: 'var(--sb-cream)',
+              }}
+            >
+              Salt Basin Net Works
+            </div>
+            <div
+              className="sb-toggle-hide-mobile"
+              style={{
+                fontSize: '0.6rem',
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                color: 'var(--sb-gold)',
+                marginTop: 1,
+              }}
+            >
+              Site Management Console
+            </div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+        <div
+          className="sb-admin-topbar-actions"
+          style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}
+        >
           <TabToggle
             items={[
               { val: 'content', label: 'Content' },
@@ -255,55 +274,77 @@ export default function AdminShell() {
             onChange={setTab}
           />
           {tab === 'content' && (
-            <TabToggle
-              items={[
-                { val: 'split', label: 'Split' },
-                { val: 'editor', label: 'Edit Only' },
-                { val: 'preview', label: 'Preview Only' },
-              ]}
-              active={view}
-              onChange={setView}
-            />
+            <span className="sb-toggle-hide-mobile">
+              <TabToggle
+                items={[
+                  { val: 'split', label: 'Split' },
+                  { val: 'editor', label: 'Edit Only' },
+                  { val: 'preview', label: 'Preview Only' },
+                ]}
+                active={view}
+                onChange={setView}
+              />
+            </span>
           )}
-          <a href="/" target="_blank" rel="noreferrer" className="sb-btn sb-btn-outline" style={{ padding: '0.4rem 0.9rem', fontSize: '0.7rem' }}>
+          <a
+            href="/"
+            target="_blank"
+            rel="noreferrer"
+            className="sb-btn sb-btn-outline sb-toggle-hide-mobile"
+            style={{ padding: '0.4rem 0.9rem', fontSize: '0.7rem' }}
+          >
             View Public
           </a>
-          <button className="sb-btn sb-btn-outline" style={{ padding: '0.4rem 0.9rem', fontSize: '0.7rem' }} onClick={logout}>
+          <button
+            className="sb-btn sb-btn-outline"
+            style={{ padding: '0.4rem 0.9rem', fontSize: '0.7rem' }}
+            onClick={logout}
+          >
             Logout
           </button>
         </div>
       </div>
 
-      <div style={styles.workspace}>
+      <div className="sb-admin-workspace" style={styles.workspace}>
         {tab === 'leads' ? (
           <LeadsPanel />
         ) : tab === 'content' ? (
           <>
-            <Sidebar
-              site={draft}
-              currentPageKey={currentPageKey}
-              currentSectionId={currentSectionId}
-              onSelectPage={(k) => {
-                setCurrentPageKey(k);
-                setCurrentSectionId(null);
-              }}
-              onSelectSection={(id) => setCurrentSectionId(id)}
-              onAddPage={() => setPageModal({ name: '', slug: '', type: 'standard', status: 'draft' })}
-              onAddSection={() => setSectionModal({ name: '', type: 'text', bg: 'ivory', status: 'draft', desc: '' })}
-              onDeleteSection={deleteSection}
-              onCycleSectionStatus={cycleSectionStatus}
-              onDeletePage={deletePage}
-            />
-            {(view === 'split' || view === 'editor') && (
-              <EditorPane
-                section={currentSection}
-                page={currentPage}
-                onUpdateSection={updateSection}
-                onUpdatePageStatus={updatePageStatus}
+            <div className={`sb-admin-sidebar${sidebarOpen ? '' : ' collapsed'}`}>
+              <Sidebar
+                site={draft}
+                currentPageKey={currentPageKey}
+                currentSectionId={currentSectionId}
+                onSelectPage={(k) => {
+                  setCurrentPageKey(k);
+                  setCurrentSectionId(null);
+                  setSidebarOpen(false);  // auto-close on mobile after selecting
+                }}
+                onSelectSection={(id) => {
+                  setCurrentSectionId(id);
+                  setSidebarOpen(false);
+                }}
+                onAddPage={() => setPageModal({ name: '', slug: '', type: 'standard', status: 'draft' })}
+                onAddSection={() => setSectionModal({ name: '', type: 'text', bg: 'ivory', status: 'draft', desc: '' })}
+                onDeleteSection={deleteSection}
+                onCycleSectionStatus={cycleSectionStatus}
+                onDeletePage={deletePage}
               />
+            </div>
+            {(view === 'split' || view === 'editor') && (
+              <div className="sb-admin-editor" style={{ display: 'flex', flex: 1, minWidth: 0 }}>
+                <EditorPane
+                  section={currentSection}
+                  page={currentPage}
+                  onUpdateSection={updateSection}
+                  onUpdatePageStatus={updatePageStatus}
+                />
+              </div>
             )}
             {(view === 'split' || view === 'preview') && (
-              <PreviewPane site={draft} config={configDraft} currentPageKey={currentPageKey} />
+              <div className="sb-admin-preview" style={{ display: 'flex' }}>
+                <PreviewPane site={draft} config={configDraft} currentPageKey={currentPageKey} />
+              </div>
             )}
           </>
         ) : (

@@ -3,6 +3,7 @@ import { useLocation, useParams } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import PublicNav from './PublicNav.jsx';
 import PublicFooter from './PublicFooter.jsx';
+import Breadcrumbs from './Breadcrumbs.jsx';
 import { RenderSection } from './blocks/index.jsx';
 
 export default function PublicSite() {
@@ -57,6 +58,7 @@ export default function PublicSite() {
   return (
     <div>
       <PublicNav site={config.site} />
+      <Breadcrumbs />
       {(currentPage.sections || []).map((sec) => (
         <RenderSection key={sec.id} section={sec} config={config} mode="public" />
       ))}

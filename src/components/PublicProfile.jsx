@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { RenderSection } from './blocks/index.jsx';
 import PublicFooter from './PublicFooter.jsx';
+import BackLink from './BackLink.jsx';
 
 export default function PublicProfile() {
   const { slug } = useParams();
@@ -27,9 +28,7 @@ export default function PublicProfile() {
           Profile Not Available
         </h1>
         <p style={{ color: 'var(--sb-sage)', marginBottom: '2rem' }}>{error}</p>
-        <Link to="/" className="sb-btn sb-btn-outline">
-          ← Back to Salt Basin
-        </Link>
+        <BackLink>← Back to Salt Basin</BackLink>
       </div>
     );
   }

@@ -970,12 +970,18 @@ function DomainsBlock({ section }) {
 function ServicesBlock({ section }) {
   const f = section.fields || {};
   const onDark = section.bg === 'navy' || section.bg === 'teal';
+  const PROPOSAL_SLUG_BY_INDEX = {
+    1: 'diagnostic-sprint',
+    2: 'embedded-operator',
+    3: 'advisory-retainer',
+  };
   const items = [1, 2, 3]
     .map((i) => ({
       title: f[`s${i}Title`],
       tag: f[`s${i}Tag`],
       desc: f[`s${i}Desc`],
       cta: f[`s${i}Cta`] || 'Inquire',
+      proposalSlug: PROPOSAL_SLUG_BY_INDEX[i],
     }))
     .filter((s) => s.title);
   return (
@@ -1037,13 +1043,25 @@ function ServicesBlock({ section }) {
               <p style={{ fontSize: '0.9rem', lineHeight: 1.7, color: '#4a4a4a', flex: 1 }}>
                 {s.desc}
               </p>
-              <a
-                href="#contact"
-                className="sb-btn sb-btn-outline-dark"
-                style={{ alignSelf: 'flex-start', padding: '0.6rem 1.2rem', fontSize: '0.72rem' }}
-              >
-                {s.cta} →
-              </a>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignSelf: 'flex-start' }}>
+                <a
+                  href="#contact"
+                  className="sb-btn sb-btn-outline-dark"
+                  style={{ padding: '0.55rem 1.1rem', fontSize: '0.7rem' }}
+                >
+                  {s.cta} →
+                </a>
+                {s.proposalSlug && (
+                  <a
+                    href={`/output/proposal/${s.proposalSlug}`}
+                    target="_blank" rel="noreferrer"
+                    className="sb-btn sb-btn-outline-dark"
+                    style={{ padding: '0.55rem 1.1rem', fontSize: '0.7rem' }}
+                  >
+                    View Proposal
+                  </a>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -1156,15 +1174,122 @@ function AssessmentsBlock({ section }) {
   );
 }
 
-// Full-fields contact form used on the Contact block. Submits a lead with
-// source='contact' and redirects to the lead view (same flow as the other
-// CTAs, so leads land on a record they can return to and update).
+// ── Reusable lead-success modal: shows URL + password on submission ──
+// Visitors get one shot to see the password (we only show it once on
+// creation). They can copy, screenshot, or proceed straight to the record.
+// The same password is sent to their email via the server.
+function LeadSuccessModal({ result, onDismiss }) {
+  const [copiedUrl, setCopiedUrl] = React.useState(false);
+  const [copiedPw, setCopiedPw] = React.useState(false);
+  const fullUrl = `${window.location.origin}${result.leadUrl}`;
+
+  function copy(value, setter) {
+    navigator.clipboard?.writeText(value);
+    setter(true);
+    setTimeout(() => setter(false), 1500);
+  }
+
+  return (
+    <div
+      style={{
+        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        zIndex: 1000, padding: '1.5rem',
+      }}
+      onClick={onDismiss}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: 'var(--sb-navy-deep)',
+          border: '0.5px solid rgba(196,132,58,0.4)',
+          borderTop: '3px solid var(--sb-gold)',
+          borderRadius: 'var(--sb-radius)',
+          padding: '2rem', maxWidth: 540, width: '100%',
+          color: 'var(--sb-cream)',
+        }}
+      >
+        <div className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>
+          {result.existing ? 'You\'re already in my records' : 'Submission received'}
+        </div>
+        <h2 className="sb-display" style={{ fontSize: '1.8rem', marginBottom: '0.5rem', letterSpacing: '0.04em' }}>
+          Lead #{result.publicId}
+        </h2>
+        {result.merged > 0 && (
+          <p style={{ fontSize: '0.85rem', color: 'var(--sb-gold)', marginBottom: '0.5rem' }}>
+            Merged {result.merged} prior submission{result.merged === 1 ? '' : 's'} into this record.
+          </p>
+        )}
+        <p style={{ fontSize: '0.9rem', color: 'var(--sb-sage)', lineHeight: 1.65, marginBottom: '1.25rem' }}>
+          {result.password
+            ? 'Save these credentials — I also sent them to your email. Use the URL + password to come back any time and update what you have shared.'
+            : 'I already have a record under this email. Use the original credentials I sent you previously, or check your inbox — I just resent a copy.'}
+        </p>
+
+        <div style={credRow}>
+          <div style={credLabel}>URL</div>
+          <div style={credValue}>{fullUrl}</div>
+          <button onClick={() => copy(fullUrl, setCopiedUrl)} className="sb-btn sb-btn-outline" style={copyBtn}>
+            {copiedUrl ? '✓' : 'Copy'}
+          </button>
+        </div>
+
+        {result.password && (
+          <div style={credRow}>
+            <div style={credLabel}>Password</div>
+            <div style={{ ...credValue, fontFamily: 'monospace', letterSpacing: '0.1em' }}>
+              {result.password}
+            </div>
+            <button onClick={() => copy(result.password, setCopiedPw)} className="sb-btn sb-btn-outline" style={copyBtn}>
+              {copiedPw ? '✓' : 'Copy'}
+            </button>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
+          <a href={result.leadUrl} className="sb-btn sb-btn-gold" style={{ padding: '0.65rem 1.25rem' }}>
+            Open my lead record →
+          </a>
+          <button onClick={onDismiss} className="sb-btn sb-btn-outline" style={{ padding: '0.65rem 1.25rem' }}>
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+const credRow = {
+  display: 'grid',
+  gridTemplateColumns: '80px 1fr auto',
+  gap: '0.6rem',
+  alignItems: 'center',
+  padding: '0.6rem 0.85rem',
+  background: 'var(--sb-navy)',
+  border: '0.5px solid rgba(196,132,58,0.25)',
+  borderRadius: 'var(--sb-radius)',
+  marginBottom: '0.65rem',
+};
+const credLabel = {
+  fontFamily: 'var(--sb-font-label)', fontSize: '0.6rem',
+  letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--sb-gold)',
+};
+const credValue = { fontSize: '0.82rem', color: 'var(--sb-cream)', wordBreak: 'break-all' };
+const copyBtn = { padding: '0.35rem 0.8rem', fontSize: '0.68rem' };
+
+// Capture which CTA fired so admin can see exactly where the lead came from.
+function ctaLocation(button) {
+  const path = window.location.pathname + window.location.hash;
+  return button ? `${path} · ${button}` : path;
+}
+
 function ContactForm() {
   const [name, setName] = React.useState('');
   const [email, setEmail] = React.useState('');
+  const [phone, setPhone] = React.useState('');
   const [message, setMessage] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState('');
+  const [result, setResult] = React.useState(null);
 
   async function submit(e) {
     e.preventDefault();
@@ -1175,56 +1300,37 @@ function ContactForm() {
       const res = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ source: 'contact', email, name, message }),
+        body: JSON.stringify({
+          source: 'contact', email, phone, name, message,
+          ctaLocation: ctaLocation('contact form'),
+        }),
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || 'Submission failed');
-      window.location.assign(body.leadUrl);
+      setResult(body);
     } catch (err) {
       setError(err.message);
+    } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <form
-      onSubmit={submit}
-      style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
-    >
-      <input
-        className="sb-input sb-input-light"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Your Name"
-      />
-      <input
-        className="sb-input sb-input-light"
-        type="email"
-        required
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Email"
-      />
-      <textarea
-        className="sb-input sb-input-light sb-textarea"
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        placeholder="What's on your mind?"
-      />
-      <button
-        type="submit"
-        className="sb-btn sb-btn-gold"
-        style={{ justifyContent: 'center' }}
-        disabled={submitting}
-      >
-        {submitting ? 'Sending…' : 'Send Message'}
-      </button>
-      {error && (
-        <div style={{ color: 'var(--sb-risk-critical)', fontSize: '0.85rem' }}>
-          {error}
-        </div>
-      )}
-    </form>
+    <>
+      <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <input className="sb-input sb-input-light" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your Name" />
+        <input className="sb-input sb-input-light" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
+        <input className="sb-input sb-input-light" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone (optional)" />
+        <textarea className="sb-input sb-input-light sb-textarea" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="What's on your mind?" />
+        <button type="submit" className="sb-btn sb-btn-gold" style={{ justifyContent: 'center' }} disabled={submitting}>
+          {submitting ? 'Sending…' : 'Send Message'}
+        </button>
+        {error && (
+          <div style={{ color: 'var(--sb-risk-critical)', fontSize: '0.85rem' }}>{error}</div>
+        )}
+      </form>
+      {result && <LeadSuccessModal result={result} onDismiss={() => setResult(null)} />}
+    </>
   );
 }
 
@@ -1232,6 +1338,7 @@ function LeadCaptureForm({ source, ctaLabel, placeholder, thanks, dark, message 
   const [email, setEmail] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState('');
+  const [result, setResult] = React.useState(null);
 
   async function submit(e) {
     e.preventDefault();
@@ -1242,14 +1349,17 @@ function LeadCaptureForm({ source, ctaLabel, placeholder, thanks, dark, message 
       const res = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ source, email, message }),
+        body: JSON.stringify({
+          source, email, message,
+          ctaLocation: ctaLocation(ctaLabel || source),
+        }),
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || 'Submit failed');
-      // Take the lead to their own record. They can bookmark and return.
-      window.location.assign(body.leadUrl);
+      setResult(body);
     } catch (err) {
       setError(err.message);
+    } finally {
       setSubmitting(false);
     }
   }
@@ -1257,13 +1367,9 @@ function LeadCaptureForm({ source, ctaLabel, placeholder, thanks, dark, message 
   return (
     <div style={{ maxWidth: 520 }}>
       <InlineDataNotice dark={dark} compact style={{ marginBottom: '0.75rem' }} />
-      <form
-        onSubmit={submit}
-        style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}
-      >
+      <form onSubmit={submit} style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
         <input
-          type="email"
-          required
+          type="email" required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder={placeholder}
@@ -1279,7 +1385,111 @@ function LeadCaptureForm({ source, ctaLabel, placeholder, thanks, dark, message 
           </div>
         )}
       </form>
+      {result && <LeadSuccessModal result={result} onDismiss={() => setResult(null)} />}
     </div>
+  );
+}
+
+// References-request block: a focused lead-capture form that asks for
+// requester name + email + company + context. Submits as source='references'
+// so admin can filter, with the lead-flow's password-protected URL.
+function ReferencesRequestBlock({ section }) {
+  const f = section.fields || {};
+  const [name, setName] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [company, setCompany] = React.useState('');
+  const [context, setContext] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState('');
+  const [result, setResult] = React.useState(null);
+
+  async function submit(e) {
+    e.preventDefault();
+    if (!email || !name) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          source: 'references',
+          email, name,
+          message: [company && `Company: ${company}`, context].filter(Boolean).join('\n\n'),
+          ctaLocation: ctaLocation('References request'),
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || 'Request failed');
+      setResult(body);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <section
+      id={section.id || 'references-request'}
+      style={{ background: BG_VAR[section.bg] || 'var(--sb-cream)', padding: '5rem 2rem' }}
+    >
+      <div id="references-request" />
+      <div className="sb-grid-2col-pitch" style={{ maxWidth: 1100, margin: '0 auto' }}>
+        <div>
+          {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
+          <h2 className="sb-display" style={{ fontSize: '2.4rem', color: 'var(--sb-navy)', marginBottom: '0.75rem' }}>
+            {f.heading || 'Request to contact my references'}
+          </h2>
+          <div className="sb-gold-rule" style={{ marginBottom: '1.5rem' }} />
+          <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: '#4a4a4a', marginBottom: '1.25rem' }}>
+            {f.intro || "References include former partners and clients from Slalom, PwC, Vista Equity, and Accenture. I protect their time — references are released after a brief context check. Tell me who you are, who you'd like to hear from (or what kind of perspective), and I'll route accordingly."}
+          </p>
+        </div>
+        <div
+          style={{
+            background: 'white',
+            border: '0.5px solid var(--sb-taupe)',
+            borderTop: '3px solid var(--sb-gold)',
+            borderRadius: 'var(--sb-radius)',
+            padding: '1.75rem',
+          }}
+        >
+          <div className="sb-eyebrow" style={{ marginBottom: '0.75rem' }}>Reference request</div>
+          <InlineDataNotice dark={false} compact style={{ marginBottom: '1rem' }} />
+          <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <input
+              className="sb-input sb-input-light"
+              type="text" required
+              value={name} onChange={(e) => setName(e.target.value)}
+              placeholder="Your name"
+            />
+            <input
+              className="sb-input sb-input-light"
+              type="email" required
+              value={email} onChange={(e) => setEmail(e.target.value)}
+              placeholder="Your email"
+            />
+            <input
+              className="sb-input sb-input-light"
+              type="text"
+              value={company} onChange={(e) => setCompany(e.target.value)}
+              placeholder="Your company (optional)"
+            />
+            <textarea
+              className="sb-input sb-input-light sb-textarea"
+              value={context} onChange={(e) => setContext(e.target.value)}
+              placeholder="What kind of reference are you looking for? (role, perspective, specific engagement…)"
+            />
+            <button type="submit" className="sb-btn sb-btn-gold" disabled={submitting} style={{ justifyContent: 'center' }}>
+              {submitting ? 'Submitting…' : 'Submit request'}
+            </button>
+            {error && <div style={{ color: 'var(--sb-risk-critical)', fontSize: '0.85rem' }}>{error}</div>}
+          </form>
+        </div>
+      </div>
+      {result && <LeadSuccessModal result={result} onDismiss={() => setResult(null)} />}
+    </section>
   );
 }
 
@@ -2783,10 +2993,24 @@ function TimelineBlock({ section }) {
             ◆ {f.educationLine}
           </div>
         )}
+        <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <a href="/output/resume" target="_blank" rel="noreferrer" className="sb-btn sb-btn-gold" style={{ fontSize: '0.72rem', padding: '0.55rem 1.25rem' }}>
+            ↓ View / Download Resume
+          </a>
+          <a href="#references-request" className="sb-btn sb-btn-outline-dark" style={{ fontSize: '0.72rem', padding: '0.55rem 1.25rem' }}>
+            Request references
+          </a>
+        </div>
       </div>
     </section>
   );
 }
+
+const CASE_STUDY_SLUG_BY_INDEX = {
+  1: 'healthcare-nasdaq-relisting',
+  2: 'global-tech-usage-billing',
+  3: 'global-manufacturing-q2r',
+};
 
 function CaseStudiesBlock({ section }) {
   const f = section.fields || {};
@@ -2796,6 +3020,7 @@ function CaseStudiesBlock({ section }) {
     if (!title) continue;
     cases.push({
       key: `case${i}`,
+      slug: CASE_STUDY_SLUG_BY_INDEX[i],
       title,
       subtitle: f[`case${i}Subtitle`] || '',
       context: (f[`case${i}Context`] || '').split('\n').map((s) => s.trim()).filter(Boolean),
@@ -2902,6 +3127,18 @@ function CaseStudyCard({ data }) {
           “{data.feedback}”
         </div>
       )}
+      {data.slug && (
+        <div style={{ marginTop: '1rem' }}>
+          <a
+            href={`/output/case-study/${data.slug}`}
+            target="_blank" rel="noreferrer"
+            className="sb-btn sb-btn-outline"
+            style={{ fontSize: '0.7rem', padding: '0.5rem 1rem' }}
+          >
+            ↗ View as PDF / Print
+          </a>
+        </div>
+      )}
     </div>
   );
 }
@@ -2966,6 +3203,7 @@ const REGISTRY = {
   services: ServicesBlock,
   assessments: AssessmentsBlock,
   joinNetwork: JoinNetworkBlock,
+  referencesRequest: ReferencesRequestBlock,
   forCompanies: ForCompaniesBlock,
   industryWheel: IndustryWheelBlock,
   technology: TechnologyBlock,

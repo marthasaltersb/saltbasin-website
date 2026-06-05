@@ -272,6 +272,18 @@ export const defaultSite = {
           fields: CASE_STUDIES_FIELDS,
         },
         {
+          id: 'founder-references',
+          type: 'referencesRequest',
+          name: 'References Request',
+          status: 'live',
+          bg: 'cream',
+          fields: {
+            eyebrow: 'Validate the work',
+            heading: 'Request to contact my references',
+            intro: "References include former partners and clients from Slalom, PwC, Vista Equity, and Accenture. I protect their time — references are released after a brief context check. Tell me who you are, who you'd like to hear from (or what kind of perspective), and I'll route accordingly.",
+          },
+        },
+        {
           id: 'founder-contact',
           type: 'cta',
           name: 'Contact CTA',

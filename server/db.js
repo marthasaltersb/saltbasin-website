@@ -112,17 +112,24 @@ async function bootstrap() {
     );
 
     CREATE TABLE IF NOT EXISTS leads (
-      id            BIGSERIAL PRIMARY KEY,
-      source        TEXT NOT NULL,
-      email         TEXT NOT NULL,
-      name          TEXT,
-      message       TEXT,
-      public_id     TEXT UNIQUE,
-      access_token  TEXT,
-      answers       TEXT,
+      id              BIGSERIAL PRIMARY KEY,
+      source          TEXT NOT NULL,
+      email           TEXT NOT NULL,
+      phone           TEXT,                       -- normalized: digits only
+      name            TEXT,
+      message         TEXT,
+      public_id       TEXT UNIQUE,
+      access_token    TEXT,                       -- legacy URL-token access (kept for back-compat)
+      password_hash   TEXT,                       -- bcrypt hash of access password
+      answers         TEXT,
+      prior_notes     TEXT,                       -- preserved notes from any leads merged into this one (JSON array of {at, source, text})
+      merged_into_id  BIGINT REFERENCES leads(id) ON DELETE SET NULL, -- non-null = this row was merged INTO another lead
+      merged_from_ids TEXT,                       -- JSON array of lead ids that were merged INTO this one
+      verified_email  BOOLEAN NOT NULL DEFAULT false,
+      verified_phone  BOOLEAN NOT NULL DEFAULT false,
       converted_user_id BIGINT,
-      created_at    BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
-      updated_at    BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+      created_at      BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at      BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
     );
 
     CREATE TABLE IF NOT EXISTS lead_messages (
@@ -134,11 +141,12 @@ async function bootstrap() {
     );
 
     CREATE TABLE IF NOT EXISTS lead_activity (
-      id          BIGSERIAL PRIMARY KEY,
-      lead_id     BIGINT NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
-      source      TEXT NOT NULL,
-      message     TEXT,
-      created_at  BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+      id            BIGSERIAL PRIMARY KEY,
+      lead_id       BIGINT NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+      source        TEXT NOT NULL,
+      cta_location  TEXT,                 -- e.g. '/#contact' or '/consulting/services'
+      message       TEXT,
+      created_at    BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
     );
 
     CREATE TABLE IF NOT EXISTS member_profiles (
@@ -162,14 +170,35 @@ async function bootstrap() {
     ['leads', 'answers', 'TEXT'],
     ['leads', 'converted_user_id', 'BIGINT'],
     ['leads', 'updated_at', "BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint"],
+    ['leads', 'phone', 'TEXT'],
+    ['leads', 'password_hash', 'TEXT'],
+    ['leads', 'prior_notes', 'TEXT'],
+    ['leads', 'merged_into_id', 'BIGINT REFERENCES leads(id) ON DELETE SET NULL'],
+    ['leads', 'merged_from_ids', 'TEXT'],
+    ['leads', 'verified_email', 'BOOLEAN NOT NULL DEFAULT false'],
+    ['leads', 'verified_phone', 'BOOLEAN NOT NULL DEFAULT false'],
+    ['lead_activity', 'cta_location', 'TEXT'],
   ];
   for (const [table, col, def] of colMigrations) {
     await sql.unsafe(`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS ${col} ${def}`).catch((e) => {
-      // ADD COLUMN IF NOT EXISTS handles the missing case; only swallow benign
-      // "duplicate column" errors that older PG variants might raise.
       if (!/already exists|duplicate column/i.test(e.message)) throw e;
     });
   }
+
+  // Lead sessions — password-based access cookie scoped to one lead record.
+  // Separate from `sessions` (admin/member) so authentication concerns stay
+  // partitioned.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS lead_sessions (
+      token       TEXT PRIMARY KEY,
+      lead_id     BIGINT NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+      expires_at  BIGINT NOT NULL,
+      created_at  BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_lead_sessions_lead ON lead_sessions (lead_id);
+    CREATE INDEX IF NOT EXISTS idx_leads_phone ON leads (phone) WHERE phone IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_leads_active ON leads (id) WHERE merged_into_id IS NULL;
+  `);
 }
 
 // Awaited at module import time so routes can use db without worrying about

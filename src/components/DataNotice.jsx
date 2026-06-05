@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import PublicNav from './PublicNav.jsx';
 import PublicFooter from './PublicFooter.jsx';
+import BackLink from './BackLink.jsx';
 import { api } from '../lib/api.js';
 
 // ── Inline disclaimer: a short reusable banner used above every data-collection
@@ -109,9 +110,9 @@ export default function DataNotice() {
             <div style={{ fontFamily: 'var(--sb-font-display)', fontStyle: 'italic', fontSize: '1.1rem', color: 'var(--sb-gold)' }}>
               — Betsy
             </div>
-            <Link to="/" className="sb-btn sb-btn-outline" style={{ fontSize: '0.72rem', padding: '0.5rem 1.1rem' }}>
+            <BackLink className="sb-btn sb-btn-outline" style={{ fontSize: '0.72rem', padding: '0.5rem 1.1rem' }}>
               ← Back to Salt Basin
-            </Link>
+            </BackLink>
           </div>
         </article>
       </div>
