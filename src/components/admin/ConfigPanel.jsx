@@ -161,7 +161,7 @@ export default function ConfigPanel({ config, onChange, scope = 'admin' }) {
           />
           <div style={{ fontSize: '0.72rem', color: 'var(--sb-dusty)', marginTop: '0.5rem', lineHeight: 1.55 }}>
             Used on lead confirmation emails. Visible to leads in their lead record's email history.
-            Until <code style={{ color: 'var(--sb-gold)' }}>RESEND_API_KEY</code> is set in Render env, emails are stubbed (logged to console + DB but not delivered).
+            Until <code style={{ color: 'var(--sb-gold)' }}>BREVO_API_KEY</code> is set in Render env, emails are stubbed (logged to console + DB but not delivered).
           </div>
         </div>
         )}
@@ -378,8 +378,8 @@ function SendTestEmail() {
         }}>
           {result.ok ? (
             result.body?.stub
-              ? '✓ Stubbed (RESEND_API_KEY not set) — content logged to server console + DB. Set the key in Render env to deliver for real.'
-              : `✓ Sent via Resend (id: ${result.body?.id || '?'})`
+              ? '✓ Stubbed (BREVO_API_KEY not set) — content logged to server console + DB. Set the key in Render env to deliver for real.'
+              : `✓ Sent via Brevo (id: ${result.body?.id || '?'})`
           ) : (
             '✗ ' + (result.body?.error || 'failed')
           )}

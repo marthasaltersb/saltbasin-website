@@ -42,7 +42,7 @@ router.put('/draft', requireAdmin, async (req, res) => {
 });
 
 // Admin diagnostic: send a test email to a specified address. If
-// RESEND_API_KEY isn't set, returns the stub log so admin can see what would
+// BREVO_API_KEY isn't set, returns the stub log so admin can see what would
 // have been sent.
 router.post('/test-email', requireAdmin, async (req, res) => {
   const { to, subject, body } = req.body || {};
@@ -50,12 +50,12 @@ router.post('/test-email', requireAdmin, async (req, res) => {
   const result = await dispatchRaw({
     to,
     subject: subject || 'Salt Basin · Test email',
-    text: body || 'This is a test email from your Salt Basin admin. If you received this, Resend (or the console stub) is wired correctly.',
-    html: `<p>${body || 'This is a test email from your Salt Basin admin. If you received this, Resend (or the console stub) is wired correctly.'}</p><p style="font-size:0.75rem;color:#8B9BAE;">— Salt Basin email diagnostic</p>`,
+    text: body || 'This is a test email from your Salt Basin admin. If you received this, Brevo (or the console stub) is wired correctly.',
+    html: `<p>${body || 'This is a test email from your Salt Basin admin. If you received this, Brevo (or the console stub) is wired correctly.'}</p><p style="font-size:0.75rem;color:#8B9BAE;">— Salt Basin email diagnostic</p>`,
   });
   res.json({
     ...result,
-    resendConfigured: !!process.env.RESEND_API_KEY,
+    brevoConfigured: !!process.env.BREVO_API_KEY,
   });
 });
 

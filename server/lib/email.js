@@ -1,7 +1,12 @@
 // Outbound email abstraction.
 //
-// If RESEND_API_KEY is set in env, sends real email via Resend.
-// If not, logs to stdout — local dev works without an account.
+// If BREVO_API_KEY is set in env, sends real email via Brevo's transactional
+// API (https://api.brevo.com/v3/smtp/email). If not, logs to stdout — local
+// dev works without an account.
+//
+// We use Brevo (formerly Sendinblue) because Resend requires an MX record on
+// a subdomain (e.g. `send.saltbasin.net`), which Wix DNS does not allow.
+// Brevo only needs apex SPF + DKIM, both of which Wix supports.
 //
 // Every dispatch also writes a row to lead_emails so the email log is
 // visible in the lead view AND admin lead detail. The "from" address is
@@ -10,10 +15,19 @@
 
 import { db } from '../db.js';
 
-const RESEND_API = 'https://api.resend.com/emails';
+const BREVO_API = 'https://api.brevo.com/v3/smtp/email';
 
-function isResendConfigured() {
-  return !!process.env.RESEND_API_KEY;
+function isBrevoConfigured() {
+  return !!process.env.BREVO_API_KEY;
+}
+
+// Parse `Name <email@domain>` into Brevo's { name, email } shape. Brevo
+// requires the sender object split out; passing a combined string fails
+// validation. Accepts a bare email too.
+function parseFrom(addr) {
+  const m = (addr || '').match(/^\s*(.*?)\s*<([^>]+)>\s*$/);
+  if (m) return { name: m[1] || undefined, email: m[2] };
+  return { email: (addr || '').trim() };
 }
 
 async function configuredFrom() {
@@ -48,7 +62,7 @@ async function logToDb({ leadId, to, from, subject, html, text, provider, status
   }
 }
 
-// Public: lets the admin "Test email" button verify Resend is wired without
+// Public: lets the admin "Test email" button verify Brevo is wired without
 // touching real lead records.
 export async function dispatchRaw({ to, subject, html, text }) {
   return dispatch({ to, subject, html, text });
@@ -57,9 +71,9 @@ export async function dispatchRaw({ to, subject, html, text }) {
 async function dispatch({ leadId, to, subject, html, text }) {
   const fromAddr = await configuredFrom();
 
-  if (!isResendConfigured()) {
+  if (!isBrevoConfigured()) {
     console.log('───────────────────────────────────────────────');
-    console.log('[email · DEV STUB · RESEND_API_KEY not set]');
+    console.log('[email · DEV STUB · BREVO_API_KEY not set]');
     console.log(`  to:       ${to}`);
     console.log(`  from:     ${fromAddr}`);
     console.log(`  subject:  ${subject}`);
@@ -70,26 +84,39 @@ async function dispatch({ leadId, to, subject, html, text }) {
     return { ok: true, stub: true, from: fromAddr };
   }
 
+  const sender = parseFrom(fromAddr);
+  const payload = {
+    sender,
+    to: [{ email: to }],
+    subject,
+    htmlContent: html || `<p>${(text || '').replace(/\n/g, '<br/>')}</p>`,
+    textContent: text || undefined,
+  };
+
   try {
-    const res = await fetch(RESEND_API, {
+    const res = await fetch(BREVO_API, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        'api-key': process.env.BREVO_API_KEY,
         'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
-      body: JSON.stringify({ from: fromAddr, to, subject, html, text }),
+      body: JSON.stringify(payload),
     });
     const body = await res.json().catch(() => ({}));
     if (!res.ok) {
+      // Brevo errors look like: { code: 'invalid_parameter', message: '...' }
       const errStr = body?.message || JSON.stringify(body);
-      console.error('[email] Resend failed:', res.status, body);
-      await logToDb({ leadId, to, from: fromAddr, subject, html, text, provider: 'resend', status: 'failed', error: errStr });
+      console.error('[email] Brevo failed:', res.status, body);
+      await logToDb({ leadId, to, from: fromAddr, subject, html, text, provider: 'brevo', status: 'failed', error: errStr });
       return { ok: false, error: body };
     }
-    await logToDb({ leadId, to, from: fromAddr, subject, html, text, provider: 'resend', status: 'sent', providerId: body.id });
-    return { ok: true, id: body.id, from: fromAddr };
+    // Brevo success: { messageId: '<token@smtp-relay.mailin.fr>' }
+    const id = body.messageId || body.messageIds?.[0] || null;
+    await logToDb({ leadId, to, from: fromAddr, subject, html, text, provider: 'brevo', status: 'sent', providerId: id });
+    return { ok: true, id, from: fromAddr };
   } catch (e) {
-    await logToDb({ leadId, to, from: fromAddr, subject, html, text, provider: 'resend', status: 'failed', error: e.message });
+    await logToDb({ leadId, to, from: fromAddr, subject, html, text, provider: 'brevo', status: 'failed', error: e.message });
     return { ok: false, error: e.message };
   }
 }
