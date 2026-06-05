@@ -299,6 +299,32 @@ async function bootstrap() {
     CREATE INDEX IF NOT EXISTS idx_backlog_kind        ON backlog_items (kind);
     CREATE INDEX IF NOT EXISTS idx_backlog_parent      ON backlog_items (parent_id) WHERE parent_id IS NOT NULL;
   `);
+
+  // Backlog Phase 1.5: extend with tech_stack (on capability_groups for the
+  // "tech per capability" view) + cost_usd_claude (per item).
+  await sql.unsafe(`
+    ALTER TABLE capability_groups ADD COLUMN IF NOT EXISTS tech_stack TEXT;       -- JSON array of tools/services used
+    ALTER TABLE backlog_items     ADD COLUMN IF NOT EXISTS tech_stack TEXT;       -- optional per-item override
+    ALTER TABLE backlog_items     ADD COLUMN IF NOT EXISTS cost_usd_claude NUMERIC;
+  `);
+
+  // Tier workarounds — capture the strategic decisions we made to stay on
+  // free tiers instead of upgrading. Surfaced on the build-summary one-pager
+  // and editable from the Backlog admin.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS tier_workarounds (
+      id                BIGSERIAL PRIMARY KEY,
+      capability_id     BIGINT REFERENCES capability_groups(id) ON DELETE SET NULL,
+      product           TEXT NOT NULL,         -- 'Netlify', 'Resend', 'Zoho', etc.
+      tier_avoided      TEXT,                  -- e.g. 'Netlify Pro ($19/mo)'
+      monthly_savings   NUMERIC,               -- USD/mo we avoided
+      problem           TEXT NOT NULL,         -- what would have forced an upgrade
+      solution          TEXT NOT NULL,         -- how we worked around it
+      sort_order        INTEGER NOT NULL DEFAULT 0,
+      created_at        BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_tier_workarounds_capability ON tier_workarounds (capability_id);
+  `);
 }
 
 // Awaited at module import time so routes can use db without worrying about

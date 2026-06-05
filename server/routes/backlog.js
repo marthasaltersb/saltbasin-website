@@ -47,6 +47,8 @@ function rowToItem(r) {
     priority: r.priority,
     workSplitClaude: r.work_split_claude == null ? null : Number(r.work_split_claude),
     timeMinutes: r.time_minutes == null ? null : Number(r.time_minutes),
+    costUsdClaude: r.cost_usd_claude == null ? null : Number(r.cost_usd_claude),
+    techStack: r.tech_stack ? safeJSON(r.tech_stack) : null,
     deployedGithub: !!r.deployed_github,
     deployedRender: !!r.deployed_render,
     deployedNetlify: !!r.deployed_netlify,
@@ -66,6 +68,21 @@ function rowToGroup(r) {
     name: r.name,
     description: r.description,
     color: r.color,
+    techStack: r.tech_stack ? safeJSON(r.tech_stack) : [],
+    sortOrder: Number(r.sort_order || 0),
+    createdAt: Number(r.created_at),
+  };
+}
+function rowToWorkaround(r) {
+  if (!r) return null;
+  return {
+    id: Number(r.id),
+    capabilityId: r.capability_id ? Number(r.capability_id) : null,
+    product: r.product,
+    tierAvoided: r.tier_avoided,
+    monthlySavings: r.monthly_savings == null ? null : Number(r.monthly_savings),
+    problem: r.problem,
+    solution: r.solution,
     sortOrder: Number(r.sort_order || 0),
     createdAt: Number(r.created_at),
   };
@@ -91,6 +108,8 @@ const ITEM_FIELD_MAP = {
   priority: 'priority',
   workSplitClaude: 'work_split_claude',
   timeMinutes: 'time_minutes',
+  costUsdClaude: 'cost_usd_claude',
+  techStack: 'tech_stack',
   deployedGithub: 'deployed_github',
   deployedRender: 'deployed_render',
   deployedNetlify: 'deployed_netlify',
@@ -102,7 +121,7 @@ const ITEM_FIELD_MAP = {
 
 function serializeForDb(key, value) {
   if (value === undefined) return undefined;
-  if (key === 'deployRelevance' || key === 'tags') {
+  if (key === 'deployRelevance' || key === 'tags' || key === 'techStack') {
     return value == null ? null : JSON.stringify(value);
   }
   return value;
@@ -235,16 +254,20 @@ router.post('/seed', async (req, res) => {
     return res.json({ ok: true, skipped: true, reason: 'already populated', existingGroups: Number(existingGroups.n), existingItems: Number(existingItems.n) });
   }
 
-  const { groups, items } = backlogSeed();
+  const { groups, items, tierWorkarounds } = backlogSeed();
   // Insert groups, capturing slug → new id mapping so items can reference.
   const slugToId = new Map();
   for (const g of groups) {
     const r = await db
       .prepare(
-        `INSERT INTO capability_groups (slug, name, description, color, sort_order)
-         VALUES ($1, $2, $3, $4, $5) RETURNING id`
+        `INSERT INTO capability_groups (slug, name, description, color, tech_stack, sort_order)
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
       )
-      .run(g.slug, g.name, g.description || null, g.color || null, g.sortOrder ?? 0);
+      .run(
+        g.slug, g.name, g.description || null, g.color || null,
+        g.techStack ? JSON.stringify(g.techStack) : null,
+        g.sortOrder ?? 0
+      );
     slugToId.set(g.slug, Number(r.lastInsertRowid));
   }
 
@@ -257,10 +280,11 @@ router.post('/seed', async (req, res) => {
            capability_id, kind, title, summary, user_story, requirement_detail,
            business_rules, design_spec, acceptance_criteria, process_steps,
            status, priority, work_split_claude, time_minutes,
+           cost_usd_claude, tech_stack,
            deployed_github, deployed_render, deployed_netlify, deploy_relevance,
            tags, external_ref, sort_order
          ) VALUES (
-           $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
+           $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23
          )`
       )
       .run(
@@ -278,6 +302,8 @@ router.post('/seed', async (req, res) => {
         item.priority || null,
         item.workSplitClaude ?? null,
         item.timeMinutes ?? null,
+        item.costUsdClaude ?? null,
+        item.techStack ? JSON.stringify(item.techStack) : null,
         item.deployedGithub ?? false,
         item.deployedRender ?? false,
         item.deployedNetlify ?? false,
@@ -289,7 +315,105 @@ router.post('/seed', async (req, res) => {
     insertedItems += 1;
   }
 
-  res.json({ ok: true, seededGroups: groups.length, seededItems: insertedItems });
+  let insertedWorkarounds = 0;
+  for (const w of tierWorkarounds || []) {
+    const capabilityId = w.capabilitySlug ? slugToId.get(w.capabilitySlug) || null : null;
+    await db
+      .prepare(
+        `INSERT INTO tier_workarounds (
+           capability_id, product, tier_avoided, monthly_savings,
+           problem, solution, sort_order
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7)`
+      )
+      .run(
+        capabilityId,
+        w.product,
+        w.tierAvoided || null,
+        w.monthlySavings ?? null,
+        w.problem,
+        w.solution,
+        w.sortOrder ?? 0
+      );
+    insertedWorkarounds += 1;
+  }
+
+  res.json({
+    ok: true,
+    seededGroups: groups.length,
+    seededItems: insertedItems,
+    seededWorkarounds: insertedWorkarounds,
+  });
+});
+
+// ── Summary endpoint feeding the build-summary one-pager output ──
+// Aggregates project metrics + per-capability tech & cost rollups + the
+// tier workarounds. Public-ish: the auth gate happens in the React route
+// (auth-gated like the resume/proposal outputs), but we still keep this
+// behind requireAdmin in case a curious member tries to scrape.
+router.get('/summary', async (req, res) => {
+  const { PROJECT_STARTED_AT } = await import('../data/backlog/seed.js');
+
+  const groups = (await db.prepare(`SELECT * FROM capability_groups ORDER BY sort_order, name`).all()).map(rowToGroup);
+  const items  = (await db.prepare(`SELECT * FROM backlog_items WHERE status != 'archived' ORDER BY sort_order, id`).all()).map(rowToItem);
+  const workarounds = (await db.prepare(`SELECT * FROM tier_workarounds ORDER BY sort_order, id`).all()).map(rowToWorkaround);
+
+  const now = Date.now();
+  const elapsedMs   = Math.max(0, now - (PROJECT_STARTED_AT || items.reduce((m, it) => Math.min(m, it.createdAt), now)));
+  const elapsedDays = Math.max(1, Math.ceil(elapsedMs / (1000 * 60 * 60 * 24)));
+
+  // Filter to delivered (deployed) work for the headline metrics, but include
+  // pending in the inventory list.
+  const delivered = items.filter((it) => it.status === 'deployed' || it.status === 'completed');
+
+  const totals = {
+    elapsedDays,
+    requirementsTotal:     items.length,
+    requirementsDelivered: delivered.length,
+    minutes:               delivered.reduce((s, it) => s + (it.timeMinutes || 0), 0),
+    costUsdClaude:         delivered.reduce((s, it) => s + (it.costUsdClaude || 0), 0),
+    monthlyTierSavings:    workarounds.reduce((s, w) => s + (w.monthlySavings || 0), 0),
+    claudeMinutesWeighted: delivered.reduce((s, it) => s + ((it.timeMinutes || 0) * (it.workSplitClaude ?? 0) / 100), 0),
+  };
+  totals.hours = Math.round(totals.minutes / 60 * 10) / 10;
+  totals.claudeOverallPct = totals.minutes ? Math.round((totals.claudeMinutesWeighted / totals.minutes) * 100) : 0;
+
+  // Per-capability rollup
+  const byCap = new Map();
+  for (const g of groups) {
+    byCap.set(g.id, {
+      group: g,
+      items: [],
+      minutes: 0,
+      costUsdClaude: 0,
+      deliveredCount: 0,
+    });
+  }
+  for (const it of items) {
+    const entry = byCap.get(it.capabilityId);
+    if (!entry) continue;
+    entry.items.push(it);
+    if (it.status === 'deployed' || it.status === 'completed') {
+      entry.minutes       += it.timeMinutes || 0;
+      entry.costUsdClaude += it.costUsdClaude || 0;
+      entry.deliveredCount += 1;
+    }
+  }
+  const capabilities = [...byCap.values()].map((e) => ({
+    group: e.group,
+    deliveredCount: e.deliveredCount,
+    totalCount: e.items.length,
+    hours: Math.round(e.minutes / 60 * 10) / 10,
+    costUsdClaude: Math.round(e.costUsdClaude * 100) / 100,
+  }));
+
+  res.json({
+    projectStartedAt: PROJECT_STARTED_AT || null,
+    totals,
+    capabilities,
+    workarounds,
+    items,         // for the feature inventory section
+    groups,        // so the client can re-lookup by id
+  });
 });
 
 export default router;

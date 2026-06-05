@@ -18,8 +18,12 @@
 // when the tables are empty. Idempotent — safe to call repeatedly.
 
 export function backlogSeed() {
-  return { groups, items };
+  return { groups, items, tierWorkarounds, projectStartedAt: PROJECT_STARTED_AT };
 }
+
+// Earliest commit on the project (git log --reverse). Used by the
+// build-summary endpoint to compute "days to build".
+export const PROJECT_STARTED_AT = new Date('2026-06-03T10:54:45-04:00').getTime();
 
 // ── Capability groups ──
 const groups = [
@@ -29,6 +33,7 @@ const groups = [
     description: 'The shared CMS infrastructure both you and members use — schema, auth, draft/publish, block library.',
     color: '#1B2A3B',
     sortOrder: 10,
+    techStack: ['React 19', 'Vite', 'React Router', 'Express', 'Postgres (Supabase)', 'bcryptjs', 'cookie-parser', 'CSS variables'],
   },
   {
     slug: 'multi-tenant-cms',
@@ -36,6 +41,7 @@ const groups = [
     description: 'Member admin parity — every operator runs their own multi-page site with the same shell you use, scoped to their own data.',
     color: '#C4843A',
     sortOrder: 20,
+    techStack: ['React 19', 'Express', 'Postgres (JSONB-style TEXT)', 'AdminShell shared component', 'requireUser middleware'],
   },
   {
     slug: 'lead-capture',
@@ -43,6 +49,7 @@ const groups = [
     description: 'Public forms → leads → match-and-merge dedup → password-protected lead records → optional member conversion.',
     color: '#A8B89A',
     sortOrder: 30,
+    techStack: ['React 19', 'Express', 'Postgres', 'bcryptjs (lead passwords)', 'crypto (publicId generation)', 'lead_sessions cookies'],
   },
   {
     slug: 'email-infrastructure',
@@ -50,6 +57,7 @@ const groups = [
     description: 'Custom-domain mailbox (Zoho), transactional sending (Brevo), DNS auth (SPF / DKIM / DMARC), templated outbound.',
     color: '#4A6670',
     sortOrder: 40,
+    techStack: ['Brevo API (v3/smtp/email)', 'Zoho Mail (Forever Free)', 'Wix DNS', 'SPF + CNAME-based DKIM + DMARC', 'fetch (no SDK)', 'lead_emails audit table'],
   },
   {
     slug: 'net-works-network',
@@ -57,6 +65,7 @@ const groups = [
     description: 'The opt-in operator network: members opt in via their config, their card appears in the rotating banner on the Salt Basin home page.',
     color: '#D4B896',
     sortOrder: 50,
+    techStack: ['React 19', 'Express', 'Postgres', 'CSS scroll-snap (horizontal banner)', 'one-shot script (inject-networks-banner.mjs)'],
   },
   {
     slug: 'public-site-content',
@@ -64,6 +73,7 @@ const groups = [
     description: 'Founder-first hero, industries × domains wheel, services, case studies, timeline, technology, contact, references.',
     color: '#8B9BAE',
     sortOrder: 60,
+    techStack: ['React 19', 'SVG (industry wheel)', 'CSS Grid + Flexbox', 'Cormorant Garamond + Inter web fonts'],
   },
   {
     slug: 'output-pages',
@@ -71,6 +81,7 @@ const groups = [
     description: 'Print-friendly, member-gated, deep-link-shareable views of high-value artifacts.',
     color: '#3D5A6C',
     sortOrder: 70,
+    techStack: ['React 19', 'CSS @media print', 'GatedPreview component (auth gate)', 'OutputFrame wrapper'],
   },
   {
     slug: 'admin-experience',
@@ -78,6 +89,7 @@ const groups = [
     description: 'Salt Basin admin UX: sidebar, editor, preview, config panel, leads panel, Net Works roster, mobile.',
     color: '#7B8F9D',
     sortOrder: 80,
+    techStack: ['React 19', 'multer (image uploads)', 'Supabase Storage', 'CSS variables (light/dark adaptive)', 'mobile breakpoint <768px'],
   },
   {
     slug: 'deployment-infrastructure',
@@ -85,6 +97,7 @@ const groups = [
     description: 'Render (backend), Netlify (frontend), Supabase (DB + storage), GitHub Actions monitors, env-var management.',
     color: '#5A7080',
     sortOrder: 90,
+    techStack: ['Render (free tier)', 'Netlify (free tier)', 'Supabase (free tier: Postgres + Storage)', 'GitHub Actions', 'libsodium-wrappers (encrypted GH secrets)', 'Render API', 'Netlify API'],
   },
   {
     slug: 'security-and-data',
@@ -92,6 +105,7 @@ const groups = [
     description: 'Auth (bcrypt + sessions), password rotation, data notice, gitignore hygiene, lead-data protection.',
     color: '#C44B4B',
     sortOrder: 100,
+    techStack: ['bcryptjs', 'node:crypto (randomBytes)', 'cookie-based sessions', 'rotate-admin-password.mjs script', 'gitignored secret files'],
   },
   {
     slug: 'observability',
@@ -99,6 +113,7 @@ const groups = [
     description: 'Deploy monitors, missed-deploy detection, build-credit hygiene, local verify-before-push workflow.',
     color: '#9E7FB0',
     sortOrder: 110,
+    techStack: ['GitHub Actions', 'UptimeRobot (13-min pings)', 'Render API polling', 'auto-issue creation on failure', 'netlify.toml build.ignore script'],
   },
   {
     slug: 'requirements-mgmt',
@@ -106,6 +121,7 @@ const groups = [
     description: 'This dashboard, deployment correlation, test cases, test runs, defect lifecycle (under construction).',
     color: '#E8A87C',
     sortOrder: 120,
+    techStack: ['React 19', 'Express', 'Postgres (capability_groups + backlog_items + tier_workarounds)', 'side-drawer pattern', 'auto-seed on first load'],
   },
 ];
 
@@ -117,6 +133,22 @@ const REL_BOTH = { deployRelevance: { github: true, render: true, netlify: true 
 const REL_BACKEND = { deployRelevance: { github: true, render: true, netlify: false } };
 const REL_FRONTEND = { deployRelevance: { github: true, render: false, netlify: true } };
 const REL_INFRA = { deployRelevance: { github: false, render: false, netlify: false } };
+
+// Common tech-stack bundles. Items pick whichever applies + add specifics.
+// Cost estimates are in USD; methodology is documented on the build-summary
+// output page. Calibration: total project budget ≈ $60 across all Claude
+// Code time, distributed proportionally to time_minutes. Per-item costs are
+// editable in the admin Backlog drawer.
+const TECH_FULLSTACK = ['React 19', 'Vite', 'React Router', 'Express', 'Postgres (Supabase)', 'Node 22'];
+const TECH_BACKEND_ONLY = ['Express', 'Postgres (Supabase)', 'Node 22'];
+const TECH_INFRA_ONLY = ['Render', 'Netlify', 'Supabase', 'Wix DNS', 'GitHub Actions'];
+const TECH_FRONTEND_ONLY = ['React 19', 'Vite', 'CSS variables'];
+
+// $0.02 / minute is the baseline rate (matches the calibration above).
+function cost(minutes) {
+  if (minutes == null) return null;
+  return Math.round(minutes * 0.02 * 100) / 100;
+}
 
 // ── Backlog items ──
 const items = [
@@ -1032,5 +1064,77 @@ const items = [
     deployedRender: false,
     deployedNetlify: false,
     deployRelevance: { github: false, render: false, netlify: false },
+  },
+];
+
+// Auto-populate cost_usd_claude on every item where it's not already set.
+// Methodology documented on the build-summary output page.
+for (const it of items) {
+  if (it.costUsdClaude == null) it.costUsdClaude = cost(it.timeMinutes);
+}
+
+// ── Tier workarounds ──
+// How we avoided needing to pay for upgraded tiers. Surfaced on the
+// build-summary one-pager output.
+const tierWorkarounds = [
+  {
+    capabilitySlug: 'email-infrastructure',
+    product: 'Resend (transactional email)',
+    tierAvoided: 'Resend paid tier + dedicated DNS host',
+    monthlySavings: 19,
+    problem:
+      'Resend\'s domain verification requires an MX record on a subdomain (e.g. send.saltbasin.net) so they can handle bounce notifications. Wix DNS — which hosts saltbasin.net\'s DNS records — does not allow MX records on subdomains, only at the apex. Apex MX was already taken by Zoho for inbound mail. Resend therefore could not be verified on Wix DNS at any tier.',
+    solution:
+      'Switched to Brevo (formerly Sendinblue), whose modern verification uses CNAME-based DKIM and a Brevo-domain return-path — no subdomain MX requirement. Brevo\'s free forever tier (9K emails/month) covers the foreseeable volume, vs Resend\'s 3K. Code refactor was small (parseFrom helper, payload reshape, header rename).',
+  },
+  {
+    capabilitySlug: 'email-infrastructure',
+    product: 'Zoho Mail (mailbox)',
+    tierAvoided: 'Google Workspace ($6/user/month) or Microsoft 365 ($6/user/month)',
+    monthlySavings: 6,
+    problem:
+      'A professional consulting brand needs a real custom-domain mailbox (betsy@saltbasin.net) for receiving lead replies, not a Gmail forward. Standard paid options are $6/user/month minimum, which adds up across an opt-in member network.',
+    solution:
+      'Used Zoho Mail\'s Forever Free Plan — custom-domain mailbox, 5GB storage, 1 user, web access only (no IMAP/POP — accept that constraint). Setup is the same standard SPF/DKIM/MX flow as paid providers. Trade-off: members would each need their own paid mailbox eventually, but for the founder identity Zoho free is fully sufficient.',
+  },
+  {
+    capabilitySlug: 'deployment-infrastructure',
+    product: 'Render (backend hosting)',
+    tierAvoided: 'Render Starter / Pro ($7-25/mo)',
+    monthlySavings: 25,
+    problem:
+      'Render\'s free tier spins down after 15 minutes of inactivity, causing 20-30 second cold starts on the next visitor. For a consulting brand site, a 20s blank screen is a brand-killer.',
+    solution:
+      'Two layers: (1) a branded ColdStartLoader component renders immediately with the Salt Basin wordmark and pulse dots so the brand is visible during the cold start, with an explainer message after 3s. (2) UptimeRobot pings /api/health every 13 minutes (under Render\'s 15-min idle threshold), keeping the container warm during business hours. Combined: cold starts are rare and when they happen, the experience is branded not broken.',
+  },
+  {
+    capabilitySlug: 'deployment-infrastructure',
+    product: 'Netlify (frontend hosting)',
+    tierAvoided: 'Netlify Starter ($19/mo) or Pro tier',
+    monthlySavings: 19,
+    problem:
+      'Iterative development with many small commits exhausts Netlify\'s free-tier build minutes (300/mo) quickly. When credits run out, Netlify blocks ALL deploys — both automated CI and manual CLI/drag-drop — until the next billing cycle.',
+    solution:
+      'Two mitigations: (1) Added a build.ignore script to netlify.toml that exits 0 (skip) when git diff finds no changes in frontend-relevant paths (src/, public/, index.html, vite.config.js, netlify.toml, package*.json) — backend-only commits stop burning credits. (2) Adopted an explicit-approval workflow: Claude asks before pushing any commit that would trigger a Netlify build, so frontend changes get batched. Future option: migrate to Cloudflare Pages (free, unlimited builds) when the next batch of frontend changes is ready.',
+  },
+  {
+    capabilitySlug: 'deployment-infrastructure',
+    product: 'Supabase (Postgres + Storage)',
+    tierAvoided: 'Supabase Pro ($25/mo)',
+    monthlySavings: 25,
+    problem:
+      'Render\'s free tier does not include persistent disk for the backend container. Files (image uploads, SQLite databases) would be wiped on every deploy or restart.',
+    solution:
+      'Migrated all persistent state to Supabase\'s free tier: Postgres for the relational data (500MB), Storage for image uploads (1GB), with absolute URLs returned by the upload endpoint so the browser fetches images directly from Supabase\'s CDN (no proxy through Render). Free tier limits are well above current needs.',
+  },
+  {
+    capabilitySlug: 'observability',
+    product: 'GitHub Actions (CI / deploy monitoring)',
+    tierAvoided: 'A paid CI provider or self-hosted runner',
+    monthlySavings: 10,
+    problem:
+      'Render does not surface deploy failures clearly. A silent skipped auto-deploy is easy to miss until the next deploy unintentionally batches the missed change.',
+    solution:
+      'Built two GitHub Actions workflows that run on the free tier (2,000 min/mo for public repos): render-deploy-monitor watches every push to main, polls the Render API, and creates a GitHub Issue with the build log on any failure. render-deploy-verify runs ~5 min after push to catch silently-skipped deploys. Cost: $0; coverage: every deploy.',
   },
 ];
