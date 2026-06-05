@@ -16,14 +16,40 @@ function deepEqual(a, b) {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-export default function AdminShell() {
+// `scope` controls which data the shell is editing and which tabs it shows:
+//   'admin'  — the Salt Basin platform site (Betsy's view). Shows all tabs.
+//   'member' — the logged-in member's own site. Hides Leads + Net Works.
+// Both scopes use the same Sidebar / EditorPane / PreviewPane / ConfigPanel —
+// only the API endpoints and the chrome differ.
+export default function AdminShell({ scope = 'admin' }) {
   const nav = useNavigate();
+  const isMember = scope === 'member';
+  const apis = isMember
+    ? {
+        getSite:    api.getMemberDraftSite,
+        saveSite:   api.saveMemberDraftSite,
+        publish:    async () => {
+          await api.publishMemberSite();
+          await api.publishMemberConfig();
+        },
+        getConfig:  api.getMemberDraftConfig,
+        saveConfig: api.saveMemberDraftConfig,
+      }
+    : {
+        getSite:    api.getDraftSite,
+        saveSite:   api.saveDraftSite,
+        publish:    api.publish,
+        getConfig:  api.getDraftConfig,
+        saveConfig: api.saveDraftConfig,
+      };
+
   const [savedSite, setSavedSite] = useState(null); // last server-confirmed draft
   const [draft, setDraft] = useState(null); // local in-progress draft
   const [savedConfig, setSavedConfig] = useState(null);
   const [configDraft, setConfigDraft] = useState(null);
+  const [profileSlug, setProfileSlug] = useState(null); // members get a /u/:slug
 
-  const [tab, setTab] = useState('content'); // 'content' | 'config'
+  const [tab, setTab] = useState('content'); // 'content' | 'config' | (admin only: 'leads' | 'networks')
   const [view, setView] = useState('split'); // 'split' | 'editor' | 'preview'
 
   const [currentPageKey, setCurrentPageKey] = useState('home');
@@ -37,13 +63,24 @@ export default function AdminShell() {
 
   // ── Load ──
   useEffect(() => {
-    Promise.all([api.getDraftSite(), api.getDraftConfig()])
-      .then(([site, cfg]) => {
+    const calls = [apis.getSite(), apis.getConfig()];
+    if (isMember) {
+      // Member needs their slug so the "View My Profile" link works. The
+      // members router exposes it via /api/members/me/profile.
+      calls.push(
+        fetch('/api/members/me/profile', { credentials: 'include' })
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null)
+      );
+    }
+    Promise.all(calls)
+      .then(([site, cfg, profile]) => {
         setSavedSite(site);
         setDraft(site);
         setSavedConfig(cfg);
         setConfigDraft(cfg);
-        const firstPage = Object.keys(site.pages)[0];
+        if (profile?.slug) setProfileSlug(profile.slug);
+        const firstPage = Object.keys(site.pages || {})[0];
         if (firstPage) setCurrentPageKey(firstPage);
       })
       .catch((e) => toast('Failed to load: ' + e.message));
@@ -174,11 +211,11 @@ export default function AdminShell() {
   async function save() {
     try {
       if (siteDirty) {
-        await api.saveDraftSite(draft);
+        await apis.saveSite(draft);
         setSavedSite(draft);
       }
       if (configDirty) {
-        await api.saveDraftConfig(configDraft);
+        await apis.saveConfig(configDraft);
         setSavedConfig(configDraft);
       }
       toast('Draft saved');
@@ -195,12 +232,16 @@ export default function AdminShell() {
       if (!yes) return;
       await save();
     } else {
-      const yes = confirm('Promote the current draft to the public site?');
+      const yes = confirm(
+        isMember
+          ? 'Promote your draft to your public profile?'
+          : 'Promote the current draft to the public site?'
+      );
       if (!yes) return;
     }
     try {
-      await api.publish();
-      toast('Published ↗ Public site updated');
+      await apis.publish();
+      toast(isMember ? 'Published ↗ Profile updated' : 'Published ↗ Public site updated');
     } catch (e) {
       toast('Publish failed: ' + e.message);
     }
@@ -245,7 +286,7 @@ export default function AdminShell() {
                 color: 'var(--sb-cream)',
               }}
             >
-              Salt Basin Net Works
+              {isMember ? (configDraft?.site?.ownerName || 'My Profile') : 'Salt Basin Net Works'}
             </div>
             <div
               className="sb-toggle-hide-mobile"
@@ -257,7 +298,7 @@ export default function AdminShell() {
                 marginTop: 1,
               }}
             >
-              Site Management Console
+              {isMember ? `Operator Console · /u/${profileSlug || ''}` : 'Site Management Console'}
             </div>
           </div>
         </div>
@@ -266,12 +307,19 @@ export default function AdminShell() {
           style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}
         >
           <TabToggle
-            items={[
-              { val: 'content', label: 'My Profile' },
-              { val: 'leads', label: 'Leads' },
-              { val: 'networks', label: 'Net Works' },
-              { val: 'config', label: 'Config' },
-            ]}
+            items={
+              isMember
+                ? [
+                    { val: 'content', label: 'My Site' },
+                    { val: 'config', label: 'Config' },
+                  ]
+                : [
+                    { val: 'content', label: 'My Profile' },
+                    { val: 'leads', label: 'Leads' },
+                    { val: 'networks', label: 'Net Works' },
+                    { val: 'config', label: 'Config' },
+                  ]
+            }
             active={tab}
             onChange={setTab}
           />
@@ -288,15 +336,40 @@ export default function AdminShell() {
               />
             </span>
           )}
-          <a
-            href="/"
-            target="_blank"
-            rel="noreferrer"
-            className="sb-btn sb-btn-outline sb-toggle-hide-mobile"
-            style={{ padding: '0.4rem 0.9rem', fontSize: '0.7rem' }}
-          >
-            View Public
-          </a>
+          {isMember ? (
+            <>
+              {profileSlug && (
+                <a
+                  href={`/u/${profileSlug}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="sb-btn sb-btn-outline sb-toggle-hide-mobile"
+                  style={{ padding: '0.4rem 0.9rem', fontSize: '0.7rem' }}
+                >
+                  View My Profile
+                </a>
+              )}
+              <a
+                href="/"
+                target="_blank"
+                rel="noreferrer"
+                className="sb-btn sb-btn-outline sb-toggle-hide-mobile"
+                style={{ padding: '0.4rem 0.9rem', fontSize: '0.7rem' }}
+              >
+                Visit Salt Basin ↗
+              </a>
+            </>
+          ) : (
+            <a
+              href="/"
+              target="_blank"
+              rel="noreferrer"
+              className="sb-btn sb-btn-outline sb-toggle-hide-mobile"
+              style={{ padding: '0.4rem 0.9rem', fontSize: '0.7rem' }}
+            >
+              View Public
+            </a>
+          )}
           <button
             className="sb-btn sb-btn-outline"
             style={{ padding: '0.4rem 0.9rem', fontSize: '0.7rem' }}
@@ -308,9 +381,9 @@ export default function AdminShell() {
       </div>
 
       <div className="sb-admin-workspace" style={styles.workspace}>
-        {tab === 'leads' ? (
+        {!isMember && tab === 'leads' ? (
           <LeadsPanel />
-        ) : tab === 'networks' ? (
+        ) : !isMember && tab === 'networks' ? (
           <NetWorksPanel />
         ) : tab === 'content' ? (
           <>
@@ -352,7 +425,7 @@ export default function AdminShell() {
             )}
           </>
         ) : (
-          <ConfigPanel config={configDraft} onChange={setConfigDraft} />
+          <ConfigPanel config={configDraft} onChange={setConfigDraft} scope={scope} />
         )}
       </div>
 
@@ -568,6 +641,9 @@ function SectionModal({ value, onChange, onSubmit, onCancel }) {
             <option value="scripture">Scripture Band</option>
             <option value="socialGrid">Social Grid</option>
             <option value="contact">Contact</option>
+            <option value="netWorksBanner">Net Works Banner (member cards)</option>
+            <option value="domains">Domains of Expertise</option>
+            <option value="resume">Resume / Experience</option>
           </select>
         </div>
         <div style={styles.fieldGroup}>

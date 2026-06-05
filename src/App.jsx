@@ -43,6 +43,7 @@ export default function App() {
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/member" element={<MemberDashboard />} />
       <Route path="/u/:slug" element={<PublicProfile />} />
+      <Route path="/u/:slug/*" element={<PublicProfile />} />
       <Route path="/lead/:publicId" element={<LeadView />} />
       <Route path="/data-notice" element={<DataNotice />} />
       <Route path="/output/resume" element={<ResumeOutput />} />

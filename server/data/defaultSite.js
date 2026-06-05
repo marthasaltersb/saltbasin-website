@@ -32,6 +32,19 @@ const HOME_SECTIONS = [
     },
   },
   {
+    id: 'netWorksBanner',
+    type: 'netWorksBanner',
+    name: 'Net Works Banner',
+    status: 'live',
+    bg: 'cream',
+    fields: {
+      eyebrow: 'The Network',
+      heading: 'Salt Basin Net Works',
+      intro:
+        'A growing roster of senior operators building from the same shoreline. Each card links to an operator profile — opt-in only.',
+    },
+  },
+  {
     id: 'scripture',
     type: 'scripture',
     name: 'Scripture Band',

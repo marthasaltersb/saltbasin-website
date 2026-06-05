@@ -1,7 +1,8 @@
 import React from 'react';
 import { styles } from './adminStyles.js';
 
-export default function ConfigPanel({ config, onChange }) {
+export default function ConfigPanel({ config, onChange, scope = 'admin' }) {
+  const isMember = scope === 'member';
   function patch(path, value) {
     const next = JSON.parse(JSON.stringify(config));
     const keys = path.split('.');
@@ -49,7 +50,8 @@ export default function ConfigPanel({ config, onChange }) {
           />
         </div>
 
-        {/* Pre-launch */}
+        {/* Pre-launch — admin only (platform-level gate) */}
+        {!isMember && (
         <div style={styles.card}>
           <div style={styles.cardTitle}>Pre-launch Landing Gate</div>
           <Toggle
@@ -76,6 +78,24 @@ export default function ConfigPanel({ config, onChange }) {
             long
           />
         </div>
+        )}
+
+        {/* Brand colors — member only. Overrides --sb-* tokens on the
+            member's own profile pages. Admin theme is locked. */}
+        {isMember && (
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Brand Colors</div>
+          <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem', lineHeight: 1.55 }}>
+            These colors apply to your profile pages only. Use hex codes (e.g. <code>#1B2A3B</code>).
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+            <ColorField label="Primary (navy)"  value={config?.brand?.primary} onChange={(v) => patch('brand.primary', v)} />
+            <ColorField label="Accent (gold)"   value={config?.brand?.accent}  onChange={(v) => patch('brand.accent', v)} />
+            <ColorField label="Ink (text)"      value={config?.brand?.ink}     onChange={(v) => patch('brand.ink', v)} />
+            <ColorField label="Paper (bg)"      value={config?.brand?.paper}   onChange={(v) => patch('brand.paper', v)} />
+          </div>
+        </div>
+        )}
 
         {/* Social */}
         <div style={styles.card}>
@@ -120,7 +140,8 @@ export default function ConfigPanel({ config, onChange }) {
           ))}
         </div>
 
-        {/* Email identity */}
+        {/* Email identity — admin only (members don't yet have outbound) */}
+        {!isMember && (
         <div style={styles.card}>
           <div style={styles.cardTitle}>Outbound Email Identity</div>
           <Field
@@ -143,8 +164,10 @@ export default function ConfigPanel({ config, onChange }) {
             Until <code style={{ color: 'var(--sb-gold)' }}>RESEND_API_KEY</code> is set in Render env, emails are stubbed (logged to console + DB but not delivered).
           </div>
         </div>
+        )}
 
         {/* New-lead notifications to admin */}
+        {!isMember && (
         <div style={styles.card}>
           <div style={styles.cardTitle}>New-Lead Notifications</div>
           <Toggle
@@ -161,8 +184,10 @@ export default function ConfigPanel({ config, onChange }) {
           />
           <SendTestEmail />
         </div>
+        )}
 
-        {/* BestyStaff persona */}
+        {/* BestyStaff persona — admin only (it's Salt Basin's public agent) */}
+        {!isMember && (
         <div style={styles.card}>
           <div style={styles.cardTitle}>BestyStaff Agent (Phase 5)</div>
           <Toggle
@@ -190,6 +215,115 @@ export default function ConfigPanel({ config, onChange }) {
             long
           />
         </div>
+        )}
+
+        {/* Net Works home-page banner opt-in — member only. When on, this
+            member's logo + blurb shows in the rotating banner under Betsy's
+            About section on saltbasin.net. */}
+        {isMember && (
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Salt Basin Net Works Banner</div>
+          <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem', lineHeight: 1.55 }}>
+            Opt in to appear in the sliding cards under Betsy's About section on the Salt Basin home page.
+            Your logo + a short blurb + a link to your profile show on rotation.
+          </div>
+          <Toggle
+            label="Show me on the Salt Basin home page"
+            checked={!!config?.featured?.displayOnHome}
+            onChange={(v) => patch('featured.displayOnHome', v)}
+            help="Takes effect when you publish."
+          />
+          <Field
+            label="Company / brand name (shown under your logo)"
+            value={config?.featured?.homeCompanyName}
+            onChange={(v) => patch('featured.homeCompanyName', v)}
+            placeholder="Acme Operations"
+          />
+          <Field
+            label="Logo URL (use the Uploads panel or paste a public URL)"
+            value={config?.featured?.homeLogoUrl}
+            onChange={(v) => patch('featured.homeLogoUrl', v)}
+            placeholder="https://…/logo.png"
+          />
+          <Field
+            label="Short blurb (1–2 sentences)"
+            value={config?.featured?.homeBlurb}
+            onChange={(v) => patch('featured.homeBlurb', v)}
+            long
+          />
+        </div>
+        )}
+
+        {/* BYO Claude — member only. The Config Agent ships next session;
+            this slot is here so members can stash a key now and have it
+            already wired when the agent goes live. */}
+        {isMember && (
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Config Agent · Bring Your Own Claude</div>
+          <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem', lineHeight: 1.55 }}>
+            Paste an Anthropic API key to power your in-admin editor agent (rolling out next).
+            Get one at <a href="https://console.anthropic.com" target="_blank" rel="noreferrer" style={{ color: 'var(--sb-gold)' }}>console.anthropic.com</a>.
+            Stored server-side and never shown back to the client.
+          </div>
+          <Field
+            label="Anthropic API key"
+            value={config?.integrations?.anthropicKey}
+            onChange={(v) => patch('integrations.anthropicKey', v)}
+            placeholder="sk-ant-…"
+            type="password"
+          />
+          <Field
+            label="Model"
+            value={config?.integrations?.anthropicModel}
+            onChange={(v) => patch('integrations.anthropicModel', v)}
+            placeholder="claude-sonnet-4-5"
+          />
+        </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Compact color input + hex text field side-by-side. Picker drives the text
+// field and vice versa, so members can either visually tweak or paste a brand
+// palette code straight in.
+function ColorField({ label, value, onChange }) {
+  const safe = (value && /^#[0-9a-fA-F]{6}$/.test(value)) ? value : '#1B2A3B';
+  return (
+    <div>
+      <label
+        style={{
+          fontFamily: 'var(--sb-font-label)',
+          fontSize: '0.6rem',
+          letterSpacing: '0.16em',
+          textTransform: 'uppercase',
+          color: 'var(--sb-dusty)',
+          display: 'block',
+          marginBottom: 4,
+        }}
+      >
+        {label}
+      </label>
+      <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+        <input
+          type="color"
+          value={safe}
+          onChange={(e) => onChange(e.target.value)}
+          style={{
+            width: 32, height: 32, padding: 0,
+            border: '0.5px solid rgba(196,132,58,0.3)',
+            borderRadius: 'var(--sb-radius)',
+            background: 'transparent', cursor: 'pointer',
+          }}
+        />
+        <input
+          className="sb-input"
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="#000000"
+          style={{ fontFamily: 'monospace', fontSize: '0.78rem' }}
+        />
       </div>
     </div>
   );

@@ -12,6 +12,8 @@ import siteRouter from './routes/site.js';
 import configRouter from './routes/config.js';
 import leadsRouter from './routes/leads.js';
 import membersRouter from './routes/members.js';
+import memberSiteRouter from './routes/memberSite.js';
+import memberConfigRouter from './routes/memberConfig.js';
 import uploadsRouter, { uploadsDir } from './routes/uploads.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -47,6 +49,8 @@ app.use('/api/site', siteRouter);
 app.use('/api/config', configRouter);
 app.use('/api/leads', leadsRouter);
 app.use('/api/members', membersRouter);
+app.use('/api/member-site', memberSiteRouter);
+app.use('/api/member-config', memberConfigRouter);
 app.use('/api/uploads', uploadsRouter);
 
 // Uploaded files now live on Supabase Storage at <SUPABASE_URL>/storage/v1/object/public/uploads/<file>.

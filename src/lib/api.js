@@ -54,4 +54,20 @@ export const api = {
 
   // Net Works (admin: list all members)
   listMembers: () => request('/api/members/'),
+
+  // Member-scoped CMS (mirrors the admin site + config endpoints, scoped to
+  // req.user.id on the server). The member admin shell uses these instead of
+  // the platform-level ones so each member only sees their own content.
+  getMemberDraftSite: () => request('/api/member-site/draft'),
+  saveMemberDraftSite: (site) =>
+    request('/api/member-site/draft', { method: 'PUT', body: JSON.stringify(site) }),
+  publishMemberSite: () => request('/api/member-site/publish', { method: 'POST' }),
+
+  getMemberDraftConfig: () => request('/api/member-config/draft'),
+  saveMemberDraftConfig: (config) =>
+    request('/api/member-config/draft', { method: 'PUT', body: JSON.stringify(config) }),
+  publishMemberConfig: () => request('/api/member-config/publish', { method: 'POST' }),
+
+  // Public — used by the Salt Basin home page Net Works banner.
+  listFeaturedMembers: () => request('/api/member-site/featured'),
 };

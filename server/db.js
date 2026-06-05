@@ -215,6 +215,33 @@ async function bootstrap() {
     CREATE INDEX IF NOT EXISTS idx_leads_phone ON leads (phone) WHERE phone IS NOT NULL;
     CREATE INDEX IF NOT EXISTS idx_leads_active ON leads (id) WHERE merged_into_id IS NULL;
   `);
+
+  // Multi-tenant CMS: each member gets their own draft + published site, plus
+  // their own config (brand colors, opt-in flags, BYO Claude key). Same JSON
+  // shape as the platform-level site_state / config_state.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS member_sites (
+      user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      kind        TEXT NOT NULL CHECK (kind IN ('draft', 'published')),
+      data        TEXT NOT NULL,
+      updated_at  BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      PRIMARY KEY (user_id, kind)
+    );
+
+    CREATE TABLE IF NOT EXISTS member_configs (
+      user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      kind        TEXT NOT NULL CHECK (kind IN ('draft', 'published')),
+      data        TEXT NOT NULL,
+      updated_at  BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      PRIMARY KEY (user_id, kind)
+    );
+
+    -- Partial index over the published config to make the public "featured
+    -- members" lookup cheap. The opt-in flag lives in JSON; we still need a
+    -- regular index on user_id so the join from member_profiles is fast.
+    CREATE INDEX IF NOT EXISTS idx_member_configs_published_user
+      ON member_configs (user_id) WHERE kind = 'published';
+  `);
 }
 
 // Awaited at module import time so routes can use db without worrying about

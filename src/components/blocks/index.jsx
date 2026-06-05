@@ -3187,6 +3187,126 @@ function CaseField({ label, items, text, accent }) {
   );
 }
 
+// ── Net Works Banner ──
+// A horizontally-scrolling row of member cards (logo + name + blurb → link to
+// /u/:slug). Sources from GET /api/member-site/featured, which returns every
+// member who has opted in via their Config panel. Designed to live directly
+// under the founder About/Intro section on the Salt Basin home page.
+function NetWorksBannerBlock({ section }) {
+  const f = section.fields || {};
+  const [members, setMembers] = React.useState(null);
+  React.useEffect(() => {
+    fetch('/api/member-site/featured')
+      .then((r) => (r.ok ? r.json() : { members: [] }))
+      .then((b) => setMembers(b.members || []))
+      .catch(() => setMembers([]));
+  }, []);
+
+  const heading = f.heading || 'Salt Basin Net Works';
+  const intro = f.intro || 'A growing roster of senior operators building from the same shoreline.';
+
+  return (
+    <section
+      id={section.id}
+      style={{
+        background: BG_VAR[section.bg] || 'var(--sb-cream)',
+        padding: '4rem 0 4.5rem',
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    >
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 2rem 1.5rem' }}>
+        {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
+        <h2 className="sb-display" style={{ fontSize: '2.2rem', color: 'var(--sb-navy)', marginBottom: '0.5rem' }}>
+          {heading}
+        </h2>
+        <div className="sb-gold-rule" style={{ marginBottom: '1.25rem' }} />
+        <p style={{ fontSize: '0.92rem', lineHeight: 1.75, color: 'var(--sb-teal-deep)', maxWidth: 720 }}>
+          {intro}
+        </p>
+      </div>
+
+      {members === null ? null : members.length === 0 ? (
+        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 2rem', fontSize: '0.85rem', color: 'var(--sb-teal-deep)', fontStyle: 'italic' }}>
+          Members start opting in soon — once they do, their profile cards appear here.
+        </div>
+      ) : (
+        <div
+          style={{
+            display: 'flex',
+            gap: '1rem',
+            padding: '0.5rem 2rem 1rem',
+            overflowX: 'auto',
+            scrollSnapType: 'x mandatory',
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'thin',
+          }}
+        >
+          {members.map((m) => (
+            <a
+              key={m.slug}
+              href={`/u/${m.slug}`}
+              style={{
+                flex: '0 0 280px',
+                scrollSnapAlign: 'start',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.75rem',
+                background: 'white',
+                border: '0.5px solid var(--sb-taupe)',
+                borderTop: '3px solid var(--sb-gold)',
+                borderRadius: 'var(--sb-radius)',
+                padding: '1.25rem 1.25rem 1.5rem',
+                textDecoration: 'none',
+                color: 'inherit',
+                boxShadow: '0 1px 3px rgba(27,42,59,0.06)',
+              }}
+            >
+              <div
+                style={{
+                  width: 64, height: 64, borderRadius: 8,
+                  background: m.logoUrl ? `url(${m.logoUrl}) center/contain no-repeat #FBF6F0` : 'var(--sb-cream)',
+                  border: '0.5px solid var(--sb-taupe)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'var(--sb-teal-deep)', fontWeight: 500, fontSize: '0.85rem',
+                  letterSpacing: '0.06em',
+                }}
+              >
+                {!m.logoUrl && (m.displayName || '?').slice(0, 2).toUpperCase()}
+              </div>
+              <div>
+                <div className="sb-display" style={{ fontSize: '1.1rem', color: 'var(--sb-navy)', letterSpacing: '0.02em' }}>
+                  {m.displayName}
+                </div>
+                {m.companyName && (
+                  <div style={{
+                    fontSize: '0.62rem', letterSpacing: '0.16em', textTransform: 'uppercase',
+                    color: 'var(--sb-gold)', marginTop: 2,
+                  }}>
+                    {m.companyName}
+                  </div>
+                )}
+              </div>
+              {m.blurb && (
+                <p style={{ fontSize: '0.82rem', lineHeight: 1.65, color: '#4a4a4a', margin: 0 }}>
+                  {m.blurb}
+                </p>
+              )}
+              <div style={{
+                marginTop: 'auto', paddingTop: '0.5rem',
+                fontSize: '0.65rem', letterSpacing: '0.18em', textTransform: 'uppercase',
+                color: 'var(--sb-gold)',
+              }}>
+                View profile →
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 const REGISTRY = {
   hero: HeroBlock,
   scripture: ScriptureBlock,
@@ -3210,6 +3330,7 @@ const REGISTRY = {
   aboutIntro: AboutIntroBlock,
   timeline: TimelineBlock,
   caseStudies: CaseStudiesBlock,
+  netWorksBanner: NetWorksBannerBlock,
 };
 
 export function RenderSection({ section, config, mode = 'public' }) {
