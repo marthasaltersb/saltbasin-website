@@ -242,6 +242,63 @@ async function bootstrap() {
     CREATE INDEX IF NOT EXISTS idx_member_configs_published_user
       ON member_configs (user_id) WHERE kind = 'published';
   `);
+
+  // ── Backlog / Requirements Management (admin-only) ──
+  //
+  // Phase 1: capability_groups + backlog_items.
+  // Future phases will add: deployments (Render/Netlify/GitHub sync),
+  // test_cases + test_scripts + test_runs, defects, time/token logs.
+  //
+  // backlog_items.kind is open-ended ('feature' | 'defect' | 'chore' | 'spike')
+  // so defects from failed test runs (future) slot in without a new table.
+  //
+  // Text fields (requirement_detail, business_rules, etc.) are markdown-ish
+  // — UI renders newlines and bullet syntax but doesn't parse to HTML, so
+  // there's no XSS risk on read.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS capability_groups (
+      id           BIGSERIAL PRIMARY KEY,
+      slug         TEXT NOT NULL UNIQUE,         -- e.g. 'multi-tenant-cms'
+      name         TEXT NOT NULL,                -- e.g. 'Multi-tenant CMS'
+      description  TEXT,
+      color        TEXT,                         -- hex used for chips
+      sort_order   INTEGER NOT NULL DEFAULT 0,
+      created_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+
+    CREATE TABLE IF NOT EXISTS backlog_items (
+      id                  BIGSERIAL PRIMARY KEY,
+      capability_id       BIGINT REFERENCES capability_groups(id) ON DELETE SET NULL,
+      parent_id           BIGINT REFERENCES backlog_items(id) ON DELETE SET NULL,  -- defect → feature
+      kind                TEXT NOT NULL DEFAULT 'feature',  -- feature | defect | chore | spike
+      title               TEXT NOT NULL,
+      summary             TEXT,                  -- one-liner shown on the card
+      user_story          TEXT,                  -- "As X, I want Y, so that Z"
+      requirement_detail  TEXT,
+      business_rules      TEXT,
+      design_spec         TEXT,
+      acceptance_criteria TEXT,
+      process_steps       TEXT,                  -- functional process steps impacted
+      status              TEXT NOT NULL DEFAULT 'pending',  -- pending | in_progress | completed | deployed | blocked | archived
+      priority            TEXT,                  -- p0 | p1 | p2 | p3
+      work_split_claude   INTEGER,               -- 0..100, % done by Claude
+      time_minutes        INTEGER,               -- estimated minutes spent
+      deployed_github     BOOLEAN NOT NULL DEFAULT false,
+      deployed_render     BOOLEAN NOT NULL DEFAULT false,
+      deployed_netlify    BOOLEAN NOT NULL DEFAULT false,
+      deploy_relevance    TEXT,                  -- JSON {github:bool,render:bool,netlify:bool} — which systems even apply
+      tags                TEXT,                  -- JSON array of free-form tags
+      external_ref        TEXT,                  -- commit sha / PR url / task id from earlier tracking
+      sort_order          INTEGER NOT NULL DEFAULT 0,
+      created_at          BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at          BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_backlog_capability  ON backlog_items (capability_id);
+    CREATE INDEX IF NOT EXISTS idx_backlog_status      ON backlog_items (status);
+    CREATE INDEX IF NOT EXISTS idx_backlog_kind        ON backlog_items (kind);
+    CREATE INDEX IF NOT EXISTS idx_backlog_parent      ON backlog_items (parent_id) WHERE parent_id IS NOT NULL;
+  `);
 }
 
 // Awaited at module import time so routes can use db without worrying about

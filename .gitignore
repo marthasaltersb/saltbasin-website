@@ -8,3 +8,4 @@ server/data/salt-basin.db-*
 server/data/uploads/
 *.log
 .DS_Store
+.netlify/
