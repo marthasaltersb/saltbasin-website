@@ -363,6 +363,70 @@ async function bootstrap() {
     );
     CREATE INDEX IF NOT EXISTS idx_tier_workarounds_capability ON tier_workarounds (capability_id);
   `);
+
+  // ── Session 2: JIRA integration + Member Templates + Scrum Agent ──
+  //
+  // jira_config: one row keyed by 'singleton'. Stores the API token plus
+  // project metadata. Token is stored as TEXT (Postgres at rest is encrypted
+  // by Supabase). A future hardening step would add app-layer encryption.
+  //
+  // member_templates: curated starter templates a member can apply to their
+  // site. pages_preset matches member_sites.draft shape; brand_kit follows
+  // defaultMemberConfig.brand.
+  //
+  // agent_threads + agent_messages: one thread per conversation. messages
+  // store user/assistant turns + proposed tool calls (awaiting approval) for
+  // the Phase 2 propose-and-approve flow.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS jira_config (
+      id            TEXT PRIMARY KEY,
+      base_url      TEXT,
+      email         TEXT,
+      api_token     TEXT,
+      project_key   TEXT,
+      field_map     TEXT,
+      last_pull_at  BIGINT,
+      updated_at    BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+
+    CREATE TABLE IF NOT EXISTS member_templates (
+      id                BIGSERIAL PRIMARY KEY,
+      slug              TEXT NOT NULL UNIQUE,
+      name              TEXT NOT NULL,
+      archetype         TEXT,
+      tagline           TEXT,
+      description       TEXT,
+      preview_image_url TEXT,
+      brand_kit         TEXT,
+      pages_preset      TEXT NOT NULL,
+      sort_order        INTEGER NOT NULL DEFAULT 0,
+      created_at        BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+
+    CREATE TABLE IF NOT EXISTS agent_threads (
+      id          BIGSERIAL PRIMARY KEY,
+      user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      kind        TEXT NOT NULL DEFAULT 'scrum',
+      title       TEXT,
+      created_at  BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at  BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+
+    CREATE TABLE IF NOT EXISTS agent_messages (
+      id           BIGSERIAL PRIMARY KEY,
+      thread_id    BIGINT NOT NULL REFERENCES agent_threads(id) ON DELETE CASCADE,
+      role         TEXT NOT NULL,
+      content      TEXT NOT NULL,
+      tool_calls   TEXT,
+      created_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_agent_messages_thread ON agent_messages (thread_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_agent_threads_user    ON agent_threads (user_id, updated_at DESC);
+
+    -- backlog_items.jira_issue_key for round-trip identification.
+    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS jira_issue_key TEXT;
+    CREATE INDEX IF NOT EXISTS idx_backlog_jira_key ON backlog_items (jira_issue_key) WHERE jira_issue_key IS NOT NULL;
+  `);
 }
 
 // Awaited at module import time so routes can use db without worrying about

@@ -9,3 +9,4 @@ server/data/uploads/
 *.log
 .DS_Store
 .netlify/
+build specs and status progress/
