@@ -1347,6 +1347,183 @@ export function ProductOnePagerOutput() {
   );
 }
 
+// ──────────────────────────────────────────────────────────────────
+// Patch Notes — curated release log shown on /output/patch-notes.
+// Admin-only (this is internal release history). Print-friendly.
+// ──────────────────────────────────────────────────────────────────
+export function PatchNotesOutput() {
+  const { loading, user } = useAuthState();
+  const [data, setData] = useState(null);
+  const [err, setErr] = useState(null);
+
+  useEffect(() => {
+    if (loading || !user || user.role !== 'admin') return;
+    fetch('/api/backlog/patch-notes', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.status))))
+      .then(setData)
+      .catch((e) => setErr(e.message));
+  }, [loading, user]);
+
+  if (loading) return null;
+  if (!user || user.role !== 'admin') {
+    return (
+      <OutputFrame title="Patch Notes" eyebrow="Internal · Release Log" gated>
+        <div style={{ maxWidth: 700, margin: '4rem auto', padding: '0 1.5rem', textAlign: 'center' }}>
+          <OutputHeading>Restricted</OutputHeading>
+          <h1 className="sb-display" style={{ fontSize: '2.4rem', color: 'var(--sb-navy)', marginBottom: '0.75rem' }}>
+            Patch notes are admin-only
+          </h1>
+          <Link to="/admin/login" className="sb-btn sb-btn-gold" style={{ marginTop: '1.5rem' }}>Sign in →</Link>
+        </div>
+      </OutputFrame>
+    );
+  }
+  if (err) {
+    return (
+      <OutputFrame title="Patch Notes" eyebrow="Internal · Release Log">
+        <div style={{ maxWidth: 700, margin: '4rem auto', padding: '0 1.5rem' }}>
+          <p style={{ color: 'var(--sb-risk-critical)' }}>Failed to load patch notes: {err}</p>
+        </div>
+      </OutputFrame>
+    );
+  }
+  if (!data) {
+    return (
+      <OutputFrame title="Patch Notes" eyebrow="Internal · Release Log">
+        <div style={{ padding: '4rem 2rem', textAlign: 'center', color: 'var(--sb-teal-deep)' }}>Loading patch notes…</div>
+      </OutputFrame>
+    );
+  }
+
+  const releases = data.releases || [];
+  const sectionMeta = {
+    'New':      { color: 'var(--sb-green)',          glyph: '✦', tone: 'rgba(168,184,154,0.12)' },
+    'Changed':  { color: 'var(--sb-gold)',           glyph: '↻', tone: 'rgba(196,132,58,0.12)' },
+    'Fixed':    { color: 'var(--sb-teal-deep)',      glyph: '✓', tone: 'rgba(74,102,112,0.12)' },
+    'Behind the scenes': { color: 'var(--sb-dusty)', glyph: '◇', tone: 'rgba(139,155,174,0.10)' },
+    'Known issues': { color: 'var(--sb-risk-critical)', glyph: '!', tone: 'rgba(196,75,75,0.10)' },
+  };
+
+  return (
+    <OutputFrame title="Salt Basin · Patch Notes" eyebrow="Internal · Release Log">
+      <div className="sb-output-page" style={{ maxWidth: 980, margin: '0 auto', padding: '2.5rem 2rem 4rem' }}>
+
+        {/* ── Hero ── */}
+        <section style={{ marginBottom: '2rem' }}>
+          <OutputHeading>Salt Basin Net Works Build Log</OutputHeading>
+          <h1 className="sb-display" style={{ fontSize: '2.6rem', color: 'var(--sb-navy)', marginBottom: '0.5rem', lineHeight: 1.05 }}>
+            Patch Notes
+          </h1>
+          <p style={{ ...paraStyle, marginBottom: 4 }}>
+            What shipped to saltbasin.net, organized by release. Most recent first.
+          </p>
+          <p style={{ fontSize: '0.75rem', color: 'var(--sb-teal-deep)', fontStyle: 'italic' }}>
+            {releases.length} releases · build started {releases.length ? formatLongDate(releases[releases.length - 1].date) : '—'}
+          </p>
+        </section>
+
+        {/* ── Releases ── */}
+        {releases.map((r, idx) => (
+          <section
+            key={r.version}
+            style={{
+              borderTop: '0.5px solid var(--sb-taupe)',
+              paddingTop: '1.5rem',
+              marginBottom: '1.75rem',
+              breakInside: 'avoid',
+            }}
+          >
+            {/* Version header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.4rem' }}>
+              <div>
+                <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.65rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--sb-gold)', marginBottom: 4 }}>
+                  {r.version} · {formatLongDate(r.date)}
+                </div>
+                <h2 className="sb-display" style={{ fontSize: '1.7rem', color: 'var(--sb-navy)', marginBottom: '0.35rem', lineHeight: 1.15 }}>
+                  {r.name}
+                </h2>
+              </div>
+              {idx === 0 && (
+                <span style={{
+                  padding: '3px 9px',
+                  fontFamily: 'var(--sb-font-label)',
+                  fontSize: '0.58rem',
+                  letterSpacing: '0.18em',
+                  textTransform: 'uppercase',
+                  color: 'var(--sb-green)',
+                  border: '0.5px solid var(--sb-green)',
+                  borderRadius: 2,
+                }}>
+                  Latest
+                </span>
+              )}
+            </div>
+
+            {r.summary && (
+              <p style={{ ...paraStyle, marginBottom: '1rem' }}>
+                {r.summary}
+              </p>
+            )}
+
+            {/* Sections */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              {(r.sections || []).map((sec) => {
+                const meta = sectionMeta[sec.heading] || sectionMeta['New'];
+                return (
+                  <div
+                    key={sec.heading}
+                    style={{
+                      padding: '0.75rem 1rem',
+                      background: meta.tone,
+                      border: `0.5px solid ${meta.color}`,
+                      borderLeft: `3px solid ${meta.color}`,
+                      borderRadius: 'var(--sb-radius)',
+                      breakInside: 'avoid',
+                    }}
+                  >
+                    <div style={{
+                      fontFamily: 'var(--sb-font-label)',
+                      fontSize: '0.62rem',
+                      letterSpacing: '0.18em',
+                      textTransform: 'uppercase',
+                      color: meta.color,
+                      marginBottom: '0.5rem',
+                    }}>
+                      <span style={{ marginRight: 5 }}>{meta.glyph}</span>
+                      {sec.heading}
+                    </div>
+                    <ul style={{ ...ulStyle }}>
+                      {(sec.items || []).map((it, i) => (
+                        <li key={i} style={{ ...liStyle, fontSize: '0.82rem', marginBottom: '0.3rem' }}>
+                          <span style={{ ...dotStyle, color: meta.color }}>·</span>
+                          {it}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ))}
+
+        {/* Footer */}
+        <section style={{ borderTop: '0.5px solid var(--sb-taupe)', paddingTop: '1rem', textAlign: 'center', fontSize: '0.7rem', color: 'var(--sb-teal-deep)' }}>
+          Generated from the curated release log at <code>server/data/patchNotes.js</code>. Future releases append to that file and auto-publish here.
+        </section>
+      </div>
+    </OutputFrame>
+  );
+}
+
+function formatLongDate(s) {
+  if (!s) return '—';
+  // s is YYYY-MM-DD
+  const d = new Date(s + 'T12:00:00');
+  if (Number.isNaN(d.getTime())) return s;
+  return d.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
 function CapabilityRow({ cap, items }) {
   const featureCount = cap.deliveredCount;
   const tech = cap.group.techStack || [];

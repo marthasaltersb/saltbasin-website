@@ -592,6 +592,15 @@ function OutputsCatalog() {
       audience: 'Internal · portfolio piece · investors',
       path: '/output/build-summary',
     },
+    {
+      slug: 'patch-notes',
+      title: 'Patch Notes (Release Log)',
+      summary: 'Curated release-by-release narrative of what shipped to saltbasin.net. New / Changed / Fixed / Behind the scenes per release. Print-friendly.',
+      icon: '▤',
+      color: 'var(--sb-sage)',
+      audience: 'Internal · investors · stakeholder updates',
+      path: '/output/patch-notes',
+    },
   ];
   return (
     <div>
