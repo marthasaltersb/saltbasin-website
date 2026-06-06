@@ -49,6 +49,11 @@ function rowToItem(r) {
     timeMinutes: r.time_minutes == null ? null : Number(r.time_minutes),
     costUsdClaude: r.cost_usd_claude == null ? null : Number(r.cost_usd_claude),
     techStack: r.tech_stack ? safeJSON(r.tech_stack) : null,
+    hoursBetsy: r.hours_betsy == null ? null : Number(r.hours_betsy),
+    hoursClaude: r.hours_claude == null ? null : Number(r.hours_claude),
+    activitiesBetsy: r.activities_betsy == null ? null : Number(r.activities_betsy),
+    activitiesClaude: r.activities_claude == null ? null : Number(r.activities_claude),
+    traditionalCostUsd: r.traditional_cost_usd == null ? null : Number(r.traditional_cost_usd),
     deployedGithub: !!r.deployed_github,
     deployedRender: !!r.deployed_render,
     deployedNetlify: !!r.deployed_netlify,
@@ -110,6 +115,11 @@ const ITEM_FIELD_MAP = {
   timeMinutes: 'time_minutes',
   costUsdClaude: 'cost_usd_claude',
   techStack: 'tech_stack',
+  hoursBetsy: 'hours_betsy',
+  hoursClaude: 'hours_claude',
+  activitiesBetsy: 'activities_betsy',
+  activitiesClaude: 'activities_claude',
+  traditionalCostUsd: 'traditional_cost_usd',
   deployedGithub: 'deployed_github',
   deployedRender: 'deployed_render',
   deployedNetlify: 'deployed_netlify',
@@ -365,27 +375,55 @@ router.get('/summary', async (req, res) => {
   // pending in the inventory list.
   const delivered = items.filter((it) => it.status === 'deployed' || it.status === 'completed');
 
+  // Source-of-truth totals from the new per-person fields (with legacy
+  // fallback to time_minutes / work_split_claude where new fields are still
+  // null for whatever reason).
+  function itemHoursClaude(it) {
+    if (it.hoursClaude != null) return it.hoursClaude;
+    return (it.timeMinutes || 0) / 60 * (it.workSplitClaude ?? 0) / 100;
+  }
+  function itemHoursBetsy(it) {
+    if (it.hoursBetsy != null) return it.hoursBetsy;
+    return (it.timeMinutes || 0) / 60 * (100 - (it.workSplitClaude ?? 0)) / 100;
+  }
+
   const totals = {
     elapsedDays,
     requirementsTotal:     items.length,
     requirementsDelivered: delivered.length,
-    minutes:               delivered.reduce((s, it) => s + (it.timeMinutes || 0), 0),
+    hoursClaude:           delivered.reduce((s, it) => s + itemHoursClaude(it), 0),
+    hoursBetsy:            delivered.reduce((s, it) => s + itemHoursBetsy(it), 0),
+    activitiesClaude:      delivered.reduce((s, it) => s + (it.activitiesClaude || 0), 0),
+    activitiesBetsy:       delivered.reduce((s, it) => s + (it.activitiesBetsy || 0), 0),
     costUsdClaude:         delivered.reduce((s, it) => s + (it.costUsdClaude || 0), 0),
+    traditionalCostUsd:    delivered.reduce((s, it) => s + (it.traditionalCostUsd || 0), 0),
     monthlyTierSavings:    workarounds.reduce((s, w) => s + (w.monthlySavings || 0), 0),
-    claudeMinutesWeighted: delivered.reduce((s, it) => s + ((it.timeMinutes || 0) * (it.workSplitClaude ?? 0) / 100), 0),
   };
-  totals.hours = Math.round(totals.minutes / 60 * 10) / 10;
-  totals.claudeOverallPct = totals.minutes ? Math.round((totals.claudeMinutesWeighted / totals.minutes) * 100) : 0;
+  totals.hoursTotal = Math.round((totals.hoursClaude + totals.hoursBetsy) * 10) / 10;
+  totals.hoursClaude = Math.round(totals.hoursClaude * 10) / 10;
+  totals.hoursBetsy = Math.round(totals.hoursBetsy * 10) / 10;
+  totals.activitiesTotal = totals.activitiesClaude + totals.activitiesBetsy;
+  totals.claudeOverallPct = totals.hoursTotal ? Math.round((totals.hoursClaude / totals.hoursTotal) * 100) : 0;
+  totals.aiSavingsUsd = Math.round((totals.traditionalCostUsd - totals.costUsdClaude) * 100) / 100;
+  totals.aiSavingsMultiple = totals.costUsdClaude > 0
+    ? Math.round((totals.traditionalCostUsd / totals.costUsdClaude) * 10) / 10
+    : null;
 
-  // Per-capability rollup
+  // Per-capability rollup using the same source-of-truth fields.
   const byCap = new Map();
   for (const g of groups) {
     byCap.set(g.id, {
       group: g,
       items: [],
-      minutes: 0,
+      hoursClaude: 0,
+      hoursBetsy: 0,
+      activitiesClaude: 0,
+      activitiesBetsy: 0,
       costUsdClaude: 0,
+      traditionalCostUsd: 0,
       deliveredCount: 0,
+      firstDeployedAt: null,
+      lastDeployedAt: null,
     });
   }
   for (const it of items) {
@@ -393,18 +431,37 @@ router.get('/summary', async (req, res) => {
     if (!entry) continue;
     entry.items.push(it);
     if (it.status === 'deployed' || it.status === 'completed') {
-      entry.minutes       += it.timeMinutes || 0;
-      entry.costUsdClaude += it.costUsdClaude || 0;
-      entry.deliveredCount += 1;
+      entry.hoursClaude       += itemHoursClaude(it);
+      entry.hoursBetsy        += itemHoursBetsy(it);
+      entry.activitiesClaude  += it.activitiesClaude || 0;
+      entry.activitiesBetsy   += it.activitiesBetsy || 0;
+      entry.costUsdClaude     += it.costUsdClaude || 0;
+      entry.traditionalCostUsd += it.traditionalCostUsd || 0;
+      entry.deliveredCount    += 1;
+      // Track first/last update for timeline view
+      const t = it.updatedAt || it.createdAt;
+      if (!entry.firstDeployedAt || t < entry.firstDeployedAt) entry.firstDeployedAt = t;
+      if (!entry.lastDeployedAt  || t > entry.lastDeployedAt)  entry.lastDeployedAt = t;
     }
   }
-  const capabilities = [...byCap.values()].map((e) => ({
-    group: e.group,
-    deliveredCount: e.deliveredCount,
-    totalCount: e.items.length,
-    hours: Math.round(e.minutes / 60 * 10) / 10,
-    costUsdClaude: Math.round(e.costUsdClaude * 100) / 100,
-  }));
+  const capabilities = [...byCap.values()].map((e) => {
+    const hoursTotal = e.hoursClaude + e.hoursBetsy;
+    return {
+      group: e.group,
+      deliveredCount: e.deliveredCount,
+      totalCount: e.items.length,
+      hoursClaude: Math.round(e.hoursClaude * 10) / 10,
+      hoursBetsy: Math.round(e.hoursBetsy * 10) / 10,
+      hoursTotal: Math.round(hoursTotal * 10) / 10,
+      activitiesClaude: e.activitiesClaude,
+      activitiesBetsy: e.activitiesBetsy,
+      costUsdClaude: Math.round(e.costUsdClaude * 100) / 100,
+      traditionalCostUsd: Math.round(e.traditionalCostUsd * 100) / 100,
+      claudePct: hoursTotal ? Math.round((e.hoursClaude / hoursTotal) * 100) : 0,
+      firstDeployedAt: e.firstDeployedAt,
+      lastDeployedAt: e.lastDeployedAt,
+    };
+  });
 
   res.json({
     projectStartedAt: PROJECT_STARTED_AT || null,

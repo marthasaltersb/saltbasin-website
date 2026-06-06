@@ -308,6 +308,44 @@ async function bootstrap() {
     ALTER TABLE backlog_items     ADD COLUMN IF NOT EXISTS cost_usd_claude NUMERIC;
   `);
 
+  // Backlog Phase 1.6: hours and activity counts BY PERSON. Replaces the
+  // single work_split_claude % with explicit breakdowns. Old columns stay
+  // for back-compat but the per-person fields are now the source of truth
+  // for capability rollups.
+  await sql.unsafe(`
+    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS hours_betsy NUMERIC;
+    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS hours_claude NUMERIC;
+    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS activities_betsy INTEGER;
+    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS activities_claude INTEGER;
+    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS traditional_cost_usd NUMERIC;  -- estimated pre-AI cost
+  `);
+
+  // One-time backfill: if hours_* are NULL but the legacy fields exist,
+  // compute splits from time_minutes + work_split_claude. Activities are
+  // estimated at ~10min per Claude activity, ~20min per Betsy activity.
+  // Idempotent — only runs where new fields are still null.
+  await sql.unsafe(`
+    UPDATE backlog_items
+       SET hours_claude = ROUND((time_minutes / 60.0) * COALESCE(work_split_claude, 50) / 100.0, 2),
+           hours_betsy  = ROUND((time_minutes / 60.0) * (100 - COALESCE(work_split_claude, 50)) / 100.0, 2)
+     WHERE hours_claude IS NULL
+       AND time_minutes IS NOT NULL;
+
+    UPDATE backlog_items
+       SET activities_claude = GREATEST(1, CEILING(hours_claude * 6)),
+           activities_betsy  = GREATEST(1, CEILING(hours_betsy  * 3))
+     WHERE activities_claude IS NULL
+       AND hours_claude IS NOT NULL;
+
+    -- Pre-AI cost: total hours × 2.5x effort multiplier × $150 blended rate.
+    -- Both Betsy hours and Claude hours represented the build's total work,
+    -- so the comparison treats the whole as one project that would need a
+    -- traditional dev team.
+    UPDATE backlog_items
+       SET traditional_cost_usd = ROUND(((COALESCE(hours_claude, 0) + COALESCE(hours_betsy, 0)) * 2.5 * 150)::numeric, 2)
+     WHERE traditional_cost_usd IS NULL;
+  `);
+
   // Tier workarounds — capture the strategic decisions we made to stay on
   // free tiers instead of upgrading. Surfaced on the build-summary one-pager
   // and editable from the Backlog admin.
