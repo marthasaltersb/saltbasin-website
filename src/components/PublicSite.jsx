@@ -55,8 +55,23 @@ export default function PublicSite() {
   if (!currentEntry) return <NotFound />;
   const [, currentPage] = currentEntry;
 
+  // Apply admin-configured brand color overrides on saltbasin.net. Scoped to
+  // .sb-public-site-root so admin chrome (/admin/*) keeps the canonical
+  // Salt Basin tokens.
+  const brand = config?.brand || {};
+  const brandCss = (brand.primary || brand.accent || brand.ink || brand.paper) ? `
+    .sb-public-site-root {
+      ${brand.primary ? `--sb-navy: ${brand.primary};` : ''}
+      ${brand.primary ? `--sb-navy-deep: ${brand.primary};` : ''}
+      ${brand.accent  ? `--sb-gold: ${brand.accent};` : ''}
+      ${brand.ink     ? `--sb-cream: ${brand.ink};` : ''}
+      ${brand.paper   ? `--sb-ivory: ${brand.paper};` : ''}
+    }
+  ` : '';
+
   return (
-    <div>
+    <div className="sb-public-site-root">
+      {brandCss && <style>{brandCss}</style>}
       <PublicNav site={config.site} />
       <Breadcrumbs />
       {(currentPage.sections || []).map((sec) => (

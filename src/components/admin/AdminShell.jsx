@@ -53,6 +53,45 @@ export default function AdminShell({ scope = 'admin' }) {
   const [tab, setTab] = useState('content'); // 'content' | 'config' | (admin only: 'leads' | 'networks')
   const [view, setView] = useState('split'); // 'split' | 'editor' | 'preview'
 
+  // Split-view editor/preview ratio. 0.55 = editor takes 55%, preview 45%.
+  // Persisted in localStorage so each browser remembers the user's preference.
+  const SPLIT_KEY = `sb_admin_split_${scope}`;
+  const [splitRatio, setSplitRatio] = useState(() => {
+    const v = parseFloat(localStorage.getItem(SPLIT_KEY));
+    return Number.isFinite(v) && v >= 0.2 && v <= 0.8 ? v : 0.55;
+  });
+  const [dragging, setDragging] = useState(false);
+  const workspaceRef = React.useRef(null);
+
+  // Save ratio when it stops moving.
+  useEffect(() => {
+    if (!dragging) localStorage.setItem(SPLIT_KEY, String(splitRatio));
+  }, [dragging, splitRatio, SPLIT_KEY]);
+
+  // Global mouse listener while dragging.
+  useEffect(() => {
+    if (!dragging) return;
+    function onMove(e) {
+      const root = workspaceRef.current;
+      if (!root) return;
+      const rect = root.getBoundingClientRect();
+      // Subtract the sidebar's width if visible to get the pure split area.
+      const sidebarWidth = sidebarOpen ? 260 : 0;
+      const left = rect.left + sidebarWidth;
+      const usable = rect.width - sidebarWidth;
+      const rel = (e.clientX - left) / usable;
+      const clamped = Math.max(0.2, Math.min(0.8, rel));
+      setSplitRatio(clamped);
+    }
+    function onUp() { setDragging(false); }
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [dragging, sidebarOpen]);
+
   const [currentPageKey, setCurrentPageKey] = useState('home');
   const [currentSectionId, setCurrentSectionId] = useState(null);
   // On desktop the sidebar is always visible; on mobile it slides over.
@@ -382,7 +421,7 @@ export default function AdminShell({ scope = 'admin' }) {
         </div>
       </div>
 
-      <div className="sb-admin-workspace" style={styles.workspace}>
+      <div ref={workspaceRef} className="sb-admin-workspace" style={{ ...styles.workspace, userSelect: dragging ? 'none' : undefined, cursor: dragging ? 'col-resize' : undefined }}>
         {!isMember && tab === 'leads' ? (
           <LeadsPanel />
         ) : !isMember && tab === 'networks' ? (
@@ -413,7 +452,14 @@ export default function AdminShell({ scope = 'admin' }) {
               />
             </div>
             {(view === 'split' || view === 'editor') && (
-              <div className="sb-admin-editor" style={{ display: 'flex', flex: 1, minWidth: 0 }}>
+              <div
+                className="sb-admin-editor"
+                style={
+                  view === 'split'
+                    ? { display: 'flex', flexBasis: `${splitRatio * 100}%`, flexShrink: 1, flexGrow: 0, minWidth: 280, overflow: 'hidden' }
+                    : { display: 'flex', flex: 1, minWidth: 0 }
+                }
+              >
                 <EditorPane
                   section={currentSection}
                   page={currentPage}
@@ -422,8 +468,22 @@ export default function AdminShell({ scope = 'admin' }) {
                 />
               </div>
             )}
+            {view === 'split' && (
+              <SplitDivider
+                dragging={dragging}
+                onMouseDown={(e) => { e.preventDefault(); setDragging(true); }}
+                onDoubleClick={() => setSplitRatio(0.55)}
+              />
+            )}
             {(view === 'split' || view === 'preview') && (
-              <div className="sb-admin-preview" style={{ display: 'flex' }}>
+              <div
+                className="sb-admin-preview"
+                style={
+                  view === 'split'
+                    ? { display: 'flex', flex: 1, minWidth: 280, overflow: 'hidden' }
+                    : { display: 'flex', flex: 1 }
+                }
+              >
                 <PreviewPane site={draft} config={configDraft} currentPageKey={currentPageKey} />
               </div>
             )}
@@ -498,6 +558,41 @@ function PublishBar({ dirty, siteDirty, configDirty, onSave, onDiscard, onPublis
       >
         Publish ↗
       </button>
+    </div>
+  );
+}
+
+// Vertical divider with a draggable grip between the editor and preview
+// panes. Mouse-down arms drag (handled by the parent's effect); double-click
+// resets the ratio to the default 55/45 split.
+function SplitDivider({ dragging, onMouseDown, onDoubleClick }) {
+  return (
+    <div
+      onMouseDown={onMouseDown}
+      onDoubleClick={onDoubleClick}
+      title="Drag to resize · double-click to reset"
+      style={{
+        width: 6,
+        flexShrink: 0,
+        cursor: 'col-resize',
+        background: dragging ? 'rgba(196,132,58,0.4)' : 'rgba(196,132,58,0.12)',
+        borderLeft: '0.5px solid rgba(196,132,58,0.2)',
+        borderRight: '0.5px solid rgba(196,132,58,0.2)',
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: dragging ? 'none' : 'background 0.15s',
+      }}
+    >
+      <div
+        style={{
+          width: 2,
+          height: 36,
+          background: dragging ? 'var(--sb-gold)' : 'rgba(196,132,58,0.5)',
+          borderRadius: 1,
+        }}
+      />
     </div>
   );
 }

@@ -109,8 +109,8 @@ export const styles = {
     flexShrink: 0,
   },
   previewPane: {
-    width: '46%',
-    minWidth: 420,
+    flex: 1,                   // fills whatever flex-basis its parent gives it
+    minWidth: 0,               // allow shrinking below content size
     background: 'var(--sb-ivory)',
     color: 'var(--sb-navy)',
     display: 'flex',

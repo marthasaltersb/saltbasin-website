@@ -145,6 +145,26 @@ export default function EditorPane({ section, page, onUpdateSection, onUpdatePag
                   </div>
                 );
               }
+              // Date-shaped fields (e.g. role1Start, role2EndDate) get a
+              // native calendar picker. Heuristic matches common naming.
+              const dateMatch = /(start|end|date|since|until|from|thru)(date)?$/i;
+              const isDate = dateMatch.test(k);
+              if (isDate) {
+                // Normalize incoming value to YYYY-MM-DD if it parses; if not,
+                // show empty so the user can pick fresh.
+                const safe = toIsoDate(v);
+                return (
+                  <div key={k} style={styles.fieldGroup}>
+                    <label style={styles.fieldLabel}>{humanLabel(k)}</label>
+                    <input
+                      type="date"
+                      className="sb-input"
+                      value={safe}
+                      onChange={(e) => patchField(k, e.target.value)}
+                    />
+                  </div>
+                );
+              }
               const isLong =
                 LONG_KEYS.some((x) => k.toLowerCase().includes(x.toLowerCase())) ||
                 (typeof v === 'string' && v.length > 90);
@@ -289,6 +309,20 @@ function ImageUploadField({ value, onChange }) {
       </div>
     </div>
   );
+}
+
+// Normalize any incoming value to a YYYY-MM-DD string suitable for
+// <input type="date">. Accepts ISO strings, "Jan 2023" loose text, etc.
+// Returns '' if it cannot parse the value as a date.
+function toIsoDate(v) {
+  if (!v) return '';
+  if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return '';
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
 }
 
 function statusBtnStyle(selected) {

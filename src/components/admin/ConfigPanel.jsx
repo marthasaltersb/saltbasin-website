@@ -82,13 +82,16 @@ export default function ConfigPanel({ config, onChange, scope = 'admin' }) {
         </div>
         )}
 
-        {/* Brand colors — member only. Overrides --sb-* tokens on the
-            member's own profile pages. Admin theme is locked. */}
-        {isMember && (
+        {/* Brand colors — both admin and member.
+            Admin scope: overrides --sb-* tokens on saltbasin.net public site.
+            Member scope: overrides --sb-* tokens on /u/:slug member profile.
+            Both write to the same `brand` JSON path in their respective config. */}
         <div style={styles.card}>
           <div style={styles.cardTitle}>Brand Colors</div>
           <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem', lineHeight: 1.55 }}>
-            These colors apply to your profile pages only. Use hex codes (e.g. <code>#1B2A3B</code>).
+            {isMember
+              ? 'These colors apply to your profile pages only. Use hex codes (e.g. #1B2A3B).'
+              : 'These colors override the Salt Basin palette on saltbasin.net public pages. Admin chrome stays locked.'}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
             <ColorField label="Primary (navy)"  value={config?.brand?.primary} onChange={(v) => patch('brand.primary', v)} />
@@ -96,8 +99,19 @@ export default function ConfigPanel({ config, onChange, scope = 'admin' }) {
             <ColorField label="Ink (text)"      value={config?.brand?.ink}     onChange={(v) => patch('brand.ink', v)} />
             <ColorField label="Paper (bg)"      value={config?.brand?.paper}   onChange={(v) => patch('brand.paper', v)} />
           </div>
+          <button
+            onClick={() => {
+              patch('brand.primary', '#1B2A3B');
+              patch('brand.accent',  '#C4843A');
+              patch('brand.ink',     '#F5F0E8');
+              patch('brand.paper',   '#FBF6F0');
+            }}
+            className="sb-btn sb-btn-outline"
+            style={{ marginTop: 8, padding: '0.35rem 0.8rem', fontSize: '0.65rem' }}
+          >
+            Reset to Salt Basin defaults
+          </button>
         </div>
-        )}
 
         {/* Social */}
         <div style={styles.card}>
