@@ -731,3 +731,694 @@ const liStyle = {
   paddingLeft: '1rem', position: 'relative', marginBottom: '0.35rem',
 };
 const dotStyle = { position: 'absolute', left: 0, color: 'var(--sb-gold)' };
+
+// ──────────────────────────────────────────────────────────────────
+// Build Summary — admin-facing one-pager that documents everything we built.
+// Headline metrics (days, hours, $ Claude, monthly tier savings), feature
+// inventory by capability, tech stack per capability, and the tier
+// workarounds we used to stay on free products.
+// ──────────────────────────────────────────────────────────────────
+export function BuildSummaryOutput() {
+  const { loading, user } = useAuthState();
+  const [data, setData] = useState(null);
+  const [err,  setErr]  = useState(null);
+
+  useEffect(() => {
+    if (loading || !user || user.role !== 'admin') return;
+    fetch('/api/backlog/summary', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.status))))
+      .then(setData)
+      .catch((e) => setErr(e.message));
+  }, [loading, user]);
+
+  if (loading) return null;
+
+  // Auth-gated to admin (not just member) — this is internal build documentation.
+  if (!user || user.role !== 'admin') {
+    return (
+      <OutputFrame title="Build Summary" eyebrow="Internal · One-Pager" gated>
+        <div style={{ maxWidth: 700, margin: '4rem auto', padding: '0 1.5rem', textAlign: 'center' }}>
+          <OutputHeading>Restricted</OutputHeading>
+          <h1 className="sb-display" style={{ fontSize: '2.4rem', color: 'var(--sb-navy)', marginBottom: '0.75rem' }}>
+            Build documentation is admin-only
+          </h1>
+          <p style={paraStyle}>
+            This one-pager summarizes every requirement built into Salt Basin Net Works, the tech stack per capability, and the cost workarounds used to stay on free product tiers. It is intended for Betsy\'s personal records.
+          </p>
+          <Link to="/admin/login" className="sb-btn sb-btn-gold" style={{ marginTop: '1.5rem' }}>
+            Sign in as admin →
+          </Link>
+        </div>
+      </OutputFrame>
+    );
+  }
+
+  if (err) {
+    return (
+      <OutputFrame title="Build Summary" eyebrow="Internal · One-Pager">
+        <div style={{ maxWidth: 700, margin: '4rem auto', padding: '0 1.5rem' }}>
+          <p style={{ color: 'var(--sb-risk-critical)' }}>Failed to load summary: {err}</p>
+        </div>
+      </OutputFrame>
+    );
+  }
+  if (!data) {
+    return (
+      <OutputFrame title="Build Summary" eyebrow="Internal · One-Pager">
+        <div style={{ padding: '4rem 2rem', textAlign: 'center', color: 'var(--sb-teal-deep)' }}>Loading build summary…</div>
+      </OutputFrame>
+    );
+  }
+
+  const { totals, capabilities, workarounds, items } = data;
+  const dollars = (n) => `$${(Math.round((n || 0) * 100) / 100).toFixed(2)}`;
+  const annualSavings = (totals.monthlyTierSavings || 0) * 12;
+  // Capabilities sorted by first deploy for the timeline
+  const timelineCaps = [...capabilities]
+    .filter((c) => c.deliveredCount > 0 && c.firstDeployedAt)
+    .sort((a, b) => (a.firstDeployedAt || 0) - (b.firstDeployedAt || 0));
+
+  return (
+    <OutputFrame title="Salt Basin · Build Progress Report" eyebrow="Internal · To-Date Build">
+      <div className="sb-output-page" style={{ maxWidth: 1100, margin: '0 auto', padding: '2rem 2rem 4rem' }}>
+
+        {/* ── Headline metrics ── */}
+        <section style={{ marginBottom: '2rem' }}>
+          <OutputHeading>The Build at a Glance</OutputHeading>
+          <h1 className="sb-display" style={{ fontSize: '2.4rem', color: 'var(--sb-navy)', marginBottom: '0.4rem', lineHeight: 1.1 }}>
+            Salt Basin Net Works · Build to Date
+          </h1>
+          <p style={{ ...paraStyle, marginBottom: '1.25rem' }}>
+            A snapshot of every product feature shipped on saltbasin.net, generated from the live admin backlog. Includes the platform itself, the multi-tenant CMS for member operators, lead capture, email infrastructure, public-site content, and the supporting deployment + observability layers.
+          </p>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+              gap: '0.75rem',
+              marginTop: '1rem',
+            }}
+          >
+            <SumChip label="Calendar days" value={totals.elapsedDays} />
+            <SumChip label="Requirements delivered" value={`${totals.requirementsDelivered} / ${totals.requirementsTotal}`} />
+            <SumChip label="Total hours" value={totals.hoursTotal} />
+            <SumChip label="Claude hours" value={totals.hoursClaude} accent />
+            <SumChip label="Betsy hours" value={totals.hoursBetsy} accent />
+            <SumChip label="Activities (C + B)" value={`${totals.activitiesClaude || 0} + ${totals.activitiesBetsy || 0}`} />
+            <SumChip label="Claude Code spend" value={dollars(totals.costUsdClaude)} accent />
+            <SumChip label="Avoided tier cost / yr" value={dollars(annualSavings)} accent />
+          </div>
+          <p style={{ fontSize: '0.72rem', color: 'var(--sb-teal-deep)', marginTop: '0.75rem', fontStyle: 'italic' }}>
+            Methodology: hours by person are explicit per requirement (editable from the Backlog drawer). Claude spend is calculated at $0.02/Claude-minute of focused work — calibration documented in code. Tier savings are listed costs of the paid alternatives that were sidestepped.
+          </p>
+        </section>
+
+        {/* ── Pre-AI cost comparison ── */}
+        <section style={{ marginBottom: '2rem', borderTop: '0.5px solid var(--sb-taupe)', paddingTop: '1.25rem' }}>
+          <OutputHeading>What This Would Have Cost Pre-AI</OutputHeading>
+          <h2 className="sb-display" style={{ fontSize: '1.5rem', color: 'var(--sb-navy)', marginBottom: '0.5rem' }}>
+            AI vs traditional dev team comparison
+          </h2>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+              gap: '0.75rem',
+              marginBottom: '0.75rem',
+            }}
+          >
+            <SumChip label="Actual AI-augmented cost" value={dollars(totals.costUsdClaude)} accent />
+            <SumChip label="Estimated traditional cost" value={dollars(totals.traditionalCostUsd)} />
+            <SumChip label="Savings vs traditional" value={dollars(totals.aiSavingsUsd)} accent />
+            <SumChip label="Cost multiplier avoided" value={totals.aiSavingsMultiple ? `${totals.aiSavingsMultiple}x` : '—'} />
+          </div>
+          <p style={{ ...paraStyle, fontSize: '0.85rem' }}>
+            Estimate methodology: a traditional senior-dev team delivering the same scope would need approximately <strong>2.5× the effort hours</strong> (accounting for slower context-switching, more debugging cycles, design review, PM overhead, and code review), at a <strong>$150/hour blended rate</strong> (US senior full-stack). Applied to the total hours captured per requirement.
+          </p>
+        </section>
+
+        {/* ── Delivery timeline by capability ── */}
+        {timelineCaps.length > 0 && (
+          <section style={{ marginBottom: '2rem', borderTop: '0.5px solid var(--sb-taupe)', paddingTop: '1.25rem' }}>
+            <OutputHeading>Delivery Timeline</OutputHeading>
+            <h2 className="sb-display" style={{ fontSize: '1.5rem', color: 'var(--sb-navy)', marginBottom: '1rem' }}>
+              Capabilities in the order they shipped
+            </h2>
+            <div style={{ position: 'relative', paddingLeft: '2rem', borderLeft: '1.5px solid var(--sb-cream)', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              {timelineCaps.map((c) => (
+                <div key={c.group.id} style={{ position: 'relative' }}>
+                  <div
+                    style={{
+                      position: 'absolute', left: '-2.45rem', top: 6,
+                      width: 10, height: 10, borderRadius: '50%',
+                      background: c.group.color || 'var(--sb-gold)',
+                      border: '2px solid white',
+                    }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <div>
+                      <div className="sb-display" style={{ fontSize: '1rem', color: 'var(--sb-navy)' }}>
+                        {c.group.name}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--sb-teal-deep)' }}>
+                        {c.deliveredCount} requirement{c.deliveredCount === 1 ? '' : 's'} ·{' '}
+                        {c.hoursTotal}h ({c.hoursClaude}h Claude + {c.hoursBetsy}h Betsy) ·{' '}
+                        ${c.costUsdClaude.toFixed(2)}
+                      </div>
+                    </div>
+                    <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--sb-gold)' }}>
+                      first shipped {formatShortDate(c.firstDeployedAt)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ── Capability rollup ── */}
+        <section style={{ marginBottom: '2rem', borderTop: '0.5px solid var(--sb-taupe)', paddingTop: '1.25rem' }}>
+          <OutputHeading>Capabilities — Inventory + Tech Stack + Cost</OutputHeading>
+          <h2 className="sb-display" style={{ fontSize: '1.5rem', color: 'var(--sb-navy)', marginBottom: '1rem' }}>
+            What was built, in what stack, at what cost
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.85rem' }}>
+            {capabilities.map((cap) => (
+              <CapabilityRow key={cap.group.id} cap={cap} items={items.filter((it) => it.capabilityId === cap.group.id)} />
+            ))}
+          </div>
+        </section>
+
+        {/* ── Tier workarounds ── */}
+        <section style={{ borderTop: '0.5px solid var(--sb-taupe)', paddingTop: '1.25rem', marginBottom: '2rem' }}>
+          <OutputHeading>Tier Workarounds — How We Stayed Free</OutputHeading>
+          <h2 className="sb-display" style={{ fontSize: '1.5rem', color: 'var(--sb-navy)', marginBottom: '0.5rem' }}>
+            ${(totals.monthlyTierSavings || 0).toLocaleString()}/mo of avoided product upgrades
+          </h2>
+          <p style={{ ...paraStyle, marginBottom: '1.25rem' }}>
+            Each entry below documents a moment where the default path required a paid tier, and the workaround that kept the build on free products without sacrificing the user experience.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.85rem' }}>
+            {workarounds.map((w) => (
+              <div
+                key={w.id}
+                style={{
+                  border: '0.5px solid var(--sb-taupe)',
+                  borderLeft: '3px solid var(--sb-gold)',
+                  borderRadius: 'var(--sb-radius)',
+                  padding: '1rem 1.15rem',
+                  background: 'rgba(196,132,58,0.04)',
+                  breakInside: 'avoid',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                  <div className="sb-display" style={{ fontSize: '1.05rem', color: 'var(--sb-navy)' }}>
+                    {w.product}
+                  </div>
+                  {w.monthlySavings != null && (
+                    <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.7rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--sb-gold)' }}>
+                      saved {dollars(w.monthlySavings)}/mo
+                    </div>
+                  )}
+                </div>
+                {w.tierAvoided && (
+                  <div style={{ fontSize: '0.72rem', color: 'var(--sb-teal-deep)', fontStyle: 'italic', marginBottom: '0.6rem' }}>
+                    Avoided: {w.tierAvoided}
+                  </div>
+                )}
+                <div style={{ marginBottom: '0.4rem' }}>
+                  <strong style={{ color: 'var(--sb-navy)', fontSize: '0.85rem' }}>Problem.</strong>{' '}
+                  <span style={{ fontSize: '0.85rem', color: '#4a4a4a', lineHeight: 1.55 }}>{w.problem}</span>
+                </div>
+                <div>
+                  <strong style={{ color: 'var(--sb-navy)', fontSize: '0.85rem' }}>Workaround.</strong>{' '}
+                  <span style={{ fontSize: '0.85rem', color: '#4a4a4a', lineHeight: 1.55 }}>{w.solution}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Footer ── */}
+        <section style={{ borderTop: '0.5px solid var(--sb-taupe)', paddingTop: '1rem', textAlign: 'center', fontSize: '0.72rem', color: 'var(--sb-teal-deep)' }}>
+          Generated from the live admin Backlog at saltbasin.net/admin · Updated continuously as requirements are edited.
+        </section>
+      </div>
+    </OutputFrame>
+  );
+}
+
+function SumChip({ label, value, accent }) {
+  return (
+    <div
+      style={{
+        padding: '0.7rem 0.9rem',
+        background: accent ? 'rgba(168,184,154,0.12)' : 'rgba(196,132,58,0.06)',
+        border: accent ? '0.5px solid rgba(168,184,154,0.4)' : '0.5px solid rgba(196,132,58,0.3)',
+        borderRadius: 'var(--sb-radius)',
+        breakInside: 'avoid',
+      }}
+    >
+      <div
+        style={{
+          fontFamily: 'var(--sb-font-label)',
+          fontSize: '0.55rem', letterSpacing: '0.16em', textTransform: 'uppercase',
+          color: accent ? '#5a7d3a' : 'var(--sb-gold)',
+          marginBottom: 4,
+        }}
+      >
+        {label}
+      </div>
+      <div className="sb-display" style={{ fontSize: '1.3rem', color: 'var(--sb-navy)', lineHeight: 1 }}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function formatShortDate(ts) {
+  if (!ts) return '—';
+  const d = new Date(Number(ts));
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Tech Stack Architecture — layered architecture diagram + full inventory.
+// Admin-only.
+// ──────────────────────────────────────────────────────────────────
+export function TechStackOutput() {
+  const { loading, user } = useAuthState();
+  const [data, setData] = useState(null);
+  const [err, setErr] = useState(null);
+
+  useEffect(() => {
+    if (loading || !user || user.role !== 'admin') return;
+    fetch('/api/backlog/summary', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.status))))
+      .then(setData)
+      .catch((e) => setErr(e.message));
+  }, [loading, user]);
+
+  if (loading) return null;
+  if (!user || user.role !== 'admin') {
+    return (
+      <OutputFrame title="Tech Stack" eyebrow="Internal · Architecture" gated>
+        <div style={{ maxWidth: 700, margin: '4rem auto', padding: '0 1.5rem', textAlign: 'center' }}>
+          <OutputHeading>Restricted</OutputHeading>
+          <h1 className="sb-display" style={{ fontSize: '2.4rem', color: 'var(--sb-navy)', marginBottom: '0.75rem' }}>
+            Tech stack documentation is admin-only
+          </h1>
+          <Link to="/admin/login" className="sb-btn sb-btn-gold" style={{ marginTop: '1.5rem' }}>Sign in →</Link>
+        </div>
+      </OutputFrame>
+    );
+  }
+  if (err) return <OutputFrame title="Tech Stack" eyebrow="Architecture"><p style={{ color: 'var(--sb-risk-critical)', padding: '2rem' }}>{err}</p></OutputFrame>;
+  if (!data) return <OutputFrame title="Tech Stack" eyebrow="Architecture"><p style={{ padding: '2rem' }}>Loading…</p></OutputFrame>;
+
+  const { capabilities, totals } = data;
+  // Architecture layers: Presentation / Application / Data / External
+  const LAYERS = [
+    {
+      title: 'Presentation Layer',
+      eyebrow: 'What the visitor sees',
+      color: 'var(--sb-gold)',
+      tech: ['React 19', 'Vite', 'React Router', 'CSS variables', 'Cormorant Garamond + Inter', 'SVG (custom industry wheel)', 'CSS @media print', 'CSS scroll-snap'],
+      note: 'Single React bundle served by Netlify CDN. Admin, member admin, public profile, lead view, and print-friendly outputs are all the same SPA with different routes.',
+    },
+    {
+      title: 'Application / Domain Layer',
+      eyebrow: 'Server-side business logic',
+      color: 'var(--sb-sage)',
+      tech: ['Express 4', 'Node 22', 'bcryptjs (password hashing)', 'cookie-parser', 'multer (uploads)', 'cors', 'middleware: requireAdmin / requireUser / requireLeadAccess', 'libsodium-wrappers (GitHub secret encryption)'],
+      note: 'Stateless Express app on Render. All routes under /api/*. Three auth scopes (admin / member / lead) layered as middleware.',
+    },
+    {
+      title: 'Data Layer',
+      eyebrow: 'Persistence',
+      color: 'var(--sb-teal-deep)',
+      tech: ['Supabase Postgres 15', 'postgres (npm pkg, async pool)', 'Supabase Storage (uploaded images)', 'JSON-in-TEXT for flexible state (config, sites)', 'idempotent ALTER TABLE migrations on boot'],
+      note: '13 tables: users, sessions, site_state, config_state, leads, lead_emails, lead_activity, lead_sessions, member_profiles, member_sites, member_configs, capability_groups, backlog_items, tier_workarounds. Migrations are idempotent and applied on every boot.',
+    },
+    {
+      title: 'External Services',
+      eyebrow: 'Third-party integrations',
+      color: 'var(--sb-navy)',
+      tech: ['Brevo (transactional email)', 'Zoho Mail (inbound)', 'Wix DNS (DNS authority)', 'Anthropic API (BYO key, member-side)', 'GitHub (source of truth + Actions CI)', 'Render API (deploy automation)', 'Netlify API (deploy automation)', 'UptimeRobot (cold-start pinger)'],
+      note: 'Pure HTTPS, no SDKs except Anthropic. Every external call has a fallback (console stub for email, in-memory for cache).',
+    },
+    {
+      title: 'Infrastructure',
+      eyebrow: 'Deployment + observability',
+      color: 'var(--sb-taupe)',
+      tech: ['Render (Express backend host)', 'Netlify (static + CDN + proxy)', 'Supabase (managed Postgres)', 'GitHub Actions (CI + deploy verify + secret rotation)', 'Wix (registrar + DNS)', 'UptimeRobot (free uptime pings)'],
+      note: 'Six free-tier products composed to deliver a production website with zero monthly fixed cost. Netlify proxies /api/* to Render via netlify.toml.',
+    },
+  ];
+
+  return (
+    <OutputFrame title="Salt Basin · Tech Stack Architecture" eyebrow="Internal · Architecture">
+      <div className="sb-output-page" style={{ maxWidth: 1100, margin: '0 auto', padding: '2rem 2rem 4rem' }}>
+        <section style={{ marginBottom: '1.5rem' }}>
+          <OutputHeading>System Overview</OutputHeading>
+          <h1 className="sb-display" style={{ fontSize: '2.2rem', color: 'var(--sb-navy)', marginBottom: '0.4rem', lineHeight: 1.1 }}>
+            Tech Stack Architecture
+          </h1>
+          <p style={paraStyle}>
+            saltbasin.net is delivered by five composable layers — presentation, application, data, external services, and infrastructure. The total stack costs <strong>$0/month</strong> at current volume (free tiers across the board). The diagram below shows the layered architecture; the inventory tables document the specific tools at each layer.
+          </p>
+        </section>
+
+        {/* ── Architecture diagram (CSS-only) ── */}
+        <section style={{ marginBottom: '2rem' }}>
+          <OutputHeading>Layered Architecture</OutputHeading>
+          <div style={{ display: 'grid', gap: 4, marginTop: '0.5rem' }}>
+            {LAYERS.map((L) => (
+              <div
+                key={L.title}
+                style={{
+                  border: `0.5px solid ${L.color}`,
+                  borderLeft: `4px solid ${L.color}`,
+                  borderRadius: 'var(--sb-radius)',
+                  padding: '0.9rem 1.1rem',
+                  background: 'rgba(245,240,232,0.5)',
+                  breakInside: 'avoid',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <div>
+                    <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.6rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: L.color }}>
+                      {L.eyebrow}
+                    </div>
+                    <div className="sb-display" style={{ fontSize: '1.1rem', color: 'var(--sb-navy)', marginTop: 2 }}>
+                      {L.title}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginTop: '0.55rem', marginBottom: '0.55rem' }}>
+                  {L.tech.map((t, i) => (
+                    <span
+                      key={i}
+                      style={{
+                        fontFamily: 'var(--sb-font-label)',
+                        fontSize: '0.62rem', letterSpacing: '0.05em',
+                        padding: '2px 8px',
+                        background: 'white',
+                        border: `0.5px solid ${L.color}`,
+                        borderRadius: 10,
+                        color: 'var(--sb-navy)',
+                      }}
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+                <p style={{ fontSize: '0.78rem', color: '#5a5a5a', lineHeight: 1.5, margin: 0 }}>{L.note}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Tech by capability ── */}
+        <section style={{ marginBottom: '2rem', borderTop: '0.5px solid var(--sb-taupe)', paddingTop: '1.25rem' }}>
+          <OutputHeading>Tech by Capability</OutputHeading>
+          <h2 className="sb-display" style={{ fontSize: '1.4rem', color: 'var(--sb-navy)', marginBottom: '0.75rem' }}>
+            What each capability is built from
+          </h2>
+          <div style={{ display: 'grid', gap: '0.75rem' }}>
+            {capabilities.map((c) => (
+              <div
+                key={c.group.id}
+                style={{
+                  border: '0.5px solid var(--sb-taupe)',
+                  borderLeft: `3px solid ${c.group.color || 'var(--sb-gold)'}`,
+                  borderRadius: 'var(--sb-radius)',
+                  padding: '0.85rem 1rem',
+                  breakInside: 'avoid',
+                }}
+              >
+                <div className="sb-display" style={{ fontSize: '1rem', color: 'var(--sb-navy)', marginBottom: 4 }}>
+                  {c.group.name}
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                  {(c.group.techStack || []).map((t, i) => (
+                    <span
+                      key={i}
+                      style={{
+                        fontFamily: 'var(--sb-font-label)',
+                        fontSize: '0.6rem',
+                        padding: '2px 7px',
+                        background: 'rgba(196,132,58,0.08)',
+                        border: '0.5px solid rgba(196,132,58,0.3)',
+                        borderRadius: 9,
+                        color: 'var(--sb-navy)',
+                      }}
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section style={{ borderTop: '0.5px solid var(--sb-taupe)', paddingTop: '1rem', textAlign: 'center', fontSize: '0.72rem', color: 'var(--sb-teal-deep)' }}>
+          Generated live from the admin Backlog · {totals.requirementsDelivered} delivered requirements
+        </section>
+      </div>
+    </OutputFrame>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Marketing Product One-Pager — Salt Basin Net Works the product.
+// Public-facing, member-gated (members + admin see it).
+// ──────────────────────────────────────────────────────────────────
+export function ProductOnePagerOutput() {
+  const { loading, user } = useAuthState();
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    if (loading) return;
+    fetch('/api/backlog/summary', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then(setData)
+      .catch(() => {});
+  }, [loading]);
+
+  if (loading) return null;
+  if (!user) {
+    return (
+      <OutputFrame title="Salt Basin Net Works" eyebrow="Product · One-Pager" gated>
+        <div style={{ maxWidth: 700, margin: '4rem auto', padding: '0 1.5rem', textAlign: 'center' }}>
+          <OutputHeading>Sign in to view</OutputHeading>
+          <h1 className="sb-display" style={{ fontSize: '2.4rem', color: 'var(--sb-navy)', marginBottom: '0.75rem' }}>
+            The product one-pager is gated to members.
+          </h1>
+          <Link to="/signup" className="sb-btn sb-btn-gold" style={{ marginRight: '0.5rem' }}>Become a member</Link>
+          <Link to="/admin/login" className="sb-btn sb-btn-outline-dark">Sign in</Link>
+        </div>
+      </OutputFrame>
+    );
+  }
+
+  return (
+    <OutputFrame title="Salt Basin Net Works" eyebrow="Product · One-Pager">
+      <div className="sb-output-page" style={{ maxWidth: 980, margin: '0 auto', padding: '2.5rem 2rem 4rem' }}>
+
+        {/* Hero */}
+        <section style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <p style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.72rem', letterSpacing: '0.25em', textTransform: 'uppercase', color: 'var(--sb-gold)', marginBottom: '0.75rem' }}>
+            ✦ Operator Network · Strategic Operator Brand ✦
+          </p>
+          <h1 className="sb-display" style={{ fontSize: '3.25rem', color: 'var(--sb-navy)', lineHeight: 1.05, marginBottom: '0.6rem', letterSpacing: '0.04em' }}>
+            Salt Basin Net Works
+          </h1>
+          <p style={{ fontSize: '1.05rem', color: 'var(--sb-teal-deep)', maxWidth: 680, margin: '0 auto', lineHeight: 1.65 }}>
+            A curated network of senior lead-to-cash, RevOps, and finance-systems operators — and the platform that connects them to PE-backed and high-growth companies that need proven talent, not bench resumes.
+          </p>
+          <div className="sb-gold-rule" style={{ margin: '1.5rem auto 0' }} />
+        </section>
+
+        {/* Three pillars */}
+        <section style={{ marginBottom: '2.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
+            {[
+              {
+                eyebrow: 'For Operators',
+                title: 'Your profile, your network',
+                body: 'Members get a full multi-page profile site (yourname.saltbasin.net or /u/yourname) with their own admin, brand colors, draft/publish workflow, and a place in the curated Net Works banner on the Salt Basin home page.',
+                cta: 'Build your profile →',
+                color: 'var(--sb-gold)',
+              },
+              {
+                eyebrow: 'For Companies',
+                title: 'Proven senior operators',
+                body: 'Skip recruiter overhead and junior bench resumes. Reach out and we will help shape the engagement — diagnostic sprint, embedded operator, or advisory retainer.',
+                cta: 'Start a conversation →',
+                color: 'var(--sb-sage)',
+              },
+              {
+                eyebrow: 'For the Founder',
+                title: 'Founder-first portfolio',
+                body: 'Salt Basin is also Betsy Salter\'s living portfolio — every case study, proposal, and reference path is reachable here. The platform doubles as her front door.',
+                cta: 'Meet Betsy →',
+                color: 'var(--sb-teal-deep)',
+              },
+            ].map((p, i) => (
+              <div
+                key={i}
+                style={{
+                  background: 'rgba(245,240,232,0.5)',
+                  border: '0.5px solid var(--sb-taupe)',
+                  borderTop: `3px solid ${p.color}`,
+                  borderRadius: 'var(--sb-radius)',
+                  padding: '1.25rem',
+                  breakInside: 'avoid',
+                }}
+              >
+                <p style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.62rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: p.color, marginBottom: '0.5rem' }}>
+                  {p.eyebrow}
+                </p>
+                <h3 className="sb-display" style={{ fontSize: '1.2rem', color: 'var(--sb-navy)', marginBottom: '0.55rem', lineHeight: 1.3 }}>
+                  {p.title}
+                </h3>
+                <p style={{ fontSize: '0.88rem', lineHeight: 1.6, color: '#4a4a4a', marginBottom: '0.75rem' }}>
+                  {p.body}
+                </p>
+                <span style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.7rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: p.color }}>
+                  {p.cta}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Feature inventory by capability */}
+        {data && (
+          <section style={{ marginBottom: '2rem', borderTop: '0.5px solid var(--sb-taupe)', paddingTop: '1.5rem' }}>
+            <OutputHeading>Platform Capabilities</OutputHeading>
+            <h2 className="sb-display" style={{ fontSize: '1.5rem', color: 'var(--sb-navy)', marginBottom: '1rem' }}>
+              {data.totals.requirementsDelivered} features shipped across {data.capabilities.filter((c) => c.deliveredCount > 0).length} capability areas
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.75rem' }}>
+              {data.capabilities
+                .filter((c) => c.deliveredCount > 0 && c.group.slug !== 'requirements-mgmt')
+                .map((c) => (
+                  <div
+                    key={c.group.id}
+                    style={{
+                      padding: '0.75rem 0.95rem',
+                      border: '0.5px solid var(--sb-taupe)',
+                      borderLeft: `3px solid ${c.group.color || 'var(--sb-gold)'}`,
+                      borderRadius: 'var(--sb-radius)',
+                      breakInside: 'avoid',
+                    }}
+                  >
+                    <div className="sb-display" style={{ fontSize: '0.95rem', color: 'var(--sb-navy)', marginBottom: 4 }}>
+                      {c.group.name}
+                    </div>
+                    {c.group.description && (
+                      <p style={{ fontSize: '0.75rem', color: '#5a5a5a', lineHeight: 1.5, margin: 0 }}>
+                        {c.group.description}
+                      </p>
+                    )}
+                    <div style={{ fontSize: '0.6rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--sb-gold)', marginTop: 6 }}>
+                      {c.deliveredCount} feature{c.deliveredCount === 1 ? '' : 's'}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </section>
+        )}
+
+        {/* CTA */}
+        <section style={{ textAlign: 'center', borderTop: '0.5px solid var(--sb-taupe)', paddingTop: '1.5rem' }}>
+          <p style={{ ...paraStyle, marginBottom: '0.75rem' }}>
+            Salt Basin Net Works is in early access. Join the network, hire from it, or reach out.
+          </p>
+          <Link to="/" className="sb-btn sb-btn-gold" style={{ marginRight: '0.5rem' }}>Visit saltbasin.net</Link>
+          <Link to="/#contact" className="sb-btn sb-btn-outline-dark">Get in touch</Link>
+        </section>
+      </div>
+    </OutputFrame>
+  );
+}
+
+function CapabilityRow({ cap, items }) {
+  const featureCount = cap.deliveredCount;
+  const tech = cap.group.techStack || [];
+  return (
+    <div
+      style={{
+        border: '0.5px solid var(--sb-taupe)',
+        borderLeft: `3px solid ${cap.group.color || 'var(--sb-gold)'}`,
+        borderRadius: 'var(--sb-radius)',
+        padding: '1rem 1.15rem',
+        background: 'white',
+        breakInside: 'avoid',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.4rem' }}>
+        <div className="sb-display" style={{ fontSize: '1.05rem', color: 'var(--sb-navy)' }}>
+          {cap.group.name}
+        </div>
+        <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.65rem', letterSpacing: '0.1em', color: 'var(--sb-teal-deep)' }}>
+          {featureCount} feature{featureCount === 1 ? '' : 's'} · {cap.hours}h · ${cap.costUsdClaude.toFixed(2)}
+        </div>
+      </div>
+      {cap.group.description && (
+        <p style={{ fontSize: '0.78rem', color: '#5a5a5a', lineHeight: 1.55, marginBottom: '0.6rem' }}>
+          {cap.group.description}
+        </p>
+      )}
+
+      {/* Tech stack chips */}
+      {tech.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginBottom: '0.6rem' }}>
+          {tech.map((t, i) => (
+            <span
+              key={i}
+              style={{
+                fontFamily: 'var(--sb-font-label)',
+                fontSize: '0.62rem', letterSpacing: '0.05em',
+                padding: '2px 8px',
+                background: 'rgba(196,132,58,0.08)',
+                border: '0.5px solid rgba(196,132,58,0.3)',
+                borderRadius: 10,
+                color: 'var(--sb-navy)',
+              }}
+            >
+              {t}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Feature inventory */}
+      <details>
+        <summary style={{ fontSize: '0.7rem', cursor: 'pointer', color: 'var(--sb-gold)', letterSpacing: '0.06em' }}>
+          {items.length} requirement{items.length === 1 ? '' : 's'} (click to expand)
+        </summary>
+        <ul style={{ ...ulStyle, marginTop: '0.5rem' }}>
+          {items.map((it) => (
+            <li key={it.id} style={{ ...liStyle, fontSize: '0.78rem' }}>
+              <span style={dotStyle}>·</span>
+              <span style={{ color: 'var(--sb-navy)', fontWeight: 500 }}>{it.title}</span>
+              {it.summary && (
+                <span style={{ color: '#5a5a5a' }}> — {it.summary}</span>
+              )}
+              {it.status !== 'deployed' && (
+                <span style={{ marginLeft: 4, fontSize: '0.62rem', color: 'var(--sb-teal-deep)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  · {it.status}
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      </details>
+    </div>
+  );
+}

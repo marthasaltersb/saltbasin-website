@@ -70,4 +70,19 @@ export const api = {
 
   // Public — used by the Salt Basin home page Net Works banner.
   listFeaturedMembers: () => request('/api/member-site/featured'),
+
+  // Backlog / Requirements Management (admin-only)
+  getBacklog: () => request('/api/backlog/'),
+  seedBacklog: () => request('/api/backlog/seed', { method: 'POST' }),
+  createBacklogItem: (item) =>
+    request('/api/backlog/items', { method: 'POST', body: JSON.stringify(item) }),
+  updateBacklogItem: (id, patch) =>
+    request(`/api/backlog/items/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  archiveBacklogItem: (id) =>
+    request(`/api/backlog/items/${id}`, { method: 'DELETE' }),
+  getBacklogItem: (id) => request(`/api/backlog/items/${id}`),
+  createCapabilityGroup: (group) =>
+    request('/api/backlog/groups', { method: 'POST', body: JSON.stringify(group) }),
+  updateCapabilityGroup: (id, patch) =>
+    request(`/api/backlog/groups/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
 };

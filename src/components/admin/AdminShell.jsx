@@ -9,6 +9,7 @@ import PreviewPane from './PreviewPane.jsx';
 import ConfigPanel from './ConfigPanel.jsx';
 import LeadsPanel from './LeadsPanel.jsx';
 import NetWorksPanel from './NetWorksPanel.jsx';
+import BacklogPanel from './BacklogPanel.jsx';
 
 const STATUS_CYCLE = ['live', 'draft', 'soon'];
 
@@ -317,6 +318,7 @@ export default function AdminShell({ scope = 'admin' }) {
                     { val: 'content', label: 'My Profile' },
                     { val: 'leads', label: 'Leads' },
                     { val: 'networks', label: 'Net Works' },
+                    { val: 'backlog', label: 'Backlog' },
                     { val: 'config', label: 'Config' },
                   ]
             }
@@ -385,6 +387,8 @@ export default function AdminShell({ scope = 'admin' }) {
           <LeadsPanel />
         ) : !isMember && tab === 'networks' ? (
           <NetWorksPanel />
+        ) : !isMember && tab === 'backlog' ? (
+          <BacklogPanel />
         ) : tab === 'content' ? (
           <>
             <div className={`sb-admin-sidebar${sidebarOpen ? '' : ' collapsed'}`}>
@@ -429,7 +433,7 @@ export default function AdminShell({ scope = 'admin' }) {
         )}
       </div>
 
-      {tab !== 'leads' && tab !== 'networks' && (
+      {tab !== 'leads' && tab !== 'networks' && tab !== 'backlog' && (
         <PublishBar
           dirty={dirty}
           siteDirty={siteDirty}
