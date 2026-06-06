@@ -23,6 +23,7 @@ import { Router } from 'express';
 import { db } from '../db.js';
 import { requireAdmin } from '../auth.js';
 import { backlogSeed } from '../data/backlog/seed.js';
+import { patchNotes } from '../data/patchNotes.js';
 
 const router = Router();
 router.use(requireAdmin);
@@ -471,6 +472,13 @@ router.get('/summary', async (req, res) => {
     items,         // for the feature inventory section
     groups,        // so the client can re-lookup by id
   });
+});
+
+// ── Patch notes ──
+// Curated release log. Returns newest-first so consumers can render in order.
+router.get('/patch-notes', async (req, res) => {
+  const list = patchNotes();
+  res.json({ releases: [...list].reverse() });
 });
 
 export default router;
