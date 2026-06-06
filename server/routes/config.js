@@ -10,6 +10,7 @@ function publicConfig(config) {
   return {
     site: config.site,
     social: config.social,
+    brand: config.brand,
     bestystaff: config.bestystaff
       ? {
           enabled: config.bestystaff.enabled,

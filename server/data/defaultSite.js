@@ -513,6 +513,14 @@ export const defaultConfig = {
     domain: 'saltbasin.net',
     copyrightLine: '© 2026 Betsy Salter · Salt Basin Net Works',
   },
+  // Brand palette — same shape as member configs. Admin can edit these in
+  // the Config panel; overrides apply to saltbasin.net public pages.
+  brand: {
+    primary: '#1B2A3B',
+    accent:  '#C4843A',
+    ink:     '#F5F0E8',
+    paper:   '#FBF6F0',
+  },
   prelaunch: {
     enabled: false,
     password: 'rising-tide',
