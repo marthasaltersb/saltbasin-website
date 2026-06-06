@@ -71,6 +71,25 @@ export const api = {
   // Public — used by the Salt Basin home page Net Works banner.
   listFeaturedMembers: () => request('/api/member-site/featured'),
 
+  // JIRA integration (admin-only)
+  getJiraConfig:      () => request('/api/jira/config'),
+  saveJiraConfig:     (cfg) => request('/api/jira/config', { method: 'PUT', body: JSON.stringify(cfg) }),
+  testJiraConnection: () => request('/api/jira/test', { method: 'POST' }),
+  importFromJira:     () => request('/api/jira/import', { method: 'POST' }),
+
+  // Scrum Agent (admin-only, Phase A scaffold)
+  listAgentThreads:   () => request('/api/agent/threads'),
+  createAgentThread:  (title) => request('/api/agent/threads', { method: 'POST', body: JSON.stringify({ title }) }),
+  getAgentMessages:   (threadId) => request(`/api/agent/threads/${threadId}/messages`),
+  deleteAgentThread:  (threadId) => request(`/api/agent/threads/${threadId}`, { method: 'DELETE' }),
+  chatWithAgent:      (threadId, message) =>
+    request('/api/agent/chat', { method: 'POST', body: JSON.stringify({ threadId, message }) }),
+
+  // Member templates (logged-in users)
+  listMemberTemplates: () => request('/api/member-templates/'),
+  getMemberTemplate:   (slug) => request(`/api/member-templates/${slug}`),
+  applyMemberTemplate: (slug) => request(`/api/member-templates/${slug}/apply`, { method: 'POST' }),
+
   // Backlog / Requirements Management (admin-only)
   getBacklog: () => request('/api/backlog/'),
   seedBacklog: () => request('/api/backlog/seed', { method: 'POST' }),

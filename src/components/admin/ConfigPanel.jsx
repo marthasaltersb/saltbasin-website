@@ -1,5 +1,7 @@
 import React from 'react';
 import { styles } from './adminStyles.js';
+import { api } from '../../lib/api.js';
+import { toast } from '../../lib/toast.js';
 
 export default function ConfigPanel({ config, onChange, scope = 'admin' }) {
   const isMember = scope === 'member';
@@ -186,6 +188,9 @@ export default function ConfigPanel({ config, onChange, scope = 'admin' }) {
         </div>
         )}
 
+        {/* JIRA integration — admin only */}
+        {!isMember && <JiraCard />}
+
         {/* BestyStaff persona — admin only (it's Salt Basin's public agent) */}
         {!isMember && (
         <div style={styles.card}>
@@ -325,6 +330,173 @@ function ColorField({ label, value, onChange }) {
           style={{ fontFamily: 'monospace', fontSize: '0.78rem' }}
         />
       </div>
+    </div>
+  );
+}
+
+function JiraCard() {
+  const [cfg, setCfg] = React.useState(null);
+  const [editing, setEditing] = React.useState({ baseUrl: '', email: '', apiToken: '', projectKey: '' });
+  const [busy, setBusy] = React.useState(false);
+  const [testResult, setTestResult] = React.useState(null);
+  const [importResult, setImportResult] = React.useState(null);
+
+  React.useEffect(() => {
+    api.getJiraConfig().then((c) => {
+      setCfg(c);
+      setEditing({
+        baseUrl: c?.baseUrl || '',
+        email: c?.email || '',
+        apiToken: '',  // never prefill — server doesn't return it
+        projectKey: c?.projectKey || '',
+      });
+    }).catch(() => {});
+  }, []);
+
+  async function save() {
+    setBusy(true);
+    try {
+      const payload = {
+        baseUrl: editing.baseUrl,
+        email: editing.email,
+        projectKey: editing.projectKey,
+      };
+      // Only send apiToken if the user typed something new
+      if (editing.apiToken) payload.apiToken = editing.apiToken;
+      const r = await api.saveJiraConfig(payload);
+      setCfg(r.config);
+      setEditing((e) => ({ ...e, apiToken: '' })); // clear token field after save
+      toast('JIRA config saved');
+    } catch (e) {
+      toast('Save failed: ' + e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function test() {
+    setBusy(true); setTestResult(null);
+    try {
+      const r = await api.testJiraConnection();
+      setTestResult(r);
+    } catch (e) {
+      setTestResult({ ok: false, error: e.message });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function runImport() {
+    if (!confirm('Pull all issues from JIRA into the backlog? Creates a "JIRA Mirror" capability group; existing imports get updated by issue key.')) return;
+    setBusy(true); setImportResult(null);
+    try {
+      const r = await api.importFromJira();
+      setImportResult(r);
+      toast(`Imported: ${r.created} new, ${r.updated} updated`);
+    } catch (e) {
+      setImportResult({ ok: false, error: e.message });
+      toast('Import failed: ' + e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div style={styles.card}>
+      <div style={styles.cardTitle}>JIRA Integration (Phase A · read-only pull)</div>
+      <div style={{ fontSize: '0.72rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem', lineHeight: 1.55 }}>
+        Connect a JIRA Cloud project. Phase A pulls issues into a "JIRA Mirror" capability group inside the Backlog tab. Phase 2 (next session) wires up bidirectional sync.
+        <br/>
+        Get an API token at{' '}
+        <a href="https://id.atlassian.com/manage-profile/security/api-tokens" target="_blank" rel="noreferrer" style={{ color: 'var(--sb-gold)' }}>
+          id.atlassian.com → API tokens
+        </a>.
+      </div>
+      <Field
+        label="Base URL (your atlassian.net subdomain)"
+        value={editing.baseUrl}
+        onChange={(v) => setEditing((e) => ({ ...e, baseUrl: v }))}
+        placeholder="https://salt-basin.atlassian.net"
+      />
+      <Field
+        label="Atlassian email"
+        value={editing.email}
+        onChange={(v) => setEditing((e) => ({ ...e, email: v }))}
+        placeholder="betsysalter@saltbasin.net"
+      />
+      <Field
+        label="API token"
+        value={editing.apiToken}
+        onChange={(v) => setEditing((e) => ({ ...e, apiToken: v }))}
+        placeholder={cfg?.apiTokenSet ? `Saved: ${cfg.apiTokenPreview} (leave blank to keep)` : 'Paste your API token'}
+        type="password"
+      />
+      <Field
+        label="Project key (e.g. SBN, OPS, etc.)"
+        value={editing.projectKey}
+        onChange={(v) => setEditing((e) => ({ ...e, projectKey: v }))}
+        placeholder="SBN"
+      />
+
+      <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+        <button onClick={save} disabled={busy} className="sb-btn sb-btn-gold" style={{ fontSize: '0.7rem', padding: '0.4rem 0.9rem' }}>
+          {busy ? '…' : 'Save'}
+        </button>
+        <button onClick={test} disabled={busy || !cfg?.apiTokenSet} className="sb-btn sb-btn-outline" style={{ fontSize: '0.7rem', padding: '0.4rem 0.9rem' }}>
+          Test connection
+        </button>
+        <button onClick={runImport} disabled={busy || !cfg?.apiTokenSet || !cfg?.projectKey} className="sb-btn sb-btn-outline" style={{ fontSize: '0.7rem', padding: '0.4rem 0.9rem' }}>
+          Import issues →
+        </button>
+      </div>
+
+      {testResult && (
+        <div
+          style={{
+            marginTop: '0.6rem', padding: '0.55rem 0.75rem',
+            background: testResult.ok ? 'rgba(168,184,154,0.12)' : 'rgba(196,75,75,0.12)',
+            border: `0.5px solid ${testResult.ok ? 'var(--sb-green)' : 'var(--sb-risk-critical)'}`,
+            borderRadius: 'var(--sb-radius)',
+            fontSize: '0.75rem',
+            color: testResult.ok ? 'var(--sb-green)' : 'var(--sb-risk-critical)',
+          }}
+        >
+          {testResult.ok ? (
+            <>
+              ✓ Authenticated as <strong>{testResult.me?.displayName}</strong> ({testResult.me?.email}).
+              {testResult.project?.name && <> Project <strong>{testResult.project.key} · {testResult.project.name}</strong> reachable.</>}
+              {testResult.project?.error && <> Project lookup failed: {testResult.project.error}</>}
+            </>
+          ) : (
+            <>✗ {testResult.error}</>
+          )}
+        </div>
+      )}
+
+      {importResult && (
+        <div
+          style={{
+            marginTop: '0.5rem', padding: '0.55rem 0.75rem',
+            background: importResult.ok === false ? 'rgba(196,75,75,0.12)' : 'rgba(196,132,58,0.1)',
+            border: `0.5px solid ${importResult.ok === false ? 'var(--sb-risk-critical)' : 'var(--sb-gold)'}`,
+            borderRadius: 'var(--sb-radius)',
+            fontSize: '0.75rem',
+            color: importResult.ok === false ? 'var(--sb-risk-critical)' : 'var(--sb-gold)',
+          }}
+        >
+          {importResult.ok === false ? (
+            <>✗ {importResult.error}</>
+          ) : (
+            <>✓ Imported {importResult.totalFromJira} issues from JIRA · {importResult.created} new · {importResult.updated} updated</>
+          )}
+        </div>
+      )}
+
+      {cfg?.lastPullAt && (
+        <div style={{ fontSize: '0.65rem', color: 'var(--sb-dusty)', marginTop: '0.5rem' }}>
+          Last import: {new Date(cfg.lastPullAt).toLocaleString()}
+        </div>
+      )}
     </div>
   );
 }

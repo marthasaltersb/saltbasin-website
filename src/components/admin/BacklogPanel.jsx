@@ -11,6 +11,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
 import BacklogDrawer from './BacklogDrawer.jsx';
+import ScrumAgentPanel from './ScrumAgentPanel.jsx';
 
 const STATUS_META = {
   pending:     { label: 'Pending',     color: 'var(--sb-dusty)' },
@@ -37,6 +38,7 @@ export default function BacklogPanel() {
   const [loading, setLoading] = useState(true);
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [view, setView] = useState('requirements'); // 'requirements' | 'outputs'
+  const [agentOpen, setAgentOpen] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -135,7 +137,7 @@ export default function BacklogPanel() {
   }
 
   return (
-    <div style={{ flex: 1, display: 'flex', minHeight: 0, background: 'var(--sb-navy-deep)' }}>
+    <div style={{ flex: 1, display: 'flex', minHeight: 0, background: 'var(--sb-navy-deep)', position: 'relative' }}>
       {/* ── Left rail: capability groups ── */}
       <aside
         style={{
@@ -257,7 +259,35 @@ export default function BacklogPanel() {
         </div>
       </div>
 
-      {/* ── Right drawer ── */}
+      {/* ── Scrum Agent panel ── */}
+      <ScrumAgentPanel open={agentOpen} onClose={() => setAgentOpen(false)} />
+
+      {/* Floating "Open Scrum Agent" toggle — bottom-right */}
+      {!agentOpen && (
+        <button
+          onClick={() => setAgentOpen(true)}
+          style={{
+            position: 'absolute',
+            bottom: 24, right: 24,
+            background: 'var(--sb-gold)',
+            color: 'var(--sb-ivory)',
+            border: 'none',
+            borderRadius: 999,
+            padding: '0.7rem 1.15rem',
+            fontFamily: 'var(--sb-font-label)',
+            fontSize: '0.7rem',
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            cursor: 'pointer',
+            boxShadow: '0 8px 20px rgba(0,0,0,0.4)',
+            zIndex: 30,
+          }}
+        >
+          ✦ Scrum Agent
+        </button>
+      )}
+
+      {/* ── Right drawer (item detail) ── */}
       {selectedItem && (
         <BacklogDrawer
           item={selectedItem}
