@@ -53,8 +53,16 @@ export default function AdminShell({ scope = 'admin' }) {
   const [tab, setTab] = useState('content'); // 'content' | 'config' | (admin only: 'leads' | 'networks')
   const [view, setView] = useState('split'); // 'split' | 'editor' | 'preview'
 
+  const [currentPageKey, setCurrentPageKey] = useState('home');
+  const [currentSectionId, setCurrentSectionId] = useState(null);
+  // On desktop the sidebar is always visible; on mobile it slides over.
+  // Default starts visible so first-time users can find pages.
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   // Split-view editor/preview ratio. 0.55 = editor takes 55%, preview 45%.
   // Persisted in localStorage so each browser remembers the user's preference.
+  // MUST come after `sidebarOpen` declaration — the drag handler reads it
+  // and the useEffect deps array reads it at call time (TDZ otherwise).
   const SPLIT_KEY = `sb_admin_split_${scope}`;
   const [splitRatio, setSplitRatio] = useState(() => {
     const v = parseFloat(localStorage.getItem(SPLIT_KEY));
@@ -91,12 +99,6 @@ export default function AdminShell({ scope = 'admin' }) {
       window.removeEventListener('mouseup', onUp);
     };
   }, [dragging, sidebarOpen]);
-
-  const [currentPageKey, setCurrentPageKey] = useState('home');
-  const [currentSectionId, setCurrentSectionId] = useState(null);
-  // On desktop the sidebar is always visible; on mobile it slides over.
-  // Default starts visible so first-time users can find pages.
-  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const [pageModal, setPageModal] = useState(null);
   const [sectionModal, setSectionModal] = useState(null);
