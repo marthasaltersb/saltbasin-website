@@ -6,8 +6,12 @@
 // Each output is meant to be viewed on screen first, then printed or saved
 // as PDF via the browser's "Save as PDF". Print CSS hides nav/footer.
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
+import {
+  ResponsiveContainer, LineChart, Line, XAxis, YAxis,
+  Tooltip, CartesianGrid, ReferenceLine, Legend,
+} from 'recharts';
 import { api } from '../lib/api.js';
 import BackLink from './BackLink.jsx';
 
@@ -837,6 +841,9 @@ export function BuildSummaryOutput() {
           </p>
         </section>
 
+        {/* ── Build progress over time ── */}
+        <BuildProgressCharts />
+
         {/* ── Pre-AI cost comparison ── */}
         <section style={{ marginBottom: '2rem', borderTop: '0.5px solid var(--sb-taupe)', paddingTop: '1.25rem' }}>
           <OutputHeading>What This Would Have Cost Pre-AI</OutputHeading>
@@ -1004,6 +1011,218 @@ function formatShortDate(ts) {
   if (!ts) return '—';
   const d = new Date(Number(ts));
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+// ──────────────────────────────────────────────────────────────────
+// BuildProgressCharts — line charts over the build_progress_snapshots
+// time series. Fetches /api/backlog/snapshots. Range selector filters
+// to last N days; "all" shows every snapshot. Reference lines drop in
+// at any snapshot whose capture_source === 'milestone' so a milestone
+// stands out from the daily auto-captures. Early in life there will be
+// 0–1 data points — the empty / single-point states are explicit.
+// ──────────────────────────────────────────────────────────────────
+const CHART_RANGES = [
+  { key: '7d',  label: '7 days',  days: 7   },
+  { key: '30d', label: '30 days', days: 30  },
+  { key: '90d', label: '90 days', days: 90  },
+  { key: 'all', label: 'All',     days: null },
+];
+
+function BuildProgressCharts() {
+  const [snapshots, setSnapshots] = useState(null);
+  const [err, setErr] = useState(null);
+  const [range, setRange] = useState('30d');
+
+  useEffect(() => {
+    fetch('/api/backlog/snapshots', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.status))))
+      .then((d) => setSnapshots(d.snapshots || []))
+      .catch((e) => setErr(e.message));
+  }, []);
+
+  const filtered = useMemo(() => {
+    if (!Array.isArray(snapshots)) return [];
+    const r = CHART_RANGES.find((x) => x.key === range);
+    if (!r || r.days == null) return snapshots;
+    const cutoff = Date.now() - r.days * 24 * 60 * 60 * 1000;
+    return snapshots.filter((s) => s.capturedAt >= cutoff);
+  }, [snapshots, range]);
+
+  // Pre-shape each row with the derived hoursTotal so the chart only sees
+  // numbers, and a short date label for the x-axis tick.
+  const series = useMemo(() => filtered.map((s) => ({
+    ...s,
+    hoursTotal: (s.hoursClaude || 0) + (s.hoursBetsy || 0),
+    dateLabel: formatShortDate(s.capturedAt),
+  })), [filtered]);
+
+  const milestones = useMemo(
+    () => series.filter((s) => s.captureSource === 'milestone'),
+    [series]
+  );
+
+  return (
+    <section style={{ marginBottom: '2rem', borderTop: '0.5px solid var(--sb-taupe)', paddingTop: '1.25rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.75rem' }}>
+        <div>
+          <OutputHeading>Build Progress Over Time</OutputHeading>
+          <h2 className="sb-display" style={{ fontSize: '1.5rem', color: 'var(--sb-navy)', marginBottom: '0.25rem' }}>
+            Trajectory across requirements, hours, and AI savings
+          </h2>
+        </div>
+        <div style={{ display: 'flex', gap: '0.25rem' }}>
+          {CHART_RANGES.map((r) => (
+            <button
+              key={r.key}
+              type="button"
+              onClick={() => setRange(r.key)}
+              style={{
+                padding: '0.35rem 0.75rem',
+                background: range === r.key ? 'var(--sb-gold)' : 'transparent',
+                color: range === r.key ? 'white' : 'var(--sb-navy)',
+                border: '0.5px solid var(--sb-taupe)',
+                borderRadius: 'var(--sb-radius)',
+                fontFamily: 'var(--sb-font-label)',
+                fontSize: '0.65rem',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                cursor: 'pointer',
+              }}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {err && (
+        <p style={{ color: 'var(--sb-risk-critical)', fontSize: '0.85rem' }}>
+          Failed to load snapshot history: {err}
+        </p>
+      )}
+
+      {!err && snapshots == null && (
+        <p style={{ color: 'var(--sb-teal-deep)', fontSize: '0.85rem', fontStyle: 'italic' }}>
+          Loading snapshot history…
+        </p>
+      )}
+
+      {snapshots != null && series.length === 0 && (
+        <p style={{ color: 'var(--sb-teal-deep)', fontSize: '0.85rem', fontStyle: 'italic' }}>
+          No snapshots in the selected range yet — the daily auto-capture writes the first row when /api/backlog/summary is loaded each UTC day. Try widening the range or check back tomorrow.
+        </p>
+      )}
+
+      {snapshots != null && series.length === 1 && (
+        <p style={{ color: 'var(--sb-teal-deep)', fontSize: '0.78rem', fontStyle: 'italic', marginBottom: '0.5rem' }}>
+          Only one snapshot in range so far — charts render as a single point. Trend lines appear once a second day's snapshot is captured.
+        </p>
+      )}
+
+      {snapshots != null && series.length > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
+          <ProgressChartCard
+            title="Requirements delivered"
+            color="#c4843a"
+            data={series}
+            dataKey="requirementsDelivered"
+            milestones={milestones}
+          />
+          <ProgressChartCard
+            title="Total hours (Claude + Betsy)"
+            color="#8b9bae"
+            data={series}
+            dataKey="hoursTotal"
+            milestones={milestones}
+            valueFormatter={(v) => `${Math.round(v * 10) / 10} h`}
+          />
+          <ProgressChartCard
+            title="AI savings vs traditional ($)"
+            color="#a8b89a"
+            data={series}
+            dataKey="aiSavingsUsd"
+            milestones={milestones}
+            valueFormatter={(v) => `$${Math.round(v).toLocaleString()}`}
+          />
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ProgressChartCard({ title, color, data, dataKey, milestones, valueFormatter }) {
+  const fmt = valueFormatter || ((v) => Math.round(v).toLocaleString());
+  return (
+    <div
+      style={{
+        border: '0.5px solid var(--sb-taupe)',
+        borderRadius: 'var(--sb-radius)',
+        padding: '0.85rem 0.85rem 0.5rem',
+        background: 'white',
+        breakInside: 'avoid',
+      }}
+    >
+      <div
+        style={{
+          fontFamily: 'var(--sb-font-label)',
+          fontSize: '0.62rem',
+          letterSpacing: '0.16em',
+          textTransform: 'uppercase',
+          color: 'var(--sb-gold)',
+          marginBottom: '0.5rem',
+        }}
+      >
+        {title}
+      </div>
+      <div style={{ width: '100%', height: 200 }}>
+        <ResponsiveContainer>
+          <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+            <CartesianGrid stroke="#eee5d8" strokeDasharray="2 4" />
+            <XAxis
+              dataKey="dateLabel"
+              tick={{ fontSize: 10, fill: '#5a7a8e' }}
+              stroke="#cdb89a"
+            />
+            <YAxis
+              tick={{ fontSize: 10, fill: '#5a7a8e' }}
+              stroke="#cdb89a"
+              tickFormatter={(v) => fmt(v)}
+              width={60}
+            />
+            <Tooltip
+              formatter={(v) => fmt(v)}
+              labelStyle={{ color: '#1B2A3B', fontSize: 12 }}
+              contentStyle={{ fontSize: 12, borderRadius: 4 }}
+            />
+            <Line
+              type="monotone"
+              dataKey={dataKey}
+              stroke={color}
+              strokeWidth={2}
+              dot={{ r: 3, fill: color }}
+              activeDot={{ r: 5 }}
+              isAnimationActive={false}
+            />
+            {milestones.map((m) => (
+              <ReferenceLine
+                key={m.id}
+                x={m.dateLabel}
+                stroke="#c4843a"
+                strokeDasharray="3 3"
+                label={{
+                  value: m.note || 'milestone',
+                  position: 'top',
+                  fill: '#c4843a',
+                  fontSize: 9,
+                }}
+              />
+            ))}
+            <Legend wrapperStyle={{ fontSize: 10 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
 }
 
 // ──────────────────────────────────────────────────────────────────
