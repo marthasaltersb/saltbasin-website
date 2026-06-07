@@ -115,7 +115,10 @@ function OutputFrame({ title, eyebrow, children, gated }) {
         )}
         {children}
         <footer style={{ marginTop: '3rem', paddingTop: '1.25rem', borderTop: '0.5px solid var(--sb-taupe)', fontSize: '0.72rem', color: 'var(--sb-teal-deep)' }}>
-          Salt Basin Net Works · saltbasin.net · betsy@saltbasin.net
+          {/* TODO: move name/domain/email into config_state.site so this is
+              editable from the admin Config panel. Tracked alongside TT.96
+              (expand admin configurability layer). */}
+          Salt Basin Net Works · saltbasin.net · betsysalter@saltbasin.net
         </footer>
       </article>
     </div>
