@@ -320,6 +320,129 @@ router.post('/public/:publicId/logout', async (req, res) => {
   res.json({ ok: true });
 });
 
+// ── Convert lead → member ──
+//
+// Called from the authed lead view. The lead must:
+//   (a) have a current valid lead_session cookie (or be acting via admin),
+//   (b) re-enter their lead password as confirmation (so a borrowed open
+//       tab can't elevate someone else's lead to a paying member account).
+//
+// On success we create a `users` row using the lead's existing password_hash
+// directly — same password as the lead, no re-hash. The lead row persists
+// (only `converted_user_id` is set) so all prior context (messages, emails,
+// activity, prior_notes from any merged-in leads) stays accessible.
+//
+// member_sites is auto-seeded on first dashboard hit via memberSite.js
+// ensureDraft(), so we only need to create the user + member_profiles +
+// the link back to the lead here.
+router.post('/public/:publicId/convert', async (req, res) => {
+  const { password } = req.body || {};
+  if (!password) return res.status(400).json({ error: 'password required' });
+
+  const lead = await db
+    .prepare(`SELECT id, public_id, email, name, password_hash, converted_user_id, merged_into_id FROM leads WHERE public_id = $1`)
+    .get(req.params.publicId);
+  if (!lead) return res.status(404).json({ error: 'lead not found' });
+  if (lead.merged_into_id) return res.status(410).json({ error: 'this lead has been merged into a newer record' });
+  if (!lead.email) return res.status(400).json({ error: 'lead has no email — cannot become a member' });
+  if (lead.converted_user_id) {
+    return res.status(409).json({ error: 'already converted', userId: Number(lead.converted_user_id) });
+  }
+  if (!lead.password_hash) {
+    return res.status(409).json({ error: 'lead has no password set — cannot confirm conversion' });
+  }
+
+  // (a) Authorization: lead_session matches this lead, OR caller is an admin.
+  const leadCookie = req.cookies?.[LEAD_COOKIE];
+  const adminCookie = req.cookies?.sb_admin;
+  let authorized = false;
+  if (adminCookie) {
+    const session = await db
+      .prepare(`SELECT u.role FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token = $1 AND s.expires_at > $2`)
+      .get(adminCookie, Date.now());
+    if (session?.role === 'admin') authorized = true;
+  }
+  if (!authorized && leadCookie) {
+    const ls = await db
+      .prepare(`SELECT lead_id, expires_at FROM lead_sessions WHERE token = $1`)
+      .get(leadCookie);
+    if (ls && Number(ls.expires_at) > Date.now() && Number(ls.lead_id) === Number(lead.id)) {
+      authorized = true;
+    }
+  }
+  if (!authorized) return res.status(401).json({ error: 'session required — open this URL from your lead view' });
+
+  // (b) Password re-entry confirmation.
+  const ok = await bcrypt.compare(password, lead.password_hash);
+  if (!ok) return res.status(401).json({ error: 'incorrect password' });
+
+  // Email collision check — a user with this email may already exist.
+  const lowerEmail = lead.email.toLowerCase();
+  const existing = await db.prepare(`SELECT id FROM users WHERE email = $1`).get(lowerEmail);
+  if (existing) {
+    return res.status(409).json({
+      error: 'an account with this email already exists — sign in instead',
+      userId: Number(existing.id),
+    });
+  }
+
+  // Create user with the SAME password_hash (no re-hash — same password). The
+  // lead's already-bcrypted hash satisfies users.password_hash directly.
+  const userInsert = await db
+    .prepare(`INSERT INTO users (email, password_hash, role) VALUES ($1, $2, 'member') RETURNING id`)
+    .run(lowerEmail, lead.password_hash);
+  const newUserId = Number(userInsert.lastInsertRowid);
+
+  // Member profile (separate from member_sites — both exist; profile holds
+  // the slug + the simpler "about you" structure; sites holds the multi-page
+  // CMS data which is lazily seeded on first dashboard access).
+  const displayName = lead.name || lowerEmail.split('@')[0];
+  const slug = await uniqueSlugForConvert(displayName);
+  const profile = defaultMemberProfile({ displayName, email: lowerEmail });
+  await db
+    .prepare(`INSERT INTO member_profiles (user_id, slug, draft, published) VALUES ($1, $2, $3, NULL)`)
+    .run(newUserId, slug, JSON.stringify(profile));
+
+  // Link the lead → new user.
+  await db
+    .prepare(`UPDATE leads SET converted_user_id = $1, updated_at = $2 WHERE id = $3`)
+    .run(newUserId, Date.now(), Number(lead.id));
+
+  // Auto-login as the new member. Issues a session and sets the same admin
+  // cookie used elsewhere (the cookie is role-agnostic; AdminShell decides
+  // what to render based on user.role).
+  const { token } = await createSession(newUserId);
+  setAdminCookie(res, token);
+
+  // Drop the now-redundant lead_session (the lead and the member are the
+  // same person; one auth cookie is enough).
+  if (leadCookie) {
+    await db.prepare(`DELETE FROM lead_sessions WHERE token = $1`).run(leadCookie);
+    res.clearCookie(LEAD_COOKIE, { path: '/' });
+  }
+
+  res.json({
+    ok: true,
+    slug,
+    user: { id: newUserId, email: lowerEmail, role: 'member' },
+    redirectTo: '/member',
+  });
+});
+
+// Local slug generator — kept self-contained so leads.js doesn't have to
+// import the slugify helpers from members.js (different module, same logic).
+async function uniqueSlugForConvert(base) {
+  const slug = (base || 'operator').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'operator';
+  let candidate = slug;
+  let n = 0;
+  while (true) {
+    const exists = await db.prepare(`SELECT 1 FROM member_profiles WHERE slug = $1`).get(candidate);
+    if (!exists) return candidate;
+    n += 1;
+    candidate = `${slug}-${n}`;
+  }
+}
+
 // ── Authorization for read/update ──
 async function getLeadByPublic(req) {
   const publicId = req.params.publicId;
