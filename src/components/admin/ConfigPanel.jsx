@@ -39,6 +39,42 @@ export default function ConfigPanel({ config, onChange, scope = 'admin' }) {
       </div>
 
       <div style={styles.editorBody}>
+        {/* Intro: explains what the Config panel is. Member-scoped wording
+            emphasizes it's about how their profile looks + links; admin-scoped
+            wording emphasizes it's about the platform site itself. */}
+        <div style={{
+          ...styles.card,
+          background: 'rgba(196,132,58,0.06)',
+          borderLeft: '2px solid var(--sb-gold)',
+          marginBottom: '1rem',
+        }}>
+          <div style={styles.cardTitle}>About Config</div>
+          <div style={{ fontSize: '0.85rem', lineHeight: 1.6, color: 'var(--sb-cream)' }}>
+            {isMember ? (
+              <>
+                Config is for <strong>how your profile looks and behaves</strong> — site name,
+                brand colors that override the default palette on your <code>/u/:slug</code>{' '}
+                page, and social links that appear in your footer. Changes go to draft and only
+                affect the public view when you publish.
+                <br /><br />
+                <strong>What's NOT here:</strong> the content of your profile (jobs, domains,
+                services, contact info) — that's in <strong>My Profile</strong>. Outputs like
+                your resume are generated from My Profile data; you don't edit them directly here.
+              </>
+            ) : (
+              <>
+                Platform-level configuration for <strong>saltbasin.net itself</strong>: site
+                identity, pre-launch landing gate, brand palette overrides for the public site
+                (admin chrome stays locked), social media footer links, outbound email identity,
+                feature flags, integration credentials, and notification preferences.
+                <br /><br />
+                Changes go to draft. Click <strong>Publish</strong> in the bar at the bottom to
+                make them live.
+              </>
+            )}
+          </div>
+        </div>
+
         {/* Site identity */}
         <div style={styles.card}>
           <div style={styles.cardTitle}>Site Identity</div>

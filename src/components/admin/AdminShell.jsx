@@ -35,8 +35,8 @@ const TAB_COMPONENTS = {
 // API down.
 const FALLBACK_ADMIN_NAV = {
   views: [
-    { id: 'content', label: 'Content', sortOrder: 0, tabs: [
-      { id: 'content', label: 'My Site', componentId: 'content', sortOrder: 0 },
+    { id: 'content', label: 'My Profile', sortOrder: 0, tabs: [
+      { id: 'content', label: 'My Profile', componentId: 'content', sortOrder: 0 },
     ]},
     { id: 'plm', label: 'Platform Lifecycle Management', sortOrder: 1, tabs: [
       { id: 'backlog', label: 'Backlog', componentId: 'backlog', sortOrder: 0 },
@@ -436,7 +436,7 @@ export default function AdminShell({ scope = 'admin' }) {
           {isMember ? (
             <TabToggle
               items={[
-                { val: 'content', label: 'My Site' },
+                { val: 'content', label: 'My Profile' },
                 { val: 'config', label: 'Config' },
               ]}
               active={tab}

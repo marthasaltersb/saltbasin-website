@@ -583,31 +583,60 @@ async function bootstrap() {
   // To re-seed after manual edits: DELETE the row in config_state where
   // id='admin_nav' and reboot. The structure can also be edited via PUT
   // /api/config/admin-nav (admin-only).
-  const existingNav = await sql.unsafe(`SELECT id FROM config_state WHERE id = 'admin_nav'`);
+  const existingNav = await sql.unsafe(`SELECT id, data FROM config_state WHERE id = 'admin_nav'`);
+  // The member's primary editing surface is "My Profile" (not "Content" / "My Site").
+  // Profile = single source of truth for a member's career + brand data; public site
+  // and generated outputs (resume PDF etc.) read from this. See project memory
+  // "project-saltbasin-profile-vision".
+  const defaultNav = {
+    views: [
+      { id: 'content', label: 'My Profile', sortOrder: 0, tabs: [
+        { id: 'content', label: 'My Profile', componentId: 'content', sortOrder: 0 },
+      ]},
+      { id: 'plm', label: 'Platform Lifecycle Management', sortOrder: 1, tabs: [
+        { id: 'backlog', label: 'Backlog', componentId: 'backlog', sortOrder: 0 },
+        { id: 'qa',      label: 'QA',      componentId: 'qa',      sortOrder: 1 },
+      ]},
+      { id: 'crm', label: 'Customer Relationship Management', sortOrder: 2, tabs: [
+        { id: 'leads',    label: 'Leads',    componentId: 'leads',    sortOrder: 0 },
+        { id: 'networks', label: 'Net Works', componentId: 'networks', sortOrder: 1 },
+      ]},
+      { id: 'system', label: 'System', sortOrder: 3, tabs: [
+        { id: 'config', label: 'Config', componentId: 'config', sortOrder: 0 },
+      ]},
+    ],
+  };
+  const now = Date.now();
   if (existingNav.length === 0) {
-    const defaultNav = {
-      views: [
-        { id: 'content', label: 'Content', sortOrder: 0, tabs: [
-          { id: 'content', label: 'My Site', componentId: 'content', sortOrder: 0 },
-        ]},
-        { id: 'plm', label: 'Platform Lifecycle Management', sortOrder: 1, tabs: [
-          { id: 'backlog', label: 'Backlog', componentId: 'backlog', sortOrder: 0 },
-          { id: 'qa',      label: 'QA',      componentId: 'qa',      sortOrder: 1 },
-        ]},
-        { id: 'crm', label: 'Customer Relationship Management', sortOrder: 2, tabs: [
-          { id: 'leads',    label: 'Leads',    componentId: 'leads',    sortOrder: 0 },
-          { id: 'networks', label: 'Net Works', componentId: 'networks', sortOrder: 1 },
-        ]},
-        { id: 'system', label: 'System', sortOrder: 3, tabs: [
-          { id: 'config', label: 'Config', componentId: 'config', sortOrder: 0 },
-        ]},
-      ],
-    };
-    const now = Date.now();
     await sql.unsafe(
       `INSERT INTO config_state (id, data, updated_at) VALUES ($1, $2, $3)`,
       ['admin_nav', JSON.stringify(defaultNav), now]
     );
+  } else {
+    // One-shot relabel: the previous boot seeded the content view with label
+    // "Content" / "My Site". Bump those to "My Profile" without touching any
+    // manual edits the admin may have made to OTHER views (PLM/CRM/System).
+    // We only rewrite if the content view still has the legacy labels.
+    try {
+      const current = JSON.parse(existingNav[0].data);
+      let changed = false;
+      const contentView = (current.views || []).find((v) => v.id === 'content');
+      if (contentView) {
+        if (contentView.label === 'Content') { contentView.label = 'My Profile'; changed = true; }
+        const contentTab = (contentView.tabs || []).find((t) => t.id === 'content');
+        if (contentTab && (contentTab.label === 'My Site' || contentTab.label === 'Content')) {
+          contentTab.label = 'My Profile'; changed = true;
+        }
+      }
+      if (changed) {
+        await sql.unsafe(
+          `UPDATE config_state SET data = $1, updated_at = $2 WHERE id = 'admin_nav'`,
+          [JSON.stringify(current), now]
+        );
+      }
+    } catch {
+      // Bad JSON — leave the row alone rather than clobbering manual state.
+    }
   }
 }
 
