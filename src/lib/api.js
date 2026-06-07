@@ -139,10 +139,13 @@ export const api = {
 
   // Password reset + email recovery (both always return 200 to prevent
   // enumeration; UI just shows a generic "check your email" success state).
-  requestPasswordReset: (email) =>
-    request('/api/auth/reset-request', { method: 'POST', body: JSON.stringify({ email }) }),
+  // recaptchaToken comes from getRecaptchaToken(action) in lib/recaptcha.js
+  // and is null when no site key is configured (server treats null as a
+  // pass-through).
+  requestPasswordReset: (email, recaptchaToken) =>
+    request('/api/auth/reset-request', { method: 'POST', body: JSON.stringify({ email, recaptchaToken }) }),
   confirmPasswordReset: (token, password) =>
     request('/api/auth/reset-confirm', { method: 'POST', body: JSON.stringify({ token, password }) }),
-  recoverEmail: (phone) =>
-    request('/api/auth/email-recover', { method: 'POST', body: JSON.stringify({ phone }) }),
+  recoverEmail: (phone, recaptchaToken) =>
+    request('/api/auth/email-recover', { method: 'POST', body: JSON.stringify({ phone, recaptchaToken }) }),
 };

@@ -16,6 +16,7 @@ import {
 } from '../auth.js';
 import { db, getJSON } from '../db.js';
 import { dispatchRaw } from '../lib/email.js';
+import { verifyRecaptcha } from '../lib/recaptcha.js';
 
 const router = Router();
 
@@ -88,10 +89,12 @@ const RESET_TTL_MS = 60 * 60 * 1000; // 1 hour
 const RESET_BASE_URL = process.env.PUBLIC_BASE_URL || 'https://saltbasin.net';
 
 router.post('/reset-request', async (req, res) => {
-  const { email } = req.body || {};
+  const { email, recaptchaToken } = req.body || {};
   if (!email || typeof email !== 'string') {
     return res.status(400).json({ error: 'email required' });
   }
+  const captcha = await verifyRecaptcha(recaptchaToken, 'forgot_password');
+  if (!captcha.ok) return res.status(400).json({ error: captcha.error || 'captcha verification failed' });
   const lower = email.toLowerCase().trim();
 
   const user = await db.prepare(`SELECT id, email FROM users WHERE email = $1`).get(lower);
@@ -180,10 +183,12 @@ router.post('/reset-confirm', async (req, res) => {
 //
 // Phone normalization mirrors what the lead-capture flow does: digits only.
 router.post('/email-recover', async (req, res) => {
-  const { phone } = req.body || {};
+  const { phone, recaptchaToken } = req.body || {};
   if (!phone || typeof phone !== 'string') {
     return res.status(400).json({ error: 'phone required' });
   }
+  const captcha = await verifyRecaptcha(recaptchaToken, 'forgot_email');
+  if (!captcha.ok) return res.status(400).json({ error: captcha.error || 'captcha verification failed' });
   const digits = phone.replace(/\D+/g, '');
   if (digits.length < 7) {
     // Too short to be a real phone — silently no-op (still 200).

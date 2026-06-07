@@ -16,6 +16,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { api } from '../../lib/api.js';
+import { getRecaptchaToken } from '../../lib/recaptcha.js';
 
 export default function LoginPage() {
   const nav = useNavigate();
@@ -52,7 +53,8 @@ export default function LoginPage() {
     setErr('');
     setSubmitting(true);
     try {
-      await api.requestPasswordReset(email);
+      const token = await getRecaptchaToken('forgot_password');
+      await api.requestPasswordReset(email, token);
       setMode('check-email');
     } catch (e) {
       setErr(e.message || 'Request failed');
@@ -66,7 +68,8 @@ export default function LoginPage() {
     setErr('');
     setSubmitting(true);
     try {
-      await api.recoverEmail(phone);
+      const token = await getRecaptchaToken('forgot_email');
+      await api.recoverEmail(phone, token);
       setMode('check-email');
     } catch (e) {
       setErr(e.message || 'Request failed');

@@ -298,4 +298,44 @@ const RELEASES = [
       },
     ],
   },
+
+  // ─── v0.11 — Real member sign-up: convert, reset, recover, captcha ──
+  {
+    version: 'v0.11',
+    name: 'A real member sign-up process',
+    date: '2026-06-07',
+    summary:
+      'The end-to-end sign-up loop a real human would use, end to end. A lead viewing their own record can convert to a member in one click (with a password re-entry confirmation) and lands in the member dashboard auto-signed-in. The Sign In button on the public site goes to a generic /login page instead of /admin/login. That page now also lets people reset a forgotten password and recover the email they signed up with. All of these flows have reCAPTCHA v3 wiring in place — the code is a no-op until you register a site key and paste the secret into Render env, then captcha kicks in everywhere at once.',
+    sections: [
+      {
+        heading: 'New',
+        items: [
+          'POST /api/leads/public/:publicId/convert — authed lead promotes themselves to a member without re-entering anything but a password confirmation. Lead password_hash is reused as the new user password_hash (no re-hash). Lead row persists with converted_user_id set so all prior context (emails, activity, merged-from history) stays queryable',
+          'LeadView "I know you love it — go ahead and convert to member" CTA card with a password-confirm modal',
+          '/login as the canonical generic sign-in URL. /admin/login still works as a back-compat alias',
+          'Forgot password? flow on the sign-in page → enter email → email with a single-use 1-hour reset link → /reset/:token page with new password + confirmation',
+          'Forgot your email? flow on the sign-in page → enter phone → email gets sent to the address on the lead with that phone reminding them which email to use',
+          'reCAPTCHA v3 wired into signup, lead→member convert, password reset request, and email recovery. Skipped at runtime when RECAPTCHA_SECRET_KEY isn\'t set, so safe to ship before keys are registered',
+        ],
+      },
+      {
+        heading: 'Changed',
+        items: [
+          'Sign-in page redirects post-login based on role: admin → /admin, member → /member. A ?next= URL param (same-origin only) overrides this',
+          'Sign-in page title is "Sign In" (not "Admin Login") since members use the same page',
+          'Password reset deletes all existing sessions for the user as a precaution — anyone signed in elsewhere will need to re-sign-in with the new password',
+        ],
+      },
+      {
+        heading: 'Behind the scenes',
+        items: [
+          'New password_reset_tokens table: token (random 32-byte hex), user_id, expires_at, used_at, created_at. Used tokens for the same user are bulk-invalidated when one is consumed (defensive against concurrent requests)',
+          'Email recovery walks leads.phone → leads.converted_user_id → users.email; phone is normalized to digits-only to match the existing lead-capture convention',
+          'Both recovery endpoints always return 200 regardless of whether a record matched, to defeat email + phone enumeration',
+          'reCAPTCHA scaffolding (server/lib/recaptcha.js + src/lib/recaptcha.js) reads env vars: VITE_RECAPTCHA_SITE_KEY (Netlify, frontend), RECAPTCHA_SECRET_KEY + optional RECAPTCHA_MIN_SCORE (Render, backend). To turn it on: register a v3 site at https://www.google.com/recaptcha/admin, paste both keys into the respective dashboards, redeploy',
+          'reCAPTCHA NOT yet applied to the lead-capture endpoint — needs each of the public lead-capture form blocks (Join the Network, For Companies, contact, assessments) to send a token first. Tracked as a follow-up on task #28',
+        ],
+      },
+    ],
+  },
 ];

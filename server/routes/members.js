@@ -9,6 +9,7 @@ import {
   createMember,
 } from '../auth.js';
 import { defaultMemberProfile } from '../data/defaultMemberProfile.js';
+import { verifyRecaptcha } from '../lib/recaptcha.js';
 
 const router = Router();
 
@@ -34,8 +35,10 @@ async function uniqueSlugFor(base) {
 // Public signup — creates a member + their starter profile, optionally linking
 // an incoming lead conversion via fromLeadPublicId + fromLeadToken.
 router.post('/signup', async (req, res) => {
-  const { email, password, displayName, requestedSlug, fromLeadPublicId, fromLeadToken } =
+  const { email, password, displayName, requestedSlug, fromLeadPublicId, fromLeadToken, recaptchaToken } =
     req.body || {};
+  const captcha = await verifyRecaptcha(recaptchaToken, 'signup');
+  if (!captcha.ok) return res.status(400).json({ error: captcha.error || 'captcha verification failed' });
   const created = await createMember(email, password, displayName);
   if (created.error) return res.status(400).json({ error: created.error });
 

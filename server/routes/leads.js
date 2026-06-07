@@ -2,8 +2,10 @@ import { Router } from 'express';
 import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { db } from '../db.js';
-import { requireAdmin } from '../auth.js';
+import { requireAdmin, createSession, setAdminCookie } from '../auth.js';
 import { sendLeadConfirmation, sendNewLeadAlert, dispatchRaw } from '../lib/email.js';
+import { defaultMemberProfile } from '../data/defaultMemberProfile.js';
+import { verifyRecaptcha } from '../lib/recaptcha.js';
 
 const router = Router();
 
@@ -124,6 +126,11 @@ async function fetchActivity(leadId) {
 
 // ── Public: create or merge a lead ──
 router.post('/', async (req, res) => {
+  // TODO(reCAPTCHA): wire verifyRecaptcha here once every lead-capture form
+  // block (Join the Network, For Companies, contact, assessments) sends a
+  // recaptchaToken. Keeping it off for now so this endpoint doesn't break when
+  // RECAPTCHA_SECRET_KEY gets set — see scripts/add-tonight-defect-items.mjs
+  // and task #28 in the session log for the rollout plan.
   const { source, email, phone, name, message, ctaLocation } = req.body || {};
 
   if (!isValidSource(source)) return res.status(400).json({ error: 'invalid source' });
@@ -336,8 +343,11 @@ router.post('/public/:publicId/logout', async (req, res) => {
 // ensureDraft(), so we only need to create the user + member_profiles +
 // the link back to the lead here.
 router.post('/public/:publicId/convert', async (req, res) => {
-  const { password } = req.body || {};
+  const { password, recaptchaToken } = req.body || {};
   if (!password) return res.status(400).json({ error: 'password required' });
+
+  const captcha = await verifyRecaptcha(recaptchaToken, 'convert_to_member');
+  if (!captcha.ok) return res.status(400).json({ error: captcha.error || 'captcha verification failed' });
 
   const lead = await db
     .prepare(`SELECT id, public_id, email, name, password_hash, converted_user_id, merged_into_id FROM leads WHERE public_id = $1`)

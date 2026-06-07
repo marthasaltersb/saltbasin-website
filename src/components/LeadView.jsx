@@ -4,6 +4,7 @@ import PublicFooter from './PublicFooter.jsx';
 import { InlineDataNotice } from './DataNotice.jsx';
 import BackLink from './BackLink.jsx';
 import { api } from '../lib/api.js';
+import { getRecaptchaToken } from '../lib/recaptcha.js';
 
 const SOURCE_LABELS = {
   joinNetwork: 'Join the Network · Operator interest',
@@ -149,11 +150,12 @@ export default function LeadView() {
     setConverting(true);
     setConvertError('');
     try {
+      const recaptchaToken = await getRecaptchaToken('convert_to_member');
       const res = await fetch(`/api/leads/public/${publicId}/convert`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: convertPassword }),
+        body: JSON.stringify({ password: convertPassword, recaptchaToken }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error || `Conversion failed (${res.status})`);

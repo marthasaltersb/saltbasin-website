@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { InlineDataNotice } from './DataNotice.jsx';
+import { getRecaptchaToken } from '../lib/recaptcha.js';
 
 export default function SignupPage() {
   const nav = useNavigate();
@@ -46,6 +47,7 @@ export default function SignupPage() {
     setErr('');
     setSubmitting(true);
     try {
+      const recaptchaToken = await getRecaptchaToken('signup');
       const res = await fetch('/api/members/signup', {
         method: 'POST',
         credentials: 'include',
@@ -54,6 +56,7 @@ export default function SignupPage() {
           ...form,
           fromLeadPublicId: fromLeadPublicId || undefined,
           fromLeadToken: fromLeadToken || undefined,
+          recaptchaToken,
         }),
       });
       const body = await res.json();
