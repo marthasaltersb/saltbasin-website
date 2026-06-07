@@ -174,7 +174,7 @@ function GatedPreview({ kind, teaser }) {
             ✦ Become a Member
           </Link>
           <Link
-            to={`/admin/login?next=${encodeURIComponent(location.pathname)}`}
+            to={`/login?next=${encodeURIComponent(location.pathname)}`}
             className="sb-btn sb-btn-outline"
             style={{ padding: '0.55rem 1.25rem', fontSize: '0.72rem' }}
           >
@@ -765,7 +765,7 @@ export function BuildSummaryOutput() {
           <p style={paraStyle}>
             This one-pager summarizes every requirement built into Salt Basin Net Works, the tech stack per capability, and the cost workarounds used to stay on free product tiers. It is intended for Betsy\'s personal records.
           </p>
-          <Link to="/admin/login" className="sb-btn sb-btn-gold" style={{ marginTop: '1.5rem' }}>
+          <Link to="/login" className="sb-btn sb-btn-gold" style={{ marginTop: '1.5rem' }}>
             Sign in as admin →
           </Link>
         </div>
@@ -1029,7 +1029,7 @@ export function TechStackOutput() {
           <h1 className="sb-display" style={{ fontSize: '2.4rem', color: 'var(--sb-navy)', marginBottom: '0.75rem' }}>
             Tech stack documentation is admin-only
           </h1>
-          <Link to="/admin/login" className="sb-btn sb-btn-gold" style={{ marginTop: '1.5rem' }}>Sign in →</Link>
+          <Link to="/login" className="sb-btn sb-btn-gold" style={{ marginTop: '1.5rem' }}>Sign in →</Link>
         </div>
       </OutputFrame>
     );
@@ -1218,7 +1218,7 @@ export function ProductOnePagerOutput() {
             The product one-pager is gated to members.
           </h1>
           <Link to="/signup" className="sb-btn sb-btn-gold" style={{ marginRight: '0.5rem' }}>Become a member</Link>
-          <Link to="/admin/login" className="sb-btn sb-btn-outline-dark">Sign in</Link>
+          <Link to="/login" className="sb-btn sb-btn-outline-dark">Sign in</Link>
         </div>
       </OutputFrame>
     );
@@ -1373,7 +1373,7 @@ export function PatchNotesOutput() {
           <h1 className="sb-display" style={{ fontSize: '2.4rem', color: 'var(--sb-navy)', marginBottom: '0.75rem' }}>
             Patch notes are admin-only
           </h1>
-          <Link to="/admin/login" className="sb-btn sb-btn-gold" style={{ marginTop: '1.5rem' }}>Sign in →</Link>
+          <Link to="/login" className="sb-btn sb-btn-gold" style={{ marginTop: '1.5rem' }}>Sign in →</Link>
         </div>
       </OutputFrame>
     );

@@ -116,7 +116,8 @@ export default function PublicNav({ site }) {
   );
 }
 
-// Top-right sign-in pill. When logged out: routes to /admin/login.
+// Top-right sign-in pill. When logged out: routes to /login (the canonical
+// sign-in URL; /admin/login is kept as an alias for back-compat).
 // When logged in: shows the user's email handle + routes to their dashboard
 // (admin or member, depending on role).
 function AuthButton({ user }) {
@@ -147,7 +148,7 @@ function AuthButton({ user }) {
   }
   return (
     <Link
-      to="/admin/login"
+      to="/login"
       style={{
         display: 'inline-flex',
         alignItems: 'center',

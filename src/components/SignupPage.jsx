@@ -141,7 +141,7 @@ export default function SignupPage() {
         </button>
 
         <div style={{ marginTop: '1rem', fontSize: '0.78rem', color: 'var(--sb-dusty)', textAlign: 'center' }}>
-          Already have an account? <Link to="/admin/login" style={{ color: 'var(--sb-gold)' }}>Sign in</Link>
+          Already have an account? <Link to="/login" style={{ color: 'var(--sb-gold)' }}>Sign in</Link>
         </div>
       </form>
     </div>

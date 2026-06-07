@@ -380,7 +380,7 @@ export default function AdminShell({ scope = 'admin' }) {
 
   async function logout() {
     await api.logout();
-    nav('/admin/login', { replace: true });
+    nav('/login', { replace: true });
   }
 
   if (!draft || !configDraft) return null;

@@ -32,13 +32,18 @@ function RequireAdmin({ children }) {
     );
   }, []);
   if (state.loading) return null;
-  if (!state.user) return <Navigate to="/admin/login" replace />;
+  if (!state.user) return <Navigate to="/login" replace />;
   return children;
 }
 
 export default function App() {
   return (
     <Routes>
+      {/* /login is the canonical sign-in URL. /admin/login is kept as an alias
+          for back-compat with any saved bookmarks / external links. Both render
+          the same LoginPage — there is no "admin login" UI distinct from member
+          login (the server figures out the role from the user record). */}
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/admin/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/member" element={<MemberDashboard />} />

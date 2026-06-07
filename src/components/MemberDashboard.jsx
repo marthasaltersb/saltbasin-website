@@ -23,10 +23,10 @@ export default function MemberDashboard() {
     api
       .me()
       .then(({ user }) => {
-        if (!user) return nav('/admin/login', { replace: true });
+        if (!user) return nav('/login', { replace: true });
         if (user.role === 'admin') return nav('/admin', { replace: true });
       })
-      .catch(() => nav('/admin/login', { replace: true }));
+      .catch(() => nav('/login', { replace: true }));
   }, [nav]);
 
   return <AdminShell scope="member" />;
