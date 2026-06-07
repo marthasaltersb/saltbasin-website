@@ -232,7 +232,7 @@ export default function ConfigPanel({ config, onChange, scope = 'admin' }) {
             label="Notification recipient (defaults to ADMIN_EMAIL env var)"
             value={config?.email?.notifyTo}
             onChange={(v) => patch('email.notifyTo', v)}
-            placeholder="betsy@saltbasin.net"
+            placeholder="betsysalter@saltbasin.net"
           />
           <SendTestEmail />
         </div>
