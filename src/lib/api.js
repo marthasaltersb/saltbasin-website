@@ -136,4 +136,13 @@ export const api = {
   getAdminNav: () => request('/api/config/admin-nav'),
   updateAdminNav: (nav) =>
     request('/api/config/admin-nav', { method: 'PUT', body: JSON.stringify(nav) }),
+
+  // Password reset + email recovery (both always return 200 to prevent
+  // enumeration; UI just shows a generic "check your email" success state).
+  requestPasswordReset: (email) =>
+    request('/api/auth/reset-request', { method: 'POST', body: JSON.stringify({ email }) }),
+  confirmPasswordReset: (token, password) =>
+    request('/api/auth/reset-confirm', { method: 'POST', body: JSON.stringify({ token, password }) }),
+  recoverEmail: (phone) =>
+    request('/api/auth/email-recover', { method: 'POST', body: JSON.stringify({ phone }) }),
 };

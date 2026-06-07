@@ -531,6 +531,27 @@ async function bootstrap() {
     CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_events (created_at DESC);
   `);
 
+  // ── Password reset tokens ──
+  //
+  // Single-use, time-limited tokens for the "Forgot password?" flow. POST
+  // /api/auth/reset-request generates a row + emails the user a link to
+  // /reset/<token>; the reset page POSTs to /api/auth/reset-confirm which
+  // verifies expiry + un-used + updates users.password_hash + stamps used_at.
+  //
+  // Tokens are opaque random strings, not signed JWTs — server is the
+  // source of truth and revocation is immediate (delete the row).
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      token       TEXT PRIMARY KEY,
+      user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      expires_at  BIGINT NOT NULL,
+      used_at     BIGINT,
+      created_at  BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_prt_user ON password_reset_tokens (user_id);
+    CREATE INDEX IF NOT EXISTS idx_prt_active ON password_reset_tokens (expires_at) WHERE used_at IS NULL;
+  `);
+
   // ── QA: many-to-many between scenarios and the features they cover ──
   //
   // A scenario can cover multiple deployed features (e.g., "sign up with

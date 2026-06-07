@@ -9,6 +9,7 @@ import SignupPage from './components/SignupPage.jsx';
 import MemberDashboard from './components/MemberDashboard.jsx';
 import PublicProfile from './components/PublicProfile.jsx';
 import LeadView from './components/LeadView.jsx';
+import ResetPasswordPage from './components/ResetPasswordPage.jsx';
 import DataNotice from './components/DataNotice.jsx';
 import { ResumeOutput, CaseStudyOutput, ProposalOutput, OnePagerOutput, BuildSummaryOutput, TechStackOutput, ProductOnePagerOutput, PatchNotesOutput } from './components/Output.jsx';
 
@@ -45,6 +46,7 @@ export default function App() {
           login (the server figures out the role from the user record). */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/admin/login" element={<LoginPage />} />
+      <Route path="/reset/:token" element={<ResetPasswordPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/member" element={<MemberDashboard />} />
       <Route path="/u/:slug" element={<PublicProfile />} />
