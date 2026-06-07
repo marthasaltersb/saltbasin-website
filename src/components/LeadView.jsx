@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useSearchParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
 import PublicFooter from './PublicFooter.jsx';
 import { InlineDataNotice } from './DataNotice.jsx';
 import BackLink from './BackLink.jsx';
@@ -27,6 +27,7 @@ export default function LeadView() {
   const { publicId } = useParams();
   const [searchParams] = useSearchParams();
   const legacyToken = searchParams.get('t');
+  const navigate = useNavigate();
 
   // Auth state for this lead.
   const [authState, setAuthState] = useState('checking'); // checking | needsPassword | authed | error
@@ -41,6 +42,15 @@ export default function LeadView() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [config, setConfig] = useState(null);
+
+  // Convert-to-member state. The lead is authed (otherwise we never render the
+  // CTA), but the backend requires a password re-entry as a confirmation step
+  // to defend against borrowed-tab promotion. See routes/leads.js convert
+  // endpoint for the full rationale.
+  const [showConvert, setShowConvert] = useState(false);
+  const [convertPassword, setConvertPassword] = useState('');
+  const [converting, setConverting] = useState(false);
+  const [convertError, setConvertError] = useState('');
 
   function loadLead() {
     const qs = legacyToken ? `?t=${encodeURIComponent(legacyToken)}` : '';
@@ -128,6 +138,35 @@ export default function LeadView() {
     }
   }
 
+  // Convert lead → member. Server validates the lead session, re-checks the
+  // password the user just typed against lead.password_hash, then creates a
+  // user row using that same password_hash directly (no re-hash) and links
+  // leads.converted_user_id to the new user. Auto-logs them in and returns
+  // a redirectTo path which we honor.
+  async function convert(e) {
+    e.preventDefault();
+    if (!convertPassword) return;
+    setConverting(true);
+    setConvertError('');
+    try {
+      const res = await fetch(`/api/leads/public/${publicId}/convert`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: convertPassword }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || `Conversion failed (${res.status})`);
+      // On success the server has already set the auth cookie. Send them
+      // straight to /member where AdminShell takes over and seeds their site.
+      navigate(body.redirectTo || '/member', { replace: true });
+    } catch (err) {
+      setConvertError(err.message);
+    } finally {
+      setConverting(false);
+    }
+  }
+
   // ── Render branches ──
   if (authState === 'checking') return null;
   if (authState === 'error') {
@@ -206,7 +245,129 @@ export default function LeadView() {
               <SummaryRow label="Merged from" value={`${lead.mergedFromCount} prior submission${lead.mergedFromCount === 1 ? '' : 's'}`} />
             )}
           </div>
+
+          {/* Convert-to-member CTA.
+              Only rendered when the lead has NOT been converted yet AND has an
+              email (the conversion target). Hidden once converted_user_id is
+              set so the same lead can't trigger the flow twice. */}
+          {!lead.convertedUserId && lead.email && (
+            <div style={{
+              marginTop: '2rem',
+              padding: '1.25rem 1.5rem',
+              background: 'rgba(196,132,58,0.10)',
+              border: '0.5px solid rgba(196,132,58,0.35)',
+              borderLeft: '3px solid var(--sb-gold)',
+              borderRadius: 'var(--sb-radius)',
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '1rem',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+              <div style={{ flex: '1 1 320px', minWidth: 0 }}>
+                <div className="sb-eyebrow" style={{ marginBottom: '0.35rem' }}>
+                  I know you love it
+                </div>
+                <div style={{ fontSize: '1.05rem', color: 'var(--sb-cream)', marginBottom: '0.35rem', lineHeight: 1.4 }}>
+                  Go ahead and convert to member
+                </div>
+                <div style={{ fontSize: '0.82rem', color: 'var(--sb-sage)', lineHeight: 1.55 }}>
+                  Your lead context — all of this — comes with you. You'll get a member dashboard,
+                  your own profile page at <code>/u/your-slug</code>, and access to outputs members can see.
+                  Your lead password becomes your member password (you can change it later).
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setShowConvert(true); setConvertError(''); setConvertPassword(''); }}
+                className="sb-btn sb-btn-gold"
+                style={{ padding: '0.7rem 1.4rem', fontSize: '0.78rem', flexShrink: 0 }}
+              >
+                Convert to Member ↗
+              </button>
+            </div>
+          )}
+
+          {lead.convertedUserId && (
+            <div style={{
+              marginTop: '2rem',
+              padding: '0.9rem 1.25rem',
+              background: 'rgba(168,184,154,0.10)',
+              border: '0.5px solid rgba(168,184,154,0.35)',
+              borderRadius: 'var(--sb-radius)',
+              fontSize: '0.82rem',
+              color: 'var(--sb-sage)',
+            }}>
+              ✓ This lead has been converted to a member account.{' '}
+              <Link to="/member" style={{ color: 'var(--sb-gold)' }}>Go to your member dashboard →</Link>
+            </div>
+          )}
         </div>
+
+        {/* Password-confirm modal for conversion. Rendered above the rest of
+            the page when showConvert is true. */}
+        {showConvert && (
+          <div
+            onClick={() => !converting && setShowConvert(false)}
+            style={{
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              zIndex: 1000, padding: '1rem',
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: 'var(--sb-navy-deep)',
+                border: '0.5px solid rgba(196,132,58,0.30)',
+                borderRadius: 'var(--sb-radius)',
+                maxWidth: 440, width: '100%',
+                padding: '1.5rem',
+                color: 'var(--sb-cream)',
+              }}
+            >
+              <div className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>Confirm conversion</div>
+              <div style={{ fontSize: '1.05rem', marginBottom: '0.5rem' }}>Re-enter your lead password</div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--sb-sage)', marginBottom: '1.25rem', lineHeight: 1.55 }}>
+                This confirms you're the one promoting this lead — not someone who just walked up to your open browser tab.
+                The same password becomes your member password. You can change it later from your member settings.
+              </div>
+              <form onSubmit={convert} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <input
+                  type="password"
+                  placeholder="Your lead password"
+                  className="sb-input"
+                  autoFocus
+                  value={convertPassword}
+                  onChange={(e) => setConvertPassword(e.target.value)}
+                  disabled={converting}
+                />
+                {convertError && (
+                  <div style={{ fontSize: '0.78rem', color: 'var(--sb-risk-critical)' }}>{convertError}</div>
+                )}
+                <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                  <button
+                    type="button"
+                    className="sb-btn sb-btn-outline"
+                    onClick={() => setShowConvert(false)}
+                    disabled={converting}
+                    style={{ padding: '0.55rem 1.1rem', fontSize: '0.75rem' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="sb-btn sb-btn-gold"
+                    disabled={converting || !convertPassword}
+                    style={{ padding: '0.55rem 1.1rem', fontSize: '0.75rem' }}
+                  >
+                    {converting ? 'Converting…' : 'Convert ↗'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         <div style={pageGrid}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
