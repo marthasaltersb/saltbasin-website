@@ -47,12 +47,13 @@ export function defaultMemberSite({ displayName, email }) {
               eyebrow: 'How I work',
               heading: 'Domains of Expertise',
               intro: 'List the 3–8 capability areas you sell into.',
-              d1Title: 'Domain 1',
-              d1Desc: 'Short description of how you create value here.',
-              d2Title: 'Domain 2',
-              d2Desc: 'Short description of how you create value here.',
-              d3Title: 'Domain 3',
-              d3Desc: 'Short description of how you create value here.',
+              // domains is a dynamic add/remove list. Each entry: title, desc.
+              // Add as many capability areas as you sell into.
+              domains: [
+                { title: 'Domain 1', desc: 'Short description of how you create value here.' },
+                { title: 'Domain 2', desc: 'Short description of how you create value here.' },
+                { title: 'Domain 3', desc: 'Short description of how you create value here.' },
+              ],
             },
           },
           {
@@ -65,12 +66,13 @@ export function defaultMemberSite({ displayName, email }) {
               eyebrow: 'Engagement shapes',
               heading: 'How I Help',
               intro: 'Common engagement shapes I run.',
-              card1Title: 'Diagnostic Sprint',
-              card1Desc: '2-week assessment of your current state with a phased roadmap.',
-              card2Title: 'Embedded Operator',
-              card2Desc: 'Hands-on execution against a defined transformation.',
-              card3Title: 'Advisory Retainer',
-              card3Desc: 'Senior advisor on call for executive decisions.',
+              // cards is a dynamic add/remove list. Each entry: title, desc,
+              // and optional icon (single character / emoji).
+              cards: [
+                { title: 'Diagnostic Sprint', desc: '2-week assessment of your current state with a phased roadmap.', icon: '' },
+                { title: 'Embedded Operator', desc: 'Hands-on execution against a defined transformation.', icon: '' },
+                { title: 'Advisory Retainer', desc: 'Senior advisor on call for executive decisions.', icon: '' },
+              ],
             },
           },
           {

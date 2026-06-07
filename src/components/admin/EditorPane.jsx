@@ -136,22 +136,46 @@ export default function EditorPane({ section, page, onUpdateSection, onUpdatePag
           )}
           {Object.entries(section.fields || {})
             .filter(([k]) => k !== 'soonMsg')
-            // Hide legacy resume role*/role*Desc fields when the new `roles`
-            // array is in use — otherwise the editor would show the dynamic
-            // list editor AND the redundant single-string fields below it.
+            // Hide legacy fixed-slot fields when the equivalent dynamic array
+            // is in use — otherwise the editor would show the dynamic list
+            // editor AND the redundant single-string fields below it.
+            //   roles  → role1/role1Desc … role6
+            //   domains → d1Title/d1Desc … d8
+            //   cards   → card1Title/card1Desc/card1Icon … card4
             .filter(([k]) => {
-              if (!Array.isArray(section.fields?.roles) || section.fields.roles.length === 0) return true;
-              return !/^role\d+(Desc)?$/i.test(k);
+              if (Array.isArray(section.fields?.roles) && section.fields.roles.length > 0
+                  && /^role\d+(Desc)?$/i.test(k)) return false;
+              if (Array.isArray(section.fields?.domains) && section.fields.domains.length > 0
+                  && /^d\d+(Title|Desc)$/i.test(k)) return false;
+              if (Array.isArray(section.fields?.cards) && section.fields.cards.length > 0
+                  && /^card\d+(Title|Desc|Icon)$/i.test(k)) return false;
+              return true;
             })
             .map(([k, v]) => {
-              // Dynamic list editor for array-typed fields. Today only `roles`
-              // hits this path; the pattern generalizes for domains / cards /
-              // anything else we convert next.
+              // Dynamic list editors for array-typed fields.
               if (Array.isArray(v) && k === 'roles') {
                 return (
                   <RoleListEditor
                     key={k}
                     roles={v}
+                    onChange={(next) => patchField(k, next)}
+                  />
+                );
+              }
+              if (Array.isArray(v) && k === 'domains') {
+                return (
+                  <DomainListEditor
+                    key={k}
+                    domains={v}
+                    onChange={(next) => patchField(k, next)}
+                  />
+                );
+              }
+              if (Array.isArray(v) && k === 'cards') {
+                return (
+                  <CardListEditor
+                    key={k}
+                    cards={v}
                     onChange={(next) => patchField(k, next)}
                   />
                 );
@@ -469,4 +493,165 @@ function iconBtnStyle(disabled) {
     fontSize: '0.85rem',
     lineHeight: 1,
   };
+}
+
+// ── DomainListEditor: dynamic add/remove list for domains-of-expertise ──
+// Replaces the legacy d1Title/d1Desc/.../d8Title/d8Desc fixed-slot pattern.
+// Each row: title, description. Reorder via up/down, delete per row. The
+// whole array patches to the parent EditorPane on every change so live preview
+// stays in sync.
+function DomainListEditor({ domains, onChange }) {
+  const list = Array.isArray(domains) ? domains : [];
+
+  function update(i, patch) {
+    onChange(list.map((d, idx) => (idx === i ? { ...d, ...patch } : d)));
+  }
+  function addItem() {
+    onChange([...list, { title: '', desc: '' }]);
+  }
+  function removeItem(i) {
+    onChange(list.filter((_, idx) => idx !== i));
+  }
+  function moveItem(i, dir) {
+    const j = i + dir;
+    if (j < 0 || j >= list.length) return;
+    const next = [...list];
+    [next[i], next[j]] = [next[j], next[i]];
+    onChange(next);
+  }
+
+  return (
+    <div style={styles.fieldGroup}>
+      <label style={styles.fieldLabel}>Domains ({list.length})</label>
+      <div style={{ fontSize: '0.72rem', color: 'var(--sb-dusty)', marginBottom: '0.5rem', lineHeight: 1.5 }}>
+        Add a row for each capability area you sell into. 3–8 works best.
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        {list.map((d, i) => (
+          <div
+            key={i}
+            style={{
+              border: '0.5px solid rgba(196,132,58,0.20)',
+              borderRadius: 'var(--sb-radius)',
+              padding: '0.75rem',
+              background: 'rgba(255,255,255,0.02)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <div style={{
+                fontFamily: 'var(--sb-font-label)',
+                fontSize: '0.62rem',
+                letterSpacing: '0.16em',
+                textTransform: 'uppercase',
+                color: 'var(--sb-gold)',
+              }}>
+                Domain {i + 1}
+              </div>
+              <div style={{ display: 'flex', gap: '0.25rem' }}>
+                <button type="button" onClick={() => moveItem(i, -1)} disabled={i === 0}
+                  style={iconBtnStyle(i === 0)} title="Move up">↑</button>
+                <button type="button" onClick={() => moveItem(i, +1)} disabled={i === list.length - 1}
+                  style={iconBtnStyle(i === list.length - 1)} title="Move down">↓</button>
+                <button type="button" onClick={() => removeItem(i)}
+                  style={{ ...iconBtnStyle(false), color: 'var(--sb-risk-critical)' }} title="Delete domain">×</button>
+              </div>
+            </div>
+            <input className="sb-input" placeholder="Title (e.g. Operations Strategy)"
+              value={d.title || ''} onChange={(e) => update(i, { title: e.target.value })}
+              style={{ marginBottom: '0.5rem' }} />
+            <textarea className="sb-input sb-textarea"
+              placeholder="Short description of how you create value here."
+              value={d.desc || ''}
+              onChange={(e) => update(i, { desc: e.target.value })} />
+          </div>
+        ))}
+        <button type="button" onClick={addItem} className="sb-btn sb-btn-outline"
+          style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', alignSelf: 'flex-start' }}>
+          + Add domain
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── CardListEditor: dynamic add/remove list for service / engagement cards ──
+// Replaces the legacy card1Title/card1Desc/card1Icon/... fixed-slot pattern.
+// Each row: title, description, optional icon character. Reorder via up/down,
+// delete per row.
+function CardListEditor({ cards, onChange }) {
+  const list = Array.isArray(cards) ? cards : [];
+
+  function update(i, patch) {
+    onChange(list.map((c, idx) => (idx === i ? { ...c, ...patch } : c)));
+  }
+  function addItem() {
+    onChange([...list, { title: '', desc: '', icon: '' }]);
+  }
+  function removeItem(i) {
+    onChange(list.filter((_, idx) => idx !== i));
+  }
+  function moveItem(i, dir) {
+    const j = i + dir;
+    if (j < 0 || j >= list.length) return;
+    const next = [...list];
+    [next[i], next[j]] = [next[j], next[i]];
+    onChange(next);
+  }
+
+  return (
+    <div style={styles.fieldGroup}>
+      <label style={styles.fieldLabel}>Cards ({list.length})</label>
+      <div style={{ fontSize: '0.72rem', color: 'var(--sb-dusty)', marginBottom: '0.5rem', lineHeight: 1.5 }}>
+        Add a card for each engagement shape or service you offer. The CardsBlock displays up to three side-by-side.
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        {list.map((c, i) => (
+          <div
+            key={i}
+            style={{
+              border: '0.5px solid rgba(196,132,58,0.20)',
+              borderRadius: 'var(--sb-radius)',
+              padding: '0.75rem',
+              background: 'rgba(255,255,255,0.02)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <div style={{
+                fontFamily: 'var(--sb-font-label)',
+                fontSize: '0.62rem',
+                letterSpacing: '0.16em',
+                textTransform: 'uppercase',
+                color: 'var(--sb-gold)',
+              }}>
+                Card {i + 1}
+              </div>
+              <div style={{ display: 'flex', gap: '0.25rem' }}>
+                <button type="button" onClick={() => moveItem(i, -1)} disabled={i === 0}
+                  style={iconBtnStyle(i === 0)} title="Move up">↑</button>
+                <button type="button" onClick={() => moveItem(i, +1)} disabled={i === list.length - 1}
+                  style={iconBtnStyle(i === list.length - 1)} title="Move down">↓</button>
+                <button type="button" onClick={() => removeItem(i)}
+                  style={{ ...iconBtnStyle(false), color: 'var(--sb-risk-critical)' }} title="Delete card">×</button>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '70px 1fr', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <input className="sb-input" placeholder="◆"
+                value={c.icon || ''} onChange={(e) => update(i, { icon: e.target.value })}
+                style={{ textAlign: 'center' }} />
+              <input className="sb-input" placeholder="Title (e.g. Diagnostic Sprint)"
+                value={c.title || ''} onChange={(e) => update(i, { title: e.target.value })} />
+            </div>
+            <textarea className="sb-input sb-textarea"
+              placeholder="One-paragraph description of this engagement shape."
+              value={c.desc || ''}
+              onChange={(e) => update(i, { desc: e.target.value })} />
+          </div>
+        ))}
+        <button type="button" onClick={addItem} className="sb-btn sb-btn-outline"
+          style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', alignSelf: 'flex-start' }}>
+          + Add card
+        </button>
+      </div>
+    </div>
+  );
 }
