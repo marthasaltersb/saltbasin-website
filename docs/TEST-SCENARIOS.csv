@@ -1,0 +1,289 @@
+﻿"Scenario #","Capability Group","Requirement Covered","Scenario Title","User Logged In","Dependencies","Steps","Expected Outcomes","How to Verify","Result (Pass/Fail/Blocked)","Defect Notes","Tester","Run Date"
+"1","Platform Foundation","Backlog #1 — *Configurable CMS with admin login and draft/publish workflow*","CMS admin login & draft→publish workflow","Admin","Admin credentials in `.env`; at least one editable page exists (Home).","Go to `/admin/login`, enter admin email + password, submit.
+In the admin sidebar, open the Home page in the editor.
+Edit a hero headline; click **Save Draft**.
+Open `/` in an incognito tab — confirm public copy is unchanged.
+Back in admin, click **Publish**.
+Refresh the incognito tab on `/`.","Step 1: redirect to `/admin` with the sidebar visible.
+Step 3: draft persists across refresh; public site still shows old copy.
+Step 6: public site shows the new copy.","Compare hero copy between admin draft state and incognito `/`; confirm only post-publish reflects the change. Confirm `updated_at` bumped on the page row (visible in admin pane footer).","","","",""
+"2","Platform Foundation","Backlog #2 — *Password-protected pre-launch landing gate*","Pre-launch landing gate","Public visitor (no login)","Pre-launch gate toggled ON in admin config; gate password known to tester.","In admin, enable pre-launch gate and set a known password. Save.
+Open incognito tab, navigate to `/`.
+Submit a wrong password.
+Submit the correct password.
+Reload `/` in the same incognito tab.","Step 2: gate screen shown, public marketing site NOT visible.
+Step 3: error message, still gated.
+Step 4: real site loads.
+Step 5: still unlocked (cookie persists).","DevTools → Application → Cookies shows the gate-unlock cookie set after step 4.","","","",""
+"3","Platform Foundation","Backlog #3 — *Block library for composable page sections*","Block library composes page sections","Admin","A page in draft state to test on.","Open admin editor for any draft page.
+Add a **Hero** block, then a **Text** block, then an **Image** block.
+Reorder so Image is first, then Hero, then Text.
+Save draft and view preview pane.
+Delete the Image block; save; refresh preview.","Each block renders correctly in the preview pane.
+Reorder reflects in preview without page refresh.
+Deleted block disappears from preview.","Preview matches editor block order; the page's `blocks` JSON in the network tab includes only the remaining blocks.","","","",""
+"4","Platform Foundation","Backlog #4 — *Brand tokens + Strategic Operator palette*","Brand tokens + Strategic Operator palette applied","Public visitor (no login)","None.","Open `/` in browser.
+Open DevTools → Computed styles on the hero heading.
+Check page background, button background, and link color against the Strategic Operator palette (deep navy `#1B2A3B`, ochre `#C4843A`, sage `#A8B89A`).
+Open `/admin/login` — same palette applied.","All sampled colors match brand tokens; no off-palette colors on home or admin login.","DevTools shows colors resolve from CSS variables (e.g., `var(--sb-navy)`), not raw hex values inline.","","","",""
+"5","Platform Foundation","Backlog #5 — *Supabase Postgres migration (from SQLite)*","Postgres-backed CMS reads/writes survive restart","Admin","Supabase project live; `DATABASE_URL` env var set on Render.","Log into admin, edit a page, publish.
+From the Render dashboard, manually restart the backend service.
+Wait for backend health to come back (~30s).
+Refresh `/` in incognito.","After restart, the published change is still present (proves persistence is in Supabase, not in-memory).","`/api/pages/home` JSON returned by the backend shows the new block content after restart.","","","",""
+"6","Multi-tenant CMS","Backlog #6 — *Member admin parity*","Member admin parity (same shell, scoped data)","Test member","Test member account exists; admin account exists.","Log in as test member, open `/member`.
+Note the sidebar tabs visible to the member.
+In a separate browser session, log in as admin and open `/admin`.
+Compare sidebar shells — both should use the same AdminShell.
+As member, edit a page on the member site.
+In the admin session, navigate to admin pages list — confirm member's page is NOT visible to admin's editor (separate tenant scope).","Identical shell components and styles for member and admin.
+Member sees only their own pages/leads; admin does NOT see member's content (and vice versa).
+Member sees no admin-only tabs (Backlog, Net Works roster).","Network calls from member admin go to `/api/users/me/...`-scoped routes; admin calls go to `/api/...` global routes.","","","",""
+"7","Multi-tenant CMS","Backlog #7 — *Member brand-color overrides*","Member brand-color overrides scoped to /u/:slug","Test member","Test member account with known slug (e.g., `/u/tester`).","Log in as test member, open Config → Brand Colors.
+Set primary color to a distinct value (e.g., `#FF6600`).
+Save.
+Open `/u/tester` in incognito.
+Open `/` in same incognito tab.","`/u/tester` reflects the new orange palette.
+`/` (Salt Basin home) is UNAFFECTED — Strategic Operator palette intact.","DevTools computed style on `/u/tester` hero = `#FF6600`; on `/` = the Salt Basin navy.","","","",""
+"8","Multi-tenant CMS","Backlog #8 — *Member BYO Anthropic API key (for future Config Agent)*","Member BYO Anthropic API key","Test member","Valid Anthropic API key (use a throwaway test key, not production).","Log in as test member, open Config → API Keys.
+Paste an Anthropic key, save.
+Refresh; confirm the key is masked (e.g., `sk-ant-...XYZW`) and not echoed back in plaintext.
+Replace with a clearly invalid key (e.g., `sk-ant-invalid`), save.
+(If a ""Test Key"" button exists) click it.","Valid key saves and is masked on reload.
+Invalid key either rejected on save or flagged on test.
+Key never appears in plaintext in the DOM or network response after save.","DevTools → Network → response body for `/api/users/me/config` shows masked key only.","","","",""
+"9","Multi-tenant CMS","Backlog #9 — *Default member starter site (Home / About / Contact)*","New member gets default starter site","Brand-new member (sign up during the test)","Use a fresh email (e.g., `tester-member-2@saltbasin.net`).","Go to `/signup`, create a new member account.
+Immediately after signup, visit `/u/<new-slug>`.
+Inspect the page list in member admin.","New member's public profile shows Home / About / Contact pages with sensible placeholder copy.
+Admin page list shows 3 starter pages in `draft` or `published` state.","`/api/users/<id>/pages` returns ≥ 3 page rows immediately after signup.","","","",""
+"41","Multi-tenant CMS","Backlog #41 — *Member Templates Phase A — 3 starter templates seeded*","Member Templates Phase A — 3 starter templates","Test member","Test member exists.","Log in as test member, open Templates / Page library.
+Browse the 3 starter templates.
+Apply one template to a new page; save draft; publish.
+Open the public profile to see the rendered template.","Exactly 3 starter templates are visible.
+Applying a template populates the new page with the template's block structure.
+Published page renders the template visually.","`/api/templates` returns 3 entries; new page's `blocks` JSON matches the template's blocks.","","","",""
+"10","Lead Capture & Identity","Backlog #10 — *Lead capture with email + phone + match-and-merge dedup*","Lead capture with match-and-merge dedup","Public visitor (no login) for submission; Admin to verify.","Brevo live (lead gets confirmation email); admin inbox accessible to see notification.","Open `/` in incognito; submit Contact form with `tester-lead@saltbasin.net`, name ""Tester A"", phone `555-123-4567`.
+Note the confirmation modal — copy the lead URL + one-time password.
+Submit the same Contact form again with the same email but different name ""Tester B"" and phone `(555) 123-4567`.
+Submit a **third** time using a DIFFERENT email but same phone digits.
+Log in as admin → Leads panel. Find `tester-lead@saltbasin.net`.","Step 2: modal shows lead URL + password exactly once.
+Step 3: no new lead row created; existing lead gets a new activity entry.
+Step 4: still no new lead row (matched by phone digits).
+Step 5: admin sees ONE lead with 3 activity rows, prior_notes preserves earlier messages.","`/api/leads` from admin shows lead count grew by exactly 1 across the 3 submissions. Lead's `prior_notes` JSON contains the earlier message bodies.","","","",""
+"11","Lead Capture & Identity","Backlog #11 — *Password-protected lead record at /lead/:publicId*","Password-protected lead record at /lead/:publicId","Lead (using the URL + password from Scenario 10)","Completed Scenario 10 (gives valid lead URL + password).","Open the lead URL from Scenario 10 in a fresh incognito window.
+Enter the wrong password.
+Enter the correct password.
+Refresh.
+Try guessing a different `publicId` in the URL.","Step 2: error message, no record shown.
+Step 3: lead record visible (activity log, contact info, etc.).
+Step 4: still authenticated (session cookie persists).
+Step 5: 404 / not-found (no enumeration possible).","Network response is 401 for wrong password; 200 with record JSON for correct; 404 for unknown publicId.","","","",""
+"12","Lead Capture & Identity","Backlog #12 — *Lead → member conversion flow*","Lead → member conversion flow","Lead (then converts to member)","Authenticated lead session from Scenario 11.","From the authenticated lead view, click ""Become a member"" (or equivalent CTA).
+Complete the signup form (set a new password).
+After signup, navigate to `/member`.
+As admin, verify the lead row links to the new member row.","Conversion succeeds without re-asking for email.
+New member has access to `/member` dashboard.
+Admin sees the lead row linked to (or merged with) the member row.","Admin Leads panel shows the lead with a ""converted → member"" status / member_id reference.","","","",""
+"13","Lead Capture & Identity","Backlog #13 — *Lead view shows email log*","Lead view shows email log","Lead","At least one email already sent to that lead (confirmation from Scenario 10 counts).","Open authenticated lead view.
+Scroll to the email log section.
+From admin, trigger a new transactional email to that lead (e.g., resend confirmation).
+Refresh the lead view.","Email log lists the initial confirmation email with timestamp + status.
+After step 3, the new email appears in the log within a refresh.","Email log entries match rows in `lead_emails` table for that lead.","","","",""
+"14","Email Infrastructure","Backlog #14 — *Zoho mailbox at betsysalter@saltbasin.net*","Zoho mailbox active for betsysalter@saltbasin.net","Tester needs Zoho webmail access to that mailbox.","Zoho Forever Free plan still active; DNS MX records pointing to Zoho.","From a personal email account, send a test message to `betsysalter@saltbasin.net`.
+Open Zoho webmail and check the inbox.
+Reply from Zoho.
+Confirm the reply arrives at the personal account.","Inbound mail received in Zoho within 1 minute.
+Outbound reply delivered to the personal account.
+DMARC report does not flag the reply as failing.","Use `dig MX saltbasin.net` (or https://mxtoolbox.com) to confirm MX → Zoho; Gmail's ""Show original"" on the reply shows DKIM + SPF pass.","","","",""
+"15","Email Infrastructure","Backlog #15 — *Brevo transactional email (swap from Resend)*","Brevo transactional sending replaces Resend","Admin","`BREVO_API_KEY` set on Render; sender verified in Brevo.","From the public Contact form, submit as `tester-lead@saltbasin.net`.
+Open Brevo dashboard → Transactional → Logs.
+Confirm the outbound email shows in Brevo's logs (not Resend).
+Check `tester-lead@saltbasin.net` inbox for the confirmation email.","Brevo log shows the send with status `delivered`.
+Email arrives within 2 minutes.
+No Resend API calls in server logs.","Render logs grep for ""brevo"" should appear; grep for ""resend"" should be empty.","","","",""
+"16","Email Infrastructure","Backlog #16 — *Lead confirmation email + Betsy notification*","Lead confirmation email + Betsy notification","Public visitor for submission; Admin/Tester to verify both inboxes.","Access to `tester-lead@saltbasin.net` inbox AND `betsysalter@saltbasin.net` inbox.","Submit Contact form with `tester-lead@saltbasin.net`, name ""Tester A"".
+Check `tester-lead@saltbasin.net` inbox.
+Check `betsysalter@saltbasin.net` inbox.","Lead inbox: confirmation email containing lead URL + one-time password.
+Betsy inbox: notification email with lead name, email, message excerpt.
+Both delivered within 2 minutes.","`lead_emails` table has two rows for this submission: one to the lead, one to Betsy.","","","",""
+"17","Email Infrastructure","Backlog #17 — *Admin-configurable email identity + notification settings*","Admin-configurable email identity + notification settings","Admin","Brevo allows the sender to be changed (verified domain).","Open admin Config → Email Settings.
+Change ""From name"" to a known marker (e.g., ""Salt Basin Test 2026"").
+Change notification recipient to a tester address you can access.
+Submit a public form to trigger an email.
+Verify the From name and recipient.
+Restore original values.","From name shown in the inbox matches the new value.
+Notification arrives at the tester recipient (not the original).
+Restoring values takes effect on the next send.","Email headers (View original / Show source) show the configured ""From"" name; Brevo log shows the configured ""To"".","","","",""
+"18","Salt Basin Net Works","Backlog #18 — *Net Works opt-in banner on Salt Basin home page*","Net Works opt-in banner on Salt Basin home","Public visitor (no login)","At least 2 members opted into Net Works.","Open `/` in incognito on desktop.
+Scroll to the Net Works banner.
+Wait through the scroll-snap rotation (or scroll horizontally).
+Resize browser to mobile width (~375px).
+Click a member card.","Banner shows opted-in member cards (logo + company + blurb).
+Horizontal scroll-snap works smoothly.
+Mobile width keeps the banner usable.
+Clicking a card navigates to `/u/<slug>`.","`/api/net-works/members` returns only members with `net_works_opted_in=true`; banner DOM has one card per returned member.","","","",""
+"19","Salt Basin Net Works","Backlog #19 — *Member opt-in card*","Member opt-in card (logo, company, blurb)","Test member","Test member with logo upload ability.","Log in as test member → Config → Net Works.
+Toggle ""Opt in to Net Works"" ON.
+Upload a logo (PNG ≤ 1MB), set company name + 1-sentence blurb. Save.
+Open `/` in incognito.
+Toggle OFF in member config; refresh `/`.","After opt-in, member's card appears in the banner.
+Logo, company name, blurb all rendered correctly.
+After opt-out, the card is gone from `/`.","`/api/net-works/members` includes / excludes the test member matching the opt-in flag.","","","",""
+"20","Public Site Content","Backlog #20 — *Founder-first hero with mission split*","Founder-first hero with mission split","Public visitor (no login)","None.","Open `/` in desktop incognito.
+Verify hero shows founder image/intro on one side, mission copy on the other.
+Resize to mobile (~375px wide).","Desktop: split hero with founder + mission visible.
+Mobile: sections stack cleanly; no overflow, no horizontal scroll.
+Headlines use Cormorant Garamond; body uses Inter.","DevTools computed font-family on hero h1 = Cormorant Garamond; on body = Inter.","","","",""
+"21","Public Site Content","Backlog #21 — *Industries × Domains wheel (interactive)*","Industries × Domains wheel (interactive)","Public visitor (no login)","None.","Open `/` on desktop, scroll to the wheel.
+Hover over each industry segment.
+Click an industry segment.
+Test keyboard navigation (Tab + Enter) into the wheel.
+Resize to mobile.","Hover highlights the segment.
+Click reveals matching domain/services beneath or in a popover.
+Keyboard focus visible and operable.
+Mobile shrinks wheel to fit; remains tappable.","SVG segment elements have `tabindex` and ARIA labels; touch targets ≥ 44×44 px on mobile.","","","",""
+"22","Public Site Content","Backlog #22 — *Timeline + Case Studies + Technology blocks*","Timeline + Case Studies + Technology blocks render","Public visitor (no login)","None.","Open `/` and scroll through all three sections.
+Click each case study card.
+Click each technology item if linkable.
+Verify the timeline displays chronological entries.","Timeline shows years in order with descriptions.
+Case study cards link to `/output/case-study/:slug`.
+Technology block renders all listed tools/stacks.
+No layout jank on slow 3G simulated load.","Network → Throttling: Slow 3G → reload; sections appear without layout shift (CLS < 0.1).","","","",""
+"23","Public Site Content","Backlog #23 — *References request flow*","References request flow","Public visitor (no login) for submission; Admin to verify.","Brevo live (email notification fires).","Open `/` → References section → click ""Request references"".
+Fill the form with `tester-lead@saltbasin.net`, name + reason.
+Submit.
+Check tester inbox and `betsysalter@saltbasin.net` inbox.
+As admin, open Leads panel.","Confirmation modal shown.
+Tester receives confirmation email.
+Betsy receives notification email tagged as a references request.
+Lead created/updated with `source = references_request`.","`/api/leads` shows the lead with `source` field set; `lead_emails` table has the two send rows.","","","",""
+"24","Output Pages","Backlog #24 — *Print-friendly Resume output page*","Print-friendly Resume output page","Member or authenticated lead (gated)","A populated resume for the logged-in user.","Log in as the gated user.
+Open `/output/resume`.
+Use the browser print preview (Ctrl/Cmd+P).
+Save as PDF.
+Sign out and try `/output/resume` again.","Authenticated view renders resume with print-styled layout.
+Print preview is single-column, no nav chrome, no broken page breaks within a section.
+Saved PDF is selectable text (not raster).
+Signed-out user sees gated preview, not full content.","Print preview hides header/footer chrome; CSS `@media print` rules apply (DevTools → Rendering → Emulate CSS media → print).","","","",""
+"25","Output Pages","Backlog #25 — *Proposal output*","Proposal output (Diagnostic / Embedded / Advisory)","Member or authenticated lead","A lead/member with proposal data.","Open `/output/proposal/diagnostic`.
+Open `/output/proposal/embedded`.
+Open `/output/proposal/advisory`.
+Try `/output/proposal/notatype`.
+Print-preview each variant.","Each `:type` route renders the matching proposal variant content.
+Unknown type returns 404 (or graceful fallback) — not a crash.
+Print-styled for each variant.","Each route response includes the variant-specific copy headers; DOM contains variant marker (e.g., `data-variant=""embedded""`).","","","",""
+"26","Output Pages","Backlog #26 — *Case Study + One-pager outputs*","Case Study + One-pager outputs","Member or public visitor (depends on gate config)","At least one published case study with `slug`.","Open `/output/case-study/<slug>`.
+Open `/output/one-pager`.
+Open `/output/case-study/does-not-exist`.
+Print-preview both valid routes.
+Copy a deep-link from the case study and share to a different browser session.","Both routes render properly; deep-link works in fresh session.
+Unknown slug returns 404 / not-found message.
+Print preview is single-column, no nav chrome.","`/api/case-studies/<slug>` returns the case study JSON; DOM headline matches.","","","",""
+"27","Admin Experience","Backlog #27 — *Admin sidebar + editor + preview pane*","Admin sidebar + editor + preview pane","Admin","A page in draft state.","Log in as admin.
+Click each sidebar tab in order; confirm each loads its panel.
+Open a page in the editor; edit a field.
+Observe preview pane updates.
+Resize the editor/preview split (if supported here too).","All sidebar tabs load their panel within 2s.
+Edits reflect in preview within ~500ms.
+No console errors in DevTools.","DevTools Console clean across all tab loads; preview iframe re-render matches latest editor state.","","","",""
+"28","Admin Experience","Backlog #28 — *Net Works admin tab (member roster)*","Net Works admin tab (member roster)","Admin","At least 2 members exist; at least 1 opted into Net Works.","Open admin → Net Works tab.
+View the roster.
+Toggle a member's opt-in status from admin side.
+Confirm change reflected on `/`.
+Restore original opt-in state.","Roster shows all members with current opt-in flag.
+Admin toggle propagates to the public banner.
+No errors when toggling rapidly.","`/api/net-works/members` returns updated opt-in flag after toggle.","","","",""
+"29","Admin Experience","Backlog #29 — *Mobile admin shell (collapsible sidebar, stacked panels)*","Mobile admin shell","Admin (on a phone or DevTools mobile emulation)","Real phone preferred; otherwise Chrome DevTools device toolbar at iPhone 14 / Pixel 7.","On mobile viewport (< 768px), log in as admin.
+Confirm sidebar starts collapsed.
+Open sidebar; pick a tab.
+Edit a page; switch to preview.
+Rotate landscape ↔ portrait.","Sidebar is collapsible and tappable.
+Editor and preview stack vertically; no horizontal scroll.
+Rotating doesn't break layout.","Lighthouse mobile run on `/admin` scores ≥ 80 on Best Practices; no overflow flagged.","","","",""
+"43","Admin Experience","Backlog #43 — *Adjustable + responsive Split view*","Adjustable + responsive Split view (drag-resize divider)","Admin","A draft page open in editor.","Log in as admin, open a page editor.
+Drag the divider between editor and preview left, right, center.
+Refresh — does the chosen split persist?
+Resize the browser window narrow.
+Repeat on mobile breakpoint.","Divider drags smoothly, no jumping.
+Split position persists across refresh (localStorage).
+Below mobile breakpoint, divider switches to stacked layout automatically.","localStorage key (e.g., `adminSplitRatio`) stores the value after drag.","","","",""
+"44","Admin Experience","Backlog #44 — *Brand colors bug fixed + Salt Basin admin palette wired*","Brand colors bug fixed + Salt Basin admin palette","Admin","None.","Log in as admin → confirm admin chrome uses the Salt Basin palette (deep navy, ochre accents).
+In Config, change a brand-token value, save.
+Confirm the admin chrome respects the change OR remains on Salt Basin (depending on spec).
+Reset to defaults.
+Compare admin and `/u/tester` palettes side-by-side — they should NOT collide.","Admin defaults to Salt Basin Strategic Operator palette regardless of any member-side overrides.
+No regressions to the original brand-colors bug (which was: member overrides leaking into admin).","DevTools computed CSS variables on `/admin` resolve to Salt Basin values even after setting member overrides.","","","",""
+"45","Admin Experience","Backlog #45 — *Calendar date pickers for date-shaped fields*","Calendar date pickers in EditorPane","Admin","A page or item with a date field (e.g., timeline entry, case study date).","Open editor for a content type with a date field.
+Click the date input → calendar widget opens.
+Pick a future date; save.
+Re-open; pick a past date; save.
+Try entering text directly into the field.","Calendar opens on focus/click.
+Selected date stored in ISO format on the backend.
+Display format is human-friendly (e.g., ""Jun 7, 2026"").
+Manual text entry either accepted (parsed) or rejected with clear feedback.","Network `POST /api/...` body shows date as ISO 8601 string.","","","",""
+"46","Admin Experience","Backlog #46 (defect) — *Hotfix: TDZ crash in AdminShell*","AdminShell TDZ crash hotfix — admin page loads","Admin","None.","Open `/admin/login` in a clean incognito window.
+Log in.
+Open DevTools Console before navigating further.
+Click through every sidebar tab.
+Hard refresh on each tab.","No ""Cannot access X before initialization"" or similar TDZ error.
+No red console errors.
+Each tab renders.","Console clean across all tabs; the previously-failing tab loads on hard refresh.","","","",""
+"30","Deployment Infrastructure","Backlog #30 — *Render (backend) + Netlify (frontend) hosting split*","Render backend + Netlify frontend split","Admin / Tester with access to Render + Netlify dashboards","Render + Netlify dashboard access; both services live.","Open `https://saltbasin.net` — confirm Netlify serves the static SPA.
+Open DevTools Network and watch an API call (e.g., login).
+Confirm the API call goes to the Render backend URL (or proxied through saltbasin.net).
+Check Render and Netlify dashboards for healthy status.","Netlify serves HTML + JS bundles.
+API requests resolve to the Render backend (visible in network request URL or via response headers).
+Both dashboards show last deploy as successful.","`curl -I https://saltbasin.net` headers show Netlify; `curl -I <render-backend-url>/api/health` shows Render.","","","",""
+"31","Deployment Infrastructure","Backlog #31 — *Render deploy monitor + auto-deploy verification*","Render deploy monitor + auto-deploy verification","Tester with GitHub + Render access","GitHub Actions workflows enabled; UptimeRobot or equivalent monitor wired.","Push a trivial (no-op) commit to `main`.
+Watch Render dashboard for the new deploy.
+Watch the GitHub Action that verifies the deploy.
+(Optional) Simulate a failing deploy in a side branch or check past failure history.","Render auto-deploys within 5 minutes.
+GitHub Action verifies deploy and reports success.
+A failure would auto-open a GitHub issue (verify from past run, do not intentionally break prod).","GitHub Action run log shows the verify step passing; Render service ""Last deploy"" timestamp updates.","","","",""
+"32","Deployment Infrastructure","Backlog #32 — *Netlify build.ignore + frontend-deploy approval gate*","Netlify build.ignore + frontend-deploy approval gate","Tester with Netlify access","`netlify.toml` configured with `build.ignore` script.","Make a commit touching only `server/` files; push.
+Open Netlify dashboard.
+Confirm Netlify SKIPS the build (no frontend assets changed).
+Make a commit touching `src/`; push.
+Confirm Netlify DOES build this time.","Backend-only commits do not consume Netlify build credits.
+Frontend-touching commits trigger a build.
+The `build.ignore` script's logs show the skip reason.","Netlify deploy log shows ""Build cancelled by build.ignore script"" for the server-only commit.","","","",""
+"33","Security & Data","Backlog #33 — *Admin password rotation tooling*","Admin password rotation tooling","Admin (then re-login with new password)","Local repo clone; ability to run `scripts/rotate-admin-password.mjs`; `.env` editable.","Run `node scripts/rotate-admin-password.mjs` (follow its prompts).
+Note the new password in the script output.
+Update `.env` if needed; restart backend.
+Log out of admin; log back in with the OLD password.
+Log in with the NEW password.","Old password rejected after rotation.
+New password works.
+Script never writes plaintext password to git-tracked files.","`git status` after running script shows no plaintext password additions; `bcrypt` hash in DB has updated.","","","",""
+"34","Security & Data","Backlog #34 — *Data Notice page + inline disclaimers*","Data Notice page + inline disclaimers","Public visitor (no login)","None.","Open `/data-notice`.
+Open `/` → Contact form. Confirm an inline disclaimer linking to `/data-notice`.
+Open `/lead/<publicId>` — confirm inline disclaimer.
+Open `/signup` — confirm inline disclaimer.","`/data-notice` renders the full notice cleanly.
+Inline disclaimers appear on all data-collection forms with link to `/data-notice`.","Page source includes a link with `href=""/data-notice""` on each form.","","","",""
+"35","Observability & Quality","Backlog #35 — *Cold-start UX with branded loader*","Cold-start UX with branded loader","Public visitor (no login)","Render free-tier backend cold (let it idle ≥ 15 min, or use Render dashboard ""Suspend → Resume"").","Ensure the Render backend is cold (no requests for 15 min).
+Open `/` in a fresh incognito tab.
+Observe the loading state during the cold-start delay.
+Wait until the page renders fully.
+Refresh — second load should be warm and fast.","Cold-start shows the branded Salt Basin loader, not a blank white page.
+Loader includes brand mark / typography consistent with the site.
+After warm, second load is < 1s.","DevTools Network shows the first API request taking 20-30s; the loader is visible during that time.","","","",""
+"40","Requirements & Test Management","Backlog #40 — *JIRA Phase A — read-only import*","JIRA Phase A — read-only import","Admin","JIRA API credentials available; test JIRA project accessible.","Log in as admin → JIRA Import panel.
+Configure connection (URL + token) for the test JIRA project.
+Run an import.
+View imported items in the backlog view.
+Confirm imports are read-only (no editing back to JIRA).","Import succeeds and pulls in tickets with title, status, description.
+Imported items are visible but flagged as JIRA-sourced.
+No write-back attempts to JIRA from the UI.","Imported items have a `external_ref` field starting with the JIRA project key (e.g., `JIRA-123`); no `PUT /api/jira/...` calls fired from the admin UI.","","","",""
+"42","Requirements & Test Management","Backlog #42 — *Scrum Agent Phase A*","Scrum Agent Phase A — chat scaffold with real Claude responses","Admin","`ANTHROPIC_API_KEY` set; Anthropic account in good standing.","Log in as admin → Scrum Agent panel.
+Send a simple prompt (""Summarize the backlog by capability"").
+Confirm a real, contextual response from Claude.
+Send a follow-up that depends on the prior message.
+Reload the page and resume the conversation.","Responses are real Claude completions (not canned).
+Conversation state persists at least within session (and across reload if spec'd that way).
+Errors (rate limit, invalid key) surface with a clear message, not silent fail.","Network → `/api/scrum-agent/chat` returns 200 with a Claude-format response body; intentionally invalidate the key briefly to confirm the failure UX.","","","",""
+"47","Requirements & Test Management","Backlog #47 — *Patch Notes output*","Patch Notes output (/output/patch-notes)","Public visitor (no login)","At least one backlog item with status changes in the last week.","Open `/output/patch-notes`.
+Verify the page lists recent deployed items grouped by date or capability.
+Confirm only `status='deployed'` items appear (no in-progress or pending leaks).
+Print preview.
+Resize to mobile.","Patch notes list deployed items with title + brief summary + date.
+No drafts or pending items leak through.
+Print-styled cleanly.
+Mobile layout readable.","`/api/backlog/` filtered to `status=deployed` and the page DOM count matches.","","","",""
