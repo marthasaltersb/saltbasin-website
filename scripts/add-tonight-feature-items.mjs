@@ -47,6 +47,24 @@ const PENDING_FRONTEND = {
 
 const ITEMS = [
   {
+    capabilitySlug: 'public-site-content',
+    externalRef: 'FEAT.2026-06-07.2 · bestystaff-public-chat-widget',
+    title: 'BestyStaff Phase 5 — public chat widget on saltbasin.net',
+    summary: 'A floating chat widget on the public Salt Basin site that lets visitors ask BestyStaff questions about the site and about Betsy. Stubbed today (501 from /api/agent/bestystaff); admin config card already collects greeting, persona, and aboutBio. This item is the build: real Anthropic-backed endpoint + frontend widget + safety guards + rate limiting.',
+    userStory: 'As a public visitor curious whether Salt Basin is right for me, I want to ask a few quick questions about the work Betsy does and what engagements look like, without filling out a form, so I can self-qualify before reaching out as a lead.',
+    requirementDetail:
+      'Replace the 501 stub at POST /api/agent/bestystaff with a real Anthropic SDK call. System prompt is built from config.bestystaff.persona + aboutBio + a snapshot of public-site pages/sections (so it can answer "what services does Betsy offer?" with the actual published copy, not a hallucination). Per-IP rate limit (e.g. 20 messages/hour to start) to bound cost and bot abuse. Optional conversation-id pattern so multi-turn works — client-side localStorage holds the id; server keeps recent turns in memory (Redis-less for now; if cardinality grows past memory, swap to a DB-backed bestystaff_conversations table).\n\nFrontend: a new BestyStaffWidget component mounted on PublicSite (and possibly /u/:slug member profiles — open question). Floating bubble bottom-right. Only renders when config.bestystaff.enabled === true. Greeting on open uses config.bestystaff.greeting. Conversation persists in localStorage so refresh doesn\'t lose context.\n\n**v1 scope (~2-3 hr):** single-turn endpoint, persona + bio as system prompt, basic widget, per-IP rate limit, safety guard system prompt. No site-context tool use, no multi-turn.\n\n**v2 (deferred):** multi-turn conversations + site-context tool use (model can read live page content via a get_site_content tool) so answers quote actual published copy.\n\n**v3 (deferred):** capture conversation → lead conversion ("want me to follow up by email?" prompt). On opt-in, creates a lead row with source=bestystaff and the conversation as prior_notes. Hooks into the existing lead-capture flow.',
+    businessRules:
+      '- Widget only renders when config.bestystaff.enabled is true (admin opt-in already exists).\n- System prompt MUST explicitly forbid revealing: admin env vars, member private data, anything in the leads table, internal config_state values beyond what publicConfig() already exposes.\n- "I don\'t know about that" fallback for off-topic questions — model is instructed never to fabricate when uncertain.\n- No PII collected from visitors without an explicit opt-in step.\n- Rate limit per IP (recommend 20 messages/hour for v1) returns 429 with a friendly "you\'ve sent a lot — try again later" message.\n- Cost cap: if monthly Anthropic spend on BestyStaff exceeds a threshold (configurable, e.g. $50), widget auto-disables and alerts admin. (v2+ — not v1.)\n- Conversations are private to the visitor browser (localStorage) unless they explicitly opt in to share / convert to lead.',
+    designSpec:
+      'Bottom-right floating chat bubble, gold accent, matches Strategic Operator palette. Closed state: small circular avatar + "Ask BestyStaff" label on hover. Open state: 360px wide × ~480px tall panel with header (BestyStaff name + close X), scrollable message list, textarea + send button at bottom. Greeting message renders as the first assistant message on first open. On mobile, panel goes full-screen modal when opened. Loading state shows a typing-indicator triple-dot.',
+    acceptanceCriteria:
+      'Given config.bestystaff.enabled is true\nWhen a public visitor opens saltbasin.net\nThen the BestyStaff bubble appears in the bottom-right\nAnd clicking it opens a chat panel with the configured greeting\nAnd asking "What services do you offer?" returns a coherent answer derived from the site\'s actual published copy + Betsy\'s configured aboutBio\nAnd asking "What is Betsy\'s home address?" returns a graceful "I don\'t share that" response (safety guard).',
+    processSteps: '1. Admin enables BestyStaff in Config → 2. Visitor lands on saltbasin.net → 3. Sees chat bubble → 4. Asks a question → 5. Gets persona-aligned response → 6. Continues conversation (v2) → 7. Optionally converts to lead (v3).',
+    priority: 'p1', tags: ['public-site', 'agent', 'bestystaff', 'phase-5', 'anthropic'],
+    ...PENDING_FRONTEND,
+  },
+  {
     capabilitySlug: 'requirements-mgmt',
     externalRef: 'FEAT.2026-06-07.1 · test-mode-side-panel',
     title: 'Test mode: embedded side panel on every screen for live run logging',
