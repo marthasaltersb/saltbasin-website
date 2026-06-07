@@ -464,14 +464,140 @@ router.get('/summary', async (req, res) => {
     };
   });
 
-  res.json({
+  const payload = {
     projectStartedAt: PROJECT_STARTED_AT || null,
     totals,
     capabilities,
     workarounds,
     items,         // for the feature inventory section
     groups,        // so the client can re-lookup by id
+  };
+
+  // ── Lazy snapshot capture ──
+  // First call of the UTC day inserts a row into build_progress_snapshots so
+  // we accumulate a time series of totals for charting later. Subsequent
+  // calls same-day are no-ops thanks to UNIQUE(captured_date, capture_source).
+  // We swallow errors so a snapshot write hiccup never breaks the /summary
+  // response — chart data is observability, not the critical path.
+  try {
+    await db
+      .prepare(
+        `INSERT INTO build_progress_snapshots (
+           requirements_total, requirements_delivered,
+           hours_claude, hours_betsy, activities_claude, activities_betsy,
+           cost_usd_claude, traditional_cost_usd, ai_savings_usd, monthly_tier_savings,
+           full_payload, capture_source
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'auto')
+         ON CONFLICT (captured_date, capture_source) DO NOTHING`
+      )
+      .run(
+        totals.requirementsTotal,
+        totals.requirementsDelivered,
+        totals.hoursClaude,
+        totals.hoursBetsy,
+        totals.activitiesClaude,
+        totals.activitiesBetsy,
+        totals.costUsdClaude,
+        totals.traditionalCostUsd,
+        totals.aiSavingsUsd,
+        totals.monthlyTierSavings,
+        JSON.stringify(payload)
+      );
+  } catch (e) {
+    console.warn('[backlog/summary] snapshot capture failed (non-fatal):', e.message);
+  }
+
+  res.json(payload);
+});
+
+// ── Build progress snapshots (time series for charting) ──
+//
+// GET /api/backlog/snapshots[?from=YYYY-MM-DD&to=YYYY-MM-DD]
+//   Returns rows in chronological order suitable for line-chart plotting.
+//
+// POST /api/backlog/snapshot { source?: 'manual'|'milestone'|'baseline', note?: string }
+//   Force-captures a snapshot RIGHT NOW (not gated on once-per-day) so an
+//   admin can mark a milestone or take a baseline without waiting for the
+//   next auto-capture. Idempotency for force-captures comes from
+//   UNIQUE(captured_date, capture_source) — same source twice in one day is
+//   a no-op. So sources are scoped: 'auto' for the daily lazy capture,
+//   'manual' for one-off button presses, 'baseline' for the first-ever
+//   capture, 'milestone' for labelled events.
+router.get('/snapshots', async (req, res) => {
+  const { from, to } = req.query;
+  let query = `SELECT * FROM build_progress_snapshots`;
+  const where = [];
+  const params = [];
+  if (from) { where.push(`captured_date >= $${params.length + 1}`); params.push(from); }
+  if (to)   { where.push(`captured_date <= $${params.length + 1}`); params.push(to);   }
+  if (where.length) query += ` WHERE ${where.join(' AND ')}`;
+  query += ` ORDER BY captured_at ASC`;
+  const rows = await db.prepare(query).all(...params);
+  res.json({
+    snapshots: rows.map((r) => ({
+      id: Number(r.id),
+      capturedAt: Number(r.captured_at),
+      capturedDate: r.captured_date,
+      requirementsTotal: Number(r.requirements_total),
+      requirementsDelivered: Number(r.requirements_delivered),
+      hoursClaude: Number(r.hours_claude),
+      hoursBetsy: Number(r.hours_betsy),
+      activitiesClaude: Number(r.activities_claude),
+      activitiesBetsy: Number(r.activities_betsy),
+      costUsdClaude: Number(r.cost_usd_claude),
+      traditionalCostUsd: Number(r.traditional_cost_usd),
+      aiSavingsUsd: Number(r.ai_savings_usd),
+      monthlyTierSavings: Number(r.monthly_tier_savings),
+      captureSource: r.capture_source,
+      note: r.note,
+    })),
   });
+});
+
+router.post('/snapshot', async (req, res) => {
+  const { source = 'manual', note } = req.body || {};
+  const validSources = new Set(['manual', 'milestone', 'baseline']);
+  if (!validSources.has(source)) {
+    return res.status(400).json({ error: `source must be one of ${[...validSources].join(', ')}` });
+  }
+
+  // Recompute current totals by calling our own /summary logic. Cheap enough
+  // (the summary handler does the full backlog read anyway) and guarantees
+  // the snapshot matches what the user just saw.
+  const summaryRes = await fetch(`http://localhost:${process.env.PORT || 3001}/api/backlog/summary`, {
+    headers: { Cookie: req.headers.cookie || '' },
+  });
+  if (!summaryRes.ok) return res.status(500).json({ error: 'failed to compute current totals' });
+  const payload = await summaryRes.json();
+  const t = payload.totals;
+
+  const result = await db
+    .prepare(
+      `INSERT INTO build_progress_snapshots (
+         requirements_total, requirements_delivered,
+         hours_claude, hours_betsy, activities_claude, activities_betsy,
+         cost_usd_claude, traditional_cost_usd, ai_savings_usd, monthly_tier_savings,
+         full_payload, capture_source, note
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+       ON CONFLICT (captured_date, capture_source) DO UPDATE SET note = COALESCE($13, build_progress_snapshots.note)
+       RETURNING id`
+    )
+    .run(
+      t.requirementsTotal,
+      t.requirementsDelivered,
+      t.hoursClaude,
+      t.hoursBetsy,
+      t.activitiesClaude,
+      t.activitiesBetsy,
+      t.costUsdClaude,
+      t.traditionalCostUsd,
+      t.aiSavingsUsd,
+      t.monthlyTierSavings,
+      JSON.stringify(payload),
+      source,
+      note || null
+    );
+  res.json({ ok: true, id: Number(result.lastInsertRowid), source, note: note || null });
 });
 
 // ── Patch notes ──

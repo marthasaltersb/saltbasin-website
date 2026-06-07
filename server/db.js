@@ -531,6 +531,41 @@ async function bootstrap() {
     CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_events (created_at DESC);
   `);
 
+  // ── Build progress snapshots ──
+  //
+  // Periodic rollup snapshots of the build-summary totals so we can chart
+  // progress over time. /api/backlog/summary lazily inserts one snapshot per
+  // UTC day on first access (idempotent — second access same-day no-ops);
+  // admin can also force-capture via POST /api/backlog/snapshot with an
+  // optional note for milestone labelling ("baseline", "post-launch", etc.).
+  //
+  // full_payload mirrors the /summary response JSONB so future chart series
+  // can pull any metric without a new column.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS build_progress_snapshots (
+      id                     BIGSERIAL PRIMARY KEY,
+      captured_at            BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      captured_date          DATE NOT NULL DEFAULT CURRENT_DATE,  -- UTC; dedup key for daily idempotency
+      requirements_total     INTEGER NOT NULL,
+      requirements_delivered INTEGER NOT NULL,
+      hours_claude           NUMERIC NOT NULL DEFAULT 0,
+      hours_betsy            NUMERIC NOT NULL DEFAULT 0,
+      activities_claude      INTEGER NOT NULL DEFAULT 0,
+      activities_betsy       INTEGER NOT NULL DEFAULT 0,
+      cost_usd_claude        NUMERIC NOT NULL DEFAULT 0,
+      traditional_cost_usd   NUMERIC NOT NULL DEFAULT 0,
+      ai_savings_usd         NUMERIC NOT NULL DEFAULT 0,
+      monthly_tier_savings   NUMERIC NOT NULL DEFAULT 0,
+      full_payload           JSONB NOT NULL,
+      capture_source         TEXT NOT NULL DEFAULT 'auto' CHECK (capture_source IN ('auto', 'manual', 'baseline', 'milestone')),
+      note                   TEXT,
+      UNIQUE (captured_date, capture_source)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_bps_captured_at ON build_progress_snapshots (captured_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_bps_captured_date ON build_progress_snapshots (captured_date DESC);
+  `);
+
   // ── Password reset tokens ──
   //
   // Single-use, time-limited tokens for the "Forgot password?" flow. POST

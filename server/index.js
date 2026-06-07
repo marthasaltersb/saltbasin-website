@@ -104,6 +104,22 @@ if (isProd) {
 }
 
 const port = Number(process.env.PORT) || 3001;
-app.listen(port, () => {
+app.listen(port, async () => {
   console.log(`[server] Salt Basin ${isProd ? '(prod)' : '(dev)'} listening on port ${port}`);
+
+  // One-shot baseline snapshot on first deploy after the build_progress_snapshots
+  // table is introduced. captureBaselineIfEmpty is auth-agnostic (no HTTP cycle,
+  // direct DB INSERT) so we don't have to wire a self-cookie. Subsequent days are
+  // covered by the lazy capture in /api/backlog/summary. Errors are non-fatal.
+  setTimeout(async () => {
+    try {
+      const { captureBaselineIfEmpty } = await import('./lib/snapshot.js');
+      const result = await captureBaselineIfEmpty();
+      if (result?.captured) {
+        console.log(`[server] baseline snapshot captured (id ${result.id})`);
+      }
+    } catch (e) {
+      console.warn('[server] baseline snapshot skipped:', e.message);
+    }
+  }, 3000);
 });

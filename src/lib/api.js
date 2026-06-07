@@ -92,6 +92,15 @@ export const api = {
 
   // Backlog / Requirements Management (admin-only)
   getBacklog: () => request('/api/backlog/'),
+  // Build progress snapshots — time-series rollups for charting "how the
+  // numbers changed week over week / month over month." Auto-captured daily
+  // on /summary access; can also be force-captured via createSnapshot().
+  getSnapshots: (range = {}) => {
+    const qs = new URLSearchParams(range).toString();
+    return request(`/api/backlog/snapshots${qs ? `?${qs}` : ''}`);
+  },
+  createSnapshot: (body = {}) =>
+    request('/api/backlog/snapshot', { method: 'POST', body: JSON.stringify(body) }),
   seedBacklog: () => request('/api/backlog/seed', { method: 'POST' }),
   createBacklogItem: (item) =>
     request('/api/backlog/items', { method: 'POST', body: JSON.stringify(item) }),
