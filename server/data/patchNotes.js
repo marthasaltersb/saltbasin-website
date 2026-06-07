@@ -228,4 +228,42 @@ const RELEASES = [
       },
     ],
   },
+
+  // ─── v0.9 — QA system + data-driven admin nav + audit log ─────────
+  {
+    version: 'v0.9',
+    name: 'QA System, Audit Log, and a Data-Driven Admin',
+    date: '2026-06-07',
+    summary:
+      'The admin grows up. A new QA tab lets the admin author test scenarios for every deployed feature, run them step-by-step, and have failed steps auto-create defect backlog items linked back to the failing scenario. Every mutation across the QA and backlog routes lands in a new audit_events log so nothing gets changed silently. The admin tabs themselves reorganize into "Platform Lifecycle Management" and "Customer Relationship Management" views — and the whole nav structure now lives in config_state rather than hardcoded JSX, so future relabels and reorderings happen without a code push.',
+    sections: [
+      {
+        heading: 'New',
+        items: [
+          'QA tab (under Platform Lifecycle Management): author test scenarios tied to deployed backlog items, with ordered steps capturing action + expected outcome',
+          'Log Test Run modal: per-step pass / fail / blocked verdicts with notes and evidence URLs, environment selector (test vs prod), overall notes',
+          'Auto-defect creation: any failed step spawns a kind="defect" backlog item parented to the scenario\'s primary feature, with the failing step\'s evidence carried into the defect summary',
+          'Multi-select linked features on a scenario — one scenario can cover multiple deployed features, with one marked as "primary" (the parent for auto-defects)',
+          'Audit log: every create / update / delete on QA and backlog routes writes a row in audit_events with before/after JSONB, the source (manual_ui / brain_dump / bulk_script / jira_sync / seed), and the actor',
+          'Admin nav reorganized into views: Content, Platform Lifecycle Management (Backlog + QA), Customer Relationship Management (Leads + Net Works), and System (Config)',
+        ],
+      },
+      {
+        heading: 'Changed',
+        items: [
+          'Admin nav structure is now data-driven from config_state["admin_nav"] — labels, grouping, order, and presence can change without touching code (the component identities stay in a small in-code registry, since React components can\'t be loaded from JSON)',
+          'Native <option> dropdowns are now legible on dark OS themes (global color rule in brand.css)',
+        ],
+      },
+      {
+        heading: 'Behind the scenes',
+        items: [
+          'New tables: test_scenarios, test_scenario_steps, test_runs, test_run_step_results, test_scenario_features (junction), audit_events',
+          'backlog_items gets a test_scenario_id column for back-navigation from a defect to the scenario that surfaced it',
+          'Optimistic concurrency on PATCH /api/qa/scenarios via expectedUpdatedAt: writes can\'t silently overwrite changes that happened between read and apply',
+          'Default admin_nav structure seeded into config_state at bootstrap if missing; deleting that row and rebooting re-seeds it',
+        ],
+      },
+    ],
+  },
 ];
