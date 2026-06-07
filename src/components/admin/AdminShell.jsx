@@ -10,6 +10,47 @@ import ConfigPanel from './ConfigPanel.jsx';
 import LeadsPanel from './LeadsPanel.jsx';
 import NetWorksPanel from './NetWorksPanel.jsx';
 import BacklogPanel from './BacklogPanel.jsx';
+import QAPanel from './QAPanel.jsx';
+
+// Tab component registry: the one piece that can't be data-driven, because
+// React components have to be referenced by import. The nav structure stored
+// in config_state references entries here via tab.componentId. Adding a new
+// component-backed tab means: import the component, add an entry here, then
+// edit the nav structure (eventually via the Config panel editor) to surface it.
+//
+// 'content' is a sentinel — it stays as inline JSX in AdminShell below because
+// the content editor is too tangled with the shell's state to be a standalone
+// panel without a real refactor.
+const TAB_COMPONENTS = {
+  leads:    () => <LeadsPanel />,
+  networks: () => <NetWorksPanel />,
+  backlog:  () => <BacklogPanel />,
+  qa:       () => <QAPanel />,
+  // config: handled inline below (ConfigPanel needs draft + setters from shell)
+  // content: handled inline below (Sidebar/EditorPane/PreviewPane composition)
+};
+
+// Fallback nav used if /api/config/admin-nav can't be reached (offline / 500).
+// Mirrors the seeded default so the admin shell stays usable even with the
+// API down.
+const FALLBACK_ADMIN_NAV = {
+  views: [
+    { id: 'content', label: 'Content', sortOrder: 0, tabs: [
+      { id: 'content', label: 'My Site', componentId: 'content', sortOrder: 0 },
+    ]},
+    { id: 'plm', label: 'Platform Lifecycle Management', sortOrder: 1, tabs: [
+      { id: 'backlog', label: 'Backlog', componentId: 'backlog', sortOrder: 0 },
+      { id: 'qa', label: 'QA', componentId: 'qa', sortOrder: 1 },
+    ]},
+    { id: 'crm', label: 'Customer Relationship Management', sortOrder: 2, tabs: [
+      { id: 'leads', label: 'Leads', componentId: 'leads', sortOrder: 0 },
+      { id: 'networks', label: 'Net Works', componentId: 'networks', sortOrder: 1 },
+    ]},
+    { id: 'system', label: 'System', sortOrder: 3, tabs: [
+      { id: 'config', label: 'Config', componentId: 'config', sortOrder: 0 },
+    ]},
+  ],
+};
 
 const STATUS_CYCLE = ['live', 'draft', 'soon'];
 
@@ -50,8 +91,13 @@ export default function AdminShell({ scope = 'admin' }) {
   const [configDraft, setConfigDraft] = useState(null);
   const [profileSlug, setProfileSlug] = useState(null); // members get a /u/:slug
 
-  const [tab, setTab] = useState('content'); // 'content' | 'config' | (admin only: 'leads' | 'networks')
-  const [view, setView] = useState('split'); // 'split' | 'editor' | 'preview'
+  const [tab, setTab] = useState('content'); // active tab id (from nav.views[].tabs[].id)
+  const [view, setView] = useState('split'); // 'split' | 'editor' | 'preview' (content editor sub-mode)
+
+  // Data-driven nav (admin only). Members keep the hardcoded 2-tab strip.
+  // Named adminNav to avoid shadowing useNavigate()'s `nav` earlier in the file.
+  const [adminNav, setAdminNav] = useState(null);
+  const [activeViewId, setActiveViewId] = useState(null);
 
   const [currentPageKey, setCurrentPageKey] = useState('home');
   const [currentSectionId, setCurrentSectionId] = useState(null);
@@ -102,6 +148,42 @@ export default function AdminShell({ scope = 'admin' }) {
 
   const [pageModal, setPageModal] = useState(null);
   const [sectionModal, setSectionModal] = useState(null);
+
+  // ── Load admin nav structure (admin only) ──
+  // Fetches once on mount; falls back to FALLBACK_ADMIN_NAV if the API is
+  // unreachable so the shell never gets stuck in a loading state.
+  useEffect(() => {
+    if (isMember) return;
+    let cancelled = false;
+    api.getAdminNav()
+      .then((data) => {
+        if (cancelled) return;
+        const useNav = (data?.views || []).length > 0 ? data : FALLBACK_ADMIN_NAV;
+        setAdminNav(useNav);
+        // Seed active view: pick the view that owns the current tab, or first.
+        const owningView = useNav.views.find((v) => v.tabs.some((t) => t.id === tab));
+        setActiveViewId((owningView || useNav.views[0])?.id || null);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setAdminNav(FALLBACK_ADMIN_NAV);
+        const owningView = FALLBACK_ADMIN_NAV.views.find((v) => v.tabs.some((t) => t.id === tab));
+        setActiveViewId((owningView || FALLBACK_ADMIN_NAV.views[0])?.id || null);
+      });
+    return () => { cancelled = true; };
+  }, [isMember]);
+
+  // When the active view changes, ensure `tab` is one of that view's tabs.
+  // Without this guard, switching views could leave `tab` pointing at a
+  // hidden tab and the workspace would render nothing.
+  function switchView(viewId) {
+    setActiveViewId(viewId);
+    const v = adminNav?.views.find((x) => x.id === viewId);
+    if (v && !v.tabs.some((t) => t.id === tab)) {
+      const firstTab = [...v.tabs].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))[0];
+      if (firstTab) setTab(firstTab.id);
+    }
+  }
 
   // ── Load ──
   useEffect(() => {
@@ -348,24 +430,27 @@ export default function AdminShell({ scope = 'admin' }) {
           className="sb-admin-topbar-actions"
           style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}
         >
-          <TabToggle
-            items={
-              isMember
-                ? [
-                    { val: 'content', label: 'My Site' },
-                    { val: 'config', label: 'Config' },
-                  ]
-                : [
-                    { val: 'content', label: 'My Profile' },
-                    { val: 'leads', label: 'Leads' },
-                    { val: 'networks', label: 'Net Works' },
-                    { val: 'backlog', label: 'Backlog' },
-                    { val: 'config', label: 'Config' },
-                  ]
-            }
-            active={tab}
-            onChange={setTab}
-          />
+          {/* Member: keep the simple 2-tab strip. Admin: render the view selector
+              from the data-driven nav loaded into `nav`. Until nav loads we show
+              nothing rather than flashing a stale layout. */}
+          {isMember ? (
+            <TabToggle
+              items={[
+                { val: 'content', label: 'My Site' },
+                { val: 'config', label: 'Config' },
+              ]}
+              active={tab}
+              onChange={setTab}
+            />
+          ) : adminNav ? (
+            <TabToggle
+              items={[...adminNav.views]
+                .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+                .map((v) => ({ val: v.id, label: v.label }))}
+              active={activeViewId}
+              onChange={switchView}
+            />
+          ) : null}
           {tab === 'content' && (
             <span className="sb-toggle-hide-mobile">
               <TabToggle
@@ -423,14 +508,57 @@ export default function AdminShell({ scope = 'admin' }) {
         </div>
       </div>
 
+      {/* Sub-nav: active view's tab strip. Only rendered for admins (members
+          have a flat single-row nav). Hidden when the view has just one tab
+          to keep the chrome quiet. */}
+      {!isMember && adminNav && (() => {
+        const activeView = adminNav.views.find((v) => v.id === activeViewId);
+        if (!activeView || activeView.tabs.length <= 1) return null;
+        return (
+          <div style={{
+            display: 'flex',
+            gap: '0.5rem',
+            padding: '0.5rem 1.5rem',
+            background: 'var(--sb-navy-deep)',
+            borderBottom: '0.5px solid rgba(196,132,58,0.18)',
+            flexShrink: 0,
+          }}>
+            <TabToggle
+              items={[...activeView.tabs]
+                .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+                .map((t) => ({ val: t.id, label: t.label }))}
+              active={tab}
+              onChange={setTab}
+            />
+          </div>
+        );
+      })()}
+
       <div ref={workspaceRef} className="sb-admin-workspace" style={{ ...styles.workspace, userSelect: dragging ? 'none' : undefined, cursor: dragging ? 'col-resize' : undefined }}>
-        {!isMember && tab === 'leads' ? (
-          <LeadsPanel />
-        ) : !isMember && tab === 'networks' ? (
-          <NetWorksPanel />
-        ) : !isMember && tab === 'backlog' ? (
-          <BacklogPanel />
-        ) : tab === 'content' ? (
+        {/* Single resolver: figures out which panel/component renders for the
+            active tab. Order: registry first (data-driven tabs like Leads,
+            Backlog, QA), then the two shell-bound special cases (content
+            editor, config panel) which need shell state and can't live in
+            the registry. */}
+        {(() => {
+          // Resolve which component to show. For admins, the nav says which
+          // componentId belongs to this tab; for members, the tab id IS the
+          // componentId.
+          let componentId = tab;
+          if (!isMember && adminNav) {
+            const activeView = adminNav.views.find((v) => v.id === activeViewId);
+            const activeTab = activeView?.tabs.find((t) => t.id === tab);
+            if (activeTab) componentId = activeTab.componentId;
+          }
+          // Registry case: simple panels with no shell-state dependency.
+          if (!isMember && TAB_COMPONENTS[componentId]) {
+            const Entry = TAB_COMPONENTS[componentId];
+            return <Entry />;
+          }
+          // Inline 'content' case: the page/section editor composes the
+          // Sidebar + EditorPane + PreviewPane and needs lots of shell state.
+          if (componentId === 'content') {
+            return (
           <>
             <div className={`sb-admin-sidebar${sidebarOpen ? '' : ' collapsed'}`}>
               <Sidebar
@@ -490,12 +618,27 @@ export default function AdminShell({ scope = 'admin' }) {
               </div>
             )}
           </>
-        ) : (
-          <ConfigPanel config={configDraft} onChange={setConfigDraft} scope={scope} />
-        )}
+            );
+          }
+          // Inline 'config' case: the panel needs draft + setter + scope from
+          // the shell. Treated as the default fallback when nothing else matched.
+          return (
+            <ConfigPanel config={configDraft} onChange={setConfigDraft} scope={scope} />
+          );
+        })()}
       </div>
 
-      {tab !== 'leads' && tab !== 'networks' && tab !== 'backlog' && (
+      {/* PublishBar is the bottom save/publish strip; only relevant for tabs
+          that produce publishable changes (content / config). The data-driven
+          set of "non-publish" tabs is derived from the registry — anything
+          in TAB_COMPONENTS is a self-contained panel that handles its own
+          persistence, so it gets the PublishBar hidden. */}
+      {!TAB_COMPONENTS[(() => {
+        if (!adminNav || isMember) return tab;
+        const v = adminNav.views.find((x) => x.id === activeViewId);
+        const t = v?.tabs.find((x) => x.id === tab);
+        return t?.componentId || tab;
+      })()] && (
         <PublishBar
           dirty={dirty}
           siteDirty={siteDirty}

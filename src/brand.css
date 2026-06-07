@@ -129,6 +129,16 @@ body {
 .sb-badge-draft { background: rgba(139, 155, 174, 0.15); color: var(--sb-dusty); }
 .sb-badge-soon  { background: rgba(196, 132, 58, 0.18); color: var(--sb-gold); }
 
+/* Native form-control dropdown options.
+ * Some browsers (Firefox in particular) render <option> using the OS dropdown
+ * chrome and ignore the parent <select>'s color/background. We re-assert the
+ * brand palette here so picklist values are legible against the OS surface,
+ * which on dark-themed systems can otherwise collide with our dark text. */
+option {
+  background: var(--sb-navy-deep);
+  color: var(--sb-cream);
+}
+
 /* Toast */
 .sb-toast {
   position: fixed;

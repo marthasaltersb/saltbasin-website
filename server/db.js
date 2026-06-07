@@ -427,6 +427,188 @@ async function bootstrap() {
     ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS jira_issue_key TEXT;
     CREATE INDEX IF NOT EXISTS idx_backlog_jira_key ON backlog_items (jira_issue_key) WHERE jira_issue_key IS NOT NULL;
   `);
+
+  // ── QA: test scenarios, scripts, runs, per-step results ──
+  //
+  // Every deployed backlog_item gets one or more test_scenarios. A scenario's
+  // numbered test_scenario_steps form its script (action + expected outcome
+  // per row). A test_run is one execution of a scenario by a tester in a
+  // given environment ('test' | 'prod'); test_run_step_results stores the
+  // pass/fail/blocked verdict per step. Any failing step auto-creates a
+  // backlog_items row with kind='defect', and the defect_backlog_item_id
+  // column on test_run_step_results captures that link so the UI can navigate
+  // run → failing step → defect → original feature.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS test_scenarios (
+      id                  BIGSERIAL PRIMARY KEY,
+      backlog_item_id     BIGINT REFERENCES backlog_items(id) ON DELETE CASCADE,  -- the feature this scenario covers
+      capability_id       BIGINT REFERENCES capability_groups(id) ON DELETE SET NULL,
+      title               TEXT NOT NULL,
+      summary             TEXT,
+      preconditions       TEXT,
+      environment_scope   TEXT NOT NULL DEFAULT 'both' CHECK (environment_scope IN ('test', 'prod', 'both')),
+      priority            TEXT,                            -- p0 | p1 | p2 | p3
+      sort_order          INTEGER NOT NULL DEFAULT 0,
+      created_at          BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at          BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+
+    CREATE TABLE IF NOT EXISTS test_scenario_steps (
+      id                  BIGSERIAL PRIMARY KEY,
+      scenario_id         BIGINT NOT NULL REFERENCES test_scenarios(id) ON DELETE CASCADE,
+      step_order          INTEGER NOT NULL,                -- 1-based position within the scenario
+      action              TEXT NOT NULL,                   -- what the tester does
+      expected_outcome    TEXT NOT NULL,                   -- what should happen
+      created_at          BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+
+    CREATE TABLE IF NOT EXISTS test_runs (
+      id                  BIGSERIAL PRIMARY KEY,
+      scenario_id         BIGINT NOT NULL REFERENCES test_scenarios(id) ON DELETE CASCADE,
+      tester_user_id      BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      environment         TEXT NOT NULL CHECK (environment IN ('test', 'prod')),
+      overall_result      TEXT NOT NULL CHECK (overall_result IN ('pass', 'fail', 'blocked')),
+      notes               TEXT,
+      run_at              BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+
+    CREATE TABLE IF NOT EXISTS test_run_step_results (
+      id                       BIGSERIAL PRIMARY KEY,
+      run_id                   BIGINT NOT NULL REFERENCES test_runs(id) ON DELETE CASCADE,
+      step_id                  BIGINT NOT NULL REFERENCES test_scenario_steps(id) ON DELETE CASCADE,
+      result                   TEXT NOT NULL CHECK (result IN ('pass', 'fail', 'blocked')),
+      notes                    TEXT,
+      evidence_url             TEXT,
+      defect_backlog_item_id   BIGINT REFERENCES backlog_items(id) ON DELETE SET NULL,
+      created_at               BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_test_scenarios_backlog     ON test_scenarios (backlog_item_id);
+    CREATE INDEX IF NOT EXISTS idx_test_scenarios_capability  ON test_scenarios (capability_id);
+    CREATE INDEX IF NOT EXISTS idx_test_scenario_steps_sc     ON test_scenario_steps (scenario_id, step_order);
+    CREATE INDEX IF NOT EXISTS idx_test_runs_scenario         ON test_runs (scenario_id, run_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_test_runs_tester           ON test_runs (tester_user_id);
+    CREATE INDEX IF NOT EXISTS idx_test_run_step_results_run  ON test_run_step_results (run_id);
+    CREATE INDEX IF NOT EXISTS idx_test_run_step_results_def  ON test_run_step_results (defect_backlog_item_id) WHERE defect_backlog_item_id IS NOT NULL;
+
+    -- Backwards link from defect backlog_items to the scenario that surfaced it.
+    -- parent_id still points to the ORIGINAL feature backlog_item (so the
+    -- defect groups under the feature in the existing tree), and
+    -- test_scenario_id captures which scenario's run produced the defect.
+    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS test_scenario_id BIGINT REFERENCES test_scenarios(id) ON DELETE SET NULL;
+    CREATE INDEX IF NOT EXISTS idx_backlog_test_scenario ON backlog_items (test_scenario_id) WHERE test_scenario_id IS NOT NULL;
+  `);
+
+  // ── Audit log for every mutation on backlog + QA entities ──
+  //
+  // Every POST/PATCH/DELETE on /api/backlog/* and /api/qa/* routes through
+  // server/audit.js writeAudit() and lands here. Same table whether the change
+  // came from a manual form, an approved brain-dump reconciler proposal, a
+  // bulk ingestion script, a JIRA sync, or initial seed — the `source` column
+  // distinguishes them.
+  //
+  // before_value / after_value are JSONB (not TEXT like other JSON-ish columns
+  // in this schema) because we'll query into the history for diffs and
+  // field-level forensics. The deviation from the surrounding convention is
+  // intentional: an audit log without queryable structure is just a haystack.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS audit_events (
+      id              BIGSERIAL PRIMARY KEY,
+      user_id         BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      entity_type     TEXT NOT NULL,                  -- 'backlog_item' | 'test_scenario' | 'test_scenario_step' | 'test_run' | 'test_run_step_result' | 'capability_group'
+      entity_id       BIGINT NOT NULL,
+      action          TEXT NOT NULL CHECK (action IN ('create', 'update', 'delete', 'status_change')),
+      before_value    JSONB,                          -- NULL on create
+      after_value     JSONB,                          -- NULL on delete
+      source          TEXT NOT NULL CHECK (source IN ('manual_ui', 'brain_dump', 'bulk_script', 'jira_sync', 'seed')),
+      reason          TEXT,                           -- optional context (brain-dump original prompt, PR description, etc.)
+      created_at      BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_audit_entity  ON audit_events (entity_type, entity_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_audit_user    ON audit_events (user_id, created_at DESC) WHERE user_id IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_audit_source  ON audit_events (source, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_events (created_at DESC);
+  `);
+
+  // ── QA: many-to-many between scenarios and the features they cover ──
+  //
+  // A scenario can cover multiple deployed features (e.g., "sign up with
+  // email + phone" exercises lead-capture, email-validation, AND phone-
+  // validation). The junction lets us link any number, and `is_primary`
+  // designates which one auto-created defects should parent to. We keep
+  // test_scenarios.backlog_item_id as a denormalized cache of the primary,
+  // so the defect-creation logic in /api/qa/runs doesn't need to look up
+  // the junction on every failed step.
+  //
+  // Partial unique index enforces "at most one primary per scenario."
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS test_scenario_features (
+      scenario_id      BIGINT NOT NULL REFERENCES test_scenarios(id) ON DELETE CASCADE,
+      backlog_item_id  BIGINT NOT NULL REFERENCES backlog_items(id) ON DELETE CASCADE,
+      is_primary       BOOLEAN NOT NULL DEFAULT false,
+      sort_order       INTEGER NOT NULL DEFAULT 0,
+      created_at       BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      PRIMARY KEY (scenario_id, backlog_item_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_tsf_scenario ON test_scenario_features (scenario_id, sort_order);
+    CREATE INDEX IF NOT EXISTS idx_tsf_feature  ON test_scenario_features (backlog_item_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_tsf_one_primary
+      ON test_scenario_features (scenario_id)
+      WHERE is_primary;
+  `);
+
+  // Backfill: any pre-existing scenario whose junction is empty but which has
+  // a backlog_item_id gets its primary feature populated in the junction.
+  // Idempotent — only touches scenarios with no junction rows yet.
+  await sql.unsafe(`
+    INSERT INTO test_scenario_features (scenario_id, backlog_item_id, is_primary)
+    SELECT ts.id, ts.backlog_item_id, true
+      FROM test_scenarios ts
+     WHERE ts.backlog_item_id IS NOT NULL
+       AND NOT EXISTS (
+         SELECT 1 FROM test_scenario_features tsf
+          WHERE tsf.scenario_id = ts.id
+       );
+  `);
+
+  // ── Seed: default admin_nav into config_state if missing ──
+  //
+  // The admin nav structure (views + tabs + ordering) lives as a JSON blob
+  // under config_state with id='admin_nav'. Loaded once at boot if missing
+  // so AdminShell always has a structure to render. Members ignore this —
+  // their nav stays hardcoded (only 2 tabs and no need for grouping).
+  //
+  // To re-seed after manual edits: DELETE the row in config_state where
+  // id='admin_nav' and reboot. The structure can also be edited via PUT
+  // /api/config/admin-nav (admin-only).
+  const existingNav = await sql.unsafe(`SELECT id FROM config_state WHERE id = 'admin_nav'`);
+  if (existingNav.length === 0) {
+    const defaultNav = {
+      views: [
+        { id: 'content', label: 'Content', sortOrder: 0, tabs: [
+          { id: 'content', label: 'My Site', componentId: 'content', sortOrder: 0 },
+        ]},
+        { id: 'plm', label: 'Platform Lifecycle Management', sortOrder: 1, tabs: [
+          { id: 'backlog', label: 'Backlog', componentId: 'backlog', sortOrder: 0 },
+          { id: 'qa',      label: 'QA',      componentId: 'qa',      sortOrder: 1 },
+        ]},
+        { id: 'crm', label: 'Customer Relationship Management', sortOrder: 2, tabs: [
+          { id: 'leads',    label: 'Leads',    componentId: 'leads',    sortOrder: 0 },
+          { id: 'networks', label: 'Net Works', componentId: 'networks', sortOrder: 1 },
+        ]},
+        { id: 'system', label: 'System', sortOrder: 3, tabs: [
+          { id: 'config', label: 'Config', componentId: 'config', sortOrder: 0 },
+        ]},
+      ],
+    };
+    const now = Date.now();
+    await sql.unsafe(
+      `INSERT INTO config_state (id, data, updated_at) VALUES ($1, $2, $3)`,
+      ['admin_nav', JSON.stringify(defaultNav), now]
+    );
+  }
 }
 
 // Awaited at module import time so routes can use db without worrying about

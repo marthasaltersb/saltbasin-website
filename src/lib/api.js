@@ -104,4 +104,36 @@ export const api = {
     request('/api/backlog/groups', { method: 'POST', body: JSON.stringify(group) }),
   updateCapabilityGroup: (id, patch) =>
     request(`/api/backlog/groups/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+
+  // QA — scenarios, steps, runs, defects
+  getScenarios: (filters = {}) => {
+    const qs = new URLSearchParams(filters).toString();
+    return request(`/api/qa/scenarios${qs ? `?${qs}` : ''}`);
+  },
+  getScenario: (id) => request(`/api/qa/scenarios/${id}`),
+  createScenario: (scenario) =>
+    request('/api/qa/scenarios', { method: 'POST', body: JSON.stringify(scenario) }),
+  updateScenario: (id, patch) =>
+    request(`/api/qa/scenarios/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  deleteScenario: (id) =>
+    request(`/api/qa/scenarios/${id}`, { method: 'DELETE' }),
+  addStep: (scenarioId, step) =>
+    request(`/api/qa/scenarios/${scenarioId}/steps`, { method: 'POST', body: JSON.stringify(step) }),
+  updateStep: (id, patch) =>
+    request(`/api/qa/steps/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  deleteStep: (id) =>
+    request(`/api/qa/steps/${id}`, { method: 'DELETE' }),
+  logRun: (run) =>
+    request('/api/qa/runs', { method: 'POST', body: JSON.stringify(run) }),
+  getRuns: (scenarioId) => {
+    const qs = scenarioId ? `?scenarioId=${scenarioId}` : '';
+    return request(`/api/qa/runs${qs}`);
+  },
+  getRun: (id) => request(`/api/qa/runs/${id}`),
+  getDefects: () => request('/api/qa/defects'),
+
+  // Admin nav structure (data-driven AdminShell)
+  getAdminNav: () => request('/api/config/admin-nav'),
+  updateAdminNav: (nav) =>
+    request('/api/config/admin-nav', { method: 'PUT', body: JSON.stringify(nav) }),
 };
