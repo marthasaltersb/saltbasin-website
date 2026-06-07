@@ -118,10 +118,27 @@ export function defaultMemberSite({ displayName, email }) {
             fields: {
               heading: 'Professional Background',
               intro: 'A short framing paragraph for your career.',
-              role1: 'Most recent role — Title (dates)',
-              role1Desc: 'One-paragraph summary of the work and outcomes.',
-              role2: 'Previous role — Title (dates)',
-              role2Desc: 'One-paragraph summary.',
+              // roles is a dynamic add/remove list. Each entry: title, company,
+              // start (YYYY-MM-DD or freeform like "Jun 2022"), end (or current=true),
+              // description (one paragraph). Add as many as your career needs.
+              roles: [
+                {
+                  title: 'Most recent role',
+                  company: 'Company name',
+                  start: '',
+                  end: '',
+                  current: true,
+                  description: 'One-paragraph summary of the work and outcomes. Edit this in your admin.',
+                },
+                {
+                  title: 'Previous role',
+                  company: 'Company name',
+                  start: '',
+                  end: '',
+                  current: false,
+                  description: 'One-paragraph summary.',
+                },
+              ],
             },
           },
         ],

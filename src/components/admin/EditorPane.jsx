@@ -136,7 +136,26 @@ export default function EditorPane({ section, page, onUpdateSection, onUpdatePag
           )}
           {Object.entries(section.fields || {})
             .filter(([k]) => k !== 'soonMsg')
+            // Hide legacy resume role*/role*Desc fields when the new `roles`
+            // array is in use — otherwise the editor would show the dynamic
+            // list editor AND the redundant single-string fields below it.
+            .filter(([k]) => {
+              if (!Array.isArray(section.fields?.roles) || section.fields.roles.length === 0) return true;
+              return !/^role\d+(Desc)?$/i.test(k);
+            })
             .map(([k, v]) => {
+              // Dynamic list editor for array-typed fields. Today only `roles`
+              // hits this path; the pattern generalizes for domains / cards /
+              // anything else we convert next.
+              if (Array.isArray(v) && k === 'roles') {
+                return (
+                  <RoleListEditor
+                    key={k}
+                    roles={v}
+                    onChange={(next) => patchField(k, next)}
+                  />
+                );
+              }
               if (isImageField(k)) {
                 return (
                   <div key={k} style={styles.fieldGroup}>
@@ -337,5 +356,117 @@ function statusBtnStyle(selected) {
     textTransform: 'uppercase',
     cursor: 'pointer',
     fontFamily: 'var(--sb-font-body)',
+  };
+}
+
+// ── RoleListEditor: dynamic add/remove list for resume roles ──
+// Replaces the legacy role1/role2/role3/... fixed-slot pattern. Members can
+// have as many roles as their career needs. Each row: title, company, start,
+// end (or a "Current" toggle), and description. Reorder via up/down arrows,
+// delete per row. The whole array patches to the parent EditorPane on every
+// change so live preview stays in sync.
+function RoleListEditor({ roles, onChange }) {
+  const list = Array.isArray(roles) ? roles : [];
+
+  function update(i, patch) {
+    onChange(list.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+  }
+  function addRole() {
+    onChange([...list, { title: '', company: '', start: '', end: '', current: false, description: '' }]);
+  }
+  function removeRole(i) {
+    onChange(list.filter((_, idx) => idx !== i));
+  }
+  function moveRole(i, dir) {
+    const j = i + dir;
+    if (j < 0 || j >= list.length) return;
+    const next = [...list];
+    [next[i], next[j]] = [next[j], next[i]];
+    onChange(next);
+  }
+
+  return (
+    <div style={styles.fieldGroup}>
+      <label style={styles.fieldLabel}>Roles ({list.length})</label>
+      <div style={{ fontSize: '0.72rem', color: 'var(--sb-dusty)', marginBottom: '0.5rem', lineHeight: 1.5 }}>
+        Add a row for each role in your career. Mark your current role with "Current" — the public profile shows it as "Present".
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        {list.map((r, i) => (
+          <div
+            key={i}
+            style={{
+              border: '0.5px solid rgba(196,132,58,0.20)',
+              borderRadius: 'var(--sb-radius)',
+              padding: '0.75rem',
+              background: 'rgba(255,255,255,0.02)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <div style={{
+                fontFamily: 'var(--sb-font-label)',
+                fontSize: '0.62rem',
+                letterSpacing: '0.16em',
+                textTransform: 'uppercase',
+                color: 'var(--sb-gold)',
+              }}>
+                Role {i + 1}
+              </div>
+              <div style={{ display: 'flex', gap: '0.25rem' }}>
+                <button type="button" onClick={() => moveRole(i, -1)} disabled={i === 0}
+                  style={iconBtnStyle(i === 0)} title="Move up">↑</button>
+                <button type="button" onClick={() => moveRole(i, +1)} disabled={i === list.length - 1}
+                  style={iconBtnStyle(i === list.length - 1)} title="Move down">↓</button>
+                <button type="button" onClick={() => removeRole(i)}
+                  style={{ ...iconBtnStyle(false), color: 'var(--sb-risk-critical)' }} title="Delete role">×</button>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <input className="sb-input" placeholder="Title (e.g. Senior Engineer)"
+                value={r.title || ''} onChange={(e) => update(i, { title: e.target.value })} />
+              <input className="sb-input" placeholder="Company"
+                value={r.company || ''} onChange={(e) => update(i, { company: e.target.value })} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center' }}>
+              <input type="date" className="sb-input"
+                value={toIsoDate(r.start) || ''}
+                onChange={(e) => update(i, { start: e.target.value })} />
+              <input type="date" className="sb-input"
+                value={toIsoDate(r.end) || ''}
+                disabled={!!r.current}
+                onChange={(e) => update(i, { end: e.target.value })} />
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem', color: 'var(--sb-sage)', cursor: 'pointer' }}>
+                <input type="checkbox" checked={!!r.current}
+                  onChange={(e) => update(i, { current: e.target.checked, end: e.target.checked ? '' : r.end })} />
+                Current
+              </label>
+            </div>
+            <textarea className="sb-input sb-textarea"
+              placeholder="One-paragraph summary of the work and outcomes."
+              value={r.description || ''}
+              onChange={(e) => update(i, { description: e.target.value })} />
+          </div>
+        ))}
+        <button type="button" onClick={addRole} className="sb-btn sb-btn-outline"
+          style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', alignSelf: 'flex-start' }}>
+          + Add role
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function iconBtnStyle(disabled) {
+  return {
+    width: 26,
+    height: 26,
+    padding: 0,
+    background: 'transparent',
+    border: '0.5px solid rgba(196,132,58,0.25)',
+    borderRadius: 'var(--sb-radius)',
+    color: disabled ? 'rgba(139,155,174,0.4)' : 'var(--sb-cream)',
+    cursor: disabled ? 'default' : 'pointer',
+    fontSize: '0.85rem',
+    lineHeight: 1,
   };
 }

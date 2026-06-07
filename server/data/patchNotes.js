@@ -266,4 +266,36 @@ const RELEASES = [
       },
     ],
   },
+
+  // ─── v0.10 — Pre-onboarding fixes: My Profile + dynamic resume ────
+  {
+    version: 'v0.10',
+    name: 'Pre-onboarding fixes — My Profile and dynamic resume',
+    date: '2026-06-07',
+    summary:
+      'Targeted fixes ahead of inviting members. The primary editing surface is "My Profile" again — the v0.9 nav refactor obscured the use case with the generic label "Content / My Site". The Config tab opens with an explanation card so newcomers know what each section configures. Resume now uses a dynamic add/remove list — members can have as many roles as their careers need, with start/end dates and a "Current" toggle.',
+    sections: [
+      {
+        heading: 'Fixed',
+        items: [
+          '"Content" / "My Site" → "My Profile" everywhere: seeded nav, hardcoded member tab strip, and a one-shot migration that relabels the existing config_state.admin_nav row in production without touching any manual nav edits',
+          'Config tab top of panel: new intro card explains what Config is for (member: "how your profile looks and where it links to"; admin: "platform-level saltbasin.net configuration"), distinguishing it from My Profile (content)',
+        ],
+      },
+      {
+        heading: 'New',
+        items: [
+          'Resume roles: dynamic add/remove list. Each role has title, company, start date, end date or "Current", and a description. Up/down to reorder, × to delete. No more 2-slot limit',
+          'scripts/add-tonight-defect-items.mjs records the five bugs flagged tonight as kind="defect" backlog items with full requirement detail and acceptance criteria — three completed, two pending follow-up',
+        ],
+      },
+      {
+        heading: 'Behind the scenes',
+        items: [
+          'ResumeBlock renderer accepts both shapes: new f.roles array (preferred) and legacy f.role1/f.role1Desc keys (fallback) so existing member data keeps rendering until next edit',
+          'EditorPane gained array-aware field detection: when a section field is an array (today: roles), a dedicated list editor renders instead of the default string input. Pattern generalizes to domains and service cards in the next pass',
+        ],
+      },
+    ],
+  },
 ];

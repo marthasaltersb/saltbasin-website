@@ -529,9 +529,33 @@ function TwoColBlock({ section }) {
 
 function ResumeBlock({ section }) {
   const f = section.fields || {};
-  const roles = [1, 2, 3, 4, 5, 6]
-    .map((i) => [f[`role${i}`], f[`role${i}Desc`]])
-    .filter(([r]) => r);
+  // Two shapes are supported:
+  //   New (preferred): f.roles = [{title, company, start, end, description, current}]
+  //   Legacy: f.role1 / f.role1Desc / f.role2 / f.role2Desc / ... up to role6
+  // The editor writes the array shape on save. The renderer accepts either so
+  // existing member profiles keep rendering correctly until they next edit.
+  function rolesFromLegacy() {
+    return [1, 2, 3, 4, 5, 6]
+      .map((i) => {
+        const head = f[`role${i}`];
+        const desc = f[`role${i}Desc`];
+        if (!head) return null;
+        // Try to split the legacy "Title — Company (dates)" string into pieces.
+        // If parsing fails, fall back to using the whole string as title.
+        return { title: head, company: '', start: '', end: '', description: desc || '', current: false, _legacy: true };
+      })
+      .filter(Boolean);
+  }
+  const rolesArr = Array.isArray(f.roles) && f.roles.length
+    ? f.roles
+    : rolesFromLegacy();
+  function dateRange(r) {
+    const start = r.start || '';
+    const end = r.current ? 'Present' : (r.end || '');
+    if (!start && !end) return '';
+    if (start && end) return `${start} – ${end}`;
+    return start || end;
+  }
   return (
     <section
       id={section.id}
@@ -572,34 +596,52 @@ function ResumeBlock({ section }) {
             gap: '2rem',
           }}
         >
-          {roles.map(([role, desc], i) => (
-            <div key={i} style={{ position: 'relative' }}>
-              <div
-                style={{
-                  position: 'absolute',
-                  left: '-2.45rem',
-                  top: 4,
-                  width: 10,
-                  height: 10,
-                  borderRadius: '50%',
-                  background: 'var(--sb-gold)',
-                  border: '2px solid var(--sb-ivory)',
-                }}
-              />
-              <div
-                style={{
-                  fontSize: '0.78rem',
-                  fontWeight: 500,
-                  letterSpacing: '0.06em',
-                  color: 'var(--sb-navy)',
-                  marginBottom: '0.4rem',
-                }}
-              >
-                {role}
+          {rolesArr.map((r, i) => {
+            const dates = dateRange(r);
+            // Legacy single-string roles render as a single line; new structured
+            // roles render with title + company on one line and dates on another.
+            const heading = r._legacy
+              ? r.title
+              : [r.title, r.company].filter(Boolean).join(' · ');
+            return (
+              <div key={i} style={{ position: 'relative' }}>
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: '-2.45rem',
+                    top: 4,
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    background: 'var(--sb-gold)',
+                    border: '2px solid var(--sb-ivory)',
+                  }}
+                />
+                <div
+                  style={{
+                    fontSize: '0.78rem',
+                    fontWeight: 500,
+                    letterSpacing: '0.06em',
+                    color: 'var(--sb-navy)',
+                    marginBottom: dates ? '0.2rem' : '0.4rem',
+                  }}
+                >
+                  {heading}
+                </div>
+                {dates && (
+                  <div style={{
+                    fontSize: '0.7rem', letterSpacing: '0.04em',
+                    color: 'var(--sb-teal-deep)', marginBottom: '0.4rem',
+                  }}>
+                    {dates}
+                  </div>
+                )}
+                <div style={{ fontSize: '0.88rem', lineHeight: 1.75, color: '#5a5a5a' }}>
+                  {r.description}
+                </div>
               </div>
-              <div style={{ fontSize: '0.88rem', lineHeight: 1.75, color: '#5a5a5a' }}>{desc}</div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         {f.education && (
           <div
