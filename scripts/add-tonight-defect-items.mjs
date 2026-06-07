@@ -118,7 +118,7 @@ const ITEMS = [
     acceptanceCriteria:
       'Given I have 3 existing roles in my resume\nWhen I click "+ Add role"\nThen a 4th empty row appears in the editor\nAnd publishing renders all 4 roles on my /u/:slug/about page.',
     processSteps: '1. Open My Profile → 2. Edit Resume section → 3. See list of roles → 4. Add a new role with title + company + dates + description → 5. Save → 6. Publish → 7. Visit public profile → 8. Confirm new role appears.',
-    status: 'pending', ...DEFECT_COMMON,
+    status: 'completed', ...DEFECT_COMMON,
     tags: ['defect', 'pre-onboarding-launch', 'dynamic-sections', 'resume', 'related-to-pb-1'],
   },
 
