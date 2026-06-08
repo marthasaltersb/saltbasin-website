@@ -43,7 +43,11 @@ async function writeState(userId, kind, data) {
 async function ensureDraft(user) {
   const existing = await readState(user.id, 'draft');
   if (existing) return existing;
-  const seeded = defaultMemberSite({ displayName: user.displayName, email: user.email });
+  const profile = await db
+    .prepare('SELECT slug FROM member_profiles WHERE user_id = $1')
+    .get(user.id);
+  const slug = profile?.slug || '';
+  const seeded = defaultMemberSite({ displayName: user.displayName, email: user.email, slug });
   await writeState(user.id, 'draft', seeded);
   return seeded;
 }

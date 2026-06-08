@@ -43,7 +43,7 @@ export async function getUserFromCookie(req) {
   if (!token) return null;
   const row = await db
     .prepare(
-      `SELECT u.id, u.email, u.role, s.expires_at
+      `SELECT u.id, u.email, u.role, u.display_name, s.expires_at
        FROM sessions s JOIN users u ON u.id = s.user_id
        WHERE s.token = $1`
     )
@@ -53,7 +53,7 @@ export async function getUserFromCookie(req) {
     await destroySession(token);
     return null;
   }
-  return { id: Number(row.id), email: row.email, role: row.role };
+  return { id: Number(row.id), email: row.email, role: row.role, displayName: row.display_name || null };
 }
 
 export async function login(email, password) {
@@ -140,9 +140,9 @@ export async function createMember(email, password, displayName) {
   const hash = await bcrypt.hash(password, 10);
   const result = await db
     .prepare(
-      'INSERT INTO users (email, password_hash, role) VALUES ($1, $2, $3) RETURNING id'
+      'INSERT INTO users (email, password_hash, role, display_name) VALUES ($1, $2, $3, $4) RETURNING id'
     )
-    .run(lower, hash, 'member');
+    .run(lower, hash, 'member', displayName || null);
   return { id: Number(result.lastInsertRowid), email: lower, displayName };
 }
 

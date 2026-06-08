@@ -614,7 +614,7 @@ export default function AdminShell({ scope = 'admin' }) {
                     : { display: 'flex', flex: 1 }
                 }
               >
-                <PreviewPane site={draft} config={configDraft} currentPageKey={currentPageKey} />
+                <PreviewPane site={draft} config={configDraft} currentPageKey={currentPageKey} isMember={isMember} slug={profileSlug} />
               </div>
             )}
           </>

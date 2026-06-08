@@ -194,6 +194,7 @@ async function bootstrap() {
     ['leads', 'verified_email', 'BOOLEAN NOT NULL DEFAULT false'],
     ['leads', 'verified_phone', 'BOOLEAN NOT NULL DEFAULT false'],
     ['lead_activity', 'cta_location', 'TEXT'],
+    ['users', 'display_name', 'TEXT'],
   ];
   for (const [table, col, def] of colMigrations) {
     await sql.unsafe(`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS ${col} ${def}`).catch((e) => {

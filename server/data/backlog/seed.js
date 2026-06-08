@@ -360,6 +360,24 @@ const items = [
     ...DEPLOYED_BACKEND, ...REL_BACKEND,
   },
 
+  {
+    capabilitySlug: 'multi-tenant-cms',
+    title: 'Subdomain routing for member + company profiles (slug.saltbasin.net)',
+    summary: 'Each member and company profile gets its own subdomain instead of the current /u/:slug path.',
+    userStory: 'As a member, I want my profile to live at suzieq.saltbasin.net so it looks like my own branded URL, not a subfolder of someone else\'s site.',
+    requirementDetail:
+      'Currently profiles live at saltbasin.net/u/:slug. The goal is slug.saltbasin.net for all member and company profiles.\n\nBlocker: saltbasin.net is registered through Wix, which does not allow editing nameservers or adding wildcard CNAME records. A domain transfer to Cloudflare Registrar or Namecheap is in progress.\n\nCode work needed once DNS is unblocked:\n- Express middleware reads Host header, extracts subdomain, looks up member by slug\n- Server injects window.__SB_SLUG__ into HTML so React knows it\'s in subdomain mode\n- App.jsx: add subdomain route (pages at / /about /contact etc. instead of /u/:slug/*)\n- Internal links in member templates updated from /u/:slug/page to /page\n- Keep /u/:slug as a 301 redirect to slug.saltbasin.net for backward compatibility\n- Company profiles use the same pattern',
+    businessRules:
+      '- Unknown subdomains fall through to the main Salt Basin site.\n- www.saltbasin.net and saltbasin.net always serve the main site.\n- /u/:slug redirects 301 → slug.saltbasin.net once subdomain routing is live.\n- Company subdomains work identically to member subdomains.',
+    acceptanceCriteria:
+      'Given a member with slug "suzieq"\nWhen I visit suzieq.saltbasin.net\nThen I see their published profile\nAnd nav links go to suzieq.saltbasin.net/about etc.\nAnd saltbasin.net/u/suzieq redirects to suzieq.saltbasin.net.',
+    status: 'planned',
+    priority: 'p1',
+    workSplitClaude: 80,
+    timeMinutes: 120,
+    tags: ['member', 'routing', 'dns', 'subdomain', 'company'],
+  },
+
   // ───────────────────────── LEAD CAPTURE ─────────────────────────
   {
     capabilitySlug: 'lead-capture',

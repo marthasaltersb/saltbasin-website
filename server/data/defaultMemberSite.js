@@ -5,7 +5,7 @@
 // Members start with three pages — Home, About, Contact — each with a small
 // set of editable sections. They can add/remove/reorder freely.
 
-export function defaultMemberSite({ displayName, email }) {
+export function defaultMemberSite({ displayName, email, slug = '' }) {
   const name = displayName || (email || '').split('@')[0] || 'Operator';
   return {
     version: 1,
@@ -33,7 +33,7 @@ export function defaultMemberSite({ displayName, email }) {
               cta1: 'Get in Touch',
               cta1Link: '#home-contact',
               cta2: 'View Resume',
-              cta2Link: '/u/__slug__/about',
+              cta2Link: slug ? `/u/${slug}/about` : '/about',
               platformLine: 'This profile is hosted on Salt Basin Net Works.',
             },
           },
