@@ -152,18 +152,31 @@ export default function ConfigPanel({ config, onChange, scope = 'admin' }) {
         {/* Social */}
         <div style={styles.card}>
           <div style={styles.cardTitle}>Social Media Links (footer)</div>
+          <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem', lineHeight: 1.55 }}>
+            Toggle a row on to show it in the footer. The presets cover the common platforms — use “+ Add custom link” for anything else (Bluesky, Threads, Mastodon, personal substack, etc.).
+          </div>
           {Object.entries(config?.social || {}).map(([k, s]) => (
             <div
               key={k}
               style={{
                 display: 'grid',
-                gridTemplateColumns: '110px 1fr auto',
+                gridTemplateColumns: '110px 1fr auto auto',
                 gap: '0.5rem',
                 alignItems: 'center',
                 marginBottom: '0.5rem',
               }}
             >
-              <span style={{ fontSize: '0.78rem', color: 'var(--sb-sage)' }}>{s.label}</span>
+              {s.custom ? (
+                <input
+                  className="sb-input"
+                  value={s.label || ''}
+                  onChange={(e) => patch(`social.${k}.label`, e.target.value)}
+                  placeholder="Label (e.g. Bluesky)"
+                  style={{ fontSize: '0.78rem' }}
+                />
+              ) : (
+                <span style={{ fontSize: '0.78rem', color: 'var(--sb-sage)' }}>{s.label}</span>
+              )}
               <input
                 className="sb-input"
                 value={s.url}
@@ -188,8 +201,43 @@ export default function ConfigPanel({ config, onChange, scope = 'admin' }) {
               >
                 {s.on ? 'On' : 'Off'}
               </button>
+              <button
+                onClick={() => {
+                  const next = { ...(config?.social || {}) };
+                  delete next[k];
+                  patch('social', next);
+                }}
+                title="Remove this link"
+                style={{
+                  width: 28, height: 28, padding: 0,
+                  background: 'transparent',
+                  border: '0.5px solid rgba(196,132,58,0.25)',
+                  borderRadius: 'var(--sb-radius)',
+                  color: 'var(--sb-risk-critical)',
+                  cursor: 'pointer',
+                  fontSize: '0.95rem',
+                  lineHeight: 1,
+                }}
+              >
+                ×
+              </button>
             </div>
           ))}
+          <button
+            type="button"
+            onClick={() => {
+              const next = { ...(config?.social || {}) };
+              // Unique key — timestamp guarantees no collision with presets or
+              // with a previously added custom link the user has since removed.
+              const key = `custom_${Date.now()}`;
+              next[key] = { label: '', url: '', color: '#C4843A', on: true, custom: true };
+              patch('social', next);
+            }}
+            className="sb-btn sb-btn-outline"
+            style={{ marginTop: '0.5rem', padding: '0.45rem 0.9rem', fontSize: '0.7rem' }}
+          >
+            + Add custom link
+          </button>
         </div>
 
         {/* Email identity — admin only (members don't yet have outbound) */}

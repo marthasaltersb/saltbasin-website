@@ -328,11 +328,20 @@ function AboutBlock({ section }) {
 function CardsBlock({ section }) {
   const f = section.fields || {};
   const onDark = section.bg === 'navy' || section.bg === 'teal';
-  const cards = [1, 2, 3, 4].map((i) => ({
-    t: f[`card${i}Title`],
-    d: f[`card${i}Desc`],
-    icon: f[`card${i}Icon`],
-  })).filter((c) => c.t);
+  // Two shapes are supported:
+  //   New (preferred): f.cards = [{ title, desc, icon }]
+  //   Legacy: f.card1Title / f.card1Desc / f.card1Icon ... up to card4
+  // The editor writes the array shape on save. The renderer accepts either so
+  // existing pages keep rendering correctly until they next edit.
+  const cards = Array.isArray(f.cards) && f.cards.length
+    ? f.cards
+        .map((c) => ({ t: c.title, d: c.desc, icon: c.icon }))
+        .filter((c) => c.t)
+    : [1, 2, 3, 4].map((i) => ({
+        t: f[`card${i}Title`],
+        d: f[`card${i}Desc`],
+        icon: f[`card${i}Icon`],
+      })).filter((c) => c.t);
   return (
     <section
       id={section.id}
@@ -922,9 +931,16 @@ function IndustriesBlock({ section }) {
 function DomainsBlock({ section }) {
   const f = section.fields || {};
   const onDark = section.bg === 'navy' || section.bg === 'teal';
-  const items = [1, 2, 3, 4, 5, 6, 7, 8]
-    .map((i) => ({ title: f[`d${i}Title`], desc: f[`d${i}Desc`] }))
-    .filter((d) => d.title);
+  // Two shapes are supported:
+  //   New (preferred): f.domains = [{ title, desc }]
+  //   Legacy: f.d1Title / f.d1Desc / ... up to d8
+  // The editor writes the array shape on save. The renderer accepts either so
+  // existing pages keep rendering correctly until they next edit.
+  const items = Array.isArray(f.domains) && f.domains.length
+    ? f.domains.filter((d) => d.title)
+    : [1, 2, 3, 4, 5, 6, 7, 8]
+        .map((i) => ({ title: f[`d${i}Title`], desc: f[`d${i}Desc`] }))
+        .filter((d) => d.title);
   return (
     <section
       id={section.id}
