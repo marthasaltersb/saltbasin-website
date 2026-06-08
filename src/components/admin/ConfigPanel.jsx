@@ -3,7 +3,7 @@ import { styles } from './adminStyles.js';
 import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
 
-export default function ConfigPanel({ config, onChange, scope = 'admin' }) {
+export default function ConfigPanel({ config, onChange, scope = 'admin', site = null }) {
   const isMember = scope === 'member';
   function patch(path, value) {
     const next = JSON.parse(JSON.stringify(config));
@@ -357,80 +357,10 @@ export default function ConfigPanel({ config, onChange, scope = 'admin' }) {
         </div>
         )}
 
-        {/* Top nav — member only. Members define their nav as an ordered list
-            of { label, href } entries. Empty = show all published pages. */}
-        {isMember && (
-        <div style={styles.card}>
-          <div style={styles.cardTitle}>Top Navigation</div>
-          <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem', lineHeight: 1.55 }}>
-            Define the links that appear in your profile's top nav bar. Add your page links (e.g. <code>/u/yourslug/about</code>) and any external links. Leave empty to auto-show all your published pages.
-          </div>
-          {(config?.nav?.items || []).map((item, i) => (
-            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <input
-                className="sb-input"
-                value={item.label || ''}
-                onChange={(e) => {
-                  const next = [...(config?.nav?.items || [])];
-                  next[i] = { ...next[i], label: e.target.value };
-                  patch('nav.items', next);
-                }}
-                placeholder="Label (e.g. About)"
-              />
-              <input
-                className="sb-input"
-                value={item.href || ''}
-                onChange={(e) => {
-                  const next = [...(config?.nav?.items || [])];
-                  next[i] = { ...next[i], href: e.target.value };
-                  patch('nav.items', next);
-                }}
-                placeholder="/u/yourslug/about"
-              />
-              <button
-                onClick={() => {
-                  const next = [...(config?.nav?.items || [])];
-                  next.splice(i, 1);
-                  patch('nav.items', next);
-                }}
-                title="Remove"
-                style={{ width: 28, height: 28, padding: 0, background: 'transparent', border: '0.5px solid rgba(196,132,58,0.25)', borderRadius: 'var(--sb-radius)', color: 'var(--sb-risk-critical)', cursor: 'pointer', fontSize: '0.95rem', lineHeight: 1 }}
-              >×</button>
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={() => patch('nav.items', [...(config?.nav?.items || []), { label: '', href: '' }])}
-            className="sb-btn sb-btn-outline"
-            style={{ marginTop: '0.5rem', padding: '0.45rem 0.9rem', fontSize: '0.7rem' }}
-          >+ Add nav link</button>
-        </div>
-        )}
-
-        {/* Resume sections — member only. Controls which blocks show on the
-            About / resume page when someone views the member's profile. */}
-        {isMember && (
-        <div style={styles.card}>
-          <div style={styles.cardTitle}>Resume — Section Visibility</div>
-          <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem', lineHeight: 1.55 }}>
-            Choose which sections appear on your About / resume page. Turning a section off hides it from visitors without deleting your content.
-          </div>
-          {[
-            ['profile',    'Profile summary (About hero + intro)'],
-            ['experience', 'Professional experience (roles / timeline)'],
-            ['domains',    'Domains of expertise'],
-            ['techStack',  'Tech stack / skills'],
-            ['education',  'Education'],
-          ].map(([key, label]) => (
-            <Toggle
-              key={key}
-              label={label}
-              checked={config?.resume?.sections?.[key] !== false}
-              onChange={(v) => patch(`resume.sections.${key}`, v)}
-            />
-          ))}
-        </div>
-        )}
+        {/* Resume presets — member only. Each named preset is a curated
+            selection of sections from any page, used to generate different
+            resume outputs (Executive, Technical, etc.). */}
+        {isMember && <ResumePresetsCard config={config} patch={patch} site={site} />}
 
         {/* Email management — member only. Signup email always stays; members
             can add personal/work emails, each verified by a 6-digit code. */}
@@ -463,6 +393,131 @@ export default function ConfigPanel({ config, onChange, scope = 'admin' }) {
         </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ── Resume Presets (member-only) ──
+// Members create named presets (e.g. "Executive", "Technical") and check
+// which sections from their site to include. One preset is marked default
+// and controls what shows on the public About / resume page.
+function ResumePresetsCard({ config, patch, site }) {
+  const presets = config?.resumePresets || [];
+  const [selectedPresetId, setSelectedPresetId] = React.useState(null);
+
+  // Flatten all pages + sections from the live site draft.
+  const allSections = React.useMemo(() => {
+    if (!site?.pages) return [];
+    return Object.entries(site.pages).flatMap(([pageKey, page]) =>
+      (page.sections || []).map((sec) => ({
+        pageKey,
+        pageName: page.name || pageKey,
+        sectionId: sec.id,
+        sectionName: sec.name || sec.type,
+      }))
+    );
+  }, [site]);
+
+  const selectedPreset = presets.find((p) => p.id === selectedPresetId) || null;
+
+  function updatePresets(next) {
+    patch('resumePresets', next);
+  }
+
+  function addPreset() {
+    const id = `preset-${Date.now()}`;
+    const name = `Resume ${presets.length + 1}`;
+    updatePresets([...presets, { id, name, isDefault: presets.length === 0, sections: [] }]);
+    setSelectedPresetId(id);
+  }
+
+  function deletePreset(id) {
+    const next = presets.filter((p) => p.id !== id);
+    if (next.length > 0 && !next.some((p) => p.isDefault)) next[0].isDefault = true;
+    updatePresets(next);
+    if (selectedPresetId === id) setSelectedPresetId(null);
+  }
+
+  function renamePreset(id, name) {
+    updatePresets(presets.map((p) => (p.id === id ? { ...p, name } : p)));
+  }
+
+  function setDefault(id) {
+    updatePresets(presets.map((p) => ({ ...p, isDefault: p.id === id })));
+  }
+
+  function toggleSection(presetId, sec) {
+    updatePresets(presets.map((p) => {
+      if (p.id !== presetId) return p;
+      const already = p.sections.some((s) => s.sectionId === sec.sectionId);
+      const sections = already
+        ? p.sections.filter((s) => s.sectionId !== sec.sectionId)
+        : [...p.sections, sec];
+      return { ...p, sections };
+    }));
+  }
+
+  const labelStyle = { fontFamily: 'var(--sb-font-label)', fontSize: '0.6rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--sb-dusty)' };
+
+  return (
+    <div style={styles.card}>
+      <div style={styles.cardTitle}>Resume Presets</div>
+      <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem', lineHeight: 1.55 }}>
+        Create named resume versions (e.g. Executive, Technical). For each preset, choose which sections from your pages to include. The <strong>default</strong> preset controls what visitors see on your public profile.
+      </div>
+
+      {/* Preset list */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '0.75rem' }}>
+        {presets.map((p) => (
+          <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.6rem', background: selectedPresetId === p.id ? 'rgba(196,132,58,0.1)' : 'transparent', borderRadius: 'var(--sb-radius)', border: '0.5px solid rgba(196,132,58,0.2)', cursor: 'pointer' }} onClick={() => setSelectedPresetId(p.id === selectedPresetId ? null : p.id)}>
+            <input
+              className="sb-input"
+              value={p.name}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => renamePreset(p.id, e.target.value)}
+              style={{ flex: 1, fontSize: '0.82rem', background: 'transparent', border: 'none', padding: 0, color: 'var(--sb-cream)' }}
+            />
+            {p.isDefault ? (
+              <span style={{ ...labelStyle, color: 'var(--sb-gold)' }}>Default</span>
+            ) : (
+              <button onClick={(e) => { e.stopPropagation(); setDefault(p.id); }} className="sb-btn sb-btn-outline" style={{ padding: '0.2rem 0.5rem', fontSize: '0.6rem' }}>Set default</button>
+            )}
+            <button onClick={(e) => { e.stopPropagation(); if (window.confirm(`Delete preset "${p.name}"?`)) deletePreset(p.id); }} title="Delete preset" style={{ width: 22, height: 22, padding: 0, background: 'transparent', border: 'none', color: 'var(--sb-risk-critical)', cursor: 'pointer', fontSize: '0.85rem', lineHeight: 1 }}>×</button>
+          </div>
+        ))}
+        <button type="button" onClick={addPreset} className="sb-btn sb-btn-outline" style={{ padding: '0.4rem 0.8rem', fontSize: '0.68rem', alignSelf: 'flex-start' }}>+ New preset</button>
+      </div>
+
+      {/* Section selector for selected preset */}
+      {selectedPreset && (
+        <div style={{ borderTop: '0.5px solid rgba(196,132,58,0.15)', paddingTop: '0.75rem' }}>
+          <div style={{ ...labelStyle, marginBottom: '0.5rem' }}>Sections in "{selectedPreset.name}"</div>
+          {allSections.length === 0 ? (
+            <div style={{ fontSize: '0.75rem', color: 'var(--sb-dusty)' }}>No sections found — add pages and sections to your site first.</div>
+          ) : (
+            Object.entries(
+              allSections.reduce((acc, sec) => {
+                if (!acc[sec.pageName]) acc[sec.pageName] = [];
+                acc[sec.pageName].push(sec);
+                return acc;
+              }, {})
+            ).map(([pageName, secs]) => (
+              <div key={pageName} style={{ marginBottom: '0.6rem' }}>
+                <div style={{ ...labelStyle, color: 'var(--sb-sage)', marginBottom: '0.3rem' }}>{pageName}</div>
+                {secs.map((sec) => {
+                  const checked = selectedPreset.sections.some((s) => s.sectionId === sec.sectionId);
+                  return (
+                    <label key={sec.sectionId} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginBottom: '0.25rem' }}>
+                      <input type="checkbox" checked={checked} onChange={() => toggleSection(selectedPreset.id, sec)} />
+                      <span style={{ fontSize: '0.8rem', color: 'var(--sb-cream)' }}>{sec.sectionName}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }

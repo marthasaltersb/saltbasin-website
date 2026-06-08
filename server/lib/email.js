@@ -268,6 +268,7 @@ function friendlySource(s) {
     forCompanies: 'For Companies',
     assessments: 'Assessments notification',
     contact: 'Contact form',
+    referenceRequest: 'Reference request (member profile)',
     references: 'References request',
   };
   return map[s] || s;

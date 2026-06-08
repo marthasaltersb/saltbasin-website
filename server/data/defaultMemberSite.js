@@ -17,6 +17,9 @@ export function defaultMemberSite({ displayName, email, slug = '' }) {
         type: 'standard',
         status: 'live',
         order: 0,
+        navLabel: '',
+        navGroup: '',
+        hideFromNav: false,
         sections: [
           {
             id: 'home-hero',
@@ -97,6 +100,9 @@ export function defaultMemberSite({ displayName, email, slug = '' }) {
         type: 'standard',
         status: 'live',
         order: 1,
+        navLabel: '',
+        navGroup: '',
+        hideFromNav: false,
         sections: [
           {
             id: 'about-hero',
@@ -152,6 +158,9 @@ export function defaultMemberSite({ displayName, email, slug = '' }) {
         type: 'standard',
         status: 'live',
         order: 2,
+        navLabel: '',
+        navGroup: '',
+        hideFromNav: false,
         sections: [
           {
             id: 'contact-hero',

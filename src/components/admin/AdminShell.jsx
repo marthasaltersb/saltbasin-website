@@ -232,6 +232,13 @@ export default function AdminShell({ scope = 'admin' }) {
     });
   }
 
+  function updatePage(patch) {
+    patchDraft((d) => {
+      d.pages[currentPageKey] = { ...d.pages[currentPageKey], ...patch };
+      return d;
+    });
+  }
+
   function updatePageStatus(status) {
     patchDraft((d) => {
       d.pages[currentPageKey].status = status;
@@ -593,8 +600,10 @@ export default function AdminShell({ scope = 'admin' }) {
                 <EditorPane
                   section={currentSection}
                   page={currentPage}
+                  site={draft}
                   onUpdateSection={updateSection}
                   onUpdatePageStatus={updatePageStatus}
+                  onUpdatePage={updatePage}
                 />
               </div>
             )}
@@ -623,7 +632,7 @@ export default function AdminShell({ scope = 'admin' }) {
           // Inline 'config' case: the panel needs draft + setter + scope from
           // the shell. Treated as the default fallback when nothing else matched.
           return (
-            <ConfigPanel config={configDraft} onChange={setConfigDraft} scope={scope} />
+            <ConfigPanel config={configDraft} onChange={setConfigDraft} scope={scope} site={draft} />
           );
         })()}
       </div>

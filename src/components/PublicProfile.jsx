@@ -9,7 +9,7 @@
 // Member-level brand colors are applied by injecting an inline <style> block
 // that overrides the --sb-* CSS variables, scoped to this profile only.
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { RenderSection } from './blocks/index.jsx';
 import PublicFooter from './PublicFooter.jsx';
@@ -95,9 +95,24 @@ export default function PublicProfile() {
   }
 
   const [currentPageKey, currentPage] = match;
-  const navPages = entries
-    .filter(([, p]) => p.status !== 'draft')
+
+  // Build ordered nav items, respecting hideFromNav and navGroup grouping.
+  const sortedPages = entries
+    .filter(([, p]) => p.status !== 'draft' && !p.hideFromNav)
     .sort((a, b) => (a[1].order ?? 0) - (b[1].order ?? 0));
+
+  // Build ordered nav item list: interleave top-level pages and group headers
+  // in the order their first member page appears.
+  const navItems = [];
+  const seenGroups = new Set();
+  for (const [k, p] of sortedPages) {
+    if (!p.navGroup) {
+      navItems.push({ type: 'page', key: k, page: p });
+    } else if (!seenGroups.has(p.navGroup)) {
+      seenGroups.add(p.navGroup);
+      navItems.push({ type: 'group', group: p.navGroup, pages: sortedPages.filter(([, pp]) => pp.navGroup === p.navGroup) });
+    }
+  }
 
   // Member brand overrides — scoped to this profile via a style block.
   const brand = config?.brand || {};
@@ -156,80 +171,87 @@ export default function PublicProfile() {
           </div>
         </Link>
 
-        {/* Sub-page nav: config.nav.items takes precedence; falls back to auto page list */}
-        {(() => {
-          const configNavItems = config?.nav?.items;
-          if (configNavItems && configNavItems.length > 0) {
-            return (
-              <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                {configNavItems.map((item, i) => {
-                  const active = window.location.pathname === item.href || window.location.pathname + '/' === item.href;
-                  return (
-                    <Link
-                      key={i}
-                      to={item.href}
-                      style={{
-                        fontFamily: 'var(--sb-font-label)',
-                        fontSize: '0.66rem',
-                        letterSpacing: '0.18em',
-                        textTransform: 'uppercase',
-                        color: active ? 'var(--sb-gold)' : 'var(--sb-sage)',
-                        textDecoration: 'none',
-                        padding: '0.3rem 0.65rem',
-                        borderBottom: active ? '0.5px solid var(--sb-gold)' : '0.5px solid transparent',
-                      }}
-                    >
-                      {item.label}
-                    </Link>
-                  );
-                })}
-              </div>
-            );
-          }
-          if (navPages.length <= 1) return null;
-          return (
-            <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-              {navPages.map(([k, p]) => {
-                const href = p.slug ? `/u/${slug}/${p.slug}` : `/u/${slug}`;
-                const active =
-                  (p.slug || '') === wantSlug ||
-                  (wantSlug === '' && (!p.slug || k === 'home'));
-                return (
-                  <Link
-                    key={k}
-                    to={href}
-                    style={{
-                      fontFamily: 'var(--sb-font-label)',
-                      fontSize: '0.66rem',
-                      letterSpacing: '0.18em',
-                      textTransform: 'uppercase',
-                      color: active ? 'var(--sb-gold)' : 'var(--sb-sage)',
-                      textDecoration: 'none',
-                      padding: '0.3rem 0.65rem',
-                      borderBottom: active ? '0.5px solid var(--sb-gold)' : '0.5px solid transparent',
-                    }}
-                  >
-                    {p.name}
-                  </Link>
-                );
-              })}
-            </div>
-          );
-        })()}
+        {navItems.length > 0 && (
+          <ProfileNav navItems={navItems} slug={slug} wantSlug={wantSlug} />
+        )}
       </nav>
 
       {(currentPage.sections || []).filter((sec) => {
-        // On the about page, respect resume.sections visibility toggles.
-        if (currentPageKey !== 'about' && currentPage.slug !== 'about') return true;
-        const rs = config?.resume?.sections;
-        if (!rs) return true;
-        const typeMap = { hero: 'profile', resume: 'experience', domains: 'domains', wheel: 'techStack', techWheel: 'techStack', education: 'education' };
-        const flag = typeMap[sec.type];
-        return flag ? rs[flag] !== false : true;
+        // If a default resume preset is defined, filter sections on any page
+        // to only those included in the preset.
+        const defaultPreset = (config?.resumePresets || []).find((p) => p.isDefault);
+        if (!defaultPreset || !defaultPreset.sections?.length) return true;
+        return defaultPreset.sections.some((s) => s.sectionId === sec.id && s.pageKey === currentPageKey);
       }).map((sec) => (
         <RenderSection key={sec.id} section={sec} config={config} mode="public" memberSlug={slug} />
       ))}
       <PublicFooter config={config} />
+    </div>
+  );
+}
+
+const navLinkStyle = (active) => ({
+  fontFamily: 'var(--sb-font-label)',
+  fontSize: '0.66rem',
+  letterSpacing: '0.18em',
+  textTransform: 'uppercase',
+  color: active ? 'var(--sb-gold)' : 'var(--sb-sage)',
+  textDecoration: 'none',
+  padding: '0.3rem 0.65rem',
+  borderBottom: active ? '0.5px solid var(--sb-gold)' : '0.5px solid transparent',
+});
+
+function ProfileNav({ navItems, slug, wantSlug }) {
+  const [openGroup, setOpenGroup] = React.useState(null);
+  const ref = useRef(null);
+
+  // Close dropdown when clicking outside.
+  React.useEffect(() => {
+    function handle(e) { if (ref.current && !ref.current.contains(e.target)) setOpenGroup(null); }
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center' }}>
+      {navItems.map((item, i) => {
+        if (item.type === 'page') {
+          const p = item.page;
+          const href = p.slug ? `/u/${slug}/${p.slug}` : `/u/${slug}`;
+          const active = (p.slug || '') === wantSlug || (wantSlug === '' && (!p.slug || item.key === 'home'));
+          return (
+            <Link key={item.key} to={href} style={navLinkStyle(active)}>
+              {p.navLabel || p.name}
+            </Link>
+          );
+        }
+        // Group dropdown
+        const groupActive = item.pages.some(([, p]) => (p.slug || '') === wantSlug || (wantSlug === '' && !p.slug));
+        const isOpen = openGroup === item.group;
+        return (
+          <div key={item.group} style={{ position: 'relative' }}>
+            <button
+              onClick={() => setOpenGroup(isOpen ? null : item.group)}
+              style={{ ...navLinkStyle(groupActive), background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+            >
+              {item.group} <span style={{ fontSize: '0.55rem' }}>{isOpen ? '▲' : '▼'}</span>
+            </button>
+            {isOpen && (
+              <div style={{ position: 'absolute', right: 0, top: '100%', background: 'rgba(27,42,59,0.98)', backdropFilter: 'blur(8px)', border: '0.5px solid rgba(196,132,58,0.2)', borderRadius: 'var(--sb-radius)', padding: '0.4rem 0', minWidth: 160, zIndex: 200 }}>
+                {item.pages.map(([k, p]) => {
+                  const href = p.slug ? `/u/${slug}/${p.slug}` : `/u/${slug}`;
+                  const active = (p.slug || '') === wantSlug;
+                  return (
+                    <Link key={k} to={href} onClick={() => setOpenGroup(null)} style={{ display: 'block', padding: '0.4rem 1rem', fontFamily: 'var(--sb-font-label)', fontSize: '0.64rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: active ? 'var(--sb-gold)' : 'var(--sb-sage)', textDecoration: 'none' }}>
+                      {p.navLabel || p.name}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

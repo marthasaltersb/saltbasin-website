@@ -12,9 +12,20 @@ export default function PreviewPane({ site, config, currentPageKey, isMember = f
   const pages = site?.pages || {};
   const page = pages[currentPageKey];
 
-  const navPages = Object.entries(pages)
-    .filter(([, p]) => p.status !== 'hidden')
+  // Build grouped nav items matching the public profile logic.
+  const sortedNavPages = Object.entries(pages)
+    .filter(([, p]) => p.status !== 'draft' && !p.hideFromNav)
     .sort((a, b) => (a[1].order ?? 0) - (b[1].order ?? 0));
+  const navItems = [];
+  const seenGroups = new Set();
+  for (const [k, p] of sortedNavPages) {
+    if (!p.navGroup) {
+      navItems.push({ type: 'page', key: k, page: p });
+    } else if (!seenGroups.has(p.navGroup)) {
+      seenGroups.add(p.navGroup);
+      navItems.push({ type: 'group', group: p.navGroup, pages: sortedNavPages.filter(([, pp]) => pp.navGroup === p.navGroup) });
+    }
+  }
 
   const previewUrl = isMember
     ? `saltbasin.net/u/${slug}${page?.slug ? `/${page.slug}` : ''}`
@@ -58,22 +69,21 @@ export default function PreviewPane({ site, config, currentPageKey, isMember = f
                     Operator Profile · {config?.site?.ownerName || slug || 'member'}
                   </div>
                 </div>
-                {navPages.length > 1 && (
-                  <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                    {navPages.map(([k, p]) => {
-                      const active = k === currentPageKey;
+                {navItems.length > 0 && (
+                  <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center' }}>
+                    {navItems.map((item) => {
+                      if (item.type === 'page') {
+                        const active = item.key === currentPageKey;
+                        return (
+                          <span key={item.key} style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.66rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: active ? 'var(--sb-gold)' : 'var(--sb-sage)', padding: '0.3rem 0.65rem', borderBottom: active ? '0.5px solid var(--sb-gold)' : '0.5px solid transparent', cursor: 'default' }}>
+                            {item.page.navLabel || item.page.name}
+                          </span>
+                        );
+                      }
+                      const groupActive = item.pages.some(([k]) => k === currentPageKey);
                       return (
-                        <span key={k} style={{
-                          fontFamily: 'var(--sb-font-label)',
-                          fontSize: '0.66rem',
-                          letterSpacing: '0.18em',
-                          textTransform: 'uppercase',
-                          color: active ? 'var(--sb-gold)' : 'var(--sb-sage)',
-                          padding: '0.3rem 0.65rem',
-                          borderBottom: active ? '0.5px solid var(--sb-gold)' : '0.5px solid transparent',
-                          cursor: 'default',
-                        }}>
-                          {p.name}
+                        <span key={item.group} style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.66rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: groupActive ? 'var(--sb-gold)' : 'var(--sb-sage)', padding: '0.3rem 0.65rem', borderBottom: groupActive ? '0.5px solid var(--sb-gold)' : '0.5px solid transparent', cursor: 'default' }}>
+                          {item.group} ▾
                         </span>
                       );
                     })}

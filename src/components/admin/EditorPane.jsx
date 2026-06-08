@@ -17,39 +17,99 @@ function humanLabel(key) {
     .replace(/^./, (s) => s.toUpperCase());
 }
 
-export default function EditorPane({ section, page, onUpdateSection, onUpdatePageStatus }) {
+export default function EditorPane({ section, page, site, onUpdateSection, onUpdatePageStatus, onUpdatePage }) {
+  // Derive existing nav group names from all pages so the datalist suggestion works.
+  const navGroups = React.useMemo(() => {
+    if (!site?.pages) return [];
+    return [...new Set(Object.values(site.pages).map((p) => p.navGroup).filter(Boolean))];
+  }, [site]);
+
   if (!section) {
+    if (!page) {
+      return (
+        <div style={styles.editorPane}>
+          <div style={styles.editorHeader}>
+            <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.78rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--sb-sage)' }}>
+              Page Settings
+            </div>
+          </div>
+          <div style={styles.editorBody}>
+            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--sb-teal-deep)' }}>
+              Select a page to view its settings.
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div style={styles.editorPane}>
         <div style={styles.editorHeader}>
           <div>
             <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.78rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--sb-sage)' }}>
-              Select a section to edit
+              Page Settings
             </div>
             <div style={{ fontSize: '0.68rem', color: 'var(--sb-teal-deep)' }}>
-              {page ? `/${page.slug || ''}` : ''}
+              /{page.slug || '(home)'}
             </div>
+          </div>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {STATUS_OPTS.map((o) => (
+              <button key={o.val} onClick={() => onUpdatePageStatus(o.val)} title={o.desc} style={statusBtnStyle(page.status === o.val)}>
+                {o.label}
+              </button>
+            ))}
           </div>
         </div>
         <div style={styles.editorBody}>
-          <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--sb-teal-deep)' }}>
-            <div style={{ fontSize: '2rem', marginBottom: '1rem', color: 'var(--sb-gold)' }}>←</div>
-            <div style={{ fontSize: '0.85rem', lineHeight: 1.7 }}>
-              Pick a section from the sidebar to begin editing, or use the page status toggle below.
-            </div>
-            {page && (
-              <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
-                {STATUS_OPTS.map((o) => (
-                  <button
-                    key={o.val}
-                    onClick={() => onUpdatePageStatus(o.val)}
-                    style={statusBtnStyle(page.status === o.val)}
-                  >
-                    {o.label}
-                  </button>
-                ))}
+          <div style={styles.card}>
+            <div style={styles.cardTitle}>Page Identity</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div style={styles.fieldGroup}>
+                <label style={styles.fieldLabel}>Page Name</label>
+                <input className="sb-input" value={page.name || ''} onChange={(e) => onUpdatePage?.({ name: e.target.value })} />
               </div>
-            )}
+              <div style={styles.fieldGroup}>
+                <label style={styles.fieldLabel}>URL Slug</label>
+                <input className="sb-input" value={page.slug || ''} placeholder="leave blank for home" onChange={(e) => onUpdatePage?.({ slug: e.target.value })} />
+              </div>
+            </div>
+          </div>
+
+          <div style={styles.card}>
+            <div style={styles.cardTitle}>Navigation</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem', lineHeight: 1.55 }}>
+              By default this page appears in the nav using its page name. Use Nav Label to override the display text. Use Nav Group to nest it under a dropdown category — type a group name or pick an existing one.
+            </div>
+            <div style={styles.fieldGroup}>
+              <label style={styles.fieldLabel}>Nav Label (blank = use page name)</label>
+              <input className="sb-input" value={page.navLabel || ''} placeholder={page.name || ''} onChange={(e) => onUpdatePage?.({ navLabel: e.target.value })} />
+            </div>
+            <div style={styles.fieldGroup}>
+              <label style={styles.fieldLabel}>Nav Group (blank = top-level link)</label>
+              <input
+                className="sb-input"
+                list="nav-groups-list"
+                value={page.navGroup || ''}
+                placeholder="e.g. Work, Resources…"
+                onChange={(e) => onUpdatePage?.({ navGroup: e.target.value })}
+              />
+              <datalist id="nav-groups-list">
+                {navGroups.map((g) => <option key={g} value={g} />)}
+              </datalist>
+            </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginTop: '0.25rem' }}>
+              <input
+                type="checkbox"
+                checked={!!page.hideFromNav}
+                onChange={(e) => onUpdatePage?.({ hideFromNav: e.target.checked })}
+              />
+              <span style={{ fontSize: '0.82rem', color: 'var(--sb-sage)' }}>Hide from navigation</span>
+            </label>
+          </div>
+
+          <div style={{ padding: '0.75rem 1.25rem', fontSize: '0.75rem', color: 'var(--sb-dusty)', lineHeight: 1.6 }}>
+            Click a section in the sidebar to edit its content.
           </div>
         </div>
       </div>
@@ -154,31 +214,28 @@ export default function EditorPane({ section, page, onUpdateSection, onUpdatePag
             .map(([k, v]) => {
               // Dynamic list editors for array-typed fields.
               if (Array.isArray(v) && k === 'roles') {
-                return (
-                  <RoleListEditor
-                    key={k}
-                    roles={v}
-                    onChange={(next) => patchField(k, next)}
-                  />
-                );
+                return <RoleListEditor key={k} roles={v} onChange={(next) => patchField(k, next)} />;
               }
               if (Array.isArray(v) && k === 'domains') {
-                return (
-                  <DomainListEditor
-                    key={k}
-                    domains={v}
-                    onChange={(next) => patchField(k, next)}
-                  />
-                );
+                return <DomainListEditor key={k} domains={v} onChange={(next) => patchField(k, next)} />;
               }
               if (Array.isArray(v) && k === 'cards') {
-                return (
-                  <CardListEditor
-                    key={k}
-                    cards={v}
-                    onChange={(next) => patchField(k, next)}
-                  />
-                );
+                return <CardListEditor key={k} cards={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'cases') {
+                return <CaseListEditor key={k} cases={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'stats') {
+                return <StatListEditor key={k} stats={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'steps') {
+                return <StepListEditor key={k} steps={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'cols') {
+                return <ColListEditor key={k} cols={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'items') {
+                return <IconItemListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
               }
               if (isImageField(k)) {
                 return (
@@ -655,3 +712,127 @@ function CardListEditor({ cards, onChange }) {
     </div>
   );
 }
+
+// ── Generic list editor factory ──
+// Builds a dynamic add/remove/reorder list editor for simple array types.
+// Each item definition: { key, placeholder, long? } drives one input/textarea.
+function makeListEditor(singularLabel, defaultItem, fieldDefs) {
+  return function GenericListEditor({ items: raw, onChange }) {
+    const list = Array.isArray(raw) ? raw : [];
+    function update(i, patch) { onChange(list.map((r, idx) => (idx === i ? { ...r, ...patch } : r))); }
+    function add() { onChange([...list, { ...defaultItem }]); }
+    function remove(i) { onChange(list.filter((_, idx) => idx !== i)); }
+    function move(i, dir) {
+      const j = i + dir;
+      if (j < 0 || j >= list.length) return;
+      const next = [...list]; [next[i], next[j]] = [next[j], next[i]]; onChange(next);
+    }
+    return (
+      <div style={styles.fieldGroup}>
+        <label style={styles.fieldLabel}>{singularLabel}s ({list.length})</label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {list.map((item, i) => (
+            <div key={i} style={{ border: '0.5px solid rgba(196,132,58,0.20)', borderRadius: 'var(--sb-radius)', padding: '0.75rem', background: 'rgba(255,255,255,0.02)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <span style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.62rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--sb-gold)' }}>{singularLabel} {i + 1}</span>
+                <div style={{ display: 'flex', gap: '0.25rem' }}>
+                  <button type="button" onClick={() => move(i, -1)} disabled={i === 0} style={iconBtnStyle(i === 0)} title="Move up">↑</button>
+                  <button type="button" onClick={() => move(i, +1)} disabled={i === list.length - 1} style={iconBtnStyle(i === list.length - 1)} title="Move down">↓</button>
+                  <button type="button" onClick={() => remove(i)} style={{ ...iconBtnStyle(false), color: 'var(--sb-risk-critical)' }} title={`Delete ${singularLabel.toLowerCase()}`}>×</button>
+                </div>
+              </div>
+              {fieldDefs.map(({ key, placeholder, long, half }) => (
+                half ? null : long ? (
+                  <textarea key={key} className="sb-input sb-textarea" placeholder={placeholder} value={item[key] || ''} onChange={(e) => update(i, { [key]: e.target.value })} style={{ marginBottom: '0.4rem' }} />
+                ) : (
+                  <input key={key} className="sb-input" placeholder={placeholder} value={item[key] || ''} onChange={(e) => update(i, { [key]: e.target.value })} style={{ marginBottom: '0.4rem' }} />
+                )
+              ))}
+              {/* Half-width fields rendered as grid row */}
+              {(() => {
+                const halves = fieldDefs.filter(f => f.half);
+                if (!halves.length) return null;
+                return (
+                  <div style={{ display: 'grid', gridTemplateColumns: `repeat(${halves.length}, 1fr)`, gap: '0.5rem', marginBottom: '0.4rem' }}>
+                    {halves.map(({ key, placeholder }) => (
+                      <input key={key} className="sb-input" placeholder={placeholder} value={item[key] || ''} onChange={(e) => update(i, { [key]: e.target.value })} />
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          ))}
+          <button type="button" onClick={add} className="sb-btn sb-btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', alignSelf: 'flex-start' }}>
+            + Add {singularLabel.toLowerCase()}
+          </button>
+        </div>
+      </div>
+    );
+  };
+}
+
+// Specialized list editors for each new block type.
+// `cases` array for the caseStudies block:
+function CaseListEditor({ cases, onChange }) {
+  const list = Array.isArray(cases) ? cases : [];
+  function update(i, patch) { onChange(list.map((r, idx) => (idx === i ? { ...r, ...patch } : r))); }
+  function add() { onChange([...list, { title: '', client: '', sector: '', challenge: '', approach: '', outcome: '', tags: '' }]); }
+  function remove(i) { onChange(list.filter((_, idx) => idx !== i)); }
+  function move(i, dir) { const j = i + dir; if (j < 0 || j >= list.length) return; const next = [...list]; [next[i], next[j]] = [next[j], next[i]]; onChange(next); }
+  return (
+    <div style={styles.fieldGroup}>
+      <label style={styles.fieldLabel}>Case Studies ({list.length})</label>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        {list.map((c, i) => (
+          <div key={i} style={{ border: '0.5px solid rgba(196,132,58,0.20)', borderRadius: 'var(--sb-radius)', padding: '0.75rem', background: 'rgba(255,255,255,0.02)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <span style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.62rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--sb-gold)' }}>Case {i + 1}</span>
+              <div style={{ display: 'flex', gap: '0.25rem' }}>
+                <button type="button" onClick={() => move(i, -1)} disabled={i === 0} style={iconBtnStyle(i === 0)}>↑</button>
+                <button type="button" onClick={() => move(i, +1)} disabled={i === list.length - 1} style={iconBtnStyle(i === list.length - 1)}>↓</button>
+                <button type="button" onClick={() => remove(i)} style={{ ...iconBtnStyle(false), color: 'var(--sb-risk-critical)' }}>×</button>
+              </div>
+            </div>
+            <input className="sb-input" placeholder="Title" value={c.title || ''} onChange={(e) => update(i, { title: e.target.value })} style={{ marginBottom: '0.4rem' }} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.4rem' }}>
+              <input className="sb-input" placeholder="Client type (optional)" value={c.client || ''} onChange={(e) => update(i, { client: e.target.value })} />
+              <input className="sb-input" placeholder="Sector / industry" value={c.sector || ''} onChange={(e) => update(i, { sector: e.target.value })} />
+            </div>
+            <textarea className="sb-input sb-textarea" placeholder="Challenge — what was the problem?" value={c.challenge || ''} onChange={(e) => update(i, { challenge: e.target.value })} style={{ marginBottom: '0.4rem' }} />
+            <textarea className="sb-input sb-textarea" placeholder="Approach — what did you do?" value={c.approach || ''} onChange={(e) => update(i, { approach: e.target.value })} style={{ marginBottom: '0.4rem' }} />
+            <textarea className="sb-input sb-textarea" placeholder="Outcome — measurable results" value={c.outcome || ''} onChange={(e) => update(i, { outcome: e.target.value })} style={{ marginBottom: '0.4rem' }} />
+            <input className="sb-input" placeholder="Tags (comma-separated: e.g. M&A, PMO, FinTech)" value={c.tags || ''} onChange={(e) => update(i, { tags: e.target.value })} />
+          </div>
+        ))}
+        <button type="button" onClick={add} className="sb-btn sb-btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', alignSelf: 'flex-start' }}>+ Add case study</button>
+      </div>
+    </div>
+  );
+}
+
+// `stats` array for the statGrid block:
+const StatListEditor = makeListEditor('Stat', { value: '', label: '', sublabel: '' }, [
+  { key: 'value', placeholder: 'Value (e.g. $2.4M, 94%, 12×)' },
+  { key: 'label', placeholder: 'Label (e.g. Revenue recovered)' },
+  { key: 'sublabel', placeholder: 'Sub-label or time period (optional)' },
+]);
+
+// `steps` array for the process block:
+const StepListEditor = makeListEditor('Step', { title: '', description: '' }, [
+  { key: 'title', placeholder: 'Step title (e.g. Discovery)' },
+  { key: 'description', placeholder: 'What happens in this step', long: true },
+]);
+
+// `cols` array for the columns block:
+const ColListEditor = makeListEditor('Column', { icon: '', title: '', body: '' }, [
+  { key: 'icon', placeholder: '◆ Icon or emoji', half: true },
+  { key: 'title', placeholder: 'Column heading', half: true },
+  { key: 'body', placeholder: 'Body text', long: true },
+]);
+
+// `items` array for the iconGrid block:
+const IconItemListEditor = makeListEditor('Item', { icon: '', label: '', tooltip: '' }, [
+  { key: 'icon', placeholder: '◆ Icon or emoji', half: true },
+  { key: 'label', placeholder: 'Label', half: true },
+  { key: 'tooltip', placeholder: 'Hover tooltip text', long: true },
+]);

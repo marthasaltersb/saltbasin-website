@@ -1450,7 +1450,7 @@ function LeadCaptureForm({ source, ctaLabel, placeholder, thanks, dark, message 
 // References-request block: a focused lead-capture form that asks for
 // requester name + email + company + context. Submits as source='references'
 // so admin can filter, with the lead-flow's password-protected URL.
-function ReferencesRequestBlock({ section }) {
+function ReferencesRequestBlock({ section, memberSlug = '' }) {
   const f = section.fields || {};
   const [name, setName] = React.useState('');
   const [email, setEmail] = React.useState('');
@@ -1466,15 +1466,18 @@ function ReferencesRequestBlock({ section }) {
     setSubmitting(true);
     setError('');
     try {
+      // On a member profile page, route to the member via referenceRequest source.
+      const payload = {
+        source: memberSlug ? 'referenceRequest' : 'references',
+        email, name,
+        message: [company && `Company: ${company}`, context].filter(Boolean).join('\n\n'),
+        ctaLocation: ctaLocation('References request'),
+      };
+      if (memberSlug) payload.memberSlug = memberSlug;
       const res = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          source: 'references',
-          email, name,
-          message: [company && `Company: ${company}`, context].filter(Boolean).join('\n\n'),
-          ctaLocation: ctaLocation('References request'),
-        }),
+        body: JSON.stringify(payload),
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || 'Request failed');
@@ -3071,21 +3074,38 @@ const CASE_STUDY_SLUG_BY_INDEX = {
 
 function CaseStudiesBlock({ section }) {
   const f = section.fields || {};
-  const cases = [];
-  for (let i = 1; i <= 5; i++) {
-    const title = f[`case${i}Title`];
-    if (!title) continue;
-    cases.push({
-      key: `case${i}`,
-      slug: CASE_STUDY_SLUG_BY_INDEX[i],
-      title,
-      subtitle: f[`case${i}Subtitle`] || '',
-      context: (f[`case${i}Context`] || '').split('\n').map((s) => s.trim()).filter(Boolean),
-      role: f[`case${i}Role`] || '',
-      actions: (f[`case${i}Actions`] || '').split('\n').map((s) => s.trim()).filter(Boolean),
-      impact: (f[`case${i}Impact`] || '').split('\n').map((s) => s.trim()).filter(Boolean),
-      feedback: f[`case${i}Feedback`] || '',
-    });
+  // Support both the dynamic `cases` array (new) and the legacy fixed-slot
+  // fields (case1Title…case5Title) for backward compat with existing content.
+  let cases;
+  if (Array.isArray(f.cases) && f.cases.length > 0) {
+    cases = f.cases.map((c, i) => ({
+      key: `case-${i}`,
+      title: c.title || '',
+      subtitle: [c.client, c.sector].filter(Boolean).join(' · '),
+      context: c.challenge ? [c.challenge] : [],
+      role: c.approach || '',
+      impact: c.outcome ? [c.outcome] : [],
+      feedback: '',
+      tags: c.tags ? c.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
+    }));
+  } else {
+    cases = [];
+    for (let i = 1; i <= 5; i++) {
+      const title = f[`case${i}Title`];
+      if (!title) continue;
+      cases.push({
+        key: `case${i}`,
+        slug: CASE_STUDY_SLUG_BY_INDEX[i],
+        title,
+        subtitle: f[`case${i}Subtitle`] || '',
+        context: (f[`case${i}Context`] || '').split('\n').map((s) => s.trim()).filter(Boolean),
+        role: f[`case${i}Role`] || '',
+        actions: (f[`case${i}Actions`] || '').split('\n').map((s) => s.trim()).filter(Boolean),
+        impact: (f[`case${i}Impact`] || '').split('\n').map((s) => s.trim()).filter(Boolean),
+        feedback: f[`case${i}Feedback`] || '',
+        tags: [],
+      });
+    }
   }
   return (
     <section
@@ -3182,6 +3202,13 @@ function CaseStudyCard({ data }) {
           }}
         >
           “{data.feedback}”
+        </div>
+      )}
+      {data.tags?.length > 0 && (
+        <div style={{ marginTop: '1rem', display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+          {data.tags.map((tag, i) => (
+            <span key={i} style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.58rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--sb-gold)', border: '0.5px solid rgba(196,132,58,0.4)', borderRadius: 'var(--sb-radius)', padding: '0.2rem 0.5rem' }}>{tag}</span>
+          ))}
         </div>
       )}
       {data.slug && (
@@ -3364,6 +3391,117 @@ function NetWorksBannerBlock({ section }) {
   );
 }
 
+// ── Visual / diagram blocks ──
+
+function StatGridBlock({ section }) {
+  const f = section.fields || {};
+  const stats = Array.isArray(f.stats) ? f.stats : [];
+  const cols = Math.min(Math.max(stats.length, 2), 4);
+  return (
+    <section id={section.id} style={{ background: BG_VAR[section.bg] || 'var(--sb-navy)', padding: '5rem 2rem' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
+        {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: 'var(--sb-cream)', marginBottom: '0.75rem' }}>{f.heading}</h2>}
+        {f.intro && <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: 'var(--sb-sage)', maxWidth: 740, marginBottom: '2.5rem' }}>{f.intro}</p>}
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: '1.5rem' }}>
+          {stats.map((s, i) => (
+            <div key={i} style={{ textAlign: 'center', padding: '2rem 1rem', background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(196,132,58,0.25)', borderRadius: 'var(--sb-radius)' }}>
+              <div className="sb-display" style={{ fontSize: '3rem', color: 'var(--sb-gold)', letterSpacing: '0.02em', lineHeight: 1 }}>{s.value}</div>
+              <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.7rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--sb-cream)', marginTop: '0.75rem' }}>{s.label}</div>
+              {s.sublabel && <div style={{ fontSize: '0.78rem', color: 'var(--sb-dusty)', marginTop: '0.35rem' }}>{s.sublabel}</div>}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ProcessBlock({ section }) {
+  const f = section.fields || {};
+  const steps = Array.isArray(f.steps) ? f.steps : [];
+  return (
+    <section id={section.id} style={{ background: BG_VAR[section.bg] || 'var(--sb-ivory)', padding: '5rem 2rem' }}>
+      <div style={{ maxWidth: 900, margin: '0 auto' }}>
+        {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
+        {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: 'var(--sb-navy)', marginBottom: '0.75rem' }}>{f.heading}</h2>}
+        {f.intro && <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: '#4a4a4a', maxWidth: 700, marginBottom: '2.5rem' }}>{f.intro}</p>}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          {steps.map((step, i) => (
+            <div key={i} style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', position: 'relative' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--sb-navy)', color: 'var(--sb-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--sb-font-label)', fontSize: '0.85rem', fontWeight: 700, flexShrink: 0, zIndex: 1 }}>{i + 1}</div>
+                {i < steps.length - 1 && <div style={{ width: 1, flex: 1, minHeight: 32, background: 'rgba(196,132,58,0.3)', margin: '4px 0' }} />}
+              </div>
+              <div style={{ paddingBottom: i < steps.length - 1 ? '2rem' : 0, paddingTop: '0.5rem' }}>
+                <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.72rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--sb-navy)', marginBottom: '0.35rem' }}>{step.title}</div>
+                {step.description && <p style={{ fontSize: '0.9rem', lineHeight: 1.7, color: '#4a4a4a', margin: 0 }}>{step.description}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ColumnsBlock({ section }) {
+  const f = section.fields || {};
+  const cols = Array.isArray(f.cols) ? f.cols : [];
+  const colCount = Math.min(Math.max(Number(f.columnCount) || cols.length || 3, 2), 4);
+  return (
+    <section id={section.id} style={{ background: BG_VAR[section.bg] || 'var(--sb-linen)', padding: '5rem 2rem' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
+        {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: 'var(--sb-navy)', marginBottom: '0.75rem' }}>{f.heading}</h2>}
+        {f.intro && <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: '#4a4a4a', maxWidth: 740, marginBottom: '2.5rem' }}>{f.intro}</p>}
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${colCount}, 1fr)`, gap: '2rem' }}>
+          {cols.map((col, i) => (
+            <div key={i} style={{ textAlign: 'center' }}>
+              {col.icon && <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>{col.icon}</div>}
+              {col.title && <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.72rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--sb-navy)', marginBottom: '0.5rem' }}>{col.title}</div>}
+              {col.body && <p style={{ fontSize: '0.88rem', lineHeight: 1.7, color: '#4a4a4a', margin: 0 }}>{col.body}</p>}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function IconGridBlock({ section }) {
+  const f = section.fields || {};
+  const items = Array.isArray(f.items) ? f.items : [];
+  const [tooltip, setTooltip] = React.useState(null);
+  return (
+    <section id={section.id} style={{ background: BG_VAR[section.bg] || 'var(--sb-cream)', padding: '5rem 2rem' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
+        {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: 'var(--sb-navy)', marginBottom: '0.75rem' }}>{f.heading}</h2>}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginTop: '2rem' }}>
+          {items.map((item, i) => (
+            <div
+              key={i}
+              onMouseEnter={() => item.tooltip && setTooltip(i)}
+              onMouseLeave={() => setTooltip(null)}
+              style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', padding: '1rem 1.25rem', background: 'rgba(27,42,59,0.06)', border: '0.5px solid rgba(27,42,59,0.15)', borderRadius: 'var(--sb-radius)', cursor: item.tooltip ? 'help' : 'default', minWidth: 90 }}
+            >
+              {item.icon && <span style={{ fontSize: '1.6rem' }}>{item.icon}</span>}
+              <span style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.6rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--sb-navy)', textAlign: 'center' }}>{item.label}</span>
+              {tooltip === i && item.tooltip && (
+                <div style={{ position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)', marginBottom: 8, background: 'var(--sb-navy)', color: 'var(--sb-cream)', fontSize: '0.78rem', lineHeight: 1.5, padding: '0.5rem 0.75rem', borderRadius: 'var(--sb-radius)', whiteSpace: 'nowrap', maxWidth: 240, zIndex: 50, pointerEvents: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.3)' }}>
+                  {item.tooltip}
+                  <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '6px solid var(--sb-navy)' }} />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 const REGISTRY = {
   hero: HeroBlock,
   scripture: ScriptureBlock,
@@ -3388,6 +3526,10 @@ const REGISTRY = {
   timeline: TimelineBlock,
   caseStudies: CaseStudiesBlock,
   netWorksBanner: NetWorksBannerBlock,
+  statGrid: StatGridBlock,
+  process: ProcessBlock,
+  columns: ColumnsBlock,
+  iconGrid: IconGridBlock,
 };
 
 export function RenderSection({ section, config, mode = 'public', memberSlug = '' }) {
