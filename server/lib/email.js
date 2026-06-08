@@ -215,6 +215,46 @@ export async function sendNewLeadAlert({ leadId, source, leadEmail, leadName, le
   return dispatch({ leadId, to: recipient, subject: subjLine, html, text });
 }
 
+export async function sendVerificationEmail({ toEmail, code }) {
+  const text = `Your Salt Basin Net Works email verification code is: ${code}\n\nThis code expires in 15 minutes. If you did not request this, ignore this email.\n\n— Salt Basin Net Works`;
+  const html = `
+    <p>Your Salt Basin Net Works email verification code is:</p>
+    <p style="font-size:2rem;font-weight:bold;letter-spacing:0.25em;color:#C4843A;font-family:monospace;">${code}</p>
+    <p style="font-size:0.85rem;color:#4A6670;">This code expires in 15 minutes. If you did not request this, ignore this email.</p>
+    <p style="font-size:0.75rem;color:#8B9BAE;margin-top:1.25rem;">— Salt Basin Net Works</p>
+  `;
+  return dispatch({ to: toEmail, subject: 'Salt Basin Net Works — email verification code', html, text });
+}
+
+export async function sendContactFormToMember({ toEmail, memberName, fromName, fromEmail, fromPhone, message }) {
+  const greeting = memberName ? `Hi ${memberName.split(' ')[0]},` : 'Hi,';
+  const text = [
+    greeting,
+    '',
+    'Someone submitted a contact form on your Salt Basin Net Works profile.',
+    '',
+    `From:    ${fromName || fromEmail}`,
+    `Email:   ${fromEmail}`,
+    fromPhone ? `Phone:   ${fromPhone}` : null,
+    message ? '' : null,
+    message ? `Message:\n${message}` : null,
+    '',
+    '— Salt Basin Net Works',
+  ].filter((l) => l !== null).join('\n');
+  const html = `
+    <p>${greeting}</p>
+    <p>Someone submitted a contact form on your Salt Basin Net Works profile:</p>
+    <table style="border-collapse:collapse;font-size:0.9rem;">
+      <tr><td style="padding:4px 12px 4px 0;color:#4A6670;">From:</td><td>${fromName || fromEmail}</td></tr>
+      <tr><td style="padding:4px 12px 4px 0;color:#4A6670;">Email:</td><td><a href="mailto:${fromEmail}" style="color:#C4843A;">${fromEmail}</a></td></tr>
+      ${fromPhone ? `<tr><td style="padding:4px 12px 4px 0;color:#4A6670;">Phone:</td><td>${fromPhone}</td></tr>` : ''}
+      ${message ? `<tr><td style="padding:4px 12px 4px 0;color:#4A6670;vertical-align:top;">Message:</td><td style="white-space:pre-wrap;">${message}</td></tr>` : ''}
+    </table>
+    <p style="font-size:0.75rem;color:#8B9BAE;margin-top:1.25rem;">— Salt Basin Net Works</p>
+  `;
+  return dispatch({ to: toEmail, subject: '[Salt Basin] New contact form submission on your profile', html, text });
+}
+
 function publicBaseUrl() {
   return process.env.PUBLIC_BASE_URL || 'https://saltbasin.net';
 }

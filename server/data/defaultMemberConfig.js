@@ -34,6 +34,22 @@ export function defaultMemberConfig({ displayName, email }) {
       homeBlurb: '',       // 1–2 sentences shown on the card
       homeCompanyName: '', // optional org / brand name displayed under the logo
     },
+    // Top navigation config. items is an ordered list of { label, href } nav
+    // links. If empty the profile falls back to auto-derived page links.
+    nav: {
+      items: [],
+    },
+    // Resume output config — controls which sections appear when someone views
+    // the member's About page / resume output.
+    resume: {
+      sections: {
+        profile:    true,   // About hero + summary paragraphs
+        experience: true,   // Professional roles / job timeline
+        domains:    true,   // Domains of expertise
+        techStack:  true,   // Tech stack / skills wheel
+        education:  true,   // Education
+      },
+    },
     // BYO Anthropic key for the Config Agent (the in-admin Claude-powered
     // editor). Stored encrypted in production; for now plain TEXT so the
     // local dev flow works. Never returned in publicConfig().

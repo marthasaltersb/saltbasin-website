@@ -741,7 +741,7 @@ function SocialGridBlock({ section, config }) {
   );
 }
 
-function ContactBlock({ section, config }) {
+function ContactBlock({ section, config, memberSlug = '' }) {
   const f = section.fields || {};
   return (
     <section
@@ -772,7 +772,7 @@ function ContactBlock({ section, config }) {
         </div>
         <div>
           <InlineDataNotice dark={false} compact style={{ marginBottom: '1rem' }} />
-          <ContactForm />
+          <ContactForm memberSlug={memberSlug} />
         </div>
       </div>
     </section>
@@ -1340,7 +1340,7 @@ function ctaLocation(button) {
   return button ? `${path} · ${button}` : path;
 }
 
-function ContactForm() {
+function ContactForm({ memberSlug = '' }) {
   const [name, setName] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [phone, setPhone] = React.useState('');
@@ -1355,13 +1355,12 @@ function ContactForm() {
     setSubmitting(true);
     setError('');
     try {
+      const payload = { source: 'contact', email, phone, name, message, ctaLocation: ctaLocation('contact form') };
+      if (memberSlug) payload.memberSlug = memberSlug;
       const res = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          source: 'contact', email, phone, name, message,
-          ctaLocation: ctaLocation('contact form'),
-        }),
+        body: JSON.stringify(payload),
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || 'Submission failed');
@@ -3391,7 +3390,7 @@ const REGISTRY = {
   netWorksBanner: NetWorksBannerBlock,
 };
 
-export function RenderSection({ section, config, mode = 'public' }) {
+export function RenderSection({ section, config, mode = 'public', memberSlug = '' }) {
   // Public never shows draft; preview shows everything with a banner.
   if (mode === 'public' && section.status === 'draft') return null;
 
@@ -3405,11 +3404,7 @@ export function RenderSection({ section, config, mode = 'public' }) {
   return (
     <>
       {banner}
-      {section.status === 'soon' && mode === 'preview' ? (
-        <Block section={section} config={config} />
-      ) : (
-        <Block section={section} config={config} />
-      )}
+      <Block section={section} config={config} memberSlug={memberSlug} />
     </>
   );
 }

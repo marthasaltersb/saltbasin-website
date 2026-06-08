@@ -57,9 +57,20 @@ export async function getUserFromCookie(req) {
 }
 
 export async function login(email, password) {
-  const row = await db
+  const lower = email.toLowerCase();
+  // Check primary email first, then any verified secondary email.
+  let row = await db
     .prepare('SELECT id, password_hash, role FROM users WHERE email = $1')
-    .get(email.toLowerCase());
+    .get(lower);
+  if (!row) {
+    row = await db
+      .prepare(
+        `SELECT u.id, u.password_hash, u.role
+           FROM user_emails ue JOIN users u ON u.id = ue.user_id
+          WHERE ue.email = $1 AND ue.verified = true`
+      )
+      .get(lower);
+  }
   if (!row) return null;
   const ok = await bcrypt.compare(password, row.password_hash);
   if (!ok) return null;
@@ -143,7 +154,14 @@ export async function createMember(email, password, displayName) {
       'INSERT INTO users (email, password_hash, role, display_name) VALUES ($1, $2, $3, $4) RETURNING id'
     )
     .run(lower, hash, 'member', displayName || null);
-  return { id: Number(result.lastInsertRowid), email: lower, displayName };
+  const userId = Number(result.lastInsertRowid);
+  // Insert signup email as verified primary so the email management UI shows it.
+  await db
+    .prepare(
+      'INSERT INTO user_emails (user_id, email, type, verified) VALUES ($1, $2, $3, true) ON CONFLICT (email) DO NOTHING'
+    )
+    .run(userId, lower, 'primary');
+  return { id: userId, email: lower, displayName };
 }
 
 export { ADMIN_COOKIE, LANDING_COOKIE };

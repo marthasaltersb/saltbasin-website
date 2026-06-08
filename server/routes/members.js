@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import crypto from 'node:crypto';
 import { db } from '../db.js';
 import {
   login,
@@ -10,6 +11,7 @@ import {
 } from '../auth.js';
 import { defaultMemberProfile } from '../data/defaultMemberProfile.js';
 import { verifyRecaptcha } from '../lib/recaptcha.js';
+import { sendVerificationEmail } from '../lib/email.js';
 
 const router = Router();
 
@@ -108,6 +110,79 @@ router.post('/me/profile/publish', requireUser, async (req, res) => {
       'UPDATE member_profiles SET published = draft, updated_at = $1 WHERE user_id = $2'
     )
     .run(Date.now(), req.user.id);
+  res.json({ ok: true });
+});
+
+// ── Multi-email management ──
+
+router.get('/me/emails', requireUser, async (req, res) => {
+  const rows = await db
+    .prepare('SELECT id, email, type, verified, created_at FROM user_emails WHERE user_id = $1 ORDER BY created_at ASC')
+    .all(req.user.id);
+  res.json({ emails: rows.map((r) => ({ ...r, id: Number(r.id), created_at: Number(r.created_at) })) });
+});
+
+router.post('/me/emails', requireUser, async (req, res) => {
+  const { email, type } = req.body || {};
+  if (!email || !email.includes('@')) return res.status(400).json({ error: 'valid email required' });
+  const lower = email.toLowerCase().trim();
+  const emailType = type === 'work' ? 'work' : 'personal';
+
+  const existsUser = await db.prepare('SELECT 1 FROM users WHERE email = $1').get(lower);
+  if (existsUser) return res.status(400).json({ error: 'email already in use' });
+  const existsUE = await db.prepare('SELECT 1 FROM user_emails WHERE email = $1').get(lower);
+  if (existsUE) return res.status(400).json({ error: 'email already in use' });
+
+  const code = String(100000 + crypto.randomInt(900000));
+  const expiresAt = Date.now() + 15 * 60 * 1000;
+
+  const result = await db
+    .prepare(
+      'INSERT INTO user_emails (user_id, email, type, verified, verification_code, code_expires_at) VALUES ($1, $2, $3, false, $4, $5) RETURNING id'
+    )
+    .run(req.user.id, lower, emailType, code, expiresAt);
+
+  sendVerificationEmail({ toEmail: lower, code }).catch((e) => console.error('[email] verify failed:', e.message));
+
+  res.json({ ok: true, id: Number(result.lastInsertRowid), email: lower, type: emailType, verified: false });
+});
+
+router.post('/me/emails/:id/verify', requireUser, async (req, res) => {
+  const { code } = req.body || {};
+  const id = Number(req.params.id);
+  const row = await db
+    .prepare('SELECT id, user_id, verification_code, code_expires_at, verified FROM user_emails WHERE id = $1')
+    .get(id);
+  if (!row || Number(row.user_id) !== req.user.id) return res.status(404).json({ error: 'not found' });
+  if (row.verified) return res.json({ ok: true, already: true });
+  if (Date.now() > Number(row.code_expires_at)) return res.status(400).json({ error: 'code expired — resend to get a new one' });
+  if (String(row.verification_code) !== String(code)) return res.status(400).json({ error: 'incorrect code' });
+  await db.prepare('UPDATE user_emails SET verified = true, verification_code = NULL, code_expires_at = NULL WHERE id = $1').run(id);
+  res.json({ ok: true });
+});
+
+router.post('/me/emails/:id/resend', requireUser, async (req, res) => {
+  const id = Number(req.params.id);
+  const row = await db
+    .prepare('SELECT id, user_id, email, verified FROM user_emails WHERE id = $1')
+    .get(id);
+  if (!row || Number(row.user_id) !== req.user.id) return res.status(404).json({ error: 'not found' });
+  if (row.verified) return res.json({ ok: true, already: true });
+  const code = String(100000 + crypto.randomInt(900000));
+  const expiresAt = Date.now() + 15 * 60 * 1000;
+  await db.prepare('UPDATE user_emails SET verification_code = $1, code_expires_at = $2 WHERE id = $3').run(code, expiresAt, id);
+  sendVerificationEmail({ toEmail: row.email, code }).catch((e) => console.error('[email] resend failed:', e.message));
+  res.json({ ok: true });
+});
+
+router.delete('/me/emails/:id', requireUser, async (req, res) => {
+  const id = Number(req.params.id);
+  const row = await db
+    .prepare('SELECT id, user_id, email FROM user_emails WHERE id = $1')
+    .get(id);
+  if (!row || Number(row.user_id) !== req.user.id) return res.status(404).json({ error: 'not found' });
+  if (row.email === req.user.email) return res.status(400).json({ error: 'cannot remove the primary signup email' });
+  await db.prepare('DELETE FROM user_emails WHERE id = $1').run(id);
   res.json({ ok: true });
 });
 

@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { db } from '../db.js';
 import { requireAdmin, createSession, setAdminCookie } from '../auth.js';
-import { sendLeadConfirmation, sendNewLeadAlert, dispatchRaw } from '../lib/email.js';
+import { sendLeadConfirmation, sendNewLeadAlert, sendContactFormToMember, dispatchRaw } from '../lib/email.js';
 import { defaultMemberProfile } from '../data/defaultMemberProfile.js';
 import { verifyRecaptcha } from '../lib/recaptcha.js';
 
@@ -131,7 +131,7 @@ router.post('/', async (req, res) => {
   // recaptchaToken. Keeping it off for now so this endpoint doesn't break when
   // RECAPTCHA_SECRET_KEY gets set — see scripts/add-tonight-defect-items.mjs
   // and task #28 in the session log for the rollout plan.
-  const { source, email, phone, name, message, ctaLocation } = req.body || {};
+  const { source, email, phone, name, message, ctaLocation, memberSlug } = req.body || {};
 
   if (!isValidSource(source)) return res.status(400).json({ error: 'invalid source' });
   if (!isValidEmail(email)) return res.status(400).json({ error: 'a valid email is required' });
@@ -263,6 +263,28 @@ router.post('/', async (req, res) => {
       password: accessPassword,
       source,
     }).catch((e) => console.error('[email] confirmation failed:', e.message));
+  }
+
+  // If submitted on a member's profile, notify that member's verified emails.
+  if (memberSlug && typeof memberSlug === 'string') {
+    db.prepare(
+      `SELECT ue.email, u.display_name
+         FROM member_profiles mp
+         JOIN users u ON u.id = mp.user_id
+         JOIN user_emails ue ON ue.user_id = mp.user_id
+        WHERE mp.slug = $1 AND ue.verified = true`
+    ).all(memberSlug).then((rows) => {
+      for (const r of rows) {
+        sendContactFormToMember({
+          toEmail: r.email,
+          memberName: r.display_name || null,
+          fromName: trimmedName,
+          fromEmail: normEmail,
+          fromPhone: normPhone,
+          message: trimmedMsg,
+        }).catch((e) => console.error('[email] member contact notify failed:', e.message));
+      }
+    }).catch((e) => console.error('[email] member lookup failed:', e.message));
   }
 
   // Notify Betsy in parallel. Fires on every new lead AND on activity for an

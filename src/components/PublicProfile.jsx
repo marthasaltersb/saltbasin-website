@@ -94,7 +94,7 @@ export default function PublicProfile() {
     );
   }
 
-  const [, currentPage] = match;
+  const [currentPageKey, currentPage] = match;
   const navPages = entries
     .filter(([, p]) => p.status !== 'draft')
     .sort((a, b) => (a[1].order ?? 0) - (b[1].order ?? 0));
@@ -156,39 +156,78 @@ export default function PublicProfile() {
           </div>
         </Link>
 
-        {/* Sub-page nav across this member's published pages */}
-        {navPages.length > 1 && (
-          <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-            {navPages.map(([k, p]) => {
-              const href = p.slug ? `/u/${slug}/${p.slug}` : `/u/${slug}`;
-              const active =
-                (p.slug || '') === wantSlug ||
-                (wantSlug === '' && (!p.slug || k === 'home'));
-              return (
-                <Link
-                  key={k}
-                  to={href}
-                  style={{
-                    fontFamily: 'var(--sb-font-label)',
-                    fontSize: '0.66rem',
-                    letterSpacing: '0.18em',
-                    textTransform: 'uppercase',
-                    color: active ? 'var(--sb-gold)' : 'var(--sb-sage)',
-                    textDecoration: 'none',
-                    padding: '0.3rem 0.65rem',
-                    borderBottom: active ? '0.5px solid var(--sb-gold)' : '0.5px solid transparent',
-                  }}
-                >
-                  {p.name}
-                </Link>
-              );
-            })}
-          </div>
-        )}
+        {/* Sub-page nav: config.nav.items takes precedence; falls back to auto page list */}
+        {(() => {
+          const configNavItems = config?.nav?.items;
+          if (configNavItems && configNavItems.length > 0) {
+            return (
+              <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                {configNavItems.map((item, i) => {
+                  const active = window.location.pathname === item.href || window.location.pathname + '/' === item.href;
+                  return (
+                    <Link
+                      key={i}
+                      to={item.href}
+                      style={{
+                        fontFamily: 'var(--sb-font-label)',
+                        fontSize: '0.66rem',
+                        letterSpacing: '0.18em',
+                        textTransform: 'uppercase',
+                        color: active ? 'var(--sb-gold)' : 'var(--sb-sage)',
+                        textDecoration: 'none',
+                        padding: '0.3rem 0.65rem',
+                        borderBottom: active ? '0.5px solid var(--sb-gold)' : '0.5px solid transparent',
+                      }}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            );
+          }
+          if (navPages.length <= 1) return null;
+          return (
+            <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+              {navPages.map(([k, p]) => {
+                const href = p.slug ? `/u/${slug}/${p.slug}` : `/u/${slug}`;
+                const active =
+                  (p.slug || '') === wantSlug ||
+                  (wantSlug === '' && (!p.slug || k === 'home'));
+                return (
+                  <Link
+                    key={k}
+                    to={href}
+                    style={{
+                      fontFamily: 'var(--sb-font-label)',
+                      fontSize: '0.66rem',
+                      letterSpacing: '0.18em',
+                      textTransform: 'uppercase',
+                      color: active ? 'var(--sb-gold)' : 'var(--sb-sage)',
+                      textDecoration: 'none',
+                      padding: '0.3rem 0.65rem',
+                      borderBottom: active ? '0.5px solid var(--sb-gold)' : '0.5px solid transparent',
+                    }}
+                  >
+                    {p.name}
+                  </Link>
+                );
+              })}
+            </div>
+          );
+        })()}
       </nav>
 
-      {(currentPage.sections || []).map((sec) => (
-        <RenderSection key={sec.id} section={sec} config={config} mode="public" />
+      {(currentPage.sections || []).filter((sec) => {
+        // On the about page, respect resume.sections visibility toggles.
+        if (currentPageKey !== 'about' && currentPage.slug !== 'about') return true;
+        const rs = config?.resume?.sections;
+        if (!rs) return true;
+        const typeMap = { hero: 'profile', resume: 'experience', domains: 'domains', wheel: 'techStack', techWheel: 'techStack', education: 'education' };
+        const flag = typeMap[sec.type];
+        return flag ? rs[flag] !== false : true;
+      }).map((sec) => (
+        <RenderSection key={sec.id} section={sec} config={config} mode="public" memberSlug={slug} />
       ))}
       <PublicFooter config={config} />
     </div>

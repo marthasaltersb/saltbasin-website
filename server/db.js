@@ -244,6 +244,26 @@ async function bootstrap() {
       ON member_configs (user_id) WHERE kind = 'published';
   `);
 
+  // Multi-email per user. A member's signup email is their primary (stored in
+  // users.email). Additional personal/work emails are stored here. Any verified
+  // row can be used to log in. The signup email is also inserted here as a
+  // verified 'primary' row so the email list UI shows it.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS user_emails (
+      id                  BIGSERIAL PRIMARY KEY,
+      user_id             BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      email               TEXT NOT NULL,
+      type                TEXT NOT NULL DEFAULT 'personal',
+      verified            BOOLEAN NOT NULL DEFAULT false,
+      verification_code   TEXT,
+      code_expires_at     BIGINT,
+      created_at          BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      UNIQUE(email)
+    );
+    CREATE INDEX IF NOT EXISTS idx_user_emails_user ON user_emails (user_id);
+    CREATE INDEX IF NOT EXISTS idx_user_emails_verified ON user_emails (email) WHERE verified = true;
+  `);
+
   // ── Backlog / Requirements Management (admin-only) ──
   //
   // Phase 1: capability_groups + backlog_items.

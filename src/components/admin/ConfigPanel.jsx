@@ -357,6 +357,85 @@ export default function ConfigPanel({ config, onChange, scope = 'admin' }) {
         </div>
         )}
 
+        {/* Top nav — member only. Members define their nav as an ordered list
+            of { label, href } entries. Empty = show all published pages. */}
+        {isMember && (
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Top Navigation</div>
+          <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem', lineHeight: 1.55 }}>
+            Define the links that appear in your profile's top nav bar. Add your page links (e.g. <code>/u/yourslug/about</code>) and any external links. Leave empty to auto-show all your published pages.
+          </div>
+          {(config?.nav?.items || []).map((item, i) => (
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <input
+                className="sb-input"
+                value={item.label || ''}
+                onChange={(e) => {
+                  const next = [...(config?.nav?.items || [])];
+                  next[i] = { ...next[i], label: e.target.value };
+                  patch('nav.items', next);
+                }}
+                placeholder="Label (e.g. About)"
+              />
+              <input
+                className="sb-input"
+                value={item.href || ''}
+                onChange={(e) => {
+                  const next = [...(config?.nav?.items || [])];
+                  next[i] = { ...next[i], href: e.target.value };
+                  patch('nav.items', next);
+                }}
+                placeholder="/u/yourslug/about"
+              />
+              <button
+                onClick={() => {
+                  const next = [...(config?.nav?.items || [])];
+                  next.splice(i, 1);
+                  patch('nav.items', next);
+                }}
+                title="Remove"
+                style={{ width: 28, height: 28, padding: 0, background: 'transparent', border: '0.5px solid rgba(196,132,58,0.25)', borderRadius: 'var(--sb-radius)', color: 'var(--sb-risk-critical)', cursor: 'pointer', fontSize: '0.95rem', lineHeight: 1 }}
+              >×</button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => patch('nav.items', [...(config?.nav?.items || []), { label: '', href: '' }])}
+            className="sb-btn sb-btn-outline"
+            style={{ marginTop: '0.5rem', padding: '0.45rem 0.9rem', fontSize: '0.7rem' }}
+          >+ Add nav link</button>
+        </div>
+        )}
+
+        {/* Resume sections — member only. Controls which blocks show on the
+            About / resume page when someone views the member's profile. */}
+        {isMember && (
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Resume — Section Visibility</div>
+          <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem', lineHeight: 1.55 }}>
+            Choose which sections appear on your About / resume page. Turning a section off hides it from visitors without deleting your content.
+          </div>
+          {[
+            ['profile',    'Profile summary (About hero + intro)'],
+            ['experience', 'Professional experience (roles / timeline)'],
+            ['domains',    'Domains of expertise'],
+            ['techStack',  'Tech stack / skills'],
+            ['education',  'Education'],
+          ].map(([key, label]) => (
+            <Toggle
+              key={key}
+              label={label}
+              checked={config?.resume?.sections?.[key] !== false}
+              onChange={(v) => patch(`resume.sections.${key}`, v)}
+            />
+          ))}
+        </div>
+        )}
+
+        {/* Email management — member only. Signup email always stays; members
+            can add personal/work emails, each verified by a 6-digit code. */}
+        {isMember && <EmailManager />}
+
         {/* BYO Claude — member only. The Config Agent ships next session;
             this slot is here so members can stash a key now and have it
             already wired when the agent goes live. */}
@@ -384,6 +463,147 @@ export default function ConfigPanel({ config, onChange, scope = 'admin' }) {
         </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ── Email Manager (member-only) ──
+// Shows all verified + pending emails for the current member with add / verify / remove actions.
+function EmailManager() {
+  const [emails, setEmails] = React.useState(null);
+  const [adding, setAdding] = React.useState(false);
+  const [newEmail, setNewEmail] = React.useState('');
+  const [newType, setNewType] = React.useState('personal');
+  const [verifyId, setVerifyId] = React.useState(null);
+  const [code, setCode] = React.useState('');
+  const [busy, setBusy] = React.useState(false);
+  const [msg, setMsg] = React.useState('');
+
+  function load() {
+    fetch('/api/members/me/emails', { credentials: 'same-origin' })
+      .then((r) => r.json())
+      .then((d) => setEmails(d.emails || []))
+      .catch(() => setEmails([]));
+  }
+  React.useEffect(load, []);
+
+  async function addEmail() {
+    if (!newEmail) return;
+    setBusy(true); setMsg('');
+    try {
+      const r = await fetch('/api/members/me/emails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: newEmail, type: newType }),
+        credentials: 'same-origin',
+      });
+      const d = await r.json();
+      if (!r.ok) { setMsg(d.error || 'Failed'); return; }
+      setAdding(false); setNewEmail(''); setNewType('personal');
+      setMsg('Verification code sent — check your inbox.');
+      setVerifyId(d.id);
+      load();
+    } finally { setBusy(false); }
+  }
+
+  async function verify(id) {
+    if (!code) return;
+    setBusy(true); setMsg('');
+    try {
+      const r = await fetch(`/api/members/me/emails/${id}/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+        credentials: 'same-origin',
+      });
+      const d = await r.json();
+      if (!r.ok) { setMsg(d.error || 'Failed'); return; }
+      setVerifyId(null); setCode(''); setMsg('Email verified!');
+      load();
+    } finally { setBusy(false); }
+  }
+
+  async function resend(id) {
+    setBusy(true); setMsg('');
+    try {
+      await fetch(`/api/members/me/emails/${id}/resend`, { method: 'POST', credentials: 'same-origin' });
+      setMsg('New code sent — check your inbox.');
+    } finally { setBusy(false); }
+  }
+
+  async function remove(id) {
+    if (!window.confirm('Remove this email address?')) return;
+    setBusy(true);
+    try {
+      await fetch(`/api/members/me/emails/${id}`, { method: 'DELETE', credentials: 'same-origin' });
+      load();
+    } finally { setBusy(false); }
+  }
+
+  const labelStyle = { fontFamily: 'var(--sb-font-label)', fontSize: '0.6rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--sb-dusty)' };
+
+  return (
+    <div style={styles.card}>
+      <div style={styles.cardTitle}>Email Addresses</div>
+      <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem', lineHeight: 1.55 }}>
+        Add personal or work emails. Any verified email can be used to log in. Contact forms submitted on your profile will notify all verified addresses.
+      </div>
+      {emails === null ? (
+        <div style={{ fontSize: '0.78rem', color: 'var(--sb-sage)' }}>Loading…</div>
+      ) : emails.map((e) => (
+        <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.82rem', color: 'var(--sb-cream)', flex: 1 }}>{e.email}</span>
+          <span style={{ ...labelStyle, color: e.verified ? 'var(--sb-sage)' : 'var(--sb-gold)' }}>
+            {e.verified ? e.type : 'pending'}
+          </span>
+          {!e.verified && (
+            <>
+              <button onClick={() => { setVerifyId(e.id); setMsg(''); }} className="sb-btn sb-btn-outline" style={{ padding: '0.25rem 0.6rem', fontSize: '0.65rem' }}>Enter code</button>
+              <button onClick={() => resend(e.id)} disabled={busy} className="sb-btn sb-btn-outline" style={{ padding: '0.25rem 0.6rem', fontSize: '0.65rem' }}>Resend</button>
+            </>
+          )}
+          {e.type !== 'primary' && (
+            <button onClick={() => remove(e.id)} disabled={busy} title="Remove" style={{ width: 24, height: 24, padding: 0, background: 'transparent', border: '0.5px solid rgba(196,132,58,0.25)', borderRadius: 'var(--sb-radius)', color: 'var(--sb-risk-critical)', cursor: 'pointer', fontSize: '0.85rem', lineHeight: 1 }}>×</button>
+          )}
+        </div>
+      ))}
+
+      {verifyId && (
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.5rem' }}>
+          <input
+            className="sb-input"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="6-digit code"
+            style={{ width: 120, fontFamily: 'monospace', letterSpacing: '0.15em' }}
+          />
+          <button onClick={() => verify(verifyId)} disabled={busy} className="sb-btn sb-btn-gold" style={{ padding: '0.35rem 0.8rem', fontSize: '0.7rem' }}>Verify</button>
+          <button onClick={() => { setVerifyId(null); setCode(''); }} className="sb-btn sb-btn-outline" style={{ padding: '0.35rem 0.7rem', fontSize: '0.7rem' }}>Cancel</button>
+        </div>
+      )}
+
+      {adding ? (
+        <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <input className="sb-input" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="new@email.com" />
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {['personal', 'work'].map((t) => (
+              <button key={t} onClick={() => setNewType(t)} className="sb-btn sb-btn-outline" style={{ padding: '0.3rem 0.7rem', fontSize: '0.65rem', background: newType === t ? 'var(--sb-gold)' : 'transparent', color: newType === t ? 'var(--sb-ivory)' : 'var(--sb-sage)' }}>
+                {t}
+              </button>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button onClick={addEmail} disabled={busy} className="sb-btn sb-btn-gold" style={{ padding: '0.35rem 0.8rem', fontSize: '0.7rem' }}>Send verification code</button>
+            <button onClick={() => { setAdding(false); setNewEmail(''); }} className="sb-btn sb-btn-outline" style={{ padding: '0.35rem 0.7rem', fontSize: '0.7rem' }}>Cancel</button>
+          </div>
+        </div>
+      ) : (
+        <button onClick={() => { setAdding(true); setMsg(''); }} className="sb-btn sb-btn-outline" style={{ marginTop: '0.5rem', padding: '0.45rem 0.9rem', fontSize: '0.7rem' }}>
+          + Add email address
+        </button>
+      )}
+
+      {msg && <div style={{ fontSize: '0.78rem', color: 'var(--sb-sage)', marginTop: '0.5rem' }}>{msg}</div>}
     </div>
   );
 }
