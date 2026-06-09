@@ -1450,15 +1450,41 @@ function LeadCaptureForm({ source, ctaLabel, placeholder, thanks, dark, message 
 // References-request block: a focused lead-capture form that asks for
 // requester name + email + company + context. Submits as source='references'
 // so admin can filter, with the lead-flow's password-protected URL.
+// References block — two modes the visitor selects:
+//
+//   "Offer a Reference"   — visitor volunteers to vouch for the member
+//   "Request References"  — visitor asks the member to furnish references to them
+//
+// All heading/intro fields live in section.fields so each member (and Betsy on
+// her own profile) can write their own copy. The memberLabel field controls how
+// the member is referred to in the form card copy.
 function ReferencesRequestBlock({ section, memberSlug = '' }) {
   const f = section.fields || {};
+  const memberLabel = f.memberLabel || 'this operator';
+
+  // Shared contact fields
   const [name, setName] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [company, setCompany] = React.useState('');
-  const [context, setContext] = React.useState('');
+
+  // Mode — 'offer' | 'request'
+  const [mode, setMode] = React.useState('offer');
+
+  // Mode-specific fields
+  const [howKnown, setHowKnown] = React.useState('');       // offer: how do they know the member
+  const [endorsement, setEndorsement] = React.useState(''); // offer: what they'd say
+  const [evalRole, setEvalRole] = React.useState('');       // request: visitor's role in evaluation
+  const [context, setContext] = React.useState('');         // request: what they need references for
+
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState('');
-  const [result, setResult] = React.useState(null);
+  const [done, setDone] = React.useState(false);
+
+  function switchMode(m) {
+    setMode(m);
+    setError('');
+    setDone(false);
+  }
 
   async function submit(e) {
     e.preventDefault();
@@ -1466,12 +1492,26 @@ function ReferencesRequestBlock({ section, memberSlug = '' }) {
     setSubmitting(true);
     setError('');
     try {
-      // On a member profile page, route to the member via referenceRequest source.
+      let source, parts;
+      if (mode === 'offer') {
+        source = memberSlug ? 'referenceOffer' : 'references';
+        parts = [
+          howKnown && `How I know them: ${howKnown}`,
+          company && `My organization: ${company}`,
+          endorsement && `What I'd say: ${endorsement}`,
+        ].filter(Boolean);
+      } else {
+        source = memberSlug ? 'referenceRequest' : 'referencesOutbound';
+        parts = [
+          evalRole && `My role in this evaluation: ${evalRole}`,
+          company && `My organization: ${company}`,
+          context && `What I'm looking for: ${context}`,
+        ].filter(Boolean);
+      }
       const payload = {
-        source: memberSlug ? 'referenceRequest' : 'references',
-        email, name,
-        message: [company && `Company: ${company}`, context].filter(Boolean).join('\n\n'),
-        ctaLocation: ctaLocation('References request'),
+        source, email, name,
+        message: parts.join('\n\n'),
+        ctaLocation: ctaLocation('References'),
       };
       if (memberSlug) payload.memberSlug = memberSlug;
       const res = await fetch('/api/leads', {
@@ -1481,7 +1521,7 @@ function ReferencesRequestBlock({ section, memberSlug = '' }) {
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || 'Request failed');
-      setResult(body);
+      setDone(true);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -1489,23 +1529,47 @@ function ReferencesRequestBlock({ section, memberSlug = '' }) {
     }
   }
 
+  const tabStyle = (active) => ({
+    flex: 1,
+    padding: '0.55rem 0.5rem',
+    fontSize: '0.72rem',
+    fontFamily: 'var(--sb-font-label)',
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase',
+    background: active ? 'var(--sb-navy)' : 'transparent',
+    color: active ? 'var(--sb-cream)' : 'var(--sb-navy)',
+    border: '0.5px solid var(--sb-navy)',
+    borderRadius: active ? 'calc(var(--sb-radius) - 2px)' : 0,
+    cursor: 'pointer',
+  });
+
   return (
     <section
-      id={section.id || 'references-request'}
+      id={section.id || 'references'}
       style={{ background: BG_VAR[section.bg] || 'var(--sb-cream)', padding: '5rem 2rem' }}
     >
-      <div id="references-request" />
       <div className="sb-grid-2col-pitch" style={{ maxWidth: 1100, margin: '0 auto' }}>
         <div>
           {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
           <h2 className="sb-display" style={{ fontSize: '2.4rem', color: 'var(--sb-navy)', marginBottom: '0.75rem' }}>
-            {f.heading || 'Request to contact my references'}
+            {f.heading || 'References'}
           </h2>
           <div className="sb-gold-rule" style={{ marginBottom: '1.5rem' }} />
           <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: '#4a4a4a', marginBottom: '1.25rem' }}>
-            {f.intro || "References include former partners and clients from Slalom, PwC, Vista Equity, and Accenture. I protect their time — references are released after a brief context check. Tell me who you are, who you'd like to hear from (or what kind of perspective), and I'll route accordingly."}
+            {f.intro || `Two ways to engage with ${memberLabel}'s reference network: offer your own endorsement, or ask ${memberLabel} to provide references for you.`}
           </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ padding: '1rem 1.25rem', background: 'rgba(196,132,58,0.07)', borderLeft: '3px solid var(--sb-gold)', borderRadius: 'var(--sb-radius)', fontSize: '0.88rem', lineHeight: 1.7, color: '#4a4a4a' }}>
+              <strong style={{ display: 'block', marginBottom: '0.25rem', color: 'var(--sb-navy)' }}>Offer a Reference</strong>
+              {f.offerNote || `If you've worked with ${memberLabel} and would vouch for their work, submit your contact and what you'd say. ${memberLabel} may share your info with prospective clients or partners.`}
+            </div>
+            <div style={{ padding: '1rem 1.25rem', background: 'rgba(196,132,58,0.07)', borderLeft: '3px solid var(--sb-gold)', borderRadius: 'var(--sb-radius)', fontSize: '0.88rem', lineHeight: 1.7, color: '#4a4a4a' }}>
+              <strong style={{ display: 'block', marginBottom: '0.25rem', color: 'var(--sb-navy)' }}>Request References</strong>
+              {f.requestNote || `If you're evaluating ${memberLabel} for a project or engagement and want to speak with their references, submit context about who you are and what you're looking for. ${memberLabel} will follow up with relevant contacts.`}
+            </div>
+          </div>
         </div>
+
         <div
           style={{
             background: 'white',
@@ -1515,40 +1579,70 @@ function ReferencesRequestBlock({ section, memberSlug = '' }) {
             padding: '1.75rem',
           }}
         >
-          <div className="sb-eyebrow" style={{ marginBottom: '0.75rem' }}>Reference request</div>
-          <InlineDataNotice dark={false} compact style={{ marginBottom: '1rem' }} />
-          <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <input
-              className="sb-input sb-input-light"
-              type="text" required
-              value={name} onChange={(e) => setName(e.target.value)}
-              placeholder="Your name"
-            />
-            <input
-              className="sb-input sb-input-light"
-              type="email" required
-              value={email} onChange={(e) => setEmail(e.target.value)}
-              placeholder="Your email"
-            />
-            <input
-              className="sb-input sb-input-light"
-              type="text"
-              value={company} onChange={(e) => setCompany(e.target.value)}
-              placeholder="Your company (optional)"
-            />
-            <textarea
-              className="sb-input sb-input-light sb-textarea"
-              value={context} onChange={(e) => setContext(e.target.value)}
-              placeholder="What kind of reference are you looking for? (role, perspective, specific engagement…)"
-            />
-            <button type="submit" className="sb-btn sb-btn-gold" disabled={submitting} style={{ justifyContent: 'center' }}>
-              {submitting ? 'Submitting…' : 'Submit request'}
-            </button>
-            {error && <div style={{ color: 'var(--sb-risk-critical)', fontSize: '0.85rem' }}>{error}</div>}
-          </form>
+          {done ? (
+            <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+              <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>✓</div>
+              <div className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>
+                {mode === 'offer' ? 'Reference submitted' : 'Request received'}
+              </div>
+              <p style={{ fontSize: '0.9rem', lineHeight: 1.7, color: '#4a4a4a' }}>
+                {mode === 'offer'
+                  ? (f.offerSuccess || `Thank you — your reference has been sent to ${memberLabel}.`)
+                  : (f.requestSuccess || `Your request has been sent to ${memberLabel}. You'll hear back directly with relevant references.`)}
+              </p>
+              <button onClick={() => switchMode(mode)} style={{ marginTop: '1.5rem', background: 'none', border: 'none', color: 'var(--sb-gold)', cursor: 'pointer', fontSize: '0.8rem', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                Submit another
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* Mode tabs */}
+              <div style={{ display: 'flex', gap: 2, background: 'rgba(27,42,59,0.06)', borderRadius: 'var(--sb-radius)', padding: 3, marginBottom: '1.25rem' }}>
+                <button style={tabStyle(mode === 'offer')} onClick={() => switchMode('offer')}>Offer a Reference</button>
+                <button style={tabStyle(mode === 'request')} onClick={() => switchMode('request')}>Request References</button>
+              </div>
+
+              {mode === 'offer' ? (
+                <>
+                  <p style={{ fontSize: '0.78rem', color: '#4a4a4a', marginBottom: '1rem', lineHeight: 1.6 }}>
+                    Offer yourself as a reference for {memberLabel}. Your contact and endorsement go directly to {memberLabel} — not shared publicly without their vetting.
+                  </p>
+                  <InlineDataNotice dark={false} compact style={{ marginBottom: '1rem' }} />
+                  <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <input className="sb-input sb-input-light" type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" />
+                    <input className="sb-input sb-input-light" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Your email" />
+                    <input className="sb-input sb-input-light" type="text" value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Your organization (optional)" />
+                    <input className="sb-input sb-input-light" type="text" value={howKnown} onChange={(e) => setHowKnown(e.target.value)} placeholder="How you know them (engagement, context, time period)" />
+                    <textarea className="sb-input sb-input-light sb-textarea" value={endorsement} onChange={(e) => setEndorsement(e.target.value)} placeholder="What you'd say about their work" />
+                    <button type="submit" className="sb-btn sb-btn-gold" disabled={submitting} style={{ justifyContent: 'center' }}>
+                      {submitting ? 'Submitting…' : 'Submit as reference'}
+                    </button>
+                    {error && <div style={{ color: 'var(--sb-risk-critical)', fontSize: '0.85rem' }}>{error}</div>}
+                  </form>
+                </>
+              ) : (
+                <>
+                  <p style={{ fontSize: '0.78rem', color: '#4a4a4a', marginBottom: '1rem', lineHeight: 1.6 }}>
+                    Ask {memberLabel} to provide references for you. Include context so the right contacts can be matched to your evaluation.
+                  </p>
+                  <InlineDataNotice dark={false} compact style={{ marginBottom: '1rem' }} />
+                  <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <input className="sb-input sb-input-light" type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" />
+                    <input className="sb-input sb-input-light" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Your email" />
+                    <input className="sb-input sb-input-light" type="text" value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Your organization (optional)" />
+                    <input className="sb-input sb-input-light" type="text" value={evalRole} onChange={(e) => setEvalRole(e.target.value)} placeholder="Your role in this evaluation (e.g. prospective client, recruiter, investor)" />
+                    <textarea className="sb-input sb-input-light sb-textarea" value={context} onChange={(e) => setContext(e.target.value)} placeholder="What you're evaluating and what kind of reference perspective would help most" />
+                    <button type="submit" className="sb-btn sb-btn-gold" disabled={submitting} style={{ justifyContent: 'center' }}>
+                      {submitting ? 'Sending…' : 'Send reference request'}
+                    </button>
+                    {error && <div style={{ color: 'var(--sb-risk-critical)', fontSize: '0.85rem' }}>{error}</div>}
+                  </form>
+                </>
+              )}
+            </>
+          )}
         </div>
       </div>
-      {result && <LeadSuccessModal result={result} onDismiss={() => setResult(null)} />}
     </section>
   );
 }

@@ -12,6 +12,7 @@ import {
 import { defaultMemberProfile } from '../data/defaultMemberProfile.js';
 import { verifyRecaptcha } from '../lib/recaptcha.js';
 import { sendVerificationEmail } from '../lib/email.js';
+import { audit } from '../lib/audit.js';
 
 const router = Router();
 
@@ -210,6 +211,113 @@ router.get('/', requireAdmin, async (req, res) => {
       created_at: Number(r.created_at),
       updated_at: r.updated_at ? Number(r.updated_at) : null,
     })),
+  });
+});
+
+// ── Audit log — member's own activity ──
+router.get('/me/audit', requireUser, async (req, res) => {
+  const limit = Math.min(Number(req.query.limit) || 50, 200);
+  const offset = Number(req.query.offset) || 0;
+  const rows = await db.prepare(`
+    SELECT id, action, entity_type, entity_id, summary, ip, created_at
+    FROM audit_log
+    WHERE actor_id = $1
+    ORDER BY created_at DESC
+    LIMIT $2 OFFSET $3
+  `).all(req.user.id, limit, offset);
+  res.json({ entries: rows.map((r) => ({ ...r, id: Number(r.id), created_at: Number(r.created_at) })) });
+});
+
+// ── Stats — member's own page views ──
+router.get('/me/stats', requireUser, async (req, res) => {
+  const mp = await db.prepare('SELECT slug FROM member_profiles WHERE user_id = $1').get(req.user.id);
+  if (!mp) return res.json({ slug: null, totals: {}, daily: [] });
+  const slug = mp.slug;
+
+  const [totalsRow, daily, topPages] = await Promise.all([
+    db.prepare(`
+      SELECT COUNT(*) AS total_views,
+             COUNT(DISTINCT ip_hash) AS unique_visitors
+      FROM page_events WHERE member_slug = $1
+    `).get(slug),
+
+    db.prepare(`
+      SELECT DATE_TRUNC('day', TO_TIMESTAMP(created_at / 1000)) AS day,
+             COUNT(*) AS views,
+             COUNT(DISTINCT ip_hash) AS uniques
+      FROM page_events WHERE member_slug = $1
+      GROUP BY 1 ORDER BY 1 DESC LIMIT 30
+    `).all(slug),
+
+    db.prepare(`
+      SELECT COALESCE(page_slug, '/') AS page, COUNT(*) AS views
+      FROM page_events WHERE member_slug = $1
+      GROUP BY 1 ORDER BY 2 DESC LIMIT 10
+    `).all(slug),
+  ]);
+
+  res.json({
+    slug,
+    totals: {
+      views: Number(totalsRow?.total_views || 0),
+      uniques: Number(totalsRow?.unique_visitors || 0),
+    },
+    daily: daily.map((r) => ({ day: r.day, views: Number(r.views), uniques: Number(r.uniques) })),
+    topPages: topPages.map((r) => ({ page: r.page, views: Number(r.views) })),
+  });
+});
+
+// ── Admin: platform-wide audit log ──
+router.get('/admin/audit', requireAdmin, async (req, res) => {
+  const limit = Math.min(Number(req.query.limit) || 100, 500);
+  const offset = Number(req.query.offset) || 0;
+  const actorId = req.query.actor_id ? Number(req.query.actor_id) : null;
+  const action = req.query.action || null;
+
+  let where = 'WHERE 1=1';
+  const params = [];
+  let idx = 1;
+  if (actorId) { where += ` AND actor_id = $${idx++}`; params.push(actorId); }
+  if (action)  { where += ` AND action LIKE $${idx++}`; params.push(action + '%'); }
+  params.push(limit, offset);
+
+  const rows = await db.prepare(`
+    SELECT id, actor_id, actor_email, actor_role, action, entity_type, entity_id, summary, ip, created_at
+    FROM audit_log ${where}
+    ORDER BY created_at DESC
+    LIMIT $${idx++} OFFSET $${idx++}
+  `).all(...params);
+
+  res.json({ entries: rows.map((r) => ({ ...r, id: Number(r.id), actor_id: r.actor_id ? Number(r.actor_id) : null, created_at: Number(r.created_at) })) });
+});
+
+// ── Admin: platform-wide stats ──
+router.get('/admin/stats', requireAdmin, async (req, res) => {
+  const [platform, memberBreakdown, recentLogins] = await Promise.all([
+    db.prepare(`
+      SELECT COUNT(*) AS total_views, COUNT(DISTINCT ip_hash) AS unique_visitors
+      FROM page_events
+    `).get(),
+
+    db.prepare(`
+      SELECT member_slug, COUNT(*) AS views, COUNT(DISTINCT ip_hash) AS uniques
+      FROM page_events WHERE member_slug IS NOT NULL
+      GROUP BY member_slug ORDER BY views DESC LIMIT 20
+    `).all(),
+
+    db.prepare(`
+      SELECT actor_email, created_at FROM audit_log
+      WHERE action = 'auth.login' ORDER BY created_at DESC LIMIT 20
+    `).all(),
+  ]);
+
+  res.json({
+    platform: {
+      views: Number(platform?.total_views || 0),
+      uniques: Number(platform?.unique_visitors || 0),
+    },
+    memberBreakdown: memberBreakdown.map((r) => ({ slug: r.member_slug, views: Number(r.views), uniques: Number(r.uniques) })),
+    recentLogins: recentLogins.map((r) => ({ email: r.actor_email, at: Number(r.created_at) })),
   });
 });
 

@@ -264,6 +264,47 @@ async function bootstrap() {
     CREATE INDEX IF NOT EXISTS idx_user_emails_verified ON user_emails (email) WHERE verified = true;
   `);
 
+  // ── Audit log — every write action across the platform. ──
+  // actor_id nullable to allow pre-auth events (failed logins). entity_id is
+  // a stringified PK so it works for every table. summary is human-readable;
+  // diff stores before/after JSON for config/site saves.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS audit_log (
+      id            BIGSERIAL PRIMARY KEY,
+      actor_id      BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      actor_email   TEXT,
+      actor_role    TEXT,
+      action        TEXT NOT NULL,
+      entity_type   TEXT,
+      entity_id     TEXT,
+      summary       TEXT,
+      diff          TEXT,
+      ip            TEXT,
+      user_agent    TEXT,
+      created_at    BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_audit_actor    ON audit_log (actor_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_audit_entity   ON audit_log (entity_type, entity_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_audit_created  ON audit_log (created_at DESC);
+  `);
+
+  // ── Page events — visitor analytics for member profile pages + platform. ──
+  // Logged server-side on every GET /api/member-site/by-slug/:slug. No PII
+  // beyond IP (hashed). member_slug=null for platform pages.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS page_events (
+      id            BIGSERIAL PRIMARY KEY,
+      member_slug   TEXT,
+      page_slug     TEXT,
+      referrer      TEXT,
+      user_agent    TEXT,
+      ip_hash       TEXT,
+      created_at    BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_page_events_member  ON page_events (member_slug, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_page_events_created ON page_events (created_at DESC);
+  `);
+
   // ── Backlog / Requirements Management (admin-only) ──
   //
   // Phase 1: capability_groups + backlog_items.
@@ -447,6 +488,136 @@ async function bootstrap() {
     -- backlog_items.jira_issue_key for round-trip identification.
     ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS jira_issue_key TEXT;
     CREATE INDEX IF NOT EXISTS idx_backlog_jira_key ON backlog_items (jira_issue_key) WHERE jira_issue_key IS NOT NULL;
+
+    -- ── Personal profiles (1:1 with users, auto-created at signup) ─────────
+    CREATE TABLE IF NOT EXISTS personal_profiles (
+      id           BIGSERIAL PRIMARY KEY,
+      user_id      BIGINT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+      display_name TEXT,
+      bio          TEXT,
+      avatar_url   TEXT,
+      location     TEXT,
+      pronouns     TEXT,
+      metadata     JSONB NOT NULL DEFAULT '{}',
+      created_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_personal_profiles_user ON personal_profiles (user_id);
+
+    -- ── Organization profiles ────────────────────────────────────────────────
+    -- An org can be anything from a solo LLC to a large enterprise.
+    -- org_type drives which integration categories are surfaced in the UI.
+    CREATE TABLE IF NOT EXISTS organization_profiles (
+      id           BIGSERIAL PRIMARY KEY,
+      slug         TEXT NOT NULL UNIQUE,
+      name         TEXT NOT NULL,
+      org_type     TEXT NOT NULL DEFAULT 'llc',
+        -- sole_proprietor | llc | corporation | partnership | nonprofit
+        -- | freelance_platform | client_org
+      description  TEXT,
+      logo_url     TEXT,
+      website      TEXT,
+      industry     TEXT,
+      metadata     JSONB NOT NULL DEFAULT '{}',
+      created_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_org_profiles_slug ON organization_profiles (slug);
+
+    -- ── Org memberships (user ↔ org, with role) ──────────────────────────────
+    CREATE TABLE IF NOT EXISTS org_memberships (
+      id         BIGSERIAL PRIMARY KEY,
+      user_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      org_id     BIGINT NOT NULL REFERENCES organization_profiles(id) ON DELETE CASCADE,
+      role       TEXT NOT NULL DEFAULT 'member',
+        -- owner | admin | member | viewer
+      invited_by BIGINT REFERENCES users(id),
+      joined_at  BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      UNIQUE (user_id, org_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_org_memberships_user ON org_memberships (user_id);
+    CREATE INDEX IF NOT EXISTS idx_org_memberships_org  ON org_memberships (org_id);
+
+    -- ── Personal → org links (self-employed connecting their own LLC, etc.) ──
+    CREATE TABLE IF NOT EXISTS personal_org_links (
+      personal_profile_id BIGINT NOT NULL REFERENCES personal_profiles(id) ON DELETE CASCADE,
+      org_id              BIGINT NOT NULL REFERENCES organization_profiles(id) ON DELETE CASCADE,
+      linked_at           BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      PRIMARY KEY (personal_profile_id, org_id)
+    );
+
+    -- ── Product licenses ─────────────────────────────────────────────────────
+    -- A license grants a user access to a Salt Basin product (finbridgeco,
+    -- handoveros, etc.) scoped to a specific org profile.
+    CREATE TABLE IF NOT EXISTS product_licenses (
+      id           BIGSERIAL PRIMARY KEY,
+      user_id      BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      org_id       BIGINT REFERENCES organization_profiles(id) ON DELETE CASCADE,
+      product_id   TEXT NOT NULL,  -- 'finbridgeco' | 'handoveros' | 'saltbasin_pro'
+      tier         TEXT NOT NULL DEFAULT 'standard',  -- standard | professional | enterprise
+      granted_by   BIGINT REFERENCES users(id),       -- null = self-service
+      granted_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      expires_at   BIGINT,         -- null = perpetual
+      is_active    BOOLEAN NOT NULL DEFAULT TRUE
+    );
+    CREATE INDEX IF NOT EXISTS idx_licenses_user    ON product_licenses (user_id);
+    CREATE INDEX IF NOT EXISTS idx_licenses_org     ON product_licenses (org_id);
+    CREATE INDEX IF NOT EXISTS idx_licenses_product ON product_licenses (product_id);
+
+    -- ── Data entitlements (what a licensed user can access within an org) ───
+    CREATE TABLE IF NOT EXISTS data_entitlements (
+      id         BIGSERIAL PRIMARY KEY,
+      license_id BIGINT NOT NULL REFERENCES product_licenses(id) ON DELETE CASCADE,
+      scope      JSONB NOT NULL DEFAULT '{}',
+        -- { capabilities: ['arr','nrr',...], providers: ['salesforce','snowflake'],
+        --   maxRows: 10000, allowExport: false }
+      created_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+
+    -- ── OAuth connections (scoped to personal profile or org) ───────────────
+    -- profile_scope: 'personal' | 'org'
+    -- profile_id: personal_profiles.id OR organization_profiles.id
+    CREATE TABLE IF NOT EXISTS oauth_connections (
+      id                BIGSERIAL PRIMARY KEY,
+      user_id           BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      profile_scope     TEXT NOT NULL DEFAULT 'personal',
+      profile_id        BIGINT NOT NULL,
+      provider          TEXT NOT NULL,
+      external_id       TEXT,
+      label             TEXT,
+      access_token_enc  TEXT NOT NULL,
+      refresh_token_enc TEXT,
+      token_expires_at  BIGINT,
+      scopes            TEXT,
+      metadata          JSONB NOT NULL DEFAULT '{}',
+      allow_write       BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at        BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at        BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      UNIQUE (profile_scope, profile_id, provider)
+    );
+    CREATE INDEX IF NOT EXISTS idx_oauth_user         ON oauth_connections (user_id);
+    CREATE INDEX IF NOT EXISTS idx_oauth_profile      ON oauth_connections (profile_scope, profile_id);
+    CREATE INDEX IF NOT EXISTS idx_oauth_provider     ON oauth_connections (provider);
+
+    -- Keep old table for backward compat during migration — new code writes oauth_connections.
+    CREATE TABLE IF NOT EXISTS member_oauth_connections (
+      id               BIGSERIAL PRIMARY KEY,
+      user_id          BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      provider         TEXT NOT NULL,
+      external_id      TEXT,
+      label            TEXT,
+      access_token_enc TEXT NOT NULL,
+      refresh_token_enc TEXT,
+      token_expires_at BIGINT,
+      scopes           TEXT,
+      metadata         JSONB NOT NULL DEFAULT '{}',
+      allow_write      BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at       BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at       BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      UNIQUE (user_id, provider)
+    );
+    CREATE INDEX IF NOT EXISTS idx_legacy_oauth_user     ON member_oauth_connections (user_id);
+    CREATE INDEX IF NOT EXISTS idx_legacy_oauth_provider ON member_oauth_connections (provider);
   `);
 
   // ── QA: test scenarios, scripts, runs, per-step results ──

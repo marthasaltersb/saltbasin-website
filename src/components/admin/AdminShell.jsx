@@ -7,6 +7,8 @@ import Sidebar from './Sidebar.jsx';
 import EditorPane from './EditorPane.jsx';
 import PreviewPane from './PreviewPane.jsx';
 import ConfigPanel from './ConfigPanel.jsx';
+import { MemberStatsPanel, MemberAuditPanel, MemberAgentPanel } from './MemberPanels.jsx';
+import ProfileHub from './ProfileHub.jsx';
 import LeadsPanel from './LeadsPanel.jsx';
 import NetWorksPanel from './NetWorksPanel.jsx';
 import BacklogPanel from './BacklogPanel.jsx';
@@ -443,8 +445,12 @@ export default function AdminShell({ scope = 'admin' }) {
           {isMember ? (
             <TabToggle
               items={[
-                { val: 'content', label: 'My Profile' },
-                { val: 'config', label: 'Config' },
+                { val: 'content',  label: 'My Profile' },
+                { val: 'config',   label: 'Config' },
+                { val: 'profiles', label: 'Profiles' },
+                { val: 'stats',    label: 'Stats' },
+                { val: 'audit',    label: 'Activity' },
+                { val: 'agent',    label: 'Agent' },
               ]}
               active={tab}
               onChange={setTab}
@@ -629,6 +635,11 @@ export default function AdminShell({ scope = 'admin' }) {
           </>
             );
           }
+          if (componentId === 'stats')    return <MemberStatsPanel isAdmin={!isMember} />;
+          if (componentId === 'audit')    return <MemberAuditPanel isAdmin={!isMember} />;
+          if (componentId === 'agent')    return <MemberAgentPanel />;
+          if (componentId === 'profiles') return <ProfileHub isAdmin={!isMember} />;
+
           // Inline 'config' case: the panel needs draft + setter + scope from
           // the shell. Treated as the default fallback when nothing else matched.
           return (
@@ -647,7 +658,7 @@ export default function AdminShell({ scope = 'admin' }) {
         const v = adminNav.views.find((x) => x.id === activeViewId);
         const t = v?.tabs.find((x) => x.id === tab);
         return t?.componentId || tab;
-      })()] && (
+      })()] && !['stats', 'audit', 'agent', 'profiles'].includes(tab) && (
         <PublishBar
           dirty={dirty}
           siteDirty={siteDirty}
@@ -886,17 +897,32 @@ function SectionModal({ value, onChange, onSubmit, onCancel }) {
         <div style={styles.fieldGroup}>
           <label style={styles.fieldLabel}>Type</label>
           <select className="sb-input" value={value.type} onChange={(e) => onChange({ ...value, type: e.target.value })}>
-            <option value="text">Text</option>
-            <option value="hero">Hero</option>
-            <option value="cards">Cards</option>
-            <option value="cta">Call to Action</option>
-            <option value="twoCol">Two Column</option>
-            <option value="scripture">Scripture Band</option>
-            <option value="socialGrid">Social Grid</option>
-            <option value="contact">Contact</option>
-            <option value="netWorksBanner">Net Works Banner (member cards)</option>
-            <option value="domains">Domains of Expertise</option>
-            <option value="resume">Resume / Experience</option>
+            <optgroup label="Content">
+              <option value="text">Text</option>
+              <option value="twoCol">Two Column</option>
+              <option value="hero">Hero</option>
+              <option value="cards">Cards</option>
+              <option value="cta">Call to Action</option>
+            </optgroup>
+            <optgroup label="Profile / Portfolio">
+              <option value="resume">Resume / Experience</option>
+              <option value="domains">Domains of Expertise</option>
+              <option value="caseStudies">Case Studies</option>
+              <option value="referencesRequest">References</option>
+            </optgroup>
+            <optgroup label="Visuals">
+              <option value="statGrid">Stat Grid</option>
+              <option value="process">Process / Steps</option>
+              <option value="columns">Columns</option>
+              <option value="iconGrid">Icon Grid</option>
+            </optgroup>
+            <optgroup label="Site">
+              <option value="contact">Contact Form</option>
+              <option value="socialGrid">Social Grid</option>
+              <option value="scripture">Scripture Band</option>
+              <option value="netWorksBanner">Net Works Banner (member cards)</option>
+              <option value="joinNetwork">Join the Network CTA</option>
+            </optgroup>
           </select>
         </div>
         <div style={styles.fieldGroup}>

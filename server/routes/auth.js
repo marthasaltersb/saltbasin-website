@@ -17,6 +17,7 @@ import {
 import { db, getJSON } from '../db.js';
 import { dispatchRaw } from '../lib/email.js';
 import { verifyRecaptcha } from '../lib/recaptcha.js';
+import { audit } from '../lib/audit.js';
 
 const router = Router();
 
@@ -24,16 +25,22 @@ router.post('/login', async (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) return res.status(400).json({ error: 'email and password required' });
   const user = await login(email, password);
-  if (!user) return res.status(401).json({ error: 'invalid credentials' });
+  if (!user) {
+    await audit({ req, actor: null, action: 'auth.login.failed', entityType: 'user', summary: `Failed login attempt for ${email}` });
+    return res.status(401).json({ error: 'invalid credentials' });
+  }
   const { token } = await createSession(user.id);
   setAdminCookie(res, token);
+  await audit({ req, actor: { id: user.id, role: user.role, email }, action: 'auth.login', entityType: 'user', entityId: user.id, summary: `${email} logged in` });
   res.json({ ok: true, user: { id: user.id, role: user.role, email } });
 });
 
 router.post('/logout', async (req, res) => {
   const token = req.cookies?.[ADMIN_COOKIE];
+  const user = await getUserFromCookie(req);
   await destroySession(token);
   clearAdminCookie(res);
+  if (user) await audit({ req, actor: user, action: 'auth.logout', entityType: 'user', entityId: user.id, summary: `${user.email} logged out` });
   res.json({ ok: true });
 });
 

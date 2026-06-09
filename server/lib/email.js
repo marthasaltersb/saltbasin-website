@@ -268,8 +268,10 @@ function friendlySource(s) {
     forCompanies: 'For Companies',
     assessments: 'Assessments notification',
     contact: 'Contact form',
+    referenceOffer: 'Reference offer (member profile)',
     referenceRequest: 'Reference request (member profile)',
-    references: 'References request',
+    references: 'Reference offer (Betsy profile)',
+    referencesOutbound: 'Reference request (Betsy profile)',
   };
   return map[s] || s;
 }

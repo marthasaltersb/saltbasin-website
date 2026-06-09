@@ -19,6 +19,10 @@ import qaRouter from './routes/qa.js';
 import jiraRouter from './routes/jira.js';
 import memberTemplatesRouter from './routes/memberTemplates.js';
 import agentRouter from './routes/agent.js';
+import memberAgentRouter from './routes/memberAgent.js';
+import eventsRouter from './routes/events.js';
+import oauthRouter from './routes/oauth.js';
+import profilesRouter from './routes/profiles.js';
 import uploadsRouter, { uploadsDir } from './routes/uploads.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -61,6 +65,10 @@ app.use('/api/qa', qaRouter);
 app.use('/api/jira', jiraRouter);
 app.use('/api/member-templates', memberTemplatesRouter);
 app.use('/api/agent', agentRouter);
+app.use('/api/members/me/agent', memberAgentRouter);
+app.use('/api/events', eventsRouter);
+app.use('/api/oauth', oauthRouter);
+app.use('/api/profiles', profilesRouter);
 app.use('/api/uploads', uploadsRouter);
 
 // Uploaded files now live on Supabase Storage at <SUPABASE_URL>/storage/v1/object/public/uploads/<file>.

@@ -19,6 +19,8 @@ import { Router } from 'express';
 import { db } from '../db.js';
 import { requireUser } from '../auth.js';
 import { defaultMemberSite } from '../data/defaultMemberSite.js';
+import { audit } from '../lib/audit.js';
+import { form, react } from '../lib/molecule.js';
 
 const router = Router();
 
@@ -59,17 +61,74 @@ router.get('/draft', requireUser, async (req, res) => {
 
 router.put('/draft', requireUser, async (req, res) => {
   const incoming = req.body;
-  if (!incoming || typeof incoming !== 'object' || !incoming.pages) {
-    return res.status(400).json({ error: 'expected { pages, ... }' });
+
+  const result = await form({
+    security:   async () => {
+      if (!req.user?.id) throw new Error('no authenticated user');
+    },
+    variables:  async () => {
+      if (!incoming || typeof incoming !== 'object' || !incoming.pages) {
+        throw new Error('expected { pages, ... }');
+      }
+    },
+    compliance: async () => {
+      await audit({
+        req,
+        actor:      req.user,
+        action:     'site.draft.save',
+        entityType: 'member_site',
+        entityId:   req.user.id,
+        summary:    'Member site draft saved',
+      });
+    },
+    commit: async () => {
+      await writeState(req.user.id, 'draft', incoming);
+      return { updatedAt: Date.now() };
+    },
+  });
+
+  if (!result.ok) {
+    const status = result.bonds?.security ? 403 : 400;
+    return res.status(status).json({ error: result.bonds });
   }
-  await writeState(req.user.id, 'draft', incoming);
-  res.json({ ok: true, updatedAt: Date.now() });
+  res.json({ ok: true, updatedAt: result.result.updatedAt });
 });
 
 router.post('/publish', requireUser, async (req, res) => {
   const draft = await readState(req.user.id, 'draft');
-  if (!draft) return res.status(404).json({ error: 'no draft to publish' });
-  await writeState(req.user.id, 'published', draft);
+
+  const result = await react({
+    inputs: { draft, actor: req.user },
+    conditions: async () => {
+      if (!draft) throw new Error('no draft to publish');
+      if (!draft.pages?.length) throw new Error('draft has no pages — cannot publish');
+    },
+    produce: async () => {
+      await form({
+        security:   async () => {
+          if (!req.user?.id) throw new Error('no authenticated user');
+        },
+        compliance: async () => {
+          await audit({
+            req,
+            actor:      req.user,
+            action:     'site.publish',
+            entityType: 'member_site',
+            entityId:   req.user.id,
+            summary:    'Member site published',
+          });
+        },
+        variables:  async () => {},
+        commit:     async () => writeState(req.user.id, 'published', draft),
+      });
+      return { published: true };
+    },
+  });
+
+  if (!result.ok) {
+    const status = result.reason?.includes('no draft') ? 404 : 400;
+    return res.status(status).json({ error: result.reason });
+  }
   res.json({ ok: true });
 });
 

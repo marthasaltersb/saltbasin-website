@@ -2,6 +2,7 @@ import React from 'react';
 import { styles } from './adminStyles.js';
 import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
+import { RenderSection } from '../blocks/index.jsx';
 
 export default function ConfigPanel({ config, onChange, scope = 'admin', site = null }) {
   const isMember = scope === 'member';
@@ -362,20 +363,22 @@ export default function ConfigPanel({ config, onChange, scope = 'admin', site = 
             resume outputs (Executive, Technical, etc.). */}
         {isMember && <ResumePresetsCard config={config} patch={patch} site={site} />}
 
+        {/* Resume generator — member only. Pick a preset or build a custom
+            section list, then render + print to PDF without leaving the admin. */}
+        {isMember && <ResumeGeneratorCard config={config} site={site} />}
+
         {/* Email management — member only. Signup email always stays; members
             can add personal/work emails, each verified by a 6-digit code. */}
         {isMember && <EmailManager />}
 
-        {/* BYO Claude — member only. The Config Agent ships next session;
-            this slot is here so members can stash a key now and have it
-            already wired when the agent goes live. */}
+        {/* BYO Claude — member only. Powers the profile agent chat. */}
         {isMember && (
         <div style={styles.card}>
-          <div style={styles.cardTitle}>Config Agent · Bring Your Own Claude</div>
+          <div style={styles.cardTitle}>Profile Agent · Bring Your Own Claude</div>
           <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem', lineHeight: 1.55 }}>
-            Paste an Anthropic API key to power your in-admin editor agent (rolling out next).
-            Get one at <a href="https://console.anthropic.com" target="_blank" rel="noreferrer" style={{ color: 'var(--sb-gold)' }}>console.anthropic.com</a>.
-            Stored server-side and never shown back to the client.
+            Paste an Anthropic API key to power the AI agent in your admin. The agent can read and update your site draft and config via chat. Get a key at{' '}
+            <a href="https://console.anthropic.com" target="_blank" rel="noreferrer" style={{ color: 'var(--sb-gold)' }}>console.anthropic.com</a>.
+            Stored server-side, never shown back to the client.
           </div>
           <Field
             label="Anthropic API key"
@@ -385,13 +388,20 @@ export default function ConfigPanel({ config, onChange, scope = 'admin', site = 
             type="password"
           />
           <Field
-            label="Model"
+            label="Model (default: claude-sonnet-4-5)"
             value={config?.integrations?.anthropicModel}
             onChange={(v) => patch('integrations.anthropicModel', v)}
             placeholder="claude-sonnet-4-5"
           />
         </div>
         )}
+
+        {/* Multi-source database connector — member only. Each connection is
+            named and independently access-controlled. The profile agent gets a
+            query_member_db tool scoped to whichever sources are configured.
+            Salt Basin's DB is never exposed or modified. */}
+        {isMember && <MemberDbsCard config={config} patch={patch} />}
+        {isMember && <ConnectedAppsCard />}
       </div>
     </div>
   );
@@ -517,6 +527,284 @@ function ResumePresetsCard({ config, patch, site }) {
             ))
           )}
         </div>
+      )}
+    </div>
+  );
+}
+
+// ── Resume Generator (member-only) ──
+// Pick a saved preset or build an ad-hoc section list, then render a
+// full-screen print-ready view. window.print() → "Save as PDF" in browser.
+function ResumeGeneratorCard({ config, site }) {
+  const presets = config?.resumePresets || [];
+  const [mode, setMode] = React.useState('preset');
+  const [activePresetId, setActivePresetId] = React.useState(
+    () => presets.find((p) => p.isDefault)?.id || presets[0]?.id || null
+  );
+  const [adhocIds, setAdhocIds] = React.useState(new Set());
+  const [generating, setGenerating] = React.useState(false);
+
+  const allSections = React.useMemo(() => {
+    if (!site?.pages) return [];
+    return Object.entries(site.pages)
+      .sort((a, b) => (a[1].order ?? 0) - (b[1].order ?? 0))
+      .flatMap(([pageKey, page]) =>
+        (page.sections || []).map((sec) => ({
+          pageKey,
+          pageName: page.name || pageKey,
+          section: sec,
+        }))
+      );
+  }, [site]);
+
+  const renderSections = React.useMemo(() => {
+    if (mode === 'preset') {
+      const preset = presets.find((p) => p.id === activePresetId);
+      if (!preset?.sections?.length) return [];
+      return allSections
+        .filter(({ section, pageKey }) =>
+          preset.sections.some((s) => s.sectionId === section.id && s.pageKey === pageKey)
+        )
+        .map(({ section }) => section);
+    }
+    return allSections
+      .filter(({ section }) => adhocIds.has(section.id))
+      .map(({ section }) => section);
+  }, [mode, activePresetId, adhocIds, presets, allSections]);
+
+  function toggleAdhoc(id) {
+    setAdhocIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  // Inject print isolation CSS while overlay is open.
+  React.useEffect(() => {
+    if (!generating) return;
+    const el = document.createElement('style');
+    el.id = 'sb-resume-print-style';
+    el.textContent = `@media print {
+      body > * { visibility: hidden !important; }
+      #sb-resume-print-root { visibility: visible !important; position: fixed; top: 0; left: 0; width: 100%; background: white; }
+      #sb-resume-print-root * { visibility: visible !important; }
+      .sb-resume-no-print { display: none !important; }
+    }`;
+    document.head.appendChild(el);
+    return () => document.getElementById('sb-resume-print-style')?.remove();
+  }, [generating]);
+
+  const labelStyle = { fontFamily: 'var(--sb-font-label)', fontSize: '0.6rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--sb-dusty)' };
+  const tabBtn = (active) => ({
+    flex: 1, padding: '0.45rem', fontSize: '0.68rem',
+    fontFamily: 'var(--sb-font-label)', letterSpacing: '0.1em', textTransform: 'uppercase',
+    background: active ? 'var(--sb-navy)' : 'transparent',
+    color: active ? 'var(--sb-cream)' : 'var(--sb-sage)',
+    border: '0.5px solid rgba(196,132,58,0.3)', cursor: 'pointer',
+    borderRadius: active ? 'calc(var(--sb-radius) - 2px)' : 0,
+  });
+
+  return (
+    <div style={styles.card}>
+      <div style={styles.cardTitle}>Generate Resume Output</div>
+      <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem', lineHeight: 1.55 }}>
+        Select a saved preset or build a one-off section list, then generate a print-ready output you can save as PDF — without leaving the admin.
+      </div>
+
+      <div style={{ display: 'flex', gap: 2, background: 'rgba(27,42,59,0.06)', borderRadius: 'var(--sb-radius)', padding: 3, marginBottom: '1rem' }}>
+        <button style={tabBtn(mode === 'preset')} onClick={() => setMode('preset')}>From Preset</button>
+        <button style={tabBtn(mode === 'adhoc')} onClick={() => setMode('adhoc')}>Custom Selection</button>
+      </div>
+
+      {mode === 'preset' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginBottom: '0.75rem' }}>
+          {presets.length === 0 ? (
+            <div style={{ fontSize: '0.75rem', color: 'var(--sb-dusty)' }}>No presets yet — create one in Resume Presets above.</div>
+          ) : presets.map((p) => (
+            <label key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', padding: '0.4rem 0.6rem', borderRadius: 'var(--sb-radius)', background: activePresetId === p.id ? 'rgba(196,132,58,0.1)' : 'transparent', border: `0.5px solid ${activePresetId === p.id ? 'rgba(196,132,58,0.4)' : 'rgba(196,132,58,0.12)'}` }}>
+              <input type="radio" name="resume-gen-preset" value={p.id} checked={activePresetId === p.id} onChange={() => setActivePresetId(p.id)} />
+              <span style={{ fontSize: '0.84rem', color: 'var(--sb-cream)', flex: 1 }}>{p.name}</span>
+              {p.isDefault && <span style={{ ...labelStyle, color: 'var(--sb-gold)' }}>Default</span>}
+              <span style={{ ...labelStyle }}>{p.sections?.length || 0} sections</span>
+            </label>
+          ))}
+        </div>
+      ) : (
+        <div style={{ marginBottom: '0.75rem' }}>
+          {allSections.length === 0 ? (
+            <div style={{ fontSize: '0.75rem', color: 'var(--sb-dusty)' }}>No sections found — add pages and sections first.</div>
+          ) : Object.entries(
+            allSections.reduce((acc, { pageName, section }) => {
+              if (!acc[pageName]) acc[pageName] = [];
+              acc[pageName].push(section);
+              return acc;
+            }, {})
+          ).map(([pageName, secs]) => (
+            <div key={pageName} style={{ marginBottom: '0.6rem' }}>
+              <div style={{ ...labelStyle, color: 'var(--sb-sage)', marginBottom: '0.3rem' }}>{pageName}</div>
+              {secs.map((sec) => (
+                <label key={sec.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginBottom: '0.2rem' }}>
+                  <input type="checkbox" checked={adhocIds.has(sec.id)} onChange={() => toggleAdhoc(sec.id)} />
+                  <span style={{ fontSize: '0.8rem', color: 'var(--sb-cream)' }}>{sec.name || sec.type}</span>
+                </label>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <button
+        onClick={() => renderSections.length > 0 && setGenerating(true)}
+        disabled={renderSections.length === 0}
+        className="sb-btn sb-btn-gold"
+        style={{ padding: '0.55rem 1.25rem', fontSize: '0.75rem', opacity: renderSections.length === 0 ? 0.45 : 1 }}
+      >
+        Generate ({renderSections.length} section{renderSections.length !== 1 ? 's' : ''})
+      </button>
+
+      {generating && (
+        <ResumeGenerateOverlay
+          sections={renderSections}
+          config={config}
+          title={mode === 'preset' ? (presets.find((p) => p.id === activePresetId)?.name || 'Resume') : 'Custom Resume'}
+          onClose={() => setGenerating(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function ResumeGenerateOverlay({ sections, config, title, onClose }) {
+  return (
+    <div
+      id="sb-resume-print-root"
+      style={{ position: 'fixed', inset: 0, zIndex: 1000, background: '#f8f4ee', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+    >
+      <div
+        className="sb-resume-no-print"
+        style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.85rem 1.5rem', background: 'var(--sb-navy)', borderBottom: '0.5px solid rgba(196,132,58,0.2)', flexShrink: 0 }}
+      >
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.62rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--sb-gold)' }}>Resume Output</div>
+          <div style={{ fontSize: '0.92rem', color: 'var(--sb-cream)', marginTop: 2 }}>{title}</div>
+        </div>
+        <button onClick={() => window.print()} className="sb-btn sb-btn-gold" style={{ fontSize: '0.75rem', padding: '0.5rem 1.1rem' }}>
+          Print / Save PDF
+        </button>
+        <button onClick={onClose} style={{ background: 'transparent', border: '0.5px solid rgba(232,221,208,0.2)', borderRadius: 'var(--sb-radius)', color: 'var(--sb-sage)', cursor: 'pointer', padding: '0.45rem 0.9rem', fontSize: '0.75rem', fontFamily: 'var(--sb-font-body)' }}>
+          ✕ Close
+        </button>
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', background: '#f8f4ee' }}>
+        {sections.map((sec) => (
+          <RenderSection key={sec.id} section={sec} config={config} mode="public" />
+        ))}
+      </div>
+
+      <style>{`@media print { .sb-resume-no-print { display: none !important; } #sb-resume-print-root > div:last-child { overflow: visible !important; } }`}</style>
+    </div>
+  );
+}
+
+// ── Multi-source Database Connector (member-only) ──
+// Members can add multiple named Postgres/Supabase connections. Each is
+// independently named, described, and access-controlled. The profile agent
+// gains query tools scoped to each connected source.
+function MemberDbsCard({ config, patch }) {
+  const dbs = config?.integrations?.memberDbs || [];
+  const [adding, setAdding] = React.useState(false);
+  const [draft, setDraft] = React.useState({ name: '', description: '', url: '', allowWrite: false });
+
+  function updateDbs(next) {
+    patch('integrations.memberDbs', next);
+  }
+
+  function addDb() {
+    if (!draft.name || !draft.url) return;
+    const id = `db-${Date.now()}`;
+    updateDbs([...dbs, { id, ...draft }]);
+    setDraft({ name: '', description: '', url: '', allowWrite: false });
+    setAdding(false);
+  }
+
+  function removeDb(id) {
+    if (!window.confirm('Remove this database source?')) return;
+    updateDbs(dbs.filter((d) => d.id !== id));
+  }
+
+  function updateDb(id, field, value) {
+    updateDbs(dbs.map((d) => d.id === id ? { ...d, [field]: value } : d));
+  }
+
+  const lbl = { fontFamily: 'var(--sb-font-label)', fontSize: '0.6rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--sb-dusty)' };
+
+  return (
+    <div style={styles.card}>
+      <div style={styles.cardTitle}>External Data Sources</div>
+      <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem', lineHeight: 1.55 }}>
+        Connect your own Postgres or Supabase databases. Each source is named and independently controlled.
+        The profile agent gains a <code style={{ color: 'var(--sb-gold)' }}>query_member_db</code> tool per source — your data stays separate from Salt Basin's schema.
+        Connection strings are stored server-side and never returned to the browser.
+      </div>
+
+      {dbs.length === 0 && !adding && (
+        <div style={{ fontSize: '0.78rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem' }}>No external sources connected yet.</div>
+      )}
+
+      {dbs.map((db) => (
+        <div key={db.id} style={{ padding: '0.75rem', background: 'rgba(196,132,58,0.05)', border: '0.5px solid rgba(196,132,58,0.2)', borderRadius: 'var(--sb-radius)', marginBottom: '0.6rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <input
+              className="sb-input"
+              value={db.name}
+              onChange={(e) => updateDb(db.id, 'name', e.target.value)}
+              placeholder="Source name (e.g. My CRM)"
+              style={{ flex: 1, fontSize: '0.84rem', fontWeight: 500, marginRight: '0.5rem' }}
+            />
+            <button onClick={() => removeDb(db.id)} style={{ width: 26, height: 26, padding: 0, background: 'transparent', border: '0.5px solid rgba(196,132,58,0.25)', borderRadius: 'var(--sb-radius)', color: 'var(--sb-risk-critical)', cursor: 'pointer', fontSize: '0.85rem', lineHeight: 1, flexShrink: 0 }}>×</button>
+          </div>
+          <input
+            className="sb-input"
+            value={db.description || ''}
+            onChange={(e) => updateDb(db.id, 'description', e.target.value)}
+            placeholder="Description (e.g. Salesforce CRM export, analytics DB)"
+            style={{ fontSize: '0.78rem', marginBottom: '0.4rem', width: '100%' }}
+          />
+          <div style={{ ...lbl, marginBottom: '0.25rem' }}>Connection string</div>
+          <input
+            className="sb-input"
+            type="password"
+            value={db.url || ''}
+            onChange={(e) => updateDb(db.id, 'url', e.target.value)}
+            placeholder="postgres://user:pass@host:5432/dbname"
+            style={{ fontFamily: 'monospace', fontSize: '0.72rem', marginBottom: '0.5rem', width: '100%' }}
+          />
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+            <input type="checkbox" checked={!!db.allowWrite} onChange={(e) => updateDb(db.id, 'allowWrite', e.target.checked)} />
+            <span style={{ fontSize: '0.75rem', color: 'var(--sb-sage)' }}>Allow agent write access (INSERT / UPDATE / DELETE) — off by default</span>
+          </label>
+        </div>
+      ))}
+
+      {adding ? (
+        <div style={{ padding: '0.75rem', background: 'rgba(196,132,58,0.05)', border: '0.5px dashed rgba(196,132,58,0.3)', borderRadius: 'var(--sb-radius)', marginBottom: '0.6rem' }}>
+          <div style={{ ...lbl, marginBottom: '0.4rem' }}>New source</div>
+          <input className="sb-input" value={draft.name} onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))} placeholder="Source name (e.g. My CRM)" style={{ marginBottom: '0.4rem', width: '100%' }} />
+          <input className="sb-input" value={draft.description} onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))} placeholder="Description" style={{ fontSize: '0.78rem', marginBottom: '0.4rem', width: '100%' }} />
+          <input className="sb-input" type="password" value={draft.url} onChange={(e) => setDraft((d) => ({ ...d, url: e.target.value }))} placeholder="postgres://…" style={{ fontFamily: 'monospace', fontSize: '0.72rem', marginBottom: '0.5rem', width: '100%' }} />
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', cursor: 'pointer' }}>
+            <input type="checkbox" checked={draft.allowWrite} onChange={(e) => setDraft((d) => ({ ...d, allowWrite: e.target.checked }))} />
+            <span style={{ fontSize: '0.75rem', color: 'var(--sb-sage)' }}>Allow agent write access</span>
+          </label>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button onClick={addDb} disabled={!draft.name || !draft.url} className="sb-btn sb-btn-gold" style={{ fontSize: '0.7rem', padding: '0.4rem 0.9rem', opacity: (!draft.name || !draft.url) ? 0.45 : 1 }}>Add source</button>
+            <button onClick={() => setAdding(false)} className="sb-btn sb-btn-outline" style={{ fontSize: '0.7rem', padding: '0.4rem 0.8rem' }}>Cancel</button>
+          </div>
+        </div>
+      ) : (
+        <button onClick={() => setAdding(true)} className="sb-btn sb-btn-outline" style={{ fontSize: '0.7rem', padding: '0.45rem 0.9rem' }}>+ Add data source</button>
       )}
     </div>
   );
@@ -953,6 +1241,144 @@ function Field({ label, value, onChange, long, type = 'text', placeholder }) {
           placeholder={placeholder}
         />
       )}
+    </div>
+  );
+}
+
+// ── Connected Apps (OAuth) ────────────────────────────────────────────────────
+function ConnectedAppsCard() {
+  const [data, setData] = React.useState(null);
+  const [busy, setBusy] = React.useState(null); // provider id being acted on
+  const [supabasePat, setSupabasePat] = React.useState('');
+  const [showPat, setShowPat] = React.useState(false);
+  const [patBusy, setPatBusy] = React.useState(false);
+
+  function load() {
+    fetch('/api/oauth/connections', { credentials: 'same-origin' })
+      .then((r) => r.json())
+      .then(setData)
+      .catch(() => {});
+  }
+  React.useEffect(load, []);
+
+  function connect(provider) {
+    window.location.href = `/api/oauth/${provider}/connect`;
+  }
+
+  async function disconnect(provider) {
+    if (!window.confirm(`Disconnect ${provider}? This will remove all saved tokens.`)) return;
+    setBusy(provider);
+    await fetch(`/api/oauth/connections/${provider}`, { method: 'DELETE', credentials: 'same-origin' });
+    setBusy(null);
+    load();
+  }
+
+  async function toggleWrite(provider, current) {
+    await fetch(`/api/oauth/connections/${provider}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ allowWrite: !current }),
+    });
+    load();
+  }
+
+  async function saveSupabasePat() {
+    if (!supabasePat) return;
+    setPatBusy(true);
+    const r = await fetch('/api/oauth/supabase/pat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ pat: supabasePat }),
+    });
+    setPatBusy(false);
+    if (r.ok) { setShowPat(false); setSupabasePat(''); load(); }
+    else { const d = await r.json(); alert(d.error || 'Failed'); }
+  }
+
+  const cardRow = { display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.6rem 0', borderBottom: '0.5px solid rgba(200,193,183,0.15)' };
+  const iconStyle = { fontSize: '1.25rem', width: 28, textAlign: 'center', flexShrink: 0 };
+  const providerName = { fontWeight: 600, fontSize: '0.84rem', color: 'var(--sb-cream)', flex: 1 };
+  const subtext = { fontSize: '0.68rem', color: 'var(--sb-dusty)', marginTop: 1 };
+  const btnSm = (active) => ({
+    padding: '3px 10px', borderRadius: 4, fontSize: '0.7rem', cursor: 'pointer',
+    border: `1px solid ${active ? 'var(--sb-teal)' : 'rgba(200,193,183,0.3)'}`,
+    background: active ? 'var(--sb-teal)' : 'transparent',
+    color: active ? '#fff' : 'var(--sb-dusty)',
+  });
+
+  return (
+    <div style={styles.card}>
+      <div style={styles.cardTitle}>Connected Apps</div>
+      <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.9rem', lineHeight: 1.55 }}>
+        Connect external systems so your profile agent can read (and optionally write) real data. Tokens are encrypted at rest and never exposed in the browser.
+      </div>
+
+      {!data && <div style={{ fontSize: '0.78rem', color: 'var(--sb-dusty)' }}>Loading…</div>}
+
+      {data && (
+        <>
+          {/* Active connections */}
+          {data.connections.map((c) => (
+            <div key={c.provider} style={cardRow}>
+              <span style={iconStyle}>{c.icon}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={providerName}>{c.label}</div>
+                <div style={subtext}>Connected as: {c.connectedAs || '—'}</div>
+              </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', fontSize: '0.68rem', color: 'var(--sb-dusty)', flexShrink: 0 }}>
+                <input type="checkbox" checked={!!c.allowWrite} onChange={() => toggleWrite(c.provider, c.allowWrite)} />
+                Write
+              </label>
+              <button onClick={() => disconnect(c.provider)} disabled={busy === c.provider}
+                style={{ ...btnSm(false), color: 'var(--sb-risk-critical)', borderColor: 'rgba(220,80,80,0.3)', flexShrink: 0 }}>
+                {busy === c.provider ? '…' : 'Disconnect'}
+              </button>
+            </div>
+          ))}
+
+          {/* Available providers */}
+          {data.available.map((p) => (
+            <div key={p.provider} style={cardRow}>
+              <span style={iconStyle}>{p.icon}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={providerName}>{p.label}</div>
+                <div style={subtext}>{p.description}</div>
+                {p.provider === 'supabase' && showPat && (
+                  <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                    <input
+                      type="password"
+                      className="sb-input"
+                      placeholder="Paste personal access token"
+                      value={supabasePat}
+                      onChange={(e) => setSupabasePat(e.target.value)}
+                      style={{ fontSize: '0.72rem', flex: 1 }}
+                    />
+                    <button onClick={saveSupabasePat} disabled={patBusy} style={{ ...btnSm(true), background: 'var(--sb-sage)' }}>
+                      {patBusy ? '…' : 'Save'}
+                    </button>
+                    <button onClick={() => setShowPat(false)} style={btnSm(false)}>Cancel</button>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => p.provider === 'supabase' ? setShowPat(true) : connect(p.provider)}
+                style={{ ...btnSm(true), background: 'var(--sb-gold)', borderColor: 'var(--sb-gold)', color: '#fff', flexShrink: 0 }}>
+                Connect
+              </button>
+            </div>
+          ))}
+
+          {data.connections.length === 0 && data.available.length === 0 && (
+            <div style={{ fontSize: '0.78rem', color: 'var(--sb-dusty)' }}>No providers configured in .env.</div>
+          )}
+        </>
+      )}
+
+      <div style={{ marginTop: '0.75rem', fontSize: '0.68rem', color: 'var(--sb-dusty)', lineHeight: 1.6 }}>
+        To register Salt Basin as an app with each provider, see the integration setup guide. Credentials go in your <code>.env</code> as <code>PROVIDER_CLIENT_ID</code> and <code>PROVIDER_CLIENT_SECRET</code>.
+      </div>
     </div>
   );
 }

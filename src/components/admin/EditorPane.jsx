@@ -1,5 +1,153 @@
 import React from 'react';
 import { styles } from './adminStyles.js';
+import { SOURCE_TYPES, TAG_CATEGORIES, MERGED_FIELD_DEFAULTS } from '../../data/capabilityTags.js';
+
+// ── Field source-type badge + inline meta editor ──────────────────────────────
+
+const SRC_BADGE_BASE = {
+  display: 'inline-block',
+  fontSize: '0.6rem',
+  fontFamily: 'var(--sb-font-label)',
+  letterSpacing: '0.05em',
+  padding: '1px 5px',
+  borderRadius: 3,
+  cursor: 'pointer',
+  userSelect: 'none',
+  marginLeft: 6,
+  verticalAlign: 'middle',
+  border: '1px solid transparent',
+};
+
+function SourceBadge({ type, onClick }) {
+  const def = SOURCE_TYPES[type] || SOURCE_TYPES.user_input;
+  return (
+    <span
+      style={{ ...SRC_BADGE_BASE, background: def.color + '22', color: def.color, borderColor: def.color + '55' }}
+      title={`Source: ${def.label} — click to edit`}
+      onClick={onClick}
+    >
+      {def.short}
+    </span>
+  );
+}
+
+function FieldMetaEditor({ fieldKey, meta, onSave, onClose, memberDbs = [] }) {
+  const [type, setType] = React.useState(meta?.sourceType || 'user_input');
+  const [mergedFrom, setMergedFrom] = React.useState(meta?.mergedFrom || '');
+  const [sources, setSources] = React.useState(meta?.sources || []);
+
+  function addSource() {
+    setSources((s) => [...s, { sourceKind: 'merged', system: 'saltbasin', capabilityTag: '', description: '' }]);
+  }
+  function removeSource(i) {
+    setSources((s) => s.filter((_, idx) => idx !== i));
+  }
+  function patchSource(i, patch) {
+    setSources((s) => s.map((src, idx) => idx === i ? { ...src, ...patch } : src));
+  }
+
+  function save() {
+    const payload = { sourceType: type };
+    if (type === 'merged') payload.mergedFrom = mergedFrom;
+    if (type === 'derived') payload.sources = sources;
+    onSave(payload);
+  }
+
+  const panelStyle = {
+    background: '#f5f2ed',
+    border: '1px solid #d4cdc6',
+    borderRadius: 6,
+    padding: '0.75rem',
+    marginTop: '0.4rem',
+    fontSize: '0.78rem',
+  };
+
+  return (
+    <div style={panelStyle}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--sb-teal-deep)' }}>
+        <span>Source type — {humanLabel(fieldKey)}</span>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--sb-dusty)' }}>✕</button>
+      </div>
+
+      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.6rem' }}>
+        {Object.entries(SOURCE_TYPES).map(([k, def]) => (
+          <button key={k} onClick={() => setType(k)} style={{
+            padding: '3px 10px', borderRadius: 4, border: `1px solid ${def.color}`,
+            background: type === k ? def.color : 'transparent',
+            color: type === k ? '#fff' : def.color,
+            fontSize: '0.72rem', cursor: 'pointer', fontFamily: 'var(--sb-font-label)',
+          }}>
+            {def.label}
+          </button>
+        ))}
+      </div>
+      <div style={{ color: 'var(--sb-dusty)', fontSize: '0.7rem', lineHeight: 1.5, marginBottom: '0.6rem' }}>
+        {SOURCE_TYPES[type]?.description}
+      </div>
+
+      {type === 'merged' && (
+        <div style={{ marginBottom: '0.5rem' }}>
+          <label style={{ display: 'block', fontWeight: 600, marginBottom: 3 }}>Merged from (system path)</label>
+          <input className="sb-input" style={{ fontSize: '0.75rem' }} value={mergedFrom} onChange={(e) => setMergedFrom(e.target.value)} placeholder="e.g. users.display_name" />
+        </div>
+      )}
+
+      {type === 'derived' && (
+        <div>
+          <div style={{ fontWeight: 600, marginBottom: '0.4rem' }}>Sources</div>
+          {sources.map((src, i) => (
+            <div key={i} style={{ background: '#ede9e3', borderRadius: 5, padding: '0.5rem', marginBottom: '0.4rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem', marginBottom: '0.35rem' }}>
+                <div>
+                  <label style={{ fontSize: '0.68rem', display: 'block', marginBottom: 2 }}>Kind</label>
+                  <select className="sb-input" style={{ fontSize: '0.72rem' }} value={src.sourceKind} onChange={(e) => patchSource(i, { sourceKind: e.target.value })}>
+                    <option value="merged">Merged (Salt Basin internal)</option>
+                    <option value="external">External (member DB / file)</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.68rem', display: 'block', marginBottom: 2 }}>System</label>
+                  <select className="sb-input" style={{ fontSize: '0.72rem' }} value={src.system} onChange={(e) => patchSource(i, { system: e.target.value })}>
+                    <option value="saltbasin">Salt Basin</option>
+                    {memberDbs.map((db) => <option key={db.id} value={db.id}>{db.name || db.id}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div style={{ marginBottom: '0.35rem' }}>
+                <label style={{ fontSize: '0.68rem', display: 'block', marginBottom: 2 }}>Capability tag</label>
+                <select className="sb-input" style={{ fontSize: '0.72rem' }} value={src.capabilityTag} onChange={(e) => patchSource(i, { capabilityTag: e.target.value })}>
+                  <option value="">— none —</option>
+                  {TAG_CATEGORIES.map((cat) => (
+                    <optgroup key={cat.id} label={cat.label}>
+                      {cat.tags.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+                    </optgroup>
+                  ))}
+                </select>
+              </div>
+              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'flex-end' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: '0.68rem', display: 'block', marginBottom: 2 }}>Description / field path</label>
+                  <input className="sb-input" style={{ fontSize: '0.72rem' }} value={src.description} onChange={(e) => patchSource(i, { description: e.target.value })} placeholder="e.g. revenue column from deals table" />
+                </div>
+                <button onClick={() => removeSource(i)} style={{ background: 'none', border: '1px solid #bbb', borderRadius: 4, cursor: 'pointer', padding: '3px 8px', fontSize: '0.72rem', color: 'var(--sb-dusty)' }}>Remove</button>
+              </div>
+            </div>
+          ))}
+          <button onClick={addSource} style={{ fontSize: '0.72rem', padding: '4px 10px', borderRadius: 4, border: '1px dashed var(--sb-sage)', background: 'transparent', cursor: 'pointer', color: 'var(--sb-sage)' }}>
+            + Add source
+          </button>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.6rem', justifyContent: 'flex-end' }}>
+        <button onClick={onClose} style={{ fontSize: '0.72rem', padding: '4px 12px', borderRadius: 4, border: '1px solid #ccc', background: 'transparent', cursor: 'pointer' }}>Cancel</button>
+        <button onClick={save} style={{ fontSize: '0.72rem', padding: '4px 12px', borderRadius: 4, border: 'none', background: 'var(--sb-sage)', color: '#fff', cursor: 'pointer' }}>Save</button>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 const STATUS_OPTS = [
   { val: 'live', label: '● Live', desc: 'Visible to visitors.' },
@@ -18,11 +166,19 @@ function humanLabel(key) {
 }
 
 export default function EditorPane({ section, page, site, onUpdateSection, onUpdatePageStatus, onUpdatePage }) {
-  // Derive existing nav group names from all pages so the datalist suggestion works.
+  // All hooks must be declared before any early returns.
   const navGroups = React.useMemo(() => {
     if (!site?.pages) return [];
     return [...new Set(Object.values(site.pages).map((p) => p.navGroup).filter(Boolean))];
   }, [site]);
+
+  const [openMetaKey, setOpenMetaKey] = React.useState(null);
+
+  const memberDbs = site?.config?.integrations?.memberDbs || [];
+
+  const knownMerged = React.useMemo(() => {
+    return MERGED_FIELD_DEFAULTS.filter((m) => m.blockType === section?.type);
+  }, [section?.type]);
 
   if (!section) {
     if (!page) {
@@ -121,6 +277,9 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
   }
   function patchTop(key, value) {
     onUpdateSection({ [key]: value });
+  }
+  function updateFieldMeta(key, meta) {
+    onUpdateSection({ fieldMeta: { ...(section.fieldMeta || {}), [key]: meta } });
   }
 
   return (
@@ -237,10 +396,28 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
               if (Array.isArray(v) && k === 'items') {
                 return <IconItemListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
               }
+              const knownMergeDefault = knownMerged.find((m) => m.fieldKey === k);
+              const effectiveMeta = section.fieldMeta?.[k] || (knownMergeDefault
+                ? { sourceType: 'merged', mergedFrom: knownMergeDefault.mergedFrom }
+                : { sourceType: 'user_input' });
+              const srcType = effectiveMeta.sourceType;
+
+              const fieldLabel = (
+                <label style={styles.fieldLabel}>
+                  {humanLabel(k)}
+                  <SourceBadge type={srcType} onClick={() => setOpenMetaKey(openMetaKey === k ? null : k)} />
+                </label>
+              );
+
               if (isImageField(k)) {
                 return (
                   <div key={k} style={styles.fieldGroup}>
-                    <label style={styles.fieldLabel}>{humanLabel(k)}</label>
+                    {fieldLabel}
+                    {openMetaKey === k && (
+                      <FieldMetaEditor fieldKey={k} meta={effectiveMeta} memberDbs={memberDbs}
+                        onSave={(m) => { updateFieldMeta(k, m); setOpenMetaKey(null); }}
+                        onClose={() => setOpenMetaKey(null)} />
+                    )}
                     <ImageUploadField value={v || ''} onChange={(url) => patchField(k, url)} />
                   </div>
                 );
@@ -255,7 +432,12 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
                 const safe = toIsoDate(v);
                 return (
                   <div key={k} style={styles.fieldGroup}>
-                    <label style={styles.fieldLabel}>{humanLabel(k)}</label>
+                    {fieldLabel}
+                    {openMetaKey === k && (
+                      <FieldMetaEditor fieldKey={k} meta={effectiveMeta} memberDbs={memberDbs}
+                        onSave={(m) => { updateFieldMeta(k, m); setOpenMetaKey(null); }}
+                        onClose={() => setOpenMetaKey(null)} />
+                    )}
                     <input
                       type="date"
                       className="sb-input"
@@ -270,7 +452,12 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
                 (typeof v === 'string' && v.length > 90);
               return (
                 <div key={k} style={styles.fieldGroup}>
-                  <label style={styles.fieldLabel}>{humanLabel(k)}</label>
+                  {fieldLabel}
+                  {openMetaKey === k && (
+                    <FieldMetaEditor fieldKey={k} meta={effectiveMeta} memberDbs={memberDbs}
+                      onSave={(m) => { updateFieldMeta(k, m); setOpenMetaKey(null); }}
+                      onClose={() => setOpenMetaKey(null)} />
+                  )}
                   {isLong ? (
                     <textarea
                       className="sb-input sb-textarea"

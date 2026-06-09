@@ -32,6 +32,16 @@ export default function PublicProfile() {
       .catch((e) => setError(e.message));
   }, [slug]);
 
+  // Fire page-view beacon when the page + slug resolve
+  useEffect(() => {
+    if (!data) return;
+    fetch('/api/events/page-view', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ memberSlug: slug, pageSlug: subPath || '/', referrer: document.referrer || null }),
+    }).catch(() => {});
+  }, [slug, subPath, data]);
+
   if (error) {
     return (
       <div
