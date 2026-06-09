@@ -30,6 +30,7 @@ const TAB_COMPONENTS = {
   networks: () => <NetWorksPanel />,
   backlog:  () => <BacklogPanel />,
   qa:       () => <QAPanel />,
+  resume:   () => <MyResumePanel />,
   // config: handled inline below (ConfigPanel needs draft + setters from shell)
   // content: handled inline below (Sidebar/EditorPane/PreviewPane composition)
 };
@@ -41,6 +42,7 @@ const FALLBACK_ADMIN_NAV = {
   views: [
     { id: 'content', label: 'My Profile', sortOrder: 0, tabs: [
       { id: 'content', label: 'My Profile', componentId: 'content', sortOrder: 0 },
+      { id: 'resume',  label: 'My Resume',  componentId: 'resume',  sortOrder: 1 },
     ]},
     { id: 'plm', label: 'Platform Lifecycle Management', sortOrder: 1, tabs: [
       { id: 'backlog', label: 'Backlog', componentId: 'backlog', sortOrder: 0 },

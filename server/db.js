@@ -875,6 +875,15 @@ async function bootstrap() {
         if (contentTab && (contentTab.label === 'My Site' || contentTab.label === 'Content')) {
           contentTab.label = 'My Profile'; changed = true;
         }
+        // One-shot: inject "My Resume" tab into the content view if not already present.
+        const hasResume = (contentView.tabs || []).some((t) => t.id === 'resume');
+        if (!hasResume) {
+          contentView.tabs = [
+            ...(contentView.tabs || []),
+            { id: 'resume', label: 'My Resume', componentId: 'resume', sortOrder: 1 },
+          ];
+          changed = true;
+        }
       }
       if (changed) {
         await sql.unsafe(
