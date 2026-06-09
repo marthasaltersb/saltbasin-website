@@ -26,7 +26,9 @@ export default function Sidebar({
 
   return (
     <div style={styles.sidebar}>
-      <div style={styles.sidebarSection}>
+
+      {/* ── Pages (fixed, non-scrolling) ─────────────────────────────── */}
+      <div style={{ ...styles.sidebarSection, flexShrink: 0 }}>
         <div style={styles.sidebarLabel}>Pages</div>
         {pages.map(([key, pg]) => {
           const b = BADGE_MAP[pg.status] || BADGE_MAP.live;
@@ -35,42 +37,27 @@ export default function Sidebar({
             <div
               key={key}
               onClick={() => onSelectPage(key)}
-              style={{
-                ...styles.pageItem,
-                ...(active ? styles.pageItemActive : null),
-              }}
+              style={{ ...styles.pageItem, ...(active ? styles.pageItemActive : null) }}
             >
               <span className={`sb-badge ${b.cls}`}>{b.txt}</span>
-              <span
-                style={{
-                  fontSize: '0.83rem',
-                  flex: 1,
-                  color: active ? 'var(--sb-gold)' : 'var(--sb-sage)',
-                }}
-              >
+              <span style={{ fontSize: '0.83rem', flex: 1, color: active ? 'var(--sb-gold)' : 'var(--sb-sage)' }}>
                 {pg.name}
               </span>
               <button
                 title="Delete page"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (confirm(`Delete page "${pg.name}"?`)) onDeletePage(key);
-                }}
+                onClick={(e) => { e.stopPropagation(); if (confirm(`Delete page "${pg.name}"?`)) onDeletePage(key); }}
                 style={iconBtn}
-              >
-                ✕
-              </button>
+              >✕</button>
             </div>
           );
         })}
-        <button style={styles.addBtn} onClick={onAddPage}>
-          + New Page
-        </button>
+        <button style={styles.addBtn} onClick={onAddPage}>+ New Page</button>
       </div>
 
-      <div style={{ height: '0.5px', background: 'rgba(196,132,58,0.15)', margin: '0.5rem 1rem' }} />
+      <div style={{ height: '0.5px', background: 'rgba(196,132,58,0.15)', margin: '0.25rem 1rem', flexShrink: 0 }} />
 
-      <div style={{ ...styles.sidebarSection, paddingBottom: '0.25rem' }}>
+      {/* ── Sections label (fixed) ────────────────────────────────────── */}
+      <div style={{ padding: '0.75rem 1rem 0.25rem', flexShrink: 0 }}>
         <div style={styles.sidebarLabel}>
           Sections —{' '}
           <span style={{ color: 'var(--sb-cream)', textTransform: 'none', letterSpacing: 0, fontSize: '0.75rem' }}>
@@ -79,7 +66,8 @@ export default function Sidebar({
         </div>
       </div>
 
-      <div style={styles.sectionList}>
+      {/* ── Section list (scrollable, takes all remaining space) ─────── */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 1rem 0.5rem', minHeight: 0 }}>
         {(currentPage?.sections || []).map((sec) => {
           const b = BADGE_MAP[sec.status] || BADGE_MAP.live;
           const active = sec.id === currentSectionId;
@@ -87,47 +75,33 @@ export default function Sidebar({
             <div
               key={sec.id}
               onClick={() => onSelectSection(sec.id)}
-              style={{
-                ...styles.secItem,
-                ...(active ? styles.secItemActive : null),
-              }}
+              style={{ ...styles.secItem, ...(active ? styles.secItemActive : null) }}
             >
               <span style={{ color: 'var(--sb-teal-deep)', fontSize: '0.7rem' }}>⋮⋮</span>
-              <span className={`sb-badge ${b.cls}`} style={{ fontSize: '0.55rem' }}>
-                {b.txt}
-              </span>
-              <span style={{ fontSize: '0.8rem', flex: 1, color: 'var(--sb-sage)' }}>
-                {sec.name}
-              </span>
+              <span className={`sb-badge ${b.cls}`} style={{ fontSize: '0.55rem' }}>{b.txt}</span>
+              <span style={{ fontSize: '0.8rem', flex: 1, color: 'var(--sb-sage)' }}>{sec.name}</span>
               <button
                 title="Cycle status"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCycleSectionStatus(sec.id);
-                }}
+                onClick={(e) => { e.stopPropagation(); onCycleSectionStatus(sec.id); }}
                 style={iconBtn}
-              >
-                ↻
-              </button>
+              >↻</button>
               <button
                 title="Delete"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (confirm(`Remove section "${sec.name}"?`)) onDeleteSection(sec.id);
-                }}
+                onClick={(e) => { e.stopPropagation(); if (confirm(`Remove section "${sec.name}"?`)) onDeleteSection(sec.id); }}
                 style={{ ...iconBtn, color: 'var(--sb-risk-critical)' }}
-              >
-                ✕
-              </button>
+              >✕</button>
             </div>
           );
         })}
       </div>
-      <div style={{ padding: '0 1rem 1rem' }}>
-        <button style={styles.addBtn} onClick={onAddSection}>
+
+      {/* ── Add Section button (pinned to bottom, always visible) ────── */}
+      <div style={{ padding: '0.5rem 1rem 1rem', flexShrink: 0, borderTop: '0.5px solid rgba(196,132,58,0.12)' }}>
+        <button style={{ ...styles.addBtn, width: '100%' }} onClick={onAddSection}>
           + Add Section
         </button>
       </div>
+
     </div>
   );
 }

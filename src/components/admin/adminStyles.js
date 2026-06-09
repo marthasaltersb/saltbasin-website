@@ -31,6 +31,7 @@ export const styles = {
     flexDirection: 'column',
     flexShrink: 0,
     overflow: 'hidden',
+    minHeight: 0,   // required so flex children can scroll rather than overflow
   },
   sidebarSection: { padding: '1rem 1rem 0.5rem' },
   sidebarLabel: {
