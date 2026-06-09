@@ -579,6 +579,7 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
           <SectionActionsEditor
             actions={Array.isArray(section.fields?.actions) ? section.fields.actions : []}
             onChange={(next) => patchField('actions', next)}
+            site={site}
           />
         </div>
 
@@ -645,7 +646,7 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
                 return <ClientSnapshotListEditor key={k} clients={v} onChange={(next) => patchField(k, next)} />;
               }
               if (Array.isArray(v) && k === 'actions') {
-                return <SectionActionsEditor key={k} actions={v} onChange={(next) => patchField(k, next)} />;
+                return <SectionActionsEditor key={k} actions={v} onChange={(next) => patchField(k, next)} site={site} />;
               }
               const knownMergeDefault = knownMerged.find((m) => m.fieldKey === k);
               const effectiveMeta = section.fieldMeta?.[k] || (knownMergeDefault
@@ -1479,29 +1480,206 @@ function ClientSnapshotListEditor({ clients, onChange }) {
 }
 
 // ── Section Actions / CTA Buttons editor ──────────────────────────────────────
-// actions: [{label, href, style:'gold'|'outline'|'outline-dark'|'teal'}]
-function SectionActionsEditor({ actions, onChange }) {
+// actions: [{label, href, style}]
+// Renders a guided link picker so the user can choose from existing pages,
+// section anchors, output routes, or type a custom URL.
+
+const OUTPUT_ROUTES = [
+  { label: 'Resume PDF',           href: '/output/resume',       desc: 'Downloadable resume output' },
+  { label: 'Executive Bio',        href: '/output/bio',          desc: 'Executive biography' },
+  { label: 'One-Pager',            href: '/output/one-pager',    desc: 'One-page overview' },
+  { label: 'Case Study',           href: '/output/case-study',   desc: 'Case study document' },
+  { label: 'Build Summary',        href: '/output/build-summary',desc: 'Project build summary' },
+  { label: 'Patch Notes',          href: '/output/patch-notes',  desc: 'Platform release log' },
+];
+
+const BTN_STYLES = [
+  { value: 'gold',         label: 'Gold (primary)' },
+  { value: 'navy',         label: 'Navy (dark)' },
+  { value: 'teal',         label: 'Teal' },
+  { value: 'outline',      label: 'Outline light' },
+  { value: 'outline-dark', label: 'Outline dark' },
+];
+
+const STYLE_PREVIEW = {
+  gold:         { background: 'var(--sb-gold,#c4843a)', color: '#fff' },
+  navy:         { background: 'var(--sb-navy,#1b2a3b)', color: '#fff' },
+  teal:         { background: 'var(--sb-teal-deep,#02a1a6)', color: '#fff' },
+  outline:      { background: 'transparent', color: 'var(--sb-gold,#c4843a)', border: '1.5px solid var(--sb-gold,#c4843a)' },
+  'outline-dark':{ background: 'transparent', color: 'var(--sb-navy,#1b2a3b)', border: '1.5px solid var(--sb-navy,#1b2a3b)' },
+};
+
+function SectionActionsEditor({ actions, onChange, site }) {
+  const [addingIndex, setAddingIndex] = React.useState(null); // which row is open for link picker
   const list = Array.isArray(actions) ? actions : [];
-  function add() { onChange([...list, { label: 'Learn More', href: '#', style: 'gold' }]); }
-  function remove(i) { onChange(list.filter((_,j) => j !== i)); }
-  function update(i, patch) { onChange(list.map((a,j) => j===i ? {...a,...patch} : a)); }
-  const BTN_STYLES = ['gold','outline','outline-dark','teal','navy'];
+
+  // Build link groups from site
+  const linkGroups = React.useMemo(() => {
+    const pages = Object.entries(site?.pages || {})
+      .sort((a, b) => (a[1].order ?? 0) - (b[1].order ?? 0));
+
+    const pageLinks = pages.map(([key, pg]) => ({
+      group: 'Site Pages',
+      label: pg.name,
+      href: pg.slug ? `/${pg.slug}` : '/',
+      desc: `Go to the ${pg.name} page`,
+    }));
+
+    const sectionLinks = pages.flatMap(([, pg]) =>
+      (pg.sections || [])
+        .filter(s => s.id && s.name)
+        .map(s => ({
+          group: 'Section Anchors',
+          label: `↳ ${s.name}`,
+          href: `#${s.id}`,
+          desc: `Scroll to "${s.name}" on ${pg.name}`,
+        }))
+    );
+
+    const outputLinks = OUTPUT_ROUTES.map(o => ({ group: 'Output Documents', ...o }));
+
+    const misc = [
+      { group: 'Common', label: 'Contact / Reach Out', href: '#contact',   desc: 'Scroll to contact section' },
+      { group: 'Common', label: 'Back to Top',          href: '#top',       desc: 'Scroll to page top' },
+      { group: 'Common', label: 'External URL',         href: '',           desc: 'Type any URL', isCustom: true },
+    ];
+
+    return [...misc, ...pageLinks, ...sectionLinks, ...outputLinks];
+  }, [site]);
+
+  // Group by group label for the picker UI
+  const grouped = React.useMemo(() => {
+    const map = {};
+    for (const item of linkGroups) {
+      if (!map[item.group]) map[item.group] = [];
+      map[item.group].push(item);
+    }
+    return Object.entries(map);
+  }, [linkGroups]);
+
+  function add() {
+    const next = [...list, { label: '', href: '', style: 'gold' }];
+    onChange(next);
+    setAddingIndex(next.length - 1);
+  }
+  function remove(i) {
+    onChange(list.filter((_, j) => j !== i));
+    if (addingIndex === i) setAddingIndex(null);
+  }
+  function update(i, patch) { onChange(list.map((a, j) => j === i ? { ...a, ...patch } : a)); }
+  function pickLink(i, item) {
+    const updated = { ...list[i], href: item.href };
+    if (!list[i].label) updated.label = item.label;
+    onChange(list.map((a, j) => j === i ? updated : a));
+    if (!item.isCustom) setAddingIndex(null);
+  }
+
+  const pill = (style) => ({
+    display: 'inline-block',
+    padding: '2px 10px',
+    borderRadius: 6,
+    fontSize: '0.68rem',
+    fontWeight: 600,
+    letterSpacing: '0.05em',
+    ...(STYLE_PREVIEW[style] || STYLE_PREVIEW.gold),
+  });
+
   return (
-    <div style={styles.fieldGroup}>
-      <label style={styles.fieldLabel}>Action Buttons ({list.length})</label>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-        {list.map((a,i) => (
-          <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 0.7fr auto', gap: '0.35rem', alignItems: 'center' }}>
-            <input className="sb-input" placeholder="Button label" value={a.label||''} onChange={e=>update(i,{label:e.target.value})} style={{ fontSize: '0.78rem' }} />
-            <input className="sb-input" placeholder="Link URL or #anchor" value={a.href||''} onChange={e=>update(i,{href:e.target.value})} style={{ fontSize: '0.78rem' }} />
-            <select className="sb-input" value={a.style||'gold'} onChange={e=>update(i,{style:e.target.value})} style={{ fontSize: '0.72rem' }}>
-              {BTN_STYLES.map(s => <option key={s} value={s}>{s}</option>)}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      {list.length === 0 && (
+        <div style={{ fontSize: '0.72rem', color: '#888', fontStyle: 'italic', padding: '0.25rem 0' }}>
+          No buttons yet. Add one below to give visitors a clear next action.
+        </div>
+      )}
+
+      {list.map((a, i) => (
+        <div key={i} style={{ background: 'rgba(0,0,0,0.03)', border: '0.5px solid rgba(0,0,0,0.1)', borderRadius: 8, padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+
+          {/* Row 1: label + style + remove */}
+          <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+            <input
+              className="sb-input"
+              placeholder="Button label"
+              value={a.label || ''}
+              onChange={e => update(i, { label: e.target.value })}
+              style={{ flex: 1, fontSize: '0.82rem', fontWeight: 600 }}
+            />
+            <select
+              className="sb-input"
+              value={a.style || 'gold'}
+              onChange={e => update(i, { style: e.target.value })}
+              style={{ width: 130, fontSize: '0.72rem' }}
+            >
+              {BTN_STYLES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
-            <button onClick={()=>remove(i)} style={{ ...iconBtnStyle(false), color: 'var(--sb-risk-critical)' }}>×</button>
+            <button onClick={() => remove(i)} style={{ ...iconBtnStyle(false), color: 'var(--sb-risk-critical)', fontSize: '0.9rem' }}>×</button>
           </div>
-        ))}
-        <button type="button" onClick={add} style={{ fontSize: '0.72rem', padding: '4px 12px', border: '1px dashed var(--sb-sage)', borderRadius: 4, background: 'transparent', cursor: 'pointer', color: 'var(--sb-sage)', alignSelf: 'flex-start', marginTop: '0.25rem' }}>+ Add button</button>
-      </div>
+
+          {/* Row 2: href + picker toggle + preview */}
+          <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+            <input
+              className="sb-input"
+              placeholder="Link URL or #anchor"
+              value={a.href || ''}
+              onChange={e => update(i, { href: e.target.value })}
+              style={{ flex: 1, fontSize: '0.78rem', fontFamily: 'monospace' }}
+            />
+            <button
+              onClick={() => setAddingIndex(addingIndex === i ? null : i)}
+              style={{ padding: '4px 10px', borderRadius: 6, border: '0.5px solid rgba(0,0,0,0.18)', background: addingIndex === i ? 'var(--sb-navy,#1b2a3b)' : 'white', color: addingIndex === i ? 'white' : '#555', fontSize: '0.7rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+            >
+              {addingIndex === i ? '▲ Close' : '🔗 Pick Link'}
+            </button>
+          </div>
+
+          {/* Preview pill */}
+          {a.label && (
+            <div>
+              <span style={{ fontSize: '0.6rem', color: '#aaa', letterSpacing: '0.1em', textTransform: 'uppercase', marginRight: 6 }}>Preview:</span>
+              <span style={pill(a.style || 'gold')}>{a.label}</span>
+            </div>
+          )}
+
+          {/* Link picker panel */}
+          {addingIndex === i && (
+            <div style={{ border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: 8, background: 'white', overflow: 'hidden', maxHeight: 280, overflowY: 'auto' }}>
+              {grouped.map(([groupName, items]) => (
+                <div key={groupName}>
+                  <div style={{ padding: '0.4rem 0.75rem', background: 'var(--sb-ivory,#faf8f4)', fontSize: '0.6rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#888', fontFamily: 'var(--sb-font-label)', borderBottom: '0.5px solid rgba(0,0,0,0.06)', position: 'sticky', top: 0 }}>
+                    {groupName}
+                  </div>
+                  {items.map((item, k) => (
+                    <button
+                      key={k}
+                      onClick={() => pickLink(i, item)}
+                      style={{ display: 'flex', width: '100%', textAlign: 'left', padding: '0.45rem 0.75rem', border: 'none', background: a.href === item.href && !item.isCustom ? 'rgba(196,132,58,0.08)' : 'transparent', cursor: 'pointer', gap: '0.5rem', alignItems: 'flex-start', borderBottom: '0.5px solid rgba(0,0,0,0.04)' }}
+                    >
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '0.8rem', fontWeight: a.href === item.href ? 600 : 400, color: 'var(--sb-navy,#1b2a3b)' }}>{item.label}</div>
+                        <div style={{ fontSize: '0.68rem', color: '#888' }}>{item.desc}</div>
+                      </div>
+                      {!item.isCustom && (
+                        <code style={{ fontSize: '0.62rem', color: '#aaa', background: 'rgba(0,0,0,0.04)', padding: '1px 5px', borderRadius: 4, alignSelf: 'center', whiteSpace: 'nowrap' }}>{item.href}</code>
+                      )}
+                      {a.href === item.href && !item.isCustom && (
+                        <span style={{ color: 'var(--sb-gold,#c4843a)', fontSize: '0.75rem', alignSelf: 'center' }}>✓</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+
+      <button
+        type="button"
+        onClick={add}
+        style={{ fontSize: '0.72rem', padding: '5px 14px', border: '1px dashed rgba(196,132,58,0.5)', borderRadius: 6, background: 'transparent', cursor: 'pointer', color: 'var(--sb-gold,#c4843a)', alignSelf: 'flex-start' }}
+      >
+        + Add Button
+      </button>
     </div>
   );
 }
