@@ -278,9 +278,18 @@ option {
   h1.sb-display { font-size: 2.1rem !important; }
 }
 
-/* ── Admin shell mobile layout ──
+/* ── Admin shell layout ──
    The admin workspace is a 3-column desktop layout (sidebar + editor + preview).
-   On mobile, we collapse the sidebar behind a toggle and stack the panels. */
+   The sidebar must be a constrained flex column so its section list can scroll
+   and the "+ Add Section" button stays pinned at the bottom. */
+.sb-admin-sidebar {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;    /* contain inner scroll — do NOT remove */
+  align-self: stretch; /* fill the workspace row height */
+}
+
+/* ── Admin shell mobile layout ── */
 .sb-admin-mobile-toggle { display: none; }
 @media (max-width: 900px) {
   .sb-admin-workspace { flex-direction: column !important; overflow-y: auto !important; }

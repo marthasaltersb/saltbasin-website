@@ -25,6 +25,7 @@ export const styles = {
   },
   sidebar: {
     width: 280,
+    height: '100%',       // fill the workspace row height so flex scroll works
     background: 'var(--sb-navy-deep)',
     borderRight: '0.5px solid rgba(196,132,58,0.18)',
     display: 'flex',
