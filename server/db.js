@@ -887,6 +887,21 @@ async function bootstrap() {
     }
   }
 
+  // ── Generic member key-value JSON store ────────────────────────────────────
+  // Stores arbitrary JSON blobs scoped to a member + key. Used by My Resume
+  // (key='resume_presets') and any future member-specific settings that don't
+  // fit into the draft/published content model.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS member_json_store (
+      user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      key         TEXT NOT NULL,
+      data        TEXT NOT NULL DEFAULT '{}',
+      updated_at  BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      PRIMARY KEY (user_id, key)
+    );
+    CREATE INDEX IF NOT EXISTS idx_member_json_store_user ON member_json_store (user_id);
+  `);
+
   // ── Field audit log ─────────────────────────────────────────────────────────
   // Records before/after values for fields with auditable: true in fieldMeta.
   await sql.unsafe(`

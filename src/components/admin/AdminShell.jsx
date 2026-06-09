@@ -9,6 +9,7 @@ import EditorPane from './EditorPane.jsx';
 import PreviewPane from './PreviewPane.jsx';
 import ConfigPanel from './ConfigPanel.jsx';
 import { MemberStatsPanel, MemberAuditPanel, MemberAgentPanel } from './MemberPanels.jsx';
+import MyResumePanel from './MyResumePanel.jsx';
 import ProfileHub from './ProfileHub.jsx';
 import LeadsPanel from './LeadsPanel.jsx';
 import NetWorksPanel from './NetWorksPanel.jsx';
@@ -440,6 +441,7 @@ export default function AdminShell({ scope = 'admin' }) {
             <TabToggle
               items={[
                 { val: 'content',  label: 'My Profile' },
+                { val: 'resume',   label: 'My Resume' },
                 { val: 'config',   label: 'Config' },
                 { val: 'profiles', label: 'Profiles' },
                 { val: 'stats',    label: 'Stats' },
@@ -629,6 +631,7 @@ export default function AdminShell({ scope = 'admin' }) {
           </>
             );
           }
+          if (componentId === 'resume')   return <MyResumePanel />;
           if (componentId === 'stats')    return <MemberStatsPanel isAdmin={!isMember} />;
           if (componentId === 'audit')    return <MemberAuditPanel isAdmin={!isMember} />;
           if (componentId === 'agent')    return <MemberAgentPanel />;
@@ -652,7 +655,7 @@ export default function AdminShell({ scope = 'admin' }) {
         const v = adminNav.views.find((x) => x.id === activeViewId);
         const t = v?.tabs.find((x) => x.id === tab);
         return t?.componentId || tab;
-      })()] && !['stats', 'audit', 'agent', 'profiles'].includes(tab) && (
+      })()] && !['stats', 'audit', 'agent', 'profiles', 'resume'].includes(tab) && (
         <PublishBar
           dirty={dirty}
           siteDirty={siteDirty}

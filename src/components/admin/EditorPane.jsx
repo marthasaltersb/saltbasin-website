@@ -570,6 +570,18 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
           </div>
         </div>
 
+        {/* ── Section Actions / Buttons card ─────────────────────────── */}
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Action Buttons</div>
+          <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem', lineHeight: 1.5 }}>
+            Buttons that appear at the bottom of this section. Each button has a label, link, and style.
+          </div>
+          <SectionActionsEditor
+            actions={Array.isArray(section.fields?.actions) ? section.fields.actions : []}
+            onChange={(next) => patchField('actions', next)}
+          />
+        </div>
+
         <div style={styles.card}>
           <div style={styles.cardTitle}>Content Fields</div>
           {section.status === 'soon' && (
@@ -625,6 +637,15 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
               }
               if (Array.isArray(v) && k === 'items') {
                 return <IconItemListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'skills') {
+                return <SkillsListEditor key={k} skills={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'clients') {
+                return <ClientSnapshotListEditor key={k} clients={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'actions') {
+                return <SectionActionsEditor key={k} actions={v} onChange={(next) => patchField(k, next)} />;
               }
               const knownMergeDefault = knownMerged.find((m) => m.fieldKey === k);
               const effectiveMeta = section.fieldMeta?.[k] || (knownMergeDefault
@@ -723,6 +744,27 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
                 </div>
               );
             })}
+
+          {/* ── Add Media (photo) ── */}
+          <div style={{ marginTop: '0.75rem', paddingTop: '0.5rem', borderTop: '0.5px solid rgba(0,0,0,0.06)' }}>
+            <div style={styles.fieldLabel}>Media / Photo</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {/* Existing photo fields */}
+              {Object.entries(section.fields || {}).filter(([k]) => /photo|image|media|Photo|Image/i.test(k) && typeof section.fields[k] === 'string').map(([k, v]) => (
+                <div key={k} style={styles.fieldGroup}>
+                  <label style={styles.fieldLabel}>{humanLabel(k)}</label>
+                  <ImageUploadField value={v || ''} onChange={(url) => patchField(k, url)} />
+                </div>
+              ))}
+              {/* Add new photo field */}
+              <button
+                onClick={() => { const key = `photoUrl_${Date.now()}`; patchField(key, ''); }}
+                style={{ fontSize: '0.72rem', padding: '4px 14px', borderRadius: 6, border: '1px dashed rgba(0,0,0,0.2)', background: 'transparent', cursor: 'pointer', color: '#888', alignSelf: 'flex-start', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.08em' }}
+              >
+                + Add photo field
+              </button>
+            </div>
+          </div>
 
           {/* ── Add Field UI ── */}
           <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '0.5px solid rgba(0,0,0,0.08)' }}>
@@ -1246,33 +1288,58 @@ function makeListEditor(singularLabel, defaultItem, fieldDefs) {
 // `cases` array for the caseStudies block:
 function CaseListEditor({ cases, onChange }) {
   const list = Array.isArray(cases) ? cases : [];
+  const [openIdx, setOpenIdx] = React.useState(null);
   function update(i, patch) { onChange(list.map((r, idx) => (idx === i ? { ...r, ...patch } : r))); }
-  function add() { onChange([...list, { title: '', client: '', sector: '', challenge: '', approach: '', outcome: '', tags: '' }]); }
-  function remove(i) { onChange(list.filter((_, idx) => idx !== i)); }
+  function add() {
+    onChange([...list, { title: '', clientSummary: '', problemStatement: '', kpiImprovement: '', methodsTaken: '', challenges: '', impact: '', feedback: '', tags: '' }]);
+    setOpenIdx(list.length);
+  }
+  function remove(i) { onChange(list.filter((_, idx) => idx !== i)); if (openIdx === i) setOpenIdx(null); }
   function move(i, dir) { const j = i + dir; if (j < 0 || j >= list.length) return; const next = [...list]; [next[i], next[j]] = [next[j], next[i]]; onChange(next); }
+
+  const CASE_FIELDS = [
+    { key: 'clientSummary',    label: 'Client Summary',       placeholder: 'Brief description of the client and engagement context', long: false },
+    { key: 'problemStatement', label: 'Problem Statement',    placeholder: 'What problem or challenge existed that required solving?', long: true },
+    { key: 'kpiImprovement',   label: 'KPI Improvement',      placeholder: 'Quantified metrics improved (e.g. "Reduced DSO by 22 days, recovered $2.4M ARR")', long: true },
+    { key: 'methodsTaken',     label: 'Methods & Approach',   placeholder: 'What methods, frameworks, or approaches were used?', long: true },
+    { key: 'challenges',       label: 'Challenges',           placeholder: 'Key obstacles encountered and how they were navigated', long: true },
+    { key: 'impact',           label: 'Impact & Outcomes',    placeholder: 'Final business outcomes and lasting impact', long: true },
+    { key: 'feedback',         label: 'Client Feedback / Quote', placeholder: '"A direct quote or paraphrased endorsement from the client"', long: true },
+    { key: 'tags',             label: 'Tags',                 placeholder: 'Comma-separated: e.g. M&A, PMO, FinTech, ERP', long: false },
+  ];
+
   return (
     <div style={styles.fieldGroup}>
       <label style={styles.fieldLabel}>Case Studies ({list.length})</label>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         {list.map((c, i) => (
-          <div key={i} style={{ border: '0.5px solid rgba(196,132,58,0.20)', borderRadius: 'var(--sb-radius)', padding: '0.75rem', background: 'rgba(255,255,255,0.02)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+          <div key={i} style={{ border: `0.5px solid ${openIdx === i ? 'rgba(196,132,58,0.5)' : 'rgba(196,132,58,0.20)'}`, borderRadius: 'var(--sb-radius)', background: 'rgba(255,255,255,0.02)', overflow: 'hidden' }}>
+            {/* Header row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 0.75rem', cursor: 'pointer', background: openIdx === i ? 'rgba(196,132,58,0.07)' : 'transparent' }} onClick={() => setOpenIdx(openIdx === i ? null : i)}>
               <span style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.62rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--sb-gold)' }}>Case {i + 1}</span>
-              <div style={{ display: 'flex', gap: '0.25rem' }}>
+              <span style={{ flex: 1, fontSize: '0.82rem', color: 'var(--sb-sage)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.title || '(untitled)'}</span>
+              <div style={{ display: 'flex', gap: '0.25rem' }} onClick={e => e.stopPropagation()}>
                 <button type="button" onClick={() => move(i, -1)} disabled={i === 0} style={iconBtnStyle(i === 0)}>↑</button>
                 <button type="button" onClick={() => move(i, +1)} disabled={i === list.length - 1} style={iconBtnStyle(i === list.length - 1)}>↓</button>
                 <button type="button" onClick={() => remove(i)} style={{ ...iconBtnStyle(false), color: 'var(--sb-risk-critical)' }}>×</button>
               </div>
+              <span style={{ fontSize: '0.7rem', color: 'var(--sb-teal-deep)' }}>{openIdx === i ? '▲' : '▼'}</span>
             </div>
-            <input className="sb-input" placeholder="Title" value={c.title || ''} onChange={(e) => update(i, { title: e.target.value })} style={{ marginBottom: '0.4rem' }} />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.4rem' }}>
-              <input className="sb-input" placeholder="Client type (optional)" value={c.client || ''} onChange={(e) => update(i, { client: e.target.value })} />
-              <input className="sb-input" placeholder="Sector / industry" value={c.sector || ''} onChange={(e) => update(i, { sector: e.target.value })} />
-            </div>
-            <textarea className="sb-input sb-textarea" placeholder="Challenge — what was the problem?" value={c.challenge || ''} onChange={(e) => update(i, { challenge: e.target.value })} style={{ marginBottom: '0.4rem' }} />
-            <textarea className="sb-input sb-textarea" placeholder="Approach — what did you do?" value={c.approach || ''} onChange={(e) => update(i, { approach: e.target.value })} style={{ marginBottom: '0.4rem' }} />
-            <textarea className="sb-input sb-textarea" placeholder="Outcome — measurable results" value={c.outcome || ''} onChange={(e) => update(i, { outcome: e.target.value })} style={{ marginBottom: '0.4rem' }} />
-            <input className="sb-input" placeholder="Tags (comma-separated: e.g. M&A, PMO, FinTech)" value={c.tags || ''} onChange={(e) => update(i, { tags: e.target.value })} />
+            {/* Expanded fields */}
+            {openIdx === i && (
+              <div style={{ padding: '0.75rem', borderTop: '0.5px solid rgba(196,132,58,0.15)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <input className="sb-input" placeholder="Case Study Title" value={c.title || ''} onChange={(e) => update(i, { title: e.target.value })} />
+                {CASE_FIELDS.map(({ key, label, placeholder, long }) => (
+                  <div key={key}>
+                    <label style={{ fontSize: '0.65rem', display: 'block', marginBottom: 2, color: 'var(--sb-teal-deep)', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{label}</label>
+                    {long
+                      ? <textarea className="sb-input sb-textarea" placeholder={placeholder} value={c[key] || ''} onChange={(e) => update(i, { [key]: e.target.value })} style={{ minHeight: 64 }} />
+                      : <input className="sb-input" placeholder={placeholder} value={c[key] || ''} onChange={(e) => update(i, { [key]: e.target.value })} />
+                    }
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ))}
         <button type="button" onClick={add} className="sb-btn sb-btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', alignSelf: 'flex-start' }}>+ Add case study</button>
@@ -1307,3 +1374,134 @@ const IconItemListEditor = makeListEditor('Item', { icon: '', label: '', tooltip
   { key: 'label', placeholder: 'Label', half: true },
   { key: 'tooltip', placeholder: 'Hover tooltip text', long: true },
 ]);
+
+// ── Skills editor ─────────────────────────────────────────────────────────────
+// skills: [{category, items:[{name,level,years}]}]
+function SkillsListEditor({ skills, onChange }) {
+  const list = Array.isArray(skills) ? skills : [];
+  const [openGrp, setOpenGrp] = React.useState(null);
+  function addGroup() { onChange([...list, { category: '', items: [] }]); setOpenGrp(list.length); }
+  function removeGroup(gi) { onChange(list.filter((_, i) => i !== gi)); }
+  function updateGroup(gi, patch) { onChange(list.map((g, i) => i === gi ? { ...g, ...patch } : g)); }
+  function addSkill(gi) { updateGroup(gi, { items: [...(list[gi].items || []), { name: '', level: 'proficient', years: '' }] }); }
+  function updateSkill(gi, si, patch) { updateGroup(gi, { items: (list[gi].items||[]).map((sk, i) => i === si ? { ...sk, ...patch } : sk) }); }
+  function removeSkill(gi, si) { updateGroup(gi, { items: (list[gi].items||[]).filter((_, i) => i !== si) }); }
+  return (
+    <div style={styles.fieldGroup}>
+      <label style={styles.fieldLabel}>Skills ({list.reduce((n,g)=>n+(g.items||[]).length,0)} skills in {list.length} groups)</label>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+        {list.map((g, gi) => (
+          <div key={gi} style={{ border: '0.5px solid rgba(196,132,58,0.2)', borderRadius: 'var(--sb-radius)', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', cursor: 'pointer', background: openGrp === gi ? 'rgba(196,132,58,0.07)' : 'transparent' }} onClick={() => setOpenGrp(openGrp === gi ? null : gi)}>
+              <span style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.6rem', color: 'var(--sb-gold)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Group {gi+1}</span>
+              <span style={{ flex: 1, fontSize: '0.82rem', color: 'var(--sb-sage)' }}>{g.category || '(unnamed group)'} · {(g.items||[]).length} skills</span>
+              <button onClick={e=>{e.stopPropagation();removeGroup(gi);}} style={{ ...iconBtnStyle(false), color:'var(--sb-risk-critical)' }}>×</button>
+              <span style={{ fontSize: '0.7rem', color: 'var(--sb-teal-deep)' }}>{openGrp===gi?'▲':'▼'}</span>
+            </div>
+            {openGrp === gi && (
+              <div style={{ padding: '0.75rem', borderTop: '0.5px solid rgba(196,132,58,0.12)' }}>
+                <input className="sb-input" placeholder="Category name (e.g. ERP Systems, Leadership)" value={g.category||''} onChange={e=>updateGroup(gi,{category:e.target.value})} style={{ marginBottom: '0.5rem' }} />
+                {(g.items||[]).map((sk,si) => (
+                  <div key={si} style={{ display: 'grid', gridTemplateColumns: '1fr 0.6fr 0.4fr auto', gap: '0.35rem', marginBottom: '0.35rem', alignItems: 'center' }}>
+                    <input className="sb-input" placeholder="Skill name" value={sk.name||''} onChange={e=>updateSkill(gi,si,{name:e.target.value})} />
+                    <select className="sb-input" value={sk.level||'proficient'} onChange={e=>updateSkill(gi,si,{level:e.target.value})} style={{ fontSize: '0.75rem' }}>
+                      <option value="expert">Expert</option>
+                      <option value="proficient">Proficient</option>
+                      <option value="familiar">Familiar</option>
+                    </select>
+                    <input className="sb-input" placeholder="Years" value={sk.years||''} onChange={e=>updateSkill(gi,si,{years:e.target.value})} style={{ fontSize: '0.75rem' }} />
+                    <button onClick={()=>removeSkill(gi,si)} style={{ ...iconBtnStyle(false), color:'var(--sb-risk-critical)' }}>×</button>
+                  </div>
+                ))}
+                <button type="button" onClick={()=>addSkill(gi)} style={{ fontSize: '0.72rem', padding: '3px 10px', border: '1px dashed var(--sb-sage)', borderRadius: 4, background: 'transparent', cursor: 'pointer', color: 'var(--sb-sage)', marginTop: '0.25rem' }}>+ Add skill</button>
+              </div>
+            )}
+          </div>
+        ))}
+        <button type="button" onClick={addGroup} className="sb-btn sb-btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', alignSelf: 'flex-start' }}>+ Add skill group</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Client Snapshot editor ────────────────────────────────────────────────────
+// clients: [{name,industry,employerSponsor,capabilitiesDelivered,capabilitiesTouched,techDelivered,techTouched,revenueRange,tags}]
+const CLIENT_SNAPSHOT_FIELDS = [
+  { key: 'industry',               label: 'Industry',                  placeholder: 'e.g. Healthcare, Manufacturing' },
+  { key: 'employerSponsor',        label: 'Employer / Sponsor',        placeholder: 'e.g. Deloitte, McKinsey, Direct' },
+  { key: 'revenueRange',           label: 'Revenue Range',             placeholder: 'e.g. $10M–$100M, $1B+' },
+  { key: 'capabilitiesDelivered',  label: 'Capabilities Delivered',    placeholder: 'Comma-separated: CPQ, Billing, Integration' },
+  { key: 'capabilitiesTouched',    label: 'Capabilities Touched',      placeholder: 'Adjacent capabilities influenced' },
+  { key: 'techDelivered',          label: 'Technology Delivered',      placeholder: 'Comma-separated: Salesforce, NetSuite, MuleSoft' },
+  { key: 'techTouched',            label: 'Technology Touched',        placeholder: 'Tools used but not led' },
+  { key: 'tags',                   label: 'Tags',                      placeholder: 'Comma-separated tags for filtering' },
+];
+function ClientSnapshotListEditor({ clients, onChange }) {
+  const list = Array.isArray(clients) ? clients : [];
+  const [openIdx, setOpenIdx] = React.useState(null);
+  function add() { onChange([...list, { name: '' }]); setOpenIdx(list.length); }
+  function remove(i) { onChange(list.filter((_,j) => j !== i)); if (openIdx === i) setOpenIdx(null); }
+  function update(i, patch) { onChange(list.map((c,j) => j === i ? { ...c, ...patch } : c)); }
+  function move(i, dir) { const j=i+dir; if(j<0||j>=list.length)return; const n=[...list];[n[i],n[j]]=[n[j],n[i]];onChange(n); }
+  return (
+    <div style={styles.fieldGroup}>
+      <label style={styles.fieldLabel}>Client Entries ({list.length})</label>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+        {list.map((c, i) => (
+          <div key={i} style={{ border: '0.5px solid rgba(196,132,58,0.2)', borderRadius: 'var(--sb-radius)', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', cursor: 'pointer', background: openIdx===i ? 'rgba(196,132,58,0.07)' : 'transparent' }} onClick={() => setOpenIdx(openIdx===i?null:i)}>
+              <span style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.6rem', color: 'var(--sb-gold)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Client {i+1}</span>
+              <span style={{ flex: 1, fontSize: '0.82rem', color: 'var(--sb-sage)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name || '(unnamed)'}{c.industry ? ` · ${c.industry}` : ''}</span>
+              <div style={{ display: 'flex', gap: '0.2rem' }} onClick={e=>e.stopPropagation()}>
+                <button type="button" onClick={()=>move(i,-1)} disabled={i===0} style={iconBtnStyle(i===0)}>↑</button>
+                <button type="button" onClick={()=>move(i,1)} disabled={i===list.length-1} style={iconBtnStyle(i===list.length-1)}>↓</button>
+                <button type="button" onClick={()=>remove(i)} style={{...iconBtnStyle(false),color:'var(--sb-risk-critical)'}}>×</button>
+              </div>
+              <span style={{ fontSize: '0.7rem', color: 'var(--sb-teal-deep)' }}>{openIdx===i?'▲':'▼'}</span>
+            </div>
+            {openIdx === i && (
+              <div style={{ padding: '0.75rem', borderTop: '0.5px solid rgba(196,132,58,0.12)', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                <input className="sb-input" placeholder="Client name / identifier" value={c.name||''} onChange={e=>update(i,{name:e.target.value})} />
+                {CLIENT_SNAPSHOT_FIELDS.map(({key,label,placeholder}) => (
+                  <div key={key}>
+                    <label style={{ fontSize: '0.62rem', display: 'block', marginBottom: 2, color: 'var(--sb-teal-deep)', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{label}</label>
+                    <input className="sb-input" placeholder={placeholder} value={c[key]||''} onChange={e=>update(i,{[key]:e.target.value})} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+        <button type="button" onClick={add} className="sb-btn sb-btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', alignSelf: 'flex-start' }}>+ Add client</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Section Actions / CTA Buttons editor ──────────────────────────────────────
+// actions: [{label, href, style:'gold'|'outline'|'outline-dark'|'teal'}]
+function SectionActionsEditor({ actions, onChange }) {
+  const list = Array.isArray(actions) ? actions : [];
+  function add() { onChange([...list, { label: 'Learn More', href: '#', style: 'gold' }]); }
+  function remove(i) { onChange(list.filter((_,j) => j !== i)); }
+  function update(i, patch) { onChange(list.map((a,j) => j===i ? {...a,...patch} : a)); }
+  const BTN_STYLES = ['gold','outline','outline-dark','teal','navy'];
+  return (
+    <div style={styles.fieldGroup}>
+      <label style={styles.fieldLabel}>Action Buttons ({list.length})</label>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+        {list.map((a,i) => (
+          <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 0.7fr auto', gap: '0.35rem', alignItems: 'center' }}>
+            <input className="sb-input" placeholder="Button label" value={a.label||''} onChange={e=>update(i,{label:e.target.value})} style={{ fontSize: '0.78rem' }} />
+            <input className="sb-input" placeholder="Link URL or #anchor" value={a.href||''} onChange={e=>update(i,{href:e.target.value})} style={{ fontSize: '0.78rem' }} />
+            <select className="sb-input" value={a.style||'gold'} onChange={e=>update(i,{style:e.target.value})} style={{ fontSize: '0.72rem' }}>
+              {BTN_STYLES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <button onClick={()=>remove(i)} style={{ ...iconBtnStyle(false), color: 'var(--sb-risk-critical)' }}>×</button>
+          </div>
+        ))}
+        <button type="button" onClick={add} style={{ fontSize: '0.72rem', padding: '4px 12px', border: '1px dashed var(--sb-sage)', borderRadius: 4, background: 'transparent', cursor: 'pointer', color: 'var(--sb-sage)', alignSelf: 'flex-start', marginTop: '0.25rem' }}>+ Add button</button>
+      </div>
+    </div>
+  );
+}

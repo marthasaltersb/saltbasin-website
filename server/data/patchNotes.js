@@ -400,4 +400,67 @@ const RELEASES = [
       },
     ],
   },
+
+  // ─────────────────────── v0.13 — Resume, Templates & Profile Depth ───────────────────────
+  {
+    version: 'v0.13',
+    name: 'Resume, Templates & Profile Depth',
+    date: '2026-06-09',
+    summary:
+      'Major expansion of member profile capabilities: categorized section template modal, career resume page seeded by default, "My Resume" member app with preset builder and AI interpreter, expanded case study + client snapshot blocks, Skills + Industry Wheel + Career Timeline templates, configurable section action buttons, and a generic member JSON store for future extensibility.',
+    sections: [
+      {
+        heading: 'New — Template Categories',
+        items: [
+          'Section template modal rebuilt: flat grid replaced by a 4-category sidebar (General, Member Profile, Org Profile, Project Management)',
+          'General: Blank, Hero, Two Column, CTA, Stat Grid',
+          'Member Profile: Career Timeline, Case Studies, Client Snapshot, Skills, Technology, Industry Wheel, Executive Summary, Services/Offerings, Resume Block',
+          'Org Profile: Company Timeline, Roadmap, Product Mockup, Team/Leaderboard',
+          'Project Management: KPI Dashboard, Status Heatmap, Project Timeline, Feature Cards, Decision Tree, Output Generator',
+          'Each category has a tab count and its templates include updated default field seeds tailored to their use case',
+        ],
+      },
+      {
+        heading: 'New — My Resume',
+        items: [
+          'New "My Resume" tab in the member admin shell (next to My Profile)',
+          'Resume preset builder: create named presets by checking which pages/sections to include in a given resume variant',
+          'Primary preset designation — the primary resume is the publicly downloadable version on the member\'s profile page',
+          'Public download link displayed in the panel once a primary preset is configured',
+          'Resume interpreter agent: paste any job description and the AI returns a tailored professional summary, top skills to highlight, experience bullet rewrites, and gap analysis',
+          'Copy-to-clipboard and direct link to the resume output renderer',
+        ],
+      },
+      {
+        heading: 'New — Resume Page Default',
+        items: [
+          'New member sites are seeded with a "Resume" page out of the box (in addition to Home, About, Contact)',
+          'The Resume page includes: Resume Hero section (navy, with Download PDF + Contact CTA), Career Timeline, Role Detail (dynamic roles list), and Skills',
+          'All role and skill entries are fully editable from the member admin',
+        ],
+      },
+      {
+        heading: 'New — Block & Editor Improvements',
+        items: [
+          'Skills block: skill groups with category headings, name, proficiency level (expert/proficient/familiar), and years — rendered as colored chips',
+          'Client Snapshot block: per-client inputs for industry, employer sponsor, capabilities delivered/touched, technology delivered/touched, revenue range, and tags; rollup view groups by industry, capability, or revenue',
+          'Case Studies block: expanded to 8 structured fields per case (clientSummary, problemStatement, kpiImprovement, methodsTaken, challenges, impact, feedback, tags) with accordion expand in both editor and public view',
+          'Career Timeline configurable actions — no longer hardcoded to "View Resume"; CTA buttons set via the Section Actions editor',
+          'Section Actions card visible for every section in the editor — add, edit, and remove CTA buttons (label, href, style)',
+          'Photo/media upload support in any section via + Add Photo Field in the editor Content Fields card',
+        ],
+      },
+      {
+        heading: 'Behind the scenes',
+        items: [
+          'New table: member_json_store (user_id, key, data, updated_at) — generic key-value store for member settings that don\'t fit the draft/published content model',
+          'New API: GET/PUT /api/members/me/resume-presets persists preset JSON to member_json_store key="resume_presets"',
+          'New component: src/components/admin/MyResumePanel.jsx',
+          'defaultMemberSite.js updated: Resume page added as 3rd page with 4 sections (hero, timeline, roles, skills)',
+          'SectionTemplateModal.jsx fully rewritten: 37 template definitions across 4 categories, category sidebar, Step 1 grid auto-sizes to category',
+          'AdminShell: "My Resume" tab wired for isMember; resume excluded from PublishBar',
+        ],
+      },
+    ],
+  },
 ];

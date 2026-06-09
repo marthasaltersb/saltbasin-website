@@ -3147,14 +3147,28 @@ function TimelineBlock({ section }) {
             ◆ {f.educationLine}
           </div>
         )}
-        <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <a href="/output/resume" target="_blank" rel="noreferrer" className="sb-btn sb-btn-gold" style={{ fontSize: '0.72rem', padding: '0.55rem 1.25rem' }}>
-            ↓ View / Download Resume
-          </a>
-          <a href="#references-request" className="sb-btn sb-btn-outline-dark" style={{ fontSize: '0.72rem', padding: '0.55rem 1.25rem' }}>
-            Request references
-          </a>
-        </div>
+        {/* Configurable action buttons — defined via section.fields.actions array
+            [{label, href, style:'gold'|'outline'|'outline-dark'}] or legacy cta1/cta2 fields */}
+        {(() => {
+          const btns = Array.isArray(f.actions) && f.actions.length
+            ? f.actions
+            : [
+                f.cta1 ? { label: f.cta1, href: f.cta1Link || '#', style: f.cta1Style || 'gold' } : null,
+                f.cta2 ? { label: f.cta2, href: f.cta2Link || '#', style: f.cta2Style || 'outline-dark' } : null,
+              ].filter(Boolean);
+          if (!btns.length) return null;
+          return (
+            <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              {btns.map((b, i) => (
+                <a key={i} href={b.href} target={b.href?.startsWith('http') ? '_blank' : undefined} rel="noreferrer"
+                  className={`sb-btn sb-btn-${b.style || 'gold'}`}
+                  style={{ fontSize: '0.72rem', padding: '0.55rem 1.25rem' }}>
+                  {b.label}
+                </a>
+              ))}
+            </div>
+          );
+        })()}
       </div>
     </section>
   );
@@ -3168,20 +3182,13 @@ const CASE_STUDY_SLUG_BY_INDEX = {
 
 function CaseStudiesBlock({ section }) {
   const f = section.fields || {};
-  // Support both the dynamic `cases` array (new) and the legacy fixed-slot
-  // fields (case1Title…case5Title) for backward compat with existing content.
+  // Supports three shapes:
+  //  1. f.cases[] with full new fields (clientSummary, problemStatement, kpiImprovement, methodsTaken, challenges, impact)
+  //  2. f.cases[] with legacy shape (challenge, approach, outcome, tags)
+  //  3. Legacy fixed-slot fields (case1Title…case5Title)
   let cases;
   if (Array.isArray(f.cases) && f.cases.length > 0) {
-    cases = f.cases.map((c, i) => ({
-      key: `case-${i}`,
-      title: c.title || '',
-      subtitle: [c.client, c.sector].filter(Boolean).join(' · '),
-      context: c.challenge ? [c.challenge] : [],
-      role: c.approach || '',
-      impact: c.outcome ? [c.outcome] : [],
-      feedback: '',
-      tags: c.tags ? c.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
-    }));
+    cases = f.cases.map((c, i) => ({ key: `case-${i}`, ...c }));
   } else {
     cases = [];
     for (let i = 1; i <= 5; i++) {
@@ -3191,13 +3198,11 @@ function CaseStudiesBlock({ section }) {
         key: `case${i}`,
         slug: CASE_STUDY_SLUG_BY_INDEX[i],
         title,
-        subtitle: f[`case${i}Subtitle`] || '',
-        context: (f[`case${i}Context`] || '').split('\n').map((s) => s.trim()).filter(Boolean),
-        role: f[`case${i}Role`] || '',
-        actions: (f[`case${i}Actions`] || '').split('\n').map((s) => s.trim()).filter(Boolean),
-        impact: (f[`case${i}Impact`] || '').split('\n').map((s) => s.trim()).filter(Boolean),
+        clientSummary: f[`case${i}Subtitle`] || '',
+        problemStatement: f[`case${i}Context`] || '',
+        methodsTaken: f[`case${i}Role`] || '',
+        impact: f[`case${i}Impact`] || '',
         feedback: f[`case${i}Feedback`] || '',
-        tags: [],
       });
     }
   }
@@ -3228,58 +3233,62 @@ function CaseStudiesBlock({ section }) {
 }
 
 function CaseStudyCard({ data }) {
+  const [open, setOpen] = React.useState(false);
+  // Normalize tags from string or array
+  const tags = Array.isArray(data.tags) ? data.tags
+    : typeof data.tags === 'string' ? data.tags.split(',').map(t => t.trim()).filter(Boolean)
+    : [];
+
+  const FIELDS = [
+    { key: 'clientSummary',    label: 'Client Summary' },
+    { key: 'problemStatement', label: 'Problem Statement' },
+    { key: 'kpiImprovement',   label: 'KPI Improvement', accent: true },
+    { key: 'methodsTaken',     label: 'Methods & Approach' },
+    { key: 'challenges',       label: 'Challenges' },
+    { key: 'impact',           label: 'Impact & Outcomes', accent: true },
+  ];
+
+  const filledFields = FIELDS.filter(f => data[f.key]);
+  const preview = filledFields.slice(0, 3);
+  const rest = filledFields.slice(3);
+
   return (
-    <div
-      style={{
-        background: 'rgba(255,255,255,0.04)',
-        border: '0.5px solid rgba(196,132,58,0.3)',
-        borderLeft: '3px solid var(--sb-gold)',
-        borderRadius: 'var(--sb-radius)',
-        padding: '1.75rem 2rem',
-      }}
-    >
-      <div className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>
-        Case Study
-      </div>
-      <h3
-        className="sb-display"
-        style={{
-          fontSize: '1.6rem',
-          color: 'var(--sb-cream)',
-          letterSpacing: '0.04em',
-          marginBottom: '0.35rem',
-        }}
-      >
+    <div style={{
+      background: 'rgba(255,255,255,0.04)',
+      border: '0.5px solid rgba(196,132,58,0.3)',
+      borderLeft: '3px solid var(--sb-gold)',
+      borderRadius: 'var(--sb-radius)',
+      padding: '1.75rem 2rem',
+    }}>
+      <div className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>Case Study</div>
+      <h3 className="sb-display" style={{ fontSize: '1.6rem', color: 'var(--sb-cream)', letterSpacing: '0.04em', marginBottom: '0.35rem' }}>
         {data.title}
       </h3>
-      {data.subtitle && (
-        <div
-          style={{
-            fontFamily: 'var(--sb-font-label)',
-            fontSize: '0.8rem',
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase',
-            color: 'var(--sb-gold)',
-            marginBottom: '1.25rem',
-          }}
-        >
-          {data.subtitle}
+      {/* Client + sector subtitle */}
+      {(data.clientSummary || data.subtitle) && (
+        <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.8rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--sb-gold)', marginBottom: '1.25rem' }}>
+          {data.clientSummary || data.subtitle}
+        </div>
+      )}
+      {tags.length > 0 && (
+        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+          {tags.map((t, i) => (
+            <span key={i} style={{ fontSize: '0.6rem', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '2px 8px', borderRadius: 10, background: 'rgba(196,132,58,0.15)', color: 'var(--sb-gold)', border: '0.5px solid rgba(196,132,58,0.3)' }}>{t}</span>
+          ))}
         </div>
       )}
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-          gap: '1.25rem',
-          marginBottom: data.feedback ? '1.25rem' : 0,
-        }}
-      >
-        <CaseField label="Context" items={data.context} />
-        <CaseField label="Role" text={data.role} />
-        <CaseField label="Actions" items={data.actions} />
-        <CaseField label="Impact" items={data.impact} accent />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem', marginBottom: rest.length && !open ? '1rem' : (data.feedback ? '1.25rem' : 0) }}>
+        {(open ? filledFields : preview).map(({ key, label, accent }) => (
+          <CaseField key={key} label={label} text={data[key]} accent={accent} />
+        ))}
       </div>
+
+      {rest.length > 0 && (
+        <button onClick={() => setOpen(o => !o)} style={{ background: 'none', border: '0.5px solid rgba(196,132,58,0.4)', borderRadius: 4, color: 'var(--sb-gold)', fontSize: '0.72rem', padding: '4px 14px', cursor: 'pointer', marginBottom: data.feedback ? '1rem' : 0, fontFamily: 'var(--sb-font-label)', letterSpacing: '0.08em' }}>
+          {open ? '▲ Less detail' : `▼ More detail (${rest.length} more fields)`}
+        </button>
+      )}
 
       {data.feedback && (
         <div
@@ -4246,6 +4255,186 @@ function OutputGeneratorBlock({ section, mode }) {
   );
 }
 
+// ── Skills Block ─────────────────────────────────────────────────────────────
+// Dynamic skill entries grouped by category.
+// skills: [{category, items: [{name, level:'expert'|'proficient'|'familiar', years}]}]
+function SkillsBlock({ section }) {
+  const f = section.fields || {};
+  const groups = Array.isArray(f.skills) ? f.skills : [];
+  const bg = BG_VAR[section.bg] || 'var(--sb-ivory)';
+  const dark = section.bg === 'navy' || section.bg === 'teal';
+  const LEVEL_COLOR = { expert: 'var(--sb-gold)', proficient: 'var(--sb-teal-deep)', familiar: '#8b9bae' };
+  const LEVEL_W = { expert: '100%', proficient: '70%', familiar: '40%' };
+  return (
+    <section id={section.id} style={{ background: bg, padding: '5rem 2rem' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
+        {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', marginBottom: f.intro ? '0.75rem' : '2rem' }}>{f.heading}</h2>}
+        {f.intro && <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: dark ? 'var(--sb-sage)' : '#555', maxWidth: 740, marginBottom: '2rem' }}>{f.intro}</p>}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+          {groups.map((g, gi) => (
+            <div key={gi} style={{ background: dark ? 'rgba(255,255,255,0.05)' : 'white', borderRadius: 10, padding: '1.25rem', border: dark ? '0.5px solid rgba(255,255,255,0.1)' : '0.5px solid rgba(0,0,0,0.07)', boxShadow: dark ? 'none' : '0 2px 12px rgba(0,0,0,0.05)' }}>
+              {g.category && (
+                <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.62rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--sb-gold)', marginBottom: '1rem', paddingBottom: '0.4rem', borderBottom: '0.5px solid rgba(196,132,58,0.2)' }}>{g.category}</div>
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                {(g.items || []).map((sk, si) => {
+                  const lvl = sk.level || 'proficient';
+                  return (
+                    <div key={si}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.2rem' }}>
+                        <span style={{ fontSize: '0.88rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', fontWeight: 500 }}>{sk.name}</span>
+                        <span style={{ fontSize: '0.62rem', color: LEVEL_COLOR[lvl] || '#888', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                          {sk.years ? `${sk.years}y · ` : ''}{lvl}
+                        </span>
+                      </div>
+                      <div style={{ height: 3, background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)', borderRadius: 2, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: LEVEL_W[lvl] || '60%', background: LEVEL_COLOR[lvl] || '#888', borderRadius: 2, transition: 'width 0.4s ease' }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Legend */}
+        <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+          {Object.entries(LEVEL_COLOR).map(([lvl, color]) => (
+            <div key={lvl} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.68rem', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.1em', color: dark ? 'var(--sb-sage)' : '#777' }}>
+              <div style={{ width: 20, height: 3, borderRadius: 2, background: color }} />
+              {lvl.charAt(0).toUpperCase() + lvl.slice(1)}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Client Snapshot Block ─────────────────────────────────────────────────────
+// Each client is an entry: {name, industry, employerSponsor, capabilitiesDelivered,
+//   capabilitiesTouched, techDelivered, techTouched, revenueRange, tags}
+// The block renders a grouped rollup view: groupBy = 'industry'|'capability'|'revenue'
+function ClientSnapshotBlock({ section }) {
+  const f = section.fields || {};
+  const clients = Array.isArray(f.clients) ? f.clients : [];
+  const [groupBy, setGroupBy] = React.useState(f.defaultGroupBy || 'industry');
+  const bg = BG_VAR[section.bg] || 'var(--sb-ivory)';
+  const dark = section.bg === 'navy' || section.bg === 'teal';
+
+  // Build grouped map
+  function getGroupKey(c) {
+    if (groupBy === 'industry') return c.industry || 'Other';
+    if (groupBy === 'revenue') return c.revenueRange || 'Unspecified';
+    if (groupBy === 'capability') {
+      const caps = (c.capabilitiesDelivered || '').split(',').map(s => s.trim()).filter(Boolean);
+      return caps[0] || 'General';
+    }
+    return 'All';
+  }
+
+  const grouped = {};
+  clients.forEach(c => {
+    if (groupBy === 'capability') {
+      // A client can appear in multiple capability groups
+      const caps = (c.capabilitiesDelivered || '').split(',').map(s => s.trim()).filter(Boolean);
+      const keys = caps.length ? caps : ['General'];
+      keys.forEach(k => { (grouped[k] = grouped[k] || []).push(c); });
+    } else {
+      const k = getGroupKey(c);
+      (grouped[k] = grouped[k] || []).push(c);
+    }
+  });
+
+  const sortedKeys = Object.keys(grouped).sort();
+  const GROUP_BTNS = [
+    { id: 'industry',   label: 'By Industry' },
+    { id: 'capability', label: 'By Capability' },
+    { id: 'revenue',    label: 'By Revenue' },
+  ];
+
+  return (
+    <section id={section.id} style={{ background: bg, padding: '5rem 2rem' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
+        {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', marginBottom: f.intro ? '0.75rem' : '1.5rem' }}>{f.heading}</h2>}
+        {f.intro && <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: dark ? 'var(--sb-sage)' : '#555', maxWidth: 740, marginBottom: '1.5rem' }}>{f.intro}</p>}
+
+        {/* Summary chips */}
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+          <div style={{ padding: '0.4rem 1rem', borderRadius: 20, background: 'rgba(196,132,58,0.12)', border: '0.5px solid rgba(196,132,58,0.3)', fontSize: '0.75rem', color: 'var(--sb-gold)', fontFamily: 'var(--sb-font-label)' }}>{clients.length} clients</div>
+          {['industry','capability','revenue'].map(dim => {
+            const vals = new Set();
+            clients.forEach(c => {
+              if (dim === 'industry') vals.add(c.industry);
+              else if (dim === 'capability') (c.capabilitiesDelivered||'').split(',').forEach(x => x.trim() && vals.add(x.trim()));
+              else vals.add(c.revenueRange);
+            });
+            vals.delete(''); vals.delete(undefined);
+            return vals.size ? <div key={dim} style={{ padding: '0.4rem 1rem', borderRadius: 20, background: dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)', border: '0.5px solid rgba(0,0,0,0.1)', fontSize: '0.72rem', color: dark ? 'var(--sb-sage)' : '#666' }}>{vals.size} {dim === 'capability' ? 'capabilities' : dim === 'revenue' ? 'revenue ranges' : 'industries'}</div> : null;
+          })}
+        </div>
+
+        {/* Group-by toggle */}
+        <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.5rem' }}>
+          {GROUP_BTNS.map(b => (
+            <button key={b.id} onClick={() => setGroupBy(b.id)} style={{ padding: '4px 14px', borderRadius: 6, border: `1.5px solid ${groupBy === b.id ? 'var(--sb-gold)' : 'rgba(0,0,0,0.15)'}`, background: groupBy === b.id ? 'var(--sb-gold)' : 'transparent', color: groupBy === b.id ? 'white' : (dark ? 'var(--sb-sage)' : '#555'), fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.06em', transition: 'all 0.15s' }}>
+              {b.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Grouped cards */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {sortedKeys.map(grpKey => (
+            <div key={grpKey}>
+              <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.65rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--sb-gold)', marginBottom: '0.75rem', paddingBottom: '0.35rem', borderBottom: '0.5px solid rgba(196,132,58,0.2)' }}>
+                {grpKey} <span style={{ color: dark ? 'var(--sb-sage)' : '#aaa', fontWeight: 400 }}>({grouped[grpKey].length})</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '0.75rem' }}>
+                {grouped[grpKey].map((c, ci) => (
+                  <div key={ci} style={{ background: dark ? 'rgba(255,255,255,0.05)' : 'white', borderRadius: 8, padding: '1rem 1.1rem', border: dark ? '0.5px solid rgba(255,255,255,0.1)' : '0.5px solid rgba(0,0,0,0.07)', boxShadow: dark ? 'none' : '0 1px 8px rgba(0,0,0,0.04)' }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.9rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', marginBottom: '0.25rem' }}>{c.name || 'Client'}</div>
+                    {c.employerSponsor && <div style={{ fontSize: '0.72rem', color: dark ? 'var(--sb-sage)' : '#888', marginBottom: '0.5rem' }}>via {c.employerSponsor}</div>}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                      {c.industry && <SnapshotRow label="Industry" val={c.industry} dark={dark} />}
+                      {c.revenueRange && <SnapshotRow label="Revenue" val={c.revenueRange} dark={dark} />}
+                      {c.capabilitiesDelivered && <SnapshotRow label="Delivered" val={c.capabilitiesDelivered} dark={dark} />}
+                      {c.capabilitiesTouched && <SnapshotRow label="Touched" val={c.capabilitiesTouched} dark={dark} />}
+                      {c.techDelivered && <SnapshotRow label="Tech" val={c.techDelivered} dark={dark} />}
+                    </div>
+                    {c.tags && (
+                      <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+                        {c.tags.split(',').map(t => t.trim()).filter(Boolean).map((t, ti) => (
+                          <span key={ti} style={{ fontSize: '0.58rem', padding: '1px 7px', borderRadius: 8, background: 'rgba(196,132,58,0.12)', color: 'var(--sb-gold)', border: '0.5px solid rgba(196,132,58,0.25)', letterSpacing: '0.06em' }}>{t}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+          {clients.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '3rem', color: dark ? 'var(--sb-sage)' : '#aaa', fontSize: '0.88rem' }}>
+              Add clients via the editor to populate the snapshot.
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+function SnapshotRow({ label, val, dark }) {
+  return (
+    <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.75rem', lineHeight: 1.4 }}>
+      <span style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.6rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: dark ? 'var(--sb-sage)' : '#aaa', flexShrink: 0, minWidth: 56 }}>{label}</span>
+      <span style={{ color: dark ? 'var(--sb-cream)' : '#333' }}>{val}</span>
+    </div>
+  );
+}
+
 const REGISTRY = {
   hero: HeroBlock,
   scripture: ScriptureBlock,
@@ -4283,6 +4472,8 @@ const REGISTRY = {
   choiceGrid: ChoiceGridBlock,
   decisionTree: DecisionTreeBlock,
   outputGenerator: OutputGeneratorBlock,
+  skills: SkillsBlock,
+  clientSnapshot: ClientSnapshotBlock,
 };
 
 export function RenderSection({ section, config, mode = 'public', memberSlug = '' }) {
