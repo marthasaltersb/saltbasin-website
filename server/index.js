@@ -24,6 +24,7 @@ import eventsRouter from './routes/events.js';
 import oauthRouter from './routes/oauth.js';
 import profilesRouter from './routes/profiles.js';
 import uploadsRouter, { uploadsDir } from './routes/uploads.js';
+import fieldAuditRouter from './routes/fieldAudit.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProd = process.env.NODE_ENV === 'production';
@@ -70,6 +71,7 @@ app.use('/api/events', eventsRouter);
 app.use('/api/oauth', oauthRouter);
 app.use('/api/profiles', profilesRouter);
 app.use('/api/uploads', uploadsRouter);
+app.use('/api/field-audit', fieldAuditRouter);
 
 // Uploaded files now live on Supabase Storage at <SUPABASE_URL>/storage/v1/object/public/uploads/<file>.
 // The returned URL from POST /api/uploads is already absolute, so the browser

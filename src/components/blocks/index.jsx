@@ -3596,6 +3596,656 @@ function IconGridBlock({ section }) {
   );
 }
 
+// ── Status color helpers (shared across new blocks) ──────────────────────────
+const STATUS_PILL = {
+  complete:    { bg: '#24bb7f20', border: '#24bb7f50', text: '#1a8a5a' },
+  'in-progress':{ bg: '#f9dc5c20', border: '#f9dc5c60', text: '#a07800' },
+  planned:     { bg: '#5271ff20', border: '#5271ff50', text: '#3050cc' },
+  blocked:     { bg: '#f2504420', border: '#f2504450', text: '#c02010' },
+  pending:     { bg: '#8b9bae20', border: '#8b9bae50', text: '#4a6670' },
+};
+
+// ── KPI Dashboard Block ───────────────────────────────────────────────────────
+// Multi-panel metric grid. panels: [{label, value, change, caption, color}]
+function KpiDashboardBlock({ section }) {
+  const f = section.fields || {};
+  const panels = Array.isArray(f.panels) ? f.panels : [];
+  const PASTEL = ['#c4e7e3','#b1f3fe','#fbd1f5','#e4cafc','#ffeec0','#cdfdf1','#fbba99','#fadf8d','#c8f5c8','#fde4d0'];
+  const bg = BG_VAR[section.bg] || 'var(--sb-ivory)';
+  const dark = section.bg === 'navy' || section.bg === 'teal';
+  return (
+    <section id={section.id} style={{ background: bg, padding: '5rem 2rem' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
+        {f.heading && (
+          <h2 className="sb-display" style={{ fontSize: '2.2rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', marginBottom: f.intro ? '0.75rem' : '2rem' }}>
+            {f.heading}
+          </h2>
+        )}
+        {f.intro && <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: dark ? 'var(--sb-sage)' : '#555', maxWidth: 740, marginBottom: '2.5rem' }}>{f.intro}</p>}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+          {panels.map((p, i) => {
+            const cardBg = p.color || PASTEL[i % PASTEL.length];
+            const isUp = String(p.change || '').startsWith('+');
+            const isDown = String(p.change || '').startsWith('-');
+            return (
+              <div key={i} style={{ background: cardBg, borderRadius: 12, padding: '1.5rem 1.25rem', position: 'relative', overflow: 'hidden' }}>
+                {p.icon && <div style={{ fontSize: '1.4rem', marginBottom: '0.5rem' }}>{p.icon}</div>}
+                <div style={{ fontSize: '0.62rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: '#333', opacity: 0.65, marginBottom: '0.4rem', fontFamily: 'var(--sb-font-label)' }}>{p.label}</div>
+                <div style={{ fontSize: '2.2rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#1a1a1a', lineHeight: 1.1 }}>{p.value}</div>
+                {p.change && (
+                  <div style={{ fontSize: '0.75rem', marginTop: '0.4rem', color: isUp ? '#1a8a5a' : isDown ? '#c02010' : '#555', fontWeight: 600 }}>
+                    {isUp ? '▲' : isDown ? '▼' : '●'} {p.change}
+                  </div>
+                )}
+                {p.caption && <div style={{ fontSize: '0.7rem', color: '#555', opacity: 0.75, marginTop: '0.3rem', lineHeight: 1.4 }}>{p.caption}</div>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Roadmap Block ─────────────────────────────────────────────────────────────
+// Horizontal timeline with color-coded milestones.
+// milestones: [{date, title, description, status}]
+function RoadmapBlock({ section }) {
+  const f = section.fields || {};
+  const milestones = Array.isArray(f.milestones) ? f.milestones : [];
+  const GRAD_COLORS = ['#f950b8','#a352ff','#5271ff','#0077b6','#02c39a','#24bb7f','#f9dc5c','#ed7843'];
+  const bg = BG_VAR[section.bg] || 'var(--sb-linen)';
+  const dark = section.bg === 'navy' || section.bg === 'teal';
+  return (
+    <section id={section.id} style={{ background: bg, padding: '5rem 2rem', overflow: 'hidden' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
+        {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', marginBottom: f.intro ? '0.75rem' : '3rem' }}>{f.heading}</h2>}
+        {f.intro && <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: dark ? 'var(--sb-sage)' : '#555', maxWidth: 740, marginBottom: '3rem' }}>{f.intro}</p>}
+        <div style={{ overflowX: 'auto', paddingBottom: '1rem' }}>
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', minWidth: Math.max(milestones.length * 220, 600) }}>
+            {/* Gradient spine */}
+            <div style={{ position: 'absolute', top: 20, left: '4%', right: '4%', height: 3, background: 'linear-gradient(to right, #f950b8, #5271ff, #02c39a)', borderRadius: 2, opacity: 0.5 }} />
+            {milestones.map((m, i) => {
+              const color = GRAD_COLORS[i % GRAD_COLORS.length];
+              const pill = STATUS_PILL[m.status] || {};
+              return (
+                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 0, position: 'relative' }}>
+                  {/* Node dot */}
+                  <div style={{ width: 20, height: 20, borderRadius: '50%', background: color, border: '3px solid white', boxShadow: `0 0 0 3px ${color}44`, zIndex: 1, flexShrink: 0, marginBottom: '1.25rem' }} />
+                  {/* Date */}
+                  <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.6rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: color, marginBottom: '0.35rem', fontWeight: 700 }}>{m.date}</div>
+                  {/* Title */}
+                  <div style={{ fontSize: '0.88rem', fontWeight: 600, color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', textAlign: 'center', padding: '0 0.5rem', marginBottom: '0.4rem', lineHeight: 1.3 }}>{m.title}</div>
+                  {/* Description */}
+                  {m.description && <p style={{ fontSize: '0.76rem', color: dark ? 'var(--sb-sage)' : '#666', textAlign: 'center', lineHeight: 1.55, padding: '0 0.5rem', margin: 0, marginBottom: '0.5rem' }}>{m.description}</p>}
+                  {/* Status pill */}
+                  {m.status && (
+                    <div style={{ fontSize: '0.6rem', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '2px 10px', borderRadius: 20, background: pill.bg || '#eee', border: `1px solid ${pill.border || '#ccc'}`, color: pill.text || '#333', fontFamily: 'var(--sb-font-label)' }}>
+                      {m.status}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Heatmap Block ─────────────────────────────────────────────────────────────
+// Status matrix — rows × columns with color-coded cells.
+// rows: [{label, values: ['green','yellow','red','blue','gray',...]}]
+// columns: ['Jan','Feb',...]
+function HeatmapBlock({ section }) {
+  const f = section.fields || {};
+  const rows = Array.isArray(f.rows) ? f.rows : [];
+  const columns = Array.isArray(f.columns) ? f.columns : [];
+  const CELL = {
+    green:  { bg: '#24bb7f18', border: '#24bb7f40', text: '#1a7a4f', label: 'On Track' },
+    yellow: { bg: '#f9dc5c18', border: '#f9dc5c50', text: '#a07800', label: 'At Risk' },
+    red:    { bg: '#f2504418', border: '#f2504440', text: '#c02010', label: 'Blocked' },
+    blue:   { bg: '#5271ff18', border: '#5271ff40', text: '#2040cc', label: 'Planned' },
+    gray:   { bg: '#88888810', border: '#88888830', text: '#666',    label: 'N/A' },
+    teal:   { bg: '#02a1a618', border: '#02a1a640', text: '#016870', label: 'Review' },
+  };
+  const bg = BG_VAR[section.bg] || 'var(--sb-ivory)';
+  const dark = section.bg === 'navy' || section.bg === 'teal';
+  const legend = Object.entries(CELL).filter(([k]) => k !== 'gray');
+  return (
+    <section id={section.id} style={{ background: bg, padding: '5rem 2rem' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
+        {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', marginBottom: f.intro ? '0.75rem' : '2rem' }}>{f.heading}</h2>}
+        {f.intro && <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: dark ? 'var(--sb-sage)' : '#555', maxWidth: 740, marginBottom: '2rem' }}>{f.intro}</p>}
+        {/* Legend */}
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+          {legend.map(([k, c]) => (
+            <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.68rem', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.1em' }}>
+              <div style={{ width: 12, height: 12, borderRadius: 3, background: c.bg, border: `1px solid ${c.border}` }} />
+              <span style={{ color: dark ? 'var(--sb-sage)' : '#555' }}>{c.label}</span>
+            </div>
+          ))}
+        </div>
+        {/* Table */}
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 400 }}>
+            {columns.length > 0 && (
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left', padding: '0.5rem 1rem 0.5rem 0', fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: 'var(--sb-font-label)', color: dark ? 'var(--sb-sage)' : 'var(--sb-teal-deep)', fontWeight: 600, borderBottom: '0.5px solid rgba(128,128,128,0.25)' }}>
+                    {f.rowLabel || 'Item'}
+                  </th>
+                  {columns.map((col, i) => (
+                    <th key={i} style={{ padding: '0.5rem 0.5rem', fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: 'var(--sb-font-label)', color: dark ? 'var(--sb-sage)' : 'var(--sb-teal-deep)', fontWeight: 600, textAlign: 'center', borderBottom: '0.5px solid rgba(128,128,128,0.25)' }}>
+                      {col}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+            )}
+            <tbody>
+              {rows.map((row, ri) => (
+                <tr key={ri} style={{ borderBottom: '0.5px solid rgba(128,128,128,0.12)' }}>
+                  <td style={{ padding: '0.6rem 1rem 0.6rem 0', fontSize: '0.88rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', fontWeight: 500, whiteSpace: 'nowrap' }}>{row.label}</td>
+                  {(row.values || []).map((v, ci) => {
+                    const c = CELL[v] || CELL.gray;
+                    return (
+                      <td key={ci} style={{ padding: '0.4rem 0.5rem', textAlign: 'center' }}>
+                        <div style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 5, background: c.bg, border: `1px solid ${c.border}`, fontSize: '0.65rem', letterSpacing: '0.08em', color: c.text, fontFamily: 'var(--sb-font-label)', whiteSpace: 'nowrap' }}>
+                          {v || '—'}
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Leaderboard Block ─────────────────────────────────────────────────────────
+// Ranked list with metric values.
+// entries: [{name, subtitle, value, change, icon, avatar}]
+function LeaderboardBlock({ section }) {
+  const f = section.fields || {};
+  const entries = Array.isArray(f.entries) ? f.entries : [];
+  const bg = BG_VAR[section.bg] || 'var(--sb-ivory)';
+  const dark = section.bg === 'navy' || section.bg === 'teal';
+  const RANK_BG = ['#C4843A','#8B9BAE','#C8895A']; // gold / silver / bronze
+  return (
+    <section id={section.id} style={{ background: bg, padding: '5rem 2rem' }}>
+      <div style={{ maxWidth: 800, margin: '0 auto' }}>
+        {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
+        {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', marginBottom: f.intro ? '0.75rem' : '2rem' }}>{f.heading}</h2>}
+        {f.intro && <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: dark ? 'var(--sb-sage)' : '#555', maxWidth: 640, marginBottom: '2rem' }}>{f.intro}</p>}
+        <div style={{ background: dark ? 'rgba(255,255,255,0.05)' : 'white', borderRadius: 12, overflow: 'hidden', border: dark ? '0.5px solid rgba(255,255,255,0.1)' : '0.5px solid rgba(0,0,0,0.08)', boxShadow: dark ? 'none' : '0 2px 20px rgba(0,0,0,0.06)' }}>
+          {entries.map((e, i) => {
+            const rankColor = RANK_BG[i] || (dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)');
+            const isUp = String(e.change || '').startsWith('+');
+            const isDown = String(e.change || '').startsWith('-');
+            return (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem 1.5rem', borderBottom: i < entries.length - 1 ? (dark ? '0.5px solid rgba(255,255,255,0.07)' : '0.5px solid rgba(0,0,0,0.06)') : 'none', transition: 'background 0.15s' }}>
+                {/* Rank */}
+                <div style={{ width: 34, height: 34, borderRadius: '50%', background: i < 3 ? rankColor : (dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)'), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.82rem', color: i < 3 ? 'white' : (dark ? 'var(--sb-sage)' : 'var(--sb-teal-deep)'), flexShrink: 0 }}>
+                  {i + 1}
+                </div>
+                {/* Avatar / icon */}
+                {e.avatar
+                  ? <img src={e.avatar} alt={e.name} style={{ width: 42, height: 42, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                  : <div style={{ width: 42, height: 42, borderRadius: '50%', background: dark ? 'rgba(255,255,255,0.1)' : 'var(--sb-linen)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0 }}>{e.icon || '👤'}</div>
+                }
+                {/* Name + subtitle */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.95rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{e.name}</div>
+                  {e.subtitle && <div style={{ fontSize: '0.76rem', color: dark ? 'var(--sb-sage)' : '#888', marginTop: '0.1rem' }}>{e.subtitle}</div>}
+                </div>
+                {/* Value */}
+                <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '1.15rem', fontWeight: 800, color: i === 0 ? 'var(--sb-gold)' : (dark ? 'var(--sb-cream)' : 'var(--sb-navy)'), letterSpacing: '-0.01em', flexShrink: 0 }}>{e.value}</div>
+                {/* Change */}
+                {e.change && <div style={{ fontSize: '0.75rem', fontWeight: 600, color: isUp ? '#24bb7f' : isDown ? '#f25044' : (dark ? 'var(--sb-sage)' : '#888'), flexShrink: 0, minWidth: 36, textAlign: 'right' }}>{isUp ? '▲' : isDown ? '▼' : '●'} {e.change}</div>}
+              </div>
+            );
+          })}
+        </div>
+        {f.footnote && <p style={{ fontSize: '0.72rem', color: dark ? 'var(--sb-sage)' : '#888', marginTop: '1rem', textAlign: 'right', opacity: 0.75 }}>{f.footnote}</p>}
+      </div>
+    </section>
+  );
+}
+
+// ── Executive Summary Block ───────────────────────────────────────────────────
+// Company/personal overview with key stats and contact block.
+// stats: [{value, label}]; contacts: [{icon, label, value, href}]
+function ExecutiveSummaryBlock({ section }) {
+  const f = section.fields || {};
+  const stats = Array.isArray(f.stats) ? f.stats : [];
+  const contacts = Array.isArray(f.contacts) ? f.contacts : [];
+  const ACCENT = f.accentColor || '#ed7843';
+  const bg = BG_VAR[section.bg] || '#fff9e7';
+  const dark = section.bg === 'navy' || section.bg === 'teal';
+  return (
+    <section id={section.id} style={{ background: bg, padding: '5rem 2rem' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'minmax(0,1.4fr) minmax(0,1fr)', gap: '4rem', alignItems: 'center' }}>
+        {/* Left: text + stats */}
+        <div>
+          {f.eyebrow && <p style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: ACCENT, marginBottom: '1rem' }}>{f.eyebrow}</p>}
+          {f.heading && <h2 style={{ fontSize: '2.8rem', fontWeight: 700, color: dark ? 'var(--sb-cream)' : '#1a1a1a', lineHeight: 1.15, marginBottom: '1.25rem' }}>{f.heading}</h2>}
+          {f.intro && <p style={{ fontSize: '0.96rem', lineHeight: 1.85, color: dark ? 'var(--sb-sage)' : '#4a4a4a', marginBottom: '2.25rem' }}>{f.intro}</p>}
+          {stats.length > 0 && (
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(stats.length, 3)}, 1fr)`, gap: '1rem' }}>
+              {stats.map((s, i) => (
+                <div key={i} style={{ textAlign: 'center', padding: '1.25rem 0.75rem', background: `${ACCENT}12`, border: `0.5px solid ${ACCENT}30`, borderRadius: 8 }}>
+                  <div style={{ fontSize: '2rem', fontWeight: 800, color: ACCENT, letterSpacing: '-0.02em', lineHeight: 1 }}>{s.value}</div>
+                  <div style={{ fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: dark ? 'var(--sb-sage)' : '#666', marginTop: '0.4rem', fontFamily: 'var(--sb-font-label)' }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        {/* Right: contact / info card */}
+        {(contacts.length > 0 || f.cardHeading) && (
+          <div style={{ padding: '2rem', background: dark ? 'rgba(255,255,255,0.06)' : 'white', borderRadius: 14, boxShadow: dark ? 'none' : '0 4px 30px rgba(0,0,0,0.08)', border: dark ? '0.5px solid rgba(255,255,255,0.1)' : '0.5px solid rgba(0,0,0,0.06)' }}>
+            {f.cardHeading && <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: ACCENT, marginBottom: '1.25rem' }}>{f.cardHeading}</div>}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              {contacts.map((c, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  {c.icon && <span style={{ fontSize: '1rem', flexShrink: 0 }}>{c.icon}</span>}
+                  <div>
+                    {c.label && <div style={{ fontSize: '0.65rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: dark ? 'var(--sb-sage)' : '#888', fontFamily: 'var(--sb-font-label)' }}>{c.label}</div>}
+                    {c.href
+                      ? <a href={c.href} style={{ fontSize: '0.88rem', color: ACCENT, textDecoration: 'none' }}>{c.value}</a>
+                      : <div style={{ fontSize: '0.88rem', color: dark ? 'var(--sb-cream)' : '#1a1a1a' }}>{c.value}</div>
+                    }
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// ── App Mockup Block ──────────────────────────────────────────────────────────
+// Phone/tablet frame with content overlay. Useful for showcasing apps/products.
+// screens: [{title, description, image, tag}]; layout: 'phone'|'tablet'|'browser'
+function AppMockupBlock({ section }) {
+  const f = section.fields || {};
+  const screens = Array.isArray(f.screens) ? f.screens : [];
+  const layout = f.layout || 'phone';
+  const GRAD = f.gradientFrom || '#030455';
+  const GRAD2 = f.gradientTo || '#0077b6';
+  const frameW = layout === 'tablet' ? 320 : layout === 'browser' ? 420 : 240;
+  const frameH = layout === 'phone' ? 480 : layout === 'tablet' ? 400 : 300;
+  const frameR = layout === 'browser' ? 10 : 36;
+  const bg = BG_VAR[section.bg] || 'var(--sb-navy)';
+  const dark = section.bg === 'navy' || section.bg === 'teal' || !section.bg;
+  return (
+    <section id={section.id} style={{ background: bg, padding: '5rem 2rem', overflow: 'hidden' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: screens.length > 1 ? '1fr 1fr' : '1fr 1.2fr', gap: '4rem', alignItems: 'center' }}>
+        {/* Text */}
+        <div>
+          {f.eyebrow && <p style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--sb-gold)', marginBottom: '1rem' }}>{f.eyebrow}</p>}
+          {f.heading && <h2 className="sb-display" style={{ fontSize: '2.5rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', lineHeight: 1.2, marginBottom: '1.25rem' }}>{f.heading}</h2>}
+          {f.intro && <p style={{ fontSize: '0.96rem', lineHeight: 1.85, color: dark ? 'var(--sb-sage)' : '#555', marginBottom: '2rem' }}>{f.intro}</p>}
+          {f.cta1 && <a href={f.cta1Link || '#'} className="sb-btn sb-btn-gold">{f.cta1}</a>}
+          {f.cta2 && <a href={f.cta2Link || '#'} className="sb-btn sb-btn-outline" style={{ marginLeft: '1rem' }}>{f.cta2}</a>}
+        </div>
+        {/* Phone frames */}
+        <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
+          {(screens.length ? screens : [{ title: 'App Preview' }]).map((sc, i) => (
+            <div key={i} style={{ width: frameW, flexShrink: 0, position: 'relative' }}>
+              {/* Frame shell */}
+              <div style={{ background: `linear-gradient(145deg, ${GRAD}, ${GRAD2})`, borderRadius: frameR, padding: layout === 'phone' ? '14px 10px' : '10px', boxShadow: '0 24px 60px rgba(0,0,0,0.4)', border: '2px solid rgba(255,255,255,0.15)' }}>
+                {/* Browser chrome */}
+                {layout === 'browser' && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingBottom: '0.5rem' }}>
+                    {['#f25044','#f9dc5c','#24bb7f'].map((c, j) => <div key={j} style={{ width: 10, height: 10, borderRadius: '50%', background: c }} />)}
+                    <div style={{ flex: 1, background: 'rgba(255,255,255,0.15)', borderRadius: 4, height: 20 }} />
+                  </div>
+                )}
+                {/* Phone notch */}
+                {layout === 'phone' && <div style={{ width: 80, height: 6, background: 'rgba(255,255,255,0.25)', borderRadius: 3, margin: '0 auto 10px' }} />}
+                {/* Screen content */}
+                <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: layout === 'phone' ? 24 : 6, minHeight: frameH - 60, overflow: 'hidden', position: 'relative' }}>
+                  {sc.image
+                    ? <img src={sc.image} alt={sc.title || ''} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    : (
+                      <div style={{ padding: '1.5rem 1rem', textAlign: 'center' }}>
+                        {sc.tag && <div style={{ fontSize: '0.58rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', marginBottom: '0.75rem', fontFamily: 'var(--sb-font-label)' }}>{sc.tag}</div>}
+                        <div style={{ fontSize: '1rem', fontWeight: 700, color: 'white', marginBottom: '0.5rem' }}>{sc.title}</div>
+                        {sc.description && <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>{sc.description}</div>}
+                        {/* Placeholder UI chrome */}
+                        <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                          {[0.9,0.7,0.5].map((w,k) => <div key={k} style={{ height: 8, background: 'rgba(255,255,255,0.15)', borderRadius: 4, width: `${w * 100}%`, margin: '0 auto' }} />)}
+                        </div>
+                      </div>
+                    )
+                  }
+                </div>
+                {/* Home indicator */}
+                {layout === 'phone' && <div style={{ width: 60, height: 4, background: 'rgba(255,255,255,0.3)', borderRadius: 2, margin: '10px auto 0' }} />}
+              </div>
+              {sc.label && <div style={{ textAlign: 'center', fontSize: '0.72rem', color: dark ? 'var(--sb-sage)' : '#666', marginTop: '0.75rem', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.1em' }}>{sc.label}</div>}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Choice Grid Block ─────────────────────────────────────────────────────────
+// Interactive grid of colored option tiles with hover/select state.
+// choices: [{icon, title, description, color, cta, ctaLink}]
+function ChoiceGridBlock({ section }) {
+  const f = section.fields || {};
+  const choices = Array.isArray(f.choices) ? f.choices : [];
+  const [selected, setSelected] = React.useState(null);
+  const PALETTE = ['#f08cae','#c99ee7','#ffc071','#73bbce','#a5d6a7','#ffcc80','#80cbc4','#ef9a9a'];
+  const bg = BG_VAR[section.bg] || 'var(--sb-cream)';
+  const dark = section.bg === 'navy' || section.bg === 'teal';
+  return (
+    <section id={section.id} style={{ background: bg, padding: '5rem 2rem' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
+        {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', marginBottom: f.intro ? '0.75rem' : '2rem' }}>{f.heading}</h2>}
+        {f.intro && <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: dark ? 'var(--sb-sage)' : '#555', maxWidth: 740, marginBottom: '2rem' }}>{f.intro}</p>}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+          {choices.map((c, i) => {
+            const accent = c.color || PALETTE[i % PALETTE.length];
+            const isSelected = selected === i;
+            return (
+              <div
+                key={i}
+                onClick={() => setSelected(isSelected ? null : i)}
+                style={{
+                  cursor: 'pointer',
+                  background: isSelected ? accent : `${accent}22`,
+                  border: `2px solid ${accent}`,
+                  borderRadius: 14,
+                  padding: '1.5rem 1.25rem',
+                  transition: 'all 0.18s ease',
+                  transform: isSelected ? 'translateY(-2px)' : 'none',
+                  boxShadow: isSelected ? `0 8px 24px ${accent}44` : 'none',
+                }}
+              >
+                {c.icon && <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>{c.icon}</div>}
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: isSelected ? 'white' : (dark ? 'var(--sb-cream)' : 'var(--sb-navy)'), marginBottom: '0.4rem' }}>{c.title}</div>
+                {c.description && <div style={{ fontSize: '0.82rem', lineHeight: 1.6, color: isSelected ? 'rgba(255,255,255,0.85)' : (dark ? 'var(--sb-sage)' : '#555') }}>{c.description}</div>}
+                {isSelected && c.cta && (
+                  <a
+                    href={c.ctaLink || '#'}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ display: 'inline-block', marginTop: '1rem', padding: '0.4rem 1.1rem', background: 'rgba(0,0,0,0.18)', color: 'white', borderRadius: 6, fontSize: '0.8rem', textDecoration: 'none', fontWeight: 600 }}
+                  >
+                    {c.cta} →
+                  </a>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Decision Tree Block ───────────────────────────────────────────────────────
+// YES/NO branching flowchart. Rendered as a visual nested tree.
+// nodes: [{id, question?, answer?, yes?, no?, type?}]  rootId: 'root'
+function DecisionTreeBlock({ section }) {
+  const f = section.fields || {};
+  const nodesArr = Array.isArray(f.nodes) ? f.nodes : [];
+  const rootId = f.rootId || (nodesArr[0]?.id);
+  const nodeMap = Object.fromEntries(nodesArr.map((n) => [n.id, n]));
+  const [path, setPath] = React.useState({});  // { nodeId: 'yes'|'no' }
+  const bg = BG_VAR[section.bg] || 'var(--sb-linen)';
+  const dark = section.bg === 'navy' || section.bg === 'teal';
+
+  function renderNode(id, depth = 0) {
+    const node = nodeMap[id];
+    if (!node) return null;
+    if (node.type === 'end' || (!node.yes && !node.no)) {
+      return (
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', padding: '0.75rem 1rem', background: '#24bb7f18', border: '1.5px solid #24bb7f40', borderRadius: 10, maxWidth: 320 }}>
+          <span style={{ fontSize: '1rem', flexShrink: 0 }}>✓</span>
+          <div style={{ fontSize: '0.88rem', color: dark ? 'var(--sb-cream)' : '#1a1a1a', lineHeight: 1.55 }}>{node.answer || node.question}</div>
+        </div>
+      );
+    }
+    const choiceYes = path[id] === 'yes';
+    const choiceNo = path[id] === 'no';
+    return (
+      <div>
+        {/* Question box */}
+        <div style={{ padding: '0.9rem 1.25rem', background: dark ? 'rgba(255,255,255,0.08)' : 'white', border: `1.5px solid ${dark ? 'rgba(255,255,255,0.18)' : 'rgba(27,42,59,0.2)'}`, borderRadius: 10, maxWidth: 360, boxShadow: '0 2px 10px rgba(0,0,0,0.06)', marginBottom: depth > 0 ? 0 : '0.5rem' }}>
+          <div style={{ fontSize: '0.62rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--sb-gold)', fontFamily: 'var(--sb-font-label)', marginBottom: '0.35rem' }}>Decision</div>
+          <div style={{ fontSize: '0.9rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', fontWeight: 500, lineHeight: 1.5 }}>{node.question}</div>
+        </div>
+        {/* YES/NO buttons + branches */}
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem', alignItems: 'flex-start' }}>
+          {['yes', 'no'].map((branch) => {
+            const targetId = node[branch];
+            if (!targetId) return null;
+            const chosen = path[id] === branch;
+            const branchColor = branch === 'yes' ? '#24bb7f' : '#f25044';
+            return (
+              <div key={branch} style={{ flex: 1 }}>
+                <button
+                  onClick={() => setPath((p) => ({ ...p, [id]: chosen ? null : branch }))}
+                  style={{ padding: '4px 14px', borderRadius: 6, border: `1.5px solid ${branchColor}`, background: chosen ? branchColor : 'transparent', color: chosen ? 'white' : branchColor, fontSize: '0.72rem', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', marginBottom: '0.6rem', width: '100%', transition: 'all 0.15s' }}
+                >
+                  {branch === 'yes' ? '✓ Yes' : '✗ No'}
+                </button>
+                {chosen && (
+                  <div style={{ borderLeft: `2px solid ${branchColor}40`, paddingLeft: '0.75rem' }}>
+                    {renderNode(targetId, depth + 1)}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <section id={section.id} style={{ background: bg, padding: '5rem 2rem' }}>
+      <div style={{ maxWidth: 900, margin: '0 auto' }}>
+        {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
+        {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', marginBottom: f.intro ? '0.75rem' : '2.5rem' }}>{f.heading}</h2>}
+        {f.intro && <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: dark ? 'var(--sb-sage)' : '#555', maxWidth: 700, marginBottom: '2.5rem' }}>{f.intro}</p>}
+        {rootId ? renderNode(rootId) : (
+          <div style={{ padding: '2rem', textAlign: 'center', color: dark ? 'var(--sb-sage)' : '#888', fontSize: '0.9rem' }}>
+            Add nodes via the editor to build your decision tree.
+          </div>
+        )}
+        {Object.keys(path).length > 0 && (
+          <button onClick={() => setPath({})} style={{ marginTop: '1.5rem', fontSize: '0.75rem', padding: '6px 16px', borderRadius: 6, border: '1px solid var(--sb-dusty)', background: 'transparent', cursor: 'pointer', color: dark ? 'var(--sb-sage)' : 'var(--sb-teal-deep)' }}>
+            ↺ Reset
+          </button>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// ── Output Generator Block ────────────────────────────────────────────────────
+// Drag-and-drop content output builder. Users select content blocks, set an
+// audience/context, and generate a tailored output (resume, bio, proposal, etc.)
+// This block is always 'preview' / admin-only; the public site hides it.
+function OutputGeneratorBlock({ section, mode }) {
+  const f = section.fields || {};
+  const contentBlocks = Array.isArray(f.contentBlocks) ? f.contentBlocks : [
+    { id: 'summary', label: 'Professional Summary', icon: '📋', included: true, content: f.summary || '' },
+    { id: 'experience', label: 'Work Experience', icon: '💼', included: true, content: f.experience || '' },
+    { id: 'skills', label: 'Skills & Tools', icon: '🛠', included: true, content: f.skills || '' },
+    { id: 'achievements', label: 'Key Achievements', icon: '🏆', included: false, content: f.achievements || '' },
+    { id: 'education', label: 'Education', icon: '🎓', included: false, content: f.education || '' },
+    { id: 'certifications', label: 'Certifications', icon: '📜', included: false, content: f.certifications || '' },
+  ];
+  const [blocks, setBlocks] = React.useState(contentBlocks);
+  const [audience, setAudience] = React.useState('');
+  const [outputType, setOutputType] = React.useState(f.defaultOutputType || 'resume');
+  const [generating, setGenerating] = React.useState(false);
+  const [output, setOutput] = React.useState('');
+  const [dragIdx, setDragIdx] = React.useState(null);
+  const [dragOverIdx, setDragOverIdx] = React.useState(null);
+
+  function toggleBlock(id) {
+    setBlocks((bs) => bs.map((b) => b.id === id ? { ...b, included: !b.included } : b));
+  }
+
+  function onDragStart(e, i) {
+    setDragIdx(i);
+    e.dataTransfer.effectAllowed = 'move';
+  }
+  function onDragOver(e, i) {
+    e.preventDefault();
+    setDragOverIdx(i);
+  }
+  function onDrop(e, i) {
+    e.preventDefault();
+    if (dragIdx === null || dragIdx === i) { setDragIdx(null); setDragOverIdx(null); return; }
+    setBlocks((bs) => {
+      const next = [...bs];
+      const [moved] = next.splice(dragIdx, 1);
+      next.splice(i, 0, moved);
+      return next;
+    });
+    setDragIdx(null);
+    setDragOverIdx(null);
+  }
+
+  async function generate() {
+    const included = blocks.filter((b) => b.included);
+    if (!included.length) return;
+    setGenerating(true);
+    setOutput('');
+    try {
+      const prompt = `Generate a ${outputType} ${audience ? `tailored for: ${audience}` : ''}\n\nContent to include:\n${included.map((b) => `### ${b.label}\n${b.content || '[add content]'}`).join('\n\n')}`;
+      const res = await fetch('/api/members/me/agent', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: prompt, threadId: null }),
+      });
+      const data = await res.json();
+      setOutput(data.reply || data.response || data.content || JSON.stringify(data));
+    } catch (e) {
+      setOutput(`Error: ${e.message}`);
+    }
+    setGenerating(false);
+  }
+
+  const OUTPUT_TYPES = ['resume', 'executive bio', 'cover letter', 'LinkedIn summary', 'one-pager', 'proposal intro'];
+  const bg = BG_VAR[section.bg] || 'var(--sb-ivory)';
+  const dark = section.bg === 'navy' || section.bg === 'teal';
+
+  return (
+    <section id={section.id} style={{ background: bg, padding: '3rem 2rem' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        {f.heading && <h2 className="sb-display" style={{ fontSize: '1.8rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', marginBottom: '0.5rem' }}>{f.heading}</h2>}
+        {f.intro && <p style={{ fontSize: '0.88rem', color: dark ? 'var(--sb-sage)' : '#666', marginBottom: '1.5rem', lineHeight: 1.7 }}>{f.intro}</p>}
+        <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '1.5rem', alignItems: 'start' }}>
+          {/* Left: block palette + controls */}
+          <div>
+            <div style={{ fontSize: '0.65rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: dark ? 'var(--sb-sage)' : 'var(--sb-teal-deep)', fontFamily: 'var(--sb-font-label)', marginBottom: '0.6rem' }}>Content Blocks</div>
+            <div style={{ fontSize: '0.68rem', color: dark ? 'var(--sb-sage)' : '#888', marginBottom: '0.75rem', lineHeight: 1.5 }}>Drag to reorder. Toggle to include/exclude.</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              {blocks.map((b, i) => (
+                <div
+                  key={b.id}
+                  draggable
+                  onDragStart={(e) => onDragStart(e, i)}
+                  onDragOver={(e) => onDragOver(e, i)}
+                  onDrop={(e) => onDrop(e, i)}
+                  onDragLeave={() => setDragOverIdx(null)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '0.6rem',
+                    padding: '0.6rem 0.75rem', borderRadius: 8,
+                    background: b.included ? (dark ? 'rgba(196,132,58,0.15)' : 'rgba(196,132,58,0.1)') : (dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'),
+                    border: dragOverIdx === i ? '1.5px dashed var(--sb-gold)' : `1px solid ${b.included ? 'rgba(196,132,58,0.35)' : 'rgba(128,128,128,0.15)'}`,
+                    cursor: 'grab', transition: 'all 0.12s',
+                    opacity: dragIdx === i ? 0.4 : 1,
+                  }}
+                >
+                  <span style={{ fontSize: '0.7rem', color: dark ? 'var(--sb-sage)' : '#aaa', flexShrink: 0 }}>⠿</span>
+                  <span style={{ fontSize: '0.95rem', flexShrink: 0 }}>{b.icon}</span>
+                  <span style={{ fontSize: '0.8rem', flex: 1, color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', fontWeight: b.included ? 500 : 400 }}>{b.label}</span>
+                  <button onClick={() => toggleBlock(b.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.7rem', color: b.included ? 'var(--sb-gold)' : (dark ? 'var(--sb-sage)' : '#aaa'), padding: 0 }} title={b.included ? 'Exclude' : 'Include'}>
+                    {b.included ? '◉' : '○'}
+                  </button>
+                </div>
+              ))}
+            </div>
+            {/* Output type */}
+            <div style={{ marginTop: '1.25rem' }}>
+              <div style={{ fontSize: '0.65rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: dark ? 'var(--sb-sage)' : 'var(--sb-teal-deep)', fontFamily: 'var(--sb-font-label)', marginBottom: '0.5rem' }}>Output Type</div>
+              <select
+                value={outputType}
+                onChange={(e) => setOutputType(e.target.value)}
+                className="sb-input"
+                style={{ fontSize: '0.82rem', marginBottom: '1rem' }}
+              >
+                {OUTPUT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+            {/* Audience */}
+            <div>
+              <div style={{ fontSize: '0.65rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: dark ? 'var(--sb-sage)' : 'var(--sb-teal-deep)', fontFamily: 'var(--sb-font-label)', marginBottom: '0.5rem' }}>Audience / Role (optional)</div>
+              <textarea
+                value={audience}
+                onChange={(e) => setAudience(e.target.value)}
+                className="sb-input"
+                placeholder="Paste a job description, company name, or audience context…"
+                style={{ fontSize: '0.78rem', minHeight: 80, resize: 'vertical', lineHeight: 1.55 }}
+              />
+            </div>
+            <button
+              onClick={generate}
+              disabled={generating || !blocks.some((b) => b.included)}
+              style={{ marginTop: '0.75rem', width: '100%', padding: '0.6rem', borderRadius: 8, border: 'none', background: generating ? '#aaa' : 'var(--sb-navy)', color: 'white', fontFamily: 'var(--sb-font-label)', fontSize: '0.75rem', letterSpacing: '0.12em', textTransform: 'uppercase', cursor: generating ? 'not-allowed' : 'pointer', transition: 'background 0.15s' }}
+            >
+              {generating ? '⟳ Generating…' : '✦ Generate Output'}
+            </button>
+          </div>
+          {/* Right: output panel */}
+          <div style={{ background: dark ? 'rgba(255,255,255,0.05)' : 'white', borderRadius: 10, border: dark ? '0.5px solid rgba(255,255,255,0.1)' : '0.5px solid rgba(0,0,0,0.08)', padding: '1.5rem', minHeight: 400 }}>
+            {output ? (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <div style={{ fontSize: '0.65rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--sb-gold)', fontFamily: 'var(--sb-font-label)' }}>Generated {outputType}</div>
+                  <button onClick={() => navigator.clipboard?.writeText(output)} style={{ fontSize: '0.7rem', padding: '3px 10px', borderRadius: 5, border: '1px solid rgba(196,132,58,0.4)', background: 'transparent', cursor: 'pointer', color: dark ? 'var(--sb-sage)' : 'var(--sb-teal-deep)' }}>⧉ Copy</button>
+                </div>
+                <div style={{ fontSize: '0.88rem', lineHeight: 1.8, color: dark ? 'var(--sb-cream)' : '#1a1a1a', whiteSpace: 'pre-wrap' }}>{output}</div>
+              </>
+            ) : (
+              <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', opacity: 0.4 }}>
+                <div style={{ fontSize: '2.5rem' }}>✦</div>
+                <div style={{ fontSize: '0.88rem', color: dark ? 'var(--sb-sage)' : '#888', textAlign: 'center', maxWidth: 260, lineHeight: 1.6 }}>
+                  Select content blocks, set your audience, and hit Generate.
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 const REGISTRY = {
   hero: HeroBlock,
   scripture: ScriptureBlock,
@@ -3624,6 +4274,15 @@ const REGISTRY = {
   process: ProcessBlock,
   columns: ColumnsBlock,
   iconGrid: IconGridBlock,
+  kpiDashboard: KpiDashboardBlock,
+  roadmap: RoadmapBlock,
+  heatmap: HeatmapBlock,
+  leaderboard: LeaderboardBlock,
+  executiveSummary: ExecutiveSummaryBlock,
+  appMockup: AppMockupBlock,
+  choiceGrid: ChoiceGridBlock,
+  decisionTree: DecisionTreeBlock,
+  outputGenerator: OutputGeneratorBlock,
 };
 
 export function RenderSection({ section, config, mode = 'public', memberSlug = '' }) {

@@ -6,6 +6,13 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "client"],
       "port": 5173
+    },
+    {
+      "name": "visual-ops-studio",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "5174"],
+      "cwd": "C:\\Users\\mbets\\visual-ops-studio",
+      "port": 5174
     }
   ]
 }

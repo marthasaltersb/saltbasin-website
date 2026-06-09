@@ -886,6 +886,22 @@ async function bootstrap() {
       // Bad JSON — leave the row alone rather than clobbering manual state.
     }
   }
+
+  // ── Field audit log ─────────────────────────────────────────────────────────
+  // Records before/after values for fields with auditable: true in fieldMeta.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS field_audit_log (
+      id           BIGSERIAL PRIMARY KEY,
+      user_id      BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      section_id   TEXT NOT NULL,
+      field_key    TEXT NOT NULL,
+      before_value TEXT,
+      after_value  TEXT,
+      created_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_field_audit_section ON field_audit_log (section_id);
+    CREATE INDEX IF NOT EXISTS idx_field_audit_user    ON field_audit_log (user_id);
+  `);
 }
 
 // Awaited at module import time so routes can use db without worrying about

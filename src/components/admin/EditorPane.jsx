@@ -31,10 +31,47 @@ function SourceBadge({ type, onClick }) {
   );
 }
 
+const FIELD_TYPES = [
+  { value: 'text',        label: 'Text' },
+  { value: 'textarea',    label: 'Long Text' },
+  { value: 'number',      label: 'Number' },
+  { value: 'date',        label: 'Date' },
+  { value: 'boolean',     label: 'Boolean (on/off)' },
+  { value: 'select',      label: 'Select (one)' },
+  { value: 'multiselect', label: 'Multi-select' },
+  { value: 'url',         label: 'URL' },
+  { value: 'email',       label: 'Email' },
+  { value: 'json',        label: 'JSON / Array' },
+  { value: 'image',       label: 'Image URL' },
+  { value: 'color',       label: 'Color' },
+  { value: 'richtext',    label: 'Rich Text' },
+];
+
 function FieldMetaEditor({ fieldKey, meta, onSave, onClose, memberDbs = [] }) {
+  // ── existing source type state ──
+  const [activeTab, setActiveTab] = React.useState('settings');
   const [type, setType] = React.useState(meta?.sourceType || 'user_input');
   const [mergedFrom, setMergedFrom] = React.useState(meta?.mergedFrom || '');
   const [sources, setSources] = React.useState(meta?.sources || []);
+
+  // ── new field settings state ──
+  const [visible, setVisible] = React.useState(meta?.visible !== false);
+  const [auditable, setAuditable] = React.useState(meta?.auditable || false);
+  const [fieldType, setFieldType] = React.useState(meta?.fieldType || 'text');
+  const [multiSelect, setMultiSelect] = React.useState(meta?.multiSelect || false);
+  const [description, setDescription] = React.useState(meta?.description || '');
+
+  // valueSet: [{value, label}]
+  const [valueSet, setValueSet] = React.useState(
+    Array.isArray(meta?.valueSet) ? meta.valueSet : []
+  );
+  const [newOptVal, setNewOptVal] = React.useState('');
+  const [newOptLabel, setNewOptLabel] = React.useState('');
+
+  // cascades: [{triggerField, triggerValue, targetField, filterValues: []}]
+  const [cascades, setCascades] = React.useState(
+    Array.isArray(meta?.cascades) ? meta.cascades : []
+  );
 
   function addSource() {
     setSources((s) => [...s, { sourceKind: 'merged', system: 'saltbasin', capabilityTag: '', description: '' }]);
@@ -46,10 +83,40 @@ function FieldMetaEditor({ fieldKey, meta, onSave, onClose, memberDbs = [] }) {
     setSources((s) => s.map((src, idx) => idx === i ? { ...src, ...patch } : src));
   }
 
+  function addOption() {
+    if (!newOptVal.trim()) return;
+    setValueSet((vs) => [...vs, { value: newOptVal.trim(), label: newOptLabel.trim() || newOptVal.trim() }]);
+    setNewOptVal(''); setNewOptLabel('');
+  }
+  function removeOption(i) {
+    setValueSet((vs) => vs.filter((_, idx) => idx !== i));
+  }
+
+  function addCascade() {
+    setCascades((c) => [...c, { triggerField: '', triggerValue: '', targetField: '', filterValues: [] }]);
+  }
+  function patchCascade(i, patch) {
+    setCascades((c) => c.map((r, idx) => idx === i ? { ...r, ...patch } : r));
+  }
+  function removeCascade(i) {
+    setCascades((c) => c.filter((_, idx) => idx !== i));
+  }
+
   function save() {
-    const payload = { sourceType: type };
+    const payload = {
+      sourceType: type,
+      visible,
+      auditable,
+      fieldType,
+      description,
+    };
     if (type === 'merged') payload.mergedFrom = mergedFrom;
     if (type === 'derived') payload.sources = sources;
+    if (['select', 'multiselect'].includes(fieldType)) {
+      payload.valueSet = valueSet;
+      payload.multiSelect = fieldType === 'multiselect' || multiSelect;
+    }
+    if (cascades.length) payload.cascades = cascades;
     onSave(payload);
   }
 
@@ -61,85 +128,210 @@ function FieldMetaEditor({ fieldKey, meta, onSave, onClose, memberDbs = [] }) {
     marginTop: '0.4rem',
     fontSize: '0.78rem',
   };
+  const tabBtn = (id) => ({
+    padding: '3px 12px', borderRadius: '4px 4px 0 0', border: '1px solid #d4cdc6',
+    borderBottom: activeTab === id ? '1px solid #f5f2ed' : '1px solid #d4cdc6',
+    background: activeTab === id ? '#f5f2ed' : '#ece8e2',
+    cursor: 'pointer', fontSize: '0.7rem', fontFamily: 'var(--sb-font-label)',
+    color: activeTab === id ? 'var(--sb-navy)' : '#888', marginRight: 2,
+  });
+  const lbl = { display: 'block', fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#666', marginBottom: 3, fontFamily: 'var(--sb-font-label)' };
+  const tog = (on) => ({
+    display: 'inline-flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer',
+    padding: '3px 10px', borderRadius: 12,
+    background: on ? '#24bb7f22' : 'rgba(0,0,0,0.06)',
+    border: `1px solid ${on ? '#24bb7f55' : 'rgba(0,0,0,0.12)'}`,
+    color: on ? '#1a7a4f' : '#888', fontSize: '0.72rem', userSelect: 'none',
+  });
 
   return (
     <div style={panelStyle}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--sb-teal-deep)' }}>
-        <span>Source type — {humanLabel(fieldKey)}</span>
+        <span>Field Settings — {humanLabel(fieldKey)}</span>
         <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--sb-dusty)' }}>✕</button>
       </div>
 
-      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.6rem' }}>
-        {Object.entries(SOURCE_TYPES).map(([k, def]) => (
-          <button key={k} onClick={() => setType(k)} style={{
-            padding: '3px 10px', borderRadius: 4, border: `1px solid ${def.color}`,
-            background: type === k ? def.color : 'transparent',
-            color: type === k ? '#fff' : def.color,
-            fontSize: '0.72rem', cursor: 'pointer', fontFamily: 'var(--sb-font-label)',
-          }}>
-            {def.label}
+      {/* Tabs */}
+      <div style={{ marginBottom: 0 }}>
+        {['settings', 'source', 'cascade'].map((t) => (
+          <button key={t} style={tabBtn(t)} onClick={() => setActiveTab(t)}>
+            {t === 'settings' ? '⚙ Settings' : t === 'source' ? '⇌ Source' : '⇒ Cascade'}
           </button>
         ))}
       </div>
-      <div style={{ color: 'var(--sb-dusty)', fontSize: '0.7rem', lineHeight: 1.5, marginBottom: '0.6rem' }}>
-        {SOURCE_TYPES[type]?.description}
-      </div>
+      <div style={{ borderTop: '1px solid #d4cdc6', marginBottom: '0.75rem' }} />
 
-      {type === 'merged' && (
-        <div style={{ marginBottom: '0.5rem' }}>
-          <label style={{ display: 'block', fontWeight: 600, marginBottom: 3 }}>Merged from (system path)</label>
-          <input className="sb-input" style={{ fontSize: '0.75rem' }} value={mergedFrom} onChange={(e) => setMergedFrom(e.target.value)} placeholder="e.g. users.display_name" />
+      {/* ── Settings tab ── */}
+      {activeTab === 'settings' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {/* Visible + Auditable toggles */}
+          <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+            <span style={tog(visible)} onClick={() => setVisible((v) => !v)}>
+              {visible ? '👁 Visible' : '🚫 Hidden'}
+            </span>
+            <span style={tog(auditable)} onClick={() => setAuditable((a) => !a)}>
+              {auditable ? '📋 Auditable' : '○ Not audited'}
+            </span>
+          </div>
+          {auditable && (
+            <div style={{ fontSize: '0.68rem', color: '#888', lineHeight: 1.5, padding: '0.35rem 0.5rem', background: 'rgba(0,0,0,0.04)', borderRadius: 5 }}>
+              Every edit to this field will be logged in the audit history with before/after values.
+            </div>
+          )}
+
+          {/* Field type */}
+          <div>
+            <label style={lbl}>Field Type</label>
+            <select className="sb-input" style={{ fontSize: '0.75rem' }} value={fieldType} onChange={(e) => setFieldType(e.target.value)}>
+              {FIELD_TYPES.map((ft) => <option key={ft.value} value={ft.value}>{ft.label}</option>)}
+            </select>
+          </div>
+
+          {/* Multi-select flag (for text/other non-select types used as multi-value) */}
+          {!['select', 'multiselect'].includes(fieldType) && (
+            <div>
+              <span style={tog(multiSelect)} onClick={() => setMultiSelect((m) => !m)}>
+                {multiSelect ? '☑ Multi-value allowed' : '☐ Single value only'}
+              </span>
+            </div>
+          )}
+
+          {/* Value set (for select / multiselect) */}
+          {['select', 'multiselect'].includes(fieldType) && (
+            <div>
+              <label style={lbl}>Predefined Options</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginBottom: '0.4rem' }}>
+                {valueSet.map((opt, i) => (
+                  <div key={i} style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                    <input className="sb-input" style={{ fontSize: '0.72rem', flex: 1 }} value={opt.value} onChange={(e) => setValueSet((vs) => vs.map((o, j) => j === i ? { ...o, value: e.target.value } : o))} placeholder="value" />
+                    <input className="sb-input" style={{ fontSize: '0.72rem', flex: 1 }} value={opt.label} onChange={(e) => setValueSet((vs) => vs.map((o, j) => j === i ? { ...o, label: e.target.value } : o))} placeholder="label (display)" />
+                    <button onClick={() => removeOption(i)} style={{ background: 'none', border: '1px solid #ccc', borderRadius: 3, cursor: 'pointer', padding: '2px 7px', fontSize: '0.68rem', color: '#888' }}>✕</button>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                <input className="sb-input" style={{ fontSize: '0.72rem', flex: 1 }} value={newOptVal} onChange={(e) => setNewOptVal(e.target.value)} placeholder="value" onKeyDown={(e) => e.key === 'Enter' && addOption()} />
+                <input className="sb-input" style={{ fontSize: '0.72rem', flex: 1 }} value={newOptLabel} onChange={(e) => setNewOptLabel(e.target.value)} placeholder="label" onKeyDown={(e) => e.key === 'Enter' && addOption()} />
+                <button onClick={addOption} style={{ padding: '3px 10px', borderRadius: 4, border: '1px dashed var(--sb-sage)', background: 'transparent', cursor: 'pointer', fontSize: '0.72rem', color: 'var(--sb-sage)', whiteSpace: 'nowrap' }}>+ Add</button>
+              </div>
+            </div>
+          )}
+
+          {/* Description */}
+          <div>
+            <label style={lbl}>Description / hint</label>
+            <input className="sb-input" style={{ fontSize: '0.75rem' }} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Explain what this field is for…" />
+          </div>
         </div>
       )}
 
-      {type === 'derived' && (
+      {/* ── Source tab ── */}
+      {activeTab === 'source' && (
         <div>
-          <div style={{ fontWeight: 600, marginBottom: '0.4rem' }}>Sources</div>
-          {sources.map((src, i) => (
-            <div key={i} style={{ background: '#ede9e3', borderRadius: 5, padding: '0.5rem', marginBottom: '0.4rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem', marginBottom: '0.35rem' }}>
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.6rem' }}>
+            {Object.entries(SOURCE_TYPES).map(([k, def]) => (
+              <button key={k} onClick={() => setType(k)} style={{
+                padding: '3px 10px', borderRadius: 4, border: `1px solid ${def.color}`,
+                background: type === k ? def.color : 'transparent',
+                color: type === k ? '#fff' : def.color,
+                fontSize: '0.72rem', cursor: 'pointer', fontFamily: 'var(--sb-font-label)',
+              }}>
+                {def.label}
+              </button>
+            ))}
+          </div>
+          <div style={{ color: 'var(--sb-dusty)', fontSize: '0.7rem', lineHeight: 1.5, marginBottom: '0.6rem' }}>
+            {SOURCE_TYPES[type]?.description}
+          </div>
+
+          {type === 'merged' && (
+            <div style={{ marginBottom: '0.5rem' }}>
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 3 }}>Merged from (system path)</label>
+              <input className="sb-input" style={{ fontSize: '0.75rem' }} value={mergedFrom} onChange={(e) => setMergedFrom(e.target.value)} placeholder="e.g. users.display_name" />
+            </div>
+          )}
+
+          {type === 'derived' && (
+            <div>
+              <div style={{ fontWeight: 600, marginBottom: '0.4rem' }}>Sources</div>
+              {sources.map((src, i) => (
+                <div key={i} style={{ background: '#ede9e3', borderRadius: 5, padding: '0.5rem', marginBottom: '0.4rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem', marginBottom: '0.35rem' }}>
+                    <div>
+                      <label style={{ fontSize: '0.68rem', display: 'block', marginBottom: 2 }}>Kind</label>
+                      <select className="sb-input" style={{ fontSize: '0.72rem' }} value={src.sourceKind} onChange={(e) => patchSource(i, { sourceKind: e.target.value })}>
+                        <option value="merged">Merged (Salt Basin internal)</option>
+                        <option value="external">External (member DB / file)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.68rem', display: 'block', marginBottom: 2 }}>System</label>
+                      <select className="sb-input" style={{ fontSize: '0.72rem' }} value={src.system} onChange={(e) => patchSource(i, { system: e.target.value })}>
+                        <option value="saltbasin">Salt Basin</option>
+                        {memberDbs.map((db) => <option key={db.id} value={db.id}>{db.name || db.id}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: '0.35rem' }}>
+                    <label style={{ fontSize: '0.68rem', display: 'block', marginBottom: 2 }}>Capability tag</label>
+                    <select className="sb-input" style={{ fontSize: '0.72rem' }} value={src.capabilityTag} onChange={(e) => patchSource(i, { capabilityTag: e.target.value })}>
+                      <option value="">— none —</option>
+                      {TAG_CATEGORIES.map((cat) => (
+                        <optgroup key={cat.id} label={cat.label}>
+                          {cat.tags.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+                        </optgroup>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'flex-end' }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ fontSize: '0.68rem', display: 'block', marginBottom: 2 }}>Description / field path</label>
+                      <input className="sb-input" style={{ fontSize: '0.72rem' }} value={src.description} onChange={(e) => patchSource(i, { description: e.target.value })} placeholder="e.g. revenue column from deals table" />
+                    </div>
+                    <button onClick={() => removeSource(i)} style={{ background: 'none', border: '1px solid #bbb', borderRadius: 4, cursor: 'pointer', padding: '3px 8px', fontSize: '0.72rem', color: 'var(--sb-dusty)' }}>Remove</button>
+                  </div>
+                </div>
+              ))}
+              <button onClick={addSource} style={{ fontSize: '0.72rem', padding: '4px 10px', borderRadius: 4, border: '1px dashed var(--sb-sage)', background: 'transparent', cursor: 'pointer', color: 'var(--sb-sage)' }}>
+                + Add source
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Cascade tab ── */}
+      {activeTab === 'cascade' && (
+        <div>
+          <div style={{ fontSize: '0.68rem', color: '#888', lineHeight: 1.55, marginBottom: '0.6rem' }}>
+            Define rules so that when a field has a particular value, the allowed options for another field are filtered. Useful for dependent dropdowns.
+          </div>
+          {cascades.map((rule, i) => (
+            <div key={i} style={{ background: '#ede9e3', borderRadius: 5, padding: '0.6rem', marginBottom: '0.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem', marginBottom: '0.4rem' }}>
                 <div>
-                  <label style={{ fontSize: '0.68rem', display: 'block', marginBottom: 2 }}>Kind</label>
-                  <select className="sb-input" style={{ fontSize: '0.72rem' }} value={src.sourceKind} onChange={(e) => patchSource(i, { sourceKind: e.target.value })}>
-                    <option value="merged">Merged (Salt Basin internal)</option>
-                    <option value="external">External (member DB / file)</option>
-                  </select>
+                  <label style={{ ...lbl }}>When field</label>
+                  <input className="sb-input" style={{ fontSize: '0.72rem' }} value={rule.triggerField} onChange={(e) => patchCascade(i, { triggerField: e.target.value })} placeholder="e.g. industry" />
                 </div>
                 <div>
-                  <label style={{ fontSize: '0.68rem', display: 'block', marginBottom: 2 }}>System</label>
-                  <select className="sb-input" style={{ fontSize: '0.72rem' }} value={src.system} onChange={(e) => patchSource(i, { system: e.target.value })}>
-                    <option value="saltbasin">Salt Basin</option>
-                    {memberDbs.map((db) => <option key={db.id} value={db.id}>{db.name || db.id}</option>)}
-                  </select>
+                  <label style={{ ...lbl }}>equals value</label>
+                  <input className="sb-input" style={{ fontSize: '0.72rem' }} value={rule.triggerValue} onChange={(e) => patchCascade(i, { triggerValue: e.target.value })} placeholder="e.g. healthcare" />
                 </div>
               </div>
-              <div style={{ marginBottom: '0.35rem' }}>
-                <label style={{ fontSize: '0.68rem', display: 'block', marginBottom: 2 }}>Capability tag</label>
-                <select className="sb-input" style={{ fontSize: '0.72rem' }} value={src.capabilityTag} onChange={(e) => patchSource(i, { capabilityTag: e.target.value })}>
-                  <option value="">— none —</option>
-                  {TAG_CATEGORIES.map((cat) => (
-                    <optgroup key={cat.id} label={cat.label}>
-                      {cat.tags.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
-                    </optgroup>
-                  ))}
-                </select>
+              <div style={{ marginBottom: '0.4rem' }}>
+                <label style={{ ...lbl }}>Then filter THIS field's options to (comma-separated values)</label>
+                <input className="sb-input" style={{ fontSize: '0.72rem' }} value={(rule.filterValues || []).join(', ')} onChange={(e) => patchCascade(i, { filterValues: e.target.value.split(',').map((v) => v.trim()).filter(Boolean) })} placeholder="e.g. billing,compliance,ehr" />
               </div>
-              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'flex-end' }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: '0.68rem', display: 'block', marginBottom: 2 }}>Description / field path</label>
-                  <input className="sb-input" style={{ fontSize: '0.72rem' }} value={src.description} onChange={(e) => patchSource(i, { description: e.target.value })} placeholder="e.g. revenue column from deals table" />
-                </div>
-                <button onClick={() => removeSource(i)} style={{ background: 'none', border: '1px solid #bbb', borderRadius: 4, cursor: 'pointer', padding: '3px 8px', fontSize: '0.72rem', color: 'var(--sb-dusty)' }}>Remove</button>
-              </div>
+              <button onClick={() => removeCascade(i)} style={{ fontSize: '0.68rem', padding: '2px 8px', border: '1px solid #bbb', borderRadius: 3, background: 'transparent', cursor: 'pointer', color: '#888' }}>Remove rule</button>
             </div>
           ))}
-          <button onClick={addSource} style={{ fontSize: '0.72rem', padding: '4px 10px', borderRadius: 4, border: '1px dashed var(--sb-sage)', background: 'transparent', cursor: 'pointer', color: 'var(--sb-sage)' }}>
-            + Add source
+          <button onClick={addCascade} style={{ fontSize: '0.72rem', padding: '4px 10px', borderRadius: 4, border: '1px dashed var(--sb-sage)', background: 'transparent', cursor: 'pointer', color: 'var(--sb-sage)' }}>
+            + Add cascade rule
           </button>
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.6rem', justifyContent: 'flex-end' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', justifyContent: 'flex-end' }}>
         <button onClick={onClose} style={{ fontSize: '0.72rem', padding: '4px 12px', borderRadius: 4, border: '1px solid #ccc', background: 'transparent', cursor: 'pointer' }}>Cancel</button>
         <button onClick={save} style={{ fontSize: '0.72rem', padding: '4px 12px', borderRadius: 4, border: 'none', background: 'var(--sb-sage)', color: '#fff', cursor: 'pointer' }}>Save</button>
       </div>
@@ -173,6 +365,8 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
   }, [site]);
 
   const [openMetaKey, setOpenMetaKey] = React.useState(null);
+  const [addFieldKey, setAddFieldKey] = React.useState('');
+  const [showAddField, setShowAddField] = React.useState(false);
 
   const memberDbs = site?.config?.integrations?.memberDbs || [];
 
@@ -273,6 +467,21 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
   }
 
   function patchField(key, value) {
+    // Fire-and-forget audit log for auditable fields
+    const meta = section.fieldMeta?.[key];
+    if (meta?.auditable) {
+      fetch('/api/field-audit', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sectionId: section.id,
+          fieldKey: key,
+          before: section.fields?.[key] ?? null,
+          after: value,
+        }),
+      }).catch(() => {/* non-fatal */});
+    }
     onUpdateSection({ fields: { ...section.fields, [key]: value } });
   }
   function patchTop(key, value) {
@@ -280,6 +489,27 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
   }
   function updateFieldMeta(key, meta) {
     onUpdateSection({ fieldMeta: { ...(section.fieldMeta || {}), [key]: meta } });
+  }
+  function addField(newKey) {
+    if (!newKey || section.fields?.[newKey] !== undefined) return;
+    onUpdateSection({ fields: { ...section.fields, [newKey]: '' } });
+  }
+  function cloneField(key) {
+    const suffix = `${key}_copy`;
+    let finalKey = suffix;
+    let i = 2;
+    while (section.fields?.[finalKey] !== undefined) { finalKey = `${suffix}${i++}`; }
+    onUpdateSection({
+      fields: { ...section.fields, [finalKey]: section.fields[key] },
+      fieldMeta: { ...(section.fieldMeta || {}), [finalKey]: { ...(section.fieldMeta?.[key] || {}) } },
+    });
+  }
+  function removeField(key) {
+    const newFields = { ...section.fields };
+    const newMeta = { ...(section.fieldMeta || {}) };
+    delete newFields[key];
+    delete newMeta[key];
+    onUpdateSection({ fields: newFields, fieldMeta: newMeta });
   }
 
   return (
@@ -402,10 +632,29 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
                 : { sourceType: 'user_input' });
               const srcType = effectiveMeta.sourceType;
 
+              const isHidden = effectiveMeta.visible === false;
+              const isAudited = !!effectiveMeta.auditable;
+
               const fieldLabel = (
-                <label style={styles.fieldLabel}>
-                  {humanLabel(k)}
-                  <SourceBadge type={srcType} onClick={() => setOpenMetaKey(openMetaKey === k ? null : k)} />
+                <label style={{ ...styles.fieldLabel, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.35rem' }}>
+                  <span style={{ flex: 1, opacity: isHidden ? 0.4 : 1 }}>
+                    {humanLabel(k)}
+                    {isHidden && <span style={{ fontSize: '0.6rem', color: '#aaa', marginLeft: 4 }}>(hidden)</span>}
+                    {isAudited && <span style={{ fontSize: '0.6rem', color: 'var(--sb-teal-deep)', marginLeft: 4 }} title="Audited field">📋</span>}
+                  </span>
+                  <span style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
+                    <SourceBadge type={srcType} onClick={() => setOpenMetaKey(openMetaKey === k ? null : k)} />
+                    <span
+                      title="Clone field"
+                      onClick={() => cloneField(k)}
+                      style={{ fontSize: '0.6rem', cursor: 'pointer', padding: '1px 5px', border: '1px solid #ccc', borderRadius: 3, color: '#888', userSelect: 'none' }}
+                    >⧉</span>
+                    <span
+                      title="Remove field"
+                      onClick={() => { if (window.confirm(`Remove field "${k}"?`)) removeField(k); }}
+                      style={{ fontSize: '0.6rem', cursor: 'pointer', padding: '1px 5px', border: '1px solid #f9a29a', borderRadius: 3, color: '#c04040', userSelect: 'none' }}
+                    >✕</span>
+                  </span>
                 </label>
               );
 
@@ -474,6 +723,41 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
                 </div>
               );
             })}
+
+          {/* ── Add Field UI ── */}
+          <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '0.5px solid rgba(0,0,0,0.08)' }}>
+            {showAddField ? (
+              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                <input
+                  className="sb-input"
+                  style={{ fontSize: '0.78rem', flex: 1 }}
+                  value={addFieldKey}
+                  onChange={(e) => setAddFieldKey(e.target.value.replace(/\s/g, '_'))}
+                  placeholder="fieldKey (camelCase or snake_case)"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') { addField(addFieldKey); setAddFieldKey(''); setShowAddField(false); }
+                    if (e.key === 'Escape') { setShowAddField(false); setAddFieldKey(''); }
+                  }}
+                />
+                <button
+                  onClick={() => { addField(addFieldKey); setAddFieldKey(''); setShowAddField(false); }}
+                  style={{ padding: '4px 12px', borderRadius: 4, border: 'none', background: 'var(--sb-sage)', color: 'white', fontSize: '0.72rem', cursor: 'pointer' }}
+                >Add</button>
+                <button
+                  onClick={() => { setShowAddField(false); setAddFieldKey(''); }}
+                  style={{ padding: '4px 10px', borderRadius: 4, border: '1px solid #ccc', background: 'transparent', fontSize: '0.72rem', cursor: 'pointer', color: '#888' }}
+                >Cancel</button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAddField(true)}
+                style={{ fontSize: '0.75rem', padding: '4px 14px', borderRadius: 6, border: '1px dashed var(--sb-sage)', background: 'transparent', cursor: 'pointer', color: 'var(--sb-sage)', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.08em' }}
+              >
+                + Add Field
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

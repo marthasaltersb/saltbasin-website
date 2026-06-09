@@ -4,6 +4,7 @@ import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
 import { styles } from './adminStyles.js';
 import Sidebar from './Sidebar.jsx';
+import { SectionTemplateModal } from './SectionTemplateModal.jsx';
 import EditorPane from './EditorPane.jsx';
 import PreviewPane from './PreviewPane.jsx';
 import ConfigPanel from './ConfigPanel.jsx';
@@ -315,24 +316,17 @@ export default function AdminShell({ scope = 'admin' }) {
     toast(`"${name}" page created`);
   }
 
-  function addSection({ name, type, bg, status, desc }) {
+  function addSection({ name, type, columns, bg, status, fields }) {
     if (!name) return toast('Section needs a name');
     const id = `sec-${Date.now()}`;
-    const baseFields = { heading: name, intro: desc || 'Add your content here.' };
-    if (type === 'cards') {
-      Object.assign(baseFields, {
-        card1Title: 'Card One',
-        card1Desc: 'Description.',
-        card2Title: 'Card Two',
-        card2Desc: 'Description.',
-        card3Title: 'Card Three',
-        card3Desc: 'Description.',
-      });
-    }
-    if (type === 'cta') Object.assign(baseFields, { cta1: 'Learn More', cta1Link: '#contact' });
-    if (type === 'hero') Object.assign(baseFields, { subtitle: '', cta1: 'Get Started', cta1Link: '#contact' });
+    const seedFields = fields || { heading: name, intro: 'Add your content here.' };
     patchDraft((d) => {
-      d.pages[currentPageKey].sections.push({ id, type, name, status, bg, fields: baseFields });
+      d.pages[currentPageKey].sections.push({
+        id, type, name, status: status || 'visible', bg: bg || '',
+        columns: columns || 1,
+        fields: seedFields,
+        fieldMeta: {},
+      });
       return d;
     });
     setCurrentSectionId(id);
@@ -588,7 +582,7 @@ export default function AdminShell({ scope = 'admin' }) {
                   setSidebarOpen(false);
                 }}
                 onAddPage={() => setPageModal({ name: '', slug: '', type: 'standard', status: 'draft' })}
-                onAddSection={() => setSectionModal({ name: '', type: 'text', bg: 'ivory', status: 'draft', desc: '' })}
+                onAddSection={() => setSectionModal(true)}
                 onDeleteSection={deleteSection}
                 onCycleSectionStatus={cycleSectionStatus}
                 onDeletePage={deletePage}
@@ -678,11 +672,9 @@ export default function AdminShell({ scope = 'admin' }) {
         />
       )}
       {sectionModal && (
-        <SectionModal
-          value={sectionModal}
-          onChange={setSectionModal}
-          onSubmit={() => addSection(sectionModal)}
-          onCancel={() => setSectionModal(null)}
+        <SectionTemplateModal
+          onConfirm={(data) => addSection(data)}
+          onClose={() => setSectionModal(null)}
         />
       )}
     </div>
