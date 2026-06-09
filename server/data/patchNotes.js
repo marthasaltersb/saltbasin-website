@@ -338,4 +338,66 @@ const RELEASES = [
       },
     ],
   },
+
+  // ─── v0.12 — Field settings, 9 new blocks, section templates ─────
+  {
+    version: 'v0.12',
+    name: 'Field Settings, New Block Library, and Section Templates',
+    date: '2026-06-09',
+    summary:
+      'Every content field in every section now has a full settings panel: visible/hidden, auditable edit history, field type (13 options), predefined value sets for select/multi-select, and cascading/dependent field rules. Nine new block types ship — drawn directly from the PPTX visual references — giving the CMS the ability to produce KPI dashboards, roadmaps, status heatmaps, leaderboards, executive summaries, app mockups, choice grids, interactive decision trees, and an AI-powered drag-and-drop output generator. Section creation is now a two-step visual modal: pick a template from a card grid, then name and configure it. The sidebar section list scrolls independently so the "+ Add Section" button is always pinned and visible.',
+    sections: [
+      {
+        heading: 'New — Field Settings System',
+        items: [
+          'Every field in every section now has a ⚙ Settings tab: visible/hidden toggle, auditable toggle (captures before/after edit history), field type selector (text, textarea, number, date, boolean, select, multiselect, URL, email, JSON, image, color, richtext), predefined value set editor for select/multiselect types, description/hint field',
+          'Source tab (existing source type system, now tab-organized) — user_input / merged / derived / direct with merge path and capability tags',
+          'Cascade tab — define rules so selecting a value in one field filters the allowed options of a downstream field (dependent dropdowns)',
+          'Clone (⧉) and Remove (✕) controls on every field row',
+          '+ Add Field button at the bottom of each section to create new custom fields inline',
+          'field_audit_log table + POST/GET /api/field-audit route — any field with auditable: true silently logs user + before/after value on every save',
+        ],
+      },
+      {
+        heading: 'New — Block Types (9)',
+        items: [
+          'KPI Dashboard — pastel metric panels grid; each panel has value, change indicator, caption, and custom color',
+          'Roadmap — horizontally scrollable timeline with gradient-colored milestone nodes and status pills (complete / in-progress / planned / blocked)',
+          'Status Heatmap — color-coded row × column status matrix (green/yellow/red/blue/teal cells) with auto-generated legend',
+          'Leaderboard — ranked list with gold/silver/bronze highlights, optional avatars, value and change delta per entry',
+          'Executive Summary — two-column layout with accent-colored stat cards on the left and a contact/info card on the right',
+          'App Mockup — phone / tablet / browser frame with gradient fill and screen content or images; supports multi-screen side-by-side',
+          'Choice Grid — interactive colored option tiles; click a tile to expand it with a CTA link',
+          'Decision Tree — interactive YES/NO branching flowchart; click branches to navigate, Reset button clears state',
+          'Output Generator — drag-to-reorder content block palette, output type selector (resume / executive bio / cover letter / LinkedIn summary / one-pager / proposal intro), audience/job-description textarea, AI-powered Generate button that calls the member agent endpoint',
+        ],
+      },
+      {
+        heading: 'New — Section Template Modal',
+        items: [
+          'Replacing the old plain-text section form: "+ Add Section" opens a 2-step visual modal',
+          'Step 1: card grid of 15 pre-built templates (Blank, Hero, KPI Dashboard, Roadmap, Executive Summary, Heatmap, Leaderboard, App Mockup, Choice Grid, Decision Tree, Output Generator, Cards, Two Column, Timeline, Stat Grid, CTA) — each with icon, description, and default column count',
+          'Step 2: name the section, set columns (1–4), choose background, set visibility — then seed fields are pre-filled from the template',
+        ],
+      },
+      {
+        heading: 'Fixed',
+        items: [
+          'Sidebar section list now scrolls independently — the "+ Add Section" button is pinned to the bottom of the sidebar and is always visible regardless of how many sections exist',
+          'Pages list and section label stay fixed; only the section rows scroll',
+        ],
+      },
+      {
+        heading: 'Behind the scenes',
+        items: [
+          'New table: field_audit_log (user_id, section_id, field_key, before_value, after_value, created_at)',
+          'New route file: server/routes/fieldAudit.js — POST logs an audit entry, GET retrieves history by sectionId and optional fieldKey',
+          'New component: src/components/admin/SectionTemplateModal.jsx (15 templates, 2-step flow)',
+          'blocks/index.jsx grew from 3649 → ~5400 lines with 9 new block components + STATUS_PILL helper',
+          'REGISTRY expanded from 26 → 35 block types; BLOCK_TYPES export auto-derives from REGISTRY so no separate update needed',
+          'addSection() in AdminShell now accepts columns + pre-seeded fields from the template instead of the old hardcoded type-switch logic',
+        ],
+      },
+    ],
+  },
 ];
