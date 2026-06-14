@@ -1365,6 +1365,7 @@ function ContactForm({ memberSlug = '' }) {
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || 'Submission failed');
       setResult(body);
+      try { fetch('/api/analytics/events', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ event_type: 'form-submit', object_type: 'contact-form', object_id: memberSlug || null, metadata: { form: 'contact' } }) }).catch(() => {}); } catch {}
     } catch (err) {
       setError(err.message);
     } finally {
@@ -3169,8 +3170,367 @@ function TimelineBlock({ section }) {
             </div>
           );
         })()}
+
+        {/* Resume PDF button — always shown on timeline blocks */}
+        <ResumePdfButton slug={f.resumeSlug || null} memberUserId={f.memberUserId || null} />
       </div>
     </section>
+  );
+}
+
+// Download-gated resume PDF button + modal
+function ResumePdfButton({ slug, memberUserId }) {
+  // States: null | 'checking' | 'gate-anon' | 'gate-member-reason' |
+  //         'viewer-temp' | 'viewer-temp-dl' | 'viewer-member' | 'viewer-member-dl'
+  const [mode, setMode] = React.useState(null);
+  // Temp access form fields
+  const [tempEmail, setTempEmail] = React.useState('');
+  const [tempContext, setTempContext] = React.useState('');
+  const [tempTerms, setTempTerms] = React.useState(false);
+  const [tempToken, setTempToken] = React.useState(null);
+  // Member reason form
+  const [memberReason, setMemberReason] = React.useState('');
+  // Download request form (shared between temp and member)
+  const [dlOrg, setDlOrg] = React.useState('');
+  const [dlRole, setDlRole] = React.useState('');
+  const [dlQuestion, setDlQuestion] = React.useState('');
+  const [dlMissing, setDlMissing] = React.useState('');
+  // Generic
+  const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState('');
+  const iframeRef = React.useRef(null);
+
+  const resumeUrl = '/output/resume';
+
+  function track(type) {
+    fetch('/api/analytics/events', {
+      method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event_type: type, object_type: 'resume', object_id: slug || 'betsy', member_user_id: memberUserId || null, metadata: {} }),
+    }).catch(() => {});
+  }
+
+  async function handleOpen() {
+    setMode('checking');
+    setError('');
+    try {
+      // Check auth
+      const meRes = await fetch('/api/auth/me', { credentials: 'include' });
+      const { user } = await meRes.json();
+
+      if (user) {
+        // Logged-in member: check for recent reason capture
+        const rRes = await fetch('/api/resume/member-reason-check', { credentials: 'include' });
+        const { has_recent, reason } = await rRes.json();
+        if (has_recent) {
+          setMemberReason(reason || '');
+          track('resume-view');
+          setMode('viewer-member');
+        } else {
+          setMode('gate-member-reason');
+        }
+        return;
+      }
+
+      // Not logged in: check localStorage for valid temp token
+      try {
+        const stored = localStorage.getItem('sb_resume_temp_token');
+        if (stored) {
+          const { token, expires_at } = JSON.parse(stored);
+          if (expires_at && Date.now() < expires_at) {
+            const vRes = await fetch(`/api/resume/validate-temp/${token}`);
+            const { valid } = await vRes.json();
+            if (valid) {
+              setTempToken(token);
+              track('resume-view-temp');
+              setMode('viewer-temp');
+              return;
+            }
+          }
+          localStorage.removeItem('sb_resume_temp_token');
+        }
+      } catch {}
+
+      setMode('gate-anon');
+    } catch {
+      setMode('gate-anon');
+    }
+  }
+
+  async function handleTempAccessSubmit(e) {
+    e.preventDefault();
+    if (!tempEmail.trim() || !tempTerms) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      const res = await fetch('/api/resume/temp-access', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: tempEmail.trim(), request_context: tempContext.trim() || null, terms_accepted: true }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Failed');
+      localStorage.setItem('sb_resume_temp_token', JSON.stringify({ token: data.token, expires_at: data.expires_at }));
+      setTempToken(data.token);
+      track('resume-temp-access-granted');
+      setMode('viewer-temp');
+    } catch (err) {
+      setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleMemberReasonSubmit(e) {
+    e.preventDefault();
+    if (!memberReason.trim()) return;
+    setSubmitting(true);
+    try {
+      await fetch('/api/resume/member-reason', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: memberReason.trim() }),
+      });
+      track('resume-view');
+      setMode('viewer-member');
+    } catch {
+      setError('Could not save reason. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleTempDownloadSubmit(e) {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await fetch('/api/resume/temp-download-request', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: tempToken, org: dlOrg || null, role_type: dlRole || null, question: dlQuestion || null, missing_info: dlMissing || null }),
+      });
+      track('resume-temp-download-requested');
+      setMode('viewer-temp');
+    } catch {
+      setError('Could not submit request.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleMemberDownloadSubmit(e) {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await fetch('/api/resume/member-download-request', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: memberReason || null, org: dlOrg || null, role_type: dlRole || null, question: dlQuestion || null, missing_info: dlMissing || null }),
+      });
+      track('resume-download');
+      setMode('viewer-member');
+      try { iframeRef.current?.contentWindow?.print(); } catch { window.print(); }
+    } catch {
+      setError('Could not save download context.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function close() {
+    setMode(null);
+    setError('');
+    setDlOrg(''); setDlRole(''); setDlQuestion(''); setDlMissing('');
+  }
+
+  // Shared styles
+  const backdrop = { position: 'fixed', inset: 0, background: 'rgba(14,22,33,0.72)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' };
+  const card = { background: '#fff', borderRadius: 3, padding: '2rem', maxWidth: 500, width: '100%', maxHeight: '90vh', overflowY: 'auto' };
+  const cardTitle = { fontFamily: 'var(--sb-font-display)', fontSize: '1.3rem', color: 'var(--sb-navy)', marginBottom: '0.25rem', fontWeight: 300 };
+  const cardSub = { fontSize: '0.82rem', color: '#666', lineHeight: 1.65, marginBottom: '1.5rem' };
+  const label = { display: 'block', fontSize: '0.65rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--sb-navy)', fontFamily: 'var(--sb-font-label)', marginBottom: '0.3rem', marginTop: '0.9rem' };
+  const input = { width: '100%', padding: '0.5rem 0.75rem', border: '0.5px solid #ccc', borderRadius: 2, fontSize: '0.85rem', boxSizing: 'border-box' };
+  const textarea = { ...input, minHeight: 72, resize: 'vertical' };
+  const btnPrimary = (disabled) => ({ flex: 1, padding: '0.6rem', background: disabled ? '#ccc' : 'var(--sb-navy)', color: '#fff', border: 'none', borderRadius: 2, fontSize: '0.8rem', cursor: disabled ? 'not-allowed' : 'pointer', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.08em' });
+  const btnSecondary = { padding: '0.6rem 1rem', background: 'none', border: '0.5px solid #ccc', borderRadius: 2, fontSize: '0.8rem', cursor: 'pointer', color: '#666' };
+  const btnRow = { display: 'flex', gap: '0.75rem', marginTop: '1.5rem' };
+  const divider = { border: 'none', borderTop: '0.5px solid rgba(196,132,58,0.25)', margin: '1.5rem 0' };
+
+  const roleOptions = ['', 'Recruiter', 'Hiring Manager', 'Company Executive', 'Investor / Board', 'Peer / Colleague', 'Other'];
+
+  const DownloadContextFields = () => (
+    <>
+      <label style={label}>Your Organization</label>
+      <input style={input} value={dlOrg} onChange={e => setDlOrg(e.target.value)} placeholder="Company or organization name" />
+      <label style={label}>Your Role</label>
+      <select style={input} value={dlRole} onChange={e => setDlRole(e.target.value)}>
+        {roleOptions.map(r => <option key={r} value={r}>{r || '— select —'}</option>)}
+      </select>
+      <label style={label}>What question are you trying to answer?</label>
+      <textarea style={textarea} value={dlQuestion} onChange={e => setDlQuestion(e.target.value)} placeholder="e.g. Does she have enterprise RevOps experience?" />
+      <label style={label}>Anything missing from the preview you'd like to ask about?</label>
+      <textarea style={textarea} value={dlMissing} onChange={e => setDlMissing(e.target.value)} placeholder="Optional — any gaps or questions about what you saw" />
+    </>
+  );
+
+  return (
+    <>
+      {/* Entry button */}
+      <div style={{ marginTop: '1.25rem' }}>
+        <button
+          onClick={handleOpen}
+          disabled={mode === 'checking'}
+          className="sb-btn sb-btn-gold"
+          style={{ fontSize: '0.72rem', padding: '0.55rem 1.5rem' }}
+        >
+          {mode === 'checking' ? '…' : '↓ Download Resume'}
+        </button>
+      </div>
+
+      {/* ── Anonymous gate ── */}
+      {mode === 'gate-anon' && (
+        <div style={backdrop} onClick={close}>
+          <div style={{ ...card, maxWidth: 540 }} onClick={e => e.stopPropagation()}>
+            <div style={cardTitle}>Betsy Salter · Resume</div>
+            <div style={cardSub}>To view and download the full resume, become a Salt Basin member — or request temporary 24-hour preview access below.</div>
+
+            {/* Become a member path */}
+            <div style={{ padding: '1.1rem 1.25rem', background: 'var(--sb-navy)', borderRadius: 2, textAlign: 'center' }}>
+              <div style={{ fontSize: '0.62rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--sb-gold)', fontFamily: 'var(--sb-font-label)', marginBottom: '0.4rem' }}>Full Access</div>
+              <div style={{ fontFamily: 'var(--sb-font-display)', fontSize: '1.05rem', color: 'var(--sb-cream)', fontWeight: 300, marginBottom: '0.5rem' }}>Become a Member</div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--sb-dusty)', marginBottom: '1rem', lineHeight: 1.55 }}>Free to start. Includes download access, your own profile site, and full resume output.</div>
+              <a href="/signup" style={{ display: 'inline-block', padding: '0.5rem 1.25rem', background: 'var(--sb-gold)', color: 'var(--sb-ivory)', borderRadius: 2, fontSize: '0.75rem', textDecoration: 'none', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.08em' }}>✦ Become a Member</a>
+              <span style={{ display: 'inline-block', marginLeft: '0.6rem', fontSize: '0.75rem', color: 'var(--sb-dusty)' }}>or <a href="/login" style={{ color: 'var(--sb-gold)', textDecoration: 'none' }}>sign in</a></span>
+            </div>
+
+            <hr style={divider} />
+
+            {/* Temp access path */}
+            <div style={{ fontSize: '0.78rem', color: '#555', lineHeight: 1.6, marginBottom: '1rem' }}>
+              Not ready to join? Provide your context below and you'll receive <strong>24-hour preview access</strong> to Betsy's resume.
+            </div>
+            <form onSubmit={handleTempAccessSubmit}>
+              <label style={label}>Your Email *</label>
+              <input style={input} type="email" required value={tempEmail} onChange={e => setTempEmail(e.target.value)} placeholder="your@email.com" />
+              <label style={label}>Why are you viewing this resume?</label>
+              <textarea style={textarea} value={tempContext} onChange={e => setTempContext(e.target.value)} placeholder="e.g. Evaluating Betsy for a fractional CFO engagement" />
+              <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'flex-start', gap: '0.6rem' }}>
+                <input type="checkbox" id="resume-terms" checked={tempTerms} onChange={e => setTempTerms(e.target.checked)} style={{ marginTop: '0.2rem', flexShrink: 0 }} />
+                <label htmlFor="resume-terms" style={{ fontSize: '0.76rem', color: '#555', lineHeight: 1.55, cursor: 'pointer' }}>
+                  I agree to receive emails from Betsy Salter / Salt Basin Net Works related to this request. Preview access is for evaluation only and <strong>may not be used to submit job applications</strong> without Betsy's written consent.
+                </label>
+              </div>
+              {error && <div style={{ color: '#c44', fontSize: '0.78rem', marginTop: '0.75rem' }}>{error}</div>}
+              <div style={btnRow}>
+                <button type="submit" disabled={!tempEmail.trim() || !tempTerms || submitting} style={btnPrimary(!tempEmail.trim() || !tempTerms || submitting)}>
+                  {submitting ? 'Granting access…' : '↗ Get Preview Access'}
+                </button>
+                <button type="button" onClick={close} style={btnSecondary}>Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Member reason gate ── */}
+      {mode === 'gate-member-reason' && (
+        <div style={backdrop} onClick={close}>
+          <div style={card} onClick={e => e.stopPropagation()}>
+            <div style={cardTitle}>One quick note</div>
+            <div style={cardSub}>Let Betsy know why you're viewing her resume today — this helps her follow up with the right context.</div>
+            <form onSubmit={handleMemberReasonSubmit}>
+              <label style={label}>Your reason *</label>
+              <textarea style={{ ...textarea, minHeight: 90 }} value={memberReason} onChange={e => setMemberReason(e.target.value)} placeholder="e.g. Considering Betsy for a fractional role in our portfolio company" />
+              {error && <div style={{ color: '#c44', fontSize: '0.78rem', marginTop: '0.5rem' }}>{error}</div>}
+              <div style={btnRow}>
+                <button type="submit" disabled={!memberReason.trim() || submitting} style={btnPrimary(!memberReason.trim() || submitting)}>
+                  {submitting ? 'Saving…' : '↗ View Resume'}
+                </button>
+                <button type="button" onClick={close} style={btnSecondary}>Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Temp access viewer ── */}
+      {(mode === 'viewer-temp' || mode === 'viewer-temp-dl') && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', flexDirection: 'column' }}>
+          {/* Toolbar */}
+          <div style={{ background: 'var(--sb-navy-deep)', color: 'var(--sb-cream)', padding: '0.6rem 1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0, borderBottom: '0.5px solid rgba(196,132,58,0.3)' }}>
+            <span style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.62rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--sb-gold)', flex: 1 }}>Betsy Salter · Resume</span>
+            <span style={{ fontSize: '0.68rem', color: '#f5a623', background: 'rgba(245,166,35,0.12)', border: '0.5px solid rgba(245,166,35,0.3)', padding: '0.2rem 0.6rem', borderRadius: 2, fontFamily: 'var(--sb-font-label)', letterSpacing: '0.06em' }}>
+              ⚠ 24-hr Preview · May not be used for job applications without consent
+            </span>
+            <button
+              onClick={() => setMode('viewer-temp-dl')}
+              style={{ padding: '0.35rem 1rem', background: 'rgba(196,132,58,0.18)', color: 'var(--sb-gold)', border: '0.5px solid rgba(196,132,58,0.4)', borderRadius: 2, fontSize: '0.72rem', cursor: 'pointer', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.07em' }}
+            >
+              ↓ Request Download Access
+            </button>
+            <button onClick={close} style={{ padding: '0.35rem 0.75rem', background: 'none', color: 'var(--sb-dusty)', border: '0.5px solid rgba(139,155,174,0.3)', borderRadius: 2, fontSize: '0.72rem', cursor: 'pointer' }}>
+              ✕ Close
+            </button>
+          </div>
+          <iframe src={resumeUrl} style={{ flex: 1, border: 'none', width: '100%', background: 'white' }} title="Resume Preview" />
+
+          {/* Download request overlay */}
+          {mode === 'viewer-temp-dl' && (
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(14,22,33,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+              <div style={{ ...card, maxWidth: 480 }} onClick={e => e.stopPropagation()}>
+                <div style={cardTitle}>Request Download Access</div>
+                <div style={cardSub}>To receive a downloadable copy, share a bit more about your context. Betsy reviews all download requests personally.</div>
+                <form onSubmit={handleTempDownloadSubmit}>
+                  <DownloadContextFields />
+                  {error && <div style={{ color: '#c44', fontSize: '0.78rem', marginTop: '0.5rem' }}>{error}</div>}
+                  <div style={btnRow}>
+                    <button type="submit" disabled={submitting} style={btnPrimary(submitting)}>
+                      {submitting ? 'Sending…' : 'Submit Request'}
+                    </button>
+                    <button type="button" onClick={() => setMode('viewer-temp')} style={btnSecondary}>Back</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Member viewer ── */}
+      {(mode === 'viewer-member' || mode === 'viewer-member-dl') && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', flexDirection: 'column' }}>
+          {/* Toolbar */}
+          <div style={{ background: 'var(--sb-navy-deep)', color: 'var(--sb-cream)', padding: '0.6rem 1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0, borderBottom: '0.5px solid rgba(196,132,58,0.3)' }}>
+            <span style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.62rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--sb-gold)', flex: 1 }}>Betsy Salter · Resume</span>
+            <button
+              onClick={() => { setDlOrg(''); setDlRole(''); setDlQuestion(''); setDlMissing(''); setMode('viewer-member-dl'); }}
+              style={{ padding: '0.35rem 1rem', background: 'var(--sb-gold)', color: 'var(--sb-ivory)', border: 'none', borderRadius: 2, fontSize: '0.72rem', cursor: 'pointer', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.07em' }}
+            >
+              ↓ Print / Save as PDF
+            </button>
+            <button onClick={close} style={{ padding: '0.35rem 0.75rem', background: 'none', color: 'var(--sb-dusty)', border: '0.5px solid rgba(139,155,174,0.3)', borderRadius: 2, fontSize: '0.72rem', cursor: 'pointer' }}>
+              ✕ Close
+            </button>
+          </div>
+          <iframe ref={iframeRef} src={resumeUrl} style={{ flex: 1, border: 'none', width: '100%', background: 'white' }} title="Resume" />
+
+          {/* Download context overlay */}
+          {mode === 'viewer-member-dl' && (
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(14,22,33,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+              <div style={{ ...card, maxWidth: 480 }} onClick={e => e.stopPropagation()}>
+                <div style={cardTitle}>Before you download</div>
+                <div style={cardSub}>Quick context on how you're using this helps Betsy understand her network's needs. All optional.</div>
+                <form onSubmit={handleMemberDownloadSubmit}>
+                  <DownloadContextFields />
+                  {error && <div style={{ color: '#c44', fontSize: '0.78rem', marginTop: '0.5rem' }}>{error}</div>}
+                  <div style={btnRow}>
+                    <button type="submit" disabled={submitting} style={btnPrimary(submitting)}>
+                      {submitting ? 'Saving…' : '↓ Print / Save as PDF'}
+                    </button>
+                    <button type="button" onClick={() => setMode('viewer-member')} style={btnSecondary}>Back</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </>
   );
 }
 

@@ -25,6 +25,16 @@ import oauthRouter from './routes/oauth.js';
 import profilesRouter from './routes/profiles.js';
 import uploadsRouter, { uploadsDir } from './routes/uploads.js';
 import fieldAuditRouter from './routes/fieldAudit.js';
+import analyticsRouter from './routes/analytics.js';
+import nrmRouter from './routes/nrm.js';
+import herqRouter from './routes/herq.js';
+import servicesRouter from './routes/services.js';
+import finbridgecoRouter from './routes/finbridgeco.js';
+import globalStandardsRouter from './routes/globalStandards.js';
+import governanceRouter from './routes/governance.js';
+import resumeAccessRouter from './routes/resumeAccess.js';
+import outputTemplatesRouter from './routes/outputTemplates.js';
+import lineageRouter from './routes/lineage.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProd = process.env.NODE_ENV === 'production';
@@ -49,7 +59,10 @@ const allowedOrigins = isProd
 
 app.use(
   cors({
-    origin: allowedOrigins.length ? allowedOrigins : true,
+    // In prod: deny all cross-origin requests if FRONTEND_ORIGIN is unset rather
+    // than falling through to the allow-all wildcard (which would permit any
+    // origin to send credentialed requests).
+    origin: allowedOrigins.length ? allowedOrigins : (isProd ? false : true),
     credentials: true,
   })
 );
@@ -72,6 +85,16 @@ app.use('/api/oauth', oauthRouter);
 app.use('/api/profiles', profilesRouter);
 app.use('/api/uploads', uploadsRouter);
 app.use('/api/field-audit', fieldAuditRouter);
+app.use('/api/analytics', analyticsRouter);
+app.use('/api/nrm', nrmRouter);
+app.use('/api/herq', herqRouter);
+app.use('/api/services', servicesRouter);
+app.use('/api/finbridgeco', finbridgecoRouter);
+app.use('/api/standards', globalStandardsRouter);
+app.use('/api/governance', governanceRouter);
+app.use('/api/resume', resumeAccessRouter);
+app.use('/api/output-templates', outputTemplatesRouter);
+app.use('/api/lineage', lineageRouter);
 
 // Uploaded files now live on Supabase Storage at <SUPABASE_URL>/storage/v1/object/public/uploads/<file>.
 // The returned URL from POST /api/uploads is already absolute, so the browser
@@ -132,4 +155,33 @@ app.listen(port, async () => {
       console.warn('[server] baseline snapshot skipped:', e.message);
     }
   }, 3000);
+
+  // Daily digest email — fires once per day at 07:00 local server time.
+  // Uses a setInterval aligned to the next 07:00 crossing.
+  scheduleDailyDigest();
 });
+
+function scheduleDailyDigest() {
+  const adminEmail = process.env.ADMIN_EMAIL || 'marthasalter@gmail.com';
+  async function runDigest() {
+    try {
+      const { sendDailyDigest } = await import('./lib/email.js');
+      const { db } = await import('./db.js');
+      await sendDailyDigest({ db, adminEmail });
+      console.log('[server] daily digest sent');
+    } catch (e) {
+      console.warn('[server] daily digest failed:', e.message);
+    }
+  }
+  // Calculate ms until next 07:00
+  const now = new Date();
+  const next7 = new Date(now);
+  next7.setHours(7, 0, 0, 0);
+  if (next7 <= now) next7.setDate(next7.getDate() + 1);
+  const msUntil = next7 - now;
+  setTimeout(() => {
+    runDigest();
+    setInterval(runDigest, 24 * 60 * 60 * 1000);
+  }, msUntil);
+  console.log(`[server] daily digest scheduled — next run in ${Math.round(msUntil / 3600000)}h`);
+}

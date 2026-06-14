@@ -195,8 +195,9 @@ router.post('/orgs/:orgId/members', express.json(), async (req, res) => {
     if (!mem || !['owner', 'admin'].includes(mem.role)) return res.status(403).json({ error: 'Insufficient role' });
 
     const { email, role = 'member' } = req.body;
-    const invitee = await db.prepare(`SELECT id FROM users WHERE email = $1`).get(email);
-    if (!invitee) return res.status(404).json({ error: 'No Salt Basin account found for that email' });
+    const invitee = await db.prepare(`SELECT id FROM users WHERE email = $1`).get(email?.toLowerCase?.() || email);
+    // Return the same response whether the user exists or not — prevents email enumeration.
+    if (!invitee) return res.json({ ok: true, invited: false });
 
     await db.prepare(`
       INSERT INTO org_memberships (user_id, org_id, role, invited_by)

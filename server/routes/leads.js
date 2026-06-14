@@ -51,11 +51,11 @@ async function newPublicId() {
 }
 
 function newAccessPassword() {
-  // 10 chars, easy to type, no ambiguous characters. Strong enough for a
-  // bookmark-style auth on a low-value record.
-  const bytes = crypto.randomBytes(10);
+  // 16 chars from a 32-char alphabet = ~80 bits of entropy. Resistant to
+  // offline brute force even if the hashed value leaked.
+  const bytes = crypto.randomBytes(16);
   let pw = '';
-  for (let i = 0; i < 10; i++) pw += ALPHABET[bytes[i] % ALPHABET.length];
+  for (let i = 0; i < 16; i++) pw += ALPHABET[bytes[i] % ALPHABET.length];
   return pw;
 }
 

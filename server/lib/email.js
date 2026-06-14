@@ -275,3 +275,63 @@ function friendlySource(s) {
   };
   return map[s] || s;
 }
+
+// Daily traffic digest — sent to Betsy + each member who had activity
+export async function sendDailyDigest({ db, adminEmail }) {
+  const since = Date.now() - 24 * 60 * 60 * 1000;
+
+  // Platform-wide totals for Betsy
+  const totals = await db.prepare(`
+    SELECT event_type, COUNT(*)::int AS cnt
+    FROM analytics_events WHERE occurred_at > $1
+    GROUP BY event_type ORDER BY cnt DESC
+  `).all(since);
+
+  if (totals.length > 0) {
+    const rows = totals.map(r => `<tr><td style="padding:3px 16px 3px 0;color:#4A6670;">${r.event_type}</td><td>${r.cnt}</td></tr>`).join('');
+    const totalCount = totals.reduce((s, r) => s + r.cnt, 0);
+    await dispatchRaw({
+      to: adminEmail,
+      subject: `[Salt Basin] Daily Traffic Digest — ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+      html: `
+        <h2 style="font-family:Georgia,serif;color:#1B2A3B;">Salt Basin · Daily Digest</h2>
+        <p style="color:#4A6670;">${totalCount} events in the last 24 hours.</p>
+        <table style="border-collapse:collapse;font-size:0.9rem;">${rows}</table>
+        <p style="color:#999;font-size:0.8rem;margin-top:1.5rem;">View full analytics at saltbasin.net/admin</p>
+      `,
+      text: `Salt Basin Daily Digest\n\n${totals.map(r => `${r.event_type}: ${r.cnt}`).join('\n')}\n\nTotal: ${totalCount} events`,
+    });
+  }
+
+  // Per-member digests — only members who had events
+  const memberActivity = await db.prepare(`
+    SELECT ae.member_user_id, u.email, u.display_name,
+           COUNT(*)::int AS total,
+           COUNT(*) FILTER (WHERE ae.event_type='visit')::int AS visits,
+           COUNT(*) FILTER (WHERE ae.event_type='pdf-download')::int AS downloads
+    FROM analytics_events ae
+    JOIN users u ON u.id = ae.member_user_id
+    WHERE ae.occurred_at > $1 AND ae.member_user_id IS NOT NULL
+    GROUP BY ae.member_user_id, u.email, u.display_name
+    HAVING COUNT(*) > 0
+  `).all(since);
+
+  for (const m of memberActivity) {
+    await dispatchRaw({
+      to: m.email,
+      subject: `[Salt Basin] Your daily traffic summary`,
+      html: `
+        <h2 style="font-family:Georgia,serif;color:#1B2A3B;">Your Salt Basin Traffic · ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</h2>
+        <p>Hi ${(m.display_name || m.email).split(' ')[0]},</p>
+        <p style="color:#4A6670;">Here's your last 24-hour activity summary:</p>
+        <table style="border-collapse:collapse;font-size:0.9rem;">
+          <tr><td style="padding:3px 16px 3px 0;color:#4A6670;">Total events</td><td>${m.total}</td></tr>
+          <tr><td style="padding:3px 16px 3px 0;color:#4A6670;">Profile visits</td><td>${m.visits}</td></tr>
+          <tr><td style="padding:3px 16px 3px 0;color:#4A6670;">Resume downloads</td><td>${m.downloads}</td></tr>
+        </table>
+        <p style="color:#999;font-size:0.8rem;margin-top:1.5rem;">View your full analytics at saltbasin.net/member</p>
+      `,
+      text: `Your Salt Basin Traffic\n\nTotal: ${m.total}\nVisits: ${m.visits}\nDownloads: ${m.downloads}`,
+    });
+  }
+}

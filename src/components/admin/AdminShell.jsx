@@ -15,6 +15,14 @@ import LeadsPanel from './LeadsPanel.jsx';
 import NetWorksPanel from './NetWorksPanel.jsx';
 import BacklogPanel from './BacklogPanel.jsx';
 import QAPanel from './QAPanel.jsx';
+import ContentManagerShell from './ContentManagerShell.jsx';
+import NrmPanel from './NrmPanel.jsx';
+import AnalyticsPanel from './AnalyticsPanel.jsx';
+import FinBridgeCoPanel from './FinBridgeCoPanel.jsx';
+import MemberPlmPanel from './MemberPlmPanel.jsx';
+import GovernancePanel from './GovernancePanel.jsx';
+import EmotionalWeatherPanel from './EmotionalWeatherPanel.jsx';
+import LineagePanel from './LineagePanel.jsx';
 
 // Tab component registry: the one piece that can't be data-driven, because
 // React components have to be referenced by import. The nav structure stored
@@ -26,11 +34,20 @@ import QAPanel from './QAPanel.jsx';
 // the content editor is too tangled with the shell's state to be a standalone
 // panel without a real refactor.
 const TAB_COMPONENTS = {
-  leads:    () => <LeadsPanel />,
-  networks: () => <NetWorksPanel />,
-  backlog:  () => <BacklogPanel />,
-  qa:       () => <QAPanel />,
-  resume:   () => <MyResumePanel />,
+  leads:          () => <LeadsPanel />,
+  networks:       () => <NetWorksPanel />,
+  backlog:        () => <BacklogPanel />,
+  qa:             () => <QAPanel />,
+  resume:         () => <MyResumePanel />,
+  contentManager: () => <ContentManagerShell />,
+  nrm:            () => <NrmPanel isAdmin={true} />,
+  analytics:      () => <AnalyticsPanel isAdmin={true} />,
+  finbridgeco:    () => <FinBridgeCoPanel />,
+  governance:     () => <GovernancePanel />,
+  emotionalWeather: () => <EmotionalWeatherPanel />,
+  memberNrm:      () => <NrmPanel isAdmin={false} />,
+  memberAnalytics:() => <AnalyticsPanel isAdmin={false} />,
+  lineage:        () => <LineagePanel />,
   // config: handled inline below (ConfigPanel needs draft + setters from shell)
   // content: handled inline below (Sidebar/EditorPane/PreviewPane composition)
 };
@@ -52,8 +69,27 @@ const FALLBACK_ADMIN_NAV = {
       { id: 'leads', label: 'Leads', componentId: 'leads', sortOrder: 0 },
       { id: 'networks', label: 'Net Works', componentId: 'networks', sortOrder: 1 },
     ]},
-    { id: 'system', label: 'System', sortOrder: 3, tabs: [
-      { id: 'config', label: 'Config', componentId: 'config', sortOrder: 0 },
+    { id: 'content-manager', label: 'Content Manager', sortOrder: 3, tabs: [
+      { id: 'content-manager', label: 'Content Manager', componentId: 'contentManager', sortOrder: 0 },
+    ]},
+    { id: 'nrm', label: 'Network Relationship Manager', sortOrder: 4, tabs: [
+      { id: 'nrm', label: 'NRM', componentId: 'nrm', sortOrder: 0 },
+    ]},
+    { id: 'analytics', label: 'Analytics', sortOrder: 5, tabs: [
+      { id: 'analytics', label: 'Analytics', componentId: 'analytics', sortOrder: 0 },
+    ]},
+    { id: 'finbridgeco', label: 'FinBridgeCo', sortOrder: 6, tabs: [
+      { id: 'finbridgeco', label: 'FinBridgeCo', componentId: 'finbridgeco', sortOrder: 0 },
+    ]},
+    { id: 'governance', label: 'Governance', sortOrder: 7, tabs: [
+      { id: 'governance', label: 'Governance Review', componentId: 'governance', sortOrder: 0 },
+    ]},
+    { id: 'emotional-weather', label: 'Emotional Weather', sortOrder: 8, tabs: [
+      { id: 'emotional-weather', label: 'Emotional Weather', componentId: 'emotionalWeather', sortOrder: 0 },
+    ]},
+    { id: 'system', label: 'System', sortOrder: 9, tabs: [
+      { id: 'config',   label: 'Config',       componentId: 'config',   sortOrder: 0 },
+      { id: 'lineage',  label: 'Data Lineage', componentId: 'lineage',  sortOrder: 1 },
     ]},
   ],
 };
@@ -442,13 +478,16 @@ export default function AdminShell({ scope = 'admin' }) {
           {isMember ? (
             <TabToggle
               items={[
-                { val: 'content',  label: 'My Profile' },
-                { val: 'resume',   label: 'My Resume' },
-                { val: 'config',   label: 'Config' },
-                { val: 'profiles', label: 'Profiles' },
-                { val: 'stats',    label: 'Stats' },
-                { val: 'audit',    label: 'Activity' },
-                { val: 'agent',    label: 'Agent' },
+                { val: 'content',        label: 'My Profile' },
+                { val: 'resume',         label: 'My Resume' },
+                { val: 'config',         label: 'Config' },
+                { val: 'profiles',       label: 'Profiles' },
+                { val: 'stats',          label: 'Stats' },
+                { val: 'audit',          label: 'Activity' },
+                { val: 'agent',          label: 'Agent' },
+                { val: 'memberNrm',      label: 'Network' },
+                { val: 'memberAnalytics',label: 'Analytics' },
+                { val: 'memberPlm',      label: 'Platform' },
               ]}
               active={tab}
               onChange={setTab}
@@ -633,11 +672,14 @@ export default function AdminShell({ scope = 'admin' }) {
           </>
             );
           }
-          if (componentId === 'resume')   return <MyResumePanel />;
-          if (componentId === 'stats')    return <MemberStatsPanel isAdmin={!isMember} />;
-          if (componentId === 'audit')    return <MemberAuditPanel isAdmin={!isMember} />;
-          if (componentId === 'agent')    return <MemberAgentPanel />;
-          if (componentId === 'profiles') return <ProfileHub isAdmin={!isMember} />;
+          if (componentId === 'resume')          return <MyResumePanel />;
+          if (componentId === 'stats')           return <MemberStatsPanel isAdmin={!isMember} />;
+          if (componentId === 'audit')           return <MemberAuditPanel isAdmin={!isMember} />;
+          if (componentId === 'agent')           return <MemberAgentPanel />;
+          if (componentId === 'profiles')        return <ProfileHub isAdmin={!isMember} />;
+          if (componentId === 'memberNrm')       return <NrmPanel isAdmin={false} />;
+          if (componentId === 'memberAnalytics') return <AnalyticsPanel isAdmin={false} />;
+          if (componentId === 'memberPlm')       return <MemberPlmPanel />;
 
           // Inline 'config' case: the panel needs draft + setter + scope from
           // the shell. Treated as the default fallback when nothing else matched.
@@ -657,7 +699,7 @@ export default function AdminShell({ scope = 'admin' }) {
         const v = adminNav.views.find((x) => x.id === activeViewId);
         const t = v?.tabs.find((x) => x.id === tab);
         return t?.componentId || tab;
-      })()] && !['stats', 'audit', 'agent', 'profiles', 'resume'].includes(tab) && (
+      })()] && !['stats', 'audit', 'agent', 'profiles', 'resume', 'memberNrm', 'memberAnalytics', 'memberPlm', 'governance'].includes(tab) && (
         <PublishBar
           dirty={dirty}
           siteDirty={siteDirty}

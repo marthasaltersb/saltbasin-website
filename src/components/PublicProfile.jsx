@@ -14,6 +14,7 @@ import { useParams, Link } from 'react-router-dom';
 import { RenderSection } from './blocks/index.jsx';
 import PublicFooter from './PublicFooter.jsx';
 import BackLink from './BackLink.jsx';
+import { track } from '../lib/analytics.js';
 
 export default function PublicProfile() {
   const params = useParams();
@@ -35,11 +36,12 @@ export default function PublicProfile() {
   // Fire page-view beacon when the page + slug resolve
   useEffect(() => {
     if (!data) return;
-    fetch('/api/events/page-view', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ memberSlug: slug, pageSlug: subPath || '/', referrer: document.referrer || null }),
-    }).catch(() => {});
+    track('visit', {
+      appId: 'app.member-site',
+      objectType: 'member-profile',
+      objectId: slug,
+      metadata: { pageSlug: subPath || '/', referrer: document.referrer || null },
+    });
   }, [slug, subPath, data]);
 
   if (error) {

@@ -926,6 +926,547 @@ async function bootstrap() {
     CREATE INDEX IF NOT EXISTS idx_field_audit_section ON field_audit_log (section_id);
     CREATE INDEX IF NOT EXISTS idx_field_audit_user    ON field_audit_log (user_id);
   `);
+
+  // ── UNIFIED PLATFORM LAYER ────────────────────────────────────────────────
+  // Phase 1A: Global Standards Repository + Unified Object Model + NRM +
+  // Analytics Events + HERQ content tables + Services Proposal + FinBridgeCo.
+
+  // Platform applications registry
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS platform_applications (
+      id               TEXT PRIMARY KEY,
+      display_name     TEXT NOT NULL,
+      slug             TEXT NOT NULL,
+      purpose          TEXT,
+      brand_mode       TEXT NOT NULL DEFAULT 'strategic',
+      admin_only       BOOLEAN NOT NULL DEFAULT false,
+      object_label_map JSONB NOT NULL DEFAULT '{}',
+      atomic_set_id    TEXT,
+      status           TEXT NOT NULL DEFAULT 'active',
+      created_at       BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+  `);
+
+  // Global Standards Repository — single source of truth for all vocabulary
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS global_standards (
+      id           TEXT PRIMARY KEY,
+      type         TEXT NOT NULL,
+      slug         TEXT NOT NULL,
+      display_name TEXT NOT NULL,
+      short_label  TEXT,
+      description  TEXT,
+      parent_id    TEXT REFERENCES global_standards(id),
+      status       TEXT NOT NULL DEFAULT 'active',
+      metadata     JSONB NOT NULL DEFAULT '{}',
+      created_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_gs_type   ON global_standards (type, status);
+    CREATE INDEX IF NOT EXISTS idx_gs_slug   ON global_standards (slug);
+    CREATE INDEX IF NOT EXISTS idx_gs_parent ON global_standards (parent_id) WHERE parent_id IS NOT NULL;
+  `);
+
+  // Pending standards — overrides that need review before merging into global_standards
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS pending_standards (
+      id                    TEXT PRIMARY KEY,
+      proposed_value        TEXT NOT NULL,
+      standard_type         TEXT NOT NULL,
+      app_id                TEXT,
+      context_ref_id        TEXT,
+      proposed_by_user_id   BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      status                TEXT NOT NULL DEFAULT 'pending',
+      review_notes          TEXT,
+      published_output_id   TEXT,
+      created_at            BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      reviewed_at           BIGINT,
+      reviewed_by_user_id   BIGINT REFERENCES users(id) ON DELETE SET NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_ps_status ON pending_standards (status, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_ps_app    ON pending_standards (app_id);
+  `);
+
+  // Standard overrides — per-object overrides linked to pending standards
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS standard_overrides (
+      id                  TEXT PRIMARY KEY,
+      standard_id         TEXT REFERENCES global_standards(id),
+      override_value      TEXT NOT NULL,
+      app_id              TEXT,
+      context_ref_id      TEXT,
+      user_id             BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      pending_standard_id TEXT REFERENCES pending_standards(id),
+      created_at          BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+  `);
+
+  // Unified content items — shared primitive across all applications
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS unified_content_items (
+      id               TEXT PRIMARY KEY,
+      app_id           TEXT NOT NULL,
+      type             TEXT NOT NULL,
+      title            TEXT NOT NULL,
+      topic            TEXT,
+      summary          TEXT,
+      body             JSONB,
+      domain_refs      TEXT[],
+      capability_refs  TEXT[],
+      audience_refs    TEXT[],
+      system_refs      TEXT[],
+      data_slice_refs  TEXT[],
+      source_refs      JSONB,
+      export_status    TEXT NOT NULL DEFAULT 'draft',
+      export_status_updated_at BIGINT,
+      series_ref       TEXT,
+      output_refs      TEXT[],
+      created_by       BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      updated_by       BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      created_at       BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at       BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      metadata         JSONB NOT NULL DEFAULT '{}'
+    );
+    CREATE INDEX IF NOT EXISTS idx_uci_app    ON unified_content_items (app_id, export_status);
+    CREATE INDEX IF NOT EXISTS idx_uci_type   ON unified_content_items (type);
+    CREATE INDEX IF NOT EXISTS idx_uci_series ON unified_content_items (series_ref) WHERE series_ref IS NOT NULL;
+  `);
+
+  // Unified outputs — configured publishable output documents
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS unified_outputs (
+      id              TEXT PRIMARY KEY,
+      app_id          TEXT NOT NULL,
+      template_ref    TEXT,
+      title           TEXT NOT NULL,
+      purpose         TEXT,
+      source_item_ids TEXT[],
+      config          JSONB NOT NULL DEFAULT '{}',
+      export_status   TEXT NOT NULL DEFAULT 'draft',
+      published_link  TEXT,
+      published_at    BIGINT,
+      created_by      BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      updated_at      BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      version_history JSONB NOT NULL DEFAULT '[]'
+    );
+    CREATE INDEX IF NOT EXISTS idx_uo_app    ON unified_outputs (app_id, export_status);
+  `);
+
+  // HERQ series versions (5 seeded below)
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS herq_series_versions (
+      id                   TEXT PRIMARY KEY,
+      acronym              TEXT NOT NULL DEFAULT 'HERQ',
+      series_title         TEXT NOT NULL,
+      classification_type  TEXT,
+      definition           TEXT,
+      default_color_token  TEXT,
+      status               TEXT NOT NULL DEFAULT 'active',
+      target_audience_refs TEXT[],
+      zero_post_eligible   BOOLEAN NOT NULL DEFAULT true,
+      created_at           BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at           BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+  `);
+
+  // HERQ research inputs
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS herq_research_inputs (
+      id                  TEXT PRIMARY KEY,
+      title               TEXT NOT NULL,
+      source_name         TEXT,
+      source_type         TEXT,
+      url                 TEXT,
+      retrieved_date      BIGINT,
+      stat                TEXT,
+      why_it_matters      TEXT,
+      verification_status TEXT NOT NULL DEFAULT 'needsVerification',
+      linked_post_refs    TEXT[],
+      linked_output_refs  TEXT[],
+      created_by          BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      created_at          BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+  `);
+
+  // HERQ comment insights
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS herq_comment_insights (
+      id                  TEXT PRIMARY KEY,
+      source_type         TEXT NOT NULL DEFAULT 'user note',
+      body                TEXT NOT NULL,
+      author_or_source    TEXT,
+      captured_date       BIGINT,
+      sentiment           TEXT NOT NULL DEFAULT 'neutral',
+      actionability       TEXT NOT NULL DEFAULT 'medium',
+      linked_post_refs    TEXT[],
+      linked_series_refs  TEXT[],
+      linked_domain_refs  TEXT[],
+      linked_capability_refs TEXT[],
+      follow_up_needed    BOOLEAN NOT NULL DEFAULT false,
+      notes               TEXT,
+      created_by          BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      created_at          BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+  `);
+
+  // NRM contacts
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS nrm_contacts (
+      id                TEXT PRIMARY KEY,
+      user_id           BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      first_name        TEXT,
+      last_name         TEXT,
+      email             TEXT,
+      org_name          TEXT,
+      role_title        TEXT,
+      relationship_type TEXT NOT NULL DEFAULT 'contact',
+      opted_in          BOOLEAN NOT NULL DEFAULT false,
+      contact_group_ids TEXT[],
+      domain_refs       TEXT[],
+      notes             TEXT,
+      last_contacted_at BIGINT,
+      owner_user_id     BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      created_at        BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at        BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_nrm_contacts_owner ON nrm_contacts (owner_user_id);
+    CREATE INDEX IF NOT EXISTS idx_nrm_contacts_user  ON nrm_contacts (user_id) WHERE user_id IS NOT NULL;
+  `);
+
+  // NRM contact groups
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS nrm_contact_groups (
+      id            TEXT PRIMARY KEY,
+      name          TEXT NOT NULL,
+      description   TEXT,
+      owner_user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+      created_at    BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+  `);
+
+  // NRM reference requests — intake from public forms
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS nrm_reference_requests (
+      id                      TEXT PRIMARY KEY,
+      requester_name          TEXT NOT NULL,
+      requester_email         TEXT NOT NULL,
+      requester_org           TEXT,
+      target_member_user_id   BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      context                 TEXT,
+      status                  TEXT NOT NULL DEFAULT 'new',
+      created_at              BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at              BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_nrm_ref_req_target ON nrm_reference_requests (target_member_user_id);
+    CREATE INDEX IF NOT EXISTS idx_nrm_ref_req_status ON nrm_reference_requests (status, created_at DESC);
+  `);
+
+  // Services proposal access
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS services_proposal_access (
+      id             TEXT PRIMARY KEY,
+      proposal_id    TEXT NOT NULL,
+      user_id        BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      org_name       TEXT,
+      request_context TEXT,
+      lead_id        BIGINT REFERENCES leads(id) ON DELETE SET NULL,
+      granted        BOOLEAN NOT NULL DEFAULT true,
+      granted_at     BIGINT,
+      created_at     BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_spa_proposal ON services_proposal_access (proposal_id);
+    CREATE INDEX IF NOT EXISTS idx_spa_user     ON services_proposal_access (user_id) WHERE user_id IS NOT NULL;
+  `);
+
+  // Platform analytics events — replaces/extends page_events
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS analytics_events (
+      id               BIGSERIAL PRIMARY KEY,
+      event_type       TEXT NOT NULL,
+      app_id           TEXT,
+      object_type      TEXT,
+      object_id        TEXT,
+      member_user_id   BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      visitor_user_id  BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      session_id       TEXT,
+      ip_hash          TEXT,
+      referrer_domain  TEXT,
+      metadata         JSONB NOT NULL DEFAULT '{}',
+      occurred_at      BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_ae_member   ON analytics_events (member_user_id, occurred_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_ae_type     ON analytics_events (event_type, occurred_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_ae_occurred ON analytics_events (occurred_at DESC);
+  `);
+
+  // FinBridgeCo placeholder config
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS finbridgeco_configs (
+      id           TEXT PRIMARY KEY,
+      config_key   TEXT NOT NULL,
+      config_value JSONB NOT NULL DEFAULT '{}',
+      description  TEXT,
+      updated_by   BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      updated_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+  `);
+
+  // Column migrations for existing tables
+  await sql.unsafe(`
+    ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS opted_in_network BOOLEAN NOT NULL DEFAULT false;
+    ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS network_bio TEXT;
+  `).catch(() => {});
+
+  // Extend pending_standards with governance workflow columns
+  await sql.unsafe(`
+    ALTER TABLE pending_standards ADD COLUMN IF NOT EXISTS base_standard_id TEXT REFERENCES global_standards(id) ON DELETE SET NULL;
+    ALTER TABLE pending_standards ADD COLUMN IF NOT EXISTS proposed_name TEXT;
+    ALTER TABLE pending_standards ADD COLUMN IF NOT EXISTS proposed_domain TEXT;
+    ALTER TABLE pending_standards ADD COLUMN IF NOT EXISTS proposed_category TEXT;
+    ALTER TABLE pending_standards ADD COLUMN IF NOT EXISTS proposed_definition TEXT;
+    ALTER TABLE pending_standards ADD COLUMN IF NOT EXISTS rationale TEXT;
+    ALTER TABLE pending_standards ADD COLUMN IF NOT EXISTS review_status TEXT NOT NULL DEFAULT 'pending';
+    ALTER TABLE pending_standards ADD COLUMN IF NOT EXISTS rejection_reason TEXT;
+    ALTER TABLE pending_standards ADD COLUMN IF NOT EXISTS proposed_by BIGINT REFERENCES users(id) ON DELETE SET NULL;
+    ALTER TABLE pending_standards ADD COLUMN IF NOT EXISTS reviewed_by BIGINT REFERENCES users(id) ON DELETE SET NULL;
+    ALTER TABLE pending_standards ADD COLUMN IF NOT EXISTS updated_at BIGINT;
+  `).catch(() => {});
+
+  // Extend standard_overrides with escalation flag
+  await sql.unsafe(`
+    ALTER TABLE standard_overrides ADD COLUMN IF NOT EXISTS escalated_to_governance BOOLEAN NOT NULL DEFAULT false;
+    ALTER TABLE standard_overrides ADD COLUMN IF NOT EXISTS override_note TEXT;
+  `).catch(() => {});
+
+  // ── Output block template system ─────────────────────────────────────────
+  // Adds template_config (block JSON) and output_type to unified_outputs.
+  await sql.unsafe(`
+    ALTER TABLE unified_outputs ADD COLUMN IF NOT EXISTS output_type TEXT;
+    ALTER TABLE unified_outputs ADD COLUMN IF NOT EXISTS template_config TEXT;
+  `).catch(() => {});
+
+  // ── Output templates table (standalone named templates, reusable across outputs) ──
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS output_templates (
+      id           TEXT PRIMARY KEY,
+      user_id      BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      output_type  TEXT NOT NULL,
+      name         TEXT NOT NULL,
+      is_primary   BOOLEAN NOT NULL DEFAULT false,
+      config       JSONB NOT NULL DEFAULT '{}',
+      created_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_ot_user_type ON output_templates (user_id, output_type);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_ot_primary ON output_templates (user_id, output_type) WHERE is_primary = true;
+  `);
+
+  // ── Salt Basin Net Works org profile seed ─────────────────────────────────
+  // Seeds the platform's own org profile and links it to the admin user (Betsy).
+  // This separates Betsy's personal user account from the Salt Basin entity profile.
+  try {
+    const existing = await sql.unsafe(`SELECT id FROM organization_profiles WHERE slug = 'salt-basin-net-works' LIMIT 1`);
+    if (existing.length === 0) {
+      const orgRow = await sql.unsafe(`
+        INSERT INTO organization_profiles (slug, name, org_type, description, website, industry, created_at, updated_at)
+        VALUES ('salt-basin-net-works', 'Salt Basin Net Works', 'llc',
+                'Strategic consulting, platform development, and AI-enabled delivery at the intersection of RevOps, governance, and enterprise architecture.',
+                'https://saltbasin.net', 'consulting',
+                ${Date.now()}, ${Date.now()})
+        RETURNING id
+      `);
+      const orgId = orgRow[0]?.id;
+      if (orgId) {
+        // Link to admin user's personal profile and org membership
+        await sql.unsafe(`
+          INSERT INTO org_memberships (user_id, org_id, role, joined_at)
+          SELECT u.id, ${orgId}, 'owner', ${Date.now()}
+            FROM users u WHERE u.role = 'admin' LIMIT 1
+          ON CONFLICT (user_id, org_id) DO NOTHING
+        `);
+        await sql.unsafe(`
+          INSERT INTO personal_org_links (personal_profile_id, org_id, linked_at)
+          SELECT pp.id, ${orgId}, ${Date.now()}
+            FROM personal_profiles pp
+            JOIN users u ON u.id = pp.user_id
+           WHERE u.role = 'admin' LIMIT 1
+          ON CONFLICT DO NOTHING
+        `);
+      }
+    }
+  } catch (e) {
+    console.warn('[db] salt basin org seed skipped:', e.message);
+  }
+
+  // ── Data lineage + snapshot tables ───────────────────────────────────────
+  // field_lineage: one row per changed field per save event. Captures the
+  // before/after value, who changed it, from what source, and a 16-char
+  // context hash that uniquely fingerprints this value-in-context.
+  //
+  // data_snapshots: one row per save event summarising how many fields changed
+  // and a composite hash of all field hashes at that moment. This is the
+  // "point-in-time fingerprint" shown in the waterfall timeline.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS field_lineage (
+      id            TEXT PRIMARY KEY,
+      entity_type   TEXT NOT NULL,
+      entity_id     TEXT NOT NULL,
+      field_path    TEXT NOT NULL,
+      value         TEXT,
+      prev_value    TEXT,
+      source_type   TEXT NOT NULL DEFAULT 'manual',
+      source_ref    TEXT,
+      author_id     BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      author_email  TEXT,
+      captured_at   BIGINT NOT NULL,
+      context_hash  TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_fl_entity   ON field_lineage (entity_type, entity_id, captured_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_fl_field    ON field_lineage (entity_type, entity_id, field_path, captured_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_fl_author   ON field_lineage (author_id, captured_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_fl_captured ON field_lineage (captured_at DESC);
+
+    CREATE TABLE IF NOT EXISTS data_snapshots (
+      id             TEXT PRIMARY KEY,
+      entity_type    TEXT NOT NULL,
+      entity_id      TEXT NOT NULL,
+      snapshot_hash  TEXT NOT NULL,
+      field_count    INTEGER NOT NULL DEFAULT 0,
+      changed_count  INTEGER NOT NULL DEFAULT 0,
+      triggered_by   TEXT NOT NULL DEFAULT 'manual',
+      author_id      BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      author_email   TEXT,
+      captured_at    BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_ds_entity   ON data_snapshots (entity_type, entity_id, captured_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_ds_captured ON data_snapshots (captured_at DESC);
+  `);
+
+  // ── Resume access control tables ─────────────────────────────────────────
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS resume_temp_access (
+      id              BIGSERIAL PRIMARY KEY,
+      email           TEXT NOT NULL,
+      token           TEXT NOT NULL UNIQUE,
+      request_context TEXT,
+      org             TEXT,
+      role_type       TEXT,
+      question        TEXT,
+      missing_info    TEXT,
+      terms_accepted  BOOLEAN NOT NULL DEFAULT false,
+      lead_id         BIGINT REFERENCES leads(id) ON DELETE SET NULL,
+      created_at      BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      expires_at      BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_rta_token  ON resume_temp_access (token);
+    CREATE INDEX IF NOT EXISTS idx_rta_email  ON resume_temp_access (email);
+
+    CREATE TABLE IF NOT EXISTS resume_member_reasons (
+      id         BIGSERIAL PRIMARY KEY,
+      user_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      reason     TEXT NOT NULL,
+      created_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_rmr_user ON resume_member_reasons (user_id, created_at DESC);
+
+    CREATE TABLE IF NOT EXISTS network_requests (
+      id                   BIGSERIAL PRIMARY KEY,
+      user_id              BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      request_type         TEXT NOT NULL DEFAULT 'resume-download',
+      reason               TEXT,
+      org                  TEXT,
+      role_type            TEXT,
+      question             TEXT,
+      missing_info         TEXT,
+      created_at           BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      converted_to_lead_id BIGINT REFERENCES leads(id) ON DELETE SET NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_nr_user ON network_requests (user_id, created_at DESC);
+  `);
+
+  // ── Seed: platform_applications ──────────────────────────────────────────
+  const appDefs = [
+    { id: 'app.herq',           display_name: 'HERQ Content Manager',          slug: 'herq',            brand_mode: 'herq',       admin_only: true  },
+    { id: 'app.services',       display_name: 'Services Proposal Manager',      slug: 'services',        brand_mode: 'strategic',  admin_only: false },
+    { id: 'app.globalStandards',display_name: 'Global Standard Content Manager',slug: 'global-standards',brand_mode: 'strategic',  admin_only: true  },
+    { id: 'app.nrm',            display_name: 'Network Relationship Manager',   slug: 'nrm',             brand_mode: 'strategic',  admin_only: false },
+    { id: 'app.crm',            display_name: 'Customer Relationship Manager',  slug: 'crm',             brand_mode: 'strategic',  admin_only: false },
+    { id: 'app.plm',            display_name: 'Platform Lifecycle Management',  slug: 'plm',             brand_mode: 'strategic',  admin_only: true  },
+    { id: 'app.finbridgeco',    display_name: 'FinBridgeCo Manager',            slug: 'finbridgeco',     brand_mode: 'strategic',  admin_only: true  },
+    { id: 'app.resume',         display_name: 'Resume Output Generator',        slug: 'resume',          brand_mode: 'strategic',  admin_only: false },
+    { id: 'app.analytics',      display_name: 'Platform Analytics Hub',         slug: 'analytics',       brand_mode: 'strategic',  admin_only: false },
+    { id: 'app.memberSite',     display_name: 'Member Website CMS',             slug: 'member-site',     brand_mode: 'strategic',  admin_only: false },
+    { id: 'app.publicSite',     display_name: 'Salt Basin Public Site CMS',     slug: 'public-site',     brand_mode: 'strategic',  admin_only: true  },
+  ];
+  for (const app of appDefs) {
+    await sql.unsafe(
+      `INSERT INTO platform_applications (id, display_name, slug, brand_mode, admin_only)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (id) DO NOTHING`,
+      [app.id, app.display_name, app.slug, app.brand_mode, app.admin_only]
+    );
+  }
+
+  // ── Seed: HERQ series versions ────────────────────────────────────────────
+  const herqSeries = [
+    { id: 'series.base',   series_title: 'Hot Elephant Resident Question',    classification_type: 'baseFramework',   default_color_token: '--herq-pink',   target_audience_refs: ['audience.general'] },
+    { id: 'series.hazard', series_title: 'Hazardous Enterprise Reality Question', classification_type: 'acronymVariation', default_color_token: '--herq-orange', target_audience_refs: ['audience.pe', 'audience.revops'] },
+    { id: 'series.retain', series_title: 'Highly Evaded Retention Question',  classification_type: 'acronymVariation', default_color_token: '--herq-sky',    target_audience_refs: ['audience.cx', 'audience.hr'] },
+    { id: 'series.human',  series_title: 'Human Enterprise Resource Question',classification_type: 'acronymVariation', default_color_token: '--herq-mint',   target_audience_refs: ['audience.peopleOps', 'audience.leadership'] },
+    { id: 'series.earn',   series_title: 'Hindered Earnings Reporting Question', classification_type: 'acronymVariation', default_color_token: '--herq-yellow', target_audience_refs: ['audience.finance', 'audience.cfo'] },
+  ];
+  const nowTs = Date.now();
+  for (const s of herqSeries) {
+    await sql.unsafe(
+      `INSERT INTO herq_series_versions (id, series_title, classification_type, default_color_token, target_audience_refs, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $6)
+       ON CONFLICT (id) DO NOTHING`,
+      [s.id, s.series_title, s.classification_type, s.default_color_token, s.target_audience_refs, nowTs]
+    );
+  }
+
+  // ── Seed / migrate admin_nav to include new tabs ─────────────────────────
+  // One-shot injection: add Content Manager, NRM, Analytics, FinBridgeCo tabs
+  // to the existing admin nav without overwriting manual edits.
+  try {
+    const navRow = await sql.unsafe(`SELECT data FROM config_state WHERE id = 'admin_nav'`);
+    if (navRow.length > 0) {
+      const nav = JSON.parse(navRow[0].data);
+      let changed = false;
+
+      // Find or create a top-level "platform" view for new platform tabs
+      const allTabIds = (nav.views || []).flatMap(v => (v.tabs || []).map(t => t.id));
+
+      const newTabs = [
+        { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'content-manager', label: 'Content Manager', componentId: 'contentManager', sortOrder: 2 },
+        { viewId: 'platform', viewLabel: 'Platform',                      id: 'nrm',             label: 'Network',         componentId: 'nrm',            sortOrder: 0 },
+        { viewId: 'platform', viewLabel: 'Platform',                      id: 'analytics',       label: 'Analytics',       componentId: 'analytics',      sortOrder: 1 },
+        { viewId: 'system',   viewLabel: 'System',                        id: 'finbridgeco',     label: 'FinBridgeCo',     componentId: 'finbridgeco',    sortOrder: 2 },
+        { viewId: 'system',   viewLabel: 'System',                        id: 'lineage',         label: 'Data Lineage',    componentId: 'lineage',        sortOrder: 3 },
+      ];
+
+      for (const t of newTabs) {
+        if (allTabIds.includes(t.id)) continue;
+        let view = (nav.views || []).find(v => v.id === t.viewId);
+        if (!view) {
+          view = { id: t.viewId, label: t.viewLabel, sortOrder: nav.views.length, tabs: [] };
+          nav.views.push(view);
+        }
+        view.tabs = view.tabs || [];
+        view.tabs.push({ id: t.id, label: t.label, componentId: t.componentId, sortOrder: t.sortOrder });
+        changed = true;
+      }
+
+      if (changed) {
+        await sql.unsafe(
+          `UPDATE config_state SET data = $1, updated_at = $2 WHERE id = 'admin_nav'`,
+          [JSON.stringify(nav), Date.now()]
+        );
+      }
+    }
+  } catch (e) {
+    console.warn('[db] admin_nav merge skipped:', e.message);
+  }
 }
 
 // Awaited at module import time so routes can use db without worrying about

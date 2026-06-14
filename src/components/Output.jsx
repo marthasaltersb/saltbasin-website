@@ -6,7 +6,7 @@
 // Each output is meant to be viewed on screen first, then printed or saved
 // as PDF via the browser's "Save as PDF". Print CSS hides nav/footer.
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis,
@@ -14,6 +14,7 @@ import {
 } from 'recharts';
 import { api } from '../lib/api.js';
 import BackLink from './BackLink.jsx';
+import { renderBlockToHtml } from '../lib/outputBlocks.js';
 
 // ── Auth state hook ──
 function useAuthState() {
@@ -331,36 +332,46 @@ const SERVICE_OFFERINGS = [
 
 // ── Resume ──
 export function ResumeOutput() {
-  const { loading, user } = useAuthState();
   const [page, setPage] = useState(null);
   const [wheel, setWheel] = useState(null);
+  const [siteError, setSiteError] = useState(null);
+  // undefined = loading, null = no template, object = template config
+  const [primaryTemplate, setPrimaryTemplate] = useState(undefined);
+
   useEffect(() => {
     api.getPublishedSite()
       .then((site) => {
         setPage(site.pages['consulting-founder']);
-        // Industries × Domains wheel section lives on the home page; we pull
-        // tech stack fields from it here for the static resume output.
         const home = site.pages['home'];
         setWheel(home?.sections.find((s) => s.type === 'industryWheel')?.fields || {});
       })
-      .catch(() => {});
-  }, []);
-  if (loading || !page) return null;
+      .catch((e) => setSiteError(e.message || 'Failed to load'));
 
-  if (!user) {
-    const about = page.sections.find((s) => s.type === 'about')?.fields || {};
-    return (
-      <OutputFrame title={about.heading || 'Betsy Salter'} eyebrow="Resume" gated>
-        <GatedPreview
-          kind="resume"
-          teaser={{
-            label: 'Profile (preview)',
-            paragraphs: [about.p1].filter(Boolean),
-          }}
-        />
-      </OutputFrame>
-    );
-  }
+    fetch('/api/output-templates/primary?output_type=resume')
+      .then(r => r.json())
+      .then(d => {
+        if (d.template?.config) {
+          const cfg = typeof d.template.config === 'string' ? JSON.parse(d.template.config) : d.template.config;
+          setPrimaryTemplate(cfg);
+        } else {
+          setPrimaryTemplate(null);
+        }
+      })
+      .catch(() => setPrimaryTemplate(null));
+  }, []);
+
+  const isLoading = primaryTemplate === undefined || (!page && !siteError);
+
+  if (isLoading) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', color: '#1B2A3B', fontFamily: 'Georgia, serif', fontSize: '1rem' }}>
+      Loading resume…
+    </div>
+  );
+  if (siteError) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', color: '#c44', fontFamily: 'Georgia, serif', fontSize: '1rem' }}>
+      {siteError}
+    </div>
+  );
 
   const about = page.sections.find((s) => s.type === 'about')?.fields || {};
   const timeline = page.sections.find((s) => s.type === 'timeline')?.fields || {};
@@ -375,7 +386,35 @@ export function ResumeOutput() {
     });
   }
 
-  // Parse the tech stack ("Label:slug, Label:slug, ...") into a clean array.
+  // ── Template-driven render ──
+  if (primaryTemplate?.blocks?.length) {
+    const ctx = { about, timeline, jobs };
+    const sorted = [...primaryTemplate.blocks]
+      .filter(b => b.visible !== false)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    return (
+      <OutputFrame title={about.heading || about.name || 'Betsy Salter'} eyebrow="Resume">
+        <div style={{ fontFamily: 'Georgia, serif' }}>
+          {sorted.map(block => {
+            // experience-block with _dynamic = 'jobs' expands into one block per job
+            if (block._dynamic === 'jobs' && jobs.length > 0) {
+              return jobs.map((job, ji) => (
+                <div key={ji} dangerouslySetInnerHTML={{ __html: renderBlockToHtml(
+                  { ...block, props: { company: job.company, title: job.title, dates: job.dates, bullets: job.bullets } },
+                  ctx
+                ) }} />
+              ));
+            }
+            return (
+              <div key={block.id} dangerouslySetInnerHTML={{ __html: renderBlockToHtml(block, ctx) }} />
+            );
+          })}
+        </div>
+      </OutputFrame>
+    );
+  }
+
+  // ── Hardcoded fallback (used until a primary template is configured) ──
   const parseTech = (s) => (s || '').split(',').map((p) => p.trim()).filter(Boolean).map((p) => p.split(':')[0].trim());
   const handsOn = parseTech(wheel?.handsOn);
   const integrationDesign = parseTech(wheel?.integrationDesign);

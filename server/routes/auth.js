@@ -18,10 +18,14 @@ import { db, getJSON } from '../db.js';
 import { dispatchRaw } from '../lib/email.js';
 import { verifyRecaptcha } from '../lib/recaptcha.js';
 import { audit } from '../lib/audit.js';
+import { makeRateLimiter } from '../lib/rateLimit.js';
+
+// 10 attempts per IP per 15 minutes on auth endpoints
+const authLimiter = makeRateLimiter({ windowMs: 15 * 60_000, max: 10, message: 'Too many attempts — please try again in 15 minutes' });
 
 const router = Router();
 
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) return res.status(400).json({ error: 'email and password required' });
   const user = await login(email, password);
@@ -95,7 +99,7 @@ router.post('/landing-gate/unlock', async (req, res) => {
 const RESET_TTL_MS = 60 * 60 * 1000; // 1 hour
 const RESET_BASE_URL = process.env.PUBLIC_BASE_URL || 'https://saltbasin.net';
 
-router.post('/reset-request', async (req, res) => {
+router.post('/reset-request', authLimiter, async (req, res) => {
   const { email, recaptchaToken } = req.body || {};
   if (!email || typeof email !== 'string') {
     return res.status(400).json({ error: 'email required' });

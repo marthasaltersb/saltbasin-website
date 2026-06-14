@@ -33,6 +33,22 @@
   --sb-border: 0.5px;
 }
 
+/* ── HERQ / Salter Momentum™ brand mode — applied via [data-brand-mode="herq"] ── */
+[data-brand-mode="herq"] {
+  --herq-bg:       #F5F0E8;
+  --herq-text:     #1A1A1A;
+  --herq-accent:   #E8407A;
+  --herq-teal:     #4A7C8E;
+  --herq-pink:     #FF6B9D;
+  --herq-yellow:   #FFE08A;
+  --herq-purple:   #C7B7FF;
+  --herq-mint:     #CDEEDC;
+  --herq-sky:      #BDE4FF;
+  --herq-orange:   #FFD6A5;
+  background:      var(--herq-bg);
+  color:           var(--herq-text);
+}
+
 /* Background → text color maps used by block renderer */
 .sb-bg-navy   { background: var(--sb-navy);   color: var(--sb-cream); }
 .sb-bg-ivory  { background: var(--sb-ivory);  color: var(--sb-navy); }

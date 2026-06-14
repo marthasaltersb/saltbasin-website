@@ -38,6 +38,17 @@ export async function destroySession(token) {
   await db.prepare('DELETE FROM sessions WHERE token = $1').run(token);
 }
 
+// Lazy purge: probabilistically clean up expired sessions (1-in-200 requests).
+// Keeps the sessions table from growing unbounded without a dedicated cron job.
+let _lastPurge = 0;
+async function maybePurgeExpiredSessions() {
+  if (Math.random() > 0.005) return; // ~0.5% of calls
+  const now = Date.now();
+  if (now - _lastPurge < 60_000) return; // at most once per minute
+  _lastPurge = now;
+  db.prepare('DELETE FROM sessions WHERE expires_at < $1').run(now).catch(() => {});
+}
+
 export async function getUserFromCookie(req) {
   const token = req.cookies?.[ADMIN_COOKIE];
   if (!token) return null;
@@ -53,6 +64,7 @@ export async function getUserFromCookie(req) {
     await destroySession(token);
     return null;
   }
+  maybePurgeExpiredSessions();
   return { id: Number(row.id), email: row.email, role: row.role, displayName: row.display_name || null };
 }
 
@@ -93,7 +105,14 @@ export function setAdminCookie(res, token) {
   res.cookie(ADMIN_COOKIE, token, cookieOptions(SESSION_TTL_MS));
 }
 export function clearAdminCookie(res) {
-  res.clearCookie(ADMIN_COOKIE, { path: '/' });
+  // Must pass the same sameSite/secure/httpOnly options used when setting the
+  // cookie — some browsers silently ignore clearCookie if attributes don't match.
+  res.clearCookie(ADMIN_COOKIE, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+  });
 }
 
 // ── Landing gate ──
