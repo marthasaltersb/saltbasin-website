@@ -367,4 +367,163 @@ router.put('/me/resume-presets', async (req, res) => {
   res.json({ ok: true, presets: cleaned });
 });
 
+// ── Member connections ─────────────────────────────────────────────────────────
+
+// Send or look up connection request by slug
+router.post('/me/connections/request', requireUser, async (req, res) => {
+  const user = req.user;
+  const { slug, message } = req.body || {};
+  if (!slug) return res.status(400).json({ error: 'slug required' });
+
+  // Find recipient by slug
+  const target = await db.prepare(
+    `SELECT u.id FROM users u
+     JOIN member_profiles mp ON mp.user_id = u.id
+     WHERE mp.slug = $1 AND u.role = 'member'`
+  ).get(slug);
+  if (!target) return res.status(404).json({ error: 'member not found' });
+  const recipientId = Number(target.id);
+  if (recipientId === Number(user.id)) return res.status(400).json({ error: 'cannot connect with yourself' });
+
+  // Check if already connected or request pending
+  const existing = await db.prepare(
+    `SELECT id, status FROM member_connections
+     WHERE (requester_id = $1 AND recipient_id = $2) OR (requester_id = $2 AND recipient_id = $1)`
+  ).get(user.id, recipientId);
+  if (existing) return res.json({ ok: true, status: existing.status, existing: true });
+
+  await db.prepare(
+    `INSERT INTO member_connections (requester_id, recipient_id, status, message)
+     VALUES ($1, $2, 'pending', $3)`
+  ).run(user.id, recipientId, message?.slice(0, 500) || null);
+
+  res.json({ ok: true, status: 'pending' });
+});
+
+// List my connections (accepted)
+router.get('/me/connections', requireUser, async (req, res) => {
+  const user = req.user;
+  const rows = await db.prepare(
+    `SELECT mc.id, mc.status, mc.created_at, mc.updated_at,
+            CASE WHEN mc.requester_id = $1 THEN mc.recipient_id ELSE mc.requester_id END AS other_user_id,
+            u.email AS other_email,
+            mp.slug AS other_slug
+     FROM member_connections mc
+     JOIN users u ON u.id = CASE WHEN mc.requester_id = $1 THEN mc.recipient_id ELSE mc.requester_id END
+     LEFT JOIN member_profiles mp ON mp.user_id = u.id
+     WHERE (mc.requester_id = $1 OR mc.recipient_id = $1) AND mc.status = 'accepted'
+     ORDER BY mc.updated_at DESC`
+  ).all(user.id);
+  res.json({ connections: rows.map(r => ({ ...r, id: Number(r.id), other_user_id: Number(r.other_user_id), created_at: Number(r.created_at), updated_at: Number(r.updated_at) })) });
+});
+
+// List incoming pending connection requests
+router.get('/me/connection-requests', requireUser, async (req, res) => {
+  const user = req.user;
+  const rows = await db.prepare(
+    `SELECT mc.id, mc.message, mc.created_at,
+            u.email AS requester_email,
+            mp.slug AS requester_slug
+     FROM member_connections mc
+     JOIN users u ON u.id = mc.requester_id
+     LEFT JOIN member_profiles mp ON mp.user_id = mc.requester_id
+     WHERE mc.recipient_id = $1 AND mc.status = 'pending'
+     ORDER BY mc.created_at DESC`
+  ).all(user.id);
+  res.json({ requests: rows.map(r => ({ ...r, id: Number(r.id), created_at: Number(r.created_at) })) });
+});
+
+// Accept / decline a request
+router.post('/me/connections/:id/accept', requireUser, async (req, res) => {
+  const id = Number(req.params.id);
+  const conn = await db.prepare(`SELECT id, recipient_id FROM member_connections WHERE id = $1`).get(id);
+  if (!conn || Number(conn.recipient_id) !== Number(req.user.id)) return res.status(404).json({ error: 'not found' });
+  await db.prepare(`UPDATE member_connections SET status = 'accepted', updated_at = $1 WHERE id = $2`).run(Date.now(), id);
+  res.json({ ok: true });
+});
+
+router.post('/me/connections/:id/decline', requireUser, async (req, res) => {
+  const id = Number(req.params.id);
+  const conn = await db.prepare(`SELECT id, recipient_id FROM member_connections WHERE id = $1`).get(id);
+  if (!conn || Number(conn.recipient_id) !== Number(req.user.id)) return res.status(404).json({ error: 'not found' });
+  await db.prepare(`UPDATE member_connections SET status = 'declined', updated_at = $1 WHERE id = $2`).run(Date.now(), id);
+  res.json({ ok: true });
+});
+
+// Check connection status with a slug
+router.get('/me/connection-status/:slug', requireUser, async (req, res) => {
+  const target = await db.prepare(
+    `SELECT u.id FROM users u JOIN member_profiles mp ON mp.user_id = u.id WHERE mp.slug = $1`
+  ).get(req.params.slug);
+  if (!target) return res.json({ status: 'none' });
+  const conn = await db.prepare(
+    `SELECT id, status, requester_id FROM member_connections
+     WHERE (requester_id = $1 AND recipient_id = $2) OR (requester_id = $2 AND recipient_id = $1)`
+  ).get(req.user.id, Number(target.id));
+  if (!conn) return res.json({ status: 'none', targetUserId: Number(target.id) });
+  res.json({ status: conn.status, connectionId: Number(conn.id), iAmRequester: Number(conn.requester_id) === Number(req.user.id), targetUserId: Number(target.id) });
+});
+
+// ── Member direct messages ─────────────────────────────────────────────────────
+
+// Send a message (must be connected)
+router.post('/me/messages', requireUser, async (req, res) => {
+  const user = req.user;
+  const { recipientId, body } = req.body || {};
+  if (!recipientId || !body?.trim()) return res.status(400).json({ error: 'recipientId and body required' });
+
+  // Verify connection exists (accepted)
+  const conn = await db.prepare(
+    `SELECT id FROM member_connections
+     WHERE status = 'accepted'
+       AND ((requester_id = $1 AND recipient_id = $2) OR (requester_id = $2 AND recipient_id = $1))`
+  ).get(user.id, Number(recipientId));
+  if (!conn) return res.status(403).json({ error: 'you must be connected to message this member' });
+
+  const result = await db.prepare(
+    `INSERT INTO member_messages (sender_id, recipient_id, body) VALUES ($1, $2, $3) RETURNING id`
+  ).run(user.id, Number(recipientId), body.trim().slice(0, 5000));
+  res.json({ ok: true, id: Number(result.lastInsertRowid) });
+});
+
+// Inbox — all received messages (grouped by sender)
+router.get('/me/messages', requireUser, async (req, res) => {
+  const user = req.user;
+  const rows = await db.prepare(
+    `SELECT mm.id, mm.sender_id, mm.body, mm.read_at, mm.created_at,
+            u.email AS sender_email, mp.slug AS sender_slug
+     FROM member_messages mm
+     JOIN users u ON u.id = mm.sender_id
+     LEFT JOIN member_profiles mp ON mp.user_id = mm.sender_id
+     WHERE mm.recipient_id = $1
+     ORDER BY mm.created_at DESC
+     LIMIT 200`
+  ).all(user.id);
+  res.json({ messages: rows.map(r => ({ ...r, id: Number(r.id), sender_id: Number(r.sender_id), read_at: r.read_at ? Number(r.read_at) : null, created_at: Number(r.created_at) })) });
+});
+
+// Thread with a specific user (both directions)
+router.get('/me/messages/thread/:userId', requireUser, async (req, res) => {
+  const user = req.user;
+  const otherId = Number(req.params.userId);
+  const rows = await db.prepare(
+    `SELECT id, sender_id, recipient_id, body, read_at, created_at
+     FROM member_messages
+     WHERE (sender_id = $1 AND recipient_id = $2) OR (sender_id = $2 AND recipient_id = $1)
+     ORDER BY created_at ASC
+     LIMIT 300`
+  ).all(user.id, otherId);
+  // Mark unread messages in this thread as read
+  await db.prepare(
+    `UPDATE member_messages SET read_at = $1 WHERE recipient_id = $2 AND sender_id = $3 AND read_at IS NULL`
+  ).run(Date.now(), user.id, otherId);
+  res.json({ messages: rows.map(r => ({ ...r, id: Number(r.id), sender_id: Number(r.sender_id), recipient_id: Number(r.recipient_id), read_at: r.read_at ? Number(r.read_at) : null, created_at: Number(r.created_at) })) });
+});
+
+// Unread count
+router.get('/me/messages/unread-count', requireUser, async (req, res) => {
+  const row = await db.prepare(`SELECT COUNT(*) AS n FROM member_messages WHERE recipient_id = $1 AND read_at IS NULL`).get(req.user.id);
+  res.json({ count: Number(row?.n || 0) });
+});
+
 export default router;

@@ -10,11 +10,116 @@
 // that overrides the --sb-* CSS variables, scoped to this profile only.
 
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { RenderSection } from './blocks/index.jsx';
 import PublicFooter from './PublicFooter.jsx';
 import BackLink from './BackLink.jsx';
 import { track } from '../lib/analytics.js';
+import { toast } from '../lib/toast.js';
+
+function ConnectionActions({ slug }) {
+  const nav = useNavigate();
+  const [connStatus, setConnStatus] = useState(null); // null=loading, {status, connectionId, iAmRequester, targetUserId}
+  const [me, setMe] = useState(undefined); // undefined=loading, null=anon
+  const [working, setWorking] = useState(false);
+  const [showMsgBox, setShowMsgBox] = useState(false);
+  const [msgText, setMsgText] = useState('');
+
+  useEffect(() => {
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        setMe(d.user || null);
+        if (d.user) {
+          fetch(`/api/members/me/connection-status/${encodeURIComponent(slug)}`, { credentials: 'include' })
+            .then(r => r.json()).then(setConnStatus).catch(() => setConnStatus({ status: 'none' }));
+        } else {
+          setConnStatus({ status: 'none' });
+        }
+      }).catch(() => { setMe(null); setConnStatus({ status: 'none' }); });
+  }, [slug]);
+
+  if (me === undefined || connStatus === null) return null;
+  if (!me) return null; // anon — no action buttons
+
+  async function sendRequest() {
+    setWorking(true);
+    try {
+      const r = await fetch('/api/members/me/connections/request', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error);
+      setConnStatus(s => ({ ...s, status: d.status }));
+      toast.success(d.existing ? 'Already connected or requested' : 'Connection request sent');
+    } catch (e) {
+      toast.error(e.message);
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  async function sendMsg() {
+    if (!msgText.trim() || !connStatus?.targetUserId) return;
+    setWorking(true);
+    try {
+      const r = await fetch('/api/members/me/messages', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipientId: connStatus.targetUserId, body: msgText.trim() }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error);
+      toast.success('Message sent');
+      setShowMsgBox(false);
+      setMsgText('');
+    } catch (e) {
+      toast.error(e.message);
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  const { status } = connStatus;
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+      {status === 'none' && (
+        <button onClick={sendRequest} disabled={working}
+          style={{ padding: '0.35rem 0.9rem', borderRadius: 6, border: '0.5px solid var(--sb-gold)', background: 'transparent', color: 'var(--sb-gold)', fontSize: '0.7rem', cursor: 'pointer', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.08em' }}>
+          {working ? '…' : '+ Connect'}
+        </button>
+      )}
+      {status === 'pending' && (
+        <span style={{ padding: '0.35rem 0.9rem', border: '0.5px solid rgba(255,255,255,0.15)', borderRadius: 6, color: 'var(--sb-dusty)', fontSize: '0.7rem', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.08em' }}>
+          Request Sent
+        </span>
+      )}
+      {status === 'accepted' && (
+        <>
+          <button onClick={() => setShowMsgBox(v => !v)}
+            style={{ padding: '0.35rem 0.9rem', borderRadius: 6, border: 'none', background: 'var(--sb-gold)', color: 'white', fontSize: '0.7rem', cursor: 'pointer', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.08em' }}>
+            Message
+          </button>
+          {showMsgBox && (
+            <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 8, background: 'var(--sb-navy)', border: '0.5px solid rgba(196,132,58,0.3)', borderRadius: 10, padding: '1rem', width: 320, boxShadow: '0 8px 24px rgba(0,0,0,0.4)', zIndex: 200 }}>
+              <div style={{ fontSize: '0.72rem', color: 'var(--sb-gold)', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '0.6rem' }}>Send Message</div>
+              <textarea value={msgText} onChange={e => setMsgText(e.target.value)} rows={3}
+                style={{ width: '100%', padding: '0.55rem', borderRadius: 6, border: '0.5px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: 'var(--sb-cream)', fontSize: '0.83rem', resize: 'none', fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }}
+                placeholder="Write a message…" />
+              <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.6rem', justifyContent: 'flex-end' }}>
+                <button onClick={() => setShowMsgBox(false)} style={{ padding: '0.35rem 0.8rem', borderRadius: 6, border: '0.5px solid rgba(255,255,255,0.15)', background: 'transparent', color: 'var(--sb-dusty)', fontSize: '0.72rem', cursor: 'pointer' }}>Cancel</button>
+                <button onClick={sendMsg} disabled={working || !msgText.trim()} style={{ padding: '0.35rem 0.8rem', borderRadius: 6, border: 'none', background: 'var(--sb-gold)', color: 'white', fontSize: '0.72rem', cursor: 'pointer' }}>{working ? 'Sending…' : 'Send'}</button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
 
 export default function PublicProfile() {
   const params = useParams();
@@ -183,9 +288,14 @@ export default function PublicProfile() {
           </div>
         </Link>
 
-        {navItems.length > 0 && (
-          <ProfileNav navItems={navItems} slug={slug} wantSlug={wantSlug} />
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+          {navItems.length > 0 && (
+            <ProfileNav navItems={navItems} slug={slug} wantSlug={wantSlug} />
+          )}
+          <div style={{ position: 'relative' }}>
+            <ConnectionActions slug={slug} />
+          </div>
+        </div>
       </nav>
 
       {(currentPage.sections || []).filter((sec) => {

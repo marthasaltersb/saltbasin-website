@@ -597,7 +597,8 @@ router.get('/', requireAdmin, async (req, res) => {
   const rows = await db
     .prepare(
       `SELECT id, source, email, phone, name, message, public_id, answers, prior_notes,
-              merged_into_id, merged_from_ids, created_at, updated_at, converted_user_id
+              merged_into_id, merged_from_ids, created_at, updated_at, converted_user_id,
+              lead_type, job_description, job_url, company, hiring_manager, job_status
        FROM leads WHERE merged_into_id IS NULL ORDER BY id DESC LIMIT 500`
     )
     .all();
@@ -612,6 +613,68 @@ router.get('/', requireAdmin, async (req, res) => {
       mergedFromCount: r.merged_from_ids ? JSON.parse(r.merged_from_ids).length : 0,
     })),
   });
+});
+
+// ── Admin: manually create a lead (skip email optional) ──
+router.post('/admin-create', requireAdmin, async (req, res) => {
+  const {
+    email, name, phone, message, source = 'manual',
+    skipEmail = false,
+    leadType = 'network',
+    jobDescription, jobUrl, company, hiringManager, jobStatus = 'new',
+  } = req.body || {};
+
+  if (!isValidEmail(email)) return res.status(400).json({ error: 'valid email required' });
+  const normEmail = normalizeEmail(email);
+  const normPhone = normalizePhone(phone);
+  const publicId = await newPublicId();
+  const accessToken = newToken();
+  const accessPassword = newAccessPassword();
+  const passwordHash = await bcrypt.hash(accessPassword, 10);
+
+  const result = await db.prepare(
+    `INSERT INTO leads
+       (source, email, phone, name, message, public_id, access_token, password_hash,
+        lead_type, job_description, job_url, company, hiring_manager, job_status)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING id`
+  ).run(
+    source, normEmail, normPhone || null, name?.slice(0, 200) || null, message?.slice(0, 2000) || null,
+    publicId, accessToken, passwordHash,
+    leadType,
+    jobDescription?.slice(0, 5000) || null,
+    jobUrl?.slice(0, 500) || null,
+    company?.slice(0, 200) || null,
+    hiringManager?.slice(0, 200) || null,
+    jobStatus,
+  );
+  const leadId = Number(result.lastInsertRowid);
+
+  if (!skipEmail && leadType === 'network') {
+    sendLeadConfirmation({
+      leadId, toEmail: normEmail, toName: name || null,
+      leadUrl: `/lead/${publicId}`, password: accessPassword, source,
+    }).catch((e) => console.error('[email] admin-create confirm failed:', e.message));
+  }
+
+  res.json({ ok: true, leadId, publicId, leadUrl: `/lead/${publicId}`, password: accessPassword });
+});
+
+// ── Admin: update lead job fields / status ──
+router.patch('/:id/job', requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  const { jobStatus, company, hiringManager, jobUrl, jobDescription, leadType } = req.body || {};
+  const updates = ['updated_at = $1'];
+  const params = [Date.now()];
+  let p = 2;
+  if (jobStatus !== undefined) { updates.push(`job_status = $${p++}`); params.push(jobStatus); }
+  if (company !== undefined) { updates.push(`company = $${p++}`); params.push(company); }
+  if (hiringManager !== undefined) { updates.push(`hiring_manager = $${p++}`); params.push(hiringManager); }
+  if (jobUrl !== undefined) { updates.push(`job_url = $${p++}`); params.push(jobUrl); }
+  if (jobDescription !== undefined) { updates.push(`job_description = $${p++}`); params.push(jobDescription); }
+  if (leadType !== undefined) { updates.push(`lead_type = $${p++}`); params.push(leadType); }
+  params.push(id);
+  await db.prepare(`UPDATE leads SET ${updates.join(', ')} WHERE id = $${p}`).run(...params);
+  res.json({ ok: true });
 });
 
 router.delete('/:id', requireAdmin, async (req, res) => {

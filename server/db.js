@@ -884,6 +884,15 @@ async function bootstrap() {
           ];
           changed = true;
         }
+        // One-shot: inject "Inbox" tab into the content view if not already present.
+        const hasInbox = (contentView.tabs || []).some((t) => t.id === 'inbox');
+        if (!hasInbox) {
+          contentView.tabs = [
+            ...(contentView.tabs || []),
+            { id: 'inbox', label: 'Inbox', componentId: 'inbox', sortOrder: 10 },
+          ];
+          changed = true;
+        }
       }
       if (changed) {
         await sql.unsafe(
@@ -1382,6 +1391,40 @@ async function bootstrap() {
       converted_to_lead_id BIGINT REFERENCES leads(id) ON DELETE SET NULL
     );
     CREATE INDEX IF NOT EXISTS idx_nr_user ON network_requests (user_id, created_at DESC);
+
+    -- Job-specific lead fields (v0.15)
+    ALTER TABLE leads ADD COLUMN IF NOT EXISTS lead_type TEXT NOT NULL DEFAULT 'network';
+    ALTER TABLE leads ADD COLUMN IF NOT EXISTS job_description TEXT;
+    ALTER TABLE leads ADD COLUMN IF NOT EXISTS job_url TEXT;
+    ALTER TABLE leads ADD COLUMN IF NOT EXISTS company TEXT;
+    ALTER TABLE leads ADD COLUMN IF NOT EXISTS hiring_manager TEXT;
+    ALTER TABLE leads ADD COLUMN IF NOT EXISTS job_status TEXT NOT NULL DEFAULT 'new';
+
+    -- Member connections (v0.15)
+    CREATE TABLE IF NOT EXISTS member_connections (
+      id           BIGSERIAL PRIMARY KEY,
+      requester_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      recipient_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      status       TEXT NOT NULL DEFAULT 'pending',
+      message      TEXT,
+      created_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      UNIQUE(requester_id, recipient_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_mc_requester ON member_connections (requester_id);
+    CREATE INDEX IF NOT EXISTS idx_mc_recipient ON member_connections (recipient_id);
+
+    -- Member direct messages (v0.15)
+    CREATE TABLE IF NOT EXISTS member_messages (
+      id           BIGSERIAL PRIMARY KEY,
+      sender_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      recipient_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      body         TEXT NOT NULL,
+      read_at      BIGINT,
+      created_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_mm_recipient ON member_messages (recipient_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_mm_sender    ON member_messages (sender_id, created_at DESC);
   `);
 
   // ── Seed: platform_applications ──────────────────────────────────────────
@@ -1443,6 +1486,7 @@ async function bootstrap() {
         { viewId: 'platform', viewLabel: 'Platform',                      id: 'analytics',       label: 'Analytics',       componentId: 'analytics',      sortOrder: 1 },
         { viewId: 'system',   viewLabel: 'System',                        id: 'finbridgeco',     label: 'FinBridgeCo',     componentId: 'finbridgeco',    sortOrder: 2 },
         { viewId: 'system',   viewLabel: 'System',                        id: 'lineage',         label: 'Data Lineage',    componentId: 'lineage',        sortOrder: 3 },
+        { viewId: 'content',  viewLabel: 'My Profile',                    id: 'inbox',           label: 'Inbox',           componentId: 'inbox',          sortOrder: 10 },
       ];
 
       for (const t of newTabs) {

@@ -551,6 +551,7 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
   const activeLayout = LAYOUTS.find(l => l.id === (editingPreset?.layout || 'classic')) || LAYOUTS[0];
 
   return (
+    <div style={{ flex: 1, overflowY: 'auto', background: 'var(--sb-ivory, #faf8f4)' }}>
     <div style={S.wrap}>
       <div style={S.h1}>My Resume</div>
       <div style={S.sub}>Configure resume presets, generate tailored outputs, and preview or print directly from here.</div>
@@ -704,6 +705,7 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
 
       {/* Name modal */}
       {showNameModal && <NameModal onConfirm={openNewPreset} onCancel={() => setShowNameModal(false)} />}
+    </div>
     </div>
   );
 }

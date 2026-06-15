@@ -23,6 +23,7 @@ import MemberPlmPanel from './MemberPlmPanel.jsx';
 import GovernancePanel from './GovernancePanel.jsx';
 import EmotionalWeatherPanel from './EmotionalWeatherPanel.jsx';
 import LineagePanel from './LineagePanel.jsx';
+import InboxPanel from './InboxPanel.jsx';
 
 // Tab component registry: the one piece that can't be data-driven, because
 // React components have to be referenced by import. The nav structure stored
@@ -38,7 +39,7 @@ const TAB_COMPONENTS = {
   networks:       () => <NetWorksPanel />,
   backlog:        () => <BacklogPanel />,
   qa:             () => <QAPanel />,
-  resume:         () => <MyResumePanel />,
+  resume:         (props) => <MyResumePanel {...props} />,
   contentManager: () => <ContentManagerShell />,
   nrm:            () => <NrmPanel isAdmin={true} />,
   analytics:      () => <AnalyticsPanel isAdmin={true} />,
@@ -48,6 +49,7 @@ const TAB_COMPONENTS = {
   memberNrm:      () => <NrmPanel isAdmin={false} />,
   memberAnalytics:() => <AnalyticsPanel isAdmin={false} />,
   lineage:        () => <LineagePanel />,
+  inbox:          () => <InboxPanel />,
   // config: handled inline below (ConfigPanel needs draft + setters from shell)
   // content: handled inline below (Sidebar/EditorPane/PreviewPane composition)
 };
@@ -673,6 +675,7 @@ export default function AdminShell({ scope = 'admin' }) {
             );
           }
           if (componentId === 'resume')          return <MyResumePanel scope={scope} />;
+          if (componentId === 'inbox')           return <InboxPanel />;
           if (componentId === 'stats')           return <MemberStatsPanel isAdmin={!isMember} />;
           if (componentId === 'audit')           return <MemberAuditPanel isAdmin={!isMember} />;
           if (componentId === 'agent')           return <MemberAgentPanel />;
