@@ -353,7 +353,7 @@ function DiffView({ diff, onAccept, onDiscard, accepting }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function MyResumePanel() {
+export default function MyResumePanel({ scope = 'member' }) {
   const [site, setSite] = useState(null);
   const [presets, setPresets] = useState([]);
   const [editingPreset, setEditingPreset] = useState(null); // preset currently in the editor
@@ -371,18 +371,21 @@ export default function MyResumePanel() {
   const iframeRef = useRef(null);
 
   useEffect(() => {
-    // Load BOTH member-site and admin-site pages so all sections are available.
-    // Betsy's resume content (about, timeline, caseStudies, etc.) lives in the
-    // admin site under consulting-founder; member-site has her member profile pages.
-    // Merging both gives the full section picker.
-    Promise.allSettled([api.getMemberDraftSite(), api.getDraftSite()])
-      .then(([memberRes, adminRes]) => {
-        const memberPages = memberRes.status === 'fulfilled' ? (memberRes.value?.pages || {}) : {};
-        const adminPages  = adminRes.status  === 'fulfilled' ? (adminRes.value?.pages  || {}) : {};
-        const merged = { ...adminPages, ...memberPages };
-        if (Object.keys(merged).length > 0) setSite({ pages: merged });
-      })
-      .catch(() => {});
+    // Admin scope (Betsy): merge admin site + member site so all sections appear —
+    // her resume content lives in the admin site (consulting-founder page).
+    // Member scope: only load their own member site pages.
+    if (scope === 'admin') {
+      Promise.allSettled([api.getMemberDraftSite(), api.getDraftSite()])
+        .then(([memberRes, adminRes]) => {
+          const memberPages = memberRes.status === 'fulfilled' ? (memberRes.value?.pages || {}) : {};
+          const adminPages  = adminRes.status  === 'fulfilled' ? (adminRes.value?.pages  || {}) : {};
+          const merged = { ...adminPages, ...memberPages };
+          if (Object.keys(merged).length > 0) setSite({ pages: merged });
+        })
+        .catch(() => {});
+    } else {
+      api.getMemberDraftSite().then(s => { if (s) setSite(s); }).catch(() => {});
+    }
     loadPresets();
   }, []);
 

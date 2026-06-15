@@ -603,7 +603,7 @@ export default function AdminShell({ scope = 'admin' }) {
           // Registry case: simple panels with no shell-state dependency.
           if (!isMember && TAB_COMPONENTS[componentId]) {
             const Entry = TAB_COMPONENTS[componentId];
-            return <Entry />;
+            return <Entry scope="admin" />;
           }
           // Inline 'content' case: the page/section editor composes the
           // Sidebar + EditorPane + PreviewPane and needs lots of shell state.
@@ -672,7 +672,7 @@ export default function AdminShell({ scope = 'admin' }) {
           </>
             );
           }
-          if (componentId === 'resume')          return <MyResumePanel />;
+          if (componentId === 'resume')          return <MyResumePanel scope={scope} />;
           if (componentId === 'stats')           return <MemberStatsPanel isAdmin={!isMember} />;
           if (componentId === 'audit')           return <MemberAuditPanel isAdmin={!isMember} />;
           if (componentId === 'agent')           return <MemberAgentPanel />;
