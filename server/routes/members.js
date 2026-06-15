@@ -196,22 +196,34 @@ router.get('/:slug', async (req, res) => {
 });
 
 router.get('/', requireAdmin, async (req, res) => {
-  const rows = await db
-    .prepare(
-      `SELECT u.id, u.email, u.created_at, m.slug,
-              (m.published IS NOT NULL) AS published, m.updated_at
-       FROM users u LEFT JOIN member_profiles m ON m.user_id = u.id
-       WHERE u.role = 'member' ORDER BY u.id DESC`
-    )
-    .all();
-  res.json({
-    members: rows.map((r) => ({
-      ...r,
-      id: Number(r.id),
-      created_at: Number(r.created_at),
-      updated_at: r.updated_at ? Number(r.updated_at) : null,
-    })),
-  });
+  try {
+    // Join member_sites (kind=published) to get published status; fall back to
+    // member_profiles for legacy slug. member_sites is the newer storage layer.
+    const rows = await db.prepare(
+      `SELECT u.id, u.email, u.created_at,
+              COALESCE(mp.slug, ms_draft.slug) AS slug,
+              (ms_pub.user_id IS NOT NULL) AS published,
+              GREATEST(COALESCE(mp.updated_at, 0), COALESCE(ms_draft.updated_at, 0)) AS updated_at
+       FROM users u
+       LEFT JOIN member_profiles mp ON mp.user_id = u.id
+       LEFT JOIN member_sites ms_draft ON ms_draft.user_id = u.id AND ms_draft.kind = 'draft'
+       LEFT JOIN member_sites ms_pub   ON ms_pub.user_id   = u.id AND ms_pub.kind  = 'published'
+       WHERE u.role = 'member'
+       ORDER BY u.created_at DESC`
+    ).all();
+    res.json({
+      members: rows.map((r) => ({
+        ...r,
+        id: Number(r.id),
+        created_at: Number(r.created_at),
+        updated_at: r.updated_at ? Number(r.updated_at) : null,
+        published: Boolean(r.published),
+      })),
+    });
+  } catch (e) {
+    console.error('[GET /api/members/] error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ── Audit log — member's own activity ──
