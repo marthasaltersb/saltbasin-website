@@ -371,15 +371,18 @@ export default function MyResumePanel() {
   const iframeRef = useRef(null);
 
   useEffect(() => {
-    // Try member draft site; fall back to admin site if member has no pages
-    // (admin users keep their content in the admin site, not member-site)
-    api.getMemberDraftSite()
-      .then(s => {
-        if (s?.pages && Object.keys(s.pages).length > 0) { setSite(s); return null; }
-        return api.getDraftSite();
+    // Load BOTH member-site and admin-site pages so all sections are available.
+    // Betsy's resume content (about, timeline, caseStudies, etc.) lives in the
+    // admin site under consulting-founder; member-site has her member profile pages.
+    // Merging both gives the full section picker.
+    Promise.allSettled([api.getMemberDraftSite(), api.getDraftSite()])
+      .then(([memberRes, adminRes]) => {
+        const memberPages = memberRes.status === 'fulfilled' ? (memberRes.value?.pages || {}) : {};
+        const adminPages  = adminRes.status  === 'fulfilled' ? (adminRes.value?.pages  || {}) : {};
+        const merged = { ...adminPages, ...memberPages };
+        if (Object.keys(merged).length > 0) setSite({ pages: merged });
       })
-      .then(s => { if (s) setSite(s); })
-      .catch(() => api.getDraftSite().then(s => setSite(s)).catch(() => {}));
+      .catch(() => {});
     loadPresets();
   }, []);
 
