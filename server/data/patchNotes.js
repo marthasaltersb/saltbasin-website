@@ -463,4 +463,128 @@ const RELEASES = [
       },
     ],
   },
+
+  // ─────────────────────── v0.14 — Platform merge: HERQ + NRM + services ──────────────────────
+  {
+    version: 'v0.14',
+    name: 'Platform Merge — HERQ, NRM, Services & Governance',
+    date: '2026-06-12',
+    summary:
+      'The largest single release in the build. Five product lines merge into the unified Salt Basin platform: HERQ (HR analytics layer), NRM (network relationship manager), Services Catalog, Standards Library, and Governance. Analytics, Data Lineage, and Security hardening round it out. The My Resume tab ships to the admin shell with layout preset builder, AI-tailored preset generation, and PDF preview. Fifty-three backlog items written or updated across twelve capability groups.',
+    sections: [
+      {
+        heading: 'New — Platform Products',
+        items: [
+          'HERQ: compensation benchmark widgets, headcount heatmap, retention-risk matrix, org-chart renderer — all reading from the analytics layer',
+          'NRM: network health dashboard, relationship map, engagement tracker, pipeline view by relationship tier',
+          'Services Catalog: browsable card grid of consulting offerings, each with scope, deliverables, and rate band',
+          'Standards Library: versioned policy and process documents with section-level approval workflows',
+          'Governance: board/committee charter management, meeting minutes, decision log, and policy attestation tracker',
+        ],
+      },
+      {
+        heading: 'New — Analytics & Lineage',
+        items: [
+          'Analytics capability group seeded (12 backlog items): event pipeline, dashboard renderer, KPI store, and threshold alerting',
+          'Data Lineage capability group (8 items): column-level lineage graph, impact analysis, compliance tagging, and audit export',
+          'Security hardening: rate limiter on login/reset, cookie attribute fix on logout, lazy session purge, org-invite email enumeration fix, 16-char lead access passwords',
+        ],
+      },
+      {
+        heading: 'New — My Resume (admin scope)',
+        items: [
+          'My Resume tab in admin shell ("My Profile" view) — same panel as member scope but loading both admin CMS sections and member sections together',
+          'Resume preset builder with layout template picker (Classic SB, Modern SB, Minimal, Executive) and per-section include toggles with drag-to-reorder',
+          'AI interpreter: paste a job description → Claude returns tailored summary, highlighted skills, rewritten bullets, and gap analysis',
+          'Accept-and-save flow: agent output becomes a new named preset; discard clears it without touching existing presets',
+          'PDF preview iframe inline in the panel',
+          'Primary preset designation controls which resume /output/resume serves publicly',
+        ],
+      },
+      {
+        heading: 'New — Action Button Editor',
+        items: [
+          'Every section in the editor now shows a Section Actions card — add CTA buttons with a guided link picker that lists site pages, anchors, and /output/* routes',
+          'Button style picker: primary / secondary / ghost / danger',
+          'Saved to fieldMeta.actions per section; rendered in public view and preview',
+        ],
+      },
+      {
+        heading: 'Behind the scenes',
+        items: [
+          'scripts/add-v014-backlog-items.mjs — idempotent backlog reconciliation for all v0.14 items',
+          '53 new/updated backlog items, 12 capability groups touched',
+          'admin_nav Inbox tab injection in db.js bootstrap',
+          'My Resume scoped via AdminShell TAB_COMPONENTS (bug surface for v0.15 fix)',
+        ],
+      },
+    ],
+  },
+
+  // ─────────────────────── v0.15 — Connections, Messaging, CRM Job Leads ────────────────────
+  {
+    version: 'v0.15',
+    name: 'Connections, Messaging & CRM Job Leads',
+    date: '2026-06-15',
+    summary:
+      'Member-to-member social layer lands: connection requests, accept/decline flow, and direct messages gated to accepted connections. Each member gets a dedicated Inbox panel with sub-tabs for Messages, Requests, and Connections. The CRM gets manual lead creation (with skip-email option) and a new Job Lead type with company, hiring manager, job URL, status (New / Applied), and job description fields. The My Resume scope bug (admin seeing 0 sections) is fixed.',
+    sections: [
+      {
+        heading: 'New — Member Connections',
+        items: [
+          'Connection request flow: "+ Connect" button on public profiles sends a pending request. Anonymous visitors see no button',
+          'Inbox → Requests sub-tab: accept or decline incoming requests with real-time count badge',
+          'Inbox → Connections sub-tab: grid of accepted connections with Profile link and Message shortcut',
+          'Bidirectional connection lookup — only one row per pair (requester_id < recipient_id direction enforced at DB level)',
+          'GET /api/members/me/connection-status/:slug — single call returns status, connectionId, direction, and targetUserId for the profile page',
+        ],
+      },
+      {
+        heading: 'New — Direct Messaging',
+        items: [
+          'Members can message connections directly from a public profile (compose popover on "Message" button) or from Inbox → Connections',
+          'Server enforces accepted connection before allowing any message — non-connections receive 403',
+          'Inbox → Messages sub-tab: thread list with unread count badge; thread view with chat bubbles (gold = mine, grey = theirs), scroll-to-bottom on open, Enter to send / Shift+Enter for newline',
+          'Read marking: GET /thread/:userId marks all their messages as read; unread count reflects state in real time',
+          'GET /api/members/me/messages/unread-count — usable for future inbox badge in the nav',
+        ],
+      },
+      {
+        heading: 'New — InboxPanel',
+        items: [
+          'New Inbox tab injected into admin_nav for both admin and member scopes via db.js bootstrap migration',
+          'Three sub-tabs: Messages (thread list + thread view), Requests (pending incoming with count), Connections (accepted grid)',
+          'Requests tab label shows live count: "Requests (2)" when 2 pending',
+        ],
+      },
+      {
+        heading: 'New — CRM Enhancements',
+        items: [
+          'Manual lead creation: "+ Add Lead" button in Leads panel header expands an inline form. Admin can create a lead without going through a public form',
+          '"Skip confirmation email" checkbox suppresses the Brevo outbound email on manual creation',
+          'Job Lead type (separate from Network leads): company, hiring manager info, job URL, status (New / Applied), and job description textarea',
+          'Type filter tabs in Leads panel: All / Network / Job with live counts',
+          'Job leads display company name prominently in the list and "Edit Job Info" inline form in the detail pane',
+          'PATCH /api/leads/:id/job — update job-specific fields without touching the core lead record',
+        ],
+      },
+      {
+        heading: 'Fixed',
+        items: [
+          'My Resume showed 0 sections for admin (Betsy): TAB_COMPONENTS entry was `() => <MyResumePanel />` — ignored all props including `scope`. Fixed to `(props) => <MyResumePanel {...props} />` so scope="admin" propagates and both admin + member site data load correctly',
+          'MyResumePanel scroll: admin workspace has overflow:hidden; panel now wraps in flex:1/overflowY:auto container so full content is reachable',
+        ],
+      },
+      {
+        heading: 'Behind the scenes',
+        items: [
+          'New tables: member_connections (UNIQUE(requester_id, recipient_id)), member_messages (sender_id, recipient_id, body, read_at)',
+          'New columns on leads: lead_type, job_description, job_url, company, hiring_manager, job_status',
+          'All migrations are idempotent ALTER TABLE IF NOT EXISTS / CREATE TABLE IF NOT EXISTS in db.js bootstrap',
+          'scripts/add-v015-backlog-items.mjs — idempotent backlog reconciliation for v0.15 items',
+          'scripts/add-v015-test-scenarios.mjs — 18 test scenarios covering every v0.15 feature plus regression paths',
+        ],
+      },
+    ],
+  },
 ];
