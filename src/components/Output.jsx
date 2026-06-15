@@ -194,6 +194,279 @@ function GatedPreview({ kind, teaser }) {
   );
 }
 
+// ── Layout: Modern SB ────────────────────────────────────────────────────────
+// Inspired by the structured multi-column professional CV format, adapted to
+// Salt Basin brand — navy headers, gold accents, ivory section fills.
+function SectionHeadingMod({ children }) {
+  return (
+    <div style={{ fontSize: '0.6rem', letterSpacing: '0.24em', textTransform: 'uppercase', color: '#1b2a3b', fontFamily: 'Georgia, serif', fontWeight: 700, marginBottom: '0.6rem', paddingBottom: '0.25rem', borderBottom: '1px solid #c4843a' }}>
+      {children}
+    </div>
+  );
+}
+
+function ResumeLayoutModern({ about, timeline, jobs, handsOn, integrationDesign, adjacent }) {
+  const name = about.name || about.heading || 'Betsy Salter';
+  const tagline = about.tagline || 'Strategic Operator · Revenue Systems · Private Equity';
+  const photoUrl = about.photoUrl || about.photo || null;
+
+  return (
+    <div style={{ fontFamily: 'Georgia, serif', color: '#1b2a3b' }}>
+
+      {/* ── Header ── */}
+      <header style={{ display: 'flex', alignItems: 'flex-start', gap: '1.5rem', marginBottom: '1.75rem', paddingBottom: '1.25rem', borderBottom: '2.5px solid #c4843a' }}>
+        {photoUrl && (
+          <img src={photoUrl} alt={name} style={{ width: 88, height: 88, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid #c4843a' }} />
+        )}
+        <div style={{ flex: 1 }}>
+          <h1 style={{ fontSize: '2.8rem', letterSpacing: '0.06em', textTransform: 'uppercase', color: '#1b2a3b', margin: 0, lineHeight: 1, fontFamily: 'Georgia, serif' }}>{name}</h1>
+          <div style={{ fontSize: '0.68rem', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#c4843a', marginTop: '0.3rem', fontFamily: 'sans-serif' }}>{tagline}</div>
+        </div>
+        <div style={{ textAlign: 'right', fontSize: '0.78rem', color: '#666', lineHeight: 1.9, flexShrink: 0 }}>
+          <div style={{ fontWeight: 600, color: '#1b2a3b' }}>saltbasin.net</div>
+          <div>betsysalter@saltbasin.net</div>
+          {about.location && <div>{about.location}</div>}
+        </div>
+      </header>
+
+      {/* ── At a Glance ── */}
+      <section style={{ marginBottom: '1.5rem' }}>
+        <SectionHeadingMod>At a Glance</SectionHeadingMod>
+        {[about.p1, about.p2, about.p3].filter(Boolean).map((p, i) => (
+          <p key={i} style={{ fontSize: '0.86rem', lineHeight: 1.75, color: '#3a3a3a', marginBottom: '0.45rem' }}>{p}</p>
+        ))}
+        {about.howIWork && (
+          <div style={{ marginTop: '0.5rem', padding: '0.5rem 0.75rem', background: '#faf8f4', borderLeft: '2px solid #c4843a', fontSize: '0.82rem', color: '#3a3a3a', fontStyle: 'italic' }}>
+            <strong style={{ fontStyle: 'normal', color: '#1b2a3b' }}>How I work:</strong> {about.howIWork}
+          </div>
+        )}
+      </section>
+
+      {/* ── Two column: Domains | Technology ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '1.5rem' }}>
+        <div>
+          <SectionHeadingMod>Core Domains</SectionHeadingMod>
+          {DOMAIN_CATEGORIES.map(cat => (
+            <div key={cat.title} style={{ marginBottom: '0.8rem' }}>
+              <div style={{ fontSize: '0.62rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: '#c4843a', fontFamily: 'sans-serif', marginBottom: '0.2rem' }}>{cat.icon} {cat.title}</div>
+              {cat.items.map((item, i) => (
+                <div key={i} style={{ fontSize: '0.78rem', color: '#3a3a3a', paddingLeft: '0.6rem', marginBottom: '0.1rem', position: 'relative' }}>
+                  <span style={{ position: 'absolute', left: 0, color: '#c4843a' }}>·</span>{item}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div>
+          <SectionHeadingMod>Technology Proficiencies</SectionHeadingMod>
+          {[['Hands-On', handsOn], ['Integration & Design', integrationDesign], ['Adjacent', adjacent]].map(([label, items]) => items.length > 0 && (
+            <div key={label} style={{ marginBottom: '0.75rem' }}>
+              <div style={{ fontSize: '0.62rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#c4843a', fontFamily: 'sans-serif', marginBottom: '0.2rem' }}>{label}</div>
+              <div style={{ fontSize: '0.78rem', color: '#3a3a3a', lineHeight: 1.6 }}>{items.join(' · ')}</div>
+            </div>
+          ))}
+          {NICHE_SOLUTIONS.map(ns => (
+            <div key={ns.label} style={{ marginBottom: '0.75rem' }}>
+              <div style={{ fontSize: '0.62rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#02a1a6', fontFamily: 'sans-serif', marginBottom: '0.2rem' }}>{ns.icon} {ns.label}</div>
+              {ns.items.map((item, i) => (
+                <div key={i} style={{ fontSize: '0.78rem', color: '#3a3a3a', paddingLeft: '0.6rem', position: 'relative', marginBottom: '0.1rem' }}>
+                  <span style={{ position: 'absolute', left: 0, color: '#02a1a6' }}>·</span>{item}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Industry Experience — 3-col cards ── */}
+      <section style={{ marginBottom: '1.5rem' }}>
+        <SectionHeadingMod>Industry Experience</SectionHeadingMod>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem' }}>
+          {INDUSTRIES.map(ind => (
+            <div key={ind.key} style={{ background: '#faf8f4', padding: '0.6rem 0.75rem', borderLeft: '2px solid #c4843a', pageBreakInside: 'avoid' }}>
+              <div style={{ fontSize: '0.62rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#c4843a', fontFamily: 'sans-serif', marginBottom: '0.2rem' }}>{ind.icon} {ind.label}</div>
+              <div style={{ fontSize: '0.7rem', color: '#5a5a5a', lineHeight: 1.55 }}>{ind.snapshot}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Philosophy / Work Style — 3-col ── */}
+      {(about.philosophy || about.interpersonalStyle || about.workEthic) && (
+        <section style={{ marginBottom: '1.5rem' }}>
+          <SectionHeadingMod>Philosophy & Work Style</SectionHeadingMod>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+            {[['Philosophy', about.philosophy], ['Interpersonal Style', about.interpersonalStyle], ['Work Ethic', about.workEthic]].filter(([, v]) => v).map(([label, val]) => (
+              <div key={label}>
+                <div style={{ fontSize: '0.62rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#c4843a', fontFamily: 'sans-serif', marginBottom: '0.3rem' }}>{label}</div>
+                <div style={{ fontSize: '0.78rem', color: '#3a3a3a', lineHeight: 1.65 }}>{val}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── Professional Experience ── */}
+      <section style={{ marginBottom: '1.5rem' }}>
+        <SectionHeadingMod>Professional Experience</SectionHeadingMod>
+        {jobs.map((job, i) => (
+          <div key={i} style={{ marginBottom: '1rem', pageBreakInside: 'avoid' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '0.5rem' }}>
+              <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#1b2a3b' }}>{job.company}</div>
+              <div style={{ fontSize: '0.68rem', letterSpacing: '0.1em', color: '#c4843a', fontFamily: 'sans-serif', whiteSpace: 'nowrap' }}>{job.dates}</div>
+            </div>
+            <div style={{ fontSize: '0.78rem', fontStyle: 'italic', color: '#02a1a6', marginBottom: '0.3rem' }}>{job.title}</div>
+            {job.bullets.map((b, j) => (
+              <div key={j} style={{ fontSize: '0.8rem', color: '#3a3a3a', paddingLeft: '0.75rem', marginBottom: '0.2rem', position: 'relative', lineHeight: 1.55 }}>
+                <span style={{ position: 'absolute', left: 0, color: '#c4843a' }}>·</span>{b}
+              </div>
+            ))}
+          </div>
+        ))}
+      </section>
+
+      {/* ── Education ── */}
+      {timeline.educationLine && (
+        <div style={{ display: 'flex', gap: '1rem', padding: '0.65rem 0.9rem', background: '#faf8f4', borderLeft: '2px solid #c4843a', alignItems: 'center' }}>
+          <div style={{ fontSize: '0.6rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: '#c4843a', fontFamily: 'sans-serif', whiteSpace: 'nowrap' }}>Education</div>
+          <div style={{ fontSize: '0.84rem', color: '#1b2a3b' }}>{timeline.educationLine}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Layout: Corporate SB ──────────────────────────────────────────────────────
+// Bold structured layout — clean columns, strong navy headers, gold rule lines.
+function ResumeLayoutCorporate({ about, timeline, jobs, handsOn, integrationDesign, adjacent }) {
+  const name = about.name || about.heading || 'Betsy Salter';
+  const tagline = about.tagline || 'Strategic Operator · Revenue Systems · Private Equity';
+  const photoUrl = about.photoUrl || about.photo || null;
+
+  return (
+    <div style={{ fontFamily: 'Georgia, serif', color: '#1b2a3b' }}>
+
+      {/* ── Header block — full-width navy bar ── */}
+      <header style={{ background: '#1b2a3b', color: 'white', padding: '1.5rem 2rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+        {photoUrl && (
+          <img src={photoUrl} alt={name} style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '2px solid #c4843a', flexShrink: 0 }} />
+        )}
+        <div style={{ flex: 1 }}>
+          <h1 style={{ fontSize: '2.2rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'white', margin: 0, lineHeight: 1, fontFamily: 'Georgia, serif' }}>{name}</h1>
+          <div style={{ fontSize: '0.65rem', letterSpacing: '0.26em', textTransform: 'uppercase', color: '#c4843a', marginTop: '0.35rem', fontFamily: 'sans-serif' }}>{tagline}</div>
+        </div>
+        <div style={{ textAlign: 'right', fontSize: '0.75rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.9, flexShrink: 0 }}>
+          <div style={{ color: '#c4843a', fontFamily: 'sans-serif', fontSize: '0.7rem' }}>saltbasin.net</div>
+          <div>betsysalter@saltbasin.net</div>
+          {about.location && <div>{about.location}</div>}
+        </div>
+      </header>
+
+      {/* ── Two-panel body: main (left 65%) + sidebar (right 35%) ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+        {/* Main column */}
+        <div>
+          {/* Profile */}
+          <section style={{ marginBottom: '1.25rem' }}>
+            <CorpHead>Executive Profile</CorpHead>
+            {[about.p1, about.p2, about.p3].filter(Boolean).map((p, i) => (
+              <p key={i} style={{ fontSize: '0.86rem', lineHeight: 1.75, color: '#3a3a3a', marginBottom: '0.4rem' }}>{p}</p>
+            ))}
+          </section>
+
+          {/* Professional Experience */}
+          <section style={{ marginBottom: '1.25rem' }}>
+            <CorpHead>Professional Experience</CorpHead>
+            {jobs.map((job, i) => (
+              <div key={i} style={{ marginBottom: '1.1rem', pageBreakInside: 'avoid' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '0.5px solid #e8ddd0', paddingBottom: '0.2rem', marginBottom: '0.2rem' }}>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1b2a3b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{job.company}</div>
+                  <div style={{ fontSize: '0.68rem', color: '#c4843a', fontFamily: 'sans-serif', letterSpacing: '0.08em' }}>{job.dates}</div>
+                </div>
+                <div style={{ fontSize: '0.75rem', fontStyle: 'italic', color: '#02a1a6', marginBottom: '0.3rem', fontFamily: 'sans-serif' }}>{job.title}</div>
+                {job.bullets.map((b, j) => (
+                  <div key={j} style={{ fontSize: '0.8rem', color: '#3a3a3a', paddingLeft: '0.75rem', marginBottom: '0.2rem', position: 'relative', lineHeight: 1.55 }}>
+                    <span style={{ position: 'absolute', left: 0, color: '#c4843a', fontWeight: 700 }}>—</span>{b}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </section>
+
+          {/* Industry Experience */}
+          <section>
+            <CorpHead>Industry Experience</CorpHead>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+              {INDUSTRIES.map(ind => (
+                <div key={ind.key} style={{ pageBreakInside: 'avoid', padding: '0.5rem 0.65rem', background: '#faf8f4', borderLeft: '2px solid #c4843a' }}>
+                  <div style={{ fontSize: '0.65rem', color: '#c4843a', fontFamily: 'sans-serif', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '0.15rem' }}>{ind.icon} {ind.label}</div>
+                  <div style={{ fontSize: '0.7rem', color: '#5a5a5a', lineHeight: 1.5 }}>{ind.snapshot}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        {/* Sidebar */}
+        <div>
+          {/* Core Domains */}
+          <section style={{ marginBottom: '1.25rem', padding: '0.9rem', background: '#1b2a3b', color: 'white', borderRadius: 2 }}>
+            <div style={{ fontSize: '0.6rem', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#c4843a', fontFamily: 'sans-serif', marginBottom: '0.6rem' }}>Core Domains</div>
+            {DOMAIN_CATEGORIES.map(cat => (
+              <div key={cat.title} style={{ marginBottom: '0.6rem' }}>
+                <div style={{ fontSize: '0.62rem', color: '#c4843a', fontFamily: 'sans-serif', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.15rem' }}>{cat.title}</div>
+                {cat.items.map((item, i) => (
+                  <div key={i} style={{ fontSize: '0.74rem', color: 'rgba(255,255,255,0.8)', paddingLeft: '0.5rem', marginBottom: '0.1rem' }}>· {item}</div>
+                ))}
+              </div>
+            ))}
+          </section>
+
+          {/* Technology */}
+          <section style={{ marginBottom: '1.25rem' }}>
+            <CorpHead>Technology</CorpHead>
+            {[['Hands-On', handsOn], ['Integration', integrationDesign], ['Adjacent', adjacent]].map(([label, items]) => items.length > 0 && (
+              <div key={label} style={{ marginBottom: '0.6rem' }}>
+                <div style={{ fontSize: '0.6rem', color: '#c4843a', fontFamily: 'sans-serif', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.15rem' }}>{label}</div>
+                <div style={{ fontSize: '0.74rem', color: '#3a3a3a', lineHeight: 1.6 }}>{items.join(', ')}</div>
+              </div>
+            ))}
+          </section>
+
+          {/* Niche Solutions */}
+          <section style={{ marginBottom: '1.25rem' }}>
+            <CorpHead>Niche Solutions</CorpHead>
+            {NICHE_SOLUTIONS.map(ns => (
+              <div key={ns.label} style={{ marginBottom: '0.6rem' }}>
+                <div style={{ fontSize: '0.62rem', color: '#02a1a6', fontFamily: 'sans-serif', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.15rem' }}>{ns.icon} {ns.label}</div>
+                {ns.items.map((item, i) => (
+                  <div key={i} style={{ fontSize: '0.74rem', color: '#3a3a3a', paddingLeft: '0.5rem', marginBottom: '0.1rem' }}>· {item}</div>
+                ))}
+              </div>
+            ))}
+          </section>
+
+          {/* Education */}
+          {timeline.educationLine && (
+            <section>
+              <CorpHead>Education</CorpHead>
+              <div style={{ fontSize: '0.8rem', color: '#1b2a3b', lineHeight: 1.6 }}>{timeline.educationLine}</div>
+            </section>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CorpHead({ children }) {
+  return (
+    <div style={{ fontSize: '0.62rem', letterSpacing: '0.24em', textTransform: 'uppercase', color: '#1b2a3b', fontFamily: 'sans-serif', fontWeight: 700, marginBottom: '0.55rem', paddingBottom: '0.2rem', borderBottom: '2px solid #c4843a' }}>
+      {children}
+    </div>
+  );
+}
+
 // ── Industry data — same content used in the wheel section, lifted here so
 //    the static resume output can show the same intel without interaction. ──
 const INDUSTRIES = [
@@ -332,12 +605,13 @@ const SERVICE_OFFERINGS = [
 
 // ── Resume ──
 export function ResumeOutput() {
+  const location = useLocation();
   const { loading: authLoading, user } = useAuthState();
   const [page, setPage] = useState(null);
   const [wheel, setWheel] = useState(null);
   const [siteError, setSiteError] = useState(null);
-  // undefined = loading, null = no template, object = template config
   const [primaryTemplate, setPrimaryTemplate] = useState(undefined);
+  const layoutParam = new URLSearchParams(location.search).get('layout') || 'classic';
 
   useEffect(() => {
     api.getPublishedSite()
@@ -437,12 +711,29 @@ export function ResumeOutput() {
     );
   }
 
-  // ── Hardcoded fallback (used until a primary template is configured) ──
+  // ── Dispatch to layout ──
   const parseTech = (s) => (s || '').split(',').map((p) => p.trim()).filter(Boolean).map((p) => p.split(':')[0].trim());
   const handsOn = parseTech(wheel?.handsOn);
   const integrationDesign = parseTech(wheel?.integrationDesign);
   const adjacent = parseTech(wheel?.adjacent);
+  const resumeProps = { about, timeline, jobs, wheel, handsOn, integrationDesign, adjacent };
 
+  if (layoutParam === 'modern') {
+    return (
+      <OutputFrame title={about.name || about.heading || 'Betsy Salter'} eyebrow="Resume · Modern">
+        <ResumeLayoutModern {...resumeProps} />
+      </OutputFrame>
+    );
+  }
+  if (layoutParam === 'corporate') {
+    return (
+      <OutputFrame title={about.name || about.heading || 'Betsy Salter'} eyebrow="Resume · Corporate">
+        <ResumeLayoutCorporate {...resumeProps} />
+      </OutputFrame>
+    );
+  }
+
+  // Classic fallback
   return (
     <OutputFrame title={about.heading || 'Betsy Salter'} eyebrow="Resume">
       <>
@@ -457,7 +748,6 @@ export function ResumeOutput() {
             </p>
           )}
         </section>
-
         <section style={{ marginBottom: '1.5rem' }}>
           <OutputHeading>Industries Served</OutputHeading>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.6rem' }}>
@@ -473,7 +763,6 @@ export function ResumeOutput() {
             ))}
           </div>
         </section>
-
         <section style={{ marginBottom: '1.5rem' }}>
           <OutputHeading>Technology & Capability</OutputHeading>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.6rem' }}>
@@ -482,36 +771,24 @@ export function ResumeOutput() {
             <TechColumn label="Adjacent Exposure" items={adjacent} />
           </div>
         </section>
-
         <section>
           <OutputHeading>Professional Experience</OutputHeading>
           {jobs.map((job, i) => (
             <div key={i} style={{ marginBottom: '1rem', pageBreakInside: 'avoid' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '0.5rem' }}>
-                <div style={{ fontFamily: 'var(--sb-font-display)', fontSize: '1.05rem', fontWeight: 500, color: 'var(--sb-navy)' }}>
-                  {job.company}
-                </div>
-                <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.72rem', letterSpacing: '0.08em', color: 'var(--sb-teal-deep)' }}>
-                  {job.dates}
-                </div>
+                <div style={{ fontFamily: 'var(--sb-font-display)', fontSize: '1.05rem', fontWeight: 500, color: 'var(--sb-navy)' }}>{job.company}</div>
+                <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.72rem', letterSpacing: '0.08em', color: 'var(--sb-teal-deep)' }}>{job.dates}</div>
               </div>
-              <div style={{ fontSize: '0.82rem', fontStyle: 'italic', color: 'var(--sb-teal-deep)', marginBottom: '0.4rem' }}>
-                {job.title}
-              </div>
+              <div style={{ fontSize: '0.82rem', fontStyle: 'italic', color: 'var(--sb-teal-deep)', marginBottom: '0.4rem' }}>{job.title}</div>
               <ul style={ulStyle}>
-                {job.bullets.map((b, j) => (
-                  <li key={j} style={liStyle}><span style={dotStyle}>·</span>{b}</li>
-                ))}
+                {job.bullets.map((b, j) => <li key={j} style={liStyle}><span style={dotStyle}>·</span>{b}</li>)}
               </ul>
             </div>
           ))}
         </section>
-
         {timeline.educationLine && (
           <section style={{ marginTop: '1rem', padding: '0.6rem 0.9rem', background: 'var(--sb-cream)', borderLeft: '3px solid var(--sb-gold)' }}>
-            <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.62rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--sb-gold)', marginBottom: 2 }}>
-              Education
-            </div>
+            <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.62rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--sb-gold)', marginBottom: 2 }}>Education</div>
             <div style={{ fontSize: '0.88rem', color: 'var(--sb-navy)' }}>{timeline.educationLine}</div>
           </section>
         )}
@@ -587,39 +864,216 @@ export function CaseStudyOutput() {
     );
   }
 
+  // Boho-style multi-section layout for case studies
+  const industry = INDUSTRIES.find(ind => title?.toLowerCase().includes(ind.label.toLowerCase().split(' ')[0]));
+
   return (
     <OutputFrame title={title} eyebrow={subtitle || 'Case Study'}>
-      <>
-        <CaseSection label="Context" items={context} />
-        <CaseSection label="Role" text={role} />
-        <CaseSection label="Actions" items={actions} />
-        <CaseSection label="Impact" items={impact} highlight />
-        {feedback && (
-          <section style={{ marginTop: '1.25rem', padding: '0.9rem 1.1rem', background: 'rgba(196,132,58,0.1)', borderLeft: '3px solid var(--sb-gold)', fontStyle: 'italic', fontSize: '0.92rem', color: '#3a3a3a' }}>
-            “{feedback}”
+      <div style={{ fontFamily: 'Georgia, serif' }}>
+
+        {/* ── Hero header ── */}
+        <div style={{ background: '#faf8f4', border: '0.5px solid #e8ddd0', borderRadius: 4, padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.6rem', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#c4843a', fontFamily: 'sans-serif', marginBottom: '0.4rem' }}>Case Study · Salt Basin Net Works</div>
+            <h2 style={{ fontSize: '1.6rem', color: '#1b2a3b', margin: 0, lineHeight: 1.2, fontFamily: 'Georgia, serif' }}>{title}</h2>
+            {subtitle && <div style={{ fontSize: '0.8rem', color: '#02a1a6', marginTop: '0.35rem', fontStyle: 'italic' }}>{subtitle}</div>}
+          </div>
+          {industry && (
+            <div style={{ background: '#1b2a3b', color: 'white', padding: '0.75rem 1rem', textAlign: 'center', minWidth: 100, borderRadius: 2 }}>
+              <div style={{ fontSize: '1.5rem', marginBottom: '0.2rem' }}>{industry.icon}</div>
+              <div style={{ fontSize: '0.6rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#c4843a', fontFamily: 'sans-serif' }}>{industry.label}</div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Context ── */}
+        {context.length > 0 && (
+          <section style={{ marginBottom: '1.25rem', pageBreakInside: 'avoid' }}>
+            <CaseSectionHead>Context</CaseSectionHead>
+            <div style={{ display: 'grid', gridTemplateColumns: context.length > 2 ? '1fr 1fr' : '1fr', gap: '0.5rem' }}>
+              {context.map((c, j) => (
+                <div key={j} style={{ padding: '0.5rem 0.75rem', background: '#faf8f4', borderLeft: '2px solid #c4843a', fontSize: '0.82rem', color: '#3a3a3a', lineHeight: 1.6 }}>{c}</div>
+              ))}
+            </div>
           </section>
         )}
-      </>
+
+        {/* ── Role ── */}
+        {role && (
+          <section style={{ marginBottom: '1.25rem', pageBreakInside: 'avoid' }}>
+            <CaseSectionHead>My Role</CaseSectionHead>
+            <div style={{ fontSize: '0.88rem', color: '#1b2a3b', lineHeight: 1.7, padding: '0.6rem 0.85rem', background: '#f0f8f8', borderLeft: '2px solid #02a1a6' }}>{role}</div>
+          </section>
+        )}
+
+        {/* ── Actions | Impact side-by-side ── */}
+        {(actions.length > 0 || impact.length > 0) && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
+            {actions.length > 0 && (
+              <section style={{ pageBreakInside: 'avoid' }}>
+                <CaseSectionHead>Actions Taken</CaseSectionHead>
+                {actions.map((a, j) => (
+                  <div key={j} style={{ fontSize: '0.82rem', color: '#3a3a3a', paddingLeft: '0.75rem', marginBottom: '0.3rem', position: 'relative', lineHeight: 1.55 }}>
+                    <span style={{ position: 'absolute', left: 0, color: '#c4843a' }}>·</span>{a}
+                  </div>
+                ))}
+              </section>
+            )}
+            {impact.length > 0 && (
+              <section style={{ pageBreakInside: 'avoid' }}>
+                <CaseSectionHead>Impact & Outcomes</CaseSectionHead>
+                {impact.map((it, j) => (
+                  <div key={j} style={{ fontSize: '0.82rem', color: '#1b2a3b', fontWeight: 500, paddingLeft: '0.75rem', marginBottom: '0.3rem', position: 'relative', lineHeight: 1.55 }}>
+                    <span style={{ position: 'absolute', left: 0, color: '#c4843a', fontWeight: 700 }}>▲</span>{it}
+                  </div>
+                ))}
+              </section>
+            )}
+          </div>
+        )}
+
+        {/* ── Feedback/quote ── */}
+        {feedback && (
+          <section style={{ marginTop: '0.5rem', padding: '1rem 1.25rem', background: '#1b2a3b', color: 'white', borderLeft: '4px solid #c4843a', pageBreakInside: 'avoid' }}>
+            <div style={{ fontSize: '0.6rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: '#c4843a', fontFamily: 'sans-serif', marginBottom: '0.4rem' }}>Stakeholder Feedback</div>
+            <div style={{ fontSize: '0.9rem', fontStyle: 'italic', lineHeight: 1.7, color: 'rgba(255,255,255,0.9)' }}>"{feedback}"</div>
+          </section>
+        )}
+      </div>
     </OutputFrame>
   );
 }
 
-function CaseSection({ label, items, text, highlight }) {
-  if (!items?.length && !text) return null;
+function CaseSectionHead({ children }) {
   return (
-    <section style={{ marginBottom: '1.2rem', pageBreakInside: 'avoid' }}>
-      <OutputHeading>{label}</OutputHeading>
-      {text && <div style={{ fontSize: '0.88rem', color: 'var(--sb-navy)' }}>{text}</div>}
-      {items?.length > 0 && (
-        <ul style={ulStyle}>
-          {items.map((it, j) => (
-            <li key={j} style={{ ...liStyle, color: highlight ? 'var(--sb-navy)' : '#4a4a4a', fontWeight: highlight ? 500 : 400 }}>
-              <span style={dotStyle}>·</span>{it}
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
+    <div style={{ fontSize: '0.6rem', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#1b2a3b', fontFamily: 'sans-serif', fontWeight: 700, marginBottom: '0.5rem', paddingBottom: '0.2rem', borderBottom: '1.5px solid #c4843a' }}>
+      {children}
+    </div>
+  );
+}
+
+// ── Domains & Niche Solutions output ─────────────────────────────────────────
+// Showcases core domains, niche solutions, industry experience, and technology
+// in a multi-column boho-style card layout adapted to SB brand.
+export function DomainsOutput() {
+  const { loading, user } = useAuthState();
+  const [about, setAbout] = useState({});
+  const [wheel, setWheel] = useState({});
+  useEffect(() => {
+    api.getPublishedSite().then(site => {
+      const cf = site.pages['consulting-founder'];
+      setAbout(cf?.sections.find(s => s.type === 'about')?.fields || {});
+      const home = site.pages['home'];
+      setWheel(home?.sections.find(s => s.type === 'industryWheel')?.fields || {});
+    }).catch(() => {});
+  }, []);
+
+  if (loading) return null;
+
+  const parseTech = (s) => (s || '').split(',').map(p => p.trim()).filter(Boolean).map(p => p.split(':')[0].trim());
+  const handsOn = parseTech(wheel?.handsOn);
+  const integrationDesign = parseTech(wheel?.integrationDesign);
+  const adjacent = parseTech(wheel?.adjacent);
+  const name = about.name || about.heading || 'Betsy Salter';
+  const photoUrl = about.photoUrl || about.photo || null;
+
+  if (!user) {
+    return (
+      <OutputFrame title={name + ' - Domains & Niche Solutions'} eyebrow="Domains" gated>
+        <GatedPreview kind="domains profile" teaser={{ label: 'Core Domains Preview', paragraphs: ['Strategic operator with deep expertise across Revenue Systems, Private Equity, and AI-enabled data architecture.'], bullets: DOMAIN_CATEGORIES.map(c => c.title) }} />
+      </OutputFrame>
+    );
+  }
+
+  return (
+    <OutputFrame title={name + ' - Domains & Niche Solutions'} eyebrow="Domains">
+      <div style={{ fontFamily: 'Georgia, serif', color: '#1b2a3b' }}>
+
+        {/* ── Header ── */}
+        <header style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', marginBottom: '1.75rem', paddingBottom: '1.25rem', borderBottom: '2.5px solid #c4843a' }}>
+          {photoUrl && <img src={photoUrl} alt={name} style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '2px solid #c4843a' }} />}
+          <div>
+            <h1 style={{ fontSize: '2rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#1b2a3b', margin: 0, lineHeight: 1, fontFamily: 'Georgia, serif' }}>{name}</h1>
+            <div style={{ fontSize: '0.65rem', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#c4843a', marginTop: '0.3rem', fontFamily: 'sans-serif' }}>Domains · Capabilities · Niche Solutions</div>
+          </div>
+        </header>
+
+        {/* ── Core Domains — 3-col card grid ── */}
+        <section style={{ marginBottom: '1.75rem' }}>
+          <DomainsHead>Core Domain Areas</DomainsHead>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+            {DOMAIN_CATEGORIES.map(cat => (
+              <div key={cat.title} style={{ background: '#faf8f4', padding: '0.85rem 1rem', borderTop: '3px solid #c4843a' }}>
+                <div style={{ fontSize: '0.62rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: '#c4843a', fontFamily: 'sans-serif', marginBottom: '0.5rem' }}>{cat.icon} {cat.title}</div>
+                {cat.items.map((item, i) => (
+                  <div key={i} style={{ fontSize: '0.8rem', color: '#3a3a3a', paddingLeft: '0.6rem', marginBottom: '0.2rem', position: 'relative', lineHeight: 1.55 }}>
+                    <span style={{ position: 'absolute', left: 0, color: '#c4843a' }}>·</span>{item}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Niche Solutions — 3-col ── */}
+        <section style={{ marginBottom: '1.75rem' }}>
+          <DomainsHead>Niche Solutions</DomainsHead>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+            {NICHE_SOLUTIONS.map(ns => (
+              <div key={ns.label} style={{ background: '#1b2a3b', color: 'white', padding: '0.85rem 1rem', borderTop: '3px solid #02a1a6' }}>
+                <div style={{ fontSize: '0.62rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: '#02a1a6', fontFamily: 'sans-serif', marginBottom: '0.5rem' }}>{ns.icon} {ns.label}</div>
+                {ns.items.map((item, i) => (
+                  <div key={i} style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.85)', paddingLeft: '0.6rem', marginBottom: '0.2rem', position: 'relative', lineHeight: 1.55 }}>
+                    <span style={{ position: 'absolute', left: 0, color: '#02a1a6' }}>·</span>{item}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Industry Experience ── */}
+        <section style={{ marginBottom: '1.75rem' }}>
+          <DomainsHead>Industry Experience</DomainsHead>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.6rem' }}>
+            {INDUSTRIES.map(ind => (
+              <div key={ind.key} style={{ pageBreakInside: 'avoid', display: 'flex', gap: '0.75rem', alignItems: 'flex-start', padding: '0.65rem 0.8rem', background: '#faf8f4', borderLeft: '3px solid #c4843a' }}>
+                <span style={{ fontSize: '1.1rem', marginTop: 2 }}>{ind.icon}</span>
+                <div>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#1b2a3b', marginBottom: '0.1rem' }}>{ind.label}</div>
+                  <div style={{ fontSize: '0.74rem', color: '#5a5a5a', lineHeight: 1.55 }}>{ind.snapshot}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Technology Proficiencies ── */}
+        <section>
+          <DomainsHead>Technology Proficiencies</DomainsHead>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+            {[['Hands-On', handsOn, '#c4843a'], ['Integration & Design', integrationDesign, '#02a1a6'], ['Adjacent Exposure', adjacent, '#5a5a5a']].map(([label, items, color]) => (
+              <div key={label} style={{ borderTop: `3px solid ${color}`, paddingTop: '0.6rem' }}>
+                <div style={{ fontSize: '0.6rem', letterSpacing: '0.16em', textTransform: 'uppercase', color, fontFamily: 'sans-serif', marginBottom: '0.4rem' }}>{label}</div>
+                {items.map((t, i) => (
+                  <div key={i} style={{ fontSize: '0.78rem', color: '#3a3a3a', paddingLeft: '0.5rem', marginBottom: '0.15rem', position: 'relative' }}>
+                    <span style={{ position: 'absolute', left: 0, color }}>·</span>{t}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </OutputFrame>
+  );
+}
+
+function DomainsHead({ children }) {
+  return (
+    <div style={{ fontSize: '0.62rem', letterSpacing: '0.24em', textTransform: 'uppercase', color: '#1b2a3b', fontFamily: 'sans-serif', fontWeight: 700, marginBottom: '0.7rem', paddingBottom: '0.25rem', borderBottom: '2px solid #c4843a' }}>
+      {children}
+    </div>
   );
 }
 

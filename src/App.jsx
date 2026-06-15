@@ -11,7 +11,7 @@ import PublicProfile from './components/PublicProfile.jsx';
 import LeadView from './components/LeadView.jsx';
 import ResetPasswordPage from './components/ResetPasswordPage.jsx';
 import DataNotice from './components/DataNotice.jsx';
-import { ResumeOutput, CaseStudyOutput, ProposalOutput, OnePagerOutput, BuildSummaryOutput, TechStackOutput, ProductOnePagerOutput, PatchNotesOutput } from './components/Output.jsx';
+import { ResumeOutput, CaseStudyOutput, DomainsOutput, ProposalOutput, OnePagerOutput, BuildSummaryOutput, TechStackOutput, ProductOnePagerOutput, PatchNotesOutput } from './components/Output.jsx';
 
 function PublicRoute() {
   const [status, setStatus] = useState(null);
@@ -61,6 +61,7 @@ export default function App() {
       <Route path="/output/tech-stack" element={<TechStackOutput />} />
       <Route path="/output/product-one-pager" element={<ProductOnePagerOutput />} />
       <Route path="/output/patch-notes" element={<PatchNotesOutput />} />
+      <Route path="/output/domains" element={<DomainsOutput />} />
       <Route
         path="/admin/*"
         element={
