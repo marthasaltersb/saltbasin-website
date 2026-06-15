@@ -91,6 +91,33 @@ const LAYOUTS = [
     url: '/output/resume?layout=corporate',
   },
   {
+    id: 'case-study',
+    name: 'Case Study',
+    description: 'Boho-style hero, 2-col actions/impact, navy quote',
+    preview: (
+      <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 72 }}>
+        <rect width="120" height="80" fill="#faf8f4" />
+        <rect x="8" y="8" width="80" height="14" rx="1" fill="#faf8f4" stroke="#c4843a" strokeWidth="0.5" />
+        <rect x="12" y="11" width="30" height="4" rx="1" fill="#1b2a3b" />
+        <rect x="12" y="17" width="20" height="2" rx="1" fill="#02a1a6" />
+        <rect x="96" y="8" width="16" height="14" rx="1" fill="#1b2a3b" />
+        <rect x="99" y="13" width="10" height="2" rx="1" fill="rgba(196,132,58,0.7)" />
+        <rect x="8" y="26" width="48" height="12" rx="1" fill="#fff" stroke="#e8ddd0" strokeWidth="0.5" />
+        <rect x="62" y="26" width="50" height="12" rx="1" fill="#fff" stroke="#e8ddd0" strokeWidth="0.5" />
+        <rect x="11" y="29" width="18" height="1.5" rx="1" fill="#c4843a" opacity="0.6" />
+        <rect x="11" y="33" width="40" height="1.5" rx="1" fill="#ddd" />
+        <rect x="65" y="29" width="18" height="1.5" rx="1" fill="#c4843a" opacity="0.6" />
+        <rect x="65" y="33" width="40" height="1.5" rx="1" fill="#ddd" />
+        <rect x="8" y="43" width="104" height="10" rx="1" fill="#1b2a3b" />
+        <rect x="12" y="46" width="25" height="1.5" rx="1" fill="rgba(255,255,255,0.5)" />
+        <rect x="12" y="50" width="60" height="1.5" rx="1" fill="rgba(255,255,255,0.25)" />
+        <rect x="8" y="58" width="104" height="2" rx="1" fill="#eee" />
+        <rect x="8" y="62" width="70" height="2" rx="1" fill="#eee" />
+      </svg>
+    ),
+    url: '/output/case-study/healthcare-nasdaq-relisting',
+  },
+  {
     id: 'domains',
     name: 'Domains & Niche',
     description: 'Card grid, niche solutions, technology map',
@@ -198,7 +225,7 @@ function SectionPicker({ allSections, includedSections, onChange }) {
 // ── Layout picker ─────────────────────────────────────────────────────────────
 function LayoutPicker({ selected, onChange }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem', marginBottom: '1rem' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.65rem', marginBottom: '1rem' }}>
       {LAYOUTS.map(layout => (
         <div key={layout.id} onClick={() => onChange(layout.id)}
           style={{ border: `2px solid ${selected === layout.id ? 'var(--sb-gold, #c4843a)' : 'rgba(0,0,0,0.1)'}`, borderRadius: 8, padding: '0.75rem', cursor: 'pointer', background: selected === layout.id ? 'rgba(196,132,58,0.04)' : 'white', transition: 'all 0.15s' }}>
@@ -344,14 +371,30 @@ export default function MyResumePanel() {
   const iframeRef = useRef(null);
 
   useEffect(() => {
-    api.getMemberDraftSite().then(s => setSite(s)).catch(() => {});
+    // Try member draft site; fall back to admin site if member has no pages
+    // (admin users keep their content in the admin site, not member-site)
+    api.getMemberDraftSite()
+      .then(s => {
+        if (s?.pages && Object.keys(s.pages).length > 0) { setSite(s); return null; }
+        return api.getDraftSite();
+      })
+      .then(s => { if (s) setSite(s); })
+      .catch(() => api.getDraftSite().then(s => setSite(s)).catch(() => {}));
     loadPresets();
   }, []);
 
   function loadPresets() {
     fetch('/api/members/me/resume-presets', { credentials: 'include' })
       .then(r => r.ok ? r.json() : { presets: [] })
-      .then(d => setPresets(d.presets || []))
+      .then(d => {
+        const loaded = d.presets || [];
+        if (loaded.length === 0) {
+          // Seed a default primary preset so the panel is never blank on first open
+          setPresets([{ id: 'preset-default', name: 'Primary Resume', primaryResume: true, includedSections: [], layout: 'classic' }]);
+        } else {
+          setPresets(loaded);
+        }
+      })
       .catch(() => {});
   }
 
