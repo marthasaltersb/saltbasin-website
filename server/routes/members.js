@@ -337,17 +337,15 @@ router.get('/admin/stats', requireAdmin, async (req, res) => {
 // Stored as JSON in member_configs with kind='resume_presets'.
 // Shape: { presets: [{ id, name, primaryResume, includedSections: [sectionId] }] }
 
-router.get('/me/resume-presets', async (req, res) => {
-  const user = await requireUser(req, res); if (!user) return;
+router.get('/me/resume-presets', requireUser, async (req, res) => {
   const row = await db.prepare(
     `SELECT data FROM member_json_store WHERE user_id = $1 AND key = $2`
-  ).get(user.id, 'resume_presets');
+  ).get(req.user.id, 'resume_presets');
   const data = row ? JSON.parse(row.data) : { presets: [] };
   res.json(data);
 });
 
-router.put('/me/resume-presets', async (req, res) => {
-  const user = await requireUser(req, res); if (!user) return;
+router.put('/me/resume-presets', requireUser, async (req, res) => {
   const { presets } = req.body;
   if (!Array.isArray(presets)) return res.status(400).json({ error: 'presets must be array' });
   // Ensure only one primary
@@ -363,7 +361,7 @@ router.put('/me/resume-presets', async (req, res) => {
     `INSERT INTO member_json_store (user_id, key, data, updated_at)
      VALUES ($1, $2, $3, $4)
      ON CONFLICT (user_id, key) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at`
-  ).run(user.id, 'resume_presets', data, now);
+  ).run(req.user.id, 'resume_presets', data, now);
   res.json({ ok: true, presets: cleaned });
 });
 
