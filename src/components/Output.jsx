@@ -332,6 +332,7 @@ const SERVICE_OFFERINGS = [
 
 // ── Resume ──
 export function ResumeOutput() {
+  const { loading: authLoading, user } = useAuthState();
   const [page, setPage] = useState(null);
   const [wheel, setWheel] = useState(null);
   const [siteError, setSiteError] = useState(null);
@@ -360,7 +361,7 @@ export function ResumeOutput() {
       .catch(() => setPrimaryTemplate(null));
   }, []);
 
-  const isLoading = primaryTemplate === undefined || (!page && !siteError);
+  const isLoading = authLoading || primaryTemplate === undefined || (!page && !siteError);
 
   if (isLoading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', color: '#1B2A3B', fontFamily: 'Georgia, serif', fontSize: '1rem' }}>
@@ -372,6 +373,28 @@ export function ResumeOutput() {
       {siteError}
     </div>
   );
+
+  if (!user) {
+    return (
+      <OutputFrame title="Betsy Salter — Resume" eyebrow="Resume" gated>
+        <GatedPreview
+          kind="resume"
+          teaser={{
+            label: 'Strategic Operator · Revenue Systems · Private Equity',
+            paragraphs: [
+              'Betsy Salter is a fractional CFO and revenue systems architect with a track record across $50M–$3.7B+ engagements in SaaS, PE-backed companies, manufacturing, and professional services.',
+              'This resume includes her full career timeline, industry breakdown, technology proficiencies, and domain capabilities — available to Salt Basin members.',
+            ],
+            bullets: [
+              '15+ years · Q2R, RevOps, GTM Systems, Data Architecture',
+              'Vista Equity Partners, PwC, Slalom, multiple NASDAQ-listed orgs',
+              'Hands-on: Salesforce, Zuora, NetSuite, Snowflake, Tableau, HubSpot',
+            ],
+          }}
+        />
+      </OutputFrame>
+    );
+  }
 
   const about = page.sections.find((s) => s.type === 'about')?.fields || {};
   const timeline = page.sections.find((s) => s.type === 'timeline')?.fields || {};
