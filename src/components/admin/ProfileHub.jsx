@@ -181,7 +181,7 @@ function PersonalProfilePanel() {
         </div>
       </div>
 
-      <IntegrationHub scope="personal" profileId={profile.id} providerGroups={PERSONAL_PROVIDERS} />
+      <IntegrationsRoadmapNotice />
     </div>
   );
 }
@@ -331,7 +331,7 @@ function OrgDetailPanel({ org, onBack }) {
         </div>
 
         {tab === 'integrations' && (
-          <IntegrationHub scope="org" profileId={org.id} providerGroups={ORG_PROVIDERS} />
+          <IntegrationsRoadmapNotice />
         )}
 
         {tab === 'members' && detail && (
@@ -397,6 +397,26 @@ function OrgSettingsPanel({ org, onSaved }) {
       <input className="sb-input" style={inputStyle} placeholder="Website" value={draft.website} onChange={(e) => setDraft((d) => ({ ...d, website: e.target.value }))} />
       <textarea className="sb-input sb-textarea" placeholder="Description" value={draft.description} onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))} style={{ width: '100%', minHeight: 72, marginBottom: '0.5rem' }} />
       <button onClick={save} disabled={saving} style={btnPrimary}>{saving ? 'Saving…' : 'Save Changes'}</button>
+    </div>
+  );
+}
+
+// ── Integrations roadmap placeholder ─────────────────────────────────────────
+// Third-party connectors are not yet available. Shown wherever IntegrationHub
+// previously rendered until a Salt Basin-native connector is officially launched.
+function IntegrationsRoadmapNotice() {
+  return (
+    <div style={{ ...card, borderColor: 'rgba(201,168,76,0.18)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.6rem' }}>
+        <span style={{ fontSize: '1.1rem' }}>🔬</span>
+        <div style={cardTitle}>Integrations — Under Research</div>
+      </div>
+      <div style={{ fontSize: '0.75rem', color: 'var(--sb-cream)', lineHeight: 1.65, marginBottom: '0.6rem' }}>
+        Third-party app connections are not available to members at this time. Salt Basin Net Works does not currently hold official partnerships or registered app status with any external platform.
+      </div>
+      <div style={{ fontSize: '0.72rem', color: 'var(--sb-dusty)', lineHeight: 1.6 }}>
+        Integration possibilities are actively being researched as the platform evolves. Which connections get built — and when — will depend on where the platform goes. Nothing is committed.
+      </div>
     </div>
   );
 }

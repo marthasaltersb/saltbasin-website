@@ -1524,6 +1524,74 @@ async function bootstrap() {
   } catch (e) {
     console.warn('[db] admin_nav merge skipped:', e.message);
   }
+
+  // ── Contribution Intelligence — sessions + enhanced backlog (v0.17) ───────
+  // sessions: ingested from JSONL files; one row per Claude Code session.
+  // backlog_items: new columns for L2R stage tracing, contribution attribution,
+  // and estimate vs actual tracking.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS sessions (
+      id                  BIGSERIAL PRIMARY KEY,
+      jsonl_filename      TEXT NOT NULL,
+      project_directory   TEXT,
+      date_start          BIGINT,
+      date_end            BIGINT,
+      active_hours        NUMERIC,
+      total_turns         INT,
+      user_turns          INT,
+      turn_density        NUMERIC,
+      oversight_intensity TEXT,
+      versions_covered    TEXT,
+      burst_count         INT,
+      notes               TEXT,
+      created_at          BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_sessions_filename ON sessions (jsonl_filename);
+
+    CREATE TABLE IF NOT EXISTS rate_configs (
+      id              TEXT PRIMARY KEY,
+      rate_type       TEXT NOT NULL,
+      contributor     TEXT,
+      rate_per_hour   NUMERIC NOT NULL,
+      effective_year  INT NOT NULL DEFAULT 2026,
+      basis           TEXT,
+      applies_to      TEXT,
+      note            TEXT,
+      created_at      BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+
+    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS session_id BIGINT REFERENCES sessions(id) ON DELETE SET NULL;
+    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS l2r_stage TEXT;
+    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS contribution_type TEXT;
+    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS est_director_hours NUMERIC;
+    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS est_claude_hours NUMERIC;
+    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS actual_director_hours NUMERIC;
+    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS actual_claude_hours NUMERIC;
+    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS oversight_intensity TEXT;
+    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS automation_potential TEXT;
+    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS patch_note_version TEXT;
+    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS data_source TEXT DEFAULT 'estimated';
+
+    ALTER TABLE capability_groups ADD COLUMN IF NOT EXISTS l2r_stages TEXT;
+    ALTER TABLE capability_groups ADD COLUMN IF NOT EXISTS business_function TEXT;
+    ALTER TABLE capability_groups ADD COLUMN IF NOT EXISTS maturity_level TEXT DEFAULT 'building';
+  `).catch((e) => console.warn('[db] v0.17 migration warning:', e.message));
+
+  // Seed 2026 rate configs — idempotent
+  const rateSeeds = [
+    { id: 'betsy_director_2026',       rate_type: 'director',    contributor: 'Betsy Salter',       rate_per_hour: 225, effective_year: 2026, basis: 'Principal Consultant / Director of Engineering — US market, 2026', applies_to: 'strategic_direction,domain_authoring,active_supervision', note: 'Single rate for all Betsy contribution types. Activity type is more meaningful than in-session vs prep location.' },
+    { id: 'claude_senior_2026',        rate_type: 'ai_senior',   contributor: 'Claude (Anthropic)', rate_per_hour: 115, effective_year: 2026, basis: 'Offshore senior engineer equivalent, quality-adjusted — boutique firm, 2026', applies_to: 'code_generation', note: 'Above offshore entry floor ($65). Below onshore senior ($175). Confirmed by Betsy Salter, June 2026.' },
+    { id: 'benchmark_offshore_2026',   rate_type: 'benchmark',   contributor: null,                 rate_per_hour: 65,  effective_year: 2026, basis: 'Boutique offshore entry-level code generation — 2026 market rate', applies_to: null, note: 'Comparison benchmark only. Floor reference.' },
+    { id: 'benchmark_onshore_2026',    rate_type: 'benchmark',   contributor: null,                 rate_per_hour: 175, effective_year: 2026, basis: 'US senior engineer consulting rate — 2026 market rate', applies_to: null, note: 'Comparison benchmark only. Traditional team replacement cost.' },
+  ];
+  for (const r of rateSeeds) {
+    await sql.unsafe(
+      `INSERT INTO rate_configs (id, rate_type, contributor, rate_per_hour, effective_year, basis, applies_to, note)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       ON CONFLICT (id) DO NOTHING`,
+      [r.id, r.rate_type, r.contributor ?? null, r.rate_per_hour, r.effective_year, r.basis, r.applies_to ?? null, r.note]
+    );
+  }
 }
 
 // Awaited at module import time so routes can use db without worrying about

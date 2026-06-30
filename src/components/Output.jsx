@@ -2341,3 +2341,416 @@ function CapabilityRow({ cap, items }) {
     </div>
   );
 }
+
+// ── IP Artifact shared components ─────────────────────────────────────────
+
+const IP_STYLES = {
+  frame: {
+    background: '#0f1117',
+    color: '#e8e4d9',
+    minHeight: '100vh',
+    fontFamily: "'Inter', system-ui, sans-serif",
+  },
+  header: {
+    background: '#1B2A3B',
+    padding: '24px 32px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    borderBottom: '1px solid #2a2e3a',
+  },
+  eyebrow: {
+    fontSize: 10,
+    fontWeight: 700,
+    color: '#c9a84c',
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
+    marginBottom: 6,
+  },
+  title: { fontSize: 22, fontWeight: 700, color: '#e8e4d9', marginBottom: 4 },
+  sub: { fontSize: 12, color: '#8a9bb0', lineHeight: 1.5 },
+  ipBadge: {
+    textAlign: 'right',
+    fontSize: 10,
+    color: '#888',
+    lineHeight: 1.6,
+    background: '#c9a84c15',
+    border: '1px solid #c9a84c33',
+    padding: '6px 12px',
+    borderRadius: 4,
+  },
+  section: { padding: '24px 32px', borderBottom: '1px solid #1f2330' },
+  sectionLabel: {
+    fontSize: 10,
+    fontWeight: 700,
+    color: '#c9a84c',
+    textTransform: 'uppercase',
+    letterSpacing: '0.1em',
+    marginBottom: 12,
+  },
+  card: {
+    background: '#1a1e2a',
+    border: '1px solid #2a2e3a',
+    borderRadius: 4,
+    padding: '12px 16px',
+  },
+  footer: {
+    background: '#0a0d12',
+    padding: '12px 32px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTop: '1px solid #1f2330',
+    fontSize: 10,
+    color: '#555',
+  },
+};
+
+function IpTierBadge({ tier }) {
+  const map = {
+    public:  { label: 'PUBLIC OVERVIEW', color: '#4caf50', bg: '#4caf5015', border: '#4caf5030' },
+    member:  { label: 'MEMBER ACCESS', color: '#c9a84c', bg: '#c9a84c15', border: '#c9a84c30' },
+    client:  { label: 'CLIENT DELIVERABLE', color: '#6699ff', bg: '#6699ff15', border: '#6699ff30' },
+  };
+  const t = map[tier] || map.public;
+  return (
+    <span style={{
+      display: 'inline-block',
+      fontSize: 10,
+      fontWeight: 700,
+      padding: '3px 10px',
+      borderRadius: 10,
+      background: t.bg,
+      border: `1px solid ${t.border}`,
+      color: t.color,
+      letterSpacing: '0.08em',
+      marginBottom: 16,
+    }}>
+      {t.label}
+    </span>
+  );
+}
+
+function IpProposalCta({ title = 'Request a Proposal' }) {
+  return (
+    <div style={{
+      background: '#1a1e2a',
+      border: '1px solid #c9a84c33',
+      borderRadius: 4,
+      padding: '16px 20px',
+      marginTop: 20,
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: 16,
+    }}>
+      <div>
+        <div style={{ fontSize: 12, color: '#e8e4d9', fontWeight: 600, marginBottom: 4 }}>
+          Ready to apply this to your revenue architecture?
+        </div>
+        <div style={{ fontSize: 11, color: '#888' }}>
+          Engagements available as Diagnostic Sprint · Embedded Operator · Advisory Retainer
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+        <a
+          href="/#contact"
+          style={{
+            background: '#c9a84c',
+            color: '#0f1117',
+            fontSize: 12,
+            fontWeight: 700,
+            padding: '9px 18px',
+            borderRadius: 4,
+            textDecoration: 'none',
+            letterSpacing: '0.04em',
+          }}
+        >
+          {title}
+        </a>
+        <a
+          href="/consulting/services"
+          style={{
+            background: 'transparent',
+            color: '#c9a84c',
+            fontSize: 12,
+            fontWeight: 600,
+            padding: '9px 18px',
+            borderRadius: 4,
+            textDecoration: 'none',
+            border: '1px solid #c9a84c44',
+          }}
+        >
+          View Services →
+        </a>
+      </div>
+    </div>
+  );
+}
+
+// ── MethodologyOutput ──────────────────────────────────────────────────────
+// /output/methodology — three tiers: public teaser, member overview, client full
+
+export function MethodologyOutput() {
+  const { loading, user } = useAuthState();
+
+  const tier = !user ? 'public' : user.role === 'admin' ? 'client' : 'member';
+
+  const PUBLIC_TEASER = (
+    <div>
+      <IpTierBadge tier="public" />
+      <p style={{ fontSize: 14, color: '#e8e4d9', lineHeight: 1.8, fontStyle: 'italic', marginBottom: 20 }}>
+        "Where the practitioner meets AI augmentation — to go from practitioner-derived, AI-augmented, to AI-derived, practitioner-signed."
+      </p>
+      <p style={{ fontSize: 12, color: '#aaa', lineHeight: 1.8, marginBottom: 20 }}>
+        A transparent methodology for measuring, attributing, and valuing human + AI contributions in enterprise software delivery.
+        Built from the ground up during the Salt Basin Net Works platform build — the platform itself is the proof of concept.
+      </p>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 20 }}>
+        {[
+          ['Four Contribution Types', 'Strategic Direction · Domain Authoring · Active Supervision · Code Generation'],
+          ['2026 Rate Benchmarks', 'Activity-based rates locked to market equivalents at build date'],
+          ['Session Measurement', 'JSONL burst analysis → active hours → turn density → oversight intensity'],
+          ['Three-Loop ROI', 'Estimation → Actuals → Variance · Cost Ledger · Business Value'],
+        ].map(([h, b]) => (
+          <div key={h} style={IP_STYLES.card}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', marginBottom: 4 }}>{h}</div>
+            <div style={{ fontSize: 11, color: '#aaa', lineHeight: 1.6 }}>{b}</div>
+          </div>
+        ))}
+      </div>
+      <IpProposalCta title="Inquire About This Methodology" />
+    </div>
+  );
+
+  const MEMBER_OVERVIEW = (
+    <div>
+      <IpTierBadge tier="member" />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
+        {[
+          { label: 'The Core Thesis', body: 'Human expertise is the irreducible input. AI is the execution multiplier. The practitioner\'s authority and accountability — not sole authorship — is what makes the output defensible.' },
+          { label: 'What Gets Measured', body: 'Session active hours (JSONL burst analysis), turn density (user_turns / active_hours), contribution type per requirement, estimate vs actual variance per release.' },
+          { label: 'Contribution Types', body: 'Strategic Direction · Domain Authoring · Active Supervision · Code Generation. All Betsy contributions at $225/hr (2026). Claude at $115/hr quality-adjusted.' },
+          { label: 'Oversight Reduction Path', body: 'Turn density classifies oversight intensity: Critical >120/hr · High 80–120 · Moderate 40–80 · Low <40. Irreducible IP turns vs reducible execution turns are tracked separately.' },
+          { label: 'The Leverage Multiple', body: 'engineer_equiv_hours / session_active_hours. Rate-independent. Salt Basin platform: 28× leverage across 35.4 active hours.' },
+          { label: 'IP Provenance', body: 'Practitioner-derived from 12+ years of enterprise delivery. AI-assisted structuring. Practitioner-signed. Session JSONL files are the creation record.' },
+        ].map(({ label, body }) => (
+          <div key={label} style={IP_STYLES.card}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', marginBottom: 5 }}>{label}</div>
+            <div style={{ fontSize: 11, color: '#aaa', lineHeight: 1.7 }}>{body}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ ...IP_STYLES.card, borderColor: '#c9a84c33', marginBottom: 20 }}>
+        <div style={IP_STYLES.sectionLabel}>The Derivation Record — How We Got Here</div>
+        <p style={{ fontSize: 11, color: '#aaa', lineHeight: 1.8 }}>
+          This methodology was co-derived by Betsy Salter and Claude (Anthropic) across 35.4 active build hours and 3,880 session turns building the Salt Basin Net Works platform.
+          Every rate benchmark, activity classification, and measurement method was proposed, challenged, and confirmed by Betsy before being written into this artifact.
+          The session JSONL files are the timestamped creation record. The platform build is the proof of concept.
+        </p>
+      </div>
+      <IpProposalCta title="Request a Proposal" />
+    </div>
+  );
+
+  const CLIENT_FULL = (
+    <div>
+      <IpTierBadge tier="client" />
+      {MEMBER_OVERVIEW}
+      <div style={{ marginTop: 20 }}>
+        <div style={IP_STYLES.sectionLabel}>Contribution Type Definitions</div>
+        {[
+          { type: 'Strategic Direction', who: 'Betsy Salter', rate: '$225/hr', reducible: false, desc: 'Platform vision, architecture decisions, product design, external artifacts. These turns ARE the work — not inefficiency. Irreducible.' },
+          { type: 'Domain Authoring', who: 'Betsy Salter', rate: '$225/hr', reducible: false, desc: 'Requirements, business rules, industry content, methodology frameworks. The domain knowledge is irreducible; authoring efficiency improves with better templates.' },
+          { type: 'Active Supervision', who: 'Betsy Salter', rate: '$225/hr', reducible: true, desc: 'Real-time course correction, UX decisions, triage during sessions. Reducible through better upfront specs and pre-approved patterns.' },
+          { type: 'Code Generation', who: 'Claude (Anthropic)', rate: '$115/hr', reducible: true, desc: 'Wall-clock active coding time from session timestamps. Reducible through automated testing, runbooks, and code templates.' },
+        ].map(({ type, who, rate, reducible, desc }) => (
+          <div key={type} style={{ ...IP_STYLES.card, marginBottom: 8, display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#e8e4d9' }}>{type}</span>
+                <span style={{ fontSize: 10, color: '#888' }}>{who}</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#c9a84c', fontFamily: 'monospace' }}>{rate}</span>
+              </div>
+              <div style={{ fontSize: 11, color: '#aaa', lineHeight: 1.6 }}>{desc}</div>
+            </div>
+            <span style={{
+              fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 10, flexShrink: 0,
+              background: reducible ? '#4caf5015' : '#ff444415',
+              color: reducible ? '#4caf50' : '#ff8888',
+              border: `1px solid ${reducible ? '#4caf5030' : '#ff444430'}`,
+            }}>
+              {reducible ? 'REDUCIBLE' : 'IRREDUCIBLE'}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const content = tier === 'public' ? PUBLIC_TEASER : tier === 'member' ? MEMBER_OVERVIEW : CLIENT_FULL;
+
+  return (
+    <div id="sb-resume-print-root" style={IP_STYLES.frame}>
+      <div style={IP_STYLES.header}>
+        <div>
+          <div style={IP_STYLES.eyebrow}>MES Best Bets™ · Methodology · Martha Elizabeth Salter aka Betsy Salter · Salt Basin Net Works</div>
+          <div style={IP_STYLES.title}>Contribution Intelligence Methodology™</div>
+          <div style={IP_STYLES.sub}>
+            Practitioner-derived · AI-augmented · Practitioner-signed · v1.0 · 2026
+          </div>
+        </div>
+        <div style={IP_STYLES.ipBadge}>
+          <div style={{ fontWeight: 700, color: '#c9a84c', marginBottom: 2 }}>INTELLECTUAL PROPERTY</div>
+          © 2026 Martha Elizabeth Salter<br />aka Betsy Salter<br />Salt Basin Net Works<br />All rights reserved
+        </div>
+      </div>
+
+      <div style={IP_STYLES.section}>
+        {content}
+      </div>
+
+      <div style={IP_STYLES.footer}>
+        <span>© 2026 <strong style={{ color: '#888' }}>Martha Elizabeth Salter aka Betsy Salter</strong> · Salt Basin Net Works · Contribution Intelligence Methodology™ · MES Best Bets™ · All rights reserved</span>
+        <span>saltbasin.net · {tier !== 'public' && user ? `Viewed by: ${user.email}` : 'Public overview'}</span>
+      </div>
+    </div>
+  );
+}
+
+// ── L2RModelOutput ─────────────────────────────────────────────────────────
+// /output/l2r-model — Lead to Revenue Capability Model, three tiers
+
+export function L2RModelOutput() {
+  const { loading, user } = useAuthState();
+  const [activeStage, setActiveStage] = useState(0);
+
+  const tier = !user ? 'public' : user.role === 'admin' ? 'client' : 'member';
+
+  const STAGES = [
+    { num: '01', name: 'Demand Gen', color: '#1B2A3B', cp: ['Campaign attribution accuracy','Lead source completeness','MQL definition alignment','Lead routing logic'], risk: ['Attribution leakage','MQL/SQL misalignment','Duplicate creation','Dark funnel'] },
+    { num: '02', name: 'Lead Qual', color: '#2A3B2A', cp: ['Dedup & identity resolution','Scoring threshold enforcement','MQL→SQL SLA','Routing to segment'], risk: ['Duplicate pipeline','Leads never touched','Score drift','MQL manipulation'] },
+    { num: '03', name: 'Pipeline', color: '#3B2A1B', cp: ['Stage definition enforcement','Forecast category discipline','Coverage ratio','Deal velocity'], risk: ['Stage skipping','Forecast manipulation','Stale opportunities','Concentration risk'] },
+    { num: '04', name: 'CPQ', color: '#2A1B3B', cp: ['Config accuracy','Discount governance','Quote turnaround SLA','Version control'], risk: ['Ad hoc discounting','Approval bypass','Quote proliferation','Config errors in contract'] },
+    { num: '05', name: 'CLM', color: '#3B2A2A', cp: ['Quote→contract consistency','Redline governance','Executed contract storage','RevRec clause tracking'], risk: ['Terms diverge from quote','Non-standard RevRec clause','Missing contracts','Unauthorized signer'] },
+    { num: '06', name: 'Order→Book', color: '#1B3B2A', cp: ['Contract→order accuracy','Booking trigger definition','Handoff completeness','Finance notification'], risk: ['Manual re-entry errors','Early booking recognition','Finance not notified','Missing term'] },
+    { num: '07', name: 'Deliver', color: '#2A2A3B', cp: ['Milestone tracking','Usage metering accuracy','Customer acceptance','Billing trigger data'], risk: ['Milestone not triggering billing','Silent rejection','Usage not reconciled','Scope creep'] },
+    { num: '08', name: 'RevRec·Bill', color: '#3B1B1B', cp: ['ASC 606 compliance','Invoice accuracy & timing','AR aging discipline','Cash application accuracy'], risk: ['RevRec before obligation met','Wrong invoice entity','Deferred rev errors','Unapplied cash'] },
+    { num: '09', name: 'Renew·Expand', color: '#1B2A3B', cp: ['Renewal pipeline 90/60/30','Health score accuracy','Expansion identification','Churn signal detection'], risk: ['Late renewal catch','Activity-based health score','Expansion mis-attributed','Churn not root-caused'] },
+  ];
+
+  const s = STAGES[activeStage];
+
+  const PUBLIC_TEASER = (
+    <div>
+      <IpTierBadge tier="public" />
+      <p style={{ fontSize: 14, color: '#e8e4d9', lineHeight: 1.8, fontStyle: 'italic', marginBottom: 16 }}>
+        "Most revenue problems aren't sales problems. They're architecture problems — gaps between the people, processes, and systems that are supposed to hand work to each other seamlessly."
+      </p>
+      <p style={{ fontSize: 12, color: '#aaa', lineHeight: 1.8, marginBottom: 20 }}>
+        The Lead to Revenue Capability Model™ is a practitioner-derived enterprise architecture that spans the full revenue lifecycle — from GTM strategy through product definition, pipeline, CPQ, contract, delivery, billing, and expansion.
+        Nine operational stages. Five GTM nodes. Six cross-cutting dimensions. Four player types at every stage.
+      </p>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 20 }}>
+        {[
+          ['GTM Architecture', '5 nodes including Product Definition → performance obligations'],
+          ['9 Revenue Stages', 'Lead Capture through Renew & Expand, delineated by handoff risk'],
+          ['System-Agnostic', 'Maps any stack — Salesforce, SAP, Oracle, NetSuite, Zuora'],
+          ['4 Dimensions', 'Players · Processes · Systems · Contributions at every stage'],
+          ['2 Paths', 'Market-first (startup) and product-first (mature org)'],
+          ['Cross-Cutting', 'Analytics · Governance · Integration · Risk · AI · Change'],
+        ].map(([h, b]) => (
+          <div key={h} style={IP_STYLES.card}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', marginBottom: 3 }}>{h}</div>
+            <div style={{ fontSize: 10, color: '#aaa', lineHeight: 1.6 }}>{b}</div>
+          </div>
+        ))}
+      </div>
+      <IpProposalCta title="Request a Proposal" />
+    </div>
+  );
+
+  const INTERACTIVE_MODEL = (
+    <div>
+      <IpTierBadge tier={tier} />
+      <div style={{ marginBottom: 8, fontSize: 11, color: '#888' }}>Click any stage to see control points and risk areas.</div>
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 12 }}>
+        {STAGES.map((st, i) => (
+          <div
+            key={st.num}
+            onClick={() => setActiveStage(i)}
+            style={{
+              background: st.color,
+              padding: '8px 10px',
+              borderRadius: 4,
+              cursor: 'pointer',
+              border: i === activeStage ? '2px solid #c9a84c' : '2px solid transparent',
+              minWidth: 72,
+              flex: '1 1 auto',
+            }}
+          >
+            <div style={{ fontSize: 8, color: '#c9a84c', fontWeight: 700, marginBottom: 2 }}>{st.num}</div>
+            <div style={{ fontSize: 10, color: '#e8e4d9', fontWeight: 600, lineHeight: 1.3 }}>{st.name}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ ...IP_STYLES.card, marginBottom: 16 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#e8e4d9', marginBottom: 10 }}>
+          {s.num} · {s.name}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Control Points</div>
+            <ul style={{ listStyle: 'none', padding: 0 }}>
+              {s.cp.map((c) => (
+                <li key={c} style={{ fontSize: 11, color: '#aaa', padding: '2px 0 2px 12px', position: 'relative' }}>
+                  <span style={{ position: 'absolute', left: 0, color: '#c9a84c' }}>–</span>{c}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#ff8888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Risk Areas</div>
+            <ul style={{ listStyle: 'none', padding: 0 }}>
+              {s.risk.map((r) => (
+                <li key={r} style={{ fontSize: 11, color: '#aaa', padding: '2px 0 2px 12px', position: 'relative' }}>
+                  <span style={{ position: 'absolute', left: 0, color: '#ff8888' }}>–</span>{r}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+      <IpProposalCta title="Apply This Model to Your Architecture" />
+    </div>
+  );
+
+  const content = tier === 'public' ? PUBLIC_TEASER : INTERACTIVE_MODEL;
+
+  return (
+    <div id="sb-resume-print-root" style={IP_STYLES.frame}>
+      <div style={IP_STYLES.header}>
+        <div>
+          <div style={IP_STYLES.eyebrow}>MES Best Bets™ · IP Artifact · Martha Elizabeth Salter aka Betsy Salter · Salt Basin Net Works</div>
+          <div style={IP_STYLES.title}>Lead to Revenue Capability Model™</div>
+          <div style={IP_STYLES.sub}>
+            GTM + Q2R · Full revenue lifecycle · Practitioner-derived · AI-assisted organization · v1.0 · 2026
+          </div>
+        </div>
+        <div style={IP_STYLES.ipBadge}>
+          <div style={{ fontWeight: 700, color: '#c9a84c', marginBottom: 2 }}>INTELLECTUAL PROPERTY</div>
+          © 2026 Martha Elizabeth Salter<br />aka Betsy Salter<br />Salt Basin Net Works<br />All rights reserved
+        </div>
+      </div>
+
+      <div style={IP_STYLES.section}>
+        {content}
+      </div>
+
+      <div style={IP_STYLES.footer}>
+        <span>© 2026 <strong style={{ color: '#888' }}>Martha Elizabeth Salter aka Betsy Salter</strong> · Salt Basin Net Works · Lead to Revenue Capability Model™ · MES Best Bets™ · All rights reserved · Not for redistribution</span>
+        <span>saltbasin.net · {tier !== 'public' && user ? `Viewed by: ${user.email}` : 'Public overview'}</span>
+      </div>
+    </div>
+  );
+}

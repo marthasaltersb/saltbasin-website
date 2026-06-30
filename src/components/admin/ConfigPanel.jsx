@@ -396,12 +396,9 @@ export default function ConfigPanel({ config, onChange, scope = 'admin', site = 
         </div>
         )}
 
-        {/* Multi-source database connector — member only. Each connection is
-            named and independently access-controlled. The profile agent gets a
-            query_member_db tool scoped to whichever sources are configured.
-            Salt Basin's DB is never exposed or modified. */}
-        {isMember && <MemberDbsCard config={config} patch={patch} />}
-        {isMember && <ConnectedAppsCard />}
+        {/* Third-party integrations are not yet available to members.
+            Shown as roadmap R&D until the Salt Basin Connector launches. */}
+        {isMember && <IntegrationsRoadmapNotice />}
       </div>
     </div>
   );
@@ -709,6 +706,23 @@ function ResumeGenerateOverlay({ sections, config, title, onClose }) {
 }
 
 // ── Multi-source Database Connector (member-only) ──
+function IntegrationsRoadmapNotice() {
+  return (
+    <div style={{ background: 'rgba(201,168,76,0.04)', border: '0.5px solid rgba(201,168,76,0.18)', borderRadius: 6, padding: '1rem 1.1rem', marginBottom: '1rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+        <span style={{ fontSize: '1rem' }}>🔬</span>
+        <span style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--sb-gold)' }}>Integrations — Under Research</span>
+      </div>
+      <div style={{ fontSize: '0.75rem', color: 'var(--sb-cream)', lineHeight: 1.65, marginBottom: '0.4rem' }}>
+        Third-party app connections are not available to members at this time. Salt Basin Net Works does not currently hold official partnerships or registered app status with any external platform.
+      </div>
+      <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', lineHeight: 1.55 }}>
+        Integration possibilities are actively being researched as the platform evolves. Which connections get built — and when — will depend on where the platform goes. Nothing is committed.
+      </div>
+    </div>
+  );
+}
+
 // Members can add multiple named Postgres/Supabase connections. Each is
 // independently named, described, and access-controlled. The profile agent
 // gains query tools scoped to each connected source.
