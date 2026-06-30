@@ -4,6 +4,23 @@
 import React from 'react';
 import { InlineDataNotice } from '../DataNotice.jsx';
 
+// Non-CMS paths that are always navigable regardless of page live-status.
+const NON_PAGE_PREFIXES = ['/output/', '/lead/', '/u/', '/member', '/admin', '/login', '/signup', '/reset/', '/data-notice'];
+
+// Returns false when href is an internal path pointing to a page that isn't
+// in liveSlugs. Always returns true for anchors, external URLs, and any
+// non-CMS route prefix above. In preview mode (liveSlugs = null) always true.
+function isLiveHref(href, liveSlugs) {
+  if (!href) return false;
+  if (!liveSlugs) return true; // preview / admin — show everything
+  if (href.startsWith('#')) return true;
+  if (href.startsWith('http://') || href.startsWith('https://')) return true;
+  if (NON_PAGE_PREFIXES.some((p) => href.startsWith(p))) return true;
+  // Internal page path — strip leading slash and check against live page slugs.
+  const slug = href.replace(/^\//, '').replace(/\/$/, '');
+  return liveSlugs.has(slug);
+}
+
 const BG_VAR = {
   ivory: 'var(--sb-ivory)',
   navy: 'var(--sb-navy)',
@@ -69,7 +86,7 @@ function SoonScreen({ msg }) {
 
 // ── Block implementations ──
 
-function HeroBlock({ section, config }) {
+function HeroBlock({ section, config, liveSlugs }) {
   const f = section.fields || {};
   const tagline = f.subtitle || f.tagline || config?.site?.tagline;
   const rings = [300, 500, 700, 900].map((s) => (
@@ -177,12 +194,12 @@ function HeroBlock({ section, config }) {
           </p>
         )}
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: f.platformLine ? '3rem' : 0 }}>
-          {f.cta1 && (
+          {f.cta1 && isLiveHref(f.cta1Link, liveSlugs) && (
             <a href={f.cta1Link || '#'} className="sb-btn sb-btn-gold">
               {f.cta1}
             </a>
           )}
-          {f.cta2 && (
+          {f.cta2 && isLiveHref(f.cta2Link, liveSlugs) && (
             <a href={f.cta2Link || '#'} className="sb-btn sb-btn-outline">
               {f.cta2}
             </a>
@@ -455,7 +472,7 @@ function CardsBlock({ section }) {
   );
 }
 
-function TwoColBlock({ section }) {
+function TwoColBlock({ section, liveSlugs }) {
   const f = section.fields || {};
   return (
     <section
@@ -502,12 +519,12 @@ function TwoColBlock({ section }) {
             </p>
           ))}
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
-            {f.cta1 && (
+            {f.cta1 && isLiveHref(f.cta1Link, liveSlugs) && (
               <a href={f.cta1Link || '#'} className="sb-btn sb-btn-gold">
                 {f.cta1}
               </a>
             )}
-            {f.cta2 && (
+            {f.cta2 && isLiveHref(f.cta2Link, liveSlugs) && (
               <a href={f.cta2Link || '#'} className="sb-btn sb-btn-outline-dark">
                 {f.cta2}
               </a>
@@ -821,7 +838,7 @@ function TextBlock({ section }) {
   );
 }
 
-function CtaBlock({ section }) {
+function CtaBlock({ section, liveSlugs }) {
   const f = section.fields || {};
   const onDark = section.bg === 'navy' || section.bg === 'teal';
   return (
@@ -855,7 +872,7 @@ function CtaBlock({ section }) {
             {f.intro}
           </p>
         )}
-        {f.cta1 && (
+        {f.cta1 && isLiveHref(f.cta1Link, liveSlugs) && (
           <a href={f.cta1Link || '#contact'} className="sb-btn sb-btn-gold">
             {f.cta1}
           </a>
@@ -3019,7 +3036,7 @@ function AboutIntroBlock({ section, config }) {
 
 // Timeline data — each job is a card pulled from her resume. Click a dot to
 // expand and show the verbatim bullets.
-function TimelineBlock({ section }) {
+function TimelineBlock({ section, liveSlugs }) {
   const f = section.fields || {};
   // The seed packs job data into structured fields: job1Company, job1Title,
   // job1Dates, job1Bullets (newline-separated). Up to 8 jobs.
@@ -3234,12 +3251,13 @@ function TimelineBlock({ section }) {
         {/* Configurable action buttons — defined via section.fields.actions array
             [{label, href, style:'gold'|'outline'|'outline-dark'}] or legacy cta1/cta2 fields */}
         {(() => {
-          const btns = Array.isArray(f.actions) && f.actions.length
+          const btns = (Array.isArray(f.actions) && f.actions.length
             ? f.actions
             : [
                 f.cta1 ? { label: f.cta1, href: f.cta1Link || '#', style: f.cta1Style || 'gold' } : null,
                 f.cta2 ? { label: f.cta2, href: f.cta2Link || '#', style: f.cta2Style || 'outline-dark' } : null,
-              ].filter(Boolean);
+              ].filter(Boolean)
+          ).filter((b) => isLiveHref(b.href, liveSlugs));
           if (!btns.length) return null;
           return (
             <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
@@ -4330,7 +4348,7 @@ function ExecutiveSummaryBlock({ section }) {
 // ── App Mockup Block ──────────────────────────────────────────────────────────
 // Phone/tablet frame with content overlay. Useful for showcasing apps/products.
 // screens: [{title, description, image, tag}]; layout: 'phone'|'tablet'|'browser'
-function AppMockupBlock({ section }) {
+function AppMockupBlock({ section, liveSlugs }) {
   const f = section.fields || {};
   const screens = Array.isArray(f.screens) ? f.screens : [];
   const layout = f.layout || 'phone';
@@ -4349,8 +4367,8 @@ function AppMockupBlock({ section }) {
           {f.eyebrow && <p style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--sb-gold)', marginBottom: '1rem' }}>{f.eyebrow}</p>}
           {f.heading && <h2 className="sb-display" style={{ fontSize: '2.5rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', lineHeight: 1.2, marginBottom: '1.25rem' }}>{f.heading}</h2>}
           {f.intro && <p style={{ fontSize: '0.96rem', lineHeight: 1.85, color: dark ? 'var(--sb-sage)' : '#555', marginBottom: '2rem' }}>{f.intro}</p>}
-          {f.cta1 && <a href={f.cta1Link || '#'} className="sb-btn sb-btn-gold">{f.cta1}</a>}
-          {f.cta2 && <a href={f.cta2Link || '#'} className="sb-btn sb-btn-outline" style={{ marginLeft: '1rem' }}>{f.cta2}</a>}
+          {f.cta1 && isLiveHref(f.cta1Link, liveSlugs) && <a href={f.cta1Link || '#'} className="sb-btn sb-btn-gold">{f.cta1}</a>}
+          {f.cta2 && isLiveHref(f.cta2Link, liveSlugs) && <a href={f.cta2Link || '#'} className="sb-btn sb-btn-outline" style={{ marginLeft: '1rem' }}>{f.cta2}</a>}
         </div>
         {/* Phone frames */}
         <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -4399,7 +4417,7 @@ function AppMockupBlock({ section }) {
 // ── Choice Grid Block ─────────────────────────────────────────────────────────
 // Interactive grid of colored option tiles with hover/select state.
 // choices: [{icon, title, description, color, cta, ctaLink}]
-function ChoiceGridBlock({ section }) {
+function ChoiceGridBlock({ section, liveSlugs }) {
   const f = section.fields || {};
   const choices = Array.isArray(f.choices) ? f.choices : [];
   const [selected, setSelected] = React.useState(null);
@@ -4434,7 +4452,7 @@ function ChoiceGridBlock({ section }) {
                 {c.icon && <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>{c.icon}</div>}
                 <div style={{ fontWeight: 700, fontSize: '0.95rem', color: isSelected ? 'white' : (dark ? 'var(--sb-cream)' : 'var(--sb-navy)'), marginBottom: '0.4rem' }}>{c.title}</div>
                 {c.description && <div style={{ fontSize: '0.82rem', lineHeight: 1.6, color: isSelected ? 'rgba(255,255,255,0.85)' : (dark ? 'var(--sb-sage)' : '#555') }}>{c.description}</div>}
-                {isSelected && c.cta && (
+                {isSelected && c.cta && isLiveHref(c.ctaLink, liveSlugs) && (
                   <a
                     href={c.ctaLink || '#'}
                     onClick={(e) => e.stopPropagation()}
@@ -4919,7 +4937,7 @@ const REGISTRY = {
   clientSnapshot: ClientSnapshotBlock,
 };
 
-export function RenderSection({ section, config, mode = 'public', memberSlug = '' }) {
+export function RenderSection({ section, config, mode = 'public', memberSlug = '', liveSlugs = null }) {
   // Public never shows draft; preview shows everything with a banner.
   if (mode === 'public' && section.status === 'draft') return null;
 
@@ -4933,7 +4951,7 @@ export function RenderSection({ section, config, mode = 'public', memberSlug = '
   return (
     <>
       {banner}
-      <Block section={section} config={config} memberSlug={memberSlug} />
+      <Block section={section} config={config} memberSlug={memberSlug} liveSlugs={liveSlugs} />
     </>
   );
 }

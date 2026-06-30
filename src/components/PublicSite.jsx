@@ -55,6 +55,12 @@ export default function PublicSite() {
   if (!currentEntry) return <NotFound />;
   const [, currentPage] = currentEntry;
 
+  const liveSlugs = new Set(
+    Object.values(pages)
+      .filter((p) => p.status === 'live')
+      .map((p) => (p.slug || '').replace(/^\//, '').replace(/\/$/, ''))
+  );
+
   // Apply admin-configured brand color overrides on saltbasin.net. Scoped to
   // .sb-public-site-root so admin chrome (/admin/*) keeps the canonical
   // Salt Basin tokens.
@@ -75,7 +81,7 @@ export default function PublicSite() {
       <PublicNav site={config.site} />
       <Breadcrumbs />
       {(currentPage.sections || []).map((sec) => (
-        <RenderSection key={sec.id} section={sec} config={config} mode="public" />
+        <RenderSection key={sec.id} section={sec} config={config} mode="public" liveSlugs={liveSlugs} />
       ))}
       <PublicFooter config={config} />
     </div>

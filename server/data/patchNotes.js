@@ -6,6 +6,38 @@
 //
 // Newest releases LAST in the array (the API returns reversed so consumers
 // see newest first). Keeps the diff small when appending.
+//
+// ── Metrics block (added retroactively in v0.16.1) ──────────────────────────
+// Every release now carries a `metrics` object:
+//
+//   directorHours      — Hours Betsy spent on architecture decisions, UX
+//                        direction, requirements definition, and build
+//                        supervision. Billed as a principal architect/director.
+//   claudeBuildMins    — Approximate wall-clock minutes Claude spent in active
+//                        coding for this release. Does NOT include idle time or
+//                        human review pauses.
+//   engineerEquivHours — Senior engineer hours required to produce the same
+//                        output independently (includes their own spec/arch
+//                        time, since Claude works from Betsy's direction).
+//
+// Computed at render time (not stored here to keep rate assumptions editable):
+//   directorCostUsd    = directorHours × DIRECTOR_RATE
+//   claudeEquivCostUsd = engineerEquivHours × ENGINEER_RATE   (what it would
+//                        cost if a human did what Claude did, at engineer rate)
+//   leverageMultiple   = engineerEquivHours / (directorHours + claudeBuildMins/60)
+//
+// ── Post-deploy steps ────────────────────────────────────────────────────────
+// After every `git push origin main` (Render auto-deploys on push):
+//   1. Verify Render deploy completes at https://dashboard.render.com
+//   2. node scripts/add-vXXX-backlog-items.mjs    ← update platform backlog
+//   3. node scripts/add-vXXX-test-scenarios.mjs   ← add test scenarios (if any)
+//   4. Confirm /output/patch-notes renders the new release
+//
+// These steps are intentionally manual (they hit the live production API).
+// They are NOT part of the Render build command because:
+//   a) They require ADMIN_EMAIL + ADMIN_INITIAL_PASSWORD in .env (not in CI)
+//   b) They are idempotent but should only run after a confirmed deploy
+//   c) A failed deploy should not create partial backlog records
 
 export function patchNotes() {
   return RELEASES;
@@ -31,6 +63,12 @@ const RELEASES = [
         ],
       },
     ],
+    metrics: {
+      directorHours: 4,
+      claudeBuildMins: 180,
+      engineerEquivHours: 80,
+      notes: 'Full-stack CMS from zero: auth, DB schema, 7 block types, brand system, split-view editor, Render + Netlify deploy pipeline.',
+    },
   },
 
   // ─────────────────────── v0.2 — Public site ──────────────────────
@@ -56,6 +94,12 @@ const RELEASES = [
         ],
       },
     ],
+    metrics: {
+      directorHours: 3,
+      claudeBuildMins: 150,
+      engineerEquivHours: 60,
+      notes: 'Content strategy, founder narrative, SVG wheel concept, case study structure, and mobile-first layout all driven by director; Claude executed the implementation.',
+    },
   },
 
   // ─────────────────── v0.3 — Lead capture + outputs ───────────────
@@ -86,6 +130,12 @@ const RELEASES = [
         ],
       },
     ],
+    metrics: {
+      directorHours: 2,
+      claudeBuildMins: 180,
+      engineerEquivHours: 50,
+      notes: 'Lead dedup model, output page design, auth gate UX, and data notice copy are all director decisions. Four distinct output document types plus the entire lead pipeline.',
+    },
   },
 
   // ─────────────────── v0.4 — Multi-tenant CMS ─────────────────────
@@ -108,6 +158,12 @@ const RELEASES = [
         ],
       },
     ],
+    metrics: {
+      directorHours: 2,
+      claudeBuildMins: 150,
+      engineerEquivHours: 40,
+      notes: 'Multi-tenancy architecture (shared shell, separate data scopes) is a director architectural decision that defines the entire platform model.',
+    },
   },
 
   // ────────── v0.5 — Email infrastructure (Zoho + Brevo) ───────────
@@ -136,6 +192,12 @@ const RELEASES = [
         ],
       },
     ],
+    metrics: {
+      directorHours: 1.5,
+      claudeBuildMins: 90,
+      engineerEquivHours: 12,
+      notes: 'Provider pivot (Resend → Brevo) was a real-time DNS constraint discovery — the director identified the issue, evaluated alternatives, and made the call. Claude executed the swap.',
+    },
   },
 
   // ─────────────── v0.6 — Backlog dashboard ────────────────────────
@@ -157,6 +219,12 @@ const RELEASES = [
         ],
       },
     ],
+    metrics: {
+      directorHours: 5,
+      claudeBuildMins: 120,
+      engineerEquivHours: 30,
+      notes: 'Director wrote or dictated the content for all 35 requirements and 6 tier workarounds — the intellectual work of translating a build into a product management system. Claude built the UI shell.',
+    },
   },
 
   // ─── v0.7 — Backlog enhancements + 3 outputs ─────────────────────
@@ -185,6 +253,12 @@ const RELEASES = [
         ],
       },
     ],
+    metrics: {
+      directorHours: 2,
+      claudeBuildMins: 120,
+      engineerEquivHours: 20,
+      notes: 'The per-person metrics model and cost comparison methodology are director-defined intellectual contributions. This release is the first time the build\'s value was formally quantified.',
+    },
   },
 
   // ─── v0.8 — JIRA + Templates + Scrum Agent + admin polish ────────
@@ -227,6 +301,12 @@ const RELEASES = [
         ],
       },
     ],
+    metrics: {
+      directorHours: 3,
+      claudeBuildMins: 240,
+      engineerEquivHours: 80,
+      notes: 'JIRA OAuth integration, AI agent scaffold, and three template definitions running in parallel tracks. High leverage ratio due to breadth — three separate system integrations in one session.',
+    },
   },
 
   // ─── v0.9 — QA system + data-driven admin nav + audit log ─────────
@@ -265,6 +345,12 @@ const RELEASES = [
         ],
       },
     ],
+    metrics: {
+      directorHours: 4,
+      claudeBuildMins: 240,
+      engineerEquivHours: 60,
+      notes: 'QA system architecture (test scenarios, step verdicts, auto-defect model), audit log design, and nav restructure are all director-level design decisions. Six new tables and the defect traceability model.',
+    },
   },
 
   // ─── v0.10 — Pre-onboarding fixes: My Profile + dynamic resume ────
@@ -297,6 +383,12 @@ const RELEASES = [
         ],
       },
     ],
+    metrics: {
+      directorHours: 1,
+      claudeBuildMins: 60,
+      engineerEquivHours: 8,
+      notes: 'Targeted UX fixes identified through Betsy\'s own use of the platform before member onboarding. Director testing is what surfaced these issues.',
+    },
   },
 
   // ─── v0.11 — Real member sign-up: convert, reset, recover, captcha ──
@@ -337,6 +429,12 @@ const RELEASES = [
         ],
       },
     ],
+    metrics: {
+      directorHours: 2,
+      claudeBuildMins: 150,
+      engineerEquivHours: 35,
+      notes: 'Complete auth UX: conversion flow, password reset, email recovery, reCAPTCHA scaffold — all with proper security defaults (enumeration prevention, session invalidation on reset).',
+    },
   },
 
   // ─── v0.12 — Field settings, 9 new blocks, section templates ─────
@@ -399,6 +497,12 @@ const RELEASES = [
         ],
       },
     ],
+    metrics: {
+      directorHours: 5,
+      claudeBuildMins: 360,
+      engineerEquivHours: 120,
+      notes: 'Nine block visual designs referenced from PPTX provided by director. Field settings system architecture (13 types, cascade rules, audit log) is a director-defined data model. Highest single-session feature density in the build.',
+    },
   },
 
   // ─────────────────────── v0.13 — Resume, Templates & Profile Depth ───────────────────────
@@ -462,6 +566,12 @@ const RELEASES = [
         ],
       },
     ],
+    metrics: {
+      directorHours: 4,
+      claudeBuildMins: 240,
+      engineerEquivHours: 70,
+      notes: 'Template category taxonomy, resume preset UX, AI interpreter flow design, and client snapshot data model are all director-designed. My Resume is a distinct product app within the platform.',
+    },
   },
 
   // ─────────────────────── v0.14 — Platform merge: HERQ + NRM + services ──────────────────────
@@ -519,6 +629,12 @@ const RELEASES = [
         ],
       },
     ],
+    metrics: {
+      directorHours: 10,
+      claudeBuildMins: 480,
+      engineerEquivHours: 200,
+      notes: 'PLATFORM_MERGE_SPEC.md is a director-produced architectural document covering 18 phases, 7 ADRs, unified object model, and 9 new applications. This release is the single largest build event. The 53 backlog items represent requirements authored by the director.',
+    },
   },
 
   // ─────────────────────── v0.15 — Connections, Messaging, CRM Job Leads ────────────────────
@@ -585,6 +701,133 @@ const RELEASES = [
           'scripts/add-v015-test-scenarios.mjs — 18 test scenarios covering every v0.15 feature plus regression paths',
         ],
       },
+    ],
+    metrics: {
+      directorHours: 3,
+      claudeBuildMins: 240,
+      engineerEquivHours: 70,
+      notes: 'Social layer architecture (connection model, bidirectional enforcement, message threading) and CRM job lead type are director-designed features. 18 test scenarios authored by director.',
+    },
+  },
+
+  // ─────────────────────── v0.16 — Lead email management + auth login fix ────────────────────
+  {
+    version: 'v0.16',
+    name: 'Lead Email Management & Auth Fix',
+    date: '2026-06-28',
+    summary:
+      'Multi-email support lands on leads: each lead can now have personal and work addresses with per-email unsubscribe and primary designation. A critical login bug is fixed — admin access was broken after a lead with the admin\'s secondary email was converted to a member. Lead-to-member conversion now checks secondary email addresses too before blocking. The resume output page no longer spins forever when the founding page is in draft.',
+    sections: [
+      {
+        heading: 'Fixed',
+        items: [
+          'Admin login restored: login() now tries the submitted password against ALL user records that match the email (primary users.email column + secondary verified user_emails rows). Prevents a member conversion from blocking an admin who had that email registered as a secondary address',
+          'Lead conversion now checks user_emails secondary table before blocking with "email already registered" — gives a proper "sign in with X" message if it finds a match',
+          'Resume output (/output/resume) no longer spins forever when the consulting-founder page is in draft — falls back to slug search and shows a clear error message instead',
+        ],
+      },
+      {
+        heading: 'New — Multi-email per Lead',
+        items: [
+          'lead_email_addresses table: each lead can have multiple contact emails, each with type (personal/work), org_name for work addresses, is_primary flag, and per-email subscribed toggle',
+          'POST /api/leads: when an existing lead is matched by phone with a different email submitted, the new email is captured to lead_email_addresses automatically',
+          'GET /api/leads/public/:publicId now includes contactEmails array',
+          'POST /public/:publicId/contact-emails — add an additional email address',
+          'PATCH /public/:publicId/contact-emails/:id — update type, org name, primary designation, or unsubscribe',
+        ],
+      },
+      {
+        heading: 'New — Lead Email UX',
+        items: [
+          'LeadSuccessModal: when an existing lead is matched, shows the existing primary email and credential reminder so the lead knows they\'ll need their original password to access/convert',
+          'LeadSuccessModal: when alternate email was submitted (phone match scenario), prompts to choose which should be primary — applies immediately without leaving the modal',
+          'LeadView Email Addresses panel: shows primary email, all alternate addresses with type selector and org name for work, make-primary button, per-email unsubscribe toggle, and add-email form',
+        ],
+      },
+      {
+        heading: 'Behind the scenes',
+        items: [
+          'lead_email_addresses table seeded in db.js bootstrap (idempotent CREATE TABLE IF NOT EXISTS)',
+          'user_emails secondary check added to conversion route: SELECT from user_emails WHERE email = submitted_email AND verified = true',
+          'Post-conversion: submitted email auto-registered in user_emails if different from users.email primary',
+        ],
+      },
+    ],
+    metrics: {
+      directorHours: 3,
+      claudeBuildMins: 180,
+      engineerEquivHours: 55,
+      notes: 'Multi-email UX design, auth debug investigation (identifying the lead conversion conflict), and lead matching flow redesign are all director contributions. Auth fix required understanding a subtle email ownership conflict across two tables.',
+    },
+  },
+
+  // ─── v0.16.1 — CTA visibility + patch notes metrics + deploy process ──
+  {
+    version: 'v0.16.1',
+    name: 'CTA Visibility, Build Metrics & Deploy Process',
+    date: '2026-06-30',
+    summary:
+      'CTA buttons that link to draft or unpublished pages are now hidden from the public site — they only appear when the target page is live. All prior patch notes (v0.1–v0.16) are retroactively updated with quantified build metrics: director hours, Claude build time, and senior engineer equivalent hours. The post-deploy backlog script gains search and traceability capabilities. The full post-deploy process is documented for the first time.',
+    sections: [
+      {
+        heading: 'New — CTA Visibility Gate',
+        items: [
+          'isLiveHref() utility in blocks/index.jsx: returns false for internal links whose slug is not in the published live-page set, true for external links, anchors, and non-page routes (/output/, /u/, etc.)',
+          'liveSlugs Set computed in PublicSite.jsx from all published pages with status="live", passed to every RenderSection',
+          'Six block types gated: HeroBlock (cta1/cta2), TwoColBlock (cta1/cta2), CtaBlock (cta1), TimelineBlock (btns array), AppMockupBlock (cta1/cta2), ChoiceGridBlock (per-choice ctaLink)',
+          'Preview and admin modes receive liveSlugs=null → show all CTAs regardless of target page status (for content authoring)',
+        ],
+      },
+      {
+        heading: 'New — Build Metrics (retroactive, v0.1–v0.16)',
+        items: [
+          'Every patch note entry now carries a metrics block: directorHours, claudeBuildMins, engineerEquivHours',
+          'directorHours: time Betsy spent on architecture decisions, UX direction, requirements definition, and build supervision — billed at a principal architect/director rate',
+          'claudeBuildMins: approximate wall-clock minutes Claude spent in active coding per release',
+          'engineerEquivHours: senior engineer hours to produce the same output independently (includes their own arch/spec time since Claude works from director-provided direction)',
+          'Computed at render time: directorCostUsd = directorHours × DIRECTOR_RATE, leverageMultiple = engineerEquivHours / (directorHours + claudeBuildMins/60)',
+          'Cumulative across v0.1–v0.16: ~57.5 director hours, ~3,465 Claude build minutes (~57.75h), ~1,010 engineer equivalent hours',
+        ],
+      },
+      {
+        heading: 'New — Backlog Script Enhancements (add-v016-backlog-items.mjs)',
+        items: [
+          'searchItems(items, query): fuzzy local search across title, summary, and externalRef — lets you find the right item to update/link without knowing the exact ref',
+          'findByVersion(items, version): returns all items whose externalRef starts with a given version string (e.g. "v0.15")',
+          'Items created with patchNoteVersion tag: tags array includes "patch:vX.XX" for queryable version linkage',
+          'Traceability fields: parentRef (links defects to their parent feature ref), testScenarioRef (links requirements to the scenario that validated them)',
+          'Summary report now shows: updated / created deployed / created pending / skipped / not-found, grouped by capability',
+        ],
+      },
+      {
+        heading: 'New — Post-Deploy Process Documentation',
+        items: [
+          'Post-deploy steps documented in patchNotes.js file header (canonical reference)',
+          'Steps: (1) verify Render deploy on dashboard, (2) node scripts/add-vXXX-backlog-items.mjs, (3) node scripts/add-vXXX-test-scenarios.mjs if scenarios exist, (4) confirm /output/patch-notes renders the new release',
+          'Why manual (not automated): scripts require ADMIN_EMAIL + ADMIN_INITIAL_PASSWORD in .env which are not in CI; idempotent but should only run after confirmed deploy; failed deploy should not create partial backlog records',
+        ],
+      },
+      {
+        heading: 'Behind the scenes',
+        items: [
+          'No new DB tables or columns in this release',
+          'src/components/blocks/index.jsx: isLiveHref + NON_PAGE_PREFIXES at top of file, liveSlugs param on RenderSection + all 6 block types',
+          'src/components/PublicSite.jsx: liveSlugs Set computed from live pages after currentPage resolution, passed to each RenderSection',
+          'server/data/patchNotes.js: metrics block added to all 16 prior entries + this entry; post-deploy steps in file header',
+          'scripts/add-v016-backlog-items.mjs: searchItems, findByVersion helpers; patchNoteVersion tagging; traceability fields on all items',
+        ],
+      },
+    ],
+    metrics: {
+      directorHours: 2,
+      claudeBuildMins: 90,
+      engineerEquivHours: 12,
+      notes: 'CTA visibility is a simple architectural guardrail. The majority of this release\'s value is the retroactive metrics analysis — director defined the measurement model and commissioned the retroactive update across all 16 prior releases.',
+    },
+    postDeploySteps: [
+      'node scripts/add-v016-backlog-items.mjs',
+      'Confirm /output/patch-notes shows v0.16.1',
+      'Verify CTA buttons on public site for draft-page targets are hidden (e.g. any section with a button pointing to a draft page)',
     ],
   },
 ];
