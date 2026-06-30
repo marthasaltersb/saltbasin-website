@@ -214,6 +214,16 @@ router.post('/', async (req, res) => {
     params.push(leadId);
     await db.prepare(`UPDATE leads SET ${updates.join(', ')} WHERE id = $${p}`).run(...params);
 
+    // If the submitted email differs from the existing primary email, capture
+    // it in lead_email_addresses so it's not lost.
+    if (normEmail !== primary.email?.toLowerCase()) {
+      await db.prepare(`
+        INSERT INTO lead_email_addresses (lead_id, email, email_type, is_primary, subscribed)
+        VALUES ($1, $2, 'personal', false, true)
+        ON CONFLICT (lead_id, email) DO NOTHING
+      `).run(leadId, normEmail);
+    }
+
     isExisting = true;
 
     // If the primary doesn't have a password yet (pre-password-era lead),
@@ -301,6 +311,11 @@ router.post('/', async (req, res) => {
     ctaLocation: ctaLoc,
   }).catch((e) => console.error('[email] alert failed:', e.message));
 
+  // Load contact emails for this lead (returned so modal can show them)
+  const contactEmails = await db.prepare(
+    `SELECT id, email, email_type, org_name, is_primary, subscribed FROM lead_email_addresses WHERE lead_id = $1 ORDER BY is_primary DESC, id ASC`
+  ).all(leadId);
+
   res.json({
     ok: true,
     leadId,
@@ -309,6 +324,10 @@ router.post('/', async (req, res) => {
     password: accessPassword, // only returned on creation or first-merge; never re-fetched
     existing: isExisting,
     merged: mergedFromIds.length,
+    // When an existing lead is matched with a different submitted email
+    existingEmail: isExisting ? (matches[0]?.email || null) : null,
+    alternateEmail: (isExisting && normEmail !== matches[0]?.email?.toLowerCase()) ? normEmail : null,
+    contactEmails,
     // Legacy: callers can still pass `?t=token` for direct-link auth.
     token: accessToken,
   });
@@ -408,13 +427,27 @@ router.post('/public/:publicId/convert', async (req, res) => {
   const ok = await bcrypt.compare(password, lead.password_hash);
   if (!ok) return res.status(401).json({ error: 'incorrect password' });
 
-  // Email collision check — a user with this email may already exist.
+  // Email collision check — check both primary users.email and verified
+  // secondary user_emails entries, since a lead conversion can otherwise
+  // create a duplicate when the email is already a secondary address on an
+  // existing account (e.g. admin added their org email to their admin account,
+  // then later submitted a lead with that same org email).
   const lowerEmail = lead.email.toLowerCase();
-  const existing = await db.prepare(`SELECT id FROM users WHERE email = $1`).get(lowerEmail);
-  if (existing) {
+  const existingPrimary = await db.prepare(`SELECT id FROM users WHERE email = $1`).get(lowerEmail);
+  if (existingPrimary) {
     return res.status(409).json({
       error: 'an account with this email already exists — sign in instead',
-      userId: Number(existing.id),
+      userId: Number(existingPrimary.id),
+    });
+  }
+  const existingSecondary = await db.prepare(
+    `SELECT u.id, u.email AS primaryEmail FROM user_emails ue JOIN users u ON u.id = ue.user_id WHERE ue.email = $1 AND ue.verified = true`
+  ).get(lowerEmail);
+  if (existingSecondary) {
+    return res.status(409).json({
+      error: `this email is already linked to an account — sign in with ${existingSecondary.primaryEmail}`,
+      userId: Number(existingSecondary.id),
+      primaryEmail: existingSecondary.primaryEmail,
     });
   }
 
@@ -439,6 +472,12 @@ router.post('/public/:publicId/convert', async (req, res) => {
   await db
     .prepare(`UPDATE leads SET converted_user_id = $1, updated_at = $2 WHERE id = $3`)
     .run(newUserId, Date.now(), Number(lead.id));
+
+  // Register the primary email in user_emails so it's visible in the email
+  // manager and so secondary-email lookups in login() find it correctly.
+  await db.prepare(
+    `INSERT INTO user_emails (user_id, email, type, verified) VALUES ($1, $2, 'primary', true) ON CONFLICT (email) DO NOTHING`
+  ).run(newUserId, lowerEmail);
 
   // Auto-login as the new member. Issues a session and sets the same admin
   // cookie used elsewhere (the cookie is role-agnostic; AdminShell decides
@@ -537,6 +576,12 @@ router.get('/public/:publicId', async (req, res) => {
        FROM lead_emails WHERE lead_id = $1 ORDER BY sent_at DESC LIMIT 50`
     )
     .all(Number(lead.id));
+  const contactEmails = await db
+    .prepare(
+      `SELECT id, email, email_type, org_name, is_primary, subscribed, created_at
+       FROM lead_email_addresses WHERE lead_id = $1 ORDER BY is_primary DESC, id ASC`
+    )
+    .all(Number(lead.id));
   res.json({
     publicId: lead.public_id,
     source: lead.source,
@@ -558,10 +603,68 @@ router.get('/public/:publicId', async (req, res) => {
       status: e.status,
       sentAt: Number(e.sent_at),
     })),
+    contactEmails: contactEmails.map((e) => ({
+      id: Number(e.id),
+      email: e.email,
+      emailType: e.email_type,
+      orgName: e.org_name,
+      isPrimary: e.is_primary,
+      subscribed: e.subscribed,
+      createdAt: Number(e.created_at),
+    })),
     createdAt: Number(lead.created_at),
     updatedAt: Number(lead.updated_at),
     convertedUserId: lead.converted_user_id ? Number(lead.converted_user_id) : null,
   });
+});
+
+// ── Lead contact-email management ──
+
+// POST /api/leads/public/:publicId/contact-emails — add an email address
+router.post('/public/:publicId/contact-emails', async (req, res) => {
+  const { lead, error, status, needsPassword } = await getLeadByPublic(req);
+  if (error) return res.status(status).json({ error, needsPassword });
+  const { email, emailType = 'personal', orgName } = req.body || {};
+  if (!isValidEmail(email)) return res.status(400).json({ error: 'valid email required' });
+  const norm = normalizeEmail(email);
+  try {
+    const row = await db.prepare(`
+      INSERT INTO lead_email_addresses (lead_id, email, email_type, org_name, is_primary, subscribed)
+      VALUES ($1, $2, $3, $4, false, true)
+      ON CONFLICT (lead_id, email) DO UPDATE SET email_type = EXCLUDED.email_type, org_name = EXCLUDED.org_name
+      RETURNING id, email, email_type, org_name, is_primary, subscribed, created_at
+    `).get(Number(lead.id), norm, emailType, orgName || null);
+    res.json({ ok: true, contactEmail: { id: Number(row.id), email: row.email, emailType: row.email_type, orgName: row.org_name, isPrimary: row.is_primary, subscribed: row.subscribed, createdAt: Number(row.created_at) } });
+  } catch (e) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PATCH /api/leads/public/:publicId/contact-emails/:id — update type, primary, subscribed, orgName
+router.patch('/public/:publicId/contact-emails/:id', async (req, res) => {
+  const { lead, error, status, needsPassword } = await getLeadByPublic(req);
+  if (error) return res.status(status).json({ error, needsPassword });
+  const emailId = Number(req.params.id);
+  const { emailType, orgName, isPrimary, subscribed } = req.body || {};
+
+  const existing = await db.prepare(`SELECT id FROM lead_email_addresses WHERE id = $1 AND lead_id = $2`).get(emailId, Number(lead.id));
+  if (!existing) return res.status(404).json({ error: 'email not found' });
+
+  const set = [];
+  const params = [];
+  let p = 1;
+  if (emailType !== undefined) { set.push(`email_type = $${p++}`); params.push(emailType); }
+  if (orgName !== undefined) { set.push(`org_name = $${p++}`); params.push(orgName || null); }
+  if (subscribed !== undefined) { set.push(`subscribed = $${p++}`); params.push(!!subscribed); }
+  if (isPrimary === true) {
+    await db.prepare(`UPDATE lead_email_addresses SET is_primary = false WHERE lead_id = $1`).run(Number(lead.id));
+    set.push(`is_primary = true`);
+  }
+
+  if (set.length === 0) return res.json({ ok: true });
+  params.push(emailId);
+  await db.prepare(`UPDATE lead_email_addresses SET ${set.join(', ')} WHERE id = $${p}`).run(...params);
+  res.json({ ok: true });
 });
 
 router.patch('/public/:publicId', async (req, res) => {

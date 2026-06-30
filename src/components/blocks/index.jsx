@@ -1239,12 +1239,40 @@ function AssessmentsBlock({ section }) {
 function LeadSuccessModal({ result, onDismiss }) {
   const [copiedUrl, setCopiedUrl] = React.useState(false);
   const [copiedPw, setCopiedPw] = React.useState(false);
+  // Email preference prompt — shown when submitted email differs from existing primary
+  const [emailChoice, setEmailChoice] = React.useState(null); // null | 'keep' | 'switch' | 'saved'
+  const [emailSaving, setEmailSaving] = React.useState(false);
   const fullUrl = `${window.location.origin}${result.leadUrl}`;
+  const showEmailPrompt = result.existing && result.alternateEmail && result.existingEmail && emailChoice === null;
 
   function copy(value, setter) {
     navigator.clipboard?.writeText(value);
     setter(true);
     setTimeout(() => setter(false), 1500);
+  }
+
+  async function handleEmailChoice(choice) {
+    if (choice === 'keep') { setEmailChoice('keep'); return; }
+    // 'switch' — mark the new email as primary via the contact-emails endpoint
+    setEmailSaving(true);
+    try {
+      // Find the id of the alternate email in contactEmails
+      const match = (result.contactEmails || []).find(
+        (e) => e.email?.toLowerCase() === result.alternateEmail?.toLowerCase()
+      );
+      if (match) {
+        await fetch(`/api/leads/public/${result.publicId}/contact-emails/${match.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isPrimary: true }),
+        });
+      }
+      setEmailChoice('switch');
+    } catch (_) {
+      setEmailChoice('switch');
+    } finally {
+      setEmailSaving(false);
+    }
   }
 
   return (
@@ -1265,6 +1293,7 @@ function LeadSuccessModal({ result, onDismiss }) {
           borderRadius: 'var(--sb-radius)',
           padding: '2rem', maxWidth: 540, width: '100%',
           color: 'var(--sb-cream)',
+          maxHeight: '90vh', overflowY: 'auto',
         }}
       >
         <div className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>
@@ -1278,11 +1307,65 @@ function LeadSuccessModal({ result, onDismiss }) {
             Merged {result.merged} prior submission{result.merged === 1 ? '' : 's'} into this record.
           </p>
         )}
-        <p style={{ fontSize: '0.9rem', color: 'var(--sb-sage)', lineHeight: 1.65, marginBottom: '1.25rem' }}>
-          {result.password
-            ? 'Save these credentials — I also sent them to your email. Use the URL + password to come back any time and update what you have shared.'
-            : 'I already have a record under this email. Use the original credentials I sent you previously, or check your inbox — I just resent a copy.'}
-        </p>
+
+        {/* Existing lead: credential reminder */}
+        {result.existing && !result.password && (
+          <div style={{ background: 'rgba(196,132,58,0.08)', border: '0.5px solid rgba(196,132,58,0.3)', borderRadius: 'var(--sb-radius)', padding: '0.85rem 1rem', marginBottom: '1rem', fontSize: '0.85rem', color: 'var(--sb-sage)', lineHeight: 1.6 }}>
+            <div style={{ color: 'var(--sb-gold)', fontFamily: 'var(--sb-font-label)', fontSize: '0.6rem', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Record on file</div>
+            Your record is registered under <strong style={{ color: 'var(--sb-cream)' }}>{result.existingEmail || 'your original email'}</strong>.
+            {' '}Use the password from your original confirmation email to access it.
+            You'll also need that password if you decide to convert your lead to a member account.
+          </div>
+        )}
+
+        {/* Email preference prompt — only shown when submitted email differs */}
+        {showEmailPrompt && (
+          <div style={{ background: 'rgba(27,42,59,0.6)', border: '0.5px solid rgba(196,132,58,0.35)', borderLeft: '3px solid var(--sb-gold)', borderRadius: 'var(--sb-radius)', padding: '1rem', marginBottom: '1rem' }}>
+            <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.6rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--sb-gold)', marginBottom: '0.5rem' }}>
+              New email detected
+            </div>
+            <p style={{ fontSize: '0.83rem', color: 'var(--sb-cream)', marginBottom: '0.75rem', lineHeight: 1.55 }}>
+              You submitted <strong>{result.alternateEmail}</strong> but your record's primary is <strong>{result.existingEmail}</strong>.
+              {' '}Which should be your primary for future communications?
+            </p>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => handleEmailChoice('keep')}
+                disabled={emailSaving}
+                className="sb-btn sb-btn-outline"
+                style={{ fontSize: '0.75rem', padding: '0.45rem 0.9rem' }}
+              >
+                Keep {result.existingEmail}
+              </button>
+              <button
+                onClick={() => handleEmailChoice('switch')}
+                disabled={emailSaving}
+                className="sb-btn sb-btn-gold"
+                style={{ fontSize: '0.75rem', padding: '0.45rem 0.9rem' }}
+              >
+                {emailSaving ? 'Saving…' : `Use ${result.alternateEmail}`}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {emailChoice === 'switch' && (
+          <div style={{ fontSize: '0.8rem', color: 'var(--sb-green)', marginBottom: '0.75rem' }}>
+            ✓ Primary email updated to {result.alternateEmail}. You can manage all emails from your lead record.
+          </div>
+        )}
+        {emailChoice === 'keep' && (
+          <div style={{ fontSize: '0.8rem', color: 'var(--sb-sage)', marginBottom: '0.75rem' }}>
+            Got it — keeping {result.existingEmail} as your primary. {result.alternateEmail} has been saved to your record as an alternate.
+          </div>
+        )}
+
+        {/* New lead: password */}
+        {result.password && (
+          <p style={{ fontSize: '0.9rem', color: 'var(--sb-sage)', lineHeight: 1.65, marginBottom: '1.25rem' }}>
+            Save these credentials — I also sent them to your email. Use the URL + password to come back any time and update what you have shared.
+          </p>
+        )}
 
         <div style={credRow}>
           <div style={credLabel}>URL</div>

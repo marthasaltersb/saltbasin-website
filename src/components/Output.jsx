@@ -616,7 +616,11 @@ export function ResumeOutput() {
   useEffect(() => {
     api.getPublishedSite()
       .then((site) => {
-        setPage(site.pages['consulting-founder']);
+        const founderPage =
+          site.pages['consulting-founder'] ||
+          Object.values(site.pages || {}).find((p) => p.slug === 'consulting/founder');
+        if (!founderPage) { setSiteError('Founder page not found — check that the Meet the Founder page is published.'); return; }
+        setPage(founderPage);
         const home = site.pages['home'];
         setWheel(home?.sections.find((s) => s.type === 'industryWheel')?.fields || {});
       })

@@ -70,23 +70,35 @@ export async function getUserFromCookie(req) {
 
 export async function login(email, password) {
   const lower = email.toLowerCase();
-  // Check primary email first, then any verified secondary email.
-  let row = await db
+  // Collect ALL user records that can authenticate with this email — primary
+  // column first, then any verified secondary entries in user_emails.  We
+  // try the password against each candidate so that an admin whose primary
+  // email differs from the submitted email but who has it as a verified
+  // secondary address can still log in (e.g. after a lead conversion created
+  // a member with that email as primary).
+  const candidates = [];
+
+  const primary = await db
     .prepare('SELECT id, password_hash, role FROM users WHERE email = $1')
     .get(lower);
-  if (!row) {
-    row = await db
-      .prepare(
-        `SELECT u.id, u.password_hash, u.role
-           FROM user_emails ue JOIN users u ON u.id = ue.user_id
-          WHERE ue.email = $1 AND ue.verified = true`
-      )
-      .get(lower);
+  if (primary) candidates.push(primary);
+
+  const secondaries = await db
+    .prepare(
+      `SELECT u.id, u.password_hash, u.role
+         FROM user_emails ue JOIN users u ON u.id = ue.user_id
+        WHERE ue.email = $1 AND ue.verified = true`
+    )
+    .all(lower);
+  for (const s of secondaries) {
+    if (!candidates.find((c) => Number(c.id) === Number(s.id))) candidates.push(s);
   }
-  if (!row) return null;
-  const ok = await bcrypt.compare(password, row.password_hash);
-  if (!ok) return null;
-  return { id: Number(row.id), role: row.role };
+
+  for (const c of candidates) {
+    const ok = await bcrypt.compare(password, c.password_hash);
+    if (ok) return { id: Number(c.id), role: c.role };
+  }
+  return null;
 }
 
 export async function changePassword(userId, currentPassword, newPassword) {

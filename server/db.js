@@ -215,6 +215,19 @@ async function bootstrap() {
     CREATE INDEX IF NOT EXISTS idx_lead_sessions_lead ON lead_sessions (lead_id);
     CREATE INDEX IF NOT EXISTS idx_leads_phone ON leads (phone) WHERE phone IS NOT NULL;
     CREATE INDEX IF NOT EXISTS idx_leads_active ON leads (id) WHERE merged_into_id IS NULL;
+
+    CREATE TABLE IF NOT EXISTS lead_email_addresses (
+      id          BIGSERIAL PRIMARY KEY,
+      lead_id     BIGINT NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+      email       TEXT NOT NULL,
+      email_type  TEXT NOT NULL DEFAULT 'personal',
+      org_name    TEXT,
+      is_primary  BOOLEAN NOT NULL DEFAULT false,
+      subscribed  BOOLEAN NOT NULL DEFAULT true,
+      created_at  BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      UNIQUE(lead_id, email)
+    );
+    CREATE INDEX IF NOT EXISTS idx_lea_lead ON lead_email_addresses (lead_id);
   `);
 
   // Multi-tenant CMS: each member gets their own draft + published site, plus

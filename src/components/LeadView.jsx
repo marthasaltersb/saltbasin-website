@@ -53,6 +53,14 @@ export default function LeadView() {
   const [converting, setConverting] = useState(false);
   const [convertError, setConvertError] = useState('');
 
+  // Email address management
+  const [showEmailManager, setShowEmailManager] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
+  const [newEmailType, setNewEmailType] = useState('personal');
+  const [newEmailOrg, setNewEmailOrg] = useState('');
+  const [emailSaving, setEmailSaving] = useState(false);
+  const [emailError, setEmailError] = useState('');
+
   function loadLead() {
     const qs = legacyToken ? `?t=${encodeURIComponent(legacyToken)}` : '';
     return fetch(`/api/leads/public/${publicId}${qs}`, { credentials: 'include' })
@@ -144,6 +152,41 @@ export default function LeadView() {
   // user row using that same password_hash directly (no re-hash) and links
   // leads.converted_user_id to the new user. Auto-logs them in and returns
   // a redirectTo path which we honor.
+  async function addEmail(e) {
+    e.preventDefault();
+    if (!newEmail) return;
+    setEmailSaving(true);
+    setEmailError('');
+    try {
+      const res = await fetch(`/api/leads/public/${publicId}/contact-emails`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: newEmail, emailType: newEmailType, orgName: newEmailOrg || undefined }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || 'Failed to save email');
+      setNewEmail(''); setNewEmailType('personal'); setNewEmailOrg('');
+      await loadLead();
+    } catch (err) {
+      setEmailError(err.message);
+    } finally {
+      setEmailSaving(false);
+    }
+  }
+
+  async function updateEmail(id, patch) {
+    try {
+      await fetch(`/api/leads/public/${publicId}/contact-emails/${id}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch),
+      });
+      await loadLead();
+    } catch (_) {}
+  }
+
   async function convert(e) {
     e.preventDefault();
     if (!convertPassword) return;
@@ -428,6 +471,89 @@ export default function LeadView() {
                 </div>
               </PanelCard>
             )}
+
+            {/* Email address manager */}
+            <PanelCard title={`Email addresses · ${(lead.contactEmails?.length || 0) + 1} on record`}>
+              {/* Primary email (from leads table) */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: 'var(--sb-navy-deep)', border: '0.5px solid rgba(196,132,58,0.25)', borderLeft: '3px solid var(--sb-gold)', borderRadius: 'var(--sb-radius)', marginBottom: '0.5rem' }}>
+                <div>
+                  <div style={{ fontSize: '0.88rem', color: 'var(--sb-cream)' }}>{lead.email}</div>
+                  <div style={{ fontSize: '0.62rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--sb-gold)', marginTop: 2 }}>Primary · email communications sent here</div>
+                </div>
+                <div style={{ fontSize: '0.65rem', color: 'var(--sb-sage)', textAlign: 'right' }}>Primary</div>
+              </div>
+
+              {/* Additional emails */}
+              {(lead.contactEmails || []).map((ce) => (
+                <div key={ce.id} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: 'var(--sb-navy-deep)', border: '0.5px solid rgba(196,132,58,0.18)', borderRadius: 'var(--sb-radius)', marginBottom: '0.5rem', gap: '0.5rem' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.85rem', color: ce.subscribed ? 'var(--sb-cream)' : 'var(--sb-dusty)', textDecoration: ce.subscribed ? 'none' : 'line-through' }}>{ce.email}</div>
+                    <div style={{ fontSize: '0.62rem', color: 'var(--sb-dusty)', marginTop: 2, display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <select
+                        value={ce.emailType}
+                        onChange={(ev) => updateEmail(ce.id, { emailType: ev.target.value })}
+                        style={{ fontSize: '0.65rem', background: 'transparent', color: 'var(--sb-sage)', border: '0.5px solid rgba(255,255,255,0.15)', borderRadius: 3, padding: '1px 4px', cursor: 'pointer' }}
+                      >
+                        <option value="personal">Personal</option>
+                        <option value="work">Work</option>
+                      </select>
+                      {ce.emailType === 'work' && (
+                        <input
+                          defaultValue={ce.orgName || ''}
+                          placeholder="Org name"
+                          onBlur={(ev) => updateEmail(ce.id, { orgName: ev.target.value })}
+                          style={{ fontSize: '0.65rem', background: 'transparent', color: 'var(--sb-cream)', border: '0.5px solid rgba(255,255,255,0.15)', borderRadius: 3, padding: '1px 4px', width: 120 }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', flexShrink: 0 }}>
+                    <button
+                      onClick={() => updateEmail(ce.id, { isPrimary: true })}
+                      style={{ fontSize: '0.62rem', background: 'none', border: '0.5px solid rgba(196,132,58,0.4)', borderRadius: 3, color: 'var(--sb-gold)', padding: '2px 6px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    >
+                      Make primary
+                    </button>
+                    <button
+                      onClick={() => updateEmail(ce.id, { subscribed: !ce.subscribed })}
+                      style={{ fontSize: '0.62rem', background: 'none', border: '0.5px solid rgba(255,255,255,0.15)', borderRadius: 3, color: 'var(--sb-dusty)', padding: '2px 6px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    >
+                      {ce.subscribed ? 'Unsubscribe' : 'Resubscribe'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {/* Add email form */}
+              <button
+                onClick={() => setShowEmailManager((v) => !v)}
+                style={{ fontSize: '0.75rem', background: 'none', border: 'none', color: 'var(--sb-gold)', cursor: 'pointer', padding: '0.3rem 0', display: 'block', marginTop: '0.25rem' }}
+              >
+                {showEmailManager ? '▲ Hide' : '+ Add another email address'}
+              </button>
+              {showEmailManager && (
+                <form onSubmit={addEmail} style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <input
+                    type="email" placeholder="email@example.com" required
+                    value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
+                    className="sb-input" style={{ fontSize: '0.82rem' }}
+                  />
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <select value={newEmailType} onChange={(e) => setNewEmailType(e.target.value)} className="sb-input" style={{ fontSize: '0.78rem', flex: 1 }}>
+                      <option value="personal">Personal</option>
+                      <option value="work">Work</option>
+                    </select>
+                    {newEmailType === 'work' && (
+                      <input placeholder="Org name" value={newEmailOrg} onChange={(e) => setNewEmailOrg(e.target.value)} className="sb-input" style={{ fontSize: '0.78rem', flex: 2 }} />
+                    )}
+                  </div>
+                  {emailError && <div style={{ fontSize: '0.78rem', color: 'var(--sb-risk-critical)' }}>{emailError}</div>}
+                  <button type="submit" className="sb-btn sb-btn-gold" disabled={emailSaving} style={{ padding: '0.45rem 1rem', fontSize: '0.78rem', alignSelf: 'flex-start' }}>
+                    {emailSaving ? 'Saving…' : 'Add email'}
+                  </button>
+                </form>
+              )}
+            </PanelCard>
 
             {lead.priorNotes?.length > 0 && (
               <PanelCard title={`Prior inquiries · ${lead.priorNotes.length} merged record${lead.priorNotes.length === 1 ? '' : 's'}`}>
