@@ -1526,13 +1526,13 @@ async function bootstrap() {
   }
 
   // ── Contribution Intelligence — sessions + enhanced backlog (v0.17) ───────
-  // sessions: ingested from JSONL files; one row per Claude Code session.
-  // backlog_items: new columns for L2R stage tracing, contribution attribution,
-  // and estimate vs actual tracking.
+  // Each statement is isolated so one failure doesn't block the rest.
+
+  // sessions table — create if missing
   await sql.unsafe(`
     CREATE TABLE IF NOT EXISTS sessions (
       id                  BIGSERIAL PRIMARY KEY,
-      jsonl_filename      TEXT NOT NULL,
+      jsonl_filename      TEXT,
       project_directory   TEXT,
       date_start          BIGINT,
       date_end            BIGINT,
@@ -1546,8 +1546,27 @@ async function bootstrap() {
       notes               TEXT,
       created_at          BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
     );
-    CREATE INDEX IF NOT EXISTS idx_sessions_filename ON sessions (jsonl_filename);
+  `).catch((e) => console.warn('[db] sessions table warning:', e.message));
 
+  // sessions columns — ADD IF NOT EXISTS handles both new installs and upgrades
+  await sql.unsafe(`
+    ALTER TABLE sessions ADD COLUMN IF NOT EXISTS jsonl_filename TEXT;
+    ALTER TABLE sessions ADD COLUMN IF NOT EXISTS project_directory TEXT;
+    ALTER TABLE sessions ADD COLUMN IF NOT EXISTS date_start BIGINT;
+    ALTER TABLE sessions ADD COLUMN IF NOT EXISTS date_end BIGINT;
+    ALTER TABLE sessions ADD COLUMN IF NOT EXISTS active_hours NUMERIC;
+    ALTER TABLE sessions ADD COLUMN IF NOT EXISTS total_turns INT;
+    ALTER TABLE sessions ADD COLUMN IF NOT EXISTS user_turns INT;
+    ALTER TABLE sessions ADD COLUMN IF NOT EXISTS turn_density NUMERIC;
+    ALTER TABLE sessions ADD COLUMN IF NOT EXISTS oversight_intensity TEXT;
+    ALTER TABLE sessions ADD COLUMN IF NOT EXISTS versions_covered TEXT;
+    ALTER TABLE sessions ADD COLUMN IF NOT EXISTS burst_count INT;
+    ALTER TABLE sessions ADD COLUMN IF NOT EXISTS notes TEXT;
+    CREATE INDEX IF NOT EXISTS idx_sessions_filename ON sessions (jsonl_filename);
+  `).catch((e) => console.warn('[db] sessions columns warning:', e.message));
+
+  // rate_configs table
+  await sql.unsafe(`
     CREATE TABLE IF NOT EXISTS rate_configs (
       id              TEXT PRIMARY KEY,
       rate_type       TEXT NOT NULL,
@@ -1559,7 +1578,10 @@ async function bootstrap() {
       note            TEXT,
       created_at      BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
     );
+  `).catch((e) => console.warn('[db] rate_configs table warning:', e.message));
 
+  // backlog_items + capability_groups new columns
+  await sql.unsafe(`
     ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS session_id BIGINT REFERENCES sessions(id) ON DELETE SET NULL;
     ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS l2r_stage TEXT;
     ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS contribution_type TEXT;
@@ -1571,11 +1593,10 @@ async function bootstrap() {
     ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS automation_potential TEXT;
     ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS patch_note_version TEXT;
     ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS data_source TEXT DEFAULT 'estimated';
-
     ALTER TABLE capability_groups ADD COLUMN IF NOT EXISTS l2r_stages TEXT;
     ALTER TABLE capability_groups ADD COLUMN IF NOT EXISTS business_function TEXT;
     ALTER TABLE capability_groups ADD COLUMN IF NOT EXISTS maturity_level TEXT DEFAULT 'building';
-  `).catch((e) => console.warn('[db] v0.17 migration warning:', e.message));
+  `).catch((e) => console.warn('[db] v0.17 column migration warning:', e.message));
 
   // Seed 2026 rate configs — idempotent
   const rateSeeds = [
