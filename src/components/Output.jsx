@@ -2594,7 +2594,7 @@ export function MethodologyOutput() {
     <div id="sb-resume-print-root" style={IP_STYLES.frame}>
       <div style={IP_STYLES.header}>
         <div>
-          <div style={IP_STYLES.eyebrow}>MES Best Bets™ · Methodology · Martha Elizabeth Salter aka Betsy Salter · Salt Basin Net Works</div>
+          <div style={IP_STYLES.eyebrow}>Master Enterprise Solution Best Bets™ · Methodology · Martha Elizabeth Salter aka Betsy Salter · Salt Basin Net Works</div>
           <div style={IP_STYLES.title}>Contribution Intelligence Methodology™</div>
           <div style={IP_STYLES.sub}>
             Practitioner-derived · AI-augmented · Practitioner-signed · v1.0 · 2026
@@ -2611,7 +2611,7 @@ export function MethodologyOutput() {
       </div>
 
       <div style={IP_STYLES.footer}>
-        <span>© 2026 <strong style={{ color: '#888' }}>Martha Elizabeth Salter aka Betsy Salter</strong> · Salt Basin Net Works · Contribution Intelligence Methodology™ · MES Best Bets™ · All rights reserved</span>
+        <span>© 2026 <strong style={{ color: '#888' }}>Martha Elizabeth Salter aka Betsy Salter</strong> · Salt Basin Net Works · Contribution Intelligence Methodology™ · Master Enterprise Solution Best Bets™ · All rights reserved</span>
         <span>saltbasin.net · {tier !== 'public' && user ? `Viewed by: ${user.email}` : 'Public overview'}</span>
       </div>
     </div>
@@ -2731,7 +2731,7 @@ export function L2RModelOutput() {
     <div id="sb-resume-print-root" style={IP_STYLES.frame}>
       <div style={IP_STYLES.header}>
         <div>
-          <div style={IP_STYLES.eyebrow}>MES Best Bets™ · IP Artifact · Martha Elizabeth Salter aka Betsy Salter · Salt Basin Net Works</div>
+          <div style={IP_STYLES.eyebrow}>Master Enterprise Solution Best Bets™ · IP Artifact · Martha Elizabeth Salter aka Betsy Salter · Salt Basin Net Works</div>
           <div style={IP_STYLES.title}>Lead to Revenue Capability Model™</div>
           <div style={IP_STYLES.sub}>
             GTM + Q2R · Full revenue lifecycle · Practitioner-derived · AI-assisted organization · v1.0 · 2026
@@ -2748,7 +2748,7 @@ export function L2RModelOutput() {
       </div>
 
       <div style={IP_STYLES.footer}>
-        <span>© 2026 <strong style={{ color: '#888' }}>Martha Elizabeth Salter aka Betsy Salter</strong> · Salt Basin Net Works · Lead to Revenue Capability Model™ · MES Best Bets™ · All rights reserved · Not for redistribution</span>
+        <span>© 2026 <strong style={{ color: '#888' }}>Martha Elizabeth Salter aka Betsy Salter</strong> · Salt Basin Net Works · Lead to Revenue Capability Model™ · Master Enterprise Solution Best Bets™ · All rights reserved · Not for redistribution</span>
         <span>saltbasin.net · {tier !== 'public' && user ? `Viewed by: ${user.email}` : 'Public overview'}</span>
       </div>
     </div>

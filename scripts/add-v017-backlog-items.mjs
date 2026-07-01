@@ -1,7 +1,7 @@
 // v0.17 backlog update
 //
 // Covers this session's work:
-//   - MES Best Bets™ trademark + copyright attribution (Martha Elizabeth Salter)
+//   - Master Enterprise Solution Best Bets™ trademark + copyright attribution (Martha Elizabeth Salter)
 //   - Lead to Revenue Capability Model™ IP artifact (server/data/leadToRevenueModel.js)
 //   - Contribution Intelligence Methodology™ IP artifact (server/data/contributionMethodology.js)
 //   - /output/methodology + /output/l2r-model output routes with three-tier IP gating
@@ -117,16 +117,16 @@ const UPDATES_BY_REF = [
 
 const NEW_DEPLOYED_ITEMS = [
 
-  // ── MES Best Bets™ + IP copyright ─────────────────────────────────────────
+  // ── Master Enterprise Solution Best Bets™ + IP copyright ─────────────────────────────────────────
 
   {
     capabilitySlug: 'ip-artifacts',
     externalRef: 'v0.17 · mes-best-bets-trademark',
-    title: 'MES Best Bets™ — top-level IP trademark registered across all artifacts',
-    summary: 'MES Best Bets™ established as the top-level brand for Betsy\'s GTM + Q2R methodology IP. Defined as: "GTM + Q2R, end-to-end full revenue lifecycle best of experience practices and platforms that lead to business results that can be actually proven." All IP artifact files (leadToRevenueModel.js, contributionMethodology.js) now carry parentBrand and parentBrandDescriptor fields. Copyright updated everywhere to "Martha Elizabeth Salter aka Betsy Salter · Salt Basin Net Works." Site footer copyrightLine updated to match.',
-    userStory: 'As Betsy, I want my IP artifacts to carry my legal name and top-level trademark so that attribution is unambiguous and the MES Best Bets™ brand is established in code from the start.',
+    title: 'Master Enterprise Solution Best Bets™ — top-level IP trademark registered across all artifacts',
+    summary: 'Master Enterprise Solution Best Bets™ established as the top-level brand for Betsy\'s GTM + Q2R methodology IP. Defined as: "GTM + Q2R, end-to-end full revenue lifecycle best of experience practices and platforms that lead to business results that can be actually proven." All IP artifact files (leadToRevenueModel.js, contributionMethodology.js) now carry parentBrand and parentBrandDescriptor fields. Copyright updated everywhere to "Martha Elizabeth Salter aka Betsy Salter · Salt Basin Net Works." Site footer copyrightLine updated to match.',
+    userStory: 'As Betsy, I want my IP artifacts to carry my legal name and top-level trademark so that attribution is unambiguous and the Master Enterprise Solution Best Bets™ brand is established in code from the start.',
     requirementDetail: 'server/data/leadToRevenueModel.js: ARTIFACT.parentBrand, parentBrandDescriptor, author = "Martha Elizabeth Salter aka Betsy Salter", copyright updated. server/data/contributionMethodology.js: same. src/components/Output.jsx: eyebrow lines, IP badge, and footer copyright in MethodologyOutput + L2RModelOutput updated. server/data/defaultSite.js copyrightLine updated.',
-    acceptanceCriteria: 'All IP artifact files carry MES Best Bets™ parentBrand. Copyright reads "Martha Elizabeth Salter aka Betsy Salter" everywhere. Site footer and output pages reflect the update.',
+    acceptanceCriteria: 'All IP artifact files carry Master Enterprise Solution Best Bets™ parentBrand. Copyright reads "Martha Elizabeth Salter aka Betsy Salter" everywhere. Site footer and output pages reflect the update.',
     ...DEPLOYED, kind: 'chore',
     hoursBetsy: 0.5, hoursClaude: 0.3,
     tags: ['patch:v0.17', 'ip-artifacts', 'trademark', 'copyright'],
@@ -140,7 +140,7 @@ const NEW_DEPLOYED_ITEMS = [
     capabilitySlug: 'ip-artifacts',
     externalRef: 'v0.17 · l2r-model-data-file',
     title: 'Lead to Revenue Capability Model™ — canonical data file',
-    summary: 'server/data/leadToRevenueModel.js created as the canonical IP artifact for the L2R Capability Model. Contains: ARTIFACT metadata (trademark, parentBrand MES Best Bets™, license tiers, watermark template), GTM_PATHS (market-first startup path + product-first mature org path), GTM_NODES (5 nodes including Product Definition with two-path architecture), LIFECYCLE_STAGES (9 stages with control points, risk areas, players, systems), CROSS_CUTTING (6 dimensions), PLATFORM_CAPABILITY_MAP (existing capability slugs linked to L2R stages). Practitioner-derived from 12+ years of enterprise Q2R/CPQ/CLM/RevRec/RevOps delivery.',
+    summary: 'server/data/leadToRevenueModel.js created as the canonical IP artifact for the L2R Capability Model. Contains: ARTIFACT metadata (trademark, parentBrand Master Enterprise Solution Best Bets™, license tiers, watermark template), GTM_PATHS (market-first startup path + product-first mature org path), GTM_NODES (5 nodes including Product Definition with two-path architecture), LIFECYCLE_STAGES (9 stages with control points, risk areas, players, systems), CROSS_CUTTING (6 dimensions), PLATFORM_CAPABILITY_MAP (existing capability slugs linked to L2R stages). Practitioner-derived from 12+ years of enterprise Q2R/CPQ/CLM/RevRec/RevOps delivery.',
     userStory: 'As Betsy, I want my Lead to Revenue Capability Model to exist as a versioned, copyright-protected data file in the platform so it can power output widgets, capability tagging, and client proposals from a single source of truth.',
     requirementDetail: 'server/data/leadToRevenueModel.js exports: ARTIFACT, GTM_PATHS, GTM_NODES (5), LIFECYCLE_STAGES (9: market-landscape, icp-definition, gtm-product-definition, demand-generation, pipeline-development, deal-management, close-and-booking, quote-to-cash, revenue-recognition-reporting), CROSS_CUTTING (6), PLATFORM_CAPABILITY_MAP. Three-tier license: public=teaser_only, member=read_only_framework, client=engagement_licensed.',
     acceptanceCriteria: 'File exists and exports all named constants. ARTIFACT contains trademark, parentBrand, copyright with Martha Elizabeth Salter. All 9 lifecycle stages present with controlPoints, riskAreas, players, systems arrays.',
@@ -155,9 +155,9 @@ const NEW_DEPLOYED_ITEMS = [
     capabilitySlug: 'ip-artifacts',
     externalRef: 'v0.17 · l2r-model-output-route',
     title: '/output/l2r-model — three-tier IP gated output route',
-    summary: 'L2RModelOutput component added to Output.jsx. Route /output/l2r-model wired in App.jsx. Three tiers: public = 6-card teaser with trademark, positioning quote, and CTA to inquire; member = interactive 9-stage model with clickable stage cards, control points + risk areas detail panel; client = same as member (engagement-licensed full detail). Dark SB design (#0f1117). © Martha Elizabeth Salter in footer on every tier. MES Best Bets™ in eyebrow. Member email shown when authenticated.',
+    summary: 'L2RModelOutput component added to Output.jsx. Route /output/l2r-model wired in App.jsx. Three tiers: public = 6-card teaser with trademark, positioning quote, and CTA to inquire; member = interactive 9-stage model with clickable stage cards, control points + risk areas detail panel; client = same as member (engagement-licensed full detail). Dark SB design (#0f1117). © Martha Elizabeth Salter in footer on every tier. Master Enterprise Solution Best Bets™ in eyebrow. Member email shown when authenticated.',
     userStory: 'As a visitor or member, I want to see the Lead to Revenue Capability Model in a rendered output that shows me the right level of detail for my relationship with Salt Basin — teaser for public, framework for members, full detail for clients.',
-    requirementDetail: 'src/components/Output.jsx: L2RModelOutput component. Auth state → tier: !user = public, user.role = admin = client, else member. Public: IpTierBadge + 6 teaser cards (one per L2R phase), positioning quote, IpProposalCta. Member/client: interactive stage grid, click to expand control points + risk areas. Footer: © Martha Elizabeth Salter aka Betsy Salter · Lead to Revenue Capability Model™ · MES Best Bets™.',
+    requirementDetail: 'src/components/Output.jsx: L2RModelOutput component. Auth state → tier: !user = public, user.role = admin = client, else member. Public: IpTierBadge + 6 teaser cards (one per L2R phase), positioning quote, IpProposalCta. Member/client: interactive stage grid, click to expand control points + risk areas. Footer: © Martha Elizabeth Salter aka Betsy Salter · Lead to Revenue Capability Model™ · Master Enterprise Solution Best Bets™.',
     acceptanceCriteria: '/output/l2r-model renders at all three tiers. Public sees teaser only. Authenticated member sees interactive model. Admin (client tier) sees full detail. Copyright in footer on all tiers.',
     ...DEPLOYED,
     hoursBetsy: 1.0, hoursClaude: 1.5,
@@ -172,10 +172,10 @@ const NEW_DEPLOYED_ITEMS = [
     capabilitySlug: 'ip-artifacts',
     externalRef: 'v0.17 · contribution-methodology-data-file',
     title: 'Contribution Intelligence Methodology™ — canonical data file',
-    summary: 'server/data/contributionMethodology.js created as the IP artifact for the Contribution Intelligence Methodology. Contains: ARTIFACT metadata (trademark, parentBrand MES Best Bets™), DERIVATION_RECORD (transparent co-derivation log — what was decided, by whom, why, and what evidence), CONTRIBUTION_TYPES (4 types: Strategic Direction, Domain Authoring, Active Supervision, Code Generation — each with 2026 rate, reducibility flag, examples), RATE_CONFIGS_2026 (4 rate entries: Betsy $225, Claude $115 quality-adjusted, offshore entry $65 benchmark, onshore senior $175 benchmark), OVERSIGHT_LEVELS (4 intensity levels keyed to turn density), REDUCTION_MAP (irreducible IP vs reducible execution), THREE_LOOPS (Loop 1 Estimation, Loop 2 Cost Ledger, Loop 3 Business Value/ROI). Calc helpers exported.',
+    summary: 'server/data/contributionMethodology.js created as the IP artifact for the Contribution Intelligence Methodology. Contains: ARTIFACT metadata (trademark, parentBrand Master Enterprise Solution Best Bets™), DERIVATION_RECORD (transparent co-derivation log — what was decided, by whom, why, and what evidence), CONTRIBUTION_TYPES (4 types: Strategic Direction, Domain Authoring, Active Supervision, Code Generation — each with 2026 rate, reducibility flag, examples), RATE_CONFIGS_2026 (4 rate entries: Betsy $225, Claude $115 quality-adjusted, offshore entry $65 benchmark, onshore senior $175 benchmark), OVERSIGHT_LEVELS (4 intensity levels keyed to turn density), REDUCTION_MAP (irreducible IP vs reducible execution), THREE_LOOPS (Loop 1 Estimation, Loop 2 Cost Ledger, Loop 3 Business Value/ROI). Calc helpers exported.',
     userStory: 'As Betsy, I want the methodology I developed for measuring practitioner + AI contribution to exist as versioned IP in the platform, with transparent derivation records so clients can understand how it was created.',
     requirementDetail: 'server/data/contributionMethodology.js: ARTIFACT, DERIVATION_RECORD, CONTRIBUTION_TYPES (4), RATE_CONFIGS_2026 (4), OVERSIGHT_LEVELS (4), REDUCTION_MAP, THREE_LOOPS (3). Exports: calcActualCost, calcEngineerEquivCost, calcLeverageMultiple, calcCostLeverage, getOversightLevel. Turn density thresholds: critical >120/hr, high 80-120, moderate 40-80, low <40.',
-    acceptanceCriteria: 'File exports all named constants and helpers. calcLeverageMultiple(1002, 35.4) returns 28.3. getOversightLevel(115) returns OVERSIGHT_LEVELS[0] (critical). ARTIFACT.parentBrand = "MES Best Bets™".',
+    acceptanceCriteria: 'File exports all named constants and helpers. calcLeverageMultiple(1002, 35.4) returns 28.3. getOversightLevel(115) returns OVERSIGHT_LEVELS[0] (critical). ARTIFACT.parentBrand = "Master Enterprise Solution Best Bets™".',
     ...DEPLOYED,
     hoursBetsy: 2.5, hoursClaude: 1.0,
     tags: ['patch:v0.17', 'ip-artifacts', 'contribution-methodology', 'mes-best-bets'],
@@ -329,11 +329,11 @@ const NEW_PENDING_ITEMS = [
   {
     capabilitySlug: 'ip-artifacts',
     externalRef: 'v0.17 · pending · mes-best-bets-public-page',
-    title: 'MES Best Bets™ — public-facing page or section on saltbasin.net',
-    summary: 'MES Best Bets™ exists as a registered trademark in the data layer but has no public-facing presence on saltbasin.net yet. A page or section should introduce the brand: what it is (GTM + Q2R end-to-end best practices and platforms), who it is from (Betsy Salter), and what it offers (methodology, L2R model, client engagements). Could live as a section on the existing site or as a dedicated /mes-best-bets route. Should link to /output/methodology and /output/l2r-model.',
-    userStory: 'As a visitor to saltbasin.net who sees MES Best Bets™ referenced in an output or proposal, I want to be able to find out what it is and how to engage with Betsy around it.',
-    requirementDetail: 'CMS section or dedicated page. Headline: "MES Best Bets™". Subhead: descriptor. Body: brief explanation of the methodology and L2R model. CTAs: View Methodology (/output/methodology), View L2R Model (/output/l2r-model), Inquire (/#contact). Should carry © Martha Elizabeth Salter aka Betsy Salter in footer.',
-    acceptanceCriteria: 'A public page or section exists that introduces MES Best Bets™. Links to both output pages. © attribution correct.',
+    title: 'Master Enterprise Solution Best Bets™ — public-facing page or section on saltbasin.net',
+    summary: 'Master Enterprise Solution Best Bets™ exists as a registered trademark in the data layer but has no public-facing presence on saltbasin.net yet. A page or section should introduce the brand: what it is (GTM + Q2R end-to-end best practices and platforms), who it is from (Betsy Salter), and what it offers (methodology, L2R model, client engagements). Could live as a section on the existing site or as a dedicated /mes-best-bets route. Should link to /output/methodology and /output/l2r-model.',
+    userStory: 'As a visitor to saltbasin.net who sees Master Enterprise Solution Best Bets™ referenced in an output or proposal, I want to be able to find out what it is and how to engage with Betsy around it.',
+    requirementDetail: 'CMS section or dedicated page. Headline: "Master Enterprise Solution Best Bets™". Subhead: descriptor. Body: brief explanation of the methodology and L2R model. CTAs: View Methodology (/output/methodology), View L2R Model (/output/l2r-model), Inquire (/#contact). Should carry © Martha Elizabeth Salter aka Betsy Salter in footer.',
+    acceptanceCriteria: 'A public page or section exists that introduces Master Enterprise Solution Best Bets™. Links to both output pages. © attribution correct.',
     priority: 'p3', ...PENDING,
     tags: ['patch:v0.17', 'cms-public', 'mes-best-bets', 'ip-artifacts'],
     l2rStage: 'demand-generation',

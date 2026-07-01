@@ -1,10 +1,10 @@
 // Contribution Intelligence Methodology
 // © 2026 Martha Elizabeth Salter aka Betsy Salter · Salt Basin Net Works · All rights reserved
 //
-// MES Best Bets™ — GTM + Q2R, end-to-end full revenue lifecycle best of experience practices
-// and platforms that lead to business results that can be actually proven.
+// Master Enterprise Solution Best Bets™ — the practitioner's best perspectives on how to master
+// your organization's measurements to produce returns on paper that exist, and are defensible.
 //
-// Contribution Intelligence Methodology is a core IP artifact under MES Best Bets™.
+// Contribution Intelligence Methodology is a core IP artifact under Master Enterprise Solution Best Bets™.
 // Practitioner-derived, AI-augmented, practitioner-signed.
 // "Where the practitioner meets AI augmentation to go from practitioner-derived,
 //  AI augmented, to AI-derived, practitioner signed." — Betsy Salter, 2026
@@ -20,8 +20,8 @@ export const ARTIFACT = {
   type: 'methodology_widget',
   title: 'Contribution Intelligence Methodology',
   trademark: 'Contribution Intelligence Methodology™',
-  parentBrand: 'MES Best Bets™',
-  parentBrandDescriptor: 'GTM + Q2R, end-to-end full revenue lifecycle best of experience practices and platforms that lead to business results that can be actually proven.',
+  parentBrand: 'Master Enterprise Solution Best Bets™',
+  parentBrandDescriptor: "The practitioner's best perspectives on how to master your organization's measurements to produce returns on paper that exist, and are defensible.",
   author: 'Martha Elizabeth Salter aka Betsy Salter',
   organization: 'Salt Basin Net Works',
   copyright: '© 2026 Martha Elizabeth Salter aka Betsy Salter · Salt Basin Net Works · All rights reserved',
@@ -34,7 +34,7 @@ export const ARTIFACT = {
     member: 'read_only_framework',
     client: 'engagement_licensed',
   },
-  watermarkTemplate: '© 2026 Martha Elizabeth Salter aka Betsy Salter · Salt Basin Net Works · Contribution Intelligence Methodology™ · MES Best Bets™ · Licensed to: {{licensee}} · {{date}}',
+  watermarkTemplate: '© 2026 Martha Elizabeth Salter aka Betsy Salter · Salt Basin Net Works · Contribution Intelligence Methodology™ · Master Enterprise Solution Best Bets™ · Licensed to: {{licensee}} · {{date}}',
 };
 
 // ── How the methodology was derived ────────────────────────────────────────
