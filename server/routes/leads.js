@@ -368,6 +368,19 @@ router.post('/public/:publicId/logout', async (req, res) => {
   res.json({ ok: true });
 });
 
+// ── Pledge interest — member site coming soon ──
+// Stamps pledged_at on the lead so Betsy can see who wants to be converted
+// when the member site goes live. Lead must be authed (cookie present).
+router.post('/public/:publicId/pledge', async (req, res) => {
+  const lead = await requireLeadAuth(req, res);
+  if (!lead) return;
+  if (lead.pledged_at) return res.json({ ok: true, alreadyPledged: true });
+  const now = Date.now();
+  await db.prepare(`UPDATE leads SET pledged_at = $1, updated_at = $2 WHERE id = $3`)
+    .run(now, now, lead.id);
+  res.json({ ok: true, pledgedAt: now });
+});
+
 // ── Convert lead → member ──
 //
 // Called from the authed lead view. The lead must:
@@ -615,6 +628,7 @@ router.get('/public/:publicId', async (req, res) => {
     createdAt: Number(lead.created_at),
     updatedAt: Number(lead.updated_at),
     convertedUserId: lead.converted_user_id ? Number(lead.converted_user_id) : null,
+    pledgedAt: lead.pledged_at ? Number(lead.pledged_at) : null,
   });
 });
 

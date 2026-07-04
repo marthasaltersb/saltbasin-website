@@ -1412,6 +1412,7 @@ async function bootstrap() {
     ALTER TABLE leads ADD COLUMN IF NOT EXISTS company TEXT;
     ALTER TABLE leads ADD COLUMN IF NOT EXISTS hiring_manager TEXT;
     ALTER TABLE leads ADD COLUMN IF NOT EXISTS job_status TEXT NOT NULL DEFAULT 'new';
+    ALTER TABLE leads ADD COLUMN IF NOT EXISTS pledged_at BIGINT;
 
     -- Member connections (v0.15)
     CREATE TABLE IF NOT EXISTS member_connections (
