@@ -1007,4 +1007,52 @@ const RELEASES = [
       'Plan the full ~101-item backlog reconciliation as a follow-up (not done in this release)',
     ],
   },
+
+  // ─────────── v0.18.2 — Full Backlog Hours Reconciliation ───────────
+  {
+    version: 'v0.18.2',
+    name: 'Full Backlog Hours Reconciliation (closes the ~101-item gap)',
+    date: '2026-07-07',
+    summary:
+      'Closed out the reconciliation flagged as a follow-up in v0.18.1. Every remaining backlog item was checked against real session evidence before its hours were touched — burst-level containment (not just createdAt-inside-a-date-range, which is misleading for sessions resumed across days), a search across all three Claude project directories on the machine for sessions filed under a different cwd, and a check of the Claude Desktop session index for sessions whose JSONL transcript no longer exists. Along the way, found and merged three "epic" backlog items whose task ranges were being double-counted against later per-task items already carrying their own hour estimates.',
+    sections: [
+      {
+        heading: 'New',
+        items: [
+          'scripts/correlate-backlog-to-bursts.mjs: precise burst-containment correlation — checks whether a backlog item\'s createdAt falls inside an actual active burst (not just a session\'s overall date range), resolving cases where two sessions\' outer date ranges overlap but only one has a real burst at that moment',
+          'scripts/reconcile-backlog-hours-full.mjs: the full 61-item correction, run in three evidence tiers (see Fixed)',
+          'Discovered a second session-metadata source beyond the JSONL transcripts: the Claude Desktop app\'s own session index (AppData/Roaming/Claude/claude-code-sessions), which retains sessionId, cwd, title, and completedTurns even for sessions whose transcript file no longer exists (flagged there as transcriptUnavailable: true)',
+        ],
+      },
+      {
+        heading: 'Fixed',
+        items: [
+          'Tier 1 (real burst analysis): 17 items (81–91, 92–97) had never been assigned hours at all — corrected using real active hours from sessions 97254a80 (5.47 hrs) and de055505 (5.05 hrs), split equally across items sharing a session since no prior estimate existed to preserve a ratio against',
+          'Tier 2 (coarse turn-count estimate, lower confidence): 41 of the original items 1–47 had hand-typed hours with no session transcript to verify them against. Found the missing session in the Claude Desktop index — "Website admin panel and configurability," 2026-06-03→06-07, 120 completed turns, transcript confirmed unavailable. Derived active hours from completedTurns / platform-average turn density (9.92 hrs), apportioned across the 41 items proportional to their original hand-estimate ratios (scale corrected, relative weighting preserved)',
+          'Merge: items #1, #6, #10 were "epic" entries whose externalRef task range (e.g. "tasks #4–#12") fully contained other items\' individually tracked tasks (#2, #3, #27 / #7, #8, #9, #18, #19 / #11) — both were being summed in Build Summary. Epics retired to 0/0 hours; the detail items keep their corrected hours',
+          'Confirmed 40 items (37–39, 48–80, 98–101) correctly carry 0/null hours — they are status=pending, i.e. not yet built, not part of the estimate-inflation problem',
+          'platform hoursTotal dropped from 93.4 to 32.1 (26.6 Claude / 5.5 Betsy) as a result',
+        ],
+      },
+      {
+        heading: 'Known issues',
+        items: [
+          'Tier 2\'s 41 items rest on a coarser evidence base than Tier 1 or the v0.18.1 corrections — completedTurns is a Desktop-app-reported total with no burst/duration/human-vs-assistant split, so its conversion to active hours assumes the platform-average turn density (12.1/hr) rather than that session\'s own (unknowable) density. Treat these 41 items\' hours as directionally correct, not independently verified.',
+          'The root cause of the missing transcript (2026-06-03→06-07) was not investigated — Claude Desktop marks it transcriptUnavailable but the mechanism (retention policy, rotation, crash) is unconfirmed. If it recurs, active session data could be lost again without warning.',
+          'Content-level duplicate detection (beyond externalRef task-number overlap) was not run — it\'s possible other items describe overlapping work without a shared task-number trail to catch it.',
+        ],
+      },
+    ],
+    metrics: {
+      directorHours: 0.4,
+      claudeBuildMins: 90,
+      engineerEquivHours: 10,
+      notes: 'Approximate — this session was in progress at time of writing. Correct against real burst analysis in a future pass once the session transcript is complete, per the same method used to correct v0.18 in v0.18.1.',
+    },
+    postDeploySteps: [
+      'Confirm /output/patch-notes shows v0.18.2',
+      'Confirm /output/build-summary hoursTotal reflects 32.1 (down from 93.4)',
+      'Design the update-not-create backlog workflow (flagged as a follow-up, not done in this release)',
+    ],
+  },
 ];
