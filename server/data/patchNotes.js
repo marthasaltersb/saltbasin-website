@@ -1055,4 +1055,54 @@ const RELEASES = [
       'Design the update-not-create backlog workflow (flagged as a follow-up, not done in this release)',
     ],
   },
+
+  // ─────────── v0.18.3 — Cost Reconciliation, Fee-Type Billing, PLM/EIDOS, Upsert Flow ───────────
+  {
+    version: 'v0.18.3',
+    name: 'Cost Reconciliation, Real Billing Fee-Type, PLM/EIDOS Item, Backlog Upsert',
+    date: '2026-07-07',
+    summary:
+      'Follow-up to v0.18.2: the hours were real, but costUsdClaude/traditionalCostUsd were still computed from two disconnected legacy formulas (neither tied to a documented rate), and the Codex-built PLM/EIDOS Operating Model dashboard existed in the codebase with no backlog record at all. Fixed the cost formulas against the actual RATE_CONFIGS_2026 rates, classified every item\'s Anthropic billing fee type against real receipts found via Gmail search, added the missing PLM item using file-mtime evidence from Codex\'s own working directories (no JSONL transcript exists for non-Claude-Code tools), and closed the loop with a durable fix so future backlog-seeding runs update instead of duplicate. Along the way, a migration bug crashed production for about 15 minutes — documented in Known issues.',
+    sections: [
+      {
+        heading: 'New',
+        items: [
+          'Wired up the v0.17 contribution-tracking columns (data_source, est_claude_hours, est_betsy_hours, actual_claude_hours, actual_betsy_hours) into backlog.js\'s API layer — they existed in the schema but were never exposed, preserving estimate-vs-actual variance instead of overwriting the original estimate when hours get corrected',
+          'New fee_type column, classified per item from real Anthropic billing receipts (Gmail search: Pro plan renewals vs. "Prepaid extra usage" overage purchases) against each item\'s build-session window',
+          '/output/build-summary: two new sections — activity-type × pricing breakdown (Code Generation @ $115/hr Claude, Active Supervision @ $225/hr Betsy) and a fee-type breakdown (subscription-included vs ad hoc overage), both pulling straight from RATE_CONFIGS_2026',
+          'Backlog item #111: the PLM/EIDOS Operating Model dashboard, documented with hoursClaude left null (built in Codex, not Claude Code — no session transcript exists, so it can\'t be measured by the Claude-specific methodology tiers) and real file-mtime evidence disclosed in requirementDetail instead',
+          'Upsert-by-externalRef on POST /api/backlog/items: if an item with the same externalRef already exists, PATCH it instead of inserting a duplicate — every add-vXXX-backlog-items.mjs script already calls this endpoint, so the fix protects all future callers automatically',
+        ],
+      },
+      {
+        heading: 'Fixed',
+        items: [
+          'costUsdClaude was computed at $0.02/Claude-minute (a legacy token-cost guess, ~$1.20/hr) and traditionalCostUsd at $6.25/min (~$375/hr, an undocumented multiplier) — neither tied to RATE_CONFIGS_2026. Replaced with hoursClaude × $115/hr and (hoursClaude+hoursBetsy) × $175/hr across all 110 items.',
+          'activitiesClaude/activitiesBetsy recomputed from the corrected hours using the codebase\'s own existing (previously dormant) formula.',
+          'Platform totals: costUsdClaude $102.30 → $3,061.30, traditionalCostUsd → $5,612.25, aiSavingsMultiple 389.6x → 1.8x. The old multiplier was never real — it was computed from hours that were themselves ~4-8x inflated hand estimates.',
+        ],
+      },
+      {
+        heading: 'Known issues',
+        items: [
+          'Production outage (~15 min, all routes 502ing): the v0.17 backlog_items column migration ran as one multi-statement query. session_id\'s foreign key into the colliding auth `sessions` table (see v0.18.1\'s known issues) failed, which silently aborted the ENTIRE batch — meaning data_source/est_*/actual_*/fee_type never actually existed in production despite being in the ALTER TABLE statements for who knows how long. Once this release\'s API layer started writing to them, the resulting Postgres error was an uncaught promise rejection that crashed the whole Node process. Fixed by isolating every migration statement into its own call and dropping the broken FK (session_id is unused). Also added a process-level unhandledRejection handler as a safety net — mitigation, not a substitute for per-route try/catch, which is still missing.',
+          'Fee-type classification is at build-session-date precision (does a "Prepaid extra usage" purchase fall inside/near the session window), not per-token metering — real dollars spent ($325 total: $60 subscription + $265 overage) and the modeled $115/hr value of the hours are different numbers answering different questions, both shown but easy to conflate.',
+          'The PLM/EIDOS item\'s 0.70hr is file-mtime-span evidence (weakest tier used yet), not turn-level data — Codex\'s local thread catalog was empty, so no richer session data exists to check it against.',
+          'Upsert-by-externalRef only catches exact string matches — it would not have caught the original epic/sub-item duplication (different externalRefs whose task ranges overlap). That still requires a human or a smarter range-aware check; not built here.',
+        ],
+      },
+    ],
+    metrics: {
+      directorHours: 0.5,
+      claudeBuildMins: 140,
+      engineerEquivHours: 14,
+      notes: 'Approximate — this session was in progress at time of writing, spanning the cost reconciliation, the production incident and its fix, the PLM item, and the upsert flow. Correct against real burst analysis in a future pass, same as v0.18.2\'s own metrics.',
+    },
+    postDeploySteps: [
+      'Confirm /output/patch-notes shows v0.18.3',
+      'Confirm /output/build-summary shows the new Contribution Intelligence and Fee Type breakdown sections',
+      'Confirm the "Operating Model" tab still resolves correctly (not falling back to Config) after a hard refresh',
+      'Spot-check that new backlog-item scripts update existing externalRefs instead of duplicating them',
+    ],
+  },
 ];
