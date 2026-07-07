@@ -40,6 +40,7 @@ const TAB_COMPONENTS = {
   networks:       () => <NetWorksPanel />,
   backlog:        () => <BacklogPanel />,
   qa:             () => <QAPanel />,
+  plmDashboard:   () => <MemberPlmPanel scope="admin" />,
   resume:         (props) => <MyResumePanel {...props} />,
   contentManager: () => <ContentManagerShell />,
   nrm:            () => <NrmPanel isAdmin={true} />,
@@ -66,8 +67,9 @@ const FALLBACK_ADMIN_NAV = {
       { id: 'resume',  label: 'My Resume',  componentId: 'resume',  sortOrder: 1 },
     ]},
     { id: 'plm', label: 'Platform Lifecycle Management', sortOrder: 1, tabs: [
-      { id: 'backlog', label: 'Backlog', componentId: 'backlog', sortOrder: 0 },
-      { id: 'qa', label: 'QA', componentId: 'qa', sortOrder: 1 },
+      { id: 'plm-dashboard', label: 'Operating Model', componentId: 'plmDashboard', sortOrder: 0 },
+      { id: 'backlog', label: 'Backlog', componentId: 'backlog', sortOrder: 1 },
+      { id: 'qa', label: 'QA', componentId: 'qa', sortOrder: 2 },
     ]},
     { id: 'crm', label: 'Customer Relationship Management', sortOrder: 2, tabs: [
       { id: 'leads', label: 'Leads', componentId: 'leads', sortOrder: 0 },
@@ -685,7 +687,7 @@ export default function AdminShell({ scope = 'admin' }) {
           if (componentId === 'profiles')        return <ProfileHub isAdmin={!isMember} />;
           if (componentId === 'memberNrm')       return <NrmPanel isAdmin={false} />;
           if (componentId === 'memberAnalytics') return <AnalyticsPanel isAdmin={false} />;
-          if (componentId === 'memberPlm')       return <MemberPlmPanel />;
+          if (componentId === 'memberPlm')       return <MemberPlmPanel scope={scope} />;
 
           // Inline 'config' case: the panel needs draft + setter + scope from
           // the shell. Treated as the default fallback when nothing else matched.

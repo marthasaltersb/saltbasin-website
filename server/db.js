@@ -855,8 +855,9 @@ async function bootstrap() {
         { id: 'content', label: 'My Profile', componentId: 'content', sortOrder: 0 },
       ]},
       { id: 'plm', label: 'Platform Lifecycle Management', sortOrder: 1, tabs: [
-        { id: 'backlog', label: 'Backlog', componentId: 'backlog', sortOrder: 0 },
-        { id: 'qa',      label: 'QA',      componentId: 'qa',      sortOrder: 1 },
+        { id: 'plm-dashboard', label: 'Operating Model', componentId: 'plmDashboard', sortOrder: 0 },
+        { id: 'backlog', label: 'Backlog', componentId: 'backlog', sortOrder: 1 },
+        { id: 'qa',      label: 'QA',      componentId: 'qa',      sortOrder: 2 },
       ]},
       { id: 'crm', label: 'Customer Relationship Management', sortOrder: 2, tabs: [
         { id: 'leads',    label: 'Leads',    componentId: 'leads',    sortOrder: 0 },
@@ -1446,6 +1447,8 @@ async function bootstrap() {
     { id: 'app.herq',           display_name: 'HERQ Content Manager',          slug: 'herq',            brand_mode: 'herq',       admin_only: true  },
     { id: 'app.services',       display_name: 'Services Proposal Manager',      slug: 'services',        brand_mode: 'strategic',  admin_only: false },
     { id: 'app.globalStandards',display_name: 'Global Standard Content Manager',slug: 'global-standards',brand_mode: 'strategic',  admin_only: true  },
+    { id: 'app.eidosOperatingModel', display_name: 'EIDOS Operating Model',      slug: 'eidos-operating-model', brand_mode: 'strategic', admin_only: true },
+    { id: 'app.contributionIntelligence', display_name: 'Contribution Intelligence', slug: 'contribution-intelligence', brand_mode: 'strategic', admin_only: true },
     { id: 'app.nrm',            display_name: 'Network Relationship Manager',   slug: 'nrm',             brand_mode: 'strategic',  admin_only: false },
     { id: 'app.crm',            display_name: 'Customer Relationship Manager',  slug: 'crm',             brand_mode: 'strategic',  admin_only: false },
     { id: 'app.plm',            display_name: 'Platform Lifecycle Management',  slug: 'plm',             brand_mode: 'strategic',  admin_only: true  },
@@ -1495,7 +1498,8 @@ async function bootstrap() {
       const allTabIds = (nav.views || []).flatMap(v => (v.tabs || []).map(t => t.id));
 
       const newTabs = [
-        { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'content-manager', label: 'Content Manager', componentId: 'contentManager', sortOrder: 2 },
+        { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'plm-dashboard',   label: 'Operating Model', componentId: 'plmDashboard',   sortOrder: 0 },
+        { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'content-manager', label: 'Content Manager',  componentId: 'contentManager', sortOrder: 3 },
         { viewId: 'platform', viewLabel: 'Platform',                      id: 'nrm',             label: 'Network',         componentId: 'nrm',            sortOrder: 0 },
         { viewId: 'platform', viewLabel: 'Platform',                      id: 'analytics',       label: 'Analytics',       componentId: 'analytics',      sortOrder: 1 },
         { viewId: 'system',   viewLabel: 'System',                        id: 'finbridgeco',     label: 'FinBridgeCo',     componentId: 'finbridgeco',    sortOrder: 2 },
@@ -1514,6 +1518,17 @@ async function bootstrap() {
         view.tabs = view.tabs || [];
         view.tabs.push({ id: t.id, label: t.label, componentId: t.componentId, sortOrder: t.sortOrder });
         changed = true;
+      }
+
+      const plmView = (nav.views || []).find(v => v.id === 'plm');
+      const plmSort = { 'plm-dashboard': 0, backlog: 1, qa: 2, 'content-manager': 3 };
+      if (plmView?.tabs) {
+        for (const tab of plmView.tabs) {
+          if (plmSort[tab.id] !== undefined && tab.sortOrder !== plmSort[tab.id]) {
+            tab.sortOrder = plmSort[tab.id];
+            changed = true;
+          }
+        }
       }
 
       if (changed) {
