@@ -1372,7 +1372,7 @@ export function BuildSummaryOutput() {
             <SumChip label="Avoided tier cost / yr" value={dollars(annualSavings)} accent />
           </div>
           <p style={{ fontSize: '0.72rem', color: 'var(--sb-teal-deep)', marginTop: '0.75rem', fontStyle: 'italic' }}>
-            Methodology: hours by person are explicit per requirement (editable from the Backlog drawer). Claude spend is calculated at $0.02/Claude-minute of focused work — calibration documented in code. Tier savings are listed costs of the paid alternatives that were sidestepped.
+            Methodology: hours by person come from the Contribution Intelligence Methodology — real JSONL session-log burst analysis where a session transcript survives, a disclosed lower-confidence estimate where it doesn't (see the breakdown below). Claude spend is calculated at $115/hr (quality-adjusted rate, RATE_CONFIGS_2026). Tier savings are listed costs of the paid alternatives that were sidestepped.
           </p>
         </section>
 
@@ -1399,9 +1399,15 @@ export function BuildSummaryOutput() {
             <SumChip label="Cost multiplier avoided" value={totals.aiSavingsMultiple ? `${totals.aiSavingsMultiple}x` : '—'} />
           </div>
           <p style={{ ...paraStyle, fontSize: '0.85rem' }}>
-            Estimate methodology: a traditional senior-dev team delivering the same scope would need approximately <strong>2.5× the effort hours</strong> (accounting for slower context-switching, more debugging cycles, design review, PM overhead, and code review), at a <strong>$150/hour blended rate</strong> (US senior full-stack). Applied to the total hours captured per requirement.
+            Estimate methodology: a traditional team is assumed to take the <strong>same wall-clock duration</strong> as the AI-augmented build, priced at <strong>$175/hour</strong> (onshore senior-engineer benchmark, RATE_CONFIGS_2026). This is a floor comparison, not a claim about how much longer traditional delivery would actually take — engineer-equivalent effort (a traditional team doing this same scope from scratch, including its own spec/architecture time) has not been independently estimated and would very likely be higher. See the Contribution Intelligence breakdown below for the activity-type pricing this is built from.
           </p>
         </section>
+
+        {/* ── Contribution Intelligence Methodology breakdown ── */}
+        <ContributionBreakdown items={items} />
+
+        {/* ── Fee-type breakdown ── */}
+        <FeeTypeBreakdown items={items} />
 
         {/* ── Delivery timeline by capability ── */}
         {timelineCaps.length > 0 && (
@@ -1511,6 +1517,157 @@ export function BuildSummaryOutput() {
         </section>
       </div>
     </OutputFrame>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────
+// ContributionBreakdown — activity-type × pricing breakdown from the
+// Contribution Intelligence Methodology. hoursClaude maps to Code
+// Generation ($115/hr, RATE_CONFIGS_2026 claude_quality_adjusted);
+// hoursBetsy maps to Active Supervision ($225/hr, betsy_director) — the
+// only Betsy contribution type that is "co-present by definition during
+// all Claude sessions" per contributionMethodology.js. Strategic
+// Direction and Domain Authoring (also $225/hr) are real contribution
+// types in the methodology but aren't tracked at the per-backlog-item
+// level, so they're disclosed as not represented here rather than folded
+// into Active Supervision.
+// ──────────────────────────────────────────────────────────────────
+const CODE_GEN_RATE = 115;
+const SUPERVISION_RATE = 225;
+
+function ContributionBreakdown({ items }) {
+  const dollars = (n) => `$${(Math.round((n || 0) * 100) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const delivered = (items || []).filter((it) => it.status === 'deployed' || it.status === 'completed');
+
+  const hoursClaude = delivered.reduce((s, it) => s + (it.hoursClaude || 0), 0);
+  const hoursBetsy = delivered.reduce((s, it) => s + (it.hoursBetsy || 0), 0);
+  const codeGenCost = hoursClaude * CODE_GEN_RATE;
+  const supervisionCost = hoursBetsy * SUPERVISION_RATE;
+
+  const measured = delivered.filter((it) => it.dataSource === 'measured_burst_analysis');
+  const estimated = delivered.filter((it) => it.dataSource === 'measured_turn_count_estimate');
+  const measuredHours = measured.reduce((s, it) => s + (it.hoursClaude || 0) + (it.hoursBetsy || 0), 0);
+  const estimatedHours = estimated.reduce((s, it) => s + (it.hoursClaude || 0) + (it.hoursBetsy || 0), 0);
+
+  const rows = [
+    { type: 'Code Generation', contributor: 'Claude', hours: hoursClaude, rate: CODE_GEN_RATE, cost: codeGenCost },
+    { type: 'Active Supervision', contributor: 'Betsy Salter', hours: hoursBetsy, rate: SUPERVISION_RATE, cost: supervisionCost },
+  ];
+
+  return (
+    <section style={{ marginBottom: '2rem', borderTop: '0.5px solid var(--sb-taupe)', paddingTop: '1.25rem' }}>
+      <OutputHeading>Contribution Intelligence Methodology™</OutputHeading>
+      <h2 className="sb-display" style={{ fontSize: '1.5rem', color: 'var(--sb-navy)', marginBottom: '0.5rem' }}>
+        Activity type → pricing breakdown
+      </h2>
+      <div style={{ overflowX: 'auto', marginBottom: '0.75rem' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid var(--sb-taupe)' }}>
+              {['Activity Type', 'Contributor', 'Hours', 'Rate', 'Cost'].map((h) => (
+                <th key={h} style={{ textAlign: h === 'Activity Type' || h === 'Contributor' ? 'left' : 'right', padding: '0.5rem 0.6rem', color: 'var(--sb-teal-deep)', fontFamily: 'var(--sb-font-label)', fontSize: '0.65rem', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.type} style={{ borderBottom: '0.5px solid var(--sb-taupe)' }}>
+                <td style={{ padding: '0.55rem 0.6rem', color: 'var(--sb-navy)' }}>{r.type}</td>
+                <td style={{ padding: '0.55rem 0.6rem' }}>{r.contributor}</td>
+                <td style={{ padding: '0.55rem 0.6rem', textAlign: 'right' }}>{r.hours.toFixed(1)}</td>
+                <td style={{ padding: '0.55rem 0.6rem', textAlign: 'right' }}>${r.rate}/hr</td>
+                <td style={{ padding: '0.55rem 0.6rem', textAlign: 'right', fontWeight: 600 }}>{dollars(r.cost)}</td>
+              </tr>
+            ))}
+            <tr>
+              <td style={{ padding: '0.55rem 0.6rem', fontWeight: 700, color: 'var(--sb-navy)' }} colSpan={2}>Total AI-augmented build cost</td>
+              <td style={{ padding: '0.55rem 0.6rem', textAlign: 'right', fontWeight: 700 }}>{(hoursClaude + hoursBetsy).toFixed(1)}</td>
+              <td />
+              <td style={{ padding: '0.55rem 0.6rem', textAlign: 'right', fontWeight: 700 }}>{dollars(codeGenCost + supervisionCost)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+          gap: '0.75rem',
+          marginBottom: '0.75rem',
+        }}
+      >
+        <SumChip label="Measured (real session logs)" value={`${measuredHours.toFixed(1)}h`} accent />
+        <SumChip label="Estimated (lower confidence)" value={`${estimatedHours.toFixed(1)}h`} />
+      </div>
+      <p style={{ fontSize: '0.72rem', color: 'var(--sb-teal-deep)', fontStyle: 'italic' }}>
+        Strategic Direction and Domain Authoring — the other two Betsy contribution types in the methodology, also priced at $225/hr — are not tracked at the per-requirement level and are not represented in this breakdown. "Measured" hours come from real JSONL session-log burst analysis; "Estimated" hours come from a coarser turn-count-based derivation used where the original session transcript no longer exists (see the Contribution Intelligence Methodology page for the full disclosure).
+      </p>
+    </section>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────
+// FeeTypeBreakdown — how the underlying Claude usage was actually paid
+// for: covered by the Claude Pro subscription's included usage, or
+// funded by a "Prepaid extra usage" overage purchase. Classified from
+// real Anthropic billing receipts against each item's build-session
+// window (purchase-date precision, not per-token metering — disclosed).
+// Note this shows the MODELED $115/hr value of the hours in each bucket,
+// not a literal allocation of receipt dollars — those are shown
+// separately as the real amount paid to Anthropic.
+// ──────────────────────────────────────────────────────────────────
+const FEE_TYPE_LABELS = {
+  ad_hoc_overage: 'Ad hoc (prepaid extra usage)',
+  subscription_included: 'Subscription-included',
+};
+
+function FeeTypeBreakdown({ items }) {
+  const dollars = (n) => `$${(Math.round((n || 0) * 100) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const delivered = (items || []).filter((it) => it.status === 'deployed' || it.status === 'completed');
+  const classified = delivered.filter((it) => it.feeType);
+  const unclassified = delivered.filter((it) => !it.feeType);
+
+  const byType = {};
+  for (const it of classified) {
+    const key = it.feeType;
+    byType[key] = byType[key] || { hours: 0, cost: 0, count: 0 };
+    byType[key].hours += (it.hoursClaude || 0);
+    byType[key].cost += (it.costUsdClaude || 0);
+    byType[key].count += 1;
+  }
+
+  return (
+    <section style={{ marginBottom: '2rem', borderTop: '0.5px solid var(--sb-taupe)', paddingTop: '1.25rem' }}>
+      <OutputHeading>Anthropic Billing — Fee Type</OutputHeading>
+      <h2 className="sb-display" style={{ fontSize: '1.5rem', color: 'var(--sb-navy)', marginBottom: '0.5rem' }}>
+        Subscription-included vs. ad hoc overage
+      </h2>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '0.75rem',
+          marginBottom: '0.75rem',
+        }}
+      >
+        {Object.entries(byType).map(([key, v]) => (
+          <SumChip
+            key={key}
+            label={`${FEE_TYPE_LABELS[key] || key} (${v.count} items)`}
+            value={`${v.hours.toFixed(1)}h · ${dollars(v.cost)}`}
+            accent={key === 'subscription_included'}
+          />
+        ))}
+        {unclassified.length > 0 && (
+          <SumChip label={`Not yet classified (${unclassified.length} items)`} value="—" />
+        )}
+      </div>
+      <p style={{ fontSize: '0.72rem', color: 'var(--sb-teal-deep)', fontStyle: 'italic' }}>
+        Classified against real Anthropic receipts (Claude Pro renewals vs. "Prepaid extra usage, Individual plan" purchases) at the build-session date level, not per-token metering. Real Anthropic spend across the build to date: $60 in Pro plan renewals (Apr–Jun 2026) + $265 in ad hoc overage purchases = <strong>$325 actual dollars paid</strong> — a different, much smaller number than the ${(Object.values(byType).reduce((s, v) => s + v.cost, 0)).toFixed(0)} modeled quality-adjusted value of Claude's hours shown above. The $115/hr figure values the work; the $325 figure is what actually left the bank account.
+      </p>
+    </section>
   );
 }
 
