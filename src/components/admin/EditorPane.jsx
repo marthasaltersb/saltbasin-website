@@ -568,6 +568,31 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
             <label style={styles.fieldLabel}>Type (read-only in Phase 1)</label>
             <input className="sb-input" value={section.type} disabled />
           </div>
+
+          <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '0.5px solid rgba(196,132,58,0.15)' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.82rem', color: 'var(--sb-cream)', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={!!section.navSubPage}
+                onChange={(e) => patchTop('navSubPage', e.target.checked)}
+              />
+              Show as a sub-page link in the nav
+            </label>
+            <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginTop: '0.35rem', lineHeight: 1.5 }}>
+              When on, this section gets its own dropdown link under this page's nav item (jumps to this section). When off, the section still appears on the page — it just won't have a dedicated nav link.
+            </div>
+            {section.navSubPage && (
+              <div style={{ ...styles.fieldGroup, marginTop: '0.6rem' }}>
+                <label style={styles.fieldLabel}>Nav Label (blank = use section name)</label>
+                <input
+                  className="sb-input"
+                  value={section.navLabel || ''}
+                  placeholder={section.name || ''}
+                  onChange={(e) => patchTop('navLabel', e.target.value)}
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ── Section Actions / Buttons card ─────────────────────────── */}

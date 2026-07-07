@@ -54,12 +54,14 @@ export function InlineDataNotice({ context = 'sharing', dark = true, compact = f
 // ── Standalone /data-notice page (long-form version) ──
 export default function DataNotice() {
   const [config, setConfig] = React.useState(null);
+  const [pages, setPages] = React.useState(null);
   React.useEffect(() => {
     api.getPublicConfig().then(setConfig).catch(() => {});
+    api.getPublishedSite().then((s) => setPages(s?.pages || {})).catch(() => {});
   }, []);
   return (
     <div>
-      <PublicNav site={config?.site || {}} />
+      <PublicNav site={config?.site || {}} pages={pages} />
       <div style={{ background: 'var(--sb-navy)', color: 'var(--sb-cream)', padding: '5rem 1.5rem' }}>
         <article style={{ maxWidth: 760, margin: '0 auto' }}>
           <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>

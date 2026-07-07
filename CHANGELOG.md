@@ -5,6 +5,100 @@ Historical versions are preserved below in reverse-chronological order.
 
 ---
 
+## [Session 8] — 2026-07-06 · Home Page Restructure, Data-Driven Nav, Contribution Intelligence
+
+### Summary
+Home page reorganized into a paired-column layout (site purpose / founder / exec dashboard /
+mission), the three separate Consulting pages merged into one with a per-section nav-link
+toggle, and the public nav rewritten to be fully data-driven — no hardcoded nav array left
+anywhere in the codebase. Dense resume-style text (career timeline, case studies) converted to
+hover/tap-expandable dashboard tiles. Retroactively applied the Contribution Intelligence
+Methodology (§ below) to this and the preceding four sessions of undocumented work.
+
+### Capabilities Added / Changed
+
+#### Home Page Restructure
+- **Row 1** (`aboutIntro` section): left column now carries the "About This Site" purpose
+  statement (living portfolio / source of truth / real-time output engine / build sandbox);
+  right column carries "Face of the Founder" (name, photo, blurb, CTAs) plus a "How I Work"
+  callout moved up from the old Professional Experience section.
+- **Row 2** (`execDashboard` section, new block type): Executive Summary redesigned as a
+  dashboard — large stat tiles (years of experience, industries served), narrative paragraphs,
+  and achievement highlights rendered as a card grid instead of a bulleted wall of text. Paired
+  with the Salt Basin Mission card (moved here from the old `aboutIntro` right column).
+- Career Timeline and Case Studies added to Home directly below the dashboard row (previously
+  only reachable via the now-removed "Meet the Founder" page).
+- Industries Served (`industryWheel`) trimmed to just the wheel + tech-capability panel;
+  the categorized-domains + niche-solutions panels split into a new `domainsNiche` block type.
+
+#### Consulting Pages Merged
+- The three separate pages (Domains & Niche Expertise, Services, Self-Service Assessments)
+  collapsed into one `Consulting` page with three sections. "Meet the Founder" removed
+  entirely — its content now lives on Home.
+- `/output/resume`, `/output/case-study/:slug`, `/output/domains` updated to read from the Home
+  page's `aboutIntro` + `execDashboard` sections instead of the removed founder page.
+
+#### Data-Driven Public Nav (breaking change to `PublicNav.jsx`)
+- Replaced the hardcoded `NAV` array with a nav built at render time from live page + section
+  data: one top-level item per published page (ordered by `page.order`), with a dropdown built
+  from any section flagged `navSubPage: true` on that page, anchored to `section.id`.
+- New "Show as a sub-page link in the nav" checkbox + Nav Label override added to EditorPane's
+  Section Settings — adding a page or flipping this toggle updates the visitor-facing nav with
+  no code change required.
+- Admin Pages sidebar simplified to a flat list (one row per page) — it now matches the nav
+  exactly, since page-level nav grouping was retired in favor of the section-level toggle for
+  the admin/platform site (member sites still use `page.navGroup` for their own nav).
+
+#### Dashboard-Tile Text Pattern (`ExpandableTile`)
+- New shared component: clamps text to 3 lines, expands to full text in a raised overlay on
+  hover or tap. Applied to Career Timeline's per-job bullets and Case Studies' labeled fields
+  (Problem Statement, Methods & Approach, Impact & Outcomes, etc.) so dense copy reads as a
+  scannable grid rather than a paragraph wall — no underlying content was shortened or removed.
+
+### Contribution Intelligence — Retroactive Application
+
+Applying `server/data/contributionMethodology.js` (built in a prior session, June 2026) to this
+session and the four preceding it (Sessions/versions v0.12–v0.17 + lead pledge flow + today):
+
+| Contribution type | Contributor | Rate (2026) | Where it showed up this session |
+|---|---|---|---|
+| Strategic Direction | Betsy Salter | $225/hr | Deciding the Home page's final section pairing (site intro ↔ founder, dashboard ↔ mission), retiring the founder page, choosing hover-expand over click-through for dense text |
+| Domain Authoring | Betsy Salter | $225/hr | The "About This Site" purpose copy, the nav-grouping mental model ("Pages should match nav exactly") |
+| Active Supervision | Betsy Salter | $225/hr | Multiple rounds of correction on section placement and pairing before landing on the final layout — the exact "how AI course-corrects toward a director's intent" pattern the methodology tracks |
+| Code Generation | Claude (Anthropic) | $115/hr (quality-adjusted) | Component rewrites (`AboutIntroBlock`, `ExecDashboardBlock`, `DomainsNicheBlock`, `PublicNav.jsx`), five DB migration scripts, `ExpandableTile`, Output.jsx field-merge compatibility layer |
+
+**Honesty note on precision:** the methodology's headline metrics (active hours, turn density,
+leverage multiple) require session-JSONL burst analysis, which was run once for the June 2026
+platform build (`35.4 active hours, 3,880 turns, 28× leverage` — see
+`server/data/contributionMethodology.js`). That analysis has not been re-run for
+Sessions/versions v0.12 through today; the table above is a qualitative attribution by
+contribution type, not a re-measured hour count. Re-running the JSONL burst analysis across
+this date range would be needed before citing new hour/leverage figures for this period.
+
+---
+
+## [v0.17 → v0.13] — 2026-06-11 to 2026-07-05 · Platform Merge, Resume Generator, IP Artifacts, Lead Pledge
+
+*(Backfilled retroactively — see git log for exact commit-level detail; this range was built
+across several sessions that predate this changelog being kept current.)*
+
+- **v0.13 — Resume, Templates & Profile Depth**: resume generator groundwork, section template
+  modal, field settings system + 9 new block types, sidebar scroll fixes, guided link picker
+  for action buttons (site pages / anchors / output routes), My Resume tab added to admin shell.
+- **v0.14 — Platform merge**: HERQ, NRM, Services, Standards, Governance, Analytics, and Lineage
+  sub-apps added; resume auth gate regression fixed.
+- **v0.15 — Resume generator**: 4 layout templates, agent diff view, Domains output page;
+  Connections, Messaging, Job Leads, Inbox; Networks panel and section-picker scope fixes
+  (admin sees admin+member pages, members see only their own).
+- **v0.16 — Lead email management**, auth login fix; **v0.16.1** — CTA visibility rules, build
+  metrics, deploy process documentation.
+- **v0.17 — IP artifacts**: Contribution Intelligence Methodology (`contributionMethodology.js`),
+  L2R (Lead-to-Revenue) model, integrations research gate; MES trademark corrected to full
+  legal name; deploy crash fixed (DB migrations isolated from `sessions` column ALTERs).
+- **Lead pledge flow**: "convert to member" replaced with a lower-friction pledge-interest flow.
+
+---
+
 ## [Session 7] — 2026-06-09 · Integration Platform, Profile Hub, Data Architecture
 
 ### Summary

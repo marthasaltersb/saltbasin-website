@@ -372,7 +372,7 @@ export default function MyResumePanel({ scope = 'member' }) {
 
   useEffect(() => {
     // Admin scope (Betsy): merge admin site + member site so all sections appear —
-    // her resume content lives in the admin site (consulting-founder page).
+    // her resume content lives in the admin site (Home page).
     // Member scope: only load their own member site pages.
     if (scope === 'admin') {
       Promise.allSettled([api.getMemberDraftSite(), api.getDraftSite()])

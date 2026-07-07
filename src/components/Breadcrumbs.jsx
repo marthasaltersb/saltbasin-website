@@ -9,14 +9,8 @@ function trailFor(pathname, params) {
 
   if (pathname === '/' || pathname === '') return null;
 
-  if (pathname.startsWith('/consulting/founder')) {
-    return [home, { label: 'Consulting', to: '/consulting/founder' }, { label: 'Meet the Founder' }];
-  }
-  if (pathname.startsWith('/consulting/services')) {
-    return [home, { label: 'Consulting', to: '/consulting/founder' }, { label: 'Services' }];
-  }
-  if (pathname.startsWith('/consulting/assessments')) {
-    return [home, { label: 'Consulting', to: '/consulting/founder' }, { label: 'Self-Service Assessments' }];
+  if (pathname.startsWith('/consulting')) {
+    return [home, { label: 'Consulting' }];
   }
   if (pathname.startsWith('/resources')) {
     return [home, { label: 'Resources' }];
@@ -40,13 +34,13 @@ function trailFor(pathname, params) {
     return [home, { label: 'Data & Security Notice' }];
   }
   if (pathname.startsWith('/output/resume')) {
-    return [home, { label: 'Consulting', to: '/consulting/founder' }, { label: 'Resume Output' }];
+    return [home, { label: 'Consulting', to: '/consulting' }, { label: 'Resume Output' }];
   }
   if (pathname.startsWith('/output/case-study')) {
-    return [home, { label: 'Consulting', to: '/consulting/founder' }, { label: 'Case Study' }];
+    return [home, { label: 'Consulting', to: '/consulting' }, { label: 'Case Study' }];
   }
   if (pathname.startsWith('/output/proposal')) {
-    return [home, { label: 'Consulting', to: '/consulting/services' }, { label: 'Proposal' }];
+    return [home, { label: 'Consulting', to: '/consulting' }, { label: 'Proposal' }];
   }
   return null;
 }

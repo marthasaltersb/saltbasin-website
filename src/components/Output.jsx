@@ -16,6 +16,25 @@ import { api } from '../lib/api.js';
 import BackLink from './BackLink.jsx';
 import { renderBlockToHtml } from '../lib/outputBlocks.js';
 
+// The Home page's "about" content is split across two sections — the founder
+// card (name/photo/howIWork, in the aboutIntro section) and the executive
+// dashboard (narrative + highlights, in the execDashboard section). Output
+// pages (resume, domains) want a single flat object, so merge them here.
+function getHomeAboutFields(page) {
+  const exec = page?.sections.find((s) => s.type === 'execDashboard')?.fields || {};
+  const founder = page?.sections.find((s) => s.type === 'aboutIntro')?.fields || {};
+  return {
+    heading: exec.heading || founder.founderName,
+    name: founder.founderName || exec.heading,
+    title: founder.founderTitle,
+    photoUrl: founder.photoUrl,
+    p1: exec.p1,
+    p2: exec.p2,
+    p3: exec.p3,
+    howIWork: founder.howIWork,
+  };
+}
+
 // ── Auth state hook ──
 function useAuthState() {
   const [state, setState] = useState({ loading: true, user: null });
@@ -616,12 +635,9 @@ export function ResumeOutput() {
   useEffect(() => {
     api.getPublishedSite()
       .then((site) => {
-        const founderPage =
-          site.pages['consulting-founder'] ||
-          Object.values(site.pages || {}).find((p) => p.slug === 'consulting/founder');
-        if (!founderPage) { setSiteError('Founder page not found — check that the Meet the Founder page is published.'); return; }
-        setPage(founderPage);
         const home = site.pages['home'];
+        if (!home) { setSiteError('Home page not found — check that the site is published.'); return; }
+        setPage(home);
         setWheel(home?.sections.find((s) => s.type === 'industryWheel')?.fields || {});
       })
       .catch((e) => setSiteError(e.message || 'Failed to load'));
@@ -674,7 +690,7 @@ export function ResumeOutput() {
     );
   }
 
-  const about = page.sections.find((s) => s.type === 'about')?.fields || {};
+  const about = getHomeAboutFields(page);
   const timeline = page.sections.find((s) => s.type === 'timeline')?.fields || {};
   const jobs = [];
   for (let i = 1; i <= 10; i++) {
@@ -832,7 +848,7 @@ export function CaseStudyOutput() {
   useEffect(() => {
     api.getPublishedSite()
       .then((site) => {
-        const cases = site.pages['consulting-founder']?.sections.find((s) => s.type === 'caseStudies')?.fields || {};
+        const cases = site.pages['home']?.sections.find((s) => s.type === 'caseStudies')?.fields || {};
         setData(cases);
       })
       .catch(() => setData(null));
@@ -965,9 +981,8 @@ export function DomainsOutput() {
   const [wheel, setWheel] = useState({});
   useEffect(() => {
     api.getPublishedSite().then(site => {
-      const cf = site.pages['consulting-founder'];
-      setAbout(cf?.sections.find(s => s.type === 'about')?.fields || {});
       const home = site.pages['home'];
+      setAbout(getHomeAboutFields(home));
       setWheel(home?.sections.find(s => s.type === 'industryWheel')?.fields || {});
     }).catch(() => {});
   }, []);
@@ -2469,7 +2484,7 @@ function IpProposalCta({ title = 'Request a Proposal' }) {
           {title}
         </a>
         <a
-          href="/consulting/services"
+          href="/consulting"
           style={{
             background: 'transparent',
             color: '#c9a84c',

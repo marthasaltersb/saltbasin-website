@@ -91,7 +91,7 @@ export default function PreviewPane({ site, config, currentPageKey, isMember = f
                 )}
               </nav>
             ) : (
-              <PublicNav site={config?.site || {}} />
+              <PublicNav site={config?.site || {}} pages={pages} />
             )}
             {(page.sections || []).map((sec) => (
               <RenderSection key={sec.id} section={sec} config={config} mode="preview" />

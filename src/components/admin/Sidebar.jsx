@@ -28,6 +28,10 @@ export default function Sidebar({
     <div style={styles.sidebar}>
 
       {/* ── Pages (fixed, non-scrolling) ─────────────────────────────── */}
+      {/* One row per page — this list is exactly the top-level public nav.
+          A page's sub-nav (e.g. "Consulting"'s dropdown) comes from that
+          page's own sections, each toggled on via section.navSubPage in the
+          Section Settings panel — not from anything configured here. */}
       <div style={{ ...styles.sidebarSection, flexShrink: 0 }}>
         <div style={styles.sidebarLabel}>Pages</div>
         {pages.map(([key, pg]) => {
@@ -41,7 +45,7 @@ export default function Sidebar({
             >
               <span className={`sb-badge ${b.cls}`}>{b.txt}</span>
               <span style={{ fontSize: '0.83rem', flex: 1, color: active ? 'var(--sb-gold)' : 'var(--sb-sage)' }}>
-                {pg.name}
+                {pg.navLabel || pg.name}
               </span>
               <button
                 title="Delete page"
@@ -80,6 +84,9 @@ export default function Sidebar({
               <span style={{ color: 'var(--sb-teal-deep)', fontSize: '0.7rem' }}>⋮⋮</span>
               <span className={`sb-badge ${b.cls}`} style={{ fontSize: '0.55rem' }}>{b.txt}</span>
               <span style={{ fontSize: '0.8rem', flex: 1, color: 'var(--sb-sage)' }}>{sec.name}</span>
+              {sec.navSubPage && (
+                <span title="Shows as a sub-page link in the nav" style={{ fontSize: '0.62rem', color: 'var(--sb-gold)' }}>▾ nav</span>
+              )}
               <button
                 title="Cycle status"
                 onClick={(e) => { e.stopPropagation(); onCycleSectionStatus(sec.id); }}

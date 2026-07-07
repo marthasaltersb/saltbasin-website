@@ -157,4 +157,7 @@ export const api = {
     request('/api/auth/reset-confirm', { method: 'POST', body: JSON.stringify({ token, password }) }),
   recoverEmail: (phone, recaptchaToken) =>
     request('/api/auth/email-recover', { method: 'POST', body: JSON.stringify({ phone, recaptchaToken }) }),
+
+  // OAuth connections (used by Command Center + Profile Hub integrations)
+  getOAuthConnections: () => request('/api/oauth/connections'),
 };

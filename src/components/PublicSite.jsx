@@ -44,7 +44,7 @@ export default function PublicSite() {
   }
   if (!site || !config) return <ColdStartLoader />;
 
-  // Full path slug — supports nested like 'consulting/founder'
+  // Full path slug — supports nested like 'consulting'
   const requestedSlug = params['*'] || '';
   const pages = site.pages || {};
   const currentEntry =
@@ -78,7 +78,7 @@ export default function PublicSite() {
   return (
     <div className="sb-public-site-root">
       {brandCss && <style>{brandCss}</style>}
-      <PublicNav site={config.site} />
+      <PublicNav site={config.site} pages={pages} />
       <Breadcrumbs />
       {(currentPage.sections || []).map((sec) => (
         <RenderSection key={sec.id} section={sec} config={config} mode="public" liveSlugs={liveSlugs} />

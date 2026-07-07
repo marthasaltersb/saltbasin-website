@@ -262,35 +262,41 @@ function ScriptureBlock({ section }) {
 
 function AboutBlock({ section }) {
   const f = section.fields || {};
+  const singleColumn = f.hidePhoto;
   return (
     <section
       id={section.id}
       style={{ background: BG_VAR[section.bg] || 'var(--sb-ivory)', padding: '5rem 2rem' }}
     >
-      <div className="sb-grid-2col-photo" style={{ maxWidth: 1000, margin: '0 auto' }}>
-        <div
-          style={{
-            background: 'var(--sb-cream)',
-            borderRadius: 'var(--sb-radius)',
-            aspectRatio: '4 / 5',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: '0.5px solid var(--sb-taupe)',
-          }}
-        >
-          <div style={{ textAlign: 'center', opacity: 0.4 }}>
-            <div
-              className="sb-display"
-              style={{ fontSize: '3rem', color: 'var(--sb-navy)' }}
-            >
-              Betsy
+      <div
+        className={singleColumn ? undefined : 'sb-grid-2col-photo'}
+        style={{ maxWidth: singleColumn ? 800 : 1000, margin: '0 auto' }}
+      >
+        {!singleColumn && (
+          <div
+            style={{
+              background: 'var(--sb-cream)',
+              borderRadius: 'var(--sb-radius)',
+              aspectRatio: '4 / 5',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '0.5px solid var(--sb-taupe)',
+            }}
+          >
+            <div style={{ textAlign: 'center', opacity: 0.4 }}>
+              <div
+                className="sb-display"
+                style={{ fontSize: '3rem', color: 'var(--sb-navy)' }}
+              >
+                Betsy
+              </div>
+              <p style={{ fontSize: '0.72rem', color: 'var(--sb-teal)', marginTop: '0.5rem' }}>
+                [ Photo placeholder ]
+              </p>
             </div>
-            <p style={{ fontSize: '0.72rem', color: 'var(--sb-teal)', marginTop: '0.5rem' }}>
-              [ Photo placeholder ]
-            </p>
           </div>
-        </div>
+        )}
         <div>
           {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
           <h2
@@ -2087,7 +2093,6 @@ function useViewportWidth() {
 function IndustryWheelBlock({ section }) {
   const f = section.fields || {};
   const [selected, setSelected] = React.useState(null);
-  const [niche, setNiche] = React.useState('pe');
   const viewportWidth = useViewportWidth();
 
   // Wheel scales down on smaller screens so it fits and the node labels stay
@@ -2111,8 +2116,6 @@ function IndustryWheelBlock({ section }) {
   const integrationDesign = parseTechList(f.integrationDesign);
   const adjacent = parseTechList(f.adjacent);
 
-  const activeNiche = NICHE_SOLUTIONS.find((n) => n.key === niche) || NICHE_SOLUTIONS[0];
-
   return (
     <section
       id={section.id}
@@ -2121,7 +2124,7 @@ function IndustryWheelBlock({ section }) {
       <div style={{ maxWidth: 1240, margin: '0 auto' }}>
         {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
         <h2 className="sb-display" style={{ fontSize: '2.4rem', color: 'var(--sb-navy)', marginBottom: '0.75rem' }}>
-          {f.heading || 'Industries Served × Domains of Expertise'}
+          {f.heading || 'Industries Served'}
         </h2>
         <div className="sb-gold-rule" style={{ marginBottom: '1.5rem' }} />
         {f.intro && (
@@ -2244,9 +2247,32 @@ function IndustryWheelBlock({ section }) {
             )}
           </PanelCard>
         </div>
+      </div>
+    </section>
+  );
+}
 
-        {/* ANCHOR for nav: Domains & Niche Expertise */}
-        <div id="domains-niche" style={{ paddingTop: 8 }} />
+function DomainsNicheBlock({ section }) {
+  const f = section.fields || {};
+  const [niche, setNiche] = React.useState('pe');
+  const activeNiche = NICHE_SOLUTIONS.find((n) => n.key === niche) || NICHE_SOLUTIONS[0];
+
+  return (
+    <section
+      id={section.id}
+      style={{ background: BG_VAR[section.bg] || 'var(--sb-ivory)', padding: '5rem 2rem' }}
+    >
+      <div style={{ maxWidth: 1240, margin: '0 auto' }}>
+        {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
+        <h2 className="sb-display" style={{ fontSize: '2.4rem', color: 'var(--sb-navy)', marginBottom: '0.75rem' }}>
+          {f.heading || 'Domains of Expertise × Niche Solutions'}
+        </h2>
+        <div className="sb-gold-rule" style={{ marginBottom: '1.5rem' }} />
+        {f.intro && (
+          <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: 'var(--sb-teal-deep)', maxWidth: 800, marginBottom: '2.5rem' }}>
+            {f.intro}
+          </p>
+        )}
 
         {/* FULL-WIDTH ROW: Categorized Domains */}
         <PanelCard title="Domains of Expertise · categorized" style={{ marginBottom: '2rem' }}>
@@ -2843,7 +2869,6 @@ function TechnologyBlock({ section }) {
 
 function AboutIntroBlock({ section, config }) {
   const f = section.fields || {};
-  const bullets = [f.bullet1, f.bullet2, f.bullet3].filter(Boolean);
   return (
     <section
       id={section.id}
@@ -2854,25 +2879,45 @@ function AboutIntroBlock({ section, config }) {
         overflow: 'hidden',
       }}
     >
-      {/* Hidden anchor for the Home nav dropdown */}
-      <div id="about-intro" style={{ position: 'absolute', top: 0 }} />
       <div className="sb-grid-2col-balanced" style={{ maxWidth: 1240, margin: '0 auto' }}>
-        {/* LEFT — Face of the Founder */}
+        {/* LEFT — About This Site */}
         <div>
           <div className="sb-eyebrow" style={{ marginBottom: '1rem' }}>
-            {f.leftEyebrow || 'Face of the Founder'}
+            {f.introEyebrow || 'About This Site'}
           </div>
-          <div
-            className="sb-grid-2col-photo"
-            style={{ gap: '1.5rem' }}
+          <h2
+            className="sb-display"
+            style={{ fontSize: '2.4rem', color: 'var(--sb-cream)', marginBottom: '1rem', lineHeight: 1.1 }}
           >
+            {f.introHeading}
+          </h2>
+          <div className="sb-gold-rule" style={{ marginBottom: '1.25rem' }} />
+          <p style={{ fontSize: '0.95rem', lineHeight: 1.85, color: 'var(--sb-sage)' }}>
+            {f.introBody}
+          </p>
+        </div>
+
+        {/* RIGHT — Face of the Founder */}
+        <div
+          style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: '0.5px solid rgba(196,132,58,0.4)',
+            borderTop: '3px solid var(--sb-gold)',
+            borderRadius: 'var(--sb-radius)',
+            padding: '2rem',
+          }}
+        >
+          <div className="sb-eyebrow" style={{ marginBottom: '0.75rem' }}>
+            {f.founderEyebrow || 'Face of the Founder'}
+          </div>
+          <div className="sb-grid-2col-photo" style={{ gap: '1.5rem' }}>
             {f.photoUrl ? (
               <img
                 src={f.photoUrl}
-                alt={f.heading || 'Founder photo'}
+                alt={f.founderName || 'Founder photo'}
                 style={{
-                  width: 180,
-                  height: 220,
+                  width: 150,
+                  height: 190,
                   objectFit: 'cover',
                   border: '0.5px solid var(--sb-taupe)',
                   borderTop: '3px solid var(--sb-gold)',
@@ -2883,8 +2928,8 @@ function AboutIntroBlock({ section, config }) {
             ) : (
               <div
                 style={{
-                  width: 180,
-                  height: 220,
+                  width: 150,
+                  height: 190,
                   background: 'var(--sb-cream)',
                   border: '0.5px solid var(--sb-taupe)',
                   borderTop: '3px solid var(--sb-gold)',
@@ -2894,7 +2939,7 @@ function AboutIntroBlock({ section, config }) {
                   justifyContent: 'center',
                   color: 'var(--sb-teal-deep)',
                   fontFamily: 'var(--sb-font-display)',
-                  fontSize: '3rem',
+                  fontSize: '2.4rem',
                   position: 'relative',
                 }}
                 title="Photo placeholder — upload via admin"
@@ -2904,7 +2949,7 @@ function AboutIntroBlock({ section, config }) {
                   style={{
                     position: 'absolute',
                     bottom: 8,
-                    fontSize: '0.6rem',
+                    fontSize: '0.55rem',
                     letterSpacing: '0.15em',
                     textTransform: 'uppercase',
                     color: 'var(--sb-teal-deep)',
@@ -2919,50 +2964,275 @@ function AboutIntroBlock({ section, config }) {
               <h1
                 className="sb-display"
                 style={{
-                  fontSize: '2.8rem',
+                  fontSize: '2.2rem',
                   letterSpacing: '0.04em',
                   color: 'var(--sb-cream)',
                   marginBottom: '0.4rem',
                   lineHeight: 1.05,
                 }}
               >
-                {f.heading || 'Betsy Salter'}
+                {f.founderName || 'Betsy Salter'}
               </h1>
               <div
                 style={{
                   fontFamily: 'var(--sb-font-label)',
-                  fontSize: '0.7rem',
+                  fontSize: '0.68rem',
                   letterSpacing: '0.25em',
                   textTransform: 'uppercase',
                   color: 'var(--sb-gold)',
-                  marginBottom: '1rem',
+                  marginBottom: '0.85rem',
                 }}
               >
-                {f.title || 'Strategic Operator'}
+                {f.founderTitle || 'Strategic Operator'}
               </div>
               <p
                 style={{
-                  fontSize: '0.95rem',
-                  lineHeight: 1.75,
+                  fontSize: '0.88rem',
+                  lineHeight: 1.7,
                   color: 'var(--sb-sage)',
                 }}
               >
-                {f.leftBlurb}
+                {f.founderBlurb}
               </p>
-              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '1.25rem' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '1.1rem' }}>
                 {f.cta1 && (
-                  <a href={f.cta1Link || '#contact'} className="sb-btn sb-btn-gold" style={{ fontSize: '0.72rem', padding: '0.55rem 1.25rem' }}>
+                  <a href={f.cta1Link || '#contact'} className="sb-btn sb-btn-gold" style={{ fontSize: '0.7rem', padding: '0.5rem 1.1rem' }}>
                     {f.cta1}
                   </a>
                 )}
                 {f.cta2 && (
-                  <a href={f.cta2Link || '#contact'} className="sb-btn sb-btn-outline" style={{ fontSize: '0.72rem', padding: '0.55rem 1.25rem' }}>
+                  <a href={f.cta2Link || '#contact'} className="sb-btn sb-btn-outline" style={{ fontSize: '0.7rem', padding: '0.5rem 1.1rem' }}>
                     {f.cta2}
                   </a>
                 )}
               </div>
             </div>
           </div>
+          {f.howIWork && (
+            <div
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                marginTop: '1.25rem',
+                padding: '1rem 1.25rem',
+                borderLeft: '3px solid var(--sb-gold)',
+                borderRadius: 'var(--sb-radius)',
+              }}
+            >
+              <div className="sb-label" style={{ color: 'var(--sb-gold)', marginBottom: '0.4rem' }}>
+                How I Work
+              </div>
+              <div style={{ fontSize: '0.82rem', lineHeight: 1.65, color: 'var(--sb-sage)' }}>
+                {f.howIWork}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Splits the raw "Selected_Notable_Highlights" text into individual highlight
+// items — strips bullet markers and drops a leading all-caps header line like
+// "NOTABLE ACHIEVEMENT HIGHLIGHTS:" so only the actual achievements remain.
+function parseHighlights(raw) {
+  if (!raw) return [];
+  return raw
+    .split('\n')
+    .map((l) => l.replace(/^[•\-•]\s*/, '').trim())
+    .filter(Boolean)
+    .filter((l) => !/^[a-z\s]*highlights?:?$/i.test(l));
+}
+
+function StatTile({ value, label }) {
+  return (
+    <div style={{ minWidth: 110 }}>
+      <div className="sb-display" style={{ fontSize: '2.6rem', color: 'var(--sb-gold)', lineHeight: 1 }}>
+        {value}
+      </div>
+      <div
+        style={{
+          fontFamily: 'var(--sb-font-label)',
+          fontSize: '0.65rem',
+          letterSpacing: '0.14em',
+          textTransform: 'uppercase',
+          color: 'var(--sb-sage)',
+          marginTop: '0.3rem',
+        }}
+      >
+        {label}
+      </div>
+    </div>
+  );
+}
+
+// A dashboard tile that shows a short, clamped teaser of `text` by default
+// and expands in place — on hover (desktop) or tap (touch) — to an overlay
+// showing the full text. Lets a section read as a grid of scannable cards
+// instead of a wall of paragraphs, without losing any of the underlying copy.
+function ExpandableTile({ icon, label, text, onDark = true }) {
+  const [active, setActive] = React.useState(false);
+  if (!text) return null;
+  const tileBg = onDark ? 'rgba(255,255,255,0.04)' : 'var(--sb-cream)';
+  const tileBorder = onDark ? '0.5px solid rgba(196,132,58,0.25)' : '0.5px solid var(--sb-taupe)';
+  const bodyColor = onDark ? 'var(--sb-sage)' : '#5a4a3a';
+  return (
+    <div
+      onMouseEnter={() => setActive(true)}
+      onMouseLeave={() => setActive(false)}
+      onClick={() => setActive((a) => !a)}
+      style={{ position: 'relative', cursor: 'pointer' }}
+    >
+      <div
+        style={{
+          background: tileBg,
+          border: tileBorder,
+          borderLeft: '3px solid var(--sb-gold)',
+          borderRadius: 'var(--sb-radius)',
+          padding: '0.85rem 1rem',
+          minHeight: 92,
+        }}
+      >
+        {(icon || label) && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
+            {icon && <span style={{ color: 'var(--sb-gold)', fontSize: '0.95rem' }}>{icon}</span>}
+            {label && (
+              <span
+                style={{
+                  fontFamily: 'var(--sb-font-label)',
+                  fontSize: '0.62rem',
+                  letterSpacing: '0.14em',
+                  textTransform: 'uppercase',
+                  color: 'var(--sb-gold)',
+                }}
+              >
+                {label}
+              </span>
+            )}
+          </div>
+        )}
+        <div
+          style={{
+            fontSize: '0.8rem',
+            lineHeight: 1.55,
+            color: bodyColor,
+            display: '-webkit-box',
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            whiteSpace: 'pre-line',
+          }}
+        >
+          {text}
+        </div>
+      </div>
+      {active && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 20,
+            background: 'var(--sb-navy-deep)',
+            border: '0.5px solid var(--sb-gold)',
+            borderRadius: 'var(--sb-radius)',
+            padding: '1rem 1.1rem',
+            boxShadow: '0 12px 28px rgba(0,0,0,0.45)',
+          }}
+        >
+          {(icon || label) && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
+              {icon && <span style={{ color: 'var(--sb-gold)', fontSize: '0.95rem' }}>{icon}</span>}
+              {label && (
+                <span
+                  style={{
+                    fontFamily: 'var(--sb-font-label)',
+                    fontSize: '0.62rem',
+                    letterSpacing: '0.14em',
+                    textTransform: 'uppercase',
+                    color: 'var(--sb-gold)',
+                  }}
+                >
+                  {label}
+                </span>
+              )}
+            </div>
+          )}
+          <div style={{ fontSize: '0.82rem', lineHeight: 1.65, color: 'var(--sb-cream)', whiteSpace: 'pre-line' }}>
+            {text}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Executive Summary rendered as a dashboard — big stat tiles (years, industries)
+// up top, narrative below, and the achievement highlights as a visual card
+// grid instead of a wall of bulleted text. Pairs with the Salt Basin Mission
+// on the right, same visual treatment as the founder card above it.
+function ExecDashboardBlock({ section }) {
+  const f = section.fields || {};
+  const highlights = parseHighlights(f.Selected_Notable_Highlights);
+  const bullets = [f.bullet1, f.bullet2, f.bullet3].filter(Boolean);
+  return (
+    <section
+      id={section.id}
+      style={{
+        background: BG_VAR[section.bg] || 'var(--sb-navy)',
+        padding: '5rem 2rem',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      <div className="sb-grid-2col-balanced" style={{ maxWidth: 1240, margin: '0 auto' }}>
+        {/* LEFT — Executive Dashboard */}
+        <div>
+          <div className="sb-eyebrow" style={{ marginBottom: '0.75rem' }}>
+            {f.eyebrow || 'Executive Summary & Selected Highlights'}
+          </div>
+          <h2 className="sb-display" style={{ fontSize: '2.2rem', color: 'var(--sb-cream)', marginBottom: '1.5rem', lineHeight: 1.1 }}>
+            {f.heading || 'Betsy Salter'}
+          </h2>
+
+          <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', marginBottom: '1.75rem' }}>
+            <StatTile value={f.statYearsValue || '13+'} label={f.statYearsLabel || 'Years of Experience'} />
+            <StatTile value={f.statIndustriesValue || '8'} label={f.statIndustriesLabel || 'Industries Served'} />
+          </div>
+
+          {[f.p1, f.p2].filter(Boolean).map((p, i) => (
+            <p key={i} style={{ fontSize: '0.9rem', lineHeight: 1.8, color: 'var(--sb-sage)', marginBottom: '1rem', whiteSpace: 'pre-line' }}>
+              {p}
+            </p>
+          ))}
+
+          {highlights.length > 0 && (
+            <div style={{ marginTop: '1.5rem' }}>
+              <div className="sb-label" style={{ color: 'var(--sb-gold)', marginBottom: '0.75rem' }}>
+                Selected Highlights
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.75rem' }}>
+                {highlights.map((h, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '0.5px solid rgba(196,132,58,0.25)',
+                      borderLeft: '3px solid var(--sb-gold)',
+                      borderRadius: 'var(--sb-radius)',
+                      padding: '0.85rem 1rem',
+                      fontSize: '0.8rem',
+                      lineHeight: 1.6,
+                      color: 'var(--sb-sage)',
+                    }}
+                  >
+                    {h}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* RIGHT — Salt Basin Mission */}
@@ -2976,7 +3246,7 @@ function AboutIntroBlock({ section, config }) {
           }}
         >
           <div className="sb-eyebrow" style={{ marginBottom: '0.75rem' }}>
-            {f.rightEyebrow || 'Salt Basin Mission · Short-Term Growth'}
+            {f.missionEyebrow || 'Salt Basin Mission · Short-Term Growth'}
           </div>
           <h2
             className="sb-display"
@@ -3202,33 +3472,11 @@ function TimelineBlock({ section, liveSlugs }) {
                 </div>
               </div>
             </div>
-            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.85rem' }}>
               {activeJob.bullets.map((b, i) => (
-                <li
-                  key={i}
-                  style={{
-                    fontSize: '0.92rem',
-                    lineHeight: 1.75,
-                    color: '#4a4a4a',
-                    paddingLeft: '1.5rem',
-                    position: 'relative',
-                  }}
-                >
-                  <span
-                    style={{
-                      position: 'absolute',
-                      left: 0,
-                      color: 'var(--sb-gold)',
-                      fontSize: '1.05rem',
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    ·
-                  </span>
-                  {b}
-                </li>
+                <ExpandableTile key={i} icon="◆" text={b} onDark={false} />
               ))}
-            </ul>
+            </div>
           </div>
         )}
 
@@ -3809,9 +4057,7 @@ function CaseField({ label, items, text, accent }) {
       >
         {label}
       </div>
-      {text && (
-        <div style={{ fontSize: '0.85rem', color: 'var(--sb-cream)', lineHeight: 1.6 }}>{text}</div>
-      )}
+      {text && <ExpandableTile text={text} onDark />}
       {items?.length > 0 && (
         <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
           {items.map((it, i) => (
@@ -4915,8 +5161,10 @@ const REGISTRY = {
   referencesRequest: ReferencesRequestBlock,
   forCompanies: ForCompaniesBlock,
   industryWheel: IndustryWheelBlock,
+  domainsNiche: DomainsNicheBlock,
   technology: TechnologyBlock,
   aboutIntro: AboutIntroBlock,
+  execDashboard: ExecDashboardBlock,
   timeline: TimelineBlock,
   caseStudies: CaseStudiesBlock,
   netWorksBanner: NetWorksBannerBlock,

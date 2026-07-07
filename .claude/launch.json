@@ -5,7 +5,8 @@
       "name": "saltbasin",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "client"],
-      "port": 5173
+      "port": 5173,
+      "autoPort": false
     },
     {
       "name": "visual-ops-studio",

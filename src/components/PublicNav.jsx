@@ -1,36 +1,35 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
-// Top-level nav items + optional dropdown children. Children can be either a
-// route (`to`) or an in-page anchor (`anchor`). Anchor links only navigate
-// within the home page; if you're on another page they take you home first.
-const NAV = [
-  {
-    label: 'Home',
-    to: '/',
-    children: [
-      { label: 'About / Intro', anchor: 'about-intro' },
-      { label: 'Industries Overview', anchor: 'industryWheel' },
-      { label: 'Domains & Niche Expertise', anchor: 'domains-niche' },
-    ],
-  },
-  {
-    label: 'Consulting',
-    to: '/consulting/founder',
-    children: [
-      { label: 'Meet the Founder', to: '/consulting/founder' },
-      { label: 'Services', to: '/consulting/services' },
-      { label: 'Self-Service Assessments', to: '/consulting/assessments' },
-    ],
-  },
-  { label: 'Resources', to: '/resources' },
-  { label: 'Creative Storefront', to: '/creative' },
-];
+// The nav is fully data-driven — one top-level item per published page
+// (ordered by page.order, skipping drafts and anything flagged
+// hideFromNav), each with a "Consulting"-style dropdown covering any of that
+// page's sections whose navSubPage flag is on. Adding a page or flipping a
+// section's navSubPage toggle in the admin updates this nav automatically —
+// nothing here should ever need to be hand-edited for a content change.
+function buildNav(pages) {
+  const ordered = Object.values(pages || {})
+    .filter((p) => p.status !== 'draft' && !p.hideFromNav)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-export default function PublicNav({ site }) {
+  return ordered.map((p) => {
+    const slug = '/' + (p.slug || '');
+    const subPages = (p.sections || []).filter((s) => s.navSubPage && s.status !== 'draft');
+    return {
+      label: p.navLabel || p.name,
+      to: slug,
+      children: subPages.length
+        ? subPages.map((s) => ({ label: s.navLabel || s.name, anchor: s.id, pageSlug: slug }))
+        : undefined,
+    };
+  });
+}
+
+export default function PublicNav({ site, pages }) {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [authUser, setAuthUser] = useState(null);
+  const nav = buildNav(pages);
 
   // Close the drawer whenever the route changes (after clicking a nav item).
   useEffect(() => {
@@ -100,7 +99,7 @@ export default function PublicNav({ site }) {
         className={`sb-nav-list${mobileOpen ? ' open' : ''}`}
         style={{ gap: '1.5rem', listStyle: 'none', alignItems: 'center', margin: 0, padding: 0 }}
       >
-        {NAV.map((item) => (
+        {nav.map((item) => (
           <NavItem
             key={item.label}
             item={item}
@@ -197,8 +196,7 @@ function NavItem({ item, pathname, isMobile }) {
 
   const isActive =
     pathname === item.to ||
-    (item.to !== '/' && pathname.startsWith(item.to)) ||
-    (item.children || []).some((c) => c.to && pathname.startsWith(c.to));
+    (item.to !== '/' && pathname.startsWith(item.to));
 
   return (
     <li
@@ -253,59 +251,39 @@ function NavItem({ item, pathname, isMobile }) {
                 }
           }
         >
-          {item.children.map((child) =>
-            child.to ? (
-              <Link
-                key={child.label}
-                to={child.to}
-                onClick={() => setOpen(false)}
-                style={{
-                  display: 'block',
-                  padding: '0.55rem 1.1rem',
-                  fontSize: '0.75rem',
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase',
-                  color: pathname === child.to ? 'var(--sb-gold)' : 'var(--sb-cream)',
-                  textDecoration: 'none',
-                }}
-                onMouseOver={(e) => (e.currentTarget.style.background = 'rgba(196,132,58,0.12)')}
-                onMouseOut={(e) => (e.currentTarget.style.background = 'transparent')}
-              >
-                {child.label}
-              </Link>
-            ) : (
-              <AnchorLink
-                key={child.label}
-                label={child.label}
-                anchor={child.anchor}
-                onNavigated={() => setOpen(false)}
-              />
-            )
-          )}
+          {item.children.map((child) => (
+            <AnchorLink
+              key={child.label}
+              label={child.label}
+              anchor={child.anchor}
+              pageSlug={child.pageSlug}
+              onNavigated={() => setOpen(false)}
+            />
+          ))}
         </div>
       )}
     </li>
   );
 }
 
-// Anchor links scroll within the home page. If you're elsewhere, route home
-// first and then scroll.
-function AnchorLink({ label, anchor, onNavigated }) {
+// Anchor links scroll to a section within its own page. If you're on a
+// different page (or a different scroll position on the same page), route
+// there first and then scroll once the page has rendered.
+function AnchorLink({ label, anchor, pageSlug, onNavigated }) {
   const location = useLocation();
   function go(e) {
     e.preventDefault();
-    if (location.pathname === '/') {
+    if (location.pathname === pageSlug) {
       const el = document.getElementById(anchor);
       el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else {
-      // Route home then scroll after a tick
-      window.location.href = '/#' + anchor;
+      window.location.href = pageSlug + '#' + anchor;
     }
     onNavigated?.();
   }
   return (
     <a
-      href={'/#' + anchor}
+      href={pageSlug + '#' + anchor}
       onClick={go}
       style={{
         display: 'block',

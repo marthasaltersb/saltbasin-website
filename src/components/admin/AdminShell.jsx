@@ -24,6 +24,7 @@ import GovernancePanel from './GovernancePanel.jsx';
 import EmotionalWeatherPanel from './EmotionalWeatherPanel.jsx';
 import LineagePanel from './LineagePanel.jsx';
 import InboxPanel from './InboxPanel.jsx';
+import CommandCenterPanel from './CommandCenterPanel.jsx';
 
 // Tab component registry: the one piece that can't be data-driven, because
 // React components have to be referenced by import. The nav structure stored
@@ -50,6 +51,7 @@ const TAB_COMPONENTS = {
   memberAnalytics:() => <AnalyticsPanel isAdmin={false} />,
   lineage:        () => <LineagePanel />,
   inbox:          () => <InboxPanel />,
+  commandCenter:  () => <CommandCenterPanel />,
   // config: handled inline below (ConfigPanel needs draft + setters from shell)
   // content: handled inline below (Sidebar/EditorPane/PreviewPane composition)
 };
@@ -92,6 +94,7 @@ const FALLBACK_ADMIN_NAV = {
     { id: 'system', label: 'System', sortOrder: 9, tabs: [
       { id: 'config',   label: 'Config',       componentId: 'config',   sortOrder: 0 },
       { id: 'lineage',  label: 'Data Lineage', componentId: 'lineage',  sortOrder: 1 },
+      { id: 'command-center', label: 'Command Center', componentId: 'commandCenter', sortOrder: 2 },
     ]},
   ],
 };
