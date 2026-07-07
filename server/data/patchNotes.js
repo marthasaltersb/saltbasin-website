@@ -1105,4 +1105,48 @@ const RELEASES = [
       'Spot-check that new backlog-item scripts update existing externalRefs instead of duplicating them',
     ],
   },
+
+  // ─────────── v0.18.4 — Active Supervision Redesign + Director Differentiator ───────────
+  {
+    version: 'v0.18.4',
+    name: 'Active Supervision Redesign (Per-Burst Weight) + Director Differentiator Narrative',
+    date: '2026-07-07',
+    summary:
+      'Director flagged that her hours (5.5 total) felt implausibly low given she is continuously present for every build session — and the methodology agreed once inspected: the session-level oversight-weight formula (activeHours × 0.20 for a whole session\'s "low" average turn density) conflated typing frequency with presence. A session with long stretches of watching Claude execute, without needing to type a correction every few minutes, was being scored as low-oversight when it was actually full presence. Replaced with a per-burst weight keyed to what kind of work was happening in each specific stretch, and added a narrative section to Build Progress explaining why the Director role isn\'t reducible to a hours count in the first place.',
+    sections: [
+      {
+        heading: 'New',
+        items: [
+          'PER_BURST_SUPERVISION_WEIGHT in contributionMethodology.js: >40 turns/hr → 1.0 (active back-and-forth), 15-40/hr → 0.75 (steady engagement), <15/hr or zero human turns in a real burst → 0.5 (present, watching a long autonomous stretch), confirmed autonomous/scheduled session → 0. Supersedes the old session-average oversightWeight (kept in the data for audit trail, no longer used).',
+          'GET /api/backlog/methodology: re-serves CONTRIBUTION_TYPES/REDUCTION_MAP/PER_BURST_SUPERVISION_WEIGHT — static reference data, no DB query.',
+          '/output/build-summary: "Why the Director\'s Hours Aren\'t Interchangeable" section — Betsy\'s three contribution types (Strategic Direction, Domain Authoring, Active Supervision) with their irreducibility rationale, plus the full irreducible-IP list, pulled live from the methodology instead of hardcoded.',
+        ],
+      },
+      {
+        heading: 'Fixed',
+        items: [
+          'Recomputed hoursBetsy for all 67 affected items (81-97, 102-110, and the Tier-2 batch 1-47) using real per-burst turn density from the underlying JSONL transcripts. Platform hoursBetsy: 5.5 → 15.3 hours. traditionalCostUsd and activitiesBetsy recomputed to match on every touched item.',
+          'hoursClaude was untouched — that formula (full session active hours) was never the problem.',
+        ],
+      },
+      {
+        heading: 'Known issues',
+        items: [
+          'The Tier 2 batch (items 1-47) has no per-burst data — its orphaned session has no surviving transcript (see v0.18.2). A flat 0.5 "long autonomous stretch" default was applied to the whole session total rather than derived per-burst, then re-apportioned across items proportional to their existing hoursBetsy share. Several of those items carry 0.00 supervision hours as a direct consequence — they had 0 in the original 2026-06 hand estimate, and proportional redistribution of a total against a zero share stays zero. This likely understates real supervision on those specific items; flagged rather than overridden with a guess.',
+          'Two methodology extensions were requested but deliberately not built: (1) a "cost basis hours" figure for Claude — a value-equivalent hours figure distinct from raw wall-clock hours, for cost-comparison purposes — the multiplier is the Director\'s judgment call to set, not something to derive from data; (2) maintenance-cost and license-cost tracking for ongoing/continuous agent-based work, which needs its own cost category (build vs. maintenance vs. license), not yet designed into the schema.',
+        ],
+      },
+    ],
+    metrics: {
+      directorHours: 0.6,
+      claudeBuildMins: 60,
+      engineerEquivHours: 8,
+      notes: 'Approximate — this session was in progress at time of writing. Correct against real burst analysis in a future pass, same as v0.18.2/v0.18.3\'s own metrics.',
+    },
+    postDeploySteps: [
+      'Confirm /output/patch-notes shows v0.18.4',
+      'Confirm /output/build-summary hoursBetsy reflects 15.3 (up from 5.5) and the new Director Differentiator section renders',
+      'Design cost-basis-hours multiplier and maintenance/license cost tracking with Betsy as a follow-up (not done in this release)',
+    ],
+  },
 ];
