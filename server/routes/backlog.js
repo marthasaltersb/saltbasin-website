@@ -218,9 +218,45 @@ router.get('/items/:id', async (req, res) => {
   res.json({ item: rowToItem(row), children: children.map(rowToItem) });
 });
 
+// Upsert by externalRef: this is the one thing that repeatedly caused
+// duplicate backlog items (an "epic" entry for a task range, then a
+// separate script run later adding per-task items within that same
+// range — both counted in Build Summary totals, see v0.18.2's merge of
+// items #1/#6/#10). Every add-vXXX-backlog-items.mjs script already
+// calls this endpoint, so fixing it here — rather than in each script —
+// protects every future caller automatically. If externalRef is provided
+// and a non-archived item with that exact externalRef already exists,
+// PATCH it instead of inserting a new row. Items without an externalRef
+// (one-off items with no stable natural key) always insert, same as
+// before.
 router.post('/items', async (req, res) => {
-  const { title } = req.body || {};
+  const { title, externalRef } = req.body || {};
   if (!title) return res.status(400).json({ error: 'title required' });
+
+  if (externalRef) {
+    const existing = await db
+      .prepare(`SELECT id FROM backlog_items WHERE external_ref = $1 AND status != 'archived' LIMIT 1`)
+      .get(externalRef);
+    if (existing) {
+      const sets = [];
+      const vals = [];
+      let i = 1;
+      for (const [camel, snake] of Object.entries(ITEM_FIELD_MAP)) {
+        if (req.body[camel] !== undefined) {
+          sets.push(`${snake} = $${i++}`);
+          vals.push(serializeForDb(camel, req.body[camel]));
+        }
+      }
+      if (sets.length) {
+        sets.push(`updated_at = $${i++}`);
+        vals.push(Date.now());
+        vals.push(Number(existing.id));
+        await db.prepare(`UPDATE backlog_items SET ${sets.join(', ')} WHERE id = $${i}`).run(...vals);
+      }
+      return res.json({ id: Number(existing.id), upserted: 'updated' });
+    }
+  }
+
   const cols = ['title'];
   const placeholders = ['$1'];
   const vals = [title];
@@ -238,7 +274,7 @@ router.post('/items', async (req, res) => {
       `INSERT INTO backlog_items (${cols.join(', ')}) VALUES (${placeholders.join(', ')}) RETURNING id`
     )
     .run(...vals);
-  res.json({ id: Number(result.lastInsertRowid) });
+  res.json({ id: Number(result.lastInsertRowid), upserted: 'created' });
 });
 
 router.patch('/items/:id', async (req, res) => {
