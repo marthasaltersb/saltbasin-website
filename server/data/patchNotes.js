@@ -884,7 +884,7 @@ const RELEASES = [
     sections: [
       { heading: 'Fixed', items: ['Author/copyright fields updated to full legal name across leadToRevenueModel.js and contributionMethodology.js'] },
     ],
-    metrics: { directorHours: 0.3, claudeBuildMins: 10, engineerEquivHours: 1, notes: 'Small correction — director caught the naming inconsistency during review.' },
+    metrics: { directorHours: 0.13, claudeBuildMins: 28, engineerEquivHours: 1, notes: 'Corrected 2026-07-07 against real JSONL burst analysis of session 551b4cbf (apportioned share of that session\'s 3.93 real active hours / 0.79 real director hours across its 3 items). engineerEquivHours remains a judgment estimate, not log-derived.' },
   },
 
   // ─────────── v0.17.2 — Deploy Crash Fix ───────────
@@ -896,7 +896,7 @@ const RELEASES = [
     sections: [
       { heading: 'Fixed', items: ['Isolated DB migrations from sessions column ALTERs so bootstrap survives a single failed ALTER statement'] },
     ],
-    metrics: { directorHours: 0.5, claudeBuildMins: 30, engineerEquivHours: 3, notes: 'Production incident response — director identified the crash from Render logs, Claude isolated and fixed the migration ordering.' },
+    metrics: { directorHours: 0.22, claudeBuildMins: 70, engineerEquivHours: 3, notes: 'Corrected 2026-07-07 against real JSONL burst analysis of session 551b4cbf (apportioned share of that session\'s 3.93 real active hours / 0.79 real director hours across its 3 items). engineerEquivHours remains a judgment estimate, not log-derived.' },
   },
 
   // ─────────── v0.17.3 — Lead Pledge Flow ───────────
@@ -908,7 +908,7 @@ const RELEASES = [
     sections: [
       { heading: 'Changed', items: ['Convert-to-member action on the Leads panel replaced with a pledge-interest flow'] },
     ],
-    metrics: { directorHours: 1.0, claudeBuildMins: 60, engineerEquivHours: 8, notes: 'Director-defined UX simplification to reduce the commitment barrier at first interest.' },
+    metrics: { directorHours: 0.44, claudeBuildMins: 139, engineerEquivHours: 8, notes: 'Corrected 2026-07-07 against real JSONL burst analysis of session 551b4cbf (apportioned share of that session\'s 3.93 real active hours / 0.79 real director hours across its 3 items). engineerEquivHours remains a judgment estimate, not log-derived.' },
   },
 
   // ─────────── v0.18 — Home Page Restructure, Data-Driven Nav, Contribution Intelligence ───────────
@@ -950,16 +950,61 @@ const RELEASES = [
       },
     ],
     metrics: {
-      directorHours: 6.0,
-      claudeBuildMins: 420,
-      engineerEquivHours: 45,
-      notes: 'Multiple rounds of real-time course correction on section placement/pairing before landing on the final Home layout — the Active Supervision contribution type at its most visible. Documentation backfill was flagged honestly: precise hour/leverage figures for this date range would require re-running the methodology\'s session-JSONL burst analysis, which was not done here — this entry gives a qualitative contribution-type breakdown, not a re-measured hour count.',
+      directorHours: 0.56,
+      claudeBuildMins: 169,
+      engineerEquivHours: 30,
+      notes: 'Corrected 2026-07-07 (same day, after real analysis was run): directorHours and claudeBuildMins are now the actual JSONL burst-analysis figures for session e3c9236b-fa3f-40be-8418-a807e0c3a21a — 2.82 real active hours, 22 real human turns (7.8/hr, "low" oversight), director hours = active hours × 0.20 oversight weight. This session covered the entire v0.18 release including the analysis that produced these very numbers. engineerEquivHours remains a judgment estimate (traditional-team-equivalent effort), not something derivable from timestamps — see contributionMethodology.js RETROACTIVE_SESSION_ANALYSIS for the full method and disclosed gaps.',
     },
     postDeploySteps: [
       'node scripts/add-v018-backlog-items.mjs',
       'Confirm /output/patch-notes shows v0.18',
       'Confirm /output/build-summary reflects the new items',
       'Verify /consulting renders all three merged sections and the public nav matches the Pages list exactly',
+    ],
+  },
+
+  // ─────────── v0.18.1 — Real Session-Log Contribution Analysis ───────────
+  {
+    version: 'v0.18.1',
+    name: 'Real Session-Log Contribution Analysis (replaces hand-estimated hours)',
+    date: '2026-07-07',
+    summary:
+      'Director flagged that the build summary\'s hours could not be right and asked for the Contribution Intelligence Methodology to be run against actual session logs, not estimates. Built a reproducible JSONL burst-analysis tool, ran it across all 11 Claude Code session transcripts on file for this project, and used the real numbers to correct the 9 backlog items added in v0.18 (which had been hand-estimated at roughly 4× their real measured time) and the associated patch-note metrics. Found and disclosed two real issues along the way: the transcript format\'s "user" turns are mostly synthetic tool-result echoes rather than human input, and the v0.17 sessions-table migration silently collided with the pre-existing auth-cookie sessions table.',
+    sections: [
+      {
+        heading: 'New',
+        items: [
+          'scripts/analyze-contribution-sessions.mjs: reproducible burst-analysis tool — groups timestamped transcript events into active bursts (gap > 15 min ends a burst), separates real human-typed messages from synthetic tool-result echoes filed under the same event type, computes active hours / turn density / oversight level per session',
+          'contributionMethodology.js RETROACTIVE_SESSION_ANALYSIS: full corrected numbers, per-session breakdown, method disclosure, and an explicit knownGaps list',
+          'A new, explicit oversight-weight table (critical=0.90, high=0.65, moderate=0.40, low=0.20) operationalizing the previously qualitative "turn density weight" language — used to split a session\'s active hours into director vs. Claude hours',
+        ],
+      },
+      {
+        heading: 'Fixed',
+        items: [
+          'Turn-counting bug: the June 2026 methodology derivation appears to have counted synthetic tool_result-echo events (logged under type:"user") as human turns, inflating turn density severalfold. Corrected filter keeps only events with real text content.',
+          '9 backlog items (v0.17.1–v0.18) had hoursClaude/hoursBetsy corrected from hand estimates to real session-derived figures — platform hoursTotal dropped from 106.3 to 93.4 as a result',
+        ],
+      },
+      {
+        heading: 'Known issues',
+        items: [
+          'The auth `sessions` table (login cookies) and the analytics session-tracking table added in v0.17 share the same name — the v0.17 CREATE TABLE was a silent no-op, and its ALTER TABLE statements added jsonl_filename/active_hours/etc. columns onto the live auth table instead. Real session analysis was stored in config_state to avoid writing synthetic rows into a security-relevant table. The underlying naming collision is unresolved.',
+          'Only 9 of ~110 backlog_items have been corrected against real session data. The remaining ~101 items still carry pre-correction hand estimates which, by the same magnitude found in this pass, likely also overstate real active time — build-summary totals remain directionally inflated until a full reconciliation is run.',
+          'Contribution-type split (Strategic Direction / Domain Authoring / Active Supervision) is not individually verified per turn — active-supervision hours use the oversight-weight formula, not a content-classified breakdown.',
+        ],
+      },
+    ],
+    metrics: {
+      directorHours: 0.35,
+      claudeBuildMins: 55,
+      engineerEquivHours: 6,
+      notes: 'This release is the analysis itself, running inside the same e3c9236b session already accounted for in v0.18 — figures here are an internal apportionment of that session\'s time to this specific piece of work, not additional hours on top of v0.18.',
+    },
+    postDeploySteps: [
+      'Confirm /output/patch-notes shows v0.18.1',
+      'Confirm /output/build-summary hoursTotal reflects the corrected 93.4 (down from 106.3)',
+      'Plan the full ~101-item backlog reconciliation as a follow-up (not done in this release)',
     ],
   },
 ];

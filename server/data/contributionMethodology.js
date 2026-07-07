@@ -10,10 +10,19 @@
 //  AI augmented, to AI-derived, practitioner signed." — Betsy Salter, 2026
 //
 // This methodology was developed collaboratively between Martha Elizabeth Salter (Betsy Salter)
-// and Claude (Anthropic) through 35.4 active session hours across the Salt Basin platform build.
-// The framework, rate benchmarks, activity taxonomy, and oversight model are
-// original intellectual property of Martha Elizabeth Salter aka Betsy Salter. AI was the
+// and Claude (Anthropic). The framework, rate benchmarks, activity taxonomy, and oversight model
+// are original intellectual property of Martha Elizabeth Salter aka Betsy Salter. AI was the
 // structuring and execution tool; the practitioner is the author and authority.
+//
+// ── 2026-07-07 retroactive correction ────────────────────────────────────────
+// The original "35.4 active hours / 3,880 turns / 7 files" figure below (June 2026) was an
+// early-derivation estimate. On 2026-07-07 it was re-run as an actual JSONL burst analysis
+// across all 11 session transcripts on file for this project (not 7), with one methodological
+// fix: the Claude Code transcript format logs both real human-typed messages AND synthetic
+// tool-result echoes under type:"user" — the original estimate appears to have counted both,
+// which inflates turn density severalfold. This pass filters to messages with real text content.
+// See RETROACTIVE_SESSION_ANALYSIS below for the full corrected numbers and per-session detail.
+// The original figures are left in place (not deleted) for audit-trail purposes.
 
 export const ARTIFACT = {
   id: 'contribution-intelligence-methodology-v1',
@@ -28,7 +37,7 @@ export const ARTIFACT = {
   tagline: 'Where the practitioner meets AI augmentation — practitioner-derived, AI-augmented, practitioner-signed.',
   version: '1.0',
   publishedAt: '2026-06-30',
-  provenance: 'Developed through the build of Salt Basin Net Works platform (2026). Framework emerged from 35.4 active build hours across 3,880 session turns — the platform itself is the proof of concept for the methodology.',
+  provenance: 'Developed through the build of Salt Basin Net Works platform (2026). Framework emerged from active build sessions — the platform itself is the proof of concept for the methodology. The original "35.4 hours / 3,880 turns" estimate (June 2026) was retroactively corrected on 2026-07-07 via real JSONL burst analysis across all 11 session transcripts on file: see RETROACTIVE_SESSION_ANALYSIS below for the corrected numbers, method, and disclosed gaps.',
   license: {
     public: 'teaser_only',
     member: 'read_only_framework',
@@ -56,17 +65,68 @@ export const DERIVATION_RECORD = {
     benchmarkCeiling: '$175/hr — US onshore senior engineer consulting rate (2026)',
   },
   oversightModel: {
-    decision: 'Turn density (user_turns / active_hours) as the primary oversight intensity metric.',
+    decision: 'Turn density (real human turns / active_hours) as the primary oversight intensity metric.',
     derivedBy: 'Betsy Salter + Claude, June 2026',
     rationale: 'Turn density is directly measurable from raw JSONL data. High density = frequent course corrections = high oversight. Low density = Claude operating with defined scope = lower oversight. This is rate-independent and always reproducible.',
-    observed: 'Salt Basin sessions ranged from 41/hr (low, well-scoped) to 180/hr (critical, novel architecture). Platform average: 110/hr.',
+    observed: 'June 2026 estimate: "41/hr to 180/hr, platform average 110/hr" — not reproduced by the 2026-07-07 corrected re-run. Corrected: 11 sessions ranged 7.1–53.8 real human turns/hr, platform average 12.1/hr (all but two sessions land in the "low" oversight band, <40/hr). See RETROACTIVE_SESSION_ANALYSIS.',
   },
   leverageMultiple: {
     decision: 'engineer_equiv_hours / session_active_hours = session leverage multiple',
     derivedBy: 'Betsy Salter + Claude, June 2026',
     rationale: 'Rate-independent. Survives market rate changes. The most defensible long-term metric for communicating AI-augmented productivity.',
-    observed: '1,002 engineer-equivalent hours delivered across 35.4 active session hours = 28× leverage on the Salt Basin platform build.',
+    observed: 'June 2026 estimate: "1,002 engineer-equivalent hours / 35.4 active hours = 28× leverage" — could not be reproduced against the corrected active-hours figure. Corrected active hours across all 11 sessions to date: ~25.0 hrs (15-min idle-gap threshold; 25.0–32.7 hrs across a 15–60 min threshold range — see RETROACTIVE_SESSION_ANALYSIS). Engineer-equivalent hours is a per-requirement judgment estimate, not something derivable from timestamps alone, and has not been independently re-derived at platform scale as of this correction — treat the 28× figure as unverified pending that work.',
   },
+};
+
+// ── 2026-07-07 retroactive session-log analysis ──────────────────────────────
+// Real numbers, not estimates: every .jsonl session transcript on file for this
+// project run through burst analysis (consecutive timestamped events grouped
+// into one "burst" when the gap between them is <= 15 minutes; larger gaps —
+// e.g. the multi-day idle periods between visits in a resumed session — are
+// excluded from active time). "Real human turns" filters type:"user" events to
+// those with actual text content, excluding synthetic tool-result echoes.
+export const RETROACTIVE_SESSION_ANALYSIS = {
+  computedAt: '2026-07-07',
+  method: {
+    idleGapThresholdMin: 15,
+    idleGapSensitivity: 'Total active hours: 25.0 @15min gap, 29.2 @30min, 32.7 @60min — presented range reflects this sensitivity rather than a single fragile point estimate.',
+    realHumanTurnFilter: 'type:"user" events where message.content is a non-empty string, or an array containing a text block with non-empty text. Excludes tool_result-only content arrays (agentic-loop bookkeeping, not human input).',
+    oversightWeight: {
+      note: 'New formalization (2026-07-07) of the previously qualitative "turn density weight" language — operationalizes active_supervision hours as a fraction of session active hours, keyed to the existing OVERSIGHT_LEVELS bands.',
+      critical: 0.90, high: 0.65, moderate: 0.40, low: 0.20,
+    },
+  },
+  sessionsAnalyzed: 11,
+  totals: {
+    activeHours15min: 25.0,
+    activeHours30min: 29.2,
+    activeHours60min: 32.7,
+    assistantTurns: 4828,
+    realHumanTurns: 303,
+    rawUserTypeEvents: 3044,
+    burstCount: 49,
+    overallTurnDensityPerHr: 12.1,
+    overallOversightLevel: 'low',
+  },
+  perSession: [
+    { file: 'abcc0d06-8e26-44ba-8290-18f2ac26230d', dateStart: '2026-06-07T11:25', dateEnd: '2026-06-09T18:05', activeHours: 0.66, assistantTurns: 118, realHumanTurns: 7, turnDensity: 10.6 },
+    { file: '97254a80-feaa-4c85-80fb-f0938a553251', dateStart: '2026-06-08T18:24', dateEnd: '2026-06-09T21:28', activeHours: 5.47, assistantTurns: 1126, realHumanTurns: 67, turnDensity: 12.3 },
+    { file: 'ddf4fb85-cda0-4758-9366-af02fa3c0c21', dateStart: '2026-06-09T03:10', dateEnd: '2026-06-09T14:14', activeHours: 2.48, assistantTurns: 136, realHumanTurns: 37, turnDensity: 14.9 },
+    { file: '0caba5fc-e4bf-42aa-b1f6-a87618c9bed8', dateStart: '2026-06-09T17:54', dateEnd: '2026-06-09T21:19', activeHours: 1.15, assistantTurns: 148, realHumanTurns: 10, turnDensity: 8.7 },
+    { file: 'de055505-dc52-499d-978f-44e5e9323502', dateStart: '2026-06-14T00:00', dateEnd: '2026-06-15T17:24', activeHours: 5.05, assistantTurns: 1213, realHumanTurns: 66, turnDensity: 13.1 },
+    { file: 'dfd38e71-cf07-4532-9925-435227f2473f', dateStart: '2026-06-14T13:15', dateEnd: '2026-06-14T13:17', activeHours: 0.02, assistantTurns: 30, realHumanTurns: 1, turnDensity: 48.1, note: 'Automated scheduled-task run, not a human-driven session' },
+    { file: '551b4cbf-3e51-4315-a936-732f68aa348d', dateStart: '2026-06-17T16:02', dateEnd: '2026-07-04T00:11', activeHours: 3.93, assistantTurns: 620, realHumanTurns: 65, turnDensity: 16.5, note: 'Covers v0.16 through v0.17.3 (lead pledge) — resumed over 17 calendar days, ends 8 seconds from the lead-pledge commit timestamp' },
+    { file: '2d89e945-2078-4752-9dfa-ee561d78e6ce', dateStart: '2026-07-04T00:37', dateEnd: '2026-07-04T03:17', activeHours: 2.25, assistantTurns: 430, realHumanTurns: 16, turnDensity: 7.1, note: 'Spatial/3D visual design config exploration — not reflected in the site backlog' },
+    { file: '50a9edca-f76e-4aad-aeb1-702e16c9b604', dateStart: '2026-07-04T00:55', dateEnd: '2026-07-04T02:02', activeHours: 1.12, assistantTurns: 137, realHumanTurns: 10, turnDensity: 8.9, note: 'Source session for FUNCTIONAL_DESIGN_SPEC.md / TECHNICAL_DESIGN_SPEC.md / FUNCTIONAL_TECHNICAL_MAPPING.md' },
+    { file: '4b8bd63e-c41c-4de0-bda8-ebcfd212b7de', dateStart: '2026-07-04T03:10', dateEnd: '2026-07-04T03:12', activeHours: 0.04, assistantTurns: 23, realHumanTurns: 2, turnDensity: 53.8 },
+    { file: 'e3c9236b-fa3f-40be-8418-a807e0c3a21a', dateStart: '2026-07-04T03:51', dateEnd: '2026-07-07T16:08', activeHours: 2.82, assistantTurns: 847, realHumanTurns: 22, turnDensity: 7.8, note: 'Home page restructure, data-driven nav, deployment, and this retroactive analysis itself' },
+  ],
+  knownGaps: [
+    'Contribution-type split (Strategic Direction / Domain Authoring / Active Supervision) within a session\'s real human turns has not been individually classified per-turn — active_supervision hours use the oversight-weight formula above, not a verified per-type breakdown.',
+    'engineer_equiv_hours (traditional-team-equivalent effort) is not derivable from timestamps and has not been re-estimated at platform scale against these corrected active hours.',
+    'Only 9 of ~110 backlog_items (v0.17.1–v0.18, added 2026-07-06/07) have had their hoursClaude/hoursBetsy corrected against real session data. The remaining ~101 items carry pre-correction estimates, which — based on the ~4x overstatement found when correcting those 9 — likely also overstate real active time. A platform-wide reconciliation pass has not been run.',
+    'The auth `sessions` table (server/db.js, used for login cookies) and the analytics session-tracking table added in v0.17 share the same name — the v0.17 CREATE TABLE was a silent no-op against the existing auth table, and its ALTER TABLE ADD COLUMN statements bolted jsonl_filename/active_hours/etc. onto the live auth sessions table instead of a dedicated table. This analysis was stored in config_state (id "contribution_session_analysis") to avoid writing synthetic rows into a security-relevant table. The naming collision itself is unresolved.',
+  ],
 };
 
 // ── Contribution Types ──────────────────────────────────────────────────────
@@ -320,6 +380,7 @@ export function getOversightLevel(turnDensity) {
 export default {
   ARTIFACT,
   DERIVATION_RECORD,
+  RETROACTIVE_SESSION_ANALYSIS,
   CONTRIBUTION_TYPES,
   RATE_CONFIGS_2026,
   OVERSIGHT_LEVELS,
