@@ -830,4 +830,136 @@ const RELEASES = [
       'Verify CTA buttons on public site for draft-page targets are hidden (e.g. any section with a button pointing to a draft page)',
     ],
   },
+
+  // ─────────── v0.17 — IP Artifacts, Contribution Methodology, L2R Model ───────────
+  {
+    version: 'v0.17',
+    name: 'IP Artifacts, Contribution Methodology & L2R Model',
+    date: '2026-06-30',
+    summary:
+      'Established Master Enterprise Solution Best Bets™ as the top-level IP brand. Added two canonical, versioned IP artifacts as data files: the Lead to Revenue Capability Model™ and the Contribution Intelligence Methodology™, each with three-tier gated output routes (/output/l2r-model, /output/methodology). Added the sessions and rate_configs tables as the data foundation for future contribution tracking. Integrations hidden behind an "Under Research" notice until real partnerships exist.',
+    sections: [
+      {
+        heading: 'New',
+        items: [
+          'Master Enterprise Solution Best Bets™ registered as the top-level IP trademark across all artifact files, copyright unified to "Martha Elizabeth Salter aka Betsy Salter"',
+          'server/data/leadToRevenueModel.js: 9-stage Lead to Revenue Capability Model, 5 GTM nodes, 6 cross-cutting dimensions, three-tier license (public/member/client)',
+          'server/data/contributionMethodology.js: 4 contribution types (Strategic Direction, Domain Authoring, Active Supervision, Code Generation), 2026 rate configs, oversight intensity scale, irreducible/reducible reduction map, three feedback loops',
+          '/output/l2r-model and /output/methodology — three-tier gated output routes (public teaser, member framework, client full detail)',
+          'DB: sessions table (JSONL ingestion foundation) + rate_configs table (versioned 2026 rate benchmarks)',
+        ],
+      },
+      {
+        heading: 'Changed',
+        items: [
+          'Integration provider list hidden behind an "Under Research" notice — no partnerships claimed until real ones exist',
+        ],
+      },
+      {
+        heading: 'Behind the scenes',
+        items: [
+          'Render env vars synced: TOKEN_ENCRYPTION_KEY + APP_BASE_URL added',
+          'Local ADMIN_INITIAL_PASSWORD synced to match production',
+        ],
+      },
+    ],
+    metrics: {
+      directorHours: 8.5,
+      claudeBuildMins: 320,
+      engineerEquivHours: 68,
+      notes: 'Both IP artifact data files are director-authored domain content (the methodology and the capability model are Betsy\'s own frameworks); Claude structured them into versioned, licensable data files and built the gated output routes around them.',
+    },
+    postDeploySteps: [
+      'node scripts/add-v017-backlog-items.mjs',
+      'Confirm /output/methodology and /output/l2r-model render at all three tiers',
+    ],
+  },
+
+  // ─────────── v0.17.1 — MES Trademark Correction ───────────
+  {
+    version: 'v0.17.1',
+    name: 'MES Trademark — Full Legal Name Correction',
+    date: '2026-07-01',
+    summary: 'Corrected the Master Enterprise Solution Best Bets™ author/copyright attribution to the full legal name across all IP artifact files, with a refined parentBrandDescriptor.',
+    sections: [
+      { heading: 'Fixed', items: ['Author/copyright fields updated to full legal name across leadToRevenueModel.js and contributionMethodology.js'] },
+    ],
+    metrics: { directorHours: 0.3, claudeBuildMins: 10, engineerEquivHours: 1, notes: 'Small correction — director caught the naming inconsistency during review.' },
+  },
+
+  // ─────────── v0.17.2 — Deploy Crash Fix ───────────
+  {
+    version: 'v0.17.2',
+    name: 'Fix v0.17 Deploy Crash',
+    date: '2026-07-02',
+    summary: 'A boot-time crash on Render was traced to a DB migration ALTER against the sessions table colliding with an existing column. Isolated each v0.17 migration statement so a failure in one no longer takes down bootstrap for the rest.',
+    sections: [
+      { heading: 'Fixed', items: ['Isolated DB migrations from sessions column ALTERs so bootstrap survives a single failed ALTER statement'] },
+    ],
+    metrics: { directorHours: 0.5, claudeBuildMins: 30, engineerEquivHours: 3, notes: 'Production incident response — director identified the crash from Render logs, Claude isolated and fixed the migration ordering.' },
+  },
+
+  // ─────────── v0.17.3 — Lead Pledge Flow ───────────
+  {
+    version: 'v0.17.3',
+    name: 'Lead Pledge Flow',
+    date: '2026-07-05',
+    summary: 'Replaced the "convert lead to member" action with a lower-friction "pledge interest" flow, so a lead can express interest in becoming a network operator without an immediate full account conversion.',
+    sections: [
+      { heading: 'Changed', items: ['Convert-to-member action on the Leads panel replaced with a pledge-interest flow'] },
+    ],
+    metrics: { directorHours: 1.0, claudeBuildMins: 60, engineerEquivHours: 8, notes: 'Director-defined UX simplification to reduce the commitment barrier at first interest.' },
+  },
+
+  // ─────────── v0.18 — Home Page Restructure, Data-Driven Nav, Contribution Intelligence ───────────
+  {
+    version: 'v0.18',
+    name: 'Home Page Restructure, Data-Driven Nav & Contribution Intelligence Retroactive Update',
+    date: '2026-07-06',
+    summary:
+      'Home page reorganized into a paired-column layout: site purpose + founder card in row 1, a new stat-tile Executive Summary dashboard + Salt Basin Mission in row 2, with Career Timeline and Case Studies added directly below. The three Consulting pages merged into one, and "Meet the Founder" retired. PublicNav.jsx rewritten to be fully data-driven — no hardcoded nav array anywhere in the codebase; a page or a section\'s "show as sub-page in nav" toggle is now the only source of truth for the visitor-facing nav. Dense resume-style text (timeline bullets, case study fields) converted to hover/tap-expandable dashboard tiles. Documentation — CHANGELOG.md and TECHNICAL_DESIGN_SPEC.md — brought current, with the Contribution Intelligence Methodology (built in a prior session) applied retroactively to this session\'s own work.',
+    sections: [
+      {
+        heading: 'New',
+        items: [
+          'execDashboard block type: stat tiles (years of experience, industries served) + card-grid achievement highlights, paired with the Salt Basin Mission',
+          'domainsNiche block type: categorized domains + niche solutions, split out of the old industryWheel into its own home on the merged Consulting page',
+          'ExpandableTile: shared dashboard-tile component — clamps text to 3 lines, expands to full text on hover/tap — applied to Career Timeline bullets and Case Studies fields',
+          'section.navSubPage + navLabel fields, with a checkbox in EditorPane\'s Section Settings — the mechanism that makes the public nav fully data-driven',
+          'Two Mermaid architecture diagrams added to TECHNICAL_DESIGN_SPEC.md (system/deployment topology; draft→publish→nav content flow)',
+        ],
+      },
+      {
+        heading: 'Changed',
+        items: [
+          'Home page section order: About This Site + Face of the Founder (row 1) → Executive Dashboard + Mission (row 2) → Career Timeline → Case Studies → Industries Served',
+          'Consulting pages (Domains & Niche Expertise, Services, Self-Service Assessments) merged into one page; "Meet the Founder" page retired, its content redistributed to Home',
+          'PublicNav.jsx: hardcoded NAV array replaced with a nav built from live page/section data at render time',
+          'Admin Pages sidebar simplified to a flat list, matching the public nav 1:1',
+          'Output.jsx (resume, case-study, domains PDF routes) updated to read from Home\'s restructured sections instead of the removed founder page',
+          'CHANGELOG.md backfilled through v0.17.3 and today (stale since Session 7, 2026-06-09)',
+        ],
+      },
+      {
+        heading: 'Behind the scenes',
+        items: [
+          'FUNCTIONAL_DESIGN_SPEC.md, TECHNICAL_DESIGN_SPEC.md, FUNCTIONAL_TECHNICAL_MAPPING.md, AGENTS.md committed (authored in a prior session, previously uncommitted)',
+          '.gitignore: added Word lock-file pattern and two personal reference paths',
+          '9 backlog items added retroactively for v0.17.1–v0.18 (scripts/add-v018-backlog-items.mjs)',
+        ],
+      },
+    ],
+    metrics: {
+      directorHours: 6.0,
+      claudeBuildMins: 420,
+      engineerEquivHours: 45,
+      notes: 'Multiple rounds of real-time course correction on section placement/pairing before landing on the final Home layout — the Active Supervision contribution type at its most visible. Documentation backfill was flagged honestly: precise hour/leverage figures for this date range would require re-running the methodology\'s session-JSONL burst analysis, which was not done here — this entry gives a qualitative contribution-type breakdown, not a re-measured hour count.',
+    },
+    postDeploySteps: [
+      'node scripts/add-v018-backlog-items.mjs',
+      'Confirm /output/patch-notes shows v0.18',
+      'Confirm /output/build-summary reflects the new items',
+      'Verify /consulting renders all three merged sections and the public nav matches the Pages list exactly',
+    ],
+  },
 ];
