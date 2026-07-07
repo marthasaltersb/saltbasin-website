@@ -412,13 +412,21 @@ async function bootstrap() {
      WHERE activities_claude IS NULL
        AND hours_claude IS NOT NULL;
 
-    -- Pre-AI cost: total hours × 2.5x effort multiplier × $150 blended rate.
-    -- Both Betsy hours and Claude hours represented the build's total work,
-    -- so the comparison treats the whole as one project that would need a
-    -- traditional dev team.
+    -- Pre-AI cost: total hours × $175/hr onshore-senior benchmark rate
+    -- (RATE_CONFIGS_2026 benchmark_onshore_senior in contributionMethodology.js).
+    -- Assumes a traditional team takes the same wall-clock duration — not a
+    -- separately-estimated engineer-equivalent effort, which remains a
+    -- disclosed unverified gap (see RETROACTIVE_SESSION_ANALYSIS.knownGaps).
     UPDATE backlog_items
-       SET traditional_cost_usd = ROUND(((COALESCE(hours_claude, 0) + COALESCE(hours_betsy, 0)) * 2.5 * 150)::numeric, 2)
+       SET traditional_cost_usd = ROUND(((COALESCE(hours_claude, 0) + COALESCE(hours_betsy, 0)) * 175)::numeric, 2)
      WHERE traditional_cost_usd IS NULL;
+
+    -- Claude build cost: hoursClaude × $115/hr quality-adjusted rate
+    -- (RATE_CONFIGS_2026 claude_quality_adjusted).
+    UPDATE backlog_items
+       SET cost_usd_claude = ROUND((COALESCE(hours_claude, 0) * 115)::numeric, 2)
+     WHERE cost_usd_claude IS NULL
+       AND hours_claude IS NOT NULL;
   `);
 
   // Tier workarounds — capture the strategic decisions we made to stay on
@@ -1610,6 +1618,7 @@ async function bootstrap() {
     ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS automation_potential TEXT;
     ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS patch_note_version TEXT;
     ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS data_source TEXT DEFAULT 'estimated';
+    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS fee_type TEXT;
     ALTER TABLE capability_groups ADD COLUMN IF NOT EXISTS l2r_stages TEXT;
     ALTER TABLE capability_groups ADD COLUMN IF NOT EXISTS business_function TEXT;
     ALTER TABLE capability_groups ADD COLUMN IF NOT EXISTS maturity_level TEXT DEFAULT 'building';

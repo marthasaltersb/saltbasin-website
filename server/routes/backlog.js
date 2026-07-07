@@ -64,6 +64,15 @@ function rowToItem(r) {
     sortOrder: Number(r.sort_order || 0),
     createdAt: Number(r.created_at),
     updatedAt: Number(r.updated_at),
+    // Contribution Intelligence audit trail (v0.17 columns, wired up in
+    // v0.18.3 — est_/actual_ preserve the estimate → actual variance instead
+    // of overwriting the original hand estimate when hours get corrected).
+    estClaudeHours: r.est_claude_hours == null ? null : Number(r.est_claude_hours),
+    estBetsyHours: r.est_director_hours == null ? null : Number(r.est_director_hours),
+    actualClaudeHours: r.actual_claude_hours == null ? null : Number(r.actual_claude_hours),
+    actualBetsyHours: r.actual_director_hours == null ? null : Number(r.actual_director_hours),
+    dataSource: r.data_source || null,
+    feeType: r.fee_type || null,
   };
 }
 function rowToGroup(r) {
@@ -128,6 +137,12 @@ const ITEM_FIELD_MAP = {
   tags: 'tags',
   externalRef: 'external_ref',
   sortOrder: 'sort_order',
+  estClaudeHours: 'est_claude_hours',
+  estBetsyHours: 'est_director_hours',
+  actualClaudeHours: 'actual_claude_hours',
+  actualBetsyHours: 'actual_director_hours',
+  dataSource: 'data_source',
+  feeType: 'fee_type',
 };
 
 function serializeForDb(key, value) {
