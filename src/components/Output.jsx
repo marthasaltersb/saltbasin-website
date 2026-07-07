@@ -1406,6 +1406,9 @@ export function BuildSummaryOutput() {
         {/* ── Contribution Intelligence Methodology breakdown ── */}
         <ContributionBreakdown items={items} />
 
+        {/* ── Why the Director's hours aren't interchangeable ── */}
+        <DirectorDifferentiator />
+
         {/* ── Fee-type breakdown ── */}
         <FeeTypeBreakdown items={items} />
 
@@ -1667,6 +1670,76 @@ function FeeTypeBreakdown({ items }) {
       <p style={{ fontSize: '0.72rem', color: 'var(--sb-teal-deep)', fontStyle: 'italic' }}>
         Classified against real Anthropic receipts (Claude Pro renewals vs. "Prepaid extra usage, Individual plan" purchases) at the build-session date level, not per-token metering. Real Anthropic spend across the build to date: $60 in Pro plan renewals (Apr–Jun 2026) + $265 in ad hoc overage purchases = <strong>$325 actual dollars paid</strong> — a different, much smaller number than the ${(Object.values(byType).reduce((s, v) => s + v.cost, 0)).toFixed(0)} modeled quality-adjusted value of Claude's hours shown above. The $115/hr figure values the work; the $325 figure is what actually left the bank account.
       </p>
+    </section>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────
+// DirectorDifferentiator — the hour count alone doesn't explain why
+// Betsy's role isn't interchangeable with a generic "reviewer." Pulls
+// the real contribution-type definitions and irreducible/reducible split
+// from contributionMethodology.js (via /api/backlog/methodology) so this
+// narrative stays a single source of truth instead of duplicated copy.
+// ──────────────────────────────────────────────────────────────────
+function DirectorDifferentiator() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    fetch('/api/backlog/methodology', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.status))))
+      .then(setData)
+      .catch(() => setData(null));
+  }, []);
+
+  if (!data) return null;
+  const betsyTypes = (data.contributionTypes || []).filter((t) => t.contributor === 'Betsy Salter');
+  const irreducible = data.reductionMap?.irreducible;
+
+  return (
+    <section style={{ marginBottom: '2rem', borderTop: '0.5px solid var(--sb-taupe)', paddingTop: '1.25rem' }}>
+      <OutputHeading>Why the Director's Hours Aren't Interchangeable</OutputHeading>
+      <h2 className="sb-display" style={{ fontSize: '1.5rem', color: 'var(--sb-navy)', marginBottom: '0.5rem' }}>
+        Hours measure time. They don't measure judgment.
+      </h2>
+      <p style={{ ...paraStyle, fontSize: '0.85rem', marginBottom: '1rem' }}>
+        The Active Supervision line above is time spent watching a build happen — reading Claude's output, catching problems, redirecting. But Betsy Salter's contribution to this platform isn't just supervision hours; it's the three things below that no amount of AI-augmented execution time can substitute for.
+      </p>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.85rem', marginBottom: '1rem' }}>
+        {betsyTypes.map((t) => (
+          <div
+            key={t.id}
+            style={{
+              border: '0.5px solid var(--sb-taupe)',
+              borderLeft: '3px solid var(--sb-navy)',
+              borderRadius: 'var(--sb-radius)',
+              padding: '1rem 1.15rem',
+              breakInside: 'avoid',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.4rem' }}>
+              <div className="sb-display" style={{ fontSize: '1.05rem', color: 'var(--sb-navy)' }}>{t.name}</div>
+              <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.65rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: t.reducible ? 'var(--sb-gold)' : '#5a7d3a' }}>
+                {t.reducible ? 'Improves with better process' : 'Irreducible'}
+              </div>
+            </div>
+            <p style={{ fontSize: '0.85rem', color: '#4a4a4a', lineHeight: 1.55, marginBottom: '0.5rem' }}>{t.reducibleNote}</p>
+            {t.examples?.length > 0 && (
+              <ul style={{ fontSize: '0.78rem', color: 'var(--sb-teal-deep)', paddingLeft: '1.1rem', margin: 0 }}>
+                {t.examples.slice(0, 3).map((ex) => <li key={ex}>{ex}</li>)}
+              </ul>
+            )}
+          </div>
+        ))}
+      </div>
+      {irreducible && (
+        <div style={{ background: 'rgba(27,42,59,0.04)', border: '0.5px solid var(--sb-taupe)', borderRadius: 'var(--sb-radius)', padding: '1rem 1.15rem' }}>
+          <div className="sb-display" style={{ fontSize: '1rem', color: 'var(--sb-navy)', marginBottom: '0.4rem' }}>{irreducible.label}</div>
+          <p style={{ fontSize: '0.82rem', color: '#4a4a4a', lineHeight: 1.55, marginBottom: '0.6rem' }}>{irreducible.note}</p>
+          <ul style={{ fontSize: '0.8rem', color: '#4a4a4a', lineHeight: 1.7, columns: 2, columnGap: '2rem', paddingLeft: '1.1rem', margin: 0 }}>
+            {(irreducible.items || []).map((it) => <li key={it} style={{ breakInside: 'avoid' }}>{it}</li>)}
+          </ul>
+        </div>
+      )}
     </section>
   );
 }

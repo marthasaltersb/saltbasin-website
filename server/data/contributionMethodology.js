@@ -69,6 +69,7 @@ export const DERIVATION_RECORD = {
     derivedBy: 'Betsy Salter + Claude, June 2026',
     rationale: 'Turn density is directly measurable from raw JSONL data. High density = frequent course corrections = high oversight. Low density = Claude operating with defined scope = lower oversight. This is rate-independent and always reproducible.',
     observed: 'June 2026 estimate: "41/hr to 180/hr, platform average 110/hr" — not reproduced by the 2026-07-07 corrected re-run. Corrected: 11 sessions ranged 7.1–53.8 real human turns/hr, platform average 12.1/hr (all but two sessions land in the "low" oversight band, <40/hr). See RETROACTIVE_SESSION_ANALYSIS.',
+    correction2026_07_07_v2: 'The original session-LEVEL weight formula (activeHours × 0.20 for a whole session\'s "low" average density) was wrong: it conflated typing frequency with presence, treating long stretches where Betsy was watching Claude work — reading, checking, ready to redirect, but not typing every few minutes — as low-oversight when they were actually full presence. Corrected to a per-BURST weight (see PER_BURST_SUPERVISION_WEIGHT below) that only discounts hours during long autonomous stretches, not during ordinary steady engagement. Platform hoursBetsy: 5.5 → 15.3 hours as a result.',
   },
   leverageMultiple: {
     decision: 'engineer_equiv_hours / session_active_hours = session leverage multiple',
@@ -92,7 +93,7 @@ export const RETROACTIVE_SESSION_ANALYSIS = {
     idleGapSensitivity: 'Total active hours: 25.0 @15min gap, 29.2 @30min, 32.7 @60min — presented range reflects this sensitivity rather than a single fragile point estimate.',
     realHumanTurnFilter: 'type:"user" events where message.content is a non-empty string, or an array containing a text block with non-empty text. Excludes tool_result-only content arrays (agentic-loop bookkeeping, not human input).',
     oversightWeight: {
-      note: 'New formalization (2026-07-07) of the previously qualitative "turn density weight" language — operationalizes active_supervision hours as a fraction of session active hours, keyed to the existing OVERSIGHT_LEVELS bands.',
+      note: 'Superseded 2026-07-07 (same day) by PER_BURST_SUPERVISION_WEIGHT below — kept here for audit-trail purposes, not used in current calculations.',
       critical: 0.90, high: 0.65, moderate: 0.40, low: 0.20,
     },
   },
@@ -132,7 +133,23 @@ export const RETROACTIVE_SESSION_ANALYSIS = {
     'Fee-type classification (v0.18.3): each item\'s Anthropic billing fee type (subscription-included vs ad-hoc "prepaid extra usage" overage) was classified against real receipts found via Gmail search, at build-session-date precision — not per-token metering. Real total Anthropic spend to date ($325: $60 subscription + $265 overage) is a materially different, much smaller number than the modeled $115/hr quality-adjusted value of the hours ($3,061.30) — both are shown in /output/build-summary but answer different questions and are easy to conflate.',
     'Non-Claude AI tool work (v0.18.3): the PLM/EIDOS Operating Model dashboard (backlog item #111) was built in Codex (OpenAI), not Claude Code. It has no JSONL transcript and can\'t be measured by any tier of this methodology, which is Claude/Anthropic-specific. Logged with hoursClaude/costUsdClaude left null; real evidence is a 0.70hr file-modification-timestamp span across two Codex working directories, disclosed in the item\'s requirementDetail rather than folded into Anthropic-attributed totals. If more non-Claude AI-tool work gets merged into this platform, it needs its own tracked contribution type — the schema has no generic "other AI tool" hours column yet.',
     'Duplicate-item prevention (v0.18.3): POST /api/backlog/items now upserts by exact externalRef match instead of always inserting, closing the mechanism that produced the original epic/sub-item duplication. It only catches exact-string matches — it would not catch two items whose externalRefs differ but whose task ranges overlap (the actual shape of the original bug). That still needs a human or a smarter range-aware check.',
+    'Active Supervision hours (v0.18.4): the original session-level oversight-weight formula (activeHours × 0.20 for a whole session\'s "low" average density) crushed Betsy\'s hours by treating long stretches of watching Claude work — present, reading, ready to redirect, but not typing every few minutes — as low-oversight. Replaced with PER_BURST_SUPERVISION_WEIGHT, applied per burst instead of once per session: platform hoursBetsy went from 5.5 to 15.3 hours. The Tier 2 batch (items 1-47) has no per-burst data (orphaned session, see above) so a flat 0.5 "long autonomous stretch" default was applied to the whole session total rather than derived per-burst — weaker grounding than the Tier 1 items, disclosed the same way Tier 2 always has been. Also unresolved: a "cost basis hours" concept for Claude (a value-equivalent hours figure distinct from raw wall-clock hours, for cost-comparison purposes) was requested but deliberately not built yet — the multiplier is a judgment call Betsy wants to set herself, not something to derive from data. Same for maintenance-cost and license-cost tracking for ongoing/agent-based work — flagged as a needed methodology extension, not yet designed.',
   ],
+};
+
+// ── Active Supervision: per-burst weight (supersedes session-level oversightWeight above) ──
+// A session's active hours are grouped into bursts (consecutive events
+// <=15min apart). Each burst gets its own weight based on what kind of
+// work was happening in it, rather than applying one weight to a whole
+// session's average density — a session can contain both tight
+// back-and-forth stretches and long autonomous stretches, and they don't
+// deserve the same discount.
+export const PER_BURST_SUPERVISION_WEIGHT = {
+  note: 'Replaces the old activeHours × sessionDensityWeight formula (2026-07-07, same day as RETROACTIVE_SESSION_ANALYSIS). Density measures how often Betsy interrupted, not whether she was present — low density during a long autonomous stretch still means she was watching it happen, not away from the keyboard.',
+  activeBackAndForth: { minDensityPerHr: 40, weight: 1.00, description: 'Frequent redirection — full presence, full engagement.' },
+  steadyEngagement:   { minDensityPerHr: 15, weight: 0.75, description: 'Regular check-ins — present and engaged, less constant correction.' },
+  longAutonomousStretch: { minDensityPerHr: 0, weight: 0.50, description: 'Present and watching, but Claude executing a long stretch without needing redirection. Applies even to bursts with zero human turns, as long as a human was in the session (not a confirmed autonomous/scheduled run).' },
+  confirmedAutonomous: { weight: 0.00, description: 'No human present — a scheduled task or /loop run with nobody watching. See RETROACTIVE_SESSION_ANALYSIS.perSession notes for which sessions this applies to.' },
 };
 
 // ── Contribution Types ──────────────────────────────────────────────────────
@@ -387,6 +404,7 @@ export default {
   ARTIFACT,
   DERIVATION_RECORD,
   RETROACTIVE_SESSION_ANALYSIS,
+  PER_BURST_SUPERVISION_WEIGHT,
   CONTRIBUTION_TYPES,
   RATE_CONFIGS_2026,
   OVERSIGHT_LEVELS,

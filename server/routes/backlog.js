@@ -24,6 +24,7 @@ import { db } from '../db.js';
 import { requireAdmin } from '../auth.js';
 import { backlogSeed } from '../data/backlog/seed.js';
 import { patchNotes } from '../data/patchNotes.js';
+import { CONTRIBUTION_TYPES, REDUCTION_MAP, PER_BURST_SUPERVISION_WEIGHT } from '../data/contributionMethodology.js';
 
 const router = Router();
 router.use(requireAdmin);
@@ -656,6 +657,15 @@ router.post('/snapshot', async (req, res) => {
 router.get('/patch-notes', async (req, res) => {
   const list = patchNotes();
   res.json({ releases: [...list].reverse() });
+});
+
+// ── Contribution methodology (static reference data) ──
+// Powers the "why the Director's hours aren't interchangeable" narrative
+// in /output/build-summary — no DB query, just re-serving the canonical
+// definitions from contributionMethodology.js so the frontend isn't
+// duplicating this text.
+router.get('/methodology', async (req, res) => {
+  res.json({ contributionTypes: CONTRIBUTION_TYPES, reductionMap: REDUCTION_MAP, perBurstSupervisionWeight: PER_BURST_SUPERVISION_WEIGHT });
 });
 
 export default router;
