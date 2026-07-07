@@ -36,6 +36,18 @@ import resumeAccessRouter from './routes/resumeAccess.js';
 import outputTemplatesRouter from './routes/outputTemplates.js';
 import lineageRouter from './routes/lineage.js';
 
+// Safety net: an unhandled promise rejection in any async route handler
+// (e.g. a bad column reference in a PATCH) is fatal by default in Node —
+// it crashes the whole process, taking every in-flight request down with
+// it, even though Express normally isolates one route's error from the
+// rest. This turned an unrelated Postgres error into a full-site outage
+// (see CHANGELOG v0.18.3). Logging instead of crashing is a mitigation,
+// not a fix — routes should still catch their own DB errors — but it
+// stops this whole class of bug from taking production down.
+process.on('unhandledRejection', (err) => {
+  console.error('[unhandledRejection]', err);
+});
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProd = process.env.NODE_ENV === 'production';
 

@@ -1605,24 +1605,42 @@ async function bootstrap() {
     );
   `).catch((e) => console.warn('[db] rate_configs table warning:', e.message));
 
-  // backlog_items + capability_groups new columns
-  await sql.unsafe(`
-    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS session_id BIGINT REFERENCES sessions(id) ON DELETE SET NULL;
-    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS l2r_stage TEXT;
-    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS contribution_type TEXT;
-    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS est_director_hours NUMERIC;
-    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS est_claude_hours NUMERIC;
-    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS actual_director_hours NUMERIC;
-    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS actual_claude_hours NUMERIC;
-    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS oversight_intensity TEXT;
-    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS automation_potential TEXT;
-    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS patch_note_version TEXT;
-    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS data_source TEXT DEFAULT 'estimated';
-    ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS fee_type TEXT;
-    ALTER TABLE capability_groups ADD COLUMN IF NOT EXISTS l2r_stages TEXT;
-    ALTER TABLE capability_groups ADD COLUMN IF NOT EXISTS business_function TEXT;
-    ALTER TABLE capability_groups ADD COLUMN IF NOT EXISTS maturity_level TEXT DEFAULT 'building';
-  `).catch((e) => console.warn('[db] v0.17 column migration warning:', e.message));
+  // backlog_items + capability_groups new columns.
+  //
+  // CRITICAL: each ALTER TABLE runs in its OWN sql.unsafe() call. A single
+  // multi-statement string is one query to Postgres — if any statement in
+  // it fails, the whole batch aborts, INCLUDING statements that would have
+  // succeeded. That's exactly what happened here: session_id's FK
+  // (REFERENCES sessions(id)) fails because "sessions" is the live
+  // auth-cookie table (token/user_id/expires_at, no usable id for this FK
+  // — the same v0.17 sessions-table collision documented in
+  // contributionMethodology.js knownGaps), which silently prevented EVERY
+  // other column below (including data_source/est_*/actual_*) from ever
+  // being created, and once the API layer started writing to them
+  // (v0.18.3), the resulting "column does not exist" error was an
+  // uncaught rejection that crashed the whole process. Dropped the FK
+  // entirely (session_id is just a plain BIGINT now — nothing reads it)
+  // and isolated every statement so this class of bug can't cascade again.
+  const backlogColumnMigrations = [
+    `ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS session_id BIGINT`,
+    `ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS l2r_stage TEXT`,
+    `ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS contribution_type TEXT`,
+    `ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS est_director_hours NUMERIC`,
+    `ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS est_claude_hours NUMERIC`,
+    `ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS actual_director_hours NUMERIC`,
+    `ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS actual_claude_hours NUMERIC`,
+    `ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS oversight_intensity TEXT`,
+    `ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS automation_potential TEXT`,
+    `ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS patch_note_version TEXT`,
+    `ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS data_source TEXT DEFAULT 'estimated'`,
+    `ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS fee_type TEXT`,
+    `ALTER TABLE capability_groups ADD COLUMN IF NOT EXISTS l2r_stages TEXT`,
+    `ALTER TABLE capability_groups ADD COLUMN IF NOT EXISTS business_function TEXT`,
+    `ALTER TABLE capability_groups ADD COLUMN IF NOT EXISTS maturity_level TEXT DEFAULT 'building'`,
+  ];
+  for (const stmt of backlogColumnMigrations) {
+    await sql.unsafe(stmt).catch((e) => console.warn('[db] v0.17 column migration warning:', stmt, '--', e.message));
+  }
 
   // Seed 2026 rate configs — idempotent
   const rateSeeds = [
