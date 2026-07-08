@@ -1085,11 +1085,23 @@ const items = [
   },
 ];
 
-// Auto-populate cost_usd_claude on every item where it's not already set.
-// Methodology documented on the build-summary output page.
-for (const it of items) {
-  if (it.costUsdClaude == null) it.costUsdClaude = cost(it.timeMinutes);
-}
+// CORRECTED 2026-07-07 (v0.18.5): this loop used to pre-populate
+// cost_usd_claude on every item via the cost() helper above ($0.02/min,
+// ~$1.20/hr) — a legacy formula superseded by the real Contribution
+// Intelligence Methodology rates ($115/hr Claude, $175/hr traditional,
+// see contributionMethodology.js RATE_CONFIGS_2026). Since these items
+// never carried hoursClaude/hoursBetsy/traditionalCostUsd/feeType at
+// all, pre-setting cost_usd_claude here meant the correct-rate backfill
+// migration in db.js (`UPDATE ... WHERE cost_usd_claude IS NULL`) would
+// never fire — this seed file would silently resurrect the wrong
+// formula on any fresh install or re-seed from empty tables.
+//
+// Left costUsdClaude unset here on purpose. On boot, db.js's migration
+// backfills hoursClaude/hoursBetsy from timeMinutes/workSplitClaude
+// below, then costUsdClaude/traditionalCostUsd from those hours at the
+// correct rates — see server/db.js "One-time backfill" comment.
+// The cost() helper itself is kept only as a record of the original
+// (wrong) formula; nothing calls it anymore.
 
 // ── Tier workarounds ──
 // How we avoided needing to pay for upgraded tiers. Surfaced on the
