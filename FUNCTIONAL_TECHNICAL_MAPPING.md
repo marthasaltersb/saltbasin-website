@@ -209,7 +209,7 @@ Section numbers below (§4.x) match the Functional Design Spec's subsystem numbe
 | Functional Item | Technical Implementation |
 |---|---|
 | R1 — item kinds & capability grouping | `backlog_items.kind`, `capability_groups`, `parent_id` self-FK — Technical §10.1, §10.2 |
-| R2 — effort/cost derivation | `hoursBetsy`/`hoursClaude` → `activitiesBetsy = CEIL(hoursBetsy×3)`, `activitiesClaude = CEIL(hoursClaude×6)`; `traditional_cost_usd = totalHours × 2.5 × $150` — computed in `GET /api/backlog/summary` |
+| R2 — effort/cost derivation | `hoursBetsy`/`hoursClaude` → `activitiesBetsy = CEIL(hoursBetsy×3)`, `activitiesClaude = CEIL(hoursClaude×6)`; `cost_usd_claude = hoursClaude × $115/hr`, `traditional_cost_usd = (hoursClaude+hoursBetsy) × $175/hr` — computed per-item (db.js migration backfill + reconcile-backlog-cost-fields.mjs), summed (not recomputed) in `GET /api/backlog/summary`. Rates are RATE_CONFIGS_2026 in contributionMethodology.js, corrected 2026-07-07 from the original $0.02/min and 2.5×$150/hr formulas. |
 | R3 — soft delete only | `DELETE /api/backlog/items/:id` sets `status='archived'`, never a SQL DELETE |
 | R4 — summary counts delivered only | `WHERE status IN ('deployed','completed')` filter inside the summary aggregation |
 | R5 — daily + milestone snapshots | `build_progress_snapshots`, UNIQUE `(captured_date, capture_source)`; lazy insert in `GET /summary`, forced insert via `POST /api/backlog/snapshot` |
