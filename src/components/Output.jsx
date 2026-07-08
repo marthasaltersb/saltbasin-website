@@ -1527,16 +1527,16 @@ export function BuildSummaryOutput() {
 // ContributionBreakdown — activity-type × pricing breakdown from the
 // Contribution Intelligence Methodology. hoursClaude maps to Code
 // Generation ($115/hr, RATE_CONFIGS_2026 claude_quality_adjusted);
-// hoursBetsy maps to Active Supervision ($225/hr, betsy_director) — the
-// only Betsy contribution type that is "co-present by definition during
-// all Claude sessions" per contributionMethodology.js. Strategic
-// Direction and Domain Authoring (also $225/hr) are real contribution
-// types in the methodology but aren't tracked at the per-backlog-item
-// level, so they're disclosed as not represented here rather than folded
-// into Active Supervision.
+// hoursStrategicDirection/hoursDomainAuthoring are a sub-breakdown of
+// hoursBetsy (real burst-level content classification, see
+// turn-classification.json and apportion-strategic-domain-hours.mjs) —
+// what's left of hoursBetsy after subtracting those two is Active
+// Supervision. All three Betsy types price at $225/hr (betsy_director);
+// hoursClaude maps to Code Generation at $115/hr
+// (claude_quality_adjusted).
 // ──────────────────────────────────────────────────────────────────
 const CODE_GEN_RATE = 115;
-const SUPERVISION_RATE = 225;
+const DIRECTOR_RATE = 225;
 
 function ContributionBreakdown({ items }) {
   const dollars = (n) => `$${(Math.round((n || 0) * 100) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -1544,8 +1544,14 @@ function ContributionBreakdown({ items }) {
 
   const hoursClaude = delivered.reduce((s, it) => s + (it.hoursClaude || 0), 0);
   const hoursBetsy = delivered.reduce((s, it) => s + (it.hoursBetsy || 0), 0);
+  const hoursStrategic = delivered.reduce((s, it) => s + (it.hoursStrategicDirection || 0), 0);
+  const hoursDomain = delivered.reduce((s, it) => s + (it.hoursDomainAuthoring || 0), 0);
+  const hoursSupervision = Math.max(0, hoursBetsy - hoursStrategic - hoursDomain);
+
   const codeGenCost = hoursClaude * CODE_GEN_RATE;
-  const supervisionCost = hoursBetsy * SUPERVISION_RATE;
+  const strategicCost = hoursStrategic * DIRECTOR_RATE;
+  const domainCost = hoursDomain * DIRECTOR_RATE;
+  const supervisionCost = hoursSupervision * DIRECTOR_RATE;
 
   const measured = delivered.filter((it) => it.dataSource === 'measured_burst_analysis');
   const estimated = delivered.filter((it) => it.dataSource === 'measured_turn_count_estimate');
@@ -1554,7 +1560,9 @@ function ContributionBreakdown({ items }) {
 
   const rows = [
     { type: 'Code Generation', contributor: 'Claude', hours: hoursClaude, rate: CODE_GEN_RATE, cost: codeGenCost },
-    { type: 'Active Supervision', contributor: 'Betsy Salter', hours: hoursBetsy, rate: SUPERVISION_RATE, cost: supervisionCost },
+    { type: 'Strategic Direction', contributor: 'Betsy Salter', hours: hoursStrategic, rate: DIRECTOR_RATE, cost: strategicCost },
+    { type: 'Domain Authoring', contributor: 'Betsy Salter', hours: hoursDomain, rate: DIRECTOR_RATE, cost: domainCost },
+    { type: 'Active Supervision', contributor: 'Betsy Salter', hours: hoursSupervision, rate: DIRECTOR_RATE, cost: supervisionCost },
   ];
 
   return (
@@ -1579,7 +1587,7 @@ function ContributionBreakdown({ items }) {
               <tr key={r.type} style={{ borderBottom: '0.5px solid var(--sb-taupe)' }}>
                 <td style={{ padding: '0.55rem 0.6rem', color: 'var(--sb-navy)' }}>{r.type}</td>
                 <td style={{ padding: '0.55rem 0.6rem' }}>{r.contributor}</td>
-                <td style={{ padding: '0.55rem 0.6rem', textAlign: 'right' }}>{r.hours.toFixed(1)}</td>
+                <td style={{ padding: '0.55rem 0.6rem', textAlign: 'right' }}>{r.hours.toFixed(2)}</td>
                 <td style={{ padding: '0.55rem 0.6rem', textAlign: 'right' }}>${r.rate}/hr</td>
                 <td style={{ padding: '0.55rem 0.6rem', textAlign: 'right', fontWeight: 600 }}>{dollars(r.cost)}</td>
               </tr>
@@ -1588,7 +1596,7 @@ function ContributionBreakdown({ items }) {
               <td style={{ padding: '0.55rem 0.6rem', fontWeight: 700, color: 'var(--sb-navy)' }} colSpan={2}>Total AI-augmented build cost</td>
               <td style={{ padding: '0.55rem 0.6rem', textAlign: 'right', fontWeight: 700 }}>{(hoursClaude + hoursBetsy).toFixed(1)}</td>
               <td />
-              <td style={{ padding: '0.55rem 0.6rem', textAlign: 'right', fontWeight: 700 }}>{dollars(codeGenCost + supervisionCost)}</td>
+              <td style={{ padding: '0.55rem 0.6rem', textAlign: 'right', fontWeight: 700 }}>{dollars(codeGenCost + strategicCost + domainCost + supervisionCost)}</td>
             </tr>
           </tbody>
         </table>
@@ -1605,7 +1613,7 @@ function ContributionBreakdown({ items }) {
         <SumChip label="Estimated (lower confidence)" value={`${estimatedHours.toFixed(1)}h`} />
       </div>
       <p style={{ fontSize: '0.72rem', color: 'var(--sb-teal-deep)', fontStyle: 'italic' }}>
-        Strategic Direction and Domain Authoring — the other two Betsy contribution types in the methodology, also priced at $225/hr — are not tracked at the per-requirement level and are not represented in this breakdown. "Measured" hours come from real JSONL session-log burst analysis; "Estimated" hours come from a coarser turn-count-based derivation used where the original session transcript no longer exists (see the Contribution Intelligence Methodology page for the full disclosure).
+        Strategic Direction / Domain Authoring / Active Supervision are a content-based split of the same hoursBetsy already counted above — not additional hours. Split by classifying real human turn content within each session's bursts (keyword + length heuristics, disclosed and inspectable — not a black box), then relabeling each burst at its existing weight rather than adding new time. Bursts without a matching item still weren't classified (the orphaned pre-2026-06-07 batch has no surviving transcript to classify at all) — those hours remain entirely in Active Supervision by default, which likely understates Strategic Direction/Domain Authoring for that batch specifically.
       </p>
     </section>
   );
