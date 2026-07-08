@@ -1634,6 +1634,8 @@ async function bootstrap() {
     `ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS patch_note_version TEXT`,
     `ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS data_source TEXT DEFAULT 'estimated'`,
     `ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS fee_type TEXT`,
+    `ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS hours_strategic_direction NUMERIC`,
+    `ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS hours_domain_authoring NUMERIC`,
     `ALTER TABLE capability_groups ADD COLUMN IF NOT EXISTS l2r_stages TEXT`,
     `ALTER TABLE capability_groups ADD COLUMN IF NOT EXISTS business_function TEXT`,
     `ALTER TABLE capability_groups ADD COLUMN IF NOT EXISTS maturity_level TEXT DEFAULT 'building'`,

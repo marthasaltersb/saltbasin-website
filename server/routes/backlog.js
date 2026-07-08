@@ -74,6 +74,8 @@ function rowToItem(r) {
     actualBetsyHours: r.actual_director_hours == null ? null : Number(r.actual_director_hours),
     dataSource: r.data_source || null,
     feeType: r.fee_type || null,
+    hoursStrategicDirection: r.hours_strategic_direction == null ? null : Number(r.hours_strategic_direction),
+    hoursDomainAuthoring: r.hours_domain_authoring == null ? null : Number(r.hours_domain_authoring),
   };
 }
 function rowToGroup(r) {
@@ -144,6 +146,8 @@ const ITEM_FIELD_MAP = {
   actualBetsyHours: 'actual_director_hours',
   dataSource: 'data_source',
   feeType: 'fee_type',
+  hoursStrategicDirection: 'hours_strategic_direction',
+  hoursDomainAuthoring: 'hours_domain_authoring',
 };
 
 function serializeForDb(key, value) {
