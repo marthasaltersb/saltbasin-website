@@ -35,6 +35,7 @@ import governanceRouter from './routes/governance.js';
 import resumeAccessRouter from './routes/resumeAccess.js';
 import outputTemplatesRouter from './routes/outputTemplates.js';
 import lineageRouter from './routes/lineage.js';
+import methodologyStatsRouter from './routes/methodologyStats.js';
 
 // Safety net: an unhandled promise rejection in any async route handler
 // (e.g. a bad column reference in a PATCH) is fatal by default in Node —
@@ -87,6 +88,7 @@ app.use('/api/members', membersRouter);
 app.use('/api/member-site', memberSiteRouter);
 app.use('/api/member-config', memberConfigRouter);
 app.use('/api/backlog', backlogRouter);
+app.use('/api/methodology-stats', methodologyStatsRouter);
 app.use('/api/qa', qaRouter);
 app.use('/api/jira', jiraRouter);
 app.use('/api/member-templates', memberTemplatesRouter);

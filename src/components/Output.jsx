@@ -2746,8 +2746,17 @@ function IpProposalCta({ title = 'Request a Proposal' }) {
 
 export function MethodologyOutput() {
   const { loading, user } = useAuthState();
+  const [stats, setStats] = useState(null);
 
   const tier = !user ? 'public' : user.role === 'admin' ? 'client' : 'member';
+
+  useEffect(() => {
+    if (!user) return;
+    fetch('/api/methodology-stats/summary', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then(setStats)
+      .catch(() => setStats(null));
+  }, [user]);
 
   const PUBLIC_TEASER = (
     <div>
@@ -2785,7 +2794,9 @@ export function MethodologyOutput() {
           { label: 'What Gets Measured', body: 'Session active hours (JSONL burst analysis), turn density (user_turns / active_hours), contribution type per requirement, estimate vs actual variance per release.' },
           { label: 'Contribution Types', body: 'Strategic Direction · Domain Authoring · Active Supervision · Code Generation. All Betsy contributions at $225/hr (2026). Claude at $115/hr quality-adjusted.' },
           { label: 'Oversight Reduction Path', body: 'Turn density classifies oversight intensity: Critical >120/hr · High 80–120 · Moderate 40–80 · Low <40. Irreducible IP turns vs reducible execution turns are tracked separately.' },
-          { label: 'The Leverage Multiple', body: 'engineer_equiv_hours / session_active_hours. Rate-independent. Salt Basin platform: 28× leverage across 35.4 active hours.' },
+          { label: 'The Cost Savings Multiple', body: stats?.aiSavingsMultiple
+              ? `traditional_cost_usd / actual_cost_usd, both computed from the same real active hours at their respective rates. Salt Basin platform to date: ${stats.aiSavingsMultiple}× across ${stats.hoursTotal} real active hours (${stats.hoursClaude}h Claude + ${stats.hoursBetsy}h Betsy). A separate "engineer-equivalent effort" leverage figure — how much longer a traditional team would actually take, not just what the same duration would cost — remains an open, unverified estimate.`
+              : 'traditional_cost_usd / actual_cost_usd, both computed from the same real active hours at their respective rates. A separate "engineer-equivalent effort" leverage figure remains an open, unverified estimate.' },
           { label: 'IP Provenance', body: 'Practitioner-derived from 12+ years of enterprise delivery. AI-assisted structuring. Practitioner-signed. Session JSONL files are the creation record.' },
         ].map(({ label, body }) => (
           <div key={label} style={IP_STYLES.card}>
@@ -2797,9 +2808,9 @@ export function MethodologyOutput() {
       <div style={{ ...IP_STYLES.card, borderColor: '#c9a84c33', marginBottom: 20 }}>
         <div style={IP_STYLES.sectionLabel}>The Derivation Record — How We Got Here</div>
         <p style={{ fontSize: 11, color: '#aaa', lineHeight: 1.8 }}>
-          This methodology was co-derived by Betsy Salter and Claude (Anthropic) across 35.4 active build hours and 3,880 session turns building the Salt Basin Net Works platform.
+          This methodology was co-derived by Betsy Salter and Claude (Anthropic) building the Salt Basin Net Works platform{stats ? ` — ${stats.hoursTotal} real active build hours (${stats.hoursClaude}h Claude, ${stats.hoursBetsy}h Betsy) measured across ${stats.requirementsDelivered} delivered requirements to date` : ''}.
           Every rate benchmark, activity classification, and measurement method was proposed, challenged, and confirmed by Betsy before being written into this artifact.
-          The session JSONL files are the timestamped creation record. The platform build is the proof of concept.
+          The session JSONL files are the timestamped creation record. The platform build is the proof of concept — figures update as the build continues, not fixed at first publish.
         </p>
       </div>
       <IpProposalCta title="Request a Proposal" />
