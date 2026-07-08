@@ -29,11 +29,31 @@ const BASE  = process.env.PUBLIC_BASE_URL || 'https://saltbasin.net';
 const EMAIL = process.env.ADMIN_EMAIL;
 const PASS  = process.env.ADMIN_INITIAL_PASSWORD;
 
+// CORRECTED 2026-07-07 (v0.18.5): the original filter let two more
+// synthetic patterns through as "real" human turns — Claude Code's
+// auto-generated context-compaction summaries ("This session is being
+// continued from a previous conversation...", sometimes 10-20K chars)
+// and <task-notification>/<scheduled-task> system messages. Both are
+// type:"user" with real text content, so the old filter (which only
+// excluded tool_result-only content) counted them as if Betsy typed
+// them. This flipped at least one burst's density band for session
+// 551b4cbf, overstating items 102-104's hoursBetsy (2.94 -> corrected
+// 2.02 weighted hours for that session). Corrected here; if this script
+// is re-run, results now reflect the fix.
 function isRealHumanMessage(o) {
   const content = o.message?.content;
-  if (typeof content === 'string') return content.trim().length > 0;
-  if (Array.isArray(content)) return content.some((c) => c.type === 'text' && c.text?.trim().length > 0);
-  return false;
+  let text = null;
+  if (typeof content === 'string') text = content;
+  else if (Array.isArray(content)) {
+    const hasText = content.some((c) => c.type === 'text' && c.text?.trim().length > 0);
+    if (!hasText) return false;
+    text = content.filter((c) => c.type === 'text').map((c) => c.text).join('\n');
+  }
+  if (!text || !text.trim()) return false;
+  const isSynthetic = /^This session is being continued from a previous conversation/.test(text.trim())
+    || /<task-notification>/.test(text)
+    || /<scheduled-task /.test(text);
+  return !isSynthetic;
 }
 
 function burstWeight(humanCount, density) {

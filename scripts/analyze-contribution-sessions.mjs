@@ -49,13 +49,27 @@ if (!fs.existsSync(DIR)) {
 
 const files = fs.readdirSync(DIR).filter((f) => f.endsWith('.jsonl'));
 
+// CORRECTED 2026-07-07 (v0.18.5): also exclude two synthetic patterns
+// that pass as type:"user" with real text content but were never typed
+// by a human — Claude Code's auto-generated context-compaction summaries
+// ("This session is being continued from a previous conversation...",
+// sometimes 10-20K chars) and <task-notification>/<scheduled-task>
+// system messages. The original filter only excluded tool_result-only
+// content, missing these.
 function isRealHumanMessage(o) {
   const content = o.message?.content;
-  if (typeof content === 'string') return content.trim().length > 0;
-  if (Array.isArray(content)) {
-    return content.some((c) => c.type === 'text' && c.text?.trim().length > 0);
+  let text = null;
+  if (typeof content === 'string') text = content;
+  else if (Array.isArray(content)) {
+    const hasText = content.some((c) => c.type === 'text' && c.text?.trim().length > 0);
+    if (!hasText) return false;
+    text = content.filter((c) => c.type === 'text').map((c) => c.text).join('\n');
   }
-  return false;
+  if (!text || !text.trim()) return false;
+  const isSynthetic = /^This session is being continued from a previous conversation/.test(text.trim())
+    || /<task-notification>/.test(text)
+    || /<scheduled-task /.test(text);
+  return !isSynthetic;
 }
 
 function analyze(filePath) {
