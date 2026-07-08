@@ -1149,4 +1149,53 @@ const RELEASES = [
       'Design cost-basis-hours multiplier and maintenance/license cost tracking with Betsy as a follow-up (not done in this release)',
     ],
   },
+
+  // ─────────── v0.18.5 — Strategic Direction/Domain Authoring Pricing + Documentation Sweep ───────────
+  {
+    version: 'v0.18.5',
+    name: 'Strategic Direction / Domain Authoring Pricing + Documentation Sweep',
+    date: '2026-07-07',
+    summary:
+      'Director asked to price out Strategic Direction and Domain Authoring — the two Betsy contribution types that had never been tracked with real hours. Building that surfaced a real bug (a second synthetic-turn pattern contaminating the "real human turns" filter, corrected on production) and, once fixed, produced a genuine 4-way Contribution Intelligence breakdown. Separately, a full audit found several places outside the live backlog data that still carried pre-correction figures — most importantly the client-facing methodology page, which was showing "28x leverage across 35.4 hours" to anyone who viewed it, disconnected from all the correction work already shipped.',
+    sections: [
+      {
+        heading: 'New',
+        items: [
+          'hours_strategic_direction / hours_domain_authoring columns: a real sub-breakdown of hoursBetsy by contribution type, built from burst-level content classification of actual turn text (keyword + length heuristics, fully inspectable in turn-classification.json — not a black box) rather than a guess. This is a relabeling of hours already counted, not new hours: per-session totals match exactly what was already on production before the split.',
+          '/output/build-summary: activity-type table now shows all 4 CONTRIBUTION_TYPES (Code Generation, Strategic Direction, Domain Authoring, Active Supervision) instead of 2.',
+          'Backlog item #113: credited session 50a9edca, which produced FUNCTIONAL_DESIGN_SPEC.md/TECHNICAL_DESIGN_SPEC.md/FUNCTIONAL_TECHNICAL_MAPPING.md but had zero hours attributed anywhere until now (1.12h Claude, 0.56h Strategic Direction).',
+          'GET /api/methodology-stats/summary: new requireUser (not admin-only) endpoint exposing safe aggregate figures so the client/member-facing methodology page can show real numbers without needing backlog.js\'s admin-gated access.',
+        ],
+      },
+      {
+        heading: 'Fixed',
+        items: [
+          'Real-human-turn filter (used everywhere in this reconciliation) let a second synthetic pattern through uncounted as human turns: Claude Code\'s auto-generated context-compaction summaries ("This session is being continued from a previous conversation...", up to 20K+ chars) and <task-notification>/<scheduled-task> system messages. Checked impact against all production data: 3 of 4 sessions were unaffected, but session 551b4cbf (items 102-104) was overstated and corrected (0.48->0.33, 0.82->0.56, 1.64->1.13hr betsy).',
+          '/output/methodology (client/member-facing IP page) was hand-typed prose disconnected from contributionMethodology.js — it never picked up the 2026-07-07 correction and was showing "28x leverage across 35.4 active hours" and "3,880 session turns" as live fact. Now fetches real figures; the unverified "leverage multiple" claim was replaced with the real, defensible cost-savings multiple, with true engineer-equivalent leverage explicitly disclosed as still unverified rather than replaced with another invented number.',
+          'server/data/backlog/seed.js pre-populated cost_usd_claude via the old $0.02/min formula on every item, which would have silently defeated the correct-rate backfill migration (which only fires on NULL) if the backlog tables were ever wiped and re-seeded. Left unset now, deferring to the migration.',
+          'TECHNICAL_DESIGN_SPEC.md and FUNCTIONAL_TECHNICAL_MAPPING.md both documented traditional_cost_usd as totalHours × 2.5 × $150/hr (the pre-correction formula) as current. Updated to the real rates.',
+        ],
+      },
+      {
+        heading: 'Known issues',
+        items: [
+          'The pre-2026-06-07 orphaned-session batch (items 1-47) has no surviving transcript to classify at all, so none of its hours could be split into Strategic Direction/Domain Authoring — that batch\'s hoursBetsy remains entirely Active Supervision by default, which likely understates real direction-setting/authoring work in it.',
+          'Off-session Strategic Direction / Domain Authoring work (specs and decisions made entirely outside Claude sessions — the HERQ platform spec, SaltTide/EIDOS documents, methodology design itself) has not been searched for or credited yet — flagged as a follow-up, not done in this release.',
+          'CHANGELOG.md had fallen behind the whole v0.18.1-v0.18.4 correction arc (last entry was Session 8 / v0.18); backfilled in this release.',
+        ],
+      },
+    ],
+    metrics: {
+      directorHours: 0.5,
+      claudeBuildMins: 90,
+      engineerEquivHours: 10,
+      notes: 'Approximate — this session was in progress at time of writing.',
+    },
+    postDeploySteps: [
+      'Confirm /output/patch-notes shows v0.18.5',
+      'Confirm /output/build-summary shows the 4-way activity-type breakdown',
+      'Confirm /output/methodology shows real figures (not 28x/35.4h) for logged-in member and client viewers',
+      'Continue the off-session Strategic Direction/Domain Authoring artifact search as a follow-up',
+    ],
+  },
 ];

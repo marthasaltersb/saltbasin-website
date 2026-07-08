@@ -5,6 +5,82 @@ Historical versions are preserved below in reverse-chronological order.
 
 ---
 
+## [Session 9] — 2026-07-07 · Contribution Intelligence Reconciliation (v0.18.1 – v0.18.5)
+
+### Summary
+Director flagged that Build Summary's hours "could not be right" and asked for the
+Contribution Intelligence Methodology to be run against real session data instead of hand
+estimates. What followed was a full, multi-pass reconciliation: real JSONL burst analysis
+across every backlog item, a from-scratch cost-formula fix, real Anthropic billing
+classification, a redesign of how supervision hours get weighted, and a real 4-way pricing
+breakdown of Betsy's contribution types — each pass surfacing and fixing the previous
+pass's gaps. Full detail lives in `server/data/patchNotes.js` (v0.18.1 through v0.18.5);
+this entry is the roll-up.
+
+### What changed, in order
+
+- **v0.18.1 — Real session-log analysis.** Built `scripts/analyze-contribution-sessions.mjs`,
+  the reproducible JSONL burst-analysis tool. Corrected the 9 backlog items from v0.18
+  (hand-estimated ~4× too high) against real session data.
+- **v0.18.2 — Full backlog reconciliation.** Closed the remaining ~101-item gap: burst-level
+  correlation (not just createdAt-in-date-range, which is misleading for sessions resumed
+  across days), a search across every Claude project directory on the machine for sessions
+  filed under the wrong cwd, and recovery of a session whose transcript no longer exists via
+  the Claude Desktop app's own session index. Found and merged three duplicate "epic"
+  backlog items along the way. `hoursTotal`: 93.4 → 32.1.
+- **v0.18.3 — Cost formula + fee-type + PLM item + upsert flow.** `costUsdClaude` and
+  `traditionalCostUsd` had been computed from two disconnected legacy formulas
+  (`$0.02/Claude-minute`, `~$375/hr`) never tied to a documented rate. Replaced with the real
+  `RATE_CONFIGS_2026` rates ($115/hr Claude, $175/hr traditional). Classified every item's
+  Anthropic billing fee type (subscription vs. ad-hoc overage) against real receipts found
+  via Gmail search. Credited the Codex-built PLM/EIDOS Operating Model dashboard. Fixed
+  `POST /api/backlog/items` to upsert by `externalRef` instead of always inserting. **A
+  migration bug crashed production for ~15 minutes during this release** — a broken foreign
+  key silently aborted an entire multi-statement column migration, and a later write to one
+  of the missing columns crashed the whole Node process. Fixed both the immediate cause and
+  the systemic fragility (isolated every migration statement; added a process-level
+  `unhandledRejection` handler).
+- **v0.18.4 — Active Supervision redesign.** Director noted her hours (5.5 total) felt
+  implausibly low given continuous presence during every build session. Root cause: the
+  oversight-weight formula scored a whole session's *average* turn density, so long stretches
+  of watching Claude execute — present, not typing every few minutes — got scored as
+  low-oversight when they were full presence. Replaced with a per-burst weight (1.0 active
+  back-and-forth / 0.75 steady engagement / 0.5 long watched stretch / 0 confirmed-autonomous).
+  `hoursBetsy`: 5.5 → 15.3. Added a "Why the Director's Hours Aren't Interchangeable" section
+  to Build Summary, pulling the real contribution-type definitions live from the methodology.
+- **v0.18.5 — Strategic Direction / Domain Authoring pricing + documentation sweep.**
+  Priced the two Betsy contribution types that had never been tracked with real hours, by
+  classifying actual turn content within existing sessions (burst-level, not per-turn — an
+  earlier per-turn-gap approach undercounted by an order of magnitude and was discarded).
+  Found and fixed a second synthetic-turn contamination bug in the human-turn filter
+  (auto-generated context-compaction summaries and task-notification messages were being
+  counted as if typed by a human) — corrected on production. Credited a previously
+  zero-hours session that produced the platform's own spec documents. Then audited every
+  documentation surface for figures this whole arc should have updated but didn't: the
+  client/member-facing `/output/methodology` page (still showing "28× leverage across 35.4
+  active hours" to anyone who viewed it — the highest-priority fix, since it's the one
+  external-facing page that had drifted), a landmine in `server/data/backlog/seed.js` that
+  would have silently resurrected the old cost formula on any future re-seed, and stale
+  formula references in `TECHNICAL_DESIGN_SPEC.md` / `FUNCTIONAL_TECHNICAL_MAPPING.md`.
+
+### Current figures (as of this entry)
+`hoursClaude` 27.7 · `hoursBetsy` 14.9 (Strategic Direction 5.19 / Domain Authoring 1.44 /
+Active Supervision remainder 8.31) · `costUsdClaude` $3,190.10 · `traditionalCostUsd` $7,469 ·
+`aiSavingsMultiple` 2.3× · real Anthropic spend to date $325 ($60 subscription + $265 ad-hoc
+overage — a materially different number from the modeled $115/hr value of the hours, both
+shown but easy to conflate).
+
+### Known gaps (see `contributionMethodology.js` `knownGaps` for full detail)
+Off-session Strategic Direction/Domain Authoring work (specs and decisions made entirely
+outside Claude sessions) hasn't been searched for yet. The pre-2026-06-07 orphaned-session
+batch has no surviving transcript, so its hours remain entirely Active Supervision by
+default. A "cost basis hours" concept for Claude (value-equivalent hours distinct from
+wall-clock hours) and maintenance/license cost tracking for ongoing/agent-based work were
+both requested and deliberately not built — they need real design work with Betsy, not a
+guessed multiplier.
+
+---
+
 ## [Session 8] — 2026-07-06 · Home Page Restructure, Data-Driven Nav, Contribution Intelligence
 
 ### Summary
@@ -70,10 +146,14 @@ session and the four preceding it (Sessions/versions v0.12–v0.17 + lead pledge
 **Honesty note on precision:** the methodology's headline metrics (active hours, turn density,
 leverage multiple) require session-JSONL burst analysis, which was run once for the June 2026
 platform build (`35.4 active hours, 3,880 turns, 28× leverage` — see
-`server/data/contributionMethodology.js`). That analysis has not been re-run for
-Sessions/versions v0.12 through today; the table above is a qualitative attribution by
-contribution type, not a re-measured hour count. Re-running the JSONL burst analysis across
-this date range would be needed before citing new hour/leverage figures for this period.
+`server/data/contributionMethodology.js`). That analysis had not been re-run for
+Sessions/versions v0.12 through this entry; the table above was a qualitative attribution by
+contribution type, not a re-measured hour count.
+**Update (Session 9, 2026-07-07):** this was re-run for real, and the June figures were not
+just unverified but wrong — see the Session 9 entry above. Current corrected figures:
+`hoursClaude` 27.7, `hoursBetsy` 14.9, `aiSavingsMultiple` 2.3× (not 28×, which conflated a
+cost-savings ratio with an unverified engineer-equivalent-effort leverage claim). Do not cite
+`35.4`/`3,880`/`28×` anywhere going forward.
 
 ---
 
