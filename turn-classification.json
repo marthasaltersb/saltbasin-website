@@ -1,0 +1,32 @@
+{
+  "97254a80": {
+    "strategic_direction": 1.15,
+    "domain_authoring": 1.31,
+    "active_supervision": 0.46,
+    "total": 2.92
+  },
+  "de055505": {
+    "strategic_direction": 1.76,
+    "domain_authoring": 0.14,
+    "active_supervision": 0.85,
+    "total": 2.75
+  },
+  "551b4cbf": {
+    "strategic_direction": 1.79,
+    "domain_authoring": 0,
+    "active_supervision": 0.22,
+    "total": 2.02
+  },
+  "e3c9236b": {
+    "strategic_direction": 0,
+    "domain_authoring": 0,
+    "active_supervision": 1.7,
+    "total": 1.7
+  },
+  "50a9edca": {
+    "strategic_direction": 0.56,
+    "domain_authoring": 0,
+    "active_supervision": 0,
+    "total": 0.56
+  }
+}
