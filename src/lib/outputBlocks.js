@@ -3,6 +3,17 @@
 // The same system drives HERQ outputs, resume, case study, one-pagers, and future outputs.
 
 export const BLOCK_DEFS = {
+  'exec-kpi-dashboard': {
+    label: 'Executive Summary (KPI Dashboard)', icon: '◫',
+    defaultProps: {},
+    defaultStyle: {},
+    // No editable fields — this block pulls its 6 KPI tiles and capability
+    // confidence bars live from Career Master (ctx.execKpis /
+    // ctx.capabilityMeters), computed the same way as the live resume
+    // layouts. Add/remove/reorder it like any other block; the numbers
+    // always reflect current Career Master data.
+    fields: [],
+  },
   'page-header': {
     label: 'Page Header', icon: '⬛',
     defaultProps: { eyebrow: '', title: 'Document Title', subtitle: '' },
@@ -181,6 +192,36 @@ export function renderBlockToHtml(block, ctx = {}) {
   const ip = (v) => interpolate(v, ctx); // interpolate a prop value
 
   switch (block.type) {
+    case 'exec-kpi-dashboard': {
+      const kpis = Array.isArray(ctx.execKpis) ? ctx.execKpis : [];
+      const meters = Array.isArray(ctx.capabilityMeters) ? ctx.capabilityMeters : [];
+      if (!kpis.length) return '';
+      const tileHtml = kpis.map((k) => `
+        <div style="background:#EEF2F6;border-radius:10px;padding:1rem 0.9rem;text-align:center">
+          <div style="font-size:1.7rem;font-weight:700;color:#172A45;font-family:Georgia,serif;line-height:1.15">${ip(k.value)}</div>
+          <div style="font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:${k.accent || '#C4843A'};font-weight:700;margin-top:0.4rem;font-family:sans-serif">${ip(k.label)}</div>
+          ${k.note ? `<div style="font-size:0.66rem;color:#536173;margin-top:0.2rem;line-height:1.4">${ip(k.note)}</div>` : ''}
+        </div>`).join('');
+      const meterHtml = meters.map((c) => `
+        <div style="margin-bottom:0.8rem">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:0.76rem;margin-bottom:0.25rem">
+            <span style="font-weight:700;color:#172A45">${ip(c.name)}</span>
+            <span style="color:#536173;font-size:0.66rem">${ip(c.evidence)}</span>
+          </div>
+          <div style="height:6px;background:#EEF2F6;border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${c.pct}%;background:${c.color || '#4A7C8E'};border-radius:3px"></div>
+          </div>
+        </div>`).join('');
+      return `<div style="${styleStr(s)}">
+  <div style="font-size:0.6rem;letter-spacing:0.24em;text-transform:uppercase;color:#172A45;font-family:Georgia,serif;font-weight:700;margin-bottom:0.75rem;padding-bottom:0.25rem;border-bottom:1px solid #C4843A">Executive Summary</div>
+  <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:0.6rem;margin-bottom:1.25rem">${tileHtml}</div>
+  ${meters.length ? `<div style="background:#F7F2E8;border-radius:10px;padding:1rem 1.1rem">
+    <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:#536173;margin-bottom:0.6rem;font-family:sans-serif">Capability Confidence</div>
+    ${meterHtml}
+  </div>` : ''}
+</div>`;
+    }
+
     case 'page-header':
       return `<div style="${styleStr(s)}">
   ${p.eyebrow ? `<div style="font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:#C4843A;font-family:sans-serif;margin-bottom:0.6rem">${ip(p.eyebrow)}</div>` : ''}
@@ -357,6 +398,7 @@ export const DEFAULT_TEMPLATES = {
       { id: 'r1', type: 'page-header', visible: true, order: 1, props: { eyebrow: 'RESUME', title: '{{about.name}}', subtitle: '{{about.title}}' }, style: { background: '#1B2A3B', color: '#F5EDD8', padding: '2.25rem 2.5rem 2rem', textAlign: 'left' } },
       { id: 'r2', type: 'color-band', visible: true, order: 2, props: {}, style: { background: '#C4843A', height: '3px' } },
       { id: 'r2b', type: 'contact-line', visible: true, order: 3, props: { items: ['{{about.email}}', '{{about.location}}', '{{about.website}}'] }, style: { padding: '0.75rem 0 0.5rem' } },
+      { id: 'r2c', type: 'exec-kpi-dashboard', visible: true, order: 3.5, props: {}, style: { padding: '0.5rem 0 0.75rem' } },
       { id: 'r3', type: 'section-label', visible: true, order: 4, props: { text: 'PROFESSIONAL SUMMARY' }, style: {} },
       { id: 'r4', type: 'body', visible: true, order: 5, props: { text: '{{about.p1}}' }, style: {} },
       { id: 'r5', type: 'section-label', visible: true, order: 6, props: { text: 'PROFESSIONAL EXPERIENCE' }, style: {} },

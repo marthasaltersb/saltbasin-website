@@ -1,0 +1,88 @@
+{
+  "routine": "Handover Intelligence Research Loop",
+  "version": "1.0",
+  "sourceDelta": {
+    "sourceId": "SRC-YYYYMMDD-001",
+    "sourceTitle": "",
+    "sourceType": "tier_a_primary|tier_b_research|tier_c_academic|reddit_signal|vendor_directional",
+    "publisherOrCommunity": "",
+    "publicationDate": "",
+    "retrievedDate": "",
+    "url": "",
+    "evidenceStatus": "verified_current|verified_historical|methodology_disclosed|vendor_directional|practitioner_signal|modeled_assumption|unsupported|deprecated",
+    "confidence": "high|medium|low",
+    "whatChanged": "",
+    "newLeakageScenarios": [
+      {
+        "scenarioId": "HOS-SCEN-YYYYMMDD-001",
+        "scenarioTitle": "",
+        "scenarioFamily": "S1|S2|S3|S4|S5|S6|NEW",
+        "lifecycleStep": 1,
+        "failureMode": "",
+        "evidenceStrength": ""
+      }
+    ],
+    "changedBenchmarks": [
+      {
+        "claimId": "BENCH-YYYYMMDD-001",
+        "existingAssumption": "",
+        "newEvidence": "",
+        "direction": "increase|decrease|no_change|split_by_segment|replace|block",
+        "modelImpact": "",
+        "publicUseStatus": "blocked|internal|public_safe_after_refresh|approved_public"
+      }
+    ],
+    "changedAssumptions": [
+      {
+        "assumption": "",
+        "change": "",
+        "reason": "",
+        "confidence": "high|medium|low"
+      }
+    ],
+    "decisionInsights": [
+      {
+        "decision": "",
+        "newInsight": "",
+        "recommendedAction": ""
+      }
+    ],
+    "riskHeatmapImpact": [
+      {
+        "scenarioId": "",
+        "probability": 1,
+        "revenueExposure": 1,
+        "recognitionRisk": 1,
+        "controlRisk": 1,
+        "customerRisk": 1,
+        "migrationRisk": 1,
+        "aiReadinessRisk": 1,
+        "evidenceStrength": 1,
+        "compositeRisk": 1.0,
+        "band": "low|watch|medium|high|critical"
+      }
+    ],
+    "accountingControlImplications": [
+      {
+        "principleArea": "revenue_recognition|contract_modification|collectability|internal_controls|audit_evidence|disclosures|payment_compliance",
+        "impact": "",
+        "reviewTrigger": ""
+      }
+    ],
+    "sectorVentureTechnologyTags": [
+      {
+        "sector": "",
+        "ventureCategory": "",
+        "technologyImpact": ""
+      }
+    ],
+    "agentDecision": {
+      "addScenario": false,
+      "changeBenchmark": false,
+      "changeAssumption": false,
+      "updateHeatmap": false,
+      "needsSourceRefresh": true,
+      "publicUseAllowed": "blocked|internal|public_safe_after_refresh|approved_public"
+    }
+  }
+}

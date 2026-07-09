@@ -7,9 +7,12 @@ import Sidebar from './Sidebar.jsx';
 import { SectionTemplateModal } from './SectionTemplateModal.jsx';
 import EditorPane from './EditorPane.jsx';
 import PreviewPane from './PreviewPane.jsx';
+import PageLayoutView from './PageLayoutView.jsx';
+import PageTypeManagerPanel from './PageTypeManagerPanel.jsx';
 import ConfigPanel from './ConfigPanel.jsx';
 import { MemberStatsPanel, MemberAuditPanel, MemberAgentPanel } from './MemberPanels.jsx';
 import MyResumePanel from './MyResumePanel.jsx';
+import CareerMasterPanel from './CareerMasterPanel.jsx';
 import ProfileHub from './ProfileHub.jsx';
 import LeadsPanel from './LeadsPanel.jsx';
 import NetWorksPanel from './NetWorksPanel.jsx';
@@ -42,6 +45,7 @@ const TAB_COMPONENTS = {
   qa:             () => <QAPanel />,
   plmDashboard:   () => <MemberPlmPanel scope="admin" />,
   resume:         (props) => <MyResumePanel {...props} />,
+  careerMaster:   () => <CareerMasterPanel />,
   contentManager: () => <ContentManagerShell />,
   nrm:            () => <NrmPanel isAdmin={true} />,
   analytics:      () => <AnalyticsPanel isAdmin={true} />,
@@ -62,24 +66,23 @@ const TAB_COMPONENTS = {
 // API down.
 const FALLBACK_ADMIN_NAV = {
   views: [
-    { id: 'content', label: 'My Profile', sortOrder: 0, tabs: [
-      { id: 'content', label: 'My Profile', componentId: 'content', sortOrder: 0 },
-      { id: 'resume',  label: 'My Resume',  componentId: 'resume',  sortOrder: 1 },
+    { id: 'content', label: 'Network Relationship Management', sortOrder: 0, tabs: [
+      { id: 'content',  label: 'My Profile',       componentId: 'content',  sortOrder: 0 },
+      { id: 'resume',   label: 'My Resume',         componentId: 'resume',  sortOrder: 1 },
+      { id: 'career-master', label: 'Career Master', componentId: 'careerMaster', sortOrder: 2 },
+      { id: 'networks', label: 'Net Works',         componentId: 'networks', sortOrder: 3 },
+      { id: 'nrm',      label: 'Network Contacts',  componentId: 'nrm',     sortOrder: 3 },
     ]},
     { id: 'plm', label: 'Platform Lifecycle Management', sortOrder: 1, tabs: [
-      { id: 'plm-dashboard', label: 'Operating Model', componentId: 'plmDashboard', sortOrder: 0 },
+      { id: 'plm-dashboard', label: 'Operating Model Dashboard', componentId: 'plmDashboard', sortOrder: 0 },
       { id: 'backlog', label: 'Backlog', componentId: 'backlog', sortOrder: 1 },
       { id: 'qa', label: 'QA', componentId: 'qa', sortOrder: 2 },
     ]},
     { id: 'crm', label: 'Customer Relationship Management', sortOrder: 2, tabs: [
       { id: 'leads', label: 'Leads', componentId: 'leads', sortOrder: 0 },
-      { id: 'networks', label: 'Net Works', componentId: 'networks', sortOrder: 1 },
     ]},
     { id: 'content-manager', label: 'Content Manager', sortOrder: 3, tabs: [
       { id: 'content-manager', label: 'Content Manager', componentId: 'contentManager', sortOrder: 0 },
-    ]},
-    { id: 'nrm', label: 'Network Relationship Manager', sortOrder: 4, tabs: [
-      { id: 'nrm', label: 'NRM', componentId: 'nrm', sortOrder: 0 },
     ]},
     { id: 'analytics', label: 'Analytics', sortOrder: 5, tabs: [
       { id: 'analytics', label: 'Analytics', componentId: 'analytics', sortOrder: 0 },
@@ -101,10 +104,44 @@ const FALLBACK_ADMIN_NAV = {
   ],
 };
 
+// Ultimate fallback if the page-types API is unreachable — matches the single
+// Hero section every page got before the page type registry existed, so a
+// network failure degrades to today's exact behavior rather than breaking.
+const FALLBACK_PAGE_TYPES = {
+  types: [
+    { id: 'standard', label: 'Standard', description: '', defaultSections: [
+      { type: 'hero', name: 'Hero', bg: 'navy', fields: { heading: '{{pageName}}', subtitle: 'Add your intro here.' } },
+    ]},
+  ],
+};
+
 const STATUS_CYCLE = ['live', 'draft', 'soon'];
 
 function deepEqual(a, b) {
   return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function substitutePageName(value, pageName) {
+  return typeof value === 'string' ? value.replace(/\{\{pageName\}\}/g, pageName) : value;
+}
+
+// Clones a page type's defaultSections template into real section objects for
+// a newly created page: fresh ids, {{pageName}} substituted. Falls back to
+// FALLBACK_PAGE_TYPES's single Hero template if the type isn't found (e.g.
+// the registry hasn't loaded yet) — zero regression from today's behavior.
+function instantiatePageSections(pageTypes, typeId, key, pageName) {
+  const type = pageTypes?.types?.find((t) => t.id === typeId);
+  const template = type?.defaultSections?.length ? type.defaultSections : FALLBACK_PAGE_TYPES.types[0].defaultSections;
+  return template.map((sec, i) => ({
+    id: `${key}-${sec.type}-${i}`,
+    type: sec.type,
+    name: substitutePageName(sec.name, pageName),
+    status: 'live',
+    bg: sec.bg || 'ivory',
+    fields: Object.fromEntries(
+      Object.entries(sec.fields || {}).map(([k, v]) => [k, substitutePageName(v, pageName)])
+    ),
+  }));
 }
 
 // `scope` controls which data the shell is editing and which tabs it shows:
@@ -197,6 +234,8 @@ export default function AdminShell({ scope = 'admin' }) {
 
   const [pageModal, setPageModal] = useState(null);
   const [sectionModal, setSectionModal] = useState(null);
+  const [pageTypes, setPageTypes] = useState(FALLBACK_PAGE_TYPES);
+  const [pageTypeManagerOpen, setPageTypeManagerOpen] = useState(false);
 
   // ── Load admin nav structure (admin only) ──
   // Fetches once on mount; falls back to FALLBACK_ADMIN_NAV if the API is
@@ -219,6 +258,22 @@ export default function AdminShell({ scope = 'admin' }) {
         const owningView = FALLBACK_ADMIN_NAV.views.find((v) => v.tabs.some((t) => t.id === tab));
         setActiveViewId((owningView || FALLBACK_ADMIN_NAV.views[0])?.id || null);
       });
+    return () => { cancelled = true; };
+  }, [isMember]);
+
+  // ── Load page type registry (both scopes) ──
+  // Platform-wide "New Page" taxonomy — members get a read-only view via the
+  // mirrored member-config route. Falls back to FALLBACK_PAGE_TYPES (today's
+  // single-Hero behavior) if the API is unreachable.
+  useEffect(() => {
+    let cancelled = false;
+    const fetchTypes = isMember ? api.getMemberPageTypes : api.getPageTypes;
+    fetchTypes()
+      .then((data) => {
+        if (cancelled) return;
+        setPageTypes((data?.types || []).length > 0 ? data : FALLBACK_PAGE_TYPES);
+      })
+      .catch(() => { if (!cancelled) setPageTypes(FALLBACK_PAGE_TYPES); });
     return () => { cancelled = true; };
   }, [isMember]);
 
@@ -276,7 +331,18 @@ export default function AdminShell({ scope = 'admin' }) {
       const pg = d.pages[currentPageKey];
       const idx = pg.sections.findIndex((s) => s.id === currentSectionId);
       if (idx < 0) return d;
-      pg.sections[idx] = { ...pg.sections[idx], ...patch };
+      const current = pg.sections[idx];
+      // layoutPatch merges into the *live* layout sub-object here (against the
+      // freshest draft, inside this functional updater) rather than the caller
+      // pre-merging against its own props — two layout controls patched back
+      // to back in the same tick (before React re-renders) would otherwise each
+      // read a stale `section.layout` closure and clobber each other's change.
+      if (patch.layoutPatch) {
+        const { layoutPatch, ...rest } = patch;
+        pg.sections[idx] = { ...current, ...rest, layout: { ...(current.layout || {}), ...layoutPatch } };
+      } else {
+        pg.sections[idx] = { ...current, ...patch };
+      }
       return d;
     });
   }
@@ -313,6 +379,13 @@ export default function AdminShell({ scope = 'admin' }) {
     if (currentSectionId === id) setCurrentSectionId(null);
   }
 
+  function reorderSections(newSections) {
+    patchDraft((d) => {
+      d.pages[currentPageKey].sections = newSections;
+      return d;
+    });
+  }
+
   function deletePage(key) {
     if (Object.keys(draft.pages).length <= 1) {
       toast("Can't delete the only page");
@@ -344,16 +417,7 @@ export default function AdminShell({ scope = 'admin' }) {
         type,
         status,
         order,
-        sections: [
-          {
-            id: `${key}-hero`,
-            type: 'hero',
-            name: 'Hero',
-            status: 'live',
-            bg: 'navy',
-            fields: { heading: name, subtitle: 'Add your intro here.' },
-          },
-        ],
+        sections: instantiatePageSections(pageTypes, type, key, name),
       };
       return d;
     });
@@ -428,7 +492,13 @@ export default function AdminShell({ scope = 'admin' }) {
   }
 
   async function logout() {
-    await api.logout();
+    // Always land on the login page, even if the logout call fails (expired
+    // session, server restart, network blip) — the user asked to leave.
+    try {
+      await api.logout();
+    } catch {
+      /* session may already be gone; proceed to login regardless */
+    }
     nav('/login', { replace: true });
   }
 
@@ -515,6 +585,7 @@ export default function AdminShell({ scope = 'admin' }) {
                   { val: 'split', label: 'Split' },
                   { val: 'editor', label: 'Edit Only' },
                   { val: 'preview', label: 'Preview Only' },
+                  { val: 'layout', label: 'Layout' },
                 ]}
                 active={view}
                 onChange={setView}
@@ -631,11 +702,14 @@ export default function AdminShell({ scope = 'admin' }) {
                   setCurrentSectionId(id);
                   setSidebarOpen(false);
                 }}
-                onAddPage={() => setPageModal({ name: '', slug: '', type: 'standard', status: 'draft' })}
+                onExpandSection={(id) => setCurrentSectionId(id)}
+                onAddPage={() => setPageModal({ name: '', slug: '', type: pageTypes?.types?.[0]?.id || 'standard', status: 'draft' })}
                 onAddSection={() => setSectionModal(true)}
                 onDeleteSection={deleteSection}
                 onCycleSectionStatus={cycleSectionStatus}
                 onDeletePage={deletePage}
+                onReorderSections={reorderSections}
+                onUpdateSection={updateSection}
               />
             </div>
             {(view === 'split' || view === 'editor') && (
@@ -674,6 +748,17 @@ export default function AdminShell({ scope = 'admin' }) {
                 }
               >
                 <PreviewPane site={draft} config={configDraft} currentPageKey={currentPageKey} isMember={isMember} slug={profileSlug} />
+              </div>
+            )}
+            {view === 'layout' && (
+              <div className="sb-admin-editor" style={{ display: 'flex', flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                <PageLayoutView
+                  page={currentPage}
+                  currentSectionId={currentSectionId}
+                  onSelectSection={(id) => setCurrentSectionId(id)}
+                  onReorderSections={reorderSections}
+                  onUpdateSection={updateSection}
+                />
               </div>
             )}
           </>
@@ -724,6 +809,20 @@ export default function AdminShell({ scope = 'admin' }) {
           onChange={setPageModal}
           onSubmit={() => addPage(pageModal)}
           onCancel={() => setPageModal(null)}
+          pageTypes={pageTypes}
+          isMember={isMember}
+          onManageTypes={() => setPageTypeManagerOpen(true)}
+        />
+      )}
+      {pageTypeManagerOpen && !isMember && (
+        <PageTypeManagerPanel
+          pageTypes={pageTypes}
+          onSave={async (types) => {
+            await api.updatePageTypes(types);
+            setPageTypes(types);
+            toast('Page types saved');
+          }}
+          onClose={() => setPageTypeManagerOpen(false)}
         />
       )}
       {sectionModal && (
@@ -884,7 +983,9 @@ function Modal({ title, children, onCancel, onSubmit, submitLabel }) {
   );
 }
 
-function PageModal({ value, onChange, onSubmit, onCancel }) {
+function PageModal({ value, onChange, onSubmit, onCancel, pageTypes, isMember, onManageTypes }) {
+  const types = pageTypes?.types?.length ? pageTypes.types : FALLBACK_PAGE_TYPES.types;
+  const selectedType = types.find((t) => t.id === value.type);
   return (
     <Modal title="Add New Page" onCancel={onCancel} onSubmit={onSubmit} submitLabel="Create Page">
       <div style={styles.fieldGroup}>
@@ -909,10 +1010,9 @@ function PageModal({ value, onChange, onSubmit, onCancel }) {
         <div style={styles.fieldGroup}>
           <label style={styles.fieldLabel}>Type</label>
           <select className="sb-input" value={value.type} onChange={(e) => onChange({ ...value, type: e.target.value })}>
-            <option value="standard">Standard</option>
-            <option value="landing">Landing</option>
-            <option value="blog">Blog</option>
-            <option value="shop">Shop</option>
+            {types.map((t) => (
+              <option key={t.id} value={t.id}>{t.label}</option>
+            ))}
           </select>
         </div>
         <div style={styles.fieldGroup}>
@@ -924,6 +1024,20 @@ function PageModal({ value, onChange, onSubmit, onCancel }) {
           </select>
         </div>
       </div>
+      {selectedType?.description && (
+        <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', lineHeight: 1.5, marginTop: '-0.5rem', marginBottom: '0.75rem' }}>
+          {selectedType.description}
+        </div>
+      )}
+      {!isMember && (
+        <button
+          type="button"
+          onClick={onManageTypes}
+          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: '0.72rem', color: 'var(--sb-gold)', textDecoration: 'underline' }}
+        >
+          Manage Page Types →
+        </button>
+      )}
     </Modal>
   );
 }

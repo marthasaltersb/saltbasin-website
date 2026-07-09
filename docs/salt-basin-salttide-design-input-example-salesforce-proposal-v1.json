@@ -1,0 +1,225 @@
+{
+  "packageId": "example.salesforce.proposal.001",
+  "packageVersion": "v1",
+  "createdAt": 1783578780000,
+  "sourceArtifacts": [
+    {
+      "sourceId": "src.example.sf.metadata",
+      "sourceType": "salesforce_export",
+      "title": "Salesforce metadata export",
+      "pathOrUrl": null,
+      "owner": "RevOps",
+      "capturedAt": null,
+      "sensitivity": "restricted",
+      "evidenceStatus": "pending_review",
+      "limitations": [
+        "Example only. Replace with exported Salesforce metadata and sampled values."
+      ]
+    }
+  ],
+  "operatingContext": {
+    "contextId": "ctx.example.proposal",
+    "organization": "Example Company",
+    "businessModel": "B2B SaaS with parent/child fulfillment",
+    "industry": "Enterprise Software",
+    "stage": "Proposal",
+    "useCase": "proposal_output",
+    "audience": ["CFO", "CRO", "RevOps", "Deal Desk"],
+    "constraints": [
+      "Internal draft only",
+      "Do not use external benchmark claims without refresh"
+    ]
+  },
+  "objectDefinitions": [
+    {
+      "objectId": "obj.sf.opportunity",
+      "objectType": "salesforce_object",
+      "canonicalName": "Opportunity",
+      "sourceSystem": "Salesforce",
+      "sourceObject": "Opportunity",
+      "owner": "Sales Operations",
+      "lifecycleStage": "Proposal",
+      "dataDefinitionPct": 0.55,
+      "methodologyCompletionPct": 0.4
+    },
+    {
+      "objectId": "obj.sf.account",
+      "objectType": "salesforce_object",
+      "canonicalName": "Account",
+      "sourceSystem": "Salesforce",
+      "sourceObject": "Account",
+      "owner": "Sales Operations",
+      "lifecycleStage": "Customer/Payer",
+      "dataDefinitionPct": 0.6,
+      "methodologyCompletionPct": 0.45
+    }
+  ],
+  "fieldDefinitions": [
+    {
+      "fieldId": "fld.sf.opp.amount",
+      "objectId": "obj.sf.opportunity",
+      "apiName": "Amount",
+      "label": "Amount",
+      "dataType": "currency",
+      "required": false,
+      "nullable": true,
+      "sourceOfTruth": "Salesforce Opportunity for pipeline amount only",
+      "sensitivity": "restricted",
+      "salesforce": {
+        "fieldApiName": "Amount",
+        "objectApiName": "Opportunity",
+        "namespace": null,
+        "externalId": false,
+        "formula": null,
+        "picklistValues": [],
+        "nullRate": null,
+        "distinctCount": null
+      }
+    },
+    {
+      "fieldId": "fld.sf.account.parent",
+      "objectId": "obj.sf.account",
+      "apiName": "ParentId",
+      "label": "Parent Account",
+      "dataType": "lookup",
+      "required": false,
+      "nullable": true,
+      "sourceOfTruth": "Candidate for parent/child customer and member entitlement mapping",
+      "sensitivity": "restricted",
+      "salesforce": {
+        "fieldApiName": "ParentId",
+        "objectApiName": "Account",
+        "namespace": null,
+        "externalId": false,
+        "formula": null,
+        "picklistValues": [],
+        "nullRate": null,
+        "distinctCount": null
+      }
+    }
+  ],
+  "mappingRules": [
+    {
+      "mappingId": "map.opp.amount.to.proposal.value",
+      "sourceFields": ["fld.sf.opp.amount"],
+      "targetField": "proposal.commercial_terms.estimated_value",
+      "ruleType": "direct",
+      "transformLogic": "Use for proposal estimate only. Reconcile to quote, contract, and billing before financial support.",
+      "confidence": 0.6,
+      "owner": "Deal Desk",
+      "templateId": "sbmap.salesforce.q2r.proposal.v1"
+    },
+    {
+      "mappingId": "map.account.parent.to.member.edge",
+      "sourceFields": ["fld.sf.account.parent"],
+      "targetField": "token_chain.memberJourneyToken.parent_child_edge",
+      "ruleType": "lookup",
+      "transformLogic": "Map Account.ParentId to payer/parent organization versus fulfillment/member child organization. Requires validation where account hierarchy is stale.",
+      "confidence": 0.45,
+      "owner": "RevOps",
+      "templateId": "sbmap.salesforce.q2r.proposal.v1"
+    }
+  ],
+  "transformationRules": [
+    {
+      "transformId": "tx.proposal.risk.missing_contract_terms",
+      "inputs": ["proposal.commercial_terms", "token_chain.contractObligationToken"],
+      "formulaOrLogic": "If renewal terms, payment terms, support terms, billing triggers, or performance obligations are missing, add proposal risk question and lower confidence.",
+      "outputs": ["proposal.risk_questions", "confidence.overallScore"],
+      "dependency": "Contract or CLM extract",
+      "testCase": "Contract terms absent in Salesforce sample",
+      "exceptionRule": "Human review required before external proposal use"
+    }
+  ],
+  "tokenChain": {
+    "tokenChainId": "tokchain.example.001",
+    "revenueLifecycleToken": "rlt.example.opportunity_to_proposal",
+    "customerJourneyToken": "cjt.example.prospect_to_negotiation",
+    "memberJourneyToken": "mjt.example.parent_child_entitlement",
+    "contractObligationToken": "cot.example.performance_obligation_pending",
+    "financialTransactionToken": null,
+    "resourceContributionToken": "rct.example.deal_contributors",
+    "confidenceReconciliationToken": "crt.example.proposal_confidence",
+    "tokenEdges": [
+      {
+        "from": "rlt.example.opportunity_to_proposal",
+        "to": "cot.example.performance_obligation_pending",
+        "relationship": "proposal depends on contract obligation definition",
+        "confidence": 0.5
+      },
+      {
+        "from": "cjt.example.prospect_to_negotiation",
+        "to": "mjt.example.parent_child_entitlement",
+        "relationship": "customer payer may differ from fulfilled member organization",
+        "confidence": 0.45
+      }
+    ]
+  },
+  "stageGates": [
+    {
+      "stageGateId": "gate.proposal.ready",
+      "stageName": "Proposal Ready",
+      "requiredInputs": [
+        "customer/payer identity",
+        "products",
+        "pricing",
+        "contract obligations",
+        "member entitlement structure"
+      ],
+      "requiredOutputs": [
+        "proposal package",
+        "commercial terms matrix",
+        "risk questions"
+      ],
+      "approvals": ["Deal Desk", "Finance"],
+      "evidence": ["Salesforce Opportunity", "Quote", "Contract/CLM extract"],
+      "computedStatus": "in_progress"
+    }
+  ],
+  "reconciliationRules": [
+    {
+      "reconciliationId": "recon.proposal.amount.quote.contract",
+      "sources": ["Opportunity.Amount", "Quote.TotalPrice", "Contract.Value"],
+      "comparisonGrain": "opportunity/quote/contract",
+      "tolerance": 0,
+      "expectedResult": "Opportunity, quote, and contract values should reconcile or exceptions should be disclosed.",
+      "exceptionHandling": "Create pricing discrepancy risk and require human review."
+    }
+  ],
+  "confidence": {
+    "coverageScore": 0.45,
+    "evidenceScore": 0.55,
+    "transformScore": 0.5,
+    "reconciliationScore": 0.35,
+    "overallScore": 0.46,
+    "reviewer": null,
+    "reviewStatus": "human_required"
+  },
+  "contributionEvents": [
+    {
+      "contributionId": "contrib.example.revops.mapping",
+      "contributorType": "team",
+      "contributor": "RevOps",
+      "role": "Salesforce source-field owner",
+      "stageGateId": "gate.proposal.ready",
+      "costBasis": null,
+      "valueAttribution": null,
+      "confidence": 0.5
+    }
+  ],
+  "outputRequest": {
+    "outputRequestId": "out.example.proposal.001",
+    "outputType": "proposal",
+    "audience": ["Customer Executive", "CFO", "CRO"],
+    "decisionNeeded": "Approve proposal draft or identify missing contract/member metadata",
+    "sourceScope": ["src.example.sf.metadata"],
+    "templateId": "sbmap.salesforce.q2r.proposal.v1",
+    "approvalRequired": true
+  },
+  "governance": {
+    "publicUseStatus": "internal_only",
+    "claimRefreshRequired": true,
+    "financialLanguageGuardRequired": true,
+    "retentionPolicy": "Replace example with real client retention policy before production use"
+  }
+}

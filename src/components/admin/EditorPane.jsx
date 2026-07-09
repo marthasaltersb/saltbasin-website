@@ -1,6 +1,10 @@
 import React from 'react';
 import { styles } from './adminStyles.js';
 import { SOURCE_TYPES, TAG_CATEGORIES, MERGED_FIELD_DEFAULTS } from '../../data/capabilityTags.js';
+import SectionLayoutFields from './SectionLayoutFields.jsx';
+import ImageUploadField from './ImageUploadField.jsx';
+import FlexColumnsEditor, { WheelNodesEditor, FormConfig } from './FlexColumnsEditor.jsx';
+import { DEFAULT_INDUSTRY_WHEEL_NODES } from '../blocks/index.jsx';
 
 // ── Field source-type badge + inline meta editor ──────────────────────────────
 
@@ -347,8 +351,6 @@ const STATUS_OPTS = [
   { val: 'soon', label: '◌ Soon', desc: 'Visitors see a Coming Soon placeholder.' },
 ];
 
-const BG_OPTS = ['ivory', 'navy', 'linen', 'teal', 'cream'];
-
 const LONG_KEYS = ['concept', 'intro', 'p1', 'p2', 'p3', 'howIWork', 'aiBadge', 'desc', 'persona', 'aboutBio', 'subhead'];
 
 function humanLabel(key) {
@@ -540,29 +542,13 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
       <div style={styles.editorBody}>
         <div style={styles.card}>
           <div style={styles.cardTitle}>Section Settings</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <div style={styles.fieldGroup}>
-              <label style={styles.fieldLabel}>Section Name</label>
-              <input
-                className="sb-input"
-                value={section.name || ''}
-                onChange={(e) => patchTop('name', e.target.value)}
-              />
-            </div>
-            <div style={styles.fieldGroup}>
-              <label style={styles.fieldLabel}>Background</label>
-              <select
-                className="sb-input"
-                value={section.bg || 'ivory'}
-                onChange={(e) => patchTop('bg', e.target.value)}
-              >
-                {BG_OPTS.map((b) => (
-                  <option key={b} value={b}>
-                    {b}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div style={styles.fieldGroup}>
+            <label style={styles.fieldLabel}>Section Name</label>
+            <input
+              className="sb-input"
+              value={section.name || ''}
+              onChange={(e) => patchTop('name', e.target.value)}
+            />
           </div>
           <div style={styles.fieldGroup}>
             <label style={styles.fieldLabel}>Type (read-only in Phase 1)</label>
@@ -595,6 +581,12 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
           </div>
         </div>
 
+        {/* ── Layout card ─────────────────────────────────────────────── */}
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Layout</div>
+          <SectionLayoutFields section={section} onUpdate={onUpdateSection} />
+        </div>
+
         {/* ── Section Actions / Buttons card ─────────────────────────── */}
         <div style={styles.card}>
           <div style={styles.cardTitle}>Action Buttons</div>
@@ -605,8 +597,35 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
             actions={Array.isArray(section.fields?.actions) ? section.fields.actions : []}
             onChange={(next) => patchField('actions', next)}
             site={site}
+            placement={section.fields?.actionsPlacement || 'left'}
+            onPlacementChange={(next) => patchField('actionsPlacement', next)}
           />
         </div>
+
+        {/* ── Wheel card — industryWheel is content-heavy enough to warrant its
+            own card rather than relying on generic field iteration, which
+            only shows a control for keys already present in section.fields.
+            Editing here always writes an explicit wheelNodes array back —
+            same "seed from defaults on first touch" pattern as Phase A's
+            SectionLayoutFields. ─────────────────────────────────────────── */}
+        {section.type === 'industryWheel' && (
+          <div style={styles.card}>
+            <div style={styles.cardTitle}>Wheel</div>
+            <div style={styles.fieldGroup}>
+              <label style={styles.fieldLabel}>Center Label</label>
+              <input
+                className="sb-input"
+                value={section.fields?.wheelCenterLabel || ''}
+                placeholder="Salt Basin"
+                onChange={(e) => patchField('wheelCenterLabel', e.target.value)}
+              />
+            </div>
+            <WheelNodesEditor
+              nodes={Array.isArray(section.fields?.wheelNodes) && section.fields.wheelNodes.length ? section.fields.wheelNodes : DEFAULT_INDUSTRY_WHEEL_NODES}
+              onChange={(next) => patchField('wheelNodes', next)}
+            />
+          </div>
+        )}
 
         <div style={styles.card}>
           <div style={styles.cardTitle}>Content Fields</div>
@@ -670,8 +689,16 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
               if (Array.isArray(v) && k === 'clients') {
                 return <ClientSnapshotListEditor key={k} clients={v} onChange={(next) => patchField(k, next)} />;
               }
-              if (Array.isArray(v) && k === 'actions') {
-                return <SectionActionsEditor key={k} actions={v} onChange={(next) => patchField(k, next)} site={site} />;
+              if (Array.isArray(v) && k === 'flexCols') {
+                return <FlexColumnsEditor key={k} cols={v} onChange={(next) => patchField(k, next)} />;
+              }
+              // wheelNodes / wheelCenterLabel have their own dedicated "Wheel"
+              // card above (industryWheel sections) — skip them here so they
+              // don't also render via generic field iteration. Same for
+              // actions / actionsPlacement, which the always-visible "Action
+              // Buttons" card above already owns.
+              if (k === 'wheelNodes' || k === 'wheelCenterLabel' || k === 'actions' || k === 'actionsPlacement') {
+                return null;
               }
               const knownMergeDefault = knownMerged.find((m) => m.fieldKey === k);
               const effectiveMeta = section.fieldMeta?.[k] || (knownMergeDefault
@@ -838,117 +865,6 @@ function isImageField(key) {
   return /^(photo|image)Url$|(Photo|Image)Url$/i.test(key);
 }
 
-function ImageUploadField({ value, onChange }) {
-  const inputRef = React.useRef(null);
-  const [uploading, setUploading] = React.useState(false);
-  const [error, setError] = React.useState('');
-
-  async function handleFile(file) {
-    if (!file) return;
-    setUploading(true);
-    setError('');
-    try {
-      const fd = new FormData();
-      fd.append('file', file);
-      const res = await fetch('/api/uploads', {
-        method: 'POST',
-        credentials: 'include',
-        body: fd,
-      });
-      const body = await res.json();
-      if (!res.ok) throw new Error(body.error || 'Upload failed');
-      onChange(body.url);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  return (
-    <div>
-      <div
-        style={{
-          display: 'flex',
-          gap: '0.75rem',
-          alignItems: 'flex-start',
-          padding: '0.75rem',
-          background: 'var(--sb-navy)',
-          border: '0.5px solid rgba(196,132,58,0.25)',
-          borderRadius: 'var(--sb-radius)',
-        }}
-      >
-        {/* Thumbnail */}
-        <div
-          style={{
-            width: 80,
-            height: 100,
-            background: 'var(--sb-navy-deep)',
-            border: '0.5px solid var(--sb-taupe)',
-            borderRadius: 'var(--sb-radius)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--sb-teal-deep)',
-            fontSize: '0.7rem',
-            flexShrink: 0,
-            overflow: 'hidden',
-          }}
-        >
-          {value ? (
-            <img
-              src={value}
-              alt="preview"
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-          ) : (
-            <span>No image</span>
-          )}
-        </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/*"
-            style={{ display: 'none' }}
-            onChange={(e) => handleFile(e.target.files?.[0])}
-          />
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              className="sb-btn sb-btn-gold"
-              style={{ padding: '0.45rem 0.95rem', fontSize: '0.7rem' }}
-              disabled={uploading}
-              onClick={() => inputRef.current?.click()}
-            >
-              {uploading ? 'Uploading…' : value ? 'Replace Image' : 'Upload Image'}
-            </button>
-            {value && (
-              <button
-                type="button"
-                className="sb-btn sb-btn-outline"
-                style={{ padding: '0.45rem 0.95rem', fontSize: '0.7rem' }}
-                onClick={() => onChange('')}
-              >
-                Clear
-              </button>
-            )}
-          </div>
-          <input
-            className="sb-input"
-            value={value || ''}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder="/uploads/… or paste a URL"
-            style={{ fontSize: '0.78rem' }}
-          />
-          {error && (
-            <div style={{ fontSize: '0.75rem', color: 'var(--sb-risk-critical)' }}>{error}</div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // Normalize any incoming value to a YYYY-MM-DD string suitable for
 // <input type="date">. Accepts ISO strings, "Jan 2023" loose text, etc.
@@ -1534,7 +1450,74 @@ const STYLE_PREVIEW = {
   'outline-dark':{ background: 'transparent', color: 'var(--sb-navy,#1b2a3b)', border: '1.5px solid var(--sb-navy,#1b2a3b)' },
 };
 
-function SectionActionsEditor({ actions, onChange, site }) {
+// Phase D — explicit button classification. `type` defaults to 'url' when
+// absent so every pre-Phase-D action object (just {label, href, style})
+// keeps rendering exactly as before with zero migration.
+const TYPE_OPTS = [
+  { value: 'url',    label: 'URL' },
+  { value: 'output', label: 'Output Document' },
+  { value: 'popup',  label: 'Popup' },
+  { value: 'custom', label: 'Custom Action' },
+];
+
+const POPUP_KIND_OPTS = [
+  { value: 'form',   label: 'Lead Form' },
+  { value: 'media',  label: 'Media (Image)' },
+  { value: 'output', label: 'Embedded Output Document' },
+];
+
+// Fixed, hardcoded menu — deliberately not arbitrary code, to avoid an
+// injected-JS / XSS surface on a field that round-trips through the DB.
+const CUSTOM_ACTION_OPTS = [
+  { value: 'copyLink',  label: 'Copy Link to Clipboard' },
+  { value: 'scrollTop', label: 'Scroll to Top' },
+  { value: 'print',     label: 'Print This Page' },
+  { value: 'share',     label: 'Share' },
+];
+
+const PLACEMENT_OPTS = [
+  { value: 'left',    label: 'Left' },
+  { value: 'center',  label: 'Center' },
+  { value: 'right',   label: 'Right' },
+  { value: 'stacked', label: 'Stacked' },
+];
+
+// Popup sub-editor — kind selector (form/media/output) + kind-specific config.
+// `onChange` receives a merge-patch, same convention as FormConfig/patchConfig
+// in FlexColumnsEditor.jsx (the popup's existing fields are preserved, not
+// replaced, on every keystroke).
+function PopupActionConfig({ popup, onChange }) {
+  const p = popup || {};
+  const kind = p.kind || 'form';
+
+  function setKind(nextKind) {
+    if (nextKind === 'form' && !Array.isArray(p.fields)) {
+      onChange({ kind: nextKind, fields: [{ key: 'email', label: 'Email', type: 'email', required: true }], submitLabel: p.submitLabel || 'Submit' });
+    } else {
+      onChange({ kind: nextKind });
+    }
+  }
+
+  return (
+    <div style={{ border: '0.5px dashed rgba(0,0,0,0.15)', borderRadius: 8, padding: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      <select className="sb-input" style={{ fontSize: '0.72rem' }} value={kind} onChange={(e) => setKind(e.target.value)}>
+        {POPUP_KIND_OPTS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+      {kind === 'form' && <FormConfig config={p} onChange={onChange} />}
+      {kind === 'media' && (
+        <ImageUploadField value={p.mediaUrl || ''} onChange={(url) => onChange({ mediaUrl: url })} />
+      )}
+      {kind === 'output' && (
+        <select className="sb-input" style={{ fontSize: '0.72rem' }} value={p.outputHref || ''} onChange={(e) => onChange({ outputHref: e.target.value })}>
+          <option value="">Choose a document…</option>
+          {OUTPUT_ROUTES.map((o) => <option key={o.href} value={o.href}>{o.label}</option>)}
+        </select>
+      )}
+    </div>
+  );
+}
+
+function SectionActionsEditor({ actions, onChange, site, placement, onPlacementChange }) {
   const [addingIndex, setAddingIndex] = React.useState(null); // which row is open for link picker
   const list = Array.isArray(actions) ? actions : [];
 
@@ -1572,10 +1555,16 @@ function SectionActionsEditor({ actions, onChange, site }) {
     return [...misc, ...pageLinks, ...sectionLinks, ...outputLinks];
   }, [site]);
 
-  // Group by group label for the picker UI
-  const grouped = React.useMemo(() => {
+  // Group by group label for the picker UI. type==='output' narrows the
+  // picker to just Output Documents (that's the whole point of picking that
+  // type); type==='url' (or absent, legacy) shows everything except Output
+  // Documents, since that's now its own explicit type.
+  const groupedFor = React.useCallback((type) => {
+    const filtered = type === 'output'
+      ? linkGroups.filter((item) => item.group === 'Output Documents')
+      : linkGroups.filter((item) => item.group !== 'Output Documents');
     const map = {};
-    for (const item of linkGroups) {
+    for (const item of filtered) {
       if (!map[item.group]) map[item.group] = [];
       map[item.group].push(item);
     }
@@ -1583,7 +1572,7 @@ function SectionActionsEditor({ actions, onChange, site }) {
   }, [linkGroups]);
 
   function add() {
-    const next = [...list, { label: '', href: '', style: 'gold' }];
+    const next = [...list, { label: '', href: '', style: 'gold', type: 'url' }];
     onChange(next);
     setAddingIndex(next.length - 1);
   }
@@ -1611,16 +1600,41 @@ function SectionActionsEditor({ actions, onChange, site }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      {onPlacementChange && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span style={{ fontSize: '0.68rem', color: 'var(--sb-dusty)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Placement</span>
+          <div style={{ display: 'flex', border: '0.5px solid rgba(0,0,0,0.15)', borderRadius: 6, overflow: 'hidden' }}>
+            {PLACEMENT_OPTS.map((o) => (
+              <button
+                key={o.value}
+                type="button"
+                onClick={() => onPlacementChange(o.value)}
+                style={{
+                  padding: '4px 10px', fontSize: '0.7rem', border: 'none', cursor: 'pointer',
+                  background: (placement || 'left') === o.value ? 'var(--sb-navy,#1b2a3b)' : 'white',
+                  color: (placement || 'left') === o.value ? 'white' : '#555',
+                }}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {list.length === 0 && (
         <div style={{ fontSize: '0.72rem', color: '#888', fontStyle: 'italic', padding: '0.25rem 0' }}>
           No buttons yet. Add one below to give visitors a clear next action.
         </div>
       )}
 
-      {list.map((a, i) => (
+      {list.map((a, i) => {
+        const type = a.type || 'url';
+        const grouped = groupedFor(type);
+        return (
         <div key={i} style={{ background: 'rgba(0,0,0,0.03)', border: '0.5px solid rgba(0,0,0,0.1)', borderRadius: 8, padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
 
-          {/* Row 1: label + style + remove */}
+          {/* Row 1: label + remove */}
           <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
             <input
               className="sb-input"
@@ -1629,6 +1643,30 @@ function SectionActionsEditor({ actions, onChange, site }) {
               onChange={e => update(i, { label: e.target.value })}
               style={{ flex: 1, fontSize: '0.82rem', fontWeight: 600 }}
             />
+            <button onClick={() => remove(i)} style={{ ...iconBtnStyle(false), color: 'var(--sb-risk-critical)', fontSize: '0.9rem' }}>×</button>
+          </div>
+
+          {/* Row 2: type + style */}
+          <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+            <select
+              className="sb-input"
+              value={type}
+              onChange={e => {
+                const nextType = e.target.value;
+                // Seed a usable default the moment a row first becomes a
+                // popup — otherwise it silently defaults to the 'form' kind
+                // display-side with no fields, and the seed logic inside
+                // PopupActionConfig only fires on an explicit kind change.
+                if (nextType === 'popup' && !a.popup) {
+                  update(i, { type: nextType, popup: { kind: 'form', fields: [{ key: 'email', label: 'Email', type: 'email', required: true }], submitLabel: 'Submit' } });
+                } else {
+                  update(i, { type: nextType });
+                }
+              }}
+              style={{ flex: 1, fontSize: '0.72rem' }}
+            >
+              {TYPE_OPTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
             <select
               className="sb-input"
               value={a.style || 'gold'}
@@ -1637,25 +1675,77 @@ function SectionActionsEditor({ actions, onChange, site }) {
             >
               {BTN_STYLES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
-            <button onClick={() => remove(i)} style={{ ...iconBtnStyle(false), color: 'var(--sb-risk-critical)', fontSize: '0.9rem' }}>×</button>
           </div>
 
-          {/* Row 2: href + picker toggle + preview */}
-          <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-            <input
-              className="sb-input"
-              placeholder="Link URL or #anchor"
-              value={a.href || ''}
-              onChange={e => update(i, { href: e.target.value })}
-              style={{ flex: 1, fontSize: '0.78rem', fontFamily: 'monospace' }}
+          {/* Type-specific config */}
+          {(type === 'url' || type === 'output') && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                <input
+                  className="sb-input"
+                  placeholder="Link URL or #anchor"
+                  value={a.href || ''}
+                  onChange={e => update(i, { href: e.target.value })}
+                  style={{ flex: 1, fontSize: '0.78rem', fontFamily: 'monospace' }}
+                />
+                <button
+                  onClick={() => setAddingIndex(addingIndex === i ? null : i)}
+                  style={{ padding: '4px 10px', borderRadius: 6, border: '0.5px solid rgba(0,0,0,0.18)', background: addingIndex === i ? 'var(--sb-navy,#1b2a3b)' : 'white', color: addingIndex === i ? 'white' : '#555', fontSize: '0.7rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                >
+                  {addingIndex === i ? '▲ Close' : '🔗 Pick Link'}
+                </button>
+              </div>
+
+              {addingIndex === i && (
+                <div style={{ border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: 8, background: 'white', overflow: 'hidden', maxHeight: 280, overflowY: 'auto' }}>
+                  {grouped.map(([groupName, items]) => (
+                    <div key={groupName}>
+                      <div style={{ padding: '0.4rem 0.75rem', background: 'var(--sb-ivory,#faf8f4)', fontSize: '0.6rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#888', fontFamily: 'var(--sb-font-label)', borderBottom: '0.5px solid rgba(0,0,0,0.06)', position: 'sticky', top: 0 }}>
+                        {groupName}
+                      </div>
+                      {items.map((item, k) => (
+                        <button
+                          key={k}
+                          onClick={() => pickLink(i, item)}
+                          style={{ display: 'flex', width: '100%', textAlign: 'left', padding: '0.45rem 0.75rem', border: 'none', background: a.href === item.href && !item.isCustom ? 'rgba(196,132,58,0.08)' : 'transparent', cursor: 'pointer', gap: '0.5rem', alignItems: 'flex-start', borderBottom: '0.5px solid rgba(0,0,0,0.04)' }}
+                        >
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '0.8rem', fontWeight: a.href === item.href ? 600 : 400, color: 'var(--sb-navy,#1b2a3b)' }}>{item.label}</div>
+                            <div style={{ fontSize: '0.68rem', color: '#888' }}>{item.desc}</div>
+                          </div>
+                          {!item.isCustom && (
+                            <code style={{ fontSize: '0.62rem', color: '#aaa', background: 'rgba(0,0,0,0.04)', padding: '1px 5px', borderRadius: 4, alignSelf: 'center', whiteSpace: 'nowrap' }}>{item.href}</code>
+                          )}
+                          {a.href === item.href && !item.isCustom && (
+                            <span style={{ color: 'var(--sb-gold,#c4843a)', fontSize: '0.75rem', alignSelf: 'center' }}>✓</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {type === 'popup' && (
+            <PopupActionConfig
+              popup={a.popup}
+              onChange={(patch) => update(i, { popup: { ...(a.popup || {}), ...patch } })}
             />
-            <button
-              onClick={() => setAddingIndex(addingIndex === i ? null : i)}
-              style={{ padding: '4px 10px', borderRadius: 6, border: '0.5px solid rgba(0,0,0,0.18)', background: addingIndex === i ? 'var(--sb-navy,#1b2a3b)' : 'white', color: addingIndex === i ? 'white' : '#555', fontSize: '0.7rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+          )}
+
+          {type === 'custom' && (
+            <select
+              className="sb-input"
+              value={a.customAction || ''}
+              onChange={e => update(i, { customAction: e.target.value })}
+              style={{ fontSize: '0.72rem' }}
             >
-              {addingIndex === i ? '▲ Close' : '🔗 Pick Link'}
-            </button>
-          </div>
+              <option value="">Choose an action…</option>
+              {CUSTOM_ACTION_OPTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          )}
 
           {/* Preview pill */}
           {a.label && (
@@ -1664,39 +1754,9 @@ function SectionActionsEditor({ actions, onChange, site }) {
               <span style={pill(a.style || 'gold')}>{a.label}</span>
             </div>
           )}
-
-          {/* Link picker panel */}
-          {addingIndex === i && (
-            <div style={{ border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: 8, background: 'white', overflow: 'hidden', maxHeight: 280, overflowY: 'auto' }}>
-              {grouped.map(([groupName, items]) => (
-                <div key={groupName}>
-                  <div style={{ padding: '0.4rem 0.75rem', background: 'var(--sb-ivory,#faf8f4)', fontSize: '0.6rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#888', fontFamily: 'var(--sb-font-label)', borderBottom: '0.5px solid rgba(0,0,0,0.06)', position: 'sticky', top: 0 }}>
-                    {groupName}
-                  </div>
-                  {items.map((item, k) => (
-                    <button
-                      key={k}
-                      onClick={() => pickLink(i, item)}
-                      style={{ display: 'flex', width: '100%', textAlign: 'left', padding: '0.45rem 0.75rem', border: 'none', background: a.href === item.href && !item.isCustom ? 'rgba(196,132,58,0.08)' : 'transparent', cursor: 'pointer', gap: '0.5rem', alignItems: 'flex-start', borderBottom: '0.5px solid rgba(0,0,0,0.04)' }}
-                    >
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '0.8rem', fontWeight: a.href === item.href ? 600 : 400, color: 'var(--sb-navy,#1b2a3b)' }}>{item.label}</div>
-                        <div style={{ fontSize: '0.68rem', color: '#888' }}>{item.desc}</div>
-                      </div>
-                      {!item.isCustom && (
-                        <code style={{ fontSize: '0.62rem', color: '#aaa', background: 'rgba(0,0,0,0.04)', padding: '1px 5px', borderRadius: 4, alignSelf: 'center', whiteSpace: 'nowrap' }}>{item.href}</code>
-                      )}
-                      {a.href === item.href && !item.isCustom && (
-                        <span style={{ color: 'var(--sb-gold,#c4843a)', fontSize: '0.75rem', alignSelf: 'center' }}>✓</span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              ))}
-            </div>
-          )}
         </div>
-      ))}
+        );
+      })}
 
       <button
         type="button"

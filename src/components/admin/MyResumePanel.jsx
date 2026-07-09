@@ -11,6 +11,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
+import { fetchCareerMaster } from '../../lib/careerMaster.js';
 
 // ── Layout templates ──────────────────────────────────────────────────────────
 const LAYOUTS = [
@@ -140,7 +141,74 @@ const LAYOUTS = [
     ),
     url: '/output/domains',
   },
+  {
+    id: 'skills-dashboard',
+    name: 'Portfolio Appendix',
+    description: 'Proficiency-tier bars, category rollups, industry table, full skills inventory',
+    preview: (
+      <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 72 }}>
+        <rect width="120" height="80" fill="#faf8f4" />
+        <rect x="8" y="8" width="35" height="5" rx="1" fill="#1b2a3b" />
+        <rect x="8" y="15" width="20" height="2" rx="1" fill="#c4843a" />
+        <rect x="8" y="20" width="26" height="12" rx="1" fill="#faf8f4" stroke="#2d5a27" strokeWidth="0.7" />
+        <rect x="36" y="20" width="26" height="12" rx="1" fill="#faf8f4" stroke="#1a3a7a" strokeWidth="0.7" />
+        <rect x="64" y="20" width="26" height="12" rx="1" fill="#faf8f4" stroke="#7a5500" strokeWidth="0.7" />
+        <rect x="92" y="20" width="20" height="12" rx="1" fill="#faf8f4" stroke="#888" strokeWidth="0.7" />
+        <rect x="8" y="37" width="104" height="6" rx="1" fill="#eee" />
+        <rect x="8" y="37" width="55" height="6" rx="1" fill="#2d8a3e" />
+        <rect x="63" y="37" width="28" height="6" fill="#3a6bb8" />
+        <rect x="91" y="37" width="15" height="6" fill="#c4843a" />
+        <rect x="8" y="48" width="104" height="2" rx="1" fill="#ddd" />
+        <rect x="8" y="52" width="80" height="2" rx="1" fill="#ddd" />
+        <rect x="8" y="60" width="104" height="14" rx="1" fill="white" stroke="#e8ddd0" strokeWidth="0.5" />
+      </svg>
+    ),
+    url: '/output/portfolio-appendix',
+  },
+  {
+    id: 'case-study-portfolio',
+    name: 'Case Study Portfolio',
+    description: 'Employer color-banded card grid, pill badges, client voice quotes, search/filter',
+    preview: (
+      <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 72 }}>
+        <rect width="120" height="80" fill="#faf8f4" />
+        <rect x="8" y="8" width="60" height="6" rx="1" fill="#1b2a3b" />
+        <rect x="8" y="16" width="35" height="2" rx="1" fill="#888" />
+        <rect x="8" y="22" width="50" height="26" rx="1" fill="white" stroke="#e8ddd0" strokeWidth="0.5" />
+        <rect x="8" y="22" width="50" height="10" rx="1" fill="#6b1f4a" />
+        <rect x="62" y="22" width="50" height="26" rx="1" fill="white" stroke="#e8ddd0" strokeWidth="0.5" />
+        <rect x="62" y="22" width="50" height="10" rx="1" fill="#2d5a27" />
+        <rect x="11" y="35" width="14" height="4" rx="2" fill="#eef2fb" stroke="#c9d4ea" strokeWidth="0.3" />
+        <rect x="27" y="35" width="14" height="4" rx="2" fill="#eef9ee" stroke="#bfe3c2" strokeWidth="0.3" />
+        <rect x="65" y="35" width="14" height="4" rx="2" fill="#eef2fb" stroke="#c9d4ea" strokeWidth="0.3" />
+        <rect x="81" y="35" width="14" height="4" rx="2" fill="#f4eefb" stroke="#dcc9ea" strokeWidth="0.3" />
+        <rect x="8" y="52" width="50" height="20" rx="1" fill="white" stroke="#e8ddd0" strokeWidth="0.5" />
+        <rect x="8" y="52" width="50" height="10" rx="1" fill="#7a2020" />
+        <rect x="62" y="52" width="50" height="20" rx="1" fill="white" stroke="#e8ddd0" strokeWidth="0.5" />
+        <rect x="62" y="52" width="50" height="10" rx="1" fill="#0e1620" />
+        <rect x="62" y="52" width="50" height="2" fill="#c4843a" />
+      </svg>
+    ),
+    url: '/output/case-study-portfolio',
+  },
 ];
+
+// Builds the preview/public URL for a preset, appending query params for
+// the Career Master toggles (showExecSummary / showCapabilityMeters) —
+// Output.jsx's ResumeOutput reads these to decide whether to render the
+// Executive Summary dashboard on the Modern/Corporate layouts. Only added
+// when explicitly turned off, since both default to on.
+function presetPreviewUrl(preset) {
+  const base = (LAYOUTS.find(l => l.id === preset?.layout) || LAYOUTS[0]).url;
+  const params = [];
+  if (preset?.showExecSummary === false) params.push('execSummary=0');
+  if (preset?.showCapabilityMeters === false) params.push('capabilityMeters=0');
+  if (preset?.showIndustryBars === false) params.push('industryBars=0');
+  if (preset?.showToolBars === false) params.push('toolBars=0');
+  if (preset?.showClientVoice === false) params.push('clientVoice=0');
+  if (!params.length) return base;
+  return base + (base.includes('?') ? '&' : '?') + params.join('&');
+}
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
 const S = {
@@ -225,7 +293,7 @@ function SectionPicker({ allSections, includedSections, onChange }) {
 // ── Layout picker ─────────────────────────────────────────────────────────────
 function LayoutPicker({ selected, onChange }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.65rem', marginBottom: '1rem' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '0.65rem', marginBottom: '1rem' }}>
       {LAYOUTS.map(layout => (
         <div key={layout.id} onClick={() => onChange(layout.id)}
           style={{ border: `2px solid ${selected === layout.id ? 'var(--sb-gold, #c4843a)' : 'rgba(0,0,0,0.1)'}`, borderRadius: 8, padding: '0.75rem', cursor: 'pointer', background: selected === layout.id ? 'rgba(196,132,58,0.04)' : 'white', transition: 'all 0.15s' }}>
@@ -352,9 +420,32 @@ function DiffView({ diff, onAccept, onDiscard, accepting }) {
   );
 }
 
+// Compact, quantified context for the Resume Interpreter Agent — Career
+// Master's skill tiers, resume-ready language, tools, jobs, and engagement
+// outcomes/metrics give it real data to tailor against instead of only the
+// free-text site sections extractProfileContext() scrapes.
+function formatCareerMasterContext(master) {
+  if (!master) return '';
+  const parts = [];
+  if (master.skills?.length) {
+    parts.push(`[Skills — tier, years, resume language]\n${master.skills.map((s) => `  - ${s.skill} (${s.tier}, ${s.yearsExp}y, ${s.numEngagements} engagements): ${s.resumeLanguage}`).join('\n')}`);
+  }
+  if (master.tools?.length) {
+    parts.push(`[Tools & Technology]\n${master.tools.map((t) => `  - ${t.nameUsed}${t.currentName && t.currentName !== t.nameUsed ? ` (now ${t.currentName})` : ''} — ${t.tier}`).join('\n')}`);
+  }
+  if (master.jobs?.length) {
+    parts.push(`[Job History]\n${master.jobs.map((j) => `  - ${j.company}, ${j.title} (${j.startDate}–${j.endDate}): ${j.keyMetrics}`).join('\n')}`);
+  }
+  if (master.engagements?.length) {
+    parts.push(`[Engagements — outcomes & metrics]\n${master.engagements.map((e) => `  - ${e.clientDisplayName} (${e.employer}, ${e.industry}): ${(e.outcomes || []).slice(0, 3).join('; ')} [${(e.metrics || []).join(', ')}]`).join('\n')}`);
+  }
+  return parts.join('\n\n');
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 export default function MyResumePanel({ scope = 'member' }) {
   const [site, setSite] = useState(null);
+  const [careerMaster, setCareerMaster] = useState(null);
   const [presets, setPresets] = useState([]);
   const [editingPreset, setEditingPreset] = useState(null); // preset currently in the editor
   const [showNameModal, setShowNameModal] = useState(false);
@@ -387,6 +478,7 @@ export default function MyResumePanel({ scope = 'member' }) {
       api.getMemberDraftSite().then(s => { if (s) setSite(s); }).catch(() => {});
     }
     loadPresets();
+    fetchCareerMaster().then(setCareerMaster);
   }, []);
 
   function loadPresets() {
@@ -465,6 +557,7 @@ export default function MyResumePanel({ scope = 'member' }) {
     const preset = presets.find(p => p.id === selectedPresetId) || presets.find(p => p.primaryResume) || presets[0];
     const sectionIds = preset?.includedSections || [];
     const profileContext = extractProfileContext(site, sectionIds);
+    const careerMasterContext = formatCareerMasterContext(careerMaster);
 
     try {
       const r = await fetch('/api/members/me/agent', {
@@ -473,7 +566,7 @@ export default function MyResumePanel({ scope = 'member' }) {
         body: JSON.stringify({
           message: `You are a professional resume writer. You have been given the candidate's actual profile content and a job description. Tailor the resume to best match the role — truthfully, using only the content provided.
 
-${profileContext ? `CANDIDATE PROFILE:\n${profileContext}\n\n` : '(No profile sections selected — limited context available.)\n\n'}BASELINE PRESET: ${preset?.name || 'Primary Resume'}
+${careerMasterContext ? `CAREER MASTER DATA (structured, quantified — prefer this over the free-text profile below when both cover the same ground):\n${careerMasterContext}\n\n` : ''}${profileContext ? `CANDIDATE PROFILE:\n${profileContext}\n\n` : '(No profile sections selected — limited context available.)\n\n'}BASELINE PRESET: ${preset?.name || 'Primary Resume'}
 JOB DESCRIPTION:\n${jobDesc}
 
 Respond ONLY with a JSON object in this exact format (no markdown, no explanation outside the JSON):
@@ -576,7 +669,7 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
             </div>
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
               <button style={S.btn('outline')} onClick={() => setEditingPreset({ ...primaryPreset })}>Edit Preset</button>
-              <button style={S.btn('navy')} onClick={() => { setPreviewUrl(LAYOUTS.find(l => l.id === primaryPreset.layout)?.url || '/output/resume'); setShowPreview(v => !v); }}>
+              <button style={S.btn('navy')} onClick={() => { setPreviewUrl(presetPreviewUrl(primaryPreset)); setShowPreview(v => !v); }}>
                 {showPreview ? 'Hide Preview' : 'Preview PDF'}
               </button>
               {showPreview && (
@@ -593,7 +686,7 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
           <div style={{ background: 'rgba(0,0,0,0.03)', borderBottom: '0.5px solid rgba(0,0,0,0.1)', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: '0.75rem', color: '#666' }}>Resume Preview · {LAYOUTS.find(l => l.url === previewUrl)?.name || 'Resume'}</span>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              {LAYOUTS.filter(l => l.url !== '/output/domains').map(l => (
+              {LAYOUTS.filter(l => l.url !== '/output/domains' && l.url !== '/output/portfolio-appendix' && l.url !== '/output/case-study-portfolio').map(l => (
                 <button key={l.id} style={{ ...S.btn(previewUrl === l.url ? 'navy' : 'outline'), padding: '2px 8px', fontSize: '0.68rem' }} onClick={() => setPreviewUrl(l.url)}>{l.name}</button>
               ))}
               <a href={previewUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.72rem', color: 'var(--sb-teal-deep, #02a1a6)', textDecoration: 'none', marginLeft: 4 }}>↗ full tab</a>
@@ -651,6 +744,44 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
           <div style={S.label}>Layout Template</div>
           <LayoutPicker selected={editingPreset.layout || 'classic'} onChange={id => setEditingPreset(p => ({ ...p, layout: id }))} />
 
+          {(editingPreset.layout === 'modern' || editingPreset.layout === 'corporate') && (
+            <>
+              <div style={S.label}>Career Master Sections — live-computed, on by default</div>
+              <div style={{ display: 'flex', gap: '1.25rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.82rem', color: '#333' }}>
+                  <input type="checkbox" checked={editingPreset.showExecSummary !== false}
+                    onChange={e => setEditingPreset(p => ({ ...p, showExecSummary: e.target.checked }))}
+                    style={{ accentColor: 'var(--sb-gold, #c4843a)', width: 15, height: 15 }} />
+                  Executive Summary (KPI dashboard — exit value, ARR automated, engagements, industries, years)
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.82rem', color: '#333' }}>
+                  <input type="checkbox" checked={editingPreset.showCapabilityMeters !== false}
+                    onChange={e => setEditingPreset(p => ({ ...p, showCapabilityMeters: e.target.checked }))}
+                    style={{ accentColor: 'var(--sb-gold, #c4843a)', width: 15, height: 15 }} />
+                  Capability Confidence bars (skill-proficiency rollup by category)
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.82rem', color: '#333' }}>
+                  <input type="checkbox" checked={editingPreset.showIndustryBars !== false}
+                    onChange={e => setEditingPreset(p => ({ ...p, showIndustryBars: e.target.checked }))}
+                    style={{ accentColor: 'var(--sb-gold, #c4843a)', width: 15, height: 15 }} />
+                  Industry Experience &amp; Duration bars (years per industry, computed from jobs + engagements)
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.82rem', color: '#333' }}>
+                  <input type="checkbox" checked={editingPreset.showToolBars !== false}
+                    onChange={e => setEditingPreset(p => ({ ...p, showToolBars: e.target.checked }))}
+                    style={{ accentColor: 'var(--sb-gold, #c4843a)', width: 15, height: 15 }} />
+                  Platform &amp; Tool Proficiency graphics (Expert/Advanced tools with tier bars + rename tracking)
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.82rem', color: '#333' }}>
+                  <input type="checkbox" checked={editingPreset.showClientVoice !== false}
+                    onChange={e => setEditingPreset(p => ({ ...p, showClientVoice: e.target.checked }))}
+                    style={{ accentColor: 'var(--sb-gold, #c4843a)', width: 15, height: 15 }} />
+                  Client Voice pull quote (live from engagement testimonials)
+                </label>
+              </div>
+            </>
+          )}
+
           <div style={S.label}>Include Sections — drag to reorder</div>
           {allSections.length > 0
             ? <SectionPicker allSections={allSections} includedSections={editingPreset.includedSections} onChange={ids => setEditingPreset(p => ({ ...p, includedSections: ids }))} />
@@ -661,7 +792,7 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
             <button style={S.btn('navy')} onClick={saveEditingPreset} disabled={saving}>{saving ? 'Saving…' : 'Save Preset'}</button>
             <button style={S.btn('outline')} onClick={() => setEditingPreset(null)}>Cancel</button>
             {editingPreset.id && !presets.some(p => p.id === editingPreset.id) ? null : (
-              <a href={(LAYOUTS.find(l => l.id === editingPreset.layout) || LAYOUTS[0]).url} target="_blank" rel="noreferrer"
+              <a href={presetPreviewUrl(editingPreset)} target="_blank" rel="noreferrer"
                 style={{ ...S.btn('outline'), textDecoration: 'none', display: 'inline-block' }}>Preview ↗</a>
             )}
           </div>

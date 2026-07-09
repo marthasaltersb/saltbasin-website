@@ -82,6 +82,36 @@ router.put('/admin-nav', requireAdmin, async (req, res) => {
   res.json({ ok: true, updatedAt: Date.now() });
 });
 
+// ── Page type registry ──
+// Stored as a config_state row with id='page_type_definitions'. Seeded in
+// db.js bootstrap if missing. This is a platform-wide taxonomy (not
+// per-member data) — the New Page flow in both admin and member scope reads
+// this same row; only admins can edit it (see memberConfig.js for the
+// read-only member-scope GET). Shape:
+//   { types: [{ id, label, description, defaultSections: [{ type, name, bg, fields }] }] }
+router.get('/page-types', requireAdmin, async (req, res) => {
+  const data = (await getJSON('config_state', 'page_type_definitions')) || { types: [] };
+  res.json(data);
+});
+
+router.put('/page-types', requireAdmin, async (req, res) => {
+  const incoming = req.body;
+  if (!incoming || !Array.isArray(incoming.types)) {
+    return res.status(400).json({ error: 'expected { types: [...] }' });
+  }
+  const seenIds = new Set();
+  for (const t of incoming.types) {
+    if (!t.id || !t.label) return res.status(400).json({ error: 'type requires id + label' });
+    if (seenIds.has(t.id)) return res.status(400).json({ error: `duplicate type id: ${t.id}` });
+    seenIds.add(t.id);
+    if (t.defaultSections && !Array.isArray(t.defaultSections)) {
+      return res.status(400).json({ error: `type ${t.id} defaultSections must be an array` });
+    }
+  }
+  await setJSON('config_state', 'page_type_definitions', incoming);
+  res.json({ ok: true, updatedAt: Date.now() });
+});
+
 // Admin diagnostic: send a test email to a specified address. If
 // BREVO_API_KEY isn't set, returns the stub log so admin can see what would
 // have been sent.

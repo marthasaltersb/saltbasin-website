@@ -6,7 +6,10 @@
 import React, { useState } from 'react';
 
 // ── Template definitions ──────────────────────────────────────────────────────
-const TEMPLATE_CATEGORIES = [
+// Exported so PageTypeManagerPanel can reuse the same section-type list for
+// its "which block type" picker — one source of truth for available section
+// types instead of a duplicated list.
+export const TEMPLATE_CATEGORIES = [
   {
     id: 'general',
     label: 'General',
@@ -121,6 +124,19 @@ const TEMPLATE_CATEGORIES = [
         accent: '#c4843a',
         fields: { heading: 'Industries & Domains', eyebrow: 'Expertise' },
         defaultCols: 1,
+      },
+      {
+        id: 'flexColumns', type: 'flexColumns', label: 'Flexible Columns', icon: '🧩',
+        desc: 'Columns where each one independently picks a display — text, photo, slideshow, form, or wheel.',
+        accent: '#8b9bae',
+        fields: {
+          heading: 'Flexible Columns',
+          flexCols: [
+            { id: 'col-1', widgetType: 'text', config: { icon: '', title: 'Column One', body: 'Edit this column, or change its display type in the editor.' } },
+            { id: 'col-2', widgetType: 'text', config: { icon: '', title: 'Column Two', body: 'Edit this column, or change its display type in the editor.' } },
+          ],
+        },
+        defaultCols: 2,
       },
       {
         id: 'executiveSummary', type: 'executiveSummary', label: 'Executive Summary', icon: '📋',

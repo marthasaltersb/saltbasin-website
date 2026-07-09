@@ -1,0 +1,768 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Salt Basin Interface Intelligence Ledger Event",
+  "type": "object",
+  "required": [
+    "transactionId",
+    "capturedAt",
+    "connector",
+    "operation",
+    "systems",
+    "objects",
+    "governance"
+  ],
+  "properties": {
+    "transactionId": {
+      "type": "string"
+    },
+    "correlationId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "idempotencyKey": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "capturedAt": {
+      "type": "integer",
+      "description": "Epoch milliseconds."
+    },
+    "connector": {
+      "type": "object",
+      "required": [
+        "connectorId",
+        "provider",
+        "environment"
+      ],
+      "properties": {
+        "connectorId": {
+          "type": "string"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "environment": {
+          "enum": [
+            "sandbox",
+            "production",
+            "test",
+            "development"
+          ]
+        },
+        "tenantRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "profileScope": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "profileId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "operation": {
+      "type": "object",
+      "required": [
+        "type",
+        "trigger"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "api_call",
+            "webhook",
+            "import",
+            "export",
+            "sync_job",
+            "manual_upload",
+            "writeback"
+          ]
+        },
+        "trigger": {
+          "type": "string"
+        },
+        "direction": {
+          "enum": [
+            "inbound",
+            "outbound",
+            "bidirectional",
+            "internal"
+          ]
+        }
+      }
+    },
+    "systems": {
+      "type": "object",
+      "required": [
+        "source",
+        "target"
+      ],
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        }
+      }
+    },
+    "objects": {
+      "type": "object",
+      "properties": {
+        "sourceObject": {
+          "type": "string"
+        },
+        "targetObject": {
+          "type": "string"
+        },
+        "canonicalEntityType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "canonicalEntityId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "payerEntityId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "billToEntityId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fulfillmentEntityId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "memberEntityId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "endUserEntityId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "tokens": {
+      "type": "object",
+      "properties": {
+        "revenueLifecycleToken": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "customerJourneyToken": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "memberJourneyToken": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "contractObligationToken": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "financialTransactionToken": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resourceContributionToken": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "confidenceReconciliationToken": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lifecycleStage": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "customerJourneyStage": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "memberJourneyStage": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "contractObligations": {
+      "type": "object",
+      "properties": {
+        "payerResponsibility": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "performanceObligations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "billingTriggers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "renewalTerms": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "firstRenewalNoticeAt": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "supportTerms": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pricingModel": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "usageModel": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "discounts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "variableConsiderations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "paymentMethodsAccepted": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "selectedPaymentMethod": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "remittanceMethod": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "invoiceDestination": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "memberEntitlement": {
+      "type": "object",
+      "properties": {
+        "memberType": {
+          "enum": [
+            "organizational_member",
+            "individual_member",
+            "end_user",
+            "site",
+            "provider",
+            "employer_group",
+            "plan_member",
+            "free_tier",
+            "unknown"
+          ]
+        },
+        "parentOrganizationId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "childOrganizationId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "siteId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "coveredPopulationRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "licenseType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "accessTier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "eligibilityStatus": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "activationStatus": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "utilizationSignals": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "stageGateIO": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "stageGateId",
+          "stageName"
+        ],
+        "properties": {
+          "stageGateId": {
+            "type": "string"
+          },
+          "stageName": {
+            "type": "string"
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "outputs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "approvals": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "decisionOwner": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "outputArtifacts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "fieldLineage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "fieldPath",
+          "sourceValue",
+          "targetValue"
+        ],
+        "properties": {
+          "fieldPath": {
+            "type": "string"
+          },
+          "sourceValue": {},
+          "targetValue": {},
+          "previousValue": {},
+          "transformRuleId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "contextHash": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "maskingPolicy": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "waterfallSteps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "stepName",
+          "status"
+        ],
+        "properties": {
+          "stepName": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "passed",
+              "failed",
+              "skipped",
+              "warning",
+              "requires_review"
+            ]
+          },
+          "startedAt": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "endedAt": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "durationMs": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "financialTransactions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "financialTransactionId": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "invoice",
+              "payment",
+              "remittance",
+              "collection",
+              "adjustment",
+              "revenue_recognition",
+              "refund",
+              "credit"
+            ]
+          },
+          "amount": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "currency": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "method": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "revenueLifecycleToken": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "recognitionStatus": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "contributionBreakdown": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "contributorId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "contributorType": {
+            "enum": [
+              "person",
+              "team",
+              "user_type",
+              "system",
+              "ai_agent",
+              "workflow",
+              "technology",
+              "partner"
+            ]
+          },
+          "role": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "stageGateId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "contributionSummary": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "costBasis": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "roiAttribution": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "required": [
+        "sensitivityLevel",
+        "evidenceStatus"
+      ],
+      "properties": {
+        "sensitivityLevel": {
+          "enum": [
+            "public_safe",
+            "internal",
+            "restricted",
+            "confidential",
+            "quarantine"
+          ]
+        },
+        "evidenceStatus": {
+          "enum": [
+            "verified_current",
+            "verified_historical",
+            "methodology_disclosed",
+            "vendor_directional",
+            "practitioner_signal",
+            "modeled_assumption",
+            "unsupported",
+            "deprecated"
+          ]
+        },
+        "retentionPolicy": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "approvalState": {
+          "enum": [
+            "not_required",
+            "pending",
+            "approved",
+            "rejected"
+          ]
+        }
+      }
+    },
+    "agentAnalysis": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "anomalyFlags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rootCauseHypotheses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "recommendedActions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "coverageScore": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "confidenceReconciliation": {
+          "type": "object",
+          "properties": {
+            "conflictingEvidence": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "reconciledBy": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "reviewStatus": {
+              "enum": [
+                "agent_resolved",
+                "human_required",
+                "human_resolved",
+                "unresolved"
+              ]
+            },
+            "resolutionSummary": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

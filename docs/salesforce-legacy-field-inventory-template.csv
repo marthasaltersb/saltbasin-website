@@ -1,0 +1,2 @@
+source_system,org_id,object_api_name,object_label,field_api_name,field_label,namespace,data_type,length_precision_scale,required,nullable_in_sample,null_rate,distinct_count,top_values,formula_or_default,external_id,source_of_truth_candidate,automation_dependencies,downstream_dependencies,sensitivity,confidence,notes
+Salesforce,,,,,,,,,,,,,,,,,,,,,

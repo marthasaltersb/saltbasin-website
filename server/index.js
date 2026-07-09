@@ -34,6 +34,7 @@ import globalStandardsRouter from './routes/globalStandards.js';
 import governanceRouter from './routes/governance.js';
 import resumeAccessRouter from './routes/resumeAccess.js';
 import outputTemplatesRouter from './routes/outputTemplates.js';
+import careerMasterRouter from './routes/careerMaster.js';
 import lineageRouter from './routes/lineage.js';
 import methodologyStatsRouter from './routes/methodologyStats.js';
 
@@ -108,6 +109,7 @@ app.use('/api/standards', globalStandardsRouter);
 app.use('/api/governance', governanceRouter);
 app.use('/api/resume', resumeAccessRouter);
 app.use('/api/output-templates', outputTemplatesRouter);
+app.use('/api/career', careerMasterRouter);
 app.use('/api/lineage', lineageRouter);
 
 // Uploaded files now live on Supabase Storage at <SUPABASE_URL>/storage/v1/object/public/uploads/<file>.

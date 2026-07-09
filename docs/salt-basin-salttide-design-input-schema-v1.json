@@ -1,0 +1,339 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Salt Basin + SaltTide Agent Design Input Package",
+  "type": "object",
+  "required": [
+    "packageId",
+    "packageVersion",
+    "createdAt",
+    "sourceArtifacts",
+    "operatingContext",
+    "outputRequest"
+  ],
+  "properties": {
+    "packageId": { "type": "string" },
+    "packageVersion": { "type": "string" },
+    "createdAt": { "type": "integer", "description": "Epoch milliseconds." },
+    "sourceArtifacts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/sourceArtifact" }
+    },
+    "operatingContext": { "$ref": "#/$defs/operatingContext" },
+    "objectDefinitions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/objectDefinition" }
+    },
+    "fieldDefinitions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/fieldDefinition" }
+    },
+    "mappingRules": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/mappingRule" }
+    },
+    "transformationRules": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/transformationRule" }
+    },
+    "tokenChain": { "$ref": "#/$defs/tokenChain" },
+    "stageGates": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/stageGate" }
+    },
+    "reconciliationRules": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/reconciliationRule" }
+    },
+    "confidence": { "$ref": "#/$defs/confidence" },
+    "contributionEvents": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/contributionEvent" }
+    },
+    "outputRequest": { "$ref": "#/$defs/outputRequest" },
+    "governance": { "$ref": "#/$defs/governance" }
+  },
+  "$defs": {
+    "sourceArtifact": {
+      "type": "object",
+      "required": ["sourceId", "sourceType", "title", "sensitivity", "evidenceStatus"],
+      "properties": {
+        "sourceId": { "type": "string" },
+        "sourceType": {
+          "enum": [
+            "codex_thread",
+            "gmail_attachment",
+            "local_file",
+            "salesforce_export",
+            "snowflake_table",
+            "spreadsheet",
+            "pdf",
+            "docx",
+            "system_extract",
+            "manual_note",
+            "public_source",
+            "generated_output"
+          ]
+        },
+        "title": { "type": "string" },
+        "pathOrUrl": { "type": ["string", "null"] },
+        "owner": { "type": ["string", "null"] },
+        "capturedAt": { "type": ["integer", "null"] },
+        "sensitivity": {
+          "enum": ["public_safe", "internal", "restricted", "confidential", "quarantine"]
+        },
+        "evidenceStatus": {
+          "enum": [
+            "verified_current",
+            "verified_historical",
+            "methodology_disclosed",
+            "vendor_directional",
+            "practitioner_signal",
+            "modeled_assumption",
+            "unsupported",
+            "deprecated",
+            "pending_review"
+          ]
+        },
+        "limitations": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "operatingContext": {
+      "type": "object",
+      "required": ["contextId", "useCase", "audience"],
+      "properties": {
+        "contextId": { "type": "string" },
+        "organization": { "type": ["string", "null"] },
+        "businessModel": { "type": ["string", "null"] },
+        "industry": { "type": ["string", "null"] },
+        "stage": { "type": ["string", "null"] },
+        "useCase": {
+          "enum": [
+            "proposal_output",
+            "snowball_reporting",
+            "executive_brief",
+            "investment_thesis",
+            "quarterly_report",
+            "financial_statement_support",
+            "reconciliation_confidence",
+            "data_reconciliation_disclosure",
+            "risk_register",
+            "mapping_template",
+            "architecture_definition"
+          ]
+        },
+        "audience": { "type": "array", "items": { "type": "string" } },
+        "constraints": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "objectDefinition": {
+      "type": "object",
+      "required": ["objectId", "objectType", "canonicalName"],
+      "properties": {
+        "objectId": { "type": "string" },
+        "objectType": {
+          "enum": [
+            "source_artifact",
+            "requirement",
+            "process_flow",
+            "scenario",
+            "test_case",
+            "roadmap_item",
+            "decision",
+            "open_question",
+            "work_log",
+            "value_hypothesis",
+            "salesforce_object",
+            "financial_statement_area",
+            "reporting_metric",
+            "token",
+            "output_artifact"
+          ]
+        },
+        "canonicalName": { "type": "string" },
+        "sourceSystem": { "type": ["string", "null"] },
+        "sourceObject": { "type": ["string", "null"] },
+        "owner": { "type": ["string", "null"] },
+        "lifecycleStage": { "type": ["string", "null"] },
+        "dataDefinitionPct": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "methodologyCompletionPct": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+      }
+    },
+    "fieldDefinition": {
+      "type": "object",
+      "required": ["fieldId", "objectId", "apiName", "dataType"],
+      "properties": {
+        "fieldId": { "type": "string" },
+        "objectId": { "type": "string" },
+        "apiName": { "type": "string" },
+        "label": { "type": ["string", "null"] },
+        "dataType": { "type": "string" },
+        "required": { "type": "boolean" },
+        "nullable": { "type": "boolean" },
+        "sourceOfTruth": { "type": ["string", "null"] },
+        "sensitivity": {
+          "enum": ["public_safe", "internal", "restricted", "confidential", "quarantine"]
+        },
+        "salesforce": {
+          "type": "object",
+          "properties": {
+            "fieldApiName": { "type": ["string", "null"] },
+            "objectApiName": { "type": ["string", "null"] },
+            "namespace": { "type": ["string", "null"] },
+            "externalId": { "type": ["boolean", "null"] },
+            "formula": { "type": ["string", "null"] },
+            "picklistValues": { "type": "array", "items": { "type": "string" } },
+            "nullRate": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+            "distinctCount": { "type": ["integer", "null"] }
+          }
+        }
+      }
+    },
+    "mappingRule": {
+      "type": "object",
+      "required": ["mappingId", "sourceFields", "targetField", "ruleType"],
+      "properties": {
+        "mappingId": { "type": "string" },
+        "sourceFields": { "type": "array", "items": { "type": "string" } },
+        "targetField": { "type": "string" },
+        "ruleType": {
+          "enum": ["direct", "lookup", "derived", "formula", "aggregation", "split", "merge", "manual_review"]
+        },
+        "transformLogic": { "type": ["string", "null"] },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "owner": { "type": ["string", "null"] },
+        "templateId": { "type": ["string", "null"] }
+      }
+    },
+    "transformationRule": {
+      "type": "object",
+      "required": ["transformId", "inputs", "outputs"],
+      "properties": {
+        "transformId": { "type": "string" },
+        "inputs": { "type": "array", "items": { "type": "string" } },
+        "formulaOrLogic": { "type": ["string", "null"] },
+        "outputs": { "type": "array", "items": { "type": "string" } },
+        "dependency": { "type": ["string", "null"] },
+        "testCase": { "type": ["string", "null"] },
+        "exceptionRule": { "type": ["string", "null"] }
+      }
+    },
+    "tokenChain": {
+      "type": "object",
+      "properties": {
+        "tokenChainId": { "type": "string" },
+        "revenueLifecycleToken": { "type": ["string", "null"] },
+        "customerJourneyToken": { "type": ["string", "null"] },
+        "memberJourneyToken": { "type": ["string", "null"] },
+        "contractObligationToken": { "type": ["string", "null"] },
+        "financialTransactionToken": { "type": ["string", "null"] },
+        "resourceContributionToken": { "type": ["string", "null"] },
+        "confidenceReconciliationToken": { "type": ["string", "null"] },
+        "tokenEdges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["from", "to", "relationship"],
+            "properties": {
+              "from": { "type": "string" },
+              "to": { "type": "string" },
+              "relationship": { "type": "string" },
+              "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        }
+      }
+    },
+    "stageGate": {
+      "type": "object",
+      "required": ["stageGateId", "stageName"],
+      "properties": {
+        "stageGateId": { "type": "string" },
+        "stageName": { "type": "string" },
+        "requiredInputs": { "type": "array", "items": { "type": "string" } },
+        "requiredOutputs": { "type": "array", "items": { "type": "string" } },
+        "approvals": { "type": "array", "items": { "type": "string" } },
+        "evidence": { "type": "array", "items": { "type": "string" } },
+        "computedStatus": { "enum": ["not_started", "blocked", "in_progress", "complete", "validated"] }
+      }
+    },
+    "reconciliationRule": {
+      "type": "object",
+      "required": ["reconciliationId", "sources", "comparisonGrain"],
+      "properties": {
+        "reconciliationId": { "type": "string" },
+        "sources": { "type": "array", "items": { "type": "string" } },
+        "comparisonGrain": { "type": "string" },
+        "tolerance": { "type": ["number", "null"] },
+        "expectedResult": { "type": ["string", "null"] },
+        "exceptionHandling": { "type": ["string", "null"] }
+      }
+    },
+    "confidence": {
+      "type": "object",
+      "properties": {
+        "coverageScore": { "type": "number", "minimum": 0, "maximum": 1 },
+        "evidenceScore": { "type": "number", "minimum": 0, "maximum": 1 },
+        "transformScore": { "type": "number", "minimum": 0, "maximum": 1 },
+        "reconciliationScore": { "type": "number", "minimum": 0, "maximum": 1 },
+        "overallScore": { "type": "number", "minimum": 0, "maximum": 1 },
+        "reviewer": { "type": ["string", "null"] },
+        "reviewStatus": {
+          "enum": ["agent_scored", "human_required", "human_reviewed", "approved", "rejected"]
+        }
+      }
+    },
+    "contributionEvent": {
+      "type": "object",
+      "required": ["contributionId", "contributorType", "role"],
+      "properties": {
+        "contributionId": { "type": "string" },
+        "contributorType": {
+          "enum": ["person", "team", "user_type", "system", "ai_agent", "workflow", "technology", "partner"]
+        },
+        "contributor": { "type": ["string", "null"] },
+        "role": { "type": "string" },
+        "stageGateId": { "type": ["string", "null"] },
+        "costBasis": { "type": ["number", "null"] },
+        "valueAttribution": { "type": ["number", "null"] },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "outputRequest": {
+      "type": "object",
+      "required": ["outputRequestId", "outputType", "audience"],
+      "properties": {
+        "outputRequestId": { "type": "string" },
+        "outputType": {
+          "enum": [
+            "proposal",
+            "snowball_reporting_analysis",
+            "executive_ready_output",
+            "investment_thesis",
+            "quarterly_report",
+            "financial_statement_support",
+            "reconciliation_confidence_scorecard",
+            "data_reconciliation_disclosure",
+            "risk_register",
+            "mapping_template"
+          ]
+        },
+        "audience": { "type": "array", "items": { "type": "string" } },
+        "decisionNeeded": { "type": ["string", "null"] },
+        "sourceScope": { "type": "array", "items": { "type": "string" } },
+        "templateId": { "type": ["string", "null"] },
+        "approvalRequired": { "type": "boolean" }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "properties": {
+        "publicUseStatus": {
+          "enum": ["blocked", "internal_only", "public_safe_after_review", "approved_public"]
+        },
+        "claimRefreshRequired": { "type": "boolean" },
+        "financialLanguageGuardRequired": { "type": "boolean" },
+        "retentionPolicy": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

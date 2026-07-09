@@ -5,11 +5,19 @@
 // client unless the requesting user owns the record.
 
 import { Router } from 'express';
-import { db } from '../db.js';
+import { db, getJSON } from '../db.js';
 import { requireUser } from '../auth.js';
 import { defaultMemberConfig } from '../data/defaultMemberConfig.js';
 
 const router = Router();
+
+// Page types are a platform-wide taxonomy, not per-member data — this reads
+// the same config_state row admin edits via PUT /api/config/page-types.
+// Read-only here; members don't get their own copy or edit rights.
+router.get('/page-types', requireUser, async (req, res) => {
+  const data = (await getJSON('config_state', 'page_type_definitions')) || { types: [] };
+  res.json(data);
+});
 
 async function readState(userId, kind) {
   const row = await db

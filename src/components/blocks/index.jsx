@@ -3,6 +3,11 @@
 // show draft/soon banners that the real public site never sees.
 import React from 'react';
 import { InlineDataNotice } from '../DataNotice.jsx';
+import SectionShell from './SectionShell.jsx';
+import { useViewportWidth, PanelCard } from './blockUtils.jsx';
+import { FlexColumnsBlock, WheelDisplay, FormColumnWidget } from './ColumnWidgets.jsx';
+import { fetchCareerMaster, toolWheelBucket } from '../../lib/careerMaster.js';
+import { toast } from '../../lib/toast.js';
 
 // Non-CMS paths that are always navigable regardless of page live-status.
 const NON_PAGE_PREFIXES = ['/output/', '/lead/', '/u/', '/member', '/admin', '/login', '/signup', '/reset/', '/data-notice'];
@@ -2077,44 +2082,64 @@ const NICHE_SOLUTIONS = [
   },
 ];
 
-// Track viewport width so child grids can pick a layout. Returns 0 during SSR.
-function useViewportWidth() {
-  const [w, setW] = React.useState(
-    typeof window === 'undefined' ? 1200 : window.innerWidth
-  );
-  React.useEffect(() => {
-    const onResize = () => setW(window.innerWidth);
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
-  return w;
+// Reformats the legacy structured per-industry dashboard data into one
+// readable text block per node — the generalized WheelDisplay widget takes a
+// single expandText per node rather than a bespoke 5-field dashboard shape
+// (see Phase C plan: a reusable widget needs a uniform shape; nothing in the
+// data is lost, just reformatted into prose).
+function formatDashboardText(d) {
+  if (!d) return '';
+  const parts = [];
+  if (d.clientCount || d.revenueRange) {
+    parts.push(`Clients: ${d.clientCount || '—'}  ·  Revenue: ${d.revenueRange || '—'}`);
+  }
+  if (d.description) parts.push(d.description);
+  if (d.workTypes?.length) parts.push(`Work performed: ${d.workTypes.join(', ')}`);
+  if (d.notable?.length) parts.push(`Notable engagements:\n${d.notable.map((n) => `- ${n}`).join('\n')}`);
+  return parts.join('\n\n');
 }
 
+export const DEFAULT_INDUSTRY_WHEEL_NODES = INDUSTRIES.map((ind) => ({
+  id: ind.key,
+  label: ind.label,
+  icon: ind.icon,
+  expandText: formatDashboardText(INDUSTRY_DASHBOARDS[ind.key]),
+}));
+
+// Data-driven wheel section — reads section.fields.wheelNodes/wheelCenterLabel
+// if the admin has edited them, otherwise falls back to the hardcoded
+// industries above so this section renders unchanged until edited.
 function IndustryWheelBlock({ section }) {
   const f = section.fields || {};
-  const [selected, setSelected] = React.useState(null);
-  const viewportWidth = useViewportWidth();
+  const [master, setMaster] = React.useState(null);
+  React.useEffect(() => { fetchCareerMaster().then(setMaster); }, []);
 
-  // Wheel scales down on smaller screens so it fits and the node labels stay
-  // legible. Phone (≤ 480) gets 260px, tablet (≤ 768) gets 320, desktop 360.
-  const wheelSize = viewportWidth <= 480 ? 260 : viewportWidth <= 768 ? 320 : 360;
-  const nodeSize = viewportWidth <= 480 ? 58 : viewportWidth <= 768 ? 64 : 72;
-  const radius = wheelSize / 2 - nodeSize / 2 - 6;
-  const center = wheelSize / 2;
-  const nodes = INDUSTRIES.map((ind, i) => {
-    const angle = (Math.PI * 2 * i) / INDUSTRIES.length - Math.PI / 2;
-    return {
-      ...ind,
-      x: center + radius * Math.cos(angle),
-      y: center + radius * Math.sin(angle),
-    };
-  });
-  const selectedInd = selected ? INDUSTRIES.find((i) => i.key === selected) : null;
-  const dashboard = selected ? INDUSTRY_DASHBOARDS[selected] : null;
+  // Career Master (career_domains group_type='industry' + career_tools) is
+  // the source of truth when populated; falls back to the legacy
+  // wheelNodes/handsOn-comma-string fields for member profiles that haven't
+  // adopted Career Master.
+  const industryDomains = (master?.domains || []).filter((d) => d.groupType === 'industry');
+  const masterNodes = industryDomains.map((d) => ({
+    id: d.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    label: d.title,
+    icon: d.icon,
+    expandText: d.description,
+  }));
+  const nodes = masterNodes.length ? masterNodes
+    : (Array.isArray(f.wheelNodes) && f.wheelNodes.length ? f.wheelNodes : DEFAULT_INDUSTRY_WHEEL_NODES);
+  const centerLabel = f.wheelCenterLabel || 'Salt Basin';
 
-  const handsOn = parseTechList(f.handsOn);
-  const integrationDesign = parseTechList(f.integrationDesign);
-  const adjacent = parseTechList(f.adjacent);
+  const masterTools = master?.tools || [];
+  let handsOn = parseTechList(f.handsOn);
+  let integrationDesign = parseTechList(f.integrationDesign);
+  let adjacent = parseTechList(f.adjacent);
+  if (masterTools.length) {
+    const bucketed = { hands_on: [], integration_design: [], adjacent: [] };
+    masterTools.forEach((t) => { bucketed[toolWheelBucket(t)].push(t.currentName || t.nameUsed); });
+    handsOn = bucketed.hands_on;
+    integrationDesign = bucketed.integration_design;
+    adjacent = bucketed.adjacent;
+  }
 
   return (
     <section
@@ -2132,120 +2157,15 @@ function IndustryWheelBlock({ section }) {
             {f.intro}
           </p>
         )}
-
-        {/* TOP ROW: Wheel | Right panel (Tech default / Dashboard on select) */}
-        <div className="sb-grid-wheel" style={{ marginBottom: '2rem' }}>
-          {/* WHEEL */}
-          <PanelCard title="Industries Served · click any to focus">
-            <div style={{ position: 'relative', width: wheelSize, height: wheelSize, margin: '0 auto' }}>
-              <svg
-                width={wheelSize}
-                height={wheelSize}
-                style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
-              >
-                <circle cx={center} cy={center} r={radius} fill="none" stroke="rgba(196,132,58,0.18)" strokeWidth="0.5" />
-                <circle cx={center} cy={center} r={radius - 32} fill="none" stroke="rgba(196,132,58,0.1)" strokeWidth="0.5" strokeDasharray="2 4" />
-                {nodes.map((n) => (
-                  <line
-                    key={n.key}
-                    x1={center}
-                    y1={center}
-                    x2={n.x}
-                    y2={n.y}
-                    stroke={
-                      selected === n.key ? 'var(--sb-gold)' : selected ? 'rgba(196,132,58,0.1)' : 'rgba(196,132,58,0.22)'
-                    }
-                    strokeWidth={selected === n.key ? 1.5 : 0.5}
-                  />
-                ))}
-              </svg>
-              <div
-                onClick={() => setSelected(null)}
-                style={{
-                  position: 'absolute',
-                  left: center - nodeSize / 2,
-                  top: center - nodeSize / 2,
-                  width: nodeSize,
-                  height: nodeSize,
-                  borderRadius: '50%',
-                  background: 'var(--sb-navy)',
-                  color: 'var(--sb-gold)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontFamily: 'var(--sb-font-display)',
-                  fontSize: nodeSize >= 70 ? '0.9rem' : '0.78rem',
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  cursor: 'pointer',
-                  border: '1.5px solid var(--sb-gold)',
-                  textAlign: 'center',
-                  zIndex: 2,
-                  lineHeight: 1.1,
-                }}
-                title="Reset to all-industry view"
-              >
-                Salt<br />Basin
-              </div>
-              {nodes.map((n) => {
-                const isSelected = selected === n.key;
-                const isDimmed = selected && !isSelected;
-                return (
-                  <button
-                    key={n.key}
-                    onClick={() => setSelected(n.key)}
-                    style={{
-                      position: 'absolute',
-                      left: n.x - nodeSize / 2,
-                      top: n.y - nodeSize / 2,
-                      width: nodeSize,
-                      height: nodeSize,
-                      borderRadius: '50%',
-                      background: isSelected ? 'var(--sb-gold)' : 'white',
-                      color: isSelected ? 'var(--sb-ivory)' : 'var(--sb-navy)',
-                      border: isSelected ? '1.5px solid var(--sb-gold-warm)' : '0.5px solid var(--sb-taupe)',
-                      opacity: isDimmed ? 0.45 : 1,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      fontFamily: 'var(--sb-font-body)',
-                      fontSize: nodeSize >= 70 ? '0.58rem' : '0.52rem',
-                      letterSpacing: '0.05em',
-                      textTransform: 'uppercase',
-                      padding: '0 3px',
-                      transition: 'all 0.18s',
-                      boxShadow: isSelected ? '0 4px 14px rgba(196,132,58,0.35)' : '0 1px 3px rgba(0,0,0,0.06)',
-                      zIndex: isSelected ? 3 : 1,
-                    }}
-                    title={n.label}
-                  >
-                    <span style={{ fontSize: '1rem', marginBottom: 2 }}>{n.icon}</span>
-                    <span style={{ lineHeight: 1.1, textAlign: 'center' }}>{n.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <div style={{ marginTop: '1rem', fontSize: '0.74rem', color: 'var(--sb-teal-deep)', textAlign: 'center', lineHeight: 1.5 }}>
-              {selected ? (
-                <>Showing client snapshot for <strong>{selectedInd?.label}</strong>. Click center to reset.</>
-              ) : (
-                'Right panel shows my tech & capability stack. Click an industry to see a client snapshot.'
-              )}
-            </div>
-          </PanelCard>
-
-          {/* RIGHT PANEL: Tech & Capability OR Industry Dashboard */}
-          <PanelCard
-            title={selected ? `${selectedInd?.label} · Client Snapshot` : 'Tech & Capability Experience'}
-          >
-            {selected ? (
-              <IndustryDashboard industry={selectedInd} data={dashboard} />
-            ) : (
+        <div style={{ marginBottom: '2rem' }}>
+          <WheelDisplay
+            centerLabel={centerLabel}
+            nodes={nodes}
+            wheelTitle="Industries Served · click any to focus"
+            renderDefaultPanel={() => (
               <TechCapabilitySummary handsOn={handsOn} integrationDesign={integrationDesign} adjacent={adjacent} />
             )}
-          </PanelCard>
+          />
         </div>
       </div>
     </section>
@@ -2315,44 +2235,6 @@ function DomainsNicheBlock({ section }) {
         </PanelCard>
       </div>
     </section>
-  );
-}
-
-function PanelCard({ title, children, headerRight, style }) {
-  return (
-    <div
-      style={{
-        background: 'white',
-        border: '0.5px solid var(--sb-taupe)',
-        borderTop: '2px solid var(--sb-gold)',
-        borderRadius: 'var(--sb-radius)',
-        padding: '1.25rem 1.5rem 1.5rem',
-        display: 'flex',
-        flexDirection: 'column',
-        ...style,
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          gap: '0.75rem',
-          marginBottom: '1rem',
-          paddingBottom: '0.5rem',
-          borderBottom: '0.5px solid rgba(196,132,58,0.18)',
-        }}
-      >
-        <div
-          className="sb-label"
-          style={{ color: 'var(--sb-gold)', fontSize: '0.62rem', letterSpacing: '0.18em' }}
-        >
-          {title}
-        </div>
-        {headerRight}
-      </div>
-      <div style={{ flex: 1 }}>{children}</div>
-    </div>
   );
 }
 
@@ -2526,104 +2408,6 @@ function NicheContent({ data }) {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function IndustryDashboard({ industry, data }) {
-  if (!data) return null;
-  return (
-    <div>
-      {/* Headline stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.25rem' }}>
-        <StatBox label="Clients" value={data.clientCount} />
-        <StatBox label="Revenue Range" value={data.revenueRange} />
-      </div>
-
-      <p style={{ fontSize: '0.88rem', lineHeight: 1.7, color: 'var(--sb-teal-deep)', marginBottom: '1.25rem' }}>
-        {data.description}
-      </p>
-
-      {/* Work-type badges */}
-      {data.workTypes?.length > 0 && (
-        <div style={{ marginBottom: '1.25rem' }}>
-          <div className="sb-label" style={{ color: 'var(--sb-gold)', fontSize: '0.6rem', letterSpacing: '0.16em', marginBottom: '0.5rem' }}>
-            Work Performed
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-            {data.workTypes.map((w) => (
-              <span
-                key={w}
-                style={{
-                  padding: '0.3rem 0.75rem',
-                  background: 'rgba(196,132,58,0.12)',
-                  border: '0.5px solid rgba(196,132,58,0.3)',
-                  borderRadius: 'var(--sb-radius)',
-                  fontSize: '0.74rem',
-                  color: 'var(--sb-navy)',
-                  fontWeight: 500,
-                }}
-              >
-                {w}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Notable engagements */}
-      {data.notable?.length > 0 ? (
-        <div>
-          <div className="sb-label" style={{ color: 'var(--sb-gold)', fontSize: '0.6rem', letterSpacing: '0.16em', marginBottom: '0.5rem' }}>
-            Notable Engagements
-          </div>
-          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {data.notable.map((n, i) => (
-              <li
-                key={i}
-                style={{
-                  fontSize: '0.85rem',
-                  color: 'var(--sb-navy)',
-                  paddingLeft: '1.25rem',
-                  position: 'relative',
-                  lineHeight: 1.55,
-                }}
-              >
-                <span style={{ position: 'absolute', left: 0, color: 'var(--sb-gold)' }}>◆</span>
-                {n}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : (
-        <div style={{ fontSize: '0.82rem', color: 'var(--sb-dusty)', fontStyle: 'italic' }}>
-          Notable engagements will be added here.
-        </div>
-      )}
-    </div>
-  );
-}
-
-function StatBox({ label, value }) {
-  return (
-    <div
-      style={{
-        background: 'var(--sb-navy)',
-        color: 'var(--sb-cream)',
-        borderTop: '2px solid var(--sb-gold)',
-        borderRadius: 'var(--sb-radius)',
-        padding: '0.85rem 1rem',
-      }}
-    >
-      <div className="sb-label" style={{ color: 'var(--sb-gold)', fontSize: '0.58rem', letterSpacing: '0.16em', marginBottom: '0.25rem' }}>
-        {label}
-      </div>
-      <div
-        className="sb-display"
-        style={{ fontSize: '1.3rem', color: 'var(--sb-cream)', fontWeight: 500, lineHeight: 1.1, letterSpacing: '0.02em' }}
-      >
-        {value}
-      </div>
     </div>
   );
 }
@@ -3306,23 +3090,172 @@ function ExecDashboardBlock({ section }) {
 
 // Timeline data — each job is a card pulled from her resume. Click a dot to
 // expand and show the verbatim bullets.
+// ── Action Buttons — shared renderer for section.fields.actions ────────────
+// Phase D: buttons classified as url/output/popup/custom (type defaults to
+// 'url' when absent, so pre-Phase-D {label,href,style} objects and the
+// legacy cta1/cta2 fallback below render exactly as before). Reference
+// implementation wired into TimelineBlock only this pass — see
+// HANDOVER_configurable_platform.md for the accepted scope boundary
+// (not retrofitted onto HeroBlock's or other blocks' hardcoded cta1/cta2).
+function PopupOverlay({ onDismiss, maxWidth = 500, children }) {
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, background: 'rgba(14,22,33,0.72)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+      onClick={onDismiss}
+    >
+      <div style={{ background: '#fff', borderRadius: 3, padding: '2rem', maxWidth, width: '100%', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }} onClick={(e) => e.stopPropagation()}>
+        <button
+          onClick={onDismiss}
+          aria-label="Close"
+          style={{ position: 'absolute', top: 10, right: 14, border: 'none', background: 'none', fontSize: '1.3rem', color: '#999', cursor: 'pointer', lineHeight: 1 }}
+        >×</button>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// Fixed, hardcoded menu — deliberately not arbitrary code, so a field that
+// round-trips through the DB can never become an injected-JS/XSS surface.
+function runCustomAction(action) {
+  switch (action) {
+    case 'copyLink':
+      navigator.clipboard?.writeText(window.location.href).then(
+        () => toast('Link copied to clipboard'),
+        () => toast('Could not copy link')
+      );
+      break;
+    case 'scrollTop':
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      break;
+    case 'print':
+      window.print();
+      break;
+    case 'share':
+      if (navigator.share) {
+        navigator.share({ url: window.location.href, title: document.title }).catch(() => {});
+      } else {
+        navigator.clipboard?.writeText(window.location.href).then(
+          () => toast('Link copied to clipboard'),
+          () => toast('Could not share')
+        );
+      }
+      break;
+    default:
+      break;
+  }
+}
+
+const PLACEMENT_JUSTIFY = { left: 'flex-start', center: 'center', right: 'flex-end' };
+
+function ActionButtons({ actions, placement, liveSlugs }) {
+  const [openIdx, setOpenIdx] = React.useState(null);
+  const list = Array.isArray(actions) ? actions : [];
+  if (!list.length) return null;
+
+  const stacked = placement === 'stacked';
+  const containerStyle = stacked
+    ? { marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'stretch' }
+    : { marginTop: '1.5rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: PLACEMENT_JUSTIFY[placement] || 'flex-start' };
+
+  const btnClass = (style) => `sb-btn sb-btn-${style || 'gold'}`;
+  const btnStyle = { fontSize: '0.72rem', padding: '0.55rem 1.25rem' };
+  const open = Number.isInteger(openIdx) ? list[openIdx] : null;
+
+  return (
+    <>
+      <div style={containerStyle}>
+        {list.map((b, i) => {
+          const type = b.type || 'url';
+          if (type === 'popup') {
+            return (
+              <button key={i} type="button" className={btnClass(b.style)} style={btnStyle} onClick={() => setOpenIdx(i)}>
+                {b.label}
+              </button>
+            );
+          }
+          if (type === 'custom') {
+            if (!b.customAction) return null;
+            return (
+              <button key={i} type="button" className={btnClass(b.style)} style={btnStyle} onClick={() => runCustomAction(b.customAction)}>
+                {b.label}
+              </button>
+            );
+          }
+          // url / output (or legacy actions with no type at all)
+          if (!isLiveHref(b.href, liveSlugs)) return null;
+          return (
+            <a key={i} href={b.href} target={b.href?.startsWith('http') ? '_blank' : undefined} rel="noreferrer"
+              className={btnClass(b.style)} style={btnStyle}>
+              {b.label}
+            </a>
+          );
+        })}
+      </div>
+
+      {open && open.type === 'popup' && (
+        <PopupOverlay onDismiss={() => setOpenIdx(null)} maxWidth={open.popup?.kind === 'output' ? 820 : 500}>
+          {(open.popup?.kind || 'form') === 'form' && (
+            <FormColumnWidget config={open.popup} source="action-button-popup" />
+          )}
+          {open.popup?.kind === 'media' && (
+            open.popup?.mediaUrl
+              ? <img src={open.popup.mediaUrl} alt={open.label || ''} style={{ maxWidth: '100%', maxHeight: '80vh', display: 'block', margin: '0 auto' }} />
+              : <div style={{ fontSize: '0.85rem', color: '#888', fontStyle: 'italic' }}>No image set.</div>
+          )}
+          {open.popup?.kind === 'output' && (
+            open.popup?.outputHref
+              ? <iframe src={open.popup.outputHref} title={open.label || 'Document'} style={{ width: '100%', height: '75vh', border: 'none' }} />
+              : <div style={{ fontSize: '0.85rem', color: '#888', fontStyle: 'italic' }}>No document selected.</div>
+          )}
+        </PopupOverlay>
+      )}
+    </>
+  );
+}
+
 function TimelineBlock({ section, liveSlugs }) {
   const f = section.fields || {};
-  // The seed packs job data into structured fields: job1Company, job1Title,
-  // job1Dates, job1Bullets (newline-separated). Up to 8 jobs.
-  const jobs = [];
-  for (let i = 1; i <= 10; i++) {
-    const company = f[`job${i}Company`];
-    if (!company) continue;
-    jobs.push({
-      key: `job${i}`,
-      company,
-      title: f[`job${i}Title`] || '',
-      dates: f[`job${i}Dates`] || '',
-      bullets: (f[`job${i}Bullets`] || '').split('\n').map((s) => s.trim()).filter(Boolean),
-    });
+  const [master, setMaster] = React.useState(null);
+  React.useEffect(() => { fetchCareerMaster().then(setMaster); }, []);
+
+  // Career Master (career_jobs) is the source of truth when populated —
+  // uncapped, unlike the legacy job1..job10 fixed-slot fields it replaces.
+  // Falls back to those fields for member profiles that haven't adopted
+  // Career Master.
+  const masterJobs = (master?.jobs || []).map((j, i) => ({
+    key: `mjob${j.id ?? i}`,
+    company: j.company,
+    title: j.title || '',
+    dates: [j.startDate, j.endDate].filter(Boolean).join(' – '),
+    bullets: (j.keyMetrics || '').split(';').map((s) => s.trim()).filter(Boolean),
+  }));
+  let jobs = masterJobs;
+  if (!jobs.length) {
+    // The seed packs job data into structured fields: job1Company, job1Title,
+    // job1Dates, job1Bullets (newline-separated). Up to 10 jobs.
+    jobs = [];
+    for (let i = 1; i <= 10; i++) {
+      const company = f[`job${i}Company`];
+      if (!company) continue;
+      jobs.push({
+        key: `job${i}`,
+        company,
+        title: f[`job${i}Title`] || '',
+        dates: f[`job${i}Dates`] || '',
+        bullets: (f[`job${i}Bullets`] || '').split('\n').map((s) => s.trim()).filter(Boolean),
+      });
+    }
   }
   const [selected, setSelected] = React.useState(jobs[jobs.length - 1]?.key || null);
+  // jobs can go from empty to populated once the async Career Master fetch
+  // resolves (or the legacy-field fallback kicks in) — re-select the last
+  // job whenever the current selection no longer matches anything.
+  React.useEffect(() => {
+    if (jobs.length && !jobs.some((j) => j.key === selected)) {
+      setSelected(jobs[jobs.length - 1].key);
+    }
+  }, [jobs.length]);
   const activeJob = jobs.find((j) => j.key === selected) || jobs[0];
 
   return (
@@ -3496,29 +3429,18 @@ function TimelineBlock({ section, liveSlugs }) {
             ◆ {f.educationLine}
           </div>
         )}
-        {/* Configurable action buttons — defined via section.fields.actions array
-            [{label, href, style:'gold'|'outline'|'outline-dark'}] or legacy cta1/cta2 fields */}
-        {(() => {
-          const btns = (Array.isArray(f.actions) && f.actions.length
+        {/* Configurable action buttons — section.fields.actions array, classified
+            url/output/popup/custom (Phase D), or legacy cta1/cta2 fields */}
+        <ActionButtons
+          actions={Array.isArray(f.actions) && f.actions.length
             ? f.actions
             : [
-                f.cta1 ? { label: f.cta1, href: f.cta1Link || '#', style: f.cta1Style || 'gold' } : null,
-                f.cta2 ? { label: f.cta2, href: f.cta2Link || '#', style: f.cta2Style || 'outline-dark' } : null,
-              ].filter(Boolean)
-          ).filter((b) => isLiveHref(b.href, liveSlugs));
-          if (!btns.length) return null;
-          return (
-            <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-              {btns.map((b, i) => (
-                <a key={i} href={b.href} target={b.href?.startsWith('http') ? '_blank' : undefined} rel="noreferrer"
-                  className={`sb-btn sb-btn-${b.style || 'gold'}`}
-                  style={{ fontSize: '0.72rem', padding: '0.55rem 1.25rem' }}>
-                  {b.label}
-                </a>
-              ))}
-            </div>
-          );
-        })()}
+                f.cta1 ? { label: f.cta1, href: f.cta1Link || '#', style: f.cta1Style || 'gold', type: 'url' } : null,
+                f.cta2 ? { label: f.cta2, href: f.cta2Link || '#', style: f.cta2Style || 'outline-dark', type: 'url' } : null,
+              ].filter(Boolean)}
+          placement={f.actionsPlacement}
+          liveSlugs={liveSlugs}
+        />
 
         {/* Resume PDF button — always shown on timeline blocks */}
         <ResumePdfButton slug={f.resumeSlug || null} memberUserId={f.memberUserId || null} />
@@ -3889,14 +3811,39 @@ const CASE_STUDY_SLUG_BY_INDEX = {
   3: 'global-manufacturing-q2r',
 };
 
+// Maps a career_engagements row (see server/data/career/seed.js /
+// server/routes/careerMaster.js) onto the shape CaseStudyCard expects.
+function engagementToCase(e) {
+  return {
+    key: `eng-${e.id}`,
+    slug: `engagement-${e.id}`,
+    title: e.clientDisplayName || e.name,
+    clientSummary: [e.employer, e.industry].filter(Boolean).join(' · '),
+    problemStatement: e.context || '',
+    methodsTaken: e.actions || '',
+    impact: Array.isArray(e.outcomes) && e.outcomes.length ? e.outcomes : undefined,
+    metrics: e.metrics || [],
+    feedback: e.testimonial || '',
+    feedbackAttr: e.testimonialAttr || '',
+    tags: e.scenarios || [],
+  };
+}
+
 function CaseStudiesBlock({ section }) {
   const f = section.fields || {};
-  // Supports three shapes:
-  //  1. f.cases[] with full new fields (clientSummary, problemStatement, kpiImprovement, methodsTaken, challenges, impact)
-  //  2. f.cases[] with legacy shape (challenge, approach, outcome, tags)
-  //  3. Legacy fixed-slot fields (case1Title…case5Title)
+  const [master, setMaster] = React.useState(null);
+  React.useEffect(() => { fetchCareerMaster().then(setMaster); }, []);
+
+  // Supports four shapes, in priority order:
+  //  1. Career Master (career_engagements, publish_case_study=true) — uncapped
+  //  2. f.cases[] with full new fields (clientSummary, problemStatement, kpiImprovement, methodsTaken, challenges, impact)
+  //  3. f.cases[] with legacy shape (challenge, approach, outcome, tags)
+  //  4. Legacy fixed-slot fields (case1Title…case5Title)
+  const masterEngagements = master?.engagements || [];
   let cases;
-  if (Array.isArray(f.cases) && f.cases.length > 0) {
+  if (masterEngagements.length > 0) {
+    cases = masterEngagements.map(engagementToCase);
+  } else if (Array.isArray(f.cases) && f.cases.length > 0) {
     cases = f.cases.map((c, i) => ({ key: `case-${i}`, ...c }));
   } else {
     cases = [];
@@ -3989,9 +3936,19 @@ function CaseStudyCard({ data }) {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem', marginBottom: rest.length && !open ? '1rem' : (data.feedback ? '1.25rem' : 0) }}>
         {(open ? filledFields : preview).map(({ key, label, accent }) => (
-          <CaseField key={key} label={label} text={data[key]} accent={accent} />
+          Array.isArray(data[key])
+            ? <CaseField key={key} label={label} items={data[key]} accent={accent} />
+            : <CaseField key={key} label={label} text={data[key]} accent={accent} />
         ))}
       </div>
+
+      {data.metrics?.length > 0 && (
+        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: data.feedback ? '1.25rem' : '0.25rem' }}>
+          {data.metrics.map((m, i) => (
+            <span key={i} style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.68rem', letterSpacing: '0.04em', color: 'var(--sb-navy)', background: 'var(--sb-gold)', borderRadius: 'var(--sb-radius)', padding: '0.25rem 0.65rem', fontWeight: 600 }}>{m}</span>
+          ))}
+        </div>
+      )}
 
       {rest.length > 0 && (
         <button onClick={() => setOpen(o => !o)} style={{ background: 'none', border: '0.5px solid rgba(196,132,58,0.4)', borderRadius: 4, color: 'var(--sb-gold)', fontSize: '0.72rem', padding: '4px 14px', cursor: 'pointer', marginBottom: data.feedback ? '1rem' : 0, fontFamily: 'var(--sb-font-label)', letterSpacing: '0.08em' }}>
@@ -4014,6 +3971,11 @@ function CaseStudyCard({ data }) {
           }}
         >
           “{data.feedback}”
+          {data.feedbackAttr && (
+            <div style={{ marginTop: '0.5rem', fontStyle: 'normal', fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--sb-gold)' }}>
+              — {data.feedbackAttr}
+            </div>
+          )}
         </div>
       )}
       {data.tags?.length > 0 && (
@@ -4965,9 +4927,29 @@ function OutputGeneratorBlock({ section, mode }) {
 // ── Skills Block ─────────────────────────────────────────────────────────────
 // Dynamic skill entries grouped by category.
 // skills: [{category, items: [{name, level:'expert'|'proficient'|'familiar', years}]}]
+// Career Master proficiency tier -> the 3-bucket level vocabulary this
+// block's legend already uses (expert / proficient / familiar).
+const TIER_TO_LEVEL = { Expert: 'expert', Advanced: 'expert', Proficient: 'proficient', Foundational: 'familiar' };
+
 function SkillsBlock({ section }) {
   const f = section.fields || {};
-  const groups = Array.isArray(f.skills) ? f.skills : [];
+  const [master, setMaster] = React.useState(null);
+  React.useEffect(() => { fetchCareerMaster().then(setMaster); }, []);
+
+  // Career Master (career_skills) is the source of truth when populated —
+  // grouped by category with tier mapped onto this block's expert/proficient/
+  // familiar bar levels. Falls back to the manually-authored f.skills groups.
+  const masterSkills = master?.skills || [];
+  let groups = Array.isArray(f.skills) ? f.skills : [];
+  if (masterSkills.length) {
+    const byCategory = new Map();
+    masterSkills.forEach((s) => {
+      const list = byCategory.get(s.category) || [];
+      list.push({ name: s.skill, level: TIER_TO_LEVEL[s.tier] || 'proficient', years: s.yearsExp });
+      byCategory.set(s.category, list);
+    });
+    groups = Array.from(byCategory.entries()).map(([category, items]) => ({ category, items }));
+  }
   const bg = BG_VAR[section.bg] || 'var(--sb-ivory)';
   const dark = section.bg === 'navy' || section.bg === 'teal';
   const LEVEL_COLOR = { expert: 'var(--sb-gold)', proficient: 'var(--sb-teal-deep)', familiar: '#8b9bae' };
@@ -5025,7 +5007,23 @@ function SkillsBlock({ section }) {
 // The block renders a grouped rollup view: groupBy = 'industry'|'capability'|'revenue'
 function ClientSnapshotBlock({ section }) {
   const f = section.fields || {};
-  const clients = Array.isArray(f.clients) ? f.clients : [];
+  const [master, setMaster] = React.useState(null);
+  React.useEffect(() => { fetchCareerMaster().then(setMaster); }, []);
+
+  // Career Master (career_engagements) is the source of truth when
+  // populated. Falls back to the manually-authored f.clients list.
+  const masterEngagements = master?.engagements || [];
+  let clients = Array.isArray(f.clients) ? f.clients : [];
+  if (masterEngagements.length) {
+    clients = masterEngagements.map((e) => ({
+      name: e.clientDisplayName || e.name,
+      industry: e.industry,
+      employerSponsor: e.employer,
+      capabilitiesDelivered: (e.roles || []).join(', '),
+      revenueRange: e.scale,
+      tags: (e.scenarios || []).join(','),
+    }));
+  }
   const [groupBy, setGroupBy] = React.useState(f.defaultGroupBy || 'industry');
   const bg = BG_VAR[section.bg] || 'var(--sb-ivory)';
   const dark = section.bg === 'navy' || section.bg === 'teal';
@@ -5161,6 +5159,7 @@ const REGISTRY = {
   referencesRequest: ReferencesRequestBlock,
   forCompanies: ForCompaniesBlock,
   industryWheel: IndustryWheelBlock,
+  flexColumns: FlexColumnsBlock,
   domainsNiche: DomainsNicheBlock,
   technology: TechnologyBlock,
   aboutIntro: AboutIntroBlock,
@@ -5199,7 +5198,9 @@ export function RenderSection({ section, config, mode = 'public', memberSlug = '
   return (
     <>
       {banner}
-      <Block section={section} config={config} memberSlug={memberSlug} liveSlugs={liveSlugs} />
+      <SectionShell section={section}>
+        <Block section={section} config={config} memberSlug={memberSlug} liveSlugs={liveSlugs} />
+      </SectionShell>
     </>
   );
 }

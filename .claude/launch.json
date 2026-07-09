@@ -16,6 +16,27 @@
       "autoPort": false
     },
     {
+      "name": "saltbasin-api",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "server"],
+      "port": 3001,
+      "autoPort": false
+    },
+    {
+      "name": "saltbasin-client-2",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "client", "--", "--port", "5175"],
+      "port": 5175,
+      "autoPort": false
+    },
+    {
+      "name": "saltbasin-client-3",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "client", "--", "--port", "5176"],
+      "port": 5176,
+      "autoPort": false
+    },
+    {
       "name": "visual-ops-studio",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--", "--port", "5174"],

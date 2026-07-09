@@ -38,6 +38,8 @@ const SESSIONS = {
   '551b4cbf': '551b4cbf-3e51-4315-a936-732f68aa348d.jsonl',
   'e3c9236b': 'e3c9236b-fa3f-40be-8418-a807e0c3a21a.jsonl',
   '50a9edca': '50a9edca-f76e-4aad-aeb1-702e16c9b604.jsonl',
+  '4ded6650': '4ded6650-5817-4768-a501-7b55b01fb2f6.jsonl',
+  'fd26e133': 'fd26e133-8fc2-466d-a852-9bf79328181e.jsonl',
 };
 
 function getTurnText(o) {

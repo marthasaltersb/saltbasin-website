@@ -141,10 +141,41 @@ export const api = {
   getRun: (id) => request(`/api/qa/runs/${id}`),
   getDefects: () => request('/api/qa/defects'),
 
+  // Career Master (admin-only CRUD; getCareerMaster is the public redacted read)
+  getCareerMaster: () => request('/api/career/master'),
+  seedCareerMaster: () => request('/api/career/seed', { method: 'POST' }),
+  listCareerJobs: () => request('/api/career/jobs'),
+  createCareerJob: (item) => request('/api/career/jobs', { method: 'POST', body: JSON.stringify(item) }),
+  updateCareerJob: (id, patch) => request(`/api/career/jobs/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  deleteCareerJob: (id) => request(`/api/career/jobs/${id}`, { method: 'DELETE' }),
+  listCareerSkills: () => request('/api/career/skills'),
+  createCareerSkill: (item) => request('/api/career/skills', { method: 'POST', body: JSON.stringify(item) }),
+  updateCareerSkill: (id, patch) => request(`/api/career/skills/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  deleteCareerSkill: (id) => request(`/api/career/skills/${id}`, { method: 'DELETE' }),
+  listCareerTools: () => request('/api/career/tools'),
+  createCareerTool: (item) => request('/api/career/tools', { method: 'POST', body: JSON.stringify(item) }),
+  updateCareerTool: (id, patch) => request(`/api/career/tools/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  deleteCareerTool: (id) => request(`/api/career/tools/${id}`, { method: 'DELETE' }),
+  listCareerEngagements: () => request('/api/career/engagements'),
+  createCareerEngagement: (item) => request('/api/career/engagements', { method: 'POST', body: JSON.stringify(item) }),
+  updateCareerEngagement: (id, patch) => request(`/api/career/engagements/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  deleteCareerEngagement: (id) => request(`/api/career/engagements/${id}`, { method: 'DELETE' }),
+  listCareerDomains: () => request('/api/career/domains'),
+  createCareerDomain: (item) => request('/api/career/domains', { method: 'POST', body: JSON.stringify(item) }),
+  updateCareerDomain: (id, patch) => request(`/api/career/domains/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  deleteCareerDomain: (id) => request(`/api/career/domains/${id}`, { method: 'DELETE' }),
+
   // Admin nav structure (data-driven AdminShell)
   getAdminNav: () => request('/api/config/admin-nav'),
   updateAdminNav: (nav) =>
     request('/api/config/admin-nav', { method: 'PUT', body: JSON.stringify(nav) }),
+
+  // Page type registry — platform-wide "New Page" taxonomy. Admin can read +
+  // write; members get a read-only view via the mirrored member-config route.
+  getPageTypes: () => request('/api/config/page-types'),
+  getMemberPageTypes: () => request('/api/member-config/page-types'),
+  updatePageTypes: (types) =>
+    request('/api/config/page-types', { method: 'PUT', body: JSON.stringify(types) }),
 
   // Password reset + email recovery (both always return 200 to prevent
   // enumeration; UI just shows a generic "check your email" success state).

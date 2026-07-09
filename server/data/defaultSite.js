@@ -18,7 +18,7 @@ const HOME_SECTIONS = [
       leftBlurb:
         'I build the systems behind revenue — Quote-to-Revenue, RevOps, financial intelligence, and executive risk advisory. This site is my living portfolio and the front door to Salt Basin Net Works — the network behind the work.',
       cta1: 'View Resume',
-      cta1Link: '/consulting/founder',
+      cta1Link: '/output/portfolio',
       cta2: 'Get in Touch',
       cta2Link: '#contact',
       rightEyebrow: 'Salt Basin Mission · Short-Term Growth',
@@ -136,99 +136,29 @@ const HOME_SECTIONS = [
   },
 ];
 
-// Job descriptions ported verbatim from Salter Resume_2026.pdf.
+// Presentational-only fields — job/timeline content is now sourced live from
+// Career Master (career_jobs, via /api/career/master), which is uncapped and
+// admin-editable through the "Career Master" tab rather than these flat
+// job1..job10 fields. See src/components/blocks/index.jsx TimelineBlock and
+// src/lib/careerMaster.js.
 const TIMELINE_FIELDS = {
   eyebrow: 'Education → Career',
   heading: 'Professional Experience Evolution',
   intro:
-    'Click any milestone on the timeline to read the work — verbatim from the resume. Education foundation: College of Charleston, B.S. Accounting, Graduated 2013.',
-
-  job1Company: 'Blackbaud, Inc.',
-  job1Title: 'Senior Operations Associate',
-  job1Dates: 'Aug 2013 – Apr 2015',
-  job1Bullets:
-    'Managed contract intake and validation, ensuring accuracy, completeness, and compliance prior to processing\nOversaw billing activities within SAP, verifying pricing, invoicing, and receivables alignment before posting to accounting\nPartnered with accounting to resolve revenue discrepancies and ensure accurate revenue recognition\nTrained and onboarded new team members on contract processing workflows and back-office systems\nServed as internal SME for contract-to-billing processes, supporting operational continuity and issue resolution',
-
-  job2Company: 'Accenture',
-  job2Title: 'Consultant',
-  job2Dates: 'Apr 2015 – Aug 2018',
-  job2Bullets:
-    'Delivered business analysis and systems integration work across three major global clients: a $4.5B+ global education and publishing company navigating an active digital transformation, a global data analytics and technology company, and an enterprise coffee distributor company with operations across Europe (Netherlands)\nSupported systems and process integration work during a period when digital and services businesses had grown to represent 65%+ of total revenue, helping align operational infrastructure to a shifting revenue model mid-transformation\nPerformed business analysis, requirements translation, and systems integration work mapping data flows, defining interface requirements, and ensuring operational systems supported accurate financial and reporting outputs\nBuilt foundational fluency in how enterprise systems architecture connects to financial performance: the beginning of a career-long practice of understanding why system decisions matter to the P&L, not just how to configure them',
-
-  job3Company: 'Vista Equity Partners',
-  job3Title: 'Senior Consultant',
-  job3Dates: 'Aug 2018 – May 2020',
-  job3Bullets:
-    'Supported portfolio companies in executing system changes tied to pricing strategy, revenue generation, and operational efficiency\nAssisted in translating GTM objectives into system updates across quoting, contracting, and billing workflows\nEvaluated operational and system performance to identify revenue leakage and inefficiencies\nContributed to implementation of changes improving cost structure and revenue scalability',
-
-  job4Company: 'TIBCO',
-  job4Title: 'Lead Solution Architect',
-  job4Dates: 'Jun 2020 – Jan 2021',
-  job4Bullets:
-    'Built and supported system integrations between enterprise platforms, enabling flow of order, pricing, and billing data\nCoordinated with technical teams to define data mappings, interfaces, and system dependencies\nAssisted in reworking integrations to improve data accuracy, processing reliability, and visibility across systems\nTroubleshot data and system issues impacting transaction processing and downstream reporting',
-
-  job5Company: 'PwC',
-  job5Title: 'Advisory Manager',
-  job5Dates: 'Jan 2021 – Jun 2023',
-  job5Bullets:
-    'Delivered CPQ and billing systems work across a portfolio of high-growth SaaS and technology clients — including a $2.6B virtual healthcare platform, a $430M+ enterprise SaaS operations company, and a $3.7B+ global positioning technology company across subscription, usage-based, and access fee revenue models\nGathered and translated complex requirements across pricing, quoting, and billing workflows ensuring system designs mapped directly to financial reporting and revenue recognition requirements for each client\'s specific model\nDeveloped process flows and system specifications bridging the gap between what sales promised and what finance could recognize, resolving misalignments before they created billing errors, deferred revenue distortions, or audit exposure',
-
-  job6Company: 'Slalom Consulting',
-  job6Title: 'Senior Principal',
-  job6Dates: 'Jun 2023 – Jun 2024',
-  job6Bullets:
-    'Led Quote-to-Revenue transformation for a $9B global industrial automation manufacturer (~35% software/services revenue mix) — redesigned CPQ and CLM systems to support a new subscription pricing model the legacy manual workflows could not handle, eliminating ad hoc discounting and improving gross margin visibility per deal\nDesigned and implemented usage-based billing and pricing systems for the technology licensing division of a $38B+ global semiconductor company where billing accuracy and recognition timing had direct, material impact on hundreds of millions in recognized revenue\nSupported a publicly traded healthcare IT company (~$615M revenue) through an active NASDAQ delisting crisis rooted in $40M+ in revenue restatements. Aligned operational systems to SEC-grade financial reporting and audit readiness requirements during an active Audit Committee investigation\nMaintained consistent executive confidence across all three engagements: received ongoing partner-level feedback citing client trust, leadership credibility, and cross-functional effectiveness',
-
-  job7Company: 'Streamforce Consulting',
-  job7Title: 'Business Architect',
-  job7Dates: 'Jan 2025 – May 2025',
-  job7Bullets:
-    'Partnered with C-suite leadership to translate revenue targets and GTM priorities into system-level execution plans with clear financial dependencies and delivery milestones\nStructured delivery roadmaps incorporating pricing logic, forecasting inputs, and operational constraints, enabling leadership to stress-test assumptions against financial outcomes\nEnsured system outputs aligned to revenue tracking and reporting requirements, reducing lag between operational execution and financial visibility\nGuided trade-off decisions across scope, timeline, and system capability, always anchored to business and financial impact, not just delivery convenience',
-
+    'Click any milestone on the timeline to read the work. Education foundation: College of Charleston, B.S. Accounting, Graduated 2013.',
   educationLine: 'College of Charleston — B.S. Accounting, Graduated 2013',
 };
 
-// Case study fields, from SalterCareerProfilePackage_2026.pdf page 4.
+// Presentational-only fields — case study content is now sourced live from
+// Career Master (career_engagements, via /api/career/master), which is
+// uncapped (24 engagements vs. the previous fixed 3) and admin-editable
+// through the "Career Master" tab. See CaseStudiesBlock / engagementToCase
+// in src/components/blocks/index.jsx.
 const CASE_STUDIES_FIELDS = {
   eyebrow: 'Selected Engagements',
   heading: 'Detailed Case Studies',
   intro:
-    'Three engagements that show the work at its full shape — context to impact, with the executive feedback that came with each.',
-
-  case1Title: 'Healthcare Company',
-  case1Subtitle: 'NASDAQ Relisting Initiative',
-  case1Context:
-    'Organization navigating post-delisting recovery and operational restructuring\nLimited alignment between financial reporting, systems, and execution',
-  case1Role: 'Strategic Operator · Quote-to-Revenue Subject Matter Expert',
-  case1Actions:
-    'Supported restructuring initiatives by aligning operational systems with financial reporting needs\nBuilt frameworks connecting system outputs to performance tracking and relisting readiness\nCoordinated across stakeholders to ensure execution aligned with financial and regulatory expectations',
-  case1Impact:
-    'Improved visibility into performance and operational drivers\nEnabled more structured approach to financial reporting and readiness planning\nSupported initiatives tied to relisting strategy and execution',
-  case1Feedback: 'Whoever put Betsy on this project is a genius. — CTO',
-
-  case2Title: 'Global Tech Co.',
-  case2Subtitle: 'GTM Alignment & Usage-Based Billing',
-  case2Context:
-    'Need to support launch of new products requiring usage-based pricing models\nExisting systems not equipped to handle dynamic billing and product structures',
-  case2Role: 'GTM Advisor · CPQ / Billing Enablement Lead',
-  case2Actions:
-    'Designed and implemented system changes to support usage-based billing and pricing models\nAligned product structures, pricing logic, and billing workflows across systems\nWorked cross-functionally to ensure systems supported new product GTM requirements',
-  case2Impact:
-    'Enabled launch of new revenue-generating products\nEstablished scalable framework for usage-based pricing and billing\nImproved alignment between product, pricing, and billing systems',
-  case2Feedback:
-    'Betsy has won the trust of the client and maintained great working relationships with internal teams. I receive consistent positive feedback about Betsy\'s leadership. — Partner',
-
-  case3Title: 'Global Manufacturing',
-  case3Subtitle: 'Quote-to-Revenue Transformation',
-  case3Context:
-    'Fragmented quoting, pricing, and contracting processes across multiple tools\nHeavy reliance on manual workflows and inconsistent pricing logic',
-  case3Role: 'CPQ / CLM Functional Lead',
-  case3Actions:
-    'Redesigned quoting and contracting workflows across CPQ and CLM platforms\nConfigured pricing logic, product models, and approval workflows\nLed workshops to align stakeholders across sales, finance, and operations',
-  case3Impact:
-    'Eliminated manual pricing processes across multiple tools\nImproved deal accuracy and execution speed\nEnabled consistent pricing governance and system-driven workflows',
-  case3Feedback:
-    'I cannot thank and applaud Betsy enough for her contributions on the complex deals project. — VP',
+    'Engagements that show the work at its full shape — context to impact, with the executive feedback that came with each.',
 };
 
 export const defaultSite = {

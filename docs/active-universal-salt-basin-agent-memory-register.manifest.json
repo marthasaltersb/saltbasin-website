@@ -1,0 +1,112 @@
+{
+  "manifest_id": "salt_basin_universal_agent_memory_register_activation_20260709",
+  "canonical_register": "docs/active-universal-salt-basin-agent-memory-register.md",
+  "audit_snapshot": "docs/active-universal-salt-basin-agent-memory-register-2026-07-08.md",
+  "approval_source": "docs/memory-approval-table-batches-1-2-2a-2026-07-08.md",
+  "activation_date": "2026-07-09",
+  "activation_status": "active_universal_memory",
+  "activation_scope": [
+    "all_current_salt_basin_agents",
+    "all_future_salt_basin_agents",
+    "public_facing_agents",
+    "internal_operating_agents",
+    "research_agents",
+    "product_agents",
+    "management_agents"
+  ],
+  "load_order": [
+    "canonical_register",
+    "role_specific_prompt",
+    "workflow_playbook",
+    "product_memory",
+    "task_context",
+    "external_sources"
+  ],
+  "active_guardrails": [
+    {
+      "id": "AMR-001",
+      "source_id": "GMC-010",
+      "status": "active",
+      "title": "Email-derived memory classification gate"
+    },
+    {
+      "id": "AMR-002",
+      "source_id": "GMC-B12-004",
+      "status": "active",
+      "title": "External claim source refresh rule"
+    },
+    {
+      "id": "AMR-003",
+      "source_id": "GMC-B12-006",
+      "status": "active",
+      "title": "Public preview boundary"
+    },
+    {
+      "id": "AMR-004",
+      "source_id": "GMC-B12-008",
+      "status": "active",
+      "title": "Career artifact deduplication rule"
+    },
+    {
+      "id": "AMR-005",
+      "source_id": "HOS-MEM-007",
+      "status": "active",
+      "title": "HandoverOS source refresh rule"
+    },
+    {
+      "id": "AMR-006",
+      "source_id": "HOS-MEM-008",
+      "status": "active",
+      "title": "Modeled assumptions remain labeled"
+    },
+    {
+      "id": "AMR-007",
+      "source_id": "HOS-MEM-009",
+      "status": "active",
+      "title": "Deprecated statistics are blocked"
+    },
+    {
+      "id": "AMR-008",
+      "source_id": "HOS-MEM-011",
+      "status": "active",
+      "title": "Employer, client, and project overclaiming guardrail"
+    }
+  ],
+  "active_blocked_claims": [
+    {
+      "id": "BLOCK-001",
+      "source_id": "HOS-BLOCK-001",
+      "status": "blocked",
+      "title": "AI-on-dirty-data numeric multiplier"
+    },
+    {
+      "id": "BLOCK-002",
+      "source_id": "HOS-BLOCK-002",
+      "status": "blocked",
+      "title": "Placeholder HandoverOS pricing"
+    },
+    {
+      "id": "BLOCK-003",
+      "source_id": "HOS-BLOCK-003",
+      "status": "blocked",
+      "title": "Unrefreshed external benchmarks"
+    }
+  ],
+  "visitor_agent_required_prompts": [
+    "Do you already know Betsy? If so, what is the connection?",
+    "What are the top 5 questions you want to get answered today - if you don't have 5, start with 1",
+    "Is it okay if Betsy uses the context from this chat to improve your intake experience and follow up more effectively?",
+    "What is the best email or phone number for Betsy to use if this should turn into a follow-up?",
+    "Did you get all of your questions answered? If not, can you provide any questions before leaving to give Betsy context?"
+  ],
+  "pending_not_activated": [
+    "GMC-003",
+    "GMC-005",
+    "GMC-008",
+    "GMC-B12-001",
+    "GMC-B12-002",
+    "GMC-B12-003",
+    "HOS-MEM-002",
+    "HOS-MEM-012"
+  ]
+}

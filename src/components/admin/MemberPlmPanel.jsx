@@ -7,6 +7,8 @@ import {
   gateLabel,
   pct,
 } from '../../data/platformLifecycleConfig.js';
+import { PLATFORM_MODULES, UNASSIGNED_MODULE, moduleForGroupSlug } from '../../data/platformModules.js';
+import { fieldCoverage } from '../../data/backlogFieldSchema.js';
 
 const s = {
   page: { flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, background: 'var(--sb-navy-deep)' },
@@ -27,6 +29,8 @@ const STATUS_LABELS = {
   blocked: 'Blocked',
 };
 
+const ALL_MODULES = [...PLATFORM_MODULES, UNASSIGNED_MODULE];
+
 export default function MemberPlmPanel({ scope = 'admin' }) {
   const [items, setItems] = useState([]);
   const [groups, setGroups] = useState([]);
@@ -35,6 +39,7 @@ export default function MemberPlmPanel({ scope = 'admin' }) {
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
   const [selectedId, setSelectedId] = useState(null);
+  const [selectedModuleId, setSelectedModuleId] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -65,15 +70,44 @@ export default function MemberPlmPanel({ scope = 'admin' }) {
   const records = useMemo(() => {
     return items
       .filter((item) => item.status !== 'archived')
-      .map((item) => backlogItemToLifecycleRecord(item, groupById[item.capabilityId]))
+      .map((item) => {
+        const group = groupById[item.capabilityId];
+        const record = backlogItemToLifecycleRecord(item, group);
+        record.module = moduleForGroupSlug(group?.slug);
+        return record;
+      })
       .sort((a, b) => a.realProgressScore - b.realProgressScore);
   }, [items, groupById]);
 
-  const visibleRecords = filter === 'all'
-    ? records
-    : records.filter((record) => record.sourceItem.status === filter);
+  const moduleSummaries = useMemo(() => {
+    return ALL_MODULES.map((module) => {
+      const moduleRecords = records.filter((record) => record.module.id === module.id);
+      const stageCounts = {};
+      for (const record of moduleRecords) {
+        const key = record.computedStage?.key || 'discovered';
+        stageCounts[key] = (stageCounts[key] || 0) + 1;
+      }
+      return {
+        module,
+        count: moduleRecords.length,
+        realProgressPct: average(moduleRecords.map((r) => r.realProgressScore)),
+        gateGapCount: moduleRecords.filter((r) => r.gateGaps.length > 0).length,
+        stageCounts,
+      };
+    });
+  }, [records]);
 
-  const selected = records.find((record) => record.id === selectedId) || visibleRecords[0] || null;
+  const selectedModule = ALL_MODULES.find((m) => m.id === selectedModuleId) || null;
+  const moduleRecords = useMemo(
+    () => (selectedModuleId ? records.filter((record) => record.module.id === selectedModuleId) : []),
+    [records, selectedModuleId]
+  );
+
+  const visibleRecords = filter === 'all'
+    ? moduleRecords
+    : moduleRecords.filter((record) => record.sourceItem.status === filter);
+
+  const selected = moduleRecords.find((record) => record.id === selectedId) || visibleRecords[0] || null;
 
   const metrics = useMemo(() => {
     const deployed = records.filter((record) => record.sourceItem.status === 'deployed' || record.sourceItem.status === 'completed').length;
@@ -91,12 +125,18 @@ export default function MemberPlmPanel({ scope = 'admin' }) {
 
   const stageCounts = useMemo(() => {
     const counts = {};
-    for (const record of records) {
+    for (const record of moduleRecords) {
       const key = record.computedStage?.key || 'discovered';
       counts[key] = (counts[key] || 0) + 1;
     }
     return counts;
-  }, [records]);
+  }, [moduleRecords]);
+
+  function openModule(moduleId) {
+    setSelectedModuleId(moduleId);
+    setSelectedId(null);
+    setFilter('all');
+  }
 
   if (scope === 'member' && error) {
     return (
@@ -114,9 +154,12 @@ export default function MemberPlmPanel({ scope = 'admin' }) {
     <div style={s.page}>
       <div style={s.scroll}>
         <div style={s.eyebrow}>Platform Lifecycle Management</div>
-        <div style={s.title}>Operating Model Merge Dashboard</div>
+        <div style={s.title}>Operating Model Dashboard</div>
         <div style={s.sub}>
-          First merged slice of the SaltTide operating model: existing Salt Basin backlog records are projected through configurable lifecycle gates, weighted methodology dimensions, contribution intelligence, and global-standard governance concepts.
+          Every platform module — Network Relationship Management, Platform Lifecycle Management,
+          Customer Relationship Management, and the rest of the Application Map — projected through
+          configurable lifecycle gates, weighted methodology dimensions driven by literal field
+          definitions, contribution intelligence, and global-standard governance concepts.
         </div>
 
         <ModelStrip />
@@ -127,7 +170,7 @@ export default function MemberPlmPanel({ scope = 'admin' }) {
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(145px, 1fr))', gap: '0.55rem', marginBottom: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(145px, 1fr))', gap: '0.55rem', marginBottom: '1.25rem' }}>
           <Metric label="Lifecycle Records" value={loading ? '...' : metrics.total} />
           <Metric label="Real Progress" value={pct(metrics.realProgressPct)} accent />
           <Metric label="Data Definition" value={pct(metrics.dataPct)} />
@@ -136,30 +179,38 @@ export default function MemberPlmPanel({ scope = 'admin' }) {
           <Metric label="Selected Ahead" value={metrics.blockedAhead} warn={metrics.blockedAhead > 0} />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', gap: '0.85rem', alignItems: 'start' }}>
-          <div style={{ minWidth: 0 }}>
-            <StageRail counts={stageCounts} total={metrics.total} />
-            <Filters active={filter} onChange={setFilter} />
-            {loading ? (
-              <div style={{ ...s.card, padding: '1rem', ...s.muted }}>Loading platform lifecycle records...</div>
-            ) : visibleRecords.length === 0 ? (
-              <div style={{ ...s.card, padding: '1rem', ...s.muted }}>No records in this status.</div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(310px, 1fr))', gap: '0.65rem' }}>
-                {visibleRecords.map((record) => (
-                  <RecordCard
-                    key={record.id}
-                    record={record}
-                    active={selected?.id === record.id}
-                    onClick={() => setSelectedId(record.id)}
-                  />
-                ))}
+        {loading ? (
+          <div style={{ ...s.card, padding: '1rem', ...s.muted }}>Loading platform lifecycle records...</div>
+        ) : !selectedModule ? (
+          <ModuleGrid summaries={moduleSummaries} onSelect={openModule} />
+        ) : (
+          <>
+            <Breadcrumb module={selectedModule} onBack={() => setSelectedModuleId(null)} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', gap: '0.85rem', alignItems: 'start' }}>
+              <div style={{ minWidth: 0 }}>
+                <StageRail counts={stageCounts} total={moduleRecords.length} />
+                <Filters active={filter} onChange={setFilter} />
+                {visibleRecords.length === 0 ? (
+                  <div style={{ ...s.card, padding: '1rem', ...s.muted }}>No records in this module / status.</div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(310px, 1fr))', gap: '0.65rem' }}>
+                    {visibleRecords.map((record) => (
+                      <RecordCard
+                        key={record.id}
+                        record={record}
+                        active={selected?.id === record.id}
+                        onClick={() => setSelectedId(record.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+                <FieldCoveragePanel items={moduleRecords.map((r) => r.sourceItem)} />
               </div>
-            )}
-          </div>
 
-          <DetailPanel record={selected} latestSnapshot={snapshots[snapshots.length - 1]} />
-        </div>
+              <DetailPanel record={selected} latestSnapshot={snapshots[snapshots.length - 1]} />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -174,6 +225,102 @@ function ModelStrip() {
           <div style={{ fontSize: '0.74rem', color: 'var(--sb-dusty)', lineHeight: 1.45 }}>{app.purpose}</div>
         </div>
       ))}
+    </div>
+  );
+}
+
+function Breadcrumb({ module, onBack }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.9rem' }}>
+      <button
+        onClick={onBack}
+        style={{
+          background: 'transparent', border: '0.5px solid rgba(196,132,58,0.35)', color: 'var(--sb-gold)',
+          borderRadius: 3, padding: '0.3rem 0.65rem', fontSize: '0.68rem', letterSpacing: '0.08em',
+          textTransform: 'uppercase', cursor: 'pointer', fontFamily: 'var(--sb-font-label)',
+        }}
+      >
+        ← All Modules
+      </button>
+      <div style={{ fontSize: '0.95rem', color: 'var(--sb-cream)', fontFamily: 'var(--sb-font-display)' }}>{module.label}</div>
+      <div style={{ fontSize: '0.72rem', color: 'var(--sb-dusty)' }}>{module.description}</div>
+    </div>
+  );
+}
+
+function ModuleGrid({ summaries, onSelect }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '0.7rem' }}>
+      {summaries.map(({ module, count, realProgressPct, gateGapCount, stageCounts }) => (
+        <button
+          key={module.id}
+          onClick={() => onSelect(module.id)}
+          style={{
+            ...s.card, textAlign: 'left', padding: '0.9rem', cursor: 'pointer',
+            fontFamily: 'var(--sb-font-body)', color: 'inherit',
+            borderColor: gateGapCount > 0 ? 'rgba(196,74,74,0.3)' : 'rgba(196,132,58,0.18)',
+          }}
+        >
+          <div style={{ fontSize: '0.58rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--sb-gold)', marginBottom: 4 }}>
+            {module.shortLabel}
+          </div>
+          <div style={{ fontSize: '0.98rem', color: 'var(--sb-cream)', lineHeight: 1.3, marginBottom: 6 }}>{module.label}</div>
+          <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', lineHeight: 1.45, marginBottom: '0.7rem', minHeight: '2.2em' }}>{module.description}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem' }}>
+            <SmallStat label="Backlog Items" value={count} />
+            <SmallStat label="Real Progress" value={pct(realProgressPct)} warn={gateGapCount > 0} />
+          </div>
+          <MiniStageBar stageCounts={stageCounts} />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function MiniStageBar({ stageCounts }) {
+  const stages = PLATFORM_LIFECYCLE_CONFIG.lifecycleStages.filter((stage) => stage.key !== 'retired');
+  return (
+    <div style={{ display: 'flex', gap: 2, marginTop: '0.6rem', height: 4 }}>
+      {stages.map((stage) => {
+        const count = stageCounts[stage.key] || 0;
+        return (
+          <div
+            key={stage.key}
+            title={`${stage.label}: ${count}`}
+            style={{
+              flex: count || 0.001,
+              minWidth: count ? 2 : 0,
+              background: count ? 'var(--sb-gold)' : 'transparent',
+              borderRadius: 2,
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function FieldCoveragePanel({ items }) {
+  const coverage = useMemo(() => fieldCoverage(items), [items]);
+  if (!items.length) return null;
+  return (
+    <div style={{ ...s.card, padding: '0.85rem', marginTop: '0.75rem' }}>
+      <div style={{ fontSize: '0.62rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--sb-gold)', marginBottom: '0.6rem' }}>
+        Field Definition Coverage
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+        {coverage.map(({ field, coveragePct }) => (
+          <div key={field.key}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.66rem', color: 'var(--sb-dusty)', marginBottom: 2 }}>
+              <span>{field.label} <span style={{ opacity: 0.6 }}>({field.type})</span></span>
+              <span>{pct(coveragePct)} · {field.sourceDoc} §{field.sourceSection}</span>
+            </div>
+            <div style={{ height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: pct(coveragePct), background: 'var(--sb-sage)' }} />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -308,6 +455,13 @@ function DetailPanel({ record, latestSnapshot }) {
                 <span style={{ color: 'var(--sb-risk-critical)', fontSize: '0.72rem' }}>{pct(gap.actual)} / {pct(gap.required)}</span>
               </div>
               <div style={{ color: 'var(--sb-dusty)', fontSize: '0.68rem', marginTop: 3 }}>{gap.source}</div>
+              {gap.missingFields?.length > 0 && (
+                <div style={{ color: 'var(--sb-risk-critical)', fontSize: '0.68rem', marginTop: 4, lineHeight: 1.45 }}>
+                  Missing: {gap.missingFields.map((f) => f.label).join(', ')}
+                  {' — see '}
+                  {[...new Set(gap.missingFields.map((f) => `${f.sourceDoc} §${f.sourceSection}`))].join('; ')}
+                </div>
+              )}
             </div>
           ))}
         </div>

@@ -1550,6 +1550,64 @@ async function bootstrap() {
     console.warn('[db] admin_nav merge skipped:', e.message);
   }
 
+  // ── Migrate admin_nav: fold My Profile + Net Works + NRM into one
+  // "Network Relationship Management" module ────────────────────────────────
+  // One-shot, idempotent: relocates the 'networks' and 'nrm' tabs into the
+  // 'content' view (wherever they currently live — 'crm' and 'platform' in
+  // the common case, but this doesn't assume a fixed prior location so it's
+  // safe even against a manually-edited nav) and relabels views/tabs. Skips
+  // any step already done, so re-running on a boot that already migrated is
+  // a no-op.
+  try {
+    const navRow2 = await sql.unsafe(`SELECT data FROM config_state WHERE id = 'admin_nav'`);
+    if (navRow2.length > 0) {
+      const nav = JSON.parse(navRow2[0].data);
+      let changed = false;
+      const views = nav.views || [];
+
+      const contentView = views.find((v) => v.id === 'content');
+      if (contentView) {
+        if (contentView.label !== 'Network Relationship Management') {
+          contentView.label = 'Network Relationship Management';
+          changed = true;
+        }
+        contentView.tabs = contentView.tabs || [];
+
+        // Relocate a tab (by id) from wherever it currently lives into the
+        // content view, applying the given label/sortOrder/componentId.
+        const relocate = (tabId, label, componentId, sortOrder) => {
+          const alreadyHere = contentView.tabs.some((t) => t.id === tabId);
+          if (alreadyHere) return;
+          for (const v of views) {
+            if (v.id === contentView.id) continue;
+            const idx = (v.tabs || []).findIndex((t) => t.id === tabId);
+            if (idx >= 0) v.tabs.splice(idx, 1);
+          }
+          contentView.tabs.push({ id: tabId, label, componentId, sortOrder });
+          changed = true;
+        };
+        relocate('networks', 'Net Works', 'networks', 2);
+        relocate('nrm', 'Network Contacts', 'nrm', 3);
+      }
+
+      const plmView2 = views.find((v) => v.id === 'plm');
+      const plmDashTab = plmView2?.tabs?.find((t) => t.id === 'plm-dashboard');
+      if (plmDashTab && plmDashTab.label !== 'Operating Model Dashboard') {
+        plmDashTab.label = 'Operating Model Dashboard';
+        changed = true;
+      }
+
+      if (changed) {
+        await sql.unsafe(
+          `UPDATE config_state SET data = $1, updated_at = $2 WHERE id = 'admin_nav'`,
+          [JSON.stringify(nav), Date.now()]
+        );
+      }
+    }
+  } catch (e) {
+    console.warn('[db] admin_nav NRM-merge skipped:', e.message);
+  }
+
   // ── Contribution Intelligence — sessions + enhanced backlog (v0.17) ───────
   // Each statement is isolated so one failure doesn't block the rest.
 
@@ -1658,6 +1716,251 @@ async function bootstrap() {
        ON CONFLICT (id) DO NOTHING`,
       [r.id, r.rate_type, r.contributor ?? null, r.rate_per_hour, r.effective_year, r.basis, r.applies_to ?? null, r.note]
     );
+  }
+
+  // ── Seed: default page_type_definitions into config_state if missing ──
+  //
+  // Platform-wide "New Page" type taxonomy — a JSON blob under config_state
+  // with id='page_type_definitions'. Same check-then-insert pattern as
+  // admin_nav above: seeded once, never overwritten by a later boot, editable
+  // via PUT /api/config/page-types (admin-only). Both admin and member scopes
+  // read this same shared row — it's one taxonomy, not per-member data.
+  const existingPageTypes = await sql.unsafe(`SELECT id FROM config_state WHERE id = 'page_type_definitions'`);
+  if (existingPageTypes.length === 0) {
+    const defaultPageTypes = {
+      types: [
+        {
+          id: 'standard',
+          label: 'Standard',
+          description: 'A general-purpose page with a hero and flexible content sections.',
+          defaultSections: [
+            { type: 'hero', name: 'Hero', bg: 'navy', fields: { heading: '{{pageName}}', subtitle: 'Add your intro here.' } },
+          ],
+        },
+        {
+          id: 'landing',
+          label: 'Landing',
+          description: 'A focused page built to drive a single call to action.',
+          defaultSections: [
+            { type: 'hero', name: 'Hero', bg: 'navy', fields: { heading: '{{pageName}}', subtitle: 'Add your intro here.' } },
+            { type: 'cta', name: 'Call to Action', bg: 'linen', fields: {} },
+          ],
+        },
+        {
+          id: 'blog',
+          label: 'Blog',
+          description: 'A long-form content page for articles and posts.',
+          defaultSections: [
+            { type: 'hero', name: 'Hero', bg: 'navy', fields: { heading: '{{pageName}}', subtitle: 'Add your intro here.' } },
+            { type: 'text', name: 'Article Body', bg: 'ivory', fields: {} },
+          ],
+        },
+        {
+          id: 'shop',
+          label: 'Shop',
+          description: 'A page for showcasing products or offerings as cards.',
+          defaultSections: [
+            { type: 'hero', name: 'Hero', bg: 'navy', fields: { heading: '{{pageName}}', subtitle: 'Add your intro here.' } },
+            { type: 'cards', name: 'Offerings', bg: 'ivory', fields: {} },
+          ],
+        },
+      ],
+    };
+    await sql.unsafe(
+      `INSERT INTO config_state (id, data, updated_at) VALUES ($1, $2, $3)`,
+      ['page_type_definitions', JSON.stringify(defaultPageTypes), Date.now()]
+    );
+  }
+
+  // ── Career master data ────────────────────────────────────────────────────
+  // Single source of truth for Betsy's resume/portfolio content — feeds the
+  // public timeline, industry wheel, case studies, resume output templates,
+  // and the elevated public profile view. Single-tenant admin data (~115
+  // rows total), so plain purpose-built tables with JSONB for list-shaped
+  // sub-fields rather than the heavier capability_groups-style normalization
+  // backlog_items uses. See PLATFORM_MERGE_SPEC.md / plan history for the
+  // "Career Master Data Model" rework.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS career_jobs (
+      id            BIGSERIAL PRIMARY KEY,
+      company       TEXT NOT NULL,
+      title         TEXT NOT NULL,
+      start_date    TEXT,
+      end_date      TEXT,
+      duration      TEXT,
+      salary        TEXT,
+      job_function  TEXT,
+      industry      TEXT,
+      key_metrics   TEXT,
+      order_index   INTEGER NOT NULL DEFAULT 0,
+      created_at    BIGINT NOT NULL,
+      updated_at    BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_career_jobs_order ON career_jobs (order_index);
+
+    CREATE TABLE IF NOT EXISTS career_skills (
+      id                BIGSERIAL PRIMARY KEY,
+      skill             TEXT NOT NULL,
+      category          TEXT,
+      tier              TEXT,
+      years_exp         NUMERIC,
+      num_engagements   INTEGER,
+      first_used        INTEGER,
+      resume_language   TEXT,
+      order_index       INTEGER NOT NULL DEFAULT 0,
+      created_at        BIGINT NOT NULL,
+      updated_at        BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_career_skills_order ON career_skills (order_index);
+    CREATE INDEX IF NOT EXISTS idx_career_skills_cat   ON career_skills (category);
+
+    CREATE TABLE IF NOT EXISTS career_tools (
+      id            BIGSERIAL PRIMARY KEY,
+      name_used     TEXT NOT NULL,
+      current_name  TEXT,
+      category      TEXT,
+      tier          TEXT,
+      first_used    INTEGER,
+      num_roles     INTEGER,
+      notes         TEXT,
+      wheel_bucket  TEXT,
+      order_index   INTEGER NOT NULL DEFAULT 0,
+      created_at    BIGINT NOT NULL,
+      updated_at    BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_career_tools_order ON career_tools (order_index);
+
+    CREATE TABLE IF NOT EXISTS career_engagements (
+      id                    BIGSERIAL PRIMARY KEY,
+      name                  TEXT NOT NULL,
+      employer              TEXT NOT NULL,
+      client_name_real      TEXT,
+      client_display_name   TEXT NOT NULL,
+      industry              TEXT,
+      period                TEXT,
+      scale                 TEXT,
+      roles                 JSONB NOT NULL DEFAULT '[]',
+      context               TEXT,
+      actions               TEXT,
+      outcomes              JSONB NOT NULL DEFAULT '[]',
+      metrics               JSONB NOT NULL DEFAULT '[]',
+      testimonial           TEXT,
+      testimonial_attr      TEXT,
+      scenarios             JSONB NOT NULL DEFAULT '[]',
+      publish_case_study    BOOLEAN NOT NULL DEFAULT true,
+      investment_type       TEXT,
+      acquired_detail       TEXT,
+      exit_detail           TEXT,
+      financial_return      TEXT,
+      outcome_status        TEXT,
+      order_index           INTEGER NOT NULL DEFAULT 0,
+      created_at            BIGINT NOT NULL,
+      updated_at            BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_career_engagements_order ON career_engagements (order_index);
+    CREATE INDEX IF NOT EXISTS idx_career_engagements_emp   ON career_engagements (employer);
+
+    CREATE TABLE IF NOT EXISTS career_domains (
+      id            BIGSERIAL PRIMARY KEY,
+      group_type    TEXT NOT NULL,
+      title         TEXT NOT NULL,
+      icon          TEXT,
+      description   TEXT,
+      items         JSONB NOT NULL DEFAULT '[]',
+      accent_color  TEXT,
+      extra         JSONB NOT NULL DEFAULT '{}',
+      order_index   INTEGER NOT NULL DEFAULT 0,
+      created_at    BIGINT NOT NULL,
+      updated_at    BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_career_domains_group ON career_domains (group_type, order_index);
+  `);
+
+  // Investor / operating-principal extension of the Career Master model:
+  // certifications (with renewal tracking), deal transactions (role-in-deal
+  // varies by employer-at-time; individual return carve-outs), and the
+  // meta-options table holding recommended selectable values for those
+  // fields (deal roles, investment types, stake types, cert categories…).
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS career_certifications (
+      id            BIGSERIAL PRIMARY KEY,
+      name          TEXT NOT NULL,
+      issuer        TEXT,
+      category      TEXT,
+      first_earned  TEXT,
+      last_renewed  TEXT,
+      expires       TEXT,
+      status        TEXT,
+      credential_id TEXT,
+      notes         TEXT,
+      order_index   INTEGER NOT NULL DEFAULT 0,
+      created_at    BIGINT NOT NULL,
+      updated_at    BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_career_certs_order ON career_certifications (order_index);
+
+    CREATE TABLE IF NOT EXISTS career_deals (
+      id                   BIGSERIAL PRIMARY KEY,
+      deal_name            TEXT NOT NULL,
+      portfolio_company    TEXT,
+      employer_at_time     TEXT,
+      deal_role            TEXT,
+      investment_type      TEXT,
+      deal_size            TEXT,
+      deal_size_musd       NUMERIC,
+      entry_date           TEXT,
+      exit_date            TEXT,
+      exit_value           TEXT,
+      exit_value_musd      NUMERIC,
+      gross_return_pct     NUMERIC,
+      attribution_pct      NUMERIC,
+      individual_return    TEXT,
+      stake_type           TEXT,
+      outcome_status       TEXT,
+      is_active_portfolio  BOOLEAN NOT NULL DEFAULT false,
+      arr_entry_musd       NUMERIC,
+      arr_prior_year_musd  NUMERIC,
+      arr_current_musd     NUMERIC,
+      notes                TEXT,
+      order_index          INTEGER NOT NULL DEFAULT 0,
+      created_at           BIGINT NOT NULL,
+      updated_at           BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_career_deals_order  ON career_deals (order_index);
+    CREATE INDEX IF NOT EXISTS idx_career_deals_active ON career_deals (is_active_portfolio);
+
+    CREATE TABLE IF NOT EXISTS career_meta_options (
+      id           BIGSERIAL PRIMARY KEY,
+      field_key    TEXT NOT NULL,
+      value        TEXT NOT NULL,
+      description  TEXT,
+      order_index  INTEGER NOT NULL DEFAULT 0,
+      created_at   BIGINT NOT NULL,
+      updated_at   BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_career_meta_options_key ON career_meta_options (field_key, order_index);
+  `);
+
+  // One-shot: inject "Career Master" tab into the admin_nav content view.
+  try {
+    const navRow3 = await sql.unsafe(`SELECT data FROM config_state WHERE id = 'admin_nav'`);
+    if (navRow3.length > 0) {
+      const nav = JSON.parse(navRow3[0].data);
+      const contentView = (nav.views || []).find((v) => v.id === 'content');
+      if (contentView) {
+        contentView.tabs = contentView.tabs || [];
+        const hasCareerMaster = contentView.tabs.some((t) => t.id === 'career-master');
+        if (!hasCareerMaster) {
+          contentView.tabs.push({ id: 'career-master', label: 'Career Master', componentId: 'careerMaster', sortOrder: 2 });
+          await sql.unsafe(
+            `UPDATE config_state SET data = $1, updated_at = $2 WHERE id = 'admin_nav'`,
+            [JSON.stringify(nav), Date.now()]
+          );
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[db] career-master nav injection skipped:', e.message);
   }
 }
 

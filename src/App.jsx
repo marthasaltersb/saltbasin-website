@@ -11,7 +11,7 @@ import PublicProfile from './components/PublicProfile.jsx';
 import LeadView from './components/LeadView.jsx';
 import ResetPasswordPage from './components/ResetPasswordPage.jsx';
 import DataNotice from './components/DataNotice.jsx';
-import { ResumeOutput, CaseStudyOutput, DomainsOutput, ProposalOutput, OnePagerOutput, BuildSummaryOutput, TechStackOutput, ProductOnePagerOutput, PatchNotesOutput, MethodologyOutput, L2RModelOutput } from './components/Output.jsx';
+import { ResumeOutput, CaseStudyOutput, DomainsOutput, PortfolioAppendixOutput, CareerCaseStudyPortfolioOutput, CareerMasterDatabaseOutput, CareerPortfolioHubOutput, CareerFullPortfolioOutput, StrategicOperatorOutput, ProposalOutput, OnePagerOutput, BuildSummaryOutput, TechStackOutput, ProductOnePagerOutput, PatchNotesOutput, MethodologyOutput, L2RModelOutput } from './components/Output.jsx';
 
 function PublicRoute() {
   const [status, setStatus] = useState(null);
@@ -62,6 +62,12 @@ export default function App() {
       <Route path="/output/product-one-pager" element={<ProductOnePagerOutput />} />
       <Route path="/output/patch-notes" element={<PatchNotesOutput />} />
       <Route path="/output/domains" element={<DomainsOutput />} />
+      <Route path="/output/portfolio-appendix" element={<PortfolioAppendixOutput />} />
+      <Route path="/output/case-study-portfolio" element={<CareerCaseStudyPortfolioOutput />} />
+      <Route path="/output/career-master-database" element={<CareerMasterDatabaseOutput />} />
+      <Route path="/output/portfolio" element={<CareerPortfolioHubOutput />} />
+      <Route path="/output/full-portfolio" element={<CareerFullPortfolioOutput />} />
+      <Route path="/output/strategic-operator" element={<StrategicOperatorOutput />} />
       <Route path="/output/methodology" element={<MethodologyOutput />} />
       <Route path="/output/l2r-model" element={<L2RModelOutput />} />
       <Route

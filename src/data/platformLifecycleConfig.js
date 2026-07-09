@@ -1,3 +1,5 @@
+import { categoryScore, dimensionScore, missingFields as missingCategoryFields, missingDimensionFields } from './backlogFieldSchema.js';
+
 export const PLATFORM_LIFECYCLE_CONFIG = {
   version: '0.2.0-salt-basin-merge',
   applications: [
@@ -190,7 +192,7 @@ export function average(values) {
 
 export function backlogItemToLifecycleRecord(item, group) {
   const dataDefinitionPct = dataDefinitionScore(item);
-  const methodology = methodologyScores(item, group);
+  const methodology = methodologyScores(item);
   const contribution = contributionScores(item, group);
   const selectedStage = selectedStageFromStatus(item.status);
   const budgetConfidence = budgetConfidenceScore(item);
@@ -245,9 +247,23 @@ function stageGateResult(record, stage) {
       required,
       actual: gateValue(record, key),
       source: PLATFORM_LIFECYCLE_CONFIG.lifecycleGateSources[key] || 'Configured gate',
+      missingFields: gateMissingFields(record, key),
     }))
     .filter((gate) => gate.actual + 0.0001 < gate.required);
   return { passed: gaps.length === 0, gaps };
+}
+
+// Which literal backlog-item fields are still missing for a given gate key,
+// with their doc provenance — lets the UI say "Missing: Acceptance Criteria,
+// Process Steps — see FUNCTIONAL_DESIGN_SPEC.md §4.12" instead of a bare %.
+function gateMissingFields(record, key) {
+  const item = record.sourceItem;
+  if (!item) return [];
+  if (key === 'dataDefinition') {
+    const categories = PLATFORM_LIFECYCLE_CONFIG.dataDefinitionRequirements['Backlog Item'] || [];
+    return categories.flatMap((category) => missingCategoryFields(item, category));
+  }
+  return missingDimensionFields(item, key);
 }
 
 function gateValue(record, key) {
@@ -302,32 +318,33 @@ function boolScore(value) {
   return value ? 1 : 0;
 }
 
+// Driven by BACKLOG_FIELD_SCHEMA (src/data/backlogFieldSchema.js) — averages
+// the presence-based score of every requirementCategory defined for backlog
+// items in PLATFORM_LIFECYCLE_CONFIG.dataDefinitionRequirements, rather than a
+// fixed set of ad hoc field checks. 'Owner' has no backing field yet, so it
+// honestly scores 0 until an owner/assignee field exists.
 function dataDefinitionScore(item) {
-  return ratio([
-    boolScore(hasText(item.title)),
-    boolScore(item.capabilityId != null),
-    boolScore(hasText(item.summary)),
-    boolScore(hasText(item.requirementDetail) || hasText(item.userStory)),
-    boolScore(hasText(item.acceptanceCriteria)),
-    boolScore(hasText(item.priority)),
-    boolScore(hasArray(item.tags) || hasText(item.externalRef)),
-    boolScore(item.timeMinutes != null || item.hoursBetsy != null || item.hoursClaude != null || item.costUsdClaude != null),
-  ]);
+  const categories = PLATFORM_LIFECYCLE_CONFIG.dataDefinitionRequirements['Backlog Item'] || [];
+  return average(categories.map((category) => categoryScore(item, category)));
 }
 
-function methodologyScores(item, group) {
+function methodologyScores(item) {
   const isDelivered = item.status === 'completed' || item.status === 'deployed';
   const isDeployed = item.status === 'deployed' || item.deployedGithub || item.deployedRender || item.deployedNetlify;
   const isBuilding = item.status === 'in_progress' || isDelivered;
   return {
-    businessDefinition: ratio([boolScore(hasText(item.userStory)), boolScore(hasText(item.businessRules)), boolScore(hasText(item.priority))]),
-    functionalDesign: ratio([boolScore(hasText(item.requirementDetail)), boolScore(hasText(item.acceptanceCriteria)), boolScore(hasText(item.processSteps))]),
-    technicalDesign: ratio([boolScore(hasText(item.designSpec)), boolScore(hasArray(item.techStack) || hasArray(group?.techStack)), boolScore(hasText(item.externalRef))]),
-    dataArchitecture: ratio([boolScore(item.capabilityId != null), boolScore(hasArray(item.tags)), boolScore(item.deployRelevance != null)]),
+    // Definition-shaped dimensions: driven by literal field presence via
+    // BACKLOG_FIELD_SCHEMA (backlogFieldSchema.js) instead of inline checks.
+    businessDefinition: dimensionScore(item, 'businessDefinition'),
+    functionalDesign: dimensionScore(item, 'functionalDesign'),
+    technicalDesign: dimensionScore(item, 'technicalDesign'),
+    dataArchitecture: dimensionScore(item, 'dataArchitecture'),
+    documentation: dimensionScore(item, 'documentation'),
+    // Delivery-state dimensions: about actual work progression, not whether a
+    // field is filled in, so these stay status-derived.
     build: isDeployed ? 1 : isDelivered ? 0.85 : isBuilding ? 0.35 : 0,
     testing: isDeployed ? 0.9 : isDelivered ? 0.75 : hasText(item.acceptanceCriteria) ? 0.25 : 0,
     validation: isDeployed ? 0.85 : isDelivered ? 0.65 : item.status === 'blocked' ? 0.1 : 0,
-    documentation: ratio([boolScore(hasText(item.summary)), boolScore(hasText(item.designSpec)), boolScore(hasText(item.acceptanceCriteria)), boolScore(hasText(item.processSteps))]),
   };
 }
 

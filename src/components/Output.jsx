@@ -15,6 +15,7 @@ import {
 import { api } from '../lib/api.js';
 import BackLink from './BackLink.jsx';
 import { renderBlockToHtml } from '../lib/outputBlocks.js';
+import { fetchCareerMaster, tierFillPct, toolWheelBucket } from '../lib/careerMaster.js';
 
 // The Home page's "about" content is split across two sections — the founder
 // card (name/photo/howIWork, in the aboutIntro section) and the executive
@@ -47,15 +48,63 @@ function useAuthState() {
   return state;
 }
 
+// Real DOM text (not CSS-generated content) so it's never stripped by print
+// CSS, text-extraction, or an ATS parsing a saved resume PDF. Appears once,
+// at the end of the document — browsers don't reliably support true
+// per-page running footers (@page margin boxes) via window.print(), so a
+// single end-of-document credit is the durable option here.
+function OutputAuthorshipFooter() {
+  return (
+    <footer style={{ marginTop: '3rem', paddingTop: '1.25rem', borderTop: '0.5px solid var(--sb-taupe)', fontSize: '0.72rem', color: 'var(--sb-teal-deep)', lineHeight: 1.6 }}>
+      <div style={{ fontWeight: 700, color: 'var(--sb-navy)' }}>Authored by Betsy Salter · Co-Authored with Claude (Anthropic AI)</div>
+      <div>© {new Date().getFullYear()} Salt Basin Holdings. All Rights Reserved. This output was generated from saltbasin.net and leverages AI LLM API to render the output formatting.</div>
+      <div>saltbasin.net · betsysalter@saltbasin.net</div>
+    </footer>
+  );
+}
+
+// Sets printMode (read by the [data-print-mode] CSS rule in OutputFrame)
+// then opens the print dialog on the next tick, giving React time to flush
+// the re-render first.
+function triggerPrint(setPrintMode, mode) {
+  setPrintMode(mode);
+  setTimeout(() => window.print(), 60);
+}
+
+// Reusable pair of print/save buttons for any output with its own
+// search/filter chrome (marked className="sb-interactive-toolbar" in that
+// page) — "Interactive" keeps the chrome visible in the saved PDF,
+// "Static" produces a clean export starting at the first content card.
+function PrintModeActions({ onPrint }) {
+  return (
+    <>
+      <button onClick={() => onPrint('interactive')} className="sb-btn sb-btn-outline" style={{ padding: '0.45rem 0.85rem', fontSize: '0.66rem' }}>
+        🔍 Interactive PDF
+      </button>
+      <button onClick={() => onPrint('static')} className="sb-btn sb-btn-gold" style={{ padding: '0.45rem 0.85rem', fontSize: '0.66rem' }}>
+        🖨 Static PDF
+      </button>
+    </>
+  );
+}
+
 // ── Reusable frame ──
-function OutputFrame({ title, eyebrow, children, gated }) {
+// printActions: optional custom toolbar buttons (e.g. separate Interactive
+// vs Static print/save options) replacing the default single "Print / Save
+// as PDF" button. Pages with their own filter/search chrome above their
+// content mark that chrome with className="sb-interactive-toolbar" — the
+// print rule below strips it whenever the page sets
+// data-print-mode="static" before calling window.print(), giving a clean
+// static export that starts right at the content instead of the controls.
+function OutputFrame({ title, eyebrow, children, gated, hideTitle, printActions }) {
   return (
     <div style={{ background: 'white', color: 'var(--sb-navy)', minHeight: '100vh' }}>
       <style>{`
         @media print {
-          .sb-output-toolbar, .sb-output-gate-overlay, footer { display: none !important; }
+          .sb-output-toolbar, .sb-output-gate-overlay { display: none !important; }
           .sb-output-page { padding: 0 !important; box-shadow: none !important; }
           body { background: white !important; }
+          [data-print-mode="static"] .sb-interactive-toolbar { display: none !important; }
         }
         @page { size: letter; margin: 0.5in; }
       `}</style>
@@ -78,7 +127,7 @@ function OutputFrame({ title, eyebrow, children, gated }) {
           </div>
         </div>
         <div style={{ display: 'flex', gap: '0.6rem' }}>
-          {!gated && (
+          {!gated && (printActions || (
             <button
               onClick={() => window.print()}
               className="sb-btn sb-btn-gold"
@@ -86,7 +135,7 @@ function OutputFrame({ title, eyebrow, children, gated }) {
             >
               ⌘ Print / Save as PDF
             </button>
-          )}
+          ))}
           {gated && (
             <span
               style={{
@@ -119,7 +168,7 @@ function OutputFrame({ title, eyebrow, children, gated }) {
           position: 'relative',
         }}
       >
-        {title && (
+        {title && !hideTitle && (
           <header style={{ marginBottom: '1.5rem', borderBottom: '2px solid var(--sb-gold)', paddingBottom: '0.75rem' }}>
             <h1
               style={{
@@ -138,12 +187,7 @@ function OutputFrame({ title, eyebrow, children, gated }) {
           </header>
         )}
         {children}
-        <footer style={{ marginTop: '3rem', paddingTop: '1.25rem', borderTop: '0.5px solid var(--sb-taupe)', fontSize: '0.72rem', color: 'var(--sb-teal-deep)' }}>
-          {/* TODO: move name/domain/email into config_state.site so this is
-              editable from the admin Config panel. Tracked alongside TT.96
-              (expand admin configurability layer). */}
-          Salt Basin Net Works · saltbasin.net · betsysalter@saltbasin.net
-        </footer>
+        <OutputAuthorshipFooter />
       </article>
     </div>
   );
@@ -213,6 +257,35 @@ function GatedPreview({ kind, teaser }) {
   );
 }
 
+// True if the given /api/auth/me user object is the Salt Basin admin.
+function isAdminUser(user) {
+  return user?.role === 'admin';
+}
+
+// Shown to a logged-in-but-non-admin member hitting an admin-only detailed
+// output (Career Master Database, Case Study Portfolio, Full Portfolio,
+// Portfolio Appendix). Distinct from GatedPreview, which assumes the
+// visitor isn't signed up at all — this visitor already is, so "sign up"
+// messaging would be wrong.
+function AdminOnlyNotice({ kind }) {
+  return (
+    <div
+      style={{
+        marginTop: '2rem', padding: '2rem', background: 'var(--sb-navy)', color: 'var(--sb-cream)',
+        borderRadius: 'var(--sb-radius)', borderTop: '3px solid var(--sb-gold)', textAlign: 'center',
+      }}
+    >
+      <div className="sb-eyebrow" style={{ color: 'var(--sb-gold)', marginBottom: '0.5rem' }}>Admin access only</div>
+      <h2 style={{ fontFamily: 'var(--sb-font-display)', fontSize: '1.5rem', marginBottom: '0.5rem', letterSpacing: '0.02em' }}>
+        This {kind} isn't public yet
+      </h2>
+      <p style={{ fontSize: '0.9rem', color: 'var(--sb-sage)', lineHeight: 1.65, maxWidth: 500, margin: '0 auto' }}>
+        The detailed {kind} is limited to Salt Basin Net Works admin access while cost and licensing terms are finalized. The Executive Resume Portfolio is available to members in the meantime.
+      </p>
+    </div>
+  );
+}
+
 // ── Layout: Modern SB ────────────────────────────────────────────────────────
 // Inspired by the structured multi-column professional CV format, adapted to
 // Salt Basin brand — navy headers, gold accents, ivory section fills.
@@ -224,7 +297,290 @@ function SectionHeadingMod({ children }) {
   );
 }
 
-function ResumeLayoutModern({ about, timeline, jobs, handsOn, integrationDesign, adjacent }) {
+// ── Salt Basin Net Works Visual Design System v1.0 ────────────────────────
+// Exact palette + component treatments from the brand doc, so the Executive
+// Summary dashboard reads as "single, recognizable strategy and
+// intelligence brand" rather than an ad hoc chart.
+const BRAND = {
+  navy: '#172A45',       // Deep Basin Navy — primary headers, hero panels, dark cards
+  midnight: '#0F1B2D',   // high-contrast backgrounds/footers
+  gold: '#C4843A',       // Tide Gold — accent lines, labels, callouts, metric emphasis
+  warmShell: '#F7F2E8',  // soft backgrounds, cover pages
+  slate: '#536173',      // secondary text, metadata
+  mist: '#EEF2F6',       // card backgrounds, table row fills
+  teal: '#4A7C8E',        // Harbor Teal — AI/data/network visuals
+  green: '#2D5A27',      // Reservoir Green — outcomes, savings, success metrics
+  plum: '#7A174E',       // Plum Signal — case-study variation, high-priority callouts
+  graphite: '#252A31',   // body text
+  fog: '#6D7785',        // captions, notes, helper text
+};
+
+// KPI Tile component (design system §5): "White/mist card, soft border,
+// gold/teal label, generous padding." Max 6 tiles per dashboard per spec.
+function KPITile({ value, label, note, accent }) {
+  return (
+    <div style={{ background: BRAND.mist, border: `0.5px solid rgba(23,42,69,0.08)`, borderRadius: 10, padding: '1rem 0.9rem', textAlign: 'center' }}>
+      <div style={{ fontSize: '1.7rem', fontWeight: 700, color: BRAND.navy, fontFamily: 'Georgia, serif', lineHeight: 1.15 }}>{value}</div>
+      <div style={{ fontSize: '0.6rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: accent || BRAND.gold, fontWeight: 700, marginTop: '0.4rem', fontFamily: 'sans-serif' }}>{label}</div>
+      {note && <div style={{ fontSize: '0.66rem', color: BRAND.slate, marginTop: '0.2rem', lineHeight: 1.4 }}>{note}</div>}
+    </div>
+  );
+}
+
+// Capability Meter component (design system §5): "Capability name +
+// confidence bar + evidence. Use for executive strengths without generic
+// bullets."
+function CapabilityMeter({ name, pct, evidence, color }) {
+  return (
+    <div style={{ marginBottom: '0.8rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: '0.76rem', marginBottom: '0.25rem' }}>
+        <span style={{ fontWeight: 700, color: BRAND.navy }}>{name}</span>
+        <span style={{ color: BRAND.slate, fontSize: '0.66rem' }}>{evidence}</span>
+      </div>
+      <div style={{ height: 6, background: BRAND.mist, borderRadius: 3, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${pct}%`, background: color || BRAND.teal, borderRadius: 3 }} />
+      </div>
+    </div>
+  );
+}
+
+// Best-effort live extraction from Career Master engagement text, falling
+// back to Betsy's own established brand-level figures (Salt Basin Net Works
+// Visual Design System v1.0, p.1) if nothing matches — so the dashboard
+// never renders empty/broken on a fresh install with sparse data.
+function extractDollarMax(strings) {
+  let best = null, bestVal = -1;
+  (strings || []).forEach((s) => {
+    if (!s) return;
+    const m = s.match(/\$[\d.]+[BM]/i);
+    if (m) {
+      const val = parseFloat(m[0].replace(/[^0-9.]/g, '')) * (/B/i.test(m[0]) ? 1000 : 1);
+      if (val > bestVal) { bestVal = val; best = m[0]; }
+    }
+  });
+  return best;
+}
+
+function computeExecutiveKPIs(master) {
+  if (!master) return [];
+  const engagements = master.engagements || [];
+  const exitFigure = extractDollarMax(engagements.map((e) => e.exitDetail)) || '$4.6B';
+  const arrMatch = engagements.flatMap((e) => e.metrics || []).find((m) => /ARR automated/i.test(m));
+  const arrFigure = (arrMatch && arrMatch.match(/\$[\d.]+[BM]\+?/i)?.[0]) || '$500M+';
+  return [
+    { value: exitFigure, label: 'Exit Signal', note: 'Portfolio value creation proof', accent: BRAND.gold },
+    { value: arrFigure, label: 'ARR Automated', note: 'Revenue system credibility', accent: BRAND.teal },
+    { value: String(engagements.length), label: 'Engagements', note: 'Case-study depth', accent: BRAND.green },
+    { value: '12', label: 'Industries', note: 'Pattern recognition range', accent: BRAND.gold },
+    { value: '13', label: 'Years', note: 'Operator track record', accent: BRAND.teal },
+    { value: 'AI-Native', label: 'Product Studio', note: 'Future-facing edge', accent: BRAND.plum },
+  ];
+}
+
+// Skill-proficiency confidence bars, one per meta-capability bucket — reuses
+// the same META_CATEGORY_MAP / tierFillPct rollup logic as the Portfolio
+// Appendix dashboard so the two stay numerically consistent.
+function computeCapabilityMeters(master) {
+  if (!master?.skills?.length) return [];
+  const colors = [BRAND.gold, BRAND.teal, BRAND.green, BRAND.plum];
+  return META_CATEGORY_ORDER.map((meta, i) => {
+    const inBucket = master.skills.filter((s) => META_CATEGORY_MAP[s.category] === meta);
+    const avgPct = inBucket.length ? inBucket.reduce((sum, s) => sum + tierFillPct(s.tier), 0) / inBucket.length : 0;
+    const expertCount = inBucket.filter((s) => s.tier === 'Expert').length;
+    return { name: meta, pct: Math.round(avgPct), evidence: `${expertCount} Expert · ${inBucket.length} skills`, color: colors[i % colors.length] };
+  });
+}
+
+// Executive Summary section (design system §8, Page 1 — "sell the thesis"):
+// KPI dashboard (6 tiles max) + capability confidence bars. This is the
+// dashboard-level skill-proficiency summary requested for the resume's
+// Executive Summary section.
+function ExecutiveSummarySection({ execKpis, capabilityMeters }) {
+  if (!execKpis?.length) return null;
+  return (
+    <section style={{ marginBottom: '1.75rem' }}>
+      <div style={{ fontSize: '0.6rem', letterSpacing: '0.24em', textTransform: 'uppercase', color: BRAND.navy, fontFamily: 'Georgia, serif', fontWeight: 700, marginBottom: '0.75rem', paddingBottom: '0.25rem', borderBottom: `1px solid ${BRAND.gold}` }}>
+        Executive Summary
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.6rem', marginBottom: '1.25rem' }}>
+        {execKpis.map((k) => <KPITile key={k.label} {...k} />)}
+      </div>
+      {capabilityMeters?.length > 0 && (
+        <div style={{ background: BRAND.warmShell, borderRadius: 10, padding: '1rem 1.1rem' }}>
+          <div style={{ fontSize: '0.6rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: BRAND.slate, marginBottom: '0.6rem', fontFamily: 'sans-serif' }}>Capability Confidence</div>
+          {capabilityMeters.map((c) => <CapabilityMeter key={c.name} {...c} />)}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ── Elevated visual sections (design system §5–6, "Strategic Operator" infographic reference) ──
+// Live-computed from Career Master, so they update when jobs/tools/engagements
+// are edited in the admin panel — no hardcoded figures beyond the bucket labels.
+
+// Industry-duration buckets: ordered keyword rules matched against job +
+// engagement industry text. Duration = count of distinct calendar years with
+// matching activity, so overlapping engagements never double-count.
+const INDUSTRY_DURATION_BUCKETS = [
+  { label: 'SaaS & Enterprise Software', sub: 'RevOps & monetization', re: /saas|software|enterprise|technology|tech\b/i },
+  { label: 'Private Equity / PortOps', sub: 'Value creation & exit readiness', re: /private equity|pe advisory|portfolio|vista/i },
+  { label: 'Healthcare Technology', sub: 'Systems alignment & relisting readiness', re: /health|telehealth/i },
+  { label: 'Manufacturing & Industrial', sub: 'Q2R & commodity pricing architecture', re: /manufactur|chemical|industrial|consumer goods|cpg/i },
+  { label: 'Education & Publishing', sub: 'Global program delivery', re: /education|publish|edtech/i },
+  { label: 'AI-Native Ventures', sub: 'Agentic products & advisory', re: /\bai\b/i },
+];
+
+function yearFromDateStr(s) {
+  const m = String(s || '').match(/(19|20)\d{2}/);
+  return m ? Number(m[0]) : null;
+}
+
+function computeIndustryDurations(master) {
+  if (!master) return [];
+  const nowYear = new Date().getFullYear();
+  const items = [];
+  (master.jobs || []).forEach((j) => {
+    const start = yearFromDateStr(j.startDate);
+    if (!start) return;
+    const end = /present|ongoing/i.test(String(j.endDate || '')) ? nowYear : (yearFromDateStr(j.endDate) ?? start);
+    items.push({ text: `${j.industry || ''} ${j.jobFunction || ''}`, start, end: Math.max(start, end) });
+  });
+  (master.engagements || []).forEach((e) => {
+    const yearsInPeriod = String(e.period || '').match(/(19|20)\d{2}/g) || [];
+    if (!yearsInPeriod.length) return;
+    const start = Number(yearsInPeriod[0]);
+    const end = /present|ongoing/i.test(String(e.period)) ? nowYear : Number(yearsInPeriod[yearsInPeriod.length - 1]);
+    items.push({ text: e.industry || '', start, end: Math.max(start, end) });
+  });
+  return INDUSTRY_DURATION_BUCKETS.map((b) => {
+    const years = new Set();
+    items.forEach((it) => {
+      if (!b.re.test(it.text)) return;
+      for (let y = it.start; y <= it.end; y += 1) years.add(y);
+    });
+    return { label: b.label, sub: b.sub, years: years.size };
+  }).filter((r) => r.years > 0).sort((a, b) => b.years - a.years);
+}
+
+// Scaling bars — magnitude encoding, so a single hue (Harbor Teal) with the
+// value labeled at the bar end; identity lives in the row label, not color.
+function IndustryDurationSection({ rows, heading = 'Industry Experience & Duration' }) {
+  if (!rows?.length) return null;
+  const max = Math.max(...rows.map((r) => r.years));
+  return (
+    <section style={{ marginBottom: '1.5rem', pageBreakInside: 'avoid' }}>
+      <SectionHeadingMod>{heading}</SectionHeadingMod>
+      {rows.map((r) => (
+        <div key={r.label} style={{ display: 'grid', gridTemplateColumns: '1fr 3.4rem', gap: '0.7rem', alignItems: 'center', marginBottom: '0.6rem' }}>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.22rem' }}>
+              <span style={{ fontSize: '0.76rem', fontWeight: 700, color: BRAND.navy }}>{r.label}</span>
+              <span style={{ fontSize: '0.62rem', color: BRAND.slate }}>{r.sub}</span>
+            </div>
+            <div style={{ height: 8, background: BRAND.mist, borderRadius: 4, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${Math.round((r.years / max) * 100)}%`, background: BRAND.teal, borderRadius: 4 }} />
+            </div>
+          </div>
+          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: BRAND.navy, fontFamily: 'Georgia, serif', textAlign: 'right' }}>
+            {r.years} yr{r.years === 1 ? '' : 's'}
+          </div>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+// Tool-proficiency graphic — the "resume templates showing tool-proficiency
+// graphics" ask. Hands-on tiers only (Expert/Advanced); surfaces the
+// career_tools product-rename tracking ("Conga CPQ, formerly Apttus CPQ").
+function computeToolProficiency(master, limit = 10) {
+  if (!master?.tools?.length) return [];
+  const order = { Expert: 0, Advanced: 1, Proficient: 2, Foundational: 3 };
+  return [...master.tools]
+    .filter((t) => t.tier === 'Expert' || t.tier === 'Advanced')
+    .sort((a, b) => (order[a.tier] - order[b.tier]) || ((Number(b.numRoles) || 0) - (Number(a.numRoles) || 0)))
+    .slice(0, limit)
+    .map((t) => {
+      const renamed = t.currentName && t.currentName !== t.nameUsed && !/sunset/i.test(t.currentName);
+      return {
+        name: renamed ? t.currentName : (t.nameUsed || t.currentName),
+        formerly: renamed ? t.nameUsed : null,
+        tier: t.tier,
+        pct: tierFillPct(t.tier),
+        evidence: [t.firstUsed ? `since ${t.firstUsed}` : null, t.numRoles ? `${t.numRoles} role${Number(t.numRoles) === 1 ? '' : 's'}` : null].filter(Boolean).join(' · '),
+      };
+    });
+}
+
+function ToolProficiencySection({ tools, heading = 'Platform & Tool Proficiency', columns = 2 }) {
+  if (!tools?.length) return null;
+  return (
+    <section style={{ marginBottom: '1.5rem', pageBreakInside: 'avoid' }}>
+      <SectionHeadingMod>{heading}</SectionHeadingMod>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: '0.7rem 1.75rem' }}>
+        {tools.map((t) => (
+          <div key={t.name}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.2rem' }}>
+              <span style={{ fontSize: '0.74rem', fontWeight: 700, color: BRAND.navy }}>
+                {t.name}
+                {t.formerly && <span style={{ fontWeight: 400, fontStyle: 'italic', color: BRAND.fog, fontSize: '0.6rem' }}> · formerly {t.formerly}</span>}
+              </span>
+              <span style={{ fontSize: '0.56rem', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, fontFamily: 'sans-serif', color: t.tier === 'Expert' ? BRAND.gold : BRAND.teal }}>{t.tier}</span>
+            </div>
+            <div style={{ height: 5, background: BRAND.mist, borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${t.pct}%`, background: t.tier === 'Expert' ? BRAND.gold : BRAND.teal, borderRadius: 3 }} />
+            </div>
+            {t.evidence && <div style={{ fontSize: '0.6rem', color: BRAND.fog, marginTop: '0.15rem' }}>{t.evidence}</div>}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// Client-voice pull quote — brand-signature callout: large gold quotation
+// mark, serif italic, attributed. Sourced live from engagement testimonials
+// (shortest first — the punchiest quotes lead).
+function computeClientQuotes(master, limit = 1) {
+  return (master?.engagements || [])
+    .filter((e) => e.testimonial)
+    .map((e) => ({ text: e.testimonial, attr: e.testimonialAttr || e.clientDisplayName || '' }))
+    .sort((a, b) => a.text.length - b.text.length)
+    .slice(0, limit);
+}
+
+function ClientVoiceSection({ quotes }) {
+  if (!quotes?.length) return null;
+  return (
+    <section style={{ marginBottom: '1.5rem', pageBreakInside: 'avoid' }}>
+      {quotes.map((q, i) => (
+        <div key={i} style={{ position: 'relative', background: BRAND.warmShell, borderRadius: 10, padding: '1rem 1.25rem 0.9rem 3.1rem', marginBottom: '0.6rem' }}>
+          <span aria-hidden="true" style={{ position: 'absolute', left: '0.9rem', top: '0.15rem', fontSize: '2.6rem', color: BRAND.gold, fontFamily: 'Georgia, serif', lineHeight: 1 }}>“</span>
+          <div style={{ fontSize: '1rem', fontStyle: 'italic', color: BRAND.navy, lineHeight: 1.6, fontFamily: 'Georgia, serif' }}>{q.text}</div>
+          {q.attr && (
+            <div style={{ marginTop: '0.4rem', fontSize: '0.6rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: BRAND.gold, fontWeight: 700, fontFamily: 'sans-serif' }}>— {q.attr}</div>
+          )}
+        </div>
+      ))}
+    </section>
+  );
+}
+
+// Shared insert for the Modern/Corporate resume layouts: duration bars +
+// tool graphics + client voice, each independently toggleable from the
+// My Resume preset editor (empty array = toggled off = renders nothing).
+function ElevatedVisualSections({ industryDurations, toolBars, clientQuotes }) {
+  return (
+    <>
+      <IndustryDurationSection rows={industryDurations} />
+      <ToolProficiencySection tools={toolBars} />
+      <ClientVoiceSection quotes={clientQuotes} />
+    </>
+  );
+}
+
+function ResumeLayoutModern({ about, timeline, jobs, handsOn, integrationDesign, adjacent, execKpis, capabilityMeters, industryDurations = [], toolBars = [], clientQuotes = [] }) {
   const name = about.name || about.heading || 'Betsy Salter';
   const tagline = about.tagline || 'Strategic Operator · Revenue Systems · Private Equity';
   const photoUrl = about.photoUrl || about.photo || null;
@@ -247,6 +603,9 @@ function ResumeLayoutModern({ about, timeline, jobs, handsOn, integrationDesign,
           {about.location && <div>{about.location}</div>}
         </div>
       </header>
+
+      <ExecutiveSummarySection execKpis={execKpis} capabilityMeters={capabilityMeters} />
+      <ElevatedVisualSections industryDurations={industryDurations} toolBars={toolBars} clientQuotes={clientQuotes} />
 
       {/* ── At a Glance ── */}
       <section style={{ marginBottom: '1.5rem' }}>
@@ -357,7 +716,7 @@ function ResumeLayoutModern({ about, timeline, jobs, handsOn, integrationDesign,
 
 // ── Layout: Corporate SB ──────────────────────────────────────────────────────
 // Bold structured layout — clean columns, strong navy headers, gold rule lines.
-function ResumeLayoutCorporate({ about, timeline, jobs, handsOn, integrationDesign, adjacent }) {
+function ResumeLayoutCorporate({ about, timeline, jobs, handsOn, integrationDesign, adjacent, execKpis, capabilityMeters, industryDurations = [], toolBars = [], clientQuotes = [] }) {
   const name = about.name || about.heading || 'Betsy Salter';
   const tagline = about.tagline || 'Strategic Operator · Revenue Systems · Private Equity';
   const photoUrl = about.photoUrl || about.photo || null;
@@ -380,6 +739,9 @@ function ResumeLayoutCorporate({ about, timeline, jobs, handsOn, integrationDesi
           {about.location && <div>{about.location}</div>}
         </div>
       </header>
+
+      <ExecutiveSummarySection execKpis={execKpis} capabilityMeters={capabilityMeters} />
+      <ElevatedVisualSections industryDurations={industryDurations} toolBars={toolBars} clientQuotes={clientQuotes} />
 
       {/* ── Two-panel body: main (left 65%) + sidebar (right 35%) ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
@@ -630,7 +992,16 @@ export function ResumeOutput() {
   const [wheel, setWheel] = useState(null);
   const [siteError, setSiteError] = useState(null);
   const [primaryTemplate, setPrimaryTemplate] = useState(undefined);
-  const layoutParam = new URLSearchParams(location.search).get('layout') || 'classic';
+  const [master, setMaster] = useState(null);
+  const searchParams = new URLSearchParams(location.search);
+  const layoutParam = searchParams.get('layout') || 'classic';
+  // Set by the resume configurator's Career Master Sections toggles
+  // (src/components/admin/MyResumePanel.jsx) — both default on.
+  const showExecSummary = searchParams.get('execSummary') !== '0';
+  const showCapabilityMeters = searchParams.get('capabilityMeters') !== '0';
+  const showIndustryBars = searchParams.get('industryBars') !== '0';
+  const showToolBars = searchParams.get('toolBars') !== '0';
+  const showClientVoice = searchParams.get('clientVoice') !== '0';
 
   useEffect(() => {
     api.getPublishedSite()
@@ -641,6 +1012,7 @@ export function ResumeOutput() {
         setWheel(home?.sections.find((s) => s.type === 'industryWheel')?.fields || {});
       })
       .catch((e) => setSiteError(e.message || 'Failed to load'));
+    fetchCareerMaster().then(setMaster);
 
     fetch('/api/output-templates/primary?output_type=resume')
       .then(r => r.json())
@@ -655,7 +1027,7 @@ export function ResumeOutput() {
       .catch(() => setPrimaryTemplate(null));
   }, []);
 
-  const isLoading = authLoading || primaryTemplate === undefined || (!page && !siteError);
+  const isLoading = authLoading || primaryTemplate === undefined || !master || (!page && !siteError);
 
   if (isLoading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', color: '#1B2A3B', fontFamily: 'Georgia, serif', fontSize: '1rem' }}>
@@ -703,14 +1075,20 @@ export function ResumeOutput() {
     });
   }
 
+  const execKpis = computeExecutiveKPIs(master);
+  const capabilityMeters = computeCapabilityMeters(master);
+
   // ── Template-driven render ──
   if (primaryTemplate?.blocks?.length) {
-    const ctx = { about, timeline, jobs };
+    const ctx = { about, timeline, jobs, execKpis, capabilityMeters };
     const sorted = [...primaryTemplate.blocks]
       .filter(b => b.visible !== false)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    // A custom template's own 'page-header' block already shows the name —
+    // suppress OutputFrame's generic h1 so the header isn't repeated.
+    const hasOwnHeader = sorted.some((b) => b.type === 'page-header');
     return (
-      <OutputFrame title={about.heading || about.name || 'Betsy Salter'} eyebrow="Resume">
+      <OutputFrame title={about.heading || about.name || 'Betsy Salter'} eyebrow="Resume" hideTitle={hasOwnHeader}>
         <div style={{ fontFamily: 'Georgia, serif' }}>
           {sorted.map(block => {
             // experience-block with _dynamic = 'jobs' expands into one block per job
@@ -736,18 +1114,29 @@ export function ResumeOutput() {
   const handsOn = parseTech(wheel?.handsOn);
   const integrationDesign = parseTech(wheel?.integrationDesign);
   const adjacent = parseTech(wheel?.adjacent);
-  const resumeProps = { about, timeline, jobs, wheel, handsOn, integrationDesign, adjacent };
+  const resumeProps = {
+    about, timeline, jobs, wheel, handsOn, integrationDesign, adjacent,
+    execKpis: showExecSummary ? execKpis : [],
+    capabilityMeters: showCapabilityMeters ? capabilityMeters : [],
+    industryDurations: showIndustryBars ? computeIndustryDurations(master) : [],
+    toolBars: showToolBars ? computeToolProficiency(master) : [],
+    clientQuotes: showClientVoice ? computeClientQuotes(master, 1) : [],
+  };
 
   if (layoutParam === 'modern') {
     return (
-      <OutputFrame title={about.name || about.heading || 'Betsy Salter'} eyebrow="Resume · Modern">
+      // ResumeLayoutModern renders its own name/tagline header — hideTitle
+      // avoids showing the name twice.
+      <OutputFrame title={about.name || about.heading || 'Betsy Salter'} eyebrow="Resume · Modern" hideTitle>
         <ResumeLayoutModern {...resumeProps} />
       </OutputFrame>
     );
   }
   if (layoutParam === 'corporate') {
     return (
-      <OutputFrame title={about.name || about.heading || 'Betsy Salter'} eyebrow="Resume · Corporate">
+      // ResumeLayoutCorporate renders its own navy header bar — hideTitle
+      // avoids showing the name twice.
+      <OutputFrame title={about.name || about.heading || 'Betsy Salter'} eyebrow="Resume · Corporate" hideTitle>
         <ResumeLayoutCorporate {...resumeProps} />
       </OutputFrame>
     );
@@ -845,6 +1234,7 @@ export function CaseStudyOutput() {
   const { slug } = useParams();
   const { loading, user } = useAuthState();
   const [data, setData] = useState(null);
+  const [master, setMaster] = useState(null);
   useEffect(() => {
     api.getPublishedSite()
       .then((site) => {
@@ -852,11 +1242,17 @@ export function CaseStudyOutput() {
         setData(cases);
       })
       .catch(() => setData(null));
+    fetchCareerMaster().then(setMaster);
   }, []);
 
-  if (loading || !data) return null;
+  if (loading || !data || !master) return null;
+
+  // engagement-<id> slugs (Career Master, uncapped) take priority over the
+  // 3 legacy fixed-slot slugs, which stay supported for old bookmarked links.
+  const engagementMatch = /^engagement-(\d+)$/.exec(slug || '');
+  const engagement = engagementMatch ? master.engagements.find((e) => String(e.id) === engagementMatch[1]) : null;
   const i = CASE_STUDY_SLUGS[slug];
-  if (!i) {
+  if (!engagement && !i) {
     return (
       <OutputFrame title="Case Study not found" eyebrow="Case Study">
         <p style={{ fontSize: '0.9rem', color: '#4a4a4a' }}>
@@ -865,30 +1261,44 @@ export function CaseStudyOutput() {
       </OutputFrame>
     );
   }
-  const title = data[`case${i}Title`];
-  const subtitle = data[`case${i}Subtitle`];
-  const context = (data[`case${i}Context`] || '').split('\n').filter(Boolean);
-  const role = data[`case${i}Role`] || '';
-  const actions = (data[`case${i}Actions`] || '').split('\n').filter(Boolean);
-  const impact = (data[`case${i}Impact`] || '').split('\n').filter(Boolean);
-  const feedback = data[`case${i}Feedback`] || '';
 
-  if (!user) {
+  const title = engagement ? engagement.clientDisplayName : data[`case${i}Title`];
+  const subtitle = engagement ? [engagement.employer, engagement.industry].filter(Boolean).join(' · ') : data[`case${i}Subtitle`];
+  const context = engagement ? [engagement.context].filter(Boolean) : (data[`case${i}Context`] || '').split('\n').filter(Boolean);
+  const role = engagement ? (engagement.roles || []).join(' · ') : (data[`case${i}Role`] || '');
+  const actions = engagement ? [engagement.actions].filter(Boolean) : (data[`case${i}Actions`] || '').split('\n').filter(Boolean);
+  const impact = engagement ? (engagement.outcomes || []) : (data[`case${i}Impact`] || '').split('\n').filter(Boolean);
+  const metrics = engagement ? (engagement.metrics || []) : [];
+  const feedback = engagement ? (engagement.testimonial || '') : (data[`case${i}Feedback`] || '');
+  const feedbackAttr = engagement ? (engagement.testimonialAttr || '') : '';
+
+  // engagement-based (Career Master) case studies are detailed documentation
+  // — admin-only while cost/licensing is finalized. The 3 legacy fixed-slot
+  // case studies stay member-gated, matching their existing exposure.
+  const requiresAdmin = !!engagement;
+  if (!user || (requiresAdmin && !isAdminUser(user))) {
     return (
       <OutputFrame title={title} eyebrow={subtitle || 'Case Study'} gated>
+        {user ? (
+          <AdminOnlyNotice kind="case study" />
+        ) : (
         <GatedPreview
           kind="case study"
           teaser={{ label: 'Context (preview)', items: undefined, bullets: context.slice(0, 1) }}
         />
+        )}
       </OutputFrame>
     );
   }
 
   // Boho-style multi-section layout for case studies
-  const industry = INDUSTRIES.find(ind => title?.toLowerCase().includes(ind.label.toLowerCase().split(' ')[0]));
+  const industryLabel = engagement ? engagement.industry : INDUSTRIES.find(ind => title?.toLowerCase().includes(ind.label.toLowerCase().split(' ')[0]))?.label;
+  const industryIcon = engagement ? '◆' : INDUSTRIES.find(ind => title?.toLowerCase().includes(ind.label.toLowerCase().split(' ')[0]))?.icon;
 
   return (
-    <OutputFrame title={title} eyebrow={subtitle || 'Case Study'}>
+    // The hero block below already shows the title — hideTitle avoids
+    // showing it twice.
+    <OutputFrame title={title} eyebrow={subtitle || 'Case Study'} hideTitle>
       <div style={{ fontFamily: 'Georgia, serif' }}>
 
         {/* ── Hero header ── */}
@@ -898,10 +1308,10 @@ export function CaseStudyOutput() {
             <h2 style={{ fontSize: '1.6rem', color: '#1b2a3b', margin: 0, lineHeight: 1.2, fontFamily: 'Georgia, serif' }}>{title}</h2>
             {subtitle && <div style={{ fontSize: '0.8rem', color: '#02a1a6', marginTop: '0.35rem', fontStyle: 'italic' }}>{subtitle}</div>}
           </div>
-          {industry && (
+          {industryLabel && (
             <div style={{ background: '#1b2a3b', color: 'white', padding: '0.75rem 1rem', textAlign: 'center', minWidth: 100, borderRadius: 2 }}>
-              <div style={{ fontSize: '1.5rem', marginBottom: '0.2rem' }}>{industry.icon}</div>
-              <div style={{ fontSize: '0.6rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#c4843a', fontFamily: 'sans-serif' }}>{industry.label}</div>
+              <div style={{ fontSize: '1.5rem', marginBottom: '0.2rem' }}>{industryIcon}</div>
+              <div style={{ fontSize: '0.6rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#c4843a', fontFamily: 'sans-serif' }}>{industryLabel}</div>
             </div>
           )}
         </div>
@@ -952,11 +1362,21 @@ export function CaseStudyOutput() {
           </div>
         )}
 
+        {/* ── Key metrics ── */}
+        {metrics.length > 0 && (
+          <section style={{ marginBottom: '1.25rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {metrics.map((m, j) => (
+              <span key={j} style={{ fontFamily: 'sans-serif', fontSize: '0.72rem', fontWeight: 600, color: '#1b2a3b', background: '#faf8f4', border: '1px solid #c4843a', borderRadius: 20, padding: '0.3rem 0.85rem' }}>{m}</span>
+            ))}
+          </section>
+        )}
+
         {/* ── Feedback/quote ── */}
         {feedback && (
           <section style={{ marginTop: '0.5rem', padding: '1rem 1.25rem', background: '#1b2a3b', color: 'white', borderLeft: '4px solid #c4843a', pageBreakInside: 'avoid' }}>
             <div style={{ fontSize: '0.6rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: '#c4843a', fontFamily: 'sans-serif', marginBottom: '0.4rem' }}>Stakeholder Feedback</div>
             <div style={{ fontSize: '0.9rem', fontStyle: 'italic', lineHeight: 1.7, color: 'rgba(255,255,255,0.9)' }}>"{feedback}"</div>
+            {feedbackAttr && <div style={{ marginTop: '0.5rem', fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#c4843a' }}>— {feedbackAttr}</div>}
           </section>
         )}
       </div>
@@ -972,6 +1392,696 @@ function CaseSectionHead({ children }) {
   );
 }
 
+// ── Case Study Portfolio (advanced) ───────────────────────────────────────
+// Modeled on Betsy's "Case Study Portfolio" Canva reference design: an
+// employer-color-banded 2-column card grid with pill badges for roles,
+// metrics, and scenario tags, plus a dark "Client Voice" quote block —
+// sourced live from career_engagements (uncapped, unlike the 3-slot legacy
+// caseStudies section fields).
+const EMPLOYER_BAND = {
+  'Blackbaud, Inc.': { bg: '#1b2a3b', top: null },
+  'Accenture': { bg: '#6b1f4a', top: null },
+  'Vista Equity Partners': { bg: '#2d5a27', top: null },
+  'TIBCO Software': { bg: '#7a2020', top: null },
+  'PwC': { bg: '#b5651d', top: null },
+  'Slalom': { bg: '#1a4a5a', top: null },
+  'Salt Basin Net Works': { bg: '#0e1620', top: '#c4843a' },
+};
+function employerBand(employer) {
+  return EMPLOYER_BAND[employer] || { bg: '#1b2a3b', top: null };
+}
+
+function Pill({ children, tone = 'neutral' }) {
+  const TONES = {
+    neutral: { bg: 'rgba(255,255,255,0.14)', color: 'white', border: 'rgba(255,255,255,0.3)' },
+    role: { bg: '#eef2fb', color: '#2a3f6b', border: '#c9d4ea' },
+    metric: { bg: '#eef9ee', color: '#1f6b2f', border: '#bfe3c2' },
+    scenario: { bg: '#f4eefb', color: '#5b2f8a', border: '#dcc9ea' },
+  };
+  const t = TONES[tone];
+  return (
+    <span style={{ display: 'inline-block', fontFamily: 'sans-serif', fontSize: '0.66rem', fontWeight: 600, padding: '0.2rem 0.6rem', borderRadius: 20, background: t.bg, color: t.color, border: `1px solid ${t.border}`, marginRight: '0.35rem', marginBottom: '0.35rem' }}>
+      {children}
+    </span>
+  );
+}
+
+function CareerCaseStudyCard({ e }) {
+  const band = employerBand(e.employer);
+  return (
+    <div style={{ background: 'white', border: '0.5px solid #e8ddd0', borderRadius: 6, overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.06)', pageBreakInside: 'avoid' }}>
+      <div style={{ background: band.bg, borderTop: band.top ? `4px solid ${band.top}` : 'none', color: 'white', padding: '1rem 1.25rem' }}>
+        <div style={{ fontFamily: 'sans-serif', fontSize: '0.62rem', letterSpacing: '0.14em', textTransform: 'uppercase', opacity: 0.85, marginBottom: '0.4rem' }}>
+          Case Study #{String(e.id).padStart(2, '0')} {e.scale && <span style={{ marginLeft: '0.5rem', padding: '0.15rem 0.55rem', borderRadius: 12, background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)' }}>{e.scale}</span>}
+        </div>
+        <div style={{ fontFamily: 'Georgia, serif', fontSize: '1.05rem', lineHeight: 1.3, marginBottom: '0.5rem' }}>{e.clientDisplayName || e.name}</div>
+        <div>
+          <Pill>{e.employer}</Pill>
+          <Pill>{e.industry}</Pill>
+          <Pill>{e.period}</Pill>
+        </div>
+      </div>
+      <div style={{ padding: '1.1rem 1.25rem' }}>
+        {e.roles?.length > 0 && (
+          <div style={{ marginBottom: '0.75rem' }}>
+            <CaseSectionHead>Roles</CaseSectionHead>
+            {e.roles.map((r, i) => <Pill key={i} tone="role">{r}</Pill>)}
+          </div>
+        )}
+        {e.context && (
+          <div style={{ marginBottom: '0.75rem' }}>
+            <CaseSectionHead>Business Context / Problem</CaseSectionHead>
+            <p style={{ fontSize: '0.8rem', color: '#3a3a3a', lineHeight: 1.6, margin: 0 }}>{e.context}</p>
+          </div>
+        )}
+        {e.actions && (
+          <div style={{ marginBottom: '0.75rem' }}>
+            <CaseSectionHead>What Betsy Did</CaseSectionHead>
+            <p style={{ fontSize: '0.8rem', color: '#3a3a3a', lineHeight: 1.6, margin: 0 }}>{e.actions}</p>
+          </div>
+        )}
+        {e.outcomes?.length > 0 && (
+          <div style={{ marginBottom: '0.75rem' }}>
+            <CaseSectionHead>Business Outcomes</CaseSectionHead>
+            {e.outcomes.map((o, i) => (
+              <div key={i} style={{ fontSize: '0.8rem', color: '#1b2a3b', paddingLeft: '0.9rem', marginBottom: '0.25rem', position: 'relative', lineHeight: 1.55 }}>
+                <span style={{ position: 'absolute', left: 0, color: '#c4843a' }}>→</span>{o}
+              </div>
+            ))}
+          </div>
+        )}
+        {e.metrics?.length > 0 && (
+          <div style={{ marginBottom: '0.75rem' }}>
+            <CaseSectionHead>Key Metrics</CaseSectionHead>
+            {e.metrics.map((m, i) => <Pill key={i} tone="metric">{m}</Pill>)}
+          </div>
+        )}
+        {e.testimonial && (
+          <div style={{ marginBottom: '0.75rem', padding: '0.85rem 1rem', background: '#0e1620', color: 'white', borderRadius: 6 }}>
+            <div style={{ fontSize: '1.1rem', color: '#c4843a', lineHeight: 1 }}>"</div>
+            <p style={{ fontSize: '0.82rem', fontStyle: 'italic', lineHeight: 1.6, margin: '0.25rem 0 0.5rem' }}>{e.testimonial}</p>
+            {e.testimonialAttr && <div style={{ fontSize: '0.68rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#c4843a' }}>— {e.testimonialAttr}</div>}
+          </div>
+        )}
+        {e.scenarios?.length > 0 && (
+          <div style={{ marginBottom: '0.5rem' }}>
+            <CaseSectionHead>Scenarios & Themes</CaseSectionHead>
+            {e.scenarios.map((s, i) => <Pill key={i} tone="scenario">{s}</Pill>)}
+          </div>
+        )}
+        <a href={`/output/case-study/engagement-${e.id}`} target="_blank" rel="noreferrer" style={{ fontSize: '0.7rem', color: 'var(--sb-teal-deep, #02a1a6)', textDecoration: 'none' }}>
+          ↗ View full case study
+        </a>
+      </div>
+    </div>
+  );
+}
+
+export function CareerCaseStudyPortfolioOutput() {
+  const { loading: authLoading, user } = useAuthState();
+  const [master, setMaster] = useState(null);
+  const [search, setSearch] = useState('');
+  const [employerFilter, setEmployerFilter] = useState('');
+  const [industryFilter, setIndustryFilter] = useState('');
+  const [scenarioFilter, setScenarioFilter] = useState('');
+  const [printMode, setPrintMode] = useState('interactive');
+  useEffect(() => { fetchCareerMaster().then(setMaster); }, []);
+
+  const isLoading = authLoading || !master;
+  if (isLoading) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', color: '#1B2A3B', fontFamily: 'Georgia, serif', fontSize: '1rem' }}>
+      Loading case study portfolio…
+    </div>
+  );
+
+  const engagements = master.engagements;
+  const industries = [...new Set(engagements.map((e) => e.industry).filter(Boolean))].sort();
+  const employers = [...new Set(engagements.map((e) => e.employer).filter(Boolean))].sort();
+  const allScenarios = [...new Set(engagements.flatMap((e) => e.scenarios || []))].sort();
+  // "12 industries · 13 years" is Betsy's established brand tagline (hand-rolled-up
+  // industry groupings, career tenure) — kept as fixed copy rather than the more
+  // granular live industries.length / computed year-span, which read as noise
+  // against her own consistent marketing figures. Engagement count stays live.
+  const portfolioTagline = `${engagements.length} engagements · 12 industries · 13 years`;
+
+  // Detailed documentation — admin-only while cost/licensing is finalized.
+  if (!isAdminUser(user)) {
+    return (
+      <OutputFrame title="Case Study Portfolio" eyebrow="Strategic Operator Portfolio" gated>
+        {!user ? (
+          <GatedPreview
+            kind="case study portfolio"
+            teaser={{
+              label: portfolioTagline,
+              paragraphs: ['Every engagement, full context to impact, with quantified business outcomes and client testimonials.'],
+              bullets: engagements.slice(0, 3).map((e) => e.clientDisplayName || e.name),
+            }}
+          />
+        ) : (
+          <AdminOnlyNotice kind="case study portfolio" />
+        )}
+      </OutputFrame>
+    );
+  }
+
+  const filtered = engagements.filter((e) => {
+    if (employerFilter && e.employer !== employerFilter) return false;
+    if (industryFilter && e.industry !== industryFilter) return false;
+    if (scenarioFilter && !(e.scenarios || []).includes(scenarioFilter)) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      const hay = [e.clientDisplayName, e.employer, e.industry, e.context, e.actions, ...(e.scenarios || [])].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  return (
+    <OutputFrame title="Case Study Portfolio" eyebrow="Strategic Operator Portfolio" printActions={<PrintModeActions onPrint={(m) => triggerPrint(setPrintMode, m)} />}>
+      <div style={{ fontFamily: 'Georgia, serif', color: '#1b2a3b' }} data-print-mode={printMode}>
+        {/* ── Interactive chrome — search/filters — stripped in static print ── */}
+        <div className="sb-interactive-toolbar">
+          <p style={{ fontSize: '0.85rem', fontStyle: 'italic', color: '#5a5a5a', marginBottom: '1.5rem' }}>
+            {portfolioTagline} · "I build for the customer you keep, not just the deal you close."
+          </p>
+          <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '1.5rem', fontFamily: 'sans-serif' }}>
+            <input
+              value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search case studies…"
+              style={{ flex: 1, minWidth: 180, padding: '0.5rem 0.75rem', borderRadius: 6, border: '1px solid #e8ddd0', fontSize: '0.8rem' }}
+            />
+            <select value={employerFilter} onChange={(e) => setEmployerFilter(e.target.value)} style={{ padding: '0.5rem 0.75rem', borderRadius: 6, border: '1px solid #e8ddd0', fontSize: '0.8rem' }}>
+              <option value="">All Employers</option>
+              {employers.map((v) => <option key={v} value={v}>{v}</option>)}
+            </select>
+            <select value={industryFilter} onChange={(e) => setIndustryFilter(e.target.value)} style={{ padding: '0.5rem 0.75rem', borderRadius: 6, border: '1px solid #e8ddd0', fontSize: '0.8rem' }}>
+              <option value="">All Industries</option>
+              {industries.map((v) => <option key={v} value={v}>{v}</option>)}
+            </select>
+            <select value={scenarioFilter} onChange={(e) => setScenarioFilter(e.target.value)} style={{ padding: '0.5rem 0.75rem', borderRadius: 6, border: '1px solid #e8ddd0', fontSize: '0.8rem' }}>
+              <option value="">All Scenarios</option>
+              {allScenarios.map((v) => <option key={v} value={v}>{v}</option>)}
+            </select>
+          </div>
+          <div style={{ fontSize: '0.72rem', color: '#888', marginBottom: '1rem', fontFamily: 'sans-serif' }}>{filtered.length} of {engagements.length} case studies</div>
+        </div>
+
+        {/* ── Card grid — always shown, reflects current filter state ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '1.25rem' }}>
+          {filtered.map((e) => <CareerCaseStudyCard key={e.id} e={e} />)}
+          {filtered.length === 0 && (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem', color: '#aaa', fontSize: '0.85rem' }}>
+              No case studies match your filters.
+            </div>
+          )}
+        </div>
+      </div>
+    </OutputFrame>
+  );
+}
+
+// ── Career Master Database (advanced) ─────────────────────────────────────
+// Live, data-driven replica of the original career_master_database.html
+// reference tool: sortable/filterable/searchable tables per resource
+// (Skills, Jobs, Tools, Engagements) plus Vista Portfolio Outcomes and
+// Positioning & Ventures tabs — all sourced from Career Master, not a
+// static snapshot.
+function exportCSV(columns, rows, filename) {
+  const escape = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const lines = [
+    columns.map((c) => escape(c.label)).join(','),
+    ...rows.map((r) => columns.map((c) => escape(c.csv ? c.csv(r) : r[c.key])).join(',')),
+  ];
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${filename}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function DataTable({ columns, rows, searchKeys, filters = [], csvFilename, rowKey = 'id' }) {
+  const [search, setSearch] = useState('');
+  const [filterValues, setFilterValues] = useState({});
+  const [sortCol, setSortCol] = useState(null);
+  const [sortDir, setSortDir] = useState(1);
+
+  const filtered = rows.filter((r) => {
+    if (search) {
+      const q = search.toLowerCase();
+      const hay = searchKeys.map((k) => r[k]).join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    for (const f of filters) {
+      if (filterValues[f.key] && String(r[f.key]) !== filterValues[f.key]) return false;
+    }
+    return true;
+  });
+
+  const sorted = sortCol ? [...filtered].sort((a, b) => {
+    const av = a[sortCol], bv = b[sortCol];
+    const an = Number(av), bn = Number(bv);
+    const cmp = (!isNaN(an) && !isNaN(bn) && av !== '' && bv !== '') ? an - bn : String(av ?? '').localeCompare(String(bv ?? ''));
+    return cmp * sortDir;
+  }) : filtered;
+
+  function toggleSort(key) {
+    if (sortCol === key) setSortDir((d) => -d);
+    else { setSortCol(key); setSortDir(1); }
+  }
+
+  return (
+    <div className="sb-interactive-toolbar">
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem', fontFamily: 'sans-serif' }}>
+        <input
+          value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search…"
+          style={{ flex: 1, minWidth: 160, padding: '0.4rem 0.65rem', borderRadius: 6, border: '1px solid #e8ddd0', fontSize: '0.76rem' }}
+        />
+        {filters.map((f) => (
+          <select key={f.key} value={filterValues[f.key] || ''} onChange={(e) => setFilterValues((v) => ({ ...v, [f.key]: e.target.value }))}
+            style={{ padding: '0.4rem 0.65rem', borderRadius: 6, border: '1px solid #e8ddd0', fontSize: '0.76rem' }}>
+            <option value="">All {f.label}</option>
+            {f.options.map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+        ))}
+        <button onClick={() => exportCSV(columns, sorted, csvFilename)} style={{ padding: '0.4rem 0.8rem', borderRadius: 6, border: 'none', background: '#1b2a3b', color: 'white', fontSize: '0.7rem', cursor: 'pointer' }}>
+          ↓ CSV
+        </button>
+        <span style={{ fontSize: '0.7rem', color: '#888', alignSelf: 'center' }}>{sorted.length} of {rows.length}</span>
+      </div>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.74rem', fontFamily: 'sans-serif' }}>
+          <thead>
+            <tr style={{ background: '#1b2a3b', color: 'white' }}>
+              {columns.map((c) => (
+                <th key={c.key} onClick={() => toggleSort(c.key)} style={{ textAlign: 'left', padding: '0.4rem 0.6rem', fontSize: '0.6rem', letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  {c.label}{sortCol === c.key ? (sortDir === 1 ? ' ↑' : ' ↓') : ''}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map((r, i) => (
+              <tr key={r[rowKey] ?? i} style={{ background: i % 2 ? '#faf8f4' : 'white' }}>
+                {columns.map((c) => (
+                  <td key={c.key} style={{ padding: '0.35rem 0.6rem', borderBottom: '0.5px solid rgba(0,0,0,0.06)', color: '#3a3a3a', maxWidth: c.wide ? 360 : undefined }}>
+                    {c.render ? c.render(r) : r[c.key]}
+                  </td>
+                ))}
+              </tr>
+            ))}
+            {sorted.length === 0 && (
+              <tr><td colSpan={columns.length} style={{ padding: '2rem', textAlign: 'center', color: '#aaa' }}>No results found.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+const CMD_TABS = [
+  { id: 'skills', label: 'Skills Master' },
+  { id: 'jobs', label: 'Job History' },
+  { id: 'tools', label: 'Tools & Tech' },
+  { id: 'engagements', label: 'Projects' },
+  { id: 'vista', label: 'Vista Portfolio Outcomes' },
+  { id: 'positioning', label: 'Positioning & Ventures' },
+];
+
+export function CareerMasterDatabaseOutput() {
+  const { loading: authLoading, user } = useAuthState();
+  const [master, setMaster] = useState(null);
+  const [tab, setTab] = useState('skills');
+  const [printMode, setPrintMode] = useState('interactive');
+  useEffect(() => { fetchCareerMaster().then(setMaster); }, []);
+
+  const isLoading = authLoading || !master;
+  if (isLoading) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', color: '#1B2A3B', fontFamily: 'Georgia, serif', fontSize: '1rem' }}>
+      Loading career master database…
+    </div>
+  );
+
+  const profileMeta = master.domains.find((d) => d.groupType === 'profile_meta');
+  const jobChain = master.jobs.map((j) => j.company).filter((c, i, arr) => arr.indexOf(c) === i).join(' → ');
+  const headerLine = [profileMeta?.extra?.education, jobChain, profileMeta?.extra?.location].filter(Boolean).join('  ·  ');
+
+  // Detailed documentation — admin-only while cost/licensing is finalized.
+  if (!isAdminUser(user)) {
+    return (
+      <OutputFrame title="Career Master Database" eyebrow="Skills · Jobs · Tools · Engagements" gated>
+        {!user ? (
+          <GatedPreview
+            kind="career master database"
+            teaser={{
+              label: `${master.skills.length} skills · ${master.jobs.length} roles · ${master.tools.length} tools · ${master.engagements.length} engagements`,
+              paragraphs: ['The full searchable, sortable career database — every skill, role, tool, and engagement with quantified detail.'],
+            }}
+          />
+        ) : (
+          <AdminOnlyNotice kind="career master database" />
+        )}
+      </OutputFrame>
+    );
+  }
+
+  const vistaEngagements = master.engagements.filter((e) => e.investmentType);
+  const domainRows = master.domains.filter((d) => d.groupType === 'domain');
+  const ventureRows = master.domains.filter((d) => d.groupType === 'venture');
+  const nicheRows = master.domains.filter((d) => d.groupType === 'niche_solution');
+
+  return (
+    <OutputFrame title="Career Master Database" eyebrow="Skills · Jobs · Tools · Engagements" printActions={<PrintModeActions onPrint={(m) => triggerPrint(setPrintMode, m)} />}>
+      <div style={{ fontFamily: 'sans-serif', color: '#1b2a3b' }} data-print-mode={printMode}>
+        {headerLine && <p className="sb-interactive-toolbar" style={{ fontSize: '0.78rem', color: '#666', marginBottom: '1.25rem' }}>{headerLine}</p>}
+
+        {/* ── Proficiency legend ── */}
+        <div className="sb-interactive-toolbar" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+          {TIER_LEGEND.map((t) => (
+            <span key={t.tier} style={{ fontSize: '0.68rem', padding: '0.25rem 0.7rem', borderRadius: 14, background: '#faf8f4', border: `1px solid ${t.color}`, color: t.color, fontWeight: 700 }}>
+              {t.tier} — {t.years}, {t.engagements}
+            </span>
+          ))}
+        </div>
+
+        {/* ── Tabs ── */}
+        <div className="sb-interactive-toolbar" style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+          {CMD_TABS.map((t) => (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              style={{ padding: '0.5rem 1rem', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: '0.72rem', fontWeight: tab === t.id ? 700 : 500, background: tab === t.id ? '#1b2a3b' : 'rgba(0,0,0,0.06)', color: tab === t.id ? 'white' : '#333' }}>
+              {t.label} ({t.id === 'skills' ? master.skills.length : t.id === 'jobs' ? master.jobs.length : t.id === 'tools' ? master.tools.length : t.id === 'engagements' ? master.engagements.length : t.id === 'vista' ? vistaEngagements.length : ventureRows.length})
+            </button>
+          ))}
+        </div>
+
+        {tab === 'skills' && (
+          <DataTable
+            csvFilename="skills_master"
+            searchKeys={['skill', 'category', 'resumeLanguage']}
+            filters={[
+              { key: 'category', label: 'Categories', options: [...new Set(master.skills.map((s) => s.category))].sort() },
+              { key: 'tier', label: 'Tiers', options: TIER_ORDER },
+            ]}
+            rows={master.skills}
+            columns={[
+              { key: 'skill', label: 'Skill', wide: true },
+              { key: 'category', label: 'Category' },
+              { key: 'tier', label: 'Tier' },
+              { key: 'yearsExp', label: 'Yrs' },
+              { key: 'numEngagements', label: 'Engmts' },
+              { key: 'firstUsed', label: 'First Used' },
+              { key: 'resumeLanguage', label: 'Resume Language', wide: true, render: (r) => <span style={{ fontSize: '0.7rem' }}>{r.resumeLanguage}</span> },
+            ]}
+          />
+        )}
+
+        {tab === 'jobs' && (
+          <DataTable
+            csvFilename="job_history"
+            searchKeys={['company', 'title', 'industry', 'keyMetrics']}
+            filters={[{ key: 'industry', label: 'Industries', options: [...new Set(master.jobs.map((j) => j.industry))].sort() }]}
+            rows={master.jobs}
+            columns={[
+              { key: 'company', label: 'Company' },
+              { key: 'title', label: 'Title' },
+              { key: 'startDate', label: 'Start' },
+              { key: 'endDate', label: 'End' },
+              { key: 'salary', label: 'Salary' },
+              { key: 'jobFunction', label: 'Function' },
+              { key: 'industry', label: 'Industry' },
+              { key: 'keyMetrics', label: 'Key Metrics', wide: true, render: (r) => <span style={{ fontSize: '0.7rem' }}>{r.keyMetrics}</span> },
+            ]}
+          />
+        )}
+
+        {tab === 'tools' && (
+          <DataTable
+            csvFilename="tools_technology"
+            searchKeys={['nameUsed', 'currentName', 'category', 'notes']}
+            filters={[
+              { key: 'category', label: 'Categories', options: [...new Set(master.tools.map((t) => t.category))].sort() },
+              { key: 'tier', label: 'Tiers', options: TIER_ORDER },
+            ]}
+            rows={master.tools}
+            columns={[
+              { key: 'nameUsed', label: 'Name Used' },
+              { key: 'currentName', label: 'Current Name' },
+              { key: 'category', label: 'Category' },
+              { key: 'tier', label: 'Tier' },
+              { key: 'firstUsed', label: 'First Used' },
+              { key: 'numRoles', label: '# Roles' },
+              { key: 'notes', label: 'Notes', wide: true, render: (r) => <span style={{ fontSize: '0.7rem' }}>{r.notes}</span> },
+            ]}
+          />
+        )}
+
+        {tab === 'engagements' && (
+          <DataTable
+            csvFilename="projects_engagements"
+            searchKeys={['clientDisplayName', 'employer', 'industry', 'context']}
+            filters={[
+              { key: 'employer', label: 'Employers', options: [...new Set(master.engagements.map((e) => e.employer))].sort() },
+              { key: 'industry', label: 'Industries', options: [...new Set(master.engagements.map((e) => e.industry))].sort() },
+            ]}
+            rows={master.engagements}
+            columns={[
+              { key: 'clientDisplayName', label: 'Project / Client', wide: true, render: (r) => <a href={`/output/case-study/engagement-${r.id}`} target="_blank" rel="noreferrer" style={{ color: 'var(--sb-teal-deep, #02a1a6)' }}>{r.clientDisplayName || r.name}</a>, csv: (r) => r.clientDisplayName || r.name },
+              { key: 'employer', label: 'Employer' },
+              { key: 'industry', label: 'Industry' },
+              { key: 'roles', label: 'Role(s)', render: (r) => (r.roles || []).join(' · '), csv: (r) => (r.roles || []).join(' · ') },
+              { key: 'period', label: 'Period' },
+              { key: 'scale', label: 'Scale', wide: true },
+            ]}
+          />
+        )}
+
+        {tab === 'vista' && (
+          <div className="sb-interactive-toolbar" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '1rem' }}>
+            {vistaEngagements.map((e) => (
+              <div key={e.id} style={{ border: '0.5px solid #e8ddd0', borderRadius: 6, overflow: 'hidden' }}>
+                <div style={{ background: '#2d5a27', color: 'white', padding: '0.7rem 1rem', fontWeight: 700, fontSize: '0.85rem' }}>{e.clientDisplayName}</div>
+                <div style={{ padding: '0.85rem 1rem', fontSize: '0.76rem', lineHeight: 1.9 }}>
+                  <div><strong>Investment Type</strong> — {e.investmentType}</div>
+                  {e.acquiredDetail && <div><strong>Acquired</strong> — {e.acquiredDetail}</div>}
+                  {e.exitDetail && <div><strong>Exit</strong> — {e.exitDetail}</div>}
+                  {e.financialReturn && <div><strong>Return</strong> — {e.financialReturn}</div>}
+                  {e.outcomeStatus && <div><strong>Outcome</strong> — <span style={{ fontWeight: 700, color: '#2d5a27' }}>{e.outcomeStatus}</span></div>}
+                </div>
+              </div>
+            ))}
+            {vistaEngagements.length === 0 && <div style={{ color: '#aaa', padding: '2rem' }}>No portfolio-outcome data recorded.</div>}
+          </div>
+        )}
+
+        {tab === 'positioning' && (
+          <div className="sb-interactive-toolbar">
+            {domainRows.length > 0 && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <div style={{ fontSize: '0.62rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#888', marginBottom: '0.6rem' }}>Strategic Domains</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.75rem' }}>
+                  {domainRows.map((d) => (
+                    <div key={d.id} style={{ background: '#faf8f4', borderLeft: `3px solid ${d.accentColor || '#c4843a'}`, padding: '0.8rem 1rem' }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.8rem', marginBottom: '0.3rem' }}>{d.icon} {d.title}</div>
+                      <div style={{ fontSize: '0.74rem', color: '#555', lineHeight: 1.5 }}>{d.description}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {ventureRows.length > 0 && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <div style={{ fontSize: '0.62rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#888', marginBottom: '0.6rem' }}>Active Ventures</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.75rem' }}>
+                  {ventureRows.map((v) => (
+                    <div key={v.id} style={{ background: '#1b2a3b', color: 'white', borderTop: `3px solid ${v.accentColor || '#c4843a'}`, padding: '0.9rem 1rem', borderRadius: 4 }}>
+                      {v.extra?.category && <div style={{ fontSize: '0.58rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: v.accentColor || '#c4843a', marginBottom: '0.4rem' }}>{v.extra.category}</div>}
+                      <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: '0.4rem' }}>{v.title}</div>
+                      <div style={{ fontSize: '0.74rem', opacity: 0.85, lineHeight: 1.5 }}>{v.description}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {nicheRows.length > 0 && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <div style={{ fontSize: '0.62rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#888', marginBottom: '0.6rem' }}>Niche Solutions</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.75rem' }}>
+                  {nicheRows.map((n) => (
+                    <div key={n.id} style={{ background: '#faf8f4', padding: '0.8rem 1rem', borderRadius: 4 }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.8rem', marginBottom: '0.4rem' }}>{n.icon} {n.title}</div>
+                      {(n.items || []).map((it, i) => <div key={i} style={{ fontSize: '0.74rem', color: '#555', marginBottom: '0.15rem' }}>· {it}</div>)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {profileMeta && (
+              <div>
+                <div style={{ fontSize: '0.62rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#888', marginBottom: '0.6rem' }}>Target Roles & Credentials</div>
+                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+                  {(profileMeta.items || []).map((t, i) => (
+                    <span key={i} style={{ fontSize: '0.7rem', fontWeight: 600, padding: '0.3rem 0.85rem', borderRadius: 20, background: '#1b2a3b', color: '#c4843a' }}>{t}</span>
+                  ))}
+                </div>
+                <p style={{ fontSize: '0.76rem', color: '#555', lineHeight: 1.7 }}>
+                  <strong>Location:</strong> {profileMeta.extra?.location} · <strong>Education:</strong> {profileMeta.extra?.education} · <strong>Certifications:</strong> {profileMeta.extra?.certifications} · <strong>Website:</strong> {profileMeta.extra?.website}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </OutputFrame>
+  );
+}
+
+// ── Portfolio hub ──────────────────────────────────────────────────────────
+// Landing screen for the homepage "View Resume" button: pick one of the
+// three data-driven portfolio views, or print/save the full combined set.
+export function CareerPortfolioHubOutput() {
+  const { loading, user } = useAuthState();
+  const [master, setMaster] = useState(null);
+  useEffect(() => { fetchCareerMaster().then(setMaster); }, []);
+  if (loading || !master) return null;
+
+  const CARDS = [
+    { title: 'Executive Resume Portfolio', desc: 'Formatted resume — profile, industries, technology, and full professional experience.', href: '/output/resume', stat: `${master.jobs.length} roles · ${master.skills.length} skills` },
+    { title: 'Career Master Database', desc: 'Every skill, role, tool, and engagement — searchable, sortable, filterable, exportable to CSV.', href: '/output/career-master-database', stat: `${master.skills.length + master.jobs.length + master.tools.length + master.engagements.length} records` },
+    { title: 'Case Study Portfolio', desc: 'Every engagement in full — context, actions, quantified outcomes, and client testimonials.', href: '/output/case-study-portfolio', stat: `${master.engagements.length} engagements` },
+    { title: 'The Strategic Operator', desc: 'One-page visual career infographic — outcomes & exits, industry-duration bars, capability confidence, platform proficiency, client voice.', href: '/output/strategic-operator', stat: 'Print-ready infographic' },
+  ];
+
+  return (
+    <OutputFrame title="View My Work" eyebrow="Portfolio">
+      {!user ? (
+        <GatedPreview kind="portfolio" teaser={{ label: 'Choose a view', paragraphs: ['Three ways to see the work — sign up or sign in to open any of them.'], bullets: CARDS.map((c) => c.title) }} />
+      ) : (
+        <div style={{ fontFamily: 'Georgia, serif' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+            {CARDS.map((c) => (
+              <a key={c.href} href={c.href} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+                <div style={{ background: '#faf8f4', border: '0.5px solid #e8ddd0', borderTop: '3px solid #c4843a', borderRadius: 4, padding: '1.25rem', height: '100%', boxSizing: 'border-box' }}>
+                  <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1b2a3b', marginBottom: '0.5rem' }}>{c.title}</div>
+                  <div style={{ fontSize: '0.82rem', color: '#5a5a5a', lineHeight: 1.6, marginBottom: '0.75rem' }}>{c.desc}</div>
+                  <div style={{ fontSize: '0.68rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#02a1a6', fontFamily: 'sans-serif' }}>{c.stat} ↗</div>
+                </div>
+              </a>
+            ))}
+          </div>
+          <div style={{ textAlign: 'center', padding: '1.5rem', background: '#1b2a3b', borderRadius: 4 }}>
+            <div style={{ color: 'white', fontSize: '0.9rem', marginBottom: '0.75rem' }}>Want everything in one document?</div>
+            <a href="/output/full-portfolio" target="_blank" rel="noreferrer" className="sb-btn sb-btn-gold" style={{ padding: '0.6rem 1.5rem', fontSize: '0.75rem', textDecoration: 'none', display: 'inline-block' }}>
+              Print / Save Full Portfolio ↗
+            </a>
+          </div>
+        </div>
+      )}
+    </OutputFrame>
+  );
+}
+
+// ── Full combined portfolio (Resume + Career Master Database + Case Studies) ──
+// A single printable document stacking all three views — for members who
+// want the whole thing as one PDF instead of three separate saves.
+export function CareerFullPortfolioOutput() {
+  const { loading: authLoading, user } = useAuthState();
+  const [page, setPage] = useState(null);
+  const [wheel, setWheel] = useState(null);
+  const [master, setMaster] = useState(null);
+  useEffect(() => {
+    api.getPublishedSite().then((site) => {
+      const home = site.pages['home'];
+      setPage(home);
+      setWheel(home?.sections.find((s) => s.type === 'industryWheel')?.fields || {});
+    }).catch(() => {});
+    fetchCareerMaster().then(setMaster);
+  }, []);
+
+  const isLoading = authLoading || !master || !page;
+  if (isLoading) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', color: '#1B2A3B', fontFamily: 'Georgia, serif', fontSize: '1rem' }}>
+      Loading full portfolio…
+    </div>
+  );
+
+  // Detailed documentation — admin-only while cost/licensing is finalized.
+  if (!isAdminUser(user)) {
+    return (
+      <OutputFrame title="Full Portfolio" eyebrow="Resume + Career Database + Case Studies" gated>
+        {!user ? (
+          <GatedPreview kind="full portfolio" teaser={{ label: 'Everything, in one document', paragraphs: ['The complete resume, career database, and case study portfolio combined into a single printable document.'] }} />
+        ) : (
+          <AdminOnlyNotice kind="full portfolio" />
+        )}
+      </OutputFrame>
+    );
+  }
+
+  const about = getHomeAboutFields(page);
+  const jobs = master.jobs.map((j) => ({ company: j.company, title: j.title, dates: [j.startDate, j.endDate].filter(Boolean).join(' – '), bullets: (j.keyMetrics || '').split(';').map((s) => s.trim()).filter(Boolean) }));
+  const parseTech = (s) => (s || '').split(',').map((p) => p.trim()).filter(Boolean).map((p) => p.split(':')[0].trim());
+  let handsOn = parseTech(wheel?.handsOn), integrationDesign = parseTech(wheel?.integrationDesign), adjacent = parseTech(wheel?.adjacent);
+  if (master.tools.length) {
+    const bucketed = { hands_on: [], integration_design: [], adjacent: [] };
+    master.tools.forEach((t) => { bucketed[toolWheelBucket(t)].push(t.currentName || t.nameUsed); });
+    handsOn = bucketed.hands_on; integrationDesign = bucketed.integration_design; adjacent = bucketed.adjacent;
+  }
+
+  const SectionDivider = ({ children }) => (
+    <div style={{ pageBreakBefore: 'always', marginTop: '2rem', marginBottom: '1.5rem', paddingBottom: '0.5rem', borderBottom: '3px solid #c4843a' }}>
+      <div style={{ fontSize: '0.62rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#c4843a', fontFamily: 'sans-serif' }}>Salt Basin Net Works Portfolio</div>
+      <h2 style={{ fontSize: '1.6rem', fontFamily: 'Georgia, serif', color: '#1b2a3b', margin: 0 }}>{children}</h2>
+    </div>
+  );
+
+  return (
+    <OutputFrame title="Full Portfolio" eyebrow="Resume + Career Database + Case Studies" hideTitle>
+      <div style={{ fontFamily: 'Georgia, serif', color: '#1b2a3b' }}>
+        <SectionDivider>Executive Resume</SectionDivider>
+        <ResumeLayoutModern about={about} timeline={{}} jobs={jobs} handsOn={handsOn} integrationDesign={integrationDesign} adjacent={adjacent} />
+
+        <SectionDivider>Career Master Database — Skills</SectionDivider>
+        <div style={{ fontFamily: 'sans-serif', fontSize: '0.76rem' }}>
+          <DataTable
+            csvFilename="skills_master" searchKeys={['skill']} filters={[]} rows={master.skills}
+            columns={[
+              { key: 'skill', label: 'Skill', wide: true }, { key: 'category', label: 'Category' }, { key: 'tier', label: 'Tier' },
+              { key: 'yearsExp', label: 'Yrs' }, { key: 'numEngagements', label: 'Engmts' },
+            ]}
+          />
+        </div>
+
+        <SectionDivider>Career Master Database — Job History</SectionDivider>
+        <div style={{ fontFamily: 'sans-serif', fontSize: '0.76rem' }}>
+          <DataTable
+            csvFilename="job_history" searchKeys={['company']} filters={[]} rows={master.jobs}
+            columns={[
+              { key: 'company', label: 'Company' }, { key: 'title', label: 'Title' }, { key: 'startDate', label: 'Start' },
+              { key: 'endDate', label: 'End' }, { key: 'industry', label: 'Industry' },
+            ]}
+          />
+        </div>
+
+        <SectionDivider>Career Master Database — Tools & Tech</SectionDivider>
+        <div style={{ fontFamily: 'sans-serif', fontSize: '0.76rem' }}>
+          <DataTable
+            csvFilename="tools_technology" searchKeys={['nameUsed']} filters={[]} rows={master.tools}
+            columns={[
+              { key: 'nameUsed', label: 'Name Used' }, { key: 'currentName', label: 'Current Name' },
+              { key: 'category', label: 'Category' }, { key: 'tier', label: 'Tier' },
+            ]}
+          />
+        </div>
+
+        <SectionDivider>Case Study Portfolio</SectionDivider>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '1.25rem' }}>
+          {master.engagements.map((e) => <CareerCaseStudyCard key={e.id} e={e} />)}
+        </div>
+      </div>
+    </OutputFrame>
+  );
+}
+
 // ── Domains & Niche Solutions output ─────────────────────────────────────────
 // Showcases core domains, niche solutions, industry experience, and technology
 // in a multi-column boho-style card layout adapted to SB brand.
@@ -979,33 +2089,60 @@ export function DomainsOutput() {
   const { loading, user } = useAuthState();
   const [about, setAbout] = useState({});
   const [wheel, setWheel] = useState({});
+  const [master, setMaster] = useState(null);
   useEffect(() => {
     api.getPublishedSite().then(site => {
       const home = site.pages['home'];
       setAbout(getHomeAboutFields(home));
       setWheel(home?.sections.find(s => s.type === 'industryWheel')?.fields || {});
     }).catch(() => {});
+    fetchCareerMaster().then(setMaster);
   }, []);
 
-  if (loading) return null;
+  if (loading || !master) return null;
+
+  // Career Master (career_domains) is the source of truth when populated —
+  // falls back to the hardcoded consts below for sites that haven't
+  // adopted it.
+  const masterDomains = master.domains.filter((d) => d.groupType === 'domain');
+  const masterNiche = master.domains.filter((d) => d.groupType === 'niche_solution');
+  const masterIndustries = master.domains.filter((d) => d.groupType === 'industry');
+  const domainCategories = masterDomains.length
+    ? masterDomains.map((d) => ({ title: d.title, icon: d.icon, items: d.items?.length ? d.items : [d.description] }))
+    : DOMAIN_CATEGORIES;
+  const nicheSolutions = masterNiche.length
+    ? masterNiche.map((d) => ({ label: d.title, icon: d.icon, items: d.items || [] }))
+    : NICHE_SOLUTIONS;
+  const industries = masterIndustries.length
+    ? masterIndustries.map((d) => ({ key: d.id, label: d.title, icon: d.icon, snapshot: d.description }))
+    : INDUSTRIES;
 
   const parseTech = (s) => (s || '').split(',').map(p => p.trim()).filter(Boolean).map(p => p.split(':')[0].trim());
-  const handsOn = parseTech(wheel?.handsOn);
-  const integrationDesign = parseTech(wheel?.integrationDesign);
-  const adjacent = parseTech(wheel?.adjacent);
+  let handsOn = parseTech(wheel?.handsOn);
+  let integrationDesign = parseTech(wheel?.integrationDesign);
+  let adjacent = parseTech(wheel?.adjacent);
+  if (master.tools?.length) {
+    const bucketed = { hands_on: [], integration_design: [], adjacent: [] };
+    master.tools.forEach((t) => { bucketed[toolWheelBucket(t)].push(t.currentName || t.nameUsed); });
+    handsOn = bucketed.hands_on;
+    integrationDesign = bucketed.integration_design;
+    adjacent = bucketed.adjacent;
+  }
   const name = about.name || about.heading || 'Betsy Salter';
   const photoUrl = about.photoUrl || about.photo || null;
 
   if (!user) {
     return (
       <OutputFrame title={name + ' - Domains & Niche Solutions'} eyebrow="Domains" gated>
-        <GatedPreview kind="domains profile" teaser={{ label: 'Core Domains Preview', paragraphs: ['Strategic operator with deep expertise across Revenue Systems, Private Equity, and AI-enabled data architecture.'], bullets: DOMAIN_CATEGORIES.map(c => c.title) }} />
+        <GatedPreview kind="domains profile" teaser={{ label: 'Core Domains Preview', paragraphs: ['Strategic operator with deep expertise across Revenue Systems, Private Equity, and AI-enabled data architecture.'], bullets: domainCategories.map(c => c.title) }} />
       </OutputFrame>
     );
   }
 
   return (
-    <OutputFrame title={name + ' - Domains & Niche Solutions'} eyebrow="Domains">
+    // The header block below already shows the name — hideTitle avoids
+    // showing it twice.
+    <OutputFrame title={name + ' - Domains & Niche Solutions'} eyebrow="Domains" hideTitle>
       <div style={{ fontFamily: 'Georgia, serif', color: '#1b2a3b' }}>
 
         {/* ── Header ── */}
@@ -1015,13 +2152,16 @@ export function DomainsOutput() {
             <h1 style={{ fontSize: '2rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#1b2a3b', margin: 0, lineHeight: 1, fontFamily: 'Georgia, serif' }}>{name}</h1>
             <div style={{ fontSize: '0.65rem', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#c4843a', marginTop: '0.3rem', fontFamily: 'sans-serif' }}>Domains · Capabilities · Niche Solutions</div>
           </div>
+          <a href="/output/portfolio-appendix" target="_blank" rel="noreferrer" style={{ marginLeft: 'auto', fontSize: '0.72rem', color: 'var(--sb-teal-deep, #02a1a6)', textDecoration: 'none', fontFamily: 'sans-serif', whiteSpace: 'nowrap' }}>
+            ↗ Full Skills & Proficiency Dashboard
+          </a>
         </header>
 
         {/* ── Core Domains — 3-col card grid ── */}
         <section style={{ marginBottom: '1.75rem' }}>
           <DomainsHead>Core Domain Areas</DomainsHead>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
-            {DOMAIN_CATEGORIES.map(cat => (
+            {domainCategories.map(cat => (
               <div key={cat.title} style={{ background: '#faf8f4', padding: '0.85rem 1rem', borderTop: '3px solid #c4843a' }}>
                 <div style={{ fontSize: '0.62rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: '#c4843a', fontFamily: 'sans-serif', marginBottom: '0.5rem' }}>{cat.icon} {cat.title}</div>
                 {cat.items.map((item, i) => (
@@ -1038,7 +2178,7 @@ export function DomainsOutput() {
         <section style={{ marginBottom: '1.75rem' }}>
           <DomainsHead>Niche Solutions</DomainsHead>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
-            {NICHE_SOLUTIONS.map(ns => (
+            {nicheSolutions.map(ns => (
               <div key={ns.label} style={{ background: '#1b2a3b', color: 'white', padding: '0.85rem 1rem', borderTop: '3px solid #02a1a6' }}>
                 <div style={{ fontSize: '0.62rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: '#02a1a6', fontFamily: 'sans-serif', marginBottom: '0.5rem' }}>{ns.icon} {ns.label}</div>
                 {ns.items.map((item, i) => (
@@ -1055,7 +2195,7 @@ export function DomainsOutput() {
         <section style={{ marginBottom: '1.75rem' }}>
           <DomainsHead>Industry Experience</DomainsHead>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.6rem' }}>
-            {INDUSTRIES.map(ind => (
+            {industries.map(ind => (
               <div key={ind.key} style={{ pageBreakInside: 'avoid', display: 'flex', gap: '0.75rem', alignItems: 'flex-start', padding: '0.65rem 0.8rem', background: '#faf8f4', borderLeft: '3px solid #c4843a' }}>
                 <span style={{ fontSize: '1.1rem', marginTop: 2 }}>{ind.icon}</span>
                 <div>
@@ -1093,6 +2233,401 @@ function DomainsHead({ children }) {
     <div style={{ fontSize: '0.62rem', letterSpacing: '0.24em', textTransform: 'uppercase', color: '#1b2a3b', fontFamily: 'sans-serif', fontWeight: 700, marginBottom: '0.7rem', paddingBottom: '0.25rem', borderBottom: '2px solid #c4843a' }}>
       {children}
     </div>
+  );
+}
+
+// ── Portfolio Appendix / Skills Dashboard ─────────────────────────────────
+// Modeled on Betsy's "Portfolio Appendix — Industry & Skills Proficiency
+// Dashboard" reference design: proficiency-tier legend, category rollup
+// tiles, a proportional Expert/Advanced/Proficient/Foundational bar,
+// industry experience table, and the full skills inventory — all computed
+// live from Career Master (career_skills / career_engagements) rather than
+// a static snapshot.
+const TIER_LEGEND = [
+  { tier: 'Expert', color: '#2d5a27', years: '7+ years', engagements: '8+ engagements', note: 'Design ownership' },
+  { tier: 'Advanced', color: '#1a3a7a', years: '4-7 years', engagements: '4-8 engagements', note: 'Cross-functional lead' },
+  { tier: 'Proficient', color: '#7a5500', years: '2-4 years', engagements: '2-5 engagements', note: 'Hands-on delivery' },
+  { tier: 'Foundational', color: '#666', years: '<2 years', engagements: '1-2 engagements', note: 'Emerging capability' },
+];
+const TIER_ORDER = ['Expert', 'Advanced', 'Proficient', 'Foundational'];
+const TIER_BAR_COLOR = { Expert: '#2d8a3e', Advanced: '#3a6bb8', Proficient: '#c4843a', Foundational: '#999' };
+
+// Maps career_skills.category (15 fine-grained categories, per the
+// Portfolio Appendix skill inventory) onto the 4 meta-buckets the dashboard
+// summarizes at the top.
+const META_CATEGORY_MAP = {
+  'Quote-to-Cash': 'Revenue Operations',
+  'Pricing & Subscription': 'Revenue Operations',
+  'Business Process': 'Process & Architecture',
+  'Integration': 'Process & Architecture',
+  'Solution Architecture': 'Process & Architecture',
+  'Process Improvement': 'Process & Architecture',
+  'Program Mgmt': 'Process & Architecture',
+  'CRM & CPQ': 'Data & Integration',
+  'Data & MDM': 'Data & Integration',
+  'QA & Testing': 'Data & Integration',
+  'Training & Change': 'Data & Integration',
+  'Stakeholder Mgmt': 'Strategy & Advisory',
+  'Business Dev': 'Strategy & Advisory',
+  'Financial Strategy': 'Strategy & Advisory',
+  'AI Operator': 'Strategy & Advisory',
+};
+const META_CATEGORY_ORDER = ['Revenue Operations', 'Process & Architecture', 'Data & Integration', 'Strategy & Advisory'];
+
+// Best-effort year span extraction from free-text period strings like
+// "Aug 2018–2019" or "2024–Present" — used only for the industry table's
+// approximate "experience" column.
+function yearSpanFromPeriods(periods) {
+  const years = [];
+  const now = new Date().getFullYear();
+  periods.forEach((p) => {
+    (p || '').match(/\d{4}/g)?.forEach((y) => years.push(Number(y)));
+    if (/present/i.test(p || '')) years.push(now);
+  });
+  if (!years.length) return null;
+  const span = Math.max(...years) - Math.min(...years);
+  return span <= 0 ? '<1 yr' : `~${span} yrs`;
+}
+
+// ── Strategic Operator infographic one-pager ──────────────────────────────
+// Elevated, print-ready career infographic modeled on the "Strategic
+// Operator" reference visual — hero outcome metrics, industry-duration
+// scaling bars, capability confidence, platform proficiency, AI-native
+// product studio, and client-voice quotes, all live from Career Master.
+// Admin-only alongside the other detailed documentation outputs.
+
+function HeroMetricCard({ value, label, note, accent }) {
+  return (
+    <div style={{ background: BRAND.navy, borderTop: `3px solid ${accent}`, borderRadius: 10, padding: '1.2rem 1.1rem', pageBreakInside: 'avoid' }}>
+      <div style={{ fontSize: '2.4rem', fontWeight: 700, color: accent, fontFamily: 'Georgia, serif', lineHeight: 1.1 }}>{value}</div>
+      <div style={{ fontSize: '0.62rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(247,242,232,0.95)', fontWeight: 700, marginTop: '0.45rem', fontFamily: 'sans-serif' }}>{label}</div>
+      {note && <div style={{ fontSize: '0.7rem', color: 'rgba(247,242,232,0.7)', marginTop: '0.35rem', lineHeight: 1.55 }}>{note}</div>}
+    </div>
+  );
+}
+
+function computeHeroMetrics(master) {
+  const engagements = master?.engagements || [];
+  const exitFigure = extractDollarMax(engagements.map((e) => e.exitDetail)) || '$4.6B';
+  const arrMatch = engagements.flatMap((e) => e.metrics || []).find((m) => /ARR automated/i.test(m));
+  const arrFigure = (arrMatch && arrMatch.match(/\$[\d.]+[BM]\+?/i)?.[0]) || '$500M+';
+  const returnPct = engagements
+    .flatMap((e) => [e.exitDetail, e.scale])
+    .map((s) => String(s || '').match(/~?(\d{2,3})%\s*return/i)?.[1])
+    .find(Boolean) || '142';
+  const peCount = engagements.filter((e) => e.investmentType).length || 4;
+  return [
+    { value: exitFigure, label: `Exit · ${returnPct}% Investor Return`, note: 'Led Q2C design for Apptio — Vista acquisition through the IBM exit.', accent: BRAND.gold },
+    { value: arrFigure, label: 'Recurring Revenue Automated', note: 'Proprietary data-migration methodology eliminated manual renewal intervention at scale.', accent: '#7FA8B8' },
+    { value: String(peCount), label: 'PE Portfolio Transformations', note: 'Post-acquisition value creation across Vista Equity Partners software holdings.', accent: '#C98BAD' },
+    { value: String(engagements.length), label: 'Engagements Documented', note: 'Full case-study depth in the Career Master database.', accent: '#9DBB98' },
+  ];
+}
+
+export function StrategicOperatorOutput() {
+  const { loading: authLoading, user } = useAuthState();
+  const [master, setMaster] = useState(null);
+  useEffect(() => { fetchCareerMaster().then(setMaster); }, []);
+
+  const isLoading = authLoading || !master;
+  if (isLoading) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', color: '#1B2A3B', fontFamily: 'Georgia, serif', fontSize: '1rem' }}>
+      Loading strategic operator profile…
+    </div>
+  );
+
+  // Elevated documentation — admin-only while cost/licensing is finalized.
+  if (!isAdminUser(user)) {
+    return (
+      <OutputFrame title="The Strategic Operator" eyebrow="Career Infographic" gated>
+        {!user ? (
+          <GatedPreview
+            kind="strategic operator profile"
+            teaser={{
+              label: 'The Strategic Operator — Career Infographic',
+              paragraphs: ['A one-page visual profile: high-impact outcomes and exits, industry experience durations, capability confidence, platform proficiency, and client voice — generated live from the Career Master database.'],
+              bullets: [`${master.engagements.length} engagements documented`, `${master.skills.length} skills tracked`, 'Print-ready branded infographic'],
+            }}
+          />
+        ) : (
+          <AdminOnlyNotice kind="strategic operator profile" />
+        )}
+      </OutputFrame>
+    );
+  }
+
+  const heroMetrics = computeHeroMetrics(master);
+  const statStrip = computeExecutiveKPIs(master).slice(3);
+  const capabilityMeters = computeCapabilityMeters(master);
+  const industryDurations = computeIndustryDurations(master);
+  const toolBars = computeToolProficiency(master, 12);
+  const clientQuotes = computeClientQuotes(master, 3);
+  const ventures = (master.domains || [])
+    .filter((d) => d.groupType === 'venture')
+    .filter((d) => {
+      const extra = typeof d.extra === 'string' ? (() => { try { return JSON.parse(d.extra); } catch { return {}; } })() : (d.extra || {});
+      return extra.isSaltBasinBrand !== false; // POP Decor is a separate aesthetic — keep it off Salt Basin artifacts
+    });
+
+  return (
+    <OutputFrame title="Betsy Salter — The Strategic Operator" eyebrow="Career Infographic" hideTitle>
+      <div style={{ fontFamily: 'Georgia, serif', color: BRAND.graphite }}>
+
+        {/* ── Hero band ── */}
+        <header style={{ background: BRAND.navy, borderRadius: 10, padding: '1.75rem 2rem', marginBottom: '1.5rem', pageBreakInside: 'avoid' }}>
+          <div style={{ fontSize: '0.6rem', letterSpacing: '0.26em', textTransform: 'uppercase', color: BRAND.gold, fontFamily: 'sans-serif', fontWeight: 700, marginBottom: '0.55rem' }}>
+            Salt Basin Net Works · Strategic Operator Profile
+          </div>
+          <h1 style={{ fontSize: '2.4rem', letterSpacing: '0.05em', textTransform: 'uppercase', color: BRAND.warmShell, margin: 0, lineHeight: 1.05, fontFamily: 'Georgia, serif' }}>
+            Betsy Salter
+          </h1>
+          <div style={{ fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: BRAND.gold, marginTop: '0.45rem', fontFamily: 'sans-serif' }}>
+            AI-Native Revenue &amp; GTM Transformation Leader · Q2R Architect · PE Value Creation
+          </div>
+          <p style={{ fontSize: '0.88rem', color: 'rgba(247,242,232,0.85)', lineHeight: 1.7, margin: '0.8rem 0 0', maxWidth: 620 }}>
+            Bridging complex enterprise operating systems and scalable revenue workflows — automating hundreds of
+            millions in recurring revenue, supporting multi-billion-dollar exits, and building AI-native diagnostic
+            products for the Private Equity sector.
+          </p>
+          <div style={{ marginTop: '0.85rem', fontStyle: 'italic', fontSize: '0.92rem', color: BRAND.gold }}>
+            “I build for the customer you keep, not just the deal you close.”
+          </div>
+        </header>
+
+        {/* ── High-impact outcomes & exits ── */}
+        <section style={{ marginBottom: '1.5rem' }}>
+          <SectionHeadingMod>High-Impact Outcomes &amp; Exits</SectionHeadingMod>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.7rem', marginBottom: '0.7rem' }}>
+            {heroMetrics.map((m) => <HeroMetricCard key={m.label} {...m} />)}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.7rem' }}>
+            {statStrip.map((k) => <KPITile key={k.label} {...k} />)}
+          </div>
+        </section>
+
+        {/* ── Industry duration + capability confidence ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+          <IndustryDurationSection rows={industryDurations} heading="Deep Industry Experience & Duration" />
+          {capabilityMeters.length > 0 && (
+            <section style={{ marginBottom: '1.5rem', pageBreakInside: 'avoid' }}>
+              <SectionHeadingMod>Capability Confidence</SectionHeadingMod>
+              {capabilityMeters.map((c) => <CapabilityMeter key={c.name} {...c} />)}
+            </section>
+          )}
+        </div>
+
+        {/* ── Platform proficiency ── */}
+        <ToolProficiencySection tools={toolBars} heading="Quote-to-Revenue Platform Proficiency" />
+
+        {/* ── AI-native product studio ── */}
+        {ventures.length > 0 && (
+          <section style={{ marginBottom: '1.5rem', pageBreakInside: 'avoid' }}>
+            <SectionHeadingMod>AI-Native Product Studio</SectionHeadingMod>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.7rem' }}>
+              {ventures.map((v) => {
+                const extra = typeof v.extra === 'string' ? (() => { try { return JSON.parse(v.extra); } catch { return {}; } })() : (v.extra || {});
+                return (
+                  <div key={v.title} style={{ background: BRAND.mist, borderLeft: `3px solid ${v.accentColor || BRAND.teal}`, borderRadius: 6, padding: '0.8rem 0.95rem', pageBreakInside: 'avoid' }}>
+                    <div style={{ fontSize: '0.58rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: BRAND.slate, fontFamily: 'sans-serif', marginBottom: '0.2rem' }}>{extra.category || 'Venture'}</div>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: BRAND.navy, marginBottom: '0.25rem' }}>{v.title}</div>
+                    <div style={{ fontSize: '0.72rem', color: BRAND.graphite, lineHeight: 1.6 }}>{v.description}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* ── Client voice ── */}
+        {clientQuotes.length > 0 && (
+          <section style={{ pageBreakInside: 'avoid' }}>
+            <SectionHeadingMod>Client Voice</SectionHeadingMod>
+            <ClientVoiceSection quotes={clientQuotes} />
+          </section>
+        )}
+      </div>
+    </OutputFrame>
+  );
+}
+
+export function PortfolioAppendixOutput() {
+  const { loading: authLoading, user } = useAuthState();
+  const [master, setMaster] = useState(null);
+  useEffect(() => { fetchCareerMaster().then(setMaster); }, []);
+
+  const isLoading = authLoading || !master;
+  if (isLoading) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', color: '#1B2A3B', fontFamily: 'Georgia, serif', fontSize: '1rem' }}>
+      Loading portfolio appendix…
+    </div>
+  );
+
+  // Detailed documentation — admin-only while cost/licensing is finalized.
+  if (!isAdminUser(user)) {
+    return (
+      <OutputFrame title="Portfolio Appendix" eyebrow="Skills Dashboard" gated>
+        {!user ? (
+          <GatedPreview
+            kind="portfolio appendix"
+            teaser={{
+              label: 'Industry & Skills Proficiency Dashboard',
+              paragraphs: ['Proficiency-tier breakdown, category rollups, and a full skills inventory.'],
+              bullets: [`${master.skills.length} skills tracked`, `${master.engagements.length} engagements`, 'Live proficiency distribution'],
+            }}
+          />
+        ) : (
+          <AdminOnlyNotice kind="portfolio appendix" />
+        )}
+      </OutputFrame>
+    );
+  }
+
+  const skills = master.skills;
+  const engagements = master.engagements;
+
+  const tierCounts = TIER_ORDER.reduce((acc, t) => ({ ...acc, [t]: skills.filter((s) => s.tier === t).length }), {});
+  const totalSkills = skills.length || 1;
+
+  const metaRollups = META_CATEGORY_ORDER.map((meta) => {
+    const inBucket = skills.filter((s) => META_CATEGORY_MAP[s.category] === meta);
+    const expertCount = inBucket.filter((s) => s.tier === 'Expert').length;
+    const avgYears = inBucket.length ? (inBucket.reduce((sum, s) => sum + (Number(s.yearsExp) || 0), 0) / inBucket.length) : 0;
+    const totalEngagements = inBucket.reduce((sum, s) => sum + (Number(s.numEngagements) || 0), 0);
+    return { meta, expertCount, avgYears: avgYears.toFixed(0), totalEngagements };
+  });
+
+  const byCategory = new Map();
+  skills.forEach((s) => { byCategory.set(s.category, (byCategory.get(s.category) || 0) + 1); });
+
+  const byIndustry = new Map();
+  engagements.forEach((e) => {
+    const key = e.industry || 'Other';
+    const bucket = byIndustry.get(key) || { count: 0, periods: [] };
+    bucket.count += 1;
+    bucket.periods.push(e.period);
+    byIndustry.set(key, bucket);
+  });
+  const industryRows = Array.from(byIndustry.entries())
+    .map(([industry, v]) => ({ industry, count: v.count, span: yearSpanFromPeriods(v.periods) }))
+    .sort((a, b) => b.count - a.count);
+
+  const sortedSkills = [...skills].sort((a, b) => (a.category || '').localeCompare(b.category || '') || TIER_ORDER.indexOf(a.tier) - TIER_ORDER.indexOf(b.tier));
+
+  return (
+    <OutputFrame title="Portfolio Appendix" eyebrow="Industry & Skills Proficiency Dashboard">
+      <div style={{ fontFamily: 'Georgia, serif', color: '#1b2a3b' }}>
+
+        {/* ── Proficiency Level Definitions ── */}
+        <section style={{ marginBottom: '1.75rem' }}>
+          <DomainsHead>Proficiency Level Definitions</DomainsHead>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem' }}>
+            {TIER_LEGEND.map((t) => (
+              <div key={t.tier} style={{ background: '#faf8f4', borderTop: `3px solid ${t.color}`, padding: '0.85rem 1rem' }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: t.color, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '0.4rem' }}>{t.tier}</div>
+                <div style={{ fontSize: '0.72rem', color: '#3a3a3a', lineHeight: 1.6 }}>{t.years}<br />{t.engagements}<br />{t.note}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Skills Dashboard Summary ── */}
+        <section style={{ marginBottom: '1.75rem' }}>
+          <DomainsHead>Skills Dashboard Summary</DomainsHead>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem' }}>
+            {metaRollups.map((r) => (
+              <div key={r.meta} style={{ background: '#1b2a3b', color: 'white', padding: '0.9rem 1rem', borderRadius: 2 }}>
+                <div style={{ fontSize: '0.62rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#c4843a', marginBottom: '0.4rem' }}>{r.meta}</div>
+                <div style={{ fontSize: '0.8rem', lineHeight: 1.7, color: 'rgba(255,255,255,0.9)' }}>
+                  {r.expertCount} Expert skills<br />
+                  {r.avgYears} yrs avg depth<br />
+                  {r.totalEngagements} engagements
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Proficiency Distribution ── */}
+        <section style={{ marginBottom: '1.75rem' }}>
+          <DomainsHead>Proficiency Distribution ({totalSkills} skills)</DomainsHead>
+          <div style={{ display: 'flex', height: 22, borderRadius: 3, overflow: 'hidden', marginBottom: '0.5rem' }}>
+            {TIER_ORDER.map((t) => tierCounts[t] > 0 && (
+              <div key={t} title={`${t}: ${tierCounts[t]}`} style={{ width: `${(tierCounts[t] / totalSkills) * 100}%`, background: TIER_BAR_COLOR[t] }} />
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap' }}>
+            {TIER_ORDER.map((t) => (
+              <div key={t} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.74rem', color: '#3a3a3a' }}>
+                <span style={{ width: 10, height: 10, borderRadius: 2, background: TIER_BAR_COLOR[t], display: 'inline-block' }} />
+                {t} ({tierCounts[t]})
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Skills by Category ── */}
+        <section style={{ marginBottom: '1.75rem' }}>
+          <DomainsHead>Skills by Category</DomainsHead>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem 1.5rem' }}>
+            {Array.from(byCategory.entries()).sort((a, b) => b[1] - a[1]).map(([cat, count]) => (
+              <div key={cat} style={{ fontSize: '0.8rem', color: '#3a3a3a' }}>
+                <span style={{ color: '#c4843a', fontWeight: 700 }}>{count}</span> {cat}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Industry Experience ── */}
+        <section style={{ marginBottom: '1.75rem' }}>
+          <DomainsHead>Industry Experience ({industryRows.length} sectors)</DomainsHead>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+            <thead>
+              <tr style={{ background: '#1b2a3b', color: 'white' }}>
+                <th style={{ textAlign: 'left', padding: '0.4rem 0.6rem', fontSize: '0.62rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Industry</th>
+                <th style={{ textAlign: 'left', padding: '0.4rem 0.6rem', fontSize: '0.62rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Experience</th>
+                <th style={{ textAlign: 'left', padding: '0.4rem 0.6rem', fontSize: '0.62rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Engagements</th>
+              </tr>
+            </thead>
+            <tbody>
+              {industryRows.map((row, i) => (
+                <tr key={row.industry} style={{ background: i % 2 ? '#faf8f4' : 'white' }}>
+                  <td style={{ padding: '0.4rem 0.6rem', borderBottom: '0.5px solid rgba(0,0,0,0.06)' }}>{row.industry}</td>
+                  <td style={{ padding: '0.4rem 0.6rem', borderBottom: '0.5px solid rgba(0,0,0,0.06)', color: '#5a5a5a' }}>{row.span || '—'}</td>
+                  <td style={{ padding: '0.4rem 0.6rem', borderBottom: '0.5px solid rgba(0,0,0,0.06)', color: '#5a5a5a' }}>{row.count}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+
+        {/* ── Full Skills Inventory ── */}
+        <section>
+          <DomainsHead>Skills Inventory ({skills.length} skills)</DomainsHead>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.76rem' }}>
+            <thead>
+              <tr style={{ background: '#1b2a3b', color: 'white' }}>
+                <th style={{ textAlign: 'left', padding: '0.4rem 0.6rem', fontSize: '0.6rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Skill</th>
+                <th style={{ textAlign: 'left', padding: '0.4rem 0.6rem', fontSize: '0.6rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Category</th>
+                <th style={{ textAlign: 'left', padding: '0.4rem 0.6rem', fontSize: '0.6rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Tier</th>
+                <th style={{ textAlign: 'left', padding: '0.4rem 0.6rem', fontSize: '0.6rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Yrs</th>
+                <th style={{ textAlign: 'left', padding: '0.4rem 0.6rem', fontSize: '0.6rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Engmts</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedSkills.map((s, i) => (
+                <tr key={s.id} style={{ background: i % 2 ? '#faf8f4' : 'white', pageBreakInside: 'avoid' }}>
+                  <td style={{ padding: '0.35rem 0.6rem', borderBottom: '0.5px solid rgba(0,0,0,0.06)', fontWeight: 600 }}>{s.skill}</td>
+                  <td style={{ padding: '0.35rem 0.6rem', borderBottom: '0.5px solid rgba(0,0,0,0.06)', color: '#5a5a5a' }}>{s.category}</td>
+                  <td style={{ padding: '0.35rem 0.6rem', borderBottom: '0.5px solid rgba(0,0,0,0.06)', color: TIER_BAR_COLOR[s.tier], fontWeight: 700 }}>{s.tier}</td>
+                  <td style={{ padding: '0.35rem 0.6rem', borderBottom: '0.5px solid rgba(0,0,0,0.06)', color: '#5a5a5a' }}>{s.yearsExp}</td>
+                  <td style={{ padding: '0.35rem 0.6rem', borderBottom: '0.5px solid rgba(0,0,0,0.06)', color: '#5a5a5a' }}>{s.numEngagements}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </OutputFrame>
   );
 }
 
