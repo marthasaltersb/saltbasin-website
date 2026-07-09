@@ -1,0 +1,166 @@
+name: Scheduled Production Promotion Agent
+
+# Deterministic CI/CD promotion lane.
+#
+# This workflow does not call Anthropic, Claude, OpenAI, or any other LLM API.
+# It promotes work that has already been packaged as a pull request and marked
+# production-ready, then lets the existing Render and Netlify auto-deploy hooks
+# deploy the resulting main-branch commit.
+#
+# One-time setup:
+#   1. Repository variable PROMOTION_AGENT_ENABLED=true
+#   2. Label deployable PRs with production-ready
+#   3. Add do-not-merge to block a PR from scheduled promotion
+#
+# Schedule:
+#   Sundays at 14:00 UTC, which is 10:00 AM Eastern during daylight time and
+#   9:00 AM Eastern during standard time.
+
+on:
+  schedule:
+    - cron: '0 14 * * 0'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Verify the next production-ready PR without merging it'
+        type: boolean
+        required: true
+        default: true
+
+concurrency:
+  group: scheduled-production-promotion
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: Promote next production-ready PR on Sunday
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PROMOTION_LABEL: production-ready
+      BLOCK_LABEL: do-not-merge
+      PROMOTION_AGENT_ENABLED: ${{ vars.PROMOTION_AGENT_ENABLED || 'false' }}
+      DRY_RUN_INPUT: ${{ github.event.inputs.dry_run }}
+
+    steps:
+      - name: Resolve promotion mode
+        id: mode
+        run: |
+          set -euo pipefail
+
+          dry_run="${DRY_RUN_INPUT:-}"
+          if [ -z "$dry_run" ]; then
+            dry_run="false"
+          fi
+
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "$PROMOTION_AGENT_ENABLED" != "true" ]; then
+            echo "Scheduled promotion is disabled. Set PROMOTION_AGENT_ENABLED=true to enable it."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "dry_run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+          echo "dry_run=$dry_run" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure promotion labels exist
+        if: steps.mode.outputs.enabled == 'true'
+        run: |
+          set -euo pipefail
+          gh label create "$PROMOTION_LABEL" \
+            --repo "$GITHUB_REPOSITORY" \
+            --color 0E8A16 \
+            --description "Eligible for scheduled production promotion" \
+            --force
+          gh label create "$BLOCK_LABEL" \
+            --repo "$GITHUB_REPOSITORY" \
+            --color B60205 \
+            --description "Blocked from automated merge or promotion" \
+            --force
+
+      - name: Select next candidate PR
+        id: select
+        if: steps.mode.outputs.enabled == 'true'
+        run: |
+          set -euo pipefail
+
+          candidates="$(gh pr list \
+            --repo "$GITHUB_REPOSITORY" \
+            --base main \
+            --state open \
+            --label "$PROMOTION_LABEL" \
+            --json number,title,headRefName,isDraft,mergeStateStatus,labels,updatedAt \
+            --jq '[.[] |
+              select(.isDraft == false) |
+              select(([.labels[].name] | index(env.BLOCK_LABEL)) | not)
+            ] | sort_by(.updatedAt)')"
+
+          count="$(echo "$candidates" | jq 'length')"
+          if [ "$count" -eq 0 ]; then
+            echo "No open, non-draft PRs labeled $PROMOTION_LABEL."
+            echo "has_candidate=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          pr_number="$(echo "$candidates" | jq -r '.[0].number')"
+          pr_title="$(echo "$candidates" | jq -r '.[0].title')"
+          head_ref="$(echo "$candidates" | jq -r '.[0].headRefName')"
+
+          echo "Selected PR #$pr_number: $pr_title"
+          echo "has_candidate=true" >> "$GITHUB_OUTPUT"
+          echo "pr_number=$pr_number" >> "$GITHUB_OUTPUT"
+          echo "head_ref=$head_ref" >> "$GITHUB_OUTPUT"
+
+      - name: Check out PR merge candidate
+        if: steps.select.outputs.has_candidate == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ steps.select.outputs.pr_number }}/merge
+          fetch-depth: 0
+
+      - name: Set up Node
+        if: steps.select.outputs.has_candidate == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.13.0'
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.select.outputs.has_candidate == 'true'
+        run: npm ci
+
+      - name: Build production bundle
+        if: steps.select.outputs.has_candidate == 'true'
+        run: npm run build
+
+      - name: Merge PR to main
+        if: steps.select.outputs.has_candidate == 'true' && steps.mode.outputs.dry_run != 'true'
+        run: |
+          set -euo pipefail
+          pr_number="${{ steps.select.outputs.pr_number }}"
+          pr_title="$(gh pr view "$pr_number" --repo "$GITHUB_REPOSITORY" --json title --jq '.title')"
+          gh pr merge "$pr_number" \
+            --repo "$GITHUB_REPOSITORY" \
+            --squash \
+            --subject "Promote PR #$pr_number: $pr_title" \
+            --body "Merged by the Scheduled Production Promotion Agent after npm ci and npm run build passed. Render and Netlify deploy from the resulting main-branch commit."
+
+      - name: Report dry run
+        if: steps.select.outputs.has_candidate == 'true' && steps.mode.outputs.dry_run == 'true'
+        run: |
+          set -euo pipefail
+          gh pr comment "${{ steps.select.outputs.pr_number }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --body "Scheduled Production Promotion Agent dry run passed: npm ci and npm run build succeeded. No merge was performed."
+
+      - name: Comment on failed candidate
+        if: failure() && steps.select.outputs.has_candidate == 'true'
+        run: |
+          gh pr comment "${{ steps.select.outputs.pr_number }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --body "Scheduled Production Promotion Agent failed while verifying this PR. See the workflow run logs before retrying production promotion."
