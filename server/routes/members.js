@@ -13,6 +13,7 @@ import { defaultMemberProfile } from '../data/defaultMemberProfile.js';
 import { verifyRecaptcha } from '../lib/recaptcha.js';
 import { sendVerificationEmail } from '../lib/email.js';
 import { audit } from '../lib/audit.js';
+import { resumeUrlFromPreset, pickPrimaryPreset, normalizePrimaryFlags } from '../lib/resumePresets.js';
 
 const router = Router();
 
@@ -22,25 +23,6 @@ function slugify(s) {
     .replace(/[^a-z0-9-]+/g, '-')
     .replace(/^-|-$/g, '')
     .slice(0, 40);
-}
-
-function resumeUrlFromPreset(preset) {
-  const layoutUrls = {
-    classic: '/output/resume',
-    modern: '/output/resume?layout=modern',
-    corporate: '/output/resume?layout=corporate',
-    minimal: '/output/resume?layout=modern',
-    executive: '/output/resume?layout=corporate',
-  };
-  const base = layoutUrls[preset?.layout] || layoutUrls.classic;
-  const params = [];
-  if (preset?.showExecSummary === false) params.push('execSummary=0');
-  if (preset?.showCapabilityMeters === false) params.push('capabilityMeters=0');
-  if (preset?.showIndustryBars === false) params.push('industryBars=0');
-  if (preset?.showToolBars === false) params.push('toolBars=0');
-  if (preset?.showClientVoice === false) params.push('clientVoice=0');
-  if (!params.length) return base;
-  return base + (base.includes('?') ? '&' : '?') + params.join('&');
 }
 
 async function uniqueSlugFor(base) {
@@ -383,20 +365,16 @@ router.get('/me/resume-url', requireUser, async (req, res) => {
   ).get(req.user.id, 'resume_presets');
   const data = row ? JSON.parse(row.data) : { presets: [] };
   const presets = Array.isArray(data.presets) ? data.presets : [];
-  const primary = presets.find((p) => p.primaryResume) || presets[0] || null;
+  const primary = pickPrimaryPreset(presets);
   res.json({ url: resumeUrlFromPreset(primary), source: primary ? 'primary_preset' : 'default' });
 });
 
 router.put('/me/resume-presets', requireUser, async (req, res) => {
   const { presets } = req.body;
   if (!Array.isArray(presets)) return res.status(400).json({ error: 'presets must be array' });
-  // Ensure only one primary
-  let hasPrimary = false;
-  const cleaned = presets.map(p => {
-    const isPrimary = p.primaryResume && !hasPrimary;
-    if (isPrimary) hasPrimary = true;
-    return { ...p, primaryResume: isPrimary };
-  });
+  // Exactly one primary whenever any presets exist (first flagged wins,
+  // first preset promoted if none flagged).
+  const cleaned = normalizePrimaryFlags(presets);
   const data = JSON.stringify({ presets: cleaned });
   const now = Date.now();
   await db.prepare(

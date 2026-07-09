@@ -146,6 +146,76 @@ const SCHEMAS = {
       { key: 'extra', label: 'Extra (raw JSON — venture/profile_meta metadata)', type: 'json' },
     ],
   },
+  // ── Investor / operating-principal extension ──
+  // 'suggest' fields offer the recommended pre-defined values from the Meta
+  // Options tab (career_meta_options) while still accepting free text.
+  certifications: {
+    list: api.listCareerCertifications, create: api.createCareerCertification, update: api.updateCareerCertification, delete: api.deleteCareerCertification,
+    columns: [
+      { key: 'name', label: 'Certification' },
+      { key: 'issuer', label: 'Issuer' },
+      { key: 'category', label: 'Category' },
+      { key: 'lastRenewed', label: 'Last Renewed', render: (v) => v || '— to confirm' },
+      { key: 'status', label: 'Status' },
+    ],
+    fields: [
+      { key: 'name', label: 'Certification Name', type: 'text' },
+      { key: 'issuer', label: 'Issuer', type: 'text' },
+      { key: 'category', label: 'Category', type: 'suggest', optionsKey: 'cert_category' },
+      { key: 'firstEarned', label: 'First Earned', type: 'text' },
+      { key: 'lastRenewed', label: 'Most Recent Renewal Date', type: 'text' },
+      { key: 'expires', label: 'Expires', type: 'text' },
+      { key: 'status', label: 'Status', type: 'suggest', optionsKey: 'cert_status' },
+      { key: 'credentialId', label: 'Credential ID', type: 'text' },
+      { key: 'notes', label: 'Notes', type: 'textarea' },
+    ],
+  },
+  deals: {
+    list: api.listCareerDeals, create: api.createCareerDeal, update: api.updateCareerDeal, delete: api.deleteCareerDeal,
+    columns: [
+      { key: 'dealName', label: 'Deal' },
+      { key: 'employerAtTime', label: 'Employer at Time' },
+      { key: 'investmentType', label: 'Investment Type' },
+      { key: 'entryDate', label: 'Entry' },
+      { key: 'outcomeStatus', label: 'Status' },
+    ],
+    fields: [
+      { key: 'dealName', label: 'Deal Name', type: 'text' },
+      { key: 'portfolioCompany', label: 'Portfolio Company', type: 'text' },
+      { key: 'employerAtTime', label: 'Employer at Time of Deal (who you worked for)', type: 'text' },
+      { key: 'dealRole', label: 'Your Role in the Deal', type: 'suggest', optionsKey: 'deal_role' },
+      { key: 'investmentType', label: 'Investment Type', type: 'suggest', optionsKey: 'investment_type' },
+      { key: 'stakeType', label: 'Your Stake', type: 'suggest', optionsKey: 'stake_type' },
+      { key: 'dealSize', label: 'Deal Size (display, e.g. "$1.94B")', type: 'text' },
+      { key: 'dealSizeMusd', label: 'Deal Size in $M (drives deal-over-deal chart)', type: 'number' },
+      { key: 'entryDate', label: 'Entry Date (e.g. "Aug 2018" or "2024-03")', type: 'text' },
+      { key: 'exitDate', label: 'Exit Date', type: 'text' },
+      { key: 'exitValue', label: 'Exit Value (display)', type: 'text' },
+      { key: 'exitValueMusd', label: 'Exit Value in $M', type: 'number' },
+      { key: 'grossReturnPct', label: 'Gross Return % (measured)', type: 'number' },
+      { key: 'attributionPct', label: 'Attribution % (share of return carved to you)', type: 'number' },
+      { key: 'individualReturn', label: 'Individual Investor Return (carved-out flag)', type: 'text' },
+      { key: 'outcomeStatus', label: 'Outcome Status', type: 'suggest', optionsKey: 'outcome_status' },
+      { key: 'isActivePortfolio', label: 'Active portfolio holding (counts toward majority-stake ARR dashboard)', type: 'checkbox', defaultOff: true },
+      { key: 'arrEntryMusd', label: 'Portfolio Co. ARR at Entry ($M)', type: 'number' },
+      { key: 'arrPriorYearMusd', label: 'Portfolio Co. ARR Prior Year ($M)', type: 'number' },
+      { key: 'arrCurrentMusd', label: 'Portfolio Co. ARR Current ($M)', type: 'number' },
+      { key: 'notes', label: 'Notes', type: 'textarea' },
+    ],
+  },
+  metaOptions: {
+    list: api.listCareerMetaOptions, create: api.createCareerMetaOption, update: api.updateCareerMetaOption, delete: api.deleteCareerMetaOption,
+    columns: [
+      { key: 'fieldKey', label: 'Field' },
+      { key: 'value', label: 'Recommended Value' },
+      { key: 'description', label: 'Description' },
+    ],
+    fields: [
+      { key: 'fieldKey', label: 'Field Key (which input this value belongs to)', type: 'select', options: META_FIELD_KEYS },
+      { key: 'value', label: 'Recommended Value', type: 'text' },
+      { key: 'description', label: 'Description (optional helper text)', type: 'textarea' },
+    ],
+  },
 };
 
 const S = {
@@ -175,12 +245,30 @@ const S = {
   field: { marginBottom: '0.85rem' },
 };
 
-function Field({ f, value, onChange }) {
+function Field({ f, value, onChange, metaOptions }) {
   if (f.type === 'select') {
     return (
       <select style={S.input} value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
         {f.options.map((o) => <option key={o} value={o}>{o || '(none)'}</option>)}
       </select>
+    );
+  }
+  if (f.type === 'suggest') {
+    // Recommended pre-defined values (from the Meta Options tab) via a
+    // native datalist — pick one or type a custom value.
+    const opts = (metaOptions || []).filter((o) => o.fieldKey === f.optionsKey).map((o) => o.value);
+    const listId = `sb-suggest-${f.optionsKey}`;
+    return (
+      <>
+        <input
+          style={S.input} type="text" list={listId} value={value ?? ''}
+          placeholder="Pick a recommended value or type your own"
+          onChange={(e) => onChange(e.target.value)}
+        />
+        <datalist id={listId}>
+          {opts.map((o) => <option key={o} value={o} />)}
+        </datalist>
+      </>
     );
   }
   if (f.type === 'textarea') {
@@ -201,7 +289,10 @@ function Field({ f, value, onChange }) {
     );
   }
   if (f.type === 'checkbox') {
-    return <input type="checkbox" checked={value !== false} onChange={(e) => onChange(e.target.checked)} style={{ width: 18, height: 18, accentColor: 'var(--sb-gold, #c4843a)' }} />;
+    // defaultOff fields (e.g. deals.isActivePortfolio) start unchecked;
+    // legacy fields (publishCaseStudy) keep their default-on behavior.
+    const checked = f.defaultOff ? value === true : value !== false;
+    return <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} style={{ width: 18, height: 18, accentColor: 'var(--sb-gold, #c4843a)' }} />;
   }
   if (f.type === 'number') {
     return <input style={S.input} type="number" step="any" value={value ?? ''} onChange={(e) => onChange(e.target.value === '' ? null : Number(e.target.value))} />;
@@ -209,7 +300,7 @@ function Field({ f, value, onChange }) {
   return <input style={S.input} type="text" value={value ?? ''} onChange={(e) => onChange(e.target.value)} />;
 }
 
-function EditModal({ schema, item, onSave, onDelete, onClose, saving }) {
+function EditModal({ schema, item, onSave, onDelete, onClose, saving, metaOptions }) {
   const [draft, setDraft] = useState(item);
   const isNew = !item.id;
   return (
@@ -221,7 +312,7 @@ function EditModal({ schema, item, onSave, onDelete, onClose, saving }) {
         {schema.fields.map((f) => (
           <div key={f.key} style={S.field}>
             <label style={S.label}>{f.label}</label>
-            <Field f={f} value={draft[f.key]} onChange={(v) => setDraft((d) => ({ ...d, [f.key]: v }))} />
+            <Field f={f} value={draft[f.key]} metaOptions={metaOptions} onChange={(v) => setDraft((d) => ({ ...d, [f.key]: v }))} />
           </div>
         ))}
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'space-between', marginTop: '1rem' }}>
@@ -264,7 +355,7 @@ export default function CareerMasterPanel() {
     try {
       const result = await api.seedCareerMaster();
       if (result.skipped) toast('Already populated — nothing to seed');
-      else toast(`Seeded ${result.seeded?.skills ?? 0} skills · ${result.seeded?.jobs ?? 0} jobs · ${result.seeded?.tools ?? 0} tools · ${result.seeded?.engagements ?? 0} engagements · ${result.seeded?.domains ?? 0} domains`);
+      else toast(`Seeded ${result.seeded?.skills ?? 0} skills · ${result.seeded?.jobs ?? 0} jobs · ${result.seeded?.tools ?? 0} tools · ${result.seeded?.engagements ?? 0} engagements · ${result.seeded?.domains ?? 0} domains · ${result.seeded?.certifications ?? 0} certs · ${result.seeded?.deals ?? 0} deals · ${result.seeded?.metaOptions ?? 0} meta options`);
       loadAll();
     } catch (e) {
       toast('Seed failed: ' + e.message);
@@ -329,7 +420,11 @@ export default function CareerMasterPanel() {
             ))}
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            {totalRows === 0 && !loading && <button style={S.btn('gold')} onClick={handleSeed}>✦ Seed Initial Data</button>}
+            {/* Seed is per-table idempotent server-side — offer it whenever
+                any tab is empty (e.g. newly added certifications/deals). */}
+            {!loading && TABS.some((t) => (rows[t.id] || []).length === 0) && (
+              <button style={S.btn('gold')} onClick={handleSeed}>✦ Seed {totalRows === 0 ? 'Initial Data' : 'Empty Tables'}</button>
+            )}
             <button style={S.btn('navy')} onClick={() => setEditing({ item: {} })}>+ Add</button>
           </div>
         </div>
@@ -369,6 +464,7 @@ export default function CareerMasterPanel() {
           schema={schema}
           item={editing.item}
           saving={saving}
+          metaOptions={rows.metaOptions || []}
           onSave={handleSave}
           onDelete={handleDelete}
           onClose={() => setEditing(null)}

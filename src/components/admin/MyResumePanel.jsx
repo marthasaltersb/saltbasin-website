@@ -538,9 +538,15 @@ export default function MyResumePanel({ scope = 'member' }) {
   async function saveEditingPreset() {
     if (!editingPreset) return;
     if (!editingPreset.name.trim()) { toast.error('Preset needs a name'); return; }
-    const next = presets.some(p => p.id === editingPreset.id)
+    let next = presets.some(p => p.id === editingPreset.id)
       ? presets.map(p => p.id === editingPreset.id ? editingPreset : p)
       : [...presets, editingPreset];
+    // Marking this preset primary must unflag the others — otherwise the
+    // server's first-flagged-wins normalization keeps the OLD primary and
+    // silently discards the checkbox choice.
+    if (editingPreset.primaryResume) {
+      next = next.map(p => p.id === editingPreset.id ? p : (p.primaryResume ? { ...p, primaryResume: false } : p));
+    }
     const ok = await savePresets(next);
     if (ok) setEditingPreset(null);
   }
@@ -689,7 +695,21 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
                 {showPreview ? 'Hide Preview' : 'Preview PDF'}
               </button>
               {showPreview && (
-                <button style={S.btn('gold')} onClick={() => iframeRef.current?.contentWindow?.print()}>Print / Save PDF</button>
+                <button style={S.btn('gold')} onClick={() => {
+                  // Printing an embedded iframe is what surfaces "print
+                  // preview is not supported" in some Chromium shells —
+                  // focus the frame first, and if the call is blocked, open
+                  // the output in its own tab where the toolbar's Print /
+                  // Save as PDF (with auto filename) always works.
+                  try {
+                    const win = iframeRef.current?.contentWindow;
+                    if (!win) throw new Error('no preview window');
+                    win.focus();
+                    win.print();
+                  } catch {
+                    window.open(previewUrl, '_blank', 'noopener');
+                  }
+                }}>Print / Save PDF</button>
               )}
             </div>
           </div>

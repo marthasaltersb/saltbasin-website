@@ -21,27 +21,9 @@ import { requireUser } from '../auth.js';
 import { defaultMemberSite } from '../data/defaultMemberSite.js';
 import { audit } from '../lib/audit.js';
 import { form, react } from '../lib/molecule.js';
+import { resumeUrlFromPreset, pickPrimaryPreset } from '../lib/resumePresets.js';
 
 const router = Router();
-
-function resumeUrlFromPreset(preset) {
-  const layoutUrls = {
-    classic: '/output/resume',
-    modern: '/output/resume?layout=modern',
-    corporate: '/output/resume?layout=corporate',
-    minimal: '/output/resume?layout=modern',
-    executive: '/output/resume?layout=corporate',
-  };
-  const base = layoutUrls[preset?.layout] || layoutUrls.classic;
-  const params = [];
-  if (preset?.showExecSummary === false) params.push('execSummary=0');
-  if (preset?.showCapabilityMeters === false) params.push('capabilityMeters=0');
-  if (preset?.showIndustryBars === false) params.push('industryBars=0');
-  if (preset?.showToolBars === false) params.push('toolBars=0');
-  if (preset?.showClientVoice === false) params.push('clientVoice=0');
-  if (!params.length) return base;
-  return base + (base.includes('?') ? '&' : '?') + params.join('&');
-}
 
 function primaryResumeUrlFromConfig(config) {
   const presets = Array.isArray(config?.resumePresets) ? config.resumePresets : [];
@@ -221,7 +203,7 @@ router.get('/by-slug/:slug/resume-url', async (req, res) => {
   if (row.preset_json) {
     const data = JSON.parse(row.preset_json);
     const presets = Array.isArray(data.presets) ? data.presets : [];
-    const primary = presets.find((p) => p.primaryResume) || presets[0] || null;
+    const primary = pickPrimaryPreset(presets);
     return res.json({ url: resumeUrlFromPreset(primary), source: primary ? 'primary_preset' : 'default' });
   }
   const config = row.config_json ? sanitizeMemberConfig(JSON.parse(row.config_json)) : null;

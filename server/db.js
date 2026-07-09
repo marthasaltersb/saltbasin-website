@@ -1941,6 +1941,53 @@ async function bootstrap() {
     CREATE INDEX IF NOT EXISTS idx_career_meta_options_key ON career_meta_options (field_key, order_index);
   `);
 
+  // Portfolio request lead funnel: intake rows from the public teaser views
+  // ("Want to request Betsy's Career Portfolio?" / "Want to build a Career
+  // Portfolio and Salt Basin Profile for yourself?") plus a temporary
+  // attachment context space — uploads expire and are hard-deleted 24 hours
+  // after upload by the sweep in server/routes/portfolioRequests.js.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS portfolio_requests (
+      id                  BIGSERIAL PRIMARY KEY,
+      kind                TEXT NOT NULL,
+      source_output       TEXT,
+      knows_betsy         BOOLEAN,
+      knows_betsy_detail  TEXT,
+      comparing_to_role   BOOLEAN,
+      job_description     TEXT,
+      coverage            JSONB NOT NULL DEFAULT '[]',
+      coverage_notes      TEXT,
+      role_type           TEXT,
+      career_stage        TEXT,
+      goal                TEXT,
+      showcase            JSONB NOT NULL DEFAULT '[]',
+      recommended_portfolio TEXT,
+      contact_name        TEXT,
+      contact_email       TEXT NOT NULL,
+      contact_company     TEXT,
+      contact_title       TEXT,
+      contact_phone       TEXT,
+      notes               TEXT,
+      status              TEXT NOT NULL DEFAULT 'new',
+      created_at          BIGINT NOT NULL,
+      updated_at          BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_portfolio_requests_created ON portfolio_requests (created_at);
+
+    CREATE TABLE IF NOT EXISTS temp_attachments (
+      id                 BIGSERIAL PRIMARY KEY,
+      request_id         BIGINT,
+      original_filename  TEXT,
+      mime_type          TEXT,
+      file_size          BIGINT,
+      storage_bucket     TEXT,
+      storage_key        TEXT,
+      expires_at         BIGINT NOT NULL,
+      created_at         BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_temp_attachments_exp ON temp_attachments (expires_at);
+  `);
+
   // Career Master intake uploads. These tables intentionally store document
   // metadata and user policy acknowledgements, not extracted client names.
   await sql.unsafe(`

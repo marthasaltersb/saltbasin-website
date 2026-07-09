@@ -2,8 +2,26 @@ import { Router } from 'express';
 import { getJSON, setJSON } from '../db.js';
 import { requireAdmin, isLandingUnlocked, getUserFromCookie } from '../auth.js';
 import { captureLineage } from '../lib/lineage.js';
+import {
+  resumeUrlFromPreset, pickPrimaryPreset, publicPresetView,
+  loadResumePresets, siteOwnerUserId,
+} from '../lib/resumePresets.js';
 
 const router = Router();
+
+// Public: resolve the site owner's (admin's) primary resume preset into the
+// URL the homepage portfolio hub links to. The hub always shows the owner's
+// portfolio, so this must not depend on who the viewer is.
+router.get('/resume-url', async (req, res) => {
+  const ownerId = await siteOwnerUserId();
+  const presets = ownerId ? await loadResumePresets(ownerId) : [];
+  const primary = pickPrimaryPreset(presets);
+  res.json({
+    url: resumeUrlFromPreset(primary),
+    source: primary ? 'primary_preset' : 'default',
+    preset: publicPresetView(primary),
+  });
+});
 
 function publicView(site) {
   if (!site || !site.pages) return site;

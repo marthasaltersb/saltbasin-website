@@ -48,27 +48,93 @@ function useAuthState() {
   return state;
 }
 
+// ── LOCKED authorship block ────────────────────────────────────────────────
+// These credits are intentionally hardcoded constants (frozen, no props, no
+// config/CMS/template path can override them) so no admin UI, output
+// template, or member setting can alter or remove the copyright tags.
+// Changing them requires editing this source file directly.
+const AUTHORSHIP = Object.freeze({
+  authorLine: 'Authored by Betsy Salter · Co-Authored with Claude (Anthropic AI)',
+  copyright: () => `© ${new Date().getFullYear()} Salt Basin Holdings. All Rights Reserved. This output was generated from saltbasin.net and leverages AI LLM API to render the output formatting.`,
+  contact: 'saltbasin.net · betsysalter@saltbasin.net',
+  chips: Object.freeze([
+    '© Betsy Salter — Author',
+    'Claude (Anthropic) — Secondary Author',
+    'Image Inspiration — NotebookLM',
+    'Design System — Co-Authored with ChatGPT',
+  ]),
+});
+
 // Real DOM text (not CSS-generated content) so it's never stripped by print
 // CSS, text-extraction, or an ATS parsing a saved resume PDF. Appears once,
 // at the end of the document — browsers don't reliably support true
 // per-page running footers (@page margin boxes) via window.print(), so a
-// single end-of-document credit is the durable option here.
+// single end-of-document credit is the durable option here. Takes no props
+// by design — see the AUTHORSHIP lock note above.
 function OutputAuthorshipFooter() {
   return (
     <footer style={{ marginTop: '3rem', paddingTop: '1.25rem', borderTop: '0.5px solid var(--sb-taupe)', fontSize: '0.72rem', color: 'var(--sb-teal-deep)', lineHeight: 1.6 }}>
-      <div style={{ fontWeight: 700, color: 'var(--sb-navy)' }}>Authored by Betsy Salter · Co-Authored with Claude (Anthropic AI)</div>
-      <div>© {new Date().getFullYear()} Salt Basin Holdings. All Rights Reserved. This output was generated from saltbasin.net and leverages AI LLM API to render the output formatting.</div>
-      <div>saltbasin.net · betsysalter@saltbasin.net</div>
+      <div style={{ fontWeight: 700, color: 'var(--sb-navy)' }}>{AUTHORSHIP.authorLine}</div>
+      <div>{AUTHORSHIP.copyright()}</div>
+      <div>{AUTHORSHIP.contact}</div>
+      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.6rem' }}>
+        {AUTHORSHIP.chips.map((chip) => (
+          <span key={chip} style={{
+            fontSize: '0.58rem', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--sb-font-label)',
+            padding: '0.2rem 0.6rem', borderRadius: 12, border: '0.5px solid var(--sb-gold)', color: 'var(--sb-navy)',
+            background: 'rgba(196,132,58,0.08)', whiteSpace: 'nowrap',
+          }}>
+            {chip}
+          </span>
+        ))}
+      </div>
     </footer>
   );
 }
 
+// Robust cross-platform print (Windows / macOS / ChromeOS Chrome et al.):
+//  1. Optionally sets document.title first — Chrome/Edge/Safari use it as
+//     the default "Save as PDF" filename — and restores it after printing.
+//  2. Waits for fonts and any still-loading images before opening the
+//     dialog, so the preview never renders half-loaded (the "have to
+//     refresh the PDF a few times" symptom).
+//  3. window.focus() first and a try/catch fallback: if the environment
+//     blocks its print preview ("print preview not supported"), we retry
+//     once on the next tick, then leave the user a clear Ctrl/Cmd+P path.
+async function safePrint(docTitle) {
+  const prevTitle = document.title;
+  if (docTitle) document.title = docTitle;
+  const restore = () => { document.title = prevTitle; };
+  window.addEventListener('afterprint', restore, { once: true });
+  try {
+    if (document.fonts?.ready) { try { await document.fonts.ready; } catch { /* fonts API unavailable */ } }
+    const pending = Array.from(document.images).filter((img) => !img.complete);
+    if (pending.length) {
+      await Promise.race([
+        Promise.all(pending.map((img) => new Promise((r) => { img.onload = r; img.onerror = r; }))),
+        new Promise((r) => setTimeout(r, 2000)),
+      ]);
+    }
+    window.focus();
+    window.print();
+  } catch {
+    // Some embedded browsers refuse window.print() — retry once, then
+    // fall back to instructing the native shortcut (title stays set so
+    // the filename is still right when they hit Ctrl/Cmd+P).
+    setTimeout(() => {
+      try { window.print(); } catch {
+        window.removeEventListener('afterprint', restore);
+        alert('This browser blocked the print dialog. Press Ctrl+P (Windows/ChromeOS) or Cmd+P (Mac) to print or save as PDF — the filename is already set.');
+      }
+    }, 250);
+  }
+}
+
 // Sets printMode (read by the [data-print-mode] CSS rule in OutputFrame)
-// then opens the print dialog on the next tick, giving React time to flush
-// the re-render first.
-function triggerPrint(setPrintMode, mode) {
+// then opens the print dialog after React flushes the re-render.
+function triggerPrint(setPrintMode, mode, docTitle) {
   setPrintMode(mode);
-  setTimeout(() => window.print(), 60);
+  setTimeout(() => safePrint(docTitle), 60);
 }
 
 // Reusable pair of print/save buttons for any output with its own
@@ -96,7 +162,7 @@ function PrintModeActions({ onPrint }) {
 // print rule below strips it whenever the page sets
 // data-print-mode="static" before calling window.print(), giving a clean
 // static export that starts right at the content instead of the controls.
-function OutputFrame({ title, eyebrow, children, gated, hideTitle, printActions }) {
+function OutputFrame({ title, eyebrow, children, gated, hideTitle, printActions, printDocTitle }) {
   const { user } = useAuthState();
   const canPrint = !!user;
   return (
@@ -104,11 +170,15 @@ function OutputFrame({ title, eyebrow, children, gated, hideTitle, printActions 
       <style>{`
         @media print {
           .sb-output-toolbar, .sb-output-gate-overlay { display: none !important; }
-          .sb-output-page { padding: 0 !important; box-shadow: none !important; }
-          body { background: white !important; }
+          /* Zero out screen chrome so the document starts at the top of
+             page 1 (no blank header band from the article's screen margin)
+             and sections space evenly page over page. */
+          .sb-output-page { padding: 0 !important; margin: 0 !important; box-shadow: none !important; max-width: none !important; }
+          .sb-output-page section { break-inside: avoid; }
+          body { background: white !important; margin: 0 !important; }
           [data-print-mode="static"] .sb-interactive-toolbar { display: none !important; }
         }
-        @page { size: letter; margin: 0.5in; }
+        @page { size: letter; margin: 0.45in 0.55in; }
       `}</style>
       <div
         className="sb-output-toolbar"
@@ -131,7 +201,7 @@ function OutputFrame({ title, eyebrow, children, gated, hideTitle, printActions 
         <div style={{ display: 'flex', gap: '0.6rem' }}>
           {!gated && canPrint && (printActions || (
             <button
-              onClick={() => window.print()}
+              onClick={() => safePrint(printDocTitle)}
               className="sb-btn sb-btn-gold"
               style={{ padding: '0.45rem 1rem', fontSize: '0.7rem' }}
             >
@@ -1083,18 +1153,29 @@ export function ResumeOutput() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) {
-      setResumePreset(null);
-      return;
-    }
-    fetch('/api/members/me/resume-presets', { credentials: 'include' })
-      .then((r) => r.ok ? r.json() : { presets: [] })
-      .then((d) => {
-        const presets = Array.isArray(d.presets) ? d.presets : [];
-        const selected = presets.find((p) => p.id === requestedPresetId) || presets.find((p) => p.primaryResume) || presets[0] || null;
-        setResumePreset(selected);
-      })
-      .catch(() => setResumePreset(null));
+    let cancelled = false;
+    (async () => {
+      let selected = null;
+      if (user) {
+        try {
+          const r = await fetch('/api/members/me/resume-presets', { credentials: 'include' });
+          const d = r.ok ? await r.json() : { presets: [] };
+          const presets = Array.isArray(d.presets) ? d.presets : [];
+          selected = presets.find((p) => p.id === requestedPresetId) || presets.find((p) => p.primaryResume) || presets[0] || null;
+        } catch { /* fall through to site owner's primary */ }
+      }
+      if (!selected) {
+        // Viewer has no presets of their own (or isn't the owner): this is
+        // the site owner's resume, so render the owner's primary preset.
+        try {
+          const r = await fetch('/api/site/resume-url', { credentials: 'include' });
+          const d = r.ok ? await r.json() : null;
+          selected = d?.preset || null;
+        } catch { /* leave null — layout falls back to query params */ }
+      }
+      if (!cancelled) setResumePreset(selected);
+    })();
+    return () => { cancelled = true; };
   }, [authLoading, user, requestedPresetId]);
 
   const isLoading = authLoading || primaryTemplate === undefined || resumePreset === undefined || !master || (!page && !siteError);
@@ -1139,6 +1220,22 @@ export function ResumeOutput() {
   const execKpis = computeExecutiveKPIs(master);
   const capabilityMeters = computeCapabilityMeters(master);
 
+  // Auto filename for print / save-as-PDF (browsers default the filename to
+  // document.title): template name + primary-or-not + a section code per
+  // enabled section (ES/CC/ID/TP/CV) + the download date.
+  const sectionCodes = [
+    ['ES', showExecSummary], ['CC', showCapabilityMeters], ['ID', showIndustryBars],
+    ['TP', showToolBars], ['CV', showClientVoice],
+  ].filter(([, on]) => on).map(([code]) => code).join('-') || 'BASE';
+  const templateName = String(resumePreset?.name || layoutParam || 'Resume').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-');
+  const printDocTitle = [
+    'Betsy-Salter-Resume',
+    templateName,
+    resumePreset ? (resumePreset.primaryResume ? 'Primary' : 'Alt') : 'Default',
+    sectionCodes,
+    new Date().toISOString().slice(0, 10),
+  ].join('_');
+
   // ── Template-driven render ──
   if (!resumePreset && primaryTemplate?.blocks?.length) {
     const ctx = { about, timeline, jobs, execKpis, capabilityMeters, resumePreset };
@@ -1149,7 +1246,7 @@ export function ResumeOutput() {
     // suppress OutputFrame's generic h1 so the header isn't repeated.
     const hasOwnHeader = sorted.some((b) => b.type === 'page-header');
     return (
-      <OutputFrame title={about.heading || about.name || 'Betsy Salter'} eyebrow="Resume" hideTitle={hasOwnHeader}>
+      <OutputFrame title={about.heading || about.name || 'Betsy Salter'} eyebrow="Resume" hideTitle={hasOwnHeader} printDocTitle={printDocTitle}>
         <div style={{ fontFamily: 'Georgia, serif' }}>
           {sorted.map(block => {
             // experience-block with _dynamic = 'jobs' expands into one block per job
@@ -1190,7 +1287,7 @@ export function ResumeOutput() {
     return (
       // ResumeLayoutModern renders its own name/tagline header — hideTitle
       // avoids showing the name twice.
-      <OutputFrame title={about.name || about.heading || 'Betsy Salter'} eyebrow="Resume · Modern" hideTitle>
+      <OutputFrame title={about.name || about.heading || 'Betsy Salter'} eyebrow="Resume · Modern" hideTitle printDocTitle={printDocTitle}>
         <ResumeLayoutModern {...resumeProps} />
       </OutputFrame>
     );
@@ -1199,7 +1296,7 @@ export function ResumeOutput() {
     return (
       // ResumeLayoutCorporate renders its own navy header bar — hideTitle
       // avoids showing the name twice.
-      <OutputFrame title={about.name || about.heading || 'Betsy Salter'} eyebrow="Resume · Corporate" hideTitle>
+      <OutputFrame title={about.name || about.heading || 'Betsy Salter'} eyebrow="Resume · Corporate" hideTitle printDocTitle={printDocTitle}>
         <ResumeLayoutCorporate {...resumeProps} />
       </OutputFrame>
     );
@@ -1207,7 +1304,7 @@ export function ResumeOutput() {
 
   // Classic fallback
   return (
-      <OutputFrame title={about.heading || 'Betsy Salter'} eyebrow="Resume">
+      <OutputFrame title={about.heading || 'Betsy Salter'} eyebrow="Resume" printDocTitle={printDocTitle}>
       <>
         <PrioritizedExperienceSection items={resumeProps.prioritizedExperience} summary={resumeProps.agentSummary} />
         <section style={{ marginBottom: '1.5rem' }}>
@@ -1621,7 +1718,7 @@ export function CareerCaseStudyPortfolioOutput() {
   });
 
   return (
-    <OutputFrame title="Case Study Portfolio" eyebrow="Strategic Operator Portfolio" printActions={<PrintModeActions onPrint={(m) => triggerPrint(setPrintMode, m)} />}>
+    <OutputFrame title="Case Study Portfolio" eyebrow="Strategic Operator Portfolio" printActions={<PrintModeActions onPrint={(m) => triggerPrint(setPrintMode, m, `Betsy-Salter_Case-Study-Portfolio_${m === 'static' ? 'Static' : 'Interactive'}_${new Date().toISOString().slice(0, 10)}`)} />}>
       <div style={{ fontFamily: 'Georgia, serif', color: '#1b2a3b' }} data-print-mode={printMode}>
         {/* ── Interactive chrome — search/filters — stripped in static print ── */}
         <div className="sb-interactive-toolbar">
@@ -1769,8 +1866,229 @@ const CMD_TABS = [
   { id: 'tools', label: 'Tools & Tech' },
   { id: 'engagements', label: 'Projects' },
   { id: 'vista', label: 'Vista Portfolio Outcomes' },
+  { id: 'investor', label: 'Investor Profile' },
   { id: 'positioning', label: 'Positioning & Ventures' },
 ];
+
+// ── Investor Profile dashboard (admin-only tab) ───────────────────────────
+// Operating-principal / investment-partner view of the Career Master:
+// certifications with renewal dates, deal transactions (role-in-deal by
+// employer-at-time, investment type, individual return carve-outs), and
+// KPIs an actively trading partner would track — deal-over-deal transaction
+// size, majority-stake portfolio ARR growth YoY, new investments (12 mo).
+
+// "Aug 2018" / "2019" / "2024-03" → comparable month index (year*12+month).
+function entryMonthIndex(s) {
+  const str = String(s || '');
+  const year = str.match(/(19|20)\d{2}/)?.[0];
+  if (!year) return null;
+  const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+  const named = months.findIndex((m) => new RegExp(m, 'i').test(str));
+  const numeric = str.match(/[-/](\d{1,2})/)?.[1];
+  const month = named >= 0 ? named : numeric ? Math.min(11, Math.max(0, Number(numeric) - 1)) : 0;
+  return Number(year) * 12 + month;
+}
+
+function fmtMusd(m) {
+  if (m == null || Number.isNaN(Number(m))) return '—';
+  const n = Number(m);
+  return n >= 1000 ? `$${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 2).replace(/\.?0+$/, '')}B` : `$${Math.round(n)}M`;
+}
+
+function InvestorEmptyNote({ children }) {
+  return (
+    <div style={{ padding: '1rem 1.2rem', background: BRAND.warmShell, borderRadius: 8, fontSize: '0.76rem', color: BRAND.slate, lineHeight: 1.6 }}>
+      {children}
+    </div>
+  );
+}
+
+// Horizontal magnitude bars (single hue, value-labeled) — shared by the
+// deal-size and ARR-growth charts so the Investor Profile reads as one system.
+function InvestorBarRow({ label, sub, value, max, display, color }) {
+  const pct = max > 0 ? Math.max(2, Math.round((Math.abs(value) / max) * 100)) : 0;
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 4.2rem', gap: '0.7rem', alignItems: 'center', marginBottom: '0.6rem' }}>
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.22rem' }}>
+          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: BRAND.navy }}>{label}</span>
+          {sub && <span style={{ fontSize: '0.62rem', color: BRAND.slate }}>{sub}</span>}
+        </div>
+        <div style={{ height: 8, background: BRAND.mist, borderRadius: 4, overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${pct}%`, background: color || BRAND.teal, borderRadius: 4 }} />
+        </div>
+      </div>
+      <div style={{ fontSize: '0.8rem', fontWeight: 700, color: BRAND.navy, fontFamily: 'Georgia, serif', textAlign: 'right' }}>{display}</div>
+    </div>
+  );
+}
+
+function InvestorProfileDashboard({ master }) {
+  const deals = master.deals || [];
+  const certs = master.certifications || [];
+
+  const sortedDeals = [...deals]
+    .map((d) => ({ ...d, _month: entryMonthIndex(d.entryDate) }))
+    .sort((a, b) => (a._month ?? 0) - (b._month ?? 0));
+  const sizedDeals = sortedDeals.filter((d) => Number(d.dealSizeMusd) > 0);
+
+  // KPI: deal-over-deal transaction size change (latest vs prior sized deal)
+  let dealOverDeal = null;
+  if (sizedDeals.length >= 2) {
+    const prev = Number(sizedDeals[sizedDeals.length - 2].dealSizeMusd);
+    const last = Number(sizedDeals[sizedDeals.length - 1].dealSizeMusd);
+    if (prev > 0) dealOverDeal = Math.round(((last - prev) / prev) * 100);
+  }
+
+  const majorityActive = deals.filter((d) => d.isActivePortfolio && /majority/i.test(String(d.stakeType || '')));
+  const nowIdx = new Date().getFullYear() * 12 + new Date().getMonth();
+  const last12 = sortedDeals.filter((d) => d._month != null && nowIdx - d._month <= 11 && nowIdx - d._month >= 0);
+  const measuredExits = deals.filter((d) => Number(d.exitValueMusd) > 0);
+  const flaggedIndividual = deals.filter((d) => d.individualReturn);
+  const totalVolume = deals.reduce((sum, d) => sum + (Number(d.dealSizeMusd) || 0), 0);
+
+  const kpis = [
+    { value: fmtMusd(totalVolume), label: 'Deal Volume Touched', note: `${deals.length} transactions`, accent: BRAND.gold },
+    { value: dealOverDeal == null ? '—' : `${dealOverDeal > 0 ? '+' : ''}${dealOverDeal}%`, label: 'Deal-over-Deal Size Δ', note: 'Latest vs prior sized deal', accent: BRAND.teal },
+    { value: String(majorityActive.length), label: 'Active Majority Portfolio', note: 'Managing-partner majority stakes', accent: BRAND.plum },
+    { value: String(last12.length), label: 'New Investments (12 mo)', note: 'By deal entry date', accent: BRAND.green },
+    { value: String(measuredExits.length), label: 'Measured Exits', note: 'Exit value on record', accent: BRAND.gold },
+    { value: String(flaggedIndividual.length), label: 'Individual Return Flags', note: 'Carved-out contributor returns', accent: BRAND.teal },
+  ];
+
+  // Active majority-stake portfolio ARR growth YoY
+  const arrRows = majorityActive
+    .filter((d) => Number(d.arrCurrentMusd) > 0 && Number(d.arrPriorYearMusd) > 0)
+    .map((d) => ({
+      label: d.portfolioCompany || d.dealName,
+      growth: Math.round(((Number(d.arrCurrentMusd) - Number(d.arrPriorYearMusd)) / Number(d.arrPriorYearMusd)) * 100),
+      sub: `${fmtMusd(d.arrPriorYearMusd)} → ${fmtMusd(d.arrCurrentMusd)} ARR`,
+    }));
+
+  // New investments per month, last 12 months
+  const monthCells = Array.from({ length: 12 }, (_, i) => {
+    const idx = nowIdx - 11 + i;
+    const count = sortedDeals.filter((d) => d._month === idx).length;
+    const date = new Date(Math.floor(idx / 12), idx % 12, 1);
+    return { key: idx, count, label: date.toLocaleString('en-US', { month: 'short' }) };
+  });
+  const monthMax = Math.max(1, ...monthCells.map((c) => c.count));
+
+  const maxDealSize = Math.max(1, ...sizedDeals.map((d) => Number(d.dealSizeMusd)));
+  const maxGrowth = Math.max(1, ...arrRows.map((r) => Math.abs(r.growth)));
+
+  return (
+    <div>
+      {/* ── KPI strip ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.7rem', marginBottom: '1.5rem' }}>
+        {kpis.map((k) => <KPITile key={k.label} {...k} />)}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '0.5rem' }}>
+        {/* ── Deal transaction size, deal over deal ── */}
+        <section style={{ pageBreakInside: 'avoid' }}>
+          <SectionHeadingMod>Deal Transaction Size — Deal over Deal</SectionHeadingMod>
+          {sizedDeals.length === 0 ? (
+            <InvestorEmptyNote>No sized deals yet — add Deal Size ($M) to deal records in Career Master → Deals.</InvestorEmptyNote>
+          ) : sizedDeals.map((d) => (
+            <InvestorBarRow key={d.id} label={d.dealName} sub={`${d.entryDate || ''}${d.investmentType ? ` · ${d.investmentType}` : ''}`}
+              value={Number(d.dealSizeMusd)} max={maxDealSize} display={d.dealSize || fmtMusd(d.dealSizeMusd)} color={BRAND.teal} />
+          ))}
+        </section>
+
+        {/* ── Active portfolio ARR growth YoY ── */}
+        <section style={{ pageBreakInside: 'avoid' }}>
+          <SectionHeadingMod>Active Portfolio — ARR Growth YoY</SectionHeadingMod>
+          {arrRows.length === 0 ? (
+            <InvestorEmptyNote>
+              No active majority-stake holdings with ARR figures yet. Mark a deal as an active portfolio holding with stake type
+              “Managing Partner — Majority” and enter prior-year + current ARR to light this up.
+            </InvestorEmptyNote>
+          ) : arrRows.map((r) => (
+            <InvestorBarRow key={r.label} label={r.label} sub={r.sub} value={r.growth} max={maxGrowth}
+              display={`${r.growth > 0 ? '+' : ''}${r.growth}%`} color={r.growth >= 0 ? BRAND.green : BRAND.plum} />
+          ))}
+        </section>
+      </div>
+
+      {/* ── New investments, last 12 months ── */}
+      <section style={{ marginBottom: '1.5rem', pageBreakInside: 'avoid' }}>
+        <SectionHeadingMod>New Investments — Last 12 Months</SectionHeadingMod>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '0.35rem', alignItems: 'end', height: 74 }}>
+          {monthCells.map((c) => (
+            <div key={c.key} style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '0.6rem', color: c.count ? BRAND.navy : BRAND.fog, fontWeight: c.count ? 700 : 400 }}>{c.count || ''}</div>
+              <div style={{ height: Math.max(3, Math.round((c.count / monthMax) * 44)), background: c.count ? BRAND.teal : BRAND.mist, borderRadius: 3 }} />
+              <div style={{ fontSize: '0.55rem', color: BRAND.fog, marginTop: '0.2rem' }}>{c.label}</div>
+            </div>
+          ))}
+        </div>
+        {last12.length === 0 && (
+          <div style={{ fontSize: '0.68rem', color: BRAND.fog, marginTop: '0.5rem' }}>
+            No new investments recorded in the last 12 months — new deals appear here by entry date.
+          </div>
+        )}
+      </section>
+
+      {/* ── Deal transactions table ── */}
+      <section style={{ marginBottom: '1.5rem' }}>
+        <SectionHeadingMod>Deal Transactions</SectionHeadingMod>
+        {deals.length === 0 ? (
+          <InvestorEmptyNote>No deals recorded yet — seed or add them in Career Master → Deals.</InvestorEmptyNote>
+        ) : (
+          <DataTable
+            csvFilename="deal_transactions"
+            searchKeys={['dealName', 'portfolioCompany', 'employerAtTime', 'dealRole', 'notes']}
+            filters={[
+              { key: 'investmentType', label: 'Investment Types', options: [...new Set(deals.map((d) => d.investmentType).filter(Boolean))].sort() },
+              { key: 'outcomeStatus', label: 'Outcomes', options: [...new Set(deals.map((d) => d.outcomeStatus).filter(Boolean))].sort() },
+            ]}
+            rows={deals}
+            columns={[
+              { key: 'dealName', label: 'Deal', wide: true },
+              { key: 'employerAtTime', label: 'Employer at Time' },
+              { key: 'dealRole', label: 'Role in Deal', wide: true, render: (r) => <span style={{ fontSize: '0.7rem' }}>{r.dealRole}</span> },
+              { key: 'investmentType', label: 'Investment Type' },
+              { key: 'dealSize', label: 'Size', render: (r) => r.dealSize || fmtMusd(r.dealSizeMusd) },
+              { key: 'entryDate', label: 'Entry' },
+              { key: 'exitValue', label: 'Exit', render: (r) => r.exitValue || (r.exitDate ? r.exitDate : '—') },
+              { key: 'grossReturnPct', label: 'Gross %', render: (r) => (r.grossReturnPct != null ? `${r.grossReturnPct}%` : '—') },
+              { key: 'individualReturn', label: 'Individual Return', render: (r) => r.individualReturn || (r.attributionPct != null ? `${r.attributionPct}% attribution` : '— not carved') },
+              { key: 'outcomeStatus', label: 'Status' },
+            ]}
+          />
+        )}
+      </section>
+
+      {/* ── Certifications & renewals ── */}
+      <section>
+        <SectionHeadingMod>Certifications & Renewal Dates</SectionHeadingMod>
+        {certs.length === 0 ? (
+          <InvestorEmptyNote>No certifications recorded yet — seed or add them in Career Master → Certifications.</InvestorEmptyNote>
+        ) : (
+          <DataTable
+            csvFilename="certifications"
+            searchKeys={['name', 'issuer', 'category', 'notes']}
+            filters={[
+              { key: 'category', label: 'Categories', options: [...new Set(certs.map((c) => c.category).filter(Boolean))].sort() },
+              { key: 'status', label: 'Statuses', options: [...new Set(certs.map((c) => c.status).filter(Boolean))].sort() },
+            ]}
+            rows={certs}
+            columns={[
+              { key: 'name', label: 'Certification', wide: true },
+              { key: 'issuer', label: 'Issuer' },
+              { key: 'category', label: 'Category' },
+              { key: 'firstEarned', label: 'First Earned', render: (r) => r.firstEarned || '—' },
+              { key: 'lastRenewed', label: 'Most Recent Renewal', render: (r) => r.lastRenewed || '— to confirm' },
+              { key: 'expires', label: 'Expires', render: (r) => r.expires || '—' },
+              { key: 'status', label: 'Status' },
+            ]}
+          />
+        )}
+      </section>
+    </div>
+  );
+}
 
 export function CareerMasterDatabaseOutput() {
   const { loading: authLoading, user } = useAuthState();
@@ -1815,7 +2133,7 @@ export function CareerMasterDatabaseOutput() {
   const nicheRows = master.domains.filter((d) => d.groupType === 'niche_solution');
 
   return (
-    <OutputFrame title="Career Master Database" eyebrow="Skills · Jobs · Tools · Engagements" printActions={<PrintModeActions onPrint={(m) => triggerPrint(setPrintMode, m)} />}>
+    <OutputFrame title="Career Master Database" eyebrow="Skills · Jobs · Tools · Engagements" printActions={<PrintModeActions onPrint={(m) => triggerPrint(setPrintMode, m, `Betsy-Salter_Career-Master-Database_${m === 'static' ? 'Static' : 'Interactive'}_${new Date().toISOString().slice(0, 10)}`)} />}>
       <div style={{ fontFamily: 'sans-serif', color: '#1b2a3b' }} data-print-mode={printMode}>
         {headerLine && <p className="sb-interactive-toolbar" style={{ fontSize: '0.78rem', color: '#666', marginBottom: '1.25rem' }}>{headerLine}</p>}
 
@@ -1833,7 +2151,7 @@ export function CareerMasterDatabaseOutput() {
           {CMD_TABS.map((t) => (
             <button key={t.id} onClick={() => setTab(t.id)}
               style={{ padding: '0.5rem 1rem', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: '0.72rem', fontWeight: tab === t.id ? 700 : 500, background: tab === t.id ? '#1b2a3b' : 'rgba(0,0,0,0.06)', color: tab === t.id ? 'white' : '#333' }}>
-              {t.label} ({t.id === 'skills' ? master.skills.length : t.id === 'jobs' ? master.jobs.length : t.id === 'tools' ? master.tools.length : t.id === 'engagements' ? master.engagements.length : t.id === 'vista' ? vistaEngagements.length : ventureRows.length})
+              {t.label} ({t.id === 'skills' ? master.skills.length : t.id === 'jobs' ? master.jobs.length : t.id === 'tools' ? master.tools.length : t.id === 'engagements' ? master.engagements.length : t.id === 'vista' ? vistaEngagements.length : t.id === 'investor' ? (master.deals?.length || 0) + (master.certifications?.length || 0) : ventureRows.length})
             </button>
           ))}
         </div>
@@ -1937,6 +2255,8 @@ export function CareerMasterDatabaseOutput() {
           </div>
         )}
 
+        {tab === 'investor' && <InvestorProfileDashboard master={master} />}
+
         {tab === 'positioning' && (
           <div className="sb-interactive-toolbar">
             {domainRows.length > 0 && (
@@ -2010,15 +2330,16 @@ export function CareerPortfolioHubOutput() {
   const targetProfile = new URLSearchParams(location.search).get('profile');
   useEffect(() => { fetchCareerMaster().then(setMaster); }, []);
   useEffect(() => {
+    // The hub always shows the site owner's portfolio, so without an explicit
+    // ?profile= it resolves the owner's primary preset — never the viewer's.
     const url = targetProfile
       ? `/api/member-site/by-slug/${encodeURIComponent(targetProfile)}/resume-url`
-      : (user ? '/api/members/me/resume-url' : null);
-    if (!url) return;
+      : '/api/site/resume-url';
     fetch(url, { credentials: 'include' })
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { if (d?.url) setResumeUrl(d.url); })
       .catch(() => {});
-  }, [user, targetProfile]);
+  }, [targetProfile]);
   if (loading || !master) return null;
 
   const CARDS = [
@@ -2114,7 +2435,7 @@ export function CareerFullPortfolioOutput() {
   );
 
   return (
-    <OutputFrame title="Full Portfolio" eyebrow="Resume + Career Database + Case Studies" hideTitle>
+    <OutputFrame title="Full Portfolio" eyebrow="Resume + Career Database + Case Studies" hideTitle printDocTitle={`Betsy-Salter_Full-Portfolio_${new Date().toISOString().slice(0, 10)}`}>
       <div style={{ fontFamily: 'Georgia, serif', color: '#1b2a3b' }}>
         <SectionDivider>Executive Resume</SectionDivider>
         <ResumeLayoutModern about={about} timeline={{}} jobs={jobs} handsOn={handsOn} integrationDesign={integrationDesign} adjacent={adjacent} />
@@ -2449,7 +2770,7 @@ export function StrategicOperatorOutput() {
     });
 
   return (
-    <OutputFrame title="Betsy Salter — The Strategic Operator" eyebrow="Career Infographic" hideTitle>
+    <OutputFrame title="Betsy Salter — The Strategic Operator" eyebrow="Career Infographic" hideTitle printDocTitle={`Betsy-Salter_Strategic-Operator-Infographic_${new Date().toISOString().slice(0, 10)}`}>
       <div style={{ fontFamily: 'Georgia, serif', color: BRAND.graphite }}>
 
         {/* ── Hero band ── */}
@@ -2593,7 +2914,7 @@ export function PortfolioAppendixOutput() {
   const sortedSkills = [...skills].sort((a, b) => (a.category || '').localeCompare(b.category || '') || TIER_ORDER.indexOf(a.tier) - TIER_ORDER.indexOf(b.tier));
 
   return (
-    <OutputFrame title="Portfolio Appendix" eyebrow="Industry & Skills Proficiency Dashboard">
+    <OutputFrame title="Portfolio Appendix" eyebrow="Industry & Skills Proficiency Dashboard" printDocTitle={`Betsy-Salter_Portfolio-Appendix_${new Date().toISOString().slice(0, 10)}`}>
       <div style={{ fontFamily: 'Georgia, serif', color: '#1b2a3b' }}>
 
         {/* ── Proficiency Level Definitions ── */}
