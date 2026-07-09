@@ -24,6 +24,31 @@ import { form, react } from '../lib/molecule.js';
 
 const router = Router();
 
+function resumeUrlFromPreset(preset) {
+  const layoutUrls = {
+    classic: '/output/resume',
+    modern: '/output/resume?layout=modern',
+    corporate: '/output/resume?layout=corporate',
+    minimal: '/output/resume?layout=modern',
+    executive: '/output/resume?layout=corporate',
+  };
+  const base = layoutUrls[preset?.layout] || layoutUrls.classic;
+  const params = [];
+  if (preset?.showExecSummary === false) params.push('execSummary=0');
+  if (preset?.showCapabilityMeters === false) params.push('capabilityMeters=0');
+  if (preset?.showIndustryBars === false) params.push('industryBars=0');
+  if (preset?.showToolBars === false) params.push('toolBars=0');
+  if (preset?.showClientVoice === false) params.push('clientVoice=0');
+  if (!params.length) return base;
+  return base + (base.includes('?') ? '&' : '?') + params.join('&');
+}
+
+function primaryResumeUrlFromConfig(config) {
+  const presets = Array.isArray(config?.resumePresets) ? config.resumePresets : [];
+  const primary = presets.find((p) => p.primaryResume || p.isDefault) || presets[0] || null;
+  return resumeUrlFromPreset(primary);
+}
+
 async function readState(userId, kind) {
   const row = await db
     .prepare('SELECT data FROM member_sites WHERE user_id = $1 AND kind = $2')
@@ -178,6 +203,29 @@ router.get('/by-slug/:slug', async (req, res) => {
     site: JSON.parse(row.site_json),
     config: row.config_json ? sanitizeMemberConfig(JSON.parse(row.config_json)) : null,
   });
+});
+
+// Public resolver for profile-facing resume links. Returns only the computed
+// primary resume URL, not the full private member config.
+router.get('/by-slug/:slug/resume-url', async (req, res) => {
+  const row = await db
+    .prepare(
+      `SELECT mp.user_id, mc.data AS config_json, mjs.data AS preset_json
+         FROM member_profiles mp
+         LEFT JOIN member_configs mc ON mc.user_id = mp.user_id AND mc.kind = 'published'
+         LEFT JOIN member_json_store mjs ON mjs.user_id = mp.user_id AND mjs.key = 'resume_presets'
+        WHERE mp.slug = $1`
+    )
+    .get(req.params.slug);
+  if (!row) return res.status(404).json({ error: 'profile not found' });
+  if (row.preset_json) {
+    const data = JSON.parse(row.preset_json);
+    const presets = Array.isArray(data.presets) ? data.presets : [];
+    const primary = presets.find((p) => p.primaryResume) || presets[0] || null;
+    return res.json({ url: resumeUrlFromPreset(primary), source: primary ? 'primary_preset' : 'default' });
+  }
+  const config = row.config_json ? sanitizeMemberConfig(JSON.parse(row.config_json)) : null;
+  res.json({ url: primaryResumeUrlFromConfig(config), source: config?.resumePresets?.length ? 'primary_preset' : 'default' });
 });
 
 // Strip secrets (Anthropic key etc.) before sending public config to clients.

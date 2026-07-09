@@ -164,6 +164,40 @@ export const api = {
   createCareerDomain: (item) => request('/api/career/domains', { method: 'POST', body: JSON.stringify(item) }),
   updateCareerDomain: (id, patch) => request(`/api/career/domains/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
   deleteCareerDomain: (id) => request(`/api/career/domains/${id}`, { method: 'DELETE' }),
+  listCareerCertifications: () => request('/api/career/certifications'),
+  createCareerCertification: (item) => request('/api/career/certifications', { method: 'POST', body: JSON.stringify(item) }),
+  updateCareerCertification: (id, patch) => request(`/api/career/certifications/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  deleteCareerCertification: (id) => request(`/api/career/certifications/${id}`, { method: 'DELETE' }),
+  listCareerDeals: () => request('/api/career/deals'),
+  createCareerDeal: (item) => request('/api/career/deals', { method: 'POST', body: JSON.stringify(item) }),
+  updateCareerDeal: (id, patch) => request(`/api/career/deals/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  deleteCareerDeal: (id) => request(`/api/career/deals/${id}`, { method: 'DELETE' }),
+  listCareerMetaOptions: () => request('/api/career/meta-options'),
+  createCareerMetaOption: (item) => request('/api/career/meta-options', { method: 'POST', body: JSON.stringify(item) }),
+  updateCareerMetaOption: (id, patch) => request(`/api/career/meta-options/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  deleteCareerMetaOption: (id) => request(`/api/career/meta-options/${id}`, { method: 'DELETE' }),
+  listCareerIntakeDocuments: () => request('/api/career/intake-documents'),
+  listCareerIntakeRuns: () => request('/api/career/intake-runs'),
+  createCareerIntakeRun: (body) =>
+    request('/api/career/intake-runs', { method: 'POST', body: JSON.stringify(body) }),
+  syncCareerSiteMetadata: (body = {}) =>
+    request('/api/career/sync-site-metadata', { method: 'POST', body: JSON.stringify(body) }),
+  uploadCareerIntakeDocument: async (formData) => {
+    const res = await fetch('/api/career/intake-documents', {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    });
+    const contentType = res.headers.get('content-type') || '';
+    const body = contentType.includes('application/json') ? await res.json() : await res.text();
+    if (!res.ok) {
+      const err = new Error(body?.error || `Request failed: ${res.status}`);
+      err.status = res.status;
+      err.body = body;
+      throw err;
+    }
+    return body;
+  },
 
   // Admin nav structure (data-driven AdminShell)
   getAdminNav: () => request('/api/config/admin-nav'),

@@ -97,6 +97,8 @@ function PrintModeActions({ onPrint }) {
 // data-print-mode="static" before calling window.print(), giving a clean
 // static export that starts right at the content instead of the controls.
 function OutputFrame({ title, eyebrow, children, gated, hideTitle, printActions }) {
+  const { user } = useAuthState();
+  const canPrint = !!user;
   return (
     <div style={{ background: 'white', color: 'var(--sb-navy)', minHeight: '100vh' }}>
       <style>{`
@@ -127,7 +129,7 @@ function OutputFrame({ title, eyebrow, children, gated, hideTitle, printActions 
           </div>
         </div>
         <div style={{ display: 'flex', gap: '0.6rem' }}>
-          {!gated && (printActions || (
+          {!gated && canPrint && (printActions || (
             <button
               onClick={() => window.print()}
               className="sb-btn sb-btn-gold"
@@ -231,22 +233,15 @@ function GatedPreview({ kind, teaser }) {
           Member access required
         </div>
         <h2 style={{ fontFamily: 'var(--sb-font-display)', fontSize: '1.5rem', marginBottom: '0.5rem', letterSpacing: '0.02em' }}>
-          Sign up to generate Salt Basin outputs
+          Sign in to generate Salt Basin outputs
         </h2>
         <p style={{ fontSize: '0.9rem', color: 'var(--sb-sage)', lineHeight: 1.65, maxWidth: 500, margin: '0 auto 1.25rem' }}>
           The full {kind} — including the rest of this content plus print-to-PDF download — is available to Salt Basin members. Free to start. You keep everything you've shared as a lead, plus get a profile site you can point to.
         </p>
         <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <Link
-            to={`/signup?next=${encodeURIComponent(location.pathname)}`}
-            className="sb-btn sb-btn-gold"
-            style={{ padding: '0.55rem 1.25rem', fontSize: '0.72rem' }}
-          >
-            ✦ Become a Member
-          </Link>
-          <Link
             to={`/login?next=${encodeURIComponent(location.pathname)}`}
-            className="sb-btn sb-btn-outline"
+            className="sb-btn sb-btn-gold"
             style={{ padding: '0.55rem 1.25rem', fontSize: '0.72rem' }}
           >
             Sign In
@@ -436,6 +431,42 @@ function yearFromDateStr(s) {
   return m ? Number(m[0]) : null;
 }
 
+function sortableRoleYear(job) {
+  const endText = String(job?.endDate || job?.dates || '').toLowerCase();
+  if (/present|current|now|ongoing/.test(endText)) return 9999;
+  const end = yearFromDateStr(job?.endDate || job?.dates);
+  const start = yearFromDateStr(job?.startDate || job?.dates);
+  return end ?? start ?? 0;
+}
+
+function sortMostRecentRoles(jobs = []) {
+  return [...jobs].sort((a, b) => sortableRoleYear(b) - sortableRoleYear(a));
+}
+
+function buildResumeJobs(master, timeline) {
+  if (master?.jobs?.length) {
+    return sortMostRecentRoles(master.jobs).map((j) => ({
+      company: j.company,
+      title: j.title,
+      dates: [j.startDate, j.endDate].filter(Boolean).join(' - '),
+      startDate: j.startDate,
+      endDate: j.endDate,
+      bullets: String(j.keyMetrics || '').split(';').map((s) => s.trim()).filter(Boolean),
+    }));
+  }
+  const jobs = [];
+  for (let i = 1; i <= 10; i += 1) {
+    if (!timeline?.[`job${i}Company`]) continue;
+    jobs.push({
+      company: timeline[`job${i}Company`],
+      title: timeline[`job${i}Title`],
+      dates: timeline[`job${i}Dates`],
+      bullets: (timeline[`job${i}Bullets`] || '').split('\n').filter(Boolean),
+    });
+  }
+  return sortMostRecentRoles(jobs);
+}
+
 function computeIndustryDurations(master) {
   if (!master) return [];
   const nowYear = new Date().getFullYear();
@@ -580,7 +611,26 @@ function ElevatedVisualSections({ industryDurations, toolBars, clientQuotes }) {
   );
 }
 
-function ResumeLayoutModern({ about, timeline, jobs, handsOn, integrationDesign, adjacent, execKpis, capabilityMeters, industryDurations = [], toolBars = [], clientQuotes = [] }) {
+function PrioritizedExperienceSection({ items, summary }) {
+  const rows = Array.isArray(items) ? items : [];
+  if (!rows.length && !summary) return null;
+  return (
+    <section style={{ marginBottom: '1.5rem', pageBreakInside: 'avoid' }}>
+      <SectionHeadingMod>Prioritized Experience for This Role</SectionHeadingMod>
+      {summary && <p style={{ fontSize: '0.84rem', lineHeight: 1.65, color: BRAND.graphite, marginBottom: '0.6rem' }}>{summary}</p>}
+      {rows.map((item, i) => (
+        <div key={i} style={{ marginBottom: '0.45rem', paddingLeft: '0.8rem', position: 'relative', fontSize: '0.8rem', lineHeight: 1.55, color: BRAND.graphite }}>
+          <span style={{ position: 'absolute', left: 0, color: BRAND.gold, fontWeight: 700 }}>{i + 1}.</span>
+          <strong>{item.label || item.experience || item.title}</strong>
+          {item.why && <span> - {item.why}</span>}
+          {item.evidence && <span style={{ color: BRAND.fog }}> ({item.evidence})</span>}
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function ResumeLayoutModern({ about, timeline, jobs, handsOn, integrationDesign, adjacent, execKpis, capabilityMeters, industryDurations = [], toolBars = [], clientQuotes = [], prioritizedExperience = [], agentSummary = '' }) {
   const name = about.name || about.heading || 'Betsy Salter';
   const tagline = about.tagline || 'Strategic Operator · Revenue Systems · Private Equity';
   const photoUrl = about.photoUrl || about.photo || null;
@@ -604,6 +654,7 @@ function ResumeLayoutModern({ about, timeline, jobs, handsOn, integrationDesign,
         </div>
       </header>
 
+      <PrioritizedExperienceSection items={prioritizedExperience} summary={agentSummary} />
       <ExecutiveSummarySection execKpis={execKpis} capabilityMeters={capabilityMeters} />
       <ElevatedVisualSections industryDurations={industryDurations} toolBars={toolBars} clientQuotes={clientQuotes} />
 
@@ -716,7 +767,7 @@ function ResumeLayoutModern({ about, timeline, jobs, handsOn, integrationDesign,
 
 // ── Layout: Corporate SB ──────────────────────────────────────────────────────
 // Bold structured layout — clean columns, strong navy headers, gold rule lines.
-function ResumeLayoutCorporate({ about, timeline, jobs, handsOn, integrationDesign, adjacent, execKpis, capabilityMeters, industryDurations = [], toolBars = [], clientQuotes = [] }) {
+function ResumeLayoutCorporate({ about, timeline, jobs, handsOn, integrationDesign, adjacent, execKpis, capabilityMeters, industryDurations = [], toolBars = [], clientQuotes = [], prioritizedExperience = [], agentSummary = '' }) {
   const name = about.name || about.heading || 'Betsy Salter';
   const tagline = about.tagline || 'Strategic Operator · Revenue Systems · Private Equity';
   const photoUrl = about.photoUrl || about.photo || null;
@@ -740,6 +791,7 @@ function ResumeLayoutCorporate({ about, timeline, jobs, handsOn, integrationDesi
         </div>
       </header>
 
+      <PrioritizedExperienceSection items={prioritizedExperience} summary={agentSummary} />
       <ExecutiveSummarySection execKpis={execKpis} capabilityMeters={capabilityMeters} />
       <ElevatedVisualSections industryDurations={industryDurations} toolBars={toolBars} clientQuotes={clientQuotes} />
 
@@ -992,9 +1044,11 @@ export function ResumeOutput() {
   const [wheel, setWheel] = useState(null);
   const [siteError, setSiteError] = useState(null);
   const [primaryTemplate, setPrimaryTemplate] = useState(undefined);
+  const [resumePreset, setResumePreset] = useState(undefined);
   const [master, setMaster] = useState(null);
   const searchParams = new URLSearchParams(location.search);
-  const layoutParam = searchParams.get('layout') || 'classic';
+  const requestedPresetId = searchParams.get('preset');
+  const layoutParam = searchParams.get('layout') || resumePreset?.layout || 'classic';
   // Set by the resume configurator's Career Master Sections toggles
   // (src/components/admin/MyResumePanel.jsx) — both default on.
   const showExecSummary = searchParams.get('execSummary') !== '0';
@@ -1027,7 +1081,23 @@ export function ResumeOutput() {
       .catch(() => setPrimaryTemplate(null));
   }, []);
 
-  const isLoading = authLoading || primaryTemplate === undefined || !master || (!page && !siteError);
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      setResumePreset(null);
+      return;
+    }
+    fetch('/api/members/me/resume-presets', { credentials: 'include' })
+      .then((r) => r.ok ? r.json() : { presets: [] })
+      .then((d) => {
+        const presets = Array.isArray(d.presets) ? d.presets : [];
+        const selected = presets.find((p) => p.id === requestedPresetId) || presets.find((p) => p.primaryResume) || presets[0] || null;
+        setResumePreset(selected);
+      })
+      .catch(() => setResumePreset(null));
+  }, [authLoading, user, requestedPresetId]);
+
+  const isLoading = authLoading || primaryTemplate === undefined || resumePreset === undefined || !master || (!page && !siteError);
 
   if (isLoading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', color: '#1B2A3B', fontFamily: 'Georgia, serif', fontSize: '1rem' }}>
@@ -1064,23 +1134,14 @@ export function ResumeOutput() {
 
   const about = getHomeAboutFields(page);
   const timeline = page.sections.find((s) => s.type === 'timeline')?.fields || {};
-  const jobs = [];
-  for (let i = 1; i <= 10; i++) {
-    if (!timeline[`job${i}Company`]) continue;
-    jobs.push({
-      company: timeline[`job${i}Company`],
-      title: timeline[`job${i}Title`],
-      dates: timeline[`job${i}Dates`],
-      bullets: (timeline[`job${i}Bullets`] || '').split('\n').filter(Boolean),
-    });
-  }
+  const jobs = buildResumeJobs(master, timeline);
 
   const execKpis = computeExecutiveKPIs(master);
   const capabilityMeters = computeCapabilityMeters(master);
 
   // ── Template-driven render ──
-  if (primaryTemplate?.blocks?.length) {
-    const ctx = { about, timeline, jobs, execKpis, capabilityMeters };
+  if (!resumePreset && primaryTemplate?.blocks?.length) {
+    const ctx = { about, timeline, jobs, execKpis, capabilityMeters, resumePreset };
     const sorted = [...primaryTemplate.blocks]
       .filter(b => b.visible !== false)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -1116,6 +1177,8 @@ export function ResumeOutput() {
   const adjacent = parseTech(wheel?.adjacent);
   const resumeProps = {
     about, timeline, jobs, wheel, handsOn, integrationDesign, adjacent,
+    agentSummary: resumePreset?.agentSummary || '',
+    prioritizedExperience: resumePreset?.prioritizedExperience || [],
     execKpis: showExecSummary ? execKpis : [],
     capabilityMeters: showCapabilityMeters ? capabilityMeters : [],
     industryDurations: showIndustryBars ? computeIndustryDurations(master) : [],
@@ -1144,8 +1207,9 @@ export function ResumeOutput() {
 
   // Classic fallback
   return (
-    <OutputFrame title={about.heading || 'Betsy Salter'} eyebrow="Resume">
+      <OutputFrame title={about.heading || 'Betsy Salter'} eyebrow="Resume">
       <>
+        <PrioritizedExperienceSection items={resumeProps.prioritizedExperience} summary={resumeProps.agentSummary} />
         <section style={{ marginBottom: '1.5rem' }}>
           <OutputHeading>Profile</OutputHeading>
           {[about.p1, about.p2, about.p3].filter(Boolean).map((p, i) => (
@@ -1939,9 +2003,22 @@ export function CareerMasterDatabaseOutput() {
 // Landing screen for the homepage "View Resume" button: pick one of the
 // three data-driven portfolio views, or print/save the full combined set.
 export function CareerPortfolioHubOutput() {
+  const location = useLocation();
   const { loading, user } = useAuthState();
   const [master, setMaster] = useState(null);
+  const [resumeUrl, setResumeUrl] = useState('/output/resume');
+  const targetProfile = new URLSearchParams(location.search).get('profile');
   useEffect(() => { fetchCareerMaster().then(setMaster); }, []);
+  useEffect(() => {
+    const url = targetProfile
+      ? `/api/member-site/by-slug/${encodeURIComponent(targetProfile)}/resume-url`
+      : (user ? '/api/members/me/resume-url' : null);
+    if (!url) return;
+    fetch(url, { credentials: 'include' })
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.url) setResumeUrl(d.url); })
+      .catch(() => {});
+  }, [user, targetProfile]);
   if (loading || !master) return null;
 
   const CARDS = [
@@ -1950,6 +2027,8 @@ export function CareerPortfolioHubOutput() {
     { title: 'Case Study Portfolio', desc: 'Every engagement in full — context, actions, quantified outcomes, and client testimonials.', href: '/output/case-study-portfolio', stat: `${master.engagements.length} engagements` },
     { title: 'The Strategic Operator', desc: 'One-page visual career infographic — outcomes & exits, industry-duration bars, capability confidence, platform proficiency, client voice.', href: '/output/strategic-operator', stat: 'Print-ready infographic' },
   ];
+
+  CARDS[0].href = resumeUrl;
 
   return (
     <OutputFrame title="View My Work" eyebrow="Portfolio">
@@ -2018,7 +2097,7 @@ export function CareerFullPortfolioOutput() {
   }
 
   const about = getHomeAboutFields(page);
-  const jobs = master.jobs.map((j) => ({ company: j.company, title: j.title, dates: [j.startDate, j.endDate].filter(Boolean).join(' – '), bullets: (j.keyMetrics || '').split(';').map((s) => s.trim()).filter(Boolean) }));
+  const jobs = buildResumeJobs(master, {});
   const parseTech = (s) => (s || '').split(',').map((p) => p.trim()).filter(Boolean).map((p) => p.split(':')[0].trim());
   let handsOn = parseTech(wheel?.handsOn), integrationDesign = parseTech(wheel?.integrationDesign), adjacent = parseTech(wheel?.adjacent);
   if (master.tools.length) {
@@ -3747,7 +3826,6 @@ export function ProductOnePagerOutput() {
           <h1 className="sb-display" style={{ fontSize: '2.4rem', color: 'var(--sb-navy)', marginBottom: '0.75rem' }}>
             The product one-pager is gated to members.
           </h1>
-          <Link to="/signup" className="sb-btn sb-btn-gold" style={{ marginRight: '0.5rem' }}>Become a member</Link>
           <Link to="/login" className="sb-btn sb-btn-outline-dark">Sign in</Link>
         </div>
       </OutputFrame>

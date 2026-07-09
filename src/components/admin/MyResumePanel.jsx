@@ -12,6 +12,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
 import { fetchCareerMaster } from '../../lib/careerMaster.js';
+import CareerIntakePanel from './CareerIntakePanel.jsx';
+import { resumeUrlFromPreset } from '../../lib/resumeUrls.js';
 
 // ── Layout templates ──────────────────────────────────────────────────────────
 const LAYOUTS = [
@@ -199,15 +201,7 @@ const LAYOUTS = [
 // Executive Summary dashboard on the Modern/Corporate layouts. Only added
 // when explicitly turned off, since both default to on.
 function presetPreviewUrl(preset) {
-  const base = (LAYOUTS.find(l => l.id === preset?.layout) || LAYOUTS[0]).url;
-  const params = [];
-  if (preset?.showExecSummary === false) params.push('execSummary=0');
-  if (preset?.showCapabilityMeters === false) params.push('capabilityMeters=0');
-  if (preset?.showIndustryBars === false) params.push('industryBars=0');
-  if (preset?.showToolBars === false) params.push('toolBars=0');
-  if (preset?.showClientVoice === false) params.push('clientVoice=0');
-  if (!params.length) return base;
-  return base + (base.includes('?') ? '&' : '?') + params.join('&');
+  return resumeUrlFromPreset(preset, { includePresetId: true });
 }
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
@@ -362,7 +356,7 @@ function NameModal({ onConfirm, onCancel }) {
 // ── Agent diff view ───────────────────────────────────────────────────────────
 function DiffView({ diff, onAccept, onDiscard, accepting }) {
   if (!diff) return null;
-  const { presetName, summary, changes = [], recommendations } = diff;
+  const { presetName, summary, changes = [], recommendations, prioritizedExperience = [] } = diff;
   return (
     <div style={{ marginTop: '1.5rem', border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: 12, overflow: 'hidden' }}>
       <div style={{ background: 'var(--sb-navy, #1b2a3b)', color: 'white', padding: '0.85rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -380,6 +374,18 @@ function DiffView({ diff, onAccept, onDiscard, accepting }) {
           <div style={{ marginBottom: '1rem', padding: '0.75rem', background: 'rgba(2,161,166,0.06)', border: '1px solid rgba(2,161,166,0.2)', borderRadius: 8 }}>
             <div style={{ fontSize: '0.6rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: '#02a1a6', fontFamily: 'var(--sb-font-label)', marginBottom: '0.35rem' }}>Tailored Summary</div>
             <div style={{ fontSize: '0.84rem', lineHeight: 1.7, color: '#333' }}>{summary}</div>
+          </div>
+        )}
+        {prioritizedExperience.length > 0 && (
+          <div style={{ marginBottom: '1rem', padding: '0.75rem', background: 'rgba(27,42,59,0.04)', border: '1px solid rgba(27,42,59,0.12)', borderRadius: 8 }}>
+            <div style={{ fontSize: '0.6rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: '#1b2a3b', fontFamily: 'var(--sb-font-label)', marginBottom: '0.35rem' }}>Prioritized Experience</div>
+            {prioritizedExperience.map((item, i) => (
+              <div key={i} style={{ fontSize: '0.8rem', lineHeight: 1.6, color: '#333', marginBottom: '0.25rem' }}>
+                <strong>{i + 1}. {item.label || item.experience || item.title}</strong>
+                {item.why && <span> - {item.why}</span>}
+                {item.evidence && <span style={{ color: '#777' }}> ({item.evidence})</span>}
+              </div>
+            ))}
           </div>
         )}
         {changes.map((c, i) => (
@@ -573,6 +579,13 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
 {
   "presetName": "Tailored for [Company] — [Role]",
   "summary": "3-4 sentence tailored professional summary",
+  "prioritizedExperience": [
+    {
+      "label": "Experience headline to display near the top of this role-specific resume",
+      "why": "Why this experience should be prioritized for the target role",
+      "evidence": "Career Master role, skill, tool, metric, or engagement evidence"
+    }
+  ],
   "changes": [
     {
       "section": "Section Name",
@@ -596,7 +609,7 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
         if (jsonMatch) diff = JSON.parse(jsonMatch[0]);
         else diff = JSON.parse(raw);
       } catch {
-        diff = { presetName: 'Tailored Resume', summary: raw, changes: [], recommendations: '' };
+        diff = { presetName: 'Tailored Resume', summary: raw, prioritizedExperience: [], changes: [], recommendations: '' };
       }
       setAgentDiff(diff);
     } catch (e) {
@@ -617,6 +630,7 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
       includedSections: basePreset?.includedSections || [],
       layout: basePreset?.layout || 'classic',
       agentSummary: agentDiff.summary,
+      prioritizedExperience: agentDiff.prioritizedExperience || [],
       agentChanges: agentDiff.changes,
       tailoredFrom: basePreset?.id,
     };
@@ -650,6 +664,8 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
       <div style={S.sub}>Configure resume presets, generate tailored outputs, and preview or print directly from here.</div>
 
       {/* ── Primary preset hero ────────────────────────────────────────── */}
+      <CareerIntakePanel onPrimaryResumeCreated={loadPresets} />
+
       {primaryPreset && editingPreset?.id !== primaryPreset.id && (
         <div style={{ marginBottom: '1.5rem' }}>
           <div style={S.label}>Primary Resume</div>

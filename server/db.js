@@ -1941,6 +1941,58 @@ async function bootstrap() {
     CREATE INDEX IF NOT EXISTS idx_career_meta_options_key ON career_meta_options (field_key, order_index);
   `);
 
+  // Career Master intake uploads. These tables intentionally store document
+  // metadata and user policy acknowledgements, not extracted client names.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS career_intake_documents (
+      id                                 BIGSERIAL PRIMARY KEY,
+      user_id                            BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      owner_scope                        TEXT NOT NULL DEFAULT 'member',
+      intake_kind                        TEXT NOT NULL,
+      source_truth_status                TEXT NOT NULL DEFAULT 'user_attested',
+      source_use_scope                   TEXT NOT NULL DEFAULT 'career_master_and_outputs',
+      client_name_policy                 TEXT NOT NULL DEFAULT 'generalize_private_clients',
+      portfolio_name_policy              TEXT NOT NULL DEFAULT 'allow_if_user_provided',
+      case_study_title_policy            TEXT NOT NULL DEFAULT 'industry_company_type',
+      public_primary_research            BOOLEAN NOT NULL DEFAULT false,
+      primary_resume_requested           BOOLEAN NOT NULL DEFAULT true,
+      analysis_passes_requested          INTEGER NOT NULL DEFAULT 3,
+      redaction_ack                      BOOLEAN NOT NULL DEFAULT false,
+      public_output_validation_ack       BOOLEAN NOT NULL DEFAULT false,
+      no_private_name_persistence_ack    BOOLEAN NOT NULL DEFAULT false,
+      original_filename                  TEXT NOT NULL,
+      storage_bucket                     TEXT NOT NULL,
+      storage_key                        TEXT NOT NULL,
+      mime_type                          TEXT,
+      file_size                          BIGINT,
+      upload_notes                       TEXT,
+      status                             TEXT NOT NULL DEFAULT 'uploaded',
+      created_at                         BIGINT NOT NULL,
+      updated_at                         BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_career_intake_docs_user ON career_intake_documents (user_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_career_intake_docs_kind ON career_intake_documents (intake_kind, created_at DESC);
+
+    CREATE TABLE IF NOT EXISTS career_intake_runs (
+      id                         BIGSERIAL PRIMARY KEY,
+      user_id                    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      owner_scope                TEXT NOT NULL DEFAULT 'member',
+      run_kind                   TEXT NOT NULL DEFAULT 'career_master_mapping',
+      status                     TEXT NOT NULL DEFAULT 'queued',
+      document_ids               JSONB NOT NULL DEFAULT '[]',
+      analysis_passes_requested  INTEGER NOT NULL DEFAULT 3,
+      primary_resume_requested   BOOLEAN NOT NULL DEFAULT true,
+      public_primary_research    BOOLEAN NOT NULL DEFAULT false,
+      resume_preset_created      BOOLEAN NOT NULL DEFAULT false,
+      summary                    TEXT,
+      metadata                   JSONB NOT NULL DEFAULT '{}',
+      created_at                 BIGINT NOT NULL,
+      updated_at                 BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_career_intake_runs_user ON career_intake_runs (user_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_career_intake_runs_status ON career_intake_runs (status, created_at DESC);
+  `);
+
   // One-shot: inject "Career Master" tab into the admin_nav content view.
   try {
     const navRow3 = await sql.unsafe(`SELECT data FROM config_state WHERE id = 'admin_nav'`);

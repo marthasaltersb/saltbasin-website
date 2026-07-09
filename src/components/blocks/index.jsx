@@ -2651,8 +2651,12 @@ function TechnologyBlock({ section }) {
 
 // ── Phase 3 blocks: aboutIntro (split hero), timeline, caseStudies ──
 
-function AboutIntroBlock({ section, config }) {
+function AboutIntroBlock({ section, config, memberSlug }) {
   const f = section.fields || {};
+  const profilePortfolioLink = (href) => {
+    if (!memberSlug || !href || !href.startsWith('/output/portfolio')) return href;
+    return href.includes('?') ? `${href}&profile=${encodeURIComponent(memberSlug)}` : `${href}?profile=${encodeURIComponent(memberSlug)}`;
+  };
   return (
     <section
       id={section.id}
@@ -2780,12 +2784,12 @@ function AboutIntroBlock({ section, config }) {
               </p>
               <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '1.1rem' }}>
                 {f.cta1 && (
-                  <a href={f.cta1Link || '#contact'} className="sb-btn sb-btn-gold" style={{ fontSize: '0.7rem', padding: '0.5rem 1.1rem' }}>
+                  <a href={profilePortfolioLink(f.cta1Link || '#contact')} className="sb-btn sb-btn-gold" style={{ fontSize: '0.7rem', padding: '0.5rem 1.1rem' }}>
                     {f.cta1}
                   </a>
                 )}
                 {f.cta2 && (
-                  <a href={f.cta2Link || '#contact'} className="sb-btn sb-btn-outline" style={{ fontSize: '0.7rem', padding: '0.5rem 1.1rem' }}>
+                  <a href={profilePortfolioLink(f.cta2Link || '#contact')} className="sb-btn sb-btn-outline" style={{ fontSize: '0.7rem', padding: '0.5rem 1.1rem' }}>
                     {f.cta2}
                   </a>
                 )}
@@ -3660,13 +3664,11 @@ function ResumePdfButton({ slug, memberUserId }) {
             <div style={cardTitle}>Betsy Salter · Resume</div>
             <div style={cardSub}>To view and download the full resume, become a Salt Basin member — or request temporary 24-hour preview access below.</div>
 
-            {/* Become a member path */}
             <div style={{ padding: '1.1rem 1.25rem', background: 'var(--sb-navy)', borderRadius: 2, textAlign: 'center' }}>
-              <div style={{ fontSize: '0.62rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--sb-gold)', fontFamily: 'var(--sb-font-label)', marginBottom: '0.4rem' }}>Full Access</div>
-              <div style={{ fontFamily: 'var(--sb-font-display)', fontSize: '1.05rem', color: 'var(--sb-cream)', fontWeight: 300, marginBottom: '0.5rem' }}>Become a Member</div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--sb-dusty)', marginBottom: '1rem', lineHeight: 1.55 }}>Free to start. Includes download access, your own profile site, and full resume output.</div>
-              <a href="/signup" style={{ display: 'inline-block', padding: '0.5rem 1.25rem', background: 'var(--sb-gold)', color: 'var(--sb-ivory)', borderRadius: 2, fontSize: '0.75rem', textDecoration: 'none', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.08em' }}>✦ Become a Member</a>
-              <span style={{ display: 'inline-block', marginLeft: '0.6rem', fontSize: '0.75rem', color: 'var(--sb-dusty)' }}>or <a href="/login" style={{ color: 'var(--sb-gold)', textDecoration: 'none' }}>sign in</a></span>
+              <div style={{ fontSize: '0.62rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--sb-gold)', fontFamily: 'var(--sb-font-label)', marginBottom: '0.4rem' }}>Approved member access</div>
+              <div style={{ fontFamily: 'var(--sb-font-display)', fontSize: '1.05rem', color: 'var(--sb-cream)', fontWeight: 300, marginBottom: '0.5rem' }}>Sign in to continue</div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--sb-dusty)', marginBottom: '1rem', lineHeight: 1.55 }}>Member creation is currently invite-only. Existing members can sign in for full resume output access.</div>
+              <a href="/login" style={{ display: 'inline-block', padding: '0.5rem 1.25rem', background: 'var(--sb-gold)', color: 'var(--sb-ivory)', borderRadius: 2, fontSize: '0.75rem', textDecoration: 'none', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.08em' }}>Sign in</a>
             </div>
 
             <hr style={divider} />

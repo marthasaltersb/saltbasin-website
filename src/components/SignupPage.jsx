@@ -69,6 +69,47 @@ export default function SignupPage() {
     }
   }
 
+  if (!fromLeadPublicId || !fromLeadToken) {
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '2rem',
+          background: 'var(--sb-navy)',
+        }}
+      >
+        <div
+          style={{
+            width: '100%',
+            maxWidth: 460,
+            background: 'var(--sb-navy-deep)',
+            padding: '2rem',
+            border: '0.5px solid rgba(196,132,58,0.25)',
+            borderTop: '3px solid var(--sb-gold)',
+            borderRadius: 'var(--sb-radius)',
+            textAlign: 'center',
+          }}
+        >
+          <div className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>
+            Salt Basin Net Works
+          </div>
+          <h2 className="sb-display" style={{ fontSize: '1.8rem', marginBottom: '0.75rem', color: 'var(--sb-cream)' }}>
+            Member creation is invite-only
+          </h2>
+          <p style={{ fontSize: '0.86rem', color: 'var(--sb-dusty)', lineHeight: 1.65, marginBottom: '1.25rem' }}>
+            Public profile creation is currently locked down. Existing approved members can sign in.
+          </p>
+          <Link to="/login" className="sb-btn sb-btn-gold" style={{ display: 'inline-flex', padding: '0.55rem 1.25rem', fontSize: '0.75rem' }}>
+            Sign in
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       style={{

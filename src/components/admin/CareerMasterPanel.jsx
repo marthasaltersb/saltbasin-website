@@ -12,6 +12,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
+import CareerIntakePanel from './CareerIntakePanel.jsx';
 
 const TIERS = ['Expert', 'Advanced', 'Proficient', 'Foundational'];
 const WHEEL_BUCKETS = ['hands_on', 'integration_design', 'adjacent'];
@@ -23,7 +24,14 @@ const TABS = [
   { id: 'tools', label: 'Tools' },
   { id: 'engagements', label: 'Engagements' },
   { id: 'domains', label: 'Domains & Ventures' },
+  { id: 'certifications', label: 'Certifications' },
+  { id: 'deals', label: 'Deals' },
+  { id: 'metaOptions', label: 'Meta Options' },
 ];
+
+// field_key values the Meta Options tab manages — each holds the
+// recommended selectable inputs for the matching 'suggest' fields below.
+const META_FIELD_KEYS = ['deal_role', 'investment_type', 'stake_type', 'outcome_status', 'cert_category', 'cert_status'];
 
 // ── field schemas drive both the table columns and the edit modal ────────
 const SCHEMAS = {
@@ -309,6 +317,8 @@ export default function CareerMasterPanel() {
           Single source of truth for skills, jobs, tools, and engagements — feeds the public timeline, industry wheel, case studies, and resume outputs.
           {!loading && totalRows === 0 && ' Tables are empty — seed the initial dataset to get started.'}
         </div>
+
+        <CareerIntakePanel />
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
           <div style={S.tabBar}>

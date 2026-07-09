@@ -24,6 +24,25 @@ function slugify(s) {
     .slice(0, 40);
 }
 
+function resumeUrlFromPreset(preset) {
+  const layoutUrls = {
+    classic: '/output/resume',
+    modern: '/output/resume?layout=modern',
+    corporate: '/output/resume?layout=corporate',
+    minimal: '/output/resume?layout=modern',
+    executive: '/output/resume?layout=corporate',
+  };
+  const base = layoutUrls[preset?.layout] || layoutUrls.classic;
+  const params = [];
+  if (preset?.showExecSummary === false) params.push('execSummary=0');
+  if (preset?.showCapabilityMeters === false) params.push('capabilityMeters=0');
+  if (preset?.showIndustryBars === false) params.push('industryBars=0');
+  if (preset?.showToolBars === false) params.push('toolBars=0');
+  if (preset?.showClientVoice === false) params.push('clientVoice=0');
+  if (!params.length) return base;
+  return base + (base.includes('?') ? '&' : '?') + params.join('&');
+}
+
 async function uniqueSlugFor(base) {
   let slug = base || 'operator';
   let n = 0;
@@ -40,8 +59,21 @@ async function uniqueSlugFor(base) {
 router.post('/signup', async (req, res) => {
   const { email, password, displayName, requestedSlug, fromLeadPublicId, fromLeadToken, recaptchaToken } =
     req.body || {};
+  const publicSignupEnabled = process.env.PUBLIC_MEMBER_SIGNUP_ENABLED === 'true';
+  const hasLeadConversion = !!(fromLeadPublicId && fromLeadToken);
+  if (!publicSignupEnabled && !hasLeadConversion) {
+    return res.status(403).json({ error: 'Member creation is currently invite-only.' });
+  }
   const captcha = await verifyRecaptcha(recaptchaToken, 'signup');
   if (!captcha.ok) return res.status(400).json({ error: captcha.error || 'captcha verification failed' });
+  if (!publicSignupEnabled && hasLeadConversion) {
+    const lead = await db
+      .prepare('SELECT id, access_token, converted_user_id FROM leads WHERE public_id = $1')
+      .get(fromLeadPublicId);
+    if (!lead || lead.access_token !== fromLeadToken || lead.converted_user_id) {
+      return res.status(403).json({ error: 'Member creation is currently invite-only.' });
+    }
+  }
   const created = await createMember(email, password, displayName);
   if (created.error) return res.status(400).json({ error: created.error });
 
@@ -343,6 +375,16 @@ router.get('/me/resume-presets', requireUser, async (req, res) => {
   ).get(req.user.id, 'resume_presets');
   const data = row ? JSON.parse(row.data) : { presets: [] };
   res.json(data);
+});
+
+router.get('/me/resume-url', requireUser, async (req, res) => {
+  const row = await db.prepare(
+    `SELECT data FROM member_json_store WHERE user_id = $1 AND key = $2`
+  ).get(req.user.id, 'resume_presets');
+  const data = row ? JSON.parse(row.data) : { presets: [] };
+  const presets = Array.isArray(data.presets) ? data.presets : [];
+  const primary = presets.find((p) => p.primaryResume) || presets[0] || null;
+  res.json({ url: resumeUrlFromPreset(primary), source: primary ? 'primary_preset' : 'default' });
 });
 
 router.put('/me/resume-presets', requireUser, async (req, res) => {

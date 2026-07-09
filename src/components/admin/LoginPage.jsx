@@ -14,7 +14,7 @@
 // (not an external URL, for safety).
 
 import React, { useState } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../../lib/api.js';
 import { getRecaptchaToken } from '../../lib/recaptcha.js';
 
@@ -152,10 +152,7 @@ export default function LoginPage() {
               </button>
             </div>
             <div style={{ marginTop: '1rem', fontSize: '0.78rem', color: 'var(--sb-dusty)', textAlign: 'center' }}>
-              No account yet?{' '}
-              <Link to={next ? `/signup?next=${encodeURIComponent(next)}` : '/signup'} style={{ color: 'var(--sb-gold)' }}>
-                Sign up
-              </Link>
+              Member creation is currently invite-only.
             </div>
           </form>
         )}
