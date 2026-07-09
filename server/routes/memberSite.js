@@ -39,6 +39,9 @@ async function readState(userId, kind) {
 }
 
 async function writeState(userId, kind, data) {
+  // Stamp a schema version if the draft predates the field — never touched
+  // again unless a future breaking migration explicitly bumps it.
+  if (data && typeof data === 'object' && data.version === undefined) data.version = 1;
   const json = JSON.stringify(data);
   await db
     .prepare(

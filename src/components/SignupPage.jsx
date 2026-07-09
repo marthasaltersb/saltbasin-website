@@ -12,6 +12,7 @@ export default function SignupPage() {
   const [form, setForm] = useState({
     displayName: '',
     email: '',
+    workEmail: '',
     password: '',
     requestedSlug: '',
   });
@@ -61,6 +62,19 @@ export default function SignupPage() {
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || 'Signup failed');
+
+      // Signup email is the personal login — capture a work email too if
+      // given, so members onboarding into a Member Organization already have
+      // both on file. Best-effort: a failure here shouldn't block signup.
+      if (form.workEmail && form.workEmail !== form.email) {
+        fetch('/api/members/me/emails', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: form.workEmail, type: 'work' }),
+        }).catch(() => {});
+      }
+
       nav('/member', { replace: true });
     } catch (e) {
       setErr(e.message);
@@ -167,7 +181,8 @@ export default function SignupPage() {
         <InlineDataNotice dark style={{ marginBottom: '1.25rem' }} />
 
         <Field label="Display Name" value={form.displayName} onChange={(v) => update('displayName', v)} placeholder="Full name as you want it shown" />
-        <Field label="Email" type="email" value={form.email} onChange={(v) => update('email', v)} placeholder="you@email.com" required />
+        <Field label="Personal Email (recommended for login)" type="email" value={form.email} onChange={(v) => update('email', v)} placeholder="you@personal-email.com" required />
+        <Field label="Work Email (optional, for org onboarding)" type="email" value={form.workEmail} onChange={(v) => update('workEmail', v)} placeholder="you@company.com" />
         <Field label="Password" type="password" value={form.password} onChange={(v) => update('password', v)} placeholder="8+ characters" required />
         <Field label="Preferred URL slug (optional)" value={form.requestedSlug} onChange={(v) => update('requestedSlug', v)} placeholder="e.g. jane-doe (lowercase, no spaces)" />
 

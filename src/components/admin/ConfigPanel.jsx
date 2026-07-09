@@ -4,6 +4,16 @@ import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
 import { RenderSection } from '../blocks/index.jsx';
 
+// Curated themes — mirrors the [data-theme] blocks in src/brand.css. Keep in
+// sync: id must match the CSS selector value exactly.
+const THEME_OPTIONS = [
+  { id: 'strategic',     label: 'Strategic Operator', swatch: ['#1B2A3B', '#C4843A', '#4A7C8E'] },
+  { id: 'glow-light',    label: 'Glow — Light',       swatch: ['#FAFAF9', '#9C6329', '#355C6A'] },
+  { id: 'glow-dark',     label: 'Glow — Dark',        swatch: ['#0A121C', '#DDAA66', '#8FADB6'] },
+  { id: 'momentum-warm', label: 'Momentum — Warm',    swatch: ['#F5E3C4', '#1B2A3B', '#9C6329'] },
+  { id: 'lagoon',        label: 'Lagoon',             swatch: ['#223E48', '#DDAA66', '#7E93A6'] },
+];
+
 export default function ConfigPanel({ config, onChange, scope = 'admin', site = null }) {
   const isMember = scope === 'member';
   function patch(path, value) {
@@ -118,6 +128,30 @@ export default function ConfigPanel({ config, onChange, scope = 'admin', site = 
           />
         </div>
         )}
+
+        {/* Theme — both admin and member. Sets data-theme on the public root
+            (PublicSite.jsx / PublicProfile.jsx), which swaps the --sb-theme-*
+            semantic tokens defined in brand.css. Independent of the Brand
+            Colors override below — Theme picks a curated combination, Brand
+            Colors recolors the base tokens directly. */}
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Theme</div>
+          <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem', lineHeight: 1.55 }}>
+            {isMember
+              ? 'Pick a curated color combination for your profile pages. Hot Pink always stays a mark/underline/icon accent, never a fill.'
+              : 'Pick a curated color combination for saltbasin.net public pages. Admin chrome stays locked to Strategic Operator.'}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '0.6rem' }}>
+            {THEME_OPTIONS.map((t) => (
+              <ThemeSwatch
+                key={t.id}
+                theme={t}
+                active={(config?.theme || 'strategic') === t.id}
+                onClick={() => patch('theme', t.id)}
+              />
+            ))}
+          </div>
+        </div>
 
         {/* Brand colors — both admin and member.
             Admin scope: overrides --sb-* tokens on saltbasin.net public site.
@@ -372,29 +406,7 @@ export default function ConfigPanel({ config, onChange, scope = 'admin', site = 
         {isMember && <EmailManager />}
 
         {/* BYO Claude — member only. Powers the profile agent chat. */}
-        {isMember && (
-        <div style={styles.card}>
-          <div style={styles.cardTitle}>Profile Agent · Bring Your Own Claude</div>
-          <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem', lineHeight: 1.55 }}>
-            Paste an Anthropic API key to power the AI agent in your admin. The agent can read and update your site draft and config via chat. Get a key at{' '}
-            <a href="https://console.anthropic.com" target="_blank" rel="noreferrer" style={{ color: 'var(--sb-gold)' }}>console.anthropic.com</a>.
-            Stored server-side, never shown back to the client.
-          </div>
-          <Field
-            label="Anthropic API key"
-            value={config?.integrations?.anthropicKey}
-            onChange={(v) => patch('integrations.anthropicKey', v)}
-            placeholder="sk-ant-…"
-            type="password"
-          />
-          <Field
-            label="Model (default: claude-sonnet-4-5)"
-            value={config?.integrations?.anthropicModel}
-            onChange={(v) => patch('integrations.anthropicModel', v)}
-            placeholder="claude-sonnet-4-5"
-          />
-        </div>
-        )}
+        {isMember && <ClaudeConnectionCard config={config} patch={patch} />}
 
         {/* Third-party integrations are not yet available to members.
             Shown as roadmap R&D until the Salt Basin Connector launches. */}
@@ -726,6 +738,89 @@ function IntegrationsRoadmapNotice() {
 // Members can add multiple named Postgres/Supabase connections. Each is
 // independently named, described, and access-controlled. The profile agent
 // gains query tools scoped to each connected source.
+// ── Claude connection (BYO Anthropic key) ────────────────────────────────────
+// The key is encrypted server-side (server/routes/memberConfig.js) and never
+// sent back to the browser — GET only ever returns
+// `integrations.anthropicKeyConfigured` (bool). Pasting a new value or
+// clicking Remove sends an explicit `anthropicKey` (set / '') that the server
+// treats as an intentional change; leaving the field alone never touches the
+// stored connection.
+function ClaudeConnectionCard({ config, patch }) {
+  const configured = !!config?.integrations?.anthropicKeyConfigured;
+  const [editing, setEditing] = React.useState(false);
+  const [draftKey, setDraftKey] = React.useState('');
+
+  function save() {
+    if (!draftKey) return;
+    patch('integrations.anthropicKey', draftKey);
+    setDraftKey('');
+    setEditing(false);
+    toast.success('Key staged — click Save (below) to store it');
+  }
+
+  function remove() {
+    if (!window.confirm('Disconnect your Anthropic API key? The profile agent will stop working until you reconnect.')) return;
+    patch('integrations.anthropicKey', '');
+    toast.success('Removal staged — click Save (below) to apply');
+  }
+
+  return (
+    <div style={styles.card}>
+      <div style={styles.cardTitle}>Profile Agent · Connect Claude</div>
+      <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem', lineHeight: 1.55 }}>
+        Paste an Anthropic API key to power the AI agent in your admin. The agent can read and update your site draft and config via chat. Get a key at{' '}
+        <a href="https://console.anthropic.com" target="_blank" rel="noreferrer" style={{ color: 'var(--sb-gold)' }}>console.anthropic.com</a>.
+        Encrypted server-side — never shown back to the browser once saved.
+      </div>
+
+      {!editing && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem' }}>
+          <span style={{
+            fontSize: '0.68rem', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.08em', textTransform: 'uppercase',
+            padding: '0.25rem 0.6rem', borderRadius: 'var(--sb-radius)',
+            background: configured ? 'rgba(122,168,116,0.15)' : 'rgba(196,132,58,0.1)',
+            color: configured ? 'var(--sb-sage)' : 'var(--sb-dusty)',
+          }}>
+            {configured ? '● Connected' : '○ Not connected'}
+          </span>
+          <button onClick={() => setEditing(true)} className="sb-btn sb-btn-outline" style={{ fontSize: '0.7rem', padding: '0.35rem 0.8rem' }}>
+            {configured ? 'Update key' : 'Connect'}
+          </button>
+          {configured && (
+            <button onClick={remove} className="sb-btn sb-btn-outline" style={{ fontSize: '0.7rem', padding: '0.35rem 0.8rem', color: 'var(--sb-risk-critical)' }}>
+              Remove
+            </button>
+          )}
+        </div>
+      )}
+
+      {editing && (
+        <div style={{ padding: '0.75rem', background: 'rgba(196,132,58,0.05)', border: '0.5px dashed rgba(196,132,58,0.3)', borderRadius: 'var(--sb-radius)', marginBottom: '0.75rem' }}>
+          <input
+            className="sb-input"
+            type="password"
+            value={draftKey}
+            onChange={(e) => setDraftKey(e.target.value)}
+            placeholder="sk-ant-…"
+            style={{ fontFamily: 'monospace', fontSize: '0.78rem', marginBottom: '0.5rem', width: '100%' }}
+          />
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button onClick={save} disabled={!draftKey} className="sb-btn sb-btn-gold" style={{ fontSize: '0.7rem', padding: '0.4rem 0.9rem', opacity: !draftKey ? 0.45 : 1 }}>Save key</button>
+            <button onClick={() => { setEditing(false); setDraftKey(''); }} className="sb-btn sb-btn-outline" style={{ fontSize: '0.7rem', padding: '0.4rem 0.8rem' }}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      <Field
+        label="Model (default: claude-sonnet-4-5)"
+        value={config?.integrations?.anthropicModel}
+        onChange={(v) => patch('integrations.anthropicModel', v)}
+        placeholder="claude-sonnet-4-5"
+      />
+    </div>
+  );
+}
+
 function MemberDbsCard({ config, patch }) {
   const dbs = config?.integrations?.memberDbs || [];
   const [adding, setAdding] = React.useState(false);
@@ -962,6 +1057,44 @@ function EmailManager() {
 
       {msg && <div style={{ fontSize: '0.78rem', color: 'var(--sb-sage)', marginTop: '0.5rem' }}>{msg}</div>}
     </div>
+  );
+}
+
+// Clickable swatch card for THEME_OPTIONS — shows the 3 role colors
+// (bg / primary / secondary) so the choice is visual, not just a label.
+function ThemeSwatch({ theme, active, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.4rem',
+        padding: '0.5rem',
+        borderRadius: 'var(--sb-radius)',
+        border: active ? '1.5px solid var(--sb-gold)' : '0.5px solid rgba(196,132,58,0.25)',
+        background: active ? 'rgba(196,132,58,0.08)' : 'transparent',
+        cursor: 'pointer',
+        textAlign: 'left',
+      }}
+    >
+      <div style={{ display: 'flex', height: 22, borderRadius: 3, overflow: 'hidden' }}>
+        {theme.swatch.map((c, i) => (
+          <div key={i} style={{ flex: 1, background: c }} />
+        ))}
+      </div>
+      <span
+        style={{
+          fontFamily: 'var(--sb-font-label)',
+          fontSize: '0.62rem',
+          letterSpacing: '0.06em',
+          color: active ? 'var(--sb-gold)' : 'var(--sb-sage)',
+        }}
+      >
+        {theme.label}
+      </span>
+    </button>
   );
 }
 

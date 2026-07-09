@@ -16,9 +16,15 @@ import postgres from 'postgres';
 import { db } from '../db.js';
 import { requireUser } from '../auth.js';
 import { audit } from '../lib/audit.js';
+import { makeRateLimiter } from '../lib/rateLimit.js';
+import { decrypt } from '../lib/crypto.js';
 
 const router = Router();
 router.use(requireUser);
+
+// LLM calls cost money per-token — cap abuse (runaway scripts, shared BYO keys,
+// or a member accidentally looping) at 20 messages/minute per IP.
+const agentLimiter = makeRateLimiter({ windowMs: 60_000, max: 20, message: 'Too many agent requests — please wait a moment' });
 
 const CLAUDE_API   = 'https://api.anthropic.com/v1/messages';
 const DEFAULT_MODEL = 'claude-sonnet-4-5';
@@ -33,7 +39,7 @@ async function getAnthropicKey(userId) {
   if (row) {
     try {
       const cfg = JSON.parse(row.data);
-      if (cfg?.integrations?.anthropicKey) return cfg.integrations.anthropicKey;
+      if (cfg?.integrations?.anthropicKeyEnc) return decrypt(cfg.integrations.anthropicKeyEnc);
     } catch {}
   }
   return process.env.ANTHROPIC_API_KEY || null;
@@ -193,7 +199,10 @@ async function executeTool(name, input, userId, memberDbPools) {
       if (!cfg) return { error: 'No config found.' };
       // Redact sensitive keys
       const safe = JSON.parse(JSON.stringify(cfg));
-      if (safe.integrations?.anthropicKey) safe.integrations.anthropicKey = '[redacted]';
+      if (safe.integrations?.anthropicKeyEnc) {
+        safe.integrations.anthropicKeyConfigured = true;
+        delete safe.integrations.anthropicKeyEnc;
+      }
       if (safe.integrations?.memberDb?.url) safe.integrations.memberDb.url = '[redacted]';
       return safe;
     }
@@ -225,8 +234,12 @@ async function executeTool(name, input, userId, memberDbPools) {
 
     case 'update_config_path': {
       const { path, value } = input;
-      // Guard: block attempts to write to integrations.memberDb.url (reserved for UI config)
-      if (path.startsWith('integrations.memberDb.url') || path === 'integrations.anthropicKey') {
+      // Guard: block attempts to write to sensitive credential fields (reserved for UI config)
+      if (
+        path.startsWith('integrations.memberDb.url')
+        || path === 'integrations.anthropicKey'
+        || path === 'integrations.anthropicKeyEnc'
+      ) {
         return { error: 'Sensitive keys can only be set through the Config UI, not the agent.' };
       }
       const cfg = await readConfig(userId) || {};
@@ -290,7 +303,7 @@ Guidelines:
 
 // ── Main chat endpoint ────────────────────────────────────────────────────────
 
-router.post('/', async (req, res) => {
+router.post('/', agentLimiter, async (req, res) => {
   const { message, history = [] } = req.body || {};
   if (!message || typeof message !== 'string') {
     return res.status(400).json({ error: 'message required' });

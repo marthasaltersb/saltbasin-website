@@ -8,6 +8,9 @@
 export function defaultMemberSite({ displayName, email, slug = '' }) {
   const name = displayName || (email || '').split('@')[0] || 'Operator';
   return {
+    // Schema version for this draft's shape. Bump only for breaking changes,
+    // paired with an explicit per-member migration — never silently
+    // reinterpret old JSON under new assumptions.
     version: 1,
     pages: {
       home: {

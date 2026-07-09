@@ -14,8 +14,14 @@ import { verifyRecaptcha } from '../lib/recaptcha.js';
 import { sendVerificationEmail } from '../lib/email.js';
 import { audit } from '../lib/audit.js';
 import { resumeUrlFromPreset, pickPrimaryPreset, normalizePrimaryFlags } from '../lib/resumePresets.js';
+import { makeRateLimiter } from '../lib/rateLimit.js';
 
 const router = Router();
+
+// 10 signups per IP per 15 minutes — mirrors the auth login/reset limiter,
+// keeps scripted account-creation from filling the members table once public
+// signup is enabled.
+const signupLimiter = makeRateLimiter({ windowMs: 15 * 60_000, max: 10, message: 'Too many signup attempts — please try again in 15 minutes' });
 
 function slugify(s) {
   return s
@@ -38,7 +44,7 @@ async function uniqueSlugFor(base) {
 
 // Public signup — creates a member + their starter profile, optionally linking
 // an incoming lead conversion via fromLeadPublicId + fromLeadToken.
-router.post('/signup', async (req, res) => {
+router.post('/signup', signupLimiter, async (req, res) => {
   const { email, password, displayName, requestedSlug, fromLeadPublicId, fromLeadToken, recaptchaToken } =
     req.body || {};
   const publicSignupEnabled = process.env.PUBLIC_MEMBER_SIGNUP_ENABLED === 'true';

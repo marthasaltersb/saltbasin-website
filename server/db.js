@@ -233,6 +233,12 @@ async function bootstrap() {
   // Multi-tenant CMS: each member gets their own draft + published site, plus
   // their own config (brand colors, opt-in flags, BYO Claude key). Same JSON
   // shape as the platform-level site_state / config_state.
+  //
+  // Deploy-safety invariant: bootstrap()/seed.js only ever ADD COLUMN or
+  // insert missing platform-wide rows — they must never UPDATE or reseed an
+  // existing member_sites/member_configs/member_profiles row. Schema changes
+  // to the JSON shape are versioned (`version`/`schemaVersion` field inside
+  // the JSON) and migrated per-member explicitly, not applied in bulk here.
   await sql.unsafe(`
     CREATE TABLE IF NOT EXISTS member_sites (
       user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -546,18 +552,28 @@ async function bootstrap() {
     CREATE INDEX IF NOT EXISTS idx_org_profiles_slug ON organization_profiles (slug);
 
     -- ── Org memberships (user ↔ org, with role) ──────────────────────────────
+    -- Role vocabulary: 'admin' (the mandatory seat — every org must have at
+    -- least one) | 'member' | 'viewer' (a restricted/specialized permission
+    -- set). There is no 'owner' — equity/ownership-stake relationships
+    -- between orgs are a separate concept from platform admin rights and are
+    -- modeled elsewhere, not as a membership role.
     CREATE TABLE IF NOT EXISTS org_memberships (
       id         BIGSERIAL PRIMARY KEY,
       user_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       org_id     BIGINT NOT NULL REFERENCES organization_profiles(id) ON DELETE CASCADE,
       role       TEXT NOT NULL DEFAULT 'member',
-        -- owner | admin | member | viewer
+        -- admin | member | viewer
       invited_by BIGINT REFERENCES users(id),
       joined_at  BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
       UNIQUE (user_id, org_id)
     );
     CREATE INDEX IF NOT EXISTS idx_org_memberships_user ON org_memberships (user_id);
     CREATE INDEX IF NOT EXISTS idx_org_memberships_org  ON org_memberships (org_id);
+
+    -- One-shot, idempotent: the 'owner' role was folded into 'admin' — an org
+    -- admin already has full management rights, and ownership stakes are a
+    -- separate (not-yet-modeled) concept. No-ops once no 'owner' rows remain.
+    UPDATE org_memberships SET role = 'admin' WHERE role = 'owner';
 
     -- ── Personal → org links (self-employed connecting their own LLC, etc.) ──
     CREATE TABLE IF NOT EXISTS personal_org_links (
@@ -1311,7 +1327,7 @@ async function bootstrap() {
         // Link to admin user's personal profile and org membership
         await sql.unsafe(`
           INSERT INTO org_memberships (user_id, org_id, role, joined_at)
-          SELECT u.id, ${orgId}, 'owner', ${Date.now()}
+          SELECT u.id, ${orgId}, 'admin', ${Date.now()}
             FROM users u WHERE u.role = 'admin' LIMIT 1
           ON CONFLICT (user_id, org_id) DO NOTHING
         `);

@@ -38,6 +38,15 @@ All content (site sections, config) lives in a **draft/published pair**:
 
 `AdminShell` uses a `scope` prop (`'admin'` or `'member'`) to switch between the two API sets. Member scope routes to `/api/member-site/*` and `/api/member-config/*`; admin scope routes to `/api/site/*` and `/api/config/*`. The components (EditorPane, PreviewPane, ConfigPanel, Sidebar) are identical — only the API endpoints differ.
 
+### Deployment-safety invariants (member rollout)
+
+Once real members have live content, a platform deploy must never regress or reinterpret their existing data:
+
+- **Block registry is append-only.** Keys in `REGISTRY` (`src/components/blocks/index.jsx`) are never renamed or deleted — a member's existing `section.type` must always resolve to a renderer. Retire a block by removing it from the "add section" picker, not from `REGISTRY`.
+- **Schema-versioned JSON.** `member_sites.data` carries `version`, `member_configs.data` carries `schemaVersion` (both stamped defensively on write in `memberSite.js`/`memberConfig.js`). Breaking shape changes are explicit, opt-in per-member migrations keyed off this field — never silent reinterpretation of old JSON.
+- **Seed/bootstrap never touches member rows.** `server/data/seed.js` and `db.js bootstrap()` only add columns or insert missing platform-wide rows (`site_state`, `config_state`, the bootstrap admin user) — never `UPDATE` or reseed `member_sites` / `member_configs` / `member_profiles`.
+- **Shared config rows members read are additive-only.** `config_state` rows like `admin_nav` and `page_type_definitions` only ever gain entries; existing keys are never renamed or removed once members may reference them.
+
 ### Section / block system
 
 The site state JSON is `{ pages: [{ slug, sections: [{ id, type, status, content, fieldMeta }] }] }`.

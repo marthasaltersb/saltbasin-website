@@ -15,6 +15,19 @@ function slugify(str) {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
+// Every org must always have at least one 'admin' — this is the seat that
+// holds management rights (invite/remove members, edit org settings, delete
+// the org). Call before any change that would move a user away from 'admin'
+// (role change, removal) to make sure at least one other admin remains.
+async function wouldLeaveOrgWithoutAdmin(orgId, userId, newRole) {
+  const target = await db.prepare(`SELECT role FROM org_memberships WHERE user_id=$1 AND org_id=$2`).get(userId, orgId);
+  if (!target || target.role !== 'admin' || newRole === 'admin') return false;
+  const { count } = await db.prepare(
+    `SELECT COUNT(*)::int AS count FROM org_memberships WHERE org_id=$1 AND role='admin'`
+  ).get(orgId);
+  return Number(count) <= 1;
+}
+
 // ── Personal profile ─────────────────────────────────────────────────────────
 
 // GET /api/profiles/me/personal
@@ -34,7 +47,20 @@ router.get('/me/personal', async (req, res) => {
       `).run(user.id, user.display_name || user.email);
       profile = await db.prepare(`SELECT * FROM personal_profiles WHERE user_id = $1`).get(user.id);
     }
-    res.json(profile);
+    // Identity graph: which org profiles this personal profile is explicitly
+    // linked to (via personal_org_links), plus this user's role in each —
+    // the connective layer between "who you are" and "which orgs you're part
+    // of." Distinct from org_memberships alone, which doesn't imply a link
+    // back to the personal profile.
+    const linkedOrgs = await db.prepare(`
+      SELECT op.id, op.slug, op.name, op.org_type, om.role
+      FROM personal_org_links pol
+      JOIN organization_profiles op ON op.id = pol.org_id
+      LEFT JOIN org_memberships om ON om.org_id = pol.org_id AND om.user_id = $1
+      WHERE pol.personal_profile_id = $2
+      ORDER BY pol.linked_at ASC
+    `).all(user.id, profile.id);
+    res.json({ ...profile, linkedOrgs });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -110,9 +136,9 @@ router.post('/me/orgs', express.json(), async (req, res) => {
       RETURNING *
     `).all(slug, name, org_type, description, logo_url, website, industry);
 
-    // Make creator the owner
+    // Make creator the org admin — the mandatory seat every org must have.
     await db.prepare(`
-      INSERT INTO org_memberships (user_id, org_id, role) VALUES ($1, $2, 'owner')
+      INSERT INTO org_memberships (user_id, org_id, role) VALUES ($1, $2, 'admin')
     `).run(user.id, org.id);
 
     await audit({ req, actor: user, action: 'org.create', entityType: 'org_profile', entityId: org.id, summary: `Created org: ${name}` });
@@ -151,7 +177,7 @@ router.patch('/orgs/:orgId', express.json(), async (req, res) => {
     const user = await requireAuth(req, res);
     if (!user) return;
     const mem = await db.prepare(`SELECT role FROM org_memberships WHERE user_id=$1 AND org_id=$2`).get(user.id, req.params.orgId);
-    if (!mem || !['owner', 'admin'].includes(mem.role)) return res.status(403).json({ error: 'Insufficient role' });
+    if (!mem || mem.role !== 'admin') return res.status(403).json({ error: 'Insufficient role' });
 
     const { name = null, org_type = null, description = null, logo_url = null, website = null, industry = null } = req.body;
     await db.prepare(`
@@ -170,13 +196,13 @@ router.patch('/orgs/:orgId', express.json(), async (req, res) => {
   }
 });
 
-// DELETE /api/profiles/orgs/:orgId — owner only
+// DELETE /api/profiles/orgs/:orgId — admin only
 router.delete('/orgs/:orgId', async (req, res) => {
   try {
     const user = await requireAuth(req, res);
     if (!user) return;
     const mem = await db.prepare(`SELECT role FROM org_memberships WHERE user_id=$1 AND org_id=$2`).get(user.id, req.params.orgId);
-    if (!mem || mem.role !== 'owner') return res.status(403).json({ error: 'Owner only' });
+    if (!mem || mem.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
     await db.prepare(`DELETE FROM organization_profiles WHERE id = $1`).run(req.params.orgId);
     res.json({ ok: true });
   } catch (err) {
@@ -192,12 +218,18 @@ router.post('/orgs/:orgId/members', express.json(), async (req, res) => {
     const user = await requireAuth(req, res);
     if (!user) return;
     const mem = await db.prepare(`SELECT role FROM org_memberships WHERE user_id=$1 AND org_id=$2`).get(user.id, req.params.orgId);
-    if (!mem || !['owner', 'admin'].includes(mem.role)) return res.status(403).json({ error: 'Insufficient role' });
+    if (!mem || mem.role !== 'admin') return res.status(403).json({ error: 'Insufficient role' });
 
     const { email, role = 'member' } = req.body;
     const invitee = await db.prepare(`SELECT id FROM users WHERE email = $1`).get(email?.toLowerCase?.() || email);
     // Return the same response whether the user exists or not — prevents email enumeration.
     if (!invitee) return res.json({ ok: true, invited: false });
+
+    // Re-inviting an existing admin with a lower role must not leave the org
+    // without one — same invariant as the explicit role-change endpoint.
+    if (await wouldLeaveOrgWithoutAdmin(req.params.orgId, invitee.id, role)) {
+      return res.status(400).json({ error: 'This org must always have at least one Admin — promote another member first.' });
+    }
 
     await db.prepare(`
       INSERT INTO org_memberships (user_id, org_id, role, invited_by)
@@ -216,7 +248,10 @@ router.patch('/orgs/:orgId/members/:userId', express.json(), async (req, res) =>
     const user = await requireAuth(req, res);
     if (!user) return;
     const mem = await db.prepare(`SELECT role FROM org_memberships WHERE user_id=$1 AND org_id=$2`).get(user.id, req.params.orgId);
-    if (!mem || !['owner', 'admin'].includes(mem.role)) return res.status(403).json({ error: 'Insufficient role' });
+    if (!mem || mem.role !== 'admin') return res.status(403).json({ error: 'Insufficient role' });
+    if (await wouldLeaveOrgWithoutAdmin(req.params.orgId, req.params.userId, req.body.role)) {
+      return res.status(400).json({ error: 'This org must always have at least one Admin — promote another member first.' });
+    }
     await db.prepare(`UPDATE org_memberships SET role=$1 WHERE user_id=$2 AND org_id=$3`).run(req.body.role, req.params.userId, req.params.orgId);
     res.json({ ok: true });
   } catch (err) {
@@ -230,9 +265,12 @@ router.delete('/orgs/:orgId/members/:userId', async (req, res) => {
     const user = await requireAuth(req, res);
     if (!user) return;
     const mem = await db.prepare(`SELECT role FROM org_memberships WHERE user_id=$1 AND org_id=$2`).get(user.id, req.params.orgId);
-    // Can remove yourself, or admin/owner can remove others
+    // Can remove yourself, or an admin can remove others
     const isSelf = String(req.params.userId) === String(user.id);
-    if (!isSelf && (!mem || !['owner', 'admin'].includes(mem.role))) return res.status(403).json({ error: 'Insufficient role' });
+    if (!isSelf && (!mem || mem.role !== 'admin')) return res.status(403).json({ error: 'Insufficient role' });
+    if (await wouldLeaveOrgWithoutAdmin(req.params.orgId, req.params.userId, null)) {
+      return res.status(400).json({ error: 'This org must always have at least one Admin — promote another member before removing this one.' });
+    }
     await db.prepare(`DELETE FROM org_memberships WHERE user_id=$1 AND org_id=$2`).run(req.params.userId, req.params.orgId);
     res.json({ ok: true });
   } catch (err) {

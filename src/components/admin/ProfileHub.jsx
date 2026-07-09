@@ -84,7 +84,9 @@ const ORG_TYPES = [
   { value: 'client_org',      label: 'Client Organization (access only)' },
 ];
 
-const ORG_ROLES = ['owner', 'admin', 'member', 'viewer'];
+// No 'owner' — an org admin already has full management rights, and equity
+// ownership stakes are a separate (not membership-role) concept.
+const ORG_ROLES = ['admin', 'member', 'viewer'];
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
 const card = {
@@ -181,7 +183,88 @@ function PersonalProfilePanel() {
         </div>
       </div>
 
+      <IdentityGraphCard profile={profile} />
+
       <IntegrationsRoadmapNotice />
+    </div>
+  );
+}
+
+// ── Identity graph ────────────────────────────────────────────────────────────
+// Shows the connective layer between this member's personal profile and the
+// Member Organizations it's linked to — `profile.linkedOrgs` comes from
+// GET /api/profiles/me/personal (server/routes/profiles.js). Linking/
+// unlinking uses the existing POST/DELETE .../me/personal/link-org/:orgId
+// endpoints, scoped to orgs the member already belongs to.
+function IdentityGraphCard({ profile }) {
+  const [orgs, setOrgs] = React.useState(null);
+  const [linking, setLinking] = React.useState(false);
+  const [selectedOrgId, setSelectedOrgId] = React.useState('');
+  const [linkedOrgs, setLinkedOrgs] = React.useState(profile.linkedOrgs || []);
+  const [busy, setBusy] = React.useState(false);
+
+  React.useEffect(() => { setLinkedOrgs(profile.linkedOrgs || []); }, [profile.linkedOrgs]);
+
+  React.useEffect(() => {
+    fetch('/api/profiles/me/orgs', { credentials: 'same-origin' })
+      .then((r) => r.json()).then(setOrgs).catch(() => setOrgs([]));
+  }, []);
+
+  const linkedIds = new Set(linkedOrgs.map((o) => Number(o.id)));
+  const linkable = (orgs || []).filter((o) => !linkedIds.has(Number(o.id)));
+
+  async function link() {
+    if (!selectedOrgId) return;
+    setBusy(true);
+    await fetch(`/api/profiles/me/personal/link-org/${selectedOrgId}`, { method: 'POST', credentials: 'same-origin' });
+    const org = (orgs || []).find((o) => Number(o.id) === Number(selectedOrgId));
+    if (org) setLinkedOrgs((prev) => [...prev, { ...org }]);
+    setSelectedOrgId('');
+    setLinking(false);
+    setBusy(false);
+  }
+
+  async function unlink(orgId) {
+    if (!window.confirm('Unlink this organization from your personal profile?')) return;
+    await fetch(`/api/profiles/me/personal/link-org/${orgId}`, { method: 'DELETE', credentials: 'same-origin' });
+    setLinkedOrgs((prev) => prev.filter((o) => Number(o.id) !== Number(orgId)));
+  }
+
+  return (
+    <div style={card}>
+      <div style={cardTitle}>Identity Graph</div>
+      <div style={{ fontSize: '0.72rem', color: 'var(--sb-dusty)', marginBottom: '0.85rem', lineHeight: 1.6 }}>
+        How your personal profile connects to the Member Organizations you're part of. Link an org here to make that connection explicit — useful once an org onboards you and you want your identity tied to both.
+      </div>
+
+      {linkedOrgs.length === 0 && (
+        <div style={{ fontSize: '0.8rem', color: 'var(--sb-dusty)', marginBottom: '0.5rem' }}>No linked organizations yet.</div>
+      )}
+      {linkedOrgs.map((o) => (
+        <div key={o.id} style={row}>
+          <div style={{ width: 30, height: 30, borderRadius: 6, background: 'rgba(196,132,58,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.95rem', flexShrink: 0 }}>🏢</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.82rem', color: 'var(--sb-cream)', fontWeight: 500 }}>{o.name}</div>
+            <div style={{ fontSize: '0.68rem', color: 'var(--sb-dusty)' }}>{o.role ? `Your role: ${o.role}` : ORG_TYPES.find((t) => t.value === o.org_type)?.label || o.org_type}</div>
+          </div>
+          <button onClick={() => unlink(o.id)} style={{ ...btnGhost, color: 'var(--sb-risk-critical)', borderColor: 'rgba(220,80,80,0.3)', fontSize: '0.68rem' }}>Unlink</button>
+        </div>
+      ))}
+
+      {linking ? (
+        <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <select className="sb-input" style={{ flex: 1, fontSize: '0.78rem' }} value={selectedOrgId} onChange={(e) => setSelectedOrgId(e.target.value)}>
+            <option value="">Select an organization…</option>
+            {linkable.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+          </select>
+          <button onClick={link} disabled={!selectedOrgId || busy} style={btnPrimary}>{busy ? '…' : 'Link'}</button>
+          <button onClick={() => setLinking(false)} style={btnGhost}>Cancel</button>
+        </div>
+      ) : (
+        linkable.length > 0 && (
+          <button onClick={() => setLinking(true)} style={{ ...btnGhost, marginTop: '0.5rem' }}>+ Link an organization</button>
+        )
+      )}
     </div>
   );
 }
@@ -291,21 +374,27 @@ function OrgDetailPanel({ org, onBack }) {
   }
 
   async function changeRole(userId, role) {
-    await fetch(`/api/profiles/orgs/${org.id}/members/${userId}`, {
+    const r = await fetch(`/api/profiles/orgs/${org.id}/members/${userId}`, {
       method: 'PATCH', credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ role }),
     });
+    if (!r.ok) { const body = await r.json().catch(() => ({})); window.alert(body.error || 'Could not change role'); }
     load();
   }
 
   async function removeMember(userId) {
     if (!window.confirm('Remove this member?')) return;
-    await fetch(`/api/profiles/orgs/${org.id}/members/${userId}`, { method: 'DELETE', credentials: 'same-origin' });
+    const r = await fetch(`/api/profiles/orgs/${org.id}/members/${userId}`, { method: 'DELETE', credentials: 'same-origin' });
+    if (!r.ok) { const body = await r.json().catch(() => ({})); window.alert(body.error || 'Could not remove member'); }
     load();
   }
 
-  const canManage = detail && ['owner', 'admin'].includes(detail.myRole);
+  const canManage = detail && detail.myRole === 'admin';
+  // Every org must always keep at least one Admin — disable the action that
+  // would remove the last one instead of letting the server 400 it.
+  const adminCount = detail ? detail.members.filter((m) => m.role === 'admin').length : 0;
+  const isLastAdmin = (m) => m.role === 'admin' && adminCount <= 1;
 
   return (
     <div>
@@ -343,14 +432,26 @@ function OrgDetailPanel({ org, onBack }) {
                   <div style={{ fontSize: '0.68rem', color: 'var(--sb-dusty)' }}>{m.email}</div>
                 </div>
                 {canManage ? (
-                  <select className="sb-input" style={{ fontSize: '0.72rem', width: 100 }} value={m.role} onChange={(e) => changeRole(m.id, e.target.value)}>
+                  <select
+                    className="sb-input" style={{ fontSize: '0.72rem', width: 100 }}
+                    value={m.role} onChange={(e) => changeRole(m.id, e.target.value)}
+                    disabled={isLastAdmin(m)}
+                    title={isLastAdmin(m) ? 'This org must always have at least one Admin' : undefined}
+                  >
                     {ORG_ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
                   </select>
                 ) : (
                   <span style={{ ...pill(false), cursor: 'default' }}>{m.role}</span>
                 )}
-                {canManage && m.role !== 'owner' && (
-                  <button onClick={() => removeMember(m.id)} style={{ ...btnGhost, color: 'var(--sb-risk-critical)', borderColor: 'rgba(220,80,80,0.3)', fontSize: '0.68rem' }}>Remove</button>
+                {canManage && (
+                  <button
+                    onClick={() => removeMember(m.id)}
+                    disabled={isLastAdmin(m)}
+                    title={isLastAdmin(m) ? 'This org must always have at least one Admin' : undefined}
+                    style={{ ...btnGhost, color: 'var(--sb-risk-critical)', borderColor: 'rgba(220,80,80,0.3)', fontSize: '0.68rem', opacity: isLastAdmin(m) ? 0.4 : 1 }}
+                  >
+                    Remove
+                  </button>
                 )}
               </div>
             ))}
@@ -358,7 +459,7 @@ function OrgDetailPanel({ org, onBack }) {
               <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                 <input className="sb-input" placeholder="Email address" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} style={{ flex: 1, fontSize: '0.78rem' }} />
                 <select className="sb-input" style={{ fontSize: '0.72rem', width: 90 }} value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}>
-                  {ORG_ROLES.filter((r) => r !== 'owner').map((r) => <option key={r} value={r}>{r}</option>)}
+                  {ORG_ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
                 </select>
                 <button onClick={invite} disabled={inviting} style={btnPrimary}>{inviting ? '…' : 'Invite'}</button>
               </div>

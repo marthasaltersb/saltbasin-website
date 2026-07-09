@@ -8,12 +8,33 @@ import { Router } from 'express';
 import { db, getJSON } from '../db.js';
 import { requireUser } from '../auth.js';
 import { defaultMemberConfig } from '../data/defaultMemberConfig.js';
+import { encrypt } from '../lib/crypto.js';
 
 const router = Router();
+
+// The BYO Anthropic key is encrypted at rest (like OAuth tokens in
+// lib/crypto.js) and never round-tripped to the client. GET responses get
+// `anthropicKeyConfigured` instead of the key/blob; PUT only touches the
+// stored key when the client explicitly sends `anthropicKey` (non-empty to
+// set, '' to clear) — omitting the field entirely leaves the existing
+// connection untouched.
+function redactForClient(cfg) {
+  if (!cfg || typeof cfg !== 'object') return cfg;
+  const safe = JSON.parse(JSON.stringify(cfg));
+  if (safe.integrations) {
+    safe.integrations.anthropicKeyConfigured = !!safe.integrations.anthropicKeyEnc;
+    delete safe.integrations.anthropicKeyEnc;
+    delete safe.integrations.anthropicKey;
+  }
+  return safe;
+}
 
 // Page types are a platform-wide taxonomy, not per-member data — this reads
 // the same config_state row admin edits via PUT /api/config/page-types.
 // Read-only here; members don't get their own copy or edit rights.
+// Deploy-safety: entries in this row (and admin_nav) are additive-only —
+// existing keys are never renamed or removed once members may reference
+// them, only appended to.
 router.get('/page-types', requireUser, async (req, res) => {
   const data = (await getJSON('config_state', 'page_type_definitions')) || { types: [] };
   res.json(data);
@@ -27,6 +48,9 @@ async function readState(userId, kind) {
 }
 
 async function writeState(userId, kind, data) {
+  // Stamp a schema version if the config predates the field — never touched
+  // again unless a future breaking migration explicitly bumps it.
+  if (data && typeof data === 'object' && data.schemaVersion === undefined) data.schemaVersion = 1;
   const json = JSON.stringify(data);
   await db
     .prepare(
@@ -47,7 +71,7 @@ async function ensureDraft(user) {
 
 router.get('/draft', requireUser, async (req, res) => {
   const cfg = await ensureDraft(req.user);
-  res.json(cfg);
+  res.json(redactForClient(cfg));
 });
 
 router.put('/draft', requireUser, async (req, res) => {
@@ -58,13 +82,22 @@ router.put('/draft', requireUser, async (req, res) => {
   // Defensive: if a client somehow omits integrations, don't wipe the existing
   // Anthropic key. Merge old into new before persisting.
   const existing = (await readState(req.user.id, 'draft')) || {};
-  const merged = {
-    ...incoming,
-    integrations: {
-      ...(existing.integrations || {}),
-      ...(incoming.integrations || {}),
-    },
+  const mergedIntegrations = {
+    ...(existing.integrations || {}),
+    ...(incoming.integrations || {}),
   };
+  // anthropicKey only appears here when the member pasted a new key (encrypt
+  // it) or explicitly cleared the field (''); absent entirely means "leave
+  // the existing connection alone" — the client never has the real value to
+  // round-trip since GET redacts it.
+  if (incoming.integrations && 'anthropicKey' in incoming.integrations) {
+    const raw = incoming.integrations.anthropicKey;
+    if (raw) mergedIntegrations.anthropicKeyEnc = encrypt(raw);
+    else delete mergedIntegrations.anthropicKeyEnc;
+  }
+  delete mergedIntegrations.anthropicKey; // never persist plaintext
+
+  const merged = { ...incoming, integrations: mergedIntegrations };
   await writeState(req.user.id, 'draft', merged);
   res.json({ ok: true, updatedAt: Date.now() });
 });

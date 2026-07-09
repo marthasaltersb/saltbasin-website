@@ -4,6 +4,10 @@ import { db, getJSON, setJSON } from '../db.js';
 import { defaultSite, defaultConfig } from './defaultSite.js';
 
 export async function ensureSeeded() {
+  // This must never write to member_sites / member_configs / member_profiles.
+  // Those rows belong to individual members once created and are never
+  // reseeded or reset — only the platform-wide site_state/config_state rows
+  // and the bootstrap admin user are handled here.
   // Seed draft + published site state.
   if (!(await getJSON('site_state', 'draft'))) {
     await setJSON('site_state', 'draft', defaultSite);

@@ -1,6 +1,13 @@
 // Block library. Each block accepts { section, config, mode } and renders the
 // public-facing markup. `mode` is 'public' or 'preview' so admin previews can
 // show draft/soon banners that the real public site never sees.
+//
+// REGISTRY keys are append-only: a member's existing section.type must
+// always resolve to a renderer, since member_sites/member_configs rows are
+// never migrated on deploy. Never rename or delete a key here — add a new
+// one, and if an old block is retired, keep its renderer registered (just
+// drop it from any "add section" picker UI) so existing member content keeps
+// rendering.
 import React from 'react';
 import { InlineDataNotice } from '../DataNotice.jsx';
 import SectionShell from './SectionShell.jsx';
@@ -5142,6 +5149,22 @@ function SnapshotRow({ label, val, dark }) {
   );
 }
 
+// Minimal plain text/heading passthrough for member-defined custom output
+// sections (layer 4 of the 4-layer output template system). These live in a
+// synthetic `_placeholders` page (see server/data/defaultMemberSite.js /
+// member_sites.data.pages) that is never added to nav or page_type
+// definitions, so this block is only ever reached via an output template's
+// layer4_sections config — never a public route.
+function CustomOutputBlock({ section }) {
+  const f = section.fields || {};
+  return (
+    <div style={{ padding: '0.5rem 0' }}>
+      {f.heading && <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.7rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--sb-gold)', marginBottom: '0.4rem' }}>{f.heading}</div>}
+      {f.body && <p style={{ fontSize: '0.88rem', lineHeight: 1.7, color: '#4a4a4a', whiteSpace: 'pre-wrap', margin: 0 }}>{f.body}</p>}
+    </div>
+  );
+}
+
 const REGISTRY = {
   hero: HeroBlock,
   scripture: ScriptureBlock,
@@ -5184,11 +5207,16 @@ const REGISTRY = {
   outputGenerator: OutputGeneratorBlock,
   skills: SkillsBlock,
   clientSnapshot: ClientSnapshotBlock,
+  customOutputBlock: CustomOutputBlock,
 };
 
 export function RenderSection({ section, config, mode = 'public', memberSlug = '', liveSlugs = null }) {
-  // Public never shows draft; preview shows everything with a banner.
-  if (mode === 'public' && section.status === 'draft') return null;
+  // Public never shows draft or placeholder sections. Placeholder sections
+  // (status: 'placeholder') are member-defined custom output-template
+  // content stored on the site but not assigned to any public view — see
+  // the layer4_sections.custom_placeholder mechanism in the 4-layer output
+  // template system (src/components/Output.jsx OutputTemplateBody).
+  if (mode === 'public' && (section.status === 'draft' || section.status === 'placeholder')) return null;
 
   const Block = REGISTRY[section.type] || TextBlock;
   const banner = mode === 'preview' ? <StatusBanner status={section.status} /> : null;

@@ -5,6 +5,10 @@
 
 export function defaultMemberConfig({ displayName, email }) {
   return {
+    // Bump only for breaking shape changes, and pair with an explicit
+    // per-member migration — never silently reinterpret old JSON under new
+    // assumptions. Mirrors `version` in defaultMemberSite.js.
+    schemaVersion: 1,
     site: {
       tagline: 'Strategic Operator',
       domain: '',
@@ -19,6 +23,13 @@ export function defaultMemberConfig({ displayName, email }) {
       ink:     '#F5F0E8',   // --sb-cream
       paper:   '#FBF6F0',   // --sb-ivory
     },
+    // Named theme applied as data-theme on the profile root (see brand.css
+    // [data-theme] blocks). Independent of the `brand` overrides above —
+    // `brand` recolors the strategic tokens directly, `theme` swaps in one
+    // of the curated palettes (strategic / glow-light / glow-dark /
+    // momentum-warm / lagoon). Additive field — old member rows without it
+    // fall back to 'strategic' at the call site, never reinterpreted.
+    theme: 'strategic',
     social: {
       linkedin: { label: 'LinkedIn', on: false, url: '', color: '#0A66C2' },
       x:        { label: 'X',        on: false, url: '', color: '#000000' },
