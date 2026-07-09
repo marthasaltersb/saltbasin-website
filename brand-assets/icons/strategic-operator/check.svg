@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="256" height="256">
+  <title>Status — Complete</title>
+  <path d="M24 42 A18 18 0 1 1 24 6 A18 18 0 0 1 24 42 Z" stroke="#C4843A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M15 24 L21 30 L33 17" stroke="#C4843A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

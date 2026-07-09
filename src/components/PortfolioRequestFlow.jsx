@@ -1,20 +1,33 @@
-// Portfolio request lead funnel — rendered under the public teaser views of
-// the Career Master Database, Case Study Portfolio, and Strategic Operator
+// BestyStaff intake chat — rendered under the public teaser views of the
+// Career Master Database, Case Study Portfolio, and Strategic Operator
 // outputs.
 //
-// Flow: teaser renders → after a short beat a popup prompts
-//   1. "Want to request Betsy's Career Portfolio?"  → tailored-portfolio
-//      request intake (knows-Betsy, open-role JD, coverage modules, contact)
-//   2. "Want to build a Career Portfolio and Salt Basin Profile for
-//      yourself?" → build-your-own intake (role type, stage, goal, showcase)
-// Both forms accept sample-document attachments behind a data disclaimer;
-// attachments live in a temporary context space auto-deleted after 24 hours
-// (server/routes/portfolioRequests.js).
+// Architecture: a cache-defined layer + an API-defined layer.
+//   - Cache layer (src/lib/bestyStaffScript.js): the opening script (consent
+//     → "do you know Betsy" → top-5-questions), the flow pick, the closing
+//     question, and a bank of guardrail-sensitive safe answers all run
+//     client-side with zero network calls — deterministic wording straight
+//     from docs/salt-basin-specific-agent-playbook.md.
+//   - API layer (server/routes/bestyStaff.js, Claude-backed): only invoked
+//     once the visitor has picked a flow, and only for turns the safe-answer
+//     bank doesn't cover — open-ended reasoning, coverage matching, JD
+//     parsing, and the final submit_portfolio_request tool call.
+//
+// Sample-document attachments ride the paperclip, behind a data disclaimer,
+// into the temporary attachment context space (auto-deleted after 24 hours).
+// When the agent is offline (no ANTHROPIC_API_KEY), the chat falls back to
+// the static intake forms below — same fields, same endpoint.
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
+import {
+  CONSENT_LINE, KNOWS_BETSY_QUESTION, TOP_QUESTIONS_QUESTION, CLOSING_QUESTION,
+  FLOW_QUICK_REPLIES, matchSafeAnswer,
+  readLeadMemory, writeLeadMemory, welcomeBackLine, welcomeBackMemberLine,
+} from '../lib/bestyStaffScript.js';
 
 const C = {
   navy: '#172A45',
+  midnight: '#0F1B2D',
   gold: '#C4843A',
   cream: '#F7F2E8',
   mist: '#EEF2F6',
@@ -23,17 +36,8 @@ const C = {
 };
 
 const S = {
-  overlay: {
-    position: 'fixed', inset: 0, background: 'rgba(15,27,45,0.55)', zIndex: 1200,
-    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.25rem',
-  },
-  modal: {
-    background: 'white', borderRadius: 12, borderTop: `3px solid ${C.gold}`, width: 620, maxWidth: '100%',
-    maxHeight: '88vh', overflowY: 'auto', padding: '1.75rem', boxShadow: '0 12px 48px rgba(0,0,0,0.3)',
-    fontFamily: 'Georgia, serif', color: C.navy, position: 'relative',
-  },
   eyebrow: { fontSize: '0.58rem', letterSpacing: '0.22em', textTransform: 'uppercase', color: C.gold, fontFamily: 'sans-serif', fontWeight: 700, marginBottom: '0.4rem' },
-  h2: { fontSize: '1.35rem', margin: '0 0 0.5rem', lineHeight: 1.25 },
+  h2: { fontSize: '1.35rem', margin: '0 0 0.5rem', lineHeight: 1.25, fontFamily: 'Georgia, serif', color: C.navy },
   p: { fontSize: '0.85rem', color: C.slate, lineHeight: 1.65, margin: '0 0 1rem' },
   label: { display: 'block', fontSize: '0.62rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: C.slate, fontFamily: 'sans-serif', fontWeight: 700, marginBottom: '0.3rem' },
   input: { width: '100%', boxSizing: 'border-box', padding: '0.55rem 0.75rem', borderRadius: 7, border: '0.5px solid rgba(23,42,69,0.25)', fontSize: '0.85rem', fontFamily: 'inherit', outline: 'none' },
@@ -41,7 +45,7 @@ const S = {
   field: { marginBottom: '0.9rem' },
   btnGold: { padding: '0.6rem 1.4rem', borderRadius: 8, border: 'none', cursor: 'pointer', background: C.gold, color: 'white', fontSize: '0.78rem', fontFamily: 'sans-serif', letterSpacing: '0.06em', fontWeight: 700 },
   btnNavy: { padding: '0.6rem 1.4rem', borderRadius: 8, border: 'none', cursor: 'pointer', background: C.navy, color: 'white', fontSize: '0.78rem', fontFamily: 'sans-serif', letterSpacing: '0.06em', fontWeight: 700 },
-  btnOutline: { padding: '0.6rem 1.2rem', borderRadius: 8, cursor: 'pointer', background: 'white', color: C.navy, border: `1px solid rgba(23,42,69,0.3)`, fontSize: '0.78rem', fontFamily: 'sans-serif', letterSpacing: '0.06em' },
+  btnOutline: { padding: '0.6rem 1.2rem', borderRadius: 8, cursor: 'pointer', background: 'white', color: C.navy, border: '1px solid rgba(23,42,69,0.3)', fontSize: '0.78rem', fontFamily: 'sans-serif', letterSpacing: '0.06em' },
   chip: (on) => ({
     padding: '0.3rem 0.7rem', borderRadius: 14, cursor: 'pointer', fontSize: '0.7rem', fontFamily: 'sans-serif',
     border: `1px solid ${on ? C.gold : 'rgba(23,42,69,0.25)'}`, background: on ? 'rgba(196,132,58,0.12)' : 'white',
@@ -50,36 +54,16 @@ const S = {
   radioRow: { display: 'flex', gap: '1.25rem', alignItems: 'center', fontSize: '0.82rem' },
 };
 
-function RadioPair({ name, value, onChange }) {
-  return (
-    <div style={S.radioRow}>
-      {[['true', 'Yes'], ['false', 'No']].map(([v, label]) => (
-        <label key={v} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer' }}>
-          <input type="radio" name={name} checked={value === v} onChange={() => onChange(v)} style={{ accentColor: C.gold }} />
-          {label}
-        </label>
-      ))}
-    </div>
-  );
-}
+// ── Attachment strip + data disclaimer (shared by chat and fallback forms) ──
+const DISCLAIMER_TEXT = (
+  <>
+    <strong style={{ color: C.navy }}>Data disclaimer:</strong> attachments are stored in a private, temporary
+    context space and are <strong style={{ color: C.navy }}>automatically deleted 24 hours after upload</strong>.
+    They're used only to tailor the requested portfolio. Don't upload anything you wouldn't share in a
+    LinkedIn DM — see the <a href="/data-notice" target="_blank" rel="noreferrer" style={{ color: C.gold }}>data notice</a>.
+  </>
+);
 
-function ChipGroup({ title, options, selected, onToggle }) {
-  if (!options.length) return null;
-  return (
-    <div style={{ marginBottom: '0.7rem' }}>
-      <div style={{ fontSize: '0.6rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: C.fog, fontFamily: 'sans-serif', marginBottom: '0.35rem' }}>{title}</div>
-      <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
-        {options.map((o) => (
-          <span key={o} style={S.chip(selected.includes(o))} onClick={() => onToggle(o)}>{o}</span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Sample-document attachments + the data disclaimer. Files upload with the
-// form submit and land in the temporary attachment context space —
-// hard-deleted 24 hours after upload, server-enforced.
 function AttachmentsField({ files, setFiles, disclaimerAck, setDisclaimerAck }) {
   const inputRef = useRef(null);
   return (
@@ -107,15 +91,37 @@ function AttachmentsField({ files, setFiles, disclaimerAck, setDisclaimerAck }) 
           </div>
           <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start', marginTop: '0.6rem', fontSize: '0.72rem', color: C.slate, lineHeight: 1.55, cursor: 'pointer' }}>
             <input type="checkbox" checked={disclaimerAck} onChange={(e) => setDisclaimerAck(e.target.checked)} style={{ accentColor: C.gold, marginTop: 2 }} />
-            <span>
-              <strong style={{ color: C.navy }}>Data disclaimer:</strong> attachments are stored in a private, temporary
-              context space and are <strong style={{ color: C.navy }}>automatically deleted 24 hours after upload</strong>.
-              They're used only to tailor the requested portfolio. Don't upload anything you wouldn't share in a
-              LinkedIn DM — see the <a href="/data-notice" target="_blank" rel="noreferrer" style={{ color: C.gold }}>data notice</a>.
-            </span>
+            <span>{DISCLAIMER_TEXT}</span>
           </label>
         </>
       )}
+    </div>
+  );
+}
+
+function RadioPair({ name, value, onChange }) {
+  return (
+    <div style={S.radioRow}>
+      {[['true', 'Yes'], ['false', 'No']].map(([v, label]) => (
+        <label key={v} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer' }}>
+          <input type="radio" name={name} checked={value === v} onChange={() => onChange(v)} style={{ accentColor: C.gold }} />
+          {label}
+        </label>
+      ))}
+    </div>
+  );
+}
+
+function ChipGroup({ title, options, selected, onToggle }) {
+  if (!options.length) return null;
+  return (
+    <div style={{ marginBottom: '0.7rem' }}>
+      <div style={{ fontSize: '0.6rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: C.fog, fontFamily: 'sans-serif', marginBottom: '0.35rem' }}>{title}</div>
+      <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+        {options.map((o) => (
+          <span key={o} style={S.chip(selected.includes(o))} onClick={() => onToggle(o)}>{o}</span>
+        ))}
+      </div>
     </div>
   );
 }
@@ -149,7 +155,7 @@ async function submitRequest({ kind, sourceOutput, form, coverage, showcase, fil
   return data;
 }
 
-// ── Form 1: request Betsy's tailored portfolio ─────────────────────────────
+// ── Fallback form 1: request Betsy's tailored portfolio ────────────────────
 function RequestBetsyForm({ sourceOutput, master, onDone }) {
   const [form, setForm] = useState({ knowsBetsy: '', knowsBetsyDetail: '', comparingToRole: '', jobDescription: '', coverageNotes: '', contactName: '', contactEmail: '', contactCompany: '', contactTitle: '', contactPhone: '' });
   const [coverage, setCoverage] = useState([]);
@@ -160,7 +166,6 @@ function RequestBetsyForm({ sourceOutput, master, onDone }) {
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const toggle = (o) => setCoverage((c) => (c.includes(o) ? c.filter((x) => x !== o) : [...c, o]));
 
-  // Coverage module options rolled up live from the public Career Master
   const modules = useMemo(() => {
     const scenarios = [...new Set((master?.engagements || []).flatMap((e) => e.scenarios || []))].slice(0, 12);
     const skillCats = [...new Set((master?.skills || []).map((s) => s.category).filter(Boolean))].slice(0, 10);
@@ -220,7 +225,7 @@ function RequestBetsyForm({ sourceOutput, master, onDone }) {
   );
 }
 
-// ── Form 2: build your own portfolio + Salt Basin profile ──────────────────
+// ── Fallback form 2: build your own ────────────────────────────────────────
 const ROLE_TYPES = ['Operating Partner / PE PortOps', 'Investment Partner (GP / LP)', 'RevOps / GTM Leader', 'Finance Executive', 'Consultant / Advisor', 'Fractional Executive', 'Founder', 'Technologist / Architect', 'Other'];
 const CAREER_STAGES = ['Early career', 'Mid career', 'Senior / Lead', 'Executive', 'Independent / Fractional'];
 const GOALS = ['Land an open role', 'Build a consulting / fractional pipeline', 'Stand up an investor profile', 'Grow my personal brand', 'Not sure yet'];
@@ -251,7 +256,7 @@ function BuildOwnForm({ sourceOutput, onDone }) {
     <form onSubmit={handleSubmit}>
       <div style={S.eyebrow}>Build Your Own</div>
       <h2 style={S.h2}>Build a Career Portfolio &amp; Salt Basin Profile for yourself</h2>
-      <p style={S.p}>Answer a few questions and we'll recommend the tailored portfolio format best suited to you — resume-led, case-study-led, or investor-profile-led.</p>
+      <p style={S.p}>Answer a few questions and we'll recommend the tailored portfolio format best suited to you.</p>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
         <div style={S.field}>
@@ -320,72 +325,422 @@ function SuccessView({ result, kind, onClose }) {
   );
 }
 
-// ── The prompt popup + floating reopen pill ────────────────────────────────
-export default function PortfolioRequestPrompt({ sourceOutput, master }) {
-  const [open, setOpen] = useState(false);
-  const [view, setView] = useState('prompt'); // prompt | request_betsy | build_own | done
-  const [result, setResult] = useState(null);
-  const [doneKind, setDoneKind] = useState(null);
+// ── BestyStaff chat window — cache layer + API layer ───────────────────────
 
-  // Let the teaser land first, then prompt.
+const GREETING = "Hi — I'm BestyStaff, Betsy Salter's AI proxy here at Salt Basin Net Works. You're looking at a preview of Betsy's career portfolio.";
+const FLOW_PICK_INTRO = 'Got it — which of these sounds like what you need?';
+
+function ChatBubble({ msg }) {
+  if (msg.role === 'notice') {
+    return (
+      <div style={{ textAlign: 'center', fontSize: '0.68rem', color: C.fog, fontFamily: 'sans-serif', padding: '0.2rem 0.75rem', lineHeight: 1.5 }}>
+        {msg.text}
+      </div>
+    );
+  }
+  const isUser = msg.role === 'user';
+  return (
+    <div style={{ display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start' }}>
+      <div style={{
+        maxWidth: '85%', padding: '0.55rem 0.8rem', borderRadius: 12,
+        borderBottomRightRadius: isUser ? 3 : 12, borderBottomLeftRadius: isUser ? 12 : 3,
+        background: isUser ? C.navy : C.mist, color: isUser ? 'white' : C.navy,
+        fontSize: '0.82rem', lineHeight: 1.55, whiteSpace: 'pre-wrap', fontFamily: 'Georgia, serif',
+      }}>
+        {msg.text}
+      </div>
+    </div>
+  );
+}
+
+function QuickReplies({ options, onPick }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.2rem' }}>
+      {options.map((q) => (
+        <button key={q} onClick={() => onPick(q)} style={{
+          textAlign: 'left', padding: '0.55rem 0.8rem', borderRadius: 10, cursor: 'pointer',
+          border: `1px solid ${C.gold}`, background: 'rgba(196,132,58,0.08)', color: C.navy,
+          fontSize: '0.78rem', fontFamily: 'Georgia, serif', lineHeight: 1.4,
+        }}>
+          {q}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export default function PortfolioRequestPrompt({ sourceOutput, master, user }) {
+  const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState([{ role: 'assistant', text: GREETING }, { role: 'assistant', text: CONSENT_LINE }]);
+  // Cache-layer phases run with zero network calls: consent → knowsBetsy →
+  // (knowsBetsyDetail) → topQuestions → flowPick. 'chatting' hands off to the
+  // API layer; 'awaitingClosing' is the required closing question.
+  const [phase, setPhase] = useState('consent');
+  const [cacheCtx, setCacheCtx] = useState({ consentGiven: null, knowsBetsy: null, knowsBetsyDetail: '', topQuestions: '' });
+  const [closingAsked, setClosingAsked] = useState(false);
+  const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
+  const [files, setFiles] = useState([]);
+  const [disclaimerAck, setDisclaimerAck] = useState(false);
+  const [submitted, setSubmitted] = useState(null);
+  const [offline, setOffline] = useState(false);
+  const [fallbackView, setFallbackView] = useState('prompt'); // prompt | request_betsy | build_own | done
+  const [fallbackResult, setFallbackResult] = useState(null);
+  const [fallbackKind, setFallbackKind] = useState(null);
+  const scrollRef = useRef(null);
+  const fileInputRef = useRef(null);
+
+  // Let the teaser land first, then open the chat.
   useEffect(() => {
     const t = setTimeout(() => setOpen(true), 2200);
     return () => clearTimeout(t);
   }, []);
 
-  const close = () => { setOpen(false); if (view === 'done') setView('prompt'); };
-  const finish = (kind) => (res) => { setResult(res); setDoneKind(kind); setView('done'); };
+  // Returning-visitor recognition — resolves once on mount, well before the
+  // 2200ms open-delay above, so there's no visible flash of the wrong
+  // script. A known member (session already resolved by the parent Output
+  // page before this component even mounts) skips straight to the flow pick
+  // with a personalized welcome; an anonymous visitor with a matched
+  // localStorage lead token does the same via the token-gated lookup
+  // endpoint. Anyone else keeps the full opening script untouched.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (user) {
+        let prior = null;
+        try {
+          const res = await fetch('/api/portfolio-requests/my-history', { credentials: 'include' });
+          if (res.ok) prior = (await res.json()).item;
+        } catch { /* no prior history — still a valid welcome-back */ }
+        if (cancelled) return;
+        setMessages([
+          { role: 'assistant', text: GREETING },
+          { role: 'assistant', text: prior ? welcomeBackLine({ name: user.displayName, ...prior }) : welcomeBackMemberLine(user.displayName) },
+        ]);
+        setCacheCtx((c) => ({ ...c, consentGiven: true, knowsBetsy: true, topQuestions: prior?.topQuestions || '' }));
+        setPhase('flowPick');
+        return;
+      }
+
+      const mem = readLeadMemory();
+      if (!mem) return; // fresh visitor — default opening script stands
+      try {
+        const res = await fetch(`/api/portfolio-requests/lookup?id=${encodeURIComponent(mem.id)}&token=${encodeURIComponent(mem.token)}`, { credentials: 'include' });
+        if (!res.ok) return; // token stale/invalid — fall back to the default script
+        const item = (await res.json()).item;
+        if (cancelled || !item) return;
+        setMessages([
+          { role: 'assistant', text: GREETING },
+          { role: 'assistant', text: welcomeBackLine({ name: item.contactName, ...item }) },
+        ]);
+        setCacheCtx((c) => ({ ...c, consentGiven: true, knowsBetsy: item.knowsBetsy === true, knowsBetsyDetail: item.knowsBetsyDetail || '', topQuestions: item.topQuestions || '' }));
+        setPhase('flowPick');
+      } catch { /* lookup failed — default opening script stands */ }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages, sending, open]);
+
+  function respondAssistant(text) { setMessages((m) => [...m, { role: 'assistant', text }]); }
+  function respondUser(text) { setMessages((m) => [...m, { role: 'user', text }]); }
+
+  async function uploadAttachments(requestId) {
+    if (!files.length) return null;
+    const fd = new FormData();
+    files.forEach((f) => fd.append('files', f, f.name));
+    fd.append('disclaimerAck', String(disclaimerAck));
+    const res = await fetch(`/api/portfolio-requests/${requestId}/attachments`, { method: 'POST', body: fd, credentials: 'include' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'attachment upload failed');
+    return data;
+  }
+
+  // API layer — only reached once a flow is picked, and only for turns the
+  // safe-answer cache bank doesn't cover. `payloadMessage` may carry an
+  // appended cache-layer context block the visitor never sees; `history`
+  // is the message list snapshot taken BEFORE the current turn was added.
+  async function sendToApi(payloadMessage, history) {
+    setSending(true);
+    try {
+      const res = await fetch('/api/agent/bestystaff', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ message: payloadMessage, history, sourceOutput, attachmentCount: files.length }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.offline) { setOffline(true); return; }
+      if (!res.ok) {
+        setMessages((m) => [...m, { role: 'notice', text: data.error || 'BestyStaff hit an error — please try again.' }]);
+        return;
+      }
+      if (data.reply) respondAssistant(data.reply);
+      if (data.submitted?.id) {
+        setSubmitted(data.submitted);
+        if (data.submitted.publicToken) writeLeadMemory({ id: data.submitted.id, token: data.submitted.publicToken });
+        if (files.length > 0) {
+          try {
+            const up = await uploadAttachments(data.submitted.id);
+            setFiles([]);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            setMessages((m) => [...m, { role: 'notice', text: `✦ ${up.attachmentsStored} attachment${up.attachmentsStored === 1 ? '' : 's'} uploaded to the temporary context space — automatically deleted within 24 hours.` }]);
+          } catch (e) {
+            setMessages((m) => [...m, { role: 'notice', text: `Attachment upload failed (${e.message}) — the request itself was submitted.` }]);
+          }
+        }
+      }
+    } catch {
+      setMessages((m) => [...m, { role: 'notice', text: 'Connection hiccup — please try that again.' }]);
+    } finally {
+      setSending(false);
+    }
+  }
+
+  function historySnapshot() {
+    return messages.filter((m) => m.role === 'user' || m.role === 'assistant').map((m) => ({ role: m.role, content: m.text }));
+  }
+
+  // Quick-reply handlers — pure cache layer, no network.
+  function pickConsent(label) {
+    const yes = label === 'Yes';
+    respondUser(label);
+    setCacheCtx((c) => ({ ...c, consentGiven: yes }));
+    setPhase('knowsBetsy');
+    respondAssistant(KNOWS_BETSY_QUESTION);
+  }
+
+  function pickKnowsBetsy(label) {
+    const yes = label === 'Yes';
+    respondUser(label);
+    setCacheCtx((c) => ({ ...c, knowsBetsy: yes }));
+    if (yes) {
+      setPhase('knowsBetsyDetail');
+      respondAssistant("Great — what's the connection?");
+    } else {
+      setPhase('topQuestions');
+      respondAssistant(TOP_QUESTIONS_QUESTION);
+    }
+  }
+
+  function pickFlow(label) {
+    respondUser(label);
+    setPhase('chatting');
+    const context = `[cache-layer context already collected — do not re-ask: consent to capture chat context = ${cacheCtx.consentGiven ? 'yes' : 'no'}; knows Betsy = ${cacheCtx.knowsBetsy ? `yes (${cacheCtx.knowsBetsyDetail || 'connection not specified'})` : 'no'}; visitor's top questions for today: "${cacheCtx.topQuestions}"]`;
+    sendToApi(`${label}\n\n${context}`, historySnapshot());
+  }
+
+  // Free-text entry point — routes by phase. The opening-script phases
+  // (consent/knowsBetsy/flowPick) are quick-reply only and disable the input,
+  // so this only ever runs for knowsBetsyDetail, topQuestions, chatting, and
+  // the closing-question phase.
+  async function handleSend(text) {
+    const trimmed = (text || '').trim();
+    if (!trimmed || sending) return;
+    if (files.length > 0 && !disclaimerAck) {
+      setMessages((m) => [...m, { role: 'notice', text: 'Please acknowledge the attachment data disclaimer below before sending.' }]);
+      return;
+    }
+    setInput('');
+
+    if (phase === 'knowsBetsyDetail') {
+      respondUser(trimmed);
+      setCacheCtx((c) => ({ ...c, knowsBetsyDetail: trimmed }));
+      setPhase('topQuestions');
+      respondAssistant(TOP_QUESTIONS_QUESTION);
+      return;
+    }
+    if (phase === 'topQuestions') {
+      respondUser(trimmed);
+      setCacheCtx((c) => ({ ...c, topQuestions: trimmed }));
+      setPhase('flowPick');
+      respondAssistant(FLOW_PICK_INTRO);
+      return;
+    }
+    if (phase === 'awaitingClosing') {
+      respondUser(trimmed);
+      const noMore = /^(no|nope|nothing|all good|that'?s all|none|i'?m good)\b/i.test(trimmed);
+      if (!noMore) {
+        if (submitted?.id) {
+          fetch(`/api/portfolio-requests/${submitted.id}/notes`, {
+            method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+            body: JSON.stringify({ note: trimmed }),
+          }).catch(() => {});
+        }
+        respondAssistant("Got it — I'll flag that for Betsy so she has the context.");
+      }
+      respondAssistant('Thanks for chatting — you can always reach Betsy directly at betsysalter@saltbasin.net or 757-407-9233.');
+      setPhase('chatting');
+      return;
+    }
+
+    // phase === 'chatting': cache-layer safe-answer bank first, then the API layer.
+    const history = historySnapshot();
+    respondUser(trimmed);
+    const safe = matchSafeAnswer(trimmed);
+    if (safe) {
+      respondAssistant(safe.reply);
+      return;
+    }
+    await sendToApi(trimmed, history);
+  }
+
+  function handleMinimizeClick() {
+    const hasRealConversation = phase === 'chatting' && messages.some((m) => m.role === 'user');
+    if (!closingAsked && hasRealConversation) {
+      setClosingAsked(true);
+      setPhase('awaitingClosing');
+      respondAssistant(CLOSING_QUESTION);
+      return;
+    }
+    setOpen(false);
+  }
+
+  const inputEnabled = phase === 'knowsBetsyDetail' || phase === 'topQuestions' || phase === 'chatting' || phase === 'awaitingClosing';
+  const placeholder = phase === 'knowsBetsyDetail' ? 'e.g. former colleague, referral, LinkedIn…'
+    : phase === 'topQuestions' ? 'Type your top questions (1-5)…'
+    : !inputEnabled ? 'Please choose an option above'
+    : submitted ? 'Anything else I can pass along?' : 'Type a reply… (paste a job description right in)';
 
   return (
     <div className="sb-request-flow">
-      <style>{`@media print { .sb-request-flow { display: none !important; } }`}</style>
+      <style>{`
+        @media print { .sb-request-flow { display: none !important; } }
+        @keyframes sb-besty-pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+      `}</style>
 
-      {/* Floating reopen pill once dismissed */}
+      {/* Reopen pill when the chat is closed */}
       {!open && (
         <button
-          onClick={() => { setView('prompt'); setOpen(true); }}
+          onClick={() => setOpen(true)}
           style={{
             position: 'fixed', right: '1.25rem', bottom: '1.25rem', zIndex: 1100,
             ...S.btnGold, borderRadius: 22, boxShadow: '0 4px 18px rgba(0,0,0,0.25)',
           }}
         >
-          ✦ Request Portfolio
+          ✦ Chat with BestyStaff
         </button>
       )}
 
       {open && (
-        <div style={S.overlay} onClick={(e) => { if (e.target === e.currentTarget) close(); }}>
-          <div style={S.modal} role="dialog" aria-modal="true">
-            <button onClick={close} aria-label="Close" style={{ position: 'absolute', top: 12, right: 14, border: 'none', background: 'none', fontSize: '1.1rem', cursor: 'pointer', color: C.fog }}>✕</button>
-
-            {view === 'prompt' && (
-              <div>
-                <div style={S.eyebrow}>Salt Basin Net Works</div>
-                <h2 style={S.h2}>Want to request Betsy's Career Portfolio?</h2>
-                <p style={S.p}>
-                  You're looking at a preview. The full portfolio — career database, case studies, and the Strategic
-                  Operator profile — can be tailored to your open role or use case and sent directly to you.
-                </p>
-                <button style={S.btnGold} onClick={() => setView('request_betsy')}>✦ Request the Tailored Portfolio</button>
-
-                <hr style={{ border: 'none', borderTop: `0.5px solid rgba(23,42,69,0.15)`, margin: '1.4rem 0' }} />
-
-                <h3 style={{ ...S.h2, fontSize: '1.05rem' }}>Want to build a Career Portfolio and Salt Basin Profile for yourself?</h3>
-                <p style={{ ...S.p, marginBottom: '0.75rem' }}>
-                  Answer a short intake and get a recommendation for the portfolio format best suited to your role type and goals.
-                </p>
-                <button style={S.btnOutline} onClick={() => setView('build_own')}>Build my own →</button>
+        <div
+          role="dialog" aria-label="BestyStaff chat"
+          style={{
+            position: 'fixed', right: '1.25rem', bottom: '1.25rem', zIndex: 1200,
+            width: 'min(400px, calc(100vw - 2rem))', height: 'min(620px, calc(100vh - 4rem))',
+            background: 'white', borderRadius: 14, boxShadow: '0 12px 48px rgba(0,0,0,0.35)',
+            display: 'flex', flexDirection: 'column', overflow: 'hidden', borderTop: `3px solid ${C.gold}`,
+          }}
+        >
+          {/* Header */}
+          <div style={{ background: C.navy, color: C.cream, padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.6rem', flexShrink: 0 }}>
+            <div style={{ width: 34, height: 34, borderRadius: '50%', background: C.gold, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0 }}>✦</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: '0.9rem', fontFamily: 'Georgia, serif' }}>BestyStaff</div>
+              <div style={{ fontSize: '0.56rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: C.gold, fontFamily: 'sans-serif' }}>
+                Betsy's AI Proxy · Salt Basin Net Works
               </div>
-            )}
-
-            {view === 'request_betsy' && <RequestBetsyForm sourceOutput={sourceOutput} master={master} onDone={finish('request_betsy')} />}
-            {view === 'build_own' && <BuildOwnForm sourceOutput={sourceOutput} onDone={finish('build_own')} />}
-            {view === 'done' && <SuccessView result={result} kind={doneKind} onClose={close} />}
-
-            {(view === 'request_betsy' || view === 'build_own') && (
-              <button onClick={() => setView('prompt')} style={{ ...S.btnOutline, marginTop: '0.9rem', border: 'none', padding: '0.3rem 0', color: C.fog, background: 'none' }}>← Back</button>
-            )}
+            </div>
+            <button onClick={handleMinimizeClick} aria-label="Minimize chat" style={{ border: 'none', background: 'none', color: 'rgba(247,242,232,0.8)', fontSize: '1.1rem', cursor: 'pointer', padding: '0.2rem' }}>—</button>
           </div>
+
+          {/* Offline fallback: static intake forms inside the panel */}
+          {offline ? (
+            <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 1.1rem' }}>
+              {fallbackView === 'prompt' && (
+                <div>
+                  <p style={{ ...S.p, marginTop: '0.25rem' }}>
+                    BestyStaff is offline right now — but both intakes still work as quick forms.
+                  </p>
+                  <h2 style={{ ...S.h2, fontSize: '1.05rem' }}>Want to request Betsy's Career Portfolio?</h2>
+                  <button style={{ ...S.btnGold, marginBottom: '1.2rem' }} onClick={() => setFallbackView('request_betsy')}>✦ Request the Tailored Portfolio</button>
+                  <h2 style={{ ...S.h2, fontSize: '1.05rem' }}>Want to build a Career Portfolio and Salt Basin Profile for yourself?</h2>
+                  <button style={S.btnOutline} onClick={() => setFallbackView('build_own')}>Build my own →</button>
+                </div>
+              )}
+              {fallbackView === 'request_betsy' && <RequestBetsyForm sourceOutput={sourceOutput} master={master} onDone={(r) => { if (r.publicToken) writeLeadMemory({ id: r.id, token: r.publicToken }); setFallbackResult(r); setFallbackKind('request_betsy'); setFallbackView('done'); }} />}
+              {fallbackView === 'build_own' && <BuildOwnForm sourceOutput={sourceOutput} onDone={(r) => { if (r.publicToken) writeLeadMemory({ id: r.id, token: r.publicToken }); setFallbackResult(r); setFallbackKind('build_own'); setFallbackView('done'); }} />}
+              {fallbackView === 'done' && <SuccessView result={fallbackResult} kind={fallbackKind} onClose={() => setOpen(false)} />}
+              {(fallbackView === 'request_betsy' || fallbackView === 'build_own') && (
+                <button onClick={() => setFallbackView('prompt')} style={{ border: 'none', background: 'none', color: C.fog, fontSize: '0.75rem', cursor: 'pointer', marginTop: '0.75rem', fontFamily: 'sans-serif' }}>← Back</button>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* Messages */}
+              <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '1rem 0.9rem', display: 'flex', flexDirection: 'column', gap: '0.55rem', background: '#fbfaf7' }}>
+                {messages.map((msg, i) => <ChatBubble key={i} msg={msg} />)}
+
+                {!sending && phase === 'consent' && <QuickReplies options={['Yes', 'No']} onPick={pickConsent} />}
+                {!sending && phase === 'knowsBetsy' && <QuickReplies options={['Yes', 'No']} onPick={pickKnowsBetsy} />}
+                {!sending && phase === 'flowPick' && <QuickReplies options={FLOW_QUICK_REPLIES} onPick={pickFlow} />}
+
+                {sending && (
+                  <div style={{ display: 'flex', gap: 4, padding: '0.4rem 0.6rem' }}>
+                    {[0, 1, 2].map((i) => (
+                      <span key={i} style={{ width: 7, height: 7, borderRadius: '50%', background: C.gold, animation: `sb-besty-pulse 1.2s ${i * 0.2}s infinite` }} />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Attached files strip + disclaimer */}
+              {files.length > 0 && (
+                <div style={{ padding: '0.5rem 0.9rem', background: C.mist, borderTop: '0.5px solid rgba(23,42,69,0.1)', flexShrink: 0 }}>
+                  {files.map((f, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: C.slate, fontFamily: 'sans-serif', padding: '0.1rem 0' }}>
+                      <span>📎 {f.name} · {(f.size / 1024 / 1024).toFixed(1)}MB</span>
+                      <span style={{ cursor: 'pointer', color: '#a33' }} onClick={() => {
+                        const next = files.filter((_, j) => j !== i);
+                        setFiles(next);
+                        if (next.length === 0 && fileInputRef.current) fileInputRef.current.value = '';
+                      }}>remove</span>
+                    </div>
+                  ))}
+                  <label style={{ display: 'flex', gap: '0.45rem', alignItems: 'flex-start', marginTop: '0.35rem', fontSize: '0.64rem', color: C.slate, lineHeight: 1.5, cursor: 'pointer', fontFamily: 'sans-serif' }}>
+                    <input type="checkbox" checked={disclaimerAck} onChange={(e) => setDisclaimerAck(e.target.checked)} style={{ accentColor: C.gold, marginTop: 1 }} />
+                    <span>{DISCLAIMER_TEXT}</span>
+                  </label>
+                </div>
+              )}
+
+              {/* Input row */}
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.4rem', padding: '0.6rem 0.7rem', borderTop: '0.5px solid rgba(23,42,69,0.12)', flexShrink: 0, background: 'white' }}>
+                <label aria-label="Attach sample documents" title="Attach sample documents (auto-deleted after 24 hours)" style={{ cursor: 'pointer', fontSize: '1.05rem', padding: '0.35rem 0.3rem', color: C.slate }}>
+                  📎
+                  <input
+                    ref={fileInputRef} type="file" multiple style={{ display: 'none' }}
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.md,.csv,.rtf,.jpg,.jpeg,.png,.webp"
+                    onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 5))}
+                  />
+                </label>
+                <textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(input); }
+                  }}
+                  disabled={!inputEnabled}
+                  placeholder={placeholder}
+                  rows={1}
+                  style={{
+                    flex: 1, resize: 'none', border: '0.5px solid rgba(23,42,69,0.2)', borderRadius: 10,
+                    padding: '0.5rem 0.7rem', fontSize: '0.82rem', fontFamily: 'inherit', outline: 'none',
+                    maxHeight: 110, overflowY: 'auto', opacity: inputEnabled ? 1 : 0.55,
+                  }}
+                />
+                <button
+                  onClick={() => handleSend(input)} disabled={sending || !input.trim() || !inputEnabled}
+                  style={{ ...S.btnGold, padding: '0.5rem 0.9rem', opacity: sending || !input.trim() || !inputEnabled ? 0.5 : 1 }}
+                >
+                  Send
+                </button>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

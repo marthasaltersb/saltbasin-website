@@ -1,0 +1,330 @@
+
+
+===== PAGE 1 / 7: Betsy_Salter_Career_Master_Database__Final.pdf =====
+Career Master Database – Betsy Salter
+B.S. Accounting, College of Charleston 2013 · Strategic Operator | C-Suite Partner | Financial Modeling | Org Transformation · Blackbaud → Accenture → Vista → TIBCO → PwC → Slalom → Streamforce → Salt Basin Net Works | St. Petersburg, FL | Last
+updated: July 2026
+Skills Master
+Capabilities, proficiency levels, years of use, engagement count, and resume language.
+SKILL CATEGORY PROFICIENCY YRS EXP. #ENNTGSAGEME FUISRESDT SUGGESTED RESUME LANGUAGE (QUANTIFIED)
+Contract Processing & Order Management Quote-to-Cash / Revenue Operations EXPERT 6.5 5 2013 Managed end-to-end contract-to-order handover at Blackbaud (10–12 person team); designed O2C processes for 4 Vista PE portfolio companies; continued as PwC Advisory Manager across PagerDuty, Teladoc,
+Trimble, and Celanese
+M&A Process Integration Quote-to-Cash / Revenue Operations ADVANCED 3.5 3 2013 Navigated multi-product-line M&A process integration at Blackbaud; led process and data unification for CentralSquare (Superion/TriTech/Zuercher merger) and IAS M&A activities at Vista
+Revenue Recognition Support Quote-to-Cash / Revenue Operations ADVANCED 4 4 2013 Ensured downstream rev rec accuracy at Blackbaud; designed ASC606-compliant O2C process flows at Vista portfolio companies; controlled billing processes in SAP per resume
+ASC606 / Variable Consideration Compliance Quote-to-Cash / Revenue Operations PROFICIENT 3 3 2018 Implemented new methodologies for ASC606 private market compliance at Vista portfolio companies; designed variable consideration handling creatively within CPQ/CLM architecture
+Deal Validation & Accuracy Review Sales Operations ADVANCED 1.75 1 2013 Reduced month-end team overtime by ~4 hrs/person on a 10–12 person team at Blackbaud following Salesforce/Apttus implementation; cost savings at inflated overtime rates
+GTM Systems Management Sales Operations EXPERT 9 12 2013 Managed deal and GTM system data integrity across 13 years and all roles; aligned GTM strategy to back-office systems for 4 Vista PE portfolio companies and 4 PwC client engagements
+Salesforce CRM Implementation CRM & CPQ Implementation EXPERT 9 10 2013 Named implementation champion at Blackbaud; 4+ Accenture engagements ($50M+ and $60M+ programs); 4 Vista portfolio companies; PwC client engagements including Global Telehealth Company $50M+
+program
+CPQ Implementation – Apttus CPQ / Conga CPQ CRM & CPQ Implementation EXPERT 9 10 2013 Super user at Blackbaud; capability lead across Accenture (Global Education Publisher R2–R5, Global CPG Company); SME across 4 Vista portfolio companies; PwC (Global Tech / Construction Company, Global
+Specialty Chemicals Manufacturer); Held Advanced CPQ + CLM + Best Practices certification — awarded on merit without prior formal training; trained sales and ops teams across career
+CPQ Implementation – Salesforce CPQ / Revenue CRM & CPQ Implementation ADVANCED 7 6 2015 Accenture (Steelbrick); Vista (iCIMS, Apptio); PwC (DevOps/IT Ops SaaS, Global Telehealth Co., Global Tech/Construction Co., Global Specialty Chemicals Co.); expanded to hands-on Salesforce Billing build at PwC;
+Cloud CPQ Trained certification held
+CLM Implementation – Apttus CLM / Conga CLM CRM & CPQ Implementation ADVANCED 5 6 2016 Apttus CLM certified; CLM delivery lead across 4 Vista portfolio companies; PwC engagements; experience spans full CLM lifecycle from contract authoring to renewal
+Business Rules Definition Business Process Design EXPERT 9 12 2013 Authored system and integration business rules across 12+ engagements; defined rules spanning CRM, CPQ, CLM, pricing, data, ERP integration, and subscription management domains
+Requirements Gathering Business Process Design EXPERT 9 12 2013 Led requirements gathering across 13 years and all clients; 25+ stakeholder surveys at Pearson; engagement-level scoping across all Vista portfolio companies and PwC clients
+Process Documentation Business Process Design EXPERT 9 12 2013 Produced Vista BOSS trademarked Best Practice L3 process flows used as standard across all portfolio companies; Blackbaud training deliverables; PwC reusable template packages; Accenture L3 flows and
+playbooks
+Offering-to-Cash (O2C) Process Design Business Process Design EXPERT 7.5 8 2015 Global Data Analytics Co. 12-wk O2C discovery; Vista BOSS proprietary L3 process flows (trademarked) deployed across 4 portfolio companies; PwC BPD at DevOps/IT Ops SaaS (8-wk, order mgmt to collections)
+and Global Telehealth Co. (12-wk, secured $50M+ win)
+Scoping & Discovery Business Process Design EXPERT 7.5 8 2015 25+ stakeholder surveys at Global Education Publisher; Global Data Analytics Co. 12-wk discovery; Vista post-acquisition business readiness scoping; 8-wk DevOps/IT Ops SaaS engagement; 12-wk Global
+Telehealth engagement; Global Tech/Construction and Global Specialty Chemicals scoping
+Workshop Facilitation Business Process Design EXPERT 7.5 8 2015 Facilitated 8 workshops for CPQ/CLM process redesign (Vista); 6 workshops for CPQ/CLM Business Process & Product Model Evaluation; Pearson global standards; Teradata O2C; PwC client workshops
+Data-Driven BPI Discovery Business Process Design ADVANCED 4.5 3 2021 Led internal PwC initiative to enhance data collection on Business Process Initiatives, enabling discovery deliverables based on data-driven analysis; contributed to reusable discovery accelerators
+Integration Design & Data Mapping Integration Design EXPERT 9 10 2014 Blackbaud SAP; Global Education Publisher Informatica/Oracle ERP/Datahub MDM; Global CPG Co. (12 integrations from source to Force.com); Vista (8 integrations at Apptio/CentralSquare); TIBCO Salesforce
+Billing; PwC MuleSoft/Informatica at Global Tech/Construction Co.; Global Specialty Chemicals SAP/CPQ
+Cross-workstream QA & Dependency Management Integration Design EXPERT 7.5 8 2015 JDE and Pearson cross-workstream QA architecture; Vista Quote to Cash integrated release across 3 programs (6 major CPQ/CLM capabilities); TIBCO cross-functional solution; PwC Trimble and Celanese cross-
+system
+Order Integration Architecture Integration Design ADVANCED 5.5 5 2018 Re-architected Salesforce Billing/Order integration at TIBCO (automated order error correction, eliminated manual intervention); designed order management integrations at Vista and PwC clients leveraging
+MuleSoft and Informatica
+Master Data Management (MDM) Data & MDM ADVANCED 5 5 2017 JDE MDM lead; Pearson Datahub MDM; Vista account hierarchy, product hierarchy, and customer master definition for all 4 portfolio companies; M&A unified data models at CentralSquare and IAS
+Data Migration Data & MDM ADVANCED 5 6 2017 JDE migration lead; Vista: introduced proprietary data migration methodology for CPQ/CLM enabling automated renewal processes — directly supported automation of $500M+ in recurring revenue; Pearson and
+PwC client data mapping
+Data Model Definition Data & MDM ADVANCED 5 6 2017 JDE future state data model; Vista: defined foundational account, product, and customer data models for 4 PE portfolio companies post-acquisition; built proprietary ARR tracking models for subscription and
+retention reporting
+UAT / Functional Testing Quality Assurance & Testing EXPERT 9 12 2013 Led or executed UAT across 12+ engagements; Pearson in-person UK and AU; Vista portfolio company go-live validation; PwC Celanese go-live; TIBCO production issue troubleshooting; recognized for defect
+pattern recognition throughout career
+Defect Troubleshooting & Pattern Recognition Quality Assurance & Testing EXPERT 9 12 2013 Career-defining differentiator recognized at Blackbaud, Accenture, and Vista for identifying defects developers could not find; TIBCO production issue resolution; prevented critical path delays across all programs
+QA Architecture (Cross-functional) Quality Assurance & Testing EXPERT 7.5 8 2015 Designed QA architecture at JDE, Pearson, Vista integrated release, TIBCO, and PwC Trimble/Celanese; responsible for QA of 6 major CPQ/CLM capabilities in Apttus (Vista); ensured data flowed accurately
+throughout end-to-end processes
+Training Content Development Training & Change Management EXPERT 9 8 2013 Blackbaud rollout training deliverables; Accenture sales upskilling; Vista BOSS methodology documentation; PwC reusable deliverable template packages that accelerated delivery across practice
+User Training & Upskilling Delivery Training & Change Management ADVANCED 9 8 2013 Delivered CPQ/CLM training at Blackbaud; Accenture client and team upskilling; Vista portfolio company team enablement; PwC: enabled client counterparts to confidently own and produce status reports and
+deliverables independently
+Champion Stakeholder / Change Agent Training & Change Management EXPERT 9 8 2013 Named implementation champion at Blackbaud; trusted change champion across Accenture; Vista trusted advisor to Operating Principals; PwC transition from delivery contributor to trusted advisor — enabled
+self-sustaining client capability
+Reusable Deliverable Framework Development Training & Change Management ADVANCED 5 4 2018 Vista BOSS trademarked L3 process flow methodology reused across all portfolio companies; PwC internal initiative to produce reusable deliverable template packages accelerating project delivery at scale
+Stakeholder Management Stakeholder Management EXPERT 9 12 2013 Managed Sales, Finance, IT, and executive stakeholders across 13 years; 25+ contributors at Pearson; Vista Operating Principals (post-acquisition leadership); PwC C-suite and program team relationships
+Cross-functional Collaboration Stakeholder Management EXPERT 9 12 2013 Cross-firm coordination at Pearson; cross-workstream at JDE/Vista/TIBCO; bridged business and technical teams at TIBCO across sales, sales ops, accounting, and revenue; PwC client cross-functional enablement
+Trusted Advisor / Advisory Consulting Stakeholder Management ADVANCED 5.5 5 2020 Transition from delivery contributor to trusted advisor began at TIBCO; formalized at PwC as Advisory Consulting Manager; enabled client counterparts to own deliverables and status reporting confidently;
+strategic influence beyond execution
+Capability Lead / Project Leadership Project & Program Management EXPERT 7 8 2015 Pearson R3–R5 CPQ capability lead; JDE MDM/CPQ/QA lead; Vista SME + Project Coordinator across 4 portfolio companies; PwC lead counterpart on PagerDuty 4-person team; PwC Teladoc 10-person team;
+managed 3 functional + 1 tech + 3 offshore at Accenture
+Global Rollout Management Project & Program Management ADVANCED 4.5 4 2016 Pearson UK/AU/NZ (in-person UAT); JDE Netherlands; Vista portfolio company cross-geography considerations; Celanese NA + Asia BU global rollout
+Program Roadmap & Business Readiness Assessment Project & Program Management ADVANCED 5.5 6 2018 Vista Operating Principals engaged for post-acquisition scope, roadmap, and readiness; PwC discovery deliverables that defined implementation roadmaps; facilitated client readiness to transition from pre-work
+to delivery
+Portfolio Company Transformation Project & Program Management ADVANCED 1.75 4 2018 Post-acquisition value creation across 4 Vista portfolio companies (CentralSquare, IAS, iCIMS, Apptio); scoped foundational data model elements, GTM alignment, and technology readiness; bridged Vista BOSS
+standards to implementation partners
+Solution Architecture Solution Architecture ADVANCED 5.5 6 2020 Formally titled Lead Business Solution Architect at TIBCO; continued solution architecture at PwC and Slalom; designed end-to-end CPQ/CLM/Billing/integration architecture; translated business requirements to
+Salesforce functional and technical designs
+Proposal & Vendor Selection Support Business Development ADVANCED 7 8 2015 Accenture proposals that secured multi-million-dollar programs; Vista vendor selection recommendations for portfolio companies; PwC BPD deliverables that secured follow-on wins (Teladoc $50M+); scoping
+engagements that converted to implementation programs
+Private Equity Value Creation Advisory Business Development ADVANCED 1.75 4 2018 Advised Vista Operating Principals on post-acquisition technology roadmaps, implementation vendor management, and foundational data model requirements to accelerate value creation and maximize exit
+readiness
+Kaizen / Root Cause Analysis Process Improvement (Lean / Six Sigma) PROFICIENT 1.75 1 2013 Kaizen workshop participant and Lean Six Sigma trainee at Blackbaud; applied RCA to identify non-value-add data elements and process steps in contract-to-order workflows
+Pricing Engine Design & Rationalization Pricing Strategy & Product Catalog EXPERT 7 6 2016 Global Education Publisher 2M+ ISBN variable pricing engine (8-tab workbook, 200+ formulas); Vista portfolio company pricing model and product hierarchy design; Global Specialty Chemicals metal pricing
+model across NA and Asia BUs; usage pricing architecture across career
+Product Catalog Management & SKU Rationalization Pricing Strategy & Product Catalog ADVANCED 7 6 2016 Global Education Publisher 2M+ SKU curriculum catalog; Vista portfolio product hierarchy definition for 4 companies; Global Specialty Chemicals multi-BU product model design; Endeavor CPQ source-to-target
+catalog migration at Vista
+Usage Pricing Model Design Pricing Strategy & Product Catalog ADVANCED 4.5 4 2018 Designed and solved implementation challenges for usage pricing models within Salesforce CPQ at Vista portfolio companies; continued at PwC client engagements; usage pricing became prevalent during Vista
+tenure
+Customer ARR Management & Retention Reporting Subscription & Revenue Management ADVANCED 4.5 4 2018 Built proprietary models at Vista for systematically tracking changes to customer ARR within subscription management and customer retention management solutions; directly supported portfolio company exit
+readiness and investor reporting
+Subscription Management Design Subscription & Revenue Management ADVANCED 4.5 4 2018 Designed subscription management and contract renewal architecture for CPQ/CLM at Vista portfolio companies; introduced data migration methodology enabling automated renewal processes at $500M+ ARR
+scale; NetSuite Zone Billing integration design
+AI Prompting & Agent Design AI Operator PROFICIENT 1.5 6 2024 Built AI-native tools under Salt Basin Net Works using Claude and LLM platforms: SaltBasin HOS (Highway Operating System) (Q2R intelligence layer), BestyStaff (AI proxy agent), SaltBasin Distressed Intel (property
+scorer), SaltTide CHI (Credit Health Infrastructure) (investor advisory tool); AI Operator identity is core brand differentiator; Claude Agent SDK and Cowork mode proficiency; transparent about AI use as part of
+Strategic Operator positioning
+Financial Modeling & Scenario Planning Financial Strategy & Advisory ADVANCED 5 6 2018 Built proprietary ARR tracking and retention reporting models at Vista ($500M+ ARR); EBITDA recovery frameworks for PE advisory context; SaaS vs. on-prem vs. usage-based pricing model comparison
+architecture; real estate distressed asset scoring (SaltBasin Distressed Intel); first-principles financial thinking applied across PE portfolio, consulting, and personal ventures
+Executive Strategy & C-Suite Partnership Financial Strategy & Advisory ADVANCED 3.5 5 2021 Trusted by C-suite and PE leadership as strategic partner beyond delivery; Healthcare CTO: 'Whoever put Betsy on this project is a genius'; Global Tech Slalom Partner: 'Betsy has won the trust of the client'; PwC
+Advisory Manager — transitioned from delivery to trusted advisor; Vista Operating Principal advisory; Aharonoff Investments PE advisory cover letter positioning
+Real Estate Investment Analysis Financial Strategy & Advisory FOUNDATIONAL 1 1 2024 Emerging capability through SaltBasin Distressed Intel venture; distressed property scoring and underutilized asset pipeline identification; first-principles financial modeling applied to real estate PE context;
+targeting real estate PE advisory roles leveraging accounting background and financial modeling capability
+
+===== PAGE 2 / 7: Betsy_Salter_Career_Master_Database__Final.pdf =====
+Job History
+Chronological role history with function, industry, compensation context, and scope notes.
+COMPANY TITLE START END DNURATIO BASE SALARY FUNCTION INDUSTRY KEY METRICS & ACHIEVEMENTS
+Blackbaud, Inc. Contract Processing Aug ~Aug ~12 $30,000 Sales Operations / Back-Office Nonprofit Technology / EdTech Core deal processing and contract-to-order handover to SAP; cross-functional collaboration with Sales and Finance; month-end overtime averaged ~10 hrs/person on 10–12 person team;
+Specialist 2013 2014 months Finance trained new employees on back-office processes
+Blackbaud, Inc. Senior Contract Processing ~Aug Apr 2015 ~8 $30,000 Sales Operations / Back-Office Nonprofit Technology / EdTech Promoted ~1 year in; named Salesforce & Apttus CPQ implementation champion; authored training deliverables for 10–12 person team; upskilled sales teams; Kaizen workshops;
+Specialist 2014 months Finance contributed to ~4 hrs/person/month overtime reduction at inflated overtime rate
+Accenture Senior Analyst May ~Nov ~18 $60,000 → Technology Consulting – CRM / Technology Consulting (Clients: Hired specifically for Salesforce + Apttus CPQ expertise; Global Education Publisher US Higher Ed R2 delivery on $50M+ program; Dreamforce event management solution (2-person build);
+2015 2016 months ~$85,000 CPQ Delivery Education Publishing, Consumer two salary increases while competing firms actively recruited
+Goods)
+Accenture Consultant ~Nov Aug ~21 ~$85,000 → Technology Consulting – CRM / Technology Consulting (Clients: Promoted to Consultant after 18 months; Global Education Publisher R3–R5 CPQ capability lead; Global Data Analytics Co. O2C discovery lead (12-wk); Global CPG Co. MDM/CPQ/QA lead
+2016 2018 months $110,000 CPQ Delivery Education Publishing, Consumer ($60M+ program); managed 3 functional + 1 technical onshore + 3 offshore resources
+Goods, Data Analytics)
+Vista Equity Partners, LLC Senior Consultant Aug May ~21 $150,000 Private Equity Portfolio Private Equity / Software Portfolio SME and Project Coordinator bridging Vista BOSS standards to implementation partners across 4 portfolio companies; designed Vista trademarked Best Practice L3 process flows;
+2018 2020 months Operations – Lead to Cash SME & (Clients: GovTech, AdTech, HR Tech, introduced data migration methodology supporting $500M+ ARR automation; built proprietary ARR retention reporting models; ASC606 compliance design; usage pricing architecture
+Project Coordinator FinOps)
+TIBCO Software Lead Business Solution Jun 2020 Jan 2021 ~7 $150,000 (lateral) IT / Internal Operations – Enterprise Software / Technology Lateral move during COVID; re-architected Salesforce Billing/Order integration; automated order error re-processing eliminating manual intervention; cross-functional solution design
+Architect months Solution Architecture (Internal) spanning sales, sales ops, accounting, and revenue; transition from external delivery to trusted advisor role began here
+PwC Advisory Consulting Jan 2021 Jun 2023 ~29 $175,000 Advisory Consulting – Lead to Professional Services (Clients: $25K increase from TIBCO; 4 client engagements; Global Telehealth Company 12-wk BPD secured $50M+ multi-year implementation win; Global Specialty Chemicals CPQ/SAP went live;
+Manager months Cash / Revenue Operations DevOps/IT Ops, internal BPI data collection initiative and reusable deliverable template program; enabled client counterparts to own and sustain work independently
+Healthcare/Telehealth,
+Construction/Transportation
+Technology, Specialty
+Chemicals/Manufacturing)
+Slalom Senior Principal Jun 2023 Jun 2024 ~12 $235,000 base Technology Consulting Technology Consulting / SaaS $60K increase from PwC; architected Salesforce Billing Accelerator for enterprise adoption acceleration; Healthcare Company Nasdaq Relisting Initiative (Strategic Operator + Q2R SME —
+months CTO: 'Whoever put Betsy on this project is a genius'); Global Tech Co. GTM Align & Usage-Based Billing (GTM Advisor + CPQ/Billing Enablement Lead — Partner: 'Betsy has won the trust of
+the client'); Global Manufacturing Q2R Transformation (CPQ/CLM Functional Lead — VP: 'I cannot thank and applaud Betsy enough')
+Streamforce Consulting Business Architect Jan 2025 May ~5 Independent Technology Consulting – Revenue Technology Consulting / SaaS Founded and operated Streamforce Consulting as an independent business architecture practice; applied 13 years of CPQ/CLM/Lead-to-Cash and Strategic Operator expertise to client
+2025 months Operations engagements on a fractional and project basis; continued trajectory from delivery to advisory
+Salt Basin Net Works Founder · Strategic 2024 Present Ongoing Independent AI Strategy / Consulting / AI / SaaS / PE Advisory / Real Estate AI-native consulting and product venture studio; positioning: Strategic Operator | C-Suite Partner | Financial Modeling | Org Transformation; ventures: SaltBasin HOS (Highway Operating
+Operator · AI Operator Product Ventures System) (Q2R intelligence layer for PE SaaS), BestyStaff (personal AI proxy), SaltBasin Distressed Intel (real estate distressed property analyzer), SaltTide CHI (Credit Health Infrastructure)
+(investor advisory tool), The Salter Momentum™ (proprietary GTM framework); website: saltbasin.net
+
+===== PAGE 3 / 7: Betsy_Salter_Career_Master_Database__Final.pdf =====
+Tools & Tech
+Systems, platforms, and implementation experience for resume keyword mining.
+NAME WHEN USED CURRENT NAME CATEGORY PROFICIENCY FUISRESDT # ROLES NOTES
+Salesforce CRM Salesforce CRM CRM EXPERT 2013 10 Named implementation champion at Blackbaud; hands-on delivery lead across all Accenture, Vista, and PwC engagements; held Salesforce.com Certification
+Apttus CPQ Conga CPQ CPQ EXPERT 2013 10 Super user at Blackbaud; Advanced Pricing + CLM + Best Practices Certified (merit-based, no prior training); hands-on build across Accenture, Vista, and PwC; trained other users
+Salesforce CPQ / Salesforce Billing Salesforce Revenue Cloud CPQ / Billing ADVANCED 2016 6 Steelbrick at Accenture; Salesforce CPQ at Vista and PwC; expanded to hands-on Salesforce Billing (Revenue Cloud) build at PwC Trimble; Salesforce CPQ Trained certification held
+Apttus CLM Conga CLM Contract Lifecycle Management ADVANCED 2016 6 Apttus CLM certified; CLM lead across Accenture and Vista portfolio companies; spans full CLM lifecycle
+Salesforce Service Cloud Salesforce Service Cloud CRM PROFICIENT 2015 3 Used at Accenture and Vista client engagements
+SAP SAP ERP ADVANCED 2013 4 Super user at Blackbaud; provided SAP integration design inputs at Accenture; Celanese SAP/CPQ redesign at PwC
+Oracle ERP Oracle ERP ERP PROFICIENT 2016 2 Integration design and data mapping at Pearson (Accenture) and Vista engagement
+NetSuite NetSuite ERP / Finance PROFICIENT 2018 2 Full-scale implementation oversight at Vista (iCIMS engagement); NetSuite Zone Billing integration design
+NetSuite Zone Billing NetSuite Zone Billing Billing / Subscription PROFICIENT 2018 1 Subscription billing integration design at Vista portfolio company engagement
+Informatica Informatica Data Integration / ETL ADVANCED 2016 4 Pearson integrations to Oracle ERP and Datahub MDM; Vista and PwC Trimble integration design and oversight
+MuleSoft MuleSoft Integration Platform ADVANCED 2018 3 Integration design oversight at Vista; hands-on integration design at PwC Trimble; PwC Celanese integration architecture
+Celigo Celigo Integration / iPaaS PROFICIENT 2018 1 Integration oversight at Vista portfolio company engagement
+Confluence Confluence Documentation / Project Management PROFICIENT 2018 3 Used for documentation and project coordination at Vista, TIBCO, and PwC engagements
+Marketo Marketo Marketing Automation PROFICIENT 2018 2 Full-scale implementation oversight at Vista (iCIMS); integration design connecting to CRM and CPQ workflows
+Endeavor CPQ Endeavor CPQ CPQ (Legacy / Migration) PROFICIENT 2018 1 Source-to-target pricing migration from Endeavor CPQ at Vista portfolio company engagement
+Microsoft Excel Microsoft Excel Productivity / Analysis EXPERT 2013 10 Super user throughout career; built 8-tab, 200+ formula variable pricing engine for Pearson 2M+ ISBNs; replaced manual pricing maintained in 6 Excel sheets at Vista iCIMS engagement
+Microsoft Word Microsoft Word Productivity / Documentation ADVANCED 2013 10 Super user; authored training deliverables, process documentation, O2C flows, and business design documents throughout career
+Microsoft PowerPoint Microsoft PowerPoint Productivity / Presentation ADVANCED 2013 8 Used for client-facing deliverables, process flow presentations, and Vista BOSS program documentation
+Shopify Shopify eCommerce FOUNDATIONAL 2020 1 Exposure during TIBCO internal IT engagement; integration touchpoint within order management re-architecture
+TIBCO Integration Products TIBCO Integration Suite Integration Platform FOUNDATIONAL 2020 1 Exposure during TIBCO internal IT engagement
+SalesLogix N/A – Sunset CRM (Legacy) PROFICIENT 2013 1 Legacy opportunity management CRM at Blackbaud; sunset and replaced by Salesforce CRM during implementation
+Clarify N/A – Sunset Entitlement System (Legacy) PROFICIENT 2013 1 Legacy customer entitlement system at Blackbaud; sunset and replaced by Salesforce integrations during implementation
+Endeavor CPQ Endeavor CPQ CPQ (Legacy) PROFICIENT 2018 1 Source-to-target pricing data migration from Endeavor CPQ platform at Vista engagement
+Claude (Anthropic) / LLM Platforms Claude AI / LLM Platform PROFICIENT 2024 6 Primary AI tool for Salt Basin Net Works ventures; built SaltBasin HOS (Highway Operating System), BestyStaff, SaltBasin Distressed Intel, SaltTide CHI (Credit Health Infrastructure) using Claude
+Agent SDK and Cowork mode; AI Operator identity; transparent about AI-assisted delivery as core part of Strategic Operator brand
+
+===== PAGE 4 / 7: Betsy_Salter_Career_Master_Database__Final.pdf =====
+Projects
+Engagement-level examples, roles, business scale, and outcome language.
+PROJECT / CLIENT EMPLOYER INDUSTRY YOUR ROLE(S) PERIOD SCALE KEY DELIVERABLES & METRICS
+Blackbaud – Salesforce CRM & Apttus CPQ Blackbaud, Inc. Nonprofit Technology / EdTech Champion Stakeholder · Super User · 2013– N/A (Internal) Sunset Saleslogix + Clarify; migrated to Salesforce CRM + Apttus CPQ with SAP integration; authored training deliverables for 10–12 person team; upskilled sales; contributed to ~4
+Implementation Business Process & Integration 2015 hrs/person/month overtime reduction
+Design Input
+Global Enterprise Education Publisher – Salesforce Accenture Education Publishing Business Analyst · CPQ Specialist 2015– $50M+ total Onboarded mid-program; troubleshot and tested US Higher Ed CPQ solution on 2M+ SKU catalog; enabled professor curriculum browsing and bookstore order influence; identified defects
+CRM & Apttus CPQ (R2: US Higher Ed) 2016 program · 60+ blocking critical path
+person team at
+peak
+Accenture Dreamforce Event Management Accenture Technology Consulting (Internal) Solution Designer (2-person team) 2015 N/A (Internal) Built QR code + lead management solution in Salesforce: RSVP tracking, QR code distribution, check-in control, capacity enforcement; contributed to Accenture's Dreamforce reputation
+Solution and additional business secured
+Global Enterprise Education Publisher – Global CPQ Accenture Education Publishing CPQ Lead 2016 $50M+ total Led 12-week global CPQ design; executed 25+ stakeholder surveys across US, UK, and AU/NZ; defined global standards and guiding principles governing all subsequent market releases
+Process Design & Quoting Model (R3: UK, AU/NZ) program
+Global Enterprise Education Publisher – Variable Accenture Education Publishing CPQ Capability Lead · Pricing 2016– $50M+ total Rationalized 2M+ ISBNs into variable attribute-based pricing engine (8-tab workbook, 200+ formulas); designed Informatica integrations to Oracle ERP and Datahub MDM; coordinated
+Pricing Engine & Integration Design (R4) Architect 2017 program with competitive vendors on overlapping workstreams; traveled in-person to UK and AU for UAT
+Global Enterprise Education Publisher – US K-12 Accenture Education Publishing CPQ Capability Lead 2017 $50M+ total Lift-and-shift CPQ to US K-12 BU; designed product and pricing integrations for automated data feeds; closed final release of $50M+ Accenture program; managed team of 3 functional + 1
+BU Rollout (R5 – Final Release) program technical + 3 offshore resources
+Global Data Analytics Technology Company – Accenture Data Analytics / Technology Process Design Lead ~2017 Advisory / 12-week engagement; delivered Best-in-Class O2C L3 process flows, business scenarios, offering models, and business rules; handed off to next Accenture team for transformation
+Offering to Cash Business Process Discovery Discovery execution
+Global Consumer Goods / CPG Company Accenture Consumer Goods / CPG MDM & Data Migration Lead · CPQ 2017– $60M+ Rescued competitor-initiated implementation; defined future state data model; led legacy data cleanup and migration file prep; designed CPQ; QA architect across all workstreams;
+(Netherlands) – CRM/CPQ & MDM/Data Migration (Netherlands) Lead · Cross-functional QA Architect Aug managed 12 integrations from source to Force.com
+2018
+CentralSquare Technologies – Lead to Cash Process Vista Equity Partners GovTech / Public Safety Lead to Cash SME · CPQ/CLM Lead · Aug Vista + Bain Designed Vista BOSS L3 process flows; M&A data and process unification for Superion/TriTech/Zuercher merger; defined account and product hierarchy; CPQ/CLM functional design;
+Design & M&A Integration Technology M&A Process & Data Integration 2018– Capital portfolio process redesign workshops; built data models for unified customer and product master post-merger
+Lead 2019 ($4.81B total
+capital)
+IAS (Integral Ad Science) – Lead to Cash Process Vista Equity Partners AdTech / Digital Advertising Lead to Cash SME · CPQ/CLM Lead · Aug Vista acquired at Vista BOSS process design; M&A integration support; CPQ/CLM functional design; defined foundational data model elements (account hierarchy, product hierarchy); GTM strategy
+Design & M&A Support Measurement M&A Integration Support 2018– ~$850M; exiting alignment; built ARR and customer retention reporting models
+2019 via Novacap at
+$1.9B (2025)
+iCIMS – Marketo, Salesforce, CPQ, Conga, NetSuite Vista Equity Partners HR Tech / Talent Acquisition CPQ/CLM Functional Lead · Project 2018– Vista portfolio Eliminated manual pricing activities performed across 6 different Excel sheets; delivered automated product configuration and pricing in Salesforce CPQ; Conga CLM implementation;
+Full-Scale Implementation Coordinator 2019 company NetSuite integration; Marketo marketing automation; QA across full Salesforce and Conga solution
+Apptio – Lead to Cash Process Design & CPQ/CLM Vista Equity Partners FinOps / Technology Lead to Cash SME · CPQ/CLM Lead · 2019– Vista acquired at Vista BOSS L3 process flows; CPQ/CLM design; data migration strategy enabling automated renewal processes — supported automation of $500M+ in recurring revenue; ARR tracking and
+Implementation Management Software Process Design Lead May $1.94B; IBM subscription management model design; ASC606 compliance methodology
+2020 acquired at $4.6B
+(Aug 2023; ~142%
+return)
+TIBCO Software – Salesforce Billing & Order TIBCO Software Enterprise Software (Internal IT) Lead Business Solution Architect Jun Internal IT Re-architected existing Salesforce Billing/Order integration; provided front-end visibility into billing and payments; automated manual order error correction processes, eliminating manual
+Integration Re-architecture 2020–Jan program intervention; cross-functional design spanning sales, sales ops, accounting, and revenue teams; troubleshot and resolved production issues
+2021
+PwC – Leading DevOps / IT Ops SaaS Platform: PwC DevOps / IT Operations Lead Counterpart · Process Design Early 8-week 8-week O2C future state design and discovery scoping order management through collections; served as lead counterpart on 4-person team; successfully handed off deliverables to
+Order Management to Collections BPD Lead (4-person team) 2021 engagement implementation team
+PwC – Global Telehealth & Virtual Healthcare PwC Healthcare / Telehealth Lead to Cash Process Design Lead · 2021– BPD → $50M+ 12-week Lead to Cash BPD engagement; leveraged and expanded prior process designs to deliver go-forward system requirements; scoping secured $50M+ multi-year Salesforce
+Company: Lead to Cash BPD → Implementation Implementation Support 2022 multi-year implementation and back-office systems redesign; supported 10-person team on implementation phase
+implementation
+win · 10-person
+team
+PwC – Global Technology Company (Construction PwC Technology / Construction / Lead to Cash Lead · Solution 2022– Implementation Lead to Cash lead; expanded hands-on capabilities to Salesforce Billing (Revenue Cloud); integration design leveraging MuleSoft and Informatica; cross-system QA and dependency
+& Transportation): Lead to Cash Implementation Transportation Architect 2023 engagement management
+PwC – Global Specialty Chemicals Manufacturer: PwC Specialty Chemicals / CPQ/SAP Lead · Solution Architect 2023 Implementation – Re-designed Salesforce CPQ and SAP integrations to support variable and ever-changing pricing model including metal pricing; designed across NA and Global Asia BUs; successfully went
+Salesforce CPQ & SAP Integration Redesign Manufacturing (NA + Asia) went live live; last project before moving to Slalom
+Slalom – Salesforce Billing Accelerator Slalom Technology Consulting / SaaS Solution Architect · Accelerator Jun Reusable Product Architected and built a Salesforce Billing (Revenue Cloud) implementation accelerator to reduce enterprise adoption timelines; designed configurable components enabling faster
+Designer 2023–Jun deployments; built for repeatability and re-use across client engagements; directly reduced implementation time and cost for companies adopting usage-based Salesforce Billing at scale
+2024
+Healthcare Company – Nasdaq Relisting Initiative Slalom Healthcare / Capital Markets Strategic Operator · Quote-to- 2023– Strategic Advisory Post-delisting recovery and operational restructuring; aligned operational systems with financial reporting and regulatory requirements; built frameworks connecting system outputs to
+Revenue SME 2024 performance tracking and relisting readiness; coordinated cross-stakeholder alignment across CTO, Finance, and IT leadership. CTO testimonial: 'Whoever put Betsy on this project is a
+genius.' Outcome: improved visibility into performance drivers; enabled structured approach to financial reporting and relisting strategy.
+Global Tech Co. – GTM Align & Usage-Based Billing Slalom High Tech / SaaS GTM Advisor · CPQ/Billing 2023– GTM + Designed and implemented usage-based billing and pricing models for new product launches; aligned product structures, pricing logic, and billing workflows; worked cross-functionally
+Enablement Lead 2024 Implementation across Product, Pricing, and Billing to support GTM requirements; established scalable usage-based pricing framework. Partner testimonial: 'Betsy has won the trust of the client and
+maintained great working relationships with internal teams. I receive consistent positive feedback about Betsy's leadership.' Outcome: launched new revenue-generating products; scalable
+usage-based pricing live.
+Global Manufacturing – Quote to Revenue Slalom Manufacturing / Industrial CPQ/CLM Functional Lead 2023– Implementation Redesigned quoting and contracting workflows across CPQ and CLM; configured pricing logic, product models, and approval workflows; led workshops aligning Sales, Finance, and
+Transformation 2024 Operations stakeholders; eliminated manual pricing across multiple tools; improved deal accuracy and execution speed; enabled consistent pricing governance. VP testimonial: 'I cannot
+thank and applaud Betsy enough for her contributions on the complex deals project.' Outcome: eliminated manual pricing processes; system-driven workflows live.
+SaltBasin HOS (Highway Operating System) – Q2R Salt Basin Net Works AI / Private Equity / SaaS Founder · Product Architect · AI 2024– Personal Venture AI-native Q2R diagnostic and intelligence tool for PE-backed and mid-market SaaS; flat-fee data readiness assessment as foot-in-door offering; 8-scenario Q2R leakage library with
+Intelligence Layer (PE SaaS) Operator Present benchmarks; EBITDA recovery advisory framework; deal qualification tools; built on 13 years of CPQ/CLM/RevOps expertise in AI-first format using Claude Agent SDK; designed to compete
+on insight depth, not headcount
+SaltBasin Distressed Intel – Property Scorer Salt Basin Net Works Real Estate / AI Founder · AI Operator 2024– Personal Venture AI-powered distressed real estate property scoring and analysis tool; surfaces underutilized asset pipeline; applies first-principles financial analysis to distressed property investment
+Present decisions; supports real estate PE advisory positioning (e.g., Aharonoff Investments); emerging AI Operator + Financial Modeling capability applied to real estate sector
+SaltTide CHI (Credit Health Infrastructure) – Salt Basin Net Works Financial Services / AI Founder · AI Operator 2024– Personal Venture AI-powered investor Q&A and advisory tool with legally precise language standards (legally critical — language rules strictly enforced); provides structured investor-grade analysis;
+Investor Advisory Tool Present integrates financial modeling with AI-native interface; designed for PE and investment advisory use cases requiring audit-grade precision
+
+===== PAGE 5 / 7: Betsy_Salter_Career_Master_Database__Final.pdf =====
+Resume Positioning
+Reusable positioning blocks and profile narratives.
+S A LT B A S I N N E T W O R K S · " B O T T O M L I N E S W I T H A R I S I N G T I D E . "
+Strategic Operator | C-Suite Partner | Financial Modeling | Org
+Transformation
+"I build for the customer you keep, not just the deal you close."
+5 S T R AT E G I C D O M A I N S
+Executive Strategy & C-Suite Partnership
+Trusted partner to C-suite and PE operating principals; converts operational complexity to boardroom-ready strategy; translation layer
+between systems, finance, and executive decision-making.
+Revenue Operations & Monetization Strategy
+13 years CPQ/CLM/Quote-to-Cash; end-to-end RevOps design; subscription, usage-based & hybrid pricing models; launched new revenue
+streams from architecture to live GTM across High Tech, SaaS, and Manufacturing.
+Financial Modeling & Scenario Planning
+Proprietary ARR/retention models at $500M+ scale; PE exit readiness; SaaS vs. on-prem vs. usage-based pricing comparisons; EBITDA
+recovery frameworks; real estate distressed asset scoring; first-principles thinking.
+Enterprise Transformation & Systems Strategy
+12+ engagements diagnosing and redesigning fragmented enterprise architectures; M&A integration; CPQ/CLM/ERP/Billing design; Vista
+BOSS trademarked methodology; systems built to survive scale and PE exit scrutiny.
+Human Capital Strategy & Leadership Operations
+Built & enabled teams across all engagements; managed 3 functional + 1 tech + 3 offshore resources; developed reusable deliverable
+frameworks that upskilled client counterparts to self-sustaining capability; The Salter Momentum™ framework.
+S A LT B A S I N N E T W O R K S — AC T I V E V E N T U R E S
+Q 2 R I N T E L L I G E N C E L AY E R
+SaltBasin HOS (Highway Operating System)
+AI-native Q2R diagnostic for PE-backed and mid-market SaaS. 8-scenario leakage library with benchmarks; flat-fee data readiness
+assessment; EBITDA recovery framework; built on 13 years of CPQ/CLM/RevOps expertise in AI-first format.
+P E R S O N A L A I P R OX Y AG E N T
+BestyStaff
+Betsy's AI proxy agent; automates research, deliverable production, and knowledge management. Amplifies Strategic Operator capacity.
+Built to act, not just answer. Name is fixed — never alter it.
+
+===== PAGE 6 / 7: Betsy_Salter_Career_Master_Database__Final.pdf =====
+R E A L E S TAT E · P E A DV I S O RY
+SaltBasin Distressed Intel
+AI-powered distressed property scoring. Surfaces underutilized asset pipeline; applies first-principles financial analysis to real estate PE
+decisions. Supports advisory positioning with firms like Aharonoff Investments.
+F I N A N C I A L A DV I S O RY · A I
+SaltTide CHI (Credit Health Infrastructure)
+AI-powered investor Q&A and advisory tool with legally precise language standards (legally critical — never violate). Structured investor-
+grade analysis for PE and investment advisory use cases.
+GT M F R A M E W O R K · P R O P R I E TA RY I P
+The Salter Momentum™
+Proprietary GTM and transformation framework (Transformation Manifestation). Bridges old-world enterprise knowledge with AI-native
+capability. Manifests as methodology cards, workshops, and advisor positioning.
+L I F E S T Y L E · E CO M M E RC E
+POP 3D Prints of Peace Decor
+3D printed boho home décor at pop3decor.com. Pampas bouquets, tabletop and shelf placement. Separate brand aesthetic — boho
+staging and natural textures. Independent of Salt Basin Net Works.
+TA R G E T S E C TO R S & R O L E T Y P E S
+Private Equity Portfolio Operations Real Estate PE / Investment Advisory Chief Revenue Officer / VP RevOps
+Strategic Operator / C-Suite Advisor AI-Native Consulting / AI Operator SaaS GTM Transformation
+Enterprise Transformation Partner
+Location: St. Petersburg, FL · Education: B.S. Accounting, College of Charleston 2013 · Certifications: Apttus Advanced CPQ + CLM +
+Best Practices (merit-awarded); Prior Held Certs for Salesforce admin, Platform builder, Sales Cloud, and Revenue Cloud · Website:
+saltbasin.net · Industries: High Tech / SaaS, Private Equity, Healthcare, Manufacturing, Real Estate, Education, GovTech, AdTech, Consumer
+Goods, Financial Services
+
+===== PAGE 7 / 7: Betsy_Salter_Career_Master_Database__Final.pdf =====
+Vista Portfolio Outcomes
+Private-equity portfolio outcomes connected to Betsy Salter engagement history.
+Vista Equity Partners – Portfolio Company Investment Outcomes
+Betsy's direct involvement in these companies (Aug 2018 – May 2020) contributed to the value creation work that supported their respective transactions. Sources: Alternatives Watch, Vista Equity Partners, IBM, SEC filings.
+Apptio – FinOps / Technology Business Management
+INVESTMENT TYPE Take-private (from Nasdaq)
+VISTA ACQUIRED January 2019 — $1.94B
+EXIT IBM acquired August 2023 — $4.6B
+VISTA RETURN ~142% return (~2.4x money) in ~4.5 years
+OUTCOME STRONG EXIT ✓ Excellent strategic outcome; IBM integrated Apptio into its IT Automation portfolio
+BETSY'S ROLE CPQ/CLM SME & Lead to Cash process design during post-acquisition value creation phase
+IAS (Integral Ad Science) – AdTech / Digital Ad Measurement
+INVESTMENT TYPE Majority stake acquisition
+VISTA ACQUIRED June 2018 — ~$850M valuation
+IPO Nasdaq IPO June 2021 at $18/share, raising ~$275M; Vista retained ~40% stake
+EXIT (PENDING) Novacap acquiring 2025 — $1.9B ($10.30/share)
+OUTCOME STRONG EXIT ✓ ~$850M → $1.9B plus IPO proceeds = strong return; grew to 800+ employees
+BETSY'S ROLE CPQ/CLM SME & Lead to Cash process design; M&A integration support during post-acquisition and expansion phase
+CentralSquare Technologies – GovTech / Public Safety Software
+INVESTMENT TYPE Platform build through M&A (Vista + Bain Capital)
+CREATED 2018 — merger of Superion, TriTech, Zuercher Technologies, and Aptean; $4.81B total capital raised
+CURRENT STATUS Still held by Vista + Bain Capital (AustralianSuper also invested); no exit event as of 2026
+OUTCOME STILL HELD Largest market share in CAD/RMS; some customer churn challenges post-merger
+BETSY'S ROLE CPQ/CLM SME & Lead to Cash process design; M&A data and process unification for merged product lines and customer base
+iCIMS – HR Tech / Talent Acquisition
+INVESTMENT TYPE Growth equity investment
+VISTA INVESTED August 2018; transaction closed September 2018
+CO-INVESTOR ADDED TA Associates joined as equal partner — August 2022; Susquehanna Growth Equity continued as shareholder
+CURRENT STATUS Still held by Vista + TA Associates as of 2025; TA addition signals continued growth investment, not exit
+OUTCOME STILL HELD / GROWTH STAGE Positive signal — TA investment validates value; no exit yet
+BETSY'S ROLE CPQ/CLM Functional Lead; Marketo, Salesforce CRM, CPQ, Conga, NetSuite full-scale implementation; eliminated manual pricing across 6 Excel-based workflows
+Portfolio Summary: What This Means
+Apptio was a textbook PE success: taken private at $1.94B, transformed, and sold to IBM for $4.6B — a ~142% return in 4.5 years. IAS
+followed a strong trajectory: acquired at ~$850M, taken public in 2021, and now being acquired by Novacap at $1.9B — a strong return with
+Vista retaining equity upside through the IPO. CentralSquare is an ongoing platform play — the M&A roll-up gave Vista + Bain the largest
+CAD/RMS market share in public safety tech, but integration complexity has been a challenge; still held. iCIMS attracted TA Associates as a
+co-equal partner in 2022, a signal of continued investor confidence in the growth trajectory; still held. Betsy's process design, CPQ/CLM, and
+data work directly contributed to the value creation and exit readiness of all four companies — two of which have generated or are
+generating strong confirmed returns.

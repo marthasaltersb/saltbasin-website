@@ -1,7 +1,7 @@
 /* Salt Basin Net Works — Strategic Operator brand tokens.
    Canonical palette per the brand operating standard. */
 :root {
-  /* Core palette */
+  /* Core palette — unchanged names, existing usage across the app is untouched */
   --sb-navy:        #1B2A3B;  /* Slate Navy — primary dark background */
   --sb-navy-deep:   #111928;  /* Deeper navy for surfaces / topbars */
   --sb-navy-soft:   #2D3A4E;  /* Lighter navy for chrome */
@@ -31,20 +31,201 @@
   /* Spacing */
   --sb-radius: 2px;
   --sb-border: 0.5px;
+
+  /* ── Expanded tonal scales (additive) ──────────────────────────────────
+     5 steps per family: 100 (tint) → 300 (light) → 500 (base) → 700 (deep) → 900 (deepest).
+     500 always matches the original named token above so nothing already
+     wired to --sb-navy / --sb-gold / --sb-teal changes. These scales exist
+     so components can reach for a lighter or deeper step instead of faking
+     one with opacity. Hot Pink's scale exists for the same reason but the
+     usage rule is absolute regardless of step: line, mark, or border only —
+     never a background, never text, never a button fill. */
+  --sb-navy-100: #DDE4EA;  --sb-navy-300: #7E93A6;  --sb-navy-500: #1B2A3B;  --sb-navy-700: #101B27;  --sb-navy-900: #0A121C;
+  --sb-gold-100: #F5E3C4;  --sb-gold-300: #DDAA66;  --sb-gold-500: #C4843A;  --sb-gold-700: #9C6329;  --sb-gold-900: #6E461D;
+  --sb-teal-100: #DCE8E7;  --sb-teal-300: #8FADB6;  --sb-teal-500: #4A7C8E;  --sb-teal-700: #355C6A;  --sb-teal-900: #223E48;
+  --sb-neutral-100: #FBF9F5; --sb-neutral-300: #EFEAE0; --sb-neutral-500: #D4CBBB; --sb-neutral-700: #8B8272; --sb-neutral-900: #3A352C;
+  --sb-pink-100: #F5DCE3;  --sb-pink-300: #E8A9BC;  --sb-pink-500: #E8407A;  --sb-pink-700: #B0305D;  --sb-pink-900: #781F3D;
+
+  /* Airy neutral — a cooler, lighter background alternative to Cream/Linen,
+     with the yellow cast removed. Additive: use where a page wants "light
+     and air" instead of warm parchment. */
+  --sb-airy-white:  #FAFAF9;
+  --sb-airy-cloud:  #F0EFEC;
+  --sb-airy-linen:  #E5E3DE;
+  --sb-airy-stone:  #CFCCC3;
+
+  /* ── Theme roles ── the semantic layer new/updated components should read
+     from so they can be re-themed by [data-theme] without every consumer
+     needing to know individual hex tokens. Defaults to Strategic Operator. */
+  --sb-theme-bg:        var(--sb-navy);
+  --sb-theme-surface:   var(--sb-navy-soft);
+  --sb-theme-text:      var(--sb-cream);
+  --sb-theme-text-soft: var(--sb-sage);
+  --sb-theme-primary:   var(--sb-gold);
+  --sb-theme-secondary: var(--sb-teal);
+  --sb-theme-pink:      var(--sb-pink-500);
 }
 
-/* ── HERQ / Salter Momentum™ brand mode — applied via [data-brand-mode="herq"] ── */
+/* ── Theme system ──────────────────────────────────────────────────────────
+   Set data-theme on a page/section root (PublicSite.jsx / PublicProfile.jsx)
+   to re-theme the whole page in one move. Each theme overrides BOTH layers:
+
+   1. The semantic --sb-theme-* roles (for new/future components).
+   2. The original --sb-navy / --sb-cream / --sb-ivory / --sb-linen / --sb-gold
+      / --sb-gold-warm / --sb-teal / --sb-teal-deep / --sb-sage / --sb-taupe /
+      --sb-dusty tokens directly — every existing block, nav, footer, badge,
+      and button in the app already reads these, so overriding them re-themes
+      all current branding functionality with zero component changes.
+
+   The dark/light section-background contrast that blocks rely on (navy vs.
+   ivory/linen, per .sb-bg-navy / .sb-bg-ivory / .sb-bg-linen in this file) is
+   preserved in every theme — a "light" theme still needs a working dark
+   option for hero/contrast sections, it's just re-hued.
+
+   Hot Pink is never assigned to a background or fill role in any theme —
+   it only ever appears as an icon, underline, callout arrow, or border path
+   (see .sb-pink-mark / .sb-pink-underline / .sb-pink-border). Admin chrome
+   (/admin/*) never receives a data-theme attribute and always renders
+   Strategic Operator regardless of a member's or the site's theme choice. */
+
+/* strategic (default) — dark navy, gold accent, teal secondary. Enterprise/PE-facing. */
+[data-theme="strategic"] {
+  --sb-navy: #1B2A3B; --sb-navy-deep: #111928; --sb-navy-soft: #2D3A4E;
+  --sb-cream: #F5F0E8; --sb-ivory: #FBF6F0; --sb-linen: #F0E4D4;
+  --sb-gold: #C4843A; --sb-gold-warm: #A86D3A;
+  --sb-teal: #4A7C8E; --sb-teal-deep: #4A6670;
+  --sb-sage: #B5C4C1; --sb-taupe: #D4B896; --sb-dusty: #8B9BAE;
+
+  --sb-theme-bg: var(--sb-navy); --sb-theme-surface: var(--sb-navy-soft);
+  --sb-theme-text: var(--sb-cream); --sb-theme-text-soft: var(--sb-sage);
+  --sb-theme-primary: var(--sb-gold); --sb-theme-secondary: var(--sb-teal);
+  --sb-theme-pink: var(--sb-pink-500);
+}
+
+/* glow-light — airy, cool, editorial. Salter Momentum™ content, LinkedIn-facing pages. */
+[data-theme="glow-light"] {
+  --sb-navy: #2C3E52; --sb-navy-deep: #182530; --sb-navy-soft: #4E6377;
+  --sb-cream: #FAFAF9; --sb-ivory: #FAFAF9; --sb-linen: #F0EFEC;
+  --sb-gold: #9C6329; --sb-gold-warm: #7A4E1F;
+  --sb-teal: #355C6A; --sb-teal-deep: #24404A;
+  --sb-sage: #C7D3DA; --sb-taupe: #DEDBD3; --sb-dusty: #8FA3B3;
+
+  --sb-theme-bg: var(--sb-airy-white); --sb-theme-surface: var(--sb-airy-cloud);
+  --sb-theme-text: var(--sb-navy-500); --sb-theme-text-soft: var(--sb-navy-300);
+  --sb-theme-primary: var(--sb-gold-700); --sb-theme-secondary: var(--sb-teal-700);
+  --sb-theme-pink: var(--sb-pink-500);
+}
+
+/* glow-dark — the signature Navy + Pink pairing on the deepest ground. Hero/spotlight moments. */
+[data-theme="glow-dark"] {
+  --sb-navy: #0A121C; --sb-navy-deep: #050A10; --sb-navy-soft: #182530;
+  --sb-cream: #FAFAF9; --sb-ivory: #F0EFEC; --sb-linen: #E5E3DE;
+  --sb-gold: #DDAA66; --sb-gold-warm: #C4843A;
+  --sb-teal: #8FADB6; --sb-teal-deep: #4A7C8E;
+  --sb-sage: #B8C4CC; --sb-taupe: #4A3E36; --sb-dusty: #8FA3B3;
+
+  --sb-theme-bg: var(--sb-navy-900); --sb-theme-surface: var(--sb-navy-700);
+  --sb-theme-text: var(--sb-airy-white); --sb-theme-text-soft: var(--sb-navy-300);
+  --sb-theme-primary: var(--sb-gold-300); --sb-theme-secondary: var(--sb-teal-300);
+  --sb-theme-pink: var(--sb-pink-300);
+}
+
+/* momentum-warm — gold-forward, warm tint background, navy structural. Frameworks, pull-quotes. */
+[data-theme="momentum-warm"] {
+  --sb-navy: #1B2A3B; --sb-navy-deep: #111928; --sb-navy-soft: #2D3A4E;
+  --sb-cream: #FAFAF9; --sb-ivory: #F5E3C4; --sb-linen: #F0EFEC;
+  --sb-gold: #9C6329; --sb-gold-warm: #6E461D;
+  --sb-teal: #587B7B; --sb-teal-deep: #3B5757;
+  --sb-sage: #D9C9A8; --sb-taupe: #C9A171; --sb-dusty: #8B9BAE;
+
+  --sb-theme-bg: var(--sb-gold-100); --sb-theme-surface: var(--sb-neutral-100);
+  --sb-theme-text: var(--sb-navy-700); --sb-theme-text-soft: var(--sb-neutral-700);
+  --sb-theme-primary: var(--sb-navy-500); --sb-theme-secondary: var(--sb-gold-700);
+  --sb-theme-pink: var(--sb-pink-500);
+}
+
+/* lagoon — teal-forward, cool and calm. Frameworks/checklists, lower-key alternative to strategic. */
+[data-theme="lagoon"] {
+  --sb-navy: #1B2A3B; --sb-navy-deep: #0F1E24; --sb-navy-soft: #22404A;
+  --sb-cream: #FAFAF9; --sb-ivory: #EAF2F1; --sb-linen: #DCE8E7;
+  --sb-gold: #DDAA66; --sb-gold-warm: #B87538;
+  --sb-teal: #7FA0A0; --sb-teal-deep: #4A6670;
+  --sb-sage: #A9C4C2; --sb-taupe: #6B92A0; --sb-dusty: #7E93A6;
+
+  --sb-theme-bg: var(--sb-teal-900); --sb-theme-surface: var(--sb-teal-700);
+  --sb-theme-text: var(--sb-airy-white); --sb-theme-text-soft: var(--sb-teal-100);
+  --sb-theme-primary: var(--sb-gold-300); --sb-theme-secondary: var(--sb-navy-300);
+  --sb-theme-pink: var(--sb-pink-300);
+}
+
+/* Pink usage primitives — the only three approved applications, wired to the
+   active theme's pink role. Never combine these with a background-color. */
+.sb-pink-mark { color: var(--sb-theme-pink); }
+.sb-pink-underline {
+  background-image: linear-gradient(var(--sb-theme-pink), var(--sb-theme-pink));
+  background-repeat: no-repeat;
+  background-size: 100% 2px;
+  background-position: 0 100%;
+  padding-bottom: 2px;
+}
+.sb-pink-border { border: 2px solid var(--sb-theme-pink); }
+
+/* ── Shape contrast rule ──────────────────────────────────────────────────
+   Any decorative shape, icon container, card, or SmartArt element that sits
+   INSIDE a section must never resolve to the exact same color as that
+   section's own background. A navy circle on a navy section (or an ivory
+   card on an ivory section) reads as a rendering bug, not a design choice.
+
+   Rule: shape fills read --sb-shape-on-dark or --sb-shape-on-light instead
+   of a raw --sb-navy / --sb-ivory / --sb-linen / --sb-teal / --sb-cream
+   token. Both are built with color-mix() against the *current* theme's gold
+   and navy, so they stay guaranteed-distinct from every section background
+   in every theme (gold and navy are never equal to each other), without any
+   component needing to know which theme is active.
+
+   Use --sb-shape-on-dark for a shape sitting on a dark section (navy/teal
+   backgrounds); --sb-shape-on-light for a shape on a light section
+   (ivory/linen/cream backgrounds). This applies to the process-flow shape
+   library, 3D/perspective architecture cards, metric icon containers, and
+   any future SmartArt component — not just the two shapes that exist today. */
+:root {
+  --sb-shape-on-dark:  color-mix(in srgb, var(--sb-gold) 24%, var(--sb-navy) 76%);
+  --sb-shape-on-light: color-mix(in srgb, var(--sb-navy) 10%, var(--sb-ivory) 90%);
+}
+.sb-shape-on-dark  { background: var(--sb-shape-on-dark); }
+.sb-shape-on-light { background: var(--sb-shape-on-light); }
+
+/* ── HERQ / Salter Momentum™ brand mode — applied via [data-brand-mode="herq"] ──
+   --herq-accent is a mark/border/underline color (see .sb-pink-* primitives
+   above, which also work here). --herq-pink/-yellow/-purple/-mint/-sky/-orange
+   are categorical series colors (one per content series, e.g. mergeFieldRegistry
+   default_color_token) — a different, legitimate use of hue as data labeling,
+   not a brand-accent fill, so they're left as flat swatches rather than scales. */
 [data-brand-mode="herq"] {
-  --herq-bg:       #F5F0E8;
-  --herq-text:     #1A1A1A;
-  --herq-accent:   #E8407A;
-  --herq-teal:     #4A7C8E;
-  --herq-pink:     #FF6B9D;
-  --herq-yellow:   #FFE08A;
-  --herq-purple:   #C7B7FF;
-  --herq-mint:     #CDEEDC;
-  --herq-sky:      #BDE4FF;
-  --herq-orange:   #FFD6A5;
+  --herq-bg:        #F5F0E8;
+  --herq-bg-airy:   #FAFAF9;  /* cooler, lighter alternative to --herq-bg */
+  --herq-text:      #1A1A1A;
+  --herq-text-soft: #4A473F;
+  --herq-accent:    #E8407A;
+  --herq-accent-100:#F5DCE3;
+  --herq-accent-300:#E8A9BC;
+  --herq-accent-700:#B0305D;
+  --herq-navy:      #1B2A3B;
+  --herq-teal:      #4A7C8E;
+  --herq-teal-100:  #DCE8E7;
+  --herq-teal-700:  #355C6A;
+  --herq-gold:      #C4843A;
+  --herq-gold-100:  #F5E3C4;
+  --herq-gold-700:  #9C6329;
+
+  /* Categorical series colors — unchanged, do not repurpose as brand fills */
+  --herq-pink:      #FF6B9D;
+  --herq-yellow:    #FFE08A;
+  --herq-purple:    #C7B7FF;
+  --herq-mint:      #CDEEDC;
+  --herq-sky:       #BDE4FF;
+  --herq-orange:    #FFD6A5;
+
   background:      var(--herq-bg);
   color:           var(--herq-text);
 }

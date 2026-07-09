@@ -1,5 +1,6 @@
 import React from 'react';
 import { styles } from './adminStyles.js';
+import { VendorLogo } from '../../lib/vendorLogos.jsx';
 
 // ── Personal profile integration categories ───────────────────────────────────
 const PERSONAL_PROVIDERS = [
@@ -582,7 +583,7 @@ function ProviderRow({ provider, scope, profileId }) {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.4rem 0.5rem', borderRadius: 4 }}>
-      <span style={{ fontSize: '1rem', width: 22, textAlign: 'center' }}>{provider.icon}</span>
+      <VendorLogo id={provider.id} size={22} fallbackIcon={provider.icon} fallbackLabel={provider.label} />
       <span style={{ flex: 1, fontSize: '0.78rem', color: 'var(--sb-cream)' }}>{provider.label}</span>
       {status === null && <span style={{ fontSize: '0.68rem', color: 'var(--sb-dusty)' }}>…</span>}
       {status === false && <button onClick={connect} style={{ ...btnPrimary, padding: '3px 10px', fontSize: '0.68rem', background: 'var(--sb-gold)' }}>Connect</button>}

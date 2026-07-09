@@ -1,0 +1,1102 @@
+[
+  {
+    "id": 1,
+    "status": "deployed",
+    "hoursClaude": 0,
+    "hoursBetsy": 0,
+    "estClaude": 3.8,
+    "estBetsy": 0.2,
+    "dataSource": "retired_duplicate",
+    "feeType": null
+  },
+  {
+    "id": 2,
+    "status": "deployed",
+    "hoursClaude": 0.19,
+    "hoursBetsy": 0.04,
+    "estClaude": 1.43,
+    "estBetsy": 0.08,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 3,
+    "status": "deployed",
+    "hoursClaude": 0.64,
+    "hoursBetsy": 0.12,
+    "estClaude": 4.75,
+    "estBetsy": 0.25,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 4,
+    "status": "deployed",
+    "hoursClaude": 0.24,
+    "hoursBetsy": 0.09,
+    "estClaude": 1.8,
+    "estBetsy": 0.2,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 5,
+    "status": "deployed",
+    "hoursClaude": 0.38,
+    "hoursBetsy": 0.07,
+    "estClaude": 2.85,
+    "estBetsy": 0.15,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 6,
+    "status": "deployed",
+    "hoursClaude": 0,
+    "hoursBetsy": 0,
+    "estClaude": 3,
+    "estBetsy": 0,
+    "dataSource": "retired_duplicate",
+    "feeType": null
+  },
+  {
+    "id": 7,
+    "status": "deployed",
+    "hoursClaude": 0.13,
+    "hoursBetsy": 0,
+    "estClaude": 1,
+    "estBetsy": 0,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 8,
+    "status": "deployed",
+    "hoursClaude": 0.1,
+    "hoursBetsy": 0,
+    "estClaude": 0.75,
+    "estBetsy": 0,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 9,
+    "status": "deployed",
+    "hoursClaude": 0.1,
+    "hoursBetsy": 0,
+    "estClaude": 0.75,
+    "estBetsy": 0,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 10,
+    "status": "deployed",
+    "hoursClaude": 0,
+    "hoursBetsy": 0,
+    "estClaude": 4,
+    "estBetsy": 0,
+    "dataSource": "retired_duplicate",
+    "feeType": null
+  },
+  {
+    "id": 11,
+    "status": "deployed",
+    "hoursClaude": 0.4,
+    "hoursBetsy": 0,
+    "estClaude": 3,
+    "estBetsy": 0,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 12,
+    "status": "deployed",
+    "hoursClaude": 0.2,
+    "hoursBetsy": 0,
+    "estClaude": 1.5,
+    "estBetsy": 0,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 13,
+    "status": "deployed",
+    "hoursClaude": 0.13,
+    "hoursBetsy": 0,
+    "estClaude": 1,
+    "estBetsy": 0,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 14,
+    "status": "deployed",
+    "hoursClaude": 0.08,
+    "hoursBetsy": 0.43,
+    "estClaude": 0.6,
+    "estBetsy": 0.9,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 15,
+    "status": "deployed",
+    "hoursClaude": 0.19,
+    "hoursBetsy": 0.04,
+    "estClaude": 1.43,
+    "estBetsy": 0.08,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 16,
+    "status": "deployed",
+    "hoursClaude": 0.2,
+    "hoursBetsy": 0,
+    "estClaude": 1.5,
+    "estBetsy": 0,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 17,
+    "status": "deployed",
+    "hoursClaude": 0.13,
+    "hoursBetsy": 0,
+    "estClaude": 1,
+    "estBetsy": 0,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 18,
+    "status": "deployed",
+    "hoursClaude": 0.27,
+    "hoursBetsy": 0,
+    "estClaude": 2,
+    "estBetsy": 0,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 19,
+    "status": "deployed",
+    "hoursClaude": 0.13,
+    "hoursBetsy": 0,
+    "estClaude": 1,
+    "estBetsy": 0,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 20,
+    "status": "deployed",
+    "hoursClaude": 0.36,
+    "hoursBetsy": 0.14,
+    "estClaude": 2.7,
+    "estBetsy": 0.3,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 21,
+    "status": "deployed",
+    "hoursClaude": 0.76,
+    "hoursBetsy": 0.14,
+    "estClaude": 5.7,
+    "estBetsy": 0.3,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 22,
+    "status": "deployed",
+    "hoursClaude": 0.6,
+    "hoursBetsy": 0.24,
+    "estClaude": 4.5,
+    "estBetsy": 0.5,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 23,
+    "status": "deployed",
+    "hoursClaude": 0.2,
+    "hoursBetsy": 0,
+    "estClaude": 1.5,
+    "estBetsy": 0,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 24,
+    "status": "deployed",
+    "hoursClaude": 0.4,
+    "hoursBetsy": 0,
+    "estClaude": 3,
+    "estBetsy": 0,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 25,
+    "status": "deployed",
+    "hoursClaude": 0.27,
+    "hoursBetsy": 0,
+    "estClaude": 2,
+    "estBetsy": 0,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 26,
+    "status": "deployed",
+    "hoursClaude": 0.33,
+    "hoursBetsy": 0,
+    "estClaude": 2.5,
+    "estBetsy": 0,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 27,
+    "status": "deployed",
+    "hoursClaude": 0.76,
+    "hoursBetsy": 0.14,
+    "estClaude": 5.7,
+    "estBetsy": 0.3,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 28,
+    "status": "deployed",
+    "hoursClaude": 0.2,
+    "hoursBetsy": 0,
+    "estClaude": 1.5,
+    "estBetsy": 0,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 29,
+    "status": "deployed",
+    "hoursClaude": 0.25,
+    "hoursBetsy": 0.05,
+    "estClaude": 1.9,
+    "estBetsy": 0.1,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 30,
+    "status": "deployed",
+    "hoursClaude": 0.19,
+    "hoursBetsy": 0.04,
+    "estClaude": 1.43,
+    "estBetsy": 0.08,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 31,
+    "status": "deployed",
+    "hoursClaude": 0.2,
+    "hoursBetsy": 0,
+    "estClaude": 1.5,
+    "estBetsy": 0,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 32,
+    "status": "deployed",
+    "hoursClaude": 0.07,
+    "hoursBetsy": 0,
+    "estClaude": 0.5,
+    "estBetsy": 0,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 33,
+    "status": "deployed",
+    "hoursClaude": 0.13,
+    "hoursBetsy": 0,
+    "estClaude": 1,
+    "estBetsy": 0,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 34,
+    "status": "deployed",
+    "hoursClaude": 0.13,
+    "hoursBetsy": 0,
+    "estClaude": 1,
+    "estBetsy": 0,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 35,
+    "status": "deployed",
+    "hoursClaude": 0.13,
+    "hoursBetsy": 0,
+    "estClaude": 1,
+    "estBetsy": 0,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 36,
+    "status": "in_progress",
+    "hoursClaude": 0.54,
+    "hoursBetsy": 0,
+    "estClaude": 4,
+    "estBetsy": 0,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 37,
+    "status": "pending",
+    "hoursClaude": 0,
+    "hoursBetsy": 0,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 38,
+    "status": "pending",
+    "hoursClaude": 0,
+    "hoursBetsy": 0,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 39,
+    "status": "pending",
+    "hoursClaude": 0,
+    "hoursBetsy": 0,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 40,
+    "status": "deployed",
+    "hoursClaude": 0.2,
+    "hoursBetsy": 0.09,
+    "estClaude": 1.5,
+    "estBetsy": 0.2,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 41,
+    "status": "deployed",
+    "hoursClaude": 0.13,
+    "hoursBetsy": 0.05,
+    "estClaude": 1,
+    "estBetsy": 0.1,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 42,
+    "status": "deployed",
+    "hoursClaude": 0.2,
+    "hoursBetsy": 0.12,
+    "estClaude": 1.51,
+    "estBetsy": 0.25,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 43,
+    "status": "deployed",
+    "hoursClaude": 0.1,
+    "hoursBetsy": 0.05,
+    "estClaude": 0.75,
+    "estBetsy": 0.1,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 44,
+    "status": "deployed",
+    "hoursClaude": 0.07,
+    "hoursBetsy": 0.05,
+    "estClaude": 0.5,
+    "estBetsy": 0.1,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 45,
+    "status": "deployed",
+    "hoursClaude": 0.04,
+    "hoursBetsy": 0.02,
+    "estClaude": 0.3,
+    "estBetsy": 0.05,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 46,
+    "status": "deployed",
+    "hoursClaude": 0.03,
+    "hoursBetsy": 0.02,
+    "estClaude": 0.25,
+    "estBetsy": 0.05,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 47,
+    "status": "deployed",
+    "hoursClaude": 0.07,
+    "hoursBetsy": 0.05,
+    "estClaude": 0.5,
+    "estBetsy": 0.1,
+    "dataSource": "measured_turn_count_estimate",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 48,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 49,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 50,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 51,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 52,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 53,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 54,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 55,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 56,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 57,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 58,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 59,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 60,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 61,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 62,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 63,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 64,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 65,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 66,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 67,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 68,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 69,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 70,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 71,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 72,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 73,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 74,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 75,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 76,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 77,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 78,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 79,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 80,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 81,
+    "status": "completed",
+    "hoursClaude": 0.5,
+    "hoursBetsy": 0.1,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 82,
+    "status": "completed",
+    "hoursClaude": 0.5,
+    "hoursBetsy": 0.1,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 83,
+    "status": "completed",
+    "hoursClaude": 0.5,
+    "hoursBetsy": 0.1,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 84,
+    "status": "completed",
+    "hoursClaude": 0.5,
+    "hoursBetsy": 0.1,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 85,
+    "status": "completed",
+    "hoursClaude": 0.5,
+    "hoursBetsy": 0.1,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 86,
+    "status": "completed",
+    "hoursClaude": 0.5,
+    "hoursBetsy": 0.1,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 87,
+    "status": "completed",
+    "hoursClaude": 0.5,
+    "hoursBetsy": 0.1,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 88,
+    "status": "completed",
+    "hoursClaude": 0.5,
+    "hoursBetsy": 0.1,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 89,
+    "status": "completed",
+    "hoursClaude": 0.5,
+    "hoursBetsy": 0.1,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 90,
+    "status": "completed",
+    "hoursClaude": 0.5,
+    "hoursBetsy": 0.1,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 91,
+    "status": "completed",
+    "hoursClaude": 0.5,
+    "hoursBetsy": 0.1,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 92,
+    "status": "completed",
+    "hoursClaude": 0.84,
+    "hoursBetsy": 0.17,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "subscription_included"
+  },
+  {
+    "id": 93,
+    "status": "completed",
+    "hoursClaude": 0.84,
+    "hoursBetsy": 0.17,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "subscription_included"
+  },
+  {
+    "id": 94,
+    "status": "completed",
+    "hoursClaude": 0.84,
+    "hoursBetsy": 0.17,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "subscription_included"
+  },
+  {
+    "id": 95,
+    "status": "completed",
+    "hoursClaude": 0.84,
+    "hoursBetsy": 0.17,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "subscription_included"
+  },
+  {
+    "id": 96,
+    "status": "completed",
+    "hoursClaude": 0.84,
+    "hoursBetsy": 0.17,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "subscription_included"
+  },
+  {
+    "id": 97,
+    "status": "completed",
+    "hoursClaude": 0.84,
+    "hoursBetsy": 0.17,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "subscription_included"
+  },
+  {
+    "id": 98,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 99,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 100,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 101,
+    "status": "pending",
+    "hoursClaude": null,
+    "hoursBetsy": null,
+    "estClaude": null,
+    "estBetsy": null,
+    "dataSource": null,
+    "feeType": null
+  },
+  {
+    "id": 102,
+    "status": "completed",
+    "hoursClaude": 0.46,
+    "hoursBetsy": 0.13,
+    "estClaude": 0.2,
+    "estBetsy": 0.3,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 103,
+    "status": "completed",
+    "hoursClaude": 1.16,
+    "hoursBetsy": 0.22,
+    "estClaude": 0.5,
+    "estBetsy": 0.5,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 104,
+    "status": "completed",
+    "hoursClaude": 2.31,
+    "hoursBetsy": 0.44,
+    "estClaude": 1,
+    "estBetsy": 1,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 105,
+    "status": "completed",
+    "hoursClaude": 0.37,
+    "hoursBetsy": 0.09,
+    "estClaude": 1.5,
+    "estBetsy": 1,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 106,
+    "status": "completed",
+    "hoursClaude": 0.49,
+    "hoursBetsy": 0.09,
+    "estClaude": 2,
+    "estBetsy": 1,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 107,
+    "status": "completed",
+    "hoursClaude": 0.61,
+    "hoursBetsy": 0.14,
+    "estClaude": 2.5,
+    "estBetsy": 1.5,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 108,
+    "status": "completed",
+    "hoursClaude": 0.61,
+    "hoursBetsy": 0.09,
+    "estClaude": 2.5,
+    "estBetsy": 1,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 109,
+    "status": "completed",
+    "hoursClaude": 0.37,
+    "hoursBetsy": 0.05,
+    "estClaude": 1.5,
+    "estBetsy": 0.5,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "ad_hoc_overage"
+  },
+  {
+    "id": 110,
+    "status": "completed",
+    "hoursClaude": 0.37,
+    "hoursBetsy": 0.09,
+    "estClaude": 1.5,
+    "estBetsy": 1,
+    "dataSource": "measured_burst_analysis",
+    "feeType": "ad_hoc_overage"
+  }
+]

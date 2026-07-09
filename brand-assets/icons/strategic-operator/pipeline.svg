@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="256" height="256">
+  <title>Pipeline — Automation / Data Flow</title>
+  <path d="M6 14 H18 V24 H30 V14 H42" stroke="#C4843A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M6 34 H18 V24" stroke="#C4843A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M30 24 V34 H42" stroke="#C4843A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M18 24 H30" stroke="#C4843A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <circle cx="6" cy="14" r="3" stroke="#C4843A" stroke-width="1.75" fill="none"/>
+  <circle cx="6" cy="34" r="3" stroke="#C4843A" stroke-width="1.75" fill="none"/>
+  <circle cx="42" cy="14" r="3" stroke="#C4843A" stroke-width="1.75" fill="none"/>
+  <circle cx="42" cy="34" r="3" stroke="#C4843A" stroke-width="1.75" fill="none"/>
+</svg>

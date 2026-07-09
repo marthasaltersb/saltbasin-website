@@ -1,0 +1,6 @@
+user=1 email=betsysalter@saltbasin.net role=admin
+  preset id=preset-default name="Primary Resume" primary=true layout=modern
+  preset id=preset-1781595269997 name="Tailored Resume" primary=false layout=modern
+  preset id=preset-1783559416606 name="Website Primary" primary=false layout=corporate
+  preset id=preset-1783578187734 name="Case Studies" primary=false layout=case-study
+member_profiles slugs: 6:martysalt, 7:test-friend, 8:phasea-qa-test

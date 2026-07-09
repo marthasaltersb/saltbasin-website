@@ -14,8 +14,10 @@ import {
 } from 'recharts';
 import { api } from '../lib/api.js';
 import BackLink from './BackLink.jsx';
-import { renderBlockToHtml } from '../lib/outputBlocks.js';
+import PortfolioRequestPrompt from './PortfolioRequestFlow.jsx';
+import { renderBlockToHtml, buildBlocksFromLayerConfig, renderMemberFooterHtml } from '../lib/outputBlocks.js';
 import { fetchCareerMaster, tierFillPct, toolWheelBucket } from '../lib/careerMaster.js';
+import { RenderSection } from './blocks/index.jsx';
 
 // The Home page's "about" content is split across two sections — the founder
 // card (name/photo/howIWork, in the aboutIntro section) and the executive
@@ -162,7 +164,7 @@ function PrintModeActions({ onPrint }) {
 // print rule below strips it whenever the page sets
 // data-print-mode="static" before calling window.print(), giving a clean
 // static export that starts right at the content instead of the controls.
-function OutputFrame({ title, eyebrow, children, gated, hideTitle, printActions, printDocTitle }) {
+function OutputFrame({ title, eyebrow, children, gated, hideTitle, printActions, printDocTitle, afterFooter }) {
   const { user } = useAuthState();
   const canPrint = !!user;
   return (
@@ -260,6 +262,7 @@ function OutputFrame({ title, eyebrow, children, gated, hideTitle, printActions,
         )}
         {children}
         <OutputAuthorshipFooter />
+        {afterFooter}
       </article>
     </div>
   );
@@ -347,6 +350,25 @@ function AdminOnlyNotice({ kind }) {
       <p style={{ fontSize: '0.9rem', color: 'var(--sb-sage)', lineHeight: 1.65, maxWidth: 500, margin: '0 auto' }}>
         The detailed {kind} is limited to Salt Basin Net Works admin access while cost and licensing terms are finalized. The Executive Resume Portfolio is available to members in the meantime.
       </p>
+    </div>
+  );
+}
+
+// Teaser wrapper for the portfolio-request funnel: shows real sample content
+// (so visitors see the actual visual quality) capped with a fade-out, ahead
+// of the PortfolioRequestPrompt popup.
+function TeaserFade({ children, note }) {
+  return (
+    <div>
+      <div style={{ position: 'relative', maxHeight: 560, overflow: 'hidden' }}>
+        {children}
+        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 180, background: 'linear-gradient(to bottom, rgba(255,255,255,0), white 88%)', pointerEvents: 'none' }} />
+      </div>
+      {note && (
+        <div style={{ textAlign: 'center', fontSize: '0.7rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#C4843A', fontFamily: 'sans-serif', fontWeight: 700, marginTop: '0.6rem' }}>
+          {note}
+        </div>
+      )}
     </div>
   );
 }
@@ -1106,6 +1128,175 @@ const SERVICE_OFFERINGS = [
   },
 ];
 
+// ── Shared 4-layer output template renderer ──────────────────────────────────
+// Used by all 5 output types (resume, proposal, case-study, one-pager,
+// build-summary). Fetches the member's primary `output_templates` config for
+// the given outputType plus the live Career Master rollup catalog; when the
+// config is schemaVersion 2, renders layer1 (header tagline + member
+// footer, appended below the LOCKED AUTHORSHIP footer — never in place of
+// it), layer2 (stat cards) and layer3 (infographics) via the System B HTML
+// block renderer, and layer4 (site sections / per-job experience / custom
+// placeholder sections) via System A's RenderSection. When no v2 config
+// exists, resolves to `{ config: null }` so callers keep their existing
+// hardcoded layout as the fallback — no output type regresses for members
+// who haven't configured a template yet.
+function useOutputTemplateConfig(outputType) {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  // `?profile=<slug>` (CareerPortfolioHubOutput's existing convention) or
+  // `?owner=<slug|me>` (used by the builder's live-preview iframe) — both
+  // thread through to Career Master's owner= param so the right member's
+  // data backs the page instead of always defaulting to the platform
+  // admin's (Betsy's) data.
+  const owner = searchParams.get('owner') || searchParams.get('profile') || '';
+  const isPreviewDraft = searchParams.get('previewDraft') === '1';
+  // `?preset=<templateId>` — view a specific named preset (e.g. from the
+  // Resume Portfolio index) instead of the owner's primary template. Only
+  // ever resolves presets explicitly marked portfolioVisible (server-side).
+  const presetId = searchParams.get('preset') || '';
+  const [state, setState] = useState({ loading: true, config: null, rollupCatalog: null, sitePages: null });
+
+  // ── Live preview mode: the builder (OutputTemplateConfigurator) posts the
+  // in-progress, unsaved config via postMessage instead of us fetching the
+  // saved primary template — see that component's postTimer effect.
+  useEffect(() => {
+    console.log('[DEBUG-preview] listener effect running, isPreviewDraft=', isPreviewDraft);
+    if (!isPreviewDraft) return undefined;
+    function onMessage(e) {
+      console.log('[DEBUG-preview] onMessage fired', e.origin, e.data?.source, e.data?.config?.layer2_stats?.cards?.length);
+      if (e.origin !== window.location.origin) return;
+      if (e.data?.source === 'sb-output-preview') {
+        console.log('[DEBUG-preview] setState with config');
+        setState((s) => ({ ...s, loading: false, config: e.data.config }));
+      }
+    }
+    window.addEventListener('message', onMessage);
+    // Tell the parent we're ready to receive the current draft (handles the
+    // iframe finishing load after the parent already has state to send).
+    window.parent.postMessage({ source: 'sb-output-preview-ready' }, '*');
+    return () => window.removeEventListener('message', onMessage);
+  }, [isPreviewDraft]);
+
+  // ── Normal mode: fetch a specific preset (?preset=) or the saved primary
+  // template, plus rollups + site.
+  useEffect(() => {
+    if (isPreviewDraft) return undefined;
+    let cancelled = false;
+    const ownerParam = owner ? `?owner=${encodeURIComponent(owner)}` : '';
+    const templateFetch = presetId
+      ? fetch(`/api/output-templates/${encodeURIComponent(presetId)}/public`, { credentials: 'include' })
+          .then((r) => r.json()).catch(() => ({ template: null }))
+      : fetch(`/api/output-templates/primary?output_type=${encodeURIComponent(outputType)}`, { credentials: 'include' })
+          .then((r) => r.json()).catch(() => ({ template: null }));
+    Promise.all([
+      templateFetch,
+      fetch(`/api/career/rollups${ownerParam}`).then((r) => r.json()).catch(() => null),
+      api.getPublishedSite().then((site) => site.pages).catch(() => null),
+    ]).then(([tplRes, rollupCatalog, sitePages]) => {
+      if (cancelled) return;
+      let config = null;
+      if (tplRes?.template?.config) {
+        config = typeof tplRes.template.config === 'string' ? JSON.parse(tplRes.template.config) : tplRes.template.config;
+      }
+      if (Number(config?.schemaVersion) !== 2) config = null;
+      setState({ loading: false, config, rollupCatalog, sitePages });
+    });
+    return () => { cancelled = true; };
+  }, [outputType, owner, presetId, isPreviewDraft]);
+
+  // Preview mode still needs rollupCatalog/sitePages for the renderer even
+  // though config comes from postMessage — fetch them once, same as normal
+  // mode, but never overwrite a config already received via postMessage.
+  useEffect(() => {
+    if (!isPreviewDraft) return;
+    const ownerParam = owner ? `?owner=${encodeURIComponent(owner)}` : '';
+    Promise.all([
+      fetch(`/api/career/rollups${ownerParam}`).then((r) => r.json()).catch(() => null),
+      api.getPublishedSite().then((site) => site.pages).catch(() => null),
+    ]).then(([rollupCatalog, sitePages]) => {
+      setState((s) => ({ ...s, rollupCatalog, sitePages }));
+    });
+  }, [isPreviewDraft, owner]);
+
+  return state;
+}
+
+// Layer4 job_experience: proficiency qualifiers (tier language from the
+// job's function/duration) alongside the actual activities performed
+// (career_jobs.keyMetrics), so each role shows both — not just a bullet list.
+function buildJobExperienceHtml(job) {
+  const qualifiers = [job.jobFunction, job.industry, job.duration].filter(Boolean).join(' · ');
+  const activities = Array.isArray(job.keyMetrics) ? job.keyMetrics : String(job.keyMetrics || '').split('\n').filter(Boolean);
+  return renderBlockToHtml({
+    type: 'experience-block',
+    props: {
+      company: job.company,
+      title: job.title,
+      dates: [job.startDate, job.endDate].filter(Boolean).join(' – '),
+      bullets: [qualifiers && `Focus: ${qualifiers}`, ...activities].filter(Boolean),
+    },
+  }, {});
+}
+
+function hasOutputLayerContent(config) {
+  if (!config) return false;
+  const l1 = !!config.layer1_header?.memberTagline;
+  const l2 = (config.layer2_stats?.cards || []).some((c) => c.visible !== false);
+  const l3 = (config.layer3_infographics?.items || []).some((i) => i.visible !== false);
+  const l4 = (config.layer4_sections?.sections || []).some((s) => s.visible !== false);
+  return l1 || l2 || l3 || l4;
+}
+
+function OutputTemplateBody({ config, ctx, sitePages, master }) {
+  if (!config) return null;
+  const items = [];
+  let order = 0;
+
+  const tagline = config.layer1_header?.memberTagline;
+  if (tagline) {
+    items.push({ order: order++, key: 'l1-tagline', kind: 'html', html: `<div style="font-size:0.85rem;color:#8b9bae;font-style:italic;margin-bottom:0.75rem">${tagline}</div>` });
+  }
+
+  for (const sec of (config.layer4_sections?.sections || []).filter((s) => s.visible !== false)) {
+    if (sec.sourceType === 'job_experience') {
+      const job = (master?.jobs || []).find((j) => String(j.id) === String(sec.jobId));
+      if (job) items.push({ order: order++, key: `l4-job-${sec.id}`, kind: 'html', html: buildJobExperienceHtml(job) });
+    } else if (sec.sourceType === 'site_section') {
+      const section = sitePages?.[sec.pageKey]?.sections?.find((s) => s.id === sec.sectionId);
+      if (section) items.push({ order: order++, key: `l4-site-${sec.id}`, kind: 'react', element: <RenderSection section={section} mode="preview" /> });
+    } else if (sec.sourceType === 'custom_placeholder') {
+      const section = sitePages?.['_placeholders']?.sections?.find((s) => s.id === sec.customSectionId);
+      if (section) items.push({ order: order++, key: `l4-placeholder-${sec.id}`, kind: 'react', element: <RenderSection section={section} mode="preview" /> });
+    }
+  }
+
+  const statBlocks = buildBlocksFromLayerConfig(config, ctx);
+  for (const block of statBlocks) {
+    items.push({ order: order++, key: `l23-${block.id}`, kind: 'html', html: renderBlockToHtml(block, ctx) });
+  }
+
+  if (!items.length) return null;
+  // The LOCKED OutputAuthorshipFooter is rendered by the caller's OutputFrame
+  // (after `children`, untouched). The member's own footer is rendered
+  // separately via OutputFrame's `afterFooter` slot so it always lands BELOW
+  // the locked footer — see MemberFooterSlot below.
+  return (
+    <div style={{ fontFamily: 'Georgia, serif' }}>
+      {items.map((it) => it.kind === 'html'
+        ? <div key={it.key} dangerouslySetInnerHTML={{ __html: it.html }} />
+        : <div key={it.key}>{it.element}</div>)}
+    </div>
+  );
+}
+
+// Renders the member/org footer BELOW the locked AUTHORSHIP footer — passed
+// to OutputFrame's `afterFooter` prop, never merged into the footer itself.
+function MemberFooterSlot({ config }) {
+  const html = renderMemberFooterHtml(config);
+  if (!html) return null;
+  return <div dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
 // ── Resume ──
 export function ResumeOutput() {
   const location = useLocation();
@@ -1116,6 +1307,7 @@ export function ResumeOutput() {
   const [primaryTemplate, setPrimaryTemplate] = useState(undefined);
   const [resumePreset, setResumePreset] = useState(undefined);
   const [master, setMaster] = useState(null);
+  const templateV2 = useOutputTemplateConfig('resume');
   const searchParams = new URLSearchParams(location.search);
   const requestedPresetId = searchParams.get('preset');
   const layoutParam = searchParams.get('layout') || resumePreset?.layout || 'classic';
@@ -1178,7 +1370,7 @@ export function ResumeOutput() {
     return () => { cancelled = true; };
   }, [authLoading, user, requestedPresetId]);
 
-  const isLoading = authLoading || primaryTemplate === undefined || resumePreset === undefined || !master || (!page && !siteError);
+  const isLoading = authLoading || primaryTemplate === undefined || resumePreset === undefined || !master || (!page && !siteError) || templateV2.loading;
 
   if (isLoading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', color: '#1B2A3B', fontFamily: 'Georgia, serif', fontSize: '1rem' }}>
@@ -1236,7 +1428,17 @@ export function ResumeOutput() {
     new Date().toISOString().slice(0, 10),
   ].join('_');
 
-  // ── Template-driven render ──
+  // ── 4-layer template-driven render (schemaVersion 2) ──
+  if (templateV2.config && hasOutputLayerContent(templateV2.config)) {
+    const ctx = { about, timeline, jobs, execKpis, capabilityMeters, resumePreset, rollupCatalog: templateV2.rollupCatalog };
+    return (
+      <OutputFrame title={about.heading || about.name || 'Betsy Salter'} eyebrow="Resume" printDocTitle={printDocTitle} afterFooter={<MemberFooterSlot config={templateV2.config} />}>
+        <OutputTemplateBody config={templateV2.config} ctx={ctx} sitePages={templateV2.sitePages} master={master} />
+      </OutputFrame>
+    );
+  }
+
+  // ── Legacy template-driven render (schemaVersion 1, blocks-only) ──
   if (!resumePreset && primaryTemplate?.blocks?.length) {
     const ctx = { about, timeline, jobs, execKpis, capabilityMeters, resumePreset };
     const sorted = [...primaryTemplate.blocks]
@@ -1396,6 +1598,7 @@ export function CaseStudyOutput() {
   const { loading, user } = useAuthState();
   const [data, setData] = useState(null);
   const [master, setMaster] = useState(null);
+  const templateV2 = useOutputTemplateConfig('case-study');
   useEffect(() => {
     api.getPublishedSite()
       .then((site) => {
@@ -1406,7 +1609,7 @@ export function CaseStudyOutput() {
     fetchCareerMaster().then(setMaster);
   }, []);
 
-  if (loading || !data || !master) return null;
+  if (loading || !data || !master || templateV2.loading) return null;
 
   // engagement-<id> slugs (Career Master, uncapped) take priority over the
   // 3 legacy fixed-slot slugs, which stay supported for old bookmarked links.
@@ -1448,6 +1651,16 @@ export function CaseStudyOutput() {
           teaser={{ label: 'Context (preview)', items: undefined, bullets: context.slice(0, 1) }}
         />
         )}
+      </OutputFrame>
+    );
+  }
+
+  // ── 4-layer template-driven render (schemaVersion 2) ──
+  if (templateV2.config && hasOutputLayerContent(templateV2.config)) {
+    const ctx = { title, subtitle, context, role, actions, impact, metrics, engagement, rollupCatalog: templateV2.rollupCatalog };
+    return (
+      <OutputFrame title={title} eyebrow={subtitle || 'Case Study'} afterFooter={<MemberFooterSlot config={templateV2.config} />}>
+        <OutputTemplateBody config={templateV2.config} ctx={ctx} sitePages={templateV2.sitePages} master={master} />
       </OutputFrame>
     );
   }
@@ -1685,22 +1898,39 @@ export function CareerCaseStudyPortfolioOutput() {
   // against her own consistent marketing figures. Engagement count stays live.
   const portfolioTagline = `${engagements.length} engagements · 12 industries · 13 years`;
 
-  // Detailed documentation — admin-only while cost/licensing is finalized.
+  // Non-admin visitors get the teaser + portfolio-request funnel: two real
+  // engagement cards with a fade-out, then the request/build-your-own popup.
   if (!isAdminUser(user)) {
+    const sampleEngagements = engagements.filter((e) => e.testimonial).slice(0, 1)
+      .concat(engagements.filter((e) => !e.testimonial).slice(0, 1));
     return (
       <OutputFrame title="Case Study Portfolio" eyebrow="Strategic Operator Portfolio" gated>
-        {!user ? (
-          <GatedPreview
-            kind="case study portfolio"
-            teaser={{
-              label: portfolioTagline,
-              paragraphs: ['Every engagement, full context to impact, with quantified business outcomes and client testimonials.'],
-              bullets: engagements.slice(0, 3).map((e) => e.clientDisplayName || e.name),
-            }}
-          />
-        ) : (
-          <AdminOnlyNotice kind="case study portfolio" />
-        )}
+        <TeaserFade note={`Preview — ${portfolioTagline} in the full portfolio`}>
+          <p style={{ fontSize: '0.85rem', color: '#536173', lineHeight: 1.65, marginBottom: '1.1rem', fontFamily: 'Georgia, serif' }}>
+            Every engagement, full context to impact, with quantified business outcomes and client testimonials.
+          </p>
+          {sampleEngagements.map((e) => (
+            <div key={e.id} style={{ border: '0.5px solid #e8ddd0', borderRadius: 8, overflow: 'hidden', marginBottom: '0.9rem' }}>
+              <div style={{ background: BRAND.navy, color: 'white', padding: '0.7rem 1rem' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.9rem', fontFamily: 'Georgia, serif' }}>{e.clientDisplayName || e.name}</div>
+                <div style={{ fontSize: '0.62rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: BRAND.gold, fontFamily: 'sans-serif', marginTop: '0.2rem' }}>
+                  {[e.industry, e.period].filter(Boolean).join(' · ')}
+                </div>
+              </div>
+              <div style={{ padding: '0.85rem 1rem' }}>
+                {(e.metrics || []).slice(0, 3).map((m, i) => (
+                  <span key={i} style={{ display: 'inline-block', fontSize: '0.66rem', padding: '0.2rem 0.65rem', borderRadius: 12, background: BRAND.mist, color: BRAND.navy, margin: '0 0.35rem 0.35rem 0', fontFamily: 'sans-serif' }}>{m}</span>
+                ))}
+                {e.testimonial && (
+                  <div style={{ fontStyle: 'italic', fontSize: '0.85rem', color: BRAND.navy, marginTop: '0.4rem', fontFamily: 'Georgia, serif' }}>
+                    “{e.testimonial}” <span style={{ fontStyle: 'normal', fontSize: '0.62rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: BRAND.gold, fontFamily: 'sans-serif' }}>— {e.testimonialAttr}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </TeaserFade>
+        <PortfolioRequestPrompt sourceOutput="case-study-portfolio" master={master} user={user} />
       </OutputFrame>
     );
   }
@@ -2108,21 +2338,46 @@ export function CareerMasterDatabaseOutput() {
   const jobChain = master.jobs.map((j) => j.company).filter((c, i, arr) => arr.indexOf(c) === i).join(' → ');
   const headerLine = [profileMeta?.extra?.education, jobChain, profileMeta?.extra?.location].filter(Boolean).join('  ·  ');
 
-  // Detailed documentation — admin-only while cost/licensing is finalized.
+  // Non-admin visitors get the teaser + portfolio-request funnel: the tier
+  // legend and a live sample of the skills table with a fade-out, then the
+  // request/build-your-own popup.
   if (!isAdminUser(user)) {
+    const sampleSkills = master.skills.slice(0, 7);
     return (
       <OutputFrame title="Career Master Database" eyebrow="Skills · Jobs · Tools · Engagements" gated>
-        {!user ? (
-          <GatedPreview
-            kind="career master database"
-            teaser={{
-              label: `${master.skills.length} skills · ${master.jobs.length} roles · ${master.tools.length} tools · ${master.engagements.length} engagements`,
-              paragraphs: ['The full searchable, sortable career database — every skill, role, tool, and engagement with quantified detail.'],
-            }}
-          />
-        ) : (
-          <AdminOnlyNotice kind="career master database" />
-        )}
+        <TeaserFade note={`Preview — ${master.skills.length} skills · ${master.jobs.length} roles · ${master.tools.length} tools · ${master.engagements.length} engagements in the full database`}>
+          <p style={{ fontSize: '0.85rem', color: '#536173', lineHeight: 1.65, marginBottom: '1rem', fontFamily: 'Georgia, serif' }}>
+            The full searchable, sortable career database — every skill, role, tool, and engagement with quantified detail.
+          </p>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+            {TIER_LEGEND.map((t) => (
+              <span key={t.tier} style={{ fontSize: '0.66rem', padding: '0.22rem 0.65rem', borderRadius: 14, background: '#faf8f4', border: `1px solid ${t.color}`, color: t.color, fontWeight: 700, fontFamily: 'sans-serif' }}>
+                {t.tier} — {t.years}
+              </span>
+            ))}
+          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem', fontFamily: 'sans-serif' }}>
+            <thead>
+              <tr>
+                {['Skill', 'Category', 'Tier', 'Yrs', 'Engagements'].map((h) => (
+                  <th key={h} style={{ textAlign: 'left', padding: '0.45rem 0.6rem', background: BRAND.navy, color: 'white', fontSize: '0.62rem', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {sampleSkills.map((s, i) => (
+                <tr key={s.id} style={{ background: i % 2 ? '#faf8f4' : 'white' }}>
+                  <td style={{ padding: '0.45rem 0.6rem', fontWeight: 700, color: BRAND.navy }}>{s.skill}</td>
+                  <td style={{ padding: '0.45rem 0.6rem', color: '#555' }}>{s.category}</td>
+                  <td style={{ padding: '0.45rem 0.6rem', color: BRAND.gold, fontWeight: 700 }}>{s.tier}</td>
+                  <td style={{ padding: '0.45rem 0.6rem', color: '#555' }}>{s.yearsExp}</td>
+                  <td style={{ padding: '0.45rem 0.6rem', color: '#555' }}>{s.numEngagements}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </TeaserFade>
+        <PortfolioRequestPrompt sourceOutput="career-master-database" master={master} user={user} />
       </OutputFrame>
     );
   }
@@ -2327,6 +2582,7 @@ export function CareerPortfolioHubOutput() {
   const { loading, user } = useAuthState();
   const [master, setMaster] = useState(null);
   const [resumeUrl, setResumeUrl] = useState('/output/resume');
+  const [portfolioPresetCount, setPortfolioPresetCount] = useState(0);
   const targetProfile = new URLSearchParams(location.search).get('profile');
   useEffect(() => { fetchCareerMaster().then(setMaster); }, []);
   useEffect(() => {
@@ -2339,6 +2595,16 @@ export function CareerPortfolioHubOutput() {
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { if (d?.url) setResumeUrl(d.url); })
       .catch(() => {});
+    // Multiple role/industry-tagged resume presets marked portfolioVisible
+    // → the resume card points at the Resume Portfolio index instead of a
+    // single resume. Only checked when we know whose portfolio this is
+    // (?profile=<slug>) — Betsy's own hub (no slug) keeps today's behavior.
+    if (targetProfile) {
+      fetch(`/api/output-templates/portfolio?owner=${encodeURIComponent(targetProfile)}&output_type=resume`)
+        .then((r) => r.json())
+        .then((d) => setPortfolioPresetCount((d.templates || []).length))
+        .catch(() => setPortfolioPresetCount(0));
+    }
   }, [targetProfile]);
   if (loading || !master) return null;
 
@@ -2349,7 +2615,14 @@ export function CareerPortfolioHubOutput() {
     { title: 'The Strategic Operator', desc: 'One-page visual career infographic — outcomes & exits, industry-duration bars, capability confidence, platform proficiency, client voice.', href: '/output/strategic-operator', stat: 'Print-ready infographic' },
   ];
 
-  CARDS[0].href = resumeUrl;
+  CARDS[0].href = portfolioPresetCount > 1
+    ? `/output/resume-portfolio?profile=${encodeURIComponent(targetProfile)}`
+    : resumeUrl;
+  if (portfolioPresetCount > 1) {
+    CARDS[0].title = 'Resume Portfolio';
+    CARDS[0].desc = `${portfolioPresetCount} resume versions by role/industry — pick the one that fits.`;
+    CARDS[0].stat = `${portfolioPresetCount} versions`;
+  }
 
   return (
     <OutputFrame title="View My Work" eyebrow="Portfolio">
@@ -2376,6 +2649,71 @@ export function CareerPortfolioHubOutput() {
           </div>
         </div>
       )}
+    </OutputFrame>
+  );
+}
+
+// ── Resume Portfolio index — role/industry-tagged presets marked
+// portfolioVisible in the output template builder, grouped for browsing.
+// Linked from CareerPortfolioHubOutput's resume card when a member has 2+
+// such presets; each card opens /output/resume?preset=<id>.
+export function ResumePortfolioOutput() {
+  const location = useLocation();
+  const { loading, user } = useAuthState();
+  const [items, setItems] = useState(null);
+  const profile = new URLSearchParams(location.search).get('profile') || '';
+
+  useEffect(() => {
+    if (!profile) { setItems([]); return; }
+    fetch(`/api/output-templates/portfolio?owner=${encodeURIComponent(profile)}&output_type=resume`)
+      .then((r) => r.json())
+      .then((d) => setItems(d.templates || []))
+      .catch(() => setItems([]));
+  }, [profile]);
+
+  if (loading || !items) return null;
+
+  if (!user) {
+    return (
+      <OutputFrame title="Resume Portfolio" eyebrow="Portfolio" gated>
+        <GatedPreview kind="portfolio" teaser={{ label: 'Multiple resume versions', paragraphs: ['Sign up or sign in to browse resume versions by role and industry.'] }} />
+      </OutputFrame>
+    );
+  }
+
+  // Group by roleLabel first, falling back to industryLabel, then "General".
+  const groups = new Map();
+  for (const item of items) {
+    const key = item.meta?.roleLabel || item.meta?.industryLabel || 'General';
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(item);
+  }
+
+  return (
+    <OutputFrame title="Resume Portfolio" eyebrow="Portfolio">
+      <div style={{ fontFamily: 'Georgia, serif' }}>
+        {items.length === 0 && (
+          <p style={{ fontSize: '0.9rem', color: '#666' }}>No published resume versions yet.</p>
+        )}
+        {[...groups.entries()].map(([group, groupItems]) => (
+          <section key={group} style={{ marginBottom: '2rem' }}>
+            <OutputHeading>{group}</OutputHeading>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+              {groupItems.map((it) => (
+                <a key={it.id} href={`/output/resume?preset=${encodeURIComponent(it.id)}&profile=${encodeURIComponent(profile)}`}
+                  target="_blank" rel="noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <div style={{ background: '#faf8f4', border: '0.5px solid #e8ddd0', borderTop: '3px solid #c4843a', borderRadius: 4, padding: '1.1rem', height: '100%', boxSizing: 'border-box' }}>
+                    <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1b2a3b', marginBottom: '0.35rem' }}>{it.name}</div>
+                    <div style={{ fontSize: '0.72rem', color: '#888' }}>
+                      {[it.meta?.roleLabel, it.meta?.industryLabel].filter(Boolean).join(' · ') || 'View resume'} ↗
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
     </OutputFrame>
   );
 }
@@ -2736,22 +3074,30 @@ export function StrategicOperatorOutput() {
     </div>
   );
 
-  // Elevated documentation — admin-only while cost/licensing is finalized.
+  // Non-admin visitors get the teaser + portfolio-request funnel: the hero
+  // band and live outcome metrics with a fade-out, then the popup.
   if (!isAdminUser(user)) {
+    const teaserMetrics = computeHeroMetrics(master);
     return (
-      <OutputFrame title="The Strategic Operator" eyebrow="Career Infographic" gated>
-        {!user ? (
-          <GatedPreview
-            kind="strategic operator profile"
-            teaser={{
-              label: 'The Strategic Operator — Career Infographic',
-              paragraphs: ['A one-page visual profile: high-impact outcomes and exits, industry experience durations, capability confidence, platform proficiency, and client voice — generated live from the Career Master database.'],
-              bullets: [`${master.engagements.length} engagements documented`, `${master.skills.length} skills tracked`, 'Print-ready branded infographic'],
-            }}
-          />
-        ) : (
-          <AdminOnlyNotice kind="strategic operator profile" />
-        )}
+      <OutputFrame title="The Strategic Operator" eyebrow="Career Infographic" gated hideTitle>
+        <TeaserFade note={`Preview — ${master.engagements.length} engagements · ${master.skills.length} skills in the full infographic`}>
+          <header style={{ background: BRAND.navy, borderRadius: 10, padding: '1.5rem 1.75rem', marginBottom: '1.25rem' }}>
+            <div style={{ fontSize: '0.6rem', letterSpacing: '0.26em', textTransform: 'uppercase', color: BRAND.gold, fontFamily: 'sans-serif', fontWeight: 700, marginBottom: '0.5rem' }}>
+              Salt Basin Net Works · Strategic Operator Profile
+            </div>
+            <h1 style={{ fontSize: '2rem', letterSpacing: '0.05em', textTransform: 'uppercase', color: BRAND.warmShell, margin: 0, lineHeight: 1.05, fontFamily: 'Georgia, serif' }}>Betsy Salter</h1>
+            <div style={{ fontSize: '0.64rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: BRAND.gold, marginTop: '0.4rem', fontFamily: 'sans-serif' }}>
+              AI-Native Revenue &amp; GTM Transformation Leader · Q2R Architect · PE Value Creation
+            </div>
+            <div style={{ marginTop: '0.8rem', fontStyle: 'italic', fontSize: '0.9rem', color: BRAND.gold, fontFamily: 'Georgia, serif' }}>
+              “I build for the customer you keep, not just the deal you close.”
+            </div>
+          </header>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.7rem' }}>
+            {teaserMetrics.map((m) => <HeroMetricCard key={m.label} {...m} />)}
+          </div>
+        </TeaserFade>
+        <PortfolioRequestPrompt sourceOutput="strategic-operator" master={master} user={user} />
       </OutputFrame>
     );
   }
@@ -3041,6 +3387,7 @@ const PROPOSAL_TYPES = {
 export function ProposalOutput() {
   const { type } = useParams();
   const { loading, user } = useAuthState();
+  const templateV2 = useOutputTemplateConfig('proposal');
   const data = PROPOSAL_TYPES[type];
   if (!data) {
     return (
@@ -3051,7 +3398,7 @@ export function ProposalOutput() {
       </OutputFrame>
     );
   }
-  if (loading) return null;
+  if (loading || templateV2.loading) return null;
   if (!user) {
     return (
       <OutputFrame title={data.title} eyebrow={`Proposal · ${data.tag}`} gated>
@@ -3063,6 +3410,16 @@ export function ProposalOutput() {
             bullets: data.activities.slice(0, 2),
           }}
         />
+      </OutputFrame>
+    );
+  }
+
+  // ── 4-layer template-driven render (schemaVersion 2) ──
+  if (templateV2.config && hasOutputLayerContent(templateV2.config)) {
+    const ctx = { data, rollupCatalog: templateV2.rollupCatalog };
+    return (
+      <OutputFrame title={data.title} eyebrow={`Proposal · ${data.tag}`} afterFooter={<MemberFooterSlot config={templateV2.config} />}>
+        <OutputTemplateBody config={templateV2.config} ctx={ctx} sitePages={templateV2.sitePages} master={null} />
       </OutputFrame>
     );
   }
@@ -3112,7 +3469,8 @@ export function ProposalOutput() {
 // ── One-Pager: Services + Domains + Niche Solutions ──
 export function OnePagerOutput() {
   const { loading, user } = useAuthState();
-  if (loading) return null;
+  const templateV2 = useOutputTemplateConfig('one-pager');
+  if (loading || templateV2.loading) return null;
   if (!user) {
     return (
       <OutputFrame title="Salt Basin — One-Pager" eyebrow="Capabilities Summary" gated>
@@ -3124,6 +3482,16 @@ export function OnePagerOutput() {
             bullets: SERVICE_OFFERINGS.map((s) => `${s.title} · ${s.tag}`),
           }}
         />
+      </OutputFrame>
+    );
+  }
+
+  // ── 4-layer template-driven render (schemaVersion 2) ──
+  if (templateV2.config && hasOutputLayerContent(templateV2.config)) {
+    const ctx = { rollupCatalog: templateV2.rollupCatalog };
+    return (
+      <OutputFrame title="Salt Basin — One-Pager" eyebrow="Capabilities Summary" afterFooter={<MemberFooterSlot config={templateV2.config} />}>
+        <OutputTemplateBody config={templateV2.config} ctx={ctx} sitePages={templateV2.sitePages} master={null} />
       </OutputFrame>
     );
   }
@@ -3219,6 +3587,7 @@ export function BuildSummaryOutput() {
   const { loading, user } = useAuthState();
   const [data, setData] = useState(null);
   const [err,  setErr]  = useState(null);
+  const templateV2 = useOutputTemplateConfig('build-summary');
 
   useEffect(() => {
     if (loading || !user || user.role !== 'admin') return;
@@ -3274,6 +3643,16 @@ export function BuildSummaryOutput() {
   const timelineCaps = [...capabilities]
     .filter((c) => c.deliveredCount > 0 && c.firstDeployedAt)
     .sort((a, b) => (a.firstDeployedAt || 0) - (b.firstDeployedAt || 0));
+
+  // ── 4-layer template-driven render (schemaVersion 2) ──
+  if (!templateV2.loading && templateV2.config && hasOutputLayerContent(templateV2.config)) {
+    const ctx = { totals, capabilities, workarounds, items, rollupCatalog: templateV2.rollupCatalog };
+    return (
+      <OutputFrame title="Salt Basin · Build Progress Report" eyebrow="Internal · To-Date Build" afterFooter={<MemberFooterSlot config={templateV2.config} />}>
+        <OutputTemplateBody config={templateV2.config} ctx={ctx} sitePages={templateV2.sitePages} master={null} />
+      </OutputFrame>
+    );
+  }
 
   return (
     <OutputFrame title="Salt Basin · Build Progress Report" eyebrow="Internal · To-Date Build">

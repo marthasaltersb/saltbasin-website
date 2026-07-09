@@ -191,6 +191,67 @@ function FieldEditor({ block, onChange, outputType }) {
           );
         }
 
+        // 'cardList' — repeating structured-object array (icon/title/description/
+        // accent, etc.), driven by field.itemFields. Used by the smart-art
+        // graphics blocks (accent-stat-cards, cascade-flow, architecture-steps)
+        // whose items carry more than a flat key/value pair.
+        if (field.type === 'cardList') {
+          const items = Array.isArray(val) ? val : [];
+          const itemFields = field.itemFields || [];
+          const itemLabel = field.itemLabel || 'Item';
+          function updateItem(i, patch) { update(field.key, items.map((it, idx) => (idx === i ? { ...it, ...patch } : it))); }
+          function addItem() { update(field.key, [...items, {}]); }
+          function removeItem(i) { update(field.key, items.filter((_, idx) => idx !== i)); }
+          function moveItem(i, dir) {
+            const j = i + dir;
+            if (j < 0 || j >= items.length) return;
+            const n = [...items]; [n[i], n[j]] = [n[j], n[i]]; update(field.key, n);
+          }
+          return (
+            <div key={field.key}>
+              <span style={S.fieldLabel}>{field.label} ({items.length})</span>
+              {items.map((item, i) => (
+                <div key={i} style={{ border: '0.5px solid rgba(196,132,58,0.2)', borderRadius: 2, padding: '0.5rem', marginBottom: '0.5rem', background: 'rgba(255,255,255,0.02)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                    <span style={{ fontSize: '0.6rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--sb-gold)' }}>{itemLabel} {i + 1}</span>
+                    <div style={{ display: 'flex', gap: '0.2rem' }}>
+                      <button onClick={() => moveItem(i, -1)} disabled={i === 0} style={{ ...S.btnGhost, padding: '0.1rem 0.35rem', fontSize: '0.65rem', opacity: i === 0 ? 0.4 : 1 }}>↑</button>
+                      <button onClick={() => moveItem(i, 1)} disabled={i === items.length - 1} style={{ ...S.btnGhost, padding: '0.1rem 0.35rem', fontSize: '0.65rem', opacity: i === items.length - 1 ? 0.4 : 1 }}>↓</button>
+                      <button onClick={() => removeItem(i)} style={{ ...S.btnGhost, padding: '0.1rem 0.35rem', fontSize: '0.65rem', color: '#c44' }}>×</button>
+                    </div>
+                  </div>
+                  {(() => {
+                    const halves = itemFields.filter(f => f.half);
+                    const fulls = itemFields.filter(f => !f.half);
+                    return (
+                      <>
+                        {halves.length > 0 && (
+                          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${halves.length},1fr)`, gap: '0.35rem', marginBottom: '0.35rem' }}>
+                            {halves.map(f => (
+                              <input key={f.key} style={S.input} placeholder={f.placeholder || f.label} value={item[f.key] || ''}
+                                onChange={e => updateItem(i, { [f.key]: e.target.value })} />
+                            ))}
+                          </div>
+                        )}
+                        {fulls.map(f => (
+                          f.long ? (
+                            <textarea key={f.key} style={{ ...S.textarea, minHeight: 48, marginBottom: '0.35rem' }} placeholder={f.placeholder || f.label} value={item[f.key] || ''}
+                              onChange={e => updateItem(i, { [f.key]: e.target.value })} />
+                          ) : (
+                            <input key={f.key} style={{ ...S.input, marginBottom: '0.35rem' }} placeholder={f.placeholder || f.label} value={item[f.key] || ''}
+                              onChange={e => updateItem(i, { [f.key]: e.target.value })} />
+                          )
+                        ))}
+                      </>
+                    );
+                  })()}
+                </div>
+              ))}
+              <button onClick={addItem} style={{ ...S.btnGhost, fontSize: '0.68rem' }}>+ Add {itemLabel.toLowerCase()}</button>
+            </div>
+          );
+        }
+
         return null;
       })}
     </div>

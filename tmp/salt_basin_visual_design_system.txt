@@ -1,0 +1,237 @@
+
+--- PAGE 1 ---
+SALT BASIN NET WORKS
+Visual Design System
+Executive brand, resume, portfolio, pitch deck, and AI-native product documentation
+standards
+Design intent: premium executive operator brand - analytical, calm, credible, visually distinctive, and
+grounded in measurable business outcomes. The system should make Betsy Salter and Salt Basin Net
+Works feel like a single, recognizable strategy and intelligence brand across resumes, case studies, decks,
+website pages, proposals, and product mockups.
+$4.6B $500M+ 24
+EXIT SIGNAL ARR AUTOMATED ENGAGEMENTS
+Portfolio value creation proof Revenue system credibility Case-study depth
+12 13 AI-Native
+INDUSTRIES YEARS PRODUCT STUDIO
+Pattern recognition range Operator track record Future-facing edge
+VERSION
+v1.0 | Built from the executive resume package, Career Master Database, and Case Study Portfolio.
+Salt Basin Net Works Visual Design System v1.0 | For resumes, portfolios, decks, proposals, and product documentation
+
+--- PAGE 2 ---
+1. BRAND THESIS
+Salt Basin Net Works should not look like a standard resume template. It should look like an operating intelligence
+system: part executive annual report, part PE value creation memo, part AI-native product studio. The design should
+make complex transformation work feel structured, measurable, and calm.
+CORE VISUAL METAPHOR
+Use the basin/tributary/tide language as a unifying system: work enters as scattered tributaries, is structured through
+operating channels, and becomes measurable enterprise value. This creates a proprietary visual language without
+becoming gimmicky.
+BRAND ADJECTIVES
+Strategic, not corporate-generic.
+Analytical, not cold.
+Modern, not trendy.
+Premium, not decorative.
+Human, but not soft.
+AI-native, but still executive-safe.
+2. COLOR SYSTEM
+The current documents already use navy and gold well. The upgrade is to expand them into a controlled palette with
+assigned meaning, so every color has a job.
+Deep Basin Midnight Tide Gold Warm Shell
+Navy #0F1B2D #C4843A #F7F2E8
+#172A45 High-contrast Accent lines, Soft
+Primary backgrounds labels, callouts, backgrounds
+headers, hero and footers metric emphasis and cover pages
+panels, dark
+cards
+Slate Mist Harbor Teal Reservoir Green
+#536173 #EEF2F6 #4A7C8E #2D5A27
+Secondary text, Card AI/data/network Outcomes,
+metadata, backgrounds visuals savings, success
+muted panels and table row metrics
+fills
+Plum Signal Graphite Fog Gray White
+#7A174E #252A31 #6D7785 #FFFFFF
+Case-study Body text Captions, notes, Main document
+variation and helper text canvas
+high-priority
+callouts
+Salt Basin Net Works Visual Design System v1.0 | For resumes, portfolios, decks, proposals, and product documentation
+
+--- PAGE 3 ---
+RULES
+• Use navy for authority, structure, and executive identity.
+• Use gold sparingly: section labels, thin accents, premium emphasis, never large body blocks.
+• Use teal for AI/data/network/product visuals.
+• Use green only for outcomes, value creation, savings, completion, or success.
+• Use plum only for selected case-study variation or strategic emphasis.
+3. TYPOGRAPHY SYSTEM
+Use a simple, durable type system that renders cleanly in Word, PowerPoint, Canva, and PDF. Prefer
+Aptos/Inter/Avenir-style sans serif fonts. Avoid decorative fonts and dense all-caps paragraphs.
+Token Use Size Range Treatment
+Display XL Cover title / hero statement 34-44 pt Bold, navy
+Display L Page title 24-30 pt Bold, navy
+H1 Major sections 15-18 pt All caps or title case, navy
+H2 Subsections/cards 11-13 pt Bold, graphite/navy
+Metric KPI numbers 20-44 pt Bold, navy or white
+Body Paragraph text 9-10.5 pt Regular, graphite
+Caption Metadata and notes 7-8.5 pt Slate/fog gray
+Label Tags, categories 7-8 pt All caps, gold/teal
+TYPOGRAPHY MISTAKES TO AVOID
+Do not overuse all caps, do not cram body text below 8 pt, and do not mix more than two font families. Your
+documents lose premium feel when every section is shouting.
+4. GRID, SPACING, AND PAGE ARCHITECTURE
+Build every asset on a repeatable layout system. The documents should feel intentionally engineered, not manually
+arranged.
+GRID
+Use a 12-column grid for slides/landscape pages and a 2-column or 3-column grid for resume/portfolio pages.
+SPACING
+Use 8 / 16 / 24 / 32 / 48 px spacing increments. When in doubt, add whitespace rather than another divider line.
+CARDS
+Use cards to group ideas. Cards should have soft borders, 8-12 px radius, and consistent internal padding.
+SECTIONS
+Separate major sections with whitespace, not thick lines. Use gold micro-rules only as premium accents.
+Salt Basin Net Works Visual Design System v1.0 | For resumes, portfolios, decks, proposals, and product documentation
+
+--- PAGE 4 ---
+5. COMPONENT LIBRARY
+Component When to Use Visual Treatment
+KPI Tile Large metric, short label, one-line proof White/mist card, soft border, gold/teal
+note. Use for $4.6B, $500M+, 24 label, generous padding.
+engagements, 12 industries, 13 years.
+Outcome Card Challenge -> Approach -> Outcome -> White/mist card, soft border, gold/teal
+Metric. Use instead of long bullet clusters. label, generous padding.
+Timeline Bar Logo or company name + year + role. Use White/mist card, soft border, gold/teal
+for resume/portfolio career story. label, generous padding.
+Capability Meter Capability name + confidence bar + White/mist card, soft border, gold/teal
+evidence. Use for executive strengths label, generous padding.
+without generic bullets.
+Portfolio Company Card Company, industry, investment context, White/mist card, soft border, gold/teal
+role, outcome. Use for Vista/PE proof. label, generous padding.
+Technology Ribbon Monochrome platform names or icons. Use White/mist card, soft border, gold/teal
+for Salesforce, CPQ, CLM, SAP, Oracle, label, generous padding.
+NetSuite, MuleSoft, Informatica, Claude.
+Quote Card Short stakeholder quote or recognition. Use White/mist card, soft border, gold/teal
+sparingly to humanize proof. label, generous padding.
+Metadata Chips Small rounded labels: industry, role, White/mist card, soft border, gold/teal
+platform, year, program size. label, generous padding.
+River Flow Diagram Shows movement from fragmented input White/mist card, soft border, gold/teal
+to structured operating value. Use for Salt label, generous padding.
+Basin diagrams.
+Validation Checklist Defined / Designed / Validated / Built / White/mist card, soft border, gold/teal
+Tested / Deployed / Measured. Use for label, generous padding.
+project governance and thesis ledger work.
+Salt Basin Net Works Visual Design System v1.0 | For resumes, portfolios, decks, proposals, and product documentation
+
+--- PAGE 5 ---
+6. ICON LIBRARY STANDARDS
+Use one consistent icon family: thin-line or rounded outline. Do not mix flat icons, emoji, 3D icons, and filled symbols
+in the same asset.
+Icon Recommended Symbol Use Case
+Revenue / Q2C Flowing arrow through invoice/document Use in revenue lifecycle, CPQ/CLM, billing,
+leakage sections
+AI / Agent Node cluster or spark inside hexagon Use for HandoverOS, BestyStaff, Claude-
+enabled work
+Private Equity Column/building + upward line Use for Vista, portfolio operations, exit
+readiness
+Architecture Stacked layers or blueprint grid Use for solution architecture and systems
+design
+Finance Ledger/table + signal line Use for financial modeling and
+ARR/EBITDA
+Operations Gear + checklist Use for process design and governance
+Data / MDM Database cylinder + node Use for integration, migration, lineage
+Healthcare Cross within rounded square Use for telehealth/relisting case studies
+Manufacturing Factory outline Use for chemicals/global manufacturing
+Education Book/grid Use for Pearson/global publisher work
+GovTech Shield/building Use for CentralSquare/public safety
+Real Estate Home parcel/plot Use for SaltBasin Distressed Intel
+ICON RULES
+• Stroke weight should stay consistent across the whole set.
+• Use navy icons on light backgrounds; use white icons on dark cards.
+• Use accent color only for one small icon detail, not the whole icon.
+• Avoid emojis in final executive documents; they are useful for rough thinking only.
+7. CHART AND DATA VISUALIZATION STANDARDS
+The visual opportunity is not more decoration; it is clearer proof. Use charts to make transformation evidence easier
+to absorb than bullets.
+Chart Type Best Use Design Guidance
+KPI Dashboard Resume hero, portfolio cover, pitch deck 6 cards max; metric + label + proof note
+opener
+Capability Heat Map Career database summary, executive Rows = capabilities; columns =
+resume page 2 strategy/architecture/delivery/data/AI; use
+Salt Basin Net Works Visual Design System v1.0 | For resumes, portfolios, decks, proposals, and product documentation
+
+--- PAGE 6 ---
+soft fills
+Revenue Lifecycle Flow Q2R, O2C, L2C explanations Lead -> Quote -> Contract -> Order -> Bill ->
+Revenue -> Renew
+PE Value Creation Map Vista and portfolio proof Company -> operating work ->
+exit/readiness signal
+Industry Matrix Portfolio overview Industries as columns; projects as rows;
+dots or tags for proof
+Timeline Career story Horizontal for resumes; vertical for
+portfolios
+Architecture Stack Product/spec docs Layered systems diagram with
+CRM/CPQ/ERP/Billing/Data/AI
+8. RESUME VISUAL UPGRADE SPECIFICATION
+The executive resume should become a two-page operator profile, not a dense job-history sheet. Page 1 should sell the
+thesis. Page 2 should prove it.
+PAGE 1 - EXECUTIVE PROOF
+• Hero: name + positioning + one-line thesis.
+• KPI dashboard: 6 proof points max.
+• Capability map: executive strategy, revenue operations, systems architecture, financial modeling, AI enablement, PE
+value creation.
+• Career timeline: company logos or clean text marks, minimal dates.
+• Selected outcomes: 3 value creation cards.
+PAGE 2 - EVIDENCE
+• Experience condensed into outcome-led role cards.
+• Technology ribbon grouped by CRM/CPQ/ERP/Data/AI.
+• Industry matrix and portfolio company callout.
+• Education and certifications in footer, not oversized.
+9. CASE STUDY PORTFOLIO UPGRADE SPECIFICATION
+The case study portfolio is already the strongest visual asset. It should be refined into a premium consulting case-
+book.
+RECOMMENDED CASE CARD ANATOMY
+• Top strip: case number, company/employer, industry, date, program size.
+• Hero metric row: 2-4 pills such as $50M+, 2M+ SKUs, 12 integrations.
+• Three-part story: Business Problem, What Betsy Did, Business Outcome.
+Salt Basin Net Works Visual Design System v1.0 | For resumes, portfolios, decks, proposals, and product documentation
+
+--- PAGE 7 ---
+• Visual proof block: mini-flow, architecture stack, or before/after diagram.
+• Footer chips: scenarios, platforms, capabilities.
+REDUCE
+Reduce repeated headings and paragraph density. Convert the repeated Business Context / What Betsy Did /
+Outcomes structure into a compact visual template with more whitespace and stronger metric hierarchy.
+10. CAREER MASTER DATABASE UPGRADE SPECIFICATION
+The Career Master Database should remain a source-of-truth artifact, but visually it should look like an intelligence
+repository rather than exported tables. Keep the data; change the interface.
+• Add a dashboard cover page summarizing skills, roles, tools, projects, industries, and metrics.
+• Use section openers before dense tables.
+• Use alternating soft row fills and smaller, more controlled table typography.
+• Create a glossary of standardized capability names to prevent resume language drift.
+• Add a filter legend: Expert, Advanced, Proficient, Foundational with definitions.
+11. DO / DO NOT
+DO DO NOT
+Use large metrics and short labels. Do not fill every inch of the page.
+Use whitespace as a design element. Do not use generic stock handshake imagery.
+Use cards instead of long divider lines. Do not mix icon styles.
+Group evidence by business outcome. Do not let bullets dominate every page.
+Let one accent color lead per section. Do not use more than 6 KPI cards at once.
+Make every visual prove a point. Do not make AI visuals look sci-fi or gimmicky.
+12. IMPLEMENTATION ROADMAP
+SPRINT 1 - FOUNDATION
+• Lock color palette and typography tokens.
+• Create KPI, timeline, card, and chip components.
+• Rebuild executive resume page 1 as a branded proof sheet.
+SPRINT 2 - PORTFOLIO SYSTEM
+• Refactor case study template.
+• Create portfolio-company cards.
+• Build reusable technology ribbon and industry icon set.
+Salt Basin Net Works Visual Design System v1.0 | For resumes, portfolios, decks, proposals, and product documentation
+
+--- PAGE 8 ---
+SPRINT 3 - DATABASE + WEBSITE
+• Create career database dashboard cover.
+• Apply same visual system to website sections.
+• Create export-ready Canva/PowerPoint component library.
+Salt Basin Net Works Visual Design System v1.0 | For resumes, portfolios, decks, proposals, and product documentation

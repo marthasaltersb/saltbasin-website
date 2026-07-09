@@ -451,6 +451,10 @@ export const defaultConfig = {
     ink:     '#F5F0E8',
     paper:   '#FBF6F0',
   },
+  // Named theme applied as data-theme on .sb-public-site-root (see
+  // src/brand.css [data-theme] blocks). New field — existing published
+  // config_state rows without it fall back to 'strategic' at read time.
+  theme: 'strategic',
   prelaunch: {
     enabled: false,
     password: 'rising-tide',

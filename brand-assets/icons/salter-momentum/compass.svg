@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="256" height="256">
+  <title>Compass — Strategic Operator Mark</title>
+  <defs>
+    <filter id="sketch-compass" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.028" numOctaves="2" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.4" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+  <g filter="url(#sketch-compass)">
+  <path d="M24 42 A18 18 0 1 1 24 6 A18 18 0 0 1 24 42 Z" stroke="#355C6A" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M31 17 L26 26 L17 31 L22 22 Z" stroke="#355C6A" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+  <circle cx="40" cy="8" r="2.5" fill="#E8407A"/>
+</svg>

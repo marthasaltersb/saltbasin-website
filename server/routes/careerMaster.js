@@ -24,6 +24,7 @@ import { createClient } from '@supabase/supabase-js';
 import { db, getJSON, setJSON } from '../db.js';
 import { requireAdmin, requireUser, getUserFromCookie } from '../auth.js';
 import { careerMasterSeed } from '../data/career/seed.js';
+import { buildRollupCatalog } from '../lib/rollupMetrics.js';
 
 const router = Router();
 const INTAKE_BUCKET = 'career-context';
@@ -184,13 +185,13 @@ async function ensurePrimaryResumePreset(userId) {
   return primary;
 }
 
-async function loadCareerMasterRows() {
+async function loadCareerMasterRows(userId) {
   const [jobs, skills, tools, engagements, domains] = await Promise.all([
-    db.prepare(`SELECT * FROM career_jobs ORDER BY order_index, id`).all(),
-    db.prepare(`SELECT * FROM career_skills ORDER BY order_index, id`).all(),
-    db.prepare(`SELECT * FROM career_tools ORDER BY order_index, id`).all(),
-    db.prepare(`SELECT * FROM career_engagements ORDER BY order_index, id`).all(),
-    db.prepare(`SELECT * FROM career_domains ORDER BY group_type, order_index, id`).all(),
+    db.prepare(`SELECT * FROM career_jobs WHERE user_id = $1 ORDER BY order_index, id`).all(userId),
+    db.prepare(`SELECT * FROM career_skills WHERE user_id = $1 ORDER BY order_index, id`).all(userId),
+    db.prepare(`SELECT * FROM career_tools WHERE user_id = $1 ORDER BY order_index, id`).all(userId),
+    db.prepare(`SELECT * FROM career_engagements WHERE user_id = $1 ORDER BY order_index, id`).all(userId),
+    db.prepare(`SELECT * FROM career_domains WHERE user_id = $1 ORDER BY group_type, order_index, id`).all(userId),
   ]);
   return { jobs, skills, tools, engagements, domains };
 }
@@ -354,20 +355,30 @@ function serializeVal(camel, value, jsonFields) {
 }
 
 // Generic CRUD router for a career_* table.
-function makeResourceRouter(table, fieldMap, jsonFields = new Set()) {
+// Every career_* table now carries user_id (multi-tenancy retrofit — see
+// db.js's career_jobs/etc ALTER TABLE + backfill). Mounted behind
+// requireUser below, so req.user is always set: each member only ever
+// sees/edits their own rows, mirroring the ownership model already used
+// for member_sites/member_configs and output_templates.
+// `scoped: false` opts a table out of per-user ownership — used only for
+// career_meta_options, which has no user_id column (shared, admin-curated
+// vocabulary, not per-member data).
+function makeResourceRouter(table, fieldMap, jsonFields = new Set(), { scoped = true } = {}) {
   const r = Router();
 
   r.get('/', async (req, res) => {
-    const rows = await db.prepare(`SELECT * FROM ${table} ORDER BY order_index, id`).all();
+    const rows = scoped
+      ? await db.prepare(`SELECT * FROM ${table} WHERE user_id = $1 ORDER BY order_index, id`).all(req.user.id)
+      : await db.prepare(`SELECT * FROM ${table} ORDER BY order_index, id`).all();
     res.json({ items: rows.map((row) => rowToCamel(row, fieldMap, jsonFields)) });
   });
 
   r.post('/', async (req, res) => {
     const body = req.body || {};
-    const cols = [];
-    const placeholders = [];
-    const vals = [];
-    let i = 1;
+    const cols = scoped ? ['user_id'] : [];
+    const placeholders = scoped ? ['$1'] : [];
+    const vals = scoped ? [req.user.id] : [];
+    let i = scoped ? 2 : 1;
     for (const [camel, snake] of Object.entries(fieldMap)) {
       if (body[camel] === undefined) continue;
       cols.push(snake);
@@ -399,66 +410,116 @@ function makeResourceRouter(table, fieldMap, jsonFields = new Set()) {
     sets.push(`updated_at = $${i++}`);
     vals.push(Date.now());
     vals.push(id);
-    await db.prepare(`UPDATE ${table} SET ${sets.join(', ')} WHERE id = $${i}`).run(...vals);
+    const where = scoped ? `WHERE id = $${i} AND user_id = $${i + 1}` : `WHERE id = $${i}`;
+    if (scoped) vals.push(req.user.id);
+    const result = await db.prepare(`UPDATE ${table} SET ${sets.join(', ')} ${where}`).run(...vals);
+    if (!result.changes) return res.status(404).json({ error: 'Not found' });
     res.json({ ok: true });
   });
 
   r.delete('/:id', async (req, res) => {
-    await db.prepare(`DELETE FROM ${table} WHERE id = $1`).run(Number(req.params.id));
+    const result = scoped
+      ? await db.prepare(`DELETE FROM ${table} WHERE id = $1 AND user_id = $2`).run(Number(req.params.id), req.user.id)
+      : await db.prepare(`DELETE FROM ${table} WHERE id = $1`).run(Number(req.params.id));
+    if (!result.changes) return res.status(404).json({ error: 'Not found' });
     res.json({ ok: true });
   });
 
   return r;
 }
 
-// ── public, redacted read (mounted before requireAdmin below) ─────────────
+// ── owner resolution (multi-tenancy) ───────────────────────────────────────
+// `?owner=<slug>` resolves to that member's user_id via member_profiles
+// (same join pattern as memberSite.js's /by-slug routes). No `owner` param
+// preserves every pre-retrofit call site exactly — it falls back to the
+// platform admin's user_id, i.e. Betsy's own data, matching today's behavior.
+let cachedAdminUserId = null;
+async function resolveDefaultAdminUserId() {
+  if (cachedAdminUserId != null) return cachedAdminUserId;
+  const row = await db.prepare(`SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1`).get();
+  cachedAdminUserId = row ? Number(row.id) : null;
+  return cachedAdminUserId;
+}
+// `owner=me` resolves to the authenticated caller's own id — lets the
+// (already-authenticated) builder/admin UI request its own Career Master
+// data without needing to know its own profile slug.
+async function resolveOwnerUserId(ownerSlug, req) {
+  if (ownerSlug === 'me') {
+    const user = await getUserFromCookie(req).catch(() => null);
+    if (user) return Number(user.id);
+  } else if (ownerSlug) {
+    const row = await db.prepare(`SELECT user_id FROM member_profiles WHERE slug = $1`).get(ownerSlug);
+    if (row) return Number(row.user_id);
+  }
+  return resolveDefaultAdminUserId();
+}
+
+// ── public, redacted read (mounted before requireUser below) ──────────────
+async function loadMasterPayload(req) {
+  const ownerUserId = await resolveOwnerUserId(req.query.owner, req);
+  const [jobRows, skillRows, toolRows, engagementRows, domainRows, certRows] = await Promise.all([
+    db.prepare(`SELECT * FROM career_jobs WHERE user_id = $1 ORDER BY order_index, id`).all(ownerUserId),
+    db.prepare(`SELECT * FROM career_skills WHERE user_id = $1 ORDER BY order_index, id`).all(ownerUserId),
+    db.prepare(`SELECT * FROM career_tools WHERE user_id = $1 ORDER BY order_index, id`).all(ownerUserId),
+    db.prepare(`SELECT * FROM career_engagements WHERE user_id = $1 AND publish_case_study = true ORDER BY order_index, id`).all(ownerUserId),
+    db.prepare(`SELECT * FROM career_domains WHERE user_id = $1 ORDER BY group_type, order_index, id`).all(ownerUserId),
+    db.prepare(`SELECT * FROM career_certifications WHERE user_id = $1 ORDER BY order_index, id`).all(ownerUserId),
+  ]);
+
+  const engagements = engagementRows.map((row) => {
+    const item = rowToCamel(row, ENGAGEMENT_FIELDS, ENGAGEMENT_JSON_FIELDS);
+    delete item.clientNameReal; // never expose the private real client name publicly
+    return item;
+  });
+
+  const payload = {
+    jobs: jobRows.map((row) => rowToCamel(row, JOB_FIELDS)),
+    skills: skillRows.map((row) => rowToCamel(row, SKILL_FIELDS)),
+    tools: toolRows.map((row) => rowToCamel(row, TOOL_FIELDS)),
+    engagements,
+    domains: domainRows.map((row) => rowToCamel(row, DOMAIN_FIELDS, DOMAIN_JSON_FIELDS)),
+    certifications: certRows.map((row) => rowToCamel(row, CERTIFICATION_FIELDS)),
+  };
+
+  // Deal transactions carry private financial data (individual return
+  // carve-outs, attribution) — only included when the requester IS the data
+  // owner (their own private investor profile), not exposed to other
+  // viewers even if they're viewing their own site. Meta options are shared,
+  // admin-curated vocabulary — safe for any authenticated user to read.
+  let user = null;
+  try { user = await getUserFromCookie(req); } catch { /* unauthenticated — public payload only */ }
+  if (user) {
+    const [metaRows] = await Promise.all([
+      db.prepare(`SELECT * FROM career_meta_options ORDER BY field_key, order_index, id`).all(),
+    ]);
+    payload.metaOptions = metaRows.map((row) => rowToCamel(row, META_OPTION_FIELDS));
+  }
+  if (user && Number(user.id) === ownerUserId) {
+    const dealRows = await db.prepare(`SELECT * FROM career_deals WHERE user_id = $1 ORDER BY order_index, id`).all(ownerUserId);
+    payload.deals = dealRows.map((row) => rowToCamel(row, DEAL_FIELDS));
+  }
+
+  return payload;
+}
+
 router.get('/master', async (req, res) => {
   try {
-    const [jobRows, skillRows, toolRows, engagementRows, domainRows, certRows] = await Promise.all([
-      db.prepare(`SELECT * FROM career_jobs ORDER BY order_index, id`).all(),
-      db.prepare(`SELECT * FROM career_skills ORDER BY order_index, id`).all(),
-      db.prepare(`SELECT * FROM career_tools ORDER BY order_index, id`).all(),
-      db.prepare(`SELECT * FROM career_engagements WHERE publish_case_study = true ORDER BY order_index, id`).all(),
-      db.prepare(`SELECT * FROM career_domains ORDER BY group_type, order_index, id`).all(),
-      db.prepare(`SELECT * FROM career_certifications ORDER BY order_index, id`).all(),
-    ]);
-
-    const engagements = engagementRows.map((row) => {
-      const item = rowToCamel(row, ENGAGEMENT_FIELDS, ENGAGEMENT_JSON_FIELDS);
-      delete item.clientNameReal; // never expose the private real client name publicly
-      return item;
-    });
-
-    const payload = {
-      jobs: jobRows.map((row) => rowToCamel(row, JOB_FIELDS)),
-      skills: skillRows.map((row) => rowToCamel(row, SKILL_FIELDS)),
-      tools: toolRows.map((row) => rowToCamel(row, TOOL_FIELDS)),
-      engagements,
-      domains: domainRows.map((row) => rowToCamel(row, DOMAIN_FIELDS, DOMAIN_JSON_FIELDS)),
-      certifications: certRows.map((row) => rowToCamel(row, CERTIFICATION_FIELDS)),
-    };
-
-    // Deal transactions carry private financial data (individual return
-    // carve-outs, attribution) — only included for the admin, who is the
-    // sole audience of the Investor Profile dashboard. Meta options ride
-    // along so the dashboard can label recommended values.
-    let isAdmin = false;
-    try {
-      const user = await getUserFromCookie(req);
-      isAdmin = user?.role === 'admin';
-    } catch { /* unauthenticated — public payload only */ }
-    if (isAdmin) {
-      const [dealRows, metaRows] = await Promise.all([
-        db.prepare(`SELECT * FROM career_deals ORDER BY order_index, id`).all(),
-        db.prepare(`SELECT * FROM career_meta_options ORDER BY field_key, order_index, id`).all(),
-      ]);
-      payload.deals = dealRows.map((row) => rowToCamel(row, DEAL_FIELDS));
-      payload.metaOptions = metaRows.map((row) => rowToCamel(row, META_OPTION_FIELDS));
-    }
-
+    const payload = await loadMasterPayload(req);
     res.json(payload);
   } catch (e) {
     res.status(500).json({ error: 'Failed to load career master data' });
+  }
+});
+
+// Suggested stat-card / infographic catalog for the output-template pickers
+// (layers 2 and 3 of the 4-layer output template system). Computed live off
+// the same Career Master rows as /master — no separate storage.
+router.get('/rollups', async (req, res) => {
+  try {
+    const master = await loadMasterPayload(req);
+    res.json(buildRollupCatalog(master));
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to compute rollup catalog' });
   }
 });
 
@@ -639,7 +700,7 @@ router.post('/sync-site-metadata', requireUser, async (req, res) => {
       : (await readMemberDraftSite(req.user.id));
     if (!draft) return res.status(404).json({ error: 'No draft site found to annotate' });
 
-    const master = await loadCareerMasterRows();
+    const master = await loadCareerMasterRows(req.user.id);
     const result = applyCareerMetadataToSite(draft, master);
     if (scope === 'admin') await setJSON('site_state', 'draft', result.site);
     else await writeMemberDraftSite(req.user.id, result.site);
@@ -650,8 +711,12 @@ router.post('/sync-site-metadata', requireUser, async (req, res) => {
   }
 });
 
-// Admin-only Career Master CRUD from here down.
-router.use(requireAdmin);
+// Career Master CRUD is member-owned from here down (multi-tenancy retrofit
+// — each member manages their own jobs/skills/tools/engagements/domains/
+// certifications/deals, same trust model as member_sites/member_configs).
+// /meta-options stays admin-only below — it's shared, admin-curated
+// vocabulary (recommended dropdown values), not per-member data.
+router.use(requireUser);
 
 router.use('/jobs', makeResourceRouter('career_jobs', JOB_FIELDS));
 router.use('/skills', makeResourceRouter('career_skills', SKILL_FIELDS));
@@ -660,7 +725,7 @@ router.use('/engagements', makeResourceRouter('career_engagements', ENGAGEMENT_F
 router.use('/domains', makeResourceRouter('career_domains', DOMAIN_FIELDS, DOMAIN_JSON_FIELDS));
 router.use('/certifications', makeResourceRouter('career_certifications', CERTIFICATION_FIELDS));
 router.use('/deals', makeResourceRouter('career_deals', DEAL_FIELDS));
-router.use('/meta-options', makeResourceRouter('career_meta_options', META_OPTION_FIELDS));
+router.use('/meta-options', requireAdmin, makeResourceRouter('career_meta_options', META_OPTION_FIELDS, undefined, { scoped: false }));
 
 // ── seed ─────────────────────────────────────────────────────────────────
 // Idempotent per table (not per call): each table is only seeded when it is

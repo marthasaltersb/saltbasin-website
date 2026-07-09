@@ -1,0 +1,1783 @@
+{
+  "sessions": [
+    {
+      "file": "0caba5fc-e4bf-42aa-b1f6-a87618c9bed8",
+      "activeHours": 1.15,
+      "assistantTurns": 148,
+      "realUserTurns": 10,
+      "turnDensity": 8.7,
+      "bursts": [
+        {
+          "start": 1781027692115,
+          "end": 1781028431118,
+          "startIso": "2026-06-09T17:54:52.115Z",
+          "endIso": "2026-06-09T18:07:11.118Z",
+          "durationMin": 12.3
+        },
+        {
+          "start": 1781031940986,
+          "end": 1781034171677,
+          "startIso": "2026-06-09T19:05:40.986Z",
+          "endIso": "2026-06-09T19:42:51.677Z",
+          "durationMin": 37.2
+        },
+        {
+          "start": 1781038805982,
+          "end": 1781039975534,
+          "startIso": "2026-06-09T21:00:05.982Z",
+          "endIso": "2026-06-09T21:19:35.534Z",
+          "durationMin": 19.5
+        }
+      ]
+    },
+    {
+      "file": "1e194ac9-9ce5-4269-a9cc-97b75193419b",
+      "activeHours": 0.05,
+      "assistantTurns": 33,
+      "realUserTurns": 1,
+      "turnDensity": 20.9,
+      "bursts": [
+        {
+          "start": 1783445316421,
+          "end": 1783445488669,
+          "startIso": "2026-07-07T17:28:36.421Z",
+          "endIso": "2026-07-07T17:31:28.669Z",
+          "durationMin": 2.9
+        }
+      ]
+    },
+    {
+      "file": "2d89e945-2078-4752-9dfa-ee561d78e6ce",
+      "activeHours": 2.31,
+      "assistantTurns": 443,
+      "realUserTurns": 21,
+      "turnDensity": 9.1,
+      "bursts": [
+        {
+          "start": 1783125445271,
+          "end": 1783132115609,
+          "startIso": "2026-07-04T00:37:25.271Z",
+          "endIso": "2026-07-04T02:28:35.609Z",
+          "durationMin": 111.2
+        },
+        {
+          "start": 1783133596249,
+          "end": 1783135028773,
+          "startIso": "2026-07-04T02:53:16.249Z",
+          "endIso": "2026-07-04T03:17:08.773Z",
+          "durationMin": 23.9
+        },
+        {
+          "start": 1783441049030,
+          "end": 1783441179344,
+          "startIso": "2026-07-07T16:17:29.030Z",
+          "endIso": "2026-07-07T16:19:39.344Z",
+          "durationMin": 2.2
+        },
+        {
+          "start": 1783443619459,
+          "end": 1783443620438,
+          "startIso": "2026-07-07T17:00:19.459Z",
+          "endIso": "2026-07-07T17:00:20.438Z",
+          "durationMin": 0
+        },
+        {
+          "start": 1783445151368,
+          "end": 1783445226130,
+          "startIso": "2026-07-07T17:25:51.368Z",
+          "endIso": "2026-07-07T17:27:06.130Z",
+          "durationMin": 1.2
+        }
+      ]
+    },
+    {
+      "file": "4b8bd63e-c41c-4de0-bda8-ebcfd212b7de",
+      "activeHours": 0.04,
+      "assistantTurns": 23,
+      "realUserTurns": 2,
+      "turnDensity": 53.8,
+      "bursts": [
+        {
+          "start": 1783134607412,
+          "end": 1783134741200,
+          "startIso": "2026-07-04T03:10:07.412Z",
+          "endIso": "2026-07-04T03:12:21.200Z",
+          "durationMin": 2.2
+        }
+      ]
+    },
+    {
+      "file": "50a9edca-f76e-4aad-aeb1-702e16c9b604",
+      "activeHours": 1.12,
+      "assistantTurns": 137,
+      "realUserTurns": 10,
+      "turnDensity": 8.9,
+      "bursts": [
+        {
+          "start": 1783126532464,
+          "end": 1783130576776,
+          "startIso": "2026-07-04T00:55:32.464Z",
+          "endIso": "2026-07-04T02:02:56.776Z",
+          "durationMin": 67.4
+        }
+      ]
+    },
+    {
+      "file": "551b4cbf-3e51-4315-a936-732f68aa348d",
+      "activeHours": 3.93,
+      "assistantTurns": 620,
+      "realUserTurns": 65,
+      "turnDensity": 16.5,
+      "bursts": [
+        {
+          "start": 1781712157232,
+          "end": 1781712434013,
+          "startIso": "2026-06-17T16:02:37.232Z",
+          "endIso": "2026-06-17T16:07:14.013Z",
+          "durationMin": 4.6
+        },
+        {
+          "start": 1782852250858,
+          "end": 1782865174169,
+          "startIso": "2026-06-30T20:44:10.858Z",
+          "endIso": "2026-07-01T00:19:34.169Z",
+          "durationMin": 215.4
+        },
+        {
+          "start": 1782871548246,
+          "end": 1782871653461,
+          "startIso": "2026-07-01T02:05:48.246Z",
+          "endIso": "2026-07-01T02:07:33.461Z",
+          "durationMin": 1.8
+        },
+        {
+          "start": 1783011255078,
+          "end": 1783011732419,
+          "startIso": "2026-07-02T16:54:15.078Z",
+          "endIso": "2026-07-02T17:02:12.419Z",
+          "durationMin": 8
+        },
+        {
+          "start": 1783116224208,
+          "end": 1783116547033,
+          "startIso": "2026-07-03T22:03:44.208Z",
+          "endIso": "2026-07-03T22:09:07.033Z",
+          "durationMin": 5.4
+        },
+        {
+          "start": 1783120526558,
+          "end": 1783120560198,
+          "startIso": "2026-07-03T23:15:26.558Z",
+          "endIso": "2026-07-03T23:16:00.198Z",
+          "durationMin": 0.6
+        },
+        {
+          "start": 1783122655770,
+          "end": 1783122661003,
+          "startIso": "2026-07-03T23:50:55.770Z",
+          "endIso": "2026-07-03T23:51:01.003Z",
+          "durationMin": 0.1
+        },
+        {
+          "start": 1783123867415,
+          "end": 1783123875543,
+          "startIso": "2026-07-04T00:11:07.415Z",
+          "endIso": "2026-07-04T00:11:15.543Z",
+          "durationMin": 0.1
+        }
+      ]
+    },
+    {
+      "file": "97254a80-feaa-4c85-80fb-f0938a553251",
+      "activeHours": 5.47,
+      "assistantTurns": 1126,
+      "realUserTurns": 67,
+      "turnDensity": 12.3,
+      "bursts": [
+        {
+          "start": 1780943086238,
+          "end": 1780950143359,
+          "startIso": "2026-06-08T18:24:46.238Z",
+          "endIso": "2026-06-08T20:22:23.359Z",
+          "durationMin": 117.6
+        },
+        {
+          "start": 1780951236178,
+          "end": 1780953261997,
+          "startIso": "2026-06-08T20:40:36.178Z",
+          "endIso": "2026-06-08T21:14:21.997Z",
+          "durationMin": 33.8
+        },
+        {
+          "start": 1780954163146,
+          "end": 1780957233640,
+          "startIso": "2026-06-08T21:29:23.146Z",
+          "endIso": "2026-06-08T22:20:33.640Z",
+          "durationMin": 51.2
+        },
+        {
+          "start": 1780958496068,
+          "end": 1780959253988,
+          "startIso": "2026-06-08T22:41:36.068Z",
+          "endIso": "2026-06-08T22:54:13.988Z",
+          "durationMin": 12.6
+        },
+        {
+          "start": 1780961928590,
+          "end": 1780962156254,
+          "startIso": "2026-06-08T23:38:48.590Z",
+          "endIso": "2026-06-08T23:42:36.254Z",
+          "durationMin": 3.8
+        },
+        {
+          "start": 1780964279950,
+          "end": 1780964729749,
+          "startIso": "2026-06-09T00:17:59.950Z",
+          "endIso": "2026-06-09T00:25:29.749Z",
+          "durationMin": 7.5
+        },
+        {
+          "start": 1781028000391,
+          "end": 1781028918672,
+          "startIso": "2026-06-09T18:00:00.391Z",
+          "endIso": "2026-06-09T18:15:18.672Z",
+          "durationMin": 15.3
+        },
+        {
+          "start": 1781030519377,
+          "end": 1781030687118,
+          "startIso": "2026-06-09T18:41:59.377Z",
+          "endIso": "2026-06-09T18:44:47.118Z",
+          "durationMin": 2.8
+        },
+        {
+          "start": 1781032043245,
+          "end": 1781034234633,
+          "startIso": "2026-06-09T19:07:23.245Z",
+          "endIso": "2026-06-09T19:43:54.633Z",
+          "durationMin": 36.5
+        },
+        {
+          "start": 1781036310871,
+          "end": 1781037147608,
+          "startIso": "2026-06-09T20:18:30.871Z",
+          "endIso": "2026-06-09T20:32:27.608Z",
+          "durationMin": 13.9
+        },
+        {
+          "start": 1781038537595,
+          "end": 1781040512777,
+          "startIso": "2026-06-09T20:55:37.595Z",
+          "endIso": "2026-06-09T21:28:32.777Z",
+          "durationMin": 32.9
+        }
+      ]
+    },
+    {
+      "file": "abcc0d06-8e26-44ba-8290-18f2ac26230d",
+      "activeHours": 0.66,
+      "assistantTurns": 118,
+      "realUserTurns": 7,
+      "turnDensity": 10.6,
+      "bursts": [
+        {
+          "start": 1780831511475,
+          "end": 1780833619060,
+          "startIso": "2026-06-07T11:25:11.475Z",
+          "endIso": "2026-06-07T12:00:19.060Z",
+          "durationMin": 35.1
+        },
+        {
+          "start": 1780931495475,
+          "end": 1780931514774,
+          "startIso": "2026-06-08T15:11:35.475Z",
+          "endIso": "2026-06-08T15:11:54.774Z",
+          "durationMin": 0.3
+        },
+        {
+          "start": 1780942697538,
+          "end": 1780942942586,
+          "startIso": "2026-06-08T18:18:17.538Z",
+          "endIso": "2026-06-08T18:22:22.586Z",
+          "durationMin": 4.1
+        },
+        {
+          "start": 1781028309986,
+          "end": 1781028323201,
+          "startIso": "2026-06-09T18:05:09.986Z",
+          "endIso": "2026-06-09T18:05:23.201Z",
+          "durationMin": 0.2
+        }
+      ]
+    },
+    {
+      "file": "bbf05b59-f0e4-45c1-a980-8fe25bb85b44",
+      "activeHours": 0.08,
+      "assistantTurns": 36,
+      "realUserTurns": 1,
+      "turnDensity": 12.7,
+      "bursts": [
+        {
+          "start": 1783440765539,
+          "end": 1783441049004,
+          "startIso": "2026-07-07T16:12:45.539Z",
+          "endIso": "2026-07-07T16:17:29.004Z",
+          "durationMin": 4.7
+        }
+      ]
+    },
+    {
+      "file": "ddf4fb85-cda0-4758-9366-af02fa3c0c21",
+      "activeHours": 2.48,
+      "assistantTurns": 136,
+      "realUserTurns": 37,
+      "turnDensity": 14.9,
+      "bursts": [
+        {
+          "start": 1780974617135,
+          "end": 1780982837480,
+          "startIso": "2026-06-09T03:10:17.135Z",
+          "endIso": "2026-06-09T05:27:17.480Z",
+          "durationMin": 137
+        },
+        {
+          "start": 1781013777102,
+          "end": 1781014477825,
+          "startIso": "2026-06-09T14:02:57.102Z",
+          "endIso": "2026-06-09T14:14:37.825Z",
+          "durationMin": 11.7
+        }
+      ]
+    },
+    {
+      "file": "de055505-dc52-499d-978f-44e5e9323502",
+      "activeHours": 5.05,
+      "assistantTurns": 1213,
+      "realUserTurns": 66,
+      "turnDensity": 13.1,
+      "bursts": [
+        {
+          "start": 1781395235821,
+          "end": 1781395903242,
+          "startIso": "2026-06-14T00:00:35.821Z",
+          "endIso": "2026-06-14T00:11:43.242Z",
+          "durationMin": 11.1
+        },
+        {
+          "start": 1781407781311,
+          "end": 1781408692605,
+          "startIso": "2026-06-14T03:29:41.311Z",
+          "endIso": "2026-06-14T03:44:52.605Z",
+          "durationMin": 15.2
+        },
+        {
+          "start": 1781413505774,
+          "end": 1781416221623,
+          "startIso": "2026-06-14T05:05:05.774Z",
+          "endIso": "2026-06-14T05:50:21.623Z",
+          "durationMin": 45.3
+        },
+        {
+          "start": 1781417685301,
+          "end": 1781417923545,
+          "startIso": "2026-06-14T06:14:45.301Z",
+          "endIso": "2026-06-14T06:18:43.545Z",
+          "durationMin": 4
+        },
+        {
+          "start": 1781430905082,
+          "end": 1781436774907,
+          "startIso": "2026-06-14T09:55:05.082Z",
+          "endIso": "2026-06-14T11:32:54.907Z",
+          "durationMin": 97.8
+        },
+        {
+          "start": 1781495719789,
+          "end": 1781496732169,
+          "startIso": "2026-06-15T03:55:19.789Z",
+          "endIso": "2026-06-15T04:12:12.169Z",
+          "durationMin": 16.9
+        },
+        {
+          "start": 1781497926370,
+          "end": 1781504032075,
+          "startIso": "2026-06-15T04:32:06.370Z",
+          "endIso": "2026-06-15T06:13:52.075Z",
+          "durationMin": 101.8
+        },
+        {
+          "start": 1781543589253,
+          "end": 1781544265787,
+          "startIso": "2026-06-15T17:13:09.253Z",
+          "endIso": "2026-06-15T17:24:25.787Z",
+          "durationMin": 11.3
+        }
+      ]
+    },
+    {
+      "file": "dfd38e71-cf07-4532-9925-435227f2473f",
+      "activeHours": 0.02,
+      "assistantTurns": 30,
+      "realUserTurns": 1,
+      "turnDensity": 48.1,
+      "bursts": [
+        {
+          "start": 1781442958947,
+          "end": 1781443033864,
+          "startIso": "2026-06-14T13:15:58.947Z",
+          "endIso": "2026-06-14T13:17:13.864Z",
+          "durationMin": 1.2
+        }
+      ]
+    },
+    {
+      "file": "e3c9236b-fa3f-40be-8418-a807e0c3a21a",
+      "activeHours": 3.35,
+      "assistantTurns": 958,
+      "realUserTurns": 24,
+      "turnDensity": 7.2,
+      "bursts": [
+        {
+          "start": 1783137114940,
+          "end": 1783137583128,
+          "startIso": "2026-07-04T03:51:54.940Z",
+          "endIso": "2026-07-04T03:59:43.128Z",
+          "durationMin": 7.8
+        },
+        {
+          "start": 1783166003103,
+          "end": 1783166136212,
+          "startIso": "2026-07-04T11:53:23.103Z",
+          "endIso": "2026-07-04T11:55:36.212Z",
+          "durationMin": 2.2
+        },
+        {
+          "start": 1783192977036,
+          "end": 1783196183410,
+          "startIso": "2026-07-04T19:22:57.036Z",
+          "endIso": "2026-07-04T20:16:23.410Z",
+          "durationMin": 53.4
+        },
+        {
+          "start": 1783274993483,
+          "end": 1783275968844,
+          "startIso": "2026-07-05T18:09:53.483Z",
+          "endIso": "2026-07-05T18:26:08.844Z",
+          "durationMin": 16.3
+        },
+        {
+          "start": 1783356789849,
+          "end": 1783356900074,
+          "startIso": "2026-07-06T16:53:09.849Z",
+          "endIso": "2026-07-06T16:55:00.074Z",
+          "durationMin": 1.8
+        },
+        {
+          "start": 1783364405476,
+          "end": 1783364406907,
+          "startIso": "2026-07-06T19:00:05.476Z",
+          "endIso": "2026-07-06T19:00:06.907Z",
+          "durationMin": 0
+        },
+        {
+          "start": 1783433794136,
+          "end": 1783435474103,
+          "startIso": "2026-07-07T14:16:34.136Z",
+          "endIso": "2026-07-07T14:44:34.103Z",
+          "durationMin": 28
+        },
+        {
+          "start": 1783436924379,
+          "end": 1783441196585,
+          "startIso": "2026-07-07T15:08:44.379Z",
+          "endIso": "2026-07-07T16:19:56.585Z",
+          "durationMin": 71.2
+        },
+        {
+          "start": 1783442530433,
+          "end": 1783443630822,
+          "startIso": "2026-07-07T16:42:10.433Z",
+          "endIso": "2026-07-07T17:00:30.822Z",
+          "durationMin": 18.3
+        },
+        {
+          "start": 1783445107328,
+          "end": 1783445237326,
+          "startIso": "2026-07-07T17:25:07.328Z",
+          "endIso": "2026-07-07T17:27:17.326Z",
+          "durationMin": 2.2
+        }
+      ]
+    }
+  ],
+  "report": [
+    {
+      "id": 1,
+      "title": "Configurable CMS with admin login and draft/publish workflow",
+      "externalRef": "tasks #4-#12",
+      "createdAtIso": "2026-06-05T21:09:04.699Z",
+      "origHoursClaude": 3.8,
+      "origHoursBetsy": 0.2,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 2,
+      "title": "Password-protected pre-launch landing gate",
+      "externalRef": "task #5",
+      "createdAtIso": "2026-06-05T21:09:04.808Z",
+      "origHoursClaude": 1.43,
+      "origHoursBetsy": 0.08,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 3,
+      "title": "Block library for composable page sections",
+      "externalRef": "task #8",
+      "createdAtIso": "2026-06-05T21:09:04.917Z",
+      "origHoursClaude": 4.75,
+      "origHoursBetsy": 0.25,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 4,
+      "title": "Brand tokens + Strategic Operator palette",
+      "externalRef": "task #3",
+      "createdAtIso": "2026-06-05T21:09:05.023Z",
+      "origHoursClaude": 1.8,
+      "origHoursBetsy": 0.2,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 5,
+      "title": "Supabase Postgres migration (from SQLite)",
+      "externalRef": "task #70",
+      "createdAtIso": "2026-06-05T21:09:05.131Z",
+      "origHoursClaude": 2.85,
+      "origHoursBetsy": 0.15,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 6,
+      "title": "Member admin parity — same shell, scoped to own data",
+      "externalRef": "tasks #123-#131, commit c414102",
+      "createdAtIso": "2026-06-05T21:09:05.237Z",
+      "origHoursClaude": 3,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 7,
+      "title": "Member brand-color overrides (scoped to /u/:slug)",
+      "externalRef": "task #127",
+      "createdAtIso": "2026-06-05T21:09:05.344Z",
+      "origHoursClaude": 1,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 8,
+      "title": "Member BYO Anthropic API key (for the future Config Agent)",
+      "externalRef": "task #127",
+      "createdAtIso": "2026-06-05T21:09:05.453Z",
+      "origHoursClaude": 0.75,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 9,
+      "title": "Default member starter site (Home / About / Contact)",
+      "externalRef": "task #130",
+      "createdAtIso": "2026-06-05T21:09:05.561Z",
+      "origHoursClaude": 0.75,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 10,
+      "title": "Lead capture with email + phone + match-and-merge dedup",
+      "externalRef": "tasks #100-#105",
+      "createdAtIso": "2026-06-05T21:09:05.667Z",
+      "origHoursClaude": 4,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 11,
+      "title": "Password-protected lead record at /lead/:publicId",
+      "externalRef": "task #102",
+      "createdAtIso": "2026-06-05T21:09:05.775Z",
+      "origHoursClaude": 3,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 12,
+      "title": "Lead → member conversion flow",
+      "externalRef": "task #64",
+      "createdAtIso": "2026-06-05T21:09:05.883Z",
+      "origHoursClaude": 1.5,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 13,
+      "title": "Lead view shows email log",
+      "externalRef": "task #114",
+      "createdAtIso": "2026-06-05T21:09:05.991Z",
+      "origHoursClaude": 1,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 14,
+      "title": "Zoho mailbox at betsysalter@saltbasin.net",
+      "externalRef": "task #132",
+      "createdAtIso": "2026-06-05T21:09:06.103Z",
+      "origHoursClaude": 0.6,
+      "origHoursBetsy": 0.9,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 15,
+      "title": "Brevo transactional email (swap from Resend)",
+      "externalRef": "task #133, commit 03d16d1",
+      "createdAtIso": "2026-06-05T21:09:06.213Z",
+      "origHoursClaude": 1.43,
+      "origHoursBetsy": 0.08,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 16,
+      "title": "Lead confirmation email + Betsy notification",
+      "externalRef": "tasks #81, #82, commit 1fe487f",
+      "createdAtIso": "2026-06-05T21:09:06.320Z",
+      "origHoursClaude": 1.5,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 17,
+      "title": "Admin-configurable email identity + notification settings",
+      "externalRef": "task #115, commit 1fe487f",
+      "createdAtIso": "2026-06-05T21:09:06.429Z",
+      "origHoursClaude": 1,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 18,
+      "title": "Net Works opt-in banner on Salt Basin home page",
+      "externalRef": "task #128, commit c414102",
+      "createdAtIso": "2026-06-05T21:09:06.537Z",
+      "origHoursClaude": 2,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 19,
+      "title": "Member opt-in card (logo, company name, blurb)",
+      "externalRef": "task #127, commit c414102",
+      "createdAtIso": "2026-06-05T21:09:06.645Z",
+      "origHoursClaude": 1,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 20,
+      "title": "Founder-first hero with mission split",
+      "externalRef": "task #33",
+      "createdAtIso": "2026-06-05T21:09:06.764Z",
+      "origHoursClaude": 2.7,
+      "origHoursBetsy": 0.3,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 21,
+      "title": "Industries × Domains wheel (interactive)",
+      "externalRef": "tasks #23, #27-#32",
+      "createdAtIso": "2026-06-05T21:09:06.873Z",
+      "origHoursClaude": 5.7,
+      "origHoursBetsy": 0.3,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 22,
+      "title": "Timeline + Case Studies + Technology blocks",
+      "externalRef": "tasks #35, #36, #24, #116",
+      "createdAtIso": "2026-06-05T21:09:06.981Z",
+      "origHoursClaude": 4.5,
+      "origHoursBetsy": 0.5,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 23,
+      "title": "References request flow",
+      "externalRef": "task #112",
+      "createdAtIso": "2026-06-05T21:09:07.093Z",
+      "origHoursClaude": 1.5,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 24,
+      "title": "Print-friendly Resume output page",
+      "externalRef": "tasks #109, #117, #118",
+      "createdAtIso": "2026-06-05T21:09:07.200Z",
+      "origHoursClaude": 3,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 25,
+      "title": "Proposal output (Diagnostic / Embedded / Advisory)",
+      "externalRef": "task #111",
+      "createdAtIso": "2026-06-05T21:09:07.307Z",
+      "origHoursClaude": 2,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 26,
+      "title": "Case Study + One-pager outputs",
+      "externalRef": "tasks #110, #119",
+      "createdAtIso": "2026-06-05T21:09:07.415Z",
+      "origHoursClaude": 2.5,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 27,
+      "title": "Admin sidebar + editor + preview pane",
+      "externalRef": "task #9",
+      "createdAtIso": "2026-06-05T21:09:07.523Z",
+      "origHoursClaude": 5.7,
+      "origHoursBetsy": 0.3,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 28,
+      "title": "Net Works admin tab (member roster)",
+      "externalRef": "task #79, commit 1fe487f",
+      "createdAtIso": "2026-06-05T21:09:07.632Z",
+      "origHoursClaude": 1.5,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 29,
+      "title": "Mobile admin shell (collapsible sidebar, stacked panels)",
+      "externalRef": "task #106",
+      "createdAtIso": "2026-06-05T21:09:07.738Z",
+      "origHoursClaude": 1.9,
+      "origHoursBetsy": 0.1,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 30,
+      "title": "Render (backend) + Netlify (frontend) hosting split",
+      "externalRef": "tasks #43-#48",
+      "createdAtIso": "2026-06-05T21:09:07.845Z",
+      "origHoursClaude": 1.43,
+      "origHoursBetsy": 0.08,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 31,
+      "title": "Render deploy monitor + auto-deploy verification",
+      "externalRef": "task #97",
+      "createdAtIso": "2026-06-05T21:09:07.959Z",
+      "origHoursClaude": 1.5,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 32,
+      "title": "Netlify build.ignore + frontend-deploy approval gate",
+      "externalRef": "commit abc94b1",
+      "createdAtIso": "2026-06-05T21:09:08.066Z",
+      "origHoursClaude": 0.5,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 33,
+      "title": "Admin password rotation tooling",
+      "externalRef": "commit c4a6ca2",
+      "createdAtIso": "2026-06-05T21:09:08.173Z",
+      "origHoursClaude": 1,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 34,
+      "title": "Data Notice page + inline disclaimers",
+      "externalRef": "tasks #67-#69",
+      "createdAtIso": "2026-06-05T21:09:08.280Z",
+      "origHoursClaude": 1,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 35,
+      "title": "Cold-start UX with branded loader",
+      "externalRef": "task #99",
+      "createdAtIso": "2026-06-05T21:09:08.387Z",
+      "origHoursClaude": 1,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 36,
+      "title": "Backlog dashboard with full-detail requirements",
+      "externalRef": "tasks #134-#139",
+      "createdAtIso": "2026-06-05T21:09:08.496Z",
+      "origHoursClaude": 4,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 37,
+      "title": "[Future] Deployments view — GitHub / Render / Netlify correlation",
+      "externalRef": "Phase 2",
+      "createdAtIso": "2026-06-05T21:09:08.605Z",
+      "origHoursClaude": 0,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 38,
+      "title": "[Future] Test cases + test scripts + run logger",
+      "externalRef": "Phase 3",
+      "createdAtIso": "2026-06-05T21:09:08.713Z",
+      "origHoursClaude": 0,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 39,
+      "title": "[Future] Activity log: hours, tokens, issues encountered + resolutions",
+      "externalRef": "Phase 4",
+      "createdAtIso": "2026-06-05T21:09:08.823Z",
+      "origHoursClaude": 0,
+      "origHoursBetsy": 0,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 40,
+      "title": "JIRA Phase A — read-only import",
+      "externalRef": "S2 · JIRA Phase A · commit 69ae9c2",
+      "createdAtIso": "2026-06-06T02:58:56.639Z",
+      "origHoursClaude": 1.5,
+      "origHoursBetsy": 0.2,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 41,
+      "title": "Member Templates Phase A — 3 starter templates seeded",
+      "externalRef": "S2 · Templates Phase A · commit 69ae9c2",
+      "createdAtIso": "2026-06-06T02:58:56.978Z",
+      "origHoursClaude": 1,
+      "origHoursBetsy": 0.1,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 42,
+      "title": "Scrum Agent Phase A — chat scaffold with real Claude responses",
+      "externalRef": "S2 · Scrum Agent Phase A · commits 69ae9c2 + cd9ba5c",
+      "createdAtIso": "2026-06-06T02:58:57.323Z",
+      "origHoursClaude": 1.5,
+      "origHoursBetsy": 0.25,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 43,
+      "title": "Adjustable + responsive Split view (drag-resize divider)",
+      "externalRef": "PA.1 · commit 3ed52c2",
+      "createdAtIso": "2026-06-06T02:58:57.646Z",
+      "origHoursClaude": 0.75,
+      "origHoursBetsy": 0.1,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 44,
+      "title": "Brand colors bug fixed + Salt Basin admin palette wired to saltbasin.net",
+      "externalRef": "PA.2 + PA.3 · commits 0c352be + 3ed52c2",
+      "createdAtIso": "2026-06-06T02:58:57.973Z",
+      "origHoursClaude": 0.5,
+      "origHoursBetsy": 0.1,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 45,
+      "title": "Calendar date pickers for date-shaped fields in EditorPane",
+      "externalRef": "PA.4 · commit 3ed52c2",
+      "createdAtIso": "2026-06-06T02:58:58.299Z",
+      "origHoursClaude": 0.3,
+      "origHoursBetsy": 0.05,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 46,
+      "title": "Hotfix: TDZ crash in AdminShell (admin page wasn't loading)",
+      "externalRef": "Hotfix · commit c03db1d",
+      "createdAtIso": "2026-06-06T02:58:58.628Z",
+      "origHoursClaude": 0.25,
+      "origHoursBetsy": 0.05,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 47,
+      "title": "Patch Notes output (/output/patch-notes)",
+      "externalRef": "Closeout · this commit",
+      "createdAtIso": "2026-06-06T02:58:58.966Z",
+      "origHoursClaude": 0.5,
+      "origHoursBetsy": 0.1,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 48,
+      "title": "Jobs as dynamic add/remove list in Resume sections",
+      "externalRef": "PB.1 · profile-admin · jobs-list",
+      "createdAtIso": "2026-06-06T21:36:37.971Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 49,
+      "title": "CTA / button configurability per section",
+      "externalRef": "PB.2 · profile-admin · cta-configurability",
+      "createdAtIso": "2026-06-06T21:36:38.450Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 50,
+      "title": "Multiple resume layout variants",
+      "externalRef": "PB.3 · resume-layouts",
+      "createdAtIso": "2026-06-06T21:36:38.821Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 51,
+      "title": "PDF resume upload → AI auto-populate",
+      "externalRef": "PB.4 · pdf-upload-auto-populate",
+      "createdAtIso": "2026-06-06T21:36:39.194Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 52,
+      "title": "Configurable top navigation + dropdown pages",
+      "externalRef": "PB.5 · configurable-nav",
+      "createdAtIso": "2026-06-06T21:36:39.556Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 53,
+      "title": "Templates Phase B — gallery UX",
+      "externalRef": "S3 · Templates Phase B · gallery UX",
+      "createdAtIso": "2026-06-06T21:36:39.931Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 54,
+      "title": "Scrum Agent Phase B — backlog tools (propose-and-approve)",
+      "externalRef": "S3 · Scrum Agent Phase B · tools + propose-approve",
+      "createdAtIso": "2026-06-06T21:36:40.320Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 55,
+      "title": "JIRA Phase B — bidirectional sync + conflict resolution",
+      "externalRef": "S4 · JIRA Phase B · bidirectional sync",
+      "createdAtIso": "2026-06-06T21:36:40.757Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 56,
+      "title": "Image library: upload + Unsplash search + AI-generated",
+      "externalRef": "S4 · Image Library",
+      "createdAtIso": "2026-06-06T21:36:41.119Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 57,
+      "title": "Scrum Agent Phase C — sprint planning tools",
+      "externalRef": "S5 · Scrum Agent Phase C · sprint planning",
+      "createdAtIso": "2026-06-06T21:36:41.581Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 58,
+      "title": "Brand kit expansion — logo, fonts, SEO meta, custom domain",
+      "externalRef": "S5 · Brand Kit expansion",
+      "createdAtIso": "2026-06-06T21:36:41.992Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 59,
+      "title": "JIRA Phase C — sprint sync (one-way pull)",
+      "externalRef": "S5 · JIRA Phase C · sprint sync",
+      "createdAtIso": "2026-06-06T21:36:42.418Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 60,
+      "title": "Scrum Agent Phase D — JIRA tools (push / pull / reconcile)",
+      "externalRef": "S6 · Scrum Agent Phase D · JIRA tools",
+      "createdAtIso": "2026-06-06T21:36:42.804Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 61,
+      "title": "User-facing file upload on Lead view (persist + delete)",
+      "externalRef": "TT.72 · lead-file-upload",
+      "createdAtIso": "2026-06-06T21:36:43.221Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 62,
+      "title": "Manual \"rotate now\" GitHub Action for Supabase + Render secrets",
+      "externalRef": "TT.76 · secret-rotation-gh-action",
+      "createdAtIso": "2026-06-06T21:36:43.616Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 63,
+      "title": "Test framework: Vitest + Playwright + GitHub Issues integration",
+      "externalRef": "TT.77 · test-framework",
+      "createdAtIso": "2026-06-06T21:36:43.994Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 64,
+      "title": "Email verification on lead submission",
+      "externalRef": "TT.80 · email-verification",
+      "createdAtIso": "2026-06-06T21:36:44.385Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 65,
+      "title": "Lead receipt confirmation email (separate template)",
+      "externalRef": "TT.83 · lead-receipt-email",
+      "createdAtIso": "2026-06-06T21:36:44.769Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 66,
+      "title": "Anonymous \"follow for updates\" option",
+      "externalRef": "TT.84 · anonymous-follow",
+      "createdAtIso": "2026-06-06T21:36:45.135Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 67,
+      "title": "Lead protection: never delete, only convert/archive",
+      "externalRef": "TT.85 · lead-protection-never-delete",
+      "createdAtIso": "2026-06-06T21:36:45.497Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 68,
+      "title": "Lead identity matching + dedup analysis (admin tool)",
+      "externalRef": "TT.86 · lead-identity-matching",
+      "createdAtIso": "2026-06-06T21:36:45.870Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 69,
+      "title": "Signup verification: prevent impersonation",
+      "externalRef": "TT.87 · signup-verification",
+      "createdAtIso": "2026-06-06T21:36:46.290Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 70,
+      "title": "User hierarchy + internal universal identifier (sb_id)",
+      "externalRef": "TT.88 · user-hierarchy-sb_id",
+      "createdAtIso": "2026-06-06T21:36:46.747Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 71,
+      "title": "Person + Institution dual-role accounts",
+      "externalRef": "TT.89 · person-institution-dual-role",
+      "createdAtIso": "2026-06-06T21:36:47.130Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 72,
+      "title": "Dynamic provisioning + usage monitoring by sb_id",
+      "externalRef": "TT.90 · usage-monitoring-by-sb_id",
+      "createdAtIso": "2026-06-06T21:36:47.535Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 73,
+      "title": "Member-only public sections with \"missing out\" prompts",
+      "externalRef": "TT.91 · member-only-sections-missing-out",
+      "createdAtIso": "2026-06-06T21:36:47.937Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 74,
+      "title": "Unique non-guessable profile links",
+      "externalRef": "TT.92 · non-guessable-profile-links",
+      "createdAtIso": "2026-06-06T21:36:48.323Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 75,
+      "title": "Membership model: monthly renewals (not auto-subscriptions)",
+      "externalRef": "TT.93 · monthly-renewals-not-auto-subscriptions",
+      "createdAtIso": "2026-06-06T21:36:48.704Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 76,
+      "title": "Content auto-distribution: LinkedIn / X / Amazon / Etsy",
+      "externalRef": "TT.95 · content-auto-distribution",
+      "createdAtIso": "2026-06-06T21:36:49.071Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 77,
+      "title": "Expand admin configurability layer",
+      "externalRef": "TT.96 · expand-admin-configurability",
+      "createdAtIso": "2026-06-06T21:36:49.433Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 78,
+      "title": "Interactive proposal scoping configurator",
+      "externalRef": "TT.121 · interactive-scoping-configurator",
+      "createdAtIso": "2026-06-06T21:36:49.805Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 79,
+      "title": "Code-split output pages into a separate JS chunk",
+      "externalRef": "TD.1 · bundle-code-splitting",
+      "createdAtIso": "2026-06-06T21:36:50.182Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 80,
+      "title": "Migrate patch_notes from code to a DB-backed table",
+      "externalRef": "TD.2 · patch-notes-to-db",
+      "createdAtIso": "2026-06-06T21:36:50.546Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "no_burst_match",
+      "matches": []
+    },
+    {
+      "id": 81,
+      "title": "Field settings panel — visible, auditable, type, value set, cascades",
+      "externalRef": "FEAT.2026-06-09.1 · field-settings-system",
+      "createdAtIso": "2026-06-09T19:43:14.327Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "ambiguous_multi_match",
+      "matches": [
+        {
+          "session": "0caba5fc-e4bf-42aa-b1f6-a87618c9bed8",
+          "burstStart": "2026-06-09T19:05:40.986Z",
+          "burstEnd": "2026-06-09T19:42:51.677Z",
+          "deltaMs": 22650
+        },
+        {
+          "session": "97254a80-feaa-4c85-80fb-f0938a553251",
+          "burstStart": "2026-06-09T19:07:23.245Z",
+          "burstEnd": "2026-06-09T19:43:54.633Z",
+          "deltaMs": 0
+        }
+      ]
+    },
+    {
+      "id": 82,
+      "title": "Field audit log — capture before/after on auditable field edits",
+      "externalRef": "FEAT.2026-06-09.2 · field-audit-log",
+      "createdAtIso": "2026-06-09T19:43:14.699Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "ambiguous_multi_match",
+      "matches": [
+        {
+          "session": "0caba5fc-e4bf-42aa-b1f6-a87618c9bed8",
+          "burstStart": "2026-06-09T19:05:40.986Z",
+          "burstEnd": "2026-06-09T19:42:51.677Z",
+          "deltaMs": 23022
+        },
+        {
+          "session": "97254a80-feaa-4c85-80fb-f0938a553251",
+          "burstStart": "2026-06-09T19:07:23.245Z",
+          "burstEnd": "2026-06-09T19:43:54.633Z",
+          "deltaMs": 0
+        }
+      ]
+    },
+    {
+      "id": 83,
+      "title": "9 new block types — KPI dashboard, roadmap, heatmap, leaderboard, executive summary, app mockup, choice grid, decision tree, output generator",
+      "externalRef": "FEAT.2026-06-09.3 · nine-new-block-types",
+      "createdAtIso": "2026-06-09T19:43:15.064Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "ambiguous_multi_match",
+      "matches": [
+        {
+          "session": "0caba5fc-e4bf-42aa-b1f6-a87618c9bed8",
+          "burstStart": "2026-06-09T19:05:40.986Z",
+          "burstEnd": "2026-06-09T19:42:51.677Z",
+          "deltaMs": 23387
+        },
+        {
+          "session": "97254a80-feaa-4c85-80fb-f0938a553251",
+          "burstStart": "2026-06-09T19:07:23.245Z",
+          "burstEnd": "2026-06-09T19:43:54.633Z",
+          "deltaMs": 0
+        }
+      ]
+    },
+    {
+      "id": 84,
+      "title": "Section template modal — 2-step visual picker with 15 templates",
+      "externalRef": "FEAT.2026-06-09.4 · section-template-modal",
+      "createdAtIso": "2026-06-09T19:43:15.428Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "ambiguous_multi_match",
+      "matches": [
+        {
+          "session": "0caba5fc-e4bf-42aa-b1f6-a87618c9bed8",
+          "burstStart": "2026-06-09T19:05:40.986Z",
+          "burstEnd": "2026-06-09T19:42:51.677Z",
+          "deltaMs": 23751
+        },
+        {
+          "session": "97254a80-feaa-4c85-80fb-f0938a553251",
+          "burstStart": "2026-06-09T19:07:23.245Z",
+          "burstEnd": "2026-06-09T19:43:54.633Z",
+          "deltaMs": 0
+        }
+      ]
+    },
+    {
+      "id": 85,
+      "title": "Fix: sidebar section list scrolls, Add Section button always visible",
+      "externalRef": "FIX.2026-06-09.1 · sidebar-scroll-add-section-visible",
+      "createdAtIso": "2026-06-09T19:43:15.774Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "ambiguous_multi_match",
+      "matches": [
+        {
+          "session": "0caba5fc-e4bf-42aa-b1f6-a87618c9bed8",
+          "burstStart": "2026-06-09T19:05:40.986Z",
+          "burstEnd": "2026-06-09T19:42:51.677Z",
+          "deltaMs": 24097
+        },
+        {
+          "session": "97254a80-feaa-4c85-80fb-f0938a553251",
+          "burstStart": "2026-06-09T19:07:23.245Z",
+          "burstEnd": "2026-06-09T19:43:54.633Z",
+          "deltaMs": 0
+        }
+      ]
+    },
+    {
+      "id": 86,
+      "title": "Section template modal — 4-category sidebar with 26 templates",
+      "externalRef": "FEAT.2026-06-09.5 · categorized-template-modal",
+      "createdAtIso": "2026-06-09T20:57:40.704Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "ambiguous_multi_match",
+      "matches": [
+        {
+          "session": "0caba5fc-e4bf-42aa-b1f6-a87618c9bed8",
+          "burstStart": "2026-06-09T21:00:05.982Z",
+          "burstEnd": "2026-06-09T21:19:35.534Z",
+          "deltaMs": 145278
+        },
+        {
+          "session": "97254a80-feaa-4c85-80fb-f0938a553251",
+          "burstStart": "2026-06-09T20:55:37.595Z",
+          "burstEnd": "2026-06-09T21:28:32.777Z",
+          "deltaMs": 0
+        }
+      ]
+    },
+    {
+      "id": 87,
+      "title": "My Resume — preset builder and AI resume interpreter agent",
+      "externalRef": "FEAT.2026-06-09.6 · my-resume-panel",
+      "createdAtIso": "2026-06-09T20:57:41.156Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "ambiguous_multi_match",
+      "matches": [
+        {
+          "session": "0caba5fc-e4bf-42aa-b1f6-a87618c9bed8",
+          "burstStart": "2026-06-09T21:00:05.982Z",
+          "burstEnd": "2026-06-09T21:19:35.534Z",
+          "deltaMs": 144826
+        },
+        {
+          "session": "97254a80-feaa-4c85-80fb-f0938a553251",
+          "burstStart": "2026-06-09T20:55:37.595Z",
+          "burstEnd": "2026-06-09T21:28:32.777Z",
+          "deltaMs": 0
+        }
+      ]
+    },
+    {
+      "id": 88,
+      "title": "Resume page added as default in new member sites",
+      "externalRef": "FEAT.2026-06-09.7 · resume-page-default",
+      "createdAtIso": "2026-06-09T20:57:41.560Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "ambiguous_multi_match",
+      "matches": [
+        {
+          "session": "0caba5fc-e4bf-42aa-b1f6-a87618c9bed8",
+          "burstStart": "2026-06-09T21:00:05.982Z",
+          "burstEnd": "2026-06-09T21:19:35.534Z",
+          "deltaMs": 144422
+        },
+        {
+          "session": "97254a80-feaa-4c85-80fb-f0938a553251",
+          "burstStart": "2026-06-09T20:55:37.595Z",
+          "burstEnd": "2026-06-09T21:28:32.777Z",
+          "deltaMs": 0
+        }
+      ]
+    },
+    {
+      "id": 89,
+      "title": "Skills, Client Snapshot, and expanded Case Studies blocks",
+      "externalRef": "FEAT.2026-06-09.8 · skills-clientsnapshot-casestudies-blocks",
+      "createdAtIso": "2026-06-09T20:57:41.927Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "ambiguous_multi_match",
+      "matches": [
+        {
+          "session": "0caba5fc-e4bf-42aa-b1f6-a87618c9bed8",
+          "burstStart": "2026-06-09T21:00:05.982Z",
+          "burstEnd": "2026-06-09T21:19:35.534Z",
+          "deltaMs": 144055
+        },
+        {
+          "session": "97254a80-feaa-4c85-80fb-f0938a553251",
+          "burstStart": "2026-06-09T20:55:37.595Z",
+          "burstEnd": "2026-06-09T21:28:32.777Z",
+          "deltaMs": 0
+        }
+      ]
+    },
+    {
+      "id": 90,
+      "title": "Configurable section action buttons — visible and editable for every section",
+      "externalRef": "FEAT.2026-06-09.9 · section-action-buttons",
+      "createdAtIso": "2026-06-09T20:57:42.290Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "ambiguous_multi_match",
+      "matches": [
+        {
+          "session": "0caba5fc-e4bf-42aa-b1f6-a87618c9bed8",
+          "burstStart": "2026-06-09T21:00:05.982Z",
+          "burstEnd": "2026-06-09T21:19:35.534Z",
+          "deltaMs": 143692
+        },
+        {
+          "session": "97254a80-feaa-4c85-80fb-f0938a553251",
+          "burstStart": "2026-06-09T20:55:37.595Z",
+          "burstEnd": "2026-06-09T21:28:32.777Z",
+          "deltaMs": 0
+        }
+      ]
+    },
+    {
+      "id": 91,
+      "title": "member_json_store — generic key-value store for member settings",
+      "externalRef": "FEAT.2026-06-09.10 · member-json-store",
+      "createdAtIso": "2026-06-09T20:57:42.646Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "ambiguous_multi_match",
+      "matches": [
+        {
+          "session": "0caba5fc-e4bf-42aa-b1f6-a87618c9bed8",
+          "burstStart": "2026-06-09T21:00:05.982Z",
+          "burstEnd": "2026-06-09T21:19:35.534Z",
+          "deltaMs": 143336
+        },
+        {
+          "session": "97254a80-feaa-4c85-80fb-f0938a553251",
+          "burstStart": "2026-06-09T20:55:37.595Z",
+          "burstEnd": "2026-06-09T21:28:32.777Z",
+          "deltaMs": 0
+        }
+      ]
+    },
+    {
+      "id": 92,
+      "title": "Resume generator scope bug fix — admin preset editor now loads all site sections",
+      "externalRef": "v0.15 · resume-scope-fix",
+      "createdAtIso": "2026-06-15T06:10:26.695Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "matched",
+      "matches": [
+        {
+          "session": "de055505-dc52-499d-978f-44e5e9323502",
+          "burstStart": "2026-06-15T04:32:06.370Z",
+          "burstEnd": "2026-06-15T06:13:52.075Z",
+          "deltaMs": 0
+        }
+      ]
+    },
+    {
+      "id": 93,
+      "title": "CRM — manual lead creation with skip-email option",
+      "externalRef": "v0.15 · crm-manual-lead-creation",
+      "createdAtIso": "2026-06-15T06:10:27.099Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "matched",
+      "matches": [
+        {
+          "session": "de055505-dc52-499d-978f-44e5e9323502",
+          "burstStart": "2026-06-15T04:32:06.370Z",
+          "burstEnd": "2026-06-15T06:13:52.075Z",
+          "deltaMs": 0
+        }
+      ]
+    },
+    {
+      "id": 94,
+      "title": "CRM — job lead type with full job tracking fields",
+      "externalRef": "v0.15 · crm-job-lead-type",
+      "createdAtIso": "2026-06-15T06:10:27.513Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "matched",
+      "matches": [
+        {
+          "session": "de055505-dc52-499d-978f-44e5e9323502",
+          "burstStart": "2026-06-15T04:32:06.370Z",
+          "burstEnd": "2026-06-15T06:13:52.075Z",
+          "deltaMs": 0
+        }
+      ]
+    },
+    {
+      "id": 95,
+      "title": "Member connections — request, accept, decline between members",
+      "externalRef": "v0.15 · member-connections",
+      "createdAtIso": "2026-06-15T06:10:27.890Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "matched",
+      "matches": [
+        {
+          "session": "de055505-dc52-499d-978f-44e5e9323502",
+          "burstStart": "2026-06-15T04:32:06.370Z",
+          "burstEnd": "2026-06-15T06:13:52.075Z",
+          "deltaMs": 0
+        }
+      ]
+    },
+    {
+      "id": 96,
+      "title": "Member direct messaging — connection-to-connection only",
+      "externalRef": "v0.15 · member-messaging",
+      "createdAtIso": "2026-06-15T06:10:28.327Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "matched",
+      "matches": [
+        {
+          "session": "de055505-dc52-499d-978f-44e5e9323502",
+          "burstStart": "2026-06-15T04:32:06.370Z",
+          "burstEnd": "2026-06-15T06:13:52.075Z",
+          "deltaMs": 0
+        }
+      ]
+    },
+    {
+      "id": 97,
+      "title": "Member Inbox panel — messages, connection requests, connections list",
+      "externalRef": "v0.15 · inbox-panel",
+      "createdAtIso": "2026-06-15T06:10:28.743Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "matched",
+      "matches": [
+        {
+          "session": "de055505-dc52-499d-978f-44e5e9323502",
+          "burstStart": "2026-06-15T04:32:06.370Z",
+          "burstEnd": "2026-06-15T06:13:52.075Z",
+          "deltaMs": 0
+        }
+      ]
+    },
+    {
+      "id": 98,
+      "title": "Connection + message email notifications (Brevo)",
+      "externalRef": "v0.15 · pending · connection-email-notifications",
+      "createdAtIso": "2026-06-15T06:10:29.102Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "matched",
+      "matches": [
+        {
+          "session": "de055505-dc52-499d-978f-44e5e9323502",
+          "burstStart": "2026-06-15T04:32:06.370Z",
+          "burstEnd": "2026-06-15T06:13:52.075Z",
+          "deltaMs": 0
+        }
+      ]
+    },
+    {
+      "id": 99,
+      "title": "Inbox unread count badge on admin topbar Inbox tab",
+      "externalRef": "v0.15 · pending · inbox-unread-badge",
+      "createdAtIso": "2026-06-15T06:10:29.466Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "matched",
+      "matches": [
+        {
+          "session": "de055505-dc52-499d-978f-44e5e9323502",
+          "burstStart": "2026-06-15T04:32:06.370Z",
+          "burstEnd": "2026-06-15T06:13:52.075Z",
+          "deltaMs": 0
+        }
+      ]
+    },
+    {
+      "id": 100,
+      "title": "Dynamic scrolling — all admin panels scroll within workspace",
+      "externalRef": "v0.15 · pending · dynamic-scrolling-all-panels",
+      "createdAtIso": "2026-06-15T06:10:29.823Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "matched",
+      "matches": [
+        {
+          "session": "de055505-dc52-499d-978f-44e5e9323502",
+          "burstStart": "2026-06-15T04:32:06.370Z",
+          "burstEnd": "2026-06-15T06:13:52.075Z",
+          "deltaMs": 0
+        }
+      ]
+    },
+    {
+      "id": 101,
+      "title": "CRM pipeline board — kanban stage view for deals (Phase 2A continuation)",
+      "externalRef": "v0.15 · pending · crm-pipeline-board",
+      "createdAtIso": "2026-06-15T06:10:30.175Z",
+      "origHoursClaude": null,
+      "origHoursBetsy": null,
+      "status": "matched",
+      "matches": [
+        {
+          "session": "de055505-dc52-499d-978f-44e5e9323502",
+          "burstStart": "2026-06-15T04:32:06.370Z",
+          "burstEnd": "2026-06-15T06:13:52.075Z",
+          "deltaMs": 0
+        }
+      ]
+    },
+    {
+      "id": 102,
+      "createdAtIso": "2026-07-07T15:37:51.030Z",
+      "status": "already_corrected"
+    },
+    {
+      "id": 103,
+      "createdAtIso": "2026-07-07T15:37:51.418Z",
+      "status": "already_corrected"
+    },
+    {
+      "id": 104,
+      "createdAtIso": "2026-07-07T15:37:51.790Z",
+      "status": "already_corrected"
+    },
+    {
+      "id": 105,
+      "createdAtIso": "2026-07-07T15:37:52.171Z",
+      "status": "already_corrected"
+    },
+    {
+      "id": 106,
+      "createdAtIso": "2026-07-07T15:37:52.538Z",
+      "status": "already_corrected"
+    },
+    {
+      "id": 107,
+      "createdAtIso": "2026-07-07T15:37:52.908Z",
+      "status": "already_corrected"
+    },
+    {
+      "id": 108,
+      "createdAtIso": "2026-07-07T15:37:53.270Z",
+      "status": "already_corrected"
+    },
+    {
+      "id": 109,
+      "createdAtIso": "2026-07-07T15:37:53.631Z",
+      "status": "already_corrected"
+    },
+    {
+      "id": 110,
+      "createdAtIso": "2026-07-07T15:37:53.981Z",
+      "status": "already_corrected"
+    }
+  ]
+}

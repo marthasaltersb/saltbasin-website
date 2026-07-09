@@ -161,8 +161,8 @@ export default function ConfigPanel({ config, onChange, scope = 'admin', site = 
           <div style={styles.cardTitle}>Brand Colors</div>
           <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem', lineHeight: 1.55 }}>
             {isMember
-              ? 'These colors apply to your profile pages only. Use hex codes (e.g. #1B2A3B).'
-              : 'These colors override the Salt Basin palette on saltbasin.net public pages. Admin chrome stays locked.'}
+              ? 'Override individual tokens on your profile pages. Leave a field blank to let the Theme above control it — filling in a hex code here always wins over the selected theme.'
+              : 'Override individual tokens on saltbasin.net public pages. Leave a field blank to let the Theme above control it — filling in a hex code here always wins over the selected theme. Admin chrome stays locked either way.'}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
             <ColorField label="Primary (navy)"  value={config?.brand?.primary} onChange={(v) => patch('brand.primary', v)} />
@@ -172,15 +172,20 @@ export default function ConfigPanel({ config, onChange, scope = 'admin', site = 
           </div>
           <button
             onClick={() => {
-              patch('brand.primary', '#1B2A3B');
-              patch('brand.accent',  '#C4843A');
-              patch('brand.ink',     '#F5F0E8');
-              patch('brand.paper',   '#FBF6F0');
+              // Clear overrides entirely (not "set to strategic hex codes") so
+              // the Theme picker above regains full control. Filling these
+              // with literal hex values — even ones that match the strategic
+              // theme — would permanently pin every public page to that one
+              // combination regardless of which theme is selected.
+              patch('brand.primary', '');
+              patch('brand.accent',  '');
+              patch('brand.ink',     '');
+              patch('brand.paper',   '');
             }}
             className="sb-btn sb-btn-outline"
             style={{ marginTop: 8, padding: '0.35rem 0.8rem', fontSize: '0.65rem' }}
           >
-            Reset to Salt Basin defaults
+            Clear overrides (use Theme)
           </button>
         </div>
 

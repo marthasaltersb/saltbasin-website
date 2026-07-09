@@ -1,0 +1,463 @@
+
+
+===== PAGE 1 / 12: Betsy_Salter_Case_Study_Portfolio_Canva_Source_Final.pdf =====
+S A L T B A S I N N E T W O R K S · S T R AT E G I C O P E R AT O R P O R T F O L I O
+Case Study Portfolio — Betsy Salter
+24 engagements · 12 industries · 13 years · "I build for the customer you keep, not just the deal you close."
+C A S E S T U D Y # 0 1 · I N T E R N A L · 1 0 – 1 2 P E R S O N T E A M C A S E S T U D Y # 0 2 · $ 5 0 M + TOTA L P R O G R A M · 6 0 + P E R S O N T E A M AT P E A K
+Blackbaud – Salesforce CRM & Apttus CPQ Implementation Global Enterprise Education Publisher – Salesforce CRM & Apttus CPQ (R2: US Higher
+Education)
+Blackbaud Nonprofit Technology / EdTech 2013–2015
+Accenture Education Publishing 2015–2016
+ROLES
+Champion Stakeholder Super User Process & Integration Design ROLES
+Business Analyst CPQ Specialist UAT Lead
+BUSINESS CONTE X T / PROBLEM
+Blackbaud's contract processing team was relying on legacy SalesLogix CRM and Clarify entitlement systems BUSINESS CONTE X T / PROBLEM
+that could not scale with deal volume or complexity. Month-end deal processing was creating 10+ hours of The client, one of the world's largest education publishers, was undertaking a massive global CRM and CPQ
+overtime per person on a 10–12 person team — a recurring, costly inefficiency rooted in manual, transformation affecting 2M+ product SKUs across its Higher Education division. The program was mid-flight
+disconnected workflows. when Betsy joined, with existing complexity around a massive product catalog, curriculum browsing for
+WHAT BETSY DID professors, and bookstore order influence.
+Betsy was named implementation champion for the Salesforce CRM and Apttus CPQ rollout. She contributed WHAT BETSY DID
+to business process and integration design, authored training deliverables for the full team, upskilled sales Hired specifically for Salesforce and Apttus CPQ expertise, Betsy onboarded mid-program to troubleshoot,
+team members on the new system, and participated in Kaizen and Lean Six Sigma workshops to identify and test, and stabilize the US Higher Education CPQ solution. She identified critical defects that were blocking the
+eliminate non-value-add process steps in the contract-to-order workflow. She also built SAP integration program's critical path — defects that the development team had not caught. She enabled the professor
+design inputs ensuring downstream accuracy. curriculum browsing and bookstore order influence workflow and contributed to UAT across the release.
+BUSINESS OUTCOMES BUSINESS OUTCOMES
+→ Reduced month-end team overtime by ~4 hours/person on a 10–12 person team (significant at inflated → Critical-path defects identified and resolved, preventing significant program delay
+overtime rates)
+→ US Higher Ed CPQ solution stabilized and released on schedule
+→ Sunset legacy SalesLogix CRM and Clarify entitlement systems; full Salesforce CRM + Apttus CPQ
+→ Professor curriculum browsing and bookstore order influence workflow functional and live
+adoption achieved
+→ Established Betsy's reputation as a defect pattern recognition expert across Accenture programs
+→ Enabled scalable deal processing with SAP integration for clean downstream handoff to finance
+→ Earned promotion to Senior Contract Processing Specialist ~1 year in based on performance and KEY METRICS
+implementation leadership $50M+ program 60+ person team 2M+ product SKUs Critical path unblocked
+KEY METRICS SCENARIOS & THEMES
+~4 hrs/person/month overtime reduction 10–12 person team enabled 2 legacy systems sunset CPQ Implementation Large-Scale Program Rescue Education Technology Defect Resolution
+SCENARIOS & THEMES
+CRM Modernization Team Enablement Sales Operations Transformation Legacy System Migration
+
+===== PAGE 2 / 12: Betsy_Salter_Case_Study_Portfolio_Canva_Source_Final.pdf =====
+C A S E S T U D Y # 0 3 · 2 - P E R S O N B U I L D · I N T E R N A L A CC E N T U R E C A S E S T U D Y # 0 4 · $ 5 0 M + TOTA L P R O G R A M · G LO B A L
+Accenture Dreamforce Event Management Solution Global Enterprise Education Publisher – Global CPQ Process Design & Quoting Model
+(R3: UK, AU/NZ)
+Accenture Technology Consulting (Internal) 2015
+Accenture Education Publishing 2016
+ROLES
+Solution Designer Co-Builder ROLES
+CPQ Lead Global Process Design Lead
+BUSINESS CONTE X T / PROBLEM
+Accenture needed a custom event management solution for its presence at Salesforce Dreamforce — one of BUSINESS CONTE X T / PROBLEM
+the largest enterprise technology conferences in the world. Managing RSVPs, attendee check-in, session Following the successful US Higher Ed release, the company needed to extend its CPQ transformation
+capacity, and lead capture with standard off-the-shelf tools was insufficient for Accenture's scale and globally — designing a quoting model that could support UK and AU/NZ markets with different curriculum
+branding requirements. structures, pricing models, and regulatory considerations. The global expansion required a unified set of
+WHAT BETSY DID standards and guiding principles that would govern all future market releases.
+Betsy co-designed and built a complete QR code and lead management solution within Salesforce: RSVP WHAT BETSY DID
+tracking, QR code generation and distribution, real-time check-in control, and capacity enforcement. The 2- Betsy led the 12-week global CPQ design engagement. She conducted 25+ stakeholder surveys across US,
+person team delivered a working solution end-to-end. UK, and AU/NZ markets to surface requirements, constraints, and exceptions. She defined global standards
+BUSINESS OUTCOMES and guiding principles governing quoting logic, product hierarchy, and pricing rules that would serve as the
+foundational design for all subsequent global rollouts.
+→ Custom Dreamforce attendee management solution built and deployed on schedule
+BUSINESS OUTCOMES
+→ Contributed to Accenture's Dreamforce presence and additional business secured at the event
+→ Global CPQ design standards and guiding principles defined — governing all future market releases
+→ Demonstrated ability to design and build independently with minimal resources
+→ 25+ stakeholder surveys executed across 3 geographies, synthesizing diverse requirements into unified
+KEY METRICS design
+2-person delivery Full event management lifecycle Live at Dreamforce → Foundation established for UK, AU/NZ, and future international market launches
+SCENARIOS & THEMES → Design handed off and successfully used as blueprint for R4 and R5 releases
+Rapid Prototyping Event Technology Salesforce Custom Build Internal Innovation
+KEY METRICS
+25+ stakeholder surveys 3 geographies 12-week engagement $50M+ program
+SCENARIOS & THEMES
+Global Rollout Strategy CPQ Design Stakeholder Alignment Standards Development
+
+===== PAGE 3 / 12: Betsy_Salter_Case_Study_Portfolio_Canva_Source_Final.pdf =====
+C A S E S T U D Y # 0 5 · $ 5 0 M + TOTA L P R O G R A M · I N - P E R S O N U K & A U C A S E S T U D Y # 0 6 ·
+$ 5 0 M + TOTA L P R O G R A M · 3 F U N C T I O N A L + 1 T E C H + 3 O F F S H O R E R E S O U R C E S M A N A G E D
+Global Enterprise Education Publisher – Variable Pricing Engine & Integration Design
+(R4) Global Enterprise Education Publisher – US K-12 Business Unit Rollout (R5 – Final
+Release)
+Accenture Education Publishing 2016–2017
+Accenture Education Publishing 2017
+ROLES
+CPQ Capability Lead Pricing Architect Integration Lead ROLES
+CPQ Capability Lead Team Lead
+BUSINESS CONTE X T / PROBLEM
+The company's 2M+ ISBN catalog presented an unprecedented pricing challenge: each product had variable BUSINESS CONTE X T / PROBLEM
+attributes that determined its price, and the existing pricing approach relied on manual Excel-based The final release of the company's global CPQ program extended the solution to the US K-12 business unit.
+processes that were untenable at global scale. The integration layer connecting CRM/CPQ to Oracle ERP and This lift-and-shift approach required adapting the established CPQ design to K-12 product and pricing
+the Datahub master data management system needed to be designed with precision to ensure pricing structures while managing a multi-resource team across onshore and offshore locations — closing out a
+accuracy and data integrity downstream. multi-year, $50M+ Accenture engagement.
+WHAT BETSY DID WHAT BETSY DID
+Betsy designed and built an 8-tab, 200+ formula variable attribute-based pricing engine for the 2M+ ISBN Betsy served as CPQ Capability Lead for R5, designing product and pricing integration architecture for
+catalog. She designed Informatica integrations to Oracle ERP and the Datahub MDM system; coordinated automated data feeds into the K-12 business unit. She managed a team of 3 functional, 1 technical onshore,
+with competitive vendors managing overlapping workstreams; and traveled in-person to UK and AU for and 3 offshore resources — her first formal team management experience — coordinating delivery across
+hands-on UAT execution, catching defects that local teams had missed. time zones and ensuring UAT quality before go-live.
+BUSINESS OUTCOMES BUSINESS OUTCOMES
+→ 8-tab, 200+ formula pricing engine built — rationalized 2M+ ISBN variable pricing into automated, → US K-12 CPQ solution successfully launched — final release of $50M+ program closed
+scalable logic
+→ Automated data feeds for product and pricing established, eliminating manual K-12 pricing inputs
+→ Informatica integration design to Oracle ERP and Datahub MDM — clean downstream data flow achieved
+→ First formal team management experience: 7 resources across onshore and offshore
+→ In-person UAT in UK and AU resulted in defects caught and resolved before go-live
+→ Multi-year Accenture engagement successfully concluded
+→ Competitive multi-vendor coordination navigated successfully, maintaining program timeline
+KEY METRICS
+KEY METRICS 7 resources managed $50M+ program closed 3 offshore resources coordinated K-12 BU enabled
+2M+ ISBNs 200+ formulas 8-tab pricing engine 2 geographies UAT in-person
+SCENARIOS & THEMES
+SCENARIOS & THEMES Global Rollout Team Management Lift & Shift Implementation Program Closeout
+Pricing Complexity Variable Pricing Engine MDM Integration Multi-Vendor Coordination
+
+===== PAGE 4 / 12: Betsy_Salter_Case_Study_Portfolio_Canva_Source_Final.pdf =====
+C A S E S T U D Y # 0 7 · 1 2 - W E E K E N G A G E M E N T · A D V I S O R Y / D I S C O V E R Y C A S E S T U D Y # 0 8 · $ 6 0 M + P R O G R A M · N E T H E R L A N D S - B A S E D
+Global Data Analytics Technology Company – Offering to Cash Business Process Global Consumer Goods / CPG Company (Netherlands) – CRM/CPQ & MDM/Data
+Discovery Migration
+Accenture Data Analytics / Technology ~2017 Accenture Consumer Goods / CPG (Netherlands) 2017–Aug 2018
+ROLES ROLES
+Process Design Lead O2C Discovery Lead MDM & Data Migration Lead CPQ Lead Cross-functional QA Architect
+BUSINESS CONTE X T / PROBLEM BUSINESS CONTE X T / PROBLEM
+The client, a global data analytics leader, needed a comprehensive Offering-to-Cash (O2C) business process The client, a global coffee and tea company, was mid-implementation on a $60M+ CRM/CPQ and data
+discovery to understand its current state, identify gaps, and define a best-in-class future state before program originally initiated by a competitor consulting firm. The program was in distress — the existing
+undertaking a major transformation program. The discovery needed to be rigorous enough to hand off to a implementation had left the data model undefined, legacy data uncleaned, and integration architecture
+subsequent implementation team. incomplete. Accenture was brought in to rescue and take over.
+WHAT BETSY DID WHAT BETSY DID
+Betsy led the 12-week O2C discovery engagement end-to-end. She delivered Best-in-Class O2C Level 3 Betsy took ownership of the data model definition, legacy data cleanup, and migration file preparation. She
+process flows, business scenarios, offering models, and comprehensive business rules documentation. The designed the CPQ solution for the company's European quoting model and served as QA architect across all
+full package served as the foundation for the transformation program handed to the next Accenture team. workstreams — ensuring data flowed correctly through 12 integrations from source systems to Force.com.
+She also managed global considerations for the Netherlands-based rollout.
+BUSINESS OUTCOMES
+→ Best-in-Class O2C L3 process flows delivered — covering full Offering-to-Cash lifecycle BUSINESS OUTCOMES
+→ Distressed program rescued and stabilized — competitor-initiated implementation taken over and
+→ Business scenarios, offering models, and business rules documented in handoff-ready package
+redirected
+→ Discovery scoping enabled the next implementation team to begin transformation without re-discovery
+→ Future-state data model defined from scratch, enabling all downstream CPQ and integration work
+→ 12-week discovery executed and closed on schedule
+→ 12 integrations from source to Force.com designed and QA'd — data integrity verified end-to-end
+KEY METRICS → Legacy data cleanup and migration files prepared, enabling clean cutover
+12-week engagement Full O2C lifecycle documented L3 process flows delivered
+→ Cross-workstream QA architecture prevented downstream defects across the full $60M+ program
+SCENARIOS & THEMES
+Business Process Discovery O2C Transformation Pre-Implementation Scoping Technology Company KEY METRICS
+$60M+ program 12 integrations designed Program rescue Netherlands global rollout
+SCENARIOS & THEMES
+Program Rescue CPG / Consumer Goods Data Migration Cross-workstream QA Global Rollout
+
+===== PAGE 5 / 12: Betsy_Salter_Case_Study_Portfolio_Canva_Source_Final.pdf =====
+C A S E S T U D Y # 0 9 · V I S TA + B A I N C A P I TA L P O RT F O L I O ( $ 4 . 8 1 B TOTA L C A P I TA L R A I S E D ) C A S E S T U D Y # 1 0 · V I S TA A CQ U I R E D AT ~ $ 8 5 0 M → N O VA C A P E X I T AT $ 1 . 9 B ( 2 0 2 5 )
+CentralSquare Technologies – Lead to Cash & M&A Integration IAS (Integral Ad Science) – Lead to Cash & M&A Support
+Vista Equity Partners GovTech / Public Safety Technology Aug 2018–2019 Vista Equity Partners AdTech / Digital Advertising Measurement Aug 2018–2019
+ROLES ROLES
+Lead to Cash SME CPQ/CLM Lead M&A Process & Data Integration Lead Lead to Cash SME CPQ/CLM Lead M&A Integration Support
+BUSINESS CONTE X T / PROBLEM BUSINESS CONTE X T / PROBLEM
+CentralSquare Technologies was created by Vista Equity Partners and Bain Capital through the merger of Integral Ad Science (IAS), a digital advertising measurement company, was acquired by Vista Equity Partners
+Superion, TriTech, and Zuercher Technologies — three separate public safety software companies. Post- in 2018. The business needed a robust Lead-to-Cash infrastructure to support its growth trajectory and
+merger, the combined company had fragmented data models, inconsistent GTM processes, and multiple prepare for the investor reporting and operational transparency required by a PE-owned SaaS company —
+product lines with no unified CPQ or CLM architecture. Betsy was brought in as part of Vista's BOSS (Best-of- including ARR tracking, customer retention, and account hierarchy management needed for exit readiness.
+Breed Operating Standards) practice to design the Lead-to-Cash process foundation.
+WHAT BETSY DID
+WHAT BETSY DID Betsy designed Vista BOSS Lead-to-Cash process flows for IAS, led CPQ/CLM functional design, defined
+Betsy designed Vista BOSS-standard L3 process flows for the unified entity. She led M&A data and process foundational data model elements (account hierarchy, product hierarchy), built proprietary ARR tracking and
+unification work across the merged product lines, defined account and product hierarchy for the combined customer retention reporting models, and provided M&A integration support during IAS's active acquisition
+customer and product master, designed CPQ and CLM functional architecture, and facilitated stakeholder activity. She architected the models that directly supported investor reporting and eventual exit readiness.
+workshops to align Sales, Finance, and IT across the newly merged business units.
+BUSINESS OUTCOMES
+BUSINESS OUTCOMES → Foundational ARR tracking and retention reporting models built — directly supported investor reporting
+→ Unified Lead-to-Cash process foundation designed for merged 3-company entity
+→ Vista BOSS CPQ/CLM process flows deployed, enabling scalable Lead-to-Cash at PE-grade standards
+→ Vista BOSS L3 process flows (trademarked) delivered — reusable across portfolio
+→ Account and product hierarchy defined, enabling unified CRM and billing data
+→ Account and product hierarchy defined, enabling unified customer and product master post-merger
+→ IAS growth trajectory supported: Vista exit value grew from ~$850M to $1.9B (Novacap acquisition 2025)
+→ CPQ/CLM functional design established for the largest CAD/RMS market share holder in public safety
+→ M&A integration support provided during IAS's expansion phase
+tech
+→ M&A data and process integration facilitated across Superion/TriTech/Zuercher product lines KEY METRICS
+~$850M → $1.9B exit value ARR models built IPO 2021 (Nasdaq) 800+ employees at exit
+KEY METRICS
+SCENARIOS & THEMES
+3-company merger integration $4.81B total capital Largest CAD/RMS market share BOSS L3 flows delivered
+PE Portfolio Operations ARR Reporting AdTech Exit Readiness M&A Integration
+SCENARIOS & THEMES
+M&A Integration PE Portfolio Operations GovTech CPQ/CLM Design Post-Acquisition Value Creation
+
+===== PAGE 6 / 12: Betsy_Salter_Case_Study_Portfolio_Canva_Source_Final.pdf =====
+C A S E S T U D Y # 1 1 · V I S TA P O RT F O L I O C O M PA N Y · F U L L - S TA C K I M P L E M E N TAT I O N C A S E S T U D Y # 1 2 ·
+V I S TA A CQ U I R E D $ 1 . 9 4 B → I B M A CQ U I R E D AT $ 4 . 6 B ( A U G 2 0 2 3 ; ~ 1 4 2 % R E T U R N I N 4 . 5
+iCIMS – Marketo, Salesforce, CPQ, Conga, NetSuite Full-Stack Implementation
+Y E A R S )
+Vista Equity Partners HR Tech / Talent Acquisition 2018–2019 Apptio – Lead to Cash & CPQ/CLM Implementation
+Vista Equity Partners FinOps / Technology Business Management 2019–May 2020
+ROLES
+CPQ/CLM Functional Lead Project Coordinator
+ROLES
+BUSINESS CONTE X T / PROBLEM
+Lead to Cash SME CPQ/CLM Lead Process Design Lead Data Migration Strategist
+iCIMS, a leading talent acquisition software platform in Vista's portfolio, was managing its entire quoting and
+pricing operation through 6 separate Excel spreadsheets — an operationally fragile, manually intensive, and BUSINESS CONTE X T / PROBLEM
+error-prone approach that was completely unscalable for a PE-backed SaaS company preparing for growth. Apptio, a Technology Business Management (FinOps) software company, was taken private by Vista in
+The company also needed a full technology stack refresh across marketing automation (Marketo), CRM January 2019 at $1.94B. As part of Vista's post-acquisition value creation program, Apptio needed a robust
+(Salesforce), CPQ (Salesforce CPQ), CLM (Conga), and ERP (NetSuite). Lead-to-Cash infrastructure including CPQ/CLM design, a data migration strategy that could support
+$500M+ in recurring revenue automation, and ASC606-compliant subscription management architecture.
+WHAT BETSY DID
+The work needed to be exit-ready.
+Betsy led the CPQ/CLM functional design and delivery across the full-stack implementation. She eliminated
+the 6-Excel-sheet manual pricing process by designing automated product configuration and pricing logic in WHAT BETSY DID
+Salesforce CPQ. She oversaw the Conga CLM implementation, NetSuite integration, and Marketo marketing Betsy designed Vista BOSS L3 process flows for Apptio's Lead-to-Cash, led CPQ/CLM design, and introduced
+automation deployment — coordinating QA across the full Salesforce and Conga solution. a proprietary data migration methodology that enabled automated CPQ renewal processes for $500M+ in
+recurring revenue. She designed ARR tracking and subscription management models, built ASC606-
+BUSINESS OUTCOMES
+compliant variable consideration handling, and created customer retention reporting models that directly
+→ 6 Excel-based manual pricing processes eliminated — fully automated in Salesforce CPQ supported investor reporting and exit due diligence.
+→ Salesforce CPQ, Conga CLM, NetSuite integration, and Marketo fully implemented and live BUSINESS OUTCOMES
+→ iCIMS positioned for scalable, system-governed quoting with audit-grade pricing controls → Proprietary data migration methodology introduced — enabled automated renewal processing of
+$500M+ recurring revenue
+→ TA Associates joined Vista as equal co-investor in 2022 — signal of continued confidence in value
+trajectory → ARR tracking and customer retention reporting models built — directly informed exit due diligence
+KEY METRICS → ASC606-compliant variable consideration methodology implemented for subscription management
+6 Excel sheets eliminated 4-system full-stack live Salesforce + Conga + NetSuite + Marketo → Apptio sold to IBM for $4.6B in August 2023 — ~142% return (~2.4x) in 4.5 years
+SCENARIOS & THEMES → Betsy's process design and data work directly contributed to operational excellence supporting the IBM
+CPQ Implementation Full-Stack SaaS Modernization HR Tech Manual Process Elimination exit
+PE Portfolio Operations KEY METRICS
+$500M+ ARR automated $1.94B → $4.6B IBM exit ~142% return / ~2.4x ASC606 compliant
+SCENARIOS & THEMES
+PE Portfolio Operations Exit Readiness ARR Automation FinOps / TBM Subscription Management
+M&A Value Creation
+
+===== PAGE 7 / 12: Betsy_Salter_Case_Study_Portfolio_Canva_Source_Final.pdf =====
+C A S E S T U D Y # 1 3 · I N T E R N A L I T P R O G R A M · C R O S S - F U N C T I O N A L C A S E S T U D Y # 1 4 · 8 - W E E K E N G A G E M E N T · 4 - P E R S O N T E A M
+TIBCO Software – Salesforce Billing & Order Integration Re-architecture Leading DevOps / IT Operations SaaS Platform – Order Management to Collections
+BPD
+TIBCO Software Enterprise Software / Technology (Internal IT) Jun 2020–Jan 2021
+PwC DevOps / IT Operations (SaaS) Early 2021
+ROLES
+Lead Business Solution Architect ROLES
+Lead Counterpart Process Design Lead
+BUSINESS CONTE X T / PROBLEM
+TIBCO Software, an enterprise integration and analytics company, had a broken Salesforce Billing/Order BUSINESS CONTE X T / PROBLEM
+integration that was creating persistent manual intervention requirements — order errors were falling out of The client, a leading DevOps and IT incident management SaaS platform, needed a structured Order
+automated processing and requiring human correction, creating operational drag for Sales Ops, Accounting, Management to Collections business process design to align its Lead-to-Cash operations with growth-stage
+and Revenue teams. The integration also lacked front-end visibility into billing and payment status. requirements. The engagement required a clear future-state design that could be handed to an
+WHAT BETSY DID implementation team without re-work.
+Betsy re-architected the existing Salesforce Billing/Order integration end-to-end. She designed front-end WHAT BETSY DID
+billing and payment visibility into the system, automated the order error re-processing logic to eliminate Betsy served as lead counterpart on the 4-person PwC team, leading the 8-week O2C future-state design
+manual intervention, and designed the cross-functional solution spanning sales, sales ops, accounting, and from order management through collections. She produced discovery and scoping deliverables covering all
+revenue teams. She also troubleshot and resolved active production issues during the engagement — a high- Lead-to-Cash process domains and successfully handed off a clean, implementation-ready package to the
+stakes, highly visible role. delivery team.
+BUSINESS OUTCOMES BUSINESS OUTCOMES
+→ Manual order error correction processes eliminated — system auto-corrects and re-processes errors → 8-week O2C BPD engagement delivered on schedule with complete process documentation
+→ Front-end billing and payment visibility added — sales and accounting teams can self-serve status → Implementation-ready handoff package produced — zero re-discovery needed
+→ Cross-functional solution aligned Sales, Sales Ops, Accounting, and Revenue around a unified integration → Lead counterpart performance positioned Betsy for larger, more complex PwC engagements
+architecture
+→ The company's Lead-to-Cash future state defined and ready for execution
+→ Production issues troubleshot and resolved during engagement, preventing revenue recognition delays
+KEY METRICS
+→ Lateral move during COVID that deepened Betsy's solution architecture and trusted advisor skill set
+8-week engagement 4-person team Full O2C lifecycle Clean handoff achieved
+KEY METRICS SCENARIOS & THEMES
+Manual intervention eliminated 4 functional teams aligned Production issues resolved Billing visibility live O2C Discovery SaaS / DevOps Process Design Pre-Implementation Scoping
+SCENARIOS & THEMES
+Integration Re-architecture Billing Automation Internal IT Transformation Cross-functional Alignment
+
+===== PAGE 8 / 12: Betsy_Salter_Case_Study_Portfolio_Canva_Source_Final.pdf =====
+C A S E S T U D Y # 1 5 · C A S E S T U D Y # 1 6 · I M P L E M E N TAT I O N E N G A G E M E N T
+B P D → $ 5 0 M + M U LT I - Y E A R I M P L E M E N TAT I O N W I N · 1 0 - P E R S O N T E A M
+Global Technology Company (Construction & Transportation) – Lead to Cash
+Global Telehealth & Virtual Healthcare Company – Lead to Cash BPD → $50M+ Implementation (Revenue Cloud)
+Implementation Win
+PwC Technology / Construction / Transportation 2022–2023
+PwC Healthcare / Telehealth 2021–2022
+ROLES
+ROLES Lead to Cash Lead Solution Architect
+Lead to Cash Process Design Lead Implementation Support
+BUSINESS CONTE X T / PROBLEM
+BUSINESS CONTE X T / PROBLEM The client, a global technology company serving construction, agriculture, and transportation markets,
+The client, a global telehealth and virtual healthcare leader, needed a comprehensive Lead-to-Cash business needed a full Lead-to-Cash implementation with a specific requirement: expand into Salesforce Billing
+process design before undertaking a major Salesforce implementation and back-office systems redesign. The (Revenue Cloud) for the first time — adding subscription and usage billing capability to its existing CPQ
+engagement was high-stakes: PwC's ability to win the subsequent multi-year implementation contract solution. The integration layer connecting to MuleSoft and Informatica was critical to ensuring billing
+depended on delivering a BPD that demonstrated clear command of the client's operational complexity and accuracy and downstream ERP alignment.
+Salesforce capability.
+WHAT BETSY DID
+WHAT BETSY DID Betsy served as Lead to Cash Lead and Solution Architect, taking hands-on responsibility for Salesforce Billing
+Betsy led the 12-week Lead-to-Cash BPD engagement, leveraging and significantly expanding prior process (Revenue Cloud) implementation — expanding her toolkit beyond CPQ into billing for the first time in a
+design work to deliver go-forward system requirements covering the client's complex hybrid delivery capacity. She designed MuleSoft and Informatica integration architecture and served as cross-system
+healthcare/technology business model. The delivery directly secured the follow-on scope. She then QA lead ensuring dependencies across CPQ, Billing, and ERP were managed cleanly.
+supported the 10-person implementation team through the delivery phase.
+BUSINESS OUTCOMES
+BUSINESS OUTCOMES → First hands-on Salesforce Billing (Revenue Cloud) implementation delivered — expanded Betsy's technical
+→ $50M+ multi-year Salesforce implementation and back-office systems redesign won — BPD performance depth into billing
+directly drove the win
+→ MuleSoft and Informatica integration architecture designed and live
+→ 12-week BPD delivered with go-forward system requirements covering full Lead-to-Cash lifecycle
+→ Cross-system QA architecture ensured dependency management across CPQ, Billing, and ERP layers
+→ Transitioned from BPD delivery to implementation support on 10-person team
+→ The company's Lead-to-Cash modernized with subscription and usage billing capability
+→ Betsy recognized for expanding PwC's relationship with Teladoc beyond the initial engagement
+KEY METRICS
+KEY METRICS Revenue Cloud live MuleSoft + Informatica integrations CPQ + Billing + ERP aligned
+$50M+ follow-on win 12-week BPD 10-person implementation team BPD-to-implementation conversion
+SCENARIOS & THEMES
+SCENARIOS & THEMES Revenue Cloud / Billing Integration Architecture Construction / Transportation Tech Multi-System QA
+Business Process Discovery Healthcare / Telehealth Pursuit Support Pre-Implementation Win SaaS GTM
+
+===== PAGE 9 / 12: Betsy_Salter_Case_Study_Portfolio_Canva_Source_Final.pdf =====
+C A S E S T U D Y # 1 7 · I M P L E M E N TAT I O N – W E N T L I V E · N A + A S I A B U S C A S E S T U D Y # 1 8 · R E U S A B L E P R O D U C T · P R A C T I C E - L E V E L A S S E T
+Global Specialty Chemicals & Advanced Materials Manufacturer – Salesforce CPQ & Slalom – Salesforce Billing Accelerator
+SAP Integration Redesign
+Slalom Technology Consulting / SaaS Jun 2023–Jun 2024
+PwC Specialty Chemicals / Manufacturing (NA + Global Asia) 2023
+ROLES
+ROLES Solution Architect Accelerator Designer
+CPQ/SAP Lead Solution Architect
+BUSINESS CONTE X T / PROBLEM
+BUSINESS CONTE X T / PROBLEM Slalom's Revenue Cloud practice needed a repeatable, configurable implementation accelerator to reduce
+The client, a global specialty chemicals and advanced materials company, had a Salesforce CPQ and SAP the time and cost for enterprise clients adopting Salesforce Billing. Individual engagements were rebuilding
+integration that could not handle its highly variable, ever-changing pricing model — including metal the same foundational components from scratch, creating delivery inefficiency and reducing the practice's
+commodity pricing that fluctuated based on market conditions. The existing architecture was brittle under competitiveness on billing-related pursuits.
+pricing changes and had no scalable solution for the NA and Global Asia business units operating under WHAT BETSY DID
+different pricing structures. Betsy architected and built the Salesforce Billing implementation accelerator — designing configurable
+WHAT BETSY DID components that covered the most common Revenue Cloud implementation patterns. The accelerator was
+Betsy redesigned the Salesforce CPQ and SAP integration architecture to support the company's variable and built for repeatability across client engagements and directly reduced the engineering time required to stand
+ever-changing metal commodity pricing model. She designed the pricing logic to accommodate ongoing up billing capability for new clients.
+market-driven updates without requiring re-implementation, aligned NA and Global Asia BU requirements BUSINESS OUTCOMES
+into a unified architecture, and drove the solution through to a successful go-live.
+→ Salesforce Billing implementation accelerator built — reusable across multiple client engagements
+BUSINESS OUTCOMES
+→ Implementation timelines reduced for enterprise companies adopting Revenue Cloud
+→ Salesforce CPQ and SAP integration successfully redesigned and went live — last project before Slalom
+→ Slalom's Revenue Cloud delivery practice enhanced with repeatable, configurable asset
+→ Variable metal commodity pricing fully supported in CPQ without fragile workarounds
+→ Betsy's expertise in billing architecture institutionalized as practice-level intellectual property
+→ NA and Global Asia BU requirements unified into single architecture
+KEY METRICS
+→ System-governed pricing changes enabled — eliminating manual pricing updates for market-driven
+Reusable accelerator built Reduced implementation timelines Practice-level IP created
+fluctuations
+SCENARIOS & THEMES
+KEY METRICS
+Product / Accelerator Build Revenue Cloud / Billing Practice Development SaaS GTM
+Went live NA + Asia BUs Variable commodity pricing live CPQ + SAP redesigned
+SCENARIOS & THEMES
+Manufacturing / Chemicals Variable Pricing SAP Integration Global Multi-BU Rollout
+
+===== PAGE 10 / 12: Betsy_Salter_Case_Study_Portfolio_Canva_Source_Final.pdf =====
+C A S E S T U D Y # 1 9 · S T R AT E G I C A D V I S O R Y C A S E S T U D Y # 2 0 · GT M + I M P L E M E N TAT I O N
+Healthcare Company – Nasdaq Relisting Initiative Global Tech Co. – GTM Align & Usage-Based Billing
+Slalom Healthcare / Capital Markets 2023–2024 Slalom High Tech / SaaS 2023–2024
+ROLES ROLES
+Strategic Operator Quote-to-Revenue SME GTM Advisor CPQ/Billing Enablement Lead
+BUSINESS CONTE X T / PROBLEM BUSINESS CONTE X T / PROBLEM
+A healthcare company had been delisted from Nasdaq and was undertaking a post-delisting recovery and A global technology company needed to launch new products requiring usage-based pricing — a
+operational restructuring to achieve relisting. The company had limited alignment between its financial monetization model its existing systems were not equipped to support. The company's product, pricing, and
+reporting, operational systems, and execution against the requirements needed to satisfy relisting criteria — billing systems were misaligned, making it impossible to launch usage-based revenue without significant
+a high-stakes environment where operational credibility directly affected the company's ability to return to architectural redesign. The business outcome was clear: enable new revenue-generating products and bring
+public markets. them to market.
+WHAT BETSY DID WHAT BETSY DID
+Betsy served as Strategic Operator and Q2R SME, supporting the restructuring by aligning operational Betsy designed and implemented the usage-based billing and pricing model architecture, aligning product
+systems with financial reporting requirements. She built frameworks connecting system outputs to structures, pricing logic, and billing workflows end-to-end. She worked cross-functionally with Product,
+performance tracking and relisting readiness, coordinating across the CTO, Finance, and IT stakeholders to Pricing, Finance, and Billing teams to ensure the new pricing model was launch-ready, establishing a scalable
+create visibility into performance drivers and a structured approach to financial reporting. framework that could support future usage-based product expansion.
+BUSINESS OUTCOMES BUSINESS OUTCOMES
+→ Operational systems aligned with financial reporting and regulatory relisting requirements → Usage-based billing and pricing models designed and implemented — new product monetization
+enabled
+→ Performance tracking frameworks built — connecting system outputs to relisting readiness indicators
+→ New revenue-generating products launched with usage-based pricing live
+→ Cross-stakeholder coordination achieved across CTO, Finance, and IT in a high-pressure environment
+→ Scalable usage-based pricing framework established for future product expansion
+→ Improved visibility into performance drivers; structured approach to financial reporting established
+→ Cross-functional alignment achieved across Product, Pricing, and Billing
+→ CTO relationship built — 'Whoever put Betsy on this project is a genius'
+→ Slalom Partner received consistent positive feedback from the client about Betsy's leadership
+KEY METRICS
+Nasdaq relisting strategy supported CTO-level trust established Performance tracking live KEY METRICS
+New products launched Usage-based billing live Scalable pricing framework Cross-functional alignment
+CLIENT VOICE
+CLIENT VOICE
+" Whoever put Betsy on this project is a genius.
+" Betsy has won the trust of the client and maintained great working relationships with internal teams. I
+— CTO · HEALTHCARE COMPANY
+receive consistent positive feedback about Betsy's leadership.
+SCENARIOS & THEMES — SLALOM PARTNER
+Capital Markets / Relisting Healthcare Strategic Advisory C-Suite Partnership
+SCENARIOS & THEMES
+Financial Reporting Alignment
+Usage-Based Billing GTM Strategy High Tech / SaaS New Product Launch Revenue Monetization
+
+===== PAGE 11 / 12: Betsy_Salter_Case_Study_Portfolio_Canva_Source_Final.pdf =====
+C A S E S T U D Y # 2 1 · C P Q / C L M I M P L E M E N TAT I O N C A S E S T U D Y # 2 2 · P E R S O N A L V E N T U R E · A I - N AT I V E P R O D U C T
+Global Manufacturing – Quote to Revenue Transformation SaltBasin HOS (Highway Operating System) – Q2R Intelligence Layer for PE-Backed
+Slalom Manufacturing / Industrial 2023–2024 SaaS
+Salt Basin Net Works AI / Private Equity / SaaS 2024–Present
+ROLES
+CPQ/CLM Functional Lead ROLES
+BUSINESS CONTE X T / PROBLEM Founder Product Architect AI Operator
+A global manufacturing company had fragmented quoting, pricing, and contracting processes with heavy
+BUSINESS CONTE X T / PROBLEM
+reliance on manual workflows and inconsistent pricing logic across its sales, finance, and operations teams.
+PE-backed and mid-market SaaS companies consistently struggle with the same Q2R leakage scenarios —
+The manual processes were creating deal inaccuracies, slowing execution speed, and preventing consistent
+misconfigured pricing, broken renewal logic, billing gaps, siloed GTM systems — yet most lack the internal
+pricing governance — a particularly acute problem for a manufacturer with complex, configurable product
+expertise or bandwidth to diagnose them quickly. Traditional consulting engagements are expensive and
+offerings.
+slow. Betsy built SaltBasin HOS (Highway Operating System) to apply her 13 years of CPQ/CLM/RevOps
+WHAT BETSY DID expertise at AI-native speed and cost.
+Betsy redesigned quoting and contracting workflows across CPQ and CLM, configuring pricing logic, product
+WHAT BETSY DID
+models, and approval workflows from scratch. She led stakeholder alignment workshops across Sales,
+Betsy designed and built SaltBasin HOS (Highway Operating System) as an AI-native Q2R diagnostic and
+Finance, and Operations, and drove the design through to implementation — delivering a fully system-
+intelligence layer. Core design elements: a flat-fee data readiness assessment as the foot-in-door offering; an
+governed Q2R process that eliminated manual pricing dependencies.
+8-scenario Q2R leakage library with benchmarks drawn from real enterprise engagements; an EBITDA
+BUSINESS OUTCOMES recovery advisory framework; and deal qualification tools. Built using Claude Agent SDK and Cowork mode,
+→ Manual pricing processes eliminated across multiple tools — system-driven workflows live with the Strategic Operator brand and palette applied throughout.
+→ Deal accuracy improved — consistent pricing logic enforced across all quoting scenarios BUSINESS OUTCOMES
+→ AI-native Q2R diagnostic tool built, encapsulating 13 years of enterprise CPQ/CLM expertise
+→ Execution speed improved through streamlined approval and contracting workflows
+→ 8-scenario leakage library with real benchmarks — provides PE-grade diagnostic depth at AI speed
+→ Consistent pricing governance enabled — audit-grade controls on all deals
+→ Flat-fee assessment model designed to lower the barrier for PE-backed SaaS companies to engage
+→ VP of the client team recognized Betsy's contributions as exceptional
+→ Salt Basin Net Works positioned as a Strategic Operator practice with AI-native capability differentiator
+KEY METRICS
+Manual pricing eliminated Deal accuracy improved Q2R fully systemized Stakeholder workshops led KEY METRICS
+8 leakage scenarios AI-native delivery PE-grade depth $0 to live using Claude Agent SDK
+CLIENT VOICE
+SCENARIOS & THEMES
+" I cannot thank and applaud Betsy enough for her contributions on the complex deals project.
+AI Operator Product Build PE Advisory Q2R Diagnostics SaaS RevOps
+— VP · GLOBAL MANUFACTURING COMPANY
+SCENARIOS & THEMES
+Manufacturing CPQ/CLM Manual Process Elimination Deal Accuracy Workshop Facilitation
+
+===== PAGE 12 / 12: Betsy_Salter_Case_Study_Portfolio_Canva_Source_Final.pdf =====
+C A S E S T U D Y # 2 3 · P E R S O N A L V E N T U R E · A I - N AT I V E TO O L C A S E S T U D Y # 2 4 · P E R S O N A L V E N T U R E · A I - N AT I V E TO O L
+SaltBasin Distressed Intel – Real Estate Property Scorer SaltTide CHI (Credit Health Infrastructure) – Investor Advisory Tool
+Salt Basin Net Works Real Estate / AI 2024–Present Salt Basin Net Works Financial Services / AI 2024–Present
+ROLES ROLES
+Founder AI Operator Founder AI Operator
+BUSINESS CONTE X T / PROBLEM BUSINESS CONTE X T / PROBLEM
+Real estate PE advisory firms (e.g., Aharonoff Investments) need to efficiently score and qualify distressed Investor advisory interactions require absolute precision in language — the difference between 'this
+property opportunities across a large pipeline — identifying which underutilized assets warrant deeper investment has performed well' and 'this investment has outperformed its benchmark by X% on a risk-
+diligence and capital deployment. Traditional approaches are manual, time-consuming, and subjective. adjusted basis' is legally and reputationally material. Betsy built SaltTide CHI (Credit Health Infrastructure) to
+Betsy's accounting background, financial modeling capability, and first-principles thinking made this an ideal provide structured, investor-grade Q&A capability with legally precise language standards baked into the
+AI application. tool's core design.
+WHAT BETSY DID WHAT BETSY DID
+Betsy designed and built an AI-powered distressed property scoring tool under Salt Basin Net Works. The Betsy designed and built SaltTide CHI (Credit Health Infrastructure) as an AI-powered investor Q&A and
+tool applies financial analysis frameworks to surface underutilized asset pipeline opportunities, qualifies advisory tool with legally critical language standards. The tool is designed to produce structured, investor-
+properties against investment criteria, and provides a structured scoring output that supports real estate PE grade analysis with language precision required for PE and investment advisory contexts. Built under Salt
+advisory conversations. Developed as part of Betsy's positioning for real estate investment advisory roles. Basin Net Works as part of the broader AI Operator positioning.
+BUSINESS OUTCOMES BUSINESS OUTCOMES
+→ AI-powered property scoring tool built — first-principles financial analysis applied to real estate → AI-powered investor advisory tool built with legally precise language standards
+→ Positions Betsy credibly for real estate PE advisory roles with a live, demonstrable capability → Structured investor-grade Q&A capability — language precision enforced by design
+→ Demonstrates AI Operator skill set applied to a new industry vertical → Expands Salt Basin Net Works' AI tool portfolio into financial advisory
+→ Cover letter to Aharonoff Investments backed by actual AI-built tool, not just narrative → Demonstrates AI Operator depth in high-compliance, legally sensitive domain
+KEY METRICS KEY METRICS
+AI tool live New industry vertical PE advisory positioning AI tool live Legally precise language PE advisory capable
+SCENARIOS & THEMES SCENARIOS & THEMES
+AI Operator Real Estate PE Advisory Financial Modeling New Vertical AI Operator Financial Services PE Advisory Investor Relations Compliance-Grade Precision

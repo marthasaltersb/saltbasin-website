@@ -244,17 +244,17 @@ export default function PublicProfile() {
   ` : '';
 
   return (
-    <div className="sb-member-profile-root">
+    <div className="sb-member-profile-root" data-theme={config?.theme || 'strategic'}>
       {brandCss && <style>{brandCss}</style>}
 
       <nav
         style={{
           position: 'sticky',
           top: 0,
-          background: 'rgba(27,42,59,0.97)',
+          background: 'color-mix(in srgb, var(--sb-navy) 97%, transparent)',
           backdropFilter: 'blur(8px)',
           padding: '1rem 2.5rem',
-          borderBottom: '0.5px solid rgba(232,221,208,0.12)',
+          borderBottom: '0.5px solid color-mix(in srgb, var(--sb-cream) 12%, transparent)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -359,7 +359,7 @@ function ProfileNav({ navItems, slug, wantSlug }) {
               {item.group} <span style={{ fontSize: '0.55rem' }}>{isOpen ? '▲' : '▼'}</span>
             </button>
             {isOpen && (
-              <div style={{ position: 'absolute', right: 0, top: '100%', background: 'rgba(27,42,59,0.98)', backdropFilter: 'blur(8px)', border: '0.5px solid rgba(196,132,58,0.2)', borderRadius: 'var(--sb-radius)', padding: '0.4rem 0', minWidth: 160, zIndex: 200 }}>
+              <div style={{ position: 'absolute', right: 0, top: '100%', background: 'color-mix(in srgb, var(--sb-navy) 98%, transparent)', backdropFilter: 'blur(8px)', border: '0.5px solid color-mix(in srgb, var(--sb-gold) 20%, transparent)', borderRadius: 'var(--sb-radius)', padding: '0.4rem 0', minWidth: 160, zIndex: 200 }}>
                 {item.pages.map(([k, p]) => {
                   const href = p.slug ? `/u/${slug}/${p.slug}` : `/u/${slug}`;
                   const active = (p.slug || '') === wantSlug;

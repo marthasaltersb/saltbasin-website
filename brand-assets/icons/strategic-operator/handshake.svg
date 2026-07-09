@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="256" height="256">
+  <title>Handshake — Partnership / PE Deal</title>
+  <path d="M4 20 L13 12 L21 18 L18 22 L13 18 L8 23 V30 L4 26 Z" stroke="#C4843A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M44 20 L35 12 L27 18 L30 22 L35 18 L40 23 V30 L44 26 Z" stroke="#C4843A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M18 22 L22 26 C23.2 27.2 25 27.2 26.2 26 L30 22" stroke="#C4843A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M21 25 L25.5 29.5" stroke="#C4843A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

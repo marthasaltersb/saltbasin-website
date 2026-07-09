@@ -20,17 +20,20 @@ const h = {
   page: { padding: '1.5rem', overflowY: 'auto', height: '100%', color: 'var(--herq-text, #1A1A1A)' },
   eyebrow: { fontSize: '0.6rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--herq-accent, #E8407A)', fontFamily: 'var(--sb-font-label)', marginBottom: '0.25rem' },
   title: { fontSize: '1.5rem', fontFamily: 'var(--sb-font-display)', fontWeight: 700, color: 'var(--herq-text, #1A1A1A)', marginBottom: '1.25rem' },
+  // Hot Pink (--herq-accent) is a mark/border color only — never a fill. Active
+  // and primary states use teal as the fill and a pink bottom-border as the mark.
   subTab: (active) => ({
     padding: '0.35rem 0.85rem', fontSize: '0.72rem', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.1em', textTransform: 'uppercase',
-    background: active ? 'var(--herq-accent, #E8407A)' : 'transparent',
+    background: active ? 'var(--herq-teal, #4A7C8E)' : 'transparent',
     color: active ? '#fff' : 'var(--herq-teal, #4A7C8E)',
-    border: `0.5px solid ${active ? 'var(--herq-accent, #E8407A)' : 'rgba(74,124,142,0.3)'}`,
+    border: `0.5px solid ${active ? 'var(--herq-teal, #4A7C8E)' : 'rgba(74,124,142,0.3)'}`,
+    borderBottom: active ? '2px solid var(--herq-accent, #E8407A)' : undefined,
     borderRadius: 2, cursor: 'pointer',
   }),
   card: { background: 'rgba(0,0,0,0.04)', border: '0.5px solid rgba(0,0,0,0.1)', borderRadius: 4, padding: '1rem' },
   label: { fontSize: '0.62rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--herq-teal, #4A7C8E)', fontFamily: 'var(--sb-font-label)', display: 'block', marginBottom: '0.3rem' },
   input: { width: '100%', background: 'rgba(255,255,255,0.8)', border: '0.5px solid rgba(0,0,0,0.15)', borderRadius: 2, padding: '0.45rem 0.7rem', color: 'var(--herq-text, #1A1A1A)', fontSize: '0.85rem', fontFamily: 'var(--sb-font-body)' },
-  btn: (primary) => ({ padding: '0.45rem 1.1rem', background: primary ? 'var(--herq-accent, #E8407A)' : 'transparent', color: primary ? '#fff' : 'var(--herq-teal, #4A7C8E)', border: `0.5px solid ${primary ? 'var(--herq-accent, #E8407A)' : 'rgba(74,124,142,0.4)'}`, borderRadius: 2, fontSize: '0.78rem', cursor: 'pointer', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.08em' }),
+  btn: (primary) => ({ padding: '0.45rem 1.1rem', background: primary ? 'var(--herq-teal, #4A7C8E)' : 'transparent', color: primary ? '#fff' : 'var(--herq-teal, #4A7C8E)', border: `0.5px solid ${primary ? 'var(--herq-accent, #E8407A)' : 'rgba(74,124,142,0.4)'}`, borderRadius: 2, fontSize: '0.78rem', cursor: 'pointer', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.08em' }),
 };
 
 // ── Series colors ──

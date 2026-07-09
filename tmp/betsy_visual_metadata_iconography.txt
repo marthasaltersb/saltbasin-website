@@ -1,0 +1,89 @@
+
+--- PAGE 1 ---
+CANVA VISUAL SOURCE COMPANION 01 / 04
+Betsy Salter - Visual Metadata Map
+Iconography and graphic cues for executive resume synthesis
+50 24 24 10 24
+SKILLS PROJECTS CASE STUDIES ROLES TOOLS
+Recommended Canva use $ Q2C / O2C
+Upload this companion with the two source PDFs. Ask Canva to borrow the icon language, metadata
+grouping, and executive color system while synthesizing the actual resume copy from the evidence
+documents.
+Quality Systems
+STRATEGIC
+OPERATOR
+Process PE Value
+AI-Native
+Revenue Ops Spine Transformation Engine PE Operator Lens AI Product Layer
+$
+Quote-to-cash, order-to-cash, CPQ, Discovery, requirements, process Portfolio systems, M&A integration, SaltBasin HOS, SaltTide CHI, tooling,
+CLM, billing, revenue recognition. design, integrations, QA, rollout. exit readiness, ARR and value data products, operator automation.
+creation.
+Source: Betsy Salter career master and case study portfolio PDFs Visual metadata companion - page 1
+
+--- PAGE 2 ---
+CANVA VISUAL SOURCE COMPANION 02 / 04
+Metadata Taxonomy
+What the source files are already encoding visually and structurally
+Employer Industry Scenario
+Company context: Blackbaud, Accenture, Vista, TIBCO, Domain surface area: EdTech, PE portfolio SaaS, Use-case tags: CPQ implementation, M&A integration,
+PwC, Slalom, Salt Basin. GovTech, FinOps, HR tech, AI, healthcare. exit readiness, ARR automation, AI operator.
+Role Metric Evidence
+$
+Positioning metadata: SME, lead, architect, operator, Quantified evidence: program size, ARR, exits, Resume language, deliverables, testimonials, project
+founder, advisor, project coordinator. stakeholders, resources, integrations, SKUs. scale, role history, tool stack.
+Top Case Scenarios Skill Categories Project Industries
+PE Portfolio Operations 4 Business Process Design 7 Education Publishing 4
+AI Operator 3 CRM & CPQ Implementation 4 AdTech / Digital Advertising M 1
+PE Advisory 3 Project & Program Management 4 AI / Private Equity / SaaS 1
+Business Process Discovery 2 Quote-to-Cash / Revenue Operat 4 Consumer Goods / CPG (Netherla 1
+CPQ Implementation 2 Training & Change Management 4 Data Analytics / Technology 1
+Exit Readiness 2 Data & MDM 3 DevOps / IT Operations 1
+Global Rollout 2 Financial Strategy & Advisory 3 Enterprise Software (Internal 1
+M&A Integration 2 Integration Design 3 Financial Services / AI 1
+Manual Process Elimination 2 Pricing Strategy & Product Cat 3 FinOps / Technology Management 1
+Design recommendation
+Use icons as small metadata anchors beside bullets: revenue for quantified business impact, systems for platform architecture, process for transformation work, data for integrations and
+analytics, PE for portfolio value creation, and AI for Salt Basin product/operator work.
+Source: Betsy Salter career master and case study portfolio PDFs Visual metadata companion - page 2
+
+--- PAGE 3 ---
+CANVA VISUAL SOURCE COMPANION 03 / 04
+Capability And Evidence Graphic Kit
+Reusable icon set, visual legend, and quantified proof cues
+Revenue Systems Process Data
+$
+Q2C, O2C, CPQ, CLM, billing, ARR, CRM, ERP, integrations, enterprise Discovery, L3 flows, requirements, Migration, product data, analytics,
+ASC606 architecture rollout reporting
+PE Value AI Native Leadership Quality
+M&A, exit readiness, portfolio operations SaltBasin HOS, SaltTide CHI, product SME, advisor, team lead, operator QA architecture, dependency
+automation judgment management, UAT
+Quantified proof badges
+$50M+ program $60M+ program $500M+ ARR automated $1.94B to $4.6B exit 2M+ ISBNs 25+ stakeholder surveys 12 integrations designed
+6 Excel sheets eliminated 10-person team 4 Vista portfolio companies
+Resume section pairing
+Executive Summary Leadership + Revenue + AI Native
+Selected Impact Revenue + PE Value + Quality
+Systems Expertise Systems + Data + Process
+Portfolio Appendix Employer + Industry + Scenario chips
+Source: Betsy Salter career master and case study portfolio PDFs Visual metadata companion - page 3
+
+--- PAGE 4 ---
+CANVA VISUAL SOURCE COMPANION 04 / 04
+Canva Prompt Addendum
+Attach this page's language when asking Canva to use the visual companion
+Suggested add-on prompt
+Use the uploaded Visual Metadata Iconography Companion as the design vocabulary for the resume package. Do not copy it as a page layout. Borrow its executive
+palette, icon meanings, metadata chips, quantified proof badges, and capability-map structure.
+Represent metadata visually:
+Use small line icons beside bullets to show evidence type: revenue impact, systems architecture, process design, data/integration work, PE value creation,
+AI-native product/operator work, leadership, and QA.
+Use compact chips for employer, industry, scenario, role, and metric metadata.
+Turn dense evidence into clean callout badges where the source files include measurable scale, ARR, program size, exits, stakeholder counts, integrations, team
+size, or product volume.
+Keep the tone premium, executive, precise, and non-decorative. Use white background, deep navy, muted gold, slate, and restrained green/teal accents.
+Preserve light text on dark backgrounds. Never place dark text on navy, charcoal, maroon, green, or other dark fills.
+Best additional output to keep
+This file should travel with the two evidence PDFs whenever Canva is asked for a polished resume, because it tells Canva how to render the metadata graphically without disturbing the
+source documents.
+Source: Betsy Salter career master and case study portfolio PDFs Visual metadata companion - page 4

@@ -1,0 +1,486 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Salt Basin Business Definition Ontology Package",
+  "type": "object",
+  "required": [
+    "packageId",
+    "packageVersion",
+    "createdAt",
+    "clientContext",
+    "domains",
+    "journeys",
+    "scenarios"
+  ],
+  "properties": {
+    "packageId": { "type": "string" },
+    "packageVersion": { "type": "string" },
+    "createdAt": { "type": "integer", "description": "Epoch milliseconds." },
+    "clientContext": { "$ref": "#/$defs/clientContext" },
+    "sourceArtifacts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/sourceArtifact" }
+    },
+    "domains": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/domain" }
+    },
+    "journeys": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/journey" }
+    },
+    "scenarios": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/scenario" }
+    },
+    "stageGates": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/stageGate" }
+    },
+    "metadataChips": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/metadataChip" }
+    },
+    "businessRules": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/businessRule" }
+    },
+    "dataElements": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/dataElement" }
+    },
+    "productDefinitions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/productDefinition" }
+    },
+    "billingObligationAllocations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/billingObligationAllocation" }
+    },
+    "systemsMap": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/systemMapEntry" }
+    },
+    "dataBasinBridge": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/dataBasinBridgeEntry" }
+    },
+    "outputSpecs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/outputSpec" }
+    },
+    "approvals": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/approval" }
+    }
+  },
+  "$defs": {
+    "clientContext": {
+      "type": "object",
+      "required": ["clientId", "clientName", "industry", "businessModel"],
+      "properties": {
+        "clientId": { "type": "string" },
+        "clientName": { "type": "string" },
+        "industry": { "type": "string" },
+        "businessModel": { "type": "string" },
+        "systemsInScope": { "type": "array", "items": { "type": "string" } },
+        "outputsInScope": { "type": "array", "items": { "type": "string" } },
+        "migrationIntent": {
+          "enum": ["map_only", "bridge_and_write_back", "bridge_then_migrate", "unified_hub"]
+        },
+        "sensitivity": {
+          "enum": ["public_safe", "internal", "restricted", "confidential", "quarantine"]
+        }
+      }
+    },
+    "sourceArtifact": {
+      "type": "object",
+      "required": ["sourceId", "sourceType", "title", "evidenceStatus"],
+      "properties": {
+        "sourceId": { "type": "string" },
+        "sourceType": {
+          "enum": [
+            "interview_note",
+            "process_doc",
+            "salesforce_metadata",
+            "salesforce_export",
+            "cpq_export",
+            "clm_export",
+            "billing_export",
+            "erp_export",
+            "warehouse_table",
+            "spreadsheet",
+            "proposal_template",
+            "contract_template",
+            "invoice_template",
+            "report_template",
+            "pricing_model",
+            "exception_log",
+            "generated_output"
+          ]
+        },
+        "title": { "type": "string" },
+        "pathOrUrl": { "type": ["string", "null"] },
+        "capturedAt": { "type": ["integer", "null"] },
+        "owner": { "type": ["string", "null"] },
+        "evidenceStatus": {
+          "enum": ["verified_current", "verified_historical", "modeled_assumption", "pending_review", "unsupported"]
+        }
+      }
+    },
+    "domain": {
+      "type": "object",
+      "required": ["domainId", "name"],
+      "properties": {
+        "domainId": { "type": "string" },
+        "name": {
+          "enum": [
+            "Revenue Lifecycle",
+            "Customer Lifecycle",
+            "Member Lifecycle",
+            "Product Lifecycle",
+            "Financial Lifecycle",
+            "Operational Lifecycle",
+            "DataBasin Bridge"
+          ]
+        },
+        "description": { "type": ["string", "null"] },
+        "owner": { "type": ["string", "null"] }
+      }
+    },
+    "journey": {
+      "type": "object",
+      "required": ["journeyId", "domainId", "journeyType", "name"],
+      "properties": {
+        "journeyId": { "type": "string" },
+        "domainId": { "type": "string" },
+        "journeyType": {
+          "enum": [
+            "revenue_lifecycle_token",
+            "customer_journey_token",
+            "member_journey_token",
+            "product_definition_token",
+            "pricing_version_token",
+            "contract_obligation_token",
+            "financial_transaction_token",
+            "resource_contribution_token",
+            "confidence_reconciliation_token"
+          ]
+        },
+        "name": { "type": "string" },
+        "standardStages": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/journeyStage" }
+        },
+        "defaultStageWeights": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/stageWeight" }
+        }
+      }
+    },
+    "journeyStage": {
+      "type": "object",
+      "required": ["stageId", "name", "sequence"],
+      "properties": {
+        "stageId": { "type": "string" },
+        "name": { "type": "string" },
+        "sequence": { "type": "integer" },
+        "description": { "type": ["string", "null"] }
+      }
+    },
+    "stageWeight": {
+      "type": "object",
+      "required": ["stageId", "weight"],
+      "properties": {
+        "stageId": { "type": "string" },
+        "weight": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "scenario": {
+      "type": "object",
+      "required": ["scenarioId", "journeyId", "title", "scenarioFamily", "status"],
+      "properties": {
+        "scenarioId": { "type": "string" },
+        "journeyId": { "type": "string" },
+        "title": { "type": "string" },
+        "scenarioFamily": {
+          "enum": [
+            "brand_new_sale",
+            "existing_customer_change",
+            "renewal",
+            "expansion",
+            "cancellation",
+            "parent_pricing_agreement",
+            "child_org_purchase_under_parent_terms",
+            "member_direct_purchase_under_group_eligibility",
+            "free_tier_to_paid_conversion",
+            "usage_based_billing_activation",
+            "contract_amendment",
+            "product_migration",
+            "partner_sale",
+            "reseller_sale",
+            "merger_or_acquisition",
+            "custom"
+          ]
+        },
+        "triggerEvent": { "type": ["string", "null"] },
+        "entryCriteria": { "type": "array", "items": { "type": "string" } },
+        "exitCriteria": { "type": "array", "items": { "type": "string" } },
+        "happyPath": { "type": "array", "items": { "type": "string" } },
+        "exceptions": { "type": "array", "items": { "type": "string" } },
+        "requiredParties": { "type": "array", "items": { "type": "string" } },
+        "requiredSystems": { "type": "array", "items": { "type": "string" } },
+        "requiredOutputs": { "type": "array", "items": { "type": "string" } },
+        "inheritedStageIds": { "type": "array", "items": { "type": "string" } },
+        "disabledStageIds": { "type": "array", "items": { "type": "string" } },
+        "stageOverrides": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/stageOverride" }
+        },
+        "relevanceScore": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "confidenceScore": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "status": {
+          "enum": ["candidate", "accepted", "rejected", "merged", "draft", "approved", "deprecated"]
+        }
+      }
+    },
+    "stageOverride": {
+      "type": "object",
+      "required": ["stageId"],
+      "properties": {
+        "stageId": { "type": "string" },
+        "enabled": { "type": "boolean" },
+        "sequence": { "type": ["integer", "null"] },
+        "weight": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "reason": { "type": ["string", "null"] }
+      }
+    },
+    "stageGate": {
+      "type": "object",
+      "required": ["stageGateId", "scenarioId", "stageId", "name"],
+      "properties": {
+        "stageGateId": { "type": "string" },
+        "scenarioId": { "type": "string" },
+        "stageId": { "type": "string" },
+        "name": { "type": "string" },
+        "purpose": { "type": ["string", "null"] },
+        "entryCriteria": { "type": "array", "items": { "type": "string" } },
+        "exitCriteria": { "type": "array", "items": { "type": "string" } },
+        "requiredMetadataChipIds": { "type": "array", "items": { "type": "string" } },
+        "generatedMetadataChipIds": { "type": "array", "items": { "type": "string" } },
+        "businessRuleIds": { "type": "array", "items": { "type": "string" } },
+        "revenueOutput": { "type": ["string", "null"] },
+        "customerOutput": { "type": ["string", "null"] },
+        "memberOutput": { "type": ["string", "null"] },
+        "sourceSystemIds": { "type": "array", "items": { "type": "string" } },
+        "targetSystemIds": { "type": "array", "items": { "type": "string" } },
+        "computedStatus": { "enum": ["not_started", "blocked", "in_progress", "complete", "validated"] }
+      }
+    },
+    "metadataChip": {
+      "type": "object",
+      "required": ["chipId", "chipType", "name"],
+      "properties": {
+        "chipId": { "type": "string" },
+        "chipType": {
+          "enum": [
+            "customer_identity",
+            "payer_identity",
+            "member_eligibility",
+            "product_version",
+            "pricing_version",
+            "contract_obligation",
+            "billing_trigger",
+            "performance_obligation",
+            "revenue_recognition",
+            "payment_credential",
+            "renewal_notice",
+            "support_entitlement",
+            "reconciliation_confidence",
+            "custom"
+          ]
+        },
+        "name": { "type": "string" },
+        "owner": { "type": ["string", "null"] },
+        "sourceObject": { "type": ["string", "null"] },
+        "sourceFields": { "type": "array", "items": { "type": "string" } },
+        "currentState": { "type": ["string", "null"] },
+        "stageGateId": { "type": ["string", "null"] },
+        "parentChipIds": { "type": "array", "items": { "type": "string" } },
+        "childChipIds": { "type": "array", "items": { "type": "string" } },
+        "transformationRule": { "type": ["string", "null"] },
+        "validationStatus": { "enum": ["unknown", "pending", "valid", "invalid", "exception"] },
+        "confidenceScore": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "tokenLinks": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "businessRule": {
+      "type": "object",
+      "required": ["ruleId", "ruleType", "plainLanguageRule"],
+      "properties": {
+        "ruleId": { "type": "string" },
+        "ruleType": {
+          "enum": [
+            "eligibility",
+            "identity",
+            "pricing",
+            "discount",
+            "approval",
+            "contract_obligation",
+            "billing_trigger",
+            "performance_obligation",
+            "revenue_recognition",
+            "renewal",
+            "payment",
+            "entitlement",
+            "reconciliation",
+            "disclosure",
+            "exception_routing",
+            "custom"
+          ]
+        },
+        "plainLanguageRule": { "type": "string" },
+        "deterministicLogic": { "type": ["string", "null"] },
+        "sourceDataElementIds": { "type": "array", "items": { "type": "string" } },
+        "targetDataElementIds": { "type": "array", "items": { "type": "string" } },
+        "applicableScenarioIds": { "type": "array", "items": { "type": "string" } },
+        "exceptions": { "type": "array", "items": { "type": "string" } },
+        "approvalOwner": { "type": ["string", "null"] },
+        "testCases": { "type": "array", "items": { "type": "string" } },
+        "confidenceScore": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "version": { "type": ["string", "null"] }
+      }
+    },
+    "dataElement": {
+      "type": "object",
+      "required": ["dataElementId", "canonicalName", "dataType"],
+      "properties": {
+        "dataElementId": { "type": "string" },
+        "canonicalName": { "type": "string" },
+        "dataType": { "type": "string" },
+        "sourceSystem": { "type": ["string", "null"] },
+        "sourceObject": { "type": ["string", "null"] },
+        "sourceField": { "type": ["string", "null"] },
+        "targetSystem": { "type": ["string", "null"] },
+        "targetObject": { "type": ["string", "null"] },
+        "targetField": { "type": ["string", "null"] },
+        "required": { "type": "boolean" },
+        "sensitivity": {
+          "enum": ["public_safe", "internal", "restricted", "confidential", "quarantine"]
+        },
+        "sourceOfTruthStatus": {
+          "enum": ["authoritative", "candidate", "derived", "manual", "unknown"]
+        }
+      }
+    },
+    "productDefinition": {
+      "type": "object",
+      "required": ["productDefinitionId", "productName", "productVersion"],
+      "properties": {
+        "productDefinitionId": { "type": "string" },
+        "productName": { "type": "string" },
+        "productVersion": { "type": "string" },
+        "pricingVersionIds": { "type": "array", "items": { "type": "string" } },
+        "allowedContractStructures": { "type": "array", "items": { "type": "string" } },
+        "allowedBillingFrequencies": { "type": "array", "items": { "type": "string" } },
+        "allowedBillingTiming": { "type": "array", "items": { "type": "string" } },
+        "allowedPaymentMethods": { "type": "array", "items": { "type": "string" } },
+        "allowedCollectionMethods": { "type": "array", "items": { "type": "string" } },
+        "allowedPerformanceObligations": { "type": "array", "items": { "type": "string" } },
+        "allowedAllocationMethods": { "type": "array", "items": { "type": "string" } },
+        "allowedRecognitionTriggers": { "type": "array", "items": { "type": "string" } },
+        "renewalRules": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "billingObligationAllocation": {
+      "type": "object",
+      "required": ["allocationId", "billingEvent", "performanceObligation", "allocationMethod"],
+      "properties": {
+        "allocationId": { "type": "string" },
+        "productDefinitionId": { "type": ["string", "null"] },
+        "scenarioId": { "type": ["string", "null"] },
+        "billingEvent": { "type": "string" },
+        "performanceObligation": { "type": "string" },
+        "allocationMethod": { "type": "string" },
+        "allocationPercent": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "recognitionTrigger": { "type": ["string", "null"] }
+      }
+    },
+    "systemMapEntry": {
+      "type": "object",
+      "required": ["systemMapId", "systemName", "objectName", "fieldName"],
+      "properties": {
+        "systemMapId": { "type": "string" },
+        "systemName": { "type": "string" },
+        "systemRole": {
+          "enum": ["system_of_record", "source", "target", "reporting", "manual", "temporary", "deprecated"]
+        },
+        "objectName": { "type": "string" },
+        "fieldName": { "type": "string" },
+        "processStep": { "type": ["string", "null"] },
+        "writeBackRequired": { "type": "boolean" },
+        "readOnlyRequired": { "type": "boolean" },
+        "reportingDependency": { "type": ["string", "null"] },
+        "migrationStatus": {
+          "enum": ["retain", "bridge", "migrate", "deprecate", "unknown"]
+        }
+      }
+    },
+    "dataBasinBridgeEntry": {
+      "type": "object",
+      "required": ["bridgeId", "sourceSystem", "sourceObject", "persistenceTarget"],
+      "properties": {
+        "bridgeId": { "type": "string" },
+        "sourceSystem": { "type": "string" },
+        "sourceObject": { "type": "string" },
+        "sourceField": { "type": ["string", "null"] },
+        "persistenceTarget": { "type": "string" },
+        "bridgeMode": {
+          "enum": ["snapshot", "stream", "batch", "write_back", "dual_write", "manual_load"]
+        },
+        "cleansingRuleIds": { "type": "array", "items": { "type": "string" } },
+        "reconciliationRuleIds": { "type": "array", "items": { "type": "string" } },
+        "retentionRequirement": { "type": ["string", "null"] }
+      }
+    },
+    "outputSpec": {
+      "type": "object",
+      "required": ["outputSpecId", "outputType", "audience"],
+      "properties": {
+        "outputSpecId": { "type": "string" },
+        "outputType": {
+          "enum": [
+            "business_definition_spec",
+            "business_rule_design_spec",
+            "proposal",
+            "snowball_reporting_analysis",
+            "executive_ready_output",
+            "investment_thesis",
+            "quarterly_report",
+            "financial_statement_support",
+            "reconciliation_confidence_scorecard",
+            "data_reconciliation_disclosure",
+            "risk_register"
+          ]
+        },
+        "audience": { "type": "array", "items": { "type": "string" } },
+        "scenarioIds": { "type": "array", "items": { "type": "string" } },
+        "requiredDataElementIds": { "type": "array", "items": { "type": "string" } },
+        "requiredRuleIds": { "type": "array", "items": { "type": "string" } },
+        "approvalRequired": { "type": "boolean" }
+      }
+    },
+    "approval": {
+      "type": "object",
+      "required": ["approvalId", "objectType", "objectId", "status"],
+      "properties": {
+        "approvalId": { "type": "string" },
+        "objectType": { "type": "string" },
+        "objectId": { "type": "string" },
+        "owner": { "type": ["string", "null"] },
+        "status": { "enum": ["not_requested", "pending", "approved", "rejected", "needs_revision"] },
+        "approvedAt": { "type": ["integer", "null"] },
+        "notes": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

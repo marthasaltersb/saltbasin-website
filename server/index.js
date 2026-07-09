@@ -36,6 +36,7 @@ import resumeAccessRouter from './routes/resumeAccess.js';
 import outputTemplatesRouter from './routes/outputTemplates.js';
 import careerMasterRouter from './routes/careerMaster.js';
 import portfolioRequestsRouter from './routes/portfolioRequests.js';
+import bestyStaffRouter from './routes/bestyStaff.js';
 import lineageRouter from './routes/lineage.js';
 import methodologyStatsRouter from './routes/methodologyStats.js';
 
@@ -94,6 +95,9 @@ app.use('/api/methodology-stats', methodologyStatsRouter);
 app.use('/api/qa', qaRouter);
 app.use('/api/jira', jiraRouter);
 app.use('/api/member-templates', memberTemplatesRouter);
+// BestyStaff intake agent is PUBLIC (anonymous teaser visitors) — must mount
+// before /api/agent, whose router is admin-gated at the top.
+app.use('/api/agent/bestystaff', bestyStaffRouter);
 app.use('/api/agent', agentRouter);
 app.use('/api/members/me/agent', memberAgentRouter);
 app.use('/api/events', eventsRouter);
@@ -135,9 +139,8 @@ app.get('/api/health', async (req, res) => {
 app.post('/api/agent/edit', (req, res) =>
   res.status(501).json({ error: 'editor agent not enabled yet (Phase 3)' })
 );
-app.post('/api/agent/bestystaff', (req, res) =>
-  res.status(501).json({ error: 'BestyStaff not enabled yet (Phase 5)' })
-);
+// /api/agent/bestystaff is live — mounted above, before the admin-gated
+// /api/agent router (former Phase 5 stub).
 
 // Serve the built React app in production. Single-origin = no CORS surprises.
 if (isProd) {

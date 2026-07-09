@@ -329,7 +329,13 @@ function EditModal({ schema, item, onSave, onDelete, onClose, saving, metaOption
   );
 }
 
-export default function CareerMasterPanel() {
+// Multi-tenant: every member owns their own Career Master data (jobs,
+// skills, tools, engagements, domains, certifications, deals). Meta Options
+// stays admin-only server-side (shared, admin-curated vocabulary) — hide
+// that tab in member scope rather than let its list() 403 and break the
+// whole panel's Promise.all load.
+export default function CareerMasterPanel({ scope = 'member' }) {
+  const visibleTabs = scope === 'admin' ? TABS : TABS.filter((t) => t.id !== 'metaOptions');
   const [activeTab, setActiveTab] = useState('skills');
   const [rows, setRows] = useState({});
   const [loading, setLoading] = useState(true);
@@ -339,7 +345,7 @@ export default function CareerMasterPanel() {
   async function loadAll() {
     setLoading(true);
     try {
-      const entries = await Promise.all(TABS.map(async (t) => [t.id, (await SCHEMAS[t.id].list()).items || []]));
+      const entries = await Promise.all(visibleTabs.map(async (t) => [t.id, (await SCHEMAS[t.id].list()).items || []]));
       setRows(Object.fromEntries(entries));
     } catch (e) {
       toast('Failed to load career master data: ' + e.message);
@@ -347,7 +353,7 @@ export default function CareerMasterPanel() {
       setLoading(false);
     }
   }
-  useEffect(() => { loadAll(); }, []);
+  useEffect(() => { loadAll(); }, [scope]);
 
   const totalRows = useMemo(() => Object.values(rows).reduce((sum, arr) => sum + (arr?.length || 0), 0), [rows]);
 
@@ -413,7 +419,7 @@ export default function CareerMasterPanel() {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
           <div style={S.tabBar}>
-            {TABS.map((t) => (
+            {visibleTabs.map((t) => (
               <button key={t.id} style={S.tabBtn(activeTab === t.id)} onClick={() => setActiveTab(t.id)}>
                 {t.label} ({(rows[t.id] || []).length})
               </button>

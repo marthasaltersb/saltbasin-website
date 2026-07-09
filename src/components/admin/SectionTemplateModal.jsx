@@ -112,6 +112,17 @@ export const TEMPLATE_CATEGORIES = [
         defaultCols: 3,
       },
       {
+        id: 'careerExplorer', type: 'careerExplorer', label: 'Career Explorer', icon: '🔎',
+        desc: 'Public, searchable widget over your Career Master data — skills, case studies, tools, and rollup stats.',
+        accent: '#02a1a6',
+        fields: {
+          eyebrow: 'Career Database',
+          heading: 'Explore My Career Master Database',
+          intro: 'Search skills, case studies, and tools — all rolled up live from actual engagement data.',
+        },
+        defaultCols: 1,
+      },
+      {
         id: 'technology', type: 'technology', label: 'Technology', icon: '⚙️',
         desc: 'Technology stack grouped by hands-on, integration, and adjacent.',
         accent: '#5271ff',
@@ -333,6 +344,61 @@ export const TEMPLATE_CATEGORIES = [
         desc: 'Drag-and-drop AI output builder with audience targeting.',
         accent: '#c4843a',
         fields: { heading: 'Generate Output', intro: 'Select content blocks and generate a tailored document.', defaultOutputType: 'one-pager' },
+        defaultCols: 1,
+      },
+    ],
+  },
+  {
+    id: 'smart-graphics',
+    label: 'Smart Graphics',
+    icon: '🧭',
+    templates: [
+      {
+        id: 'accentStatCards', type: 'accentStatCards', label: 'Accent Stat Cards', icon: '🧭',
+        desc: 'Icon + big number cards with a colored top accent bar and citation line.',
+        accent: '#C4843A',
+        fields: {
+          eyebrow: 'By the Numbers',
+          heading: 'Key Outcomes',
+          statCards: [
+            { icon: 'exit', value: '$4.6B', label: 'Exit Value', caption: 'One-line context for this stat.', source: 'Source, Year', accent: 'gold' },
+            { icon: 'pipeline', value: '$500M+', label: 'Revenue Automated', caption: 'One-line context for this stat.', source: 'Source, Year', accent: 'teal' },
+            { icon: 'portfolio', value: '4', label: 'Portfolio Transformations', caption: 'One-line context for this stat.', source: 'Source, Year', accent: 'pink' },
+          ],
+        },
+        defaultCols: 3,
+      },
+      {
+        id: 'cascadeFlow', type: 'cascadeFlow', label: 'Cascade Flow', icon: '➡️',
+        desc: 'Arrow-connected step cards showing a chain reaction, with a summary callout.',
+        accent: '#4A7C8E',
+        fields: {
+          eyebrow: 'How It Breaks',
+          heading: 'The Cascade',
+          cascadeSteps: [
+            { icon: 'magnifier', title: 'Step one', description: 'What happens first.', accent: 'teal' },
+            { icon: 'graph', title: 'Step two', description: 'What happens next.', accent: 'gold' },
+            { icon: 'shield', title: 'Step three', description: 'The consequence.', accent: 'pink' },
+          ],
+          summary: 'We intervene at step one — before the cascade starts.',
+          summaryIcon: 'compass',
+        },
+        defaultCols: 1,
+      },
+      {
+        id: 'architectureSteps', type: 'architectureSteps', label: 'Architecture Steps', icon: '🔢',
+        desc: 'Numbered vertical flow with connecting line — click a step to expand it.',
+        accent: '#4A7C8E',
+        fields: {
+          eyebrow: 'How It Works',
+          heading: 'Under the Hood',
+          collapsible: false,
+          steps: [
+            { title: 'Step one title', description: 'What happens in this step.' },
+            { title: 'Step two title', description: 'What happens in this step.' },
+            { title: 'Step three title', description: 'What happens in this step.' },
+          ],
+        },
         defaultCols: 1,
       },
     ],

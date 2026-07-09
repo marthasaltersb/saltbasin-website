@@ -11,6 +11,7 @@ function publicConfig(config) {
     site: config.site,
     social: config.social,
     brand: config.brand,
+    theme: config.theme,
     bestystaff: config.bestystaff
       ? {
           enabled: config.bestystaff.enabled,

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="256" height="256">
+  <title>Exit — M&A / Successful Exit</title>
+  <path d="M18 6 H10 C8.9 6 8 6.9 8 8 V40 C8 41.1 8.9 42 10 42 H18" stroke="#C4843A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M27 24 H41" stroke="#C4843A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M34 17 L41 24 L34 31" stroke="#C4843A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M18 6 H27 V42 H18" stroke="#C4843A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

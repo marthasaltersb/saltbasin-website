@@ -3,6 +3,7 @@ import { styles } from './adminStyles.js';
 import { SOURCE_TYPES, TAG_CATEGORIES, MERGED_FIELD_DEFAULTS } from '../../data/capabilityTags.js';
 import SectionLayoutFields from './SectionLayoutFields.jsx';
 import ImageUploadField from './ImageUploadField.jsx';
+import IconPickerField from './IconPickerField.jsx';
 import FlexColumnsEditor, { WheelNodesEditor, FormConfig } from './FlexColumnsEditor.jsx';
 import { DEFAULT_INDUSTRY_WHEEL_NODES } from '../blocks/index.jsx';
 
@@ -672,16 +673,22 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
                 return <CaseListEditor key={k} cases={v} onChange={(next) => patchField(k, next)} />;
               }
               if (Array.isArray(v) && k === 'stats') {
-                return <StatListEditor key={k} stats={v} onChange={(next) => patchField(k, next)} />;
+                return <StatListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
               }
               if (Array.isArray(v) && k === 'steps') {
-                return <StepListEditor key={k} steps={v} onChange={(next) => patchField(k, next)} />;
+                return <StepListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
               }
               if (Array.isArray(v) && k === 'cols') {
-                return <ColListEditor key={k} cols={v} onChange={(next) => patchField(k, next)} />;
+                return <ColListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
               }
               if (Array.isArray(v) && k === 'items') {
                 return <IconItemListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'statCards') {
+                return <StatCardListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'cascadeSteps') {
+                return <CascadeStepListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
               }
               if (Array.isArray(v) && k === 'skills') {
                 return <SkillsListEditor key={k} skills={v} onChange={(next) => patchField(k, next)} />;
@@ -1315,6 +1322,29 @@ const IconItemListEditor = makeListEditor('Item', { icon: '', label: '', tooltip
   { key: 'icon', placeholder: '◆ Icon or emoji', half: true },
   { key: 'label', placeholder: 'Label', half: true },
   { key: 'tooltip', placeholder: 'Hover tooltip text', long: true },
+]);
+
+// `statCards` array for the accentStatCards block. `icon` is a brandIcons.jsx
+// icon name (shield, graph, exit, handshake, portfolio, magnifier, gear,
+// pipeline, network, brain, document, layers, compass, star, quote, check,
+// rocket, clock) — not a free-text emoji, since this block renders via
+// BrandIcon rather than raw text like iconGrid does.
+const StatCardListEditor = makeListEditor('Stat Card', { icon: '', value: '', label: '', caption: '', source: '', accent: 'gold' }, [
+  { key: 'icon', placeholder: 'Icon name (e.g. exit, graph, shield)', half: true },
+  { key: 'accent', placeholder: 'Accent: gold / teal / pink / sage', half: true },
+  { key: 'value', placeholder: 'Big value (e.g. $4.6B, 142%)' },
+  { key: 'label', placeholder: 'Label' },
+  { key: 'caption', placeholder: 'One-line context', long: true },
+  { key: 'source', placeholder: 'Source citation (optional)' },
+]);
+
+// `cascadeSteps` array for the cascadeFlow block. Same icon-name convention
+// as StatCardListEditor above.
+const CascadeStepListEditor = makeListEditor('Cascade Step', { icon: '', title: '', description: '', accent: 'teal' }, [
+  { key: 'icon', placeholder: 'Icon name (e.g. magnifier, graph)', half: true },
+  { key: 'accent', placeholder: 'Accent: gold / teal / pink / sage', half: true },
+  { key: 'title', placeholder: 'Step title' },
+  { key: 'description', placeholder: 'What happens in this step', long: true },
 ]);
 
 // ── Skills editor ─────────────────────────────────────────────────────────────

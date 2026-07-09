@@ -1,0 +1,348 @@
+{
+  "packageId": "sb-bizdef-example-parent-pricing-v1",
+  "packageVersion": "1.0.0",
+  "createdAt": 1783576800000,
+  "clientContext": {
+    "clientId": "example-client",
+    "clientName": "Example District Platform Client",
+    "industry": "Public Sector Software / Healthcare-Adjacent SaaS",
+    "businessModel": "Parent-negotiated pricing with child organization fulfillment and mixed member/end-user entitlement",
+    "systemsInScope": ["Salesforce", "CPQ", "CLM", "Billing", "DataBasin"],
+    "outputsInScope": ["business_definition_spec", "proposal", "reconciliation_confidence_scorecard"],
+    "migrationIntent": "bridge_and_write_back",
+    "sensitivity": "internal"
+  },
+  "sourceArtifacts": [
+    {
+      "sourceId": "src.note.parent-pricing-context",
+      "sourceType": "interview_note",
+      "title": "Parent pricing agreement and child organization purchase context",
+      "pathOrUrl": "C:\\Users\\mbets\\.codex\\attachments\\513e53c1-420a-4e7e-9db0-722d4839cdfd\\pasted-text.txt",
+      "capturedAt": 1783576800000,
+      "owner": "Betsy Salter",
+      "evidenceStatus": "pending_review"
+    }
+  ],
+  "domains": [
+    {
+      "domainId": "domain.revenue",
+      "name": "Revenue Lifecycle",
+      "description": "Commercial and financial journey from lead through renewal and adjustment.",
+      "owner": "Revenue Operations"
+    },
+    {
+      "domainId": "domain.member",
+      "name": "Member Lifecycle",
+      "description": "Entitled organization, site, member, individual user, or free-tier user journey.",
+      "owner": "Customer Operations"
+    },
+    {
+      "domainId": "domain.product",
+      "name": "Product Lifecycle",
+      "description": "Product definition, pricing version, allowed billing, obligation, and renewal configurations.",
+      "owner": "Product Operations"
+    }
+  ],
+  "journeys": [
+    {
+      "journeyId": "journey.revenue.standard",
+      "domainId": "domain.revenue",
+      "journeyType": "revenue_lifecycle_token",
+      "name": "Revenue Lifecycle Journey",
+      "standardStages": [
+        { "stageId": "rev.lead", "name": "Lead", "sequence": 1, "description": "Initial signal or external ingestion." },
+        { "stageId": "rev.qualification", "name": "Qualification", "sequence": 2, "description": "Qualification threshold for opportunity creation." },
+        { "stageId": "rev.opportunity", "name": "Opportunity", "sequence": 3, "description": "Commercial pursuit." },
+        { "stageId": "rev.proposal", "name": "Proposal / Quote", "sequence": 4, "description": "Pricing and scope offer." },
+        { "stageId": "rev.contract", "name": "Contract", "sequence": 5, "description": "Legally effective commercial agreement." },
+        { "stageId": "rev.order", "name": "Order / Booking", "sequence": 6, "description": "Booked commercial event." },
+        { "stageId": "rev.fulfillment", "name": "Fulfillment / Provisioning", "sequence": 7, "description": "Product/service fulfillment." },
+        { "stageId": "rev.billing", "name": "Billing", "sequence": 8, "description": "Invoice creation and billing activation." },
+        { "stageId": "rev.collection", "name": "Collection / Payment", "sequence": 9, "description": "Payment and remittance." },
+        { "stageId": "rev.recognition", "name": "Revenue Recognition", "sequence": 10, "description": "Revenue recognition against performance obligations." },
+        { "stageId": "rev.renewal", "name": "Renewal / Expansion / Termination", "sequence": 11, "description": "Lifecycle continuation or change." }
+      ],
+      "defaultStageWeights": [
+        { "stageId": "rev.lead", "weight": 0.05 },
+        { "stageId": "rev.qualification", "weight": 0.10 },
+        { "stageId": "rev.opportunity", "weight": 0.15 },
+        { "stageId": "rev.proposal", "weight": 0.15 },
+        { "stageId": "rev.contract", "weight": 0.15 },
+        { "stageId": "rev.order", "weight": 0.10 },
+        { "stageId": "rev.fulfillment", "weight": 0.10 },
+        { "stageId": "rev.billing", "weight": 0.05 },
+        { "stageId": "rev.collection", "weight": 0.05 },
+        { "stageId": "rev.recognition", "weight": 0.05 },
+        { "stageId": "rev.renewal", "weight": 0.05 }
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "scenarioId": "l2.parent_pricing_agreement.example",
+      "journeyId": "journey.revenue.standard",
+      "title": "Parent Pricing Agreement Without Direct Payment Obligation",
+      "scenarioFamily": "parent_pricing_agreement",
+      "triggerEvent": "Parent organization signs agreement that creates favorable pricing eligibility for related organizations or members.",
+      "entryCriteria": [
+        "Parent account identified",
+        "Eligible child/member population defined",
+        "Product and pricing version selected"
+      ],
+      "exitCriteria": [
+        "Eligibility and pricing rules approved",
+        "Payment obligation status defined",
+        "Child/member purchase path defined"
+      ],
+      "happyPath": [
+        "Parent signs pricing agreement",
+        "Eligible child organizations are surfaced for campaigns",
+        "Child organization creates purchase journey under inherited terms",
+        "Child sold-to/bill-to/fulfill-to relationships are captured"
+      ],
+      "exceptions": [
+        "Parent is also the paying customer",
+        "Parent negotiates terms but child signs and pays",
+        "Member purchases directly under group eligibility",
+        "Eligibility exists but no paid purchase occurs"
+      ],
+      "requiredParties": ["parent account", "child organization", "bill-to account", "member/end user"],
+      "requiredSystems": ["Salesforce", "CPQ", "CLM", "Billing", "DataBasin"],
+      "requiredOutputs": ["business_definition_spec", "proposal", "reconciliation_confidence_scorecard"],
+      "inheritedStageIds": ["rev.lead", "rev.qualification", "rev.opportunity", "rev.proposal", "rev.contract", "rev.fulfillment", "rev.billing", "rev.recognition", "rev.renewal"],
+      "disabledStageIds": [],
+      "stageOverrides": [
+        {
+          "stageId": "rev.contract",
+          "enabled": true,
+          "sequence": 5,
+          "weight": 0.20,
+          "reason": "Contract gate carries high ambiguity because signature may create eligibility instead of direct revenue."
+        }
+      ],
+      "relevanceScore": 0.92,
+      "confidenceScore": 0.72,
+      "status": "draft"
+    }
+  ],
+  "stageGates": [
+    {
+      "stageGateId": "gate.parent.contract.payment-obligation-defined",
+      "scenarioId": "l2.parent_pricing_agreement.example",
+      "stageId": "rev.contract",
+      "name": "Payment Obligation Defined",
+      "purpose": "Confirm whether the parent agreement creates a direct payment obligation or only pricing eligibility.",
+      "entryCriteria": ["Parent agreement draft or executed agreement exists"],
+      "exitCriteria": ["Payment responsibility is classified", "Child/member purchase path is documented"],
+      "requiredMetadataChipIds": ["chip.parent.identity", "chip.pricing.version"],
+      "generatedMetadataChipIds": ["chip.payment.obligation.status", "chip.member.eligibility"],
+      "businessRuleIds": ["rule.parent.signature.not-always-revenue"],
+      "revenueOutput": "Parent agreement is classified as revenue-generating or eligibility-only.",
+      "customerOutput": "Customer role is classified as payer, pricing sponsor, or both.",
+      "memberOutput": "Eligible member or child organization path is created.",
+      "sourceSystemIds": ["Salesforce", "CLM"],
+      "targetSystemIds": ["DataBasin", "Salesforce"],
+      "computedStatus": "in_progress"
+    }
+  ],
+  "metadataChips": [
+    {
+      "chipId": "chip.parent.identity",
+      "chipType": "customer_identity",
+      "name": "Parent Account Identity",
+      "owner": "Revenue Operations",
+      "sourceObject": "Salesforce Account",
+      "sourceFields": ["Account.Id", "Account.ParentId", "Account.Type"],
+      "currentState": "candidate",
+      "stageGateId": "gate.parent.contract.payment-obligation-defined",
+      "parentChipIds": [],
+      "childChipIds": ["chip.member.eligibility"],
+      "transformationRule": "Normalize account hierarchy and role classification.",
+      "validationStatus": "pending",
+      "confidenceScore": 0.70,
+      "tokenLinks": ["customer_journey_token", "member_journey_token"]
+    },
+    {
+      "chipId": "chip.pricing.version",
+      "chipType": "pricing_version",
+      "name": "Inherited Pricing Version",
+      "owner": "Deal Desk",
+      "sourceObject": "CPQ Price Rule / Quote",
+      "sourceFields": ["Quote.Pricebook2Id", "QuoteLine.Discount", "QuoteLine.NetPrice"],
+      "currentState": "draft",
+      "stageGateId": "gate.parent.contract.payment-obligation-defined",
+      "parentChipIds": [],
+      "childChipIds": [],
+      "transformationRule": "Bind child purchase eligibility to approved parent pricing version.",
+      "validationStatus": "pending",
+      "confidenceScore": 0.65,
+      "tokenLinks": ["pricing_version_token", "contract_obligation_token"]
+    },
+    {
+      "chipId": "chip.payment.obligation.status",
+      "chipType": "contract_obligation",
+      "name": "Payment Obligation Status",
+      "owner": "Legal / Finance",
+      "sourceObject": "CLM Contract",
+      "sourceFields": ["Contract.PaymentTerms", "Contract.EffectiveDate"],
+      "currentState": "unknown",
+      "stageGateId": "gate.parent.contract.payment-obligation-defined",
+      "parentChipIds": ["chip.parent.identity"],
+      "childChipIds": [],
+      "transformationRule": "Classify as direct payer, pricing sponsor only, or mixed obligation.",
+      "validationStatus": "pending",
+      "confidenceScore": 0.55,
+      "tokenLinks": ["contract_obligation_token", "revenue_lifecycle_token"]
+    }
+  ],
+  "businessRules": [
+    {
+      "ruleId": "rule.parent.signature.not-always-revenue",
+      "ruleType": "contract_obligation",
+      "plainLanguageRule": "A parent pricing agreement is not closed-won revenue unless the parent also accepts a payment obligation for a product or service.",
+      "deterministicLogic": "if agreement_type = 'parent_pricing' and payment_obligation_party is null then revenue_event_status = 'eligibility_only'",
+      "sourceDataElementIds": ["de.contract.agreement_type", "de.contract.payment_obligation_party"],
+      "targetDataElementIds": ["de.revenue.event_status"],
+      "applicableScenarioIds": ["l2.parent_pricing_agreement.example"],
+      "exceptions": ["Parent may be both pricing sponsor and payer", "Child may sign separate order under inherited pricing"],
+      "approvalOwner": "Finance / Legal",
+      "testCases": ["Parent signs pricing-only agreement", "Parent signs agreement and pays", "Child organization buys under parent terms"],
+      "confidenceScore": 0.78,
+      "version": "1.0.0"
+    }
+  ],
+  "dataElements": [
+    {
+      "dataElementId": "de.contract.agreement_type",
+      "canonicalName": "Agreement Type",
+      "dataType": "picklist",
+      "sourceSystem": "CLM",
+      "sourceObject": "Contract",
+      "sourceField": "Agreement_Type__c",
+      "targetSystem": "DataBasin",
+      "targetObject": "contract_obligation",
+      "targetField": "agreement_type",
+      "required": true,
+      "sensitivity": "internal",
+      "sourceOfTruthStatus": "candidate"
+    },
+    {
+      "dataElementId": "de.contract.payment_obligation_party",
+      "canonicalName": "Payment Obligation Party",
+      "dataType": "reference",
+      "sourceSystem": "CLM",
+      "sourceObject": "Contract",
+      "sourceField": "Payment_Obligation_Account__c",
+      "targetSystem": "DataBasin",
+      "targetObject": "contract_obligation",
+      "targetField": "payment_obligation_party_id",
+      "required": true,
+      "sensitivity": "restricted",
+      "sourceOfTruthStatus": "candidate"
+    },
+    {
+      "dataElementId": "de.revenue.event_status",
+      "canonicalName": "Revenue Event Status",
+      "dataType": "picklist",
+      "sourceSystem": "DataBasin",
+      "sourceObject": "revenue_lifecycle_event",
+      "sourceField": "event_status",
+      "targetSystem": "Salesforce",
+      "targetObject": "Opportunity",
+      "targetField": "Revenue_Event_Status__c",
+      "required": true,
+      "sensitivity": "internal",
+      "sourceOfTruthStatus": "derived"
+    }
+  ],
+  "productDefinitions": [
+    {
+      "productDefinitionId": "prod.platform.subscription.v1",
+      "productName": "Platform Subscription",
+      "productVersion": "1.0",
+      "pricingVersionIds": ["price.platform.subscription.parent.v1"],
+      "allowedContractStructures": ["annual_subscription", "parent_pricing_agreement", "child_order_under_parent_terms"],
+      "allowedBillingFrequencies": ["monthly", "quarterly", "annual"],
+      "allowedBillingTiming": ["up_front", "arrears"],
+      "allowedPaymentMethods": ["ach", "card", "invoice"],
+      "allowedCollectionMethods": ["auto_pay", "manual"],
+      "allowedPerformanceObligations": ["license", "hosting", "support", "implementation"],
+      "allowedAllocationMethods": ["standalone_selling_price", "fixed_percent", "manual_review"],
+      "allowedRecognitionTriggers": ["service_available", "subscription_start", "customer_acceptance"],
+      "renewalRules": ["annual_auto_renewal_allowed", "notice_period_required"]
+    }
+  ],
+  "billingObligationAllocations": [
+    {
+      "allocationId": "alloc.annual-invoice-license-support",
+      "productDefinitionId": "prod.platform.subscription.v1",
+      "scenarioId": "l2.parent_pricing_agreement.example",
+      "billingEvent": "Annual invoice",
+      "performanceObligation": "License and support",
+      "allocationMethod": "standalone_selling_price",
+      "allocationPercent": null,
+      "recognitionTrigger": "subscription_start"
+    }
+  ],
+  "systemsMap": [
+    {
+      "systemMapId": "sysmap.sf.account.parent",
+      "systemName": "Salesforce",
+      "systemRole": "source",
+      "objectName": "Account",
+      "fieldName": "ParentId",
+      "processStep": "Qualification / Contract",
+      "writeBackRequired": false,
+      "readOnlyRequired": true,
+      "reportingDependency": "Account hierarchy and member eligibility reporting",
+      "migrationStatus": "bridge"
+    },
+    {
+      "systemMapId": "sysmap.databasin.revenue-event-status",
+      "systemName": "DataBasin",
+      "systemRole": "system_of_record",
+      "objectName": "revenue_lifecycle_event",
+      "fieldName": "event_status",
+      "processStep": "Contract",
+      "writeBackRequired": true,
+      "readOnlyRequired": false,
+      "reportingDependency": "Revenue lifecycle classification and proposal risk output",
+      "migrationStatus": "retain"
+    }
+  ],
+  "dataBasinBridge": [
+    {
+      "bridgeId": "bridge.sf.account-hierarchy",
+      "sourceSystem": "Salesforce",
+      "sourceObject": "Account",
+      "sourceField": "ParentId",
+      "persistenceTarget": "DataBasin.customer_member_relationship",
+      "bridgeMode": "batch",
+      "cleansingRuleIds": ["rule.normalize-account-hierarchy"],
+      "reconciliationRuleIds": ["rule.parent.signature.not-always-revenue"],
+      "retentionRequirement": "Retain original hierarchy snapshot and normalized relationship history."
+    }
+  ],
+  "outputSpecs": [
+    {
+      "outputSpecId": "output.business-definition.parent-pricing",
+      "outputType": "business_definition_spec",
+      "audience": ["RevOps", "Finance", "Legal", "Product"],
+      "scenarioIds": ["l2.parent_pricing_agreement.example"],
+      "requiredDataElementIds": ["de.contract.agreement_type", "de.contract.payment_obligation_party", "de.revenue.event_status"],
+      "requiredRuleIds": ["rule.parent.signature.not-always-revenue"],
+      "approvalRequired": true
+    }
+  ],
+  "approvals": [
+    {
+      "approvalId": "approval.rule.parent-signature",
+      "objectType": "business_rule",
+      "objectId": "rule.parent.signature.not-always-revenue",
+      "owner": "Finance / Legal",
+      "status": "pending",
+      "approvedAt": null,
+      "notes": "Needs client-specific legal and revenue policy confirmation."
+    }
+  ]
+}

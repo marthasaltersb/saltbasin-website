@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="256" height="256">
+  <title>Magnifier — Diagnostics / Insight</title>
+  <path d="M22 36 A14 14 0 1 1 22 8 A14 14 0 0 1 22 36 Z" stroke="#C4843A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M32 32 L43 43" stroke="#C4843A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M22 15 V29" stroke="#C4843A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M15 22 H29" stroke="#C4843A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

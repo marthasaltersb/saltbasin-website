@@ -76,7 +76,7 @@ export default function PublicSite() {
   ` : '';
 
   return (
-    <div className="sb-public-site-root">
+    <div className="sb-public-site-root" data-theme={config?.theme || 'strategic'}>
       {brandCss && <style>{brandCss}</style>}
       <PublicNav site={config.site} pages={pages} />
       <Breadcrumbs />

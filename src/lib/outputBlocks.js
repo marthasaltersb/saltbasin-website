@@ -1,6 +1,20 @@
 // Output block system — machine-readable block configs that drive all rendered outputs.
 // Blocks are stored as JSON in the DB and rendered to HTML via renderTemplateToHtml().
 // The same system drives HERQ outputs, resume, case study, one-pagers, and future outputs.
+import { ICONS, ICON_VIEWBOX } from './brandIconData.js';
+
+// Static (non-interactive) inline SVG for the output-doc renderer — same
+// geometry as src/lib/brandIcons.jsx, but a plain string since output docs
+// are print-safe static HTML, not React. No hover/sketch-filter variant here.
+function iconSvg(name, color, size = 22) {
+  const icon = ICONS[name];
+  if (!icon) return '';
+  const paths = icon.paths.map((d) => `<path d="${d}" stroke="${color}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`).join('');
+  const circles = (icon.circles || []).map((c) => `<circle cx="${c.cx}" cy="${c.cy}" r="${c.r}" stroke="${color}" stroke-width="1.75" fill="none"/>`).join('');
+  return `<svg viewBox="${ICON_VIEWBOX}" width="${size}" height="${size}" fill="none">${paths}${circles}</svg>`;
+}
+
+const OUTPUT_ACCENT_SWATCH = { gold: '#C4843A', teal: '#4A7C8E', pink: '#E8407A', sage: '#B5C4C1' };
 
 export const BLOCK_DEFS = {
   'exec-kpi-dashboard': {
@@ -164,6 +178,136 @@ export const BLOCK_DEFS = {
       { key: 'style.fontSize', label: 'Font Size', type: 'text' },
     ],
   },
+
+  // ── Layer 2 stat/metric cards — resolved by buildBlocksFromLayerConfig()
+  // before render (props.cards is a pre-resolved array, not raw catalog
+  // lookups, since which cards + labels/order came from the member's config).
+  'stat-cards': {
+    label: 'Stat Cards', icon: '▣',
+    defaultProps: { cards: [] },
+    defaultStyle: {},
+    fields: [],
+  },
+
+  // ── Layer 3 infographics — data-driven from ctx.rollupCatalog, no editable
+  // fields (mirrors 'exec-kpi-dashboard'). See server/lib/rollupMetrics.js
+  // for the shapes these read (staticRollups/deltaRollups/toolUsage/
+  // certBadges/overlaps). props.sourceKey selects which catalog entry (or
+  // entries) a given block instance renders.
+  'capacity-gauge': {
+    label: 'Capacity Gauge', icon: '◐',
+    defaultProps: { sourceKey: '' },
+    defaultStyle: {},
+    fields: [{ key: 'props.sourceKey', label: 'Metric Key', type: 'text' }],
+  },
+  'bar-chart-h': {
+    label: 'Bar Chart (Horizontal)', icon: '▤',
+    defaultProps: { sourceKey: '', title: '' },
+    defaultStyle: {},
+    fields: [
+      { key: 'props.sourceKey', label: 'Rollup Group Prefix', type: 'text' },
+      { key: 'props.title', label: 'Title', type: 'text' },
+    ],
+  },
+  'bar-chart-v': {
+    label: 'Bar Chart (Vertical)', icon: '▥',
+    defaultProps: { sourceKey: '', title: '' },
+    defaultStyle: {},
+    fields: [
+      { key: 'props.sourceKey', label: 'Rollup Group Prefix', type: 'text' },
+      { key: 'props.title', label: 'Title', type: 'text' },
+    ],
+  },
+  'venn-overlap': {
+    label: 'Overlap (Venn)', icon: '◍',
+    defaultProps: { title: 'Capability Overlap' },
+    defaultStyle: {},
+    fields: [{ key: 'props.title', label: 'Title', type: 'text' }],
+  },
+  'cert-badges': {
+    label: 'Certification Badges', icon: '◆',
+    defaultProps: { title: 'Certifications' },
+    defaultStyle: {},
+    fields: [{ key: 'props.title', label: 'Title', type: 'text' }],
+  },
+  'tool-usage-snapshot': {
+    label: 'Tool & Tech Snapshot', icon: '▦',
+    defaultProps: { title: 'Tools & Technology' },
+    defaultStyle: {},
+    fields: [{ key: 'props.title', label: 'Title', type: 'text' }],
+  },
+
+  // ── Smart-art graphics — same data shape and icon set as the website's
+  // cascadeFlow / accentStatCards / architectureSteps blocks
+  // (src/components/blocks/index.jsx REGISTRY), rendered here as static
+  // print-safe HTML instead of interactive React (no hover/click state —
+  // output docs are printed/exported, not browsed).
+  'accent-stat-cards': {
+    label: 'Accent Stat Cards', icon: '▣',
+    defaultProps: {
+      statCards: [
+        { icon: 'exit', value: '$4.6B', label: 'Exit Value', caption: 'One-line context for this stat.', source: 'Source, Year', accent: 'gold' },
+        { icon: 'pipeline', value: '$500M+', label: 'Revenue Automated', caption: 'One-line context for this stat.', source: 'Source, Year', accent: 'teal' },
+        { icon: 'portfolio', value: '4', label: 'Portfolio Transformations', caption: 'One-line context for this stat.', source: 'Source, Year', accent: 'pink' },
+      ],
+    },
+    defaultStyle: { margin: '0.75rem 0' },
+    fields: [{
+      key: 'props.statCards', label: 'Stat Cards', type: 'cardList', itemLabel: 'Stat Card',
+      itemFields: [
+        { key: 'icon', label: 'Icon', placeholder: 'e.g. exit, graph, shield', half: true },
+        { key: 'accent', label: 'Accent', placeholder: 'gold / teal / pink / sage', half: true },
+        { key: 'value', label: 'Value', placeholder: 'e.g. $4.6B, 142%' },
+        { key: 'label', label: 'Label', placeholder: 'Label' },
+        { key: 'caption', label: 'Caption', placeholder: 'One-line context', long: true },
+        { key: 'source', label: 'Source', placeholder: 'Citation (optional)' },
+      ],
+    }],
+  },
+  'cascade-flow': {
+    label: 'Cascade Flow', icon: '➡️',
+    defaultProps: {
+      cascadeSteps: [
+        { icon: 'magnifier', title: 'Step one', description: 'What happens first.', accent: 'teal' },
+        { icon: 'graph', title: 'Step two', description: 'What happens next.', accent: 'gold' },
+        { icon: 'shield', title: 'Step three', description: 'The consequence.', accent: 'pink' },
+      ],
+      summary: 'We intervene at step one — before the cascade starts.',
+      summaryIcon: 'compass',
+    },
+    defaultStyle: { margin: '0.75rem 0' },
+    fields: [
+      {
+        key: 'props.cascadeSteps', label: 'Cascade Steps', type: 'cardList', itemLabel: 'Step',
+        itemFields: [
+          { key: 'icon', label: 'Icon', placeholder: 'e.g. magnifier, graph', half: true },
+          { key: 'accent', label: 'Accent', placeholder: 'gold / teal / pink / sage', half: true },
+          { key: 'title', label: 'Title', placeholder: 'Step title' },
+          { key: 'description', label: 'Description', placeholder: 'What happens in this step', long: true },
+        ],
+      },
+      { key: 'props.summary', label: 'Summary Callout', type: 'textarea' },
+      { key: 'props.summaryIcon', label: 'Summary Icon', type: 'text' },
+    ],
+  },
+  'architecture-steps': {
+    label: 'Architecture Steps', icon: '🔢',
+    defaultProps: {
+      steps: [
+        { title: 'Step one title', description: 'What happens in this step.' },
+        { title: 'Step two title', description: 'What happens in this step.' },
+        { title: 'Step three title', description: 'What happens in this step.' },
+      ],
+    },
+    defaultStyle: { margin: '0.75rem 0' },
+    fields: [{
+      key: 'props.steps', label: 'Steps', type: 'cardList', itemLabel: 'Step',
+      itemFields: [
+        { key: 'title', label: 'Title', placeholder: 'Step title' },
+        { key: 'description', label: 'Description', placeholder: 'What happens in this step', long: true },
+      ],
+    }],
+  },
 };
 
 // ── Renderer ──────────────────────────────────────────────────────────────────
@@ -303,6 +447,175 @@ export function renderBlockToHtml(block, ctx = {}) {
       return `<div style="${styleStr(s)}">${itemsHtml}</div>`;
     }
 
+    case 'stat-cards': {
+      const cards = Array.isArray(p.cards) ? p.cards : [];
+      if (!cards.length) return '';
+      const cols = Math.min(Math.max(cards.length, 2), 4);
+      const cardsHtml = cards.map((c) => `
+        <div style="text-align:center;padding:0.9rem 0.6rem;background:#F7F2E8;border-radius:8px">
+          <div style="font-size:1.5rem;font-weight:700;color:#1B2A3B;font-family:Georgia,serif;line-height:1.1">${ip(c.value)}</div>
+          <div style="font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:#C4843A;font-weight:700;margin-top:0.3rem;font-family:sans-serif">${ip(c.label)}</div>
+          ${c.change ? `<div style="font-size:0.68rem;margin-top:0.2rem;color:${String(c.change).startsWith('-') ? '#c02010' : '#1a8a5a'};font-weight:600">${String(c.change).startsWith('-') ? '▼' : '▲'} ${ip(c.change)}</div>` : ''}
+          ${c.sublabel ? `<div style="font-size:0.62rem;color:#536173;margin-top:0.2rem">${ip(c.sublabel)}</div>` : ''}
+        </div>`).join('');
+      return `<div style="${styleStr(s)};display:grid;grid-template-columns:repeat(${cols},1fr);gap:0.6rem">${cardsHtml}</div>`;
+    }
+
+    case 'capacity-gauge': {
+      const catalog = ctx.rollupCatalog || {};
+      const rollup = [...(catalog.staticRollups || []), ...(catalog.deltaRollups || [])].find((r) => r.key === p.sourceKey);
+      if (!rollup) return '';
+      const max = Number(rollup.max) || Math.max(Number(rollup.value) || 0, 100);
+      const pct = Math.min(100, Math.round((Number(rollup.value) / max) * 100));
+      return `<div style="${styleStr(s)};text-align:center;padding:0.75rem 0">
+  <svg viewBox="0 0 120 70" width="140" height="82">
+    <path d="M10,65 A50,50 0 0 1 110,65" fill="none" stroke="#EEF2F6" stroke-width="10" />
+    <path d="M10,65 A50,50 0 0 1 110,65" fill="none" stroke="#C4843A" stroke-width="10"
+      stroke-dasharray="${(pct / 100) * 157},157" />
+  </svg>
+  <div style="font-size:1.3rem;font-weight:700;color:#1B2A3B;font-family:Georgia,serif">${ip(rollup.value)}</div>
+  <div style="font-size:0.66rem;letter-spacing:0.1em;text-transform:uppercase;color:#536173;font-family:sans-serif">${ip(rollup.label)}</div>
+</div>`;
+    }
+
+    case 'bar-chart-h':
+    case 'bar-chart-v': {
+      const catalog = ctx.rollupCatalog || {};
+      const prefix = p.sourceKey || '';
+      const rows = (catalog.staticRollups || []).filter((r) => !prefix || r.key.startsWith(prefix));
+      if (!rows.length) return '';
+      const max = Math.max(...rows.map((r) => Number(r.value) || 0), 1);
+      const horizontal = block.type === 'bar-chart-h';
+      const barsHtml = rows.map((r) => {
+        const pct = Math.round(((Number(r.value) || 0) / max) * 100);
+        return horizontal
+          ? `<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem">
+              <div style="width:110px;font-size:0.7rem;color:#2d3748;flex-shrink:0">${ip(r.label)}</div>
+              <div style="flex:1;background:#EEF2F6;border-radius:3px;height:12px;overflow:hidden">
+                <div style="width:${pct}%;height:100%;background:#4A9EBF"></div>
+              </div>
+              <div style="width:28px;font-size:0.7rem;color:#1B2A3B;font-weight:700;text-align:right">${r.value}</div>
+            </div>`
+          : `<div style="display:inline-flex;flex-direction:column;align-items:center;width:52px;vertical-align:bottom">
+              <div style="font-size:0.66rem;color:#1B2A3B;font-weight:700">${r.value}</div>
+              <div style="width:22px;height:${Math.max(pct, 4)}px;background:#4A9EBF;border-radius:2px 2px 0 0;margin-top:2px"></div>
+              <div style="font-size:0.58rem;color:#536173;text-align:center;margin-top:0.25rem;line-height:1.2">${ip(r.label)}</div>
+            </div>`;
+      }).join('');
+      return `<div style="${styleStr(s)}">
+  ${p.title ? `<div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:#536173;margin-bottom:0.5rem;font-family:sans-serif">${ip(p.title)}</div>` : ''}
+  <div style="${horizontal ? '' : 'display:flex;align-items:flex-end;gap:0.5rem;height:110px'}">${barsHtml}</div>
+</div>`;
+    }
+
+    case 'venn-overlap': {
+      const overlaps = (ctx.rollupCatalog?.overlaps || []).slice(0, 6);
+      if (!overlaps.length) return '';
+      const rowsHtml = overlaps.map((o) => `
+        <div style="display:flex;justify-content:space-between;font-size:0.76rem;padding:0.3rem 0;border-bottom:0.5px solid #EEF2F6">
+          <span style="color:#1B2A3B">${ip(o.category)} × ${ip(o.industry)}</span>
+          <span style="color:#C4843A;font-weight:700">${o.overlapCount}</span>
+        </div>`).join('');
+      return `<div style="${styleStr(s)}">
+  ${p.title ? `<div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:#536173;margin-bottom:0.5rem;font-family:sans-serif">${ip(p.title)}</div>` : ''}
+  ${rowsHtml}
+</div>`;
+    }
+
+    case 'cert-badges': {
+      const groups = ctx.rollupCatalog?.certBadges || [];
+      const items = groups.flatMap((g) => g.items.map((it) => ({ ...it, status: g.status })));
+      if (!items.length) return '';
+      const badgesHtml = items.map((it) => `
+        <span style="display:inline-flex;flex-direction:column;padding:0.4rem 0.7rem;margin:0.2rem;border-radius:6px;border:0.5px solid ${it.status === 'active' ? '#C4843A' : '#8b9bae'};background:${it.status === 'active' ? 'rgba(196,132,58,0.07)' : 'rgba(139,155,174,0.07)'}">
+          <span style="font-size:0.74rem;font-weight:700;color:#1B2A3B">${ip(it.name)}</span>
+          <span style="font-size:0.6rem;color:#536173">${ip(it.issuer || '')}${it.expires ? ` · exp ${ip(it.expires)}` : ''}</span>
+        </span>`).join('');
+      return `<div style="${styleStr(s)}">
+  ${p.title ? `<div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:#536173;margin-bottom:0.5rem;font-family:sans-serif">${ip(p.title)}</div>` : ''}
+  <div>${badgesHtml}</div>
+</div>`;
+    }
+
+    case 'tool-usage-snapshot': {
+      const tools = (ctx.rollupCatalog?.toolUsage || []).filter((t) => t.roleCount > 0).slice(0, 12);
+      if (!tools.length) return '';
+      const rowsHtml = tools.map((t) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.76rem;padding:0.3rem 0;border-bottom:0.5px solid #EEF2F6">
+          <span style="color:#1B2A3B;font-weight:600">${ip(t.tool)}</span>
+          <span style="color:#536173;font-size:0.66rem">${ip(t.category || '')} · ${t.roleCount} role${t.roleCount === 1 ? '' : 's'}${t.industries.length ? ` · ${ip(t.industries.join(', '))}` : ''}</span>
+        </div>`).join('');
+      return `<div style="${styleStr(s)}">
+  ${p.title ? `<div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:#536173;margin-bottom:0.5rem;font-family:sans-serif">${ip(p.title)}</div>` : ''}
+  ${rowsHtml}
+</div>`;
+    }
+
+    case 'accent-stat-cards': {
+      const cards = Array.isArray(p.statCards) ? p.statCards : [];
+      if (!cards.length) return '';
+      const cols = Math.min(Math.max(cards.length, 2), 4);
+      const cardsHtml = cards.map((c) => {
+        const accent = OUTPUT_ACCENT_SWATCH[c.accent] || OUTPUT_ACCENT_SWATCH.gold;
+        return `
+        <div style="border:0.5px solid rgba(27,42,59,0.14);border-radius:4px;overflow:hidden;background:#fff">
+          <div style="height:4px;background:${accent}"></div>
+          <div style="padding:0.9rem 0.85rem">
+            ${c.icon ? `<div style="margin-bottom:0.5rem">${iconSvg(c.icon, accent, 22)}</div>` : ''}
+            <div style="font-size:1.4rem;font-family:Georgia,serif;color:#1B2A3B;line-height:1">${ip(c.value)}</div>
+            <div style="font-size:0.6rem;letter-spacing:0.08em;color:#1B2A3B;margin-top:0.4rem;font-family:sans-serif;text-transform:uppercase">${ip(c.label)}</div>
+            ${c.caption ? `<div style="font-size:0.66rem;color:#536173;margin-top:0.35rem;line-height:1.4">${ip(c.caption)}</div>` : ''}
+            ${c.source ? `<div style="font-size:0.56rem;color:#999;margin-top:0.4rem;font-style:italic">${ip(c.source)}</div>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+      return `<div style="${styleStr(s)};display:grid;grid-template-columns:repeat(${cols},1fr);gap:0.75rem">${cardsHtml}</div>`;
+    }
+
+    case 'cascade-flow': {
+      const steps = Array.isArray(p.cascadeSteps) ? p.cascadeSteps : [];
+      if (!steps.length) return '';
+      const stepsHtml = steps.map((step, i) => {
+        const accent = OUTPUT_ACCENT_SWATCH[step.accent] || OUTPUT_ACCENT_SWATCH.teal;
+        const arrow = i < steps.length - 1 ? `<div style="display:flex;align-items:center;justify-content:center;width:20px;flex-shrink:0;color:#C4843A;font-size:1rem">→</div>` : '';
+        return `
+        <div style="flex:1;min-width:110px;border:0.5px solid rgba(27,42,59,0.14);border-radius:4px;overflow:hidden;background:#fff">
+          <div style="height:3px;background:${accent}"></div>
+          <div style="padding:0.7rem 0.6rem">
+            ${step.icon ? `<div style="margin-bottom:0.4rem">${iconSvg(step.icon, accent, 18)}</div>` : ''}
+            <div style="font-size:0.72rem;font-weight:700;color:#1B2A3B;margin-bottom:0.25rem">${ip(step.title)}</div>
+            <div style="font-size:0.64rem;color:#536173;line-height:1.4">${ip(step.description)}</div>
+          </div>
+        </div>${arrow}`;
+      }).join('');
+      const summaryHtml = p.summary ? `
+      <div style="margin-top:0.85rem;background:#EAF1F3;border-left:3px solid #4A7C8E;border-radius:2px;padding:0.6rem 0.85rem;display:flex;align-items:center;gap:0.6rem">
+        ${p.summaryIcon ? iconSvg(p.summaryIcon, '#1B2A3B', 18) : ''}
+        <div style="font-size:0.72rem;color:#1B2A3B;line-height:1.5">${ip(p.summary)}</div>
+      </div>` : '';
+      return `<div style="${styleStr(s)}">
+  <div style="display:flex;align-items:stretch;gap:0.4rem;flex-wrap:wrap">${stepsHtml}</div>
+  ${summaryHtml}
+</div>`;
+    }
+
+    case 'architecture-steps': {
+      const steps = Array.isArray(p.steps) ? p.steps : [];
+      if (!steps.length) return '';
+      const stepsHtml = steps.map((step, i) => `
+        <div style="display:flex;gap:0.75rem">
+          <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+            <div style="width:22px;height:22px;border-radius:50%;background:#4A7C8E;color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.66rem;font-weight:700;font-family:sans-serif;flex-shrink:0">${i + 1}</div>
+            ${i < steps.length - 1 ? `<div style="width:1px;flex:1;min-height:20px;background:rgba(74,124,142,0.35);margin:2px 0"></div>` : ''}
+          </div>
+          <div style="padding-bottom:${i < steps.length - 1 ? '0.85rem' : 0}">
+            <div style="font-size:0.78rem;font-weight:700;color:#1B2A3B;margin-bottom:0.2rem">${ip(step.title)}</div>
+            ${step.description ? `<div style="font-size:0.7rem;color:#536173;line-height:1.55">${ip(step.description)}</div>` : ''}
+          </div>
+        </div>`).join('');
+      return `<div style="${styleStr(s)};display:flex;flex-direction:column">${stepsHtml}</div>`;
+    }
+
     default:
       return `<div style="padding:0.5rem;background:#f5f5f5;font-size:0.75rem;color:#999;border:1px dashed #ccc">[Unknown block: ${block.type}]</div>`;
   }
@@ -334,6 +647,64 @@ ${body}
 </div>
 </body>
 </html>`;
+}
+
+// ── Member footer (layer 1) — deliberately standalone, never merged into
+// renderTemplateToHtml's block loop or the locked AUTHORSHIP footer in
+// Output.jsx. Renders the member/org's own footer lines, APPENDED below the
+// locked Salt Basin footer — never in place of it.
+export function renderMemberFooterHtml(config) {
+  const layer1 = config?.layer1_header || {};
+  const lines = Array.isArray(layer1.memberFooterLines) ? layer1.memberFooterLines.filter(Boolean) : [];
+  const links = Array.isArray(layer1.memberFooterLinks) ? layer1.memberFooterLinks.filter((l) => l?.label) : [];
+  if (!lines.length && !links.length) return '';
+  const linesHtml = lines.map((l) => `<div>${l}</div>`).join('');
+  const linksHtml = links.length
+    ? `<div style="margin-top:0.3rem">${links.map((l) => `<a href="${l.url || '#'}" style="color:inherit">${l.label}</a>`).join(' · ')}</div>`
+    : '';
+  return `<div style="margin-top:0.75rem;padding-top:0.6rem;border-top:0.5px solid rgba(139,155,174,0.3);font-size:0.68rem;color:#8b9bae;line-height:1.6">
+  ${linesHtml}${linksHtml}
+</div>`;
+}
+
+// ── Layer config adapter — turns a v2 output_templates.config object into
+// the flat blocks[] array renderBlockToHtml()/renderTemplateToHtml() already
+// consume. Layer 2 (stat cards) is resolved here against ctx.rollupCatalog
+// since block selection/order/labels live in config, not in the catalog.
+export function buildBlocksFromLayerConfig(config, ctx = {}) {
+  const blocks = [];
+  let order = 1;
+  const catalog = ctx.rollupCatalog || {};
+
+  const layer2 = config?.layer2_stats?.cards || [];
+  const visibleCards = layer2.filter((c) => c.visible !== false);
+  if (visibleCards.length) {
+    const resolvedCards = visibleCards.map((c) => {
+      const pool = c.kind === 'delta' ? catalog.deltaRollups : catalog.staticRollups;
+      const rollup = (pool || []).find((r) => r.key === c.metricKey);
+      return {
+        label: c.label || rollup?.label || c.metricKey,
+        value: rollup ? (c.kind === 'delta' ? (rollup.series?.[rollup.series.length - 1]?.value ?? rollup.change) : rollup.value) : '—',
+        change: c.kind === 'delta' ? rollup?.change : null,
+        sublabel: c.sublabel || rollup?.sublabel,
+      };
+    });
+    blocks.push({ id: `l2-stats`, type: 'stat-cards', visible: true, order: order++, props: { cards: resolvedCards }, style: { margin: '0.75rem 0' } });
+  }
+
+  const layer3 = config?.layer3_infographics?.items || [];
+  for (const item of layer3.filter((i) => i.visible !== false)) {
+    blocks.push({
+      id: item.id || `l3-${item.blockType}-${order}`,
+      type: item.blockType,
+      visible: true,
+      order: order++,
+      props: { sourceKey: item.sourceKey, title: item.params?.title || '', ...(item.params || {}) },
+      style: { margin: '0.75rem 0' },
+    });
+  }
+
+  return blocks;
 }
 
 // ── Default template configs ──────────────────────────────────────────────────

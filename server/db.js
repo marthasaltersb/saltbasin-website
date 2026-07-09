@@ -1957,6 +1957,42 @@ async function bootstrap() {
     CREATE INDEX IF NOT EXISTS idx_career_meta_options_key ON career_meta_options (field_key, order_index);
   `);
 
+  // ── Career master multi-tenancy retrofit ──────────────────────────────────
+  // Career Master started single-tenant (Betsy's data only, no user_id at
+  // all). Every member now gets their own Career Master dataset, matching
+  // the ownership model already used for member_sites/member_configs.
+  // Nullable + backfilled rather than a forced NOT NULL migration — existing
+  // rows are assigned to the platform admin so nothing regresses.
+  await sql.unsafe(`
+    ALTER TABLE career_jobs           ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES users(id);
+    ALTER TABLE career_skills         ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES users(id);
+    ALTER TABLE career_tools          ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES users(id);
+    ALTER TABLE career_engagements    ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES users(id);
+    ALTER TABLE career_domains        ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES users(id);
+    ALTER TABLE career_certifications ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES users(id);
+    ALTER TABLE career_deals          ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES users(id);
+    CREATE INDEX IF NOT EXISTS idx_career_jobs_user           ON career_jobs (user_id);
+    CREATE INDEX IF NOT EXISTS idx_career_skills_user         ON career_skills (user_id);
+    CREATE INDEX IF NOT EXISTS idx_career_tools_user          ON career_tools (user_id);
+    CREATE INDEX IF NOT EXISTS idx_career_engagements_user    ON career_engagements (user_id);
+    CREATE INDEX IF NOT EXISTS idx_career_domains_user        ON career_domains (user_id);
+    CREATE INDEX IF NOT EXISTS idx_career_certifications_user ON career_certifications (user_id);
+    CREATE INDEX IF NOT EXISTS idx_career_deals_user          ON career_deals (user_id);
+  `);
+
+  // One-time idempotent backfill — existing (pre-retrofit) rows had no
+  // owner, so they belong to the platform admin. Guarded by `user_id IS
+  // NULL` so it never touches rows a member has since created for themselves.
+  await sql.unsafe(`
+    UPDATE career_jobs           SET user_id = (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1) WHERE user_id IS NULL;
+    UPDATE career_skills         SET user_id = (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1) WHERE user_id IS NULL;
+    UPDATE career_tools          SET user_id = (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1) WHERE user_id IS NULL;
+    UPDATE career_engagements    SET user_id = (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1) WHERE user_id IS NULL;
+    UPDATE career_domains        SET user_id = (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1) WHERE user_id IS NULL;
+    UPDATE career_certifications SET user_id = (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1) WHERE user_id IS NULL;
+    UPDATE career_deals          SET user_id = (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1) WHERE user_id IS NULL;
+  `).catch((e) => console.warn('[db] career_* user_id backfill skipped:', e.message));
+
   // Portfolio request lead funnel: intake rows from the public teaser views
   // ("Want to request Betsy's Career Portfolio?" / "Want to build a Career
   // Portfolio and Salt Basin Profile for yourself?") plus a temporary
@@ -1989,6 +2025,16 @@ async function bootstrap() {
       updated_at          BIGINT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_portfolio_requests_created ON portfolio_requests (created_at);
+
+    -- public_token: opaque per-lead token so a returning anonymous visitor's
+    -- browser (via localStorage, no login required) can look up their own
+    -- prior submission for the BestyStaff "welcome back" greeting, without
+    -- exposing other visitors' records (sequential ids are guessable).
+    -- top_questions: verbatim capture of the cache-layer "top 5 questions"
+    -- answer, persisted so it can be replayed back as memory context.
+    ALTER TABLE portfolio_requests ADD COLUMN IF NOT EXISTS public_token TEXT;
+    ALTER TABLE portfolio_requests ADD COLUMN IF NOT EXISTS top_questions TEXT;
+    CREATE INDEX IF NOT EXISTS idx_portfolio_requests_token ON portfolio_requests (public_token);
 
     CREATE TABLE IF NOT EXISTS temp_attachments (
       id                 BIGSERIAL PRIMARY KEY,
@@ -2076,6 +2122,31 @@ async function bootstrap() {
     }
   } catch (e) {
     console.warn('[db] career-master nav injection skipped:', e.message);
+  }
+
+  // One-shot: inject "Output Templates" tab into the admin_nav content view
+  // — the 4-layer output template configurator (src/components/admin/
+  // OutputTemplateConfigurator.jsx), additive alongside the existing "My
+  // Resume" tab rather than replacing it.
+  try {
+    const navRow4 = await sql.unsafe(`SELECT data FROM config_state WHERE id = 'admin_nav'`);
+    if (navRow4.length > 0) {
+      const nav = JSON.parse(navRow4[0].data);
+      const contentView = (nav.views || []).find((v) => v.id === 'content');
+      if (contentView) {
+        contentView.tabs = contentView.tabs || [];
+        const hasOutputTemplates = contentView.tabs.some((t) => t.id === 'output-templates');
+        if (!hasOutputTemplates) {
+          contentView.tabs.push({ id: 'output-templates', label: 'Output Templates', componentId: 'outputTemplates', sortOrder: 2.5 });
+          await sql.unsafe(
+            `UPDATE config_state SET data = $1, updated_at = $2 WHERE id = 'admin_nav'`,
+            [JSON.stringify(nav), Date.now()]
+          );
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[db] output-templates nav injection skipped:', e.message);
   }
 }
 

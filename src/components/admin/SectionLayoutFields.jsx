@@ -29,6 +29,20 @@ const WIDTH_OPTS = [
 const BG_OPTS = ['ivory', 'navy', 'linen', 'teal', 'cream'];
 const COLUMN_OPTS = [1, 2, 3, 4];
 
+// Mirrors the [data-theme] blocks in src/brand.css. Empty value = inherit
+// whatever theme the page root (PublicSite.jsx / PublicProfile.jsx) is set
+// to — most sections should leave this alone; it's for the rare section that
+// needs to break from the page's theme on purpose (e.g. a single dark
+// spotlight band inside an otherwise light page).
+const SECTION_THEME_OPTS = [
+  { val: '', label: 'Inherit page theme' },
+  { val: 'strategic', label: 'Strategic Operator' },
+  { val: 'glow-light', label: 'Glow — Light' },
+  { val: 'glow-dark', label: 'Glow — Dark' },
+  { val: 'momentum-warm', label: 'Momentum — Warm' },
+  { val: 'lagoon', label: 'Lagoon' },
+];
+
 function segBtnStyle(selected) {
   return {
     padding: '0.35rem 0.75rem',
@@ -148,12 +162,23 @@ export default function SectionLayoutFields({ section, onUpdate }) {
         </div>
       </div>
 
-      <div style={{ ...styles.fieldGroup, marginBottom: 0 }}>
-        <label style={styles.fieldLabel}>Color Theme</label>
+      <div style={styles.fieldGroup}>
+        <label style={styles.fieldLabel}>Background</label>
         <select className="sb-input" value={section.bg || 'ivory'} onChange={(e) => onUpdate({ bg: e.target.value })}>
           {BG_OPTS.map((b) => (
             <option key={b} value={b}>
               {b}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div style={{ ...styles.fieldGroup, marginBottom: 0 }}>
+        <label style={styles.fieldLabel}>Section Theme</label>
+        <select className="sb-input" value={section.theme || ''} onChange={(e) => onUpdate({ theme: e.target.value || null })}>
+          {SECTION_THEME_OPTS.map((t) => (
+            <option key={t.val} value={t.val}>
+              {t.label}
             </option>
           ))}
         </select>

@@ -12,6 +12,7 @@ import PageTypeManagerPanel from './PageTypeManagerPanel.jsx';
 import ConfigPanel from './ConfigPanel.jsx';
 import { MemberStatsPanel, MemberAuditPanel, MemberAgentPanel } from './MemberPanels.jsx';
 import MyResumePanel from './MyResumePanel.jsx';
+import { OutputTemplateConfiguratorHub } from './OutputTemplateConfigurator.jsx';
 import CareerMasterPanel from './CareerMasterPanel.jsx';
 import ProfileHub from './ProfileHub.jsx';
 import LeadsPanel from './LeadsPanel.jsx';
@@ -45,7 +46,8 @@ const TAB_COMPONENTS = {
   qa:             () => <QAPanel />,
   plmDashboard:   () => <MemberPlmPanel scope="admin" />,
   resume:         (props) => <MyResumePanel {...props} />,
-  careerMaster:   () => <CareerMasterPanel />,
+  outputTemplates: (props) => <OutputTemplateConfiguratorHub {...props} />,
+  careerMaster:   () => <CareerMasterPanel scope="admin" />,
   contentManager: () => <ContentManagerShell />,
   nrm:            () => <NrmPanel isAdmin={true} />,
   analytics:      () => <AnalyticsPanel isAdmin={true} />,
@@ -69,6 +71,7 @@ const FALLBACK_ADMIN_NAV = {
     { id: 'content', label: 'Network Relationship Management', sortOrder: 0, tabs: [
       { id: 'content',  label: 'My Profile',       componentId: 'content',  sortOrder: 0 },
       { id: 'resume',   label: 'My Resume',         componentId: 'resume',  sortOrder: 1 },
+      { id: 'output-templates', label: 'Output Templates', componentId: 'outputTemplates', sortOrder: 2.5 },
       { id: 'career-master', label: 'Career Master', componentId: 'careerMaster', sortOrder: 2 },
       { id: 'networks', label: 'Net Works',         componentId: 'networks', sortOrder: 3 },
       { id: 'nrm',      label: 'Network Contacts',  componentId: 'nrm',     sortOrder: 3 },
@@ -765,6 +768,8 @@ export default function AdminShell({ scope = 'admin' }) {
             );
           }
           if (componentId === 'resume')          return <MyResumePanel scope={scope} />;
+          if (componentId === 'outputTemplates') return <OutputTemplateConfiguratorHub scope={scope} />;
+          if (componentId === 'careerMaster')    return <CareerMasterPanel scope={scope} />;
           if (componentId === 'inbox')           return <InboxPanel />;
           if (componentId === 'stats')           return <MemberStatsPanel isAdmin={!isMember} />;
           if (componentId === 'audit')           return <MemberAuditPanel isAdmin={!isMember} />;

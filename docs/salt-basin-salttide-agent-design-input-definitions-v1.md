@@ -186,3 +186,36 @@ Use these definitions when mapping old Salesforce orgs, CPQ implementations, man
 5. Add reconciliation confidence scoring between Salesforce, billing/ERP, Snowflake/reporting tables, and spreadsheet/manual sources.
 6. Generate an executive-ready output pack using only approved/internal-safe facts.
 7. Promote repeated mappings into reusable templates with version, owner, sensitivity, and evidence status.
+
+## 10. Business Definition Workbench Extension
+
+The next product layer is a real-time Business Definition Tool that turns the design-input package into an editable scenario workbench.
+
+The workbench should help a client move from raw source material to an approved Business Definition and Business Rule Design Spec by defining:
+
+- L0 enterprise domains.
+- L1 journey tokens.
+- L2 business scenarios.
+- L3 journey stages.
+- L4 stage gates.
+- L5 metadata mutations.
+- L6 business rules.
+- L7 data elements.
+
+The workbench should also maintain:
+
+- Metadata chips that accumulate and transform through the journey.
+- Product Definition Data Rods that define allowable pricing, billing, contract, obligation, recognition, renewal, and migration behavior.
+- Billing-event to performance-obligation allocation matrices.
+- Traditional system-of-record maps.
+- DataBasin bridge/reservoir persistence targets.
+- Write-back requirements to existing operating systems.
+- Output specs for proposal, Snowball reporting, executive, investment, quarterly, financial statement, reconciliation, disclosure, and risk outputs.
+
+Supporting documents:
+
+- `docs/salt-basin-business-definition-tool-product-spec-v1.md`
+- `docs/salt-basin-business-definition-ontology-schema-v1.json`
+- `docs/salt-basin-business-definition-scenario-starter-catalog-v1.md`
+- `docs/business-definition-l2-scenario-intake-template.csv`
+- `docs/salt-basin-business-definition-example-parent-pricing-v1.json`

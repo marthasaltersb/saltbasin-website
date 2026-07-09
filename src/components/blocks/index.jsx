@@ -15,6 +15,7 @@ import { useViewportWidth, PanelCard } from './blockUtils.jsx';
 import { FlexColumnsBlock, WheelDisplay, FormColumnWidget } from './ColumnWidgets.jsx';
 import { fetchCareerMaster, toolWheelBucket } from '../../lib/careerMaster.js';
 import { toast } from '../../lib/toast.js';
+import { BrandIcon } from '../../lib/brandIcons.jsx';
 
 // Non-CMS paths that are always navigable regardless of page live-status.
 const NON_PAGE_PREFIXES = ['/output/', '/lead/', '/u/', '/member', '/admin', '/login', '/signup', '/reset/', '/data-notice'];
@@ -120,6 +121,7 @@ function HeroBlock({ section, config, liveSlugs }) {
   return (
     <section
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{
         minHeight: '100vh',
         background: BG_VAR[section.bg] || 'var(--sb-navy)',
@@ -241,6 +243,7 @@ function ScriptureBlock({ section }) {
   return (
     <div
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{
         background: BG_VAR[section.bg] || 'var(--sb-teal)',
         padding: '2.5rem 2rem',
@@ -278,6 +281,7 @@ function AboutBlock({ section }) {
   return (
     <section
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{ background: BG_VAR[section.bg] || 'var(--sb-ivory)', padding: '5rem 2rem' }}
     >
       <div
@@ -380,6 +384,7 @@ function CardsBlock({ section }) {
   return (
     <section
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{
         background: BG_VAR[section.bg] || 'var(--sb-navy)',
         padding: '5rem 2rem',
@@ -495,6 +500,7 @@ function TwoColBlock({ section, liveSlugs }) {
   return (
     <section
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{
         background: BG_VAR[section.bg] || 'var(--sb-linen)',
         padding: '5rem 2rem',
@@ -603,6 +609,7 @@ function ResumeBlock({ section }) {
   return (
     <section
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{ background: BG_VAR[section.bg] || 'var(--sb-ivory)', padding: '5rem 2rem' }}
     >
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
@@ -714,6 +721,7 @@ function SocialGridBlock({ section, config }) {
   return (
     <section
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{ background: BG_VAR[section.bg] || 'var(--sb-ivory)', padding: '5rem 2rem' }}
     >
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
@@ -781,6 +789,7 @@ function ContactBlock({ section, config, memberSlug = '' }) {
   return (
     <section
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{ background: BG_VAR[section.bg] || 'var(--sb-linen)', padding: '5rem 2rem' }}
     >
       <div className="sb-grid-2col" style={{ maxWidth: 1000, margin: '0 auto', gap: '4rem' }}>
@@ -820,6 +829,7 @@ function TextBlock({ section }) {
   return (
     <section
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{
         background: BG_VAR[section.bg] || 'var(--sb-ivory)',
         padding: '5rem 2rem',
@@ -862,6 +872,7 @@ function CtaBlock({ section, liveSlugs }) {
   return (
     <section
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{
         background: BG_VAR[section.bg] || 'var(--sb-linen)',
         padding: '4rem 2rem',
@@ -908,6 +919,7 @@ function IndustriesBlock({ section }) {
   return (
     <section
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{ background: BG_VAR[section.bg] || 'var(--sb-ivory)', padding: '5rem 2rem' }}
     >
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
@@ -979,6 +991,7 @@ function DomainsBlock({ section }) {
   return (
     <section
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{
         background: BG_VAR[section.bg] || 'var(--sb-navy)',
         padding: '5rem 2rem',
@@ -1080,6 +1093,7 @@ function ServicesBlock({ section }) {
   return (
     <section
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{
         background: BG_VAR[section.bg] || 'var(--sb-linen)',
         padding: '5rem 2rem',
@@ -1175,6 +1189,7 @@ function AssessmentsBlock({ section }) {
   return (
     <section
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{
         background: BG_VAR[section.bg] || 'var(--sb-navy)',
         padding: '5rem 2rem',
@@ -1772,6 +1787,7 @@ function JoinNetworkBlock({ section }) {
   return (
     <section
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{ background: BG_VAR[section.bg] || 'var(--sb-cream)', padding: '5rem 2rem' }}
     >
       <div className="sb-grid-2col-pitch" style={{ maxWidth: 1100, margin: '0 auto' }}>
@@ -1837,6 +1853,7 @@ function ForCompaniesBlock({ section }) {
   return (
     <section
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{ background: BG_VAR[section.bg] || 'var(--sb-ivory)', padding: '5rem 2rem' }}
     >
       <div className="sb-grid-2col-pitch" style={{ maxWidth: 1100, margin: '0 auto' }}>
@@ -2151,6 +2168,7 @@ function IndustryWheelBlock({ section }) {
   return (
     <section
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{ background: BG_VAR[section.bg] || 'var(--sb-ivory)', padding: '5rem 2rem' }}
     >
       <div style={{ maxWidth: 1240, margin: '0 auto' }}>
@@ -2187,6 +2205,7 @@ function DomainsNicheBlock({ section }) {
   return (
     <section
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{ background: BG_VAR[section.bg] || 'var(--sb-ivory)', padding: '5rem 2rem' }}
     >
       <div style={{ maxWidth: 1240, margin: '0 auto' }}>
@@ -2611,6 +2630,7 @@ function TechnologyBlock({ section }) {
   return (
     <section
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{
         background: BG_VAR[section.bg] || 'var(--sb-navy)',
         padding: '5rem 2rem',
@@ -2667,6 +2687,7 @@ function AboutIntroBlock({ section, config, memberSlug }) {
   return (
     <section
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{
         background: BG_VAR[section.bg] || 'var(--sb-navy)',
         padding: '5rem 2rem',
@@ -2974,6 +2995,7 @@ function ExecDashboardBlock({ section }) {
   return (
     <section
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{
         background: BG_VAR[section.bg] || 'var(--sb-navy)',
         padding: '5rem 2rem',
@@ -3272,6 +3294,7 @@ function TimelineBlock({ section, liveSlugs }) {
   return (
     <section
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{ background: BG_VAR[section.bg] || 'var(--sb-ivory)', padding: '5rem 2rem' }}
     >
       <div style={{ maxWidth: 1240, margin: '0 auto' }}>
@@ -3874,6 +3897,7 @@ function CaseStudiesBlock({ section }) {
   return (
     <section
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{ background: BG_VAR[section.bg] || 'var(--sb-navy)', padding: '5rem 2rem', color: 'var(--sb-cream)' }}
     >
       <div style={{ maxWidth: 1240, margin: '0 auto' }}>
@@ -4073,6 +4097,7 @@ function NetWorksBannerBlock({ section }) {
   return (
     <section
       id={section.id}
+      data-theme={section.theme || undefined}
       style={{
         background: BG_VAR[section.bg] || 'var(--sb-cream)',
         padding: '4rem 0 4.5rem',
@@ -4179,7 +4204,7 @@ function StatGridBlock({ section }) {
   const stats = Array.isArray(f.stats) ? f.stats : [];
   const cols = Math.min(Math.max(stats.length, 2), 4);
   return (
-    <section id={section.id} style={{ background: BG_VAR[section.bg] || 'var(--sb-navy)', padding: '5rem 2rem' }}>
+    <section id={section.id} data-theme={section.theme || undefined} style={{ background: BG_VAR[section.bg] || 'var(--sb-navy)', padding: '5rem 2rem' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
         {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
         {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: 'var(--sb-cream)', marginBottom: '0.75rem' }}>{f.heading}</h2>}
@@ -4202,7 +4227,7 @@ function ProcessBlock({ section }) {
   const f = section.fields || {};
   const steps = Array.isArray(f.steps) ? f.steps : [];
   return (
-    <section id={section.id} style={{ background: BG_VAR[section.bg] || 'var(--sb-ivory)', padding: '5rem 2rem' }}>
+    <section id={section.id} data-theme={section.theme || undefined} style={{ background: BG_VAR[section.bg] || 'var(--sb-ivory)', padding: '5rem 2rem' }}>
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
         {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
         {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: 'var(--sb-navy)', marginBottom: '0.75rem' }}>{f.heading}</h2>}
@@ -4226,12 +4251,165 @@ function ProcessBlock({ section }) {
   );
 }
 
+// ── Smart-art graphics — SaltTide deck visual language ──────────────────────
+// Accent-bar cards, cascade arrows, and numbered architecture flows, ported
+// from the SaltTide Investor Pitch deck's design system into data-driven
+// blocks. Each accepts an `items`/`steps` array via section.fields so content
+// is edited the same way as every other array-backed block (admin array
+// editor), not hardcoded per instance.
+const ACCENT_SWATCH = {
+  gold: 'var(--sb-gold)',
+  teal: 'var(--sb-teal)',
+  pink: 'var(--herq-accent, #E8407A)',
+  sage: 'var(--sb-sage)',
+};
+
+function AccentStatCardsBlock({ section }) {
+  const f = section.fields || {};
+  const items = Array.isArray(f.statCards) ? f.statCards : [];
+  const dark = section.bg !== 'ivory' && section.bg !== 'linen' && section.bg !== 'cream';
+  const cardBg = dark ? 'rgba(255,255,255,0.05)' : '#fff';
+  const [hovered, setHovered] = React.useState(null);
+  return (
+    <section id={section.id} data-theme={section.theme || undefined} style={{ background: BG_VAR[section.bg] || 'var(--sb-navy)', padding: '5rem 2rem' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
+        {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: TEXT_FOR[section.bg] || 'var(--sb-cream)', marginBottom: '0.75rem' }}>{f.heading}</h2>}
+        {f.intro && <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: SUB_FOR[section.bg] || 'var(--sb-sage)', maxWidth: 740, marginBottom: '2.5rem' }}>{f.intro}</p>}
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(Math.max(items.length, 2), 4)}, 1fr)`, gap: '1.25rem' }}>
+          {items.map((item, i) => {
+            const accent = ACCENT_SWATCH[item.accent] || ACCENT_SWATCH.gold;
+            const isHover = hovered === i;
+            return (
+              <div
+                key={i}
+                onMouseEnter={() => setHovered(i)}
+                onMouseLeave={() => setHovered(null)}
+                style={{
+                  background: cardBg, borderRadius: 4, overflow: 'hidden',
+                  border: `0.5px solid ${dark ? 'rgba(255,255,255,0.12)' : 'rgba(27,42,59,0.12)'}`,
+                  transform: isHover ? 'translateY(-3px)' : 'none',
+                  boxShadow: isHover ? '0 10px 24px rgba(0,0,0,0.18)' : 'none',
+                  transition: 'transform 160ms ease, box-shadow 160ms ease',
+                }}
+              >
+                <div style={{ height: 4, background: accent }} />
+                <div style={{ padding: '1.25rem 1.1rem' }}>
+                  {item.icon && <BrandIcon name={item.icon} size={26} color={accent} style={{ marginBottom: '0.6rem', display: 'block' }} />}
+                  <div className="sb-display" style={{ fontSize: '1.9rem', color: dark ? '#fff' : 'var(--sb-navy)', lineHeight: 1 }}>{item.value}</div>
+                  <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.66rem', letterSpacing: '0.08em', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', marginTop: '0.5rem' }}>{item.label}</div>
+                  {item.caption && <div style={{ fontSize: '0.72rem', color: dark ? 'var(--sb-dusty)' : '#666', marginTop: '0.45rem', lineHeight: 1.5 }}>{item.caption}</div>}
+                  {item.source && <div style={{ fontSize: '0.62rem', color: dark ? 'rgba(181,196,193,0.6)' : '#999', marginTop: '0.5rem', fontStyle: 'italic' }}>{item.source}</div>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CascadeFlowBlock({ section }) {
+  const f = section.fields || {};
+  const steps = Array.isArray(f.cascadeSteps) ? f.cascadeSteps : [];
+  const [active, setActive] = React.useState(null);
+  return (
+    <section id={section.id} data-theme={section.theme || undefined} style={{ background: BG_VAR[section.bg] || 'var(--sb-navy)', padding: '5rem 2rem' }}>
+      <div style={{ maxWidth: 1180, margin: '0 auto' }}>
+        {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
+        {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: TEXT_FOR[section.bg] || 'var(--sb-cream)', marginBottom: '0.75rem' }}>{f.heading}</h2>}
+        {f.intro && <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: SUB_FOR[section.bg] || 'var(--sb-sage)', maxWidth: 740, marginBottom: '2.5rem' }}>{f.intro}</p>}
+        <div style={{ display: 'flex', alignItems: 'stretch', gap: 0, overflowX: 'auto', paddingBottom: '0.5rem' }}>
+          {steps.map((step, i) => {
+            const accent = ACCENT_SWATCH[step.accent] || ACCENT_SWATCH.teal;
+            const isActive = active === i;
+            return (
+              <React.Fragment key={i}>
+                <div
+                  onMouseEnter={() => setActive(i)}
+                  onMouseLeave={() => setActive(null)}
+                  style={{
+                    minWidth: 190, flex: '0 0 190px', background: 'rgba(255,255,255,0.05)', borderRadius: 4,
+                    padding: '1.1rem 1rem', position: 'relative',
+                    boxShadow: isActive ? `0 0 0 1.5px ${accent}` : '0 0 0 0.5px rgba(255,255,255,0.1)',
+                    transition: 'box-shadow 160ms ease',
+                  }}
+                >
+                  <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 4, background: accent, borderRadius: '4px 4px 0 0' }} />
+                  {step.icon && <BrandIcon name={step.icon} size={26} color={accent} style={{ marginBottom: '0.6rem', display: 'block' }} />}
+                  <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.78rem', fontWeight: 600, color: '#fff', marginBottom: '0.4rem' }}>{step.title}</div>
+                  <div style={{ fontSize: '0.76rem', color: 'var(--sb-sage)', lineHeight: 1.5 }}>{step.description}</div>
+                </div>
+                {i < steps.length - 1 && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 34, flexShrink: 0, color: 'var(--sb-gold)', fontSize: '1.2rem' }}>→</div>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </div>
+        {f.summary && (
+          <div style={{ marginTop: '1.5rem', background: 'var(--sb-teal-deep)', borderRadius: 4, padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            {f.summaryIcon && <BrandIcon name={f.summaryIcon} size={22} color="var(--sb-cream)" />}
+            <p style={{ margin: 0, color: 'var(--sb-cream)', fontSize: '0.9rem', lineHeight: 1.6 }}>{f.summary}</p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function ArchitectureStepsBlock({ section }) {
+  const f = section.fields || {};
+  const steps = Array.isArray(f.steps) ? f.steps : [];
+  const [selected, setSelected] = React.useState(0);
+  return (
+    <section id={section.id} data-theme={section.theme || undefined} style={{ background: BG_VAR[section.bg] || 'var(--sb-navy)', padding: '5rem 2rem' }}>
+      <div style={{ maxWidth: 900, margin: '0 auto' }}>
+        {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
+        {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: TEXT_FOR[section.bg] || 'var(--sb-cream)', marginBottom: '0.75rem' }}>{f.heading}</h2>}
+        {f.intro && <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: SUB_FOR[section.bg] || 'var(--sb-sage)', maxWidth: 740, marginBottom: '2.5rem' }}>{f.intro}</p>}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          {steps.map((step, i) => {
+            const isSelected = selected === i;
+            return (
+              <div key={i} style={{ display: 'flex', gap: '1.25rem', alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                  <button
+                    type="button"
+                    onClick={() => setSelected(i)}
+                    style={{
+                      width: 34, height: 34, borderRadius: '50%', border: 'none', cursor: 'pointer',
+                      background: isSelected ? 'var(--sb-teal)' : 'var(--sb-navy-soft, var(--sb-navy))',
+                      color: isSelected ? '#fff' : 'var(--sb-teal)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontFamily: 'var(--sb-font-label)', fontSize: '0.85rem', fontWeight: 700, flexShrink: 0, zIndex: 1,
+                      boxShadow: isSelected ? '0 0 0 3px rgba(74,124,142,0.3)' : 'none',
+                    }}
+                  >{i + 1}</button>
+                  {i < steps.length - 1 && <div style={{ width: 1, flex: 1, minHeight: 36, background: 'var(--sb-teal)', opacity: 0.35, margin: '4px 0' }} />}
+                </div>
+                <div style={{ paddingBottom: i < steps.length - 1 ? '1.5rem' : 0, paddingTop: '0.3rem', cursor: 'pointer' }} onClick={() => setSelected(i)}>
+                  <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.85rem', fontWeight: isSelected ? 700 : 500, color: TEXT_FOR[section.bg] || 'var(--sb-cream)', marginBottom: '0.3rem' }}>{step.title}</div>
+                  {(isSelected || !f.collapsible) && step.description && (
+                    <p style={{ fontSize: '0.85rem', lineHeight: 1.6, color: SUB_FOR[section.bg] || 'var(--sb-sage)', margin: 0, maxWidth: 620 }}>{step.description}</p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function ColumnsBlock({ section }) {
   const f = section.fields || {};
   const cols = Array.isArray(f.cols) ? f.cols : [];
   const colCount = Math.min(Math.max(Number(f.columnCount) || cols.length || 3, 2), 4);
   return (
-    <section id={section.id} style={{ background: BG_VAR[section.bg] || 'var(--sb-linen)', padding: '5rem 2rem' }}>
+    <section id={section.id} data-theme={section.theme || undefined} style={{ background: BG_VAR[section.bg] || 'var(--sb-linen)', padding: '5rem 2rem' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
         {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
         {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: 'var(--sb-navy)', marginBottom: '0.75rem' }}>{f.heading}</h2>}
@@ -4255,7 +4433,7 @@ function IconGridBlock({ section }) {
   const items = Array.isArray(f.items) ? f.items : [];
   const [tooltip, setTooltip] = React.useState(null);
   return (
-    <section id={section.id} style={{ background: BG_VAR[section.bg] || 'var(--sb-cream)', padding: '5rem 2rem' }}>
+    <section id={section.id} data-theme={section.theme || undefined} style={{ background: BG_VAR[section.bg] || 'var(--sb-cream)', padding: '5rem 2rem' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
         {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
         {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: 'var(--sb-navy)', marginBottom: '0.75rem' }}>{f.heading}</h2>}
@@ -4301,7 +4479,7 @@ function KpiDashboardBlock({ section }) {
   const bg = BG_VAR[section.bg] || 'var(--sb-ivory)';
   const dark = section.bg === 'navy' || section.bg === 'teal';
   return (
-    <section id={section.id} style={{ background: bg, padding: '5rem 2rem' }}>
+    <section id={section.id} data-theme={section.theme || undefined} style={{ background: bg, padding: '5rem 2rem' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
         {f.heading && (
@@ -4345,7 +4523,7 @@ function RoadmapBlock({ section }) {
   const bg = BG_VAR[section.bg] || 'var(--sb-linen)';
   const dark = section.bg === 'navy' || section.bg === 'teal';
   return (
-    <section id={section.id} style={{ background: bg, padding: '5rem 2rem', overflow: 'hidden' }}>
+    <section id={section.id} data-theme={section.theme || undefined} style={{ background: bg, padding: '5rem 2rem', overflow: 'hidden' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
         {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', marginBottom: f.intro ? '0.75rem' : '3rem' }}>{f.heading}</h2>}
@@ -4403,7 +4581,7 @@ function HeatmapBlock({ section }) {
   const dark = section.bg === 'navy' || section.bg === 'teal';
   const legend = Object.entries(CELL).filter(([k]) => k !== 'gray');
   return (
-    <section id={section.id} style={{ background: bg, padding: '5rem 2rem' }}>
+    <section id={section.id} data-theme={section.theme || undefined} style={{ background: bg, padding: '5rem 2rem' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
         {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', marginBottom: f.intro ? '0.75rem' : '2rem' }}>{f.heading}</h2>}
@@ -4468,7 +4646,7 @@ function LeaderboardBlock({ section }) {
   const dark = section.bg === 'navy' || section.bg === 'teal';
   const RANK_BG = ['#C4843A','#8B9BAE','#C8895A']; // gold / silver / bronze
   return (
-    <section id={section.id} style={{ background: bg, padding: '5rem 2rem' }}>
+    <section id={section.id} data-theme={section.theme || undefined} style={{ background: bg, padding: '5rem 2rem' }}>
       <div style={{ maxWidth: 800, margin: '0 auto' }}>
         {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
         {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', marginBottom: f.intro ? '0.75rem' : '2rem' }}>{f.heading}</h2>}
@@ -4519,7 +4697,7 @@ function ExecutiveSummaryBlock({ section }) {
   const bg = BG_VAR[section.bg] || '#fff9e7';
   const dark = section.bg === 'navy' || section.bg === 'teal';
   return (
-    <section id={section.id} style={{ background: bg, padding: '5rem 2rem' }}>
+    <section id={section.id} data-theme={section.theme || undefined} style={{ background: bg, padding: '5rem 2rem' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'minmax(0,1.4fr) minmax(0,1fr)', gap: '4rem', alignItems: 'center' }}>
         {/* Left: text + stats */}
         <div>
@@ -4577,7 +4755,7 @@ function AppMockupBlock({ section, liveSlugs }) {
   const bg = BG_VAR[section.bg] || 'var(--sb-navy)';
   const dark = section.bg === 'navy' || section.bg === 'teal' || !section.bg;
   return (
-    <section id={section.id} style={{ background: bg, padding: '5rem 2rem', overflow: 'hidden' }}>
+    <section id={section.id} data-theme={section.theme || undefined} style={{ background: bg, padding: '5rem 2rem', overflow: 'hidden' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: screens.length > 1 ? '1fr 1fr' : '1fr 1.2fr', gap: '4rem', alignItems: 'center' }}>
         {/* Text */}
         <div>
@@ -4642,7 +4820,7 @@ function ChoiceGridBlock({ section, liveSlugs }) {
   const bg = BG_VAR[section.bg] || 'var(--sb-cream)';
   const dark = section.bg === 'navy' || section.bg === 'teal';
   return (
-    <section id={section.id} style={{ background: bg, padding: '5rem 2rem' }}>
+    <section id={section.id} data-theme={section.theme || undefined} style={{ background: bg, padding: '5rem 2rem' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
         {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
         {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', marginBottom: f.intro ? '0.75rem' : '2rem' }}>{f.heading}</h2>}
@@ -4748,7 +4926,7 @@ function DecisionTreeBlock({ section }) {
   }
 
   return (
-    <section id={section.id} style={{ background: bg, padding: '5rem 2rem' }}>
+    <section id={section.id} data-theme={section.theme || undefined} style={{ background: bg, padding: '5rem 2rem' }}>
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
         {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
         {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', marginBottom: f.intro ? '0.75rem' : '2.5rem' }}>{f.heading}</h2>}
@@ -4841,7 +5019,7 @@ function OutputGeneratorBlock({ section, mode }) {
   const dark = section.bg === 'navy' || section.bg === 'teal';
 
   return (
-    <section id={section.id} style={{ background: bg, padding: '3rem 2rem' }}>
+    <section id={section.id} data-theme={section.theme || undefined} style={{ background: bg, padding: '3rem 2rem' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         {f.heading && <h2 className="sb-display" style={{ fontSize: '1.8rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', marginBottom: '0.5rem' }}>{f.heading}</h2>}
         {f.intro && <p style={{ fontSize: '0.88rem', color: dark ? 'var(--sb-sage)' : '#666', marginBottom: '1.5rem', lineHeight: 1.7 }}>{f.intro}</p>}
@@ -4964,7 +5142,7 @@ function SkillsBlock({ section }) {
   const LEVEL_COLOR = { expert: 'var(--sb-gold)', proficient: 'var(--sb-teal-deep)', familiar: '#8b9bae' };
   const LEVEL_W = { expert: '100%', proficient: '70%', familiar: '40%' };
   return (
-    <section id={section.id} style={{ background: bg, padding: '5rem 2rem' }}>
+    <section id={section.id} data-theme={section.theme || undefined} style={{ background: bg, padding: '5rem 2rem' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
         {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
         {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', marginBottom: f.intro ? '0.75rem' : '2rem' }}>{f.heading}</h2>}
@@ -5069,7 +5247,7 @@ function ClientSnapshotBlock({ section }) {
   ];
 
   return (
-    <section id={section.id} style={{ background: bg, padding: '5rem 2rem' }}>
+    <section id={section.id} data-theme={section.theme || undefined} style={{ background: bg, padding: '5rem 2rem' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
         {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: dark ? 'var(--sb-cream)' : 'var(--sb-navy)', marginBottom: f.intro ? '0.75rem' : '1.5rem' }}>{f.heading}</h2>}
@@ -5165,6 +5343,145 @@ function CustomOutputBlock({ section }) {
   );
 }
 
+// ── Career Explorer — public, searchable, interactive Career Master widget ──
+// Embeddable in any page's sections array. Lets a site visitor search a
+// member's skills inventory and case study portfolio, and see rollup stat
+// cards / charts computed live off the same Career Master data as the
+// output-template builder (server/lib/rollupMetrics.js), scoped to
+// `memberSlug` via the public `?owner=` param on /api/career/master and
+// /api/career/rollups (multi-tenancy retrofit — server/routes/careerMaster.js).
+const EXPLORER_TABS = [
+  { id: 'skills', label: 'Skills' },
+  { id: 'engagements', label: 'Case Studies' },
+  { id: 'tools', label: 'Tools' },
+];
+
+function CareerExplorerBlock({ section, memberSlug }) {
+  const f = section.fields || {};
+  const [master, setMaster] = React.useState(null);
+  const [rollupCatalog, setRollupCatalog] = React.useState(null);
+  const [tab, setTab] = React.useState('skills');
+  const [query, setQuery] = React.useState('');
+
+  React.useEffect(() => {
+    const ownerParam = memberSlug ? `?owner=${encodeURIComponent(memberSlug)}` : '';
+    fetch(`/api/career/master${ownerParam}`).then((r) => r.json()).then(setMaster).catch(() => setMaster(null));
+    fetch(`/api/career/rollups${ownerParam}`).then((r) => r.json()).then(setRollupCatalog).catch(() => setRollupCatalog(null));
+  }, [memberSlug]);
+
+  const bg = BG_VAR[section.bg] || 'var(--sb-ivory)';
+  const dark = section.bg === 'navy' || section.bg === 'teal';
+  const textColor = dark ? 'var(--sb-cream)' : 'var(--sb-navy)';
+  const subColor = dark ? 'var(--sb-sage)' : '#555';
+  const cardBg = dark ? 'rgba(255,255,255,0.05)' : 'white';
+  const cardBorder = dark ? '0.5px solid rgba(255,255,255,0.1)' : '0.5px solid rgba(0,0,0,0.07)';
+
+  if (!master || !rollupCatalog) {
+    return (
+      <section id={section.id} style={{ background: bg, padding: '5rem 2rem' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', textAlign: 'center', color: subColor, fontSize: '0.85rem' }}>Loading career database…</div>
+      </section>
+    );
+  }
+
+  const q = query.trim().toLowerCase();
+  const skills = (master.skills || []).filter((s) => !q || s.skill?.toLowerCase().includes(q) || s.category?.toLowerCase().includes(q));
+  const engagements = (master.engagements || []).filter((e) => !q || e.clientDisplayName?.toLowerCase().includes(q) || e.industry?.toLowerCase().includes(q) || e.employer?.toLowerCase().includes(q));
+  const tools = (rollupCatalog.toolUsage || []).filter((t) => !q || t.tool?.toLowerCase().includes(q) || t.category?.toLowerCase().includes(q));
+
+  return (
+    <section id={section.id} style={{ background: bg, padding: '5rem 2rem' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
+        {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: textColor, marginBottom: '0.75rem' }}>{f.heading}</h2>}
+        {f.intro && <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: subColor, maxWidth: 740, marginBottom: '2rem' }}>{f.intro}</p>}
+
+        {/* Rollup stat cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.9rem', marginBottom: '2rem' }}>
+          {(rollupCatalog.staticRollups || []).slice(0, 6).map((r) => (
+            <div key={r.key} style={{ textAlign: 'center', padding: '1.1rem 0.6rem', background: cardBg, border: cardBorder, borderRadius: 10 }}>
+              <div className="sb-display" style={{ fontSize: '1.8rem', color: 'var(--sb-gold)', lineHeight: 1 }}>{r.value}</div>
+              <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.6rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: textColor, marginTop: '0.5rem' }}>{r.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Industry duration bar chart, if available */}
+        {rollupCatalog.staticRollups?.some((r) => r.key.startsWith('jobs_by_industry:')) && (
+          <div style={{ marginBottom: '2rem' }}>
+            {rollupCatalog.staticRollups.filter((r) => r.key.startsWith('jobs_by_industry:')).map((r) => {
+              const max = Math.max(...rollupCatalog.staticRollups.filter((x) => x.key.startsWith('jobs_by_industry:')).map((x) => x.value), 1);
+              const pct = Math.round((r.value / max) * 100);
+              return (
+                <div key={r.key} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
+                  <div style={{ width: 160, fontSize: '0.76rem', color: subColor, flexShrink: 0 }}>{r.label.replace('Roles · ', '')}</div>
+                  <div style={{ flex: 1, background: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)', borderRadius: 3, height: 10, overflow: 'hidden' }}>
+                    <div style={{ width: `${pct}%`, height: '100%', background: 'var(--sb-gold)' }} />
+                  </div>
+                  <div style={{ width: 24, fontSize: '0.72rem', color: textColor, fontWeight: 700 }}>{r.value}</div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Search + tabs */}
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search skills, case studies, tools…"
+          style={{ width: '100%', padding: '0.65rem 1rem', borderRadius: 8, border: cardBorder, marginBottom: '1rem', fontSize: '0.88rem', background: cardBg, color: textColor, boxSizing: 'border-box' }}
+        />
+        <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.25rem' }}>
+          {EXPLORER_TABS.map((t) => (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              style={{ padding: '0.45rem 1rem', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: '0.74rem', fontFamily: 'var(--sb-font-label)', background: tab === t.id ? 'var(--sb-gold)' : (dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'), color: tab === t.id ? 'var(--sb-navy)' : textColor }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {tab === 'skills' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.6rem' }}>
+            {skills.map((s) => (
+              <div key={s.id} style={{ padding: '0.7rem 0.9rem', background: cardBg, border: cardBorder, borderRadius: 8 }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: textColor }}>{s.skill}</div>
+                <div style={{ fontSize: '0.68rem', color: subColor, marginTop: 2 }}>{s.category} · {s.tier}{s.yearsExp ? ` · ${s.yearsExp}y` : ''}</div>
+              </div>
+            ))}
+            {!skills.length && <div style={{ fontSize: '0.8rem', color: subColor }}>No skills match "{query}".</div>}
+          </div>
+        )}
+
+        {tab === 'engagements' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '0.75rem' }}>
+            {engagements.map((e) => (
+              <div key={e.id} style={{ padding: '0.9rem 1rem', background: cardBg, border: cardBorder, borderRadius: 8 }}>
+                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: textColor }}>{e.clientDisplayName}</div>
+                <div style={{ fontSize: '0.7rem', color: subColor, marginTop: 2 }}>{[e.employer, e.industry].filter(Boolean).join(' · ')}</div>
+                {e.testimonial && <div style={{ fontSize: '0.76rem', color: subColor, marginTop: '0.5rem', fontStyle: 'italic' }}>"{e.testimonial.slice(0, 140)}{e.testimonial.length > 140 ? '…' : ''}"</div>}
+              </div>
+            ))}
+            {!engagements.length && <div style={{ fontSize: '0.8rem', color: subColor }}>No case studies match "{query}".</div>}
+          </div>
+        )}
+
+        {tab === 'tools' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.6rem' }}>
+            {tools.map((t) => (
+              <div key={t.tool} style={{ padding: '0.7rem 0.9rem', background: cardBg, border: cardBorder, borderRadius: 8 }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: textColor }}>{t.tool}</div>
+                <div style={{ fontSize: '0.68rem', color: subColor, marginTop: 2 }}>{t.category} · {t.tier} · {t.roleCount} role{t.roleCount === 1 ? '' : 's'}</div>
+              </div>
+            ))}
+            {!tools.length && <div style={{ fontSize: '0.8rem', color: subColor }}>No tools match "{query}".</div>}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 const REGISTRY = {
   hero: HeroBlock,
   scripture: ScriptureBlock,
@@ -5208,6 +5525,10 @@ const REGISTRY = {
   skills: SkillsBlock,
   clientSnapshot: ClientSnapshotBlock,
   customOutputBlock: CustomOutputBlock,
+  careerExplorer: CareerExplorerBlock,
+  accentStatCards: AccentStatCardsBlock,
+  cascadeFlow: CascadeFlowBlock,
+  architectureSteps: ArchitectureStepsBlock,
 };
 
 export function RenderSection({ section, config, mode = 'public', memberSlug = '', liveSlugs = null }) {

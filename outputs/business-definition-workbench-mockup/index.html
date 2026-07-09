@@ -1,0 +1,1323 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Salt Basin Business Definition Workbench Mockup</title>
+  <style>
+    :root {
+      --sb-navy: #132f3f;
+      --sb-navy-deep: #0b2230;
+      --sb-ink: #15303c;
+      --sb-ivory: #f8f6f0;
+      --sb-paper: #fffdf8;
+      --sb-line: #d9d2c5;
+      --sb-muted: #6f7c82;
+      --sb-gold: #c4843a;
+      --sb-gold-soft: #f2dfbf;
+      --sb-teal: #2c9c92;
+      --sb-blue: #4a7c8e;
+      --sb-green: #5f9d74;
+      --sb-red: #ad5a50;
+      --sb-shadow: 0 16px 34px rgba(11, 34, 48, 0.12);
+      --radius: 8px;
+      --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font);
+      color: var(--sb-ink);
+      background: var(--sb-ivory);
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: 56px 1fr;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 20px;
+      background: var(--sb-navy-deep);
+      color: var(--sb-ivory);
+      border-bottom: 1px solid rgba(196, 132, 58, 0.35);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .mark {
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      color: var(--sb-navy-deep);
+      background: linear-gradient(135deg, var(--sb-gold), #f0d093);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-title {
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand-subtitle {
+      margin-top: 2px;
+      color: rgba(248, 246, 240, 0.68);
+      font-size: 11px;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 32px;
+      padding: 7px 11px;
+      border-radius: 7px;
+      background: rgba(248, 246, 240, 0.08);
+      color: var(--sb-ivory);
+      border: 1px solid rgba(248, 246, 240, 0.14);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .btn.primary {
+      background: var(--sb-gold);
+      color: #17130e;
+      border-color: var(--sb-gold);
+    }
+
+    .btn.light {
+      background: var(--sb-paper);
+      color: var(--sb-ink);
+      border: 1px solid var(--sb-line);
+    }
+
+    .btn.ghost {
+      background: transparent;
+      color: var(--sb-gold);
+      border: 1px solid rgba(196, 132, 58, 0.3);
+    }
+
+    .workspace {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 292px minmax(480px, 1fr) 344px;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--sb-navy);
+      color: var(--sb-ivory);
+      border-right: 1px solid rgba(196, 132, 58, 0.28);
+    }
+
+    .panel-head {
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid rgba(196, 132, 58, 0.22);
+    }
+
+    .label {
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--sb-gold);
+      font-weight: 800;
+    }
+
+    .panel-title {
+      margin: 6px 0 0;
+      font-size: 17px;
+      line-height: 1.2;
+      font-weight: 800;
+    }
+
+    .panel-sub {
+      margin: 6px 0 0;
+      color: rgba(248, 246, 240, 0.68);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .search {
+      margin-top: 12px;
+      width: 100%;
+      border: 1px solid rgba(248, 246, 240, 0.16);
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.07);
+      color: var(--sb-ivory);
+      padding: 9px 10px;
+      outline: none;
+      font-size: 12px;
+    }
+
+    .scenario-list {
+      min-height: 0;
+      overflow: auto;
+      padding: 12px;
+    }
+
+    .scenario-card {
+      width: 100%;
+      text-align: left;
+      padding: 11px;
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--sb-ivory);
+      border: 1px solid transparent;
+      margin-bottom: 8px;
+    }
+
+    .scenario-card.active {
+      background: rgba(196, 132, 58, 0.14);
+      border-color: rgba(196, 132, 58, 0.42);
+    }
+
+    .scenario-name {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .score-pill {
+      flex: 0 0 auto;
+      border-radius: 999px;
+      padding: 2px 7px;
+      background: rgba(44, 156, 146, 0.2);
+      color: #a7eee5;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .scenario-meta {
+      margin-top: 7px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 999px;
+      padding: 3px 7px;
+      background: rgba(255, 255, 255, 0.09);
+      color: rgba(248, 246, 240, 0.78);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .main {
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto 1fr 260px;
+      background: var(--sb-ivory);
+    }
+
+    .scenario-toolbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      padding: 16px 18px;
+      background: var(--sb-paper);
+      border-bottom: 1px solid var(--sb-line);
+    }
+
+    .scenario-h1 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.14;
+      letter-spacing: 0;
+    }
+
+    .scenario-copy {
+      margin: 7px 0 0;
+      max-width: 860px;
+      color: var(--sb-muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 112px);
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .metric {
+      padding: 9px;
+      border-radius: var(--radius);
+      border: 1px solid var(--sb-line);
+      background: #fff;
+    }
+
+    .metric .num {
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .metric .text {
+      margin-top: 4px;
+      color: var(--sb-muted);
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .canvas {
+      min-height: 0;
+      overflow: auto;
+      padding: 18px;
+    }
+
+    .flow {
+      min-width: 980px;
+      display: grid;
+      grid-template-columns: repeat(11, minmax(124px, 1fr));
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .stage {
+      min-height: 260px;
+      background: var(--sb-paper);
+      border: 1px solid var(--sb-line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 6px 14px rgba(19, 47, 63, 0.05);
+    }
+
+    .stage.active {
+      border-color: rgba(196, 132, 58, 0.82);
+      box-shadow: 0 0 0 2px rgba(196, 132, 58, 0.18), 0 10px 22px rgba(19, 47, 63, 0.08);
+    }
+
+    .stage.disabled {
+      opacity: 0.48;
+      filter: grayscale(0.3);
+    }
+
+    .stage-head {
+      padding: 10px;
+      background: #f1eadf;
+      border-bottom: 1px solid var(--sb-line);
+    }
+
+    .stage-name {
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 1.2;
+    }
+
+    .stage-weight {
+      margin-top: 5px;
+      color: var(--sb-muted);
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .gate-list {
+      padding: 9px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .gate {
+      width: 100%;
+      text-align: left;
+      padding: 9px;
+      border-radius: 7px;
+      background: #fff;
+      border: 1px solid var(--sb-line);
+      color: var(--sb-ink);
+    }
+
+    .gate.active {
+      border-color: var(--sb-gold);
+      background: #fff8eb;
+    }
+
+    .gate-title {
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 1.2;
+    }
+
+    .gate-meta {
+      margin-top: 5px;
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .mini-pill {
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: #eef3f3;
+      color: var(--sb-muted);
+      font-size: 9px;
+      font-weight: 800;
+    }
+
+    .spec-preview {
+      min-height: 0;
+      overflow: auto;
+      border-top: 1px solid var(--sb-line);
+      background: var(--sb-paper);
+      padding: 14px 18px;
+    }
+
+    .preview-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    .preview-card {
+      border: 1px solid var(--sb-line);
+      border-radius: var(--radius);
+      background: #fff;
+      padding: 12px;
+    }
+
+    .preview-card h3 {
+      margin: 0 0 8px;
+      font-size: 13px;
+    }
+
+    .preview-card ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--sb-muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .inspector {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      border-left: 1px solid var(--sb-line);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      padding: 10px;
+      border-bottom: 1px solid var(--sb-line);
+      background: #fbfaf6;
+      overflow-x: auto;
+    }
+
+    .tab {
+      flex: 1 0 auto;
+      min-height: 30px;
+      padding: 7px 9px;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--sb-muted);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .tab.active {
+      background: var(--sb-navy);
+      color: var(--sb-ivory);
+    }
+
+    .inspector-body {
+      min-height: 0;
+      overflow: auto;
+      padding: 14px;
+    }
+
+    .field {
+      margin-bottom: 12px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--sb-muted);
+      font-weight: 900;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      border: 1px solid var(--sb-line);
+      border-radius: 7px;
+      background: #fff;
+      color: var(--sb-ink);
+      padding: 9px;
+      outline: none;
+      font-size: 12px;
+    }
+
+    .field textarea {
+      min-height: 82px;
+      resize: vertical;
+      line-height: 1.4;
+    }
+
+    .slider-row {
+      display: grid;
+      grid-template-columns: 1fr 44px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .chip-list,
+    .rule-list,
+    .system-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .chip,
+    .rule,
+    .system {
+      padding: 10px;
+      border-radius: var(--radius);
+      border: 1px solid var(--sb-line);
+      background: #fff;
+    }
+
+    .chip {
+      border-left: 4px solid var(--sb-teal);
+    }
+
+    .rule {
+      border-left: 4px solid var(--sb-gold);
+    }
+
+    .system {
+      border-left: 4px solid var(--sb-blue);
+    }
+
+    .item-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .item-copy {
+      margin-top: 5px;
+      color: var(--sb-muted);
+      font-size: 11px;
+      line-height: 1.42;
+    }
+
+    .inline-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      max-width: 320px;
+      padding: 12px 14px;
+      border-radius: var(--radius);
+      background: var(--sb-navy-deep);
+      color: var(--sb-ivory);
+      box-shadow: var(--sb-shadow);
+      border: 1px solid rgba(196, 132, 58, 0.35);
+      font-size: 12px;
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: 180ms ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 1120px) {
+      .workspace {
+        grid-template-columns: 260px 1fr;
+      }
+
+      .inspector {
+        position: fixed;
+        top: 56px;
+        right: 0;
+        width: min(390px, 92vw);
+        height: calc(100vh - 56px);
+        z-index: 5;
+        box-shadow: var(--sb-shadow);
+      }
+
+      .metrics {
+        grid-template-columns: repeat(3, 92px);
+      }
+    }
+
+    @media (max-width: 760px) {
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .scenario-toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .main {
+        grid-template-rows: auto 1fr 340px;
+      }
+
+      .preview-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark">SB</div>
+        <div>
+          <div class="brand-title">Business Definition Workbench</div>
+          <div class="brand-subtitle">Scenario configuration mockup for Salt Basin</div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="btn" id="resetBtn">Reset</button>
+        <button class="btn" id="exportBtn">Export JSON</button>
+        <button class="btn primary" id="generateBtn">Generate Spec</button>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <aside class="sidebar">
+        <div class="panel-head">
+          <div class="label">Scenario Discovery</div>
+          <h1 class="panel-title">L2 Scenario Candidates</h1>
+          <p class="panel-sub">Accept, tune, and map client-specific business scenarios into tokenized journeys.</p>
+          <input class="search" id="searchInput" placeholder="Search scenarios, systems, chips..." />
+        </div>
+        <div class="scenario-list" id="scenarioList"></div>
+      </aside>
+
+      <main class="main">
+        <section class="scenario-toolbar">
+          <div>
+            <div class="label" id="scenarioFamilyLabel">L2 Scenario</div>
+            <h2 class="scenario-h1" id="scenarioTitle"></h2>
+            <p class="scenario-copy" id="scenarioDescription"></p>
+            <div class="inline-actions">
+              <button class="btn light" id="acceptScenarioBtn">Accept Scenario</button>
+              <button class="btn light" id="addGateBtn">Add Gate</button>
+              <button class="btn light" id="addChipBtn">Add Metadata Chip</button>
+              <button class="btn light" id="addRuleBtn">Add Business Rule</button>
+            </div>
+          </div>
+          <div class="metrics">
+            <div class="metric">
+              <div class="num" id="relevanceMetric">0%</div>
+              <div class="text">Relevance</div>
+            </div>
+            <div class="metric">
+              <div class="num" id="confidenceMetric">0%</div>
+              <div class="text">Confidence</div>
+            </div>
+            <div class="metric">
+              <div class="num" id="coverageMetric">0%</div>
+              <div class="text">Definition</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="canvas">
+          <div class="flow" id="flow"></div>
+        </section>
+
+        <section class="spec-preview">
+          <div class="preview-grid">
+            <div class="preview-card">
+              <h3>Generated Business Definition</h3>
+              <ul id="definitionPreview"></ul>
+            </div>
+            <div class="preview-card">
+              <h3>Rule Design Preview</h3>
+              <ul id="rulePreview"></ul>
+            </div>
+            <div class="preview-card">
+              <h3>DataBasin Bridge Preview</h3>
+              <ul id="bridgePreview"></ul>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <aside class="inspector">
+        <div class="tabs">
+          <button class="tab active" data-tab="scenario">Scenario</button>
+          <button class="tab" data-tab="gate">Gate</button>
+          <button class="tab" data-tab="chips">Chips</button>
+          <button class="tab" data-tab="rules">Rules</button>
+          <button class="tab" data-tab="systems">Systems</button>
+        </div>
+        <div class="inspector-body" id="inspectorBody"></div>
+      </aside>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const stages = [
+      { id: "rev.lead", name: "Lead", weight: 0.05 },
+      { id: "rev.qualification", name: "Qualification", weight: 0.10 },
+      { id: "rev.opportunity", name: "Opportunity", weight: 0.15 },
+      { id: "rev.proposal", name: "Proposal / Quote", weight: 0.15 },
+      { id: "rev.contract", name: "Contract", weight: 0.15 },
+      { id: "rev.order", name: "Order / Booking", weight: 0.10 },
+      { id: "rev.fulfillment", name: "Fulfillment", weight: 0.10 },
+      { id: "rev.billing", name: "Billing", weight: 0.05 },
+      { id: "rev.collection", name: "Collection", weight: 0.05 },
+      { id: "rev.recognition", name: "Revenue Recognition", weight: 0.05 },
+      { id: "rev.renewal", name: "Renewal", weight: 0.05 }
+    ];
+
+    const defaultState = {
+      selectedScenarioId: "l2.parent_pricing_agreement",
+      selectedGateId: "gate.payment-obligation-defined",
+      tab: "scenario",
+      scenarios: [
+        {
+          id: "l2.brand_new_sale",
+          title: "Brand New Sale",
+          family: "brand_new_sale",
+          status: "candidate",
+          relevance: 0.86,
+          confidence: 0.70,
+          description: "A new commercial relationship where the sold-to party has not previously held a paying contract for the selected product or service.",
+          systems: ["Salesforce", "CPQ", "CLM", "Billing", "DataBasin"],
+          outputs: ["Proposal", "Business Definition Spec", "Revenue Lifecycle Map"],
+          enabledStages: ["rev.lead", "rev.qualification", "rev.opportunity", "rev.proposal", "rev.contract", "rev.order", "rev.fulfillment", "rev.billing", "rev.collection", "rev.recognition", "rev.renewal"],
+          gates: [
+            gate("gate.new-sale-qualified", "Qualification Complete", "rev.qualification", "Qualification threshold met and customer identity chip created.", ["Customer Identity"], ["Revenue", "Customer"]),
+            gate("gate.new-sale-pricing", "Pricing Approved", "rev.proposal", "Products, discount, payment terms, and billing trigger approved.", ["Product Version", "Pricing Version"], ["Revenue", "Contract"]),
+            gate("gate.new-sale-contract", "Contract Executed", "rev.contract", "Payment obligation and performance obligations defined.", ["Contract Obligation", "Performance Obligation"], ["Revenue", "Customer", "Member"])
+          ],
+          chips: [
+            chip("chip.customer.identity", "Customer Identity", "customer_identity", "Salesforce Account", "Candidate payer/customer identity."),
+            chip("chip.product.version", "Product Version", "product_version", "Product2", "Selected product version constrains downstream terms."),
+            chip("chip.billing.trigger", "Billing Trigger", "billing_trigger", "Contract / Billing", "Event permitting first bill.")
+          ],
+          rules: [
+            rule("rule.sold-to-payment-obligation", "identity", "Sold-to must be the party signing a payment obligation for the product or service.")
+          ]
+        },
+        {
+          id: "l2.parent_pricing_agreement",
+          title: "Parent Pricing Agreement",
+          family: "parent_pricing_agreement",
+          status: "draft",
+          relevance: 0.92,
+          confidence: 0.72,
+          description: "A parent organization signs terms that make child organizations, sites, members, or individuals eligible for defined pricing, but may not itself purchase or pay.",
+          systems: ["Salesforce", "CPQ", "CLM", "Billing", "DataBasin"],
+          outputs: ["Business Definition Spec", "Proposal", "Reconciliation Confidence"],
+          enabledStages: ["rev.lead", "rev.qualification", "rev.opportunity", "rev.proposal", "rev.contract", "rev.fulfillment", "rev.billing", "rev.recognition", "rev.renewal"],
+          gates: [
+            gate("gate.parent-eligibility", "Eligibility Population Defined", "rev.qualification", "Eligible child organizations, sites, members, or individuals are identified.", ["Parent Account", "Member Eligibility"], ["Customer", "Member"]),
+            gate("gate.parent-pricing", "Pricing Version Bound", "rev.proposal", "Approved pricing version is linked to eligible population and product definition.", ["Pricing Version", "Product Version"], ["Revenue", "Product"]),
+            gate("gate.payment-obligation-defined", "Payment Obligation Defined", "rev.contract", "Confirm whether parent agreement creates direct payment obligation or pricing eligibility only.", ["Parent Identity", "Payment Obligation", "Member Eligibility"], ["Revenue", "Customer", "Member"]),
+            gate("gate.child-path-created", "Child Purchase Path Created", "rev.fulfillment", "Child organizations or members can start purchase journey under inherited terms.", ["Member Eligibility", "Billing Trigger"], ["Member", "Revenue"])
+          ],
+          chips: [
+            chip("chip.parent.identity", "Parent Account Identity", "customer_identity", "Salesforce Account.ParentId", "Parent or sponsor account normalized into customer/member hierarchy."),
+            chip("chip.pricing.version", "Inherited Pricing Version", "pricing_version", "CPQ Quote / Pricebook", "Pricing version inherited by child or member purchase journeys."),
+            chip("chip.payment.obligation", "Payment Obligation Status", "contract_obligation", "CLM Contract", "Classifies parent as payer, pricing sponsor, or mixed obligation."),
+            chip("chip.member.eligibility", "Member Eligibility", "member_eligibility", "Account hierarchy / eligibility file", "Eligible child orgs, sites, users, or members.")
+          ],
+          rules: [
+            rule("rule.parent-signature-not-revenue", "contract_obligation", "A parent pricing agreement is not closed-won revenue unless the parent accepts a payment obligation."),
+            rule("rule.child-inherits-pricing", "pricing", "Child purchase journeys may inherit pricing terms while creating separate revenue lifecycle tokens."),
+            rule("rule.member-eligibility-not-payment", "entitlement", "Eligibility sponsor and paying member must be classified separately when a member purchases directly.")
+          ]
+        },
+        {
+          id: "l2.usage_based_billing_activation",
+          title: "Usage-Based Billing Activation",
+          family: "usage_based_billing_activation",
+          status: "candidate",
+          relevance: 0.81,
+          confidence: 0.64,
+          description: "Billing amount depends on usage events, claims, API calls, seats, members, transactions, or other variable quantities.",
+          systems: ["Product", "Metering", "Billing", "Warehouse", "DataBasin"],
+          outputs: ["Reconciliation Confidence", "Financial Statement Support", "Disclosure Register"],
+          enabledStages: ["rev.contract", "rev.fulfillment", "rev.billing", "rev.collection", "rev.recognition", "rev.renewal"],
+          gates: [
+            gate("gate.usage-meter-defined", "Usage Meter Defined", "rev.contract", "Usage event, idempotency key, timestamp rule, and aggregation window are defined.", ["Usage Event", "Pricing Version"], ["Revenue", "Financial"]),
+            gate("gate.usage-invoice-ready", "Invoice Quantity Approved", "rev.billing", "Metered usage is aggregated and reconciled before invoice creation.", ["Billing Trigger", "Reconciliation Confidence"], ["Revenue", "Financial"]),
+            gate("gate.usage-revrec-trueup", "Recognition True-Up Complete", "rev.recognition", "Usage billing and revenue recognition paths are reconciled.", ["Revenue Recognition", "Financial Transaction"], ["Revenue"])
+          ],
+          chips: [
+            chip("chip.usage.event", "Usage Event", "custom", "Metering Event", "Atomic billable event definition."),
+            chip("chip.recon.confidence", "Reconciliation Confidence", "reconciliation_confidence", "Warehouse / Billing", "Confidence score for meter to invoice to revenue tie-out.")
+          ],
+          rules: [
+            rule("rule.usage-events-replayable", "reconciliation", "Usage-event controls must be deterministic, idempotent, and replayable by period.")
+          ]
+        },
+        {
+          id: "l2.product_migration",
+          title: "Product Migration",
+          family: "product_migration",
+          status: "candidate",
+          relevance: 0.74,
+          confidence: 0.62,
+          description: "Customer or member moves from one product, SKU, version, platform, package, or pricing model to another.",
+          systems: ["Salesforce", "Product", "Billing", "DataBasin"],
+          outputs: ["Quarterly Report", "Executive Brief", "Revenue Bridge"],
+          enabledStages: ["rev.opportunity", "rev.proposal", "rev.contract", "rev.order", "rev.fulfillment", "rev.billing", "rev.recognition", "rev.renewal"],
+          gates: [
+            gate("gate.migration-source-target", "Source and Target Products Mapped", "rev.proposal", "Source and target product definitions, pricing bridge, and entitlement bridge are mapped.", ["Product Version", "Pricing Version"], ["Product", "Member"]),
+            gate("gate.migration-reporting-class", "Reporting Classification Approved", "rev.recognition", "Migration is classified for revenue, customer, member, and investor reporting.", ["Reconciliation Confidence"], ["Revenue", "Customer"])
+          ],
+          chips: [
+            chip("chip.source.product", "Source Product Version", "product_version", "Product Catalog", "Product being migrated from."),
+            chip("chip.target.product", "Target Product Version", "product_version", "Product Catalog", "Product being migrated to.")
+          ],
+          rules: [
+            rule("rule.migration-not-churn-new", "reconciliation", "Migration should not be misclassified as churn plus new sale unless explicitly required by approved reporting logic.")
+          ]
+        }
+      ],
+      systemsMap: [
+        { id: "sys.salesforce.account", system: "Salesforce", role: "source", object: "Account", field: "ParentId", writeBack: false, target: "DataBasin.customer_member_relationship" },
+        { id: "sys.clm.contract", system: "CLM", role: "source", object: "Contract", field: "Payment_Obligation_Account__c", writeBack: false, target: "DataBasin.contract_obligation" },
+        { id: "sys.databasin.event", system: "DataBasin", role: "system_of_record", object: "revenue_lifecycle_event", field: "event_status", writeBack: true, target: "Salesforce.Opportunity.Revenue_Event_Status__c" }
+      ]
+    };
+
+    function gate(id, name, stageId, purpose, chips, journeys) {
+      return { id, name, stageId, purpose, chips, journeys, status: "in_progress" };
+    }
+
+    function chip(id, name, type, source, state) {
+      return { id, name, type, source, state, confidence: 0.68 };
+    }
+
+    function rule(id, type, text) {
+      return { id, type, text, confidence: 0.72, owner: "Finance / RevOps" };
+    }
+
+    let state = loadState();
+
+    const els = {
+      scenarioList: document.getElementById("scenarioList"),
+      searchInput: document.getElementById("searchInput"),
+      flow: document.getElementById("flow"),
+      scenarioTitle: document.getElementById("scenarioTitle"),
+      scenarioDescription: document.getElementById("scenarioDescription"),
+      scenarioFamilyLabel: document.getElementById("scenarioFamilyLabel"),
+      relevanceMetric: document.getElementById("relevanceMetric"),
+      confidenceMetric: document.getElementById("confidenceMetric"),
+      coverageMetric: document.getElementById("coverageMetric"),
+      inspectorBody: document.getElementById("inspectorBody"),
+      definitionPreview: document.getElementById("definitionPreview"),
+      rulePreview: document.getElementById("rulePreview"),
+      bridgePreview: document.getElementById("bridgePreview"),
+      toast: document.getElementById("toast")
+    };
+
+    function loadState() {
+      const saved = localStorage.getItem("sbBusinessWorkbenchMockup");
+      if (!saved) return structuredClone(defaultState);
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return structuredClone(defaultState);
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem("sbBusinessWorkbenchMockup", JSON.stringify(state));
+    }
+
+    function selectedScenario() {
+      return state.scenarios.find((s) => s.id === state.selectedScenarioId) || state.scenarios[0];
+    }
+
+    function selectedGate() {
+      const scenario = selectedScenario();
+      return scenario.gates.find((g) => g.id === state.selectedGateId) || scenario.gates[0];
+    }
+
+    function pct(value) {
+      return Math.round((value || 0) * 100) + "%";
+    }
+
+    function coverageScore(scenario) {
+      const expected = 10;
+      const score = Math.min(1, (scenario.gates.length + scenario.chips.length + scenario.rules.length) / expected);
+      return score;
+    }
+
+    function render() {
+      const scenario = selectedScenario();
+      if (!scenario) return;
+      renderScenarioList();
+      renderHeader(scenario);
+      renderFlow(scenario);
+      renderInspector();
+      renderPreview(scenario);
+      saveState();
+    }
+
+    function renderScenarioList() {
+      const query = els.searchInput.value.trim().toLowerCase();
+      els.scenarioList.innerHTML = "";
+      state.scenarios
+        .filter((s) => {
+          const haystack = [s.title, s.family, s.status, ...s.systems, ...s.outputs].join(" ").toLowerCase();
+          return haystack.includes(query);
+        })
+        .forEach((scenario) => {
+          const btn = document.createElement("button");
+          btn.className = "scenario-card" + (scenario.id === state.selectedScenarioId ? " active" : "");
+          btn.innerHTML = `
+            <div class="scenario-name">
+              <span>${escapeHtml(scenario.title)}</span>
+              <span class="score-pill">${pct(scenario.relevance)}</span>
+            </div>
+            <div class="scenario-meta">
+              <span class="tag">${escapeHtml(scenario.status)}</span>
+              <span class="tag">${escapeHtml(scenario.family.replaceAll("_", " "))}</span>
+              <span class="tag">${scenario.gates.length} gates</span>
+            </div>
+          `;
+          btn.addEventListener("click", () => {
+            state.selectedScenarioId = scenario.id;
+            state.selectedGateId = scenario.gates[0] ? scenario.gates[0].id : null;
+            render();
+          });
+          els.scenarioList.appendChild(btn);
+        });
+    }
+
+    function renderHeader(scenario) {
+      els.scenarioTitle.textContent = scenario.title;
+      els.scenarioDescription.textContent = scenario.description;
+      els.scenarioFamilyLabel.textContent = "L2 Scenario / " + scenario.family.replaceAll("_", " ");
+      els.relevanceMetric.textContent = pct(scenario.relevance);
+      els.confidenceMetric.textContent = pct(scenario.confidence);
+      els.coverageMetric.textContent = pct(coverageScore(scenario));
+    }
+
+    function renderFlow(scenario) {
+      els.flow.innerHTML = "";
+      stages.forEach((stage) => {
+        const enabled = scenario.enabledStages.includes(stage.id);
+        const gates = scenario.gates.filter((g) => g.stageId === stage.id);
+        const stageEl = document.createElement("div");
+        stageEl.className = "stage" + (!enabled ? " disabled" : "") + (gates.some((g) => g.id === state.selectedGateId) ? " active" : "");
+        stageEl.innerHTML = `
+          <div class="stage-head">
+            <div class="stage-name">${escapeHtml(stage.name)}</div>
+            <div class="stage-weight">${Math.round(stage.weight * 100)}% default weight</div>
+          </div>
+          <div class="gate-list"></div>
+        `;
+        const list = stageEl.querySelector(".gate-list");
+        if (!gates.length) {
+          const empty = document.createElement("button");
+          empty.className = "gate";
+          empty.innerHTML = `<div class="gate-title">No gate mapped</div><div class="gate-meta"><span class="mini-pill">click to add</span></div>`;
+          empty.addEventListener("click", () => addGate(stage.id));
+          list.appendChild(empty);
+        }
+        gates.forEach((gateItem) => {
+          const gateEl = document.createElement("button");
+          gateEl.className = "gate" + (gateItem.id === state.selectedGateId ? " active" : "");
+          gateEl.innerHTML = `
+            <div class="gate-title">${escapeHtml(gateItem.name)}</div>
+            <div class="gate-meta">
+              <span class="mini-pill">${gateItem.chips.length} chips</span>
+              <span class="mini-pill">${gateItem.journeys.join(" + ")}</span>
+            </div>
+          `;
+          gateEl.addEventListener("click", () => {
+            state.selectedGateId = gateItem.id;
+            state.tab = "gate";
+            render();
+          });
+          list.appendChild(gateEl);
+        });
+        els.flow.appendChild(stageEl);
+      });
+    }
+
+    function renderInspector() {
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.classList.toggle("active", tab.dataset.tab === state.tab);
+      });
+      if (state.tab === "scenario") renderScenarioInspector();
+      if (state.tab === "gate") renderGateInspector();
+      if (state.tab === "chips") renderChipsInspector();
+      if (state.tab === "rules") renderRulesInspector();
+      if (state.tab === "systems") renderSystemsInspector();
+    }
+
+    function renderScenarioInspector() {
+      const scenario = selectedScenario();
+      els.inspectorBody.innerHTML = `
+        <div class="label">L2 Scenario Definition</div>
+        ${field("Scenario Title", "title", scenario.title)}
+        ${textarea("Definition", "description", scenario.description)}
+        ${select("Status", "status", scenario.status, ["candidate", "accepted", "draft", "approved", "rejected"])}
+        ${slider("Relevance Score", "relevance", scenario.relevance)}
+        ${slider("Confidence Score", "confidence", scenario.confidence)}
+        ${textarea("Required Outputs", "outputs", scenario.outputs.join("\\n"))}
+        <div class="inline-actions">
+          <button class="btn primary" onclick="applyScenarioInspector()">Apply Changes</button>
+        </div>
+      `;
+    }
+
+    function renderGateInspector() {
+      const gateItem = selectedGate();
+      if (!gateItem) {
+        els.inspectorBody.innerHTML = "<p>No gate selected.</p>";
+        return;
+      }
+      els.inspectorBody.innerHTML = `
+        <div class="label">L4 Stage Gate</div>
+        ${field("Gate Name", "gateName", gateItem.name)}
+        ${select("Stage", "gateStageId", gateItem.stageId, stages.map((s) => s.id))}
+        ${textarea("Purpose", "gatePurpose", gateItem.purpose)}
+        ${textarea("Metadata Chips Required", "gateChips", gateItem.chips.join("\\n"))}
+        ${textarea("Journey Outputs", "gateJourneys", gateItem.journeys.join("\\n"))}
+        <div class="inline-actions">
+          <button class="btn primary" onclick="applyGateInspector()">Apply Gate</button>
+          <button class="btn ghost" onclick="duplicateGate()">Duplicate</button>
+        </div>
+      `;
+    }
+
+    function renderChipsInspector() {
+      const scenario = selectedScenario();
+      els.inspectorBody.innerHTML = `
+        <div class="label">L5 Metadata Chips</div>
+        <div class="chip-list">
+          ${scenario.chips.map((c) => `
+            <div class="chip">
+              <div class="item-title"><span>${escapeHtml(c.name)}</span><span>${pct(c.confidence)}</span></div>
+              <div class="item-copy">${escapeHtml(c.type.replaceAll("_", " "))} from ${escapeHtml(c.source)}</div>
+              <div class="item-copy">${escapeHtml(c.state)}</div>
+            </div>
+          `).join("")}
+        </div>
+        <div class="inline-actions">
+          <button class="btn primary" onclick="addChip()">Add Metadata Chip</button>
+        </div>
+      `;
+    }
+
+    function renderRulesInspector() {
+      const scenario = selectedScenario();
+      els.inspectorBody.innerHTML = `
+        <div class="label">L6 Business Rules</div>
+        <div class="rule-list">
+          ${scenario.rules.map((r) => `
+            <div class="rule">
+              <div class="item-title"><span>${escapeHtml(r.type.replaceAll("_", " "))}</span><span>${pct(r.confidence)}</span></div>
+              <div class="item-copy">${escapeHtml(r.text)}</div>
+              <div class="item-copy">Owner: ${escapeHtml(r.owner)}</div>
+            </div>
+          `).join("")}
+        </div>
+        <div class="inline-actions">
+          <button class="btn primary" onclick="addRule()">Add Business Rule</button>
+        </div>
+      `;
+    }
+
+    function renderSystemsInspector() {
+      els.inspectorBody.innerHTML = `
+        <div class="label">Systems and DataBasin Bridge</div>
+        <div class="system-list">
+          ${state.systemsMap.map((s) => `
+            <div class="system">
+              <div class="item-title"><span>${escapeHtml(s.system)}</span><span>${escapeHtml(s.role)}</span></div>
+              <div class="item-copy">${escapeHtml(s.object)}.${escapeHtml(s.field)}</div>
+              <div class="item-copy">Target: ${escapeHtml(s.target)}</div>
+              <div class="item-copy">Write-back: ${s.writeBack ? "required" : "read-only"}</div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function renderPreview(scenario) {
+      const gateItem = selectedGate();
+      els.definitionPreview.innerHTML = [
+        `Scenario: ${scenario.title}`,
+        `Family: ${scenario.family.replaceAll("_", " ")}`,
+        `Status: ${scenario.status}`,
+        `Relevant stages: ${scenario.enabledStages.length} of ${stages.length}`,
+        `Selected gate: ${gateItem ? gateItem.name : "none"}`
+      ].map(li).join("");
+
+      els.rulePreview.innerHTML = scenario.rules.slice(0, 4).map((r) => li(r.text)).join("");
+      els.bridgePreview.innerHTML = state.systemsMap.slice(0, 4).map((s) => li(`${s.system}.${s.object}.${s.field} -> ${s.target}`)).join("");
+    }
+
+    function field(label, id, value) {
+      return `<div class="field"><label for="${id}">${label}</label><input id="${id}" value="${escapeAttr(value)}" /></div>`;
+    }
+
+    function textarea(label, id, value) {
+      return `<div class="field"><label for="${id}">${label}</label><textarea id="${id}">${escapeHtml(value)}</textarea></div>`;
+    }
+
+    function select(label, id, value, options) {
+      return `
+        <div class="field">
+          <label for="${id}">${label}</label>
+          <select id="${id}">
+            ${options.map((o) => `<option value="${escapeAttr(o)}" ${o === value ? "selected" : ""}>${escapeHtml(o.replaceAll("_", " "))}</option>`).join("")}
+          </select>
+        </div>
+      `;
+    }
+
+    function slider(label, id, value) {
+      return `
+        <div class="field">
+          <label for="${id}">${label}</label>
+          <div class="slider-row">
+            <input id="${id}" type="range" min="0" max="100" value="${Math.round(value * 100)}" oninput="document.getElementById('${id}Value').textContent=this.value+'%'" />
+            <strong id="${id}Value">${Math.round(value * 100)}%</strong>
+          </div>
+        </div>
+      `;
+    }
+
+    function li(text) {
+      return `<li>${escapeHtml(text)}</li>`;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function escapeAttr(value) {
+      return escapeHtml(value).replaceAll("\n", " ");
+    }
+
+    function applyScenarioInspector() {
+      const scenario = selectedScenario();
+      scenario.title = document.getElementById("title").value;
+      scenario.description = document.getElementById("description").value;
+      scenario.status = document.getElementById("status").value;
+      scenario.relevance = Number(document.getElementById("relevance").value) / 100;
+      scenario.confidence = Number(document.getElementById("confidence").value) / 100;
+      scenario.outputs = document.getElementById("outputs").value.split("\n").map((x) => x.trim()).filter(Boolean);
+      toast("Scenario definition updated.");
+      render();
+    }
+
+    function applyGateInspector() {
+      const gateItem = selectedGate();
+      gateItem.name = document.getElementById("gateName").value;
+      gateItem.stageId = document.getElementById("gateStageId").value;
+      gateItem.purpose = document.getElementById("gatePurpose").value;
+      gateItem.chips = document.getElementById("gateChips").value.split("\n").map((x) => x.trim()).filter(Boolean);
+      gateItem.journeys = document.getElementById("gateJourneys").value.split("\n").map((x) => x.trim()).filter(Boolean);
+      toast("Stage gate updated.");
+      render();
+    }
+
+    function addGate(stageId) {
+      const scenario = selectedScenario();
+      const targetStage = stageId || "rev.contract";
+      const newGate = gate(
+        "gate.custom-" + Date.now(),
+        "New Stage Gate",
+        targetStage,
+        "Define entry criteria, exit criteria, metadata chips, rules, and token outputs.",
+        ["New Metadata Chip"],
+        ["Revenue", "Customer", "Member"]
+      );
+      scenario.gates.push(newGate);
+      if (!scenario.enabledStages.includes(targetStage)) scenario.enabledStages.push(targetStage);
+      state.selectedGateId = newGate.id;
+      state.tab = "gate";
+      toast("New gate added.");
+      render();
+    }
+
+    function duplicateGate() {
+      const scenario = selectedScenario();
+      const source = selectedGate();
+      const copy = structuredClone(source);
+      copy.id = "gate.copy-" + Date.now();
+      copy.name = source.name + " Copy";
+      scenario.gates.push(copy);
+      state.selectedGateId = copy.id;
+      toast("Gate duplicated.");
+      render();
+    }
+
+    function addChip() {
+      const scenario = selectedScenario();
+      scenario.chips.push(chip("chip.custom-" + Date.now(), "New Metadata Chip", "custom", "Unmapped Source", "Define source, transformation, token links, and validation status."));
+      state.tab = "chips";
+      toast("Metadata chip added.");
+      render();
+    }
+
+    function addRule() {
+      const scenario = selectedScenario();
+      scenario.rules.push(rule("rule.custom-" + Date.now(), "custom", "New rule: define deterministic logic, source fields, target fields, exceptions, owner, and test cases."));
+      state.tab = "rules";
+      toast("Business rule added.");
+      render();
+    }
+
+    function acceptScenario() {
+      selectedScenario().status = "accepted";
+      toast("Scenario accepted into the Business Definition spec.");
+      render();
+    }
+
+    function generateSpec() {
+      const scenario = selectedScenario();
+      const spec = {
+        outputType: "business_definition_and_rule_design_spec",
+        scenario: scenario.title,
+        family: scenario.family,
+        relevance: scenario.relevance,
+        confidence: scenario.confidence,
+        stages: scenario.enabledStages,
+        gates: scenario.gates,
+        metadataChips: scenario.chips,
+        businessRules: scenario.rules,
+        systemsMap: state.systemsMap,
+        generatedAt: new Date().toISOString()
+      };
+      console.log("Generated Salt Basin spec preview", spec);
+      toast("Spec preview generated. Open the browser console for the structured object.");
+      renderPreview(scenario);
+    }
+
+    function exportJson() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "salt-basin-business-definition-workbench-state.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast("Workbench state exported.");
+    }
+
+    function resetState() {
+      state = structuredClone(defaultState);
+      localStorage.removeItem("sbBusinessWorkbenchMockup");
+      toast("Mockup reset to starter scenarios.");
+      render();
+    }
+
+    function toast(message) {
+      els.toast.textContent = message;
+      els.toast.classList.add("show");
+      window.clearTimeout(toast.timer);
+      toast.timer = window.setTimeout(() => els.toast.classList.remove("show"), 2200);
+    }
+
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        state.tab = tab.dataset.tab;
+        render();
+      });
+    });
+
+    document.getElementById("acceptScenarioBtn").addEventListener("click", acceptScenario);
+    document.getElementById("addGateBtn").addEventListener("click", () => addGate());
+    document.getElementById("addChipBtn").addEventListener("click", addChip);
+    document.getElementById("addRuleBtn").addEventListener("click", addRule);
+    document.getElementById("generateBtn").addEventListener("click", generateSpec);
+    document.getElementById("exportBtn").addEventListener("click", exportJson);
+    document.getElementById("resetBtn").addEventListener("click", resetState);
+    els.searchInput.addEventListener("input", renderScenarioList);
+
+    render();
+  </script>
+</body>
+</html>

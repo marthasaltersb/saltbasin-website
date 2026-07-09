@@ -13,6 +13,16 @@ async function requireAuth(req, res) {
 
 function newId() { return `tpl.${crypto.randomUUID().split('-')[0]}`; }
 
+// `config` is opaque JSONB, but when it declares a schemaVersion we validate
+// it against known shapes rather than silently persisting an unrecognized
+// version — breaking shape changes must be explicit, per CLAUDE.md.
+const KNOWN_CONFIG_SCHEMA_VERSIONS = new Set([1, 2]);
+function validConfigShape(config) {
+  if (config == null || typeof config !== 'object') return true;
+  if (config.schemaVersion == null) return true;
+  return KNOWN_CONFIG_SCHEMA_VERSIONS.has(Number(config.schemaVersion));
+}
+
 // GET /api/output-templates?output_type=resume
 // Returns all templates for a given output type for the current user.
 router.get('/', async (req, res) => {
@@ -57,6 +67,51 @@ router.get('/primary', async (req, res) => {
   }
 });
 
+// GET /api/output-templates/portfolio?owner=<slug>&output_type=resume
+// Public — lists a member's presets explicitly marked portfolioVisible in
+// their layer-config `meta`, for the public Resume Portfolio index
+// (Output.jsx's ResumePortfolioOutput). Minimal fields only — never exposes
+// unpublished presets even to someone guessing ids.
+router.get('/portfolio', async (req, res) => {
+  try {
+    const { owner, output_type = 'resume' } = req.query;
+    if (!owner) return res.json({ templates: [] });
+    const profile = await db.prepare(`SELECT user_id FROM member_profiles WHERE slug = $1`).get(owner);
+    if (!profile) return res.json({ templates: [] });
+    const rows = await db.prepare(`
+      SELECT id, name, config FROM output_templates
+       WHERE user_id = $1 AND output_type = $2
+         AND (config->'meta'->>'portfolioVisible')::boolean = true
+       ORDER BY updated_at DESC
+    `).all(profile.user_id, output_type);
+    res.json({
+      templates: rows.map((r) => ({
+        id: r.id,
+        name: r.name,
+        meta: (typeof r.config === 'string' ? JSON.parse(r.config) : r.config)?.meta || {},
+      })),
+    });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to load portfolio' });
+  }
+});
+
+// GET /api/output-templates/:id/public
+// Public — returns one preset's config only if it's explicitly marked
+// portfolioVisible. Additive alongside the owner-authed GET/PUT/DELETE
+// below; never exposes a non-published preset even if its id is known.
+router.get('/:id/public', async (req, res) => {
+  try {
+    const row = await db.prepare(`SELECT * FROM output_templates WHERE id = $1`).get(req.params.id);
+    if (!row) return res.status(404).json({ error: 'Not found' });
+    const config = typeof row.config === 'string' ? JSON.parse(row.config) : row.config;
+    if (!config?.meta?.portfolioVisible) return res.status(404).json({ error: 'Not found' });
+    res.json({ template: { id: row.id, name: row.name, config } });
+  } catch (e) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // POST /api/output-templates
 router.post('/', async (req, res) => {
   try {
@@ -64,6 +119,7 @@ router.post('/', async (req, res) => {
     if (!user) return;
     const { output_type, name, config, is_primary } = req.body;
     if (!output_type || !name) return res.status(400).json({ error: 'output_type and name required' });
+    if (!validConfigShape(config)) return res.status(400).json({ error: `Unrecognized config.schemaVersion` });
     const id = newId();
     const now = Date.now();
     if (is_primary) {
@@ -85,6 +141,7 @@ router.put('/:id', async (req, res) => {
     const user = await requireAuth(req, res);
     if (!user) return;
     const { name, config, is_primary } = req.body;
+    if (!validConfigShape(config)) return res.status(400).json({ error: `Unrecognized config.schemaVersion` });
     const row = await db.prepare(`SELECT * FROM output_templates WHERE id = $1 AND user_id = $2`).get(req.params.id, user.id);
     if (!row) return res.status(404).json({ error: 'Not found' });
     if (is_primary) {
