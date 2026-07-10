@@ -264,6 +264,52 @@ async function bootstrap() {
       created_at BIGINT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_rod_events_rod ON journey_rod_events (rod_id, created_at DESC);
+
+    CREATE TABLE IF NOT EXISTS journey_metadata_molecules (
+      id BIGSERIAL PRIMARY KEY, molecule_key TEXT NOT NULL UNIQUE, label TEXT NOT NULL,
+      data_type TEXT NOT NULL DEFAULT 'text', source_paths JSONB NOT NULL DEFAULT '[]',
+      validation_config JSONB NOT NULL DEFAULT '{}', is_sensitive BOOLEAN NOT NULL DEFAULT false,
+      is_active BOOLEAN NOT NULL DEFAULT true, created_at BIGINT NOT NULL, updated_at BIGINT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS journey_metadata_clusters (
+      id BIGSERIAL PRIMARY KEY, cluster_key TEXT NOT NULL UNIQUE, label TEXT NOT NULL,
+      description TEXT, molecule_keys JSONB NOT NULL DEFAULT '[]', completion_rule TEXT NOT NULL DEFAULT 'all',
+      minimum_count INTEGER, is_active BOOLEAN NOT NULL DEFAULT true, created_at BIGINT NOT NULL, updated_at BIGINT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS journey_scenarios (
+      id BIGSERIAL PRIMARY KEY, scenario_key TEXT NOT NULL UNIQUE, rod_type TEXT NOT NULL,
+      label TEXT NOT NULL, description TEXT, selected_cluster_keys JSONB NOT NULL DEFAULT '[]',
+      dimensions JSONB NOT NULL DEFAULT '[]', actor_roles JSONB NOT NULL DEFAULT '[]',
+      is_active BOOLEAN NOT NULL DEFAULT true, created_at BIGINT NOT NULL, updated_at BIGINT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS journey_gate_definitions (
+      id BIGSERIAL PRIMARY KEY, scenario_id BIGINT NOT NULL REFERENCES journey_scenarios(id) ON DELETE CASCADE,
+      stage_key TEXT NOT NULL, required_clusters JSONB NOT NULL DEFAULT '[]', required_molecules JSONB NOT NULL DEFAULT '[]',
+      required_dimensions JSONB NOT NULL DEFAULT '[]', required_actor_roles JSONB NOT NULL DEFAULT '[]',
+      dependency_rules JSONB NOT NULL DEFAULT '[]', judgment_policy TEXT NOT NULL DEFAULT 'when_ambiguous',
+      human_prompt TEXT, sort_order INTEGER NOT NULL DEFAULT 0, is_active BOOLEAN NOT NULL DEFAULT true,
+      created_at BIGINT NOT NULL, updated_at BIGINT NOT NULL, UNIQUE(scenario_id, stage_key)
+    );
+    CREATE TABLE IF NOT EXISTS journey_rod_evidence (
+      id BIGSERIAL PRIMARY KEY, rod_id BIGINT NOT NULL REFERENCES journey_data_rods(id) ON DELETE CASCADE,
+      molecule_key TEXT NOT NULL, value JSONB NOT NULL DEFAULT 'null', source_type TEXT,
+      source_reference TEXT, actor_key TEXT, confidence NUMERIC, observed_at BIGINT NOT NULL,
+      metadata JSONB NOT NULL DEFAULT '{}', UNIQUE(rod_id, molecule_key, source_reference)
+    );
+    CREATE INDEX IF NOT EXISTS idx_rod_evidence_rod ON journey_rod_evidence (rod_id, molecule_key);
+    CREATE TABLE IF NOT EXISTS journey_rod_actors (
+      id BIGSERIAL PRIMARY KEY, rod_id BIGINT NOT NULL REFERENCES journey_data_rods(id) ON DELETE CASCADE,
+      actor_key TEXT NOT NULL, role_key TEXT NOT NULL, contribution_status TEXT NOT NULL DEFAULT 'invited',
+      contribution JSONB NOT NULL DEFAULT '{}', required_from_stage TEXT, added_at BIGINT NOT NULL,
+      UNIQUE(rod_id, actor_key, role_key)
+    );
+    CREATE TABLE IF NOT EXISTS journey_rod_decisions (
+      id BIGSERIAL PRIMARY KEY, rod_id BIGINT NOT NULL REFERENCES journey_data_rods(id) ON DELETE CASCADE,
+      decision_type TEXT NOT NULL, proposed_action JSONB NOT NULL DEFAULT '{}', human_prompt TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending', requested_at BIGINT NOT NULL, decided_at BIGINT,
+      decided_by BIGINT REFERENCES users(id) ON DELETE SET NULL, decision_notes TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_rod_decisions_pending ON journey_rod_decisions (status, requested_at);
   `);
 
   const nowJourney = Date.now();
