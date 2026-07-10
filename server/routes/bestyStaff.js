@@ -18,6 +18,8 @@ import { db, getJSON } from '../db.js';
 import { makeRateLimiter } from '../lib/rateLimit.js';
 import { createPortfolioRequest } from './portfolioRequests.js';
 import { defaultConfig } from '../data/defaultSite.js';
+import { getUserFromCookie } from '../auth.js';
+import { actorScope, buildAgentDataContext, agentDataPolicyPrompt, inferAgentPurpose } from '../lib/agentDataPolicy.js';
 
 const router = Router();
 
@@ -185,7 +187,7 @@ Grounded facts about Betsy you may draw on (do not invent others, and do not sha
 - The Career Master database documents 24 engagements, 52 skills, and 24 tools; client quotes include a Fortune 500 healthcare CTO: "Whoever put Betsy on this project is a genius."
 - Salt Basin's AI-native product studio includes HandoverOS, BestyStaff (you), and SaltBasin Distressed Intel.
 
-If the visitor seems to be wrapping up the conversation (says thanks, goodbye, that's all, or similar) and you have not already asked it this turn, ask the required closing question before they go: "Did you get all of your questions answered? If not, can you provide any questions before leaving to give Betsy context?" If they mention Betsy directly, you may offer betsysalter@saltbasin.net as the only direct-contact alternative. Never disclose Betsy's phone number.
+If the visitor seems to be wrapping up the conversation (says thanks, goodbye, that's all, or similar) and you have not already asked it this turn, ask the required closing question before they go: "Did you get all of your questions answered? If not, can you provide any questions before leaving to give Betsy context?" If they mention Betsy directly, offer only contact data present in the server-enforced allowed context and only when it is relevant. A phone number or email being present does not by itself authorize disclosure.
 
 Style: Strategic Operator voice — direct, warm, no fluff, no corporate filler. Keep messages short (2-4 sentences plus at most a short option list). One question at a time. Never use pushy sales language.
 
@@ -222,17 +224,30 @@ router.post('/', chatLimiter, async (req, res) => {
     typeof sourceOutput === 'string' ? sourceOutput : '',
     intakeConfig
   );
+  const user = await getUserFromCookie(req);
+  let prior = null;
   if (leadMemory?.id && leadMemory?.token) {
-    const prior = await db.prepare(`
-      SELECT l.answers, l.message
+    prior = await db.prepare(`
+      SELECT l.email, l.phone, l.answers, l.message
       FROM portfolio_requests pr
       JOIN leads l ON l.id = pr.lead_id
       WHERE pr.id = $1 AND pr.public_token = $2 AND l.merged_into_id IS NULL
     `).get(Number(leadMemory.id), String(leadMemory.token).slice(0, 64));
-    if (prior) {
-      system += `\n\nPrior persisted lead context for this returning visitor (use it to avoid re-asking known facts and to improve qualification; do not quote the full transcript back):\nStructured context: ${String(prior.answers || '{}').slice(0, 12000)}\nPrior transcript: ${String(prior.message || '').slice(-12000)}`;
-    }
   }
+  const dataContext = buildAgentDataContext({
+    actor: actorScope({ user, ownsLead: !!prior }),
+    purpose: inferAgentPurpose(message),
+    policy: publishedConfig.bestystaff?.dataPolicy || {},
+    values: {
+      'betsy.email': publishedConfig.bestystaff?.privateContext?.contactEmail || 'betsysalter@saltbasin.net',
+      'betsy.phone': publishedConfig.bestystaff?.privateContext?.contactPhone || process.env.ADMIN_PHONE || null,
+      'lead.email': prior?.email,
+      'lead.phone': prior?.phone,
+      'lead.answers': prior?.answers ? String(prior.answers).slice(0, 12000) : null,
+      'lead.transcript': prior?.message ? String(prior.message).slice(-12000) : null,
+    },
+  });
+  system += `\n\n${agentDataPolicyPrompt(dataContext)}`;
 
   let submitted = null;
   try {

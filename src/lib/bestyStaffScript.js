@@ -24,7 +24,7 @@ export const CLOSING_QUESTION =
   "Did you get all of your questions answered? If not, can you provide any questions before leaving to give Betsy context?";
 
 export const CONTACT_LINE =
-  "If you want Betsy to follow up, what is the best email address to reach you? You can also contact her directly at betsysalter@saltbasin.net.";
+  "If you want Betsy to follow up, what is the best email address or phone number to reach you? You can also contact her directly at betsysalter@saltbasin.net.";
 
 export const FLOW_QUICK_REPLIES = [
   "Want to request Betsy's Career Portfolio?",

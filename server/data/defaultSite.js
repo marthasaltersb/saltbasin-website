@@ -793,6 +793,20 @@ export const defaultConfig = {
         marketing: { enabled: false, outboundUrl: '' },
       },
     },
+    privateContext: {
+      contactEmail: 'betsysalter@saltbasin.net',
+      contactPhone: '',
+    },
+    dataPolicy: {
+      rules: {
+        public: { read: ['anonymous', 'lead_owner', 'member', 'admin'], update: ['admin'] },
+        business_contact: { read: ['anonymous', 'lead_owner', 'member', 'admin'], update: ['admin'] },
+        personal_contact: { read: ['lead_owner', 'admin'], update: ['lead_owner', 'admin'] },
+        private: { read: ['admin'], update: ['admin'] },
+        sensitive: { read: ['lead_owner', 'admin'], update: ['lead_owner', 'admin'] },
+        credential: { read: [], update: [] },
+      },
+    },
   },
   platform: {
     membersEnabled: true,

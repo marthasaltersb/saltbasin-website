@@ -357,6 +357,17 @@ export default function ConfigPanel({ config, onChange, scope = 'admin', site = 
             onChange={(v) => patch('bestystaff.persona', v)}
             long
           />
+          <Field
+            label="Private contact email (policy-filtered before agent use)"
+            value={config?.bestystaff?.privateContext?.contactEmail}
+            onChange={(v) => patch('bestystaff.privateContext.contactEmail', v)}
+          />
+          <Field
+            label="Private contact phone (admin-only by default)"
+            value={config?.bestystaff?.privateContext?.contactPhone}
+            onChange={(v) => patch('bestystaff.privateContext.contactPhone', v)}
+            placeholder="Stored for agent context; not disclosed to public visitors"
+          />
           <Field label="Homepage primary CTA" value={config?.bestystaff?.homepage?.primaryCtaLabel} onChange={(v) => patch('bestystaff.homepage.primaryCtaLabel', v)} />
           <Field label="Homepage contact CTA" value={config?.bestystaff?.homepage?.contactCtaLabel} onChange={(v) => patch('bestystaff.homepage.contactCtaLabel', v)} />
           <Field label="Contact section eyebrow" value={config?.bestystaff?.homepage?.eyebrow} onChange={(v) => patch('bestystaff.homepage.eyebrow', v)} />
