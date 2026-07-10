@@ -322,6 +322,29 @@ router.patch('/:id/notes', intakeLimiter, async (req, res) => {
   }
 });
 
+// Token-gated link from a completed BestyStaff intake to the canonical CRM
+// lead created through /api/leads. This lets future agent turns and external
+// integrations reuse the full transcript and qualification context.
+router.patch('/:id/lead', intakeLimiter, async (req, res) => {
+  try {
+    const requestId = Number(req.params.id);
+    const leadId = Number(req.body?.leadId);
+    const token = clean(req.body?.token, 64);
+    if (!Number.isFinite(requestId) || !Number.isFinite(leadId) || !token) {
+      return res.status(400).json({ error: 'request id, lead id, and token are required' });
+    }
+    const request = await db.prepare(`SELECT id FROM portfolio_requests WHERE id = $1 AND public_token = $2`).get(requestId, token);
+    if (!request) return res.status(404).json({ error: 'Request not found' });
+    const lead = await db.prepare(`SELECT id FROM leads WHERE id = $1 AND merged_into_id IS NULL`).get(leadId);
+    if (!lead) return res.status(404).json({ error: 'Lead not found' });
+    await db.prepare(`UPDATE portfolio_requests SET lead_id = $1, updated_at = $2 WHERE id = $3`).run(leadId, Date.now(), requestId);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[portfolio-requests] lead link failed:', e.message);
+    res.status(500).json({ error: 'Failed to link lead' });
+  }
+});
+
 // Safe subset of a portfolio_requests row for "returning visitor" memory —
 // deliberately excludes contact_email/contact_phone (no reason to echo PII
 // back into a chat bubble) and job_description/notes (may carry pasted

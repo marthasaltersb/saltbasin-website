@@ -21,8 +21,8 @@ const HOME_SECTIONS = [
       lede: 'Salt Basin MRS designs, builds, and maintains your Enterprise Ecosystem — a Salt Basin Net Work — applying the HOS™ methodology across revenue, systems, and data.',
       cta1Label: 'See how Salt Basin MRS works',
       cta1Link: '#home-build-flow',
-      cta2Label: 'Meet the Founder',
-      cta2Link: '/consulting',
+      cta2Label: 'Get in Touch',
+      cta2Link: '#bestystaff',
     },
   },
   {
@@ -52,9 +52,9 @@ const HOME_SECTIONS = [
         },
         {
           eyebrow: 'MESA',
-          title: 'Advisory built on what we operate ourselves.',
-          text: 'MES Agencies delivers advisory, delivery, and diagnostic work across industries — grounded in the same products Salt Basin runs day to day.',
-          chips: 'Advisory, Diagnostics, Delivery',
+          title: 'Next-generation agentic infrastructure, measured honestly.',
+          text: 'MES Agencies designs agent hierarchies, cache systems, and agentic infrastructure that apply the Contribution Intelligence Methodology to quantify human + AI interactions, compare cost-basis and traditional delivery models, and calculate value-based pricing margin.',
+          chips: 'Agentic Hierarchy, Cache Infrastructure, Contribution Intelligence, Value-Based Margin',
         },
         {
           eyebrow: 'RLMM™',
@@ -128,9 +128,11 @@ const HOME_SECTIONS = [
       heading: 'Real products, one operating philosophy',
       intro: 'Every product ships from the same founder-led practice — engagement-based, outcome-driven, never oversold.',
       products: [
+        { id: 'platform', name: 'Salt Basin Net Works Platform', tagline: 'The operating platform behind the network', desc: 'A configurable multi-tenant platform for public sites, operator profiles, governed content, lead context, integrations, products, and reusable operating intelligence.', priceLabel: 'Platform access · Scope by use case', outputs: 'Operator Network, Configurable Sites, Lead Intelligence, Integration APIs' },
+        { id: 'career-portfolio', name: 'Living Career Portfolio', tagline: 'Direct-to-consumer career placement outputs', desc: 'A living career source of truth that turns experience, skills, case studies, tools, and outcomes into tailored resumes, portfolio sites, role-specific outputs, and placement-ready evidence.', priceLabel: 'Direct to consumer · Output-based', outputs: 'Portfolio Site, Tailored Resume, Case Studies, Career Placement Outputs' },
         { id: 'mrs', name: 'Salt Basin MRS', tagline: 'Measurement Rendering Systems', desc: 'Designs, builds, and maintains your Enterprise Ecosystem — a Salt Basin Net Work — by applying the HOS™ methodology.', priceLabel: 'Engagement-based · Contact for scope', outputs: 'Enterprise Ecosystem, HOS™ Design, Maintenance Model' },
         { id: 'salttide', name: 'SaltTide™', tagline: 'Bottom lines with a rising tide', desc: 'Consumer credit intelligence and routing, built on a covenant-of-salt brand promise.', priceLabel: 'Engagement-based · Contact for scope', outputs: 'Routing Intelligence, Credit Health Signal' },
-        { id: 'mesa', name: 'MESA', tagline: 'MES Agencies', desc: "Advisory, delivery, and diagnostic services across industries — built on Salt Basin's own products.", priceLabel: 'Engagement-based · Contact for scope', outputs: 'Advisory, Diagnostics, Delivery' },
+        { id: 'mesa', name: 'MESA', tagline: 'MES Agencies · Next Gen Agentic Infrastructure', desc: 'Designs agentic hierarchies, governed cache systems, and human + AI operating infrastructure. Contribution Intelligence measures interaction and contribution, compares cost-basis to traditional delivery, and supports value-based pricing margin calculations.', priceLabel: 'Engagement-based · Value model by scope', outputs: 'Agent Hierarchy, Cache System, Contribution Intelligence, Cost-Basis Comparison, Value-Based Margin' },
         { id: 'bestystaff', name: 'BestyStaff', tagline: "Betsy's AI proxy agent", desc: 'An intake-sequenced agentic assistant with deliberate pacing, loop-back logic, and persistent memory — never claims licensure.', priceLabel: 'Available on this site', outputs: 'Guided Intake, Follow-up Routing' },
         { id: 'rlmm', name: 'RLMM™ Diagnostic', tagline: 'Revenue Lifecycle Mechanics Maturity', desc: 'The proprietary diagnostic that scores revenue lifecycle maturity before Salt Basin MRS designs anything.', priceLabel: 'Engagement-based · Contact for scope', outputs: 'Maturity Score, Diagnostic Report' },
       ],
@@ -161,14 +163,14 @@ const HOME_SECTIONS = [
   {
     id: 'home-apis',
     type: 'apiCatalogTable',
-    name: 'Systems We Connect To',
+    name: 'System Engine APIs on our Connector Radar',
     status: 'live',
     bg: 'ivory',
     navSubPage: true,
     fields: {
-      eyebrow: 'Systems We Connect To',
-      heading: 'Salt Basin MRS meets you inside your own stack',
-      intro: 'No rip-and-replace. Salt Basin MRS sits inside the systems you already run and pushes clean, traced data upward.',
+      eyebrow: 'System Engine APIs on our Connector Radar',
+      heading: 'A configurable connector horizon for the systems that run the work',
+      intro: 'No rip-and-replace. These are active and priority connector targets for ingesting, normalizing, tracing, and returning data across the Salt Basin platform.',
       apis: [
         { name: 'Salesforce', purpose: 'CRM objects and native capabilities', auth: 'OAuth 2.0', setup: '2–4 weeks', costModel: 'API + platform licenses', journeyUse: 'Revenue Journey' },
         { name: 'QuickBooks', purpose: 'Billing and financial records', auth: 'OAuth 2.0', setup: '1–2 weeks', costModel: 'Usage-based', journeyUse: 'Billing Track' },
@@ -183,7 +185,7 @@ const HOME_SECTIONS = [
     id: 'home-start-engagement',
     type: 'startEngagement',
     name: 'Start an Engagement',
-    status: 'live',
+    status: 'draft',
     bg: 'cream',
     navSubPage: true,
     fields: {
@@ -222,7 +224,7 @@ const HOME_SECTIONS = [
     id: 'home-conversation',
     type: 'conversationalDemo',
     name: 'BestyStaff Demo',
-    status: 'live',
+    status: 'draft',
     bg: 'navy',
     navSubPage: true,
     fields: {
@@ -760,6 +762,37 @@ export const defaultConfig = {
       "You are BestyStaff, Martha Elizabeth (Betsy) Salter's personal AI proxy agent. Speak in first person about Betsy in the third person. You are warm, direct, and outcomes-oriented — never generic. Answer questions about her consulting work, background, faith writing, and POP Decor side. If someone wants to book a call, route them to the contact form. Never invent details — if you don't know, offer to forward the question.",
     aboutBio:
       "Betsy Salter is a Strategic Operator and C-suite partner who bridges enterprise knowledge with AI capability. She runs Salt Basin Net Works (Bottom Lines with a Rising Tide), builds HandoverOS (Q2R intelligence for PE-backed SaaS), and creates POP Decor (3D printed home goods). Based in St. Petersburg, FL.",
+    homepage: {
+      primaryCtaLabel: 'Explore the work',
+      contactCtaLabel: 'Get in touch',
+      eyebrow: 'Get in touch',
+      heading: 'Start with BestyStaff.',
+      description: 'Share what brought you here. BestyStaff will gather the useful context for Betsy, answer what it can, and create a lead record so the conversation can continue.',
+    },
+    intake: {
+      greeting: "Hi — I'm BestyStaff, Betsy's AI proxy here at Salt Basin Net Works.",
+      consentPrompt: 'May I capture this conversation as lead context so Betsy can follow up with the full picture?',
+      flowOptions: ["Request Betsy's Career Portfolio", 'Build a Career Portfolio and Salt Basin Profile for myself'],
+      questions: [
+        { id: 'interestArea', prompt: 'Which best matches your interest: the shared network of niche executive-level strategic operators, Salt Basin Career Portfolio site and outputs, Lead-to-Cash operating model solutions and technology, or something else?', required: true, enabled: true },
+        { id: 'businessNeed', prompt: 'What business problem, opportunity, or outcome brought you here?', required: true, enabled: true },
+        { id: 'urgency', prompt: 'What timing or urgency should Betsy understand?', required: false, enabled: true },
+        { id: 'decisionRole', prompt: 'What role do you play in evaluating or approving next steps?', required: false, enabled: true },
+        { id: 'contactCompany', prompt: 'What company or organization are you with?', required: false, enabled: true },
+        { id: 'contactTitle', prompt: 'What is your role or title?', required: false, enabled: true },
+        { id: 'contactPhone', prompt: 'Would you like to include a phone number?', required: false, enabled: true },
+      ],
+    },
+    integrations: {
+      providers: {
+        pitchbook: { enabled: false, outboundUrl: '' },
+        dnb: { enabled: false, outboundUrl: '' },
+        salesforce: { enabled: false, outboundUrl: '' },
+        hubspot: { enabled: false, outboundUrl: '' },
+        marketo: { enabled: false, outboundUrl: '' },
+        marketing: { enabled: false, outboundUrl: '' },
+      },
+    },
   },
   platform: {
     membersEnabled: true,

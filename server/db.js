@@ -2034,6 +2034,7 @@ async function bootstrap() {
     -- answer, persisted so it can be replayed back as memory context.
     ALTER TABLE portfolio_requests ADD COLUMN IF NOT EXISTS public_token TEXT;
     ALTER TABLE portfolio_requests ADD COLUMN IF NOT EXISTS top_questions TEXT;
+    ALTER TABLE portfolio_requests ADD COLUMN IF NOT EXISTS lead_id BIGINT REFERENCES leads(id) ON DELETE SET NULL;
     CREATE INDEX IF NOT EXISTS idx_portfolio_requests_token ON portfolio_requests (public_token);
 
     CREATE TABLE IF NOT EXISTS temp_attachments (
@@ -2230,6 +2231,22 @@ async function bootstrap() {
     CREATE INDEX IF NOT EXISTS idx_product_onboarding_runs_user ON product_onboarding_runs (user_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_product_onboarding_runs_product ON product_onboarding_runs (product_id);
   `);
+
+  // Compatibility for databases that briefly received the commerce draft
+  // with BIGINT package/product identifiers before natural string keys were
+  // finalized. Convert in place before seeding the canonical dp.* IDs.
+  await sql.unsafe(`
+    ALTER TABLE commerce_payments DROP CONSTRAINT IF EXISTS commerce_payments_deliverable_id_fkey;
+    ALTER TABLE deliverable_packages ALTER COLUMN id TYPE TEXT USING id::text;
+    ALTER TABLE deliverable_packages ALTER COLUMN product_id TYPE TEXT USING product_id::text;
+    ALTER TABLE commerce_payments ALTER COLUMN deliverable_id TYPE TEXT USING deliverable_id::text;
+    ALTER TABLE product_onboarding_runs ALTER COLUMN product_id TYPE TEXT USING product_id::text;
+    ALTER TABLE commerce_payments
+      ADD CONSTRAINT commerce_payments_deliverable_id_fkey
+      FOREIGN KEY (deliverable_id) REFERENCES deliverable_packages(id) ON DELETE SET NULL;
+  `).catch((e) => {
+    if (!/already exists|duplicate object/i.test(e.message)) throw e;
+  });
 
   // ── Seed: deliverable_packages ───────────────────────────────────────────
   // Starter catalog for SMB self-service commerce. Prices are placeholders —

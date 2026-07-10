@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { getJSON, setJSON } from '../db.js';
 import { requireAdmin, isLandingUnlocked } from '../auth.js';
 import { dispatchRaw } from '../lib/email.js';
+import { defaultConfig } from '../data/defaultSite.js';
 
 const router = Router();
 
@@ -19,15 +20,23 @@ export function invalidatePublicConfigCache() {
 
 function publicConfig(config) {
   if (!config) return null;
+  const bestystaff = {
+    ...defaultConfig.bestystaff,
+    ...(config.bestystaff || {}),
+    homepage: { ...defaultConfig.bestystaff.homepage, ...(config.bestystaff?.homepage || {}) },
+    intake: { ...defaultConfig.bestystaff.intake, ...(config.bestystaff?.intake || {}) },
+  };
   return {
     site: config.site,
     social: config.social,
     brand: config.brand,
     theme: config.theme,
-    bestystaff: config.bestystaff
+    bestystaff: bestystaff
       ? {
-          enabled: config.bestystaff.enabled,
-          greeting: config.bestystaff.greeting,
+          enabled: bestystaff.enabled,
+          greeting: bestystaff.greeting,
+          homepage: bestystaff.homepage,
+          intake: bestystaff.intake,
         }
       : null,
   };

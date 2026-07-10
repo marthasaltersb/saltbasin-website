@@ -39,8 +39,9 @@ function PXHead({ eyebrow, heading, intro, dark }) {
   );
 }
 
-export function ProductHeroBlock({ section }) {
+export function ProductHeroBlock({ section, config }) {
   const f = section.fields || {};
+  const bestyHome = config?.bestystaff?.homepage || {};
   return (
     <section id={section.id} className="sbh-px-hero">
       <div className="sbh-px-hero-canvas" aria-hidden="true">
@@ -55,12 +56,14 @@ export function ProductHeroBlock({ section }) {
           </h1>
         )}
         {f.lede && <p className="sbh-px-hero-lede">{f.lede}</p>}
-        <div className="sbh-cta-row">
+        <div className="sbh-cta-row sbh-hero-cta-row">
           {f.cta1Label && (
             <a className="sbh-btn sbh-btn-primary" href={f.cta1Link || '#'}>{f.cta1Label}</a>
           )}
           {f.cta2Label && (
-            <a className="sbh-btn sbh-btn-secondary" href={f.cta2Link || '#'}>{f.cta2Label}</a>
+            <a className="sbh-btn sbh-btn-secondary" href="#bestystaff">
+              {bestyHome.contactCtaLabel || 'Get in touch'}
+            </a>
           )}
         </div>
       </div>

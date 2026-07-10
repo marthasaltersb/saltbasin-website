@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { recordBestyTouch } from '../lib/bestyStaffAttribution.js';
 
 function buildNav(pages) {
   const ordered = Object.values(pages || {})
@@ -70,6 +71,17 @@ export default function PublicNav({ site, pages }) {
 }
 
 function AuthButton({ user }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    function close(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, []);
+
   if (user) {
     const target = user.role === 'admin' ? '/admin' : '/member';
     const handle = (user.email || '').split('@')[0];
@@ -82,9 +94,22 @@ function AuthButton({ user }) {
   }
 
   return (
-    <Link className="sb-public-auth" to="/login">
-      Sign In
-    </Link>
+    <div className="sb-public-auth-wrap" ref={ref} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+      <button className="sb-public-auth" type="button" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+        Net Works Sign In <span className="sb-public-nav-caret">v</span>
+      </button>
+      {open && (
+        <div className="sb-public-auth-menu">
+          <Link to="/login" onClick={() => setOpen(false)}>Sign In</Link>
+          <a
+            href="/?intakeSource=networks-sign-up#bestystaff"
+            onClick={() => recordBestyTouch('networks-sign-up', { action: 'sign-up-menu' })}
+          >
+            Sign Up
+          </a>
+        </div>
+      )}
+    </div>
   );
 }
 

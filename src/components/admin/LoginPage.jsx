@@ -17,6 +17,7 @@ import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../../lib/api.js';
 import { getRecaptchaToken } from '../../lib/recaptcha.js';
+import SaltBasinCrystal from '../SaltBasinCrystal.jsx';
 
 export default function LoginPage() {
   const nav = useNavigate();
@@ -86,25 +87,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '2rem',
-      }}
-    >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: 380,
-          background: 'var(--sb-navy-deep)',
-          padding: '2rem',
-          border: '0.5px solid rgba(196,132,58,0.25)',
-          borderRadius: 'var(--sb-radius)',
-        }}
-      >
+    <div className="sb-login-brand-page">
+      <div className="sb-login-brand-mark" aria-hidden="true">
+        <SaltBasinCrystal variant="signature" size="hero" interactive />
+      </div>
+      <div className="sb-login-brand-panel">
         <div className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>
           Salt Basin Net Works
         </div>
@@ -151,8 +138,8 @@ export default function LoginPage() {
                 Forgot your email?
               </button>
             </div>
-            <div style={{ marginTop: '1rem', fontSize: '0.78rem', color: 'var(--sb-dusty)', textAlign: 'center' }}>
-              Member creation is currently invite-only.
+            <div style={{ marginTop: '1rem', fontSize: '0.78rem', color: 'var(--sbh-ink-soft)', textAlign: 'center' }}>
+              New here? <a href="/?intakeSource=login-sign-up#bestystaff" style={{ color: 'var(--sbh-gold)' }}>Start with BestyStaff</a>
             </div>
           </form>
         )}

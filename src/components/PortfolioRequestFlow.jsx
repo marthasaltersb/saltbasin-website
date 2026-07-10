@@ -24,28 +24,29 @@ import {
   FLOW_QUICK_REPLIES, matchSafeAnswer,
   readLeadMemory, writeLeadMemory, welcomeBackLine, welcomeBackMemberLine,
 } from '../lib/bestyStaffScript.js';
+import { readBestyAttribution, recordBestyTouch } from '../lib/bestyStaffAttribution.js';
 
 const C = {
-  navy: '#172A45',
-  midnight: '#0F1B2D',
-  gold: '#C4843A',
-  cream: '#F7F2E8',
-  mist: '#EEF2F6',
-  slate: '#536173',
-  fog: '#6D7785',
+  navy: 'var(--sbh-ink, #172A45)',
+  midnight: 'var(--sb-navy-deep, #0F1B2D)',
+  gold: 'var(--sbh-gold, #C4843A)',
+  cream: 'var(--sbh-cream, #F7F2E8)',
+  mist: 'var(--sbh-mist, #EEF2F6)',
+  slate: 'var(--sbh-ink-soft, #536173)',
+  fog: 'var(--sb-dusty, #6D7785)',
 };
 
 const S = {
-  eyebrow: { fontSize: '0.58rem', letterSpacing: '0.22em', textTransform: 'uppercase', color: C.gold, fontFamily: 'sans-serif', fontWeight: 700, marginBottom: '0.4rem' },
-  h2: { fontSize: '1.35rem', margin: '0 0 0.5rem', lineHeight: 1.25, fontFamily: 'Georgia, serif', color: C.navy },
+  eyebrow: { fontSize: '0.58rem', letterSpacing: '0.22em', textTransform: 'uppercase', color: C.gold, fontFamily: 'var(--sb-font-label)', fontWeight: 700, marginBottom: '0.4rem' },
+  h2: { fontSize: '1.35rem', margin: '0 0 0.5rem', lineHeight: 1.25, fontFamily: 'var(--sb-font-display)', color: C.navy },
   p: { fontSize: '0.85rem', color: C.slate, lineHeight: 1.65, margin: '0 0 1rem' },
   label: { display: 'block', fontSize: '0.62rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: C.slate, fontFamily: 'sans-serif', fontWeight: 700, marginBottom: '0.3rem' },
   input: { width: '100%', boxSizing: 'border-box', padding: '0.55rem 0.75rem', borderRadius: 7, border: '0.5px solid rgba(23,42,69,0.25)', fontSize: '0.85rem', fontFamily: 'inherit', outline: 'none' },
   textarea: { width: '100%', boxSizing: 'border-box', minHeight: 90, padding: '0.6rem 0.75rem', borderRadius: 7, border: '0.5px solid rgba(23,42,69,0.25)', fontSize: '0.82rem', fontFamily: 'inherit', resize: 'vertical', outline: 'none' },
   field: { marginBottom: '0.9rem' },
-  btnGold: { padding: '0.6rem 1.4rem', borderRadius: 8, border: 'none', cursor: 'pointer', background: C.gold, color: 'white', fontSize: '0.78rem', fontFamily: 'sans-serif', letterSpacing: '0.06em', fontWeight: 700 },
-  btnNavy: { padding: '0.6rem 1.4rem', borderRadius: 8, border: 'none', cursor: 'pointer', background: C.navy, color: 'white', fontSize: '0.78rem', fontFamily: 'sans-serif', letterSpacing: '0.06em', fontWeight: 700 },
-  btnOutline: { padding: '0.6rem 1.2rem', borderRadius: 8, cursor: 'pointer', background: 'white', color: C.navy, border: '1px solid rgba(23,42,69,0.3)', fontSize: '0.78rem', fontFamily: 'sans-serif', letterSpacing: '0.06em' },
+  btnGold: { padding: '0.6rem 1.4rem', borderRadius: 8, border: 'none', cursor: 'pointer', background: C.gold, color: 'white', fontSize: '0.78rem', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.06em', fontWeight: 700 },
+  btnNavy: { padding: '0.6rem 1.4rem', borderRadius: 8, border: 'none', cursor: 'pointer', background: C.navy, color: 'white', fontSize: '0.78rem', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.06em', fontWeight: 700 },
+  btnOutline: { padding: '0.6rem 1.2rem', borderRadius: 8, cursor: 'pointer', background: 'white', color: C.navy, border: '1px solid rgba(23,42,69,0.3)', fontSize: '0.78rem', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.06em' },
   chip: (on) => ({
     padding: '0.3rem 0.7rem', borderRadius: 14, cursor: 'pointer', fontSize: '0.7rem', fontFamily: 'sans-serif',
     border: `1px solid ${on ? C.gold : 'rgba(23,42,69,0.25)'}`, background: on ? 'rgba(196,132,58,0.12)' : 'white',
@@ -369,9 +370,12 @@ function QuickReplies({ options, onPick }) {
   );
 }
 
-export default function PortfolioRequestPrompt({ sourceOutput, master, user }) {
+export default function PortfolioRequestPrompt({ sourceOutput, master, user, autoOpen = true, openOnHash = null, intakeConfig = null }) {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState([{ role: 'assistant', text: GREETING }, { role: 'assistant', text: CONSENT_LINE }]);
+  const [messages, setMessages] = useState([
+    { role: 'assistant', text: intakeConfig?.greeting || GREETING },
+    { role: 'assistant', text: intakeConfig?.consentPrompt || CONSENT_LINE },
+  ]);
   // Cache-layer phases run with zero network calls: consent → knowsBetsy →
   // (knowsBetsyDetail) → topQuestions → flowPick. 'chatting' hands off to the
   // API layer; 'awaitingClosing' is the required closing question.
@@ -390,11 +394,31 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user }) {
   const scrollRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Let the teaser land first, then open the chat.
   useEffect(() => {
-    const t = setTimeout(() => setOpen(true), 2200);
-    return () => clearTimeout(t);
+    const source = new URLSearchParams(window.location.search).get('intakeSource');
+    if (source) recordBestyTouch(source, { action: 'arrived-at-intake' });
   }, []);
+
+  useEffect(() => {
+    if (open) recordBestyTouch('bestystaff-chat', { action: 'chat-opened', sourceOutput });
+  }, [open, sourceOutput]);
+
+  // Teaser pages open automatically. Data-driven contact sections can opt
+  // into hash-triggered opening instead.
+  useEffect(() => {
+    const openForHash = () => {
+      if (openOnHash && window.location.hash === openOnHash) setOpen(true);
+    };
+    openForHash();
+    window.addEventListener('hashchange', openForHash);
+    window.addEventListener('bestystaff:open', openForHash);
+    const t = autoOpen ? setTimeout(() => setOpen(true), 2200) : null;
+    return () => {
+      if (t) clearTimeout(t);
+      window.removeEventListener('hashchange', openForHash);
+      window.removeEventListener('bestystaff:open', openForHash);
+    };
+  }, [autoOpen, openOnHash]);
 
   // Returning-visitor recognition — resolves once on mount, well before the
   // 2200ms open-delay above, so there's no visible flash of the wrong
@@ -463,14 +487,46 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user }) {
   // safe-answer cache bank doesn't cover. `payloadMessage` may carry an
   // appended cache-layer context block the visitor never sees; `history`
   // is the message list snapshot taken BEFORE the current turn was added.
-  async function sendToApi(payloadMessage, history) {
+  async function createLeadFromTranscript(leadCapture, transcriptMessages) {
+    if (!leadCapture?.contactEmail) return null;
+    const transcript = transcriptMessages
+      .filter((m) => m?.content)
+      .map((m) => `${m.role === 'assistant' ? 'BestyStaff' : 'Visitor'}: ${m.content}`)
+      .join('\n\n');
+    const res = await fetch('/api/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        source: 'bestystaff',
+        email: leadCapture.contactEmail,
+        phone: leadCapture.contactPhone || null,
+        name: leadCapture.contactName || null,
+        message: transcript,
+        answers: { ...(leadCapture.answers || {}), attribution: readBestyAttribution() },
+        ctaLocation: `${window.location.pathname}#bestystaff`,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'lead record creation failed');
+    return data;
+  }
+
+  async function sendToApi(payloadMessage, history, visibleMessage = payloadMessage) {
     setSending(true);
     try {
       const res = await fetch('/api/agent/bestystaff', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ message: payloadMessage, history, sourceOutput, attachmentCount: files.length }),
+        body: JSON.stringify({
+          message: payloadMessage,
+          history,
+          sourceOutput,
+          attachmentCount: files.length,
+          leadMemory: readLeadMemory(),
+          attribution: readBestyAttribution(),
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (data.offline) { setOffline(true); return; }
@@ -480,6 +536,27 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user }) {
       }
       if (data.reply) respondAssistant(data.reply);
       if (data.submitted?.id) {
+        const transcriptMessages = [
+          ...history,
+          { role: 'user', content: visibleMessage },
+          ...(data.reply ? [{ role: 'assistant', content: data.reply }] : []),
+        ];
+        try {
+          data.submitted.lead = await createLeadFromTranscript(data.submitted.leadCapture, transcriptMessages);
+          if (data.submitted.lead?.leadId && data.submitted.publicToken) {
+            await fetch(`/api/portfolio-requests/${data.submitted.id}/lead`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({
+                token: data.submitted.publicToken,
+                leadId: data.submitted.lead.leadId,
+              }),
+            });
+          }
+        } catch (e) {
+          setMessages((m) => [...m, { role: 'notice', text: `Your intake was saved, but the CRM lead record needs a retry (${e.message}).` }]);
+        }
         setSubmitted(data.submitted);
         if (data.submitted.publicToken) writeLeadMemory({ id: data.submitted.id, token: data.submitted.publicToken });
         if (files.length > 0) {
@@ -530,7 +607,7 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user }) {
     respondUser(label);
     setPhase('chatting');
     const context = `[cache-layer context already collected — do not re-ask: consent to capture chat context = ${cacheCtx.consentGiven ? 'yes' : 'no'}; knows Betsy = ${cacheCtx.knowsBetsy ? `yes (${cacheCtx.knowsBetsyDetail || 'connection not specified'})` : 'no'}; visitor's top questions for today: "${cacheCtx.topQuestions}"]`;
-    sendToApi(`${label}\n\n${context}`, historySnapshot());
+    sendToApi(`${label}\n\n${context}`, historySnapshot(), label);
   }
 
   // Free-text entry point — routes by phase. The opening-script phases
@@ -585,7 +662,7 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user }) {
       respondAssistant(safe.reply);
       return;
     }
-    await sendToApi(trimmed, history);
+    await sendToApi(trimmed, history, trimmed);
   }
 
   function handleMinimizeClick() {
@@ -676,7 +753,9 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user }) {
 
                 {!sending && phase === 'consent' && <QuickReplies options={['Yes', 'No']} onPick={pickConsent} />}
                 {!sending && phase === 'knowsBetsy' && <QuickReplies options={['Yes', 'No']} onPick={pickKnowsBetsy} />}
-                {!sending && phase === 'flowPick' && <QuickReplies options={FLOW_QUICK_REPLIES} onPick={pickFlow} />}
+                {!sending && phase === 'flowPick' && (
+                  <QuickReplies options={intakeConfig?.flowOptions || FLOW_QUICK_REPLIES} onPick={pickFlow} />
+                )}
 
                 {sending && (
                   <div style={{ display: 'flex', gap: 4, padding: '0.4rem 0.6rem' }}>

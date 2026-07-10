@@ -39,6 +39,7 @@ import portfolioRequestsRouter from './routes/portfolioRequests.js';
 import bestyStaffRouter from './routes/bestyStaff.js';
 import lineageRouter from './routes/lineage.js';
 import methodologyStatsRouter from './routes/methodologyStats.js';
+import leadIntegrationsRouter from './routes/leadIntegrations.js';
 
 // Safety net: an unhandled promise rejection in any async route handler
 // (e.g. a bad column reference in a PATCH) is fatal by default in Node —
@@ -87,6 +88,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/site', siteRouter);
 app.use('/api/config', configRouter);
 app.use('/api/leads', leadsRouter);
+app.use('/api/lead-integrations', leadIntegrationsRouter);
 app.use('/api/members', membersRouter);
 app.use('/api/member-site', memberSiteRouter);
 app.use('/api/member-config', memberConfigRouter);

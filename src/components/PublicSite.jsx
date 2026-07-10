@@ -5,6 +5,7 @@ import PublicNav from './PublicNav.jsx';
 import PublicFooter from './PublicFooter.jsx';
 import Breadcrumbs from './Breadcrumbs.jsx';
 import SaltBasinCrystal from './SaltBasinCrystal.jsx';
+import BestyStaffContactSection from './BestyStaffContactSection.jsx';
 import { RenderSection } from './blocks/index.jsx';
 
 // Short-lived session cache so repeat navigation within the same tab session
@@ -117,9 +118,12 @@ export default function PublicSite() {
       {brandCss && <style>{brandCss}</style>}
       <PublicNav site={config.site} pages={pages} />
       <Breadcrumbs />
-      {(currentPage.sections || []).map((sec) => (
-        <RenderSection key={sec.id} section={sec} config={config} mode="public" liveSlugs={liveSlugs} />
-      ))}
+      {(currentPage.sections || [])
+        .filter((sec) => requestedSlug !== '' || !['startEngagement', 'conversationalDemo'].includes(sec.type))
+        .map((sec) => (
+          <RenderSection key={sec.id} section={sec} config={config} mode="public" liveSlugs={liveSlugs} />
+        ))}
+      {requestedSlug === '' && <BestyStaffContactSection config={config} />}
       <PublicFooter config={config} />
     </div>
   );

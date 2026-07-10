@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import PublicNav from './PublicNav.jsx';
 import PublicFooter from './PublicFooter.jsx';
 import SaltBasinCrystal from './SaltBasinCrystal.jsx';
+import PortfolioRequestPrompt from './PortfolioRequestFlow.jsx';
 import { api } from '../lib/api.js';
 
 const ventures = [
@@ -173,6 +174,7 @@ export default function SaltBasinHome({ config, pages }) {
   const [members, setMembers] = useState([]);
   const [activeExplorer, setActiveExplorer] = useState(null);
   const [activeCareerObject, setActiveCareerObject] = useState(careerOrbitObjects[0]);
+  const intake = config?.bestystaff?.homepage || {};
 
   useEffect(() => {
     api
@@ -198,12 +200,12 @@ export default function SaltBasinHome({ config, pages }) {
                 A living operating-intelligence portfolio, product studio, and senior-operator network
                 for the revenue, systems, and data handoffs that decide whether growth actually holds.
               </p>
-              <div className="sbh-cta-row">
+              <div className="sbh-cta-row sbh-hero-cta-row">
                 <a className="sbh-btn sbh-btn-primary" href="#ventures">
-                  Explore the work
+                  {intake.primaryCtaLabel || 'Explore the work'}
                 </a>
-                <a className="sbh-btn sbh-btn-secondary" href="/output/portfolio">
-                  View portfolio
+                <a className="sbh-btn sbh-btn-secondary" href="#bestystaff">
+                  {intake.contactCtaLabel || 'Get in touch'}
                 </a>
               </div>
             </div>
@@ -321,8 +323,8 @@ export default function SaltBasinHome({ config, pages }) {
                 Slalom, and Streamforce: financial modeling depth, GTM execution, CPQ and
                 billing architecture, revenue operations, and executive-level operating trust.
               </p>
-              <a className="sbh-inline-link" href="/consulting/founder">
-                Meet the founder
+              <a className="sbh-inline-link" href="#bestystaff">
+                {intake.contactCtaLabel || 'Get in touch'}
               </a>
             </div>
             <div className="sbh-metric-grid">
@@ -420,6 +422,35 @@ export default function SaltBasinHome({ config, pages }) {
               </a>
             </div>
           )}
+        </section>
+
+        <section className="sbh-band sbh-besty-section" id="bestystaff">
+          <div className="sbh-besty-section-inner">
+            <button
+              type="button"
+              className="sbh-besty-crystal-trigger"
+              aria-label="Open BestyStaff chat"
+              onClick={() => {
+                if (window.location.hash !== '#bestystaff') window.location.hash = 'bestystaff';
+                else window.dispatchEvent(new Event('bestystaff:open'));
+              }}
+            >
+              <SaltBasinCrystal variant="signature" size="hero" interactive />
+            </button>
+            <div>
+              <p className="sbh-eyebrow">{intake.eyebrow || 'Get in touch'}</p>
+              <h2>{intake.heading || 'Start with BestyStaff.'}</h2>
+              <p>
+                {intake.description || 'Share what brought you here. BestyStaff will gather the useful context for Betsy, answer what it can, and create a lead record so the conversation can continue.'}
+              </p>
+            </div>
+          </div>
+          <PortfolioRequestPrompt
+            sourceOutput="homepage-contact"
+            autoOpen={false}
+            openOnHash="#bestystaff"
+            intakeConfig={config?.bestystaff?.intake}
+          />
         </section>
 
         <section className="sbh-connect" id="connect">

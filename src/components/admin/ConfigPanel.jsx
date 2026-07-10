@@ -357,6 +357,33 @@ export default function ConfigPanel({ config, onChange, scope = 'admin', site = 
             onChange={(v) => patch('bestystaff.persona', v)}
             long
           />
+          <Field label="Homepage primary CTA" value={config?.bestystaff?.homepage?.primaryCtaLabel} onChange={(v) => patch('bestystaff.homepage.primaryCtaLabel', v)} />
+          <Field label="Homepage contact CTA" value={config?.bestystaff?.homepage?.contactCtaLabel} onChange={(v) => patch('bestystaff.homepage.contactCtaLabel', v)} />
+          <Field label="Contact section eyebrow" value={config?.bestystaff?.homepage?.eyebrow} onChange={(v) => patch('bestystaff.homepage.eyebrow', v)} />
+          <Field label="Contact section heading" value={config?.bestystaff?.homepage?.heading} onChange={(v) => patch('bestystaff.homepage.heading', v)} />
+          <Field label="Contact section description" value={config?.bestystaff?.homepage?.description} onChange={(v) => patch('bestystaff.homepage.description', v)} long />
+          <Field label="Intake greeting" value={config?.bestystaff?.intake?.greeting} onChange={(v) => patch('bestystaff.intake.greeting', v)} long />
+          <Field label="Consent prompt" value={config?.bestystaff?.intake?.consentPrompt} onChange={(v) => patch('bestystaff.intake.consentPrompt', v)} long />
+          <BestyQuestionsEditor
+            questions={config?.bestystaff?.intake?.questions || []}
+            onChange={(v) => patch('bestystaff.intake.questions', v)}
+          />
+          <div style={{ ...styles.fieldLabel, marginTop: '1rem' }}>Lead integration webhooks</div>
+          {['pitchbook', 'dnb', 'salesforce', 'hubspot', 'marketo', 'marketing'].map((provider) => (
+            <div key={provider} style={{ marginBottom: '0.75rem' }}>
+              <Toggle
+                label={`${provider} outbound sync`}
+                checked={!!config?.bestystaff?.integrations?.providers?.[provider]?.enabled}
+                onChange={(v) => patch(`bestystaff.integrations.providers.${provider}.enabled`, v)}
+              />
+              <Field
+                label={`${provider} webhook URL`}
+                value={config?.bestystaff?.integrations?.providers?.[provider]?.outboundUrl}
+                onChange={(v) => patch(`bestystaff.integrations.providers.${provider}.outboundUrl`, v)}
+                placeholder="https://..."
+              />
+            </div>
+          ))}
         </div>
         )}
 
@@ -1370,6 +1397,33 @@ function SendTestEmail() {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function BestyQuestionsEditor({ questions, onChange }) {
+  const update = (index, key, value) => onChange(questions.map((q, i) => i === index ? { ...q, [key]: value } : q));
+  return (
+    <div style={{ marginTop: '1rem' }}>
+      <div style={styles.fieldLabel}>Data-driven intake questions</div>
+      {questions.map((q, index) => (
+        <div key={q.id || index} style={{ ...styles.card, padding: '0.75rem', marginBottom: '0.5rem' }}>
+          <Field label="Field ID" value={q.id} onChange={(v) => update(index, 'id', v)} placeholder="businessNeed" />
+          <Field label="Question" value={q.prompt} onChange={(v) => update(index, 'prompt', v)} long />
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <Toggle label="Enabled" checked={q.enabled !== false} onChange={(v) => update(index, 'enabled', v)} />
+            <Toggle label="Required" checked={!!q.required} onChange={(v) => update(index, 'required', v)} />
+          </div>
+          <button type="button" className="sb-btn sb-btn-outline" onClick={() => onChange(questions.filter((_, i) => i !== index))}>Remove question</button>
+        </div>
+      ))}
+      <button
+        type="button"
+        className="sb-btn sb-btn-outline"
+        onClick={() => onChange([...questions, { id: `custom_${Date.now()}`, prompt: '', required: false, enabled: true }])}
+      >
+        Add question
+      </button>
     </div>
   );
 }

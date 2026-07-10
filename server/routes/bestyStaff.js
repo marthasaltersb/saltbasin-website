@@ -14,9 +14,10 @@
 
 import { Router } from 'express';
 import Anthropic from '@anthropic-ai/sdk';
-import { db } from '../db.js';
+import { db, getJSON } from '../db.js';
 import { makeRateLimiter } from '../lib/rateLimit.js';
 import { createPortfolioRequest } from './portfolioRequests.js';
+import { defaultConfig } from '../data/defaultSite.js';
 
 const router = Router();
 
@@ -63,6 +64,16 @@ const TOOLS = [
         contactCompany: { type: 'string' },
         contactTitle: { type: 'string' },
         contactPhone: { type: 'string' },
+        businessNeed: { type: 'string', description: 'The business problem, opportunity, or desired outcome in the visitor\'s words' },
+        urgency: { type: 'string', description: 'Timing or urgency, if the visitor is willing to share it' },
+        budgetRange: { type: 'string', description: 'Budget range or commercial readiness, if volunteered or relevant' },
+        decisionRole: { type: 'string', description: 'The visitor\'s role in evaluating or approving next steps' },
+        nextStep: { type: 'string', description: 'The requested or agreed next step' },
+        interestArea: {
+          type: 'string',
+          enum: ['operator_network', 'career_portfolio', 'lead_to_cash', 'other'],
+          description: 'Primary interest: shared network of niche executive operators, Career Portfolio site/outputs, Lead-to-Cash solutions/technology, or other',
+        },
         notes: { type: 'string', description: 'Anything else relevant from the conversation worth recording on the lead' },
       },
       required: ['kind', 'contactEmail'],
@@ -70,7 +81,7 @@ const TOOLS = [
   },
 ];
 
-async function executeTool(name, input, sourceOutput) {
+async function executeTool(name, input, sourceOutput, attribution = null) {
   if (name === 'get_coverage_options') {
     try {
       const [engRows, skillRows, toolRows] = await Promise.all([
@@ -98,7 +109,18 @@ async function executeTool(name, input, sourceOutput) {
         sourceOutput,
         via: 'bestystaff',
       });
-      return { ok: true, id: created.id, recommendedPortfolio: created.recommendedPortfolio, publicToken: created.publicToken };
+      return {
+        ok: true,
+        id: created.id,
+        recommendedPortfolio: created.recommendedPortfolio,
+        publicToken: created.publicToken,
+        leadCapture: {
+          contactName: input.contactName || null,
+          contactEmail: input.contactEmail,
+          contactPhone: input.contactPhone || null,
+          answers: { ...input, attribution },
+        },
+      };
     } catch (e) {
       return { error: e.message };
     }
@@ -113,10 +135,17 @@ const SOURCE_LABELS = {
   'career-master-database': 'the Career Master Database preview',
   'case-study-portfolio': 'the Case Study Portfolio preview',
   'strategic-operator': 'the Strategic Operator career infographic preview',
+  'homepage-contact': 'the Salt Basin homepage contact section',
 };
 
-function buildSystemPrompt(sourceOutput) {
+function buildSystemPrompt(sourceOutput, intakeConfig = {}) {
   const sourceLabel = SOURCE_LABELS[sourceOutput] || 'a preview of Betsy\'s career portfolio';
+  const configuredQuestions = Array.isArray(intakeConfig.questions)
+    ? intakeConfig.questions
+      .filter((q) => q?.enabled !== false && q?.prompt)
+      .map((q) => `- ${q.prompt}${q.required ? ' (required)' : ' (optional)'}`)
+      .join('\n')
+    : '';
   return `You are BestyStaff — Betsy Salter's AI proxy agent at Salt Basin Net Works ("Bottom Lines with a Rising Tide"). You are chatting with a visitor who is viewing ${sourceLabel} on saltbasin.net. You are transparent about being an AI agent acting on Betsy's behalf.
 
 You are the API-layer fallback: the chat UI already runs a deterministic cache layer for the opening script (consent, "do you know Betsy", top-5-questions), the closing question, and a bank of guardrail-sensitive answers (Vista/broker claims, license claims, dollar-figure sourcing, "what does Salt Basin do", example-deliverable requests, "who has Betsy worked with", CPQ/billing help, "not ready to talk"). You are only called for turns that bank doesn't cover — open-ended reasoning, coverage matching, JD parsing, and lead submission. If a visitor's free-text message clearly re-asks one of those same guardrail-sensitive topics in a way the keyword bank missed, answer it using the exact same restraint described in the Non-Negotiable Guardrails below rather than improvising.
@@ -144,7 +173,9 @@ FLOW 2 — "Build a Career Portfolio and Salt Basin Profile for yourself" (kind:
 4. Contact name and email for follow-up.
 After submitting, relay the recommendedPortfolio from the tool result — that's the format best suited to them.
 
-When the visitor hasn't picked a flow yet, offer both plainly. Once the required info for a flow is gathered, give a one-or-two-line summary and ask them to confirm the email is right, then call submit_portfolio_request exactly once. If the visitor's message carries a "[cache-layer context already collected...]" block mentioning their top questions for today, pass that phrase through verbatim as the topQuestions field on the tool call — it's saved on the lead so a "welcome back" greeting on a future visit can reference it. After a successful submit, confirm warmly: Betsy has been notified, and the portfolio/follow-up goes to their email.
+When the visitor hasn't picked a flow yet, offer both plainly. Try to complete every relevant intake field before submission, including business need, desired outcome, urgency, decision role, name, email, company, title, and phone; clearly allow the visitor to skip optional fields. Do not submit immediately after receiving only an email. Once the applicable intake is as complete as the visitor is willing to make it, give a one-or-two-line summary, confirm the email and key details, then call submit_portfolio_request exactly once. If the visitor's message carries a "[cache-layer context already collected...]" block mentioning their top questions for today, pass that phrase through verbatim as the topQuestions field on the tool call — it's saved on the lead so a "welcome back" greeting on a future visit can reference it. After a successful submit, confirm warmly: Betsy has been notified, and the portfolio/follow-up goes to their email.
+
+${configuredQuestions ? `Configured intake questions (ask one at a time and persist answers in the closest tool fields):\n${configuredQuestions}` : ''}
 
 Attachments: the paperclip in this chat lets the visitor attach sample documents (a job description, their resume) for context. If it's relevant, mention it once. Attached files are stored in a private temporary context space and automatically deleted 24 hours after upload — say so if they attach or ask. Files upload automatically right after the intake is submitted.
 
@@ -164,7 +195,7 @@ Boundaries: stay on intake and light questions about Betsy's background. If aske
 // ── Chat endpoint ──────────────────────────────────────────────────────────
 
 router.post('/', chatLimiter, async (req, res) => {
-  const { message, history = [], sourceOutput, attachmentCount = 0 } = req.body || {};
+  const { message, history = [], sourceOutput, attachmentCount = 0, leadMemory, attribution } = req.body || {};
   if (!message || typeof message !== 'string' || message.length > 8000) {
     return res.status(400).json({ error: 'message required (max 8000 chars)' });
   }
@@ -182,7 +213,26 @@ router.post('/', chatLimiter, async (req, res) => {
     : message;
 
   const messages = [...cleanHistory, { role: 'user', content: userText }];
-  const system = buildSystemPrompt(typeof sourceOutput === 'string' ? sourceOutput : '');
+  const publishedConfig = (await getJSON('config_state', 'published')) || {};
+  const intakeConfig = {
+    ...defaultConfig.bestystaff.intake,
+    ...(publishedConfig.bestystaff?.intake || {}),
+  };
+  let system = buildSystemPrompt(
+    typeof sourceOutput === 'string' ? sourceOutput : '',
+    intakeConfig
+  );
+  if (leadMemory?.id && leadMemory?.token) {
+    const prior = await db.prepare(`
+      SELECT l.answers, l.message
+      FROM portfolio_requests pr
+      JOIN leads l ON l.id = pr.lead_id
+      WHERE pr.id = $1 AND pr.public_token = $2 AND l.merged_into_id IS NULL
+    `).get(Number(leadMemory.id), String(leadMemory.token).slice(0, 64));
+    if (prior) {
+      system += `\n\nPrior persisted lead context for this returning visitor (use it to avoid re-asking known facts and to improve qualification; do not quote the full transcript back):\nStructured context: ${String(prior.answers || '{}').slice(0, 12000)}\nPrior transcript: ${String(prior.message || '').slice(-12000)}`;
+    }
+  }
 
   let submitted = null;
   try {
@@ -204,9 +254,19 @@ router.post('/', chatLimiter, async (req, res) => {
       messages.push({ role: 'assistant', content: response.content });
       const toolResults = [];
       for (const block of toolUses) {
-        const result = await executeTool(block.name, block.input, typeof sourceOutput === 'string' ? sourceOutput : null);
+        const result = await executeTool(
+          block.name,
+          block.input,
+          typeof sourceOutput === 'string' ? sourceOutput : null,
+          attribution && typeof attribution === 'object' ? attribution : null
+        );
         if (block.name === 'submit_portfolio_request' && result.ok) {
-          submitted = { id: result.id, recommendedPortfolio: result.recommendedPortfolio || null, publicToken: result.publicToken || null };
+          submitted = {
+            id: result.id,
+            recommendedPortfolio: result.recommendedPortfolio || null,
+            publicToken: result.publicToken || null,
+            leadCapture: result.leadCapture || null,
+          };
         }
         toolResults.push({ type: 'tool_result', tool_use_id: block.id, content: JSON.stringify(result) });
       }

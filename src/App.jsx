@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { api } from './lib/api.js';
 import PublicSite from './components/PublicSite.jsx';
 import LandingGate from './components/LandingGate.jsx';
@@ -37,6 +37,15 @@ function RequireAdmin({ children }) {
   return children;
 }
 
+function SignupRoute() {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  // Preserve the authenticated lead-to-member conversion flow. General
+  // sign-up traffic starts with the configurable BestyStaff intake instead.
+  if (params.get('fromLead')) return <SignupPage />;
+  return <Navigate to="/?intakeSource=networks-sign-up#bestystaff" replace />;
+}
+
 export default function App() {
   return (
     <Routes>
@@ -47,7 +56,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/admin/login" element={<LoginPage />} />
       <Route path="/reset/:token" element={<ResetPasswordPage />} />
-      <Route path="/signup" element={<SignupPage />} />
+      <Route path="/signup" element={<SignupRoute />} />
       <Route path="/member" element={<MemberDashboard />} />
       <Route path="/u/:slug" element={<PublicProfile />} />
       <Route path="/u/:slug/*" element={<PublicProfile />} />

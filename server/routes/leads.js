@@ -131,7 +131,7 @@ router.post('/', async (req, res) => {
   // recaptchaToken. Keeping it off for now so this endpoint doesn't break when
   // RECAPTCHA_SECRET_KEY gets set — see scripts/add-tonight-defect-items.mjs
   // and task #28 in the session log for the rollout plan.
-  const { source, email, phone, name, message, ctaLocation, memberSlug } = req.body || {};
+  const { source, email, phone, name, message, answers, ctaLocation, memberSlug } = req.body || {};
 
   if (!isValidSource(source)) return res.status(400).json({ error: 'invalid source' });
   if (!isValidEmail(email)) return res.status(400).json({ error: 'a valid email is required' });
@@ -141,11 +141,17 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'phone number format looks off — 7 to 15 digits' });
   }
 
-  if (rateLimited(req.ip)) return res.status(429).json({ error: 'slow down a moment' });
+  const integrationRequest = process.env.LEAD_INTEGRATION_API_KEY
+    && req.get('x-saltbasin-integration-key') === process.env.LEAD_INTEGRATION_API_KEY;
+  if (!integrationRequest && rateLimited(req.ip)) return res.status(429).json({ error: 'slow down a moment' });
 
   const normEmail = normalizeEmail(email);
   const trimmedName = name?.slice(0, 200) || null;
-  const trimmedMsg = message?.slice(0, 2000) || null;
+  const messageLimit = source === 'bestystaff' ? 50_000 : 2_000;
+  const trimmedMsg = message?.slice(0, messageLimit) || null;
+  const structuredAnswers = answers && typeof answers === 'object' && !Array.isArray(answers)
+    ? answers
+    : null;
   const ctaLoc = typeof ctaLocation === 'string' ? ctaLocation.slice(0, 200) : null;
 
   // Find any matching active leads (by email OR phone).
@@ -211,6 +217,12 @@ router.post('/', async (req, res) => {
       updates.push(`name = $${p++}`);
       params.push(trimmedName);
     }
+    if (structuredAnswers) {
+      let priorAnswers = {};
+      try { priorAnswers = primary.answers ? JSON.parse(primary.answers) : {}; } catch { priorAnswers = {}; }
+      updates.push(`answers = $${p++}`);
+      params.push(JSON.stringify({ ...priorAnswers, ...structuredAnswers }));
+    }
     params.push(leadId);
     await db.prepare(`UPDATE leads SET ${updates.join(', ')} WHERE id = $${p}`).run(...params);
 
@@ -247,10 +259,10 @@ router.post('/', async (req, res) => {
     passwordHash = await bcrypt.hash(accessPassword, 10);
     const result = await db
       .prepare(
-        `INSERT INTO leads (source, email, phone, name, message, public_id, access_token, password_hash)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
+        `INSERT INTO leads (source, email, phone, name, message, answers, public_id, access_token, password_hash)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`
       )
-      .run(source, normEmail, normPhone, trimmedName, trimmedMsg, publicId, accessToken, passwordHash);
+      .run(source, normEmail, normPhone, trimmedName, trimmedMsg, structuredAnswers ? JSON.stringify(structuredAnswers) : null, publicId, accessToken, passwordHash);
     leadId = Number(result.lastInsertRowid);
     isExisting = false;
   }
