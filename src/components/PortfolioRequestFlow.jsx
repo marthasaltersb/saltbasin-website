@@ -391,9 +391,9 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
   const [fallbackView, setFallbackView] = useState('prompt'); // prompt | request_betsy | build_own | done
   const [fallbackResult, setFallbackResult] = useState(null);
   const [fallbackKind, setFallbackKind] = useState(null);
+  const [actorContext, setActorContext] = useState(null);
   const scrollRef = useRef(null);
   const fileInputRef = useRef(null);
-  const leadTouchRef = useRef('idle');
 
   useEffect(() => {
     const source = new URLSearchParams(window.location.search).get('intakeSource');
@@ -447,6 +447,29 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
         return;
       }
 
+      try {
+        const actorRes = await fetch('/api/leads/actor-context', { credentials: 'include' });
+        const actor = actorRes.ok ? await actorRes.json() : null;
+        if (!cancelled && actor?.returning) {
+          const welcome = 'Welcome back! Thanks for returning, what can I help you with this visit?';
+          setActorContext(actor);
+          setMessages([{ role: 'assistant', text: welcome }]);
+          setCacheCtx((c) => ({
+            ...c,
+            consentGiven: actor.answered?.consentGiven ?? c.consentGiven,
+            knowsBetsy: actor.answered?.knowsBetsy ?? c.knowsBetsy,
+            knowsBetsyDetail: actor.answered?.knowsBetsyDetail || c.knowsBetsyDetail,
+            topQuestions: actor.answered?.topQuestions || c.topQuestions,
+          }));
+          setPhase('returningWelcome');
+          fetch('/api/leads/touch', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+            body: JSON.stringify({ source: 'bestystaff', message: welcome, questionKey: 'returningWelcome', answerValue: true, ctaLocation: window.location.pathname }),
+          }).catch(() => {});
+          return;
+        }
+      } catch { /* fresh visitor fallback */ }
+
       const mem = readLeadMemory();
       if (!mem) return; // fresh visitor — default opening script stands
       try {
@@ -471,24 +494,18 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
   }, [messages, sending, open]);
 
   function respondAssistant(text) { setMessages((m) => [...m, { role: 'assistant', text }]); }
-  function respondUser(text) {
+  function respondUser(text, questionKey = 'conversation', answerValue = text) {
     setMessages((m) => [...m, { role: 'user', text }]);
-    if (leadTouchRef.current === 'idle') {
-      leadTouchRef.current = 'pending';
-      fetch('/api/leads/touch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          source: 'bestystaff',
-          message: text,
-          ctaLocation: `${window.location.pathname}${window.location.search}#bestystaff`,
-          attribution: readBestyAttribution(),
-        }),
-      }).then((res) => {
-        leadTouchRef.current = res.ok ? 'done' : 'idle';
-      }).catch(() => { leadTouchRef.current = 'idle'; });
-    }
+    fetch('/api/leads/touch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        source: 'bestystaff', message: text, questionKey, answerValue,
+        ctaLocation: `${window.location.pathname}${window.location.search}#bestystaff`,
+        attribution: readBestyAttribution(),
+      }),
+    }).catch(() => {});
   }
 
   async function uploadAttachments(requestId) {
@@ -603,7 +620,7 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
   // Quick-reply handlers — pure cache layer, no network.
   function pickConsent(label) {
     const yes = label === 'Yes';
-    respondUser(label);
+    respondUser(label, 'consentGiven', yes);
     setCacheCtx((c) => ({ ...c, consentGiven: yes }));
     setPhase('knowsBetsy');
     respondAssistant(KNOWS_BETSY_QUESTION);
@@ -611,7 +628,7 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
 
   function pickKnowsBetsy(label) {
     const yes = label === 'Yes';
-    respondUser(label);
+    respondUser(label, 'knowsBetsy', yes);
     setCacheCtx((c) => ({ ...c, knowsBetsy: yes }));
     if (yes) {
       setPhase('knowsBetsyDetail');
@@ -623,7 +640,7 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
   }
 
   function pickFlow(label) {
-    respondUser(label);
+    respondUser(label, 'interestArea', label);
     setPhase('chatting');
     const context = `[cache-layer context already collected — do not re-ask: consent to capture chat context = ${cacheCtx.consentGiven ? 'yes' : 'no'}; knows Betsy = ${cacheCtx.knowsBetsy ? `yes (${cacheCtx.knowsBetsyDetail || 'connection not specified'})` : 'no'}; visitor's top questions for today: "${cacheCtx.topQuestions}"]`;
     sendToApi(`${label}\n\n${context}`, historySnapshot(), label);
@@ -643,21 +660,21 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
     setInput('');
 
     if (phase === 'knowsBetsyDetail') {
-      respondUser(trimmed);
+      respondUser(trimmed, 'knowsBetsyDetail', trimmed);
       setCacheCtx((c) => ({ ...c, knowsBetsyDetail: trimmed }));
       setPhase('topQuestions');
       respondAssistant(TOP_QUESTIONS_QUESTION);
       return;
     }
     if (phase === 'topQuestions') {
-      respondUser(trimmed);
+      respondUser(trimmed, 'topQuestions', trimmed);
       setCacheCtx((c) => ({ ...c, topQuestions: trimmed }));
       setPhase('flowPick');
       respondAssistant(FLOW_PICK_INTRO);
       return;
     }
     if (phase === 'awaitingClosing') {
-      respondUser(trimmed);
+      respondUser(trimmed, 'closingResponse', trimmed);
       const noMore = /^(no|nope|nothing|all good|that'?s all|none|i'?m good)\b/i.test(trimmed);
       if (!noMore) {
         if (submitted?.id) {
@@ -672,10 +689,17 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
       setPhase('chatting');
       return;
     }
+    if (phase === 'returningWelcome') {
+      const history = historySnapshot();
+      respondUser(trimmed, 'returnVisitNeed', trimmed);
+      setPhase('chatting');
+      await sendToApi(`${trimmed}\n\n[returning actor: before addressing the request, ask for missing name/contact information, marketing consent, and explain contact privacy; has email=${actorContext?.hasEmail ? 'yes' : 'no'}; has name=${actorContext?.hasName ? 'yes' : 'no'}]`, history, trimmed);
+      return;
+    }
 
     // phase === 'chatting': cache-layer safe-answer bank first, then the API layer.
     const history = historySnapshot();
-    respondUser(trimmed);
+    respondUser(trimmed, phase === 'returningWelcome' ? 'returnVisitNeed' : 'conversation', trimmed);
     const safe = matchSafeAnswer(trimmed);
     if (safe) {
       respondAssistant(safe.reply);
@@ -695,10 +719,11 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
     setOpen(false);
   }
 
-  const inputEnabled = phase === 'knowsBetsyDetail' || phase === 'topQuestions' || phase === 'chatting' || phase === 'awaitingClosing';
+  const inputEnabled = phase === 'knowsBetsyDetail' || phase === 'topQuestions' || phase === 'chatting' || phase === 'awaitingClosing' || phase === 'returningWelcome';
   const placeholder = phase === 'knowsBetsyDetail' ? 'e.g. former colleague, referral, LinkedIn…'
     : phase === 'topQuestions' ? 'Type your top questions (1-5)…'
     : !inputEnabled ? 'Please choose an option above'
+    : phase === 'returningWelcome' ? 'What can I help you with this visit?'
     : submitted ? 'Anything else I can pass along?' : 'Type a reply… (paste a job description right in)';
 
   return (

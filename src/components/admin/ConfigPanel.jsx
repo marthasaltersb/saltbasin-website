@@ -1421,6 +1421,8 @@ function BestyQuestionsEditor({ questions, onChange }) {
         <div key={q.id || index} style={{ ...styles.card, padding: '0.75rem', marginBottom: '0.5rem' }}>
           <Field label="Field ID" value={q.id} onChange={(v) => update(index, 'id', v)} placeholder="businessNeed" />
           <Field label="Question" value={q.prompt} onChange={(v) => update(index, 'prompt', v)} long />
+          <Field label="Metadata cluster" value={q.cluster} onChange={(v) => update(index, 'cluster', v)} placeholder="identity, intent, need, authority…" />
+          <Field label="Qualification weight" type="number" value={q.weight ?? 0} onChange={(v) => update(index, 'weight', Number(v) || 0)} />
           <div style={{ display: 'flex', gap: '1rem' }}>
             <Toggle label="Enabled" checked={q.enabled !== false} onChange={(v) => update(index, 'enabled', v)} />
             <Toggle label="Required" checked={!!q.required} onChange={(v) => update(index, 'required', v)} />

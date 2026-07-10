@@ -11,6 +11,7 @@ const router = Router();
 
 const LEAD_COOKIE = 'sb_lead';
 const ACTOR_COOKIE = 'sb_actor_context';
+const VISIT_COOKIE = 'sb_actor_visit';
 const LEAD_SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 90; // 90 days
 
 // ── Validation + normalization ──
@@ -140,18 +141,77 @@ function actorCookieOptions() {
   };
 }
 
+export async function resetLeadCredentialsByEmail(email) {
+  if (!isValidEmail(email)) return { ok: true };
+  const lead = await db.prepare(`SELECT id, public_id, email, name, source FROM leads WHERE LOWER(email) = $1 AND merged_into_id IS NULL ORDER BY updated_at DESC LIMIT 1`).get(normalizeEmail(email));
+  if (!lead) return { ok: true };
+  const password = newAccessPassword();
+  const hash = await bcrypt.hash(password, 10);
+  await db.prepare(`UPDATE leads SET password_hash = $1, updated_at = $2 WHERE id = $3`).run(hash, Date.now(), Number(lead.id));
+  await db.prepare(`DELETE FROM lead_sessions WHERE lead_id = $1`).run(Number(lead.id));
+  await sendLeadConfirmation({
+    leadId: Number(lead.id), toEmail: lead.email, toName: lead.name,
+    leadUrl: `/lead/${lead.public_id}`, password, source: lead.source || 'bestystaff',
+  });
+  return { ok: true, leadUrl: `/lead/${lead.public_id}` };
+}
+
+router.post('/credential-reset', async (req, res) => {
+  if (rateLimited(req.ip)) return res.status(429).json({ error: 'slow down a moment' });
+  await resetLeadCredentialsByEmail(req.body?.email);
+  res.json({ ok: true, message: 'If that email is linked to a lead, refreshed credentials are on the way.' });
+});
+
+function visitCookieOptions() {
+  return { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/' };
+}
+
+router.get('/actor-context', async (req, res) => {
+  let actorKey = req.cookies?.[ACTOR_COOKIE];
+  let visitKey = req.cookies?.[VISIT_COOKIE];
+  if (!actorKey) {
+    actorKey = newToken();
+    res.cookie(ACTOR_COOKIE, actorKey, actorCookieOptions());
+  }
+  if (!visitKey) {
+    visitKey = newToken();
+    res.cookie(VISIT_COOKIE, visitKey, visitCookieOptions());
+  }
+  const lead = await db.prepare(`SELECT id, public_id, email, name, answers, visit_count FROM leads WHERE actor_key = $1 AND merged_into_id IS NULL`).get(actorKey);
+  if (!lead) return res.json({ returning: false, visitKey });
+  let answers = {};
+  try { answers = lead.answers ? JSON.parse(lead.answers) : {}; } catch { answers = {}; }
+  const domain = lead.email?.split('@')[1]?.toLowerCase() || null;
+  const consumerDomains = new Set(['gmail.com','outlook.com','hotmail.com','yahoo.com','icloud.com','aol.com','proton.me','protonmail.com']);
+  res.json({
+    returning: true,
+    publicId: lead.public_id,
+    visitCount: Number(lead.visit_count || 0),
+    hasEmail: !!lead.email,
+    emailDomain: domain,
+    emailKind: domain ? (consumerDomains.has(domain) ? 'consumer' : 'custom') : null,
+    hasName: !!lead.name,
+    answered: Object.fromEntries(Object.entries(answers).filter(([k]) => ['consentGiven','knowsBetsy','knowsBetsyDetail','topQuestions','interestArea','marketingConsent','contactName'].includes(k))),
+  });
+});
+
 // First-answer tracking: one provisional canonical lead per browser actor.
 // Final contact submission upgrades this row through the normal lead flow.
 router.post('/touch', async (req, res) => {
   try {
-    const { source = 'bestystaff', message, ctaLocation, attribution } = req.body || {};
+    const { source = 'bestystaff', message, questionKey, answerValue, ctaLocation, attribution } = req.body || {};
     if (!isValidSource(source)) return res.status(400).json({ error: 'invalid source' });
     if (!message || typeof message !== 'string') return res.status(400).json({ error: 'an answered question is required' });
 
     let actorKey = req.cookies?.[ACTOR_COOKIE];
+    let visitKey = req.cookies?.[VISIT_COOKIE];
     if (!actorKey) {
       actorKey = newToken();
       res.cookie(ACTOR_COOKIE, actorKey, actorCookieOptions());
+    }
+    if (!visitKey) {
+      visitKey = newToken();
+      res.cookie(VISIT_COOKIE, visitKey, visitCookieOptions());
     }
 
     let lead = await db.prepare(`SELECT id, public_id FROM leads WHERE actor_key = $1 AND merged_into_id IS NULL`).get(actorKey);
@@ -164,9 +224,26 @@ router.post('/touch', async (req, res) => {
       lead = { id: Number(result.lastInsertRowid), public_id: publicId };
     }
 
+    if (questionKey) {
+      const current = await db.prepare(`SELECT answers FROM leads WHERE id = $1`).get(Number(lead.id));
+      let answers = {};
+      try { answers = current?.answers ? JSON.parse(current.answers) : {}; } catch { answers = {}; }
+      answers[String(questionKey).slice(0, 80)] = answerValue;
+      await db.prepare(`UPDATE leads SET answers = $1, updated_at = $2 WHERE id = $3`).run(JSON.stringify(answers), Date.now(), Number(lead.id));
+    }
+
+    const visitInsert = await db.prepare(`
+      INSERT INTO lead_visits (lead_id, visit_key, entry_path, first_message, created_at)
+      VALUES ($1,$2,$3,$4,$5) ON CONFLICT (lead_id, visit_key) DO NOTHING
+    `).run(Number(lead.id), visitKey, String(ctaLocation || '').slice(0, 500) || null, message.slice(0, 2000), Date.now());
+    if (visitInsert.changes > 0) {
+      await db.prepare(`UPDATE leads SET visit_count = visit_count + 1, last_visit_at = $1 WHERE id = $2`).run(Date.now(), Number(lead.id));
+    }
+
     await db.prepare(`INSERT INTO lead_activity (lead_id, source, cta_location, message) VALUES ($1,$2,$3,$4)`)
       .run(Number(lead.id), source, String(ctaLocation || '').slice(0, 200) || null, message.slice(0, 2000));
-    res.json({ ok: true, leadId: Number(lead.id), publicId: lead.public_id, provisional: true });
+    const tracked = await db.prepare(`SELECT visit_count FROM leads WHERE id = $1`).get(Number(lead.id));
+    res.json({ ok: true, leadId: Number(lead.id), publicId: lead.public_id, provisional: true, visitCount: Number(tracked?.visit_count || 0) });
   } catch (e) {
     console.error('[leads] actor touch failed:', e.message);
     res.status(500).json({ error: 'failed to track actor context' });
@@ -604,7 +681,7 @@ async function getLeadByPublic(req) {
     .prepare(
       `SELECT id, source, email, phone, name, message, public_id, access_token, answers,
               prior_notes, merged_from_ids, merged_into_id, password_hash,
-              created_at, updated_at, converted_user_id
+              created_at, updated_at, converted_user_id, visit_count, last_visit_at
        FROM leads WHERE public_id = $1`
     )
     .get(publicId);
@@ -696,6 +773,8 @@ router.get('/public/:publicId', async (req, res) => {
     updatedAt: Number(lead.updated_at),
     convertedUserId: lead.converted_user_id ? Number(lead.converted_user_id) : null,
     pledgedAt: lead.pledged_at ? Number(lead.pledged_at) : null,
+    visitCount: Number(lead.visit_count || 0),
+    lastVisitAt: lead.last_visit_at ? Number(lead.last_visit_at) : null,
   });
 });
 

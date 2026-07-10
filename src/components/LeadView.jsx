@@ -5,6 +5,8 @@ import { InlineDataNotice } from './DataNotice.jsx';
 import BackLink from './BackLink.jsx';
 import { api } from '../lib/api.js';
 import { getRecaptchaToken } from '../lib/recaptcha.js';
+import SaltBasinCrystal from './SaltBasinCrystal.jsx';
+import PortfolioRequestPrompt from './PortfolioRequestFlow.jsx';
 
 const SOURCE_LABELS = {
   joinNetwork: 'Join the Network · Operator interest',
@@ -43,6 +45,7 @@ export default function LeadView() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [config, setConfig] = useState(null);
+  const [crystalMessage, setCrystalMessage] = useState('');
 
   // Pledge state
   const [pledging, setPledging] = useState(false);
@@ -244,6 +247,17 @@ export default function LeadView() {
   if (!lead) return null;
   const answeredKeys = Object.entries(answers).filter(([, v]) => v && String(v).trim());
 
+  function openLeadGenie() {
+    const message = "You found the lead genie in the bottle — except the bottle is a 3D-rendered intake crystal. What should we add to the future wish list?";
+    setCrystalMessage(message);
+    fetch('/api/leads/touch', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+      body: JSON.stringify({ source: 'bestystaff', message, questionKey: 'crystalInteraction', answerValue: true, ctaLocation: `/lead/${publicId}#crystal` }),
+    }).catch(() => {});
+    if (window.location.hash !== '#bestystaff') window.location.hash = 'bestystaff';
+    else window.dispatchEvent(new Event('bestystaff:open'));
+  }
+
   return (
     <div>
       <nav style={topbarStyle}>
@@ -261,6 +275,17 @@ export default function LeadView() {
       </nav>
 
       <div style={containerStyle}>
+        <section className="sb-lead-crystal-layout">
+          <button type="button" className="sb-lead-crystal-button" onClick={openLeadGenie} aria-label="Open BestyStaff for this lead">
+            <SaltBasinCrystal variant="signature" size="hero" interactive />
+          </button>
+          <div>
+            <div className="sb-eyebrow">Your living lead context</div>
+            <h1 className="sb-display">Lead #{lead.publicId}</h1>
+            <p>{lead.visitCount || 1} recorded visit{lead.visitCount === 1 ? '' : 's'} across this actor context.</p>
+            {crystalMessage && <p className="sb-lead-genie-message">{crystalMessage}</p>}
+          </div>
+        </section>
         <div style={{ maxWidth: 1100, margin: '0 auto 2.5rem' }}>
           <div className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>You're in. Here's your record.</div>
           <h1 className="sb-display" style={{ fontSize: '2.8rem', color: 'var(--sb-cream)', marginBottom: '0.5rem', letterSpacing: '0.04em' }}>
@@ -329,6 +354,8 @@ export default function LeadView() {
             </div>
           )}
         </div>
+
+        <PortfolioRequestPrompt sourceOutput="lead-record" autoOpen={false} openOnHash="#bestystaff" intakeConfig={config?.bestystaff?.intake} />
 
 
         <div style={pageGrid}>

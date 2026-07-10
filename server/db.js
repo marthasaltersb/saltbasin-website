@@ -195,6 +195,8 @@ async function bootstrap() {
     ['leads', 'verified_phone', 'BOOLEAN NOT NULL DEFAULT false'],
     ['leads', 'actor_key', 'TEXT'],
     ['leads', 'provisional', 'BOOLEAN NOT NULL DEFAULT false'],
+    ['leads', 'visit_count', 'INTEGER NOT NULL DEFAULT 0'],
+    ['leads', 'last_visit_at', 'BIGINT'],
     ['lead_activity', 'cta_location', 'TEXT'],
     ['users', 'display_name', 'TEXT'],
   ];
@@ -206,6 +208,16 @@ async function bootstrap() {
   await sql.unsafe(`
     ALTER TABLE leads ALTER COLUMN email DROP NOT NULL;
     CREATE UNIQUE INDEX IF NOT EXISTS idx_leads_actor_key ON leads (actor_key) WHERE actor_key IS NOT NULL AND merged_into_id IS NULL;
+    CREATE TABLE IF NOT EXISTS lead_visits (
+      id BIGSERIAL PRIMARY KEY,
+      lead_id BIGINT NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+      visit_key TEXT NOT NULL,
+      entry_path TEXT,
+      first_message TEXT,
+      created_at BIGINT NOT NULL,
+      UNIQUE(lead_id, visit_key)
+    );
+    CREATE INDEX IF NOT EXISTS idx_lead_visits_lead ON lead_visits (lead_id, created_at DESC);
   `);
 
   // Lead sessions — password-based access cookie scoped to one lead record.

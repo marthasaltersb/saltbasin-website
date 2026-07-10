@@ -17,6 +17,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { db, getJSON } from '../db.js';
 import { makeRateLimiter } from '../lib/rateLimit.js';
 import { createPortfolioRequest } from './portfolioRequests.js';
+import { resetLeadCredentialsByEmail } from './leads.js';
 import { defaultConfig } from '../data/defaultSite.js';
 import { getUserFromCookie } from '../auth.js';
 import { actorScope, buildAgentDataContext, agentDataPolicyPrompt, inferAgentPurpose } from '../lib/agentDataPolicy.js';
@@ -66,6 +67,11 @@ const TOOLS = [
         contactCompany: { type: 'string' },
         contactTitle: { type: 'string' },
         contactPhone: { type: 'string' },
+        additionalEmail: { type: 'string', description: 'Optional additional work or personal email supplied by the visitor' },
+        marketingConsent: { type: 'boolean', description: 'Whether the visitor explicitly consented to marketing content' },
+        engagementType: { type: 'string', enum: ['full_time', 'fractional', 'fixed_scope', 'not_sure'], description: 'Hiring/consulting engagement shape' },
+        isBuyer: { type: 'boolean', description: 'Whether the visitor is the organizational buyer or decision maker' },
+        buyerRoleContext: { type: 'string', description: 'If not the buyer, their role and relationship to the buyer' },
         businessNeed: { type: 'string', description: 'The business problem, opportunity, or desired outcome in the visitor\'s words' },
         urgency: { type: 'string', description: 'Timing or urgency, if the visitor is willing to share it' },
         budgetRange: { type: 'string', description: 'Budget range or commercial readiness, if volunteered or relevant' },
@@ -80,6 +86,11 @@ const TOOLS = [
       },
       required: ['kind', 'contactEmail'],
     },
+  },
+  {
+    name: 'request_lead_credential_reset',
+    description: 'Send refreshed lead-record credentials by email. Use only after the visitor supplies and confirms their email. Never return a password in chat.',
+    input_schema: { type: 'object', properties: { email: { type: 'string' } }, required: ['email'] },
   },
 ];
 
@@ -128,6 +139,11 @@ async function executeTool(name, input, sourceOutput, attribution = null) {
     }
   }
 
+  if (name === 'request_lead_credential_reset') {
+    await resetLeadCredentialsByEmail(input.email);
+    return { ok: true, message: 'If the supplied email is linked to a lead, refreshed credentials were emailed.' };
+  }
+
   return { error: `Unknown tool: ${name}` };
 }
 
@@ -145,7 +161,8 @@ function buildSystemPrompt(sourceOutput, intakeConfig = {}) {
   const configuredQuestions = Array.isArray(intakeConfig.questions)
     ? intakeConfig.questions
       .filter((q) => q?.enabled !== false && q?.prompt)
-      .map((q) => `- ${q.prompt}${q.required ? ' (required)' : ' (optional)'}`)
+      .sort((a, b) => Number(b.weight || 0) - Number(a.weight || 0))
+      .map((q) => `- [cluster=${q.cluster || 'general'}; weight=${q.weight || 0}] ${q.prompt}${q.required ? ' (required)' : ' (optional)'}`)
       .join('\n')
     : '';
   return `You are BestyStaff — Betsy Salter's AI proxy agent at Salt Basin Net Works ("Bottom Lines with a Rising Tide"). You are chatting with a visitor who is viewing ${sourceLabel} on saltbasin.net. You are transparent about being an AI agent acting on Betsy's behalf.
@@ -176,6 +193,20 @@ FLOW 2 — "Build a Career Portfolio and Salt Basin Profile for yourself" (kind:
 After submitting, relay the recommendedPortfolio from the tool result — that's the format best suited to them.
 
 When the visitor hasn't picked a flow yet, offer both plainly. Try to complete every relevant intake field before submission, including business need, desired outcome, urgency, decision role, name, email, company, title, and phone; clearly allow the visitor to skip optional fields. Do not submit immediately after receiving only an email. Once the applicable intake is as complete as the visitor is willing to make it, give a one-or-two-line summary, confirm the email and key details, then call submit_portfolio_request exactly once. If the visitor's message carries a "[cache-layer context already collected...]" block mentioning their top questions for today, pass that phrase through verbatim as the topQuestions field on the tool call — it's saved on the lead so a "welcome back" greeting on a future visit can reference it. After a successful submit, confirm warmly: Betsy has been notified, and the portfolio/follow-up goes to their email.
+
+Returning-lead rules:
+- Never repeat a question already answered in allowed structured context, especially whether they know Betsy.
+- After the visitor answers the welcome-back question, ask for any missing name and contact information before addressing the new request. Ask separately for marketing consent.
+- Explain that contact information is not shared with anyone else, just as BestyStaff cannot reveal another person's contact information.
+- Marketing consent does not control the transactional lead-record email. When an email is first captured, the visitor receives lead-record credentials regardless of marketing preference, and Betsy will personally follow up within 48 hours.
+- If the stored email domain is a consumer domain, mention only the domain (for example @gmail.com) and ask for an optional work/additional email. If it is a custom domain, ask whether the email on file is personal without revealing the full address. When a new email is supplied, only confirm it was captured and linked.
+- Prioritize the highest-weight unanswered metadata cluster needed for qualification.
+- For hiring/consulting interest, capture engagement type (full-time, fractional, fixed scope, or unsure), whether they want Betsy's Career Portfolio, job description/scope detail or guided prompts, whether they are the buyer, and if not, their role.
+
+Contact and attachment safety:
+- Never share an attachment or sensitive information from an attachment in chat. Attachments are private intake context for Approved Salt Basin Executives only (currently Betsy) and are deleted after 24 hours.
+- If asked, say Betsy can personally confirm deletion for a member and that attachment content is not persisted to agent memory.
+- Never provide a lead password in chat. Verify the visitor-supplied email before starting credential recovery. Provide a direct lead URL only for the actor's verified/owned lead.
 
 ${configuredQuestions ? `Configured intake questions (ask one at a time and persist answers in the closest tool fields):\n${configuredQuestions}` : ''}
 
@@ -234,6 +265,22 @@ router.post('/', chatLimiter, async (req, res) => {
       WHERE pr.id = $1 AND pr.public_token = $2 AND l.merged_into_id IS NULL
     `).get(Number(leadMemory.id), String(leadMemory.token).slice(0, 64));
   }
+  if (!prior && req.cookies?.sb_actor_context) {
+    prior = await db.prepare(`
+      SELECT email, phone, answers, message
+      FROM leads WHERE actor_key = $1 AND merged_into_id IS NULL
+    `).get(req.cookies.sb_actor_context);
+  }
+  let minimizedAnswers = prior?.answers || null;
+  try {
+    const parsed = typeof prior?.answers === 'string' ? JSON.parse(prior.answers) : (prior?.answers || {});
+    for (const key of ['contactEmail', 'additionalEmail']) {
+      if (parsed[key]) parsed[key] = `@${String(parsed[key]).split('@')[1] || 'email'} on file`;
+    }
+    if (parsed.contactPhone) parsed.contactPhone = '[phone on file]';
+    minimizedAnswers = JSON.stringify(parsed);
+  } catch { minimizedAnswers = '{}'; }
+  const storedDomain = prior?.email?.split('@')[1]?.toLowerCase() || null;
   const dataContext = buildAgentDataContext({
     actor: actorScope({ user, ownsLead: !!prior }),
     purpose: inferAgentPurpose(message),
@@ -241,9 +288,9 @@ router.post('/', chatLimiter, async (req, res) => {
     values: {
       'betsy.email': publishedConfig.bestystaff?.privateContext?.contactEmail || 'betsysalter@saltbasin.net',
       'betsy.phone': publishedConfig.bestystaff?.privateContext?.contactPhone || process.env.ADMIN_PHONE || null,
-      'lead.email': prior?.email,
+      'lead.emailDomain': storedDomain,
       'lead.phone': prior?.phone,
-      'lead.answers': prior?.answers ? String(prior.answers).slice(0, 12000) : null,
+      'lead.answers': minimizedAnswers ? String(minimizedAnswers).slice(0, 12000) : null,
       'lead.transcript': prior?.message ? String(prior.message).slice(-12000) : null,
     },
   });

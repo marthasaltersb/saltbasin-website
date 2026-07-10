@@ -11,6 +11,7 @@ const DEFAULT_FIELDS = {
   'betsy.email': { classification: 'business_contact', purposes: ['contact', 'lead_intake'] },
   'betsy.phone': { classification: 'private', purposes: ['contact'] },
   'lead.email': { classification: 'personal_contact', purposes: ['lead_intake', 'lead_follow_up', 'account_support'] },
+  'lead.emailDomain': { classification: 'personal_contact', purposes: ['lead_intake', 'lead_qualification', 'account_support'] },
   'lead.phone': { classification: 'personal_contact', purposes: ['lead_intake', 'lead_follow_up', 'account_support'] },
   'lead.answers': { classification: 'personal_contact', purposes: ['lead_intake', 'lead_qualification', 'business_definition'] },
   'lead.transcript': { classification: 'sensitive', purposes: ['lead_intake', 'lead_qualification', 'business_definition'] },
