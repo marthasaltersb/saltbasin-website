@@ -2,6 +2,7 @@ import express from 'express';
 import { db } from '../db.js';
 import { getUserFromCookie } from '../auth.js';
 import { audit } from '../lib/audit.js';
+import { ensureMemberOrganizationRods } from '../lib/journeyRods.js';
 
 const router = express.Router();
 
@@ -140,6 +141,7 @@ router.post('/me/orgs', express.json(), async (req, res) => {
     await db.prepare(`
       INSERT INTO org_memberships (user_id, org_id, role) VALUES ($1, $2, 'admin')
     `).run(user.id, org.id);
+    await ensureMemberOrganizationRods(user.id, Number(org.id));
 
     await audit({ req, actor: user, action: 'org.create', entityType: 'org_profile', entityId: org.id, summary: `Created org: ${name}` });
     res.json(org);
@@ -236,6 +238,7 @@ router.post('/orgs/:orgId/members', express.json(), async (req, res) => {
       VALUES ($1, $2, $3, $4)
       ON CONFLICT (user_id, org_id) DO UPDATE SET role = EXCLUDED.role
     `).run(invitee.id, req.params.orgId, role, user.id);
+    await ensureMemberOrganizationRods(Number(invitee.id), Number(req.params.orgId));
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });

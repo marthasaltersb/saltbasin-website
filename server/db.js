@@ -218,7 +218,72 @@ async function bootstrap() {
       UNIQUE(lead_id, visit_key)
     );
     CREATE INDEX IF NOT EXISTS idx_lead_visits_lead ON lead_visits (lead_id, created_at DESC);
+
+    CREATE TABLE IF NOT EXISTS journey_stage_gates (
+      id BIGSERIAL PRIMARY KEY,
+      rod_type TEXT NOT NULL,
+      stage_key TEXT NOT NULL,
+      label TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      qualification_metadata JSONB NOT NULL DEFAULT '{}',
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL,
+      UNIQUE(rod_type, stage_key)
+    );
+
+    CREATE TABLE IF NOT EXISTS journey_data_rods (
+      id BIGSERIAL PRIMARY KEY,
+      rod_type TEXT NOT NULL,
+      lead_id BIGINT REFERENCES leads(id) ON DELETE CASCADE,
+      user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+      personal_profile_id BIGINT,
+      org_id BIGINT,
+      current_stage TEXT NOT NULL DEFAULT 'first_interaction',
+      stage_score NUMERIC NOT NULL DEFAULT 0,
+      potential_revenue_cents BIGINT NOT NULL DEFAULT 0,
+      actual_revenue_cents BIGINT NOT NULL DEFAULT 0,
+      metadata JSONB NOT NULL DEFAULT '{}',
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_lead_type ON journey_data_rods (lead_id, rod_type) WHERE lead_id IS NOT NULL AND user_id IS NULL AND org_id IS NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_user_type ON journey_data_rods (user_id, rod_type) WHERE user_id IS NOT NULL AND org_id IS NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_user_org_type ON journey_data_rods (user_id, org_id, rod_type) WHERE user_id IS NOT NULL AND org_id IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_rods_org ON journey_data_rods (org_id, rod_type);
+
+    CREATE TABLE IF NOT EXISTS journey_rod_events (
+      id BIGSERIAL PRIMARY KEY,
+      rod_id BIGINT NOT NULL REFERENCES journey_data_rods(id) ON DELETE CASCADE,
+      event_type TEXT NOT NULL,
+      from_stage TEXT,
+      to_stage TEXT,
+      score_delta NUMERIC NOT NULL DEFAULT 0,
+      potential_revenue_delta_cents BIGINT NOT NULL DEFAULT 0,
+      metadata JSONB NOT NULL DEFAULT '{}',
+      created_at BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_rod_events_rod ON journey_rod_events (rod_id, created_at DESC);
   `);
+
+  const nowJourney = Date.now();
+  for (const gate of [
+    ['revenue_lifecycle','first_interaction','First Interaction',0],
+    ['revenue_lifecycle','qualified_context','Qualified Context',10],
+    ['revenue_lifecycle','solution_fit','Solution Fit',20],
+    ['revenue_lifecycle','scope_defined','Scope Defined',30],
+    ['revenue_lifecycle','proposal','Proposal',40],
+    ['revenue_lifecycle','committed','Committed',50],
+    ['revenue_lifecycle','customer','Customer',60],
+    ['member','lead','Lead',0],
+    ['member','member_active','Member Active',10],
+    ['customer','member_profile','Member Profile',0],
+    ['customer','organization_connected','Organization Connected',10],
+  ]) {
+    await sql.unsafe(`INSERT INTO journey_stage_gates (rod_type, stage_key, label, sort_order, created_at, updated_at)
+      VALUES ($1,$2,$3,$4,$5,$5) ON CONFLICT (rod_type, stage_key) DO UPDATE SET label=EXCLUDED.label, sort_order=EXCLUDED.sort_order, updated_at=EXCLUDED.updated_at`,
+      [gate[0], gate[1], gate[2], gate[3], nowJourney]);
+  }
 
   // Lead sessions — password-based access cookie scoped to one lead record.
   // Separate from `sessions` (admin/member) so authentication concerns stay
@@ -673,6 +738,30 @@ async function bootstrap() {
     );
     CREATE INDEX IF NOT EXISTS idx_legacy_oauth_user     ON member_oauth_connections (user_id);
     CREATE INDEX IF NOT EXISTS idx_legacy_oauth_provider ON member_oauth_connections (provider);
+  `);
+
+  await sql.unsafe(`
+    INSERT INTO journey_data_rods (rod_type,lead_id,current_stage,metadata,created_at,updated_at)
+    SELECT 'revenue_lifecycle',l.id,'first_interaction','{"backfilled":true}'::jsonb,l.created_at,EXTRACT(EPOCH FROM NOW())::bigint*1000
+    FROM leads l WHERE l.merged_into_id IS NULL
+      AND NOT EXISTS (SELECT 1 FROM journey_data_rods r WHERE r.lead_id=l.id AND r.rod_type='revenue_lifecycle' AND r.user_id IS NULL AND r.org_id IS NULL);
+
+    INSERT INTO journey_data_rods (rod_type,user_id,personal_profile_id,current_stage,metadata,created_at,updated_at)
+    SELECT 'member',u.id,pp.id,'member_active','{"backfilled":true}'::jsonb,COALESCE(pp.created_at,EXTRACT(EPOCH FROM NOW())::bigint*1000),EXTRACT(EPOCH FROM NOW())::bigint*1000
+    FROM users u LEFT JOIN personal_profiles pp ON pp.user_id=u.id WHERE u.role='member'
+      AND NOT EXISTS (SELECT 1 FROM journey_data_rods r WHERE r.user_id=u.id AND r.rod_type='member' AND r.org_id IS NULL);
+
+    INSERT INTO journey_data_rods (rod_type,user_id,personal_profile_id,current_stage,metadata,created_at,updated_at)
+    SELECT t.rod_type,u.id,pp.id,CASE WHEN t.rod_type='customer' THEN 'member_profile' ELSE 'first_interaction' END,
+      '{"backfilled":true,"payerRequired":false}'::jsonb,COALESCE(pp.created_at,EXTRACT(EPOCH FROM NOW())::bigint*1000),EXTRACT(EPOCH FROM NOW())::bigint*1000
+    FROM users u LEFT JOIN personal_profiles pp ON pp.user_id=u.id CROSS JOIN (VALUES ('customer'),('revenue_lifecycle')) t(rod_type)
+    WHERE u.role='member' AND NOT EXISTS (SELECT 1 FROM journey_data_rods r WHERE r.user_id=u.id AND r.rod_type=t.rod_type AND r.org_id IS NULL);
+
+    INSERT INTO journey_data_rods (rod_type,user_id,org_id,current_stage,metadata,created_at,updated_at)
+    SELECT t.rod_type,om.user_id,om.org_id,CASE WHEN t.rod_type='customer' THEN 'organization_connected' ELSE 'first_interaction' END,
+      '{"backfilled":true,"payerRequired":false,"tracksOrganizationPotential":true}'::jsonb,om.joined_at,EXTRACT(EPOCH FROM NOW())::bigint*1000
+    FROM org_memberships om CROSS JOIN (VALUES ('customer'),('revenue_lifecycle')) t(rod_type)
+    WHERE NOT EXISTS (SELECT 1 FROM journey_data_rods r WHERE r.user_id=om.user_id AND r.org_id=om.org_id AND r.rod_type=t.rod_type);
   `);
 
   // ── QA: test scenarios, scripts, runs, per-step results ──

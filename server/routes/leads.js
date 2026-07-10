@@ -6,6 +6,7 @@ import { requireAdmin, createSession, setAdminCookie } from '../auth.js';
 import { sendLeadConfirmation, sendNewLeadAlert, sendContactFormToMember, dispatchRaw } from '../lib/email.js';
 import { defaultMemberProfile } from '../data/defaultMemberProfile.js';
 import { verifyRecaptcha } from '../lib/recaptcha.js';
+import { ensureLeadRevenueRod, ensureMemberJourneyRods } from '../lib/journeyRods.js';
 
 const router = Router();
 
@@ -222,6 +223,7 @@ router.post('/touch', async (req, res) => {
         VALUES ($1, NULL, $2, $3, $4, $5, true, $6) RETURNING id
       `).run(source, message.slice(0, 2000), publicId, newToken(), actorKey, JSON.stringify({ attribution: attribution || null }));
       lead = { id: Number(result.lastInsertRowid), public_id: publicId };
+      await ensureLeadRevenueRod(Number(lead.id), { source, actorKey, firstInteraction: message.slice(0, 500) });
     }
 
     if (questionKey) {
@@ -398,6 +400,8 @@ router.post('/', async (req, res) => {
     leadId = Number(result.lastInsertRowid);
     isExisting = false;
   }
+
+  await ensureLeadRevenueRod(leadId, { source, actorKey, ctaLocation: ctaLoc });
 
   // Always log activity — first submission, merge, or repeat CTA.
   await db
@@ -629,6 +633,7 @@ router.post('/public/:publicId/convert', async (req, res) => {
   await db
     .prepare(`UPDATE leads SET converted_user_id = $1, updated_at = $2 WHERE id = $3`)
     .run(newUserId, Date.now(), Number(lead.id));
+  await ensureMemberJourneyRods(newUserId, Number(lead.id));
 
   // Register the primary email in user_emails so it's visible in the email
   // manager and so secondary-email lookups in login() find it correctly.

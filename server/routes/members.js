@@ -15,6 +15,7 @@ import { sendVerificationEmail } from '../lib/email.js';
 import { audit } from '../lib/audit.js';
 import { resumeUrlFromPreset, pickPrimaryPreset, normalizePrimaryFlags } from '../lib/resumePresets.js';
 import { makeRateLimiter } from '../lib/rateLimit.js';
+import { ensureMemberJourneyRods } from '../lib/journeyRods.js';
 
 const router = Router();
 
@@ -86,6 +87,8 @@ router.post('/signup', signupLimiter, async (req, res) => {
         .run(created.id, Date.now(), Number(lead.id));
     }
   }
+  const sourceLead = await db.prepare(`SELECT id FROM leads WHERE converted_user_id = $1 ORDER BY updated_at DESC LIMIT 1`).get(created.id);
+  await ensureMemberJourneyRods(created.id, sourceLead ? Number(sourceLead.id) : null);
 
   const { token } = await createSession(created.id);
   setAdminCookie(res, token);
