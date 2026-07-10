@@ -193,6 +193,8 @@ async function bootstrap() {
     ['leads', 'merged_from_ids', 'TEXT'],
     ['leads', 'verified_email', 'BOOLEAN NOT NULL DEFAULT false'],
     ['leads', 'verified_phone', 'BOOLEAN NOT NULL DEFAULT false'],
+    ['leads', 'actor_key', 'TEXT'],
+    ['leads', 'provisional', 'BOOLEAN NOT NULL DEFAULT false'],
     ['lead_activity', 'cta_location', 'TEXT'],
     ['users', 'display_name', 'TEXT'],
   ];
@@ -201,6 +203,10 @@ async function bootstrap() {
       if (!/already exists|duplicate column/i.test(e.message)) throw e;
     });
   }
+  await sql.unsafe(`
+    ALTER TABLE leads ALTER COLUMN email DROP NOT NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_leads_actor_key ON leads (actor_key) WHERE actor_key IS NOT NULL AND merged_into_id IS NULL;
+  `);
 
   // Lead sessions — password-based access cookie scoped to one lead record.
   // Separate from `sessions` (admin/member) so authentication concerns stay

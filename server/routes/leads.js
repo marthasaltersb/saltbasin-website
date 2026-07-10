@@ -10,6 +10,7 @@ import { verifyRecaptcha } from '../lib/recaptcha.js';
 const router = Router();
 
 const LEAD_COOKIE = 'sb_lead';
+const ACTOR_COOKIE = 'sb_actor_context';
 const LEAD_SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 90; // 90 days
 
 // ── Validation + normalization ──
@@ -89,7 +90,7 @@ function leadCookieOptions() {
 // phone (excluding already-merged ones). If we find any, the new submission
 // becomes the primary; the older matches get archived into prior_notes and
 // flagged with merged_into_id.
-async function findActiveMatches({ email, phone }) {
+async function findActiveMatches({ email, phone, actorKey }) {
   const params = [];
   const where = [];
   if (email) {
@@ -100,9 +101,14 @@ async function findActiveMatches({ email, phone }) {
     params.push(phone);
     where.push(`phone = $${params.length}`);
   }
+  if (actorKey) {
+    params.push(actorKey);
+    where.push(`actor_key = $${params.length}`);
+  }
   if (!where.length) return [];
   const sqlText = `
-    SELECT id, source, email, phone, name, message, public_id, answers, prior_notes, merged_from_ids,
+    SELECT id, source, email, phone, name, message, public_id, access_token, password_hash,
+           actor_key, provisional, answers, prior_notes, merged_from_ids,
            created_at, updated_at
     FROM leads
     WHERE merged_into_id IS NULL AND (${where.join(' OR ')})
@@ -123,6 +129,49 @@ async function fetchActivity(leadId) {
     )
     .all(leadId);
 }
+
+function actorCookieOptions() {
+  return {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: LEAD_SESSION_TTL_MS,
+    path: '/',
+  };
+}
+
+// First-answer tracking: one provisional canonical lead per browser actor.
+// Final contact submission upgrades this row through the normal lead flow.
+router.post('/touch', async (req, res) => {
+  try {
+    const { source = 'bestystaff', message, ctaLocation, attribution } = req.body || {};
+    if (!isValidSource(source)) return res.status(400).json({ error: 'invalid source' });
+    if (!message || typeof message !== 'string') return res.status(400).json({ error: 'an answered question is required' });
+
+    let actorKey = req.cookies?.[ACTOR_COOKIE];
+    if (!actorKey) {
+      actorKey = newToken();
+      res.cookie(ACTOR_COOKIE, actorKey, actorCookieOptions());
+    }
+
+    let lead = await db.prepare(`SELECT id, public_id FROM leads WHERE actor_key = $1 AND merged_into_id IS NULL`).get(actorKey);
+    if (!lead) {
+      const publicId = await newPublicId();
+      const result = await db.prepare(`
+        INSERT INTO leads (source, email, message, public_id, access_token, actor_key, provisional, answers)
+        VALUES ($1, NULL, $2, $3, $4, $5, true, $6) RETURNING id
+      `).run(source, message.slice(0, 2000), publicId, newToken(), actorKey, JSON.stringify({ attribution: attribution || null }));
+      lead = { id: Number(result.lastInsertRowid), public_id: publicId };
+    }
+
+    await db.prepare(`INSERT INTO lead_activity (lead_id, source, cta_location, message) VALUES ($1,$2,$3,$4)`)
+      .run(Number(lead.id), source, String(ctaLocation || '').slice(0, 200) || null, message.slice(0, 2000));
+    res.json({ ok: true, leadId: Number(lead.id), publicId: lead.public_id, provisional: true });
+  } catch (e) {
+    console.error('[leads] actor touch failed:', e.message);
+    res.status(500).json({ error: 'failed to track actor context' });
+  }
+});
 
 // ── Public: create or merge a lead ──
 router.post('/', async (req, res) => {
@@ -155,7 +204,8 @@ router.post('/', async (req, res) => {
   const ctaLoc = typeof ctaLocation === 'string' ? ctaLocation.slice(0, 200) : null;
 
   // Find any matching active leads (by email OR phone).
-  const matches = await findActiveMatches({ email: normEmail, phone: normPhone });
+  const actorKey = req.cookies?.[ACTOR_COOKIE] || null;
+  const matches = await findActiveMatches({ email: normEmail, phone: normPhone, actorKey });
 
   let leadId;
   let publicId;
@@ -217,6 +267,11 @@ router.post('/', async (req, res) => {
       updates.push(`name = $${p++}`);
       params.push(trimmedName);
     }
+    if (!primary.email) {
+      updates.push(`email = $${p++}`);
+      params.push(normEmail);
+    }
+    if (primary.provisional) updates.push('provisional = false');
     if (structuredAnswers) {
       let priorAnswers = {};
       try { priorAnswers = primary.answers ? JSON.parse(primary.answers) : {}; } catch { priorAnswers = {}; }
@@ -228,7 +283,7 @@ router.post('/', async (req, res) => {
 
     // If the submitted email differs from the existing primary email, capture
     // it in lead_email_addresses so it's not lost.
-    if (normEmail !== primary.email?.toLowerCase()) {
+    if (primary.email && normEmail !== primary.email.toLowerCase()) {
       await db.prepare(`
         INSERT INTO lead_email_addresses (lead_id, email, email_type, is_primary, subscribed)
         VALUES ($1, $2, 'personal', false, true)
@@ -259,10 +314,10 @@ router.post('/', async (req, res) => {
     passwordHash = await bcrypt.hash(accessPassword, 10);
     const result = await db
       .prepare(
-        `INSERT INTO leads (source, email, phone, name, message, answers, public_id, access_token, password_hash)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`
+        `INSERT INTO leads (source, email, phone, name, message, answers, public_id, access_token, password_hash, actor_key, provisional)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, false) RETURNING id`
       )
-      .run(source, normEmail, normPhone, trimmedName, trimmedMsg, structuredAnswers ? JSON.stringify(structuredAnswers) : null, publicId, accessToken, passwordHash);
+      .run(source, normEmail, normPhone, trimmedName, trimmedMsg, structuredAnswers ? JSON.stringify(structuredAnswers) : null, publicId, accessToken, passwordHash, actorKey);
     leadId = Number(result.lastInsertRowid);
     isExisting = false;
   }
@@ -338,7 +393,7 @@ router.post('/', async (req, res) => {
     merged: mergedFromIds.length,
     // When an existing lead is matched with a different submitted email
     existingEmail: isExisting ? (matches[0]?.email || null) : null,
-    alternateEmail: (isExisting && normEmail !== matches[0]?.email?.toLowerCase()) ? normEmail : null,
+    alternateEmail: (isExisting && matches[0]?.email && normEmail !== matches[0].email.toLowerCase()) ? normEmail : null,
     contactEmails,
     // Legacy: callers can still pass `?t=token` for direct-link auth.
     token: accessToken,

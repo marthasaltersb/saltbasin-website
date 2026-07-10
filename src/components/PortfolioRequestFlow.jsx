@@ -393,6 +393,7 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
   const [fallbackKind, setFallbackKind] = useState(null);
   const scrollRef = useRef(null);
   const fileInputRef = useRef(null);
+  const leadTouchRef = useRef('idle');
 
   useEffect(() => {
     const source = new URLSearchParams(window.location.search).get('intakeSource');
@@ -470,7 +471,25 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
   }, [messages, sending, open]);
 
   function respondAssistant(text) { setMessages((m) => [...m, { role: 'assistant', text }]); }
-  function respondUser(text) { setMessages((m) => [...m, { role: 'user', text }]); }
+  function respondUser(text) {
+    setMessages((m) => [...m, { role: 'user', text }]);
+    if (leadTouchRef.current === 'idle') {
+      leadTouchRef.current = 'pending';
+      fetch('/api/leads/touch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          source: 'bestystaff',
+          message: text,
+          ctaLocation: `${window.location.pathname}${window.location.search}#bestystaff`,
+          attribution: readBestyAttribution(),
+        }),
+      }).then((res) => {
+        leadTouchRef.current = res.ok ? 'done' : 'idle';
+      }).catch(() => { leadTouchRef.current = 'idle'; });
+    }
+  }
 
   async function uploadAttachments(requestId) {
     if (!files.length) return null;
