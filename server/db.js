@@ -2148,6 +2148,108 @@ async function bootstrap() {
   } catch (e) {
     console.warn('[db] output-templates nav injection skipped:', e.message);
   }
+
+  // ── Member product onboarding + self-service commerce ──────────────────
+  //
+  // product_licenses already carries the fields this needs (user/org scope,
+  // tier, granted_by null = self-service, expires_at null = perpetual) — see
+  // CREATE TABLE product_licenses above. access_mode makes a license's
+  // commercial shape explicit instead of inferring it from tier + expires_at.
+  //
+  // deliverable_packages: the reusable 3D-rendered HTML deliverable a
+  // product_license grants access to. entitlement_renewals: backs the
+  // annual-entitlement tier's quarterly update inclusions. commerce_payments:
+  // minimal payment-event log — Stripe remains the source of truth for the
+  // actual transaction. product_onboarding_runs: the 5-question sample
+  // journey per product, generalized from career_intake_runs.
+  await sql.unsafe(`
+    ALTER TABLE product_licenses ADD COLUMN IF NOT EXISTS access_mode TEXT;
+      -- 'self_service_view' | 'self_service_download' | 'annual_entitlement' | 'custom_enterprise'
+
+    -- Gates self-service commerce to SMB. Unset = treated as SMB-eligible by
+    -- default (individuals and new orgs aren't blocked); an admin flags an
+    -- org 'mid_market' or 'enterprise' via the existing profile tools to move
+    -- it to the custom-scoping path instead.
+    ALTER TABLE organization_profiles ADD COLUMN IF NOT EXISTS segment TEXT;
+      -- 'smb' | 'mid_market' | 'enterprise'
+
+    CREATE TABLE IF NOT EXISTS deliverable_packages (
+      id                   TEXT PRIMARY KEY,   -- natural key, e.g. 'dp.hos-scenario-explorer' — seeded idempotently below
+      product_id           TEXT NOT NULL,
+      title                TEXT NOT NULL,
+      description          TEXT,
+      html_storage_key     TEXT,       -- points into the existing uploads storage (server/routes/uploads.js)
+      version              TEXT NOT NULL DEFAULT '1',
+      smb_eligible          BOOLEAN NOT NULL DEFAULT TRUE,
+      view_price_cents      INTEGER,       -- period-gated view-only self-service price; null = not sold this way
+      view_period_days      INTEGER NOT NULL DEFAULT 30,
+      flat_fee_price_cents  INTEGER,       -- one-time downloadable traditional-deliverable price; null = not offered
+      annual_price_cents    INTEGER,       -- annual entitlement price; null = not offered
+      is_active             BOOLEAN NOT NULL DEFAULT TRUE,
+      created_at             BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at             BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_deliverable_packages_product ON deliverable_packages (product_id);
+
+    CREATE TABLE IF NOT EXISTS entitlement_renewals (
+      id                        BIGSERIAL PRIMARY KEY,
+      license_id                BIGINT NOT NULL REFERENCES product_licenses(id) ON DELETE CASCADE,
+      period_start               BIGINT NOT NULL,
+      period_end                 BIGINT NOT NULL,
+      quarterly_updates_included INTEGER NOT NULL DEFAULT 4,
+      quarterly_updates_used     INTEGER NOT NULL DEFAULT 0,
+      created_at                 BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_entitlement_renewals_license ON entitlement_renewals (license_id);
+
+    CREATE TABLE IF NOT EXISTS commerce_payments (
+      id                 BIGSERIAL PRIMARY KEY,
+      user_id            BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      deliverable_id     TEXT REFERENCES deliverable_packages(id) ON DELETE SET NULL,
+      license_id         BIGINT REFERENCES product_licenses(id) ON DELETE SET NULL,
+      purchase_kind      TEXT NOT NULL,   -- 'self_service_view' | 'self_service_download' | 'annual_entitlement'
+      stripe_session_id  TEXT,
+      amount_cents       INTEGER NOT NULL,
+      status             TEXT NOT NULL DEFAULT 'pending',  -- pending | paid | failed | refunded
+      stub               BOOLEAN NOT NULL DEFAULT FALSE,   -- true when created via the no-Stripe-key stdout stub
+      created_at         BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at         BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_commerce_payments_user ON commerce_payments (user_id);
+    CREATE INDEX IF NOT EXISTS idx_commerce_payments_session ON commerce_payments (stripe_session_id);
+
+    CREATE TABLE IF NOT EXISTS product_onboarding_runs (
+      id           BIGSERIAL PRIMARY KEY,
+      user_id      BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      product_id   TEXT NOT NULL,
+      answers      JSONB NOT NULL DEFAULT '[]',  -- [{ question, answer }, ...] — up to 5
+      status       TEXT NOT NULL DEFAULT 'in_progress',  -- in_progress | completed
+      created_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_product_onboarding_runs_user ON product_onboarding_runs (user_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_product_onboarding_runs_product ON product_onboarding_runs (product_id);
+  `);
+
+  // ── Seed: deliverable_packages ───────────────────────────────────────────
+  // Starter catalog for SMB self-service commerce. Prices are placeholders —
+  // Betsy should confirm actual pricing before this is exposed publicly.
+  const deliverablePackageDefs = [
+    { id: 'dp.hos-journey-rod-explorer', product_id: 'hos', title: 'Journey Data Rod Explorer',
+      description: 'Interactive 3D view of your Revenue, Customer, and Member journey rods with scenario-driven maturity.',
+      view_price_cents: 49500, view_period_days: 30, flat_fee_price_cents: 129500, annual_price_cents: 495000 },
+    { id: 'dp.hos-architecture-translation', product_id: 'hos', title: 'Architecture Translation Package',
+      description: 'Current-state system map translated into HOS™ capability clusters, metadata, and API dependencies.',
+      view_price_cents: 79500, view_period_days: 30, flat_fee_price_cents: 179500, annual_price_cents: 795000 },
+  ];
+  for (const dp of deliverablePackageDefs) {
+    await sql.unsafe(
+      `INSERT INTO deliverable_packages (id, product_id, title, description, view_price_cents, view_period_days, flat_fee_price_cents, annual_price_cents)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       ON CONFLICT (id) DO NOTHING`,
+      [dp.id, dp.product_id, dp.title, dp.description, dp.view_price_cents, dp.view_period_days, dp.flat_fee_price_cents, dp.annual_price_cents]
+    );
+  }
 }
 
 // Awaited at module import time so routes can use db without worrying about

@@ -13,6 +13,12 @@ import { InlineDataNotice } from '../DataNotice.jsx';
 import SectionShell from './SectionShell.jsx';
 import { useViewportWidth, PanelCard } from './blockUtils.jsx';
 import { FlexColumnsBlock, WheelDisplay, FormColumnWidget } from './ColumnWidgets.jsx';
+import {
+  ProductHeroBlock, RotatingHighlightsBlock, BuildFlowBlock, JourneyRodsBlock,
+  ProductCatalogBlock, ExposureCalculatorBlock, ApiCatalogTableBlock, StartEngagementBlock,
+  PlatformCadenceBlock, ConversationalDemoBlock, SalterMomentumMethodBlock,
+} from './ProductExperienceBlocks.jsx';
+import { MetadataModelDiagramBlock } from './MetadataModelBlock.jsx';
 import { fetchCareerMaster, toolWheelBucket } from '../../lib/careerMaster.js';
 import { toast } from '../../lib/toast.js';
 import { BrandIcon } from '../../lib/brandIcons.jsx';
@@ -5529,6 +5535,18 @@ const REGISTRY = {
   accentStatCards: AccentStatCardsBlock,
   cascadeFlow: CascadeFlowBlock,
   architectureSteps: ArchitectureStepsBlock,
+  productHero: ProductHeroBlock,
+  rotatingHighlights: RotatingHighlightsBlock,
+  buildFlow: BuildFlowBlock,
+  journeyRods: JourneyRodsBlock,
+  productCatalog: ProductCatalogBlock,
+  exposureCalculator: ExposureCalculatorBlock,
+  apiCatalogTable: ApiCatalogTableBlock,
+  startEngagement: StartEngagementBlock,
+  platformCadence: PlatformCadenceBlock,
+  conversationalDemo: ConversationalDemoBlock,
+  salterMomentumMethod: SalterMomentumMethodBlock,
+  metadataModelDiagram: MetadataModelDiagramBlock,
 };
 
 export function RenderSection({ section, config, mode = 'public', memberSlug = '', liveSlugs = null }) {

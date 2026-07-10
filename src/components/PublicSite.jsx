@@ -4,7 +4,34 @@ import { api } from '../lib/api.js';
 import PublicNav from './PublicNav.jsx';
 import PublicFooter from './PublicFooter.jsx';
 import Breadcrumbs from './Breadcrumbs.jsx';
+import SaltBasinCrystal from './SaltBasinCrystal.jsx';
 import { RenderSection } from './blocks/index.jsx';
+
+// Short-lived session cache so repeat navigation within the same tab session
+// doesn't re-fetch site/config on every route change. Cleared implicitly by
+// its own TTL — no manual invalidation needed since it's this short-lived.
+const SESSION_CACHE_KEY = 'sb-public-site-cache-v1';
+const SESSION_CACHE_MS = 60_000;
+
+function readSessionCache() {
+  try {
+    const raw = window.sessionStorage.getItem(SESSION_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || Date.now() - parsed.at > SESSION_CACHE_MS) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeSessionCache(site, config) {
+  try {
+    window.sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify({ site, config, at: Date.now() }));
+  } catch {
+    // sessionStorage unavailable (private mode, quota) — fetch just won't be cached.
+  }
+}
 
 export default function PublicSite() {
   const [site, setSite] = useState(null);
@@ -14,10 +41,17 @@ export default function PublicSite() {
   const location = useLocation();
 
   useEffect(() => {
+    const cached = readSessionCache();
+    if (cached) {
+      setSite(cached.site);
+      setConfig(cached.config);
+      return;
+    }
     Promise.all([api.getPublishedSite(), api.getPublicConfig()])
       .then(([s, c]) => {
         setSite(s);
         setConfig(c);
+        writeSessionCache(s, c);
       })
       .catch((e) => setError(e.message));
   }, []);
@@ -76,7 +110,10 @@ export default function PublicSite() {
   ` : '';
 
   return (
-    <div className="sb-public-site-root" data-theme={config?.theme || 'strategic'}>
+    <div
+      className={`sb-public-site-root${requestedSlug === '' ? ' sb-home-redesign' : ''}`}
+      data-theme={config?.theme || 'strategic'}
+    >
       {brandCss && <style>{brandCss}</style>}
       <PublicNav site={config.site} pages={pages} />
       <Breadcrumbs />
@@ -123,77 +160,25 @@ function ColdStartLoader() {
   }, []);
   const slow = elapsedSec >= 3; // show the explainer once we're definitely on a cold start
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: 'var(--sb-navy)',
-        color: 'var(--sb-cream)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'column',
-        padding: '2rem',
-        textAlign: 'center',
-      }}
-    >
-      <div
-        className="sb-display"
-        style={{
-          fontSize: '2rem',
-          letterSpacing: '0.18em',
-          textTransform: 'uppercase',
-          color: 'var(--sb-cream)',
-          marginBottom: '0.4rem',
-        }}
-      >
-        Salt Basin
-      </div>
-      <div
-        style={{
-          fontFamily: 'var(--sb-font-label)',
-          fontSize: '0.65rem',
-          letterSpacing: '0.22em',
-          textTransform: 'uppercase',
-          color: 'var(--sb-gold)',
-          marginBottom: '2rem',
-        }}
-      >
-        Net Works · Bottom Lines with a Rising Tide
-      </div>
-
-      {/* Three-dot pulse */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem' }}>
-        {[0, 0.2, 0.4].map((delay, i) => (
-          <div
-            key={i}
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: 'var(--sb-gold)',
-              animation: 'sb-toast-in 1.1s ease infinite',
-              animationDelay: `${delay}s`,
-              opacity: 0.6,
-            }}
-          />
-        ))}
-      </div>
-
-      {slow && (
-        <div
-          style={{
-            maxWidth: 460,
-            fontSize: '0.82rem',
-            color: 'var(--sb-sage)',
-            lineHeight: 1.7,
-            opacity: 0.8,
-          }}
-        >
-          The site is waking up — this is a small Render free-tier quirk that adds
-          a few seconds on the first visit after idle. Hold tight, content is
-          loading in {elapsedSec}s.
+    <div className="sb-coldstart-loader">
+      <div className="sb-coldstart-panel">
+        <div className="sb-coldstart-mark">
+          <SaltBasinCrystal variant="signature" size="mark" />
         </div>
-      )}
+        <div className="sb-coldstart-kicker">Salt Basin Net Works</div>
+        <h1>We build for the customer you keep.</h1>
+        <p>Not just the deal you close.</p>
+        <div className="sb-coldstart-pulse" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
+        {slow && (
+          <div className="sb-coldstart-note">
+            The site is waking up. Hold tight, content is loading in {elapsedSec}s.
+          </div>
+        )}
+      </div>
     </div>
   );
 }

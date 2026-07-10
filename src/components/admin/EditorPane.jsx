@@ -699,6 +699,48 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
               if (Array.isArray(v) && k === 'flexCols') {
                 return <FlexColumnsEditor key={k} cols={v} onChange={(next) => patchField(k, next)} />;
               }
+              if (Array.isArray(v) && k === 'highlights') {
+                return <HighlightListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'metrics') {
+                return <MetricListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'path') {
+                return <PathListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'tabs') {
+                return <BuildFlowTabListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'rods') {
+                return <RodListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'products') {
+                return <ProductCatalogListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'engageProducts') {
+                return <EngageProductListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'categories') {
+                return <CategoryListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'apis') {
+                return <ApiCatalogListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'schedule') {
+                return <CadenceScheduleListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'seedMessages') {
+                return <SeedMessageListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'momentumSteps') {
+                return <MomentumStepListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'nodes') {
+                return <MetadataNodeListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'edges') {
+                return <MetadataEdgeListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
+              }
               // wheelNodes / wheelCenterLabel have their own dedicated "Wheel"
               // card above (industryWheel sections) — skip them here so they
               // don't also render via generic field iteration. Same for
@@ -749,6 +791,19 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
                         onClose={() => setOpenMetaKey(null)} />
                     )}
                     <ImageUploadField value={v || ''} onChange={(url) => patchField(k, url)} />
+                  </div>
+                );
+              }
+              if (isIconField(k)) {
+                return (
+                  <div key={k} style={styles.fieldGroup}>
+                    {fieldLabel}
+                    {openMetaKey === k && (
+                      <FieldMetaEditor fieldKey={k} meta={effectiveMeta} memberDbs={memberDbs}
+                        onSave={(m) => { updateFieldMeta(k, m); setOpenMetaKey(null); }}
+                        onClose={() => setOpenMetaKey(null)} />
+                    )}
+                    <IconPickerField value={v || ''} onChange={(key) => patchField(k, key)} />
                   </div>
                 );
               }
@@ -1345,6 +1400,115 @@ const CascadeStepListEditor = makeListEditor('Cascade Step', { icon: '', title: 
   { key: 'accent', placeholder: 'Accent: gold / teal / pink / sage', half: true },
   { key: 'title', placeholder: 'Step title' },
   { key: 'description', placeholder: 'What happens in this step', long: true },
+]);
+
+// ── Product Experience block editors (Salt Basin MRS homepage) ─────────────
+// `highlights` array for the rotatingHighlights block:
+const HighlightListEditor = makeListEditor('Highlight', { eyebrow: '', title: '', text: '', chips: '' }, [
+  { key: 'eyebrow', placeholder: 'Eyebrow (e.g. Salt Basin MRS)' },
+  { key: 'title', placeholder: 'Title' },
+  { key: 'text', placeholder: 'Body text', long: true },
+  { key: 'chips', placeholder: 'Chips, comma-separated' },
+]);
+
+// `metrics` array for the rotatingHighlights block:
+const MetricListEditor = makeListEditor('Metric', { label: '', value: '', sublabel: '' }, [
+  { key: 'label', placeholder: 'Label', half: true },
+  { key: 'value', placeholder: 'Value (e.g. 12+)', half: true },
+  { key: 'sublabel', placeholder: 'Sub-label (optional)' },
+]);
+
+// `path` array for the buildFlow block:
+const PathListEditor = makeListEditor('Step', { label: '', desc: '' }, [
+  { key: 'label', placeholder: 'Step label (e.g. Understand)' },
+  { key: 'desc', placeholder: 'What happens in this step', long: true },
+]);
+
+// `tabs` array for the buildFlow block:
+const BuildFlowTabListEditor = makeListEditor('Tab', { name: '', desc: '', chips: '' }, [
+  { key: 'name', placeholder: 'Tab name (e.g. Founder)' },
+  { key: 'desc', placeholder: 'Description', long: true },
+  { key: 'chips', placeholder: 'Chips, comma-separated' },
+]);
+
+// `rods` array for the journeyRods block:
+const RodListEditor = makeListEditor('Rod', { key: '', label: '', color: '', start: '0', checkoutBoost: '0', increment: '5' }, [
+  { key: 'key', placeholder: 'Key (e.g. revenue)', half: true },
+  { key: 'label', placeholder: 'Label (e.g. Revenue Rod)', half: true },
+  { key: 'color', placeholder: 'Color (hex or CSS var)', half: true },
+  { key: 'start', placeholder: 'Starting %', half: true },
+  { key: 'checkoutBoost', placeholder: 'Boost % (unused reserve)', half: true },
+  { key: 'increment', placeholder: 'Increment per click', half: true },
+]);
+
+// `products` array for the productCatalog block:
+const ProductCatalogListEditor = makeListEditor('Product', { id: '', name: '', tagline: '', desc: '', priceLabel: 'Engagement-based · Contact for scope', outputs: '' }, [
+  { key: 'id', placeholder: 'ID (e.g. mrs)', half: true },
+  { key: 'name', placeholder: 'Product name', half: true },
+  { key: 'tagline', placeholder: 'Tagline' },
+  { key: 'desc', placeholder: 'Description', long: true },
+  { key: 'priceLabel', placeholder: 'Price label (qualitative, not a dollar figure)' },
+  { key: 'outputs', placeholder: 'Outputs, comma-separated' },
+]);
+
+// `engageProducts` array for the startEngagement block (lite — id + name only):
+const EngageProductListEditor = makeListEditor('Product', { id: '', name: '' }, [
+  { key: 'id', placeholder: 'ID (must match a productCatalog id)', half: true },
+  { key: 'name', placeholder: 'Product name', half: true },
+]);
+
+// `categories` array for the exposureCalculator block:
+const CategoryListEditor = makeListEditor('Category', { key: '', label: '', defaultArr: '0', defaultExposurePct: '0' }, [
+  { key: 'key', placeholder: 'Key (e.g. billingTrack)', half: true },
+  { key: 'label', placeholder: 'Label (e.g. Billing Track)', half: true },
+  { key: 'defaultArr', placeholder: 'Default ARR ($)', half: true },
+  { key: 'defaultExposurePct', placeholder: 'Default exposure %', half: true },
+]);
+
+// `apis` array for the apiCatalogTable block:
+const ApiCatalogListEditor = makeListEditor('System', { name: '', purpose: '', auth: '', setup: '', costModel: '', journeyUse: '' }, [
+  { key: 'name', placeholder: 'System name', half: true },
+  { key: 'auth', placeholder: 'Auth method', half: true },
+  { key: 'purpose', placeholder: 'Purpose', long: true },
+  { key: 'setup', placeholder: 'Setup time' },
+  { key: 'costModel', placeholder: 'Cost model' },
+  { key: 'journeyUse', placeholder: 'Where it’s used', long: true },
+]);
+
+// `schedule` array for the platformCadence block:
+const CadenceScheduleListEditor = makeListEditor('Item', { cadence: '', title: '', description: '' }, [
+  { key: 'cadence', placeholder: 'Cadence (e.g. Monthly)', half: true },
+  { key: 'title', placeholder: 'Title', half: true },
+  { key: 'description', placeholder: 'Description', long: true },
+]);
+
+// `seedMessages` array for the conversationalDemo block:
+const SeedMessageListEditor = makeListEditor('Message', { role: 'agent', text: '' }, [
+  { key: 'role', placeholder: 'Role: user or agent', half: true },
+  { key: 'text', placeholder: 'Message text', long: true },
+]);
+
+// `momentumSteps` array for the salterMomentumMethod block:
+const MomentumStepListEditor = makeListEditor('Phase', { phase: 'U', label: '', subtitle: '', points: '' }, [
+  { key: 'phase', placeholder: 'Phase: U / R / M', half: true },
+  { key: 'label', placeholder: 'Label (e.g. Understanding)', half: true },
+  { key: 'subtitle', placeholder: 'Subtitle (e.g. Old World)' },
+  { key: 'points', placeholder: 'Points, comma-separated', long: true },
+]);
+
+// `nodes` array for the metadataModelDiagram block:
+const MetadataNodeListEditor = makeListEditor('Node', { id: '', label: '', tier: 'atom', desc: '' }, [
+  { key: 'id', placeholder: 'ID (referenced by edges)', half: true },
+  { key: 'tier', placeholder: 'Tier: atom / joint / molecule', half: true },
+  { key: 'label', placeholder: 'Label' },
+  { key: 'desc', placeholder: 'Description', long: true },
+]);
+
+// `edges` array for the metadataModelDiagram block:
+const MetadataEdgeListEditor = makeListEditor('Edge', { from: '', to: '', label: '' }, [
+  { key: 'from', placeholder: 'From node ID', half: true },
+  { key: 'to', placeholder: 'To node ID', half: true },
+  { key: 'label', placeholder: 'Relationship label (e.g. traced to)' },
 ]);
 
 // ── Skills editor ─────────────────────────────────────────────────────────────

@@ -279,7 +279,7 @@ export const MERGE_FIELDS = [
     label: 'Organization Tagline',
     description: 'Brand tagline',
     type: 'text',
-    example: 'Net Works · Bottom Lines With a Rising Tide',
+    example: 'Net Works · We build for the customer you keep',
     context: ['all'],
   },
 ];

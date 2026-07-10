@@ -6,8 +6,16 @@ import {
   resumeUrlFromPreset, pickPrimaryPreset, publicPresetView,
   loadResumePresets, siteOwnerUserId,
 } from '../lib/resumePresets.js';
+import { invalidatePublicConfigCache } from './config.js';
 
 const router = Router();
+
+// In-memory cache for the published site GET, fetched on every public page
+// view. Short TTL, invalidated explicitly on publish — never serves stale
+// data past a publish action.
+let publishedSiteCache = null;
+let publishedSiteCacheAt = 0;
+const PUBLISHED_SITE_CACHE_MS = 30_000;
 
 // Public: resolve the site owner's (admin's) primary resume preset into the
 // URL the homepage portfolio hub links to. The hub always shows the owner's
@@ -40,8 +48,14 @@ router.get('/published', async (req, res) => {
   if (!(await isLandingUnlocked(req))) {
     return res.status(403).json({ error: 'landing gate locked' });
   }
+  if (publishedSiteCache && Date.now() - publishedSiteCacheAt < PUBLISHED_SITE_CACHE_MS) {
+    return res.json(publishedSiteCache);
+  }
   const site = (await getJSON('site_state', 'published')) || { pages: {} };
-  res.json(publicView(site));
+  const view = publicView(site);
+  publishedSiteCache = view;
+  publishedSiteCacheAt = Date.now();
+  res.json(view);
 });
 
 router.get('/draft', requireAdmin, async (req, res) => {
@@ -73,6 +87,8 @@ router.post('/publish', requireAdmin, async (req, res) => {
   await setJSON('site_state', 'published', draft);
   const draftConfig = await getJSON('config_state', 'draft');
   if (draftConfig) await setJSON('config_state', 'published', draftConfig);
+  publishedSiteCache = null;
+  invalidatePublicConfigCache();
   const user = await getUserFromCookie(req);
   captureLineage({
     entityType: 'site_state', entityId: 'published',

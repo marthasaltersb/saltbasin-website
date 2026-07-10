@@ -1,12 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
-// The nav is fully data-driven — one top-level item per published page
-// (ordered by page.order, skipping drafts and anything flagged
-// hideFromNav), each with a "Consulting"-style dropdown covering any of that
-// page's sections whose navSubPage flag is on. Adding a page or flipping a
-// section's navSubPage toggle in the admin updates this nav automatically —
-// nothing here should ever need to be hand-edited for a content change.
 function buildNav(pages) {
   const ordered = Object.values(pages || {})
     .filter((p) => p.status !== 'draft' && !p.hideFromNav)
@@ -31,13 +25,10 @@ export default function PublicNav({ site, pages }) {
   const [authUser, setAuthUser] = useState(null);
   const nav = buildNav(pages);
 
-  // Close the drawer whenever the route changes (after clicking a nav item).
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname, location.hash]);
 
-  // Detect whether someone's already signed in. The nav button reflects this
-  // so the visitor doesn't see "Sign In" when they're already logged in.
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
       .then((r) => r.json())
@@ -46,59 +37,22 @@ export default function PublicNav({ site, pages }) {
   }, [location.pathname]);
 
   return (
-    <nav
-      style={{
-        position: 'sticky',
-        top: 0,
-        background: 'rgba(27, 42, 59, 0.97)',
-        backdropFilter: 'blur(8px)',
-        borderBottom: '0.5px solid rgba(232,221,208,0.12)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '1rem 1.25rem',
-        zIndex: 100,
-      }}
-    >
-      <Link to="/" style={{ textDecoration: 'none' }}>
-        <div
-          className="sb-display"
-          style={{
-            fontSize: '1.25rem',
-            fontWeight: 500,
-            letterSpacing: '0.16em',
-            textTransform: 'uppercase',
-            color: 'var(--sb-cream)',
-          }}
-        >
-          {site?.name || 'Salt Basin'}
+    <nav className="sb-public-nav">
+      <Link to="/" className="sb-public-brand">
+        <div className="sb-public-brand-name">
+          <span>Salt Basin</span>
+          <span className="sb-public-brand-network">Net Works</span>
         </div>
-        <div
-          style={{
-            fontFamily: 'var(--sb-font-label)',
-            fontSize: '0.55rem',
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase',
-            color: 'var(--sb-gold)',
-          }}
-        >
-          Net Works · {site?.tagline}
-        </div>
+        <div className="sb-public-brand-domain">{site?.domain || 'saltbasin.net'}</div>
       </Link>
 
-      {/* Hamburger — only visible on mobile (CSS media query handles show/hide) */}
       <button
-        className="sb-nav-hamburger"
-        onClick={() => setMobileOpen((o) => !o)}
+        className={`sb-nav-hamburger${mobileOpen ? ' open' : ''}`}
+        onClick={() => setMobileOpen((open) => !open)}
         aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
-      >
-        {mobileOpen ? '✕' : '☰'}
-      </button>
+      />
 
-      <ul
-        className={`sb-nav-list${mobileOpen ? ' open' : ''}`}
-        style={{ gap: '1.5rem', listStyle: 'none', alignItems: 'center', margin: 0, padding: 0 }}
-      >
+      <ul className={`sb-nav-list${mobileOpen ? ' open' : ''}`}>
         {nav.map((item) => (
           <NavItem
             key={item.label}
@@ -115,54 +69,20 @@ export default function PublicNav({ site, pages }) {
   );
 }
 
-// Top-right sign-in pill. When logged out: routes to /login (the canonical
-// sign-in URL; /admin/login is kept as an alias for back-compat).
-// When logged in: shows the user's email handle + routes to their dashboard
-// (admin or member, depending on role).
 function AuthButton({ user }) {
   if (user) {
     const target = user.role === 'admin' ? '/admin' : '/member';
     const handle = (user.email || '').split('@')[0];
     return (
-      <Link
-        to={target}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '0.4rem',
-          padding: '0.45rem 0.95rem',
-          background: 'var(--sb-gold)',
-          color: 'var(--sb-ivory)',
-          borderRadius: 'var(--sb-radius)',
-          fontSize: '0.72rem',
-          fontWeight: 500,
-          letterSpacing: '0.08em',
-          textTransform: 'uppercase',
-          textDecoration: 'none',
-        }}
-      >
-        {handle} ↗
+      <Link className="sb-public-auth sb-public-auth-user" to={target}>
+        {handle}
+        <span aria-hidden="true">-&gt;</span>
       </Link>
     );
   }
+
   return (
-    <Link
-      to="/login"
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        padding: '0.45rem 0.95rem',
-        background: 'transparent',
-        color: 'var(--sb-cream)',
-        border: '0.5px solid rgba(232,221,208,0.35)',
-        borderRadius: 'var(--sb-radius)',
-        fontSize: '0.72rem',
-        fontWeight: 500,
-        letterSpacing: '0.08em',
-        textTransform: 'uppercase',
-        textDecoration: 'none',
-      }}
-    >
+    <Link className="sb-public-auth" to="/login">
       Sign In
     </Link>
   );
@@ -173,8 +93,6 @@ function NavItem({ item, pathname, isMobile }) {
   const ref = useRef(null);
   const closeTimer = useRef(null);
   const hasChildren = !!item.children?.length;
-  // When the mobile drawer is open, expand submenus inline (no hover, no
-  // floating panel) so the whole nav fits in one column.
   const inlineMode = !!isMobile;
 
   useEffect(() => {
@@ -189,68 +107,32 @@ function NavItem({ item, pathname, isMobile }) {
     clearTimeout(closeTimer.current);
     if (hasChildren) setOpen(true);
   }
+
   function handleLeave() {
     clearTimeout(closeTimer.current);
     closeTimer.current = setTimeout(() => setOpen(false), 120);
   }
 
-  const isActive =
-    pathname === item.to ||
-    (item.to !== '/' && pathname.startsWith(item.to));
+  const isActive = pathname === item.to || (item.to !== '/' && pathname.startsWith(item.to));
 
   return (
     <li
       ref={ref}
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
-      style={{ position: 'relative' }}
+      className="sb-public-nav-item"
     >
       <Link
+        className={`sb-public-nav-link${isActive ? ' active' : ''}`}
         to={item.to}
-        onClick={() => hasChildren && setOpen((o) => !o)}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 4,
-          fontSize: '0.8rem',
-          fontWeight: 500,
-          letterSpacing: '0.08em',
-          textTransform: 'uppercase',
-          color: isActive ? 'var(--sb-gold)' : 'var(--sb-sage)',
-          textDecoration: 'none',
-        }}
+        onClick={() => hasChildren && setOpen((current) => !current)}
       >
         {item.label}
-        {hasChildren && (
-          <span style={{ fontSize: '0.6rem', opacity: 0.8 }}>▾</span>
-        )}
+        {hasChildren && <span className="sb-public-nav-caret">v</span>}
       </Link>
+
       {hasChildren && (open || inlineMode) && (
-        <div
-          style={
-            inlineMode
-              ? {
-                  marginTop: '0.5rem',
-                  paddingLeft: '0.75rem',
-                  borderLeft: '0.5px dashed rgba(196,132,58,0.4)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                }
-              : {
-                  position: 'absolute',
-                  top: 'calc(100% + 8px)',
-                  right: 0,
-                  minWidth: 240,
-                  background: 'var(--sb-navy-deep)',
-                  border: '0.5px solid rgba(196,132,58,0.4)',
-                  borderTop: '2px solid var(--sb-gold)',
-                  borderRadius: 'var(--sb-radius)',
-                  padding: '0.5rem 0',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-                  zIndex: 200,
-                }
-          }
-        >
+        <div className={`sb-public-nav-menu${inlineMode ? ' inline' : ''}`}>
           {item.children.map((child) => (
             <AnchorLink
               key={child.label}
@@ -266,11 +148,9 @@ function NavItem({ item, pathname, isMobile }) {
   );
 }
 
-// Anchor links scroll to a section within its own page. If you're on a
-// different page (or a different scroll position on the same page), route
-// there first and then scroll once the page has rendered.
 function AnchorLink({ label, anchor, pageSlug, onNavigated }) {
   const location = useLocation();
+
   function go(e) {
     e.preventDefault();
     if (location.pathname === pageSlug) {
@@ -281,22 +161,9 @@ function AnchorLink({ label, anchor, pageSlug, onNavigated }) {
     }
     onNavigated?.();
   }
+
   return (
-    <a
-      href={pageSlug + '#' + anchor}
-      onClick={go}
-      style={{
-        display: 'block',
-        padding: '0.55rem 1.1rem',
-        fontSize: '0.75rem',
-        letterSpacing: '0.06em',
-        textTransform: 'uppercase',
-        color: 'var(--sb-cream)',
-        textDecoration: 'none',
-      }}
-      onMouseOver={(e) => (e.currentTarget.style.background = 'rgba(196,132,58,0.12)')}
-      onMouseOut={(e) => (e.currentTarget.style.background = 'transparent')}
-    >
+    <a className="sb-public-nav-anchor" href={pageSlug + '#' + anchor} onClick={go}>
       {label}
     </a>
   );

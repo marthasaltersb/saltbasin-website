@@ -168,7 +168,15 @@ function OutputFrame({ title, eyebrow, children, gated, hideTitle, printActions,
   const { user } = useAuthState();
   const canPrint = !!user;
   return (
-    <div style={{ background: 'white', color: 'var(--sb-navy)', minHeight: '100vh' }}>
+    <div
+      className="sb-output-shell"
+      style={{
+        background:
+          'radial-gradient(circle at 18% 8%, rgba(217,140,160,0.12), transparent 26%), radial-gradient(circle at 88% 2%, rgba(74,124,142,0.14), transparent 28%), linear-gradient(135deg, var(--sbh-parchment), var(--sbh-cream) 52%, var(--sbh-parchment-deep))',
+        color: 'var(--sbh-ink)',
+        minHeight: '100vh',
+      }}
+    >
       <style>{`
         @media print {
           .sb-output-toolbar, .sb-output-gate-overlay { display: none !important; }
@@ -186,18 +194,20 @@ function OutputFrame({ title, eyebrow, children, gated, hideTitle, printActions,
         className="sb-output-toolbar"
         style={{
           position: 'sticky', top: 0, zIndex: 100,
-          background: 'var(--sb-navy-deep)', color: 'var(--sb-cream)',
+          background: 'rgba(248,244,236,0.94)', color: 'var(--sbh-ink)',
           padding: '0.8rem 1.5rem',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          borderBottom: '0.5px solid rgba(196,132,58,0.4)',
+          borderBottom: '0.5px solid var(--sbh-line)',
+          boxShadow: '0 12px 30px -28px rgba(43,42,40,0.42)',
+          backdropFilter: 'blur(10px)',
         }}
       >
         <div>
-          <div className="sb-display" style={{ fontSize: '0.95rem', letterSpacing: '0.16em', textTransform: 'uppercase' }}>
-            Salt Basin Net Works
+          <div className="sb-display" style={{ fontSize: '1.05rem', letterSpacing: 0, lineHeight: 1 }}>
+            Salt Basin <span style={{ color: 'var(--sbh-gold)' }}>Net Works</span>
           </div>
-          <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.58rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--sb-gold)' }}>
-            {eyebrow || 'Output'}
+          <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.6rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--sbh-teal-deep)', marginTop: '0.18rem' }}>
+            saltbasin.net · {eyebrow || 'Output'}
           </div>
         </div>
         <div style={{ display: 'flex', gap: '0.6rem' }}>
@@ -237,26 +247,29 @@ function OutputFrame({ title, eyebrow, children, gated, hideTitle, printActions,
           maxWidth: 820,
           margin: '2rem auto',
           padding: '2.5rem 3rem',
-          background: 'white',
-          boxShadow: '0 2px 16px rgba(0,0,0,0.08)',
+          background: 'rgba(255,253,247,0.96)',
+          border: '1px solid var(--sbh-line)',
+          borderTop: '4px solid var(--sbh-gold)',
+          boxShadow: '0 24px 70px -52px rgba(43,42,40,0.42)',
           position: 'relative',
         }}
       >
         {title && !hideTitle && (
-          <header style={{ marginBottom: '1.5rem', borderBottom: '2px solid var(--sb-gold)', paddingBottom: '0.75rem' }}>
+          <header style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--sbh-line)', paddingBottom: '0.9rem' }}>
             <h1
               style={{
                 fontFamily: 'var(--sb-font-display)',
                 fontSize: '2.4rem',
-                color: 'var(--sb-navy)',
-                letterSpacing: '0.03em',
+                color: 'var(--sbh-ink)',
+                letterSpacing: 0,
                 marginBottom: '0.2rem',
+                lineHeight: 1,
               }}
             >
               {title}
             </h1>
-            <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.65rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--sb-gold)' }}>
-              Salt Basin Net Works · Bottom Lines with a Rising Tide
+            <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--sbh-teal-deep)' }}>
+              saltbasin.net · We build for the customer you keep
             </div>
           </header>
         )}
@@ -4912,63 +4925,68 @@ function CapabilityRow({ cap, items }) {
 
 const IP_STYLES = {
   frame: {
-    background: '#0f1117',
-    color: '#e8e4d9',
+    background: 'linear-gradient(135deg, var(--sbh-parchment), var(--sbh-cream) 52%, var(--sbh-parchment-deep))',
+    color: 'var(--sbh-ink)',
     minHeight: '100vh',
-    fontFamily: "'Inter', system-ui, sans-serif",
+    fontFamily: 'var(--sb-font-body)',
   },
   header: {
-    background: '#1B2A3B',
+    background: 'rgba(248,244,236,0.95)',
     padding: '24px 32px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    borderBottom: '1px solid #2a2e3a',
+    borderBottom: '1px solid var(--sbh-line)',
+    boxShadow: '0 16px 36px -30px rgba(43,42,40,0.45)',
   },
   eyebrow: {
     fontSize: 10,
     fontWeight: 700,
-    color: '#c9a84c',
+    color: 'var(--sbh-teal-deep)',
     letterSpacing: '0.12em',
     textTransform: 'uppercase',
     marginBottom: 6,
+    fontFamily: 'var(--sb-font-label)',
   },
-  title: { fontSize: 22, fontWeight: 700, color: '#e8e4d9', marginBottom: 4 },
-  sub: { fontSize: 12, color: '#8a9bb0', lineHeight: 1.5 },
+  title: { fontSize: 28, fontWeight: 500, color: 'var(--sbh-ink)', marginBottom: 4, fontFamily: 'var(--sb-font-display)', letterSpacing: 0, lineHeight: 1 },
+  sub: { fontSize: 12, color: 'var(--sbh-muted)', lineHeight: 1.5, fontFamily: 'var(--sb-font-label)' },
   ipBadge: {
     textAlign: 'right',
     fontSize: 10,
-    color: '#888',
+    color: 'var(--sbh-muted)',
     lineHeight: 1.6,
-    background: '#c9a84c15',
-    border: '1px solid #c9a84c33',
+    background: 'rgba(196,132,58,0.09)',
+    border: '1px solid rgba(196,132,58,0.28)',
     padding: '6px 12px',
-    borderRadius: 4,
+    borderRadius: 8,
   },
-  section: { padding: '24px 32px', borderBottom: '1px solid #1f2330' },
+  section: { padding: '24px 32px', borderBottom: '1px solid var(--sbh-line)' },
   sectionLabel: {
     fontSize: 10,
     fontWeight: 700,
-    color: '#c9a84c',
+    color: 'var(--sbh-teal-deep)',
     textTransform: 'uppercase',
-    letterSpacing: '0.1em',
+    letterSpacing: '0.12em',
     marginBottom: 12,
+    fontFamily: 'var(--sb-font-label)',
   },
   card: {
-    background: '#1a1e2a',
-    border: '1px solid #2a2e3a',
-    borderRadius: 4,
+    background: 'rgba(255,253,247,0.78)',
+    border: '1px solid var(--sbh-line)',
+    borderRadius: 8,
     padding: '12px 16px',
+    boxShadow: '0 14px 32px -28px rgba(43,42,40,0.35)',
   },
   footer: {
-    background: '#0a0d12',
+    background: 'var(--sbh-ink)',
     padding: '12px 32px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderTop: '1px solid #1f2330',
+    borderTop: '1px solid rgba(248,244,236,0.14)',
     fontSize: 10,
-    color: '#555',
+    color: 'rgba(248,244,236,0.62)',
+    fontFamily: 'var(--sb-font-label)',
   },
 };
 

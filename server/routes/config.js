@@ -5,6 +5,18 @@ import { dispatchRaw } from '../lib/email.js';
 
 const router = Router();
 
+// In-memory cache for the public config GET, which is fetched on every
+// public page view. Short TTL, invalidated explicitly on publish (called
+// from site.js's /publish route, which publishes config_state alongside
+// site_state) — never serves stale data past a publish action.
+let publicConfigCache = null;
+let publicConfigCacheAt = 0;
+const PUBLIC_CONFIG_CACHE_MS = 30_000;
+
+export function invalidatePublicConfigCache() {
+  publicConfigCache = null;
+}
+
 function publicConfig(config) {
   if (!config) return null;
   return {
@@ -25,8 +37,14 @@ router.get('/public', async (req, res) => {
   if (!(await isLandingUnlocked(req))) {
     return res.status(403).json({ error: 'landing gate locked' });
   }
+  if (publicConfigCache && Date.now() - publicConfigCacheAt < PUBLIC_CONFIG_CACHE_MS) {
+    return res.json(publicConfigCache);
+  }
   const config = (await getJSON('config_state', 'published')) || {};
-  res.json(publicConfig(config));
+  const view = publicConfig(config);
+  publicConfigCache = view;
+  publicConfigCacheAt = Date.now();
+  res.json(view);
 });
 
 router.get('/draft', requireAdmin, async (req, res) => {
