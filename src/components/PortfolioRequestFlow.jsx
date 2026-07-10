@@ -649,7 +649,7 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
         }
         respondAssistant("Got it — I'll flag that for Betsy so she has the context.");
       }
-      respondAssistant('Thanks for chatting — you can always reach Betsy directly at betsysalter@saltbasin.net or 757-407-9233.');
+      respondAssistant('Thanks for chatting — you can always reach Betsy directly at betsysalter@saltbasin.net.');
       setPhase('chatting');
       return;
     }

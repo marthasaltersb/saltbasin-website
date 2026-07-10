@@ -1241,15 +1241,22 @@ option {
   background: var(--sbh-cream);
   border-top: 1px solid var(--sbh-line);
   border-bottom: 1px solid var(--sbh-line);
+  overflow: hidden;
 }
 
 .sbh-besty-section-inner {
   width: min(100%, 820px);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: clamp(140px, 18vw, 210px) minmax(320px, 1fr);
   align-items: center;
   gap: clamp(1rem, 4vw, 2.5rem);
+}
+
+.sbh-besty-section-inner > div {
+  min-width: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .sbh-besty-section-inner h2 {
@@ -1274,6 +1281,15 @@ option {
   background: transparent;
   cursor: pointer;
   transition: transform 0.22s ease, filter 0.22s ease;
+  justify-self: center;
+  overflow: hidden;
+  contain: layout paint;
+}
+
+.sbh-besty-crystal-trigger > * {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
 }
 
 .sbh-besty-crystal-trigger:hover,
@@ -2270,6 +2286,12 @@ option {
   .sbh-besty-section-inner {
     grid-template-columns: 1fr;
     text-align: center;
+    gap: 1.25rem;
+  }
+
+  .sbh-besty-crystal-trigger {
+    width: min(58vw, 190px);
+    max-width: 100%;
   }
 
   .sbh-hero,
