@@ -927,6 +927,11 @@ function isImageField(key) {
   return /^(photo|image)Url$|(Photo|Image)Url$/i.test(key);
 }
 
+// Icon fields use the shared icon picker instead of a plain text input.
+function isIconField(key) {
+  return /icon$/i.test(key);
+}
+
 
 // Normalize any incoming value to a YYYY-MM-DD string suitable for
 // <input type="date">. Accepts ISO strings, "Jan 2023" loose text, etc.
