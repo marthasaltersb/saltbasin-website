@@ -287,19 +287,58 @@ export async function sendDailyDigest({ db, adminEmail }) {
     GROUP BY event_type ORDER BY cnt DESC
   `).all(since);
 
-  if (totals.length > 0) {
-    const rows = totals.map(r => `<tr><td style="padding:3px 16px 3px 0;color:#4A6670;">${r.event_type}</td><td>${r.cnt}</td></tr>`).join('');
-    const totalCount = totals.reduce((s, r) => s + r.cnt, 0);
+  // Business activity — leads, member signups, commerce revenue, sample
+  // onboarding completions, and journey rod stage advances. This is the
+  // part of the digest that answers "did anything happen with the business
+  // today", distinct from raw page-view traffic below.
+  const [newLeads, newMembers, payments, onboardingRuns, rodAdvances] = await Promise.all([
+    db.prepare(`SELECT id, email, name, source FROM leads WHERE created_at > $1 AND merged_into_id IS NULL ORDER BY created_at DESC`).all(since),
+    db.prepare(`SELECT id, email, display_name FROM users WHERE created_at > $1 AND role = 'member'`).all(since),
+    db.prepare(`SELECT COUNT(*)::int AS cnt, COALESCE(SUM(amount_cents),0)::int AS total_cents FROM commerce_payments WHERE status = 'paid' AND updated_at > $1`).get(since),
+    db.prepare(`SELECT COUNT(*)::int AS cnt FROM product_onboarding_runs WHERE created_at > $1 AND status = 'completed'`).get(since),
+    db.prepare(`SELECT COUNT(*)::int AS cnt FROM journey_rod_events WHERE event_type = 'evidence_gate_advanced' AND created_at > $1`).get(since),
+  ]);
+
+  const hasBusinessActivity = newLeads.length || newMembers.length || payments.cnt || onboardingRuns.cnt || rodAdvances.cnt;
+  const dateLabel = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+  if (hasBusinessActivity || totals.length > 0) {
+    const leadRows = newLeads.map(l => `<tr><td style="padding:3px 16px 3px 0;color:#4A6670;">${l.name || l.email}</td><td>${friendlySource(l.source)}</td></tr>`).join('');
+    const memberRows = newMembers.map(m => `<tr><td style="padding:3px 16px 3px 0;color:#4A6670;">${m.display_name || m.email}</td></tr>`).join('');
+    const trafficRows = totals.map(r => `<tr><td style="padding:3px 16px 3px 0;color:#4A6670;">${r.event_type}</td><td>${r.cnt}</td></tr>`).join('');
+    const totalTraffic = totals.reduce((s, r) => s + r.cnt, 0);
+
+    const businessTextLines = [
+      `New leads: ${newLeads.length}`,
+      ...newLeads.map(l => `  - ${l.name || l.email} (${friendlySource(l.source)})`),
+      `New member signups: ${newMembers.length}`,
+      ...newMembers.map(m => `  - ${m.display_name || m.email}`),
+      `Commerce: ${payments.cnt} payment(s), $${(payments.total_cents / 100).toFixed(2)}`,
+      `Sample onboarding completions: ${onboardingRuns.cnt}`,
+      `Journey stage advances: ${rodAdvances.cnt}`,
+    ];
+
     await dispatchRaw({
       to: adminEmail,
-      subject: `[Salt Basin] Daily Traffic Digest — ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+      subject: `[Salt Basin] Daily Digest — ${dateLabel}`,
       html: `
         <h2 style="font-family:Georgia,serif;color:#1B2A3B;">Salt Basin · Daily Digest</h2>
-        <p style="color:#4A6670;">${totalCount} events in the last 24 hours.</p>
-        <table style="border-collapse:collapse;font-size:0.9rem;">${rows}</table>
+        <h3 style="color:#1B2A3B;font-size:1rem;margin-bottom:0.25rem;">Business activity</h3>
+        <table style="border-collapse:collapse;font-size:0.9rem;margin-bottom:0.75rem;">
+          <tr><td style="padding:3px 16px 3px 0;color:#4A6670;">New leads</td><td>${newLeads.length}</td></tr>
+          <tr><td style="padding:3px 16px 3px 0;color:#4A6670;">New member signups</td><td>${newMembers.length}</td></tr>
+          <tr><td style="padding:3px 16px 3px 0;color:#4A6670;">Commerce payments</td><td>${payments.cnt} · $${(payments.total_cents / 100).toFixed(2)}</td></tr>
+          <tr><td style="padding:3px 16px 3px 0;color:#4A6670;">Sample onboarding completions</td><td>${onboardingRuns.cnt}</td></tr>
+          <tr><td style="padding:3px 16px 3px 0;color:#4A6670;">Journey stage advances</td><td>${rodAdvances.cnt}</td></tr>
+        </table>
+        ${leadRows ? `<h3 style="color:#1B2A3B;font-size:0.9rem;margin-bottom:0.25rem;">New leads</h3><table style="border-collapse:collapse;font-size:0.85rem;margin-bottom:0.75rem;">${leadRows}</table>` : ''}
+        ${memberRows ? `<h3 style="color:#1B2A3B;font-size:0.9rem;margin-bottom:0.25rem;">New members</h3><table style="border-collapse:collapse;font-size:0.85rem;margin-bottom:0.75rem;">${memberRows}</table>` : ''}
+        <h3 style="color:#1B2A3B;font-size:1rem;margin-bottom:0.25rem;">Traffic</h3>
+        <p style="color:#4A6670;font-size:0.85rem;">${totalTraffic} events in the last 24 hours.</p>
+        <table style="border-collapse:collapse;font-size:0.9rem;">${trafficRows}</table>
         <p style="color:#999;font-size:0.8rem;margin-top:1.5rem;">View full analytics at saltbasin.net/admin</p>
       `,
-      text: `Salt Basin Daily Digest\n\n${totals.map(r => `${r.event_type}: ${r.cnt}`).join('\n')}\n\nTotal: ${totalCount} events`,
+      text: `Salt Basin Daily Digest — ${dateLabel}\n\n${businessTextLines.join('\n')}\n\nTraffic (${totalTraffic} events):\n${totals.map(r => `${r.event_type}: ${r.cnt}`).join('\n')}`,
     });
   }
 

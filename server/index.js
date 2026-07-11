@@ -42,6 +42,7 @@ import methodologyStatsRouter from './routes/methodologyStats.js';
 import leadIntegrationsRouter from './routes/leadIntegrations.js';
 import journeyRodsRouter from './routes/journeyRods.js';
 import commerceRouter, { stripeWebhookHandler } from './routes/commerce.js';
+import feedbackRouter from './routes/feedback.js';
 
 // Safety net: an unhandled promise rejection in any async route handler
 // (e.g. a bad column reference in a PATCH) is fatal by default in Node —
@@ -130,6 +131,7 @@ app.use('/api/career', careerMasterRouter);
 app.use('/api/portfolio-requests', portfolioRequestsRouter);
 app.use('/api/lineage', lineageRouter);
 app.use('/api/commerce', commerceRouter);
+app.use('/api/feedback', feedbackRouter);
 
 // Uploaded files now live on Supabase Storage at <SUPABASE_URL>/storage/v1/object/public/uploads/<file>.
 // The returned URL from POST /api/uploads is already absolute, so the browser

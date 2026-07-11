@@ -2424,7 +2424,77 @@ async function bootstrap() {
     );
     CREATE INDEX IF NOT EXISTS idx_product_onboarding_runs_user ON product_onboarding_runs (user_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_product_onboarding_runs_product ON product_onboarding_runs (product_id);
+
+    -- ── Beta product feedback loop ────────────────────────────────────────
+    -- Member-submitted feedback on beta products, scored automatically
+    -- (server/lib/feedbackScoring.js) from a per-category weight and upvote
+    -- count, then auto-routed into backlog_items once the score clears
+    -- ROUTE_THRESHOLD. feedback_category_weights is the "curated individuals
+    -- advising on real weights" mechanic — admins and active feedback_advisors
+    -- can adjust it, which reprices every future (not retroactive) score.
+    CREATE TABLE IF NOT EXISTS product_feedback (
+      id                     BIGSERIAL PRIMARY KEY,
+      user_id                BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      product_id             TEXT,
+      category               TEXT NOT NULL DEFAULT 'idea',  -- bug | friction | idea | praise
+      message                TEXT NOT NULL,
+      status                 TEXT NOT NULL DEFAULT 'new',   -- new | reviewing | routed | archived
+      score                  NUMERIC NOT NULL DEFAULT 0,
+      upvotes                INTEGER NOT NULL DEFAULT 0,
+      routed_backlog_item_id BIGINT REFERENCES backlog_items(id) ON DELETE SET NULL,
+      created_at             BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at             BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_product_feedback_user ON product_feedback (user_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_product_feedback_score ON product_feedback (score DESC);
+    CREATE INDEX IF NOT EXISTS idx_product_feedback_status ON product_feedback (status);
+
+    CREATE TABLE IF NOT EXISTS feedback_advisors (
+      user_id     BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      is_active   BOOLEAN NOT NULL DEFAULT true,
+      note        TEXT,
+      created_at  BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+
+    CREATE TABLE IF NOT EXISTS feedback_category_weights (
+      category    TEXT PRIMARY KEY,
+      weight      NUMERIC NOT NULL DEFAULT 1,
+      updated_by  BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      updated_at  BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
   `);
+
+  // Seed default category weights — insert-if-missing so an admin/advisor's
+  // later edits are never overwritten by a reboot.
+  for (const [category, weight] of [['bug', 3], ['friction', 2], ['idea', 1], ['praise', 0.5]]) {
+    await sql.unsafe(
+      `INSERT INTO feedback_category_weights (category, weight, updated_at) VALUES ($1, $2, $3) ON CONFLICT (category) DO NOTHING`,
+      [category, weight, Date.now()]
+    );
+  }
+
+  // One-shot: inject "Feedback" tab into the admin_nav PLM view, next to
+  // Backlog — same additive pattern as the output-templates injection above.
+  try {
+    const navRow5 = await sql.unsafe(`SELECT data FROM config_state WHERE id = 'admin_nav'`);
+    if (navRow5.length > 0) {
+      const nav = JSON.parse(navRow5[0].data);
+      const plmView = (nav.views || []).find((v) => v.id === 'plm');
+      if (plmView) {
+        plmView.tabs = plmView.tabs || [];
+        const hasFeedback = plmView.tabs.some((t) => t.id === 'feedback');
+        if (!hasFeedback) {
+          plmView.tabs.push({ id: 'feedback', label: 'Feedback', componentId: 'feedback', sortOrder: 1.5 });
+          await sql.unsafe(
+            `UPDATE config_state SET data = $1, updated_at = $2 WHERE id = 'admin_nav'`,
+            [JSON.stringify(nav), Date.now()]
+          );
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[db] feedback nav injection skipped:', e.message);
+  }
 
   // Compatibility for databases that briefly received the commerce draft
   // with BIGINT package/product identifiers before natural string keys were

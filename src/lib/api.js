@@ -235,6 +235,22 @@ export const api = {
   getMyOnboardingRuns: () => request('/api/commerce/onboarding-runs'),
   startMessageBetsy: () => request('/api/commerce/message-betsy/start', { method: 'POST' }),
 
+  // Beta product feedback loop
+  submitFeedback: (productId, category, message) =>
+    request('/api/feedback', { method: 'POST', body: JSON.stringify({ productId, category, message }) }),
+  getMyFeedback: () => request('/api/feedback/mine'),
+  upvoteFeedback: (id) => request(`/api/feedback/${id}/upvote`, { method: 'POST' }),
+  getFeedbackQueue: () => request('/api/feedback'),
+  updateFeedback: (id, patch) => request(`/api/feedback/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  routeFeedback: (id) => request(`/api/feedback/${id}/route`, { method: 'POST' }),
+  getFeedbackCategoryWeights: () => request('/api/feedback/category-weights'),
+  setFeedbackCategoryWeight: (category, weight) =>
+    request(`/api/feedback/category-weights/${category}`, { method: 'PATCH', body: JSON.stringify({ weight }) }),
+  getFeedbackAdvisors: () => request('/api/feedback/advisors'),
+  addFeedbackAdvisor: (userId, note) =>
+    request('/api/feedback/advisors', { method: 'POST', body: JSON.stringify({ userId, note }) }),
+  removeFeedbackAdvisor: (userId) => request(`/api/feedback/advisors/${userId}`, { method: 'DELETE' }),
+
   // OAuth connections (used by Command Center + Profile Hub integrations)
   getOAuthConnections: () => request('/api/oauth/connections'),
 };

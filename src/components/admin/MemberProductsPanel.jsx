@@ -42,10 +42,12 @@ export default function MemberProductsPanel() {
   const [access, setAccess] = React.useState(null);
   const [wizardFor, setWizardFor] = React.useState(null); // productId
   const [error, setError] = React.useState('');
+  const [myFeedback, setMyFeedback] = React.useState(null);
 
   const load = React.useCallback(() => {
     api.getCommerceProducts().then((d) => setProducts(d.packages || [])).catch((e) => setError(e.message));
     api.getMyCommerceAccess().then((d) => setAccess(d.access || [])).catch(() => setAccess([]));
+    api.getMyFeedback().then((d) => setMyFeedback(d.feedback || [])).catch(() => setMyFeedback([]));
   }, []);
 
   React.useEffect(() => { load(); }, [load]);
@@ -173,6 +175,9 @@ export default function MemberProductsPanel() {
             ))}
           </div>
         ))}
+
+        {/* Beta feedback */}
+        <BetaFeedbackCard productIds={[...grouped.keys()]} feedback={myFeedback} onSubmitted={load} />
       </div>
     </div>
   );
@@ -263,6 +268,88 @@ function SampleWizard({ productId, onDone }) {
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+const FEEDBACK_CATEGORIES = [
+  { val: 'bug', label: 'Something broke' },
+  { val: 'friction', label: 'This was confusing' },
+  { val: 'idea', label: 'I have an idea' },
+  { val: 'praise', label: 'This worked well' },
+];
+
+const STATUS_LABEL = {
+  new: 'Received',
+  reviewing: 'Under review',
+  routed: 'In the backlog',
+  archived: 'Archived',
+};
+
+function BetaFeedbackCard({ productIds, feedback, onSubmitted }) {
+  const [productId, setProductId] = React.useState('');
+  const [category, setCategory] = React.useState('idea');
+  const [message, setMessage] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
+
+  async function submit() {
+    if (!message.trim()) return;
+    setSubmitting(true);
+    try {
+      await api.submitFeedback(productId || null, category, message.trim());
+      toast.success('Thanks — this feeds directly into what we build next.');
+      setMessage('');
+      onSubmitted();
+    } catch (e) {
+      toast.error(e.message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div style={styles.card}>
+      <div style={{ ...label, marginBottom: '0.5rem' }}>Beta Feedback</div>
+      <div style={{ color: 'var(--sb-dusty)', fontSize: '0.82rem', marginBottom: '0.75rem' }}>
+        You're on the beta list — anything you flag here is scored and routed straight into what gets built next.
+      </div>
+
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
+        {productIds.length > 0 && (
+          <select value={productId} onChange={(e) => setProductId(e.target.value)}
+            style={{ background: 'var(--sb-navy-deep)', color: 'var(--sb-cream)', border: '0.5px solid rgba(196,132,58,0.25)', borderRadius: 'var(--sb-radius)', padding: '0.4rem 0.6rem', fontSize: '0.78rem' }}>
+            <option value="">General</option>
+            {productIds.map((id) => <option key={id} value={id}>{id.toUpperCase()}</option>)}
+          </select>
+        )}
+        <select value={category} onChange={(e) => setCategory(e.target.value)}
+          style={{ background: 'var(--sb-navy-deep)', color: 'var(--sb-cream)', border: '0.5px solid rgba(196,132,58,0.25)', borderRadius: 'var(--sb-radius)', padding: '0.4rem 0.6rem', fontSize: '0.78rem' }}>
+          {FEEDBACK_CATEGORIES.map((c) => <option key={c.val} value={c.val}>{c.label}</option>)}
+        </select>
+      </div>
+
+      <textarea
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        rows={3}
+        style={{ width: '100%', background: 'var(--sb-navy-deep)', color: 'var(--sb-cream)', border: '0.5px solid rgba(196,132,58,0.25)', borderRadius: 'var(--sb-radius)', padding: '0.6rem', fontSize: '0.85rem', resize: 'vertical' }}
+        placeholder="What did you notice?"
+      />
+      <button className="sb-btn sb-btn-gold" style={{ padding: '0.4rem 0.85rem', fontSize: '0.72rem', marginTop: '0.6rem' }} disabled={submitting || !message.trim()} onClick={submit}>
+        {submitting ? 'Sending…' : 'Send feedback'}
+      </button>
+
+      {feedback && feedback.length > 0 && (
+        <div style={{ marginTop: '1.25rem' }}>
+          <div style={{ ...label, marginBottom: '0.5rem' }}>Your feedback</div>
+          {feedback.map((f) => (
+            <div key={f.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem', padding: '0.5rem 0', borderBottom: '0.5px solid rgba(196,132,58,0.12)' }}>
+              <div style={{ color: 'var(--sb-cream)', fontSize: '0.82rem' }}>{f.message}</div>
+              <div style={{ color: 'var(--sb-dusty)', fontSize: '0.68rem', whiteSpace: 'nowrap' }}>{STATUS_LABEL[f.status] || f.status}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

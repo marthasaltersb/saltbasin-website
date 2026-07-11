@@ -30,6 +30,7 @@ import LineagePanel from './LineagePanel.jsx';
 import InboxPanel from './InboxPanel.jsx';
 import CommandCenterPanel from './CommandCenterPanel.jsx';
 import MemberProductsPanel from './MemberProductsPanel.jsx';
+import FeedbackPanel from './FeedbackPanel.jsx';
 
 // Tab component registry: the one piece that can't be data-driven, because
 // React components have to be referenced by import. The nav structure stored
@@ -44,6 +45,7 @@ const TAB_COMPONENTS = {
   leads:          () => <LeadsPanel />,
   networks:       () => <NetWorksPanel />,
   backlog:        () => <BacklogPanel />,
+  feedback:       () => <FeedbackPanel />,
   qa:             () => <QAPanel />,
   plmDashboard:   () => <MemberPlmPanel scope="admin" />,
   resume:         (props) => <MyResumePanel {...props} />,
