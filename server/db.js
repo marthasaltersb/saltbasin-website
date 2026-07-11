@@ -197,6 +197,7 @@ async function bootstrap() {
     ['leads', 'provisional', 'BOOLEAN NOT NULL DEFAULT false'],
     ['leads', 'visit_count', 'INTEGER NOT NULL DEFAULT 0'],
     ['leads', 'last_visit_at', 'BIGINT'],
+    ['leads', 'originating_member_user_id', 'BIGINT REFERENCES users(id) ON DELETE SET NULL'],
     ['lead_activity', 'cta_location', 'TEXT'],
     ['users', 'display_name', 'TEXT'],
   ];
@@ -297,6 +298,13 @@ async function bootstrap() {
       metadata JSONB NOT NULL DEFAULT '{}', UNIQUE(rod_id, molecule_key, source_reference)
     );
     CREATE INDEX IF NOT EXISTS idx_rod_evidence_rod ON journey_rod_evidence (rod_id, molecule_key);
+    CREATE TABLE IF NOT EXISTS journey_rod_threshold_profiles (
+      rod_id BIGINT PRIMARY KEY REFERENCES journey_data_rods(id) ON DELETE CASCADE,
+      dimension_definitions JSONB NOT NULL DEFAULT '[]',
+      combinations JSONB NOT NULL DEFAULT '[]',
+      configured_by BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      created_at BIGINT NOT NULL, updated_at BIGINT NOT NULL
+    );
     CREATE TABLE IF NOT EXISTS journey_rod_actors (
       id BIGSERIAL PRIMARY KEY, rod_id BIGINT NOT NULL REFERENCES journey_data_rods(id) ON DELETE CASCADE,
       actor_key TEXT NOT NULL, role_key TEXT NOT NULL, contribution_status TEXT NOT NULL DEFAULT 'invited',
@@ -316,6 +324,11 @@ async function bootstrap() {
   for (const gate of [
     ['revenue_lifecycle','first_interaction','First Interaction',0],
     ['revenue_lifecycle','qualified_context','Qualified Context',10],
+    // Promotion gate for lead-lineage rods (Member Organization Leads): once a
+    // revenue_lifecycle rod tied to a lead reaches this stage, journeyRods.js
+    // transitionRodOwnership() re-links it from lead_id to org_id — this is
+    // the lead "becoming" the org's Revenue Journey Data Rod, not a new rod.
+    ['revenue_lifecycle','qualified_opportunity','Qualified Opportunity',15],
     ['revenue_lifecycle','solution_fit','Solution Fit',20],
     ['revenue_lifecycle','scope_defined','Scope Defined',30],
     ['revenue_lifecycle','proposal','Proposal',40],
@@ -675,10 +688,38 @@ async function bootstrap() {
       website      TEXT,
       industry     TEXT,
       metadata     JSONB NOT NULL DEFAULT '{}',
+      -- Traces this org back to the Member Organization Lead that qualified
+      -- into it (see server/lib/journeyRods.js promoteLeadToOrganizationLead /
+      -- the qualified_opportunity promotion) — null for orgs created directly
+      -- through the member dashboard's self-service flow, which has no lead
+      -- lineage. NOT the same as org creation itself; this only gets set when
+      -- an org is born from a promoted lead.
+      originating_lead_id BIGINT REFERENCES leads(id) ON DELETE SET NULL,
       created_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
       updated_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
     );
+    ALTER TABLE organization_profiles ADD COLUMN IF NOT EXISTS originating_lead_id BIGINT REFERENCES leads(id) ON DELETE SET NULL;
     CREATE INDEX IF NOT EXISTS idx_org_profiles_slug ON organization_profiles (slug);
+    CREATE INDEX IF NOT EXISTS idx_org_profiles_originating_lead ON organization_profiles (originating_lead_id);
+
+    -- ── Master data account records ──────────────────────────────────────────
+    -- One row per Member (created at lead→member conversion) and one row per
+    -- qualifying Member Organization (created when its lead-lineage rod is
+    -- promoted to a Revenue Journey Data Rod). Admin/system-visible only for
+    -- now — no member-facing UI reads this yet.
+    CREATE TABLE IF NOT EXISTS account_records (
+      id           BIGSERIAL PRIMARY KEY,
+      account_type TEXT NOT NULL, -- 'member' | 'organization'
+      user_id      BIGINT REFERENCES users(id) ON DELETE CASCADE,
+      org_id       BIGINT REFERENCES organization_profiles(id) ON DELETE CASCADE,
+      lead_id      BIGINT REFERENCES leads(id) ON DELETE SET NULL,
+      display_name TEXT,
+      metadata     JSONB NOT NULL DEFAULT '{}',
+      created_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_account_records_user ON account_records (user_id) WHERE user_id IS NOT NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_account_records_org ON account_records (org_id) WHERE org_id IS NOT NULL;
 
     -- ── Org memberships (user ↔ org, with role) ──────────────────────────────
     -- Role vocabulary: 'admin' (the mandatory seat — every org must have at
@@ -2409,7 +2450,7 @@ async function bootstrap() {
       description: 'Interactive 3D view of your Revenue, Customer, and Member journey rods with scenario-driven maturity.',
       view_price_cents: 49500, view_period_days: 30, flat_fee_price_cents: 129500, annual_price_cents: 495000 },
     { id: 'dp.hos-architecture-translation', product_id: 'hos', title: 'Architecture Translation Package',
-      description: 'Current-state system map translated into HOS™ capability clusters, metadata, and API dependencies.',
+      description: 'Current-state system map translated into the atoms, joints, and molecules of your future Salt Basin Net Work.',
       view_price_cents: 79500, view_period_days: 30, flat_fee_price_cents: 179500, annual_price_cents: 795000 },
   ];
   for (const dp of deliverablePackageDefs) {
@@ -2419,6 +2460,145 @@ async function bootstrap() {
        ON CONFLICT (id) DO NOTHING`,
       [dp.id, dp.product_id, dp.title, dp.description, dp.view_price_cents, dp.view_period_days, dp.flat_fee_price_cents, dp.annual_price_cents]
     );
+  }
+  // One-time text fix: the seed above only inserts once (ON CONFLICT DO
+  // NOTHING — intentional, so it never clobbers an admin's future catalog
+  // edits). This corrects wording from the pre-redesign 5-tier vocabulary
+  // to the canonical Atom/Joint/Molecule model in an already-seeded row,
+  // scoped to the exact stale string so it never touches a real edit.
+  await sql.unsafe(`
+    UPDATE deliverable_packages
+    SET description = 'Current-state system map translated into the atoms, joints, and molecules of your future Salt Basin Net Work.'
+    WHERE id = 'dp.hos-architecture-translation'
+      AND description = 'Current-state system map translated into HOS™ capability clusters, metadata, and API dependencies.'
+  `);
+
+  // One-shot: replace the "Coming Soon Resources" placeholder on the public
+  // Resources page with two real sections (IP Stack, Acronym & Brand System)
+  // plus a third, deeper technical section (Methodology Mathematics — the
+  // actual HOS™ stage-gate algebra from server/lib/journeyRods.js and the
+  // institutional-constants table it depends on). No admin session touched
+  // this — same pattern as the admin_nav one-shot injections above, applied
+  // to site_state draft instead. Guarded by section id so it never re-runs
+  // or clobbers a manual edit; only ever applies to DRAFT — publishing is a
+  // deliberate human action via the existing admin Publish button.
+  try {
+    const siteDraftRow = await sql.unsafe(`SELECT data FROM site_state WHERE id = 'draft'`);
+    if (siteDraftRow.length > 0) {
+      const site = JSON.parse(siteDraftRow[0].data);
+      const resourcesPage = site.pages?.resources;
+      const hasIpStack = resourcesPage?.sections?.some((s) => s.id === 'res-ip-stack');
+      if (resourcesPage && !hasIpStack) {
+        const ipStackSection = {
+          id: 'res-ip-stack', type: 'architectureSteps', name: 'The IP Stack', status: 'live', bg: 'navy',
+          fields: {
+            eyebrow: 'The IP Stack',
+            heading: 'Methodology → Diagnostic → Platform → Deliverable',
+            intro: 'Five layers, each one operationalizing the layer above it.',
+            steps: [
+              { title: 'The Salter Momentum™* — Master Methodology', description: 'Universal sequencing spine: Understanding → Rendering → Manifesting (U/R/M). Applies to any initiative, not just revenue.' },
+              { title: 'RLMM™ (Revenue Lifecycle Mechanics Maturity™) — Diagnostic', description: 'Proprietary diagnostic capability model that tactically applies the Salter Momentum spine to revenue operations.' },
+              { title: 'HOS™ (Highway Operating System) — Methodology', description: 'The named operating methodology for Quote-to-Revenue intelligence. Journey Data Rods live inside this methodology, tracked through SaltBridge.' },
+              { title: 'Salt Basin MRS (Measurement Rendering Systems) — Platform', description: "The product/platform that operationalizes HOS™ to design, build, and maintain a client's Enterprise Ecosystem — delivered as a Salt Basin Net Work." },
+              { title: 'Client Deliverables — Output Layer', description: 'Assessments, workbooks, frameworks, and reports produced from everything above.' },
+            ],
+          },
+        };
+        const acronymSection = {
+          id: 'res-acronyms', type: 'columns', name: 'Acronym & Brand System', status: 'live', bg: 'ivory',
+          fields: {
+            eyebrow: 'Brand & Naming System',
+            heading: 'Acronyms That Carry More Than One Meaning',
+            intro: 'Deliberate wordplay across the entity structure — never auto-corrected to "just one" reading.',
+            columnCount: 3,
+            cols: [
+              { icon: '◇', title: 'MESS — MES Subsidiaries, LLC', body: 'Martha Elizabeth Salter Subsidiaries (legacy anchor) · Monetized Economic Spending Solutions · Managed Equity Security Services · Measured Enterprise Scaling Solutions.' },
+              { icon: '◈', title: 'MES Solutions, LLC', body: 'Measured Enterprise Success Solutions. Houses MESS Platforms, SaltTide™, SaltBridge, SaltChannels, Salt Covenant Solutions, Revenue Intelligence, RLMM™, and Salt Basin MRS.' },
+              { icon: '◰', title: 'MESA — MES Agencies, LLC', body: 'Advisory, delivery, and diagnostic services across industries — the only Tier 4 entity confirmed filed. Formerly "The Salter Influence."' },
+            ],
+          },
+        };
+        const methodologyMathSection = {
+          id: 'res-methodology-math', type: 'methodologyMath', name: 'Methodology Mathematics', status: 'live',
+          fields: {
+            eyebrow: 'For the technically curious',
+            heading: 'Methodology Mathematics',
+            intro: 'How each methodology actually computes, and how the constants an institution configures plug into a single evaluation engine.',
+            methodologies: [
+              {
+                kind: 'Master Methodology — Qualitative', name: 'The Salter Momentum™*',
+                summary: 'No scoring formula of its own — it is the fixed sequencing constant every other methodology inherits. Every diagnostic, journey, or build always runs Understanding → Rendering → Manifesting, in that order.',
+                formula: '', notes: '',
+              },
+              {
+                kind: 'Diagnostic — Pending Finalization', name: 'RLMM™ (Revenue Lifecycle Mechanics Maturity™)',
+                summary: 'Applies the same weighted-maturity pattern used by the Journey Data Rod evaluation engine (below) to revenue-lifecycle diagnostics specifically. Exact stage names and default weights are not yet finalized — no RLMM-specific formula is final until confirmed.',
+                formula: '', notes: "Open item: RLMM™ process-stage names pending Betsy's finalization.",
+              },
+              {
+                kind: 'Methodology — Shipped, Journey Data Rods', name: 'HOS™ Stage-Gate Evaluation',
+                summary: "The real, running evaluation engine (server/lib/journeyRods.js). A cluster passes based on its configured rule; a dimension is the clamped [0,1] value of a cluster pass, a molecule's evidence value, or an actor-role's completion; a stage gate passes only when every required cluster, molecule, actor, dependency, and weighted-dimension threshold clears.",
+                formula:
+`Cluster_passed(C):
+  |found(C)| = |keys(C)|          if rule(C) = "all"
+  |found(C)| > 0                  if rule(C) = "any"
+  |found(C)| ≥ min_count(C)       if rule(C) = "minimum"
+
+Dimension value:
+  d(k) = clamp( value_source(k), 0, 1 )
+
+Weighted combination (per stage gate G):
+  Actual(G) = Σ [ d(k_i) × w_i ] / Σ w_i
+  Passed(G) = Actual(G) + ε ≥ θ(G),  ε = 0.0001
+
+Gate advancement:
+  Gate_passed(G) = missing_clusters = ∅ ∧ missing_molecules = ∅
+                    ∧ missing_actors = ∅ ∧ unmet_dependencies = ∅
+                    ∧ missing_dimensions = ∅
+  Eligible_stage = last G (in sort order) where Gate_passed(G) = true,
+                    evaluated in sequence, halting at first failure
+
+Rod state, per event:
+  stage_score(t+1) = stage_score(t) + Δscore
+  potential_revenue(t+1) = potential_revenue(t) + Δrevenue
+  current_stage(t+1) = to_stage, if provided`,
+                notes: 'This is the actual algebra running in production — not illustrative.',
+              },
+              {
+                kind: 'Platform — Execution Layer', name: 'Salt Basin MRS',
+                summary: "Owns no separate formula. It is the platform that stores an institution's constants, runs the HOS™ evaluation above against real evidence, and renders the result as a living, board-ready record.",
+                formula: '', notes: '',
+              },
+            ],
+            constantsHeading: 'The Unified Data Model of Institutional Constants',
+            constants: [
+              { constant: 'Cluster completion rule', symbol: 'rule(C)', location: 'journey_metadata_clusters.completion_rule', configurableBy: 'Institution, per metadata cluster' },
+              { constant: 'Cluster minimum count', symbol: 'min_count(C)', location: 'journey_metadata_clusters.minimum_count', configurableBy: 'Institution, per metadata cluster' },
+              { constant: 'Dimension weight', symbol: 'w_i', location: 'journey_rod_threshold_profiles.combinations[].members[].weight', configurableBy: 'Institution, per journey rod / scenario' },
+              { constant: 'Combination threshold', symbol: 'θ(G)', location: 'journey_rod_threshold_profiles.combinations[].threshold', configurableBy: 'Institution, per journey rod / scenario' },
+              { constant: 'Required clusters / molecules / actor roles', symbol: 'R(G)', location: 'journey_gate_definitions.required_*', configurableBy: 'Institution, per scenario stage gate' },
+              { constant: 'Event score / revenue delta', symbol: 'Δscore, Δrevenue', location: "recordRodEvent() caller input, per event type", configurableBy: 'Salt Basin default per event type, overridable per institution' },
+            ],
+            agentHeading: 'The Agent Experience',
+            agentSteps: [
+              { label: 'Signal Ingestion', desc: 'A Salt Basin agent observes a real institutional event — a purchase, a completed sample journey, an uploaded document — and records it as evidence.' },
+              { label: 'Institutional Context', desc: "The engine loads that institution's own configured constants: its clusters, gates, and threshold profile — never a shared default once the institution has its own." },
+              { label: 'Capability Model Execution', desc: "The fixed, Salt-Basin-maintained HOS™ algebra above runs against the institution's constants and evidence — the institution never touches the evaluation code, only its business rules." },
+              { label: 'Human Judgment Where Ambiguous', desc: "When a gate doesn't clearly pass, the agent requests a decision instead of guessing — a human stays in the loop exactly where the institution's own rules are unclear." },
+              { label: 'Living Record', desc: "Every event, evidence value, and decision is preserved, so the organization's operating history and context compounds instead of resetting." },
+              { label: 'Board-Ready Output', desc: 'Salt Basin renders the accumulated maturity, score, and stage into reportable views — accurate, presentable, and ready for the room.' },
+            ],
+            footnote: "Institutions define business rules by adjusting these constants — or adopt Salt Basin's pre-built default scenario, cluster, and gate templates unchanged.",
+          },
+        };
+
+        resourcesPage.sections = (resourcesPage.sections || []).filter((s) => s.id !== 'res-coming');
+        resourcesPage.sections.push(ipStackSection, acronymSection, methodologyMathSection);
+        await sql.unsafe(`UPDATE site_state SET data = $1, updated_at = $2 WHERE id = 'draft'`, [JSON.stringify(site), Date.now()]);
+      }
+    }
+  } catch (e) {
+    console.warn('[db] resources-page methodology sections injection skipped:', e.message);
   }
 }
 

@@ -51,6 +51,14 @@ export default function LeadView() {
   const [pledging, setPledging] = useState(false);
   const [pledged, setPledged] = useState(false);
 
+  // Member conversion — BestyStaff captures personalOrOther/loginEmail via
+  // convert_lead_to_member, then this page collects the password
+  // confirmation (never through the chat transcript) and calls /convert.
+  const [conversionIntent, setConversionIntent] = useState(null);
+  const [convertPassword, setConvertPassword] = useState('');
+  const [converting, setConverting] = useState(false);
+  const [convertError, setConvertError] = useState('');
+
   // Email address management
   const [showEmailManager, setShowEmailManager] = useState(false);
   const [newEmail, setNewEmail] = useState('');
@@ -202,6 +210,32 @@ export default function LeadView() {
     }
   }
 
+  async function completeConversion(e) {
+    e.preventDefault();
+    setConverting(true);
+    setConvertError('');
+    try {
+      const recaptchaToken = await getRecaptchaToken('convert_to_member');
+      const res = await fetch(`/api/leads/public/${publicId}/convert`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          password: convertPassword,
+          recaptchaToken,
+          loginEmail: conversionIntent?.personalOrOther === 'personal' ? (conversionIntent.loginEmail || undefined) : undefined,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Conversion failed');
+      navigate(data.redirectTo || '/member');
+    } catch (err) {
+      setConvertError(err.message);
+    } finally {
+      setConverting(false);
+    }
+  }
+
   // ── Render branches ──
   if (authState === 'checking') return null;
   if (authState === 'error') {
@@ -303,7 +337,7 @@ export default function LeadView() {
             )}
           </div>
 
-          {/* Member site coming soon — pledge CTA */}
+          {/* Become a member — BestyStaff-driven conversion */}
           {!lead.convertedUserId && lead.email && (
             <div style={{
               marginTop: '2rem',
@@ -313,28 +347,64 @@ export default function LeadView() {
               borderLeft: '3px solid var(--sb-gold)',
               borderRadius: 'var(--sb-radius)',
             }}>
-              <div className="sb-eyebrow" style={{ marginBottom: '0.35rem' }}>Member site coming soon</div>
+              <div className="sb-eyebrow" style={{ marginBottom: '0.35rem' }}>Become a member</div>
               <div style={{ fontSize: '1.0rem', color: 'var(--sb-cream)', marginBottom: '0.5rem', lineHeight: 1.4 }}>
                 Know you want to be a member?
               </div>
               <div style={{ fontSize: '0.82rem', color: 'var(--sb-sage)', lineHeight: 1.6, marginBottom: '1rem' }}>
-                The member site is still being perfected. Go ahead and pledge your interest here — I'll convert you
-                automatically when it's ready to go live. Your lead record stays intact and comes with you.
+                Tell BestyStaff below and it'll walk you through it — your lead record stays exactly as it is,
+                nothing is lost, you just get a real login. Not ready yet? You can still pledge your spot instead.
               </div>
-              {lead.pledgedAt ? (
-                <div style={{ fontSize: '0.82rem', color: 'var(--sb-sage)', fontStyle: 'italic' }}>
-                  ✓ You've pledged — you're on the list. I'll be in touch when it's time.
-                </div>
-              ) : (
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
                 <button
                   type="button"
-                  onClick={pledge}
-                  disabled={pledging || pledged}
+                  onClick={openLeadGenie}
                   className="sb-btn sb-btn-gold"
                   style={{ padding: '0.65rem 1.4rem', fontSize: '0.78rem' }}
                 >
-                  {pledging ? 'Saving…' : pledged ? '✓ Pledged!' : 'Pledge my spot →'}
+                  Become a member →
                 </button>
+                {lead.pledgedAt ? (
+                  <div style={{ fontSize: '0.82rem', color: 'var(--sb-sage)', fontStyle: 'italic' }}>
+                    ✓ You've also pledged your spot.
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={pledge}
+                    disabled={pledging || pledged}
+                    className="sb-btn sb-btn-outline-dark"
+                    style={{ padding: '0.65rem 1.4rem', fontSize: '0.78rem' }}
+                  >
+                    {pledging ? 'Saving…' : pledged ? '✓ Pledged!' : 'Just pledge my spot instead'}
+                  </button>
+                )}
+              </div>
+
+              {conversionIntent && (
+                <form onSubmit={completeConversion} style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '0.5px solid rgba(196,132,58,0.25)' }}>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--sb-cream)', marginBottom: '0.6rem' }}>
+                    BestyStaff has what it needs
+                    {conversionIntent.loginEmail ? ` — your login will be ${conversionIntent.loginEmail}` : ''}.
+                    Confirm your lead password to finish creating your member login.
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                    <input
+                      type="password"
+                      className="sb-input"
+                      placeholder="Your lead password"
+                      value={convertPassword}
+                      onChange={(e) => setConvertPassword(e.target.value)}
+                      style={{ maxWidth: 240 }}
+                      autoComplete="current-password"
+                      required
+                    />
+                    <button type="submit" className="sb-btn sb-btn-gold" disabled={converting || !convertPassword} style={{ padding: '0.65rem 1.4rem', fontSize: '0.78rem' }}>
+                      {converting ? 'Creating your login…' : 'Confirm & become a member'}
+                    </button>
+                  </div>
+                  {convertError && <div style={{ marginTop: '0.5rem', fontSize: '0.78rem', color: 'var(--sb-risk-critical)' }}>{convertError}</div>}
+                </form>
               )}
             </div>
           )}
@@ -355,7 +425,7 @@ export default function LeadView() {
           )}
         </div>
 
-        <PortfolioRequestPrompt sourceOutput="lead-record" autoOpen={false} openOnHash="#bestystaff" intakeConfig={config?.bestystaff?.intake} />
+        <PortfolioRequestPrompt sourceOutput="lead-record" autoOpen={false} openOnHash="#bestystaff" intakeConfig={config?.bestystaff?.intake} onConversionIntent={setConversionIntent} />
 
 
         <div style={pageGrid}>

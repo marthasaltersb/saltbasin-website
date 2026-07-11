@@ -370,7 +370,7 @@ function QuickReplies({ options, onPick }) {
   );
 }
 
-export default function PortfolioRequestPrompt({ sourceOutput, master, user, autoOpen = true, openOnHash = null, intakeConfig = null }) {
+export default function PortfolioRequestPrompt({ sourceOutput, master, user, autoOpen = true, openOnHash = null, intakeConfig = null, onConversionIntent = null }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
     { role: 'assistant', text: intakeConfig?.greeting || GREETING },
@@ -571,6 +571,11 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
         return;
       }
       if (data.reply) respondAssistant(data.reply);
+      // convert_lead_to_member only captures the visitor's choice (personal
+      // vs. other, optional alternate login email) — it never handles a
+      // password. The actual conversion happens in a secure UI step the
+      // host page provides (see LeadView.jsx), not in this chat transcript.
+      if (data.conversionIntent && onConversionIntent) onConversionIntent(data.conversionIntent);
       if (data.submitted?.id) {
         const transcriptMessages = [
           ...history,

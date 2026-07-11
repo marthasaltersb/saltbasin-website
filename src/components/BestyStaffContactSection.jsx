@@ -19,6 +19,7 @@ export default function BestyStaffContactSection({ config }) {
       <div className="sbh-besty-section-inner">
         <button type="button" className="sbh-besty-crystal-trigger" aria-label="Open BestyStaff chat" onClick={openChat}>
           <SaltBasinCrystal variant="signature" size="hero" interactive />
+          <span className="sbh-besty-crystal-caption" aria-hidden="true">Click to chat</span>
         </button>
         <div>
           <p className="sbh-eyebrow">{copy.eyebrow || 'Get in touch'}</p>

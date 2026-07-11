@@ -6,6 +6,8 @@ Purpose: preserve the full HOS™ methodology — Journey Data Rods, the metadat
 
 This is a companion to [salt-basin-brand-context.md](salt-basin-brand-context.md) (visual/verbal standards), [salt-basin-universal-agent-reasoning-context.md](salt-basin-universal-agent-reasoning-context.md) (agent reasoning loop), and [salt-basin-foundation-source-of-truth.md](salt-basin-foundation-source-of-truth.md) (canonical brand/entity/product names — authoritative over this doc wherever they conflict).
 
+**Vocabulary correction (2026-07-10, later same session):** the "Metadata Crystal Model" section below describes a 5-tier exploratory structure (atom → joint → molecule → capability cluster → stage gate) with Journey Data Rods as the top-level container. That is **not** the shipped vocabulary. The canonical, currently-live model is [salt-basin-metadata-model.md](salt-basin-metadata-model.md) — **3 tiers only** (Atom → Joint → Molecule), rendered on the homepage via `src/components/blocks/MetadataModelBlock.jsx`. In that model, **a Journey Data Rod is itself an example of a molecule** (alongside a job, a case study, a capability, and a product) — not a separate container that holds molecules. Read `salt-basin-metadata-model.md` for anything client-facing or homepage-adjacent; treat the section below as historical design exploration that fed the live `journey_data_rods` schema and evaluation engine (see the Status section at the end) but does not reflect current public vocabulary.
+
 ## Core Thesis
 
 Traditional CRM/ERP systems track **objects** (Lead, Opportunity, Contract). HOS™ tracks **journeys** — persistent, continuously-evolving truth graphs that are never recreated, only enriched.
@@ -189,4 +191,10 @@ Diagnostic layer note: HOS™ operationalizes **RLMM™** (Revenue Lifecycle Mec
 
 ## Status
 
-This methodology is architecture/vocabulary reference, not a shipped data model. Nothing in this document should be presented publicly as an implemented Salt Basin capability unless it also exists in `server/db.js`, the block registry, or another shipped surface. Treat it as the reasoning substrate for future HOS™ / Salt Basin MRS / SaltBridge build sessions.
+**Correction (2026-07-10, later same session):** an earlier version of this doc said this methodology was "architecture/vocabulary reference, not a shipped data model." That was wrong — a real, working implementation already exists:
+
+- `server/lib/journeyRods.js` — `ensureLeadRevenueRod`, `ensureMemberJourneyRods`, `ensureMemberOrganizationRods`, `recordRodEvent`, `evaluateJourneyRod` (the stage-gate evaluation engine: required clusters/molecules/actor roles/dependency rules, weighted dimension combinations, human-judgment escalation via `requestJourneyDecision`), `upsertJourneyEvidence`.
+- `server/routes/journeyRods.js` — `/api/journey-rods/*`, including admin CRUD for molecules, clusters, scenarios, and gate definitions, plus per-rod evidence/evaluate/threshold-profile endpoints.
+- Tables in `server/db.js`: `journey_data_rods`, `journey_rod_events`, `journey_metadata_molecules`, `journey_metadata_clusters`, `journey_scenarios`, `journey_gate_definitions`, `journey_rod_evidence`, `journey_rod_actors`, `journey_rod_threshold_profiles`, `journey_rod_decisions`, `journey_stage_gates`.
+
+The live schema uses **molecules** (an individual metadata field) and **clusters** (a required grouping of molecules) rather than this doc's atom/joint/molecule/capability-cluster four-level vocabulary — one level flatter, same spirit. Treat `server/lib/journeyRods.js` as the source of truth for how evaluation actually works; use this doc for the broader conceptual vocabulary (branches, rod cache hierarchy, Data Rod Joint Agents, SaltBridge, etc.) that hasn't been built yet. Don't assume something described here is shipped without checking against the files above.

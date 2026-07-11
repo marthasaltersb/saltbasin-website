@@ -43,26 +43,30 @@ async function uniqueSlugFor(base) {
   }
 }
 
-// Public signup — creates a member + their starter profile, optionally linking
-// an incoming lead conversion via fromLeadPublicId + fromLeadToken.
+// Public signup — creates a member + their starter profile.
+//
+// The fromLeadPublicId/fromLeadToken fresh-password conversion path is
+// deprecated: lead-to-member conversion now happens exclusively through
+// POST /api/leads/public/:publicId/convert (reuses the lead's existing
+// password, in-place update, no new object) driven by a BestyStaff
+// conversation — see bestyStaff.js's convert_lead_to_member tool and
+// LeadView.jsx. Callers still passing fromLead params are redirected there
+// instead of getting a fresh-password account.
 router.post('/signup', signupLimiter, async (req, res) => {
   const { email, password, displayName, requestedSlug, fromLeadPublicId, fromLeadToken, recaptchaToken } =
     req.body || {};
+  if (fromLeadPublicId || fromLeadToken) {
+    return res.status(410).json({
+      error: 'This sign-up path has moved — lead conversion now happens through a BestyStaff conversation on your lead page.',
+      redirectTo: fromLeadPublicId ? `/lead/${fromLeadPublicId}` : '/?intakeSource=networks-sign-up#bestystaff',
+    });
+  }
   const publicSignupEnabled = process.env.PUBLIC_MEMBER_SIGNUP_ENABLED === 'true';
-  const hasLeadConversion = !!(fromLeadPublicId && fromLeadToken);
-  if (!publicSignupEnabled && !hasLeadConversion) {
+  if (!publicSignupEnabled) {
     return res.status(403).json({ error: 'Member creation is currently invite-only.' });
   }
   const captcha = await verifyRecaptcha(recaptchaToken, 'signup');
   if (!captcha.ok) return res.status(400).json({ error: captcha.error || 'captcha verification failed' });
-  if (!publicSignupEnabled && hasLeadConversion) {
-    const lead = await db
-      .prepare('SELECT id, access_token, converted_user_id FROM leads WHERE public_id = $1')
-      .get(fromLeadPublicId);
-    if (!lead || lead.access_token !== fromLeadToken || lead.converted_user_id) {
-      return res.status(403).json({ error: 'Member creation is currently invite-only.' });
-    }
-  }
   const created = await createMember(email, password, displayName);
   if (created.error) return res.status(400).json({ error: created.error });
 
@@ -75,20 +79,7 @@ router.post('/signup', signupLimiter, async (req, res) => {
     )
     .run(created.id, slug, JSON.stringify(profile));
 
-  if (fromLeadPublicId && fromLeadToken) {
-    const lead = await db
-      .prepare('SELECT id, access_token FROM leads WHERE public_id = $1')
-      .get(fromLeadPublicId);
-    if (lead && lead.access_token === fromLeadToken) {
-      await db
-        .prepare(
-          'UPDATE leads SET converted_user_id = $1, updated_at = $2 WHERE id = $3'
-        )
-        .run(created.id, Date.now(), Number(lead.id));
-    }
-  }
-  const sourceLead = await db.prepare(`SELECT id FROM leads WHERE converted_user_id = $1 ORDER BY updated_at DESC LIMIT 1`).get(created.id);
-  await ensureMemberJourneyRods(created.id, sourceLead ? Number(sourceLead.id) : null);
+  await ensureMemberJourneyRods(created.id);
 
   const { token } = await createSession(created.id);
   setAdminCookie(res, token);

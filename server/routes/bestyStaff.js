@@ -21,6 +21,7 @@ import { resetLeadCredentialsByEmail } from './leads.js';
 import { defaultConfig } from '../data/defaultSite.js';
 import { getUserFromCookie } from '../auth.js';
 import { actorScope, buildAgentDataContext, agentDataPolicyPrompt, inferAgentPurpose } from '../lib/agentDataPolicy.js';
+import { classifyEmailDomain } from '../lib/emailDomain.js';
 
 const router = Router();
 
@@ -92,9 +93,21 @@ const TOOLS = [
     description: 'Send refreshed lead-record credentials by email. Use only after the visitor supplies and confirms their email. Never return a password in chat.',
     input_schema: { type: 'object', properties: { email: { type: 'string' } }, required: ['email'] },
   },
+  {
+    name: 'convert_lead_to_member',
+    description: "Call this once the visitor has confirmed they want to become a member and you've resolved which email their login should use. This does NOT create the account itself and does NOT ask for or handle a password — it hands the captured choice back to the page, which will show its own secure password-confirmation step (the visitor already knows their lead password) and complete the conversion there. Only usable when a known lead record is already loaded for this conversation.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        personalOrOther: { type: 'string', enum: ['personal', 'other', 'not_applicable'], description: "Only ask this when the stored email domain is a custom/work domain: is this membership for the visitor personally, or something else (e.g. an org account)? Use 'not_applicable' when the stored email is already a personal/consumer domain — no need to ask." },
+        loginEmail: { type: 'string', description: "The separate personal email to use as the login, if the visitor provided one (only relevant when personalOrOther is 'personal' and the stored email is a work domain). Omit if the stored email should be used as-is." },
+      },
+      required: ['personalOrOther'],
+    },
+  },
 ];
 
-async function executeTool(name, input, sourceOutput, attribution = null) {
+async function executeTool(name, input, sourceOutput, attribution = null, context = {}) {
   if (name === 'get_coverage_options') {
     try {
       const [engRows, skillRows, toolRows] = await Promise.all([
@@ -142,6 +155,25 @@ async function executeTool(name, input, sourceOutput, attribution = null) {
   if (name === 'request_lead_credential_reset') {
     await resetLeadCredentialsByEmail(input.email);
     return { ok: true, message: 'If the supplied email is linked to a lead, refreshed credentials were emailed.' };
+  }
+
+  if (name === 'convert_lead_to_member') {
+    if (!context.hasKnownLead) {
+      return { error: "No lead record is loaded for this conversation — the visitor needs to open this chat from their lead view link first." };
+    }
+    if (input.loginEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.loginEmail)) {
+      return { error: 'loginEmail does not look like a valid email address — ask again.' };
+    }
+    // No account is created here — see the tool description. The client
+    // surfaces its own password-confirmation UI and calls
+    // POST /api/leads/public/:publicId/convert directly.
+    return {
+      ok: true,
+      conversionIntent: {
+        personalOrOther: input.personalOrOther,
+        loginEmail: input.loginEmail || null,
+      },
+    };
   }
 
   return { error: `Unknown tool: ${name}` };
@@ -202,6 +234,8 @@ Returning-lead rules:
 - If the stored email domain is a consumer domain, mention only the domain (for example @gmail.com) and ask for an optional work/additional email. If it is a custom domain, ask whether the email on file is personal without revealing the full address. When a new email is supplied, only confirm it was captured and linked.
 - Prioritize the highest-weight unanswered metadata cluster needed for qualification.
 - For hiring/consulting interest, capture engagement type (full-time, fractional, fixed scope, or unsure), whether they want Betsy's Career Portfolio, job description/scope detail or guided prompts, whether they are the buyer, and if not, their role.
+
+Becoming a member: if the visitor asks to become a member, sign up, or get an account, and a lead record is already loaded for this conversation, confirm they want to proceed, then check the stored email's domain kind. If it's a custom/work domain, ask whether this membership is for them personally or something else — if personal, ask for a separate personal email to use as their login (their work email and everything already on the lead record stays exactly as it is). If the stored email is already a personal domain, no extra question is needed. Once you have what you need, call convert_lead_to_member — it does not create the account itself; the page will show its own secure step to finish. Never ask for or repeat back a password in chat.
 
 Contact and attachment safety:
 - Never share an attachment or sensitive information from an attachment in chat. Attachments are private intake context for Approved Salt Basin Executives only (currently Betsy) and are deleted after 24 hours.
@@ -289,6 +323,7 @@ router.post('/', chatLimiter, async (req, res) => {
       'betsy.email': publishedConfig.bestystaff?.privateContext?.contactEmail || 'betsysalter@saltbasin.net',
       'betsy.phone': publishedConfig.bestystaff?.privateContext?.contactPhone || process.env.ADMIN_PHONE || null,
       'lead.emailDomain': storedDomain,
+      'lead.emailKind': classifyEmailDomain(prior?.email),
       'lead.phone': prior?.phone,
       'lead.answers': minimizedAnswers ? String(minimizedAnswers).slice(0, 12000) : null,
       'lead.transcript': prior?.message ? String(prior.message).slice(-12000) : null,
@@ -297,6 +332,7 @@ router.post('/', chatLimiter, async (req, res) => {
   system += `\n\n${agentDataPolicyPrompt(dataContext)}`;
 
   let submitted = null;
+  let conversionIntent = null;
   try {
     for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
       const response = await anthropic.messages.create({
@@ -310,7 +346,7 @@ router.post('/', chatLimiter, async (req, res) => {
       const toolUses = (response.content || []).filter((b) => b.type === 'tool_use');
       if (response.stop_reason !== 'tool_use' || toolUses.length === 0) {
         const reply = (response.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('\n').trim();
-        return res.json({ reply: reply || '…', submitted });
+        return res.json({ reply: reply || '…', submitted, conversionIntent });
       }
 
       messages.push({ role: 'assistant', content: response.content });
@@ -320,7 +356,8 @@ router.post('/', chatLimiter, async (req, res) => {
           block.name,
           block.input,
           typeof sourceOutput === 'string' ? sourceOutput : null,
-          attribution && typeof attribution === 'object' ? attribution : null
+          attribution && typeof attribution === 'object' ? attribution : null,
+          { hasKnownLead: !!prior }
         );
         if (block.name === 'submit_portfolio_request' && result.ok) {
           submitted = {
@@ -330,12 +367,15 @@ router.post('/', chatLimiter, async (req, res) => {
             leadCapture: result.leadCapture || null,
           };
         }
+        if (block.name === 'convert_lead_to_member' && result.ok) {
+          conversionIntent = result.conversionIntent;
+        }
         toolResults.push({ type: 'tool_result', tool_use_id: block.id, content: JSON.stringify(result) });
       }
       messages.push({ role: 'user', content: toolResults });
     }
     // Tool-iteration cap — return what we have so the visitor isn't stranded.
-    res.json({ reply: "I hit a snag wrapping that up — mind sending that last message again?", submitted });
+    res.json({ reply: "I hit a snag wrapping that up — mind sending that last message again?", submitted, conversionIntent });
   } catch (e) {
     console.error('[bestystaff] chat failed:', e.status || '', e.message);
     if (e.status === 429) return res.status(429).json({ error: 'BestyStaff is at capacity — try again in a few seconds.' });

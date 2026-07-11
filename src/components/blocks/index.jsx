@@ -16,7 +16,7 @@ import { FlexColumnsBlock, WheelDisplay, FormColumnWidget } from './ColumnWidget
 import {
   ProductHeroBlock, RotatingHighlightsBlock, BuildFlowBlock, JourneyRodsBlock,
   ProductCatalogBlock, ExposureCalculatorBlock, ApiCatalogTableBlock, StartEngagementBlock,
-  PlatformCadenceBlock, ConversationalDemoBlock, SalterMomentumMethodBlock,
+  PlatformCadenceBlock, ConversationalDemoBlock, SalterMomentumMethodBlock, MethodologyMathBlock,
 } from './ProductExperienceBlocks.jsx';
 import { MetadataModelDiagramBlock } from './MetadataModelBlock.jsx';
 import { fetchCareerMaster, toolWheelBucket } from '../../lib/careerMaster.js';
@@ -5547,6 +5547,7 @@ const REGISTRY = {
   conversationalDemo: ConversationalDemoBlock,
   salterMomentumMethod: SalterMomentumMethodBlock,
   metadataModelDiagram: MetadataModelDiagramBlock,
+  methodologyMath: MethodologyMathBlock,
 };
 
 export function RenderSection({ section, config, mode = 'public', memberSlug = '', liveSlugs = null }) {

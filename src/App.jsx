@@ -5,7 +5,6 @@ import PublicSite from './components/PublicSite.jsx';
 import LandingGate from './components/LandingGate.jsx';
 import LoginPage from './components/admin/LoginPage.jsx';
 import AdminShell from './components/admin/AdminShell.jsx';
-import SignupPage from './components/SignupPage.jsx';
 import MemberDashboard from './components/MemberDashboard.jsx';
 import PublicProfile from './components/PublicProfile.jsx';
 import LeadView from './components/LeadView.jsx';
@@ -40,10 +39,15 @@ function RequireAdmin({ children }) {
 function SignupRoute() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-  // Preserve the authenticated lead-to-member conversion flow. General
-  // sign-up traffic starts with the configurable BestyStaff intake instead.
-  if (params.get('fromLead')) return <SignupPage />;
-  return <Navigate to="/?intakeSource=networks-sign-up#bestystaff" replace />;
+  // All sign-up traffic — including lead conversion — now starts with the
+  // BestyStaff intake. A lead becomes a member through a conversation on
+  // their own lead view (POST /api/leads/public/:publicId/convert), not a
+  // standalone password-creation form — see LeadView.jsx's "Become a
+  // member" prompt and bestyStaff.js's convert_lead_to_member tool.
+  // SignupPage.jsx (the old fromLead form) is intentionally unreferenced
+  // here now, not deleted, per the project's "flag, don't lose work" norm.
+  const source = params.get('intakeSource') || 'networks-sign-up';
+  return <Navigate to={`/?intakeSource=${encodeURIComponent(source)}#bestystaff`} replace />;
 }
 
 export default function App() {

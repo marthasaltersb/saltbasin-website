@@ -18,6 +18,7 @@ import { db } from '../db.js';
 import { requireUser, requireAdmin } from '../auth.js';
 import { audit } from '../lib/audit.js';
 import { makeRateLimiter } from '../lib/rateLimit.js';
+import { ensureUserRevenueRod, recordRodEvent, promoteLeadToOrganizationLead, upsertJourneyEvidence } from '../lib/journeyRods.js';
 
 const router = Router();
 const STRIPE_API = 'https://api.stripe.com/v1';
@@ -87,6 +88,25 @@ async function grantAccess({ userId, pkg, purchaseKind, paymentId }) {
 
   await db.prepare(`UPDATE commerce_payments SET status = 'paid', license_id = $1, updated_at = $2 WHERE id = $3`)
     .run(license.id, now, paymentId);
+
+  // Feed the real Journey Data Rod engine (server/lib/journeyRods.js) so a
+  // commerce purchase is reflected in the buyer's revenue_lifecycle rod, not
+  // just the commerce tables. Best-effort — a rod hiccup should never block
+  // an already-completed purchase. Creates the revenue rod lazily, right
+  // here at the moment of a real purchase — not pre-created at signup.
+  try {
+    const rod = await ensureUserRevenueRod(userId);
+    if (rod) {
+      await recordRodEvent(rod.id, {
+        eventType: 'commerce_purchase',
+        potentialRevenueDeltaCents: 0,
+        scoreDelta: purchaseKind === 'annual_entitlement' ? 15 : 5,
+        metadata: { productId: pkg.product_id, deliverablePackageId: pkg.id, purchaseKind },
+      });
+    }
+  } catch (e) {
+    console.warn('[commerce] journey rod event skipped:', e.message);
+  }
 
   return license;
 }
@@ -217,10 +237,14 @@ router.post('/checkout', requireUser, checkoutLimiter, async (req, res) => {
 });
 
 // ── Stripe webhook ───────────────────────────────────────────────────────
-// Mounted with express.raw() in server/index.js (must run before the global
-// express.json() parser) so the signature can be verified against the exact
-// raw bytes Stripe sent.
-router.post('/webhook', async (req, res) => {
+// NOT mounted on `router` — Express only stops walking later middleware
+// once a response is sent, so if this lived on the router it would still
+// pass back through the global express.json() parser first (which would
+// try to read the already-consumed raw stream a second time). Instead
+// server/index.js registers this handler directly, with express.raw(),
+// as its own complete route BEFORE app.use(express.json()) — the response
+// it sends ends the cycle for that request before json() ever runs.
+export async function stripeWebhookHandler(req, res) {
   if (!isStripeConfigured() || !process.env.STRIPE_WEBHOOK_SECRET) {
     return res.status(503).json({ error: 'Stripe webhook not configured' });
   }
@@ -252,7 +276,7 @@ router.post('/webhook', async (req, res) => {
     console.error('[commerce] webhook handling failed:', err.message);
     res.status(500).json({ error: err.message });
   }
-});
+}
 
 // Minimal Stripe webhook signature check (HMAC-SHA256 over "timestamp.payload"),
 // implemented directly rather than pulling in the stripe SDK for one function —
@@ -270,27 +294,133 @@ function verifyStripeSignature(rawBody, sigHeader, secret) {
 }
 
 // ── Custom scoping request (mid-market / enterprise) ────────────────────
+// Uses the Member Organization Lead mechanic (server/lib/journeyRods.js)
+// rather than a bare `leads` row: a member signaling they represent an
+// organization that needs custom scoping gets its own revenue_lifecycle
+// rod, which matures on real evidence and — per evaluateJourneyRod — is
+// promoted into a real organization_profiles record + rod ownership
+// transition once it clears the 'qualified_opportunity' gate. This is the
+// same lazy, evidence-driven creation principle ensureUserRevenueRod uses
+// for purchases; a scoping request is exactly this scenario, not a plain
+// contact-form submission.
 router.post('/request-custom-scoping', requireUser, async (req, res) => {
   const { deliverablePackageId, notes } = req.body || {};
   try {
     const pkg = deliverablePackageId
       ? await db.prepare('SELECT title FROM deliverable_packages WHERE id = $1').get(deliverablePackageId)
       : null;
-    const message = [
-      pkg ? `Interested in: ${pkg.title}` : 'Requesting custom scoping',
-      notes ? `Notes: ${notes}` : null,
-    ].filter(Boolean).join('\n');
+    const emailDomain = (req.user.email || '').split('@')[1] || null;
 
-    const lead = await db.prepare(`
-      INSERT INTO leads (source, email, name, message, lead_type)
-      VALUES ('commerce-custom-scoping', $1, $2, $3, 'commerce')
-      RETURNING id
-    `).get(req.user.email, req.user.displayName || null, message);
+    const { leadId, rod } = await promoteLeadToOrganizationLead(req.user.id, {
+      orgSignalSource: 'commerce-custom-scoping',
+      emailDomain,
+    });
 
-    await audit({ req, actor: req.user, action: 'commerce.custom_scoping.request', entityType: 'lead', entityId: lead.id,
+    if (rod) {
+      const interestNote = [
+        pkg ? `Interested in: ${pkg.title}` : 'Requesting custom scoping',
+        notes ? `Notes: ${notes}` : null,
+      ].filter(Boolean).join('\n');
+      await upsertJourneyEvidence(rod.id, {
+        moleculeKey: 'custom_scoping_interest',
+        value: interestNote,
+        sourceType: 'commerce_request',
+        actorKey: `user:${req.user.id}`,
+        confidence: 1,
+        metadata: { deliverablePackageId: deliverablePackageId || null },
+      });
+    }
+
+    await audit({ req, actor: req.user, action: 'commerce.custom_scoping.request', entityType: 'lead', entityId: leadId,
       summary: `Requested custom scoping${pkg ? ` for ${pkg.title}` : ''}` });
 
     res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Sample onboarding journey (5 questions per product) ─────────────────
+// The wizard collects answers client-side and submits the whole run once
+// completed — generalization of career_intake_runs (server/db.js) to any
+// product. Saved context is available to Betsy for future work but isn't
+// otherwise gated behind a purchase.
+router.post('/onboarding-runs', requireUser, async (req, res) => {
+  const { productId, answers } = req.body || {};
+  if (!productId || !Array.isArray(answers) || !answers.length) {
+    return res.status(400).json({ error: 'productId and a non-empty answers array are required' });
+  }
+  try {
+    const now = Date.now();
+    const run = await db.prepare(`
+      INSERT INTO product_onboarding_runs (user_id, product_id, answers, status, created_at, updated_at)
+      VALUES ($1, $2, $3::jsonb, 'completed', $4, $4)
+      RETURNING *
+    `).get(req.user.id, productId, JSON.stringify(answers.slice(0, 5)), now);
+
+    // Best-effort: a completed sample journey is meaningful commercial
+    // signal — record it against the member's revenue_lifecycle rod exactly
+    // like a commerce purchase does in grantAccess() above.
+    try {
+      const rod = await ensureUserRevenueRod(req.user.id);
+      if (rod) {
+        await recordRodEvent(rod.id, {
+          eventType: 'sample_onboarding_completed',
+          scoreDelta: 3,
+          metadata: { productId },
+        });
+      }
+    } catch (e) {
+      console.warn('[commerce] journey rod event skipped:', e.message);
+    }
+
+    await audit({ req, actor: req.user, action: 'commerce.onboarding.completed', entityType: 'product_onboarding_run', entityId: run.id,
+      summary: `Completed sample onboarding for ${productId}` });
+
+    res.json({ ok: true, run });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/onboarding-runs', requireUser, async (req, res) => {
+  try {
+    const rows = await db.prepare(
+      `SELECT * FROM product_onboarding_runs WHERE user_id = $1 ORDER BY created_at DESC`
+    ).all(req.user.id);
+    res.json({ runs: rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Message Betsy ─────────────────────────────────────────────────────────
+// member_messages requires an accepted member_connections row (see
+// server/routes/members.js POST /me/messages) — that's the right model for
+// member-to-member messaging, but too much friction for "message Betsy
+// directly" from a product page. This auto-establishes (or reuses) an
+// accepted connection with the platform's admin account, then the existing
+// InboxPanel/messages endpoints work unmodified.
+router.post('/message-betsy/start', requireUser, async (req, res) => {
+  try {
+    const betsy = await db.prepare(`SELECT id FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1`).get();
+    if (!betsy) return res.status(503).json({ error: 'no admin account configured' });
+    if (Number(betsy.id) === Number(req.user.id)) return res.status(400).json({ error: 'cannot message yourself' });
+
+    const existing = await db.prepare(
+      `SELECT id FROM member_connections WHERE status = 'accepted'
+         AND ((requester_id = $1 AND recipient_id = $2) OR (requester_id = $2 AND recipient_id = $1))`
+    ).get(req.user.id, betsy.id);
+
+    if (!existing) {
+      await db.prepare(`
+        INSERT INTO member_connections (requester_id, recipient_id, status, message)
+        VALUES ($1, $2, 'accepted', 'Auto-connected via Message Betsy')
+        ON CONFLICT (requester_id, recipient_id) DO UPDATE SET status = 'accepted', updated_at = EXCLUDED.updated_at
+      `).run(req.user.id, betsy.id);
+    }
+
+    res.json({ ok: true, recipientId: Number(betsy.id) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

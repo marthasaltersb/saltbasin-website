@@ -2,7 +2,7 @@ import express from 'express';
 import { db } from '../db.js';
 import { getUserFromCookie } from '../auth.js';
 import { audit } from '../lib/audit.js';
-import { ensureMemberOrganizationRods } from '../lib/journeyRods.js';
+import { ensureMemberOrganizationRods, upsertAccountRecord } from '../lib/journeyRods.js';
 
 const router = express.Router();
 
@@ -239,6 +239,26 @@ router.post('/orgs/:orgId/members', express.json(), async (req, res) => {
       ON CONFLICT (user_id, org_id) DO UPDATE SET role = EXCLUDED.role
     `).run(invitee.id, req.params.orgId, role, user.id);
     await ensureMemberOrganizationRods(Number(invitee.id), Number(req.params.orgId));
+
+    // If this org traces back to a promoted Member Organization Lead, this
+    // invite is the "first Member license provisioned" signal that branches
+    // the Customer Journey Data Rod off the org's Revenue rod (best-effort —
+    // never block the invite itself).
+    try {
+      const org = await db.prepare(`SELECT id, name, originating_lead_id FROM organization_profiles WHERE id=$1`).get(req.params.orgId);
+      if (org?.originating_lead_id) {
+        const { count } = await db.prepare(`SELECT COUNT(*)::int AS count FROM org_memberships WHERE org_id=$1`).get(req.params.orgId);
+        if (Number(count) >= 2) {
+          await upsertAccountRecord({
+            accountType: 'organization', orgId: Number(org.id), leadId: Number(org.originating_lead_id),
+            displayName: org.name || null, metadata: { firstLicenseProvisionedAt: Date.now() },
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('[profiles] org lead-lineage account record skipped:', e.message);
+    }
+
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });

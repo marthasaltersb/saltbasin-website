@@ -29,6 +29,7 @@ import EmotionalWeatherPanel from './EmotionalWeatherPanel.jsx';
 import LineagePanel from './LineagePanel.jsx';
 import InboxPanel from './InboxPanel.jsx';
 import CommandCenterPanel from './CommandCenterPanel.jsx';
+import MemberProductsPanel from './MemberProductsPanel.jsx';
 
 // Tab component registry: the one piece that can't be data-driven, because
 // React components have to be referenced by import. The nav structure stored
@@ -559,6 +560,8 @@ export default function AdminShell({ scope = 'admin' }) {
             <TabToggle
               items={[
                 { val: 'content',        label: 'My Profile' },
+                { val: 'products',       label: 'Products' },
+                { val: 'inbox',          label: 'Messages' },
                 { val: 'resume',         label: 'My Resume' },
                 { val: 'config',         label: 'Config' },
                 { val: 'profiles',       label: 'Profiles' },
@@ -771,6 +774,7 @@ export default function AdminShell({ scope = 'admin' }) {
           if (componentId === 'outputTemplates') return <OutputTemplateConfiguratorHub scope={scope} />;
           if (componentId === 'careerMaster')    return <CareerMasterPanel scope={scope} />;
           if (componentId === 'inbox')           return <InboxPanel />;
+          if (componentId === 'products')        return <MemberProductsPanel />;
           if (componentId === 'stats')           return <MemberStatsPanel isAdmin={!isMember} />;
           if (componentId === 'audit')           return <MemberAuditPanel isAdmin={!isMember} />;
           if (componentId === 'agent')           return <MemberAgentPanel />;

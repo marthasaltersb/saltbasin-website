@@ -41,6 +41,7 @@ import lineageRouter from './routes/lineage.js';
 import methodologyStatsRouter from './routes/methodologyStats.js';
 import leadIntegrationsRouter from './routes/leadIntegrations.js';
 import journeyRodsRouter from './routes/journeyRods.js';
+import commerceRouter, { stripeWebhookHandler } from './routes/commerce.js';
 
 // Safety net: an unhandled promise rejection in any async route handler
 // (e.g. a bad column reference in a PATCH) is fatal by default in Node —
@@ -64,6 +65,13 @@ const app = express();
 // Behind Render / Netlify / any reverse proxy. Required so secure cookies and
 // req.ip work correctly.
 if (isProd) app.set('trust proxy', 1);
+
+// Stripe webhook signature verification needs the raw, unparsed request
+// body. Registered as a complete route (not just body-parsing middleware)
+// before the global express.json() parser below — once this handler sends
+// a response, Express never falls through to json() for the same request,
+// so the raw stream is never read twice. See server/routes/commerce.js.
+app.post('/api/commerce/webhook', express.raw({ type: 'application/json' }), stripeWebhookHandler);
 
 app.use(express.json({ limit: '2mb' }));
 app.use(cookieParser());
@@ -121,6 +129,7 @@ app.use('/api/output-templates', outputTemplatesRouter);
 app.use('/api/career', careerMasterRouter);
 app.use('/api/portfolio-requests', portfolioRequestsRouter);
 app.use('/api/lineage', lineageRouter);
+app.use('/api/commerce', commerceRouter);
 
 // Uploaded files now live on Supabase Storage at <SUPABASE_URL>/storage/v1/object/public/uploads/<file>.
 // The returned URL from POST /api/uploads is already absolute, so the browser

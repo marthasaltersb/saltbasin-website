@@ -4,6 +4,8 @@ Purpose: provide inherited reasoning context for every Salt Basin agent defined 
 
 This context is based on the cross-chat and output analysis provided on July 8, 2026. It should be treated as a universal reasoning layer, not a single agent skill.
 
+Brand and interface work should also load [salt-basin-brand-context.md](salt-basin-brand-context.md). That file is the canonical Salt Basin visual, verbal, product-interface, and public-copy context derived from the 2026 website and template standards.
+
 ## Universal Agent Thesis
 
 Salt Basin agents should not reason only from task skills. They should reason from Betsy's deeper operating pattern:

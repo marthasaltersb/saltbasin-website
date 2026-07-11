@@ -6,7 +6,8 @@ import { requireAdmin, createSession, setAdminCookie } from '../auth.js';
 import { sendLeadConfirmation, sendNewLeadAlert, sendContactFormToMember, dispatchRaw } from '../lib/email.js';
 import { defaultMemberProfile } from '../data/defaultMemberProfile.js';
 import { verifyRecaptcha } from '../lib/recaptcha.js';
-import { ensureLeadRevenueRod, ensureMemberJourneyRods } from '../lib/journeyRods.js';
+import { ensureLeadRevenueRod, ensureMemberJourneyRods, upsertAccountRecord } from '../lib/journeyRods.js';
+import { classifyEmailDomain, emailDomainOf } from '../lib/emailDomain.js';
 
 const router = Router();
 
@@ -182,15 +183,14 @@ router.get('/actor-context', async (req, res) => {
   if (!lead) return res.json({ returning: false, visitKey });
   let answers = {};
   try { answers = lead.answers ? JSON.parse(lead.answers) : {}; } catch { answers = {}; }
-  const domain = lead.email?.split('@')[1]?.toLowerCase() || null;
-  const consumerDomains = new Set(['gmail.com','outlook.com','hotmail.com','yahoo.com','icloud.com','aol.com','proton.me','protonmail.com']);
+  const domain = emailDomainOf(lead.email);
   res.json({
     returning: true,
     publicId: lead.public_id,
     visitCount: Number(lead.visit_count || 0),
     hasEmail: !!lead.email,
     emailDomain: domain,
-    emailKind: domain ? (consumerDomains.has(domain) ? 'consumer' : 'custom') : null,
+    emailKind: classifyEmailDomain(lead.email),
     hasName: !!lead.name,
     answered: Object.fromEntries(Object.entries(answers).filter(([k]) => ['consentGiven','knowsBetsy','knowsBetsyDetail','topQuestions','interestArea','marketingConsent','contactName'].includes(k))),
   });
@@ -545,8 +545,11 @@ router.post('/public/:publicId/pledge', async (req, res) => {
 // ensureDraft(), so we only need to create the user + member_profiles +
 // the link back to the lead here.
 router.post('/public/:publicId/convert', async (req, res) => {
-  const { password, recaptchaToken } = req.body || {};
+  const { password, recaptchaToken, loginEmail } = req.body || {};
   if (!password) return res.status(400).json({ error: 'password required' });
+  if (loginEmail !== undefined && loginEmail !== null && !isValidEmail(loginEmail)) {
+    return res.status(400).json({ error: 'loginEmail is not a valid email address' });
+  }
 
   const captcha = await verifyRecaptcha(recaptchaToken, 'convert_to_member');
   if (!captcha.ok) return res.status(400).json({ error: captcha.error || 'captcha verification failed' });
@@ -593,7 +596,13 @@ router.post('/public/:publicId/convert', async (req, res) => {
   // create a duplicate when the email is already a secondary address on an
   // existing account (e.g. admin added their org email to their admin account,
   // then later submitted a lead with that same org email).
-  const lowerEmail = lead.email.toLowerCase();
+  // A custom-domain lead email may not be the right login — BestyStaff asks
+  // whether conversion is for personal membership and, if so, captures a
+  // separate personal email (see the convert_lead_to_member tool in
+  // bestyStaff.js). loginEmail overrides which email becomes users.email;
+  // the lead's original email and all its history stay attached to the lead
+  // row either way.
+  const lowerEmail = normalizeEmail(loginEmail || lead.email);
   const existingPrimary = await db.prepare(`SELECT id FROM users WHERE email = $1`).get(lowerEmail);
   if (existingPrimary) {
     return res.status(409).json({
@@ -634,6 +643,7 @@ router.post('/public/:publicId/convert', async (req, res) => {
     .prepare(`UPDATE leads SET converted_user_id = $1, updated_at = $2 WHERE id = $3`)
     .run(newUserId, Date.now(), Number(lead.id));
   await ensureMemberJourneyRods(newUserId, Number(lead.id));
+  await upsertAccountRecord({ accountType: 'member', userId: newUserId, leadId: Number(lead.id), displayName: lead.name || null });
 
   // Register the primary email in user_emails so it's visible in the email
   // manager and so secondary-email lookups in login() find it correctly.

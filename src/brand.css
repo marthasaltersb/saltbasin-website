@@ -681,6 +681,15 @@ option {
   box-shadow: 0 14px 30px rgba(0,0,0,0.28);
 }
 
+.sb-public-auth-menu::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  width: 100%;
+  height: 10px;
+}
+
 .sb-public-auth-menu a {
   display: block;
   padding: 0.65rem 1rem;
@@ -1292,11 +1301,67 @@ option {
   height: 100%;
 }
 
+/* .sbh-webgl-crystal-hero (in the crystal's own size-variant rules, defined
+   later in this file) hardcodes width/height up to 420px — same specificity
+   as the `> *` rule above, so it was winning on source order and getting
+   clipped by this trigger's overflow:hidden box. This two-class selector
+   has higher specificity and forces the crystal to actually fill its
+   container instead. */
+.sbh-besty-crystal-trigger .sbh-webgl-crystal {
+  width: 100%;
+  height: 100%;
+}
+
 .sbh-besty-crystal-trigger:hover,
 .sbh-besty-crystal-trigger:focus-visible {
   transform: translateY(-4px) scale(1.03);
   filter: drop-shadow(0 14px 22px rgba(23, 42, 69, 0.2));
   outline: none;
+}
+
+/* Click-to-chat affordance — a small pulsing ring + caption so the crystal
+   reads as interactive, not just decorative, at a glance. */
+.sbh-besty-crystal-trigger {
+  position: relative;
+}
+.sbh-besty-crystal-trigger::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1.5px solid var(--sbh-gold);
+  opacity: 0;
+  animation: sbh-besty-pulse 2.6s ease-out infinite;
+  pointer-events: none;
+}
+/* Overrides `.sbh-besty-crystal-trigger > *`'s width:100%/height:100% (which
+   would otherwise stretch this span full-width and break the centering
+   transform below) — two classes beats one, regardless of source order. */
+.sbh-besty-crystal-trigger > .sbh-besty-crystal-caption {
+  position: absolute;
+  left: 50%;
+  bottom: -1.6rem;
+  width: auto;
+  height: auto;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-family: var(--sb-font-label);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sbh-teal-deep);
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+@keyframes sbh-besty-pulse {
+  0% { transform: scale(0.94); opacity: 0.55; }
+  70% { transform: scale(1.18); opacity: 0; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sbh-besty-crystal-trigger::before { animation: none; opacity: 0; }
 }
 
 .sb-login-brand-page {

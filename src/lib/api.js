@@ -223,6 +223,18 @@ export const api = {
   recoverEmail: (phone, recaptchaToken) =>
     request('/api/auth/email-recover', { method: 'POST', body: JSON.stringify({ phone, recaptchaToken }) }),
 
+  // Commerce — SMB self-service deliverable packages + sample onboarding
+  getCommerceProducts: () => request('/api/commerce/products'),
+  getMyCommerceAccess: () => request('/api/commerce/my-access'),
+  commerceCheckout: (deliverablePackageId, purchaseKind, orgId) =>
+    request('/api/commerce/checkout', { method: 'POST', body: JSON.stringify({ deliverablePackageId, purchaseKind, orgId }) }),
+  requestCustomScoping: (deliverablePackageId, notes) =>
+    request('/api/commerce/request-custom-scoping', { method: 'POST', body: JSON.stringify({ deliverablePackageId, notes }) }),
+  submitOnboardingRun: (productId, answers) =>
+    request('/api/commerce/onboarding-runs', { method: 'POST', body: JSON.stringify({ productId, answers }) }),
+  getMyOnboardingRuns: () => request('/api/commerce/onboarding-runs'),
+  startMessageBetsy: () => request('/api/commerce/message-betsy/start', { method: 'POST' }),
+
   // OAuth connections (used by Command Center + Profile Hub integrations)
   getOAuthConnections: () => request('/api/oauth/connections'),
 };

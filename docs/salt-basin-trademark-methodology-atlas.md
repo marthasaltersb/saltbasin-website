@@ -18,16 +18,6 @@ Adjacent confirmed trademarked products (not part of the IP stack above, but rea
 - **MESA** (MES Agencies, LLC) — advisory, delivery, and diagnostic services across industries; the only Tier 4 entity confirmed filed as of the foundation doc.
 - **BestyStaff** — Betsy's personal AI proxy agent. Name is fixed, never altered.
 
-## ⚠️ Open conflict — flagged, not resolved
-
-**"Master Enterprise Solution Best Bets™"** appears in project memory (`mes_best_bets_trademark.md`) as the top-level IP brand for GTM + Q2R methodology outputs, parent to "Lead to Revenue Capability Model™" and "Contribution Intelligence Methodology™" (used on the site's `/output/methodology` contribution-attribution page). It **does not appear anywhere** in the July 2026 Foundation Source of Truth doc's IP stack above.
-
-Two possibilities, unresolved:
-1. It's superseded — the RLMM™ → HOS™ → Salt Basin MRS stack replaced it.
-2. It's a separate, still-live brand specifically for output-layer/attribution artifacts (resumes, the Contribution Intelligence page) that coexists alongside the entity-level IP stack.
-
-**Do not silently pick one.** Confirm with Betsy before changing copyright lines, footer trademark strings, or the `/output/methodology` page's branding.
-
 ## Acronym Expansion Tracker
 
 Some Salt Basin acronyms intentionally carry more than one valid expansion depending on context. This is deliberate wordplay, not inconsistency — never auto-correct it.
@@ -74,4 +64,4 @@ The pitch: the client-facing vocabulary adapts to the industry (health plan oper
 
 ## Status
 
-Everything under "Open conflict" and "DRAFT" above is explicitly unresolved. Everything else is drawn directly from `salt-basin-foundation-source-of-truth.md` and should be treated as current as of 2026-07-10.
+The IP stack above (Salter Momentum™ → RLMM™ → HOS™ → Salt Basin MRS → Client Deliverables) is the defined, current structure — "Master Enterprise Solution Best Bets™" is superseded by it and retired (see `mes_best_bets_trademark.md`). Everything under "DRAFT" above is still explicitly unresolved. Everything else is drawn directly from `salt-basin-foundation-source-of-truth.md` and should be treated as current as of 2026-07-10.

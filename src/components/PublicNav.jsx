@@ -73,14 +73,28 @@ export default function PublicNav({ site, pages }) {
 function AuthButton({ user }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  const closeTimer = useRef(null);
 
   useEffect(() => {
     function close(e) {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     }
     document.addEventListener('mousedown', close);
-    return () => document.removeEventListener('mousedown', close);
+    return () => {
+      clearTimeout(closeTimer.current);
+      document.removeEventListener('mousedown', close);
+    };
   }, []);
+
+  function keepOpen() {
+    clearTimeout(closeTimer.current);
+    setOpen(true);
+  }
+
+  function closeSoon() {
+    clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(() => setOpen(false), 180);
+  }
 
   if (user) {
     const target = user.role === 'admin' ? '/admin' : '/member';
@@ -94,7 +108,7 @@ function AuthButton({ user }) {
   }
 
   return (
-    <div className="sb-public-auth-wrap" ref={ref} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+    <div className="sb-public-auth-wrap" ref={ref} onMouseEnter={keepOpen} onMouseLeave={closeSoon}>
       <button className="sb-public-auth" type="button" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
         Net Works Sign In <span className="sb-public-nav-caret">v</span>
       </button>
@@ -102,7 +116,7 @@ function AuthButton({ user }) {
         <div className="sb-public-auth-menu">
           <Link to="/login" onClick={() => setOpen(false)}>Sign In</Link>
           <a
-            href="/?intakeSource=networks-sign-up#bestystaff"
+            href="/signup?intakeSource=networks-sign-up"
             onClick={() => recordBestyTouch('networks-sign-up', { action: 'sign-up-menu' })}
           >
             Sign Up

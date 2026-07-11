@@ -5,6 +5,13 @@ import { evaluateJourneyRod, upsertJourneyEvidence } from '../lib/journeyRods.js
 
 const router = Router();
 
+async function requireRodOwnerOrAdmin(req, res) {
+  const rod = await db.prepare(`SELECT * FROM journey_data_rods WHERE id=$1`).get(req.params.rodId);
+  if (!rod) { res.status(404).json({ error: 'Journey rod not found' }); return null; }
+  if (req.user.role !== 'admin' && Number(rod.user_id) !== Number(req.user.id)) { res.status(403).json({ error: 'Not authorized for this journey rod' }); return null; }
+  return rod;
+}
+
 router.get('/me', requireUser, async (req, res) => {
   const rods = await db.prepare(`SELECT * FROM journey_data_rods WHERE user_id=$1 ORDER BY rod_type, org_id NULLS FIRST`).all(req.user.id);
   res.json({ rods: rods.map(normalizeRod) });
@@ -51,6 +58,9 @@ router.put('/scenarios/:key', requireAdmin, async (req,res)=>{ const b=req.body|
 router.put('/scenarios/:key/gates/:stageKey', requireAdmin, async (req,res)=>{ const b=req.body||{},now=Date.now(); const scenario=await db.prepare(`SELECT id FROM journey_scenarios WHERE scenario_key=$1`).get(req.params.key); if(!scenario) return res.status(404).json({error:'scenario not found'}); await db.prepare(`INSERT INTO journey_gate_definitions (scenario_id,stage_key,required_clusters,required_molecules,required_dimensions,required_actor_roles,dependency_rules,judgment_policy,human_prompt,sort_order,is_active,created_at,updated_at) VALUES ($1,$2,$3::jsonb,$4::jsonb,$5::jsonb,$6::jsonb,$7::jsonb,$8,$9,$10,$11,$12,$12) ON CONFLICT (scenario_id,stage_key) DO UPDATE SET required_clusters=EXCLUDED.required_clusters,required_molecules=EXCLUDED.required_molecules,required_dimensions=EXCLUDED.required_dimensions,required_actor_roles=EXCLUDED.required_actor_roles,dependency_rules=EXCLUDED.dependency_rules,judgment_policy=EXCLUDED.judgment_policy,human_prompt=EXCLUDED.human_prompt,sort_order=EXCLUDED.sort_order,is_active=EXCLUDED.is_active,updated_at=EXCLUDED.updated_at`).run(scenario.id,req.params.stageKey,JSON.stringify(b.requiredClusters||[]),JSON.stringify(b.requiredMolecules||[]),JSON.stringify(b.requiredDimensions||[]),JSON.stringify(b.requiredActorRoles||[]),JSON.stringify(b.dependencyRules||[]),b.judgmentPolicy||'when_ambiguous',b.humanPrompt||null,b.sortOrder||0,b.isActive!==false,now); res.json({ok:true}); });
 
 router.post('/:rodId/actors', requireAdmin, async (req,res)=>{ const b=req.body||{}; if(!b.actorKey||!b.roleKey) return res.status(400).json({error:'actorKey and roleKey are required'}); await db.prepare(`INSERT INTO journey_rod_actors (rod_id,actor_key,role_key,contribution_status,contribution,required_from_stage,added_at) VALUES ($1,$2,$3,$4,$5::jsonb,$6,$7) ON CONFLICT (rod_id,actor_key,role_key) DO UPDATE SET contribution_status=EXCLUDED.contribution_status,contribution=EXCLUDED.contribution,required_from_stage=EXCLUDED.required_from_stage`).run(req.params.rodId,b.actorKey,b.roleKey,b.contributionStatus||'invited',JSON.stringify(b.contribution||{}),b.requiredFromStage||null,Date.now()); res.json(await evaluateJourneyRod(Number(req.params.rodId))); });
+
+router.get('/:rodId/threshold-profile', requireUser, async (req,res)=>{ if(!await requireRodOwnerOrAdmin(req,res)) return; res.json({profile:await db.prepare(`SELECT * FROM journey_rod_threshold_profiles WHERE rod_id=$1`).get(req.params.rodId)}); });
+router.put('/:rodId/threshold-profile', requireUser, async (req,res)=>{ if(!await requireRodOwnerOrAdmin(req,res)) return; const b=req.body||{},now=Date.now(); if(!Array.isArray(b.dimensionDefinitions)||!Array.isArray(b.combinations)) return res.status(400).json({error:'dimensionDefinitions and combinations must be arrays'}); await db.prepare(`INSERT INTO journey_rod_threshold_profiles (rod_id,dimension_definitions,combinations,configured_by,created_at,updated_at) VALUES ($1,$2::jsonb,$3::jsonb,$4,$5,$5) ON CONFLICT (rod_id) DO UPDATE SET dimension_definitions=EXCLUDED.dimension_definitions,combinations=EXCLUDED.combinations,configured_by=EXCLUDED.configured_by,updated_at=EXCLUDED.updated_at`).run(req.params.rodId,JSON.stringify(b.dimensionDefinitions),JSON.stringify(b.combinations),req.user.id,now); res.json(await evaluateJourneyRod(Number(req.params.rodId))); });
 
 router.post('/:rodId/evidence', requireAdmin, async (req,res)=>{ try { res.json(await upsertJourneyEvidence(Number(req.params.rodId),req.body||{})); } catch(e){ res.status(400).json({error:e.message}); } });
 router.post('/:rodId/evaluate', requireAdmin, async (req,res)=>{ try { res.json(await evaluateJourneyRod(Number(req.params.rodId))); } catch(e){ res.status(400).json({error:e.message}); } });

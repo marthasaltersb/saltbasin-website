@@ -460,3 +460,70 @@ export function SalterMomentumMethodBlock({ section }) {
     </section>
   );
 }
+
+// Deep technical breakdown: per-methodology equations, the unified table of
+// institution-configurable constants those equations depend on, and the
+// agent-execution flow that runs an institution's data through them. Reuses
+// existing sbh-px-* primitives (panel, table, mono, path) rather than
+// inventing new CSS — see .sbh-px-table / .sbh-px-mono / .sbh-px-path in
+// brand.css, already shared with ApiCatalogTableBlock and BuildFlowBlock.
+export function MethodologyMathBlock({ section }) {
+  const f = section.fields || {};
+  const methodologies = Array.isArray(f.methodologies) ? f.methodologies : [];
+  const constants = Array.isArray(f.constants) ? f.constants : [];
+  const agentSteps = Array.isArray(f.agentSteps) ? f.agentSteps : [];
+  return (
+    <section id={section.id} className="sbh-px-band">
+      <PXHead eyebrow={f.eyebrow} heading={f.heading} intro={f.intro} />
+
+      <div className="sbh-px-panel-stack" style={{ display: 'grid', gap: '1rem', marginBottom: '2.5rem' }}>
+        {methodologies.map((m, i) => (
+          <div className="sbh-px-panel" key={i}>
+            <span className="sbh-eyebrow">{m.kind}</span>
+            <h3>{m.name}</h3>
+            {m.summary && <p style={{ fontSize: '0.88rem', lineHeight: 1.7, color: 'rgba(43,42,40,0.72)', marginBottom: m.formula ? '1rem' : 0 }}>{m.summary}</p>}
+            {m.formula && <pre className="sbh-px-mono" style={{ whiteSpace: 'pre-wrap', background: 'rgba(43,42,40,0.05)', border: '1px solid var(--sbh-line)', borderRadius: 10, padding: '0.9rem 1.1rem', margin: 0 }}>{m.formula}</pre>}
+            {m.notes && <p style={{ fontSize: '0.78rem', color: 'rgba(43,42,40,0.55)', marginTop: '0.6rem', fontStyle: 'italic' }}>{m.notes}</p>}
+          </div>
+        ))}
+      </div>
+
+      {constants.length > 0 && (
+        <div className="sbh-px-panel sbh-px-table-panel" style={{ marginBottom: '2.5rem' }}>
+          {f.constantsHeading && <h3>{f.constantsHeading}</h3>}
+          <table className="sbh-px-table">
+            <thead>
+              <tr><th>Constant</th><th>Symbol</th><th>Lives in</th><th>Institution configures</th></tr>
+            </thead>
+            <tbody>
+              {constants.map((c, i) => (
+                <tr key={i}>
+                  <td>{c.constant}</td>
+                  <td className="sbh-px-mono">{c.symbol}</td>
+                  <td className="sbh-px-mono">{c.location}</td>
+                  <td>{c.configurableBy}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {agentSteps.length > 0 && (
+        <div className="sbh-px-panel">
+          {f.agentHeading && <h3>{f.agentHeading}</h3>}
+          <div className="sbh-px-path">
+            {agentSteps.map((step, i) => (
+              <div className="sbh-px-path-node" key={i}>
+                <b>{step.label}</b>
+                <span>{step.desc}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {f.footnote && <p className="sbh-px-footnote" style={{ color: 'rgba(43,42,40,0.55)' }}>{f.footnote}</p>}
+    </section>
+  );
+}
