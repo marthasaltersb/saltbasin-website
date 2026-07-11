@@ -48,7 +48,10 @@ function addLights(scene, THREE) {
   fill.position.set(-5, -2, 3);
   scene.add(fill);
 
-  scene.add(new THREE.AmbientLight(0xF8F4EC, 0.55));
+  const ambient = new THREE.AmbientLight(0xF8F4EC, 0.55);
+  scene.add(ambient);
+
+  return { key, fill, ambient };
 }
 
 const crystalVariants = {
@@ -322,11 +325,21 @@ export default function SaltBasinCrystal({
   className = '',
   interactive = false,
   orbitCount = 0,
+  autoRotate = true,
+  pulseActive = false,
 }) {
   const hostRef = useRef(null);
   const canvasRef = useRef(null);
   const mouseRef = useRef({ x: 0, y: 0 });
   const [rendered, setRendered] = useState(false);
+
+  // Refs, not effect deps — animate() reads these live so toggling
+  // autoRotate/pulseActive (e.g. on every BestyStaff send) never tears down
+  // and rebuilds the WebGL scene.
+  const autoRotateRef = useRef(autoRotate);
+  autoRotateRef.current = autoRotate;
+  const pulseActiveRef = useRef(pulseActive);
+  pulseActiveRef.current = pulseActive;
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !hasWebGL()) return undefined;
@@ -363,7 +376,7 @@ export default function SaltBasinCrystal({
         });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isHeroScale ? 2 : 1.5));
 
-        addLights(scene, THREE);
+        const lights = addLights(scene, THREE);
 
         const group = new THREE.Group();
         group.rotation.x = 0.3;
@@ -400,15 +413,21 @@ export default function SaltBasinCrystal({
           const t = clock.getElapsedTime();
           const mouse = mouseRef.current;
           const parallax = interactive ? 1 : 0;
+          const autoRotate = autoRotateRef.current;
+          const pulseActive = pulseActiveRef.current;
+          const speedMul = pulseActive ? 1.8 : 1;
 
-          group.rotation.y = t * (isHeroScale ? 0.28 : 0.4) + mouse.x * 0.6 * parallax;
-          group.rotation.x = 0.3 + Math.sin(t * 0.4) * 0.05 + mouse.y * 0.3 * parallax;
-          group.position.y = Math.sin(t * 0.6) * (isHeroScale ? 0.15 : 0.08);
-          handles.spin.forEach((mesh, index) => {
-            mesh.rotation.x += index % 2 ? -0.012 : 0.01;
-            mesh.rotation.y += index % 2 ? -0.008 : 0.015;
-          });
-          if (orbitGroup) orbitGroup.rotation.z = t * 0.12;
+          group.rotation.y = (autoRotate ? t * (isHeroScale ? 0.28 : 0.4) * speedMul : 0) + mouse.x * 0.6 * parallax;
+          group.rotation.x = (autoRotate ? 0.3 + Math.sin(t * 0.4) * 0.05 : 0.3) + mouse.y * 0.3 * parallax;
+          group.position.y = autoRotate ? Math.sin(t * 0.6) * (isHeroScale ? 0.15 : 0.08) : 0;
+          if (autoRotate) {
+            handles.spin.forEach((mesh, index) => {
+              mesh.rotation.x += (index % 2 ? -0.012 : 0.01) * speedMul;
+              mesh.rotation.y += (index % 2 ? -0.008 : 0.015) * speedMul;
+            });
+            if (orbitGroup) orbitGroup.rotation.z = t * 0.12 * speedMul;
+          }
+          lights.key.intensity = pulseActive ? 1.4 + Math.sin(t * 6) * 0.5 : 1.4;
           renderer.render(scene, camera);
         }
 
