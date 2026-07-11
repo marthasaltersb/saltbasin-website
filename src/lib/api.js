@@ -67,6 +67,13 @@ export const api = {
   saveMemberDraftConfig: (config) =>
     request('/api/member-config/draft', { method: 'PUT', body: JSON.stringify(config) }),
   publishMemberConfig: () => request('/api/member-config/publish', { method: 'POST' }),
+  getOrgPortalContext: (id) => request(`/api/org-portal/${id}/context`),
+  getOrgSite: (id) => request(`/api/org-portal/${id}/site`),
+  saveOrgSite: (id, data) => request(`/api/org-portal/${id}/site`, { method: 'PUT', body: JSON.stringify(data) }),
+  getOrgConfig: (id) => request(`/api/org-portal/${id}/config`),
+  saveOrgConfig: (id, data) => request(`/api/org-portal/${id}/config`, { method: 'PUT', body: JSON.stringify(data) }),
+  publishOrgPortal: (id) => request(`/api/org-portal/${id}/publish`, { method: 'POST' }),
+  getOrgPageTypes: (id) => request(`/api/org-portal/${id}/page-types`),
 
   // Public — used by the Salt Basin home page Net Works banner.
   listFeaturedMembers: () => request('/api/member-site/featured'),

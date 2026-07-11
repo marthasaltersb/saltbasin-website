@@ -10,6 +10,8 @@ import PublicProfile from './components/PublicProfile.jsx';
 import LeadView from './components/LeadView.jsx';
 import ResetPasswordPage from './components/ResetPasswordPage.jsx';
 import DataNotice from './components/DataNotice.jsx';
+import BusinessDefinitionExperience from './components/BusinessDefinitionExperience.jsx';
+import OrgPortal from './components/OrgPortal.jsx';
 import { ResumeOutput, CaseStudyOutput, DomainsOutput, PortfolioAppendixOutput, CareerCaseStudyPortfolioOutput, CareerMasterDatabaseOutput, CareerPortfolioHubOutput, ResumePortfolioOutput, CareerFullPortfolioOutput, StrategicOperatorOutput, ProposalOutput, OnePagerOutput, BuildSummaryOutput, TechStackOutput, ProductOnePagerOutput, PatchNotesOutput, MethodologyOutput, L2RModelOutput } from './components/Output.jsx';
 
 function PublicRoute() {
@@ -62,6 +64,7 @@ export default function App() {
       <Route path="/reset/:token" element={<ResetPasswordPage />} />
       <Route path="/signup" element={<SignupRoute />} />
       <Route path="/member" element={<MemberDashboard />} />
+      <Route path="/org/:orgId" element={<OrgPortal />} />
       <Route path="/u/:slug" element={<PublicProfile />} />
       <Route path="/u/:slug/*" element={<PublicProfile />} />
       <Route path="/lead/:publicId" element={<LeadView />} />
@@ -84,6 +87,7 @@ export default function App() {
       <Route path="/output/strategic-operator" element={<StrategicOperatorOutput />} />
       <Route path="/output/methodology" element={<MethodologyOutput />} />
       <Route path="/output/l2r-model" element={<L2RModelOutput />} />
+      <Route path="/output/business-definition-experience" element={<BusinessDefinitionExperience />} />
       <Route
         path="/admin/*"
         element={

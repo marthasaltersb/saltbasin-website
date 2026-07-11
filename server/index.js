@@ -43,6 +43,7 @@ import leadIntegrationsRouter from './routes/leadIntegrations.js';
 import journeyRodsRouter from './routes/journeyRods.js';
 import commerceRouter, { stripeWebhookHandler } from './routes/commerce.js';
 import feedbackRouter from './routes/feedback.js';
+import orgPortalRouter from './routes/orgPortal.js';
 
 // Safety net: an unhandled promise rejection in any async route handler
 // (e.g. a bad column reference in a PATCH) is fatal by default in Node —
@@ -103,6 +104,7 @@ app.use('/api/journey-rods', journeyRodsRouter);
 app.use('/api/members', membersRouter);
 app.use('/api/member-site', memberSiteRouter);
 app.use('/api/member-config', memberConfigRouter);
+app.use('/api/org-portal', orgPortalRouter);
 app.use('/api/backlog', backlogRouter);
 app.use('/api/methodology-stats', methodologyStatsRouter);
 app.use('/api/qa', qaRouter);

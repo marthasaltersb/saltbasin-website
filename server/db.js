@@ -740,6 +740,21 @@ async function bootstrap() {
     CREATE INDEX IF NOT EXISTS idx_org_memberships_user ON org_memberships (user_id);
     CREATE INDEX IF NOT EXISTS idx_org_memberships_org  ON org_memberships (org_id);
 
+    CREATE TABLE IF NOT EXISTS org_sites (
+      org_id BIGINT NOT NULL REFERENCES organization_profiles(id) ON DELETE CASCADE,
+      kind TEXT NOT NULL CHECK (kind IN ('draft', 'published')),
+      data TEXT NOT NULL,
+      updated_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      PRIMARY KEY (org_id, kind)
+    );
+    CREATE TABLE IF NOT EXISTS org_configs (
+      org_id BIGINT NOT NULL REFERENCES organization_profiles(id) ON DELETE CASCADE,
+      kind TEXT NOT NULL CHECK (kind IN ('draft', 'published')),
+      data TEXT NOT NULL,
+      updated_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      PRIMARY KEY (org_id, kind)
+    );
+
     -- One-shot, idempotent: the 'owner' role was folded into 'admin' — an org
     -- admin already has full management rights, and ownership stakes are a
     -- separate (not-yet-modeled) concept. No-ops once no 'owner' rows remain.

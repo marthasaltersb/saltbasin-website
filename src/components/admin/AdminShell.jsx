@@ -155,10 +155,20 @@ function instantiatePageSections(pageTypes, typeId, key, pageName) {
 //   'member' — the logged-in member's own site. Hides Leads + Net Works.
 // Both scopes use the same Sidebar / EditorPane / PreviewPane / ConfigPanel —
 // only the API endpoints and the chrome differ.
-export default function AdminShell({ scope = 'admin' }) {
+export default function AdminShell({ scope = 'admin', orgId = null }) {
   const nav = useNavigate();
-  const isMember = scope === 'member';
-  const apis = isMember
+  const isOrg = scope === 'org-admin' || scope === 'org-user';
+  const readOnly = scope === 'org-user';
+  const isMember = scope !== 'admin';
+  const apis = isOrg
+    ? {
+        getSite: () => api.getOrgSite(orgId),
+        saveSite: (site) => api.saveOrgSite(orgId, site),
+        publish: () => api.publishOrgPortal(orgId),
+        getConfig: () => api.getOrgConfig(orgId),
+        saveConfig: (config) => api.saveOrgConfig(orgId, config),
+      }
+    : isMember
     ? {
         getSite:    api.getMemberDraftSite,
         saveSite:   api.saveMemberDraftSite,
@@ -273,7 +283,7 @@ export default function AdminShell({ scope = 'admin' }) {
   // single-Hero behavior) if the API is unreachable.
   useEffect(() => {
     let cancelled = false;
-    const fetchTypes = isMember ? api.getMemberPageTypes : api.getPageTypes;
+    const fetchTypes = isOrg ? () => api.getOrgPageTypes(orgId) : isMember ? api.getMemberPageTypes : api.getPageTypes;
     fetchTypes()
       .then((data) => {
         if (cancelled) return;
@@ -281,7 +291,7 @@ export default function AdminShell({ scope = 'admin' }) {
       })
       .catch(() => { if (!cancelled) setPageTypes(FALLBACK_PAGE_TYPES); });
     return () => { cancelled = true; };
-  }, [isMember]);
+  }, [isMember, isOrg, orgId]);
 
   // When the active view changes, ensure `tab` is one of that view's tabs.
   // Without this guard, switching views could leave `tab` pointing at a
@@ -720,7 +730,7 @@ export default function AdminShell({ scope = 'admin' }) {
                 onUpdateSection={updateSection}
               />
             </div>
-            {(view === 'split' || view === 'editor') && (
+            {!readOnly && (view === 'split' || view === 'editor') && (
               <div
                 className="sb-admin-editor"
                 style={
@@ -739,14 +749,14 @@ export default function AdminShell({ scope = 'admin' }) {
                 />
               </div>
             )}
-            {view === 'split' && (
+            {!readOnly && view === 'split' && (
               <SplitDivider
                 dragging={dragging}
                 onMouseDown={(e) => { e.preventDefault(); setDragging(true); }}
                 onDoubleClick={() => setSplitRatio(0.55)}
               />
             )}
-            {(view === 'split' || view === 'preview') && (
+            {(readOnly || view === 'split' || view === 'preview') && (
               <div
                 className="sb-admin-preview"
                 style={
@@ -798,7 +808,7 @@ export default function AdminShell({ scope = 'admin' }) {
           set of "non-publish" tabs is derived from the registry — anything
           in TAB_COMPONENTS is a self-contained panel that handles its own
           persistence, so it gets the PublishBar hidden. */}
-      {!TAB_COMPONENTS[(() => {
+      {!readOnly && !TAB_COMPONENTS[(() => {
         if (!adminNav || isMember) return tab;
         const v = adminNav.views.find((x) => x.id === activeViewId);
         const t = v?.tabs.find((x) => x.id === tab);
