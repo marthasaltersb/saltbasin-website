@@ -3182,7 +3182,7 @@ option {
   border-radius: 12px;
 }
 .sbh-px-metamodel-tier-atom { background: rgba(74,124,142,0.22); color: #AFD3DD; }
-.sbh-px-metamodel-tier-joint { background: rgba(196,132,58,0.22); color: #F0C793; }
+.sbh-px-metamodel-tier-joint { background: rgba(139,155,174,0.24); color: #D7DEE6; }
 .sbh-px-metamodel-tier-molecule { background: rgba(120,93,105,0.28); color: #E3C3D0; }
 .sbh-px-metamodel-node { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 0.8rem 1rem; }
 .sbh-px-metamodel-node b { display: block; font-size: 0.88rem; }

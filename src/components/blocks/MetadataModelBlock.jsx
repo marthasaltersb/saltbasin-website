@@ -5,7 +5,7 @@
 import React from 'react';
 
 const TIER_ORDER = ['atom', 'joint', 'molecule'];
-const TIER_LABEL = { atom: 'Atom', joint: 'Joint', molecule: 'Molecule' };
+const TIER_LABEL = { atom: 'Atom', joint: 'Bonding Rule', molecule: 'Molecule' };
 
 export function MetadataModelDiagramBlock({ section }) {
   const f = section.fields || {};
