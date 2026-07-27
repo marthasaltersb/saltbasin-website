@@ -34,9 +34,17 @@ export default function PublicFooter({ config }) {
         )}
 
         <div className="sb-public-footer-meta">
-          <Link to="/data-notice" className="sb-public-footer-notice">
-            Data & Security Notice
-          </Link>
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            <Link to="/privacy" className="sb-public-footer-notice">
+              Privacy Policy
+            </Link>
+            <Link to="/terms" className="sb-public-footer-notice">
+              Terms of Service
+            </Link>
+            <Link to="/data-notice" className="sb-public-footer-notice">
+              Data & Security Notice
+            </Link>
+          </div>
           <div className="sb-public-footer-copy">
             {site.copyrightLine || '© 2026 Salt Basin Holdings. All rights reserved.'}
           </div>

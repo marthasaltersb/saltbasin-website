@@ -112,9 +112,17 @@ export default function DataNotice() {
             <div style={{ fontFamily: 'var(--sb-font-display)', fontStyle: 'italic', fontSize: '1.1rem', color: 'var(--sb-gold)' }}>
               — Betsy
             </div>
-            <BackLink className="sb-btn sb-btn-outline" style={{ fontSize: '0.72rem', padding: '0.5rem 1.1rem' }}>
-              ← Back to Salt Basin
-            </BackLink>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <Link to="/privacy" style={{ color: 'var(--sb-gold)', fontSize: '0.75rem', textDecoration: 'underline' }}>
+                Privacy Policy
+              </Link>
+              <Link to="/terms" style={{ color: 'var(--sb-gold)', fontSize: '0.75rem', textDecoration: 'underline' }}>
+                Terms of Service
+              </Link>
+              <BackLink className="sb-btn sb-btn-outline" style={{ fontSize: '0.72rem', padding: '0.5rem 1.1rem' }}>
+                ← Back to Salt Basin
+              </BackLink>
+            </div>
           </div>
         </article>
       </div>

@@ -186,7 +186,7 @@ function PersonalProfilePanel() {
 
       <IdentityGraphCard profile={profile} />
 
-      <IntegrationsRoadmapNotice />
+      <IntegrationHub scope="personal" providerGroups={PERSONAL_PROVIDERS} />
     </div>
   );
 }
@@ -504,8 +504,12 @@ function OrgSettingsPanel({ org, onSaved }) {
 }
 
 // ── Integrations roadmap placeholder ─────────────────────────────────────────
-// Third-party connectors are not yet available. Shown wherever IntegrationHub
-// previously rendered until a Salt Basin-native connector is officially launched.
+// Personal-scope connections are now live (see IntegrationHub above) since
+// member_oauth_connections is genuinely keyed by user_id and works for any
+// authenticated member. Org-scoped connections are NOT real yet — there's no
+// org_id column on member_oauth_connections, so an "org" connect would
+// silently store as a personal connection while the UI implied otherwise.
+// This notice stays on the org tab only, until that's actually built.
 function IntegrationsRoadmapNotice() {
   return (
     <div style={{ ...card, borderColor: 'rgba(201,168,76,0.18)' }}>
@@ -514,17 +518,22 @@ function IntegrationsRoadmapNotice() {
         <div style={cardTitle}>Integrations — Under Research</div>
       </div>
       <div style={{ fontSize: '0.75rem', color: 'var(--sb-cream)', lineHeight: 1.65, marginBottom: '0.6rem' }}>
-        Third-party app connections are not available to members at this time. Salt Basin Net Works does not currently hold official partnerships or registered app status with any external platform.
+        Organization-level connections aren't available yet — connect accounts from your Personal Profile tab instead, which is fully supported today.
       </div>
       <div style={{ fontSize: '0.72rem', color: 'var(--sb-dusty)', lineHeight: 1.6 }}>
-        Integration possibilities are actively being researched as the platform evolves. Which connections get built — and when — will depend on where the platform goes. Nothing is committed.
+        Org-scoped connection storage is on the roadmap. Which connections get built — and when — will depend on where the platform goes. Nothing is committed.
       </div>
     </div>
   );
 }
 
-// ── Integration hub (used by both personal and org panels) ───────────────────
-function IntegrationHub({ scope, profileId, providerGroups }) {
+// ── Integration hub (personal-scope connections — matches the real,
+// working member_oauth_connections table, which is keyed only by
+// (user_id, provider): no org-scoped connection storage exists yet, so
+// this is not offered for the org tab (still IntegrationsRoadmapNotice
+// there) to avoid a UI that implies org-scoped storage the backend
+// doesn't actually provide. ─────────────────────────────────────────────
+function IntegrationHub({ scope, providerGroups }) {
   const [expandedGroup, setExpandedGroup] = React.useState(null);
 
   return (
@@ -532,10 +541,14 @@ function IntegrationHub({ scope, profileId, providerGroups }) {
       <div style={cardTitle}>
         {scope === 'personal' ? 'Personal Integrations' : 'Organization Integrations'}
       </div>
-      <div style={{ fontSize: '0.72rem', color: 'var(--sb-dusty)', marginBottom: '0.85rem', lineHeight: 1.6 }}>
+      <div style={{ fontSize: '0.72rem', color: 'var(--sb-dusty)', marginBottom: '0.6rem', lineHeight: 1.6 }}>
         {scope === 'personal'
           ? 'Connect your personal accounts. Data stays private to you and feeds your personal profile and agent.'
           : 'Connect organization data sources. Members with access can use connected data within their licensed products.'}
+      </div>
+      <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.85rem', lineHeight: 1.6, padding: '0.5rem 0.7rem', background: 'rgba(196,132,58,0.08)', borderLeft: '2px solid var(--sb-gold)', borderRadius: 3 }}>
+        Connecting an account shares the scopes you approve with that provider, per our{' '}
+        <a href="/privacy" target="_blank" rel="noreferrer" style={{ color: 'var(--sb-gold)' }}>Privacy Policy</a>.
       </div>
       {providerGroups.map((group) => (
         <div key={group.group} style={{ marginBottom: '0.5rem' }}>
@@ -548,7 +561,7 @@ function IntegrationHub({ scope, profileId, providerGroups }) {
           {expandedGroup === group.group && (
             <div style={{ padding: '0.5rem 0 0.25rem 0' }}>
               {group.providers.map((p) => (
-                <ProviderRow key={p.id} provider={p} scope={scope} profileId={profileId} />
+                <ProviderRow key={p.id} provider={p} />
               ))}
             </div>
           )}
@@ -558,26 +571,26 @@ function IntegrationHub({ scope, profileId, providerGroups }) {
   );
 }
 
-function ProviderRow({ provider, scope, profileId }) {
+function ProviderRow({ provider }) {
   const [status, setStatus] = React.useState(null); // null=loading, false=disconnected, object=connected
 
   React.useEffect(() => {
-    fetch(`/api/oauth/connections?scope=${scope}&profileId=${profileId}&provider=${provider.id}`, { credentials: 'same-origin' })
+    fetch(`/api/oauth/connections`, { credentials: 'same-origin' })
       .then((r) => r.json())
       .then((d) => {
         const match = d.connections?.find((c) => c.provider === provider.id);
         setStatus(match || false);
       })
       .catch(() => setStatus(false));
-  }, [provider.id, scope, profileId]);
+  }, [provider.id]);
 
   function connect() {
-    window.location.href = `/api/oauth/${provider.id}/connect?scope=${scope}&profileId=${profileId}`;
+    window.location.href = `/api/oauth/${provider.id}/connect`;
   }
 
   async function disconnect() {
     if (!window.confirm(`Disconnect ${provider.label}?`)) return;
-    await fetch(`/api/oauth/connections/${provider.id}?scope=${scope}&profileId=${profileId}`, { method: 'DELETE', credentials: 'same-origin' });
+    await fetch(`/api/oauth/connections/${provider.id}`, { method: 'DELETE', credentials: 'same-origin' });
     setStatus(false);
   }
 

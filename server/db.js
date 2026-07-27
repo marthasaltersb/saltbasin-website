@@ -20,6 +20,7 @@
 // boot. ALTER TABLE ADD COLUMN IF NOT EXISTS works natively in Postgres 9.6+.
 import 'dotenv/config';
 import postgres from 'postgres';
+import { generateCareerAtomDefinitions, generateCareerMoleculeDefinitions } from './lib/careerAtomRegistry.js';
 
 const url = process.env.DATABASE_URL;
 if (!url) {
@@ -71,7 +72,133 @@ export const db = {
 // ... ADD COLUMN IF NOT EXISTS works in PG 9.6+ (Supabase is 15+).
 
 async function bootstrap() {
+  // Isolated backfill for the Member Entitlement Provisioning columns added
+  // to journey_data_rods on 2026-07-13 (parent_rod_id, rod_relationship_type,
+  // module_key, provisioning_origin — onboarding_email_status included too,
+  // same gap). All four/five only ever lived inside the CREATE TABLE IF NOT
+  // EXISTS below, which is a no-op on any install where journey_data_rods
+  // already existed (this one has, for a while). Without this ALTER, the
+  // CREATE UNIQUE INDEX statements further down that reference module_key
+  // and parent_rod_id throw "column does not exist" inside the large
+  // unisolated multi-statement block below, aborting bootstrap() entirely
+  // for every process that imports this file — the same failure class as
+  // the v0.17 sessions-table collision documented near the Contribution
+  // Intelligence v0.17 block. Isolated here, ahead of that block, so it
+  // always runs first regardless of the block's own lack of per-statement
+  // isolation. CLAUDE.md's own convention is new columns get an ALTER here;
+  // this batch just missed it.
+  const journeyRodsBackfill = [
+    `ALTER TABLE journey_data_rods ADD COLUMN IF NOT EXISTS parent_rod_id BIGINT REFERENCES journey_data_rods(id) ON DELETE SET NULL`,
+    `ALTER TABLE journey_data_rods ADD COLUMN IF NOT EXISTS rod_relationship_type TEXT`,
+    `ALTER TABLE journey_data_rods ADD COLUMN IF NOT EXISTS module_key TEXT`,
+    `ALTER TABLE journey_data_rods ADD COLUMN IF NOT EXISTS provisioning_origin TEXT`,
+    `ALTER TABLE journey_data_rods ADD COLUMN IF NOT EXISTS onboarding_email_status TEXT NOT NULL DEFAULT 'not_applicable'`,
+    `ALTER TABLE journey_data_rods ADD COLUMN IF NOT EXISTS first_login_at BIGINT`,
+  ];
+  for (const stmt of journeyRodsBackfill) {
+    await sql.unsafe(stmt).catch((e) => console.warn('[db] journey_data_rods Member Entitlement Provisioning column backfill warning (table may not exist yet on first install, which is fine):', stmt, '--', e.message));
+  }
+
   await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS metric_definitions (
+      metric_id TEXT PRIMARY KEY,
+      metric_key TEXT NOT NULL UNIQUE,
+      display_name TEXT NOT NULL,
+      metric_family TEXT NOT NULL,
+      metric_subfamily TEXT,
+      definition_json JSONB NOT NULL,
+      calculation_version TEXT NOT NULL,
+      effective_from BIGINT NOT NULL,
+      effective_to BIGINT,
+      created_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+
+    CREATE TABLE IF NOT EXISTS metric_calculations (
+      id BIGSERIAL PRIMARY KEY,
+      metric_id TEXT NOT NULL REFERENCES metric_definitions(metric_id),
+      variant_key TEXT NOT NULL,
+      calculation_version TEXT NOT NULL,
+      as_of BIGINT NOT NULL,
+      value NUMERIC,
+      unit TEXT NOT NULL,
+      confidence NUMERIC NOT NULL,
+      formula_json JSONB NOT NULL,
+      inputs_json JSONB NOT NULL,
+      methodology TEXT NOT NULL,
+      context_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+      created_by BIGINT,
+      created_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_metric_calculations_lookup
+      ON metric_calculations(metric_id, variant_key, as_of DESC);
+
+    CREATE TABLE IF NOT EXISTS metric_observations (
+      id BIGSERIAL PRIMARY KEY,
+      calculation_id BIGINT NOT NULL UNIQUE REFERENCES metric_calculations(id) ON DELETE CASCADE,
+      entity_type TEXT NOT NULL DEFAULT 'portfolio_company',
+      entity_id TEXT NOT NULL,
+      period_start BIGINT,
+      period_end BIGINT NOT NULL,
+      observed_value NUMERIC,
+      status TEXT NOT NULL DEFAULT 'calculated',
+      created_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+
+    -- Governed scenario vocabulary. Definitions are immutable by
+    -- (scenario_id, version); activation is a separate reviewed decision.
+    CREATE TABLE IF NOT EXISTS scenario_imports (
+      id BIGSERIAL PRIMARY KEY,
+      workbook_hash TEXT NOT NULL UNIQUE,
+      workbook_version TEXT NOT NULL,
+      scenario_count INTEGER NOT NULL,
+      validation JSONB NOT NULL DEFAULT '{}',
+      status TEXT NOT NULL DEFAULT 'pending_review',
+      imported_by BIGINT,
+      imported_at BIGINT NOT NULL,
+      reviewed_by BIGINT,
+      reviewed_at BIGINT
+    );
+    CREATE TABLE IF NOT EXISTS scenario_definition_versions (
+      id BIGSERIAL PRIMARY KEY,
+      scenario_id TEXT NOT NULL,
+      version INTEGER NOT NULL,
+      definition_hash TEXT NOT NULL,
+      signature_id TEXT NOT NULL,
+      definition JSONB NOT NULL,
+      import_id BIGINT REFERENCES scenario_imports(id) ON DELETE RESTRICT,
+      review_status TEXT NOT NULL DEFAULT 'pending_review',
+      active BOOLEAN NOT NULL DEFAULT false,
+      effective_from BIGINT,
+      effective_to BIGINT,
+      created_at BIGINT NOT NULL,
+      reviewed_by BIGINT,
+      reviewed_at BIGINT,
+      UNIQUE (scenario_id, version),
+      UNIQUE (scenario_id, definition_hash)
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_scenario_one_active_version ON scenario_definition_versions (scenario_id) WHERE active = true;
+    CREATE INDEX IF NOT EXISTS idx_scenario_signature ON scenario_definition_versions (signature_id) WHERE active = true;
+    CREATE TABLE IF NOT EXISTS scenario_observations (
+      observation_id TEXT PRIMARY KEY,
+      signature_id TEXT NOT NULL,
+      atom_assignments JSONB NOT NULL,
+      nearest_scenarios JSONB NOT NULL DEFAULT '[]',
+      source_event_id TEXT,
+      customer_id TEXT,
+      contract_id TEXT,
+      evidence JSONB NOT NULL DEFAULT '[]',
+      review_status TEXT NOT NULL DEFAULT 'pending_review',
+      resolution_scenario_id TEXT,
+      reviewer_id BIGINT,
+      review_note TEXT,
+      created_at BIGINT NOT NULL,
+      reviewed_at BIGINT
+    );
+    CREATE INDEX IF NOT EXISTS idx_scenario_observation_review ON scenario_observations (review_status, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_metric_observations_entity
+      ON metric_observations(entity_type, entity_id, period_end DESC);
+
     CREATE TABLE IF NOT EXISTS users (
       id            BIGSERIAL PRIMARY KEY,
       email         TEXT NOT NULL UNIQUE,
@@ -245,13 +372,42 @@ async function bootstrap() {
       potential_revenue_cents BIGINT NOT NULL DEFAULT 0,
       actual_revenue_cents BIGINT NOT NULL DEFAULT 0,
       metadata JSONB NOT NULL DEFAULT '{}',
+      -- Member Entitlement Provisioning (2026-07-13): parent_rod_id +
+      -- rod_relationship_type model a *typed rod relationship* — a Member
+      -- Channel Rod spawning a Member Entitlement / Public Site / Career
+      -- Master Channel Rod is rod formation, not a Tributary (a Tributary is
+      -- a bounded scenario divergence within one rod's own lifecycle, per
+      -- terminology-migration-registry.json's own "Member Organization
+      -- Branch -> Member Organization Relationship" precedent, which
+      -- rejected calling an analogous rod-to-rod link a Tributary). See
+      -- server/lib/memberProvisioning.js.
+      parent_rod_id BIGINT REFERENCES journey_data_rods(id) ON DELETE SET NULL,
+      rod_relationship_type TEXT,
+        -- e.g. member_entitlement_provisioning | member_public_site_provisioning
+        --      | member_career_provisioning | member_organization_provisioning (future)
+      module_key TEXT,
+        -- member_entitlement rods only: which module (personal_brand_website, resume_career, ...)
+      provisioning_origin TEXT,
+        -- member_entitlement rods only: direct_to_consumer | organization_provisioned
+      onboarding_email_status TEXT NOT NULL DEFAULT 'not_applicable',
+        -- not_applicable | pending | sent | failed
+      first_login_at BIGINT,
       created_at BIGINT NOT NULL,
       updated_at BIGINT NOT NULL
     );
     CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_lead_type ON journey_data_rods (lead_id, rod_type) WHERE lead_id IS NOT NULL AND user_id IS NULL AND org_id IS NULL;
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_user_type ON journey_data_rods (user_id, rod_type) WHERE user_id IS NOT NULL AND org_id IS NULL;
+    -- A member can hold multiple member_entitlement rods (one per module) —
+    -- refined below to exclude that rod_type from the one-per-(user,type)
+    -- rule, then given its own (user, module_key) uniqueness instead.
+    -- DROP+CREATE changes only the constraint's WHERE clause, not any row
+    -- data, and existing rod_types (member/customer/revenue_lifecycle etc.)
+    -- keep exactly the enforcement they always had.
+    DROP INDEX IF EXISTS idx_rods_user_type;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_user_type ON journey_data_rods (user_id, rod_type) WHERE user_id IS NOT NULL AND org_id IS NULL AND rod_type <> 'member_entitlement';
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_user_entitlement_module ON journey_data_rods (user_id, module_key) WHERE user_id IS NOT NULL AND org_id IS NULL AND rod_type = 'member_entitlement';
     CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_user_org_type ON journey_data_rods (user_id, org_id, rod_type) WHERE user_id IS NOT NULL AND org_id IS NOT NULL;
     CREATE INDEX IF NOT EXISTS idx_rods_org ON journey_data_rods (org_id, rod_type);
+    CREATE INDEX IF NOT EXISTS idx_rods_parent ON journey_data_rods (parent_rod_id);
 
     CREATE TABLE IF NOT EXISTS journey_rod_events (
       id BIGSERIAL PRIMARY KEY,
@@ -342,6 +498,461 @@ async function bootstrap() {
     await sql.unsafe(`INSERT INTO journey_stage_gates (rod_type, stage_key, label, sort_order, created_at, updated_at)
       VALUES ($1,$2,$3,$4,$5,$5) ON CONFLICT (rod_type, stage_key) DO UPDATE SET label=EXCLUDED.label, sort_order=EXCLUDED.sort_order, updated_at=EXCLUDED.updated_at`,
       [gate[0], gate[1], gate[2], gate[3], nowJourney]);
+  }
+
+  // ── EIDOS Operating Model schema (Salt Basin Divergent State Mechanics) ──
+  // Extends the journey_data_rods family above with the layers documented in
+  // docs/eidos-operating-model-playbook.md. Phase 1 is broad-shallow: schema
+  // + basic CRUD for every layer; real settlement-density math, accounting-
+  // topology inference, and Port query/sync execution are deferred to a
+  // later phase (see that doc's "non-goals"). New definition tables carry an
+  // optional org_id column — NULL = global/platform default, set = an
+  // org-scoped override — the same alternate-scope pattern journey_data_rods
+  // already uses for lead_id/user_id/org_id. Already-shipped tables
+  // (journey_metadata_molecules/clusters) are extended with ADD COLUMN only;
+  // their existing UNIQUE constraints are untouched.
+  await sql.unsafe(`
+    -- L2 Evidence Atoms — additive columns onto the already-shipped atom
+    -- definition + instance tables.
+    ALTER TABLE journey_metadata_molecules ADD COLUMN IF NOT EXISTS canonical_definition TEXT;
+    ALTER TABLE journey_metadata_molecules ADD COLUMN IF NOT EXISTS value_domain TEXT;
+    ALTER TABLE journey_metadata_molecules ADD COLUMN IF NOT EXISTS mutability_class TEXT NOT NULL DEFAULT 'revisable';
+    ALTER TABLE journey_rod_evidence ADD COLUMN IF NOT EXISTS effective_from BIGINT;
+    ALTER TABLE journey_rod_evidence ADD COLUMN IF NOT EXISTS effective_to BIGINT;
+    ALTER TABLE journey_rod_evidence ADD COLUMN IF NOT EXISTS lineage_parent_id BIGINT REFERENCES journey_rod_evidence(id) ON DELETE SET NULL;
+
+    -- L3 Semantic Fields — journey_metadata_clusters doubles as "semantic
+    -- field"; alignment_rules is separate from the existing molecule_keys
+    -- membership list because affinity (relevance to a cluster) and
+    -- alignment (compatibility with the cluster's other members) are
+    -- deliberately distinct axes.
+    ALTER TABLE journey_metadata_clusters ADD COLUMN IF NOT EXISTS alignment_rules JSONB NOT NULL DEFAULT '[]';
+
+    CREATE TABLE IF NOT EXISTS journey_atom_affinity_rules (
+      id BIGSERIAL PRIMARY KEY,
+      cluster_key TEXT NOT NULL REFERENCES journey_metadata_clusters(cluster_key) ON DELETE CASCADE,
+      molecule_key TEXT NOT NULL REFERENCES journey_metadata_molecules(molecule_key) ON DELETE CASCADE,
+      org_id BIGINT REFERENCES organization_profiles(id) ON DELETE CASCADE,
+      minimum_affinity NUMERIC NOT NULL DEFAULT 0.5,
+      source_authority_modifier NUMERIC NOT NULL DEFAULT 0,
+      metadata JSONB NOT NULL DEFAULT '{}',
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_affinity_rule_global ON journey_atom_affinity_rules (cluster_key, molecule_key) WHERE org_id IS NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_affinity_rule_org ON journey_atom_affinity_rules (cluster_key, molecule_key, org_id) WHERE org_id IS NOT NULL;
+
+    -- L1 Ports — governed interfaces to external source systems. Governance
+    -- metadata only; does not replace or touch server/lib/oauthProviders.js.
+    CREATE TABLE IF NOT EXISTS data_ports (
+      id BIGSERIAL PRIMARY KEY,
+      port_key TEXT NOT NULL,
+      org_id BIGINT REFERENCES organization_profiles(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      port_type TEXT NOT NULL DEFAULT 'crm',
+      native_system_type TEXT,
+      environment TEXT NOT NULL DEFAULT 'production',
+      query_mode TEXT NOT NULL DEFAULT 'pull',
+      centralization_allowed BOOLEAN NOT NULL DEFAULT true,
+      policy JSONB NOT NULL DEFAULT '{}',
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_data_ports_key_global ON data_ports (port_key) WHERE org_id IS NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_data_ports_key_org ON data_ports (port_key, org_id) WHERE org_id IS NOT NULL;
+
+    CREATE TABLE IF NOT EXISTS port_source_objects (
+      id BIGSERIAL PRIMARY KEY,
+      port_id BIGINT NOT NULL REFERENCES data_ports(id) ON DELETE CASCADE,
+      object_key TEXT NOT NULL,
+      native_object_name TEXT NOT NULL,
+      business_definition TEXT,
+      natural_key_definition TEXT,
+      system_of_record_claim TEXT,
+      metadata JSONB NOT NULL DEFAULT '{}',
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL,
+      UNIQUE(port_id, object_key)
+    );
+
+    CREATE TABLE IF NOT EXISTS port_source_fields (
+      id BIGSERIAL PRIMARY KEY,
+      source_object_id BIGINT NOT NULL REFERENCES port_source_objects(id) ON DELETE CASCADE,
+      field_key TEXT NOT NULL,
+      native_field_name TEXT NOT NULL,
+      business_definition TEXT,
+      value_domain TEXT,
+      editable_roles JSONB NOT NULL DEFAULT '[]',
+      metadata JSONB NOT NULL DEFAULT '{}',
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL,
+      UNIQUE(source_object_id, field_key)
+    );
+
+    -- L5 Settlement — how corroborated a molecule's contribution to one
+    -- specific rod's projection is, computed per (rod, molecule) pair, never
+    -- stored on the atom itself. Table + read path only in this phase; not
+    -- yet wired into journeyRods.js evaluateJourneyRod()'s gate math.
+    CREATE TABLE IF NOT EXISTS journey_rod_settlement_states (
+      id BIGSERIAL PRIMARY KEY,
+      rod_id BIGINT NOT NULL REFERENCES journey_data_rods(id) ON DELETE CASCADE,
+      molecule_key TEXT NOT NULL,
+      settlement_density NUMERIC NOT NULL DEFAULT 0,
+      settlement_class TEXT NOT NULL DEFAULT 'surface',
+        -- surface | water | suspended | sediment | bedrock
+      computed_at BIGINT NOT NULL,
+      metadata JSONB NOT NULL DEFAULT '{}',
+      UNIQUE(rod_id, molecule_key)
+    );
+    CREATE INDEX IF NOT EXISTS idx_settlement_rod ON journey_rod_settlement_states (rod_id);
+
+    -- L6 Journey Rods — a real registry for rod_type, previously a bare TEXT
+    -- column with no canonical list anywhere.
+    CREATE TABLE IF NOT EXISTS journey_rod_types (
+      id TEXT PRIMARY KEY,
+      label TEXT NOT NULL,
+      description TEXT,
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL
+    );
+
+    -- L7 Accounting — Reciprocal Economic-Accounting State Projection
+    -- (Invention 4, docs/salt-basin-divergent-state-mechanics-claim-tree.md
+    -- §9). Skeleton + CRUD only; no posting/GL-sync logic in this phase.
+    CREATE TABLE IF NOT EXISTS accounting_policies (
+      id BIGSERIAL PRIMARY KEY,
+      policy_key TEXT NOT NULL,
+      org_id BIGINT REFERENCES organization_profiles(id) ON DELETE CASCADE,
+      framework TEXT NOT NULL DEFAULT 'GAAP',
+      legal_entity TEXT,
+      jurisdiction TEXT,
+      recognition_rules JSONB NOT NULL DEFAULT '{}',
+      measurement_rules JSONB NOT NULL DEFAULT '{}',
+      allocation_rules JSONB NOT NULL DEFAULT '{}',
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_accounting_policy_global ON accounting_policies (policy_key) WHERE org_id IS NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_accounting_policy_org ON accounting_policies (policy_key, org_id) WHERE org_id IS NOT NULL;
+
+    CREATE TABLE IF NOT EXISTS gl_accounts (
+      id BIGSERIAL PRIMARY KEY,
+      account_key TEXT NOT NULL,
+      org_id BIGINT REFERENCES organization_profiles(id) ON DELETE CASCADE,
+      native_account_id TEXT,
+      legal_entity TEXT,
+      account_type TEXT NOT NULL DEFAULT 'asset',
+        -- asset | liability | equity | revenue | expense
+      normal_balance TEXT NOT NULL DEFAULT 'debit',
+        -- debit | credit
+      semantic_definition TEXT,
+      permitted_event_classes JSONB NOT NULL DEFAULT '[]',
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_gl_account_global ON gl_accounts (account_key) WHERE org_id IS NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_gl_account_org ON gl_accounts (account_key, org_id) WHERE org_id IS NOT NULL;
+
+    CREATE TABLE IF NOT EXISTS accounting_topology_definitions (
+      id BIGSERIAL PRIMARY KEY,
+      topology_key TEXT NOT NULL,
+      org_id BIGINT REFERENCES organization_profiles(id) ON DELETE CASCADE,
+      label TEXT NOT NULL,
+      economic_composition_requirements JSONB NOT NULL DEFAULT '[]',
+      required_account_roles JSONB NOT NULL DEFAULT '[]',
+      balancing_constraints JSONB NOT NULL DEFAULT '{}',
+      policy_id BIGINT REFERENCES accounting_policies(id) ON DELETE SET NULL,
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_topology_def_global ON accounting_topology_definitions (topology_key) WHERE org_id IS NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_topology_def_org ON accounting_topology_definitions (topology_key, org_id) WHERE org_id IS NOT NULL;
+
+    CREATE TABLE IF NOT EXISTS journal_entries (
+      id BIGSERIAL PRIMARY KEY,
+      org_id BIGINT REFERENCES organization_profiles(id) ON DELETE CASCADE,
+      rod_id BIGINT REFERENCES journey_data_rods(id) ON DELETE SET NULL,
+      native_journal_id TEXT,
+      legal_entity TEXT,
+      accounting_date BIGINT,
+      posting_date BIGINT,
+      effective_date BIGINT,
+      currency TEXT NOT NULL DEFAULT 'USD',
+      total_debit NUMERIC NOT NULL DEFAULT 0,
+      total_credit NUMERIC NOT NULL DEFAULT 0,
+      source_type TEXT NOT NULL DEFAULT 'manual',
+      metadata JSONB NOT NULL DEFAULT '{}',
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_journal_entries_org ON journal_entries (org_id);
+    CREATE INDEX IF NOT EXISTS idx_journal_entries_rod ON journal_entries (rod_id);
+
+    CREATE TABLE IF NOT EXISTS journal_entry_lines (
+      id BIGSERIAL PRIMARY KEY,
+      journal_entry_id BIGINT NOT NULL REFERENCES journal_entries(id) ON DELETE CASCADE,
+      line_sequence INTEGER NOT NULL DEFAULT 0,
+      gl_account_id BIGINT REFERENCES gl_accounts(id) ON DELETE SET NULL,
+      debit_amount NUMERIC NOT NULL DEFAULT 0,
+      credit_amount NUMERIC NOT NULL DEFAULT 0,
+      dimensions JSONB NOT NULL DEFAULT '{}',
+      description TEXT,
+      metadata JSONB NOT NULL DEFAULT '{}'
+    );
+    CREATE INDEX IF NOT EXISTS idx_je_lines_entry ON journal_entry_lines (journal_entry_id);
+
+    -- L8 Reciprocal Inference — divergence between an independently-derived
+    -- journey projection and an accounting-implied economic composition for
+    -- the same journey identity. Skeleton + a stub computation entry point
+    -- only; the inference algorithm itself is still research-stage (see the
+    -- claim-tree doc §9).
+    CREATE TABLE IF NOT EXISTS economic_composition_requirements (
+      id BIGSERIAL PRIMARY KEY,
+      topology_id BIGINT NOT NULL REFERENCES accounting_topology_definitions(id) ON DELETE CASCADE,
+      required_composition_type TEXT NOT NULL,
+      required_state JSONB NOT NULL DEFAULT '{}',
+      necessity_type TEXT NOT NULL DEFAULT 'required',
+        -- required | conditional | explanatory
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS reciprocity_comparisons (
+      id BIGSERIAL PRIMARY KEY,
+      rod_id BIGINT NOT NULL REFERENCES journey_data_rods(id) ON DELETE CASCADE,
+      journal_entry_id BIGINT REFERENCES journal_entries(id) ON DELETE SET NULL,
+      actual_coordinate NUMERIC,
+      inferred_coordinate NUMERIC,
+      axial_difference NUMERIC,
+      reciprocity_state TEXT NOT NULL DEFAULT 'indeterminate',
+        -- aligned | divergent | indeterminate
+      computed_at BIGINT NOT NULL,
+      metadata JSONB NOT NULL DEFAULT '{}'
+    );
+    CREATE INDEX IF NOT EXISTS idx_reciprocity_rod ON reciprocity_comparisons (rod_id);
+
+    CREATE TABLE IF NOT EXISTS divergence_states (
+      id BIGSERIAL PRIMARY KEY,
+      rod_id_a BIGINT NOT NULL REFERENCES journey_data_rods(id) ON DELETE CASCADE,
+      rod_id_b BIGINT NOT NULL REFERENCES journey_data_rods(id) ON DELETE CASCADE,
+      axial_divergence NUMERIC NOT NULL DEFAULT 0,
+      density_divergence NUMERIC NOT NULL DEFAULT 0,
+      divergence_rate NUMERIC NOT NULL DEFAULT 0,
+      divergence_acceleration NUMERIC NOT NULL DEFAULT 0,
+      boundary_exceeded BOOLEAN NOT NULL DEFAULT false,
+      computed_at BIGINT NOT NULL,
+      metadata JSONB NOT NULL DEFAULT '{}'
+    );
+    CREATE INDEX IF NOT EXISTS idx_divergence_pair ON divergence_states (rod_id_a, rod_id_b);
+
+    -- Legacy Maturity Observation (migrations/terminology-migration-registry.json
+    -- rule #5: "Maturity Score" -> preferred term "Legacy Maturity Observation",
+    -- targetObjectType historical_observation. Preserves a rod's pre-EIDOS
+    -- stage_score verbatim, with its observation time, as a historical fact —
+    -- explicitly NOT equated to journey coordinate or settlement (that's
+    -- journey_rod_settlement_states, computed independently from real
+    -- evidence). journey_data_rods.stage_score itself is never renamed or
+    -- dropped; this is an additive preservation record, not a replacement.
+    CREATE TABLE IF NOT EXISTS historical_observations (
+      id BIGSERIAL PRIMARY KEY,
+      rod_id BIGINT NOT NULL REFERENCES journey_data_rods(id) ON DELETE CASCADE,
+      observation_type TEXT NOT NULL DEFAULT 'legacy_maturity_score',
+      observed_value NUMERIC,
+      observed_at BIGINT NOT NULL,
+      source_term TEXT NOT NULL DEFAULT 'stage_score',
+      metadata JSONB NOT NULL DEFAULT '{}',
+      created_at BIGINT NOT NULL,
+      UNIQUE(rod_id, observation_type, observed_at)
+    );
+    CREATE INDEX IF NOT EXISTS idx_historical_observations_rod ON historical_observations (rod_id);
+
+    -- Loop 14 (§38 Real-Time Multi-User Collaboration) — presence slice.
+    -- Full scope (real-time transport + Agent collaborative-reasoning
+    -- compilation across simultaneous users) is a larger build than one
+    -- pass; this is the real, working first slice: who is at a checkpoint
+    -- right now, doing what, visible to whom. TTL-expired via last_seen_at
+    -- rather than a hard delete-on-disconnect, since there is no websocket
+    -- transport yet — the API layer (server/routes/presence.js) is a
+    -- heartbeat/poll model, upgradeable to push transport later without a
+    -- schema change.
+    CREATE TABLE IF NOT EXISTS checkpoint_presence (
+      id BIGSERIAL PRIMARY KEY,
+      rod_id BIGINT NOT NULL REFERENCES journey_data_rods(id) ON DELETE CASCADE,
+      checkpoint_stage TEXT NOT NULL,
+      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      selected_molecule_key TEXT,
+      active_agent_id TEXT,
+      action_state TEXT NOT NULL DEFAULT 'viewing',
+        -- viewing | editing | proposing
+      visibility_scope TEXT NOT NULL DEFAULT 'ORGANIZATION_SHARED',
+        -- reuses the canonical Data Scope enum (server/lib/financialPolicyRegistry.js DATA_SCOPES)
+      last_seen_at BIGINT NOT NULL,
+      created_at BIGINT NOT NULL,
+      UNIQUE(rod_id, user_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_checkpoint_presence_rod ON checkpoint_presence (rod_id, last_seen_at);
+
+    -- Resume Output Projection (master-org-admin-config.md §5, 2026-07-16).
+    -- "A Resume Output is a projection of the canonical Career state ... Do
+    -- not create a second resume data record. Create an Output Projection."
+    -- The existing member_json_store 'resume_presets' blob remains the
+    -- reusable CONFIGURATION (template/layout/section choices) — this table
+    -- is the separate, new thing: a lineage-tracked snapshot of *when* a
+    -- member generated output from that configuration and what Career state
+    -- backed it, so staleness can be detected without silently rewriting an
+    -- approved output.
+    CREATE TABLE IF NOT EXISTS resume_output_projections (
+      id BIGSERIAL PRIMARY KEY,
+      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      preset_id TEXT NOT NULL,
+      preset_name TEXT,
+      included_sections JSONB NOT NULL DEFAULT '[]',
+      career_state_fingerprint TEXT NOT NULL,
+      atom_count INTEGER NOT NULL DEFAULT 0,
+      generated_at BIGINT NOT NULL,
+      effective_career_state_at BIGINT NOT NULL,
+      output_status TEXT NOT NULL DEFAULT 'draft',
+        -- draft | approved | published | archived
+      lineage_root_id BIGINT REFERENCES resume_output_projections(id) ON DELETE SET NULL,
+      target_job_description TEXT,
+      targeting_result JSONB,
+      created_at BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_resume_output_projections_user ON resume_output_projections (user_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_resume_output_projections_lineage ON resume_output_projections (lineage_root_id);
+  `);
+  // Additive — job-description-targeted resume output (2026-07-27). Both
+  // columns are nullable and absent for every pre-existing projection row.
+  await sql.unsafe(`ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS target_job_description TEXT`)
+    .catch((e) => console.warn('[db] resume_output_projections target_job_description backfill warning:', e.message));
+  await sql.unsafe(`ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS targeting_result JSONB`)
+    .catch((e) => console.warn('[db] resume_output_projections targeting_result backfill warning:', e.message));
+
+  // Legacy Maturity Observation backfill — insert-only, one snapshot per rod
+  // of its stage_score at the time this migration ran. Never re-runs for a
+  // rod that already has one (ON CONFLICT DO NOTHING), so a later stage_score
+  // change creates a new observation on the *next* explicit backfill rather
+  // than silently rewriting history here.
+  await sql.unsafe(`
+    INSERT INTO historical_observations (rod_id, observation_type, observed_value, observed_at, source_term, metadata, created_at)
+    SELECT r.id, 'legacy_maturity_score', r.stage_score, r.updated_at, 'stage_score',
+      '{"migrationRule":"terminology-migration-registry.json#Maturity Score","note":"Preserved verbatim; not equated to journey coordinate or settlement."}'::jsonb,
+      EXTRACT(EPOCH FROM NOW())::bigint*1000
+    FROM journey_data_rods r
+    WHERE NOT EXISTS (
+      SELECT 1 FROM historical_observations h WHERE h.rod_id = r.id AND h.observation_type = 'legacy_maturity_score'
+    );
+  `);
+
+  // Canonical Atom + Semantic Field seed — journey_metadata_molecules/
+  // journey_metadata_clusters were real, empty tables (schema shipped, zero
+  // rows). This is the master build prompt's own §34 worked example
+  // ("How does ARR relate to pipeline, onboarded customers, and actual user
+  // adoption?"), used verbatim as the seed source rather than invented
+  // business vocabulary — insert-only, never overwrites an admin's later
+  // edit to label/definition/is_active.
+  const nowAtomSeed = Date.now();
+  for (const [key, label, dataType, canonicalDefinition, valueDomain] of [
+    ['arr', 'ARR', 'currency', 'Annual recurring revenue attributed to this Channel Rod.', 'currency_usd'],
+    ['opportunity_amount', 'Opportunity Amount', 'currency', 'Total contract value of the open opportunity.', 'currency_usd'],
+    ['probability', 'Probability', 'percentage', 'Sales-stage-derived likelihood of the opportunity closing.', 'percentage_0_100'],
+    ['contract_effective_date', 'Contract Effective Date', 'date', 'The date contractual obligations begin.', 'date'],
+    ['onboarding_state', 'Onboarding State', 'enum', 'Where the customer is in provisioning/onboarding.', 'onboarding_state_enum'],
+    ['provisioned_user_count', 'Provisioned User Count', 'integer', 'Number of user seats provisioned under the contract.', 'integer_nonneg'],
+    ['active_user_count', 'Active User Count', 'integer', 'Number of provisioned users observed as actively using the product.', 'integer_nonneg'],
+    ['adoption_rate', 'Adoption Rate', 'percentage', 'active_user_count / provisioned_user_count.', 'percentage_0_100'],
+  ]) {
+    await sql.unsafe(
+      `INSERT INTO journey_metadata_molecules (molecule_key,label,data_type,source_paths,validation_config,is_sensitive,is_active,canonical_definition,value_domain,mutability_class,created_at,updated_at)
+       VALUES ($1,$2,$3,'[]'::jsonb,'{}'::jsonb,false,true,$4,$5,'revisable',$6,$6) ON CONFLICT (molecule_key) DO NOTHING`,
+      [key, label, dataType, canonicalDefinition, valueDomain, nowAtomSeed]
+    );
+  }
+  for (const [key, label, description, moleculeKeys] of [
+    ['revenue_recognition_readiness', 'Revenue Recognition Readiness', 'Master prompt §34 worked example: "How does ARR relate to pipeline?" — the commercial-commitment atoms.', ['arr', 'opportunity_amount', 'probability', 'contract_effective_date']],
+    ['adoption_signal', 'Adoption Signal', 'Master prompt §34 worked example: "...onboarded customers, and actual user adoption?" — the consumption atoms.', ['onboarding_state', 'provisioned_user_count', 'active_user_count', 'adoption_rate']],
+  ]) {
+    await sql.unsafe(
+      `INSERT INTO journey_metadata_clusters (cluster_key,label,description,molecule_keys,completion_rule,minimum_count,is_active,alignment_rules,created_at,updated_at)
+       VALUES ($1,$2,$3,$4::jsonb,'all',NULL,true,'[]'::jsonb,$5,$5) ON CONFLICT (cluster_key) DO NOTHING`,
+      [key, label, description, JSON.stringify(moleculeKeys), nowAtomSeed]
+    );
+  }
+
+  // Career Atom + Career Molecule vocabulary seed (master prompt §77,
+  // 2026-07-16) — generated from server/lib/careerAtomRegistry.js's
+  // table-driven field mapping (79 atoms across 7 entry types) rather than
+  // hand-authored, same reasoning as the scenario generator. Definitions
+  // only; the actual career_* row migration into journey_rod_evidence is a
+  // separate, explicit one-time action (server/lib/careerAtomMigration.js)
+  // since it touches real per-member data, not vocabulary.
+  const nowCareerAtomSeed = Date.now();
+  for (const atom of generateCareerAtomDefinitions()) {
+    await sql.unsafe(
+      `INSERT INTO journey_metadata_molecules (molecule_key,label,data_type,source_paths,validation_config,is_sensitive,is_active,canonical_definition,value_domain,mutability_class,created_at,updated_at)
+       VALUES ($1,$2,$3,'[]'::jsonb,'{}'::jsonb,false,true,$4,NULL,'revisable',$5,$5) ON CONFLICT (molecule_key) DO NOTHING`,
+      [atom.atomKey, atom.label, atom.dataType, `Migrated from legacy ${atom.sourceTable}.${atom.sourceColumn}.`, nowCareerAtomSeed]
+    );
+  }
+  for (const molecule of generateCareerMoleculeDefinitions()) {
+    await sql.unsafe(
+      `INSERT INTO journey_metadata_clusters (cluster_key,label,description,molecule_keys,completion_rule,minimum_count,is_active,alignment_rules,created_at,updated_at)
+       VALUES ($1,$2,$3,$4::jsonb,'all',NULL,true,'[]'::jsonb,$5,$5) ON CONFLICT (cluster_key) DO NOTHING`,
+      [molecule.entryType, molecule.label, `Migrated from legacy ${molecule.sourceTable} rows — one Career Molecule instance per row, distinguished by source_reference on the underlying journey_rod_evidence.`, JSON.stringify(molecule.atomKeys), nowCareerAtomSeed]
+    );
+  }
+
+  // Career Bonding Rules seed (2026-07-27, Career Configuration Overhaul
+  // Phase 1) — journey_atom_affinity_rules was real schema, zero rows for
+  // any Career cluster/atom pair. Every Career Atom belongs to exactly one
+  // Career Molecule (entryType) by deterministic table-column membership
+  // (careerAtomRegistry.js's own generator), so minimum_affinity=1.0 here
+  // records "this atom IS a member of this molecule," not a fuzzy threshold
+  // — the fuzzy-matching case (an uploaded Excel header or AI-proposed
+  // resume field label that doesn't arrive as a real atomKey) is handled at
+  // request time by careerBondingEngine.js's looser DEFAULT_MINIMUM_AFFINITY
+  // against these same atom definitions, not by a second seeded rule set.
+  for (const atom of generateCareerAtomDefinitions()) {
+    await sql.unsafe(
+      `INSERT INTO journey_atom_affinity_rules (cluster_key,molecule_key,minimum_affinity,source_authority_modifier,metadata,is_active,created_at,updated_at)
+       VALUES ($1,$2,1.0,0,'{}'::jsonb,true,$3,$3) ON CONFLICT (cluster_key, molecule_key) WHERE org_id IS NULL DO NOTHING`,
+      [atom.entryType, atom.atomKey, nowCareerAtomSeed]
+    );
+  }
+
+  // journey_rod_types backfill — insert-only (never overwrite an admin's
+  // is_active/label/description edit on a later boot). The 3 shipped types
+  // plus 8 aspirational types from docs/salt-basin-hos-journey-methodology.md,
+  // seeded inactive until an admin turns them on.
+  const nowRodTypes = Date.now();
+  for (const [rtId, rtLabel, rtDescription, rtActive, rtSort] of [
+    ['revenue_lifecycle', 'Revenue Lifecycle', 'Lead through closed revenue and renewal.', true, 0],
+    ['member', 'Member', "An individual's own journey as a portal member.", true, 1],
+    ['customer', 'Customer', "An organization's journey as a paying counterparty.", true, 2],
+    ['fund_deal', 'Fund Deal', 'A private equity or investment fund deal lifecycle.', false, 10],
+    ['portfolio_company', 'Portfolio Company', 'A fund-owned operating company journey.', false, 11],
+    ['contract_obligation', 'Contract Obligation', 'A single contractual obligation lifecycle.', false, 12],
+    ['financial_transaction', 'Financial Transaction', 'A discrete financial transaction lifecycle.', false, 13],
+    ['resource_contribution', 'Resource Contribution', 'An internal resource/staffing contribution lifecycle.', false, 14],
+    ['confidence_reconciliation', 'Confidence Reconciliation', 'Cross-source confidence reconciliation lifecycle.', false, 15],
+    ['product_definition', 'Product Definition', 'A product/offering definition lifecycle.', false, 16],
+    ['value_creation', 'Value Creation', 'A value-creation initiative lifecycle.', false, 17],
+    ['member_entitlement', 'Member Entitlement', 'A Member\'s provisioned access to one product/feature module — one rod per module, formed from the Member Channel Rod.', true, 2],
+    ['public_site', 'Public Site', "A Member's Personal Brand Website/World, governed as a Channel Rod per the Salt Basin data model.", true, 3],
+    ['career_master', 'Career Master', "A Member's Career Master — Career Atoms and Resume Output Projection source, governed as a Channel Rod.", true, 4],
+  ]) {
+    await sql.unsafe(
+      `INSERT INTO journey_rod_types (id, label, description, is_active, sort_order, created_at, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$6) ON CONFLICT (id) DO NOTHING`,
+      [rtId, rtLabel, rtDescription, rtActive, rtSort, nowRodTypes]
+    );
   }
 
   // Lead sessions — password-based access cookie scoped to one lead record.
@@ -447,6 +1058,28 @@ async function bootstrap() {
     CREATE INDEX IF NOT EXISTS idx_audit_actor    ON audit_log (actor_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_audit_entity   ON audit_log (entity_type, entity_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_audit_created  ON audit_log (created_at DESC);
+
+    -- Consent actions (2026-07-16) — the authoritative, timestamped record of
+    -- every consent grant/revoke, modeled on audit_log above. Career Master's
+    -- existing redaction_ack/public_output_validation_ack/
+    -- no_private_name_persistence_ack booleans on career_intake_documents
+    -- stay in place for backward compatibility, but this table (not those
+    -- booleans) is the record of truth going forward: one row per action,
+    -- never overwritten, full history, not a mutable flag. Consent is
+    -- required BEFORE any career configuration/upload/orbit entry — see
+    -- consentRegistry.js.
+    CREATE TABLE IF NOT EXISTS consent_actions (
+      id             BIGSERIAL PRIMARY KEY,
+      user_id        BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      consent_type   TEXT NOT NULL,
+      action         TEXT NOT NULL, -- 'granted' | 'revoked'
+      consent_version TEXT NOT NULL,
+      context        JSONB NOT NULL DEFAULT '{}',
+      ip             TEXT,
+      user_agent     TEXT,
+      created_at     BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_consent_actions_user ON consent_actions (user_id, consent_type, created_at DESC);
   `);
 
   // ── Page events — visitor analytics for member profile pages + platform. ──
@@ -820,6 +1453,80 @@ async function bootstrap() {
     CREATE INDEX IF NOT EXISTS idx_oauth_user         ON oauth_connections (user_id);
     CREATE INDEX IF NOT EXISTS idx_oauth_profile      ON oauth_connections (profile_scope, profile_id);
     CREATE INDEX IF NOT EXISTS idx_oauth_provider     ON oauth_connections (provider);
+
+    -- Personal financial connections are Member-owned. Tokens remain in the
+    -- provider vault/secure token architecture and never become Evidence Atoms.
+    CREATE TABLE IF NOT EXISTS financial_consents (
+      id BIGSERIAL PRIMARY KEY,
+      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      provider_id TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','revoked','expired')),
+      permitted_account_classes JSONB NOT NULL DEFAULT '[]',
+      granted_at BIGINT NOT NULL,
+      revoked_at BIGINT,
+      created_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_financial_consents_user ON financial_consents(user_id);
+
+    CREATE TABLE IF NOT EXISTS external_financial_connections (
+      id BIGSERIAL PRIMARY KEY,
+      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      provider_id TEXT NOT NULL,
+      provider_connection_ref TEXT,
+      connection_type TEXT NOT NULL,
+      consent_id BIGINT NOT NULL REFERENCES financial_consents(id),
+      status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','active','attention_required','revoked','expired')),
+      permitted_account_classes JSONB NOT NULL DEFAULT '[]',
+      security_policy_id TEXT NOT NULL,
+      retention_policy_id TEXT NOT NULL,
+      data_scope TEXT NOT NULL DEFAULT 'MEMBER_PRIVATE' CHECK (data_scope='MEMBER_PRIVATE'),
+      last_successful_refresh_at BIGINT,
+      next_refresh_at BIGINT,
+      metadata JSONB NOT NULL DEFAULT '{}',
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_financial_connections_user ON external_financial_connections(user_id);
+
+    CREATE TABLE IF NOT EXISTS financial_account_definitions (
+      id BIGSERIAL PRIMARY KEY,
+      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      connection_id BIGINT NOT NULL REFERENCES external_financial_connections(id) ON DELETE CASCADE,
+      provider_account_ref TEXT,
+      account_class TEXT NOT NULL CHECK (account_class IN ('checking','savings','money_market','credit_card','personal_loan','unsecured_line_of_credit','other')),
+      liability_class TEXT NOT NULL CHECK (liability_class IN ('unsecured','secured','not_applicable','unknown')),
+      institution_name TEXT NOT NULL,
+      account_display_name TEXT NOT NULL,
+      masked_account_reference TEXT,
+      currency TEXT NOT NULL DEFAULT 'USD',
+      semantic_atom_refs JSONB NOT NULL DEFAULT '{}',
+      connection_status TEXT NOT NULL DEFAULT 'active',
+      security_policy_id TEXT NOT NULL,
+      data_scope TEXT NOT NULL DEFAULT 'MEMBER_PRIVATE' CHECK (data_scope='MEMBER_PRIVATE'),
+      effective_from BIGINT NOT NULL,
+      effective_to BIGINT,
+      created_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      UNIQUE(connection_id, provider_account_ref)
+    );
+    CREATE INDEX IF NOT EXISTS idx_financial_accounts_user ON financial_account_definitions(user_id);
+
+    -- Only derived/authorized outputs may cross into an Organization context.
+    -- Raw connections and account definitions have no org_id column by design.
+    CREATE TABLE IF NOT EXISTS financial_output_shares (
+      id BIGSERIAL PRIMARY KEY,
+      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      org_id BIGINT NOT NULL REFERENCES organization_profiles(id) ON DELETE CASCADE,
+      output_type TEXT NOT NULL,
+      output_payload JSONB NOT NULL,
+      source_account_ids JSONB NOT NULL DEFAULT '[]',
+      data_scope TEXT NOT NULL DEFAULT 'ORGANIZATION_SHARED' CHECK (data_scope='ORGANIZATION_SHARED'),
+      consent_statement TEXT NOT NULL,
+      revoked_at BIGINT,
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_financial_output_shares_member ON financial_output_shares(user_id);
+    CREATE INDEX IF NOT EXISTS idx_financial_output_shares_org ON financial_output_shares(org_id);
 
     -- Keep old table for backward compat during migration — new code writes oauth_connections.
     CREATE TABLE IF NOT EXISTS member_oauth_connections (
@@ -1943,6 +2650,127 @@ async function bootstrap() {
     );
   }
 
+  // ── Contribution Intelligence v2 — Contribution Event model (Phase 1) ─────
+  // Additive alongside the v0.17 backlog-centric methodology above (which
+  // keeps serving /output/methodology unchanged for now — see
+  // docs/salt-basin-contribution-intelligence-progress.md open decisions).
+  // This is the source-agnostic, event-level model from
+  // .claude/skills/salt-basin-contribution-intelligence/reference/master-build-prompt.md
+  // §I/§XIX/§XX: an immutable raw event store, and a versioned, reprocessable
+  // classification layer on top of it. Each statement isolated per the same
+  // rule documented above the v0.17 backlogColumnMigrations block — one
+  // failure must not silently block the rest.
+
+  // raw_events — immutable evidence. `id` is the source adapter's own
+  // deterministic hash (e.g. sha256(file:line:content), matching the pattern
+  // already shipped in scripts/run-codex-contribution-intelligence.mjs) so
+  // every adapter's insert is naturally idempotent via ON CONFLICT DO NOTHING
+  // — no separate dedup bookkeeping table needed. Never UPDATE a row here;
+  // if an adapter needs to correct itself, it inserts a new id.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS raw_events (
+      id                  TEXT PRIMARY KEY,
+      source_platform     TEXT NOT NULL,
+      source_session_id   TEXT,
+      source_message_id   TEXT,
+      source_event_id     TEXT,
+      source_file         TEXT,
+      source_line         INT,
+      source_timestamp    BIGINT,
+      ingested_timestamp  BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      event_type          TEXT,
+      payload_hash        TEXT,
+      observable_evidence TEXT,
+      evidence_type       TEXT,
+      raw_payload         JSONB,
+      created_at          BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+  `).catch((e) => console.warn('[db] raw_events table warning:', e.message));
+
+  await sql.unsafe(`
+    CREATE INDEX IF NOT EXISTS idx_raw_events_platform ON raw_events (source_platform, source_timestamp);
+    CREATE INDEX IF NOT EXISTS idx_raw_events_session  ON raw_events (source_session_id) WHERE source_session_id IS NOT NULL;
+  `).catch((e) => console.warn('[db] raw_events index warning:', e.message));
+
+  // contribution_events — governed semantic interpretation of one or more
+  // raw_events rows. Versioned per §XX: reclassifying a Contribution Event
+  // INSERTs a new row sharing the same contribution_event_id with
+  // attribution_version incremented, rather than UPDATE-ing the prior row's
+  // substantive columns. classification_status on the prior row may move to
+  // 'superseded' — that status flip is metadata about currency, not a
+  // rewrite of what was actually observed/classified at that version.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS contribution_events (
+      row_id                        BIGSERIAL PRIMARY KEY,
+      contribution_event_id         TEXT NOT NULL,
+      attribution_version           INT NOT NULL DEFAULT 1,
+      classification_status         TEXT NOT NULL DEFAULT 'provisional',
+      raw_event_ids                 JSONB,
+      source_platform                TEXT,
+      source_session_id              TEXT,
+      organization_id                TEXT,
+      workspace_id                    TEXT,
+      channel_id                      TEXT,
+      project_id                      TEXT,
+      initiative_id                   TEXT,
+      workstream_id                   TEXT,
+      outcome_id                      TEXT,
+      artifact_id                     TEXT,
+      artifact_version_id             TEXT,
+      contributor_type                TEXT NOT NULL,
+      contributor_id                  TEXT,
+      contributor_role                TEXT,
+      agent_id                        TEXT,
+      model_id                        TEXT,
+      model_version                   TEXT,
+      parent_contribution_event_id    TEXT,
+      causal_predecessor_ids          JSONB,
+      causal_successor_ids            JSONB,
+      effective_timestamp             BIGINT,
+      start_timestamp                 BIGINT,
+      end_timestamp                   BIGINT,
+      estimated_active_duration_min   NUMERIC,
+      estimated_wait_duration_min     NUMERIC,
+      contribution_class              TEXT,
+      contribution_subclass           TEXT,
+      action_type                     TEXT,
+      reasoning_type                  TEXT,
+      decision_type                   TEXT,
+      transformation_type             TEXT,
+      evidence_type                   TEXT,
+      validation_type                 TEXT,
+      confidence                      NUMERIC,
+      scores                          JSONB,
+      raw_input_reference             TEXT,
+      raw_output_reference            TEXT,
+      normalized_semantic_summary     TEXT,
+      evidence_references             JSONB,
+      assumptions                     JSONB,
+      classification_method           TEXT,
+      classification_version          TEXT,
+      created_at                      BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      created_by                      TEXT,
+      updated_at                      BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_by                      TEXT
+    );
+  `).catch((e) => console.warn('[db] contribution_events table warning:', e.message));
+
+  await sql.unsafe(`
+    CREATE INDEX IF NOT EXISTS idx_contrib_events_logical    ON contribution_events (contribution_event_id, attribution_version DESC);
+    CREATE INDEX IF NOT EXISTS idx_contrib_events_current    ON contribution_events (contribution_event_id) WHERE classification_status <> 'superseded';
+    CREATE INDEX IF NOT EXISTS idx_contrib_events_session    ON contribution_events (source_session_id) WHERE source_session_id IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_contrib_events_contributor ON contribution_events (contributor_type, contributor_id);
+    CREATE INDEX IF NOT EXISTS idx_contrib_events_outcome     ON contribution_events (outcome_id) WHERE outcome_id IS NOT NULL;
+  `).catch((e) => console.warn('[db] contribution_events index warning:', e.message));
+
+  // GIN index for the `raw_event_ids ? id` containment check the Phase 2
+  // classifier (scripts/classify-contribution-events.mjs) uses to find
+  // not-yet-classified raw_events. Without this, that NOT EXISTS check
+  // degrades as contribution_events grows past its first (empty-table) run.
+  await sql.unsafe(`
+    CREATE INDEX IF NOT EXISTS idx_contrib_events_raw_ids ON contribution_events USING GIN (raw_event_ids);
+  `).catch((e) => console.warn('[db] contribution_events GIN index warning:', e.message));
+
   // ── Seed: default page_type_definitions into config_state if missing ──
   //
   // Platform-wide "New Page" type taxonomy — a JSON blob under config_state
@@ -1995,6 +2823,39 @@ async function bootstrap() {
       `INSERT INTO config_state (id, data, updated_at) VALUES ($1, $2, $3)`,
       ['page_type_definitions', JSON.stringify(defaultPageTypes), Date.now()]
     );
+  }
+
+  // One-shot: append the "Career Prospect" page type into the existing
+  // page_type_definitions row (the seed-if-missing block above only runs on
+  // a genuinely fresh install — this row already exists in the live DB, so
+  // editing defaultPageTypes above alone would never reach it). Never
+  // renames or removes an existing type.
+  try {
+    const pageTypesRow = await sql.unsafe(`SELECT data FROM config_state WHERE id = 'page_type_definitions'`);
+    if (pageTypesRow.length > 0) {
+      const pageTypes = JSON.parse(pageTypesRow[0].data);
+      pageTypes.types = pageTypes.types || [];
+      const hasCareerProspect = pageTypes.types.some((t) => t.id === 'career-prospect');
+      if (!hasCareerProspect) {
+        pageTypes.types.push({
+          id: 'career-prospect',
+          label: 'Career Prospect',
+          description: 'A guided, evidence-driven view of your career — hero, audience-lens tabs, an auto-populated Career Master rollup, and a member journey stepper.',
+          defaultSections: [
+            { type: 'careerHeroOrbit', name: 'Career Hero', bg: 'cream', fields: { eyebrow: 'MEMBER PROSPECT EXPERIENCE', heading: '{{pageName}}', lede: 'Add your intro here.', statBadges: [] } },
+            { type: 'careerLensTabs', name: 'Choose Your Lens', bg: 'linen', fields: { eyebrow: 'CHOOSE YOUR LENS', heading: 'The experience begins with the question.', lensTabs: [] } },
+            { type: 'careerRollupShowcase', name: 'Career Rollup', bg: 'ivory', fields: { eyebrow: 'CAREER CLAIM OBJECTS', heading: 'Proof, organized like an operating system.', groupBy: 'skills', chartType: 'bar' } },
+            { type: 'careerJourneyStepper', name: 'Member Journey', bg: 'linen', fields: { eyebrow: 'MEMBER JOURNEY', heading: 'The experience adapts to the visitor.', stages: [] } },
+          ],
+        });
+        await sql.unsafe(
+          `UPDATE config_state SET data = $1, updated_at = $2 WHERE id = 'page_type_definitions'`,
+          [JSON.stringify(pageTypes), Date.now()]
+        );
+      }
+    }
+  } catch (e) {
+    console.warn('[db] career-prospect page-type injection skipped:', e.message);
   }
 
   // ── Career master data ────────────────────────────────────────────────────
@@ -2511,6 +3372,78 @@ async function bootstrap() {
     console.warn('[db] feedback nav injection skipped:', e.message);
   }
 
+  // One-shot: inject "EIDOS Operating Model" as its own top-level admin_nav
+  // view (not a tab inside an existing view — it's its own domain). Single
+  // componentId 'eidos' backs all its internal sub-tabs; the component
+  // itself owns its own tab bar (see EidosOperatingModelPanel.jsx), same
+  // pattern as CareerMasterPanel.
+  try {
+    const navRow6 = await sql.unsafe(`SELECT data FROM config_state WHERE id = 'admin_nav'`);
+    if (navRow6.length > 0) {
+      const nav = JSON.parse(navRow6[0].data);
+      nav.views = nav.views || [];
+      const hasEidos = nav.views.some((v) => v.id === 'eidos');
+      if (!hasEidos) {
+        nav.views.push({
+          id: 'eidos', label: 'EIDOS Operating Model', sortOrder: 4, tabs: [
+            { id: 'eidos', label: 'EIDOS Operating Model', componentId: 'eidos', sortOrder: 0 },
+          ],
+        });
+        await sql.unsafe(
+          `UPDATE config_state SET data = $1, updated_at = $2 WHERE id = 'admin_nav'`,
+          [JSON.stringify(nav), Date.now()]
+        );
+      }
+    }
+  } catch (e) {
+    console.warn('[db] eidos nav injection skipped:', e.message);
+  }
+
+  // Metric Intelligence is a governed finance capability surfaced inside
+  // Analytics. Additive and idempotent: existing admin navigation edits are
+  // preserved and only the missing tab is appended.
+  try {
+    const navRows = await sql.unsafe(`SELECT data FROM config_state WHERE id = 'admin_nav'`);
+    if (navRows.length) {
+      const nav = JSON.parse(navRows[0].data);
+      let analytics = (nav.views || []).find((view) => view.id === 'analytics');
+      if (!analytics) {
+        analytics = { id: 'analytics', label: 'Analytics', sortOrder: 5, tabs: [] };
+        nav.views.push(analytics);
+      }
+      analytics.tabs = analytics.tabs || [];
+      if (!analytics.tabs.some((tab) => tab.id === 'metric-intelligence')) {
+        analytics.tabs.push({ id: 'metric-intelligence', label: 'Metric Intelligence', componentId: 'metricIntelligence', sortOrder: 1 });
+        await sql.unsafe(`UPDATE config_state SET data=$1, updated_at=$2 WHERE id='admin_nav'`, [JSON.stringify(nav), Date.now()]);
+      }
+    }
+  } catch (e) {
+    console.warn('[db] metric intelligence nav injection skipped:', e.message);
+  }
+
+  // Additive Website Intelligence workspace. This only updates admin
+  // navigation configuration; it never modifies draft or published site data.
+  try {
+    const navRows = await sql.unsafe(`SELECT data FROM config_state WHERE id = 'admin_nav'`);
+    if (navRows.length > 0) {
+      const nav = JSON.parse(navRows[0].data);
+      nav.views = nav.views || [];
+      if (!nav.views.some((view) => view.id === 'website-intelligence')) {
+        nav.views.push({
+          id: 'website-intelligence', label: 'Website Intelligence', sortOrder: 4.5, tabs: [
+            { id: 'website-intelligence', label: 'Public Site Inventory', componentId: 'websiteIntelligence', sortOrder: 0 },
+          ],
+        });
+        await sql.unsafe(
+          `UPDATE config_state SET data = $1, updated_at = $2 WHERE id = 'admin_nav'`,
+          [JSON.stringify(nav), Date.now()]
+        );
+      }
+    }
+  } catch (e) {
+    console.warn('[db] website intelligence nav injection skipped:', e.message);
+  }
+
   // Compatibility for databases that briefly received the commerce draft
   // with BIGINT package/product identifiers before natural string keys were
   // finalized. Convert in place before seeding the canonical dp.* IDs.
@@ -2684,6 +3617,82 @@ Rod state, per event:
     }
   } catch (e) {
     console.warn('[db] resources-page methodology sections injection skipped:', e.message);
+  }
+
+  // ── Real bonding-rule schema additions (2026-07-27) — Semantic Affinity
+  // Field / dual-scoped bonding rules, per the salt-basin-channel-journey-
+  // architecture skill's reuse-first law. Additive columns only, no new
+  // tables: Atom Clusters stay computed on demand (never a static
+  // pre-declared list — see server/lib/eidosBonding.js), Molecule state
+  // stays event-sourced via journey_rod_events. These columns are what makes
+  // that computation real instead of the static molecule_keys[] approximation
+  // a prior session mistakenly built for Career Molecules (2026-07-16).
+  const bondingRuleBackfill = [
+    `ALTER TABLE journey_rod_evidence ADD COLUMN IF NOT EXISTS magnetic_properties JSONB NOT NULL DEFAULT '[]'`,
+    `ALTER TABLE journey_metadata_clusters ADD COLUMN IF NOT EXISTS attraction_tags JSONB NOT NULL DEFAULT '[]'`,
+    `ALTER TABLE journey_metadata_clusters ADD COLUMN IF NOT EXISTS min_attraction_overlap NUMERIC NOT NULL DEFAULT 1`,
+    `ALTER TABLE journey_atom_affinity_rules ADD COLUMN IF NOT EXISTS scope_type TEXT NOT NULL DEFAULT 'master_data'`,
+    `ALTER TABLE journey_atom_affinity_rules ADD COLUMN IF NOT EXISTS current_key TEXT`,
+  ];
+  for (const stmt of bondingRuleBackfill) {
+    await sql.unsafe(stmt).catch((e) => console.warn('[db] bonding-rule schema backfill warning (safe to ignore on repeat boots):', stmt, '--', e.message));
+  }
+  // CHECK constraint added separately and only once — Postgres has no "ADD
+  // CONSTRAINT IF NOT EXISTS," and errors on re-adding an existing one.
+  try {
+    const hasScopeCheck = await sql.unsafe(`
+      SELECT 1 FROM information_schema.check_constraints WHERE constraint_name = 'journey_atom_affinity_rules_scope_type_check'
+    `);
+    if (hasScopeCheck.length === 0) {
+      await sql.unsafe(`ALTER TABLE journey_atom_affinity_rules ADD CONSTRAINT journey_atom_affinity_rules_scope_type_check CHECK (scope_type IN ('master_data','channel_current'))`);
+    }
+  } catch (e) {
+    console.warn('[db] journey_atom_affinity_rules scope_type check constraint warning:', e.message);
+  }
+
+  // One-shot: give every existing journey_metadata_clusters row (molecule
+  // definition) a real, tag-based attraction field instead of leaving the
+  // new attraction_tags column empty. Generic and platform-wide — applies to
+  // Career's clusters and the pre-existing revenue-lifecycle clusters alike,
+  // not a Career-specific backfill. Default: a molecule attracts atoms
+  // tagged with its own cluster_key, overlap of 1 — the simplest real
+  // bonding rule, refined per-cluster later if a richer field is needed.
+  try {
+    await sql.unsafe(`
+      UPDATE journey_metadata_clusters
+      SET attraction_tags = to_jsonb(ARRAY[cluster_key]), min_attraction_overlap = 1
+      WHERE attraction_tags = '[]'::jsonb
+    `);
+  } catch (e) {
+    console.warn('[db] journey_metadata_clusters attraction_tags backfill warning:', e.message);
+  }
+
+  // One-shot: tag every existing journey_rod_evidence row's magnetic_properties
+  // with its own entryType (from metadata.entryType, already stamped by
+  // careerAtomMigration.js and any other evidence writer that sets it) —
+  // rows migrated before this session's bonding work exist with the
+  // magnetic_properties column defaulted to '[]', which would otherwise make
+  // every Molecule assembly find zero compatible atoms for pre-existing
+  // evidence (confirmed by direct testing, 2026-07-27). Generic, not
+  // Career-specific: applies to any evidence row whose metadata carries an
+  // entryType, from any rod_type.
+  //
+  // Done row-by-row in JS, not a single SQL UPDATE using metadata->>'entryType'
+  // — this adapter's jsonb columns are written as double-encoded JSON text
+  // (confirmed via jsonb_typeof(metadata) = 'string', not 'object', for every
+  // existing row), so Postgres's native ->> operator can't extract from them
+  // server-side. Every other reader of this column already works around the
+  // same quirk with `JSON.parse()` on the JS side; this backfill does the same.
+  try {
+    const untagged = await sql.unsafe(`SELECT id, metadata FROM journey_rod_evidence WHERE magnetic_properties = '[]'::jsonb`);
+    for (const row of untagged) {
+      let meta;
+      try { meta = typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata; } catch { continue; }
+      if (!meta?.entryType) continue;
+      await sql.unsafe(`UPDATE journey_rod_evidence SET magnetic_properties = $1::jsonb WHERE id = $2`, [JSON.stringify([meta.entryType]), row.id]);
+    }
+  } catch (e) {
+    console.warn('[db] journey_rod_evidence magnetic_properties backfill warning:', e.message);
   }
 }
 

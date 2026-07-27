@@ -5,13 +5,16 @@ import PublicNav from './PublicNav.jsx';
 import PublicFooter from './PublicFooter.jsx';
 import Breadcrumbs from './Breadcrumbs.jsx';
 import SaltBasinCrystal from './SaltBasinCrystal.jsx';
+import CrystalMarkField from './CrystalMarkField.jsx';
 import BestyStaffContactSection from './BestyStaffContactSection.jsx';
 import { RenderSection } from './blocks/index.jsx';
+import { defaultSite, defaultConfig } from '../../server/data/defaultSite.js';
+import { useSeoHead } from '../lib/useSeoHead.js';
 
 // Short-lived session cache so repeat navigation within the same tab session
 // doesn't re-fetch site/config on every route change. Cleared implicitly by
 // its own TTL — no manual invalidation needed since it's this short-lived.
-const SESSION_CACHE_KEY = 'sb-public-site-cache-v1';
+const SESSION_CACHE_KEY = `sb-public-site-cache-v2-${import.meta.env.DEV ? 'draft' : 'published'}`;
 const SESSION_CACHE_MS = 60_000;
 
 function readSessionCache() {
@@ -34,6 +37,17 @@ function writeSessionCache(site, config) {
   }
 }
 
+async function retryRequest(load, attempts = 3) {
+  let lastError;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try { return await load(); } catch (error) {
+      lastError = error;
+      if (attempt < attempts - 1) await new Promise((resolve) => setTimeout(resolve, 350 * (attempt + 1)));
+    }
+  }
+  throw lastError;
+}
+
 export default function PublicSite() {
   const [site, setSite] = useState(null);
   const [config, setConfig] = useState(null);
@@ -48,13 +62,32 @@ export default function PublicSite() {
       setConfig(cached.config);
       return;
     }
-    Promise.all([api.getPublishedSite(), api.getPublicConfig()])
+    const loadPublicState = async () => {
+      if (!import.meta.env.DEV) return Promise.all([api.getPublishedSite(), api.getPublicConfig()]);
+      const session = await api.me().catch(() => ({ user: null }));
+      return session?.user
+        ? Promise.all([
+            api.getDraftSite().catch(() => api.getPublishedSite()),
+            api.getDraftConfig().catch(() => api.getPublicConfig()),
+          ])
+        : Promise.all([api.getPublishedSite(), api.getPublicConfig()]);
+    };
+    retryRequest(loadPublicState)
       .then(([s, c]) => {
+        setError(null);
         setSite(s);
         setConfig(c);
         writeSessionCache(s, c);
       })
-      .catch((e) => setError(e.message));
+      .catch((e) => {
+        // Keep the public homepage available through local API cold starts or
+        // brief network interruptions. Canonical defaults are preferable to a
+        // permanent "Request failed" screen and are replaced on next refresh.
+        console.warn('[PublicSite] CMS state unavailable; rendering canonical fallback:', e.message);
+        setError(null);
+        setSite(defaultSite);
+        setConfig(defaultConfig);
+      });
   }, []);
 
   // After data + DOM exist, scroll to any #anchor in the URL (used by the Home
@@ -70,6 +103,33 @@ export default function PublicSite() {
     }
   }, [site, config, location.hash, location.pathname]);
 
+  // Full path slug — supports nested like 'consulting'. Computed above the
+  // loading/error early returns below (not just for the JSX further down) so
+  // useSeoHead can be called unconditionally — hooks must run before any
+  // conditional return (see the EditorPane.jsx blank-screen bug this rule
+  // already caused once, documented in CLAUDE.md).
+  const requestedSlug = params['*'] || '';
+  const pages = site?.pages || {};
+  let currentEntry =
+    Object.entries(pages).find(([, p]) => (p.slug || '') === requestedSlug) ||
+    (requestedSlug === ''
+      ? Object.entries(pages).find(([, p]) => p.slug === '' || !p.slug)
+      : null);
+  if (!currentEntry && requestedSlug === 'consulting/founder') {
+    const fallback = defaultSite.pages['consulting-founder'];
+    const capabilitySummary = defaultSite.pages.home?.sections?.find((section) => section.type === 'industryWheel');
+    currentEntry = ['consulting-founder', {
+      ...fallback,
+      sections: [
+        ...fallback.sections.filter((section) => ['about', 'timeline'].includes(section.type)),
+        ...(capabilitySummary ? [{ ...capabilitySummary, id: 'founder-capability-confidence', name: 'Capability Confidence & Proficiency Summary' }] : []),
+      ],
+    }];
+  }
+  const currentPage = currentEntry ? currentEntry[1] : null;
+
+  useSeoHead(currentPage, { siteName: 'Salt Basin Net Works' });
+
   if (error) {
     return (
       <div style={{ padding: '4rem 2rem', textAlign: 'center' }}>
@@ -78,17 +138,12 @@ export default function PublicSite() {
     );
   }
   if (!site || !config) return <ColdStartLoader />;
-
-  // Full path slug — supports nested like 'consulting'
-  const requestedSlug = params['*'] || '';
-  const pages = site.pages || {};
-  const currentEntry =
-    Object.entries(pages).find(([, p]) => (p.slug || '') === requestedSlug) ||
-    (requestedSlug === ''
-      ? Object.entries(pages).find(([, p]) => p.slug === '' || !p.slug)
-      : null);
   if (!currentEntry) return <NotFound />;
-  const [, currentPage] = currentEntry;
+
+  const configuredSections = currentPage.sections || [];
+  const hasConfiguredBestyStaff = requestedSlug === '' && configuredSections.some(
+    (section) => section.status === 'live' && section.type === 'conversationalDemo'
+  );
 
   const liveSlugs = new Set(
     Object.values(pages)
@@ -96,14 +151,17 @@ export default function PublicSite() {
       .map((p) => (p.slug || '').replace(/^\//, '').replace(/\/$/, ''))
   );
 
-  // Apply admin-configured brand color overrides on saltbasin.net. Scoped to
-  // .sb-public-site-root so admin chrome (/admin/*) keeps the canonical
-  // Salt Basin tokens.
+  // Config-driven brand overrides — matches the pattern already used in
+  // PublicProfile.jsx. This used to be a hardcoded static CSS block
+  // (fixed navy/teal values, never read from config.brand at all), which
+  // silently made the admin-scope "Brand Colors" ConfigPanel card dead code
+  // and fought with the [data-theme] system on tokens every theme also
+  // overrides (regression-gate audit finding, 2026-07-16) — fixed here to
+  // read real config the same way the member profile page already does.
   const brand = config?.brand || {};
-  const brandCss = (brand.primary || brand.accent || brand.ink || brand.paper) ? `
+  const brandCss = brand && Object.keys(brand).length ? `
     .sb-public-site-root {
-      ${brand.primary ? `--sb-navy: ${brand.primary};` : ''}
-      ${brand.primary ? `--sb-navy-deep: ${brand.primary};` : ''}
+      ${brand.primary ? `--sb-navy: ${brand.primary}; --sb-navy-deep: ${brand.primary};` : ''}
       ${brand.accent  ? `--sb-gold: ${brand.accent};` : ''}
       ${brand.ink     ? `--sb-cream: ${brand.ink};` : ''}
       ${brand.paper   ? `--sb-ivory: ${brand.paper};` : ''}
@@ -116,16 +174,45 @@ export default function PublicSite() {
       data-theme={config?.theme || 'strategic'}
     >
       {brandCss && <style>{brandCss}</style>}
+      <CrystalMarkField />
       <PublicNav site={config.site} pages={pages} />
       <Breadcrumbs />
-      {(currentPage.sections || [])
-        .filter((sec) => requestedSlug !== '' || !['startEngagement', 'conversationalDemo'].includes(sec.type))
-        .map((sec) => (
-          <RenderSection key={sec.id} section={sec} config={config} mode="public" liveSlugs={liveSlugs} />
+      {configuredSections.filter((sec) => sec.id !== 'home-founder-highlights' && !['conversationalDemo', 'journeyRods'].includes(sec.type)).map((sec) => (
+          <RenderSection key={sec.id} section={sec} config={{ ...config, homepageSections: currentPage.sections }} mode="public" liveSlugs={liveSlugs} />
         ))}
+      {requestedSlug === '' && <AudiencePathways />}
       {requestedSlug === '' && <BestyStaffContactSection config={config} />}
       <PublicFooter config={config} />
     </div>
+  );
+}
+
+function AudiencePathways() {
+  const pathways = [
+    {
+      id: 'individuals', eyebrow: 'For consumers', title: 'Build your Member Career World',
+      text: 'Organize career evidence once, then turn it into a portfolio, targeted resumes, case studies, and an approved personal brand—with access to enterprise product simulations.',
+      features: ['Career portfolio and case studies', 'Role-targeted resume generation', 'Personal brand publishing', 'Enterprise simulation access'],
+      actions: [{ label: 'Build My Career Portfolio', href: '/signup', primary: true }, { label: 'Enter My Member World', href: '/member' }],
+    },
+    {
+      id: 'organizations', eyebrow: 'For organizations', title: 'Render the enterprise you actually operate',
+      text: 'Use Salt Basin MRS to connect source evidence, definitions, handoffs, financial exposure, and governed agents into one navigable Enterprise Ecosystem.',
+      features: ['Enterprise Ecosystem rendering', 'Evidence normalization and lineage', 'Q2R and financial simulations', 'Policy-bounded agent workforce'],
+      actions: [{ label: 'Explore Solutions & Services', href: '/platform', primary: true }, { label: 'Talk with BestyStaff', href: '#bestystaff' }],
+    },
+  ];
+  return (
+    <section className="sbh-band sbh-audience-band" id="pathways">
+      <div className="sbh-section-head"><p className="sbh-eyebrow">Choose your path</p><h2>For consumers or for organizations</h2><p>Start in the context that matches what you need. Your permissions, products, and simulations adapt to that context.</p></div>
+      <div className="sbh-audience-grid">
+        {pathways.map((pathway) => <article className={`sbh-audience-card sbh-audience-${pathway.id}`} key={pathway.id}>
+          <p className="sbh-card-tag">{pathway.eyebrow}</p><h3>{pathway.title}</h3><p className="sbh-audience-copy">{pathway.text}</p>
+          <ul>{pathway.features.map((feature) => <li key={feature}>{feature}</li>)}</ul>
+          <div className="sbh-audience-actions">{pathway.actions.map((action) => <a key={action.label} className={`sbh-btn ${action.primary ? 'sbh-btn-primary' : 'sbh-btn-secondary'}`} href={action.href}>{action.label}</a>)}</div>
+        </article>)}
+      </div>
+    </section>
   );
 }
 

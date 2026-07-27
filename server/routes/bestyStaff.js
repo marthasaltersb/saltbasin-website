@@ -22,6 +22,8 @@ import { defaultConfig } from '../data/defaultSite.js';
 import { getUserFromCookie } from '../auth.js';
 import { actorScope, buildAgentDataContext, agentDataPolicyPrompt, inferAgentPurpose } from '../lib/agentDataPolicy.js';
 import { classifyEmailDomain } from '../lib/emailDomain.js';
+import { getOrRefresh, invalidate } from '../lib/contextCache.js';
+import { renderContextCacheKey, resolveAgentContextPolicy } from '../lib/agentContextRegistry.js';
 
 const router = Router();
 
@@ -186,10 +188,20 @@ const SOURCE_LABELS = {
   'case-study-portfolio': 'the Case Study Portfolio preview',
   'strategic-operator': 'the Strategic Operator career infographic preview',
   'homepage-contact': 'the Salt Basin homepage contact section',
+  'login': 'the Salt Basin sign-in page',
+  'wayfinding': 'the CrystalMovementSystems wayfinding view',
+};
+
+const SOURCE_POSTURE = {
+  'homepage-contact': 'Treat this as a welcoming first stop and connect their question to the most useful next view.',
+  'lead-record': 'This visitor already has a lead record; treat the exchange as a continuing conversation, not a first touch.',
+  'login': 'They may be an existing member or applicant; check whether they need account help before beginning general intake.',
+  'wayfinding': 'Use the playful Question Queen posture: ask where they came from, what they were looking for, and then one clarifying question at a time until the right question signal is found.',
 };
 
 function buildSystemPrompt(sourceOutput, intakeConfig = {}) {
   const sourceLabel = SOURCE_LABELS[sourceOutput] || 'a preview of Betsy\'s career portfolio';
+  const sourcePosture = SOURCE_POSTURE[sourceOutput] || '';
   const configuredQuestions = Array.isArray(intakeConfig.questions)
     ? intakeConfig.questions
       .filter((q) => q?.enabled !== false && q?.prompt)
@@ -197,7 +209,7 @@ function buildSystemPrompt(sourceOutput, intakeConfig = {}) {
       .map((q) => `- [cluster=${q.cluster || 'general'}; weight=${q.weight || 0}] ${q.prompt}${q.required ? ' (required)' : ' (optional)'}`)
       .join('\n')
     : '';
-  return `You are BestyStaff — Betsy Salter's AI proxy agent at Salt Basin Net Works ("Bottom Lines with a Rising Tide"). You are chatting with a visitor who is viewing ${sourceLabel} on saltbasin.net. You are transparent about being an AI agent acting on Betsy's behalf.
+  return `You are BestyStaff — Betsy Salter's AI proxy agent at Salt Basin Net Works ("Bottom Lines with a Rising Tide"). You are chatting with a visitor who is viewing ${sourceLabel} on saltbasin.net. You are transparent about being an AI agent acting on Betsy's behalf. ${sourcePosture}
 
 You are the API-layer fallback: the chat UI already runs a deterministic cache layer for the opening script (consent, "do you know Betsy", top-5-questions), the closing question, and a bank of guardrail-sensitive answers (Vista/broker claims, license claims, dollar-figure sourcing, "what does Salt Basin do", example-deliverable requests, "who has Betsy worked with", CPQ/billing help, "not ready to talk"). You are only called for turns that bank doesn't cover — open-ended reasoning, coverage matching, JD parsing, and lead submission. If a visitor's free-text message clearly re-asks one of those same guardrail-sensitive topics in a way the keyword bank missed, answer it using the exact same restraint described in the Non-Negotiable Guardrails below rather than improvising.
 
@@ -290,20 +302,43 @@ router.post('/', chatLimiter, async (req, res) => {
     intakeConfig
   );
   const user = await getUserFromCookie(req);
+  // §35 context cache: the lead lookup below is this agent's baseline
+  // context and was previously rebuilt from Postgres on every single chat
+  // turn. leadMemory.id (a stable per-conversation identifier) or the
+  // sb_actor_context cookie is the cache key; a short freshness window
+  // means a multi-turn conversation reuses one lookup instead of re-querying
+  // per message, while still picking up admin edits within ~20s.
+  const contextPolicy = resolveAgentContextPolicy(intakeConfig.contextPolicyKey);
+  if (!contextPolicy) return res.status(503).json({ error: 'BestyStaff context policy is not configured' });
+  const leadCacheId = leadMemory?.id && leadMemory?.token
+    ? renderContextCacheKey(contextPolicy, 'leadMemory', { id: leadMemory.id })
+    : (req.cookies?.sb_actor_context
+        ? renderContextCacheKey(contextPolicy, 'actorCookie', { actorKey: req.cookies.sb_actor_context })
+        : null);
   let prior = null;
-  if (leadMemory?.id && leadMemory?.token) {
-    prior = await db.prepare(`
-      SELECT l.email, l.phone, l.answers, l.message
-      FROM portfolio_requests pr
-      JOIN leads l ON l.id = pr.lead_id
-      WHERE pr.id = $1 AND pr.public_token = $2 AND l.merged_into_id IS NULL
-    `).get(Number(leadMemory.id), String(leadMemory.token).slice(0, 64));
-  }
-  if (!prior && req.cookies?.sb_actor_context) {
-    prior = await db.prepare(`
-      SELECT email, phone, answers, message
-      FROM leads WHERE actor_key = $1 AND merged_into_id IS NULL
-    `).get(req.cookies.sb_actor_context);
+  if (leadCacheId) {
+    const cached = await getOrRefresh({
+      cacheId: leadCacheId,
+      agentId: contextPolicy.agentId,
+      contextDomain: contextPolicy.contextDomain,
+      freshnessThresholdMs: contextPolicy.freshnessThresholdMs,
+      invalidationRules: contextPolicy.invalidationRules,
+      loader: async () => {
+        const value = leadMemory?.id && leadMemory?.token
+          ? await db.prepare(`
+              SELECT l.email, l.phone, l.answers, l.message
+              FROM portfolio_requests pr
+              JOIN leads l ON l.id = pr.lead_id
+              WHERE pr.id = $1 AND pr.public_token = $2 AND l.merged_into_id IS NULL
+            `).get(Number(leadMemory.id), String(leadMemory.token).slice(0, 64))
+          : await db.prepare(`
+              SELECT email, phone, answers, message
+              FROM leads WHERE actor_key = $1 AND merged_into_id IS NULL
+            `).get(req.cookies.sb_actor_context);
+        return { value, sourceIds: contextPolicy.sourceIds, securitySlice: actorScope({ user, ownsLead: !!value }) };
+      },
+    });
+    prior = cached.value;
   }
   let minimizedAnswers = prior?.answers || null;
   try {
@@ -366,6 +401,9 @@ router.post('/', chatLimiter, async (req, res) => {
             publicToken: result.publicToken || null,
             leadCapture: result.leadCapture || null,
           };
+          // Source rows changed underneath this cache entry — don't wait out
+          // the freshness window before the next turn sees the new state.
+          if (leadCacheId) invalidate(contextPolicy.agentId, contextPolicy.contextDomain, leadCacheId);
         }
         if (block.name === 'convert_lead_to_member' && result.ok) {
           conversionIntent = result.conversionIntent;

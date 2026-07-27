@@ -7,32 +7,39 @@ import { api } from '../lib/api.js';
 
 const ventures = [
   {
-    tag: 'Flagship product',
-    title: 'SaltTide',
-    mark: 'hourglass',
+    tag: 'Individual member platform',
+    title: 'Salt Basin Net Works',
+    mark: 'founder',
     text:
-      'Credit Health Infrastructure that follows financial context, timing, obligations, rewards, debt signals, and outcome paths as a connected customer network.',
+      'A Member World for turning canonical career evidence into configurable portfolios, targeted resume outputs, and a personal brand site—plus governed access to enterprise product simulations and operating-method experiences.',
   },
   {
-    tag: 'Operating engine',
-    title: 'HandoverOS',
+    tag: 'Flagship enterprise platform',
+    title: 'Salt Basin MRS',
     mark: 'engine',
     text:
-      'Salt Basin Highway Operating System for journey data rods, SaltBridge lineage, SaltTide routing, and every handoff that determines whether a customer stays.',
+      'Measurement Rendering Systems designs, builds, and maintains a client-specific Enterprise Ecosystem—a Salt Basin Net Work—by turning distributed evidence into a governed, visible operating model.',
   },
   {
-    tag: 'Advisory layer',
-    title: 'MESA',
+    tag: 'Consumer intelligence product',
+    title: 'SaltTide™',
+    mark: 'hourglass',
+    text:
+      'Credit-card and unsecured-debt routing intelligence that connects timing, obligations, interest, rewards, cash context, and outcome paths instead of optimizing one transaction in isolation.',
+  },
+  {
+    tag: 'Governed agent product',
+    title: 'BestyStaff',
     mark: 'rings',
     text:
-      'Management, execution, strategy, and assessment services for companies that need senior operating judgment without a slow consulting machine.',
+      'A policy-bounded agent architecture that carries Betsy’s intake, questioning, context, and operating patterns into reusable Member Staff and Channel Rod Staff configurations.',
   },
 ];
 
 const method = [
   ['01', 'Understanding', 'Find the root cause across people, process, systems, data, incentives, and financial exposure.'],
   ['02', 'Rendering', 'Turn the diagnosis into a visible operating model, architecture, scorecard, or board-ready decision artifact.'],
-  ['03', 'Manifesting', 'Execute the change with traceable metrics, clean ownership, and reusable infrastructure for the next decision.'],
+  ['03', 'Measuring', 'Measure the configured change with traceable evidence, clean ownership, and reusable infrastructure for the next decision.'],
 ];
 
 const capabilities = [
@@ -46,60 +53,83 @@ const engagements = [
   ['38B+', 'Semiconductor usage-based billing design'],
   ['9B', 'Industrial automation quote-to-revenue transformation'],
   ['615M', 'Healthcare IT revenue recognition and relisting support'],
-  ['15+', 'Years across enterprise systems, GTM, finance, and transformation'],
+  ['12+', 'Years across enterprise systems, GTM, finance, and transformation'],
+];
+
+const audiencePathways = [
+  {
+    id: 'individuals', eyebrow: 'For individuals', title: 'Build your Member Career World',
+    text: 'Organize career evidence once, then project it into a navigable portfolio, targeted resumes, case studies, and an approved personal brand site. Explore enterprise product simulations from the same Member identity.',
+    features: ['Canonical career evidence', 'Portfolio and case-study outputs', 'Role-targeted resume generation', 'Personal brand publishing', 'Enterprise simulation access'],
+    actions: [
+      { label: 'Build My Career Portfolio', href: '/signup', primary: true },
+      { label: 'Generate a Resume', href: '/output/resume' },
+      { label: 'Enter My Member World', href: '/member' },
+    ],
+  },
+  {
+    id: 'organizations', eyebrow: 'For organizations', title: 'Render the enterprise you actually operate',
+    text: 'Use Salt Basin MRS and the HOS™ methodology to connect source evidence, definitions, Channel Rods, handoffs, financial exposure, and governed agents into one navigable Enterprise Ecosystem.',
+    features: ['Enterprise Ecosystem rendering', 'DataBasin evidence normalization', 'Channel and Channel Rod lineage', 'Q2R and financial simulations', 'Policy-bounded agent workforce'],
+    actions: [
+      { label: 'Explore Salt Basin MRS', href: '/output/methodology', primary: true },
+      { label: 'Run a Product Simulation', href: '/output/business-definition-experience' },
+      { label: 'Talk with BestyStaff', href: '#bestystaff' },
+    ],
+  },
 ];
 
 const explorerObjects = [
   {
     id: 'salttide',
     variant: 'hourglass',
-    label: 'SaltTide',
-    heading: 'Credit Health Infrastructure',
-    text: 'A customer financial network layer for timing, obligations, card paths, reward rules, debt signals, and outcome health.',
-    chips: ['Credit Health', 'Timing', 'Routing', 'Network'],
+    label: 'SaltTide™',
+    heading: 'Consumer credit routing intelligence',
+    text: 'A decision layer for credit-card and unsecured-debt paths that evaluates timing, obligations, interest, rewards, cash context, and downstream financial outcomes together.',
+    chips: ['Credit Cards', 'Unsecured Debt', 'Timing', 'Routing'],
     href: '#ventures',
-    preview: 'Hourglass layer for consumer financial routing, timing, and health.',
-    stat: 'Flagship',
-    statLabel: 'Product venture',
+    preview: 'The buoyant-hourglass product layer for consumer financial routing, timing, and outcome health.',
+    stat: 'B2C',
+    statLabel: 'Intelligence product',
     positionClass: 'explorer-hourglass',
   },
   {
-    id: 'handoveros',
+    id: 'mrs',
     variant: 'token',
-    label: 'HandoverOS',
-    heading: 'Salt Basin Highway Operating System',
-    text: 'The network operating layer for journey data rods in SaltBridge, SaltTide flows, customer handoffs, lineage, and portfolio evidence.',
-    chips: ['Journey Data Rods', 'SaltBridge', 'SaltTide', 'Network'],
+    label: 'Salt Basin MRS',
+    heading: 'Measurement Rendering Systems',
+    text: 'The flagship platform that applies the HOS™ methodology to measure and render a client’s Enterprise Ecosystem as a governed Salt Basin Net Work.',
+    chips: ['Enterprise Ecosystem', 'HOS™', 'Channel Rods', 'DataBasin'],
     href: '/output/methodology',
-    preview: 'Crystal token for following the network, not the object model.',
-    stat: 'Q2R',
-    statLabel: 'Operating layer',
+    preview: 'The enterprise measurement and rendering layer that turns operating evidence into a navigable system.',
+    stat: 'MRS',
+    statLabel: 'Flagship platform',
     positionClass: 'explorer-token',
   },
   {
-    id: 'mesa',
+    id: 'bestystaff',
     variant: 'table',
-    label: 'MESA',
-    heading: 'Advisory worktable',
-    text: 'Management, execution, strategy, and assessment services for companies that need senior operators and reusable executive outputs.',
-    chips: ['Advisory', 'Strategy', 'Assessment', 'Delivery'],
-    href: '/consulting/services',
-    preview: 'Round-top crystal table for board-ready decisions and executive artifacts.',
-    stat: 'MESA',
-    statLabel: 'Services layer',
+    label: 'BestyStaff',
+    heading: 'Policy-bounded operating agents',
+    text: 'Reusable agent templates grounded in governed context, explicit authority, and the current Member, Organization, Channel, and security scope.',
+    chips: ['Agent Boundaries', 'Member Staff', 'Channel Rod Staff', 'Context'],
+    href: '#bestystaff',
+    preview: 'The governed workforce layer for intake, definitions, questions, and operating action.',
+    stat: 'Agentic',
+    statLabel: 'Workforce layer',
     positionClass: 'explorer-table',
   },
   {
     id: 'career',
     variant: 'founder',
-    label: 'Career Portfolio',
-    heading: 'Founder career solar system',
-    text: 'A 3D portfolio journey through job history, case studies, industries, skills, capabilities, engagement scale, and technology coverage.',
-    chips: ['24 Engagements', '12+ Industries', '12+ Years', 'Portfolio Outputs'],
+    label: 'Member Career World',
+    heading: 'Career portfolio and resume generator',
+    text: 'A Member-scoped experience that turns canonical career evidence into navigable portfolios, role-targeted resume outputs, case studies, and approved personal-brand content without duplicating the underlying career truth.',
+    chips: ['Career Evidence', 'Resume Outputs', 'Portfolio', 'Product Simulations'],
     href: '#career-system',
-    preview: 'Metallic pink founder object that opens the career narrative experience.',
-    stat: '24',
-    statLabel: 'Engagement objects',
+    preview: 'The individual Member World for career projections, personal positioning, and governed simulation access.',
+    stat: 'Member',
+    statLabel: 'Personal operating world',
     positionClass: 'explorer-founder',
   },
 ];
@@ -256,8 +286,8 @@ export default function SaltBasinHome({ config, pages }) {
         <section className="sbh-band sbh-band-light" id="ventures">
           <SectionHead
             eyebrow="What Salt Basin builds"
-            title="Two product layers, one operating method"
-            intro="We build for the customer you keep, not just the deal you close. Salt Basin follows the network across customer outcomes, product paths, operating evidence, and reusable institutional memory."
+            title="One semantic architecture for individual and enterprise outcomes"
+            intro="Individual Members use Salt Basin Net Works to build career portfolios, generate targeted resume outputs, publish an approved personal brand, and explore enterprise product simulations. Salt Basin MRS renders enterprise ecosystems, SaltTide™ routes consumer financial decisions, and BestyStaff supplies governed agent capacity across those contexts."
           />
           <div className="sbh-venture-grid">
             {ventures.map((item) => (
@@ -271,6 +301,24 @@ export default function SaltBasinHome({ config, pages }) {
               </article>
             ))}
           </div>
+        </section>
+
+        <section className="sbh-band sbh-audience-band" id="pathways">
+          <SectionHead eyebrow="Choose your operating context" title="Start with your career world or your enterprise world" intro="One canonical Member identity can move between personal and authorized organization contexts. Data scope, agent authority, and available simulations change with the context—not your identity." />
+          <div className="sbh-audience-grid">
+            {audiencePathways.map((pathway) => (
+              <article className={`sbh-audience-card sbh-audience-${pathway.id}`} key={pathway.id}>
+                <p className="sbh-card-tag">{pathway.eyebrow}</p>
+                <h3>{pathway.title}</h3>
+                <p className="sbh-audience-copy">{pathway.text}</p>
+                <ul>{pathway.features.map((feature) => <li key={feature}>{feature}</li>)}</ul>
+                <div className="sbh-audience-actions">
+                  {pathway.actions.map((action) => <a key={action.label} className={`sbh-btn ${action.primary ? 'sbh-btn-primary' : 'sbh-btn-secondary'}`} href={action.href}>{action.label}</a>)}
+                </div>
+              </article>
+            ))}
+          </div>
+          <p className="sbh-simulation-note">Simulation access is governed by context: public demonstrations introduce the method, Member simulations support individual exploration, and organization-authorized simulations may use scoped enterprise evidence.</p>
         </section>
 
         <section className="sbh-band sbh-method-band" id="method">

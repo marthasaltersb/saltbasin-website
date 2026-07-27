@@ -13,6 +13,7 @@ import { defaultMemberProfile } from '../data/defaultMemberProfile.js';
 import { verifyRecaptcha } from '../lib/recaptcha.js';
 import { sendVerificationEmail } from '../lib/email.js';
 import { audit } from '../lib/audit.js';
+import { recordConsent } from '../lib/consentRegistry.js';
 import { resumeUrlFromPreset, pickPrimaryPreset, normalizePrimaryFlags } from '../lib/resumePresets.js';
 import { makeRateLimiter } from '../lib/rateLimit.js';
 import { ensureMemberJourneyRods } from '../lib/journeyRods.js';
@@ -53,7 +54,7 @@ async function uniqueSlugFor(base) {
 // LeadView.jsx. Callers still passing fromLead params are redirected there
 // instead of getting a fresh-password account.
 router.post('/signup', signupLimiter, async (req, res) => {
-  const { email, password, displayName, requestedSlug, fromLeadPublicId, fromLeadToken, recaptchaToken } =
+  const { email, password, displayName, requestedSlug, fromLeadPublicId, fromLeadToken, recaptchaToken, agreedToTerms } =
     req.body || {};
   if (fromLeadPublicId || fromLeadToken) {
     return res.status(410).json({
@@ -65,10 +66,15 @@ router.post('/signup', signupLimiter, async (req, res) => {
   if (!publicSignupEnabled) {
     return res.status(403).json({ error: 'Member creation is currently invite-only.' });
   }
+  if (agreedToTerms !== true) {
+    return res.status(400).json({ error: 'You must agree to the Terms of Service and Privacy Policy.' });
+  }
   const captcha = await verifyRecaptcha(recaptchaToken, 'signup');
   if (!captcha.ok) return res.status(400).json({ error: captcha.error || 'captcha verification failed' });
   const created = await createMember(email, password, displayName);
   if (created.error) return res.status(400).json({ error: created.error });
+
+  await recordConsent(created.id, 'platform_terms', true, { ip: req.ip, userAgent: req.get('user-agent') });
 
   const base = slugify(requestedSlug || displayName || email.split('@')[0]);
   const slug = await uniqueSlugFor(base);

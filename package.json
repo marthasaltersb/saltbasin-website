@@ -8,9 +8,18 @@
     "client": "vite",
     "server": "node --watch server/index.js",
     "build": "vite build",
+    "postbuild": "node scripts/run-codex-contribution-intelligence.mjs",
+    "contribution:codex": "node scripts/run-codex-contribution-intelligence.mjs",
+    "contribution:claude": "node scripts/run-claude-contribution-intelligence.mjs",
+    "contribution:import-codex": "node scripts/import-codex-raw-events.mjs",
     "start": "node server/index.js",
     "preview": "vite preview",
-    "seed": "node server/data/seed.js"
+    "seed": "node server/data/seed.js",
+    "verify:metrics": "node scripts/verify-metric-intelligence.mjs",
+    "scenarios:import": "node scripts/run-scenario-import.mjs",
+    "scenarios:validate": "node scripts/validate-scenario-registry.mjs",
+    "scenarios:fixture": "node scripts/generate-scenario-fixture.mjs",
+    "test:scenarios": "node --test tests/scenarios.test.js"
   },
   "engines": {
     "node": ">=22.5.0"
@@ -27,13 +36,19 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "mammoth": "^1.12.0",
     "multer": "^2.1.1",
+    "pdf-parse": "^2.4.5",
     "postgres": "^3.4.9",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.1.1",
     "recharts": "^3.8.1",
-    "vite": "^6.0.7"
+    "three": "^0.185.1",
+    "vite": "^6.0.7",
+    "xlsx": "^0.18.5",
+    "zod": "^4.4.3",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "concurrently": "^9.1.0",

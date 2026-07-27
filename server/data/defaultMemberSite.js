@@ -23,6 +23,10 @@ export function defaultMemberSite({ displayName, email, slug = '' }) {
         navLabel: '',
         navGroup: '',
         hideFromNav: false,
+        seo: {
+          title: `${name} | Salt Basin Net Works`,
+          description: `${name}'s professional profile on Salt Basin Net Works.`,
+        },
         sections: [
           {
             id: 'home-hero',
@@ -106,6 +110,10 @@ export function defaultMemberSite({ displayName, email, slug = '' }) {
         navLabel: '',
         navGroup: '',
         hideFromNav: false,
+        seo: {
+          title: `About ${name} | Salt Basin Net Works`,
+          description: `Background, approach, and career arc for ${name}.`,
+        },
         sections: [
           {
             id: 'about-hero',
@@ -164,6 +172,10 @@ export function defaultMemberSite({ displayName, email, slug = '' }) {
         navLabel: 'Resume',
         navGroup: '',
         hideFromNav: false,
+        seo: {
+          title: `${name}'s Resume | Salt Basin Net Works`,
+          description: `Professional background and career history for ${name}.`,
+        },
         sections: [
           {
             id: 'resume-hero',
@@ -256,6 +268,10 @@ export function defaultMemberSite({ displayName, email, slug = '' }) {
         navLabel: '',
         navGroup: '',
         hideFromNav: false,
+        seo: {
+          title: `Contact ${name} | Salt Basin Net Works`,
+          description: `Get in touch with ${name}.`,
+        },
         sections: [
           {
             id: 'contact-hero',

@@ -50,6 +50,20 @@ export const TEMPLATE_CATEGORIES = [
         fields: { heading: 'By the Numbers', stat1Value: '0', stat1Label: 'Metric One', stat2Value: '0', stat2Label: 'Metric Two', stat3Value: '0', stat3Label: 'Metric Three' },
         defaultCols: 3,
       },
+      {
+        id: 'marketingHooks', type: 'marketingHooks', label: 'Marketing Hooks', icon: '🪝',
+        desc: 'Click-driven product hooks with a fixed-height pitch + simulation stage — no auto-rotation, no page reflow.',
+        accent: '#c4843a',
+        fields: {
+          eyebrow: 'Explore the family',
+          heading: 'Pick a hook. See the product move.',
+          intro: 'One quick pitch and one tiny simulation per product — no waiting, no rotating carousel.',
+          hooks: [
+            { id: 'product-1', productLabel: 'Product One', hookLine: 'The one-line hook that grabs attention.', teaser: 'A short teaser pitch, one to two sentences.', metricValue: '0', metricLabel: 'Proof point', simSteps: 'Step one,Step two,Step three', ctaLabel: 'Learn more', ctaLink: '#bestystaff' },
+          ],
+        },
+        defaultCols: 1,
+      },
     ],
   },
   {
@@ -397,6 +411,68 @@ export const TEMPLATE_CATEGORIES = [
             { title: 'Step one title', description: 'What happens in this step.' },
             { title: 'Step two title', description: 'What happens in this step.' },
             { title: 'Step three title', description: 'What happens in this step.' },
+          ],
+        },
+        defaultCols: 1,
+      },
+    ],
+  },
+  {
+    id: 'career-prospect',
+    label: 'Career Prospect',
+    icon: '💎',
+    templates: [
+      {
+        id: 'careerHeroOrbit', type: 'careerHeroOrbit', label: 'Career Hero (Orbit)', icon: '💎',
+        desc: 'Headline + lede with an orbiting crystal visual — the entry point of the Career Prospect layout.',
+        accent: '#4A7C8E',
+        fields: {
+          eyebrow: 'MEMBER PROSPECT EXPERIENCE',
+          heading: "Don't just read the résumé. Traverse the evidence.",
+          lede: 'A guided view of my work at the convergence of strategy, systems, and execution.',
+          statBadges: [{ label: 'Add a stat' }],
+        },
+        defaultCols: 1,
+      },
+      {
+        id: 'careerLensTabs', type: 'careerLensTabs', label: 'Choose Your Lens', icon: '🔀',
+        desc: 'Tabbed audience switcher — each tab shows different framing copy for a different kind of visitor.',
+        accent: '#C4843A',
+        fields: {
+          eyebrow: 'CHOOSE YOUR LENS',
+          heading: 'The experience begins with the question.',
+          lensTabs: [
+            { tabLabel: 'Hiring leader', kicker: 'LEADERSHIP + EXECUTION', title: 'Can I close the gap between plan and execution?', copy: 'Trace the work across strategy, systems, and people.' },
+            { tabLabel: 'Sponsor', kicker: 'PROGRAM + ARCHITECTURE', title: 'Can I turn an ambiguous mandate into an executable plan?', copy: 'See how goals become definitions, decisions, and measurable outcomes.' },
+          ],
+        },
+        defaultCols: 1,
+      },
+      {
+        id: 'careerRollupShowcase', type: 'careerRollupShowcase', label: 'Career Rollup', icon: '📊',
+        desc: 'Auto-populated chart from your Career Master — no typing required, just pick a grouping and chart type.',
+        accent: '#345A68',
+        fields: {
+          eyebrow: 'CAREER CLAIM OBJECTS',
+          heading: 'Proof, organized like an operating system.',
+          intro: 'Rolled up automatically from your own Career Master entries.',
+          groupBy: 'skills',
+          chartType: 'bar',
+        },
+        defaultCols: 1,
+      },
+      {
+        id: 'careerJourneyStepper', type: 'careerJourneyStepper', label: 'Member Journey', icon: '➡️',
+        desc: 'Horizontal stepper describing how a visitor moves through your profile.',
+        accent: '#C4843A',
+        fields: {
+          eyebrow: 'MEMBER JOURNEY',
+          heading: 'The experience adapts to the visitor.',
+          stages: [
+            { label: 'Arrive', sublabel: 'Prospect' },
+            { label: 'Choose lens', sublabel: 'Role context' },
+            { label: 'Inspect claims', sublabel: 'Evidence' },
+            { label: 'Converse', sublabel: 'Next action' },
           ],
         },
         defaultCols: 1,

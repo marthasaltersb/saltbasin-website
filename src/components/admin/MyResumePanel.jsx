@@ -456,6 +456,9 @@ export default function MyResumePanel({ scope = 'member' }) {
   const [editingPreset, setEditingPreset] = useState(null); // preset currently in the editor
   const [showNameModal, setShowNameModal] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [resumeOutputs, setResumeOutputs] = useState([]);
+  const [generatingOutput, setGeneratingOutput] = useState(false);
+  const [targetJobDescription, setTargetJobDescription] = useState('');
 
   // Agent state
   const [jobDesc, setJobDesc] = useState('');
@@ -485,7 +488,41 @@ export default function MyResumePanel({ scope = 'member' }) {
     }
     loadPresets();
     fetchCareerMaster().then(setCareerMaster);
+    loadResumeOutputs();
   }, []);
+
+  function loadResumeOutputs() {
+    api.listResumeOutputs().then((d) => setResumeOutputs(d.projections || [])).catch(() => {});
+  }
+
+  async function generateOutput(preset) {
+    setGeneratingOutput(true);
+    try {
+      await api.createResumeOutput({
+        presetId: preset.id,
+        presetName: preset.name,
+        includedSections: preset.includedSections || [],
+        targetJobDescription: targetJobDescription.trim() || undefined,
+      });
+      loadResumeOutputs();
+      toast.success(
+        targetJobDescription.trim()
+          ? 'Resume output saved — targeting emphasis computed for the job description you pasted.'
+          : 'Resume output saved — this snapshot is now traceable to your current Career Master state.'
+      );
+    } catch (e) {
+      toast.error('Could not save output: ' + e.message);
+    } finally {
+      setGeneratingOutput(false);
+    }
+  }
+
+  async function setOutputStatus(id, status) {
+    try {
+      await api.updateResumeOutputStatus(id, status);
+      loadResumeOutputs();
+    } catch (e) { toast.error(e.message); }
+  }
 
   function loadPresets() {
     fetch('/api/members/me/resume-presets', { credentials: 'include' })
@@ -694,6 +731,18 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
               <button style={S.btn('navy')} onClick={() => { setPreviewUrl(presetPreviewUrl(primaryPreset)); setShowPreview(v => !v); }}>
                 {showPreview ? 'Hide Preview' : 'Preview PDF'}
               </button>
+              <button style={S.btn('teal')} disabled={generatingOutput} onClick={() => generateOutput(primaryPreset)} title="Snapshot this resume against your current Career Master state so you can tell later if it's gone stale">
+                {generatingOutput ? 'Saving…' : 'Save as Output'}
+              </button>
+              <div style={{ width: '100%', marginTop: '0.4rem' }}>
+                <textarea
+                  className="sb-input"
+                  value={targetJobDescription}
+                  onChange={(e) => setTargetJobDescription(e.target.value)}
+                  placeholder="Optional — paste a job description to get emphasis guidance for which of your Career Master categories to foreground in this output"
+                  style={{ fontSize: '0.78rem', minHeight: 60, width: '100%', resize: 'vertical' }}
+                />
+              </div>
               {showPreview && (
                 <button style={S.btn('gold')} onClick={() => {
                   // Printing an embedded iframe is what surfaces "print
@@ -712,6 +761,61 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
                 }}>Print / Save PDF</button>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Resume Output Projection history — master-org-admin-config.md §5.
+          Each row is a lineage-tracked snapshot, not a live re-render; a
+          stale one is flagged, never silently regenerated. */}
+      {resumeOutputs.length > 0 && (
+        <div style={{ marginBottom: '1.5rem' }}>
+          <div style={S.label}>Resume Output History</div>
+          <div style={{ display: 'grid', gap: '0.5rem' }}>
+            {resumeOutputs.map((output) => (
+              <div key={output.id} style={{
+                background: 'white', border: `1px solid ${output.isStale ? 'var(--sb-gold, #c4843a)' : 'rgba(0,0,0,0.1)'}`,
+                borderRadius: 8, padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap',
+              }}>
+                <div style={{ flex: 1, minWidth: 200 }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--sb-navy, #1b2a3b)' }}>
+                    {output.presetName || output.presetId} <span style={{ fontWeight: 400, color: '#999', fontSize: '0.72rem' }}>· {output.atomCount} Career Atoms</span>
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#888' }}>
+                    Generated {new Date(output.generatedAt).toLocaleString()} · <span style={{ textTransform: 'capitalize' }}>{output.outputStatus}</span>
+                  </div>
+                  {output.isStale && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--sb-gold, #c4843a)', marginTop: '0.25rem', fontWeight: 600 }}>
+                      Your Career Channel has {Math.abs(output.atomCountDelta)} atom update{Math.abs(output.atomCountDelta) === 1 ? '' : 's'} not reflected in this resume output.
+                    </div>
+                  )}
+                  {output.targetingResult?.emphasisNote && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--sb-teal-deep, #02a1a6)', marginTop: '0.35rem', lineHeight: 1.5 }}>
+                      🎯 {output.targetingResult.emphasisNote}
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  {output.outputStatus === 'draft' && (
+                    <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setOutputStatus(output.id, 'approved')}>Approve</button>
+                  )}
+                  {output.outputStatus === 'approved' && (
+                    <button style={{ ...S.btn('teal'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setOutputStatus(output.id, 'published')}>Publish</button>
+                  )}
+                  {output.outputStatus !== 'archived' && (
+                    <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setOutputStatus(output.id, 'archived')}>Archive</button>
+                  )}
+                  {output.isStale && (
+                    <button
+                      style={{ ...S.btn('gold'), padding: '4px 10px', fontSize: '0.72rem' }}
+                      onClick={() => generateOutput({ id: output.presetId, name: output.presetName, includedSections: [] })}
+                    >
+                      Regenerate
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

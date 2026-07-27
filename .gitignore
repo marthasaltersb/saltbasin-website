@@ -14,3 +14,9 @@ build specs and status progress/
 master resume.pdf
 spatial visual design config/
 contribution-session-analysis.json
+.codex/contribution-intelligence/codex-observable-events.json
+.codex/contribution-intelligence/codex-sync-checkpoint.json
+
+# Local DB export snapshot — contains real session tokens, password-reset
+# tokens, and password hashes. Never commit this to git history.
+migrations/pre-eidos-snapshot-2026-07-12/

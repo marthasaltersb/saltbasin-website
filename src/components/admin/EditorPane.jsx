@@ -360,7 +360,25 @@ function humanLabel(key) {
     .replace(/^./, (s) => s.toUpperCase());
 }
 
-export default function EditorPane({ section, page, site, onUpdateSection, onUpdatePageStatus, onUpdatePage }) {
+// A cascade rule lives on the TARGET field's own fieldMeta (the field whose
+// Settings panel was open when the rule was authored — see FieldMetaEditor's
+// Cascade tab, "Then filter THIS field's options to…"). `targetField` in the
+// rule shape is unused by the authoring UI; "this field" IS the target.
+// Fails open: no matching rule, or a rule whose filterValues excludes every
+// option, returns the full valueSet rather than hiding the field's own value.
+function cascadeFilteredValueSet(effectiveMeta, sectionFields) {
+  const valueSet = Array.isArray(effectiveMeta.valueSet) ? effectiveMeta.valueSet : [];
+  const cascades = Array.isArray(effectiveMeta.cascades) ? effectiveMeta.cascades : [];
+  const matching = cascades.find(
+    (rule) => rule.triggerField && (sectionFields || {})[rule.triggerField] === rule.triggerValue
+  );
+  if (!matching || !Array.isArray(matching.filterValues) || matching.filterValues.length === 0) return valueSet;
+  const allowed = new Set(matching.filterValues);
+  const filtered = valueSet.filter((opt) => allowed.has(opt.value));
+  return filtered.length > 0 ? filtered : valueSet;
+}
+
+export default function EditorPane({ section, page, site, config, onUpdateSection, onUpdatePageStatus, onUpdatePage }) {
   // All hooks must be declared before any early returns.
   const navGroups = React.useMemo(() => {
     if (!site?.pages) return [];
@@ -458,6 +476,91 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
                 onChange={(e) => onUpdatePage?.({ hideFromNav: e.target.checked })}
               />
               <span style={{ fontSize: '0.82rem', color: 'var(--sb-sage)' }}>Hide from navigation</span>
+            </label>
+          </div>
+
+          <div style={styles.card}>
+            <div style={styles.cardTitle}>SEO &amp; Sharing</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem', lineHeight: 1.55 }}>
+              Controls the browser tab title, search engine listing, and link-preview cards (Slack, Twitter, LinkedIn). Leave blank to use the defaults shown as placeholders.
+            </div>
+            {(() => {
+              // Deterministic suggestion composed from profile data the
+              // member has already entered elsewhere — no AI call, matches
+              // whatever's actually known rather than guessing.
+              const ownerName = config?.site?.ownerName;
+              const suggestedTitle = ownerName ? `${page.name} | ${ownerName}` : '';
+              const suggestedDescription = config?.featured?.homeBlurb || config?.site?.tagline || '';
+              const canSuggest = !!(suggestedTitle || suggestedDescription);
+              return (
+                <div style={{ marginBottom: '0.75rem' }}>
+                  <button
+                    type="button"
+                    className="sb-btn sb-btn-outline"
+                    disabled={!canSuggest}
+                    style={{ padding: '0.35rem 0.8rem', fontSize: '0.68rem', opacity: canSuggest ? 1 : 0.5 }}
+                    onClick={() => onUpdatePage?.({
+                      seo: {
+                        ...page.seo,
+                        title: suggestedTitle || page.seo?.title,
+                        description: suggestedDescription || page.seo?.description,
+                      },
+                    })}
+                  >
+                    ✨ Suggest from profile
+                  </button>
+                  {!canSuggest && (
+                    <div style={{ fontSize: '0.65rem', color: 'var(--sb-dusty)', marginTop: '0.35rem' }}>
+                      Add a display name in Config → Site Identity (or a blurb in the Net Works Banner card) for a suggestion.
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+            <div style={styles.fieldGroup}>
+              <label style={styles.fieldLabel}>Meta Title</label>
+              <input
+                className="sb-input"
+                value={page.seo?.title || ''}
+                placeholder={page.slug ? `${page.name} | Salt Basin Net Works` : 'Salt Basin Net Works'}
+                onChange={(e) => onUpdatePage?.({ seo: { ...page.seo, title: e.target.value } })}
+              />
+            </div>
+            <div style={styles.fieldGroup}>
+              <label style={styles.fieldLabel}>Meta Description</label>
+              <textarea
+                className="sb-input"
+                rows={3}
+                value={page.seo?.description || ''}
+                placeholder="One or two sentences describing this page for search results and link previews."
+                onChange={(e) => onUpdatePage?.({ seo: { ...page.seo, description: e.target.value } })}
+              />
+            </div>
+            <div style={styles.fieldGroup}>
+              <label style={styles.fieldLabel}>Canonical URL (optional override)</label>
+              <input
+                className="sb-input"
+                value={page.seo?.canonical || ''}
+                placeholder={`https://saltbasin.net/${page.slug || ''}`}
+                onChange={(e) => onUpdatePage?.({ seo: { ...page.seo, canonical: e.target.value } })}
+              />
+            </div>
+            <div style={styles.fieldGroup}>
+              <label style={styles.fieldLabel}>Social Share Image URL (optional)</label>
+              <input
+                className="sb-input"
+                value={page.seo?.ogImage || ''}
+                placeholder="https://…"
+                onChange={(e) => onUpdatePage?.({ seo: { ...page.seo, ogImage: e.target.value } })}
+              />
+            </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginTop: '0.25rem' }}>
+              <input
+                type="checkbox"
+                checked={!!page.seo?.noIndex}
+                onChange={(e) => onUpdatePage?.({ seo: { ...page.seo, noIndex: e.target.checked } })}
+              />
+              <span style={{ fontSize: '0.82rem', color: 'var(--sb-sage)' }}>Hide from search engines</span>
             </label>
           </div>
 
@@ -735,11 +838,47 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
               if (Array.isArray(v) && k === 'momentumSteps') {
                 return <MomentumStepListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
               }
-              if (Array.isArray(v) && k === 'nodes') {
+              // decisionTree's `nodes` shares the field name "nodes" with
+              // metadataModelDiagram's, but the shapes are incompatible
+              // ({id,type,question,answer,yes,no} vs {id,tier,label,desc}) —
+              // routing it to MetadataNodeListEditor silently hid every
+              // decisionTree node's actual content (regression-gate audit
+              // finding, 2026-07-16). Falls through to the generic
+              // structured-field editor below instead until a dedicated
+              // decision-tree node editor exists (see follow-up task).
+              if (Array.isArray(v) && k === 'nodes' && section.type !== 'decisionTree') {
                 return <MetadataNodeListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
               }
               if (Array.isArray(v) && k === 'edges') {
                 return <MetadataEdgeListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'hooks') {
+                return <HookListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'statBadges') {
+                return <StatBadgeListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'lensTabs') {
+                return <LensTabListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
+              }
+              if (Array.isArray(v) && k === 'stages') {
+                return <CareerStageListEditor key={k} items={v} onChange={(next) => patchField(k, next)} />;
+              }
+              // careerRollupShowcase's two config dropdowns — a plain string
+              // field would work but a picker matches "select the grouping /
+              // chart type" much better than free text.
+              if (section.type === 'careerRollupShowcase' && (k === 'groupBy' || k === 'chartType')) {
+                const opts = k === 'groupBy'
+                  ? [['skills', 'Skills by category'], ['industry', 'Roles by industry'], ['tools', 'Tools by wheel bucket']]
+                  : [['bar', 'Bar chart'], ['list', 'List'], ['meter', 'Meter grid']];
+                return (
+                  <div key={k} style={styles.fieldGroup}>
+                    {fieldLabel}
+                    <select className="sb-input" value={v || opts[0][0]} onChange={(e) => patchField(k, e.target.value)}>
+                      {opts.map(([val, label]) => <option key={val} value={val}>{label}</option>)}
+                    </select>
+                  </div>
+                );
               }
               // wheelNodes / wheelCenterLabel have their own dedicated "Wheel"
               // card above (industryWheel sections) — skip them here so they
@@ -832,6 +971,108 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
                   </div>
                 );
               }
+              // Safety net for array/object fields no dedicated list editor
+              // exists for yet (confirmed via audit, 2026-07-16: KpiDashboard
+              // .panels, RoadmapBlock.milestones, HeatmapBlock.rows/columns,
+              // LeaderboardBlock.entries, ExecutiveSummaryBlock.contacts,
+              // AppMockupBlock.screens, ChoiceGridBlock.choices,
+              // OutputGeneratorBlock.contentBlocks, AboutIntroBlock
+              // .portfolioLinks, JourneyRodsBlock.channelEvents/
+              // platformBehaviors, MethodologyMathBlock.methodologies/
+              // constants/agentSteps, decisionTree's nodes — above). Without
+              // this, these fell through to the plain &lt;input&gt; below, which
+              // stringifies the array/object on first keystroke and
+              // permanently destroys the structured data. This doesn't give
+              // each one a polished editor, but it stops silent corruption.
+              if (Array.isArray(v) || (v && typeof v === 'object')) {
+                return (
+                  <div key={k} style={styles.fieldGroup}>
+                    {fieldLabel}
+                    {openMetaKey === k && (
+                      <FieldMetaEditor fieldKey={k} meta={effectiveMeta} memberDbs={memberDbs}
+                        onSave={(m) => { updateFieldMeta(k, m); setOpenMetaKey(null); }}
+                        onClose={() => setOpenMetaKey(null)} />
+                    )}
+                    <GenericStructuredFieldEditor fieldKey={k} value={v} onChange={(next) => patchField(k, next)} />
+                  </div>
+                );
+              }
+              // Typed rendering driven by fieldMeta.fieldType — a field with
+              // no fieldType set (every pre-existing field) falls straight
+              // through to the plain text/textarea branch below, unchanged.
+              if (effectiveMeta.fieldType === 'select' || effectiveMeta.fieldType === 'multiselect') {
+                const options = cascadeFilteredValueSet(effectiveMeta, section.fields);
+                const isMulti = effectiveMeta.fieldType === 'multiselect' || !!effectiveMeta.multiSelect;
+                const selected = isMulti ? (Array.isArray(v) ? v : []) : v;
+                return (
+                  <div key={k} style={styles.fieldGroup}>
+                    {fieldLabel}
+                    {openMetaKey === k && (
+                      <FieldMetaEditor fieldKey={k} meta={effectiveMeta} memberDbs={memberDbs}
+                        onSave={(m) => { updateFieldMeta(k, m); setOpenMetaKey(null); }}
+                        onClose={() => setOpenMetaKey(null)} />
+                    )}
+                    {isMulti ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                        {options.map((opt) => (
+                          <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem' }}>
+                            <input
+                              type="checkbox"
+                              checked={selected.includes(opt.value)}
+                              onChange={(e) => {
+                                const next = e.target.checked
+                                  ? [...selected, opt.value]
+                                  : selected.filter((sv) => sv !== opt.value);
+                                patchField(k, next);
+                              }}
+                            />
+                            {opt.label}
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <select className="sb-input" value={selected || ''} onChange={(e) => patchField(k, e.target.value)}>
+                        <option value="">— select —</option>
+                        {options.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                      </select>
+                    )}
+                  </div>
+                );
+              }
+              if (effectiveMeta.fieldType === 'boolean') {
+                return (
+                  <div key={k} style={styles.fieldGroup}>
+                    {fieldLabel}
+                    {openMetaKey === k && (
+                      <FieldMetaEditor fieldKey={k} meta={effectiveMeta} memberDbs={memberDbs}
+                        onSave={(m) => { updateFieldMeta(k, m); setOpenMetaKey(null); }}
+                        onClose={() => setOpenMetaKey(null)} />
+                    )}
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem' }}>
+                      <input type="checkbox" checked={!!v} onChange={(e) => patchField(k, e.target.checked)} />
+                      {v ? 'On' : 'Off'}
+                    </label>
+                  </div>
+                );
+              }
+              if (effectiveMeta.fieldType === 'number') {
+                return (
+                  <div key={k} style={styles.fieldGroup}>
+                    {fieldLabel}
+                    {openMetaKey === k && (
+                      <FieldMetaEditor fieldKey={k} meta={effectiveMeta} memberDbs={memberDbs}
+                        onSave={(m) => { updateFieldMeta(k, m); setOpenMetaKey(null); }}
+                        onClose={() => setOpenMetaKey(null)} />
+                    )}
+                    <input
+                      type="number"
+                      className="sb-input"
+                      value={v ?? ''}
+                      onChange={(e) => patchField(k, e.target.value === '' ? '' : Number(e.target.value))}
+                    />
+                  </div>
+                );
+              }
               const isLong =
                 LONG_KEYS.some((x) => k.toLowerCase().includes(x.toLowerCase())) ||
                 (typeof v === 'string' && v.length > 90);
@@ -915,7 +1156,120 @@ export default function EditorPane({ section, page, site, onUpdateSection, onUpd
               </button>
             )}
           </div>
+
+          <SubSectionsCard section={section} onUpdateSection={onUpdateSection} />
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Sub-sections editor (2026-07-27) ──────────────────────────────────────────
+// Add/reorder(up-down)/remove sub-sections and edit each one's own flat
+// field bag. Deliberately a simpler, generic field editor (plain text inputs
+// only) rather than reusing the ~250-line special-cased array-editor branch
+// above — sub-section content (text/image/hover-icon/rollup config) doesn't
+// need those array editors, and duplicating that logic here isn't warranted.
+const SUBSECTION_TYPE_LABELS = {
+  text: 'Text',
+  image: 'Image',
+  hoverIcon: 'Hover Icon',
+  dashboardRollup: 'Dashboard Rollup',
+  outputGenerator: 'Output Generator',
+};
+const miniBtnStyle = { fontSize: '0.65rem', padding: '2px 6px', border: '1px solid #ccc', borderRadius: 3, background: 'transparent', cursor: 'pointer', color: '#888' };
+
+function SubSectionsCard({ section, onUpdateSection }) {
+  const subSections = Array.isArray(section.subSections) ? section.subSections : [];
+  const [addingType, setAddingType] = React.useState('text');
+  const [newFieldKeys, setNewFieldKeys] = React.useState({});
+
+  function updateSubSections(next) {
+    onUpdateSection({ subSections: next });
+  }
+  function addSubSection(type) {
+    updateSubSections([...subSections, { id: `sub_${Date.now()}`, type, fields: {}, fieldMeta: {} }]);
+  }
+  function removeSubSection(id) {
+    updateSubSections(subSections.filter((s) => s.id !== id));
+  }
+  function moveSubSection(id, dir) {
+    const idx = subSections.findIndex((s) => s.id === id);
+    const swapWith = idx + dir;
+    if (idx < 0 || swapWith < 0 || swapWith >= subSections.length) return;
+    const next = [...subSections];
+    [next[idx], next[swapWith]] = [next[swapWith], next[idx]];
+    updateSubSections(next);
+  }
+  function patchSubSectionField(id, key, value) {
+    updateSubSections(subSections.map((s) => (s.id === id ? { ...s, fields: { ...s.fields, [key]: value } } : s)));
+  }
+  function addSubSectionField(id, key) {
+    if (!key) return;
+    updateSubSections(subSections.map((s) => (s.id === id && s.fields?.[key] === undefined ? { ...s, fields: { ...s.fields, [key]: '' } } : s)));
+  }
+  function removeSubSectionField(id, key) {
+    updateSubSections(subSections.map((s) => {
+      if (s.id !== id) return s;
+      const nextFields = { ...s.fields };
+      delete nextFields[key];
+      return { ...s, fields: nextFields };
+    }));
+  }
+
+  return (
+    <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid rgba(0,0,0,0.1)' }}>
+      <div style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: '0.5rem', color: 'var(--sb-teal-deep)' }}>Sub-sections</div>
+      {subSections.length === 0 && (
+        <div style={{ fontSize: '0.75rem', color: '#888', marginBottom: '0.5rem' }}>No sub-sections yet.</div>
+      )}
+      {subSections.map((sub, i) => (
+        <div key={sub.id} style={{ background: '#f5f2ed', border: '1px solid #d4cdc6', borderRadius: 6, padding: '0.6rem', marginBottom: '0.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 600 }}>{SUBSECTION_TYPE_LABELS[sub.type] || sub.type}</span>
+            <span style={{ display: 'flex', gap: 4 }}>
+              <button onClick={() => moveSubSection(sub.id, -1)} disabled={i === 0} style={miniBtnStyle}>↑</button>
+              <button onClick={() => moveSubSection(sub.id, 1)} disabled={i === subSections.length - 1} style={miniBtnStyle}>↓</button>
+              <button onClick={() => { if (window.confirm('Remove this sub-section?')) removeSubSection(sub.id); }} style={{ ...miniBtnStyle, color: '#c04040' }}>✕</button>
+            </span>
+          </div>
+          {Object.entries(sub.fields || {}).map(([k, v]) => (
+            <div key={k} style={{ marginBottom: '0.35rem' }}>
+              <label style={{ fontSize: '0.65rem', color: '#888', display: 'flex', justifyContent: 'space-between' }}>
+                {humanLabel(k)}
+                <span onClick={() => removeSubSectionField(sub.id, k)} style={{ cursor: 'pointer', color: '#c04040' }}>✕</span>
+              </label>
+              <input className="sb-input" style={{ fontSize: '0.75rem' }} value={v || ''} onChange={(e) => patchSubSectionField(sub.id, k, e.target.value)} />
+            </div>
+          ))}
+          <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.4rem' }}>
+            <input
+              className="sb-input"
+              style={{ fontSize: '0.72rem', flex: 1 }}
+              placeholder="add field key…"
+              value={newFieldKeys[sub.id] || ''}
+              onChange={(e) => setNewFieldKeys((m) => ({ ...m, [sub.id]: e.target.value.replace(/\s/g, '_') }))}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') { addSubSectionField(sub.id, newFieldKeys[sub.id]); setNewFieldKeys((m) => ({ ...m, [sub.id]: '' })); }
+              }}
+            />
+            <button
+              onClick={() => { addSubSectionField(sub.id, newFieldKeys[sub.id]); setNewFieldKeys((m) => ({ ...m, [sub.id]: '' })); }}
+              style={{ ...miniBtnStyle, padding: '4px 10px' }}
+            >+ Field</button>
+          </div>
+        </div>
+      ))}
+      <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', marginTop: '0.5rem' }}>
+        <select className="sb-input" style={{ fontSize: '0.75rem' }} value={addingType} onChange={(e) => setAddingType(e.target.value)}>
+          {Object.entries(SUBSECTION_TYPE_LABELS).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+        </select>
+        <button
+          onClick={() => addSubSection(addingType)}
+          style={{ fontSize: '0.75rem', padding: '4px 14px', borderRadius: 6, border: '1px dashed var(--sb-sage)', background: 'transparent', cursor: 'pointer', color: 'var(--sb-sage)' }}
+        >
+          + Add sub-section
+        </button>
       </div>
     </div>
   );
@@ -1501,6 +1855,19 @@ const MomentumStepListEditor = makeListEditor('Phase', { phase: 'U', label: '', 
   { key: 'points', placeholder: 'Points, comma-separated', long: true },
 ]);
 
+// `hooks` array for the marketingHooks block:
+const HookListEditor = makeListEditor('Hook', { id: '', productLabel: '', hookLine: '', teaser: '', metricValue: '', metricLabel: '', simSteps: '', ctaLabel: '', ctaLink: '#bestystaff' }, [
+  { key: 'id', placeholder: 'ID (e.g. salttide)', half: true },
+  { key: 'productLabel', placeholder: 'Product name', half: true },
+  { key: 'hookLine', placeholder: 'The grab hook — one punchy line' },
+  { key: 'teaser', placeholder: 'Teaser pitch, 1-2 sentences', long: true },
+  { key: 'metricValue', placeholder: 'Proof-point value (e.g. $38B+)', half: true },
+  { key: 'metricLabel', placeholder: 'Proof-point label', half: true },
+  { key: 'simSteps', placeholder: 'Simulation steps, comma-separated', long: true },
+  { key: 'ctaLabel', placeholder: 'CTA button label', half: true },
+  { key: 'ctaLink', placeholder: 'CTA link (e.g. #bestystaff)', half: true },
+]);
+
 // `nodes` array for the metadataModelDiagram block:
 const MetadataNodeListEditor = makeListEditor('Node', { id: '', label: '', tier: 'atom', desc: '' }, [
   { key: 'id', placeholder: 'ID (referenced by edges)', half: true },
@@ -1515,6 +1882,69 @@ const MetadataEdgeListEditor = makeListEditor('Edge', { from: '', to: '', label:
   { key: 'to', placeholder: 'To node ID', half: true },
   { key: 'label', placeholder: 'Relationship label (e.g. traced to)' },
 ]);
+
+// `statBadges` array for the careerHeroOrbit block:
+const StatBadgeListEditor = makeListEditor('Stat Badge', { label: '' }, [
+  { key: 'label', placeholder: 'Stat text (e.g. 14 transformations)' },
+]);
+
+// `lensTabs` array for the careerLensTabs block:
+const LensTabListEditor = makeListEditor('Lens Tab', { tabLabel: '', kicker: '', title: '', copy: '' }, [
+  { key: 'tabLabel', placeholder: 'Tab label (e.g. Hiring leader)', half: true },
+  { key: 'kicker', placeholder: 'Kicker (e.g. LEADERSHIP + EXECUTION)' },
+  { key: 'title', placeholder: 'Question or title', long: true },
+  { key: 'copy', placeholder: 'Body copy', long: true },
+]);
+
+// `stages` array for the careerJourneyStepper block:
+const CareerStageListEditor = makeListEditor('Stage', { label: '', sublabel: '' }, [
+  { key: 'label', placeholder: 'Stage label (e.g. Arrive)', half: true },
+  { key: 'sublabel', placeholder: 'Sublabel (e.g. Prospect)', half: true },
+]);
+
+// Safety-net editor for array/object fields no dedicated list editor exists
+// for yet — see the dispatch site above for the full list this currently
+// covers. Renders raw JSON rather than a polished form, but critically never
+// commits a change unless it still parses to valid JSON, so it can't
+// silently replace a structured array/object with a plain string the way the
+// generic text &lt;input&gt; used to (regression-gate audit finding, 2026-07-16).
+function GenericStructuredFieldEditor({ fieldKey, value, onChange }) {
+  const [raw, setRaw] = React.useState(() => JSON.stringify(value, null, 2));
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => {
+    setRaw(JSON.stringify(value, null, 2));
+    setError(null);
+  }, [fieldKey]);
+
+  function handleChange(text) {
+    setRaw(text);
+    try {
+      const parsed = JSON.parse(text);
+      setError(null);
+      onChange(parsed);
+    } catch {
+      setError('Invalid JSON — not saved until this is fixed. Your last valid version is still stored.');
+    }
+  }
+
+  return (
+    <div>
+      <div style={{ fontSize: '0.68rem', color: 'var(--sb-dusty)', marginBottom: '0.35rem', lineHeight: 1.5 }}>
+        No dedicated editor exists yet for this field — raw JSON, edit carefully.
+      </div>
+      <textarea
+        className="sb-input sb-textarea"
+        style={{ fontFamily: 'monospace', fontSize: '0.75rem', minHeight: 160 }}
+        value={raw}
+        onChange={(e) => handleChange(e.target.value)}
+      />
+      {error && (
+        <div style={{ fontSize: '0.7rem', color: 'var(--sb-risk-critical)', marginTop: '0.35rem' }}>{error}</div>
+      )}
+    </div>
+  );
+}
 
 // ── Skills editor ─────────────────────────────────────────────────────────────
 // skills: [{category, items:[{name,level,years}]}]

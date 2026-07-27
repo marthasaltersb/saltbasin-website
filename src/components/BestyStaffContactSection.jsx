@@ -25,6 +25,9 @@ export default function BestyStaffContactSection({ config }) {
           <p className="sbh-eyebrow">{copy.eyebrow || 'Get in touch'}</p>
           <h2>{copy.heading || 'Start with BestyStaff.'}</h2>
           <p>{copy.description || 'Share what brought you here. BestyStaff will gather the useful context for Betsy, answer what it can, and create a lead record so the conversation can continue.'}</p>
+          <button type="button" className="sbh-besty-launch-callout" onClick={openChat}>
+            Click the BestyStaff crystal in the bottom-right corner to begin.
+          </button>
         </div>
       </div>
       <PortfolioRequestPrompt sourceOutput="homepage-contact" autoOpen={false} openOnHash="#bestystaff" intakeConfig={bestystaff.intake} />

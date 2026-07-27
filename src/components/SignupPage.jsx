@@ -16,6 +16,7 @@ export default function SignupPage() {
     password: '',
     requestedSlug: '',
   });
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [err, setErr] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [leadInfo, setLeadInfo] = useState(null); // {publicId, email, name?}
@@ -46,6 +47,10 @@ export default function SignupPage() {
   async function submit(e) {
     e.preventDefault();
     setErr('');
+    if (!agreedToTerms) {
+      setErr('You must agree to the Terms of Service and Privacy Policy.');
+      return;
+    }
     setSubmitting(true);
     try {
       const recaptchaToken = await getRecaptchaToken('signup');
@@ -58,6 +63,7 @@ export default function SignupPage() {
           fromLeadPublicId: fromLeadPublicId || undefined,
           fromLeadToken: fromLeadToken || undefined,
           recaptchaToken,
+          agreedToTerms,
         }),
       });
       const body = await res.json();
@@ -186,6 +192,38 @@ export default function SignupPage() {
         <Field label="Password" type="password" value={form.password} onChange={(v) => update('password', v)} placeholder="8+ characters" required />
         <Field label="Preferred URL slug (optional)" value={form.requestedSlug} onChange={(v) => update('requestedSlug', v)} placeholder="e.g. jane-doe (lowercase, no spaces)" />
 
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '0.5rem',
+            fontSize: '0.8rem',
+            color: 'var(--sb-dusty)',
+            lineHeight: 1.5,
+            marginBottom: '1rem',
+            cursor: 'pointer',
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={agreedToTerms}
+            onChange={(e) => setAgreedToTerms(e.target.checked)}
+            style={{ marginTop: 3 }}
+            required
+          />
+          <span>
+            I agree to the{' '}
+            <Link to="/terms" target="_blank" rel="noreferrer" style={{ color: 'var(--sb-gold)' }}>
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link to="/privacy" target="_blank" rel="noreferrer" style={{ color: 'var(--sb-gold)' }}>
+              Privacy Policy
+            </Link>
+            .
+          </span>
+        </label>
+
         {err && (
           <div style={{ color: 'var(--sb-risk-critical)', fontSize: '0.85rem', marginBottom: '1rem' }}>{err}</div>
         )}
@@ -194,7 +232,7 @@ export default function SignupPage() {
           type="submit"
           className="sb-btn sb-btn-gold"
           style={{ width: '100%', justifyContent: 'center' }}
-          disabled={submitting}
+          disabled={submitting || !agreedToTerms}
         >
           {submitting ? 'Creating…' : 'Create Profile ↗'}
         </button>

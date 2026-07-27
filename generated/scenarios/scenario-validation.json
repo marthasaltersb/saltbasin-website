@@ -1,0 +1,12 @@
+{
+  "valid": true,
+  "scenarioCount": 2400,
+  "uniqueScenarioIds": 2400,
+  "uniqueSignatures": 2400,
+  "duplicateScenarioIds": [],
+  "duplicateSignatures": [],
+  "unresolvedMappings": [],
+  "definitionChanges": [],
+  "workbookHash": "deb2ea7892c9a17a37804fca146f1039500d04b2a2ba9fc4bb4a57638ea5f027",
+  "validatedAt": "2026-07-12T00:00:00.000Z"
+}

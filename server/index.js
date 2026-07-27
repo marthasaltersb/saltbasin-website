@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import { ensureSeeded } from './data/seed.js';
+import { createSeoMiddleware } from './lib/seoMiddleware.js';
 import authRouter from './routes/auth.js';
 import siteRouter from './routes/site.js';
 import configRouter from './routes/config.js';
@@ -41,9 +42,17 @@ import lineageRouter from './routes/lineage.js';
 import methodologyStatsRouter from './routes/methodologyStats.js';
 import leadIntegrationsRouter from './routes/leadIntegrations.js';
 import journeyRodsRouter from './routes/journeyRods.js';
+import eidosRouter from './routes/eidos.js';
 import commerceRouter, { stripeWebhookHandler } from './routes/commerce.js';
 import feedbackRouter from './routes/feedback.js';
 import orgPortalRouter from './routes/orgPortal.js';
+import dataSourcesRouter from './routes/dataSources.js';
+import metricIntelligenceRouter from './routes/metricIntelligence.js';
+import memberFinancialRouter from './routes/memberFinancial.js';
+import presenceRouter from './routes/presence.js';
+import memberEntitlementsRouter from './routes/memberEntitlements.js';
+import resumeOutputsRouter from './routes/resumeOutputs.js';
+import scenariosRouter from './routes/scenarios.js';
 
 // Safety net: an unhandled promise rejection in any async route handler
 // (e.g. a bad column reference in a PATCH) is fatal by default in Node —
@@ -101,10 +110,13 @@ app.use('/api/config', configRouter);
 app.use('/api/leads', leadsRouter);
 app.use('/api/lead-integrations', leadIntegrationsRouter);
 app.use('/api/journey-rods', journeyRodsRouter);
+app.use('/api/eidos', eidosRouter);
+app.use('/api/presence', presenceRouter);
 app.use('/api/members', membersRouter);
 app.use('/api/member-site', memberSiteRouter);
 app.use('/api/member-config', memberConfigRouter);
 app.use('/api/org-portal', orgPortalRouter);
+app.use('/api/data-sources', dataSourcesRouter);
 app.use('/api/backlog', backlogRouter);
 app.use('/api/methodology-stats', methodologyStatsRouter);
 app.use('/api/qa', qaRouter);
@@ -134,6 +146,11 @@ app.use('/api/portfolio-requests', portfolioRequestsRouter);
 app.use('/api/lineage', lineageRouter);
 app.use('/api/commerce', commerceRouter);
 app.use('/api/feedback', feedbackRouter);
+app.use('/api/metric-intelligence', metricIntelligenceRouter);
+app.use('/api/member-financial', memberFinancialRouter);
+app.use('/api/member-entitlements', memberEntitlementsRouter);
+app.use('/api/resume-outputs', resumeOutputsRouter);
+app.use('/api/scenarios', scenariosRouter);
 
 // Uploaded files now live on Supabase Storage at <SUPABASE_URL>/storage/v1/object/public/uploads/<file>.
 // The returned URL from POST /api/uploads is already absolute, so the browser
@@ -163,6 +180,10 @@ app.post('/api/agent/edit', (req, res) =>
 if (isProd) {
   const distDir = path.join(__dirname, '..', 'dist');
   if (fs.existsSync(distDir)) {
+    // Must run before express.static: rewrites the HTML response's <head>
+    // with per-page SEO tags for real routes, and falls through (next()) for
+    // static assets and anything it can't resolve.
+    app.use(createSeoMiddleware(distDir));
     app.use(express.static(distDir, { maxAge: '1h' }));
     // SPA fallback: any non-API GET that didn't match a static file returns
     // index.html so React Router can take over.

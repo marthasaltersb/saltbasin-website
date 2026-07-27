@@ -1,0 +1,174 @@
+{
+  "registryVersion": "2026-07-12.channel-3",
+  "effectiveFrom": "2026-07-12",
+  "canonicalArchitectureTerm": "Channel",
+  "legacyAliases": {
+    "Channel": ["Journey"],
+    "ChannelRod": ["JourneyRod", "JourneyDataRod"],
+    "ChannelDefinition": ["JourneyDefinition"],
+    "ChannelStage": ["JourneyStage"],
+    "ChannelCoordinate": ["JourneyCoordinate", "JourneyLatitude"],
+    "ChannelAttractionField": ["JourneyAttractionField"],
+    "ChannelProjection": ["JourneyProjection"],
+    "ChannelTributary": ["JourneyTributary"],
+    "ChannelAgent": ["JourneyAgent"],
+    "ChannelState": ["JourneyState"],
+    "ChannelIdentity": ["JourneyIdentity"],
+    "ChannelSettlementDensity": ["JourneyDensity"],
+    "QueryChannel": ["QueryJourney"]
+  },
+  "governingChain": [
+    "Basin", "Port", "SourceObservation", "Element", "EvidenceAtom",
+    "SemanticAffinityField", "AtomCluster", "SemanticComposition",
+    "ProjectionRelativeSettlement", "Riverbed", "Channel", "ChannelRod",
+    "ChannelTributary", "Current", "CurrentArc", "Confluence", "QueryChannel", "CompressedQueryRod",
+    "AccountingProjection", "ReciprocalStateInference",
+    "HeterosemanticDivergence", "AgentBoundary", "ChannelRodStaff"
+  ],
+  "canonicalRules": [
+    {
+      "foundationElementId": "rule-evidence-preservation",
+      "canonicalName": "Evidence preservation and reconstructability",
+      "elementType": "businessRule",
+      "definition": "Authoritative evidence is preserved; every derived state remains reconstructable from evidence, rule versions, effective time, security context, and lineage.",
+      "validationStatus": "canonical"
+    },
+    {
+      "foundationElementId": "rule-agent-authority-intersection",
+      "canonicalName": "Interacting-principal authority intersection",
+      "elementType": "securityRule",
+      "definition": "An Agent may retrieve, expose, transform, propose, stage, or commit only within the intersection of the interacting principal's current authority, the Agent Boundary, applicable policy, and the requested action's required authority.",
+      "validationStatus": "canonical"
+    },
+    {
+      "foundationElementId": "rule-query-hash-retrieval",
+      "canonicalName": "Content-addressed Query Rod Hash",
+      "elementType": "queryRule",
+      "definition": "A Query Rod Hash is a deterministic content-addressed retrieval and verification key for a persisted Compressed Query Rod and its governed contribution lineage.",
+      "validationStatus": "canonical"
+    },
+    {
+      "foundationElementId": "rule-channel-non-equivalence",
+      "canonicalName": "Correlated Channel non-equivalence",
+      "elementType": "semanticRule",
+      "definition": "Revenue, Customer, Member, and other projections may share a canonical identity while remaining intentionally non-equivalent; their divergence is preserved and measured.",
+      "validationStatus": "canonical"
+    },
+    {
+      "foundationElementId": "rule-domain-specific-source-authority",
+      "canonicalName": "Domain-specific source authority",
+      "elementType": "evidenceRule",
+      "definition": "Source authority is evaluated by semantic domain; contradictory evidence is preserved and no universal source-priority list is permitted.",
+      "validationStatus": "canonical"
+    },
+    {
+      "foundationElementId": "rule-event-sourced-lineage",
+      "canonicalName": "Event-sourced temporal lineage",
+      "elementType": "lineageRule",
+      "definition": "Proposal, validation, staging, commit, rejection, and supersession are distinct replayable events retaining effective and recorded time without overwriting evidence.",
+      "validationStatus": "canonical"
+    },
+    {
+      "foundationElementId": "rule-fields-distinction",
+      "canonicalName": "Magnetic and gravitational field distinction",
+      "elementType": "semanticRule",
+      "definition": "Magnetic Fields govern semantic attraction and repulsion into compositions; Gravitational Fields govern projection toward Channel Rod temporal-destination coordinates.",
+      "validationStatus": "canonical"
+    },
+    {
+      "foundationElementId": "rule-accounting-non-equivalence",
+      "canonicalName": "Commercial and accounting state non-equivalence",
+      "elementType": "accountingRule",
+      "definition": "Commercial compositions and accounting projections are linked but independently derived; reciprocal inference compares them while preserving journal and upstream causality.",
+      "validationStatus": "canonical"
+    },
+    {
+      "foundationElementId": "rule-config-first-rendering",
+      "canonicalName": "Configuration-first semantic rendering",
+      "elementType": "visualRule",
+      "definition": "Every governed renderable object resolves canonical identity and visual semantics through versioned shared registries; the production Visual Registry also generates the Dynamic Legend.",
+      "validationStatus": "canonical"
+    },
+    {
+      "foundationElementId": "rule-accessible-world-equivalence",
+      "canonicalName": "Accessible world equivalence",
+      "elementType": "accessibilityRule",
+      "definition": "Every spatial scene provides a synchronized keyboard-accessible, screen-reader-readable 2D representation and reduced-motion behavior that preserves semantic explanation.",
+      "validationStatus": "canonical"
+    },
+    {
+      "foundationElementId": "rule-member-org-admin-identity",
+      "canonicalName": "Member Organization Admin is not a separate identity",
+      "elementType": "identityRule",
+      "definition": "Member Organization Admin capability is created through Organization-scoped authority, module access, view access, Agent access, and action permissions layered onto a canonical Member identity, never a separate user-record type. Implemented by extending data_entitlements.scope; authorityProfileIds/moduleAccessProfileIds/viewAccessProfileIds as separate tables are rejected in favor of this lower-risk mechanism unless a concrete module later needs gating the JSONB shape can't express.",
+      "validationStatus": "canonical"
+    },
+    {
+      "foundationElementId": "rule-member-financial-privacy",
+      "canonicalName": "Member financial data privacy by default",
+      "elementType": "securityRule",
+      "definition": "Personal financial data is Member-private by default and never becomes Organization-visible through inference from Organization Admin authority — only through an explicit authorized sharing action.",
+      "validationStatus": "canonical"
+    },
+    {
+      "foundationElementId": "rule-reuse-first-architecture",
+      "canonicalName": "Reuse-first architecture law",
+      "elementType": "architectureRule",
+      "definition": "A new concept must be checked against the existing substrate before any new table is proposed, in order: new rod_type, new TRIBUTARY_TYPES entry, new journey_rod_events event_type (event-sourced state), new tracked interaction in provisioningPolicyRegistry.js (Orbit/usage), new Atom/Molecule/bonding-rule definition, additive column. A new table is justified only when all six are a genuine poor fit for a structurally different shape. Enforced by the salt-basin-channel-journey-architecture skill.",
+      "validationStatus": "canonical",
+      "decidedDate": "2026-07-27"
+    },
+    {
+      "foundationElementId": "rule-molecule-non-duplication",
+      "canonicalName": "Molecule evolution without duplication",
+      "elementType": "semanticRule",
+      "definition": "A governed Molecule instance evolves and matures in place — same identity, updated state, reconstructable from the event log — and is never duplicated on recomputation. Persisting a static, pre-declared list of member Atoms per Molecule/Cluster (as an earlier session mistakenly did for Career Molecules) is a violation of this rule, not an acceptable simplification.",
+      "validationStatus": "canonical",
+      "decidedDate": "2026-07-27"
+    }
+  ],
+  "foundationElements": [
+    {"foundationElementId":"concept-basin","canonicalName":"Basin","canonicalCode":"BASIN","elementType":"semanticObject","definition":"Governed semantic containment environment that may project distributed sources.","aliases":[],"validationStatus":"canonical","approvalStatus":"approved"},
+    {"foundationElementId":"concept-port","canonicalName":"Port","canonicalCode":"PORT","elementType":"semanticObject","definition":"Governed interaction, ingress, handoff, integration, projection, or output boundary.","aliases":[],"validationStatus":"canonical","approvalStatus":"approved"},
+    {"foundationElementId":"concept-element","canonicalName":"Element","canonicalCode":"ELEMENT","elementType":"semanticObject","definition":"Configurable stable category of business meaning used by Atoms.","aliases":[],"validationStatus":"canonical","approvalStatus":"approved"},
+    {"foundationElementId":"concept-atom","canonicalName":"Atom","canonicalCode":"ATOM","elementType":"semanticObject","definition":"Smallest independently governed bounded assertion with evidence and temporal lineage.","aliases":["EvidenceAtom"],"validationStatus":"canonical","approvalStatus":"approved"},
+    {"foundationElementId":"concept-magnetic-field","canonicalName":"Magnetic Field","canonicalCode":"MAGNETIC_FIELD","elementType":"semanticRuleSystem","definition":"Configurable contextual attraction and repulsion rules governing semantic convergence.","aliases":["SemanticAffinityField"],"validationStatus":"canonical","approvalStatus":"approved"},
+    {"foundationElementId":"concept-gravitational-field","canonicalName":"Gravitational Field","canonicalCode":"GRAVITATIONAL_FIELD","elementType":"semanticRuleSystem","definition":"Channel Rod destination-projection influence over Semantic Compositions.","aliases":[],"validationStatus":"canonical","approvalStatus":"approved"},
+    {"foundationElementId":"concept-molecule","canonicalName":"Molecule","canonicalCode":"MOLECULE","elementType":"semanticObject","definition":"Governed composition of Atom roles defining meaningful business state.","aliases":["SemanticComposition"],"validationStatus":"canonical","approvalStatus":"approved"},
+    {"foundationElementId":"concept-channel","canonicalName":"Channel","canonicalCode":"CHANNEL","elementType":"semanticDefinition","definition":"The definition of a temporal-destination corridor type, governing what kind of semantic state can be projected, positioned, diverted, recombined, settled, and interpreted along corridors of that type (e.g. Member, Customer, Revenue Lifecycle, Fund Deal, Portfolio Company, Value Creation). Declared once per type; carries no live state itself. Backed by journey_rod_types (server/db.js).","relatedElement":"concept-channel-rod","relationshipToRelated":"definition-of (Channel Rod is the persistent instance of a Channel)","aliases":["Journey"],"validationStatus":"canonical","approvalStatus":"approved","decidedDate":"2026-07-16"},
+    {"foundationElementId":"concept-channel-rod","canonicalName":"Channel Rod","canonicalCode":"CHANNEL_ROD","elementType":"semanticInstance","definition":"The persistent instance of a Channel definition: one real, live occurrence of that Channel type for a specific entity, carrying actual temporal state, evidence, and settlement. Every journey_data_rods row is a Channel Rod instantiating its rod_type's Channel definition.","relatedElement":"concept-channel","relationshipToRelated":"instance-of (Channel is the definition this Channel Rod instantiates)","aliases":["JourneyRod","JourneyDataRod","DataRod"],"validationStatus":"canonical","approvalStatus":"approved","decidedDate":"2026-07-16"},
+    {"foundationElementId":"concept-channel-rod-staff","canonicalName":"Channel Rod Staff","canonicalCode":"CHANNEL_ROD_STAFF","elementType":"agentArchitecture","definition":"Policy-bounded agent workforce built from the reusable BestyStaff template architecture.","aliases":["RodAgent","JourneyAgent"],"validationStatus":"canonical","approvalStatus":"approved"},
+    {"foundationElementId":"concept-databasin","canonicalName":"DataBasin","canonicalCode":"DATABASIN","elementType":"platformLayer","definition":"Governed bridge that normalizes, translates, reconciles, simulates, validates, and maps distributed evidence into the semantic model.","aliases":[],"validationStatus":"canonical","approvalStatus":"approved"},
+    {"foundationElementId":"concept-member-identity","canonicalName":"Member Identity","canonicalCode":"MEMBER_IDENTITY","elementType":"identityObject","definition":"Canonical identity for every interacting user; Organization membership, roles, and Organization Admin authority attach to it rather than creating a duplicate identity.","aliases":["MemberIdentity"],"validationStatus":"canonical","approvalStatus":"approved"},
+    {"foundationElementId":"concept-riverbed","canonicalName":"Riverbed","canonicalCode":"RIVERBED","elementType":"semanticObject","definition":"Client scope owning Channels and Tributaries — a Member (no Organization profiles assigned) or a Member Organization. Not a stored row: resolved as the set of journey_data_rods sharing a user_id (member scope) or org_id (organization scope). Atoms/Molecules are shared, never duplicated, across every Channel instance, Tributary, and sub-journey within a Riverbed.","aliases":[],"validationStatus":"canonical","approvalStatus":"approved","decidedDate":"2026-07-27"},
+    {"foundationElementId":"concept-current","canonicalName":"Current","canonicalCode":"CURRENT","elementType":"semanticRuleSystem","definition":"The rule set defining a Channel journey's context: entry criteria, derived-data rules, per-state user input, maturity progression entry/exit, minimum carry, required context data, port stage, port stage maturity. Exists in a master-data (canonical) or Channel-current (journey-instance) scope, without duplicating the underlying Atoms/Molecules.","relatedElement":"concept-current-arc","relationshipToRelated":"rules-for (Current Arc is the resulting state a Current's rules produce)","aliases":[],"validationStatus":"canonical","approvalStatus":"approved","decidedDate":"2026-07-27"},
+    {"foundationElementId":"concept-current-arc","canonicalName":"Current Arc","canonicalCode":"CURRENT_ARC","elementType":"semanticInstance","definition":"The actual temporal data state produced by evaluating a Current's rules against shared Atoms/Molecules across journey Channels — distinct from the Current (rules) itself. Event-sourced as journey_rod_events rows, reconstructed by reading a Rod's events in order.","relatedElement":"concept-current","relationshipToRelated":"instance-of","aliases":[],"validationStatus":"canonical","approvalStatus":"approved","decidedDate":"2026-07-27"},
+    {"foundationElementId":"concept-orbit","canonicalName":"Orbit","canonicalCode":"ORBIT","elementType":"platformLayer","definition":"Per-module user interface, callable API, and usage-tracking surface (logins, queries, projection versions) per module per Member profile. Formalizes the pre-existing 3D orbit visual metaphor into a real tracked object. Implemented via usageTracking.js/analytics_events/provisioningPolicyRegistry.js's tracked-interaction registry, not new infrastructure.","aliases":["Customer Orbit"],"validationStatus":"canonical","approvalStatus":"approved","decidedDate":"2026-07-27"}
+  ],
+  "protectedNames": ["BestyStaff", "The Salter Momentum", "SaltTide", "Salt Basin MRS"],
+  "methodologySpine": ["Understanding", "Rendering", "Measuring"],
+  "retiredConcepts": ["Five-pillar Salter Momentum model"],
+  "sourceLineage": [
+    "docs/salt-basin-foundation-source-of-truth.md",
+    "docs/foundation-channel-update-comparison-2026-07-12.md",
+    "July 12 2026 Channel Architecture + Channel Rod Staff master prompt",
+    "July 12 2026 Foundation canonical update delta",
+    "Salt Basin Holdings — Ultimate Master Build Prompt (SHA-256: 9FC162DA846C269C570F76E2F8C7E64B5E576FE36FCC5F2CBA68766E74A3DE57)"
+  ],
+  "sourceArtifacts": [
+    {
+      "sourceId": "source-ultimate-master-build-2026-07-12",
+      "canonicalName": "Salt Basin Holdings — Ultimate Master Build Prompt",
+      "sourceType": "approvedArchitectureDirective",
+      "effectiveFrom": "2026-07-12",
+      "sha256": "9FC162DA846C269C570F76E2F8C7E64B5E576FE36FCC5F2CBA68766E74A3DE57",
+      "validationStatus": "reconciled",
+      "approvalStatus": "approved",
+      "implementationReferences": [
+        "docs/salt-basin-foundation-source-of-truth.md#11-canonical-salt-basin-computational-architecture",
+        "docs/foundation-channel-update-comparison-2026-07-12.md",
+        "migrations/terminology-migration-registry.json"
+      ]
+    }
+  ]
+}

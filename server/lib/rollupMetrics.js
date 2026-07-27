@@ -26,7 +26,7 @@ function parseSalary(value) {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
-function groupCount(rows, keyFn) {
+export function groupCount(rows, keyFn) {
   const counts = new Map();
   for (const row of rows) {
     const key = keyFn(row);

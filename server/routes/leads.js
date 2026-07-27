@@ -7,7 +7,9 @@ import { sendLeadConfirmation, sendNewLeadAlert, sendContactFormToMember, dispat
 import { defaultMemberProfile } from '../data/defaultMemberProfile.js';
 import { verifyRecaptcha } from '../lib/recaptcha.js';
 import { ensureLeadRevenueRod, ensureMemberJourneyRods, upsertAccountRecord } from '../lib/journeyRods.js';
+import { provisionDefaultModulesForNewMember } from '../lib/memberProvisioning.js';
 import { classifyEmailDomain, emailDomainOf } from '../lib/emailDomain.js';
+import { recordConsent } from '../lib/consentRegistry.js';
 
 const router = Router();
 
@@ -545,8 +547,11 @@ router.post('/public/:publicId/pledge', async (req, res) => {
 // ensureDraft(), so we only need to create the user + member_profiles +
 // the link back to the lead here.
 router.post('/public/:publicId/convert', async (req, res) => {
-  const { password, recaptchaToken, loginEmail } = req.body || {};
+  const { password, recaptchaToken, loginEmail, agreedToTerms } = req.body || {};
   if (!password) return res.status(400).json({ error: 'password required' });
+  if (agreedToTerms !== true) {
+    return res.status(400).json({ error: 'You must agree to the Terms of Service and Privacy Policy.' });
+  }
   if (loginEmail !== undefined && loginEmail !== null && !isValidEmail(loginEmail)) {
     return res.status(400).json({ error: 'loginEmail is not a valid email address' });
   }
@@ -627,6 +632,7 @@ router.post('/public/:publicId/convert', async (req, res) => {
     .prepare(`INSERT INTO users (email, password_hash, role) VALUES ($1, $2, 'member') RETURNING id`)
     .run(lowerEmail, lead.password_hash);
   const newUserId = Number(userInsert.lastInsertRowid);
+  await recordConsent(newUserId, 'platform_terms', true, { ip: req.ip, userAgent: req.get('user-agent') });
 
   // Member profile (separate from member_sites — both exist; profile holds
   // the slug + the simpler "about you" structure; sites holds the multi-page
@@ -642,8 +648,16 @@ router.post('/public/:publicId/convert', async (req, res) => {
   await db
     .prepare(`UPDATE leads SET converted_user_id = $1, updated_at = $2 WHERE id = $3`)
     .run(newUserId, Date.now(), Number(lead.id));
-  await ensureMemberJourneyRods(newUserId, Number(lead.id));
+  const memberRod = await ensureMemberJourneyRods(newUserId, Number(lead.id));
   await upsertAccountRecord({ accountType: 'member', userId: newUserId, leadId: Number(lead.id), displayName: lead.name || null });
+  // Member Entitlement Provisioning (DTC path): give the new member both
+  // default modules — Personal Brand Website + Resume Output Creator — as
+  // part of this same onboarding action. Never let a provisioning hiccup
+  // block the conversion itself (the account/session above is already
+  // real); log and continue.
+  provisionDefaultModulesForNewMember(memberRod, newUserId).catch((e) =>
+    console.error('[leads] provisionDefaultModulesForNewMember failed:', e.message)
+  );
 
   // Register the primary email in user_emails so it's visible in the email
   // manager and so secondary-email lookups in login() find it correctly.

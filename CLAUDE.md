@@ -49,11 +49,16 @@ Once real members have live content, a platform deploy must never regress or rei
 
 ### Section / block system
 
-The site state JSON is `{ pages: [{ slug, sections: [{ id, type, status, content, fieldMeta }] }] }`.
+The site state JSON is `{ version, pages: { [pageKey]: { key, name, slug, type, status, order, seo, sections: [{ id, type, name, status, bg, fields, fieldMeta }] } } }`.
 
+- `page.seo` (`{ title, description, canonical, ogImage, noIndex }`) is an optional, additive page-level key — added 2026-07-16 for the SEO/structured-data layer, not populated on any pre-existing page. `server/lib/seo.js`'s `buildSeoTags()` computes sane fallback tags when it's absent; both `src/lib/useSeoHead.js` (client `<head>` updates on route change) and `server/lib/seoMiddleware.js` (server-side HTML injection for link-unfurling bots, prod-only) call it. Edited via the "SEO & Sharing" card in `EditorPane.jsx`'s page-settings branch — every field's `onChange` must spread `page.seo` first since `AdminShell.jsx`'s `updatePage()` is a shallow merge.
+
+- `pages` is a **keyed object** (keyed by page key), not an array — despite the shape sometimes being described as `pages: [...]`. Always normalize with `Object.values(data.pages)` (or check `Array.isArray` first) before iterating; don't assume either shape blindly. Confirmed against the real published `site_state` row 2026-07-16.
+- Section content lives under **`section.fields`**, not `section.content` — every block in `src/components/blocks/index.jsx` reads `const f = section.fields || {}` (51 occurrences repo-wide, zero occurrences of `section.content` anywhere in `src/` or `server/`). `fieldMeta` is a real, documented sibling key but is currently unused in production data (0 of 23 live sections carry it as of 2026-07-16) — don't assume it's populated without checking.
 - `src/components/blocks/index.jsx` — `REGISTRY` map of `type → Component`. `RenderSection` dispatches by `section.type`. All blocks accept `{ section, config, mode, memberSlug }`.
 - `mode` is `'public'` or `'preview'` — preview shows draft/soon banners that the public site never shows.
-- `src/data/capabilityTags.js` — `SOURCE_TYPES`, `MERGED_FIELD_DEFAULTS`, `TAG_CATEGORIES` for the field metadata system. Every field in a section can carry `section.fieldMeta[fieldKey]` with `{ sourceType, mergedFrom, sources, capabilityTags, description }`.
+- `src/data/capabilityTags.js` — `SOURCE_TYPES`, `MERGED_FIELD_DEFAULTS`, `TAG_CATEGORIES` for the field metadata system. Every field in a section can carry `section.fieldMeta[fieldKey]` with `{ sourceType, mergedFrom, sources, capabilityTags, description }` — schema exists and is wired into the blocks, but isn't yet populated in any live section.
+- CTA fields have **no standardized naming convention** across blocks — `home-hero` uses `cta1Label`/`cta1Link`, `services` uses `s1Cta`, `assessments` uses `a1Price`, `creative-decor` uses a bare `cta1`. Each block invented its own key names, so nothing outside that block's own render logic can reliably enumerate "the CTAs on this page." Do not assume a `cta{N}Label`/`cta{N}Link` pattern is universal when writing tooling against section fields.
 
 ### Admin shell tab routing
 
@@ -130,8 +135,18 @@ OAuth provider keys follow the pattern `{PROVIDER}_CLIENT_ID` / `{PROVIDER}_CLIE
 - All API calls go through `src/lib/api.js` — always `credentials: 'include'`, always JSON.
 - Toast notifications via `src/lib/toast.js` — `toast.success(msg)` / `toast.error(msg)`.
 - Admin styles via `src/components/admin/adminStyles.js` — inline style objects, no CSS modules.
-- CSS variables (colors, fonts) defined in `index.css` under `--sb-*` prefix.
+- CSS variables (colors, fonts) defined in `src/brand.css` under `--sb-*` prefix (not `index.css` — corrected 2026-07-16).
 - No test framework. No TypeScript. ESM throughout (`"type": "module"` in package.json).
+
+### Theme system
+
+`src/brand.css` defines 6 named themes via `[data-theme="..."]` blocks: `strategic` (default), `glow-light`, `glow-dark`, `momentum-warm`, `lagoon`, `prospect` (added 2026-07-16 — light cream/parchment/paper palette, teal/gold structure). Each theme overrides both the raw `--sb-*` tokens every existing block already reads and the semantic `--sb-theme-*` roles. `data-theme` is set on the page root in `PublicSite.jsx`/`PublicProfile.jsx` from `config.theme` (default `'strategic'`); admin chrome (`/admin/*`) never gets a `data-theme` attribute and always renders Strategic Operator. Picked via the shared `ThemeSwatch` picker in `ConfigPanel.jsx` (`THEME_OPTIONS`), identical for admin and member scope. New members default to `'prospect'` (`server/data/defaultMemberConfig.js`); existing members keep whatever they had.
+
+**Two independent override layers, both must agree**: `config.theme` (named palette) and `config.brand.{primary,accent,ink,paper}` (raw hex overrides — always wins over the selected theme when non-empty). `defaultMemberConfig.js`'s `brand` defaults are empty strings, not hardcoded hex — pinning every new member to one theme's exact values via a "default" override was a real regression, found and fixed 2026-07-16 (`PublicSite.jsx` had the same bug even worse: a fully hardcoded, non-`config`-driven override block that silently defeated the theme picker entirely for Betsy's own site). Pink/rose is **never** a background, text, or button fill in any theme — mark/underline/border only (`.sb-pink-mark`/`.sb-pink-underline`/`.sb-pink-border`), one shared hot-pink hue (`--sb-pink-500` family) reused at different tints across themes, by explicit product decision — don't introduce a per-theme pink hue without checking this first.
+
+### Career Channel Rod
+
+The legacy `career_jobs/skills/tools/engagements/domains/certifications/deals` tables (per-user via `user_id`) remain the actual editing surface (`server/routes/careerMaster.js`'s CRUD routes, used by `CareerMasterPanel.jsx`/`MyResumePanel.jsx`). Anything member-facing/public reads from the **Career Channel Rod** instead (`journey_data_rods` where `rod_type='career_master'`, evidence in `journey_rod_evidence`) — a field-mapping "Career Atom" layer (`server/lib/careerAtomRegistry.js`) kept live-synced with the legacy CRUD by `server/lib/careerAtomMigration.js`'s `syncSingleEntry`/`removeEntryEvidence` (called from `careerMaster.js`'s shared `makeResourceRouter` on every create/update/delete, 2026-07-16). `server/lib/careerAtomRollups.js`'s `buildCareerAtomRollupCatalog()` reconstructs entries from evidence and computes `skills_by_category`/`jobs_by_industry`/`tools_by_wheel_bucket` groupings, exposed at `GET /api/career/atom-rollups?owner=<slug>|me` — this is what the public `careerRollupShowcase` block (`src/components/blocks/CareerProspectBlocks.jsx`) renders, not the legacy `/api/career/rollups` (which stays as the separate, admin-facing `careerExplorer` block's data source). A member with no Career Master rows gets an honest empty state, never fabricated numbers. The separate **Resume Output Projection** system (`server/lib/resumeProjection.js`, `server/routes/resumeOutputs.js`, `/api/resume-outputs`) reads the same Channel Rod evidence for a different purpose (fingerprinting/staleness of generated resume documents) but as of 2026-07-16 has no automated trigger populating it for most members — a known, separate gap, not fixed by the sync above (which only ensures the rod/evidence exist, not that a resume projection has been generated).
 
 ### React rules of hooks
 

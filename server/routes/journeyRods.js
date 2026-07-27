@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { db } from '../db.js';
 import { requireUser, requireAdmin } from '../auth.js';
 import { evaluateJourneyRod, upsertJourneyEvidence } from '../lib/journeyRods.js';
+import { generateScenarioMatrix, estimateMatrixSize, DRAFT_DIMENSION_DEFINITIONS } from '../lib/scenarioGenerator.js';
 
 const router = Router();
 
@@ -45,15 +46,41 @@ for (const [path, table, order] of [
 
 router.put('/molecules/:key', requireAdmin, async (req, res) => {
   const b=req.body||{}, now=Date.now();
-  await db.prepare(`INSERT INTO journey_metadata_molecules (molecule_key,label,data_type,source_paths,validation_config,is_sensitive,is_active,created_at,updated_at) VALUES ($1,$2,$3,$4::jsonb,$5::jsonb,$6,$7,$8,$8)
-    ON CONFLICT (molecule_key) DO UPDATE SET label=EXCLUDED.label,data_type=EXCLUDED.data_type,source_paths=EXCLUDED.source_paths,validation_config=EXCLUDED.validation_config,is_sensitive=EXCLUDED.is_sensitive,is_active=EXCLUDED.is_active,updated_at=EXCLUDED.updated_at`)
-    .run(req.params.key,b.label||req.params.key,b.dataType||'text',JSON.stringify(b.sourcePaths||[]),JSON.stringify(b.validationConfig||{}),!!b.isSensitive,b.isActive!==false,now);
+  await db.prepare(`INSERT INTO journey_metadata_molecules (molecule_key,label,data_type,source_paths,validation_config,is_sensitive,is_active,canonical_definition,value_domain,mutability_class,created_at,updated_at) VALUES ($1,$2,$3,$4::jsonb,$5::jsonb,$6,$7,$8,$9,$10,$11,$11)
+    ON CONFLICT (molecule_key) DO UPDATE SET label=EXCLUDED.label,data_type=EXCLUDED.data_type,source_paths=EXCLUDED.source_paths,validation_config=EXCLUDED.validation_config,is_sensitive=EXCLUDED.is_sensitive,is_active=EXCLUDED.is_active,canonical_definition=EXCLUDED.canonical_definition,value_domain=EXCLUDED.value_domain,mutability_class=EXCLUDED.mutability_class,updated_at=EXCLUDED.updated_at`)
+    .run(req.params.key,b.label||req.params.key,b.dataType||'text',JSON.stringify(b.sourcePaths||[]),JSON.stringify(b.validationConfig||{}),!!b.isSensitive,b.isActive!==false,b.canonicalDefinition||null,b.valueDomain||null,b.mutabilityClass||'revisable',now);
   res.json({ok:true});
 });
 
-router.put('/clusters/:key', requireAdmin, async (req,res)=>{ const b=req.body||{},now=Date.now(); await db.prepare(`INSERT INTO journey_metadata_clusters (cluster_key,label,description,molecule_keys,completion_rule,minimum_count,is_active,created_at,updated_at) VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7,$8,$8) ON CONFLICT (cluster_key) DO UPDATE SET label=EXCLUDED.label,description=EXCLUDED.description,molecule_keys=EXCLUDED.molecule_keys,completion_rule=EXCLUDED.completion_rule,minimum_count=EXCLUDED.minimum_count,is_active=EXCLUDED.is_active,updated_at=EXCLUDED.updated_at`).run(req.params.key,b.label||req.params.key,b.description||null,JSON.stringify(b.moleculeKeys||[]),b.completionRule||'all',b.minimumCount??null,b.isActive!==false,now); res.json({ok:true}); });
+router.put('/clusters/:key', requireAdmin, async (req,res)=>{ const b=req.body||{},now=Date.now(); await db.prepare(`INSERT INTO journey_metadata_clusters (cluster_key,label,description,molecule_keys,completion_rule,minimum_count,is_active,alignment_rules,created_at,updated_at) VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7,$8::jsonb,$9,$9) ON CONFLICT (cluster_key) DO UPDATE SET label=EXCLUDED.label,description=EXCLUDED.description,molecule_keys=EXCLUDED.molecule_keys,completion_rule=EXCLUDED.completion_rule,minimum_count=EXCLUDED.minimum_count,is_active=EXCLUDED.is_active,alignment_rules=EXCLUDED.alignment_rules,updated_at=EXCLUDED.updated_at`).run(req.params.key,b.label||req.params.key,b.description||null,JSON.stringify(b.moleculeKeys||[]),b.completionRule||'all',b.minimumCount??null,b.isActive!==false,JSON.stringify(b.alignmentRules||[]),now); res.json({ok:true}); });
 
 router.put('/scenarios/:key', requireAdmin, async (req,res)=>{ const b=req.body||{},now=Date.now(); await db.prepare(`INSERT INTO journey_scenarios (scenario_key,rod_type,label,description,selected_cluster_keys,dimensions,actor_roles,is_active,created_at,updated_at) VALUES ($1,$2,$3,$4,$5::jsonb,$6::jsonb,$7::jsonb,$8,$9,$9) ON CONFLICT (scenario_key) DO UPDATE SET rod_type=EXCLUDED.rod_type,label=EXCLUDED.label,description=EXCLUDED.description,selected_cluster_keys=EXCLUDED.selected_cluster_keys,dimensions=EXCLUDED.dimensions,actor_roles=EXCLUDED.actor_roles,is_active=EXCLUDED.is_active,updated_at=EXCLUDED.updated_at`).run(req.params.key,b.rodType||'revenue_lifecycle',b.label||req.params.key,b.description||null,JSON.stringify(b.selectedClusterKeys||[]),JSON.stringify(b.dimensions||[]),JSON.stringify(b.actorRoles||[]),b.isActive!==false,now); res.json({ok:true}); });
+
+// §26 scenario generator: cross-products dimensionDefinitions into the L2
+// scenario matrix instead of hand-authoring rows. GET previews the count for
+// any dimension set (defaults to the DRAFT placeholder set — see
+// scenarioGenerator.js) without writing anything; POST requires
+// confirmDraft:true when no custom dimensionDefinitions are supplied, so the
+// full placeholder cross-product is never written by accident.
+router.get('/scenarios/generate/preview', requireAdmin, async (req, res) => {
+  const dimensionDefinitions = req.query.dimensionDefinitions ? JSON.parse(req.query.dimensionDefinitions) : DRAFT_DIMENSION_DEFINITIONS;
+  res.json({ dimensionDefinitions, estimatedCount: estimateMatrixSize(dimensionDefinitions), isDraftSet: !req.query.dimensionDefinitions });
+});
+
+router.post('/scenarios/generate', requireAdmin, async (req, res) => {
+  const b = req.body || {};
+  const dimensionDefinitions = b.dimensionDefinitions || DRAFT_DIMENSION_DEFINITIONS;
+  if (!b.dimensionDefinitions && !b.confirmDraft) {
+    return res.status(400).json({ error: 'Pass dimensionDefinitions with your real business taxonomy, or confirmDraft:true to generate the placeholder DRAFT matrix.', estimatedCount: estimateMatrixSize(DRAFT_DIMENSION_DEFINITIONS) });
+  }
+  const scenarios = generateScenarioMatrix(dimensionDefinitions, { rodType: b.rodType || 'revenue_lifecycle' });
+  const now = Date.now();
+  for (const scenario of scenarios) {
+    await db.prepare(`INSERT INTO journey_scenarios (scenario_key,rod_type,label,description,selected_cluster_keys,dimensions,actor_roles,is_active,created_at,updated_at) VALUES ($1,$2,$3,$4,$5::jsonb,$6::jsonb,$7::jsonb,$8,$9,$9) ON CONFLICT (scenario_key) DO NOTHING`)
+      .run(scenario.scenarioKey, scenario.rodType, scenario.label, b.dimensionDefinitions ? null : 'Generated from DRAFT placeholder dimensions — not a business-approved scenario.', JSON.stringify([]), JSON.stringify(scenario.dimensions), JSON.stringify([]), true, now);
+  }
+  res.json({ ok: true, generatedCount: scenarios.length });
+});
 
 router.put('/scenarios/:key/gates/:stageKey', requireAdmin, async (req,res)=>{ const b=req.body||{},now=Date.now(); const scenario=await db.prepare(`SELECT id FROM journey_scenarios WHERE scenario_key=$1`).get(req.params.key); if(!scenario) return res.status(404).json({error:'scenario not found'}); await db.prepare(`INSERT INTO journey_gate_definitions (scenario_id,stage_key,required_clusters,required_molecules,required_dimensions,required_actor_roles,dependency_rules,judgment_policy,human_prompt,sort_order,is_active,created_at,updated_at) VALUES ($1,$2,$3::jsonb,$4::jsonb,$5::jsonb,$6::jsonb,$7::jsonb,$8,$9,$10,$11,$12,$12) ON CONFLICT (scenario_id,stage_key) DO UPDATE SET required_clusters=EXCLUDED.required_clusters,required_molecules=EXCLUDED.required_molecules,required_dimensions=EXCLUDED.required_dimensions,required_actor_roles=EXCLUDED.required_actor_roles,dependency_rules=EXCLUDED.dependency_rules,judgment_policy=EXCLUDED.judgment_policy,human_prompt=EXCLUDED.human_prompt,sort_order=EXCLUDED.sort_order,is_active=EXCLUDED.is_active,updated_at=EXCLUDED.updated_at`).run(scenario.id,req.params.stageKey,JSON.stringify(b.requiredClusters||[]),JSON.stringify(b.requiredMolecules||[]),JSON.stringify(b.requiredDimensions||[]),JSON.stringify(b.requiredActorRoles||[]),JSON.stringify(b.dependencyRules||[]),b.judgmentPolicy||'when_ambiguous',b.humanPrompt||null,b.sortOrder||0,b.isActive!==false,now); res.json({ok:true}); });
 

@@ -4,17 +4,36 @@ import { recordBestyTouch } from '../lib/bestyStaffAttribution.js';
 
 function buildNav(pages) {
   const ordered = Object.values(pages || {})
-    .filter((p) => p.status !== 'draft' && !p.hideFromNav)
+    .filter((p) => p.status !== 'draft' && !p.hideFromNav && p.slug !== 'creative')
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-  return ordered.map((p) => {
+  const normalized = ordered.map((p) => ({
+    ...p,
+    navLabel: p.slug === 'platform' ? 'Solutions & Services' : p.navLabel,
+    navParent: p.navParent || (p.slug === 'consulting' ? 'platform' : p.slug === 'methodology' ? 'resources' : null),
+  }));
+
+  return normalized.filter((p) => !p.navParent).map((p) => {
     const slug = '/' + (p.slug || '');
-    const subPages = (p.sections || []).filter((s) => s.navSubPage && s.status !== 'draft');
+    const subPages = (p.sections || []).filter((s) =>
+      s.status !== 'draft' &&
+      s.status !== 'placeholder' &&
+      !s.hideFromNav &&
+      !['conversationalDemo', 'journeyRods'].includes(s.type)
+    );
+    const childPages = normalized.filter((candidate) => candidate.navParent === p.slug);
+    const resourceLinks = p.slug === 'resources'
+      ? [{ label: 'Architecture & Roadmap', to: '/platform#architecture-map' }]
+      : [];
     return {
       label: p.navLabel || p.name,
       to: slug,
-      children: subPages.length
-        ? subPages.map((s) => ({ label: s.navLabel || s.name, anchor: s.id, pageSlug: slug }))
+      children: (subPages.length || childPages.length || resourceLinks.length)
+        ? [
+            ...childPages.map((child) => ({ label: child.navLabel || child.name, to: '/' + child.slug })),
+            ...subPages.map((s) => ({ label: s.navLabel || s.name, anchor: s.id, pageSlug: slug })),
+            ...resourceLinks,
+          ]
         : undefined,
     };
   });
@@ -162,7 +181,7 @@ function NavItem({ item, pathname, isMobile }) {
       className="sb-public-nav-item"
     >
       <Link
-        className={`sb-public-nav-link${isActive ? ' active' : ''}`}
+        className={`sb-public-nav-link${isActive ? ' active' : ''}${item.featured ? ' sb-public-nav-featured' : ''}`}
         to={item.to}
         onClick={() => hasChildren && setOpen((current) => !current)}
       >
@@ -173,13 +192,15 @@ function NavItem({ item, pathname, isMobile }) {
       {hasChildren && (open || inlineMode) && (
         <div className={`sb-public-nav-menu${inlineMode ? ' inline' : ''}`}>
           {item.children.map((child) => (
-            <AnchorLink
-              key={child.label}
-              label={child.label}
-              anchor={child.anchor}
-              pageSlug={child.pageSlug}
-              onNavigated={() => setOpen(false)}
-            />
+            child.to
+              ? <Link key={child.label} className="sb-public-nav-anchor" to={child.to} onClick={() => setOpen(false)}>{child.label}</Link>
+              : <AnchorLink
+                  key={child.label}
+                  label={child.label}
+                  anchor={child.anchor}
+                  pageSlug={child.pageSlug}
+                  onNavigated={() => setOpen(false)}
+                />
           ))}
         </div>
       )}

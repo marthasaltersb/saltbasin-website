@@ -12,6 +12,7 @@ const THEME_OPTIONS = [
   { id: 'glow-dark',     label: 'Glow — Dark',        swatch: ['#0A121C', '#DDAA66', '#8FADB6'] },
   { id: 'momentum-warm', label: 'Momentum — Warm',    swatch: ['#F5E3C4', '#1B2A3B', '#9C6329'] },
   { id: 'lagoon',        label: 'Lagoon',             swatch: ['#223E48', '#DDAA66', '#7E93A6'] },
+  { id: 'prospect',      label: 'Career Prospect',    swatch: ['#F8F4EC', '#C4843A', '#4A7C8E'] },
 ];
 
 export default function ConfigPanel({ config, onChange, scope = 'admin', site = null }) {
@@ -328,6 +329,13 @@ export default function ConfigPanel({ config, onChange, scope = 'admin', site = 
 
         {/* JIRA integration — admin only */}
         {!isMember && <JiraCard />}
+
+        {/* Connected Apps (OAuth) — admin only. Was fully built (14-provider
+            config in server/lib/oauthProviders.js) but never actually
+            rendered anywhere in this panel — confirmed dead/unreachable UI,
+            not a deliberate rollback like MemberDbsCard's replacement notice
+            below. Restored here (regression-gate audit finding, 2026-07-16). */}
+        {!isMember && <ConnectedAppsCard />}
 
         {/* BestyStaff persona — admin only (it's Salt Basin's public agent) */}
         {!isMember && (

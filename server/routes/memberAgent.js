@@ -18,6 +18,11 @@ import { requireUser } from '../auth.js';
 import { audit } from '../lib/audit.js';
 import { makeRateLimiter } from '../lib/rateLimit.js';
 import { decrypt } from '../lib/crypto.js';
+import {
+  canWriteMemberConfigPath,
+  resolveMemberStaffTemplate,
+  toolsForMemberStaff,
+} from '../lib/memberStaffTemplates.js';
 
 const router = Router();
 router.use(requireUser);
@@ -32,7 +37,7 @@ const MAX_TOOL_ITERATIONS = 8; // safety cap on agentic loops
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-async function getAnthropicKey(userId) {
+export async function getAnthropicKey(userId) {
   const row = await db
     .prepare(`SELECT data FROM member_configs WHERE user_id = $1 AND kind = 'draft'`)
     .get(userId);
@@ -160,7 +165,7 @@ const TOOLS = [
 
 // ── Tool execution ────────────────────────────────────────────────────────────
 
-async function executeTool(name, input, userId, memberDbPools) {
+async function executeTool(name, input, userId, memberDbPools, staffTemplate) {
   // Dynamic per-source query tool
   if (name.startsWith('query_db_')) {
     const dbId = name.replace('query_db_', '');
@@ -169,7 +174,9 @@ async function executeTool(name, input, userId, memberDbPools) {
     const { sql: rawSql } = input;
     if (!rawSql || typeof rawSql !== 'string') return { error: 'sql is required' };
     const isWrite = /^\s*(INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|TRUNCATE)\b/i.test(rawSql);
-    if (isWrite && !src.allowWrite) return { error: `Write access is not enabled for source "${src.name}". Enable it in Config → External Data Sources.` };
+    if (isWrite && (!src.allowWrite || !staffTemplate.allowExternalWrites)) {
+      return { error: `${staffTemplate.name} has read-only authority for external sources.` };
+    }
     try {
       const rows = await src.pool.unsafe(rawSql);
       return { source: src.name, rows: Array.from(rows).slice(0, 200) };
@@ -234,6 +241,9 @@ async function executeTool(name, input, userId, memberDbPools) {
 
     case 'update_config_path': {
       const { path, value } = input;
+      if (!canWriteMemberConfigPath(staffTemplate, path)) {
+        return { error: `${staffTemplate.name} is not authorized to write config path "${path}".` };
+      }
       // Guard: block attempts to write to sensitive credential fields (reserved for UI config)
       if (
         path.startsWith('integrations.memberDb.url')
@@ -270,8 +280,11 @@ async function executeTool(name, input, userId, memberDbPools) {
 
 // ── System prompt ─────────────────────────────────────────────────────────────
 
-function buildSystemPrompt(member, hasMemberDb) {
-  return `You are a profile-building agent for Salt Basin Net Works. You are helping ${member.email} (role: ${member.role}) configure and build their operator profile site.
+function buildSystemPrompt(member, hasMemberDb, staffTemplate) {
+  return `You are ${staffTemplate.name}, a BestyStaff-derived agent for Salt Basin Net Works. You are helping ${member.email} configure their member-scoped draft environment.
+
+Purpose: ${staffTemplate.purpose}
+Workforce type: ${staffTemplate.workforceType}. You are not Channel Rod Staff unless explicitly assigned to a Channel Rod.
 
 Your capabilities:
 - Read and update the member's draft site (pages, sections, fields)
@@ -293,6 +306,7 @@ Salt Basin site structure:
 - Config holds brand colors, social links, resume presets, and integration settings
 
 Guidelines:
+${staffTemplate.instructions.map((instruction) => `- ${instruction}`).join('\n')}
 - Always call get_site first before making changes so you know the current structure
 - When adding sections, set status to 'draft' unless the member explicitly wants it live
 - Suggest meaningful section names that will make sense in the sidebar
@@ -304,7 +318,7 @@ Guidelines:
 // ── Main chat endpoint ────────────────────────────────────────────────────────
 
 router.post('/', agentLimiter, async (req, res) => {
-  const { message, history = [] } = req.body || {};
+  const { message, history = [], staffTemplateId } = req.body || {};
   if (!message || typeof message !== 'string') {
     return res.status(400).json({ error: 'message required' });
   }
@@ -318,11 +332,14 @@ router.post('/', agentLimiter, async (req, res) => {
 
   // Check for member DB connections (array of named sources)
   const cfg = await readConfig(req.user.id);
+  const configuredTemplateId = cfg?.agents?.defaultMemberStaffTemplateId;
+  const staffTemplate = resolveMemberStaffTemplate(staffTemplateId || configuredTemplateId);
   const memberDbs = cfg?.integrations?.memberDbs || [];
   const memberDbPools = {};
-  const activeTools = [...TOOLS];
+  const activeTools = toolsForMemberStaff(staffTemplate, TOOLS);
 
   for (const dbCfg of memberDbs) {
+    if (!staffTemplate.allowExternalSources) break;
     if (!dbCfg.url || !dbCfg.id) continue;
     try {
       memberDbPools[dbCfg.id] = {
@@ -343,7 +360,7 @@ router.post('/', agentLimiter, async (req, res) => {
   }
 
   const member = req.user;
-  const systemPrompt = buildSystemPrompt(member, Object.keys(memberDbPools).length > 0);
+  const systemPrompt = buildSystemPrompt(member, Object.keys(memberDbPools).length > 0, staffTemplate);
 
   // Build message history for Claude
   const messages = [
@@ -399,7 +416,7 @@ router.post('/', agentLimiter, async (req, res) => {
       const toolResults = [];
       for (const block of assistantContent) {
         if (block.type !== 'tool_use') continue;
-        const result = await executeTool(block.name, block.input, req.user.id, memberDbPools);
+        const result = await executeTool(block.name, block.input, req.user.id, memberDbPools, staffTemplate);
         toolCallLog.push({ tool: block.name, input: block.input, result });
         toolResults.push({ type: 'tool_result', tool_use_id: block.id, content: JSON.stringify(result) });
       }

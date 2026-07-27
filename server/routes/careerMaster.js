@@ -25,6 +25,14 @@ import { db, getJSON, setJSON } from '../db.js';
 import { requireAdmin, requireUser, getUserFromCookie } from '../auth.js';
 import { careerMasterSeed } from '../data/career/seed.js';
 import { buildRollupCatalog } from '../lib/rollupMetrics.js';
+import { syncSingleEntry, removeEntryEvidence } from '../lib/careerAtomMigration.js';
+import { buildCareerAtomRollupCatalog } from '../lib/careerAtomRollups.js';
+import { CAREER_ENTRY_SOURCES, sourceForTable, atomDefinitionByKey, isJsonbSourceColumn } from '../lib/careerAtomRegistry.js';
+import { getConsentStatus, recordConsent } from '../lib/consentRegistry.js';
+import { recordInteraction } from '../lib/usageTracking.js';
+import { buildCareerSemanticTemplateWorkbook } from '../lib/careerSemanticTemplate.js';
+import { parseCareerSemanticWorkbook } from '../lib/careerSemanticImport.js';
+import { extractResumeText, proposeCareerMappingsFromText, bondProposedMappings } from '../lib/careerResumeExtraction.js';
 
 const router = Router();
 const INTAKE_BUCKET = 'career-context';
@@ -392,7 +400,15 @@ function makeResourceRouter(table, fieldMap, jsonFields = new Set(), { scoped = 
     const result = await db
       .prepare(`INSERT INTO ${table} (${cols.join(', ')}) VALUES (${placeholders.join(', ')}) RETURNING id`)
       .run(...vals);
-    res.json({ id: Number(result.lastInsertRowid) });
+    const newId = Number(result.lastInsertRowid);
+    // Keep the Career Channel Rod's evidence in sync with the legacy CRUD —
+    // fire-and-forget, same pattern as the audit-log calls elsewhere in this
+    // codebase. Only applies to tables in CAREER_ENTRY_SOURCES (career_meta_
+    // options has no rod to sync into and isn't part of that registry).
+    if (scoped && sourceForTable(table)) {
+      syncSingleEntry(req.user.id, table, newId).catch((e) => console.error('[careerMaster] atom sync failed:', e.message));
+    }
+    res.json({ id: newId });
   });
 
   r.patch('/:id', async (req, res) => {
@@ -414,14 +430,21 @@ function makeResourceRouter(table, fieldMap, jsonFields = new Set(), { scoped = 
     if (scoped) vals.push(req.user.id);
     const result = await db.prepare(`UPDATE ${table} SET ${sets.join(', ')} ${where}`).run(...vals);
     if (!result.changes) return res.status(404).json({ error: 'Not found' });
+    if (scoped && sourceForTable(table)) {
+      syncSingleEntry(req.user.id, table, id).catch((e) => console.error('[careerMaster] atom sync failed:', e.message));
+    }
     res.json({ ok: true });
   });
 
   r.delete('/:id', async (req, res) => {
+    const id = Number(req.params.id);
     const result = scoped
-      ? await db.prepare(`DELETE FROM ${table} WHERE id = $1 AND user_id = $2`).run(Number(req.params.id), req.user.id)
-      : await db.prepare(`DELETE FROM ${table} WHERE id = $1`).run(Number(req.params.id));
+      ? await db.prepare(`DELETE FROM ${table} WHERE id = $1 AND user_id = $2`).run(id, req.user.id)
+      : await db.prepare(`DELETE FROM ${table} WHERE id = $1`).run(id);
     if (!result.changes) return res.status(404).json({ error: 'Not found' });
+    if (scoped && sourceForTable(table)) {
+      removeEntryEvidence(req.user.id, table, id).catch((e) => console.error('[careerMaster] atom evidence cleanup failed:', e.message));
+    }
     res.json({ ok: true });
   });
 
@@ -442,8 +465,9 @@ async function resolveDefaultAdminUserId() {
 }
 // `owner=me` resolves to the authenticated caller's own id — lets the
 // (already-authenticated) builder/admin UI request its own Career Master
-// data without needing to know its own profile slug.
-async function resolveOwnerUserId(ownerSlug, req) {
+// data without needing to know its own profile slug. Exported for reuse by
+// server/lib/dataSourceRegistry.js's generic rollup route.
+export async function resolveOwnerUserId(ownerSlug, req) {
   if (ownerSlug === 'me') {
     const user = await getUserFromCookie(req).catch(() => null);
     if (user) return Number(user.id);
@@ -520,6 +544,54 @@ router.get('/rollups', async (req, res) => {
     res.json(buildRollupCatalog(master));
   } catch (e) {
     res.status(500).json({ error: 'Failed to compute rollup catalog' });
+  }
+});
+
+// Rollup catalog for the public Career Prospect layout (careerRollupShowcase
+// block) — computed from Channel Rod evidence (journey_rod_evidence), not
+// the legacy tables directly, per explicit design decision: the legacy
+// career_* tables stay the editing surface, the Channel Rod is the read
+// surface for anything member-facing/public. Same ?owner=<slug>|me
+// resolution as /rollups above.
+router.get('/atom-rollups', async (req, res) => {
+  try {
+    const ownerUserId = await resolveOwnerUserId(req.query.owner, req);
+    res.json(await buildCareerAtomRollupCatalog(ownerUserId));
+    // Orbit usage tracking (2026-07-27) — attributed to the profile owner
+    // being queried, not the (possibly anonymous) viewer. Fire-and-forget,
+    // after the response is sent, and never lets a missing entitlement rod
+    // (e.g. no real member behind this owner id yet) fail the actual
+    // request — same non-blocking pattern as this file's other tracking
+    // calls elsewhere in the codebase.
+    recordInteraction({ userId: ownerUserId, moduleKey: 'resume_career', interactionType: 'career_rollup_queried' })
+      .catch((e) => console.warn('[careerMaster] atom-rollups usage tracking skipped:', e.message));
+  } catch (e) {
+    console.error('[careerMaster] atom-rollups failed:', e.message);
+    res.status(500).json({ error: 'Failed to compute Career Atom rollup catalog' });
+  }
+});
+
+// Consent gate (2026-07-16) — required before any career configuration,
+// upload, or Career Orbit entry. See server/lib/consentRegistry.js.
+router.get('/consent-status', requireUser, async (req, res) => {
+  try {
+    res.json(await getConsentStatus(req.user.id, req.query.consentType || 'career_portfolio'));
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.post('/consent', requireUser, async (req, res) => {
+  const { consentType = 'career_portfolio', granted } = req.body || {};
+  if (typeof granted !== 'boolean') return res.status(400).json({ error: 'granted (boolean) is required' });
+  try {
+    const result = await recordConsent(req.user.id, consentType, granted, {
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+    });
+    res.json({ ok: true, ...result });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
   }
 });
 
@@ -709,6 +781,165 @@ router.post('/sync-site-metadata', requireUser, async (req, res) => {
     console.error('[career] sync-site-metadata failed:', e.message);
     res.status(500).json({ error: 'Failed to sync site metadata from Career Master' });
   }
+});
+
+// ── Phase 1: Excel semantic template + AI resume extraction + preview-
+// before-persist (2026-07-27) ── server/lib/careerSemanticTemplate.js,
+// careerSemanticImport.js, and careerResumeExtraction.js hold the real
+// logic; these routes are thin. Only /mappings/commit writes to the
+// database — /semantic-template just generates a download, /semantic-import
+// and /resume-analysis only parse/propose and return a preview payload for
+// CareerMappingPreview.jsx. Scope note: unlike /intake-documents above,
+// these routes don't persist the raw uploaded file to Supabase or create a
+// career_intake_documents row — the proposal is transient (held in the
+// browser until confirmed), which is what "preview before persisting"
+// requires; the legacy intake-documents/intake-runs upload flow remains a
+// separate, still-dormant system, not wired to this new path.
+router.get('/semantic-template', requireUser, async (req, res) => {
+  try {
+    const buffer = await buildCareerSemanticTemplateWorkbook();
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="salt-basin-career-semantic-template.xlsx"');
+    res.send(buffer);
+  } catch (e) {
+    console.error('[career] semantic-template failed:', e.message);
+    res.status(500).json({ error: 'Failed to generate semantic template' });
+  }
+});
+
+router.post('/semantic-import', requireUser, (req, res) => {
+  intakeUpload.single('file')(req, res, async (err) => {
+    if (err) return res.status(400).json({ error: err.message });
+    if (!req.file) return res.status(400).json({ error: 'file is required' });
+    try {
+      const result = parseCareerSemanticWorkbook(req.file.buffer);
+      res.json({ ok: true, source: 'excel_semantic_import', ...result });
+    } catch (e) {
+      console.error('[career] semantic-import failed:', e.message);
+      res.status(400).json({ error: `Could not parse workbook: ${e.message}` });
+    }
+  });
+});
+
+router.post('/resume-analysis', requireUser, (req, res) => {
+  intakeUpload.single('file')(req, res, async (err) => {
+    if (err) return res.status(400).json({ error: err.message });
+    if (!req.file) return res.status(400).json({ error: 'file is required' });
+    try {
+      const text = await extractResumeText(req.file.buffer, req.file.mimetype, req.file.originalname);
+      if (!text.trim()) return res.status(400).json({ error: 'Could not extract any text from this file — try a different format' });
+      const rawProposal = await proposeCareerMappingsFromText(text);
+      if (rawProposal.offline) return res.status(503).json({ error: 'Resume analysis is not configured on this server (missing ANTHROPIC_API_KEY)' });
+      const proposal = bondProposedMappings(rawProposal);
+      res.json({ ok: true, source: 'ai_resume_extraction', proposal, sheetWarnings: [], missingSheets: [], recognizedSheets: [] });
+    } catch (e) {
+      console.error('[career] resume-analysis failed:', e.message);
+      res.status(500).json({ error: `Resume analysis failed: ${e.message}` });
+    }
+  });
+});
+
+const TABLE_BY_ENTRY_TYPE = Object.fromEntries(CAREER_ENTRY_SOURCES.map((s) => [s.entryType, s.table]));
+const nextOrderIndexCache = new Map();
+async function nextOrderIndex(table, userId) {
+  const cacheKey = `${table}:${userId}`;
+  if (nextOrderIndexCache.has(cacheKey)) {
+    const next = nextOrderIndexCache.get(cacheKey);
+    nextOrderIndexCache.set(cacheKey, next + 1);
+    return next;
+  }
+  const row = await db.prepare(`SELECT COALESCE(MAX(order_index), -1) + 1 AS next FROM ${table} WHERE user_id = $1`).get(userId);
+  const next = Number(row?.next ?? 0);
+  nextOrderIndexCache.set(cacheKey, next + 1);
+  return next;
+}
+
+// The only route in this Phase 1 group that persists anything. Writes each
+// confirmed entry into its real legacy career_* table (the actual editing
+// surface, per this file's own header comment) so the classic
+// CareerMasterPanel immediately shows what was imported, then reuses the
+// already-shipped syncSingleEntry() to populate journey_rod_evidence —
+// same single write-path every other Career Master create already uses, not
+// a second parallel evidence-only write.
+router.post('/mappings/commit', requireUser, async (req, res) => {
+  const body = req.body || {};
+  const entries = Array.isArray(body.entries) ? body.entries : [];
+  if (!entries.length) return res.status(400).json({ error: 'entries (non-empty array) is required' });
+
+  const created = [];
+  const errors = [];
+  const now = Date.now();
+  nextOrderIndexCache.clear();
+
+  for (const entry of entries) {
+    const table = TABLE_BY_ENTRY_TYPE[entry.entryType];
+    if (!table) { errors.push({ entryType: entry.entryType, error: 'Unknown entry type' }); continue; }
+    const values = entry.values || {};
+    const cols = ['user_id'];
+    const placeholders = ['$1'];
+    const vals = [req.user.id];
+    let i = 2;
+    let touchedAny = false;
+    for (const [atomKey, rawValue] of Object.entries(values)) {
+      if (rawValue === null || rawValue === undefined || rawValue === '') continue;
+      const atomDef = atomDefinitionByKey(atomKey);
+      if (!atomDef || atomDef.entryType !== entry.entryType) {
+        errors.push({ entryType: entry.entryType, atomKey, error: 'Unknown or mismatched atom' });
+        continue;
+      }
+      const column = atomDef.sourceColumn;
+      cols.push(column);
+      if (isJsonbSourceColumn(column)) {
+        placeholders.push(`$${i++}::jsonb`);
+        let jsonValue = rawValue;
+        if (typeof rawValue === 'string') {
+          try { jsonValue = JSON.parse(rawValue); } catch { jsonValue = [rawValue]; }
+        }
+        vals.push(JSON.stringify(Array.isArray(jsonValue) ? jsonValue : [jsonValue]));
+      } else {
+        placeholders.push(`$${i++}`);
+        vals.push(rawValue);
+      }
+      touchedAny = true;
+    }
+    if (!touchedAny) { errors.push({ entryType: entry.entryType, error: 'No recognized fields to save' }); continue; }
+
+    cols.push('order_index', 'created_at', 'updated_at');
+    placeholders.push(`$${i++}`, `$${i++}`, `$${i++}`);
+    vals.push(await nextOrderIndex(table, req.user.id), now, now);
+
+    try {
+      const result = await db.prepare(`INSERT INTO ${table} (${cols.join(', ')}) VALUES (${placeholders.join(', ')}) RETURNING id`).run(...vals);
+      const newId = Number(result.lastInsertRowid);
+      await syncSingleEntry(req.user.id, table, newId);
+      created.push({ entryType: entry.entryType, table, id: newId });
+    } catch (e) {
+      console.error('[career] mappings/commit insert failed:', e.message);
+      errors.push({ entryType: entry.entryType, error: e.message });
+    }
+  }
+
+  try {
+    await db.prepare(`
+      INSERT INTO career_intake_runs (
+        user_id, owner_scope, run_kind, status, document_ids, analysis_passes_requested,
+        primary_resume_requested, public_primary_research, resume_preset_created,
+        summary, metadata, created_at, updated_at
+      ) VALUES ($1,$2,$3,'completed',$4,1,false,false,false,$5,$6,$7,$7)
+    `).run(
+      req.user.id,
+      req.user.role === 'admin' ? 'admin' : 'member',
+      cleanText(body.source, 80) || 'career_mapping_commit',
+      JSON.stringify([]),
+      `Committed ${created.length} Career Master entr${created.length === 1 ? 'y' : 'ies'} from ${body.source === 'ai_resume_extraction' ? 'AI resume analysis' : 'semantic Excel import'}.`,
+      JSON.stringify({ created, errors, source: body.source || null }),
+      now
+    );
+  } catch (e) {
+    console.error('[career] failed to record intake run for mappings commit:', e.message);
+  }
+
+  res.json({ ok: true, created, errors });
 });
 
 // Career Master CRUD is member-owned from here down (multi-tenancy retrofit

@@ -20,6 +20,25 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  getMemberEntitlements: () => request('/api/member-entitlements'),
+  getCareerConsentStatus: (consentType = 'career_portfolio') => request(`/api/career/consent-status?consentType=${consentType}`),
+  recordCareerConsent: (consentType, granted) => request('/api/career/consent', { method: 'POST', body: JSON.stringify({ consentType, granted }) }),
+  listResumeOutputs: () => request('/api/resume-outputs'),
+  createResumeOutput: (body) => request('/api/resume-outputs', { method: 'POST', body: JSON.stringify(body) }),
+  getResumeOutputStaleness: (id) => request(`/api/resume-outputs/${id}/staleness`),
+  updateResumeOutputStatus: (id, status) => request(`/api/resume-outputs/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+  getFinancialProviders: () => request('/api/member-financial/providers'),
+  getFinancialConnections: () => request('/api/member-financial/connections'),
+  createFinancialConnection: (body) => request('/api/member-financial/connections', { method: 'POST', body: JSON.stringify(body) }),
+  revokeFinancialConnection: (id) => request(`/api/member-financial/connections/${id}`, { method: 'DELETE' }),
+  createFinancialAccount: (connectionId, body) => request(`/api/member-financial/connections/${connectionId}/accounts`, { method: 'POST', body: JSON.stringify(body) }),
+  createFinancialShare: (body) => request('/api/member-financial/shares', { method: 'POST', body: JSON.stringify(body) }),
+  revokeFinancialShare: (id) => request(`/api/member-financial/shares/${id}`, { method: 'DELETE' }),
+  getMetricRegistry: () => request('/api/metric-intelligence/metrics'),
+  getMetricArrDemo: (variant = 'live_arr') => request(`/api/metric-intelligence/metrics/arr/demo?variant=${encodeURIComponent(variant)}`),
+  syncMetricRegistry: () => request('/api/metric-intelligence/registry/sync', { method: 'POST' }),
+  calculateMetric: (body) => request('/api/metric-intelligence/calculate', { method: 'POST', body: JSON.stringify(body) }),
+  getMetricObservations: (filters = {}) => request(`/api/metric-intelligence/observations?${new URLSearchParams(filters)}`),
   // Auth
   me: () => request('/api/auth/me'),
   login: (email, password) =>
@@ -74,6 +93,9 @@ export const api = {
   saveOrgConfig: (id, data) => request(`/api/org-portal/${id}/config`, { method: 'PUT', body: JSON.stringify(data) }),
   publishOrgPortal: (id) => request(`/api/org-portal/${id}/publish`, { method: 'POST' }),
   getOrgPageTypes: (id) => request(`/api/org-portal/${id}/page-types`),
+  getOrgConsentStatus: (id) => request(`/api/org-portal/${id}/consent-status`),
+  recordOrgConsent: (id, body) => request(`/api/org-portal/${id}/consent`, { method: 'POST', body: JSON.stringify(body) }),
+  getMemberEmails: () => request('/api/members/me/emails'),
 
   // Public — used by the Salt Basin home page Net Works banner.
   listFeaturedMembers: () => request('/api/member-site/featured'),
@@ -206,6 +228,30 @@ export const api = {
     return body;
   },
 
+  // Phase 1 semantic import / resume analysis (2026-07-27) — download is a
+  // raw blob fetch (not JSON), the two upload calls share uploadCareerIntakeDocument's
+  // formData-POST pattern above, commit is a plain JSON POST.
+  downloadCareerSemanticTemplate: async () => {
+    const res = await fetch('/api/career/semantic-template', { credentials: 'include' });
+    if (res.status === 404) { const e = new Error('not_built'); e.status = 404; throw e; }
+    if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+    return res.blob();
+  },
+  importCareerSemanticWorkbook: async (formData) => {
+    const res = await fetch('/api/career/semantic-import', { method: 'POST', credentials: 'include', body: formData });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) { const e = new Error(body?.error || `Request failed: ${res.status}`); e.status = res.status; throw e; }
+    return body;
+  },
+  analyzeCareerResume: async (formData) => {
+    const res = await fetch('/api/career/resume-analysis', { method: 'POST', credentials: 'include', body: formData });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) { const e = new Error(body?.error || `Request failed: ${res.status}`); e.status = res.status; throw e; }
+    return body;
+  },
+  commitCareerMappings: (entries, source) =>
+    request('/api/career/mappings/commit', { method: 'POST', body: JSON.stringify({ entries, source }) }),
+
   // Admin nav structure (data-driven AdminShell)
   getAdminNav: () => request('/api/config/admin-nav'),
   updateAdminNav: (nav) =>
@@ -260,4 +306,62 @@ export const api = {
 
   // OAuth connections (used by Command Center + Profile Hub integrations)
   getOAuthConnections: () => request('/api/oauth/connections'),
+
+  // EIDOS Operating Model — global/org-scoped config for the DSM engine
+  // built on top of journey_data_rods. Most resources are keyed by a human
+  // business key (not a numeric id), upserted via PUT — see
+  // docs/eidos-operating-model-playbook.md.
+  listEidosRodTypes: () => request('/api/eidos/rod-types'),
+  saveEidosRodType: (id, item) => request(`/api/eidos/rod-types/${id}`, { method: 'PUT', body: JSON.stringify(item) }),
+  deleteEidosRodType: (id) => request(`/api/eidos/rod-types/${id}`, { method: 'DELETE' }),
+
+  listEidosPorts: (orgId) => request(`/api/eidos/ports${orgId ? `?orgId=${orgId}` : ''}`),
+  saveEidosPort: (key, item) => request(`/api/eidos/ports/${key}`, { method: 'PUT', body: JSON.stringify(item) }),
+  deleteEidosPort: (key, orgId) => request(`/api/eidos/ports/${key}${orgId ? `?orgId=${orgId}` : ''}`, { method: 'DELETE' }),
+
+  listEidosMolecules: () => request('/api/journey-rods/molecules'),
+  saveEidosMolecule: (key, item) => request(`/api/journey-rods/molecules/${key}`, { method: 'PUT', body: JSON.stringify(item) }),
+  listEidosClusters: () => request('/api/journey-rods/clusters'),
+  saveEidosCluster: (key, item) => request(`/api/journey-rods/clusters/${key}`, { method: 'PUT', body: JSON.stringify(item) }),
+
+  listEidosAffinityRules: (orgId) => request(`/api/eidos/affinity-rules${orgId ? `?orgId=${orgId}` : ''}`),
+  saveEidosAffinityRule: (clusterKey, moleculeKey, item) =>
+    request(`/api/eidos/affinity-rules/${clusterKey}/${moleculeKey}`, { method: 'PUT', body: JSON.stringify(item) }),
+  deleteEidosAffinityRule: (clusterKey, moleculeKey, orgId) =>
+    request(`/api/eidos/affinity-rules/${clusterKey}/${moleculeKey}${orgId ? `?orgId=${orgId}` : ''}`, { method: 'DELETE' }),
+
+  listEidosScenarios: () => request('/api/journey-rods/scenarios'),
+  saveEidosScenario: (key, item) => request(`/api/journey-rods/scenarios/${key}`, { method: 'PUT', body: JSON.stringify(item) }),
+  listEidosGateDefinitions: () => request('/api/journey-rods/gate-definitions'),
+  saveEidosGateDefinition: (scenarioKey, stageKey, item) =>
+    request(`/api/journey-rods/scenarios/${scenarioKey}/gates/${stageKey}`, { method: 'PUT', body: JSON.stringify(item) }),
+
+  getEidosSettlementStates: (rodId) => request(`/api/eidos/settlement-states/${rodId}`),
+  computeEidosSettlement: (rodId, moleculeKey) =>
+    request(`/api/eidos/settlement-states/${rodId}/compute`, { method: 'POST', body: JSON.stringify({ moleculeKey }) }),
+
+  listEidosAccountingPolicies: (orgId) => request(`/api/eidos/accounting-policies${orgId ? `?orgId=${orgId}` : ''}`),
+  saveEidosAccountingPolicy: (key, item) => request(`/api/eidos/accounting-policies/${key}`, { method: 'PUT', body: JSON.stringify(item) }),
+  deleteEidosAccountingPolicy: (key, orgId) => request(`/api/eidos/accounting-policies/${key}${orgId ? `?orgId=${orgId}` : ''}`, { method: 'DELETE' }),
+
+  listEidosGlAccounts: (orgId) => request(`/api/eidos/gl-accounts${orgId ? `?orgId=${orgId}` : ''}`),
+  saveEidosGlAccount: (key, item) => request(`/api/eidos/gl-accounts/${key}`, { method: 'PUT', body: JSON.stringify(item) }),
+  deleteEidosGlAccount: (key, orgId) => request(`/api/eidos/gl-accounts/${key}${orgId ? `?orgId=${orgId}` : ''}`, { method: 'DELETE' }),
+
+  listEidosAccountingTopologies: (orgId) => request(`/api/eidos/accounting-topologies${orgId ? `?orgId=${orgId}` : ''}`),
+  saveEidosAccountingTopology: (key, item) => request(`/api/eidos/accounting-topologies/${key}`, { method: 'PUT', body: JSON.stringify(item) }),
+  deleteEidosAccountingTopology: (key, orgId) => request(`/api/eidos/accounting-topologies/${key}${orgId ? `?orgId=${orgId}` : ''}`, { method: 'DELETE' }),
+
+  listEidosJournalEntries: (orgId) => request(`/api/eidos/journal-entries${orgId ? `?orgId=${orgId}` : ''}`),
+  getEidosJournalEntry: (id) => request(`/api/eidos/journal-entries/${id}`),
+  createEidosJournalEntry: (item) => request('/api/eidos/journal-entries', { method: 'POST', body: JSON.stringify(item) }),
+
+  getEidosReciprocalComparisons: (rodId) => request(`/api/eidos/reciprocal/comparisons/${rodId}`),
+  getEidosDivergences: (rodId) => request(`/api/eidos/reciprocal/divergences/${rodId}`),
+  computeEidosDivergence: (rodIdA, rodIdB) =>
+    request('/api/eidos/reciprocal/divergences/compute', { method: 'POST', body: JSON.stringify({ rodIdA, rodIdB }) }),
+
+  getEidosPendingDecisions: () => request('/api/journey-rods/decisions/pending'),
+  resolveEidosDecision: (id, status, notes) =>
+    request(`/api/journey-rods/decisions/${id}/resolve`, { method: 'POST', body: JSON.stringify({ status, notes }) }),
 };

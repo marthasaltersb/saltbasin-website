@@ -19,6 +19,7 @@
 // the static intake forms below — same fields, same endpoint.
 
 import React, { useEffect, useRef, useState, useMemo } from 'react';
+import SaltBasinCrystal from './SaltBasinCrystal.jsx';
 import {
   CONSENT_LINE, KNOWS_BETSY_QUESTION, TOP_QUESTIONS_QUESTION, CLOSING_QUESTION,
   FLOW_QUICK_REPLIES, matchSafeAnswer,
@@ -27,9 +28,9 @@ import {
 import { readBestyAttribution, recordBestyTouch } from '../lib/bestyStaffAttribution.js';
 
 const C = {
-  navy: 'var(--sbh-ink, #172A45)',
+  navy: 'var(--sb-navy, #3D4452)',
   midnight: 'var(--sb-navy-deep, #0F1B2D)',
-  gold: 'var(--sbh-gold, #C4843A)',
+  gold: 'var(--sb-teal, #4A7C8E)',
   cream: 'var(--sbh-cream, #F7F2E8)',
   mist: 'var(--sbh-mist, #EEF2F6)',
   slate: 'var(--sbh-ink-soft, #536173)',
@@ -401,7 +402,24 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
   }, []);
 
   useEffect(() => {
-    if (open) recordBestyTouch('bestystaff-chat', { action: 'chat-opened', sourceOutput });
+    if (!open) return;
+    recordBestyTouch('bestystaff-chat', { action: 'chat-opened', sourceOutput });
+    // Opening BestyStaff is itself a meaningful interaction. Create or update
+    // an anonymous provisional lead immediately so abandoned chats remain
+    // visible to the lead owner without implying contact or marketing consent.
+    fetch('/api/leads/touch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        source: 'bestystaff',
+        message: 'BestyStaff chat opened — conversation unfinished',
+        questionKey: 'conversationStatus',
+        answerValue: 'provisional_unfinished',
+        ctaLocation: `${window.location.pathname}${window.location.search}#bestystaff`,
+        attribution: readBestyAttribution(),
+      }),
+    }).catch(() => {});
   }, [open, sourceOutput]);
 
   // Teaser pages open automatically. Data-driven contact sections can opt
@@ -539,7 +557,7 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
         phone: leadCapture.contactPhone || null,
         name: leadCapture.contactName || null,
         message: transcript,
-        answers: { ...(leadCapture.answers || {}), attribution: readBestyAttribution() },
+        answers: { ...(leadCapture.answers || {}), conversationStatus: 'completed', attribution: readBestyAttribution() },
         ctaLocation: `${window.location.pathname}#bestystaff`,
       }),
     });
@@ -742,12 +760,11 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          style={{
-            position: 'fixed', right: '1.25rem', bottom: '1.25rem', zIndex: 1100,
-            ...S.btnGold, borderRadius: 22, boxShadow: '0 4px 18px rgba(0,0,0,0.25)',
-          }}
+          className="sbh-chat-launcher"
+          aria-label="Open BestyStaff intake"
         >
-          ✦ Chat with BestyStaff
+          <SaltBasinCrystal variant="signature" size="launcher" interactive pulseActive={sending} />
+          <span>BestyStaff Intake</span>
         </button>
       )}
 

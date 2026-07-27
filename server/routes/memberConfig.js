@@ -71,7 +71,8 @@ async function ensureDraft(user) {
 
 router.get('/draft', requireUser, async (req, res) => {
   const cfg = await ensureDraft(req.user);
-  res.json(redactForClient(cfg));
+  const defaults = defaultMemberConfig({ displayName: req.user.displayName, email: req.user.email });
+  res.json(redactForClient({ ...cfg, navigation: cfg.navigation || defaults.navigation }));
 });
 
 router.put('/draft', requireUser, async (req, res) => {

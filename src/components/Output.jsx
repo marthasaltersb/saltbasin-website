@@ -1408,7 +1408,7 @@ export function ResumeOutput() {
               'This resume includes her full career timeline, industry breakdown, technology proficiencies, and domain capabilities — available to Salt Basin members.',
             ],
             bullets: [
-              '15+ years · Q2R, RevOps, GTM Systems, Data Architecture',
+              '12+ years · Q2R, RevOps, GTM Systems, Data Architecture',
               'Vista Equity Partners, PwC, Slalom, multiple NASDAQ-listed orgs',
               'Hands-on: Salesforce, Zuora, NetSuite, Snowflake, Tableau, HubSpot',
             ],
@@ -2694,6 +2694,11 @@ export function ResumePortfolioOutput() {
     );
   }
 
+  // A portfolio is still useful before named public presets have been saved.
+  // Render the owner's configured primary resume (or the canonical v2/default
+  // resume configuration) instead of presenting a dead empty state.
+  if (items.length === 0) return <ResumeOutput />;
+
   // Group by roleLabel first, falling back to industryLabel, then "General".
   const groups = new Map();
   for (const item of items) {
@@ -2705,9 +2710,6 @@ export function ResumePortfolioOutput() {
   return (
     <OutputFrame title="Resume Portfolio" eyebrow="Portfolio">
       <div style={{ fontFamily: 'Georgia, serif' }}>
-        {items.length === 0 && (
-          <p style={{ fontSize: '0.9rem', color: '#666' }}>No published resume versions yet.</p>
-        )}
         {[...groups.entries()].map(([group, groupItems]) => (
           <section key={group} style={{ marginBottom: '2rem' }}>
             <OutputHeading>{group}</OutputHeading>
@@ -3720,13 +3722,13 @@ export function BuildSummaryOutput() {
               marginBottom: '0.75rem',
             }}
           >
-            <SumChip label="Actual AI-augmented cost" value={dollars(totals.costUsdClaude)} accent />
-            <SumChip label="Estimated traditional cost" value={dollars(totals.traditionalCostUsd)} />
-            <SumChip label="Savings vs traditional" value={dollars(totals.aiSavingsUsd)} accent />
-            <SumChip label="Cost multiplier avoided" value={totals.aiSavingsMultiple ? `${totals.aiSavingsMultiple}x` : '—'} />
+            <SumChip label="Observed human-plus-AI cost" value={dollars(totals.costUsdClaude)} accent />
+            <SumChip label="Estimated equivalent traditional cost" value={dollars(totals.traditionalCostUsd)} />
+            <SumChip label="Estimated cost avoided" value={dollars(totals.estimatedCostAvoidedUsd)} accent />
+            <SumChip label="Cost leverage ratio" value={totals.costLeverageRatio ? `${totals.costLeverageRatio}x` : '—'} />
           </div>
           <p style={{ ...paraStyle, fontSize: '0.85rem' }}>
-            Estimate methodology: a traditional team is assumed to take the <strong>same wall-clock duration</strong> as the AI-augmented build, priced at <strong>$175/hour</strong> (onshore senior-engineer benchmark, RATE_CONFIGS_2026). This is a floor comparison, not a claim about how much longer traditional delivery would actually take — engineer-equivalent effort (a traditional team doing this same scope from scratch, including its own spec/architecture time) has not been independently estimated and would very likely be higher. See the Contribution Intelligence breakdown below for the activity-type pricing this is built from.
+            Estimate methodology: a traditional team is assumed to take the <strong>same wall-clock duration</strong> as the AI-augmented build, priced at <strong>$175/hour</strong> (onshore senior-engineer benchmark, RATE_CONFIGS_2026). This is a floor comparison, not a claim about how much longer traditional delivery would actually take, and not a claim that AI "saved" this amount — engineer-equivalent effort (a traditional team doing this same scope from scratch, including its own spec/architecture time) has not been independently estimated and would very likely be higher. See the Contribution Intelligence breakdown below for the activity-type pricing this is built from.
           </p>
         </section>
 
@@ -4237,10 +4239,10 @@ function BuildProgressCharts() {
             valueFormatter={(v) => `${Math.round(v * 10) / 10} h`}
           />
           <ProgressChartCard
-            title="AI savings vs traditional ($)"
+            title="Estimated cost avoided vs traditional ($)"
             color="#a8b89a"
             data={series}
-            dataKey="aiSavingsUsd"
+            dataKey="estimatedCostAvoidedUsd"
             milestones={milestones}
             valueFormatter={(v) => `$${Math.round(v).toLocaleString()}`}
           />
@@ -5125,9 +5127,9 @@ export function MethodologyOutput() {
           { label: 'What Gets Measured', body: 'Session active hours (JSONL burst analysis), turn density (user_turns / active_hours), contribution type per requirement, estimate vs actual variance per release.' },
           { label: 'Contribution Types', body: 'Strategic Direction · Domain Authoring · Active Supervision · Code Generation. All Betsy contributions at $225/hr (2026). Claude at $115/hr quality-adjusted.' },
           { label: 'Oversight Reduction Path', body: 'Turn density classifies oversight intensity: Critical >120/hr · High 80–120 · Moderate 40–80 · Low <40. Irreducible IP turns vs reducible execution turns are tracked separately.' },
-          { label: 'The Cost Savings Multiple', body: stats?.aiSavingsMultiple
-              ? `traditional_cost_usd / actual_cost_usd, both computed from the same real active hours at their respective rates. Salt Basin platform to date: ${stats.aiSavingsMultiple}× across ${stats.hoursTotal} real active hours (${stats.hoursClaude}h Claude + ${stats.hoursBetsy}h Betsy). A separate "engineer-equivalent effort" leverage figure — how much longer a traditional team would actually take, not just what the same duration would cost — remains an open, unverified estimate.`
-              : 'traditional_cost_usd / actual_cost_usd, both computed from the same real active hours at their respective rates. A separate "engineer-equivalent effort" leverage figure remains an open, unverified estimate.' },
+          { label: 'The Cost Leverage Ratio', body: stats?.costLeverageRatio
+              ? `traditional_cost_usd / actual_cost_usd, both computed from the same real active hours at their respective rates — an estimated equivalent traditional effort, not a verified savings figure. Salt Basin platform to date: ${stats.costLeverageRatio}× across ${stats.hoursTotal} real active hours (${stats.hoursClaude}h Claude + ${stats.hoursBetsy}h Betsy). A separate "engineer-equivalent effort" leverage figure — how much longer a traditional team would actually take, not just what the same duration would cost — remains an open, unverified estimate.`
+              : 'traditional_cost_usd / actual_cost_usd, both computed from the same real active hours at their respective rates — an estimated equivalent traditional effort, not a verified savings figure. A separate "engineer-equivalent effort" leverage figure remains an open, unverified estimate.' },
           { label: 'IP Provenance', body: 'Practitioner-derived from 12+ years of enterprise delivery. AI-assisted structuring. Practitioner-signed. Session JSONL files are the creation record.' },
         ].map(({ label, body }) => (
           <div key={label} style={IP_STYLES.card}>

@@ -3,6 +3,7 @@ import { db } from '../db.js';
 import { getUserFromCookie } from '../auth.js';
 import { audit } from '../lib/audit.js';
 import { ensureMemberOrganizationRods, upsertAccountRecord } from '../lib/journeyRods.js';
+import { recordConsent, hasCurrentConsent } from '../lib/consentRegistry.js';
 
 const router = express.Router();
 
@@ -126,6 +127,21 @@ router.post('/me/orgs', express.json(), async (req, res) => {
     const { name, org_type = 'llc', description = null, logo_url = null, website = null, industry = null } = req.body;
     if (!name) return res.status(400).json({ error: 'name is required' });
 
+    // An organization profile must be tied to a real, verified organization
+    // email — otherwise "organization-specific" data has no actual
+    // connection to that organization and could be indistinguishable from
+    // self-declared/personal data. Reuses the existing verify-by-code flow
+    // at POST /me/emails + POST /me/emails/:id/verify (members.js) — no new
+    // verification mechanism.
+    const verifiedWorkEmail = await db
+      .prepare(`SELECT email FROM user_emails WHERE user_id=$1 AND type='work' AND verified=true LIMIT 1`)
+      .get(user.id);
+    if (!verifiedWorkEmail) {
+      return res.status(400).json({
+        error: 'A verified organization (work) email is required to create an organization profile. Add and verify a work email first.',
+      });
+    }
+
     let slug = slugify(name);
     // Ensure slug uniqueness
     const existing = await db.prepare(`SELECT id FROM organization_profiles WHERE slug = $1`).get(slug);
@@ -142,6 +158,16 @@ router.post('/me/orgs', express.json(), async (req, res) => {
       INSERT INTO org_memberships (user_id, org_id, role) VALUES ($1, $2, 'admin')
     `).run(user.id, org.id);
     await ensureMemberOrganizationRods(user.id, Number(org.id));
+
+    // Creator already proved a verified work email above — record the
+    // organization-data-scope consent now for this org so they aren't
+    // immediately blocked by the same interstitial orgPortal.js shows
+    // anyone else opening this org's data without it.
+    await recordConsent(user.id, 'organization_data_scope', true, {
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+      context: { orgId: Number(org.id), designatedEmail: verifiedWorkEmail.email },
+    });
 
     await audit({ req, actor: user, action: 'org.create', entityType: 'org_profile', entityId: org.id, summary: `Created org: ${name}` });
     res.json(org);

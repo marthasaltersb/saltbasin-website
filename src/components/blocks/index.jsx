@@ -8,17 +8,32 @@
 // one, and if an old block is retired, keep its renderer registered (just
 // drop it from any "add section" picker UI) so existing member content keeps
 // rendering.
-import React from 'react';
+import React, { lazy } from 'react';
 import { InlineDataNotice } from '../DataNotice.jsx';
 import SectionShell from './SectionShell.jsx';
 import { useViewportWidth, PanelCard } from './blockUtils.jsx';
 import { FlexColumnsBlock, WheelDisplay, FormColumnWidget } from './ColumnWidgets.jsx';
-import {
-  ProductHeroBlock, RotatingHighlightsBlock, BuildFlowBlock, JourneyRodsBlock,
-  ProductCatalogBlock, ExposureCalculatorBlock, ApiCatalogTableBlock, StartEngagementBlock,
-  PlatformCadenceBlock, ConversationalDemoBlock, SalterMomentumMethodBlock, MethodologyMathBlock,
-} from './ProductExperienceBlocks.jsx';
-import { MetadataModelDiagramBlock } from './MetadataModelBlock.jsx';
+const lazyNamed = (loader, name) => lazy(() => loader().then((module) => ({ default: module[name] })));
+const loadProductBlocks = () => import('./ProductExperienceBlocks.jsx');
+const ProductHeroBlock = lazyNamed(loadProductBlocks, 'ProductHeroBlock');
+const RotatingHighlightsBlock = lazyNamed(loadProductBlocks, 'RotatingHighlightsBlock');
+const BuildFlowBlock = lazyNamed(loadProductBlocks, 'BuildFlowBlock');
+const JourneyRodsBlock = lazyNamed(loadProductBlocks, 'JourneyRodsBlock');
+const ProductCatalogBlock = lazyNamed(loadProductBlocks, 'ProductCatalogBlock');
+const ExposureCalculatorBlock = lazyNamed(loadProductBlocks, 'ExposureCalculatorBlock');
+const ApiCatalogTableBlock = lazyNamed(loadProductBlocks, 'ApiCatalogTableBlock');
+const StartEngagementBlock = lazyNamed(loadProductBlocks, 'StartEngagementBlock');
+const PlatformCadenceBlock = lazyNamed(loadProductBlocks, 'PlatformCadenceBlock');
+const ConversationalDemoBlock = lazyNamed(loadProductBlocks, 'ConversationalDemoBlock');
+const SalterMomentumMethodBlock = lazyNamed(loadProductBlocks, 'SalterMomentumMethodBlock');
+const MethodologyMathBlock = lazyNamed(loadProductBlocks, 'MethodologyMathBlock');
+const MarketingHooksBlock = lazyNamed(loadProductBlocks, 'MarketingHooksBlock');
+const MetadataModelDiagramBlock = lazyNamed(() => import('./MetadataModelBlock.jsx'), 'MetadataModelDiagramBlock');
+const loadCareerProspectBlocks = () => import('./CareerProspectBlocks.jsx');
+const CareerHeroOrbitBlock = lazyNamed(loadCareerProspectBlocks, 'CareerHeroOrbitBlock');
+const CareerLensTabsBlock = lazyNamed(loadCareerProspectBlocks, 'CareerLensTabsBlock');
+const CareerRollupShowcaseBlock = lazyNamed(loadCareerProspectBlocks, 'CareerRollupShowcaseBlock');
+const CareerJourneyStepperBlock = lazyNamed(loadCareerProspectBlocks, 'CareerJourneyStepperBlock');
 import { fetchCareerMaster, toolWheelBucket } from '../../lib/careerMaster.js';
 import { toast } from '../../lib/toast.js';
 import { BrandIcon } from '../../lib/brandIcons.jsx';
@@ -2690,6 +2705,31 @@ function AboutIntroBlock({ section, config, memberSlug }) {
     if (!memberSlug || !href || !href.startsWith('/output/portfolio')) return href;
     return href.includes('?') ? `${href}&profile=${encodeURIComponent(memberSlug)}` : `${href}?profile=${encodeURIComponent(memberSlug)}`;
   };
+  if (section.id === 'home-founder' || section.variant === 'founderSummary') {
+    const links = Array.isArray(f.portfolioLinks) && f.portfolioLinks.length ? f.portfolioLinks : [
+      { label: 'Meet the Founder', href: '/consulting/founder' },
+      { label: 'Resume Portfolio', href: '/output/resume-portfolio' },
+      { label: 'Case Study Portfolio', href: '/output/case-study-portfolio' },
+      { label: 'Career Master Database', href: '/output/career-master-database' },
+      { label: 'Strategic Operator', href: '/output/strategic-operator' },
+    ];
+    return (
+      <section id={section.id} className="sbh-founder-summary">
+        <div>
+          <p className="sbh-eyebrow">{f.founderEyebrow || 'Meet the founder'}</p>
+          <h2>{f.founderName || 'Betsy Salter'}</h2>
+          <p className="sbh-founder-role">{f.founderTitle || 'Strategic Operator · Founder, Salt Basin Net Works'}</p>
+          <p>{f.founderBlurb || f.introBody}</p>
+          <div className="sbh-founder-highlights">
+            <span>12+ years</span><span>24 documented cases</span><span>Enterprise + AI-native systems</span>
+          </div>
+          <div className="sbh-founder-links">
+            {links.map((link, index) => <a key={link.href} href={profilePortfolioLink(link.href)} className={`sbh-btn ${index === 0 ? 'sbh-btn-primary' : 'sbh-btn-secondary'}`}>{link.label}</a>)}
+          </div>
+        </div>
+      </section>
+    );
+  }
   return (
     <section
       id={section.id}
@@ -4208,19 +4248,18 @@ function NetWorksBannerBlock({ section }) {
 function StatGridBlock({ section }) {
   const f = section.fields || {};
   const stats = Array.isArray(f.stats) ? f.stats : [];
-  const cols = Math.min(Math.max(stats.length, 2), 4);
   return (
     <section id={section.id} data-theme={section.theme || undefined} style={{ background: BG_VAR[section.bg] || 'var(--sb-navy)', padding: '5rem 2rem' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
         {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
-        {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: 'var(--sb-cream)', marginBottom: '0.75rem' }}>{f.heading}</h2>}
-        {f.intro && <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: 'var(--sb-sage)', maxWidth: 740, marginBottom: '2.5rem' }}>{f.intro}</p>}
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: '1.5rem' }}>
+        {f.heading && <h2 className="sb-display" style={{ fontSize: 'clamp(1.9rem, 1.55rem + 1.2vw, 2.6rem)', lineHeight: 1.12, color: 'var(--sb-cream)', marginBottom: '0.75rem' }}>{f.heading}</h2>}
+        {f.intro && <p style={{ fontSize: 'clamp(0.95rem, 0.91rem + 0.16vw, 1.05rem)', lineHeight: 1.75, color: 'var(--sb-sage)', maxWidth: 780, marginBottom: '2.5rem' }}>{f.intro}</p>}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 'clamp(0.85rem, 2vw, 1.5rem)' }}>
           {stats.map((s, i) => (
             <div key={i} style={{ textAlign: 'center', padding: '2rem 1rem', background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(196,132,58,0.25)', borderRadius: 'var(--sb-radius)' }}>
-              <div className="sb-display" style={{ fontSize: '3rem', color: 'var(--sb-gold)', letterSpacing: '0.02em', lineHeight: 1 }}>{s.value}</div>
-              <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.7rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--sb-cream)', marginTop: '0.75rem' }}>{s.label}</div>
-              {s.sublabel && <div style={{ fontSize: '0.78rem', color: 'var(--sb-dusty)', marginTop: '0.35rem' }}>{s.sublabel}</div>}
+              <div className="sb-display" style={{ fontSize: 'clamp(2.2rem, 1.8rem + 1.3vw, 3rem)', color: 'var(--sb-gold)', letterSpacing: '0.02em', lineHeight: 1 }}>{s.value}</div>
+              <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: 'clamp(0.7rem, 0.67rem + 0.1vw, 0.78rem)', letterSpacing: '0.14em', lineHeight: 1.4, textTransform: 'uppercase', color: 'var(--sb-cream)', marginTop: '0.75rem' }}>{s.label}</div>
+              {s.sublabel && <div style={{ fontSize: 'clamp(0.78rem, 0.74rem + 0.12vw, 0.86rem)', lineHeight: 1.5, color: 'var(--sb-dusty)', marginTop: '0.35rem' }}>{s.sublabel}</div>}
             </div>
           ))}
         </div>
@@ -5536,6 +5575,7 @@ const REGISTRY = {
   cascadeFlow: CascadeFlowBlock,
   architectureSteps: ArchitectureStepsBlock,
   productHero: ProductHeroBlock,
+  marketingHooks: MarketingHooksBlock,
   rotatingHighlights: RotatingHighlightsBlock,
   buildFlow: BuildFlowBlock,
   journeyRods: JourneyRodsBlock,
@@ -5548,6 +5588,64 @@ const REGISTRY = {
   salterMomentumMethod: SalterMomentumMethodBlock,
   metadataModelDiagram: MetadataModelDiagramBlock,
   methodologyMath: MethodologyMathBlock,
+  careerHeroOrbit: CareerHeroOrbitBlock,
+  careerLensTabs: CareerLensTabsBlock,
+  careerRollupShowcase: CareerRollupShowcaseBlock,
+  careerJourneyStepper: CareerJourneyStepperBlock,
+};
+
+// ── Sub-sections (2026-07-27) ────────────────────────────────────────────────
+// Optional, additive nesting: section.subSections = [{id, type, fields, fieldMeta}],
+// a sibling of section.fields. Absent/undefined for every pre-existing
+// section — RenderSection only maps over it when present, so no existing
+// section's shape or rendering changes. Lightweight wrappers (no outer
+// <section>/max-width chrome of their own) meant to render inside a parent
+// section's content area; each reuses an existing block/pattern rather than
+// inventing new rendering per type.
+function SubSectionText({ subSection }) {
+  const f = subSection.fields || {};
+  if (!f.text && !f.heading) return null;
+  return (
+    <div style={{ padding: '1rem 0' }}>
+      {f.heading && <h3 className="sb-display" style={{ fontSize: '1.2rem', marginBottom: '0.4rem' }}>{f.heading}</h3>}
+      {f.text && <p style={{ lineHeight: 1.7 }}>{f.text}</p>}
+    </div>
+  );
+}
+function SubSectionImage({ subSection }) {
+  const f = subSection.fields || {};
+  if (!f.imageUrl) return null;
+  return (
+    <div style={{ padding: '1rem 0' }}>
+      <img src={f.imageUrl} alt={f.alt || ''} style={{ maxWidth: '100%', borderRadius: 'var(--sb-radius)' }} />
+    </div>
+  );
+}
+function SubSectionHoverIcon({ subSection }) {
+  const f = subSection.fields || {};
+  return (
+    <div style={{ padding: '0.5rem 0', maxWidth: 360 }}>
+      <ExpandableTile icon={f.icon} label={f.label} text={f.text} onDark={!!f.onDark} />
+    </div>
+  );
+}
+// A sub-section is just a section rendered without the outer page-section
+// wrapper it normally provides — reuses CareerRollupShowcaseBlock's
+// dataSource/groupBy/chartType fields and generalized
+// /api/data-sources/:key/rollup fetch verbatim (Phase 3).
+function SubSectionDashboardRollup({ subSection, memberSlug }) {
+  return <CareerRollupShowcaseBlock section={subSection} memberSlug={memberSlug} />;
+}
+function SubSectionOutputGenerator({ subSection }) {
+  return <OutputGeneratorBlock section={subSection} mode="preview" />;
+}
+
+export const SUBSECTION_REGISTRY = {
+  text: SubSectionText,
+  image: SubSectionImage,
+  hoverIcon: SubSectionHoverIcon,
+  dashboardRollup: SubSectionDashboardRollup,
+  outputGenerator: SubSectionOutputGenerator,
 };
 
 export function RenderSection({ section, config, mode = 'public', memberSlug = '', liveSlugs = null }) {
@@ -5565,11 +5663,21 @@ export function RenderSection({ section, config, mode = 'public', memberSlug = '
     return <SoonScreen msg={section.fields?.soonMsg} />;
   }
 
+  const subSections = Array.isArray(section.subSections) ? section.subSections : [];
+
   return (
     <>
       {banner}
       <SectionShell section={section}>
         <Block section={section} config={config} memberSlug={memberSlug} liveSlugs={liveSlugs} />
+        {subSections.length > 0 && (
+          <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 2rem' }}>
+            {subSections.map((sub) => {
+              const SubBlock = SUBSECTION_REGISTRY[sub.type];
+              return SubBlock ? <SubBlock key={sub.id} subSection={sub} memberSlug={memberSlug} /> : null;
+            })}
+          </div>
+        )}
       </SectionShell>
     </>
   );

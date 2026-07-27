@@ -1,0 +1,24 @@
+import assert from 'node:assert/strict';
+import { ARR_DEFINITION, CORE_METRICS, DEMO_ARR, METRIC_DEPENDENCIES, analyzeChange, calculateMetric, calculateUsageCharge, classifyChangeEvent, evaluateFormula, serializeDefinition } from '../server/lib/metricIntelligence.js';
+
+assert.equal(evaluateFormula({ op: 'divide', numerator: { op: 'literal', value: 10 }, denominator: { op: 'literal', value: 2 } }, {}), 5);
+const prior = calculateMetric({ variantKey: 'live_arr', variables: DEMO_ARR.prior });
+const current = calculateMetric({ variantKey: 'live_arr', variables: DEMO_ARR.current });
+assert.equal(prior.value, 900000);
+assert.equal(current.value, 1080000);
+const analysis = analyzeChange(current, prior);
+assert.equal(analysis.change, 180000);
+assert.equal(analysis.unexplained, 0);
+assert.equal(analysis.classification, 'economic');
+assert.equal(serializeDefinition(ARR_DEFINITION).metricId, 'metric.revenue.arr');
+assert.equal(CORE_METRICS.length, 10);
+assert.ok(METRIC_DEPENDENCIES.some((edge) => edge.from === 'gross_profit' && edge.to === 'gross_margin'));
+const moic = CORE_METRICS.find((item) => item.metricKey === 'moic');
+assert.equal(calculateMetric({ metric: moic, variantKey: 'canonical', variables: { realized_value: 120, unrealized_value: 80, invested_capital: 100 } }).value, 2);
+const tiers = [{ from: 0, to: 100, rate: 10 }, { from: 100, to: 200, rate: 8 }, { from: 200, to: null, rate: 6 }];
+assert.deepEqual(calculateUsageCharge({ quantity: 250, tiers, mode: 'progressive' }), { quantity: 250, mode: 'progressive', usageCharge: 2100, minimumCommitment: 0, billedCharge: 2100, minimumCommitmentShortfall: 0 });
+assert.equal(calculateUsageCharge({ quantity: 250, tiers, mode: 'retroactive' }).billedCharge, 1500);
+assert.equal(calculateUsageCharge({ quantity: 50, tiers, minimumCommitment: 750 }).minimumCommitmentShortfall, 250);
+assert.deepEqual(classifyChangeEvent({ current, prior, context: { sourceSystemChanged: true, dataCorrection: true } }).contributingClassifications, ['source_system', 'data_correction']);
+assert.equal(classifyChangeEvent({ current, prior, context: { contractModification: true } }).isEconomic, true);
+console.log('metric intelligence verification passed');

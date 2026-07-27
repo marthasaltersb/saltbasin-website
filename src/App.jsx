@@ -1,18 +1,41 @@
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { api } from './lib/api.js';
 import PublicSite from './components/PublicSite.jsx';
-import LandingGate from './components/LandingGate.jsx';
-import LoginPage from './components/admin/LoginPage.jsx';
-import AdminShell from './components/admin/AdminShell.jsx';
-import MemberDashboard from './components/MemberDashboard.jsx';
-import PublicProfile from './components/PublicProfile.jsx';
-import LeadView from './components/LeadView.jsx';
-import ResetPasswordPage from './components/ResetPasswordPage.jsx';
-import DataNotice from './components/DataNotice.jsx';
-import BusinessDefinitionExperience from './components/BusinessDefinitionExperience.jsx';
-import OrgPortal from './components/OrgPortal.jsx';
-import { ResumeOutput, CaseStudyOutput, DomainsOutput, PortfolioAppendixOutput, CareerCaseStudyPortfolioOutput, CareerMasterDatabaseOutput, CareerPortfolioHubOutput, ResumePortfolioOutput, CareerFullPortfolioOutput, StrategicOperatorOutput, ProposalOutput, OnePagerOutput, BuildSummaryOutput, TechStackOutput, ProductOnePagerOutput, PatchNotesOutput, MethodologyOutput, L2RModelOutput } from './components/Output.jsx';
+const LandingGate = lazy(() => import('./components/LandingGate.jsx'));
+const LoginPage = lazy(() => import('./components/admin/LoginPage.jsx'));
+const AdminShell = lazy(() => import('./components/admin/AdminShell.jsx'));
+const MemberDashboard = lazy(() => import('./components/MemberDashboard.jsx'));
+const PublicProfile = lazy(() => import('./components/PublicProfile.jsx'));
+const LeadView = lazy(() => import('./components/LeadView.jsx'));
+const ResetPasswordPage = lazy(() => import('./components/ResetPasswordPage.jsx'));
+const DataNotice = lazy(() => import('./components/DataNotice.jsx'));
+const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy.jsx'));
+const TermsOfService = lazy(() => import('./components/TermsOfService.jsx'));
+const BusinessDefinitionExperience = lazy(() => import('./components/BusinessDefinitionExperience.jsx'));
+const OrgPortal = lazy(() => import('./components/OrgPortal.jsx'));
+
+const lazyOutput = (name) => lazy(() =>
+  import('./components/Output.jsx').then((module) => ({ default: module[name] }))
+);
+const ResumeOutput = lazyOutput('ResumeOutput');
+const CaseStudyOutput = lazyOutput('CaseStudyOutput');
+const DomainsOutput = lazyOutput('DomainsOutput');
+const PortfolioAppendixOutput = lazyOutput('PortfolioAppendixOutput');
+const CareerCaseStudyPortfolioOutput = lazyOutput('CareerCaseStudyPortfolioOutput');
+const CareerMasterDatabaseOutput = lazyOutput('CareerMasterDatabaseOutput');
+const CareerPortfolioHubOutput = lazyOutput('CareerPortfolioHubOutput');
+const ResumePortfolioOutput = lazyOutput('ResumePortfolioOutput');
+const CareerFullPortfolioOutput = lazyOutput('CareerFullPortfolioOutput');
+const StrategicOperatorOutput = lazyOutput('StrategicOperatorOutput');
+const ProposalOutput = lazyOutput('ProposalOutput');
+const OnePagerOutput = lazyOutput('OnePagerOutput');
+const BuildSummaryOutput = lazyOutput('BuildSummaryOutput');
+const TechStackOutput = lazyOutput('TechStackOutput');
+const ProductOnePagerOutput = lazyOutput('ProductOnePagerOutput');
+const PatchNotesOutput = lazyOutput('PatchNotesOutput');
+const MethodologyOutput = lazyOutput('MethodologyOutput');
+const L2RModelOutput = lazyOutput('L2RModelOutput');
 
 function PublicRoute() {
   const [status, setStatus] = useState(null);
@@ -54,6 +77,7 @@ function SignupRoute() {
 
 export default function App() {
   return (
+    <Suspense fallback={<RouteLoader />}>
     <Routes>
       {/* /login is the canonical sign-in URL. /admin/login is kept as an alias
           for back-compat with any saved bookmarks / external links. Both render
@@ -69,6 +93,8 @@ export default function App() {
       <Route path="/u/:slug/*" element={<PublicProfile />} />
       <Route path="/lead/:publicId" element={<LeadView />} />
       <Route path="/data-notice" element={<DataNotice />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfService />} />
       <Route path="/output/resume" element={<ResumeOutput />} />
       <Route path="/output/case-study/:slug" element={<CaseStudyOutput />} />
       <Route path="/output/proposal/:type" element={<ProposalOutput />} />
@@ -98,5 +124,14 @@ export default function App() {
       />
       <Route path="/*" element={<PublicRoute />} />
     </Routes>
+    </Suspense>
+  );
+}
+
+function RouteLoader() {
+  return (
+    <div className="sb-route-loader" role="status" aria-live="polite">
+      Loading…
+    </div>
   );
 }

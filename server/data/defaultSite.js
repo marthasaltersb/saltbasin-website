@@ -19,7 +19,7 @@ const HOME_SECTIONS = [
       heading: 'We build for the customer you keep,',
       headingEmphasis: 'not just the deal you close.',
       lede: 'Salt Basin MRS designs, builds, and maintains your Enterprise Ecosystem — a Salt Basin Net Work — applying the HOS™ methodology across revenue, systems, and data.',
-      cta1Label: 'See how Salt Basin MRS works',
+      cta1Label: "See what we're building",
       cta1Link: '#home-build-flow',
       cta2Label: 'Get in Touch',
       cta2Link: '#bestystaff',
@@ -64,7 +64,7 @@ const HOME_SECTIONS = [
         },
       ],
       metrics: [
-        { label: 'Years of enterprise consulting', value: '15+', sublabel: 'Blackbaud, Accenture, PwC, Vista, TIBCO, Slalom' },
+        { label: 'Years of enterprise consulting', value: '12+', sublabel: 'Blackbaud, Accenture, PwC, Vista, TIBCO, Slalom' },
         { label: 'Largest engagement', value: '$38B+', sublabel: 'Semiconductor usage-based billing' },
         { label: 'Renewal process automated', value: '$500M', sublabel: 'Recurring revenue' },
         { label: 'Real products in the family', value: '4', sublabel: 'Salt Basin MRS, SaltTide™, MESA, RLMM™' },
@@ -651,7 +651,8 @@ export const defaultSite = {
       name: 'Creative Storefront',
       slug: 'creative',
       type: 'standard',
-      status: 'live',
+      status: 'draft',
+      hideFromNav: true,
       order: 5,
       sections: [
         {
@@ -770,6 +771,7 @@ export const defaultConfig = {
       description: 'Share what brought you here. BestyStaff will gather the useful context for Betsy, answer what it can, and create a lead record so the conversation can continue.',
     },
     intake: {
+      contextPolicyKey: 'bestystaff_lead_intake_v1',
       greeting: "Hi — I'm BestyStaff, Betsy's AI proxy here at Salt Basin Net Works.",
       consentPrompt: 'May I capture this conversation as lead context so Betsy can follow up with the full picture?',
       flowOptions: [

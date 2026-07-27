@@ -58,6 +58,7 @@ export default function LeadView() {
   const [convertPassword, setConvertPassword] = useState('');
   const [converting, setConverting] = useState(false);
   const [convertError, setConvertError] = useState('');
+  const [convertAgreedToTerms, setConvertAgreedToTerms] = useState(false);
 
   // Email address management
   const [showEmailManager, setShowEmailManager] = useState(false);
@@ -212,8 +213,12 @@ export default function LeadView() {
 
   async function completeConversion(e) {
     e.preventDefault();
-    setConverting(true);
     setConvertError('');
+    if (!convertAgreedToTerms) {
+      setConvertError('You must agree to the Terms of Service and Privacy Policy.');
+      return;
+    }
+    setConverting(true);
     try {
       const recaptchaToken = await getRecaptchaToken('convert_to_member');
       const res = await fetch(`/api/leads/public/${publicId}/convert`, {
@@ -224,6 +229,7 @@ export default function LeadView() {
           password: convertPassword,
           recaptchaToken,
           loginEmail: conversionIntent?.personalOrOther === 'personal' ? (conversionIntent.loginEmail || undefined) : undefined,
+          agreedToTerms: convertAgreedToTerms,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -399,10 +405,41 @@ export default function LeadView() {
                       autoComplete="current-password"
                       required
                     />
-                    <button type="submit" className="sb-btn sb-btn-gold" disabled={converting || !convertPassword} style={{ padding: '0.65rem 1.4rem', fontSize: '0.78rem' }}>
+                    <button type="submit" className="sb-btn sb-btn-gold" disabled={converting || !convertPassword || !convertAgreedToTerms} style={{ padding: '0.65rem 1.4rem', fontSize: '0.78rem' }}>
                       {converting ? 'Creating your login…' : 'Confirm & become a member'}
                     </button>
                   </div>
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '0.5rem',
+                      fontSize: '0.76rem',
+                      color: 'var(--sb-dusty)',
+                      lineHeight: 1.5,
+                      marginTop: '0.6rem',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={convertAgreedToTerms}
+                      onChange={(e) => setConvertAgreedToTerms(e.target.checked)}
+                      style={{ marginTop: 3 }}
+                      required
+                    />
+                    <span>
+                      I agree to the{' '}
+                      <Link to="/terms" target="_blank" rel="noreferrer" style={{ color: 'var(--sb-gold)' }}>
+                        Terms of Service
+                      </Link>{' '}
+                      and{' '}
+                      <Link to="/privacy" target="_blank" rel="noreferrer" style={{ color: 'var(--sb-gold)' }}>
+                        Privacy Policy
+                      </Link>
+                      .
+                    </span>
+                  </label>
                   {convertError && <div style={{ marginTop: '0.5rem', fontSize: '0.78rem', color: 'var(--sb-risk-critical)' }}>{convertError}</div>}
                 </form>
               )}

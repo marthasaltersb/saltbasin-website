@@ -136,6 +136,7 @@ I received your submission via ${friendlySource(source)} on Salt Basin Net Works
 Bookmark the URL and save the password somewhere safe — you can return any time to add more context or update what you have shared with me.
 
 Real talk on data security: I am still hardening this platform's security. Treat anything you share here like a LinkedIn DM until I have certified more. Full notice: ${publicBaseUrl()}/data-notice
+Privacy Policy: ${publicBaseUrl()}/privacy
 
 — Betsy
 Salt Basin Net Works
@@ -152,6 +153,7 @@ Salt Basin Net Works
     <p style="font-size:0.85rem;color:#4A6670;">
       <strong>Real talk on data security:</strong> I am still hardening this platform's security. Treat anything you share here like a LinkedIn DM until I have certified more.
       <br/><a href="${publicBaseUrl()}/data-notice" style="color:#C4843A;">Full notice →</a>
+      &nbsp;·&nbsp;<a href="${publicBaseUrl()}/privacy" style="color:#C4843A;">Privacy Policy →</a>
     </p>
     <p>— Betsy<br/><em>Salt Basin Net Works</em></p>
   `;
@@ -253,6 +255,53 @@ export async function sendContactFormToMember({ toEmail, memberName, fromName, f
     <p style="font-size:0.75rem;color:#8B9BAE;margin-top:1.25rem;">— Salt Basin Net Works</p>
   `;
   return dispatch({ to: toEmail, subject: '[Salt Basin] New contact form submission on your profile', html, text });
+}
+
+// Member Entitlement welcome/onboarding email (2026-07-13). `setPasswordUrl`
+// is present only when the member needs to set a new password (no existing
+// lead password_hash to reuse) — see server/lib/memberProvisioning.js, which
+// decides that and never hands this function a plaintext password. Config
+// check mirrors sendNewLeadAlert's cfg.email.notifyOnNewLead pattern so this
+// stays an admin-configurable alert, not an unconditional send.
+export async function sendMemberEntitlementWelcome({ toEmail, toName, moduleLabel, loginUrl, setPasswordUrl }) {
+  let cfg = {};
+  try {
+    const row = await db.prepare(`SELECT data FROM config_state WHERE id = $1`).get('published');
+    cfg = row ? JSON.parse(row.data) : {};
+  } catch { /* ignore */ }
+  const enabled = cfg?.email?.notifyOnEntitlementProvisioned !== false; // default: enabled
+  if (!enabled) return { ok: true, skipped: 'disabled' };
+
+  const greeting = toName ? `Hi ${toName.split(' ')[0]},` : 'Hi,';
+  const accessLine = setPasswordUrl
+    ? `Before you log in, set your password here (link expires in 1 hour):\n  ${setPasswordUrl}`
+    : `Log in with your existing Salt Basin password:\n  ${loginUrl}`;
+  const accessHtml = setPasswordUrl
+    ? `<p>Before you log in, set your password (link expires in 1 hour):</p>
+       <p><a href="${setPasswordUrl}" style="display:inline-block;padding:0.5rem 1.1rem;background:#C4843A;color:#FBF6F0;text-decoration:none;border-radius:2px;font-size:0.85rem;">Set your password →</a></p>`
+    : `<p>Log in with your existing Salt Basin password:</p>
+       <p><a href="${loginUrl}" style="color:#C4843A;">${loginUrl}</a></p>`;
+
+  const text = `${greeting}
+
+Your ${moduleLabel} is ready on Salt Basin Net Works.
+
+${accessLine}
+
+Privacy Policy: ${publicBaseUrl()}/privacy · Terms of Service: ${publicBaseUrl()}/terms
+
+— Salt Basin Net Works`;
+  const html = `
+    <p>${greeting}</p>
+    <p>Your <strong>${moduleLabel}</strong> is ready on Salt Basin Net Works.</p>
+    ${accessHtml}
+    <p style="font-size:0.72rem;color:#8B9BAE;margin-top:1.25rem;">
+      <a href="${publicBaseUrl()}/privacy" style="color:#8B9BAE;">Privacy Policy</a> ·
+      <a href="${publicBaseUrl()}/terms" style="color:#8B9BAE;">Terms of Service</a>
+    </p>
+    <p style="font-size:0.75rem;color:#8B9BAE;margin-top:0.5rem;">— Salt Basin Net Works</p>
+  `;
+  return dispatchRaw({ to: toEmail, subject: `[Salt Basin] Your ${moduleLabel} is ready`, html, text });
 }
 
 function publicBaseUrl() {

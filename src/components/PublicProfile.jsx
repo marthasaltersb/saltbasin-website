@@ -16,6 +16,7 @@ import PublicFooter from './PublicFooter.jsx';
 import BackLink from './BackLink.jsx';
 import { track } from '../lib/analytics.js';
 import { toast } from '../lib/toast.js';
+import { useSeoHead } from '../lib/useSeoHead.js';
 
 function ConnectionActions({ slug }) {
   const nav = useNavigate();
@@ -149,6 +150,24 @@ export default function PublicProfile() {
     });
   }, [slug, subPath, data]);
 
+  // Computed above the loading/error early returns below (not just for the
+  // JSX further down) so useSeoHead can be called unconditionally — hooks
+  // must run before any conditional return (see the EditorPane.jsx
+  // blank-screen bug this rule already caused once, documented in CLAUDE.md).
+  const { site, config } = data || {};
+  const pages = site?.pages || {};
+  const wantSlug = subPath.replace(/\/$/, '');
+  const entries = Object.entries(pages);
+  const match =
+    entries.find(([, p]) => (p.slug || '') === wantSlug) ||
+    (wantSlug === '' && entries.find(([k]) => k === 'home')) ||
+    null;
+  const currentPage = match ? match[1] : null;
+
+  useSeoHead(currentPage, {
+    siteName: config?.site?.ownerName || config?.featured?.homeCompanyName || 'Salt Basin Net Works',
+  });
+
   if (error) {
     return (
       <div
@@ -172,19 +191,6 @@ export default function PublicProfile() {
     );
   }
   if (!data) return null;
-
-  const { site, config } = data;
-  const pages = site?.pages || {};
-
-  // Find the page whose slug matches the URL tail. Empty string ('') means
-  // home — try the page explicitly named 'home' first, then fall back to any
-  // page with an empty slug.
-  const wantSlug = subPath.replace(/\/$/, '');
-  const entries = Object.entries(pages);
-  const match =
-    entries.find(([, p]) => (p.slug || '') === wantSlug) ||
-    (wantSlug === '' && entries.find(([k]) => k === 'home')) ||
-    null;
 
   if (!match) {
     return (
@@ -211,7 +217,7 @@ export default function PublicProfile() {
     );
   }
 
-  const [currentPageKey, currentPage] = match;
+  const [currentPageKey] = match;
 
   // Build ordered nav items, respecting hideFromNav and navGroup grouping.
   const sortedPages = entries

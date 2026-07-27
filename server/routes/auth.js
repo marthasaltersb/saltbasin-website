@@ -19,6 +19,7 @@ import { dispatchRaw } from '../lib/email.js';
 import { verifyRecaptcha } from '../lib/recaptcha.js';
 import { audit } from '../lib/audit.js';
 import { makeRateLimiter } from '../lib/rateLimit.js';
+import { recordLogin } from '../lib/usageTracking.js';
 
 // 10 attempts per IP per 15 minutes on auth endpoints
 const authLimiter = makeRateLimiter({ windowMs: 15 * 60_000, max: 10, message: 'Too many attempts — please try again in 15 minutes' });
@@ -36,6 +37,12 @@ router.post('/login', authLimiter, async (req, res) => {
   const { token } = await createSession(user.id);
   setAdminCookie(res, token);
   await audit({ req, actor: { id: user.id, role: user.role, email }, action: 'auth.login', entityType: 'user', entityId: user.id, summary: `${email} logged in` });
+  if (user.role === 'member') {
+    // First-login stage transitions + login-count tracking (§ Member
+    // Entitlement Provisioning) only apply to members — admin logins aren't
+    // Channel Rod-backed identities.
+    recordLogin(user.id).catch((e) => console.error('[auth] recordLogin failed:', e.message));
+  }
   res.json({ ok: true, user: { id: user.id, role: user.role, email } });
 });
 

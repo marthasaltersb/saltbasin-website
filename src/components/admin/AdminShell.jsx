@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { lazy, useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
@@ -10,27 +10,37 @@ import PreviewPane from './PreviewPane.jsx';
 import PageLayoutView from './PageLayoutView.jsx';
 import PageTypeManagerPanel from './PageTypeManagerPanel.jsx';
 import ConfigPanel from './ConfigPanel.jsx';
-import { MemberStatsPanel, MemberAuditPanel, MemberAgentPanel } from './MemberPanels.jsx';
-import MyResumePanel from './MyResumePanel.jsx';
-import { OutputTemplateConfiguratorHub } from './OutputTemplateConfigurator.jsx';
-import CareerMasterPanel from './CareerMasterPanel.jsx';
-import ProfileHub from './ProfileHub.jsx';
-import LeadsPanel from './LeadsPanel.jsx';
-import NetWorksPanel from './NetWorksPanel.jsx';
-import BacklogPanel from './BacklogPanel.jsx';
-import QAPanel from './QAPanel.jsx';
-import ContentManagerShell from './ContentManagerShell.jsx';
-import NrmPanel from './NrmPanel.jsx';
-import AnalyticsPanel from './AnalyticsPanel.jsx';
-import FinBridgeCoPanel from './FinBridgeCoPanel.jsx';
-import MemberPlmPanel from './MemberPlmPanel.jsx';
-import GovernancePanel from './GovernancePanel.jsx';
-import EmotionalWeatherPanel from './EmotionalWeatherPanel.jsx';
-import LineagePanel from './LineagePanel.jsx';
-import InboxPanel from './InboxPanel.jsx';
-import CommandCenterPanel from './CommandCenterPanel.jsx';
-import MemberProductsPanel from './MemberProductsPanel.jsx';
-import FeedbackPanel from './FeedbackPanel.jsx';
+const lazyNamed = (path, name) => lazy(() => import(path).then((module) => ({ default: module[name] })));
+const MemberStatsPanel = lazyNamed('./MemberPanels.jsx', 'MemberStatsPanel');
+const MemberAuditPanel = lazyNamed('./MemberPanels.jsx', 'MemberAuditPanel');
+const MemberAgentPanel = lazyNamed('./MemberPanels.jsx', 'MemberAgentPanel');
+const MyResumePanel = lazy(() => import('./MyResumePanel.jsx'));
+const OutputTemplateConfiguratorHub = lazyNamed('./OutputTemplateConfigurator.jsx', 'OutputTemplateConfiguratorHub');
+const CareerMasterPanel = lazy(() => import('./CareerMasterPanel.jsx'));
+const ProfileHub = lazy(() => import('./ProfileHub.jsx'));
+const LeadsPanel = lazy(() => import('./LeadsPanel.jsx'));
+const NetWorksPanel = lazy(() => import('./NetWorksPanel.jsx'));
+const BacklogPanel = lazy(() => import('./BacklogPanel.jsx'));
+const QAPanel = lazy(() => import('./QAPanel.jsx'));
+const ContentManagerShell = lazy(() => import('./ContentManagerShell.jsx'));
+const NrmPanel = lazy(() => import('./NrmPanel.jsx'));
+const AnalyticsPanel = lazy(() => import('./AnalyticsPanel.jsx'));
+const FinBridgeCoPanel = lazy(() => import('./FinBridgeCoPanel.jsx'));
+const MemberPlmPanel = lazy(() => import('./MemberPlmPanel.jsx'));
+const GovernancePanel = lazy(() => import('./GovernancePanel.jsx'));
+const EmotionalWeatherPanel = lazy(() => import('./EmotionalWeatherPanel.jsx'));
+const LineagePanel = lazy(() => import('./LineagePanel.jsx'));
+const InboxPanel = lazy(() => import('./InboxPanel.jsx'));
+const CommandCenterPanel = lazy(() => import('./CommandCenterPanel.jsx'));
+const MemberProductsPanel = lazy(() => import('./MemberProductsPanel.jsx'));
+const FeedbackPanel = lazy(() => import('./FeedbackPanel.jsx'));
+const EidosOperatingModelPanel = lazy(() => import('./EidosOperatingModelPanel.jsx'));
+const WebsiteIntelligencePanel = lazy(() => import('./WebsiteIntelligencePanel.jsx'));
+const MetricIntelligencePanel = lazy(() => import('./MetricIntelligencePanel.jsx'));
+const MemberFinancialPanel = lazy(() => import('./MemberFinancialPanel.jsx'));
+const MemberEntitlementsPanel = lazy(() => import('./MemberEntitlementsPanel.jsx'));
+const CareerConsentGate = lazy(() => import('./CareerConsentGate.jsx'));
+const CareerMasterEntryPoint = lazy(() => import('./CareerMasterEntryPoint.jsx'));
 
 // Tab component registry: the one piece that can't be data-driven, because
 // React components have to be referenced by import. The nav structure stored
@@ -62,6 +72,9 @@ const TAB_COMPONENTS = {
   lineage:        () => <LineagePanel />,
   inbox:          () => <InboxPanel />,
   commandCenter:  () => <CommandCenterPanel />,
+  eidos:          () => <EidosOperatingModelPanel />,
+  websiteIntelligence: () => <WebsiteIntelligencePanel />,
+  metricIntelligence: () => <MetricIntelligencePanel />,
   // config: handled inline below (ConfigPanel needs draft + setters from shell)
   // content: handled inline below (Sidebar/EditorPane/PreviewPane composition)
 };
@@ -92,6 +105,7 @@ const FALLBACK_ADMIN_NAV = {
     ]},
     { id: 'analytics', label: 'Analytics', sortOrder: 5, tabs: [
       { id: 'analytics', label: 'Analytics', componentId: 'analytics', sortOrder: 0 },
+      { id: 'metric-intelligence', label: 'Metric Intelligence', componentId: 'metricIntelligence', sortOrder: 1 },
     ]},
     { id: 'finbridgeco', label: 'FinBridgeCo', sortOrder: 6, tabs: [
       { id: 'finbridgeco', label: 'FinBridgeCo', componentId: 'finbridgeco', sortOrder: 0 },
@@ -106,6 +120,12 @@ const FALLBACK_ADMIN_NAV = {
       { id: 'config',   label: 'Config',       componentId: 'config',   sortOrder: 0 },
       { id: 'lineage',  label: 'Data Lineage', componentId: 'lineage',  sortOrder: 1 },
       { id: 'command-center', label: 'Command Center', componentId: 'commandCenter', sortOrder: 2 },
+    ]},
+    { id: 'eidos', label: 'EIDOS Operating Model', sortOrder: 4, tabs: [
+      { id: 'eidos', label: 'EIDOS Operating Model', componentId: 'eidos', sortOrder: 0 },
+    ]},
+    { id: 'website-intelligence', label: 'Website Intelligence', sortOrder: 4.5, tabs: [
+      { id: 'website-intelligence', label: 'Public Site Inventory', componentId: 'websiteIntelligence', sortOrder: 0 },
     ]},
   ],
 };
@@ -304,6 +324,15 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
       if (firstTab) setTab(firstTab.id);
     }
   }
+
+  // Lets a child panel (e.g. ChooseYourPathScreen's "public site career
+  // layout" link, via CareerMasterEntryPoint) switch the active tab without
+  // needing setTab threaded through props.
+  useEffect(() => {
+    const handler = (e) => { if (e.detail?.tab) setTab(e.detail.tab); };
+    window.addEventListener('sb-admin-switch-tab', handler);
+    return () => window.removeEventListener('sb-admin-switch-tab', handler);
+  }, []);
 
   // ── Load ──
   useEffect(() => {
@@ -570,20 +599,10 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
               nothing rather than flashing a stale layout. */}
           {isMember ? (
             <TabToggle
-              items={[
-                { val: 'content',        label: 'My Profile' },
-                { val: 'products',       label: 'Products' },
-                { val: 'inbox',          label: 'Messages' },
-                { val: 'resume',         label: 'My Resume' },
-                { val: 'config',         label: 'Config' },
-                { val: 'profiles',       label: 'Profiles' },
-                { val: 'stats',          label: 'Stats' },
-                { val: 'audit',          label: 'Activity' },
-                { val: 'agent',          label: 'Agent' },
-                { val: 'memberNrm',      label: 'Network' },
-                { val: 'memberAnalytics',label: 'Analytics' },
-                { val: 'memberPlm',      label: 'Platform' },
-              ]}
+              items={(configDraft?.navigation?.memberTabs || [])
+                .filter((item) => item.enabled !== false)
+                .sort((a, b) => a.sortOrder - b.sortOrder)
+                .map((item) => ({ val: item.id, label: item.label }))}
               active={tab}
               onChange={setTab}
             />
@@ -690,7 +709,9 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
           // Resolve which component to show. For admins, the nav says which
           // componentId belongs to this tab; for members, the tab id IS the
           // componentId.
-          let componentId = tab;
+          let componentId = isMember
+            ? (configDraft?.navigation?.memberTabs || []).find((item) => item.id === tab)?.componentId || tab
+            : tab;
           if (!isMember && adminNav) {
             const activeView = adminNav.views.find((v) => v.id === activeViewId);
             const activeTab = activeView?.tabs.find((t) => t.id === tab);
@@ -743,6 +764,7 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
                   section={currentSection}
                   page={currentPage}
                   site={draft}
+                  config={configDraft}
                   onUpdateSection={updateSection}
                   onUpdatePageStatus={updatePageStatus}
                   onUpdatePage={updatePage}
@@ -782,9 +804,9 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
           </>
             );
           }
-          if (componentId === 'resume')          return <MyResumePanel scope={scope} />;
+          if (componentId === 'resume')          return <CareerConsentGate><MyResumePanel scope={scope} /></CareerConsentGate>;
           if (componentId === 'outputTemplates') return <OutputTemplateConfiguratorHub scope={scope} />;
-          if (componentId === 'careerMaster')    return <CareerMasterPanel scope={scope} />;
+          if (componentId === 'careerMaster')    return <CareerMasterEntryPoint scope={scope} />;
           if (componentId === 'inbox')           return <InboxPanel />;
           if (componentId === 'products')        return <MemberProductsPanel />;
           if (componentId === 'stats')           return <MemberStatsPanel isAdmin={!isMember} />;
@@ -794,6 +816,8 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
           if (componentId === 'memberNrm')       return <NrmPanel isAdmin={false} />;
           if (componentId === 'memberAnalytics') return <AnalyticsPanel isAdmin={false} />;
           if (componentId === 'memberPlm')       return <MemberPlmPanel scope={scope} />;
+          if (componentId === 'financial')       return <MemberFinancialPanel />;
+          if (componentId === 'entitlements')     return <MemberEntitlementsPanel />;
 
           // Inline 'config' case: the panel needs draft + setter + scope from
           // the shell. Treated as the default fallback when nothing else matched.
@@ -813,7 +837,7 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
         const v = adminNav.views.find((x) => x.id === activeViewId);
         const t = v?.tabs.find((x) => x.id === tab);
         return t?.componentId || tab;
-      })()] && !['stats', 'audit', 'agent', 'profiles', 'resume', 'memberNrm', 'memberAnalytics', 'memberPlm', 'governance'].includes(tab) && (
+      })()] && !['stats', 'audit', 'agent', 'profiles', 'resume', 'memberNrm', 'memberAnalytics', 'memberPlm', 'financial', 'governance'].includes(tab) && (
         <PublishBar
           dirty={dirty}
           siteDirty={siteDirty}
