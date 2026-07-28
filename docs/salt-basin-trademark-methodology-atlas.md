@@ -9,7 +9,7 @@ Purpose: one place that lists every trademarked Salt Basin methodology/product, 
 | 1 | **The Salter Momentum™\*** | Confirmed, master methodology | Universal mindset/spine: **Understanding → Rendering → Manifesting** (U/R/M). The `>` in the footnote mark reads "Transformation > Manifestation." Applies to any initiative, not just revenue. |
 | 2 | **RLMM™** (Revenue Lifecycle Mechanics Maturity™) | Confirmed, process-stage names not yet finalized | Proprietary diagnostic capability model — applies the Salter Momentum spine tactically to revenue operations. |
 | 3 | **HOS™** (Highway Operating System) | Confirmed methodology, formerly "HandoverOS" | The named operating methodology for Quote-to-Revenue (Q2R) intelligence in PE-backed mid-market SaaS. Journey Data Rods (Revenue/Customer/Member) live inside this methodology, tracked through SaltBridge. See [salt-basin-hos-journey-methodology.md](salt-basin-hos-journey-methodology.md) for the full architecture. |
-| 4 | **Salt Basin MRS** (Measurement Rendering Systems) | Confirmed flagship platform, ™ symbol unconfirmed | The product/platform that operationalizes HOS™ to design, build, and maintain a client's **Enterprise Ecosystem** — the resulting per-client build is called **a Salt Basin Net Work**. |
+| 4 | **Salt Basin MRS** (Measurement Rendering Systems / Monetary River Systems) | Confirmed flagship platform, ™ symbol unconfirmed | The product/platform that operationalizes HOS™ to design, build, and maintain a client's **Enterprise Ecosystem** — the resulting per-client build is called **a Salt Basin Net Work**. See MRS entry in the Acronym Expansion Tracker below. |
 | 5 | Client Deliverables | Confirmed | Tactical output layer: assessments, workbooks, frameworks, reports. |
 
 Adjacent confirmed trademarked products (not part of the IP stack above, but real and trademarked):
@@ -42,6 +42,15 @@ Flagged mismatch: "*Success*" here vs. "*Scaling*" in one of the four MESS expan
 ### MESA — Tier 4 entity (MES Agencies, LLC)
 
 Expands to **MES Agencies**. Advisory/delivery/diagnostic services layer — consulting engagements built on MES Solutions' own products, spanning multiple industries. Formerly branded "The Salter Influence."
+
+### Salt Basin MRS — flagship platform
+
+| Expansion | Context |
+|---|---|
+| Measurement Rendering Systems | Original, still primary — the product measures and renders a client's Enterprise Ecosystem |
+| Monetary River Systems | Confirmed by Betsy, 2026-07-27 — ties MRS into the architecture's existing river vocabulary (Riverbed, Channel, Tributary, Current, Current Arc). Live in the homepage's "The Data Composition" section. |
+
+Both readings are valid and neither supersedes the other, same dual-expansion convention as MESS above.
 
 ## DRAFT — Industry-specific acronym re-expansion (proposed 2026-07-10, not approved)
 

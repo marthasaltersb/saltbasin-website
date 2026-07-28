@@ -118,8 +118,10 @@ The ™* does triple duty: signals trademark protection; stands for **Transforma
 
 ## 5. PRODUCTS
 
-### Salt Basin MRS (Measurement Rendering Systems)
+### Salt Basin MRS (Measurement Rendering Systems / Monetary River Systems)
 The flagship product/platform. Designs and builds an **Enterprise Ecosystem** for a client by applying the HOS™ methodology. Each client's resulting ecosystem is literally called **a Salt Basin Net Work** — both a specific per-client deliverable and something maintained under the Salt Basin Net Works umbrella going forward. Structurally, a client's Salt Basin Net Work is an atom/joint/molecule metadata graph (see `docs/salt-basin-metadata-model.md`) — Salt Basin MRS is the system that measures and renders it. Trademark symbol for "MRS" has not been confirmed by Betsy — do not add a ™ until she confirms it.
+
+**Confirmed multi-expansion (2026-07-27), same pattern as MESS/MES Solutions below:** MRS carries two deliberate, interchangeable expansions — **Measurement Rendering Systems** (the original, still primary) and **Monetary River Systems** (confirmed by Betsy, ties MRS into the architecture's existing river vocabulary — Riverbed, Channel, Tributary, Current, Current Arc). "Monetary River Systems" ships in the public homepage's "The Data Composition" section copy. Both readings are valid; don't treat either as superseding the other.
 
 ### SaltTide™ (formerly "CardWise")
 Consumer credit card intelligence and routing product. Renamed from CardWise in July 2026 after discovering existing CardWise products in-market. **Legal home: Salt Basin Net Works, LLC**, alongside a sibling product, **Salt Covenant Solutions**.

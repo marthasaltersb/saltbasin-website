@@ -122,6 +122,9 @@ function SoonScreen({ msg }) {
 
 function HeroBlock({ section, config, liveSlugs }) {
   const f = section.fields || {};
+  const onDark = section.bg === 'navy' || section.bg === 'teal';
+  const lightText = onDark ? 'var(--sb-cream)' : 'var(--sb-teal-300)';
+  const softText = onDark ? 'var(--sb-sage)' : 'var(--sb-teal-300)';
   const tagline = f.subtitle || f.tagline || config?.site?.tagline;
   const rings = [300, 500, 700, 900].map((s) => (
     <div
@@ -177,7 +180,7 @@ function HeroBlock({ section, config, liveSlugs }) {
             fontSize: '5.5rem',
             fontWeight: 500,
             letterSpacing: '0.12em',
-            color: 'var(--sb-cream)',
+            color: lightText,
             marginBottom: '0.4rem',
             lineHeight: 1,
           }}
@@ -204,7 +207,7 @@ function HeroBlock({ section, config, liveSlugs }) {
             style={{
               fontSize: '1.25rem',
               fontStyle: 'italic',
-              color: 'var(--sb-sage)',
+              color: softText,
               maxWidth: 640,
               margin: '0 auto 2rem',
               lineHeight: 1.85,
@@ -220,7 +223,7 @@ function HeroBlock({ section, config, liveSlugs }) {
               fontSize: '0.7rem',
               letterSpacing: '0.18em',
               textTransform: 'uppercase',
-              color: 'var(--sb-sage)',
+              color: softText,
               opacity: 0.75,
               marginBottom: '2.25rem',
             }}
@@ -261,6 +264,7 @@ function HeroBlock({ section, config, liveSlugs }) {
 
 function ScriptureBlock({ section }) {
   const f = section.fields || {};
+  const onDark = section.bg === 'navy' || section.bg === 'teal';
   return (
     <div
       id={section.id}
@@ -276,7 +280,7 @@ function ScriptureBlock({ section }) {
         style={{
           fontSize: '1.2rem',
           fontStyle: 'italic',
-          color: 'var(--sb-cream)',
+          color: onDark ? 'var(--sb-cream)' : 'var(--sb-teal-300)',
           marginBottom: '0.5rem',
         }}
       >
@@ -1207,6 +1211,9 @@ function AssessmentsBlock({ section }) {
       price: f[`a${i}Price`],
     }))
     .filter((a) => a.title);
+  const onDark = section.bg === 'navy' || section.bg === 'teal';
+  const lightText = onDark ? 'var(--sb-cream)' : 'var(--sb-teal-300)';
+  const softText = onDark ? 'var(--sb-sage)' : 'var(--sb-teal-300)';
   return (
     <section
       id={section.id}
@@ -1214,7 +1221,7 @@ function AssessmentsBlock({ section }) {
       style={{
         background: BG_VAR[section.bg] || 'var(--sb-navy)',
         padding: '5rem 2rem',
-        color: 'var(--sb-cream)',
+        color: lightText,
       }}
     >
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
@@ -1232,12 +1239,12 @@ function AssessmentsBlock({ section }) {
             ◌ {f.eyebrow}
           </p>
         )}
-        <h2 className="sb-display" style={{ fontSize: '2.4rem', color: 'var(--sb-cream)', marginBottom: '0.75rem' }}>
+        <h2 className="sb-display" style={{ fontSize: '2.4rem', color: lightText, marginBottom: '0.75rem' }}>
           {f.heading}
         </h2>
         <div className="sb-gold-rule" style={{ marginBottom: '1.5rem' }} />
         {f.intro && (
-          <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: 'var(--sb-sage)', maxWidth: 720, marginBottom: '2.5rem' }}>
+          <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: softText, maxWidth: 720, marginBottom: '2.5rem' }}>
             {f.intro}
           </p>
         )}
@@ -1253,7 +1260,7 @@ function AssessmentsBlock({ section }) {
             <div
               key={i}
               style={{
-                background: 'rgba(255,255,255,0.04)',
+                background: onDark ? 'rgba(255,255,255,0.04)' : 'var(--sb-airy-white)',
                 border: '0.5px dashed rgba(196,132,58,0.4)',
                 borderRadius: 'var(--sb-radius)',
                 padding: '1.75rem 1.5rem',
@@ -1283,11 +1290,11 @@ function AssessmentsBlock({ section }) {
               )}
               <h3
                 className="sb-display"
-                style={{ fontSize: '1.25rem', color: 'var(--sb-cream)', marginBottom: '0.6rem', letterSpacing: '0.02em' }}
+                style={{ fontSize: '1.25rem', color: lightText, marginBottom: '0.6rem', letterSpacing: '0.02em' }}
               >
                 {a.title}
               </h3>
-              <p style={{ fontSize: '0.86rem', lineHeight: 1.7, color: 'var(--sb-sage)' }}>{a.desc}</p>
+              <p style={{ fontSize: '0.86rem', lineHeight: 1.7, color: softText }}>{a.desc}</p>
             </div>
           ))}
         </div>
@@ -1296,7 +1303,7 @@ function AssessmentsBlock({ section }) {
           ctaLabel={f.notifyLabel || 'Notify Me at Launch'}
           placeholder="your@email.com"
           thanks="Got it — you'll hear from me the moment they go live."
-          dark
+          dark={onDark}
         />
       </div>
     </section>
@@ -2578,11 +2585,12 @@ function TechLogo({ slug, label, size = 36 }) {
   );
 }
 
-function TechCategory({ title, subtitle, items }) {
+function TechCategory({ title, subtitle, items, onDark = true }) {
+  const lightText = onDark ? 'var(--sb-cream)' : 'var(--sb-teal-300)';
   return (
     <div
       style={{
-        background: 'rgba(255,255,255,0.04)',
+        background: onDark ? 'rgba(255,255,255,0.04)' : 'var(--sb-airy-white)',
         border: '0.5px solid rgba(232,221,208,0.12)',
         borderTop: '2px solid var(--sb-gold)',
         borderRadius: 'var(--sb-radius)',
@@ -2591,7 +2599,7 @@ function TechCategory({ title, subtitle, items }) {
     >
       <h3
         className="sb-display"
-        style={{ fontSize: '1.2rem', color: 'var(--sb-cream)', marginBottom: '0.25rem', letterSpacing: '0.02em' }}
+        style={{ fontSize: '1.2rem', color: lightText, marginBottom: '0.25rem', letterSpacing: '0.02em' }}
       >
         {title}
       </h3>
@@ -2618,7 +2626,7 @@ function TechCategory({ title, subtitle, items }) {
             }}
           >
             <TechLogo slug={t.slug} label={t.label} size={32} />
-            <span style={{ fontSize: '0.88rem', color: 'var(--sb-cream)', fontWeight: 500 }}>{t.label}</span>
+            <span style={{ fontSize: '0.88rem', color: lightText, fontWeight: 500 }}>{t.label}</span>
           </div>
         ))}
       </div>
@@ -2647,6 +2655,9 @@ function TechnologyBlock({ section }) {
   const handsOn = parseTechList(f.handsOn);
   const integrationDesign = parseTechList(f.integrationDesign);
   const adjacent = parseTechList(f.adjacent);
+  const onDark = section.bg === 'navy' || section.bg === 'teal';
+  const lightText = onDark ? 'var(--sb-cream)' : 'var(--sb-teal-300)';
+  const softText = onDark ? 'var(--sb-sage)' : 'var(--sb-teal-300)';
 
   return (
     <section
@@ -2655,17 +2666,17 @@ function TechnologyBlock({ section }) {
       style={{
         background: BG_VAR[section.bg] || 'var(--sb-navy)',
         padding: '5rem 2rem',
-        color: 'var(--sb-cream)',
+        color: lightText,
       }}
     >
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
-        <h2 className="sb-display" style={{ fontSize: '2.4rem', color: 'var(--sb-cream)', marginBottom: '0.75rem' }}>
+        <h2 className="sb-display" style={{ fontSize: '2.4rem', color: lightText, marginBottom: '0.75rem' }}>
           {f.heading || 'Technology Experience'}
         </h2>
         <div className="sb-gold-rule" style={{ marginBottom: '1.5rem' }} />
         {f.intro && (
-          <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: 'var(--sb-sage)', maxWidth: 760, marginBottom: '2.5rem' }}>
+          <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: softText, maxWidth: 760, marginBottom: '2.5rem' }}>
             {f.intro}
           </p>
         )}
@@ -2677,16 +2688,19 @@ function TechnologyBlock({ section }) {
           }}
         >
           <TechCategory
+            onDark={onDark}
             title="Hands-On Implementation"
             subtitle="Direct build / configure / deliver"
             items={handsOn}
           />
           <TechCategory
+            onDark={onDark}
             title="Integration Designs in Adjacent Systems"
             subtitle="Architected interfaces & data flows"
             items={integrationDesign}
           />
           <TechCategory
+            onDark={onDark}
             title="Adjacent Project Exposure"
             subtitle="Encountered, observed, briefed"
             items={adjacent}
@@ -2730,6 +2744,9 @@ function AboutIntroBlock({ section, config, memberSlug }) {
       </section>
     );
   }
+  const onDark = section.bg === 'navy' || section.bg === 'teal';
+  const lightText = onDark ? 'var(--sb-cream)' : 'var(--sb-teal-300)';
+  const softText = onDark ? 'var(--sb-sage)' : 'var(--sb-teal-300)';
   return (
     <section
       id={section.id}
@@ -2749,12 +2766,12 @@ function AboutIntroBlock({ section, config, memberSlug }) {
           </div>
           <h2
             className="sb-display"
-            style={{ fontSize: '2.4rem', color: 'var(--sb-cream)', marginBottom: '1rem', lineHeight: 1.1 }}
+            style={{ fontSize: '2.4rem', color: lightText, marginBottom: '1rem', lineHeight: 1.1 }}
           >
             {f.introHeading}
           </h2>
           <div className="sb-gold-rule" style={{ marginBottom: '1.25rem' }} />
-          <p style={{ fontSize: '0.95rem', lineHeight: 1.85, color: 'var(--sb-sage)' }}>
+          <p style={{ fontSize: '0.95rem', lineHeight: 1.85, color: softText }}>
             {f.introBody}
           </p>
         </div>
@@ -2828,7 +2845,7 @@ function AboutIntroBlock({ section, config, memberSlug }) {
                 style={{
                   fontSize: '2.2rem',
                   letterSpacing: '0.04em',
-                  color: 'var(--sb-cream)',
+                  color: lightText,
                   marginBottom: '0.4rem',
                   lineHeight: 1.05,
                 }}
@@ -2851,7 +2868,7 @@ function AboutIntroBlock({ section, config, memberSlug }) {
                 style={{
                   fontSize: '0.88rem',
                   lineHeight: 1.7,
-                  color: 'var(--sb-sage)',
+                  color: softText,
                 }}
               >
                 {f.founderBlurb}
@@ -2906,7 +2923,7 @@ function parseHighlights(raw) {
     .filter((l) => !/^[a-z\s]*highlights?:?$/i.test(l));
 }
 
-function StatTile({ value, label }) {
+function StatTile({ value, label, onDark = true }) {
   return (
     <div style={{ minWidth: 110 }}>
       <div className="sb-display" style={{ fontSize: '2.6rem', color: 'var(--sb-gold)', lineHeight: 1 }}>
@@ -2918,7 +2935,7 @@ function StatTile({ value, label }) {
           fontSize: '0.65rem',
           letterSpacing: '0.14em',
           textTransform: 'uppercase',
-          color: 'var(--sb-sage)',
+          color: onDark ? 'var(--sb-sage)' : 'var(--sb-teal-300)',
           marginTop: '0.3rem',
         }}
       >
@@ -3038,6 +3055,9 @@ function ExecDashboardBlock({ section }) {
   const f = section.fields || {};
   const highlights = parseHighlights(f.Selected_Notable_Highlights);
   const bullets = [f.bullet1, f.bullet2, f.bullet3].filter(Boolean);
+  const onDark = section.bg === 'navy' || section.bg === 'teal';
+  const lightText = onDark ? 'var(--sb-cream)' : 'var(--sb-teal-300)';
+  const softText = onDark ? 'var(--sb-sage)' : 'var(--sb-teal-300)';
   return (
     <section
       id={section.id}
@@ -3055,17 +3075,17 @@ function ExecDashboardBlock({ section }) {
           <div className="sb-eyebrow" style={{ marginBottom: '0.75rem' }}>
             {f.eyebrow || 'Executive Summary & Selected Highlights'}
           </div>
-          <h2 className="sb-display" style={{ fontSize: '2.2rem', color: 'var(--sb-cream)', marginBottom: '1.5rem', lineHeight: 1.1 }}>
+          <h2 className="sb-display" style={{ fontSize: '2.2rem', color: lightText, marginBottom: '1.5rem', lineHeight: 1.1 }}>
             {f.heading || 'Betsy Salter'}
           </h2>
 
           <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', marginBottom: '1.75rem' }}>
-            <StatTile value={f.statYearsValue || '13+'} label={f.statYearsLabel || 'Years of Experience'} />
-            <StatTile value={f.statIndustriesValue || '8'} label={f.statIndustriesLabel || 'Industries Served'} />
+            <StatTile onDark={onDark} value={f.statYearsValue || '13+'} label={f.statYearsLabel || 'Years of Experience'} />
+            <StatTile onDark={onDark} value={f.statIndustriesValue || '8'} label={f.statIndustriesLabel || 'Industries Served'} />
           </div>
 
           {[f.p1, f.p2].filter(Boolean).map((p, i) => (
-            <p key={i} style={{ fontSize: '0.9rem', lineHeight: 1.8, color: 'var(--sb-sage)', marginBottom: '1rem', whiteSpace: 'pre-line' }}>
+            <p key={i} style={{ fontSize: '0.9rem', lineHeight: 1.8, color: softText, marginBottom: '1rem', whiteSpace: 'pre-line' }}>
               {p}
             </p>
           ))}
@@ -3080,14 +3100,14 @@ function ExecDashboardBlock({ section }) {
                   <div
                     key={i}
                     style={{
-                      background: 'rgba(255,255,255,0.04)',
+                      background: onDark ? 'rgba(255,255,255,0.04)' : 'var(--sb-airy-white)',
                       border: '0.5px solid rgba(196,132,58,0.25)',
                       borderLeft: '3px solid var(--sb-gold)',
                       borderRadius: 'var(--sb-radius)',
                       padding: '0.85rem 1rem',
                       fontSize: '0.8rem',
                       lineHeight: 1.6,
-                      color: 'var(--sb-sage)',
+                      color: softText,
                     }}
                   >
                     {h}
@@ -3101,7 +3121,7 @@ function ExecDashboardBlock({ section }) {
         {/* RIGHT — Salt Basin Mission */}
         <div
           style={{
-            background: 'rgba(255,255,255,0.04)',
+            background: onDark ? 'rgba(255,255,255,0.04)' : 'var(--sb-airy-white)',
             border: '0.5px solid rgba(196,132,58,0.4)',
             borderTop: '3px solid var(--sb-gold)',
             borderRadius: 'var(--sb-radius)',
@@ -3115,7 +3135,7 @@ function ExecDashboardBlock({ section }) {
             className="sb-display"
             style={{
               fontSize: '2rem',
-              color: 'var(--sb-cream)',
+              color: lightText,
               marginBottom: '0.75rem',
               letterSpacing: '0.02em',
               lineHeight: 1.15,
@@ -3124,7 +3144,7 @@ function ExecDashboardBlock({ section }) {
             {f.missionHeading || 'A network for the best of the best.'}
           </h2>
           <div className="sb-gold-rule" style={{ marginBottom: '1.25rem' }} />
-          <p style={{ fontSize: '0.95rem', lineHeight: 1.85, color: 'var(--sb-sage)', marginBottom: '1.25rem' }}>
+          <p style={{ fontSize: '0.95rem', lineHeight: 1.85, color: softText, marginBottom: '1.25rem' }}>
             {f.missionBody}
           </p>
           {bullets.length > 0 && (
@@ -3134,7 +3154,7 @@ function ExecDashboardBlock({ section }) {
                   key={i}
                   style={{
                     fontSize: '0.88rem',
-                    color: 'var(--sb-cream)',
+                    color: lightText,
                     paddingLeft: '1.25rem',
                     position: 'relative',
                     lineHeight: 1.6,
@@ -3940,26 +3960,29 @@ function CaseStudiesBlock({ section }) {
       });
     }
   }
+  const onDark = section.bg === 'navy' || section.bg === 'teal';
+  const lightText = onDark ? 'var(--sb-cream)' : 'var(--sb-teal-300)';
+  const softText = onDark ? 'var(--sb-sage)' : 'var(--sb-teal-300)';
   return (
     <section
       id={section.id}
       data-theme={section.theme || undefined}
-      style={{ background: BG_VAR[section.bg] || 'var(--sb-navy)', padding: '5rem 2rem', color: 'var(--sb-cream)' }}
+      style={{ background: BG_VAR[section.bg] || 'var(--sb-navy)', padding: '5rem 2rem', color: lightText }}
     >
       <div style={{ maxWidth: 1240, margin: '0 auto' }}>
         {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
-        <h2 className="sb-display" style={{ fontSize: '2.4rem', color: 'var(--sb-cream)', marginBottom: '0.75rem' }}>
+        <h2 className="sb-display" style={{ fontSize: '2.4rem', color: lightText, marginBottom: '0.75rem' }}>
           {f.heading || 'Detailed Case Studies'}
         </h2>
         <div className="sb-gold-rule" style={{ marginBottom: '1.5rem' }} />
         {f.intro && (
-          <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: 'var(--sb-sage)', maxWidth: 800, marginBottom: '2.5rem' }}>
+          <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: softText, maxWidth: 800, marginBottom: '2.5rem' }}>
             {f.intro}
           </p>
         )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {cases.map((c) => (
-            <CaseStudyCard key={c.key} data={c} />
+            <CaseStudyCard key={c.key} data={c} onDark={onDark} />
           ))}
         </div>
       </div>
@@ -3967,8 +3990,9 @@ function CaseStudiesBlock({ section }) {
   );
 }
 
-function CaseStudyCard({ data }) {
+function CaseStudyCard({ data, onDark = true }) {
   const [open, setOpen] = React.useState(false);
+  const lightText = onDark ? 'var(--sb-cream)' : 'var(--sb-teal-300)';
   // Normalize tags from string or array
   const tags = Array.isArray(data.tags) ? data.tags
     : typeof data.tags === 'string' ? data.tags.split(',').map(t => t.trim()).filter(Boolean)
@@ -3989,14 +4013,14 @@ function CaseStudyCard({ data }) {
 
   return (
     <div style={{
-      background: 'rgba(255,255,255,0.04)',
+      background: onDark ? 'rgba(255,255,255,0.04)' : 'var(--sb-airy-white)',
       border: '0.5px solid rgba(196,132,58,0.3)',
       borderLeft: '3px solid var(--sb-gold)',
       borderRadius: 'var(--sb-radius)',
       padding: '1.75rem 2rem',
     }}>
       <div className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>Case Study</div>
-      <h3 className="sb-display" style={{ fontSize: '1.6rem', color: 'var(--sb-cream)', letterSpacing: '0.04em', marginBottom: '0.35rem' }}>
+      <h3 className="sb-display" style={{ fontSize: '1.6rem', color: lightText, letterSpacing: '0.04em', marginBottom: '0.35rem' }}>
         {data.title}
       </h3>
       {/* Client + sector subtitle */}
@@ -4016,8 +4040,8 @@ function CaseStudyCard({ data }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem', marginBottom: rest.length && !open ? '1rem' : (data.feedback ? '1.25rem' : 0) }}>
         {(open ? filledFields : preview).map(({ key, label, accent }) => (
           Array.isArray(data[key])
-            ? <CaseField key={key} label={label} items={data[key]} accent={accent} />
-            : <CaseField key={key} label={label} text={data[key]} accent={accent} />
+            ? <CaseField key={key} label={label} items={data[key]} accent={accent} onDark={onDark} />
+            : <CaseField key={key} label={label} text={data[key]} accent={accent} onDark={onDark} />
         ))}
       </div>
 
@@ -4044,7 +4068,7 @@ function CaseStudyCard({ data }) {
             borderLeft: '3px solid var(--sb-gold)',
             borderRadius: 'var(--sb-radius)',
             fontStyle: 'italic',
-            color: 'var(--sb-cream)',
+            color: lightText,
             fontSize: '0.92rem',
             lineHeight: 1.7,
           }}
@@ -4080,8 +4104,10 @@ function CaseStudyCard({ data }) {
   );
 }
 
-function CaseField({ label, items, text, accent }) {
+function CaseField({ label, items, text, accent, onDark = true }) {
   if (!items?.length && !text) return null;
+  const lightText = onDark ? 'var(--sb-cream)' : 'var(--sb-teal-300)';
+  const softText = onDark ? 'var(--sb-sage)' : 'var(--sb-teal-300)';
   return (
     <div>
       <div
@@ -4098,7 +4124,7 @@ function CaseField({ label, items, text, accent }) {
       >
         {label}
       </div>
-      {text && <ExpandableTile text={text} onDark />}
+      {text && <ExpandableTile text={text} onDark={onDark} />}
       {items?.length > 0 && (
         <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
           {items.map((it, i) => (
@@ -4107,7 +4133,7 @@ function CaseField({ label, items, text, accent }) {
               style={{
                 fontSize: '0.85rem',
                 lineHeight: 1.6,
-                color: accent ? 'var(--sb-cream)' : 'var(--sb-sage)',
+                color: accent ? lightText : softText,
                 paddingLeft: '1rem',
                 position: 'relative',
               }}
@@ -4444,6 +4470,145 @@ function ArchitectureStepsBlock({ section }) {
             );
           })}
         </div>
+      </div>
+    </section>
+  );
+}
+
+// Evidence Chain diagram (2026-07-27) — Claim → Attribution → Evidence →
+// Time → Exit-Defense (or any org-defined chain via f.links), generalized
+// from the Data Channel Rod visual in the LoneTree Capital reference
+// package (Salt_Basin_LoneTree_Prospect_Experience). Data-driven: no
+// product-specific wording is hardcoded here, only the connected-chain
+// layout treatment.
+function EvidenceChainDiagramBlock({ section }) {
+  const f = section.fields || {};
+  const links = Array.isArray(f.links) ? f.links : [];
+  return (
+    <section id={section.id} data-theme={section.theme || undefined} style={{ background: BG_VAR[section.bg] || 'var(--sb-navy)', padding: '5rem 2rem' }}>
+      <div style={{ maxWidth: 1180, margin: '0 auto' }}>
+        {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
+        {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: TEXT_FOR[section.bg] || 'var(--sb-cream)', marginBottom: '0.75rem' }}>{f.heading}</h2>}
+        {f.intro && <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: SUB_FOR[section.bg] || 'var(--sb-sage)', maxWidth: 740, marginBottom: '2.5rem' }}>{f.intro}</p>}
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', gap: 0, overflowX: 'auto', paddingTop: '0.5rem', paddingBottom: '1rem' }}>
+          {links.map((link, i) => {
+            const accent = ACCENT_SWATCH[link.accent] || ACCENT_SWATCH.gold;
+            return (
+              <React.Fragment key={i}>
+                <div style={{ minWidth: 168, flex: '0 0 168px', textAlign: 'center' }}>
+                  <div style={{
+                    width: 18, height: 18, margin: '0 auto 0.75rem', borderRadius: i === 0 ? 4 : '50%', transform: i === 0 ? 'rotate(45deg)' : 'none',
+                    background: accent, boxShadow: `0 0 0 4px ${accent}33`,
+                  }} />
+                  <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.78rem', fontWeight: 700, color: TEXT_FOR[section.bg] || '#fff', marginBottom: '0.35rem' }}>{link.label}</div>
+                  <div style={{ fontSize: '0.76rem', color: SUB_FOR[section.bg] || 'var(--sb-sage)', lineHeight: 1.5 }}>{link.description}</div>
+                </div>
+                {i < links.length - 1 && (
+                  <div style={{ flex: '0 0 40px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: 18, marginTop: 0 }}>
+                    <div style={{ width: '100%', height: 2, background: `linear-gradient(90deg, ${accent}, ${ACCENT_SWATCH[links[i + 1]?.accent] || accent})` }} />
+                  </div>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </div>
+        {f.summary && (
+          <div style={{ marginTop: '1rem', background: 'var(--sb-teal-deep)', borderRadius: 4, padding: '1rem 1.25rem' }}>
+            <p style={{ margin: 0, color: 'var(--sb-cream)', fontSize: '0.9rem', lineHeight: 1.6 }}>{f.summary}</p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// Orbit Model diagram (2026-07-27) — Crystal Atom → Molecule → Rod → Orbit,
+// generalized from the Salt Basin Orbit Visual & Data Model reference.
+// Concentric rings (f.rings, innermost first) around a center label — a
+// genuinely different treatment from the linear-chain blocks above, since
+// the source concept is explicitly hierarchical/nested, not sequential.
+function OrbitModelDiagramBlock({ section }) {
+  const f = section.fields || {};
+  const rings = Array.isArray(f.rings) ? f.rings : [];
+  const size = 420;
+  const cx = size / 2, cy = size / 2;
+  const maxR = size / 2 - 24;
+  const step = rings.length > 1 ? maxR / rings.length : maxR;
+  return (
+    <section id={section.id} data-theme={section.theme || undefined} style={{ background: BG_VAR[section.bg] || 'var(--sb-navy)', padding: '5rem 2rem' }}>
+      <div style={{ maxWidth: 1180, margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: '3rem', alignItems: 'center' }}>
+        <div style={{ flex: '1 1 320px', minWidth: 280 }}>
+          {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
+          {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: TEXT_FOR[section.bg] || 'var(--sb-cream)', marginBottom: '0.75rem' }}>{f.heading}</h2>}
+          {f.intro && <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: SUB_FOR[section.bg] || 'var(--sb-sage)', marginBottom: '1.5rem' }}>{f.intro}</p>}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+            {rings.map((ring, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <span style={{ width: 10, height: 10, borderRadius: '50%', background: ACCENT_SWATCH[ring.accent] || ACCENT_SWATCH.teal, flexShrink: 0 }} />
+                <span style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.82rem', fontWeight: 600, color: TEXT_FOR[section.bg] || '#fff' }}>{ring.label}</span>
+                {ring.description && <span style={{ fontSize: '0.78rem', color: SUB_FOR[section.bg] || 'var(--sb-sage)' }}>— {ring.description}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+        <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} style={{ flex: '0 0 auto', maxWidth: '100%' }}>
+          {rings.map((ring, i) => {
+            const r = maxR - i * step;
+            return (
+              <circle key={i} cx={cx} cy={cy} r={Math.max(r, 20)} fill="none"
+                stroke={ACCENT_SWATCH[ring.accent] || ACCENT_SWATCH.teal} strokeWidth={1.5} opacity={0.6} />
+            );
+          })}
+          {f.centerLabel && (
+            <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle"
+              fontFamily="var(--sb-font-label)" fontSize="13" fontWeight="700"
+              fill={TEXT_FOR[section.bg] || '#fff'}>{f.centerLabel}</text>
+          )}
+        </svg>
+      </div>
+    </section>
+  );
+}
+
+// Maturity Signals diagram (2026-07-27) — levels 0–5 (f.levels) plus a grid
+// of contributing signals (f.signals), generalized from "The Signals That
+// Matter in the Maturity Model": maturity is the strength of the weakest
+// signal, not an average.
+function MaturitySignalsDiagramBlock({ section }) {
+  const f = section.fields || {};
+  const levels = Array.isArray(f.levels) ? f.levels : [];
+  const signals = Array.isArray(f.signals) ? f.signals : [];
+  return (
+    <section id={section.id} data-theme={section.theme || undefined} style={{ background: BG_VAR[section.bg] || 'var(--sb-navy)', padding: '5rem 2rem' }}>
+      <div style={{ maxWidth: 1180, margin: '0 auto' }}>
+        {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
+        {f.heading && <h2 className="sb-display" style={{ fontSize: '2.2rem', color: TEXT_FOR[section.bg] || 'var(--sb-cream)', marginBottom: '0.75rem' }}>{f.heading}</h2>}
+        {f.intro && <p style={{ fontSize: '0.96rem', lineHeight: 1.8, color: SUB_FOR[section.bg] || 'var(--sb-sage)', maxWidth: 740, marginBottom: '2rem' }}>{f.intro}</p>}
+        {levels.length > 0 && (
+          <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '2rem' }}>
+            {levels.map((level, i) => (
+              <div key={i} style={{ flex: 1, textAlign: 'center' }}>
+                <div style={{ height: 6, borderRadius: 3, background: ACCENT_SWATCH[level.accent] || ACCENT_SWATCH.gold, marginBottom: '0.5rem' }} />
+                <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.7rem', fontWeight: 700, color: TEXT_FOR[section.bg] || '#fff' }}>L{i} — {level.label}</div>
+              </div>
+            ))}
+          </div>
+        )}
+        {signals.length > 0 && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem' }}>
+            {signals.map((signal, i) => (
+              <div key={i} style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 4, padding: '0.85rem 1rem', boxShadow: '0 0 0 0.5px rgba(255,255,255,0.1)' }}>
+                <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.78rem', fontWeight: 600, color: TEXT_FOR[section.bg] || '#fff', marginBottom: '0.3rem' }}>{signal.label}</div>
+                {signal.description && <div style={{ fontSize: '0.74rem', color: SUB_FOR[section.bg] || 'var(--sb-sage)', lineHeight: 1.5 }}>{signal.description}</div>}
+              </div>
+            ))}
+          </div>
+        )}
+        {f.summary && (
+          <div style={{ marginTop: '1.5rem', background: 'var(--sb-teal-deep)', borderRadius: 4, padding: '1rem 1.25rem' }}>
+            <p style={{ margin: 0, color: 'var(--sb-cream)', fontSize: '0.9rem', lineHeight: 1.6 }}>{f.summary}</p>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -5592,6 +5757,9 @@ const REGISTRY = {
   careerLensTabs: CareerLensTabsBlock,
   careerRollupShowcase: CareerRollupShowcaseBlock,
   careerJourneyStepper: CareerJourneyStepperBlock,
+  evidenceChainDiagram: EvidenceChainDiagramBlock,
+  orbitModelDiagram: OrbitModelDiagramBlock,
+  maturitySignalsDiagram: MaturitySignalsDiagramBlock,
 };
 
 // ── Sub-sections (2026-07-27) ────────────────────────────────────────────────
