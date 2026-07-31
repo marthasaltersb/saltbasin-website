@@ -14,11 +14,12 @@ const S = {
   card: { background: 'white', border: '0.5px solid rgba(0,0,0,0.1)', borderRadius: 12, padding: '1.5rem', marginBottom: '1.25rem' },
   title: { fontSize: '1.05rem', fontWeight: 700, color: 'var(--sb-navy, #1b2a3b)', marginBottom: '0.4rem' },
   desc: { fontSize: '0.82rem', color: '#777', lineHeight: 1.5, marginBottom: '1rem' },
+  uploadNotice: { fontSize: '0.76rem', fontWeight: 700, color: 'var(--sb-gold, #c4843a)', marginBottom: '0.55rem' },
   btn: { padding: '0.55rem 1.2rem', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: '0.8rem', fontFamily: 'var(--sb-font-label)', background: 'var(--sb-gold, #c4843a)', color: 'white' },
   linkBtn: { fontSize: '0.78rem', color: 'var(--sb-teal-deep, #02a1a6)', cursor: 'pointer', marginTop: '1rem', display: 'inline-block' },
 };
 
-export default function UploadDataScreen({ onOpenClassicEditor }) {
+export default function UploadDataScreen({ onOpenClassicEditor, onCommitted }) {
   const [downloading, setDownloading] = useState(false);
   const [importing, setImporting] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -77,7 +78,7 @@ export default function UploadDataScreen({ onOpenClassicEditor }) {
         sheetWarnings={preview.sheetWarnings}
         missingSheets={preview.missingSheets}
         onCancel={() => setPreview(null)}
-        onCommitted={() => setPreview(null)}
+        onCommitted={(result) => { setPreview(null); onCommitted?.(result); }}
       />
     );
   }
@@ -92,11 +93,13 @@ export default function UploadDataScreen({ onOpenClassicEditor }) {
       <div style={S.card}>
         <div style={S.title}>Upload a Filled-In Template</div>
         <div style={S.desc}>Upload your completed semantic template — you'll see a preview of exactly what will be created before anything is saved.</div>
+        <div style={S.uploadNotice}>Please check required terms before upload.</div>
         <input type="file" accept=".xlsx,.xls" disabled={importing} onChange={(e) => importWorkbook(e.target.files?.[0])} />
       </div>
       <div style={S.card}>
         <div style={S.title}>Upload an Existing Resume</div>
         <div style={S.desc}>Upload a resume for AI-assisted extraction — you'll see a preview of the suggested Atom/Molecule mappings and can make changes before anything is saved.</div>
+        <div style={S.uploadNotice}>Please check required terms before upload.</div>
         <input type="file" accept=".pdf,.docx,.txt" disabled={analyzing} onChange={(e) => analyzeResume(e.target.files?.[0])} />
         {analyzing && <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.5rem' }}>Analyzing resume…</div>}
       </div>

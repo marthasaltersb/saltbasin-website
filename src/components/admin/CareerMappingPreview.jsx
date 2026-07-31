@@ -53,7 +53,7 @@ function buildInitialEntries(proposal) {
         included: true,
         source: entry.sourceSheet || 'ai_resume_extraction',
         fields: Object.entries(entry.fieldBonds || {}).map(([atomKey, bond]) => ({
-          atomKey, included: true, value: bond.value, label: bond.label || atomKey, header: bond.header, matchType: bond.matchType, affinity: bond.affinity,
+          atomKey, included: true, value: bond.value, originalValue: bond.value, label: bond.label || atomKey, header: bond.header, matchType: bond.matchType, affinity: bond.affinity, sourceLocation: bond.sourceLocation, documentId: bond.documentId || entry.documentId, sourceFilename: bond.sourceFilename || entry.sourceFilename,
         })),
         unresolvedHeaders: entry.unresolvedHeaders || [],
       });
@@ -93,6 +93,7 @@ export default function CareerMappingPreview({ proposal, source, sheetWarnings =
       .map((e) => ({
         entryType: e.entryType,
         values: Object.fromEntries(e.fields.filter((f) => f.included).map((f) => [f.atomKey, f.value])),
+        mappings: e.fields.filter((f) => f.included).map((f) => ({ atomKey: f.atomKey, originalValue: f.originalValue, committedValue: f.value, sourceLocation: f.sourceLocation, sourceLabel: f.header, matchType: f.matchType, affinity: f.affinity, documentId: f.documentId, sourceFilename: f.sourceFilename })),
       }))
       .filter((e) => Object.keys(e.values).length > 0);
     if (!payload.length) return toast.error('Nothing selected to save');
@@ -146,6 +147,7 @@ export default function CareerMappingPreview({ proposal, source, sheetWarnings =
                   <span style={S.fieldLabel}>
                     {f.label}
                     {f.matchType === 'fuzzy' && <span style={S.affinity}>(matched from "{f.header}", {Math.round((f.affinity || 0) * 100)}%)</span>}
+                    <span style={{ display: 'block', color: '#8a7356', fontSize: '.66rem', marginTop: '.15rem' }}>Found in: {f.sourceLocation || f.header || 'uploaded source'}</span>
                   </span>
                   <input
                     style={S.input}

@@ -19,6 +19,8 @@ import { QUERY_CONVERGENCE_METHODOLOGY } from '../../src/config/metrics/queryCon
 import { MATURITY_MODEL } from '../../src/config/metrics/maturityModel.js';
 import { SCENARIO_LIBRARY, validateScenarioLibraryShape } from '../data/scenarioLibrary.js';
 import { DEFAULT_ATOM_WEIGHTS } from '../../src/scenarios/scenarioRegistry.js';
+import { JOURNEY_WORLD_EXPERIENCE, validateJourneyWorldExperience } from '../../src/config/visual/journeyWorldExperience.js';
+import { LONETREE_PROSPECT_EXPERIENCE, validateLonetreeProspectExperience } from '../../src/config/visual/lonetreeProspectExperience.js';
 
 const SUM_TOLERANCE = 1e-9;
 
@@ -235,4 +237,22 @@ export const SCENARIO_ATOM_WEIGHTS_ENVELOPE = defineConfigEnvelope({
   validate(value) {
     return nonNegativeNumbers(value, 'weights');
   },
+});
+
+export const JOURNEY_WORLD_EXPERIENCE_ENVELOPE = defineConfigEnvelope({
+  id: 'journey-world-experience',
+  label: 'Spatial Journey World Experience',
+  description: 'Editable geometry, grouping colors, visibility, progressive formation, camera, seabed, panel placement, and future ion/atom/molecule/mineral/crystallography presentation rules.',
+  publicRead: true,
+  defaultValue: JOURNEY_WORLD_EXPERIENCE,
+  validate: validateJourneyWorldExperience,
+});
+
+export const LONETREE_PROSPECT_EXPERIENCE_ENVELOPE = defineConfigEnvelope({
+  id: 'lonetree-prospect-experience',
+  label: 'LoneTree Prospect Experience',
+  description: 'Editable prospect-demo narrative, light-first visual tokens, font tokens, and hierarchy-first crystal navigation.',
+  publicRead: true,
+  defaultValue: LONETREE_PROSPECT_EXPERIENCE,
+  validate: validateLonetreeProspectExperience,
 });

@@ -4025,6 +4025,118 @@ option {
   0%, 100% { translate: 0 0; }
   50% { translate: 0 -9px; }
 }
+
+/* Spatial Journey World — playable journey layout. These overrides keep every
+   overlay on a dark, explicit surface so cream/white type is never placed on
+   a cream card. */
+.sjw-shell {
+  --sjw-surface: rgba(20,31,45,.94);
+  --sjw-surface-raised: rgba(29,43,58,.97);
+  --sjw-line: rgba(255,242,221,.16);
+  --sjw-text: #FFF2DD;
+  --sjw-muted: #DAD3CE;
+  --sjw-ink: #172433;
+  font-family: 'Jost', var(--sb-font-label), sans-serif;
+}
+.sjw-top-bar {
+  margin:.8rem;
+  padding:.72rem .85rem;
+  border:1px solid var(--sjw-line);
+  border-radius:18px;
+  background:linear-gradient(180deg,rgba(30,43,57,.94),rgba(20,31,45,.9));
+  box-shadow:0 16px 45px rgba(0,0,0,.25);
+  backdrop-filter:blur(18px);
+}
+.sjw-title,.sjw-inspector-panel h3,.sjw-compound-overlay h4,.sjw-legend-panel h4 {
+  font-family:'Fraunces',var(--sbh-font-display),serif;
+  color:var(--sjw-text);
+}
+.sjw-top-controls { gap:.42rem; }
+.sjw-icon-btn,.sjw-world-picker select {
+  min-height:36px;
+  border:1px solid rgba(255,242,221,.18);
+  border-radius:999px;
+  background:rgba(255,255,255,.06);
+  color:var(--sjw-text);
+}
+.sjw-icon-btn:hover,.sjw-icon-btn:focus-visible {
+  border-color:rgba(196,132,58,.8);
+  background:rgba(196,132,58,.16);
+}
+.sjw-icon-btn.sjw-primary-nav { background:#C4843A;color:#172433;border-color:#E3AD6C;font-weight:800; }
+.sjw-world-picker span,.sjw-instructions { color:var(--sjw-muted); }
+.sjw-instructions { display:none; }
+.sjw-layer-controls {
+  position:absolute;z-index:19;top:5.45rem;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:.3rem;padding:.35rem;
+  border:1px solid var(--sjw-line);border-radius:999px;background:var(--sjw-surface);
+  box-shadow:0 10px 30px rgba(0,0,0,.22);backdrop-filter:blur(14px);
+}
+.sjw-layer-controls > span { padding:0 .55rem;color:#C4843A;font-size:.6rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase; }
+.sjw-layer-controls button { border:0;border-radius:999px;background:transparent;color:var(--sjw-muted);padding:.48rem .7rem;cursor:pointer;font:700 .66rem var(--sb-font-label); }
+.sjw-layer-controls button.active { background:#FFF2DD;color:#172433; }
+.sjw-objectives-panel {
+  top:6.1rem;width:238px;border-radius:18px;background:var(--sjw-surface);
+  border-color:var(--sjw-line);box-shadow:0 18px 50px rgba(0,0,0,.22);backdrop-filter:blur(16px);
+}
+.sjw-objective { border-radius:11px;color:var(--sjw-text); }
+.sjw-objective:hover { background:rgba(196,132,58,.12); }
+.sjw-inspector-panel {
+  top:auto;left:50%;right:auto;bottom:.9rem;width:min(1040px,calc(100vw - 2rem));max-width:none;height:min(315px,42vh);
+  transform:translateX(-50%);display:block;padding:1rem 3.5rem 1rem 1.25rem;
+  border:1px solid rgba(196,132,58,.38);border-radius:24px;background:var(--sjw-surface-raised);
+  box-shadow:0 -18px 60px rgba(0,0,0,.34);color:var(--sjw-text);backdrop-filter:blur(20px);
+}
+.sjw-inspector-body { max-width:none; }
+.sjw-inspector-body > div { display:grid;grid-template-columns:minmax(210px,.7fr) minmax(0,2fr);gap:.65rem 1.2rem;align-items:start; }
+.sjw-inspector-body h3,.sjw-inspector-body .sjw-eyebrow,.sjw-inspector-body .sjw-meta-row { grid-column:1; }
+.sjw-inspector-body .sjw-agent-line,.sjw-inspector-body .sjw-evidence-list,.sjw-inspector-body .sjw-gate-block,.sjw-inspector-body .sjw-lineage-block,.sjw-inspector-body > div > button { grid-column:2; }
+.sjw-evidence-card,.sjw-outcome-card,.sjw-gate-block,.sjw-lineage-block {
+  background:rgba(255,255,255,.065);border-color:var(--sjw-line);color:var(--sjw-text);
+}
+.sjw-evidence-source,.sjw-query-note,.sjw-agent-line,.sjw-compound-sub { color:var(--sjw-muted); }
+.sjw-evidence-value,.sjw-outcome-value { color:var(--sjw-text); }
+.sjw-legend-panel {
+  left:auto;right:1rem;top:5.9rem;bottom:auto;width:min(360px,calc(100vw - 2rem));max-height:calc(100vh - 7rem);
+  overflow:auto;border-radius:22px;background:var(--sjw-surface-raised);color:var(--sjw-text);
+  box-shadow:-18px 20px 60px rgba(0,0,0,.34);backdrop-filter:blur(20px);
+}
+.sjw-legend-section { border-top:1px solid var(--sjw-line);padding:.8rem 0; }
+.sjw-legend-section b { color:#C4843A; }
+.sjw-legend-section p,.sjw-legend-bands { color:var(--sjw-muted); }
+.sjw-shape-legend { display:grid;grid-template-columns:1fr 1fr;gap:.55rem; }
+.sjw-shape-legend > div { display:grid;grid-template-columns:42px 1fr;grid-template-rows:auto auto;align-items:center;padding:.55rem;border:1px solid var(--sjw-line);border-radius:13px;background:rgba(255,255,255,.045); }
+.sjw-shape-legend span { color:var(--sjw-text);font-weight:800; }
+.sjw-shape-legend small { color:var(--sjw-muted);font-size:.65rem; }
+.sjw-shape { grid-row:1/3;width:24px;height:24px;margin:auto;background:#4A7C8E;transform:rotate(45deg);box-shadow:0 0 14px rgba(74,124,142,.45); }
+.sjw-shape-molecule { border:2px solid #785D69;border-radius:50%;background:transparent; }
+.sjw-shape-mineral { clip-path:polygon(50% 0,100% 35%,82% 100%,18% 100%,0 35%);background:#C4843A; }
+.sjw-shape-conflict { border:2px solid #B5433A;border-radius:50%;background:transparent;box-shadow:0 0 12px #B5433A; }
+.sjw-compound-overlay,.sjw-map-overlay {
+  background:var(--sjw-surface-raised);color:var(--sjw-text);border-color:rgba(196,132,58,.38);
+  border-radius:24px;box-shadow:0 28px 90px rgba(0,0,0,.42);
+}
+.sjw-new-lead-form label { color:var(--sjw-muted); }
+.sjw-new-lead-form input,.sjw-new-lead-form select {
+  background:#FFF;color:var(--sjw-ink);border:1px solid #B8C4C9;border-radius:10px;
+}
+.sjw-form-error { color:#FFD0CC;background:rgba(181,67,58,.18);border:1px solid rgba(181,67,58,.45);border-radius:10px;padding:.6rem; }
+.sjw-customer-card {
+  display:grid;gap:.65rem;padding:.85rem 1rem;border:1px solid var(--sjw-line);border-radius:15px;
+  background:rgba(255,255,255,.055);cursor:pointer;transition:transform .18s,border-color .18s,background .18s;
+}
+.sjw-customer-card:hover { transform:translateY(-2px);border-color:#C4843A;background:rgba(196,132,58,.11); }
+.sjw-customer-card-head { display:flex;justify-content:space-between;gap:1rem;color:var(--sjw-text);font-weight:800; }
+.sjw-customer-card-head b { color:#C4843A;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em; }
+.sjw-customer-card-meta { display:flex;flex-wrap:wrap;gap:.45rem; }
+.sjw-customer-card-meta span { border-radius:999px;background:rgba(74,124,142,.16);color:var(--sjw-muted);padding:.3rem .5rem;font-size:.68rem; }
+.sjw-customer-card-meta span.risk { background:rgba(181,67,58,.2);color:#FFD0CC; }
+@media(max-width:760px){
+  .sjw-layer-controls{top:6.7rem;width:calc(100vw - 2rem);justify-content:center}
+  .sjw-layer-controls>span{display:none}
+  .sjw-inspector-panel{height:min(390px,52vh)}
+  .sjw-inspector-body>div{display:block}
+}
 .sbx-band { padding: clamp(2.5rem, 5vw, 5rem); }
 .sbx-intake-grid, .sbx-review-grid, .sbx-career-crystal { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(1rem, 3vw, 2rem); align-items: stretch; }
 .sbx-panel { background: rgba(255,255,255,0.82); border: 1px solid var(--sbh-line); border-radius: 20px; padding: clamp(1.2rem, 2.5vw, 2rem); box-shadow: 0 18px 45px rgba(17,25,40,0.08); }
@@ -4181,4 +4293,82 @@ option {
   .sbx-artifact-label { min-width: 108px; padding: 0.48rem; }
   .sbx-artifact-orb { width: 76px; height: 76px; }
   .sbx-artifact-orb .sbh-webgl-crystal-orbit { width: 62px; height: 62px; }
+}
+/* Career Master member entry: keep the path selector and selected workflow
+   in one responsive document column, regardless of the surrounding admin
+   shell's flex layout. */
+.career-master-entry-layout {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem 2rem;
+  box-sizing: border-box;
+}
+.career-master-paths {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .75rem;
+  width: 100%;
+}
+.career-master-path-card {
+  min-width: 0;
+  padding: 1rem;
+  text-align: left;
+  border-radius: 12px;
+  cursor: pointer;
+  font: inherit;
+}
+.career-master-active-view {
+  width: 100%;
+  min-width: 0;
+  margin-top: 1rem;
+}
+.career-master-active-view > * {
+  width: 100%;
+  max-width: none !important;
+  box-sizing: border-box;
+}
+@media (max-width: 760px) {
+  .career-master-entry-layout { padding: .85rem .75rem 1.5rem; }
+  .career-master-paths { grid-template-columns: 1fr; gap: .55rem; }
+  .career-master-path-card { padding: .8rem .9rem; }
+  .career-master-active-view { margin-top: .75rem; }
+}
+
+.career-analysis-thinking {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin: 0 0 1rem;
+  padding: 1.15rem 1.3rem;
+  color: #f7f1e8;
+  background: radial-gradient(circle at 12% 50%, rgba(2,161,166,.24), transparent 30%), #101d2b;
+  border: 1px solid rgba(225,186,123,.3);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.career-analysis-orbit { position: relative; flex: 0 0 96px; width: 96px; height: 96px; perspective: 360px; transform-style: preserve-3d; }
+.career-analysis-core { position: absolute; inset: 34px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #f9dfaa, #c4843a 45%, #71451f); box-shadow: 0 0 24px rgba(225,186,123,.8); animation: career-core-pulse 1.8s ease-in-out infinite; }
+.career-analysis-ring { position: absolute; inset: 12px; border: 1px solid rgba(143,218,218,.48); border-radius: 50%; transform-style: preserve-3d; animation: career-orbit-spin 2.6s linear infinite; }
+.career-analysis-ring i { position: absolute; top: -4px; left: 50%; width: 8px; height: 8px; border-radius: 50%; background: #8fdada; box-shadow: 0 0 12px #8fdada; }
+.career-analysis-ring.ring-two { transform: rotateX(66deg) rotateZ(28deg); animation-duration: 3.4s; animation-direction: reverse; }
+.career-analysis-ring.ring-three { inset: 22px 5px; transform: rotateY(68deg) rotateZ(-18deg); animation-duration: 2.1s; }
+.career-analysis-thinking-title { font-size: .94rem; font-weight: 700; margin-bottom: .3rem; }
+.career-analysis-thinking-step { min-height: 1.2em; color: #b9cbd2; font-size: .78rem; }
+@keyframes career-orbit-spin { to { transform: rotateZ(360deg) rotateY(38deg); } }
+@keyframes career-core-pulse { 50% { transform: scale(1.16); box-shadow: 0 0 34px rgba(225,186,123,.95); } }
+@media (max-width: 560px) {
+  .career-analysis-thinking { align-items: flex-start; gap: .8rem; padding: .9rem; }
+  .career-analysis-orbit { flex-basis: 70px; width: 70px; height: 70px; transform: scale(.72); transform-origin: top left; margin-right: -20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .career-analysis-ring, .career-analysis-core { animation: none; }
 }

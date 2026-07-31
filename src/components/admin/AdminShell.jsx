@@ -80,7 +80,7 @@ const TAB_COMPONENTS = {
   websiteIntelligence: () => <WebsiteIntelligencePanel />,
   metricIntelligence: () => <MetricIntelligencePanel />,
   methodologyConfig: () => <MethodologyConfigPanel />,
-  lonetreeMvp:    () => <LonetreeMvpPanel />,
+  lonetreeMvp:    (props) => <LonetreeMvpPanel {...props} />,
   // config: handled inline below (ConfigPanel needs draft + setters from shell)
   // content: handled inline below (Sidebar/EditorPane/PreviewPane composition)
 };
@@ -856,7 +856,7 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
           if (componentId === 'entitlements')     return <MemberEntitlementsPanel />;
           if (componentId === 'orgDocuments')     return <OrgDocumentsPanel orgId={orgId} />;
           if (componentId === 'proposalExperience') return <ProposalExperiencePanel />;
-          if (componentId === 'lonetreeMvp')       return <LonetreeMvpPanel />;
+          if (componentId === 'lonetreeMvp')       return <LonetreeMvpPanel scope={scope} />;
 
           // Inline 'config' case: the panel needs draft + setter + scope from
           // the shell. Treated as the default fallback when nothing else

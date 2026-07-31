@@ -28,7 +28,7 @@ function findGateStageIndex(parentRod, originGateId) {
 // rods: array of { id, parentRodId, originGateId, branchAngleDeg,
 // branchElevation, stages }. Returns { [rodId]: THREE.Vector3[] } aligned
 // index-for-index with each rod's `stages` array.
-export function computeRodLayout(THREE, rods, { stageSpacing = STAGE_SPACING } = {}) {
+export function computeRodLayout(THREE, rods, { stageSpacing = STAGE_SPACING, rootPath = null } = {}) {
   const rodById = new Map(rods.map((rod) => [rod.id, rod]));
   const origins = new Map();
   const positions = new Map();
@@ -60,9 +60,15 @@ export function computeRodLayout(THREE, rods, { stageSpacing = STAGE_SPACING } =
     if (positions.has(rod.id)) return positions.get(rod.id);
     const { position, direction } = resolveOrigin(rod);
     const startOffset = rod.parentRodId ? stageSpacing : 0;
-    const stagePositions = rod.stages.map((_, index) =>
-      position.clone().addScaledVector(direction, startOffset + index * stageSpacing)
-    );
+    const stagePositions = rod.stages.map((_, index) => {
+      const point = position.clone().addScaledVector(direction, startOffset + index * stageSpacing);
+      if (!rod.parentRodId && rootPath?.style === 'tidal_curve') {
+        const t = index / Math.max(rod.stages.length - 1, 1);
+        point.x += Math.sin(t * Math.PI * 1.4) * Number(rootPath.amplitudeX || 0);
+        point.y += Math.sin(t * Math.PI * 2.2) * Number(rootPath.amplitudeY || 0);
+      }
+      return point;
+    });
     positions.set(rod.id, stagePositions);
     return stagePositions;
   }

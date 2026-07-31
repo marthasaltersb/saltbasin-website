@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
+import CareerMappingPreview from './CareerMappingPreview.jsx';
 
 const INTAKE_KINDS = [
   { value: 'initial_mapping', label: 'Initial Career Master mapping' },
@@ -102,6 +103,9 @@ export default function CareerIntakePanel({ compact = false, onPrimaryResumeCrea
   const [uploading, setUploading] = useState(false);
   const [queuing, setQueuing] = useState(false);
   const [syncingMetadata, setSyncingMetadata] = useState(false);
+  const [runningId, setRunningId] = useState(null);
+  const [analysisPreview, setAnalysisPreview] = useState(null);
+  const [thinkingStep, setThinkingStep] = useState(0);
   const [file, setFile] = useState(null);
   const fileRef = useRef(null);
   const [form, setForm] = useState({
@@ -141,6 +145,11 @@ export default function CareerIntakePanel({ compact = false, onPrimaryResumeCrea
   }
 
   useEffect(() => { load(); }, []);
+  useEffect(() => {
+    if (!runningId) return undefined;
+    const timer = setInterval(() => setThinkingStep((step) => (step + 1) % 4), 1400);
+    return () => clearInterval(timer);
+  }, [runningId]);
 
   const selectedCount = useMemo(() => selectedIds.length, [selectedIds]);
 
@@ -207,6 +216,23 @@ export default function CareerIntakePanel({ compact = false, onPrimaryResumeCrea
       toast('Metadata sync failed: ' + e.message);
     } finally {
       setSyncingMetadata(false);
+    }
+  }
+
+  async function runAnalysis(run) {
+    setRunningId(run.id);
+    setThinkingStep(0);
+    setRuns((current) => current.map((item) => item.id === run.id ? { ...item, status: 'running' } : item));
+    try {
+      const result = await api.runCareerIntakeAnalysis(run.id);
+      setAnalysisPreview(result);
+      setRuns((current) => current.map((item) => item.id === run.id ? { ...item, status: 'completed', summary: `Analysis completed. Review the proposed mappings below.` } : item));
+      if (result.sourceErrors?.length) toast(`${result.sourceErrors.length} source${result.sourceErrors.length === 1 ? '' : 's'} could not be analyzed`);
+    } catch (e) {
+      setRuns((current) => current.map((item) => item.id === run.id ? { ...item, status: 'failed', summary: e.message } : item));
+      toast('Analysis failed: ' + e.message);
+    } finally {
+      setRunningId(null);
     }
   }
 
@@ -309,6 +335,25 @@ export default function CareerIntakePanel({ compact = false, onPrimaryResumeCrea
 
           <div>
             <div style={S.label}>Queued analysis ({runs.length})</div>
+            {runningId && (
+              <div className="career-analysis-thinking" role="status" aria-live="polite">
+                <div className="career-analysis-orbit" aria-hidden="true">
+                  <span className="career-analysis-core" />
+                  <span className="career-analysis-ring ring-one"><i /></span>
+                  <span className="career-analysis-ring ring-two"><i /></span>
+                  <span className="career-analysis-ring ring-three"><i /></span>
+                </div>
+                <div>
+                  <div className="career-analysis-thinking-title">Analyzing your Career Orbit</div>
+                  <div className="career-analysis-thinking-step">{[
+                    'Reading attached source evidence…',
+                    'Identifying roles, skills, tools, outcomes, and case studies…',
+                    'Bonding source facts to Career Master fields…',
+                    'Preparing an editable provenance preview…',
+                  ][thinkingStep]}</div>
+                </div>
+              </div>
+            )}
             <div style={{ display: 'grid', gap: '0.4rem' }}>
               {runs.length === 0 && <div style={{ fontSize: '0.78rem', color: '#888' }}>No analysis runs queued yet.</div>}
               {runs.slice(0, 5).map((run) => (
@@ -318,6 +363,11 @@ export default function CareerIntakePanel({ compact = false, onPrimaryResumeCrea
                     <span style={{ fontSize: '0.72rem', color: '#666' }}>{run.analysisPassesRequested} passes, {run.documentIds?.length || 0} sources</span>
                   </div>
                   <div style={{ fontSize: '0.73rem', color: '#555', lineHeight: 1.45 }}>{run.summary}</div>
+                  {(run.status === 'queued' || run.status === 'failed') && (
+                    <button type="button" style={{ ...S.btn('gold'), marginTop: '0.5rem' }} disabled={!!runningId} onClick={() => runAnalysis(run)}>
+                      {runningId === run.id ? 'Analyzing…' : run.status === 'failed' ? 'Run Analysis Again' : 'Run Analysis'}
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -329,6 +379,16 @@ export default function CareerIntakePanel({ compact = false, onPrimaryResumeCrea
         <div style={{ marginTop: '0.75rem', fontSize: '0.74rem', color: '#666' }}>
           {docs.length} uploaded source{docs.length === 1 ? '' : 's'} available. {selectedCount} selected for the next analysis run.
         </div>
+      )}
+
+      {analysisPreview && !runningId && (
+        <CareerMappingPreview
+          proposal={analysisPreview.proposal}
+          source={analysisPreview.source}
+          sheetWarnings={analysisPreview.sheetWarnings}
+          onCancel={() => setAnalysisPreview(null)}
+          onCommitted={() => { setAnalysisPreview(null); load(); }}
+        />
       )}
     </div>
   );

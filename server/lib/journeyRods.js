@@ -28,6 +28,43 @@ async function ensureRod({ rodType, leadId = null, userId = null, personalProfil
   return await db.prepare(`SELECT * FROM journey_data_rods WHERE id=$1`).get(rodId);
 }
 
+// User-configured journey instances are intentionally not routed through
+// ensureRod(): one member may configure more than one deal for the same
+// scenario. The scenario and its first configured gate supply the type/stage;
+// this function does not invent either value.
+export async function createUserJourneyRod(userId, { scenarioKey, label }) {
+  const scenario = await db.prepare(`
+    SELECT * FROM journey_scenarios
+    WHERE scenario_key=$1 AND is_active=true
+  `).get(scenarioKey);
+  if (!scenario) throw new Error('Journey scenario not found');
+
+  const firstGate = await db.prepare(`
+    SELECT stage_key FROM journey_gate_definitions
+    WHERE scenario_id=$1 AND is_active=true
+    ORDER BY sort_order
+    LIMIT 1
+  `).get(scenario.id);
+  if (!firstGate) throw new Error('Journey scenario has no configured stages');
+
+  const profile = await db.prepare(`SELECT id FROM personal_profiles WHERE user_id=$1`).get(userId);
+  const now = Date.now();
+  const metadata = { scenarioKey: scenario.scenario_key, label };
+  const result = await db.prepare(`
+    INSERT INTO journey_data_rods
+      (rod_type,user_id,personal_profile_id,current_stage,metadata,created_at,updated_at)
+    VALUES ($1,$2,$3,$4,$5::jsonb,$6,$6)
+    RETURNING id
+  `).run(scenario.rod_type, userId, profile?.id || null, firstGate.stage_key, metadata, now);
+  const rodId = Number(result.lastInsertRowid);
+  await db.prepare(`
+    INSERT INTO journey_rod_events
+      (rod_id,event_type,to_stage,metadata,created_at)
+    VALUES ($1,'rod_created',$2,$3::jsonb,$4)
+  `).run(rodId, firstGate.stage_key, metadata, now);
+  return evaluateJourneyRod(rodId, { requestJudgment: false });
+}
+
 export async function ensureLeadRevenueRod(leadId, metadata = {}) {
   return ensureRod({ rodType: 'revenue_lifecycle', leadId, stage: 'first_interaction', metadata });
 }

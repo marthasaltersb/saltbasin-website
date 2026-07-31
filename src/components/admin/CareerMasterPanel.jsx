@@ -45,8 +45,8 @@ const SCHEMAS = {
       { key: 'numEngagements', label: '# Eng.' },
     ],
     fields: [
-      { key: 'skill', label: 'Skill', type: 'text' },
-      { key: 'category', label: 'Category', type: 'text' },
+      { key: 'skill', label: 'Skill', type: 'catalog', catalogKey: 'skills' },
+      { key: 'category', label: 'Category', type: 'catalog', catalogKey: 'skillCategories' },
       { key: 'tier', label: 'Proficiency Tier', type: 'select', options: TIERS },
       { key: 'yearsExp', label: 'Years Experience', type: 'number' },
       { key: 'numEngagements', label: '# Engagements', type: 'number' },
@@ -70,8 +70,8 @@ const SCHEMAS = {
       { key: 'endDate', label: 'End Date', type: 'text' },
       { key: 'duration', label: 'Duration', type: 'text' },
       { key: 'salary', label: 'Base Salary', type: 'text' },
-      { key: 'jobFunction', label: 'Function', type: 'text' },
-      { key: 'industry', label: 'Industry', type: 'text' },
+      { key: 'jobFunction', label: 'Function', type: 'catalog', catalogKey: 'jobFunctions' },
+      { key: 'industry', label: 'Industry', type: 'catalog', catalogKey: 'industries' },
       { key: 'keyMetrics', label: 'Key Metrics & Achievements', type: 'textarea' },
     ],
   },
@@ -85,9 +85,9 @@ const SCHEMAS = {
       { key: 'numRoles', label: '# Roles' },
     ],
     fields: [
-      { key: 'nameUsed', label: 'Name When Used', type: 'text' },
+      { key: 'nameUsed', label: 'Name When Used', type: 'catalog', catalogKey: 'tools' },
       { key: 'currentName', label: 'Current Name (if renamed)', type: 'text' },
-      { key: 'category', label: 'Category', type: 'text' },
+      { key: 'category', label: 'Category', type: 'catalog', catalogKey: 'toolCategories' },
       { key: 'tier', label: 'Proficiency Tier', type: 'select', options: TIERS },
       { key: 'firstUsed', label: 'First Used (Year)', type: 'number' },
       { key: 'numRoles', label: '# Roles', type: 'number' },
@@ -245,7 +245,7 @@ const S = {
   field: { marginBottom: '0.85rem' },
 };
 
-function Field({ f, value, onChange, metaOptions }) {
+function Field({ f, value, onChange, metaOptions, catalogs }) {
   if (f.type === 'select') {
     return (
       <select style={S.input} value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
@@ -270,6 +270,13 @@ function Field({ f, value, onChange, metaOptions }) {
         </datalist>
       </>
     );
+  }
+  if (f.type === 'catalog') {
+    const listId = `sb-catalog-${f.catalogKey}`;
+    return <>
+      <input style={S.input} type="search" list={listId} value={value ?? ''} placeholder="Search the catalog or add a custom value" onChange={(e) => onChange(e.target.value)} />
+      <datalist id={listId}>{(catalogs?.[f.catalogKey] || []).map((o) => <option key={o} value={o} />)}</datalist>
+    </>;
   }
   if (f.type === 'textarea') {
     return <textarea style={S.textarea} value={value ?? ''} onChange={(e) => onChange(e.target.value)} />;
@@ -300,7 +307,7 @@ function Field({ f, value, onChange, metaOptions }) {
   return <input style={S.input} type="text" value={value ?? ''} onChange={(e) => onChange(e.target.value)} />;
 }
 
-function EditModal({ schema, item, onSave, onDelete, onClose, saving, metaOptions }) {
+function EditModal({ schema, item, onSave, onDelete, onClose, saving, metaOptions, catalogs }) {
   const [draft, setDraft] = useState(item);
   const isNew = !item.id;
   return (
@@ -312,7 +319,7 @@ function EditModal({ schema, item, onSave, onDelete, onClose, saving, metaOption
         {schema.fields.map((f) => (
           <div key={f.key} style={S.field}>
             <label style={S.label}>{f.label}</label>
-            <Field f={f} value={draft[f.key]} metaOptions={metaOptions} onChange={(v) => setDraft((d) => ({ ...d, [f.key]: v }))} />
+            <Field f={f} value={draft[f.key]} metaOptions={metaOptions} catalogs={catalogs} onChange={(v) => setDraft((d) => ({ ...d, [f.key]: v }))} />
           </div>
         ))}
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'space-between', marginTop: '1rem' }}>
@@ -341,12 +348,17 @@ export default function CareerMasterPanel({ scope = 'member' }) {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // { key, item } or null
   const [saving, setSaving] = useState(false);
+  const [catalogs, setCatalogs] = useState({});
 
   async function loadAll() {
     setLoading(true);
     try {
-      const entries = await Promise.all(visibleTabs.map(async (t) => [t.id, (await SCHEMAS[t.id].list()).items || []]));
-      setRows(Object.fromEntries(entries));
+      const [entries, sharedCatalogs] = await Promise.all([
+        Promise.all(visibleTabs.map(async (t) => [t.id, (await SCHEMAS[t.id].list()).items || []])),
+        api.getCareerCatalogs(),
+      ]);
+      setRows({ ...Object.fromEntries(entries), metaOptions: sharedCatalogs.metaOptions || [] });
+      setCatalogs(sharedCatalogs);
     } catch (e) {
       toast('Failed to load career master data: ' + e.message);
     } finally {
@@ -407,7 +419,7 @@ export default function CareerMasterPanel({ scope = 'member' }) {
   const activeRows = rows[activeTab] || [];
 
   return (
-    <div style={{ flex: 1, overflowY: 'auto', background: 'var(--sb-ivory, #faf8f4)' }}>
+    <div style={{ width: '100%', minWidth: 0, background: 'var(--sb-ivory, #faf8f4)' }}>
       <div style={S.wrap}>
         <div style={S.h1}>Career Master</div>
         <div style={S.sub}>
@@ -471,6 +483,7 @@ export default function CareerMasterPanel({ scope = 'member' }) {
           item={editing.item}
           saving={saving}
           metaOptions={rows.metaOptions || []}
+          catalogs={catalogs}
           onSave={handleSave}
           onDelete={handleDelete}
           onClose={() => setEditing(null)}

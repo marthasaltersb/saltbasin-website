@@ -5,16 +5,45 @@
 // Module) per Betsy's direction that this demo tab now also surfaces inside
 // the member interface, alongside the new guided Proposal Experience.
 import express from 'express';
+import { fileURLToPath } from 'node:url';
 import { db } from '../db.js';
 import { getUserFromCookie } from '../auth.js';
 import { computePortcoCommercialReconciliation, computeFundEconomics, traceMetricLineage, traceEnterpriseValueDrivers, computeSignalPropagationDemonstration } from '../lib/lonetreeReconciliation.js';
+import { LONETREE_PROSPECT_EXPERIENCE, validateLonetreeProspectExperience } from '../../src/config/visual/lonetreeProspectExperience.js';
 
 const router = express.Router();
+const prospectPackagePath = fileURLToPath(new URL('../assets/lonetree-proposal/Salt_Basin_LoneTree_Prospect_Experience_v5.zip', import.meta.url));
+const prospectHtmlPath = fileURLToPath(new URL('../assets/lonetree-proposal/OPEN_SALT_BASIN_EXPERIENCE.html', import.meta.url));
 
 async function requireAdmin(req, res) {
   const user = await getUserFromCookie(req);
   if (!user) { res.status(401).json({ error: 'Not authenticated' }); return null; }
   return user;
+}
+
+async function requirePlatformAdmin(req, res) {
+  const user = await getUserFromCookie(req);
+  if (!user) { res.status(401).json({ error: 'Not authenticated' }); return null; }
+  if (user.role !== 'admin') { res.status(403).json({ error: 'Admin access is required to save or publish proposal configuration changes.' }); return null; }
+  return user;
+}
+
+const proposalConfigRowId = (userId, kind) => `prospect-proposal:${Number(userId)}:${kind}`;
+
+async function readProposalConfig(userId, kind) {
+  const row = await db.prepare('SELECT data, updated_at FROM config_state WHERE id=$1').get(proposalConfigRowId(userId, kind));
+  if (!row) {
+    if (kind === 'draft') return readProposalConfig(userId, 'published');
+    return { value: LONETREE_PROSPECT_EXPERIENCE, source: 'default', updatedAt: null };
+  }
+  try {
+    const value = JSON.parse(row.data);
+    const errors = validateLonetreeProspectExperience(value);
+    if (!errors.length) return { value, source: kind, updatedAt: Number(row.updated_at) };
+    return { value: LONETREE_PROSPECT_EXPERIENCE, source: 'default', updatedAt: null, invalidStoredValueErrors: errors };
+  } catch {
+    return { value: LONETREE_PROSPECT_EXPERIENCE, source: 'default', updatedAt: null, invalidStoredValueErrors: ['Stored proposal configuration is not valid JSON.'] };
+  }
 }
 
 async function getEvidenceRows(rodId, moleculeKey) {
@@ -28,6 +57,63 @@ async function getEvidenceRows(rodId, moleculeKey) {
     observedAt: Number(r.observed_at),
   }));
 }
+
+router.get('/prospect-package', async (req, res) => {
+  const user = await requireAdmin(req, res); if (!user) return;
+  res.download(prospectPackagePath, 'Salt_Basin_LoneTree_Prospect_Experience_v5.zip');
+});
+
+router.get('/prospect-html', async (req, res) => {
+  const user = await requireAdmin(req, res); if (!user) return;
+  res.sendFile(prospectHtmlPath);
+});
+
+router.get('/proposal-config', async (req, res) => {
+  const user = await requireAdmin(req, res); if (!user) return;
+  res.json({ prospect: { id: user.id, email: user.email, displayName: user.displayName }, ...(await readProposalConfig(user.id, 'published')) });
+});
+
+router.get('/admin/prospects', async (req, res) => {
+  const admin = await requirePlatformAdmin(req, res); if (!admin) return;
+  const prospects = await db.prepare(`
+    SELECT DISTINCT u.id, u.email, u.display_name
+      FROM users u
+      JOIN journey_data_rods member_rod ON member_rod.user_id=u.id AND member_rod.rod_type='member'
+      JOIN journey_data_rods proposal_rod ON proposal_rod.parent_rod_id=member_rod.id AND proposal_rod.rod_type='proposal_experience'
+     WHERE u.role='member'
+     ORDER BY u.display_name NULLS LAST, u.email
+  `).all();
+  res.json({ prospects: prospects.map((p) => ({ id: Number(p.id), email: p.email, displayName: p.display_name || p.email })) });
+});
+
+router.get('/admin/prospects/:userId/proposal-config', async (req, res) => {
+  const admin = await requirePlatformAdmin(req, res); if (!admin) return;
+  const prospect = await db.prepare(`SELECT id, email, display_name FROM users WHERE id=$1 AND role='member'`).get(Number(req.params.userId));
+  if (!prospect) return res.status(404).json({ error: 'Prospect member not found' });
+  const kind = req.query.kind === 'published' ? 'published' : 'draft';
+  res.json({ prospect: { id: Number(prospect.id), email: prospect.email, displayName: prospect.display_name || prospect.email }, kind, ...(await readProposalConfig(prospect.id, kind)) });
+});
+
+router.put('/admin/prospects/:userId/proposal-config/draft', async (req, res) => {
+  const admin = await requirePlatformAdmin(req, res); if (!admin) return;
+  const prospect = await db.prepare(`SELECT id FROM users WHERE id=$1 AND role='member'`).get(Number(req.params.userId));
+  if (!prospect) return res.status(404).json({ error: 'Prospect member not found' });
+  const errors = validateLonetreeProspectExperience(req.body?.value);
+  if (errors.length) return res.status(400).json({ error: 'Validation failed', details: errors });
+  const now = Date.now();
+  await db.prepare(`INSERT INTO config_state (id,data,updated_at) VALUES ($1,$2,$3) ON CONFLICT (id) DO UPDATE SET data=$2,updated_at=$3`).run(proposalConfigRowId(prospect.id, 'draft'), JSON.stringify(req.body.value), now);
+  res.json({ ok: true, value: req.body.value, updatedAt: now });
+});
+
+router.post('/admin/prospects/:userId/proposal-config/publish', async (req, res) => {
+  const admin = await requirePlatformAdmin(req, res); if (!admin) return;
+  const draft = await readProposalConfig(Number(req.params.userId), 'draft');
+  const errors = validateLonetreeProspectExperience(draft.value);
+  if (errors.length) return res.status(400).json({ error: 'Draft validation failed', details: errors });
+  const now = Date.now();
+  await db.prepare(`INSERT INTO config_state (id,data,updated_at) VALUES ($1,$2,$3) ON CONFLICT (id) DO UPDATE SET data=$2,updated_at=$3`).run(proposalConfigRowId(req.params.userId, 'published'), JSON.stringify(draft.value), now);
+  res.json({ ok: true, value: draft.value, updatedAt: now });
+});
 
 async function findDemoRods() {
   const fundRod = await db.prepare(`SELECT * FROM journey_data_rods WHERE rod_type='fund_deal' ORDER BY id ASC LIMIT 1`).get();

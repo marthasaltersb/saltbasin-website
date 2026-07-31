@@ -3,7 +3,7 @@
     {
       "Topic": "Repository purpose",
       "Definition": "Executable seed-data and configuration repository for a demonstrable Salt Basin MVP.",
-      "Implementation Note": "Build and test an end-to-end Market-to-Exit story with Veradigm as the illustrative PortCo.",
+      "Implementation Note": "Build and test an end-to-end Market-to-Exit story with HealthCare Portco Example as the illustrative PortCo.",
       "Status": "Active"
     },
     {
@@ -20,8 +20,8 @@
     },
     {
       "Topic": "Targets",
-      "Definition": "Hazel Health and Veradigm are modeled as illustrative acquisition targets.",
-      "Implementation Note": "Veradigm is selected for the detailed PortCo scenario because public reporting, revenue-cycle products, usage signals, accounting remediation and relisting create a richer reconciliation story.",
+      "Definition": "Hazel Health and HealthCare Portco Example are modeled as illustrative acquisition targets.",
+      "Implementation Note": "HealthCare Portco Example is selected for the detailed PortCo scenario because public reporting, revenue-cycle products, usage signals, accounting remediation and relisting create a richer reconciliation story.",
       "Status": "Active"
     },
     {
@@ -85,28 +85,28 @@
     },
     {
       "Source_ID": "SRC-VD-001",
-      "Source_Name": "Veradigm 2025 Financial Update",
+      "Source_Name": "HealthCare Portco Example 2025 Financial Update",
       "Scope": "2024 revenue estimate and 2025 outlook",
       "Source_Type": "Public",
-      "URL": "https://www.nasdaq.com/press-release/veradigm-provides-2025-financial-business-update-2025-06-23",
+      "URL": "https://example.com/healthcare-portco-example/financial-business-update",
       "Retrieved_Date": "2026-07-29",
       "Use_in_Model": "2024 revenue estimated at $583M-$588M; 2025 expected approximately flat."
     },
     {
       "Source_ID": "SRC-VD-002",
-      "Source_Name": "Veradigm 2023/2024 10-K Filing Update",
+      "Source_Name": "HealthCare Portco Example 2023/2024 10-K Filing Update",
       "Scope": "SEC filing remediation and relisting intent",
       "Source_Type": "Public",
-      "URL": "https://investor.veradigm.com/news-releases/news-release-details/veradigm-files-2023-and-2024-form-10-k",
+      "URL": "https://example.com/healthcare-portco-example/financial-filing-update",
       "Retrieved_Date": "2026-07-29",
       "Use_in_Model": "Company filed 2023 and 2024 10-Ks and remains focused on becoming current and relisting."
     },
     {
       "Source_ID": "SRC-VD-003",
-      "Source_Name": "Veradigm Business Update",
+      "Source_Name": "HealthCare Portco Example Business Update",
       "Scope": "2025 estimated performance and 2026 strategy",
       "Source_Type": "Public",
-      "URL": "https://investor.veradigm.com/news-releases/news-release-details/veradigm-provides-business-and-strategy-update",
+      "URL": "https://example.com/healthcare-portco-example/business-update",
       "Retrieved_Date": "2026-07-29",
       "Use_in_Model": "Reset, Recover, Reignite strategy; 2025 performance described as in line with expectations."
     },
@@ -173,7 +173,7 @@
     },
     {
       "Organization_ID": "ORG-0006",
-      "Organization_Name": "Veradigm",
+      "Organization_Name": "HealthCare Portco Example",
       "Organization_Type": "Acquisition Target / Selected PortCo",
       "Data_Status": "Public + synthetic scenario",
       "Role_Definition": "Clinical and revenue-cycle technology/services company",
@@ -295,7 +295,7 @@
     },
     {
       "Target_ID": "TGT-VD",
-      "Target_Name": "Veradigm",
+      "Target_Name": "HealthCare Portco Example",
       "Sector": "Healthcare IT / Software",
       "Business_Model": "Clinical, practice, revenue-cycle and data solutions",
       "Ownership_Status": "Public OTC",
@@ -398,7 +398,7 @@
       "Start_State": "Closed Investment",
       "End_State": "Exit Ready PortCo",
       "Render_Order": 3,
-      "Primary_Scope": "Veradigm"
+      "Primary_Scope": "HealthCare Portco Example"
     },
     {
       "Highway_ID": "HW-04",
@@ -408,7 +408,7 @@
       "Start_State": "Prospect",
       "End_State": "Renewed / Expanded / Churned",
       "Render_Order": 4,
-      "Primary_Scope": "Veradigm"
+      "Primary_Scope": "HealthCare Portco Example"
     },
     {
       "Highway_ID": "HW-05",
@@ -418,7 +418,7 @@
       "Start_State": "Contract Event",
       "End_State": "Recognized Revenue",
       "Render_Order": 5,
-      "Primary_Scope": "Veradigm"
+      "Primary_Scope": "HealthCare Portco Example"
     },
     {
       "Highway_ID": "HW-06",
@@ -428,7 +428,7 @@
       "Start_State": "Subledger Event",
       "End_State": "Financial Statement / Cash",
       "Render_Order": 6,
-      "Primary_Scope": "Veradigm"
+      "Primary_Scope": "HealthCare Portco Example"
     },
     {
       "Highway_ID": "HW-07",
@@ -438,7 +438,7 @@
       "Start_State": "Evidence-backed Initiative",
       "End_State": "Realized Value",
       "Render_Order": 7,
-      "Primary_Scope": "LoneTree + Veradigm"
+      "Primary_Scope": "LoneTree + HealthCare Portco Example"
     },
     {
       "Highway_ID": "HW-08",
@@ -1231,7 +1231,7 @@
       "Channel_Code": "CH-ACQ",
       "Stage": "Initial Review",
       "Event_Type": "Create",
-      "Event_Name": "Veradigm enters formal target review",
+      "Event_Name": "HealthCare Portco Example enters formal target review",
       "Business_Rationale": "Scaled revenue-cycle platform with public reporting-remediation risk.",
       "Evidence_Source_ID": "SRC-VD-001",
       "Maturity_After": 0.2,
@@ -1257,7 +1257,7 @@
       "Channel_Code": "CH-ACQ",
       "Stage": "Due Diligence",
       "Event_Type": "Advance",
-      "Event_Name": "Veradigm diligence opened",
+      "Event_Name": "HealthCare Portco Example diligence opened",
       "Business_Rationale": "Validate normalized revenue, retention, filing remediation, product usage and cash.",
       "Evidence_Source_ID": "SRC-VD-002",
       "Maturity_After": 0.55,
@@ -1270,7 +1270,7 @@
       "Channel_Code": "CH-ACQ",
       "Stage": "Investment Committee",
       "Event_Type": "Advance",
-      "Event_Name": "Veradigm selected for illustrative IC",
+      "Event_Name": "HealthCare Portco Example selected for illustrative IC",
       "Business_Rationale": "MVP demonstration value outweighs execution risk in synthetic scenario.",
       "Evidence_Source_ID": "SRC-DEMO-001",
       "Maturity_After": 0.78,
@@ -1379,7 +1379,7 @@
   "MVP_10_PortCo_Products": [
     {
       "Product_ID": "PRD-001",
-      "Product_Name": "Veradigm Practice Platform",
+      "Product_Name": "HealthCare Portco Example Practice Platform",
       "Product_Family": "Clinical / Practice Software",
       "Revenue_Model": "Subscription",
       "Pricing_Lever": "Provider per month",
@@ -1390,7 +1390,7 @@
     },
     {
       "Product_ID": "PRD-002",
-      "Product_Name": "Veradigm Revenue Cycle Services",
+      "Product_Name": "HealthCare Portco Example Revenue Cycle Services",
       "Product_Family": "Revenue Cycle",
       "Revenue_Model": "Consumption",
       "Pricing_Lever": "Visit / claim transaction",
@@ -1401,7 +1401,7 @@
     },
     {
       "Product_ID": "PRD-003",
-      "Product_Name": "Veradigm Payment Enablement",
+      "Product_Name": "HealthCare Portco Example Payment Enablement",
       "Product_Family": "Payments",
       "Revenue_Model": "Consumption",
       "Pricing_Lever": "Successful payment transaction",
@@ -1412,7 +1412,7 @@
     },
     {
       "Product_ID": "PRD-004",
-      "Product_Name": "Veradigm Data Insights",
+      "Product_Name": "HealthCare Portco Example Data Insights",
       "Product_Family": "Data / Analytics",
       "Revenue_Model": "Subscription + usage",
       "Pricing_Lever": "Organization annual subscription + data volume",
@@ -3472,7 +3472,7 @@
       "To_Type": "GL Account",
       "Transformation_or_Relationship": "Revenue schedule posts to GL",
       "Authority_State": "Posted",
-      "Scope": "Veradigm"
+      "Scope": "HealthCare Portco Example"
     },
     {
       "Lineage_ID": "LIN-007",
@@ -3482,7 +3482,7 @@
       "To_Type": "Adjusted EBITDA",
       "Transformation_or_Relationship": "GL revenue contributes to EBITDA",
       "Authority_State": "Calculated",
-      "Scope": "Veradigm"
+      "Scope": "HealthCare Portco Example"
     },
     {
       "Lineage_ID": "LIN-008",
@@ -3512,7 +3512,7 @@
       "To_Type": "Investment Thesis",
       "Transformation_or_Relationship": "Reporting remediation evidence updates thesis confidence",
       "Authority_State": "Governed",
-      "Scope": "LoneTree + Veradigm"
+      "Scope": "LoneTree + HealthCare Portco Example"
     }
   ],
   "MVP_24_Rendering_Map": [
@@ -3541,11 +3541,11 @@
       "Visual_Form": "Amber target crystal",
       "Source_Object_ID": "TGT-HZ",
       "Visual_Mapping_Rule": "Density = diligence maturity; opacity = confidence",
-      "Interaction": "Compare against Veradigm"
+      "Interaction": "Compare against HealthCare Portco Example"
     },
     {
       "Render_ID": "RN-004",
-      "Object_Name": "Veradigm",
+      "Object_Name": "HealthCare Portco Example",
       "Render_Type": "Selected Target / PortCo",
       "Visual_Form": "Blue selected crystal transitioning to PortCo world",
       "Source_Object_ID": "TGT-VD",
@@ -3594,14 +3594,14 @@
       "Test_Case_ID": "TC-001",
       "Feature": "Market-to-Target",
       "Test_Action": "Load target universe",
-      "Expected_Result": "Hazel and Veradigm appear with public/synthetic badges and target scores.",
+      "Expected_Result": "Hazel and HealthCare Portco Example appear with public/synthetic badges and target scores.",
       "Status": "Not Run",
       "Priority": "Critical"
     },
     {
       "Test_Case_ID": "TC-002",
       "Feature": "Target Selection",
-      "Test_Action": "Advance Veradigm to IC and close",
+      "Test_Action": "Advance HealthCare Portco Example to IC and close",
       "Expected_Result": "Journey maturity reaches 1.0 and selected target converts to PortCo state.",
       "Status": "Not Run",
       "Priority": "Critical"
@@ -3690,55 +3690,55 @@
   "MVP_26_Dashboard": [
     {
       "Selected Target": "Modeled PortCo",
-      "Veradigm": "Veradigm",
+      "HealthCare Portco Example": "HealthCare Portco Example",
       "Deal Maturity": "Open Signals",
       "100.0%": "4"
     },
     {
       "Selected Target": "Fund Size",
-      "Veradigm": "$200.0M",
+      "HealthCare Portco Example": "$200.0M",
       "Deal Maturity": "Value Creation Initiatives",
       "100.0%": "4"
     },
     {
       "Selected Target": "Modeled Exit MOIC",
-      "Veradigm": 2.018063492063492,
+      "HealthCare Portco Example": 2.018063492063492,
       "Deal Maturity": "Modeled Gross IRR",
       "100.0%": 0.15076584955606953
     },
     {
       "Selected Target": "Thesis",
-      "Veradigm": "Initial Confidence",
+      "HealthCare Portco Example": "Initial Confidence",
       "Deal Maturity": "Primary Evidence",
       "100.0%": "Primary Initiative"
     },
     {
       "Selected Target": "Healthcare IT recurring revenue",
-      "Veradigm": 0.76,
+      "HealthCare Portco Example": 0.76,
       "Deal Maturity": "Public + operating evidence",
       "100.0%": "Pending"
     },
     {
       "Selected Target": "Revenue-cycle monetization",
-      "Veradigm": 0.72,
+      "HealthCare Portco Example": 0.72,
       "Deal Maturity": "CTR-005 visit volume declined 36.7% versus January baseline.",
       "100.0%": "Customer Health and Contract Alignment"
     },
     {
       "Selected Target": "Reporting remediation",
-      "Veradigm": 0.64,
+      "HealthCare Portco Example": 0.64,
       "Deal Maturity": "SEC filing remediation remains incomplete and relisting depends on becoming current.",
       "100.0%": "Reporting Remediation and Relisting Readiness"
     },
     {
       "Selected Target": "Data and AI operating leverage",
-      "Veradigm": 0.69,
+      "HealthCare Portco Example": 0.69,
       "Deal Maturity": "Public + operating evidence",
       "100.0%": "Source-to-GL Reconciliation Layer"
     },
     {
       "Selected Target": "Strategic product simplification",
-      "Veradigm": 0.67,
+      "HealthCare Portco Example": 0.67,
       "Deal Maturity": "Public + operating evidence",
       "100.0%": "Pending"
     }

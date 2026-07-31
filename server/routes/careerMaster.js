@@ -87,6 +87,28 @@ async function ensureIntakeBucket() {
   return intakeBucketReady;
 }
 
+async function attachMappingSource(user, file, sourceKind) {
+  if (!supabase) throw new Error('Source storage is not configured');
+  await ensureIntakeBucket();
+  const now = Date.now();
+  const ext = path.extname(file.originalname || '').toLowerCase().slice(0, 12) || '.bin';
+  const storageKey = `${user.role === 'admin' ? 'admin' : 'member'}/${user.id}/${now}-${crypto.randomBytes(10).toString('hex')}${ext}`;
+  const { error } = await supabase.storage.from(INTAKE_BUCKET).upload(storageKey, file.buffer, { contentType: file.mimetype, upsert: false });
+  if (error) throw new Error(`Could not attach source: ${error.message}`);
+  const inserted = await db.prepare(`
+    INSERT INTO career_intake_documents (
+      user_id, owner_scope, intake_kind, source_truth_status, source_use_scope,
+      client_name_policy, portfolio_name_policy, case_study_title_policy,
+      public_primary_research, primary_resume_requested, analysis_passes_requested,
+      redaction_ack, public_output_validation_ack, no_private_name_persistence_ack,
+      original_filename, storage_bucket, storage_key, mime_type, file_size, status, created_at, updated_at
+    ) VALUES ($1,$2,$3,'user_attested','career_master_and_outputs','generalize_private_clients',
+      'allow_if_user_provided','industry_company_type',false,true,1,true,true,true,$4,$5,$6,$7,$8,'parsed',$9,$9)
+    RETURNING id
+  `).run(user.id, user.role === 'admin' ? 'admin' : 'member', sourceKind, file.originalname || 'upload', INTAKE_BUCKET, storageKey, file.mimetype || null, file.size ?? null, now);
+  return { kind: sourceKind, documentId: Number(inserted.lastInsertRowid), filename: file.originalname || 'upload' };
+}
+
 function boolVal(value) {
   return value === true || value === 'true' || value === '1' || value === 'on';
 }
@@ -547,6 +569,28 @@ router.get('/rollups', async (req, res) => {
   }
 });
 
+// Shared, non-personal vocabulary derived from seeded Career Master data.
+// Members can search these values without copying another person's roles,
+// employers, metrics, narratives, or engagements.
+router.get('/catalogs', requireUser, async (req, res) => {
+  try {
+    const distinct = async (table, column) => (await db.prepare(
+      `SELECT DISTINCT ${column} AS value FROM ${table} WHERE ${column} IS NOT NULL AND TRIM(${column}) <> '' ORDER BY value`
+    ).all()).map((r) => r.value);
+    const [skills, skillCategories, tools, toolCategories, industries, jobFunctions, domains, metaOptions] = await Promise.all([
+      distinct('career_skills', 'skill'), distinct('career_skills', 'category'),
+      distinct('career_tools', 'name_used'), distinct('career_tools', 'category'),
+      distinct('career_jobs', 'industry'), distinct('career_jobs', 'job_function'),
+      distinct('career_domains', 'title'),
+      db.prepare(`SELECT * FROM career_meta_options ORDER BY field_key, order_index, id`).all(),
+    ]);
+    res.json({ skills, skillCategories, tools, toolCategories, industries, jobFunctions, domains, metaOptions: metaOptions.map((r) => rowToCamel(r, META_OPTION_FIELDS)) });
+  } catch (e) {
+    console.error('[career] catalogs failed:', e.message);
+    res.status(500).json({ error: 'Failed to load career catalogs' });
+  }
+});
+
 // Rollup catalog for the public Career Prospect layout (careerRollupShowcase
 // block) — computed from Channel Rod evidence (journey_rod_evidence), not
 // the legacy tables directly, per explicit design decision: the legacy
@@ -764,6 +808,66 @@ router.post('/intake-runs', requireUser, async (req, res) => {
   }
 });
 
+router.post('/intake-runs/:id/run', requireUser, async (req, res) => {
+  const runId = Number(req.params.id);
+  const run = await db.prepare(`SELECT * FROM career_intake_runs WHERE id = $1 AND user_id = $2`).get(runId, req.user.id);
+  if (!run) return res.status(404).json({ error: 'Analysis run not found' });
+  const documentIds = Array.isArray(run.document_ids) ? run.document_ids.map(Number) : [];
+  if (!documentIds.length) return res.status(400).json({ error: 'This run has no attached sources' });
+  if (!supabase) return res.status(503).json({ error: 'Source storage is not configured' });
+
+  await db.prepare(`UPDATE career_intake_runs SET status = 'running', updated_at = $1 WHERE id = $2`).run(Date.now(), runId);
+  try {
+    const proposal = {};
+    const sheetWarnings = [];
+    const sourceErrors = [];
+    for (const documentId of documentIds) {
+      const doc = await db.prepare(`SELECT * FROM career_intake_documents WHERE id = $1 AND user_id = $2`).get(documentId, req.user.id);
+      if (!doc) { sourceErrors.push({ documentId, error: 'Source not found' }); continue; }
+      const { data, error } = await supabase.storage.from(doc.storage_bucket).download(doc.storage_key);
+      if (error || !data) { sourceErrors.push({ documentId, filename: doc.original_filename, error: error?.message || 'Download failed' }); continue; }
+      const buffer = Buffer.from(await data.arrayBuffer());
+      let parsed;
+      if (/\.xlsx?$/i.test(doc.original_filename || '')) {
+        parsed = parseCareerSemanticWorkbook(buffer);
+        sheetWarnings.push(...(parsed.sheetWarnings || []));
+      } else if (/\.(pdf|docx|txt)$/i.test(doc.original_filename || '')) {
+        const text = await extractResumeText(buffer, doc.mime_type, doc.original_filename);
+        const raw = await proposeCareerMappingsFromText(text);
+        if (raw.offline) throw new Error('AI analysis is not configured (missing ANTHROPIC_API_KEY)');
+        parsed = { proposal: bondProposedMappings(raw) };
+      } else {
+        sourceErrors.push({ documentId, filename: doc.original_filename, error: 'Analysis currently supports PDF, DOCX, TXT, XLS, and XLSX sources' });
+        continue;
+      }
+      for (const [entryType, entries] of Object.entries(parsed.proposal || {})) {
+        proposal[entryType] ||= [];
+        proposal[entryType].push(...entries.map((entry) => ({
+          ...entry,
+          documentId,
+          sourceFilename: doc.original_filename,
+          fieldBonds: Object.fromEntries(Object.entries(entry.fieldBonds || {}).map(([key, bond]) => [key, {
+            ...bond, documentId, sourceFilename: doc.original_filename,
+            sourceLocation: `${doc.original_filename}: ${bond.sourceLocation || bond.header || 'extracted source text'}`,
+          }])),
+        })));
+      }
+      await db.prepare(`UPDATE career_intake_documents SET status = 'analyzed', updated_at = $1 WHERE id = $2`).run(Date.now(), documentId);
+    }
+    const mappedEntries = Object.values(proposal).reduce((sum, items) => sum + items.length, 0);
+    const now = Date.now();
+    await db.prepare(`UPDATE career_intake_runs SET status = 'completed', summary = $1, metadata = $2::jsonb, updated_at = $3 WHERE id = $4`).run(
+      `Analysis completed with ${mappedEntries} proposed Career Master entries across ${documentIds.length} source${documentIds.length === 1 ? '' : 's'}.`,
+      { mappedEntries, sourceErrors }, now, runId
+    );
+    res.json({ ok: true, runId, source: { kind: 'career_intake_run', runId, documentIds }, proposal, sheetWarnings, sourceErrors });
+  } catch (e) {
+    await db.prepare(`UPDATE career_intake_runs SET status = 'failed', summary = $1, updated_at = $2 WHERE id = $3`).run(e.message, Date.now(), runId);
+    console.error('[career-intake] run failed:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 router.post('/sync-site-metadata', requireUser, async (req, res) => {
   try {
     const scope = req.user.role === 'admin' && req.body?.scope !== 'member' ? 'admin' : 'member';
@@ -812,8 +916,9 @@ router.post('/semantic-import', requireUser, (req, res) => {
     if (err) return res.status(400).json({ error: err.message });
     if (!req.file) return res.status(400).json({ error: 'file is required' });
     try {
+      const source = await attachMappingSource(req.user, req.file, 'excel_semantic_import');
       const result = parseCareerSemanticWorkbook(req.file.buffer);
-      res.json({ ok: true, source: 'excel_semantic_import', ...result });
+      res.json({ ok: true, source, ...result });
     } catch (e) {
       console.error('[career] semantic-import failed:', e.message);
       res.status(400).json({ error: `Could not parse workbook: ${e.message}` });
@@ -826,12 +931,13 @@ router.post('/resume-analysis', requireUser, (req, res) => {
     if (err) return res.status(400).json({ error: err.message });
     if (!req.file) return res.status(400).json({ error: 'file is required' });
     try {
+      const source = await attachMappingSource(req.user, req.file, 'ai_resume_extraction');
       const text = await extractResumeText(req.file.buffer, req.file.mimetype, req.file.originalname);
       if (!text.trim()) return res.status(400).json({ error: 'Could not extract any text from this file — try a different format' });
       const rawProposal = await proposeCareerMappingsFromText(text);
       if (rawProposal.offline) return res.status(503).json({ error: 'Resume analysis is not configured on this server (missing ANTHROPIC_API_KEY)' });
       const proposal = bondProposedMappings(rawProposal);
-      res.json({ ok: true, source: 'ai_resume_extraction', proposal, sheetWarnings: [], missingSheets: [], recognizedSheets: [] });
+      res.json({ ok: true, source, proposal, sheetWarnings: [], missingSheets: [], recognizedSheets: [] });
     } catch (e) {
       console.error('[career] resume-analysis failed:', e.message);
       res.status(500).json({ error: `Resume analysis failed: ${e.message}` });
@@ -863,6 +969,7 @@ async function nextOrderIndex(table, userId) {
 // a second parallel evidence-only write.
 router.post('/mappings/commit', requireUser, async (req, res) => {
   const body = req.body || {};
+  const source = typeof body.source === 'object' && body.source ? body.source : { kind: body.source || 'career_mapping_commit' };
   const entries = Array.isArray(body.entries) ? body.entries : [];
   if (!entries.length) return res.status(400).json({ error: 'entries (non-empty array) is required' });
 
@@ -912,6 +1019,18 @@ router.post('/mappings/commit', requireUser, async (req, res) => {
       const result = await db.prepare(`INSERT INTO ${table} (${cols.join(', ')}) VALUES (${placeholders.join(', ')}) RETURNING id`).run(...vals);
       const newId = Number(result.lastInsertRowid);
       await syncSingleEntry(req.user.id, table, newId);
+      for (const mapping of Array.isArray(entry.mappings) ? entry.mappings : []) {
+        await db.prepare(`
+          INSERT INTO career_source_mappings (
+            user_id, document_id, source_kind, source_filename, source_location, source_label,
+            entry_type, target_table, target_id, atom_key, original_value, committed_value,
+            match_type, affinity, created_at
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12::jsonb,$13,$14,$15)
+        `).run(req.user.id, mapping.documentId || source.documentId || null, source.kind, mapping.sourceFilename || source.filename || null,
+          mapping.sourceLocation || null, mapping.sourceLabel || null, entry.entryType, table, newId,
+          mapping.atomKey, JSON.stringify(mapping.originalValue ?? null), JSON.stringify(mapping.committedValue ?? null),
+          mapping.matchType || null, Number.isFinite(Number(mapping.affinity)) ? Number(mapping.affinity) : null, now);
+      }
       created.push({ entryType: entry.entryType, table, id: newId });
     } catch (e) {
       console.error('[career] mappings/commit insert failed:', e.message);
@@ -929,10 +1048,10 @@ router.post('/mappings/commit', requireUser, async (req, res) => {
     `).run(
       req.user.id,
       req.user.role === 'admin' ? 'admin' : 'member',
-      cleanText(body.source, 80) || 'career_mapping_commit',
+      cleanText(source.kind, 80) || 'career_mapping_commit',
       [],
       `Committed ${created.length} Career Master entr${created.length === 1 ? 'y' : 'ies'} from ${body.source === 'ai_resume_extraction' ? 'AI resume analysis' : 'semantic Excel import'}.`,
-      { created, errors, source: body.source || null },
+      { created, errors, source },
       now
     );
   } catch (e) {

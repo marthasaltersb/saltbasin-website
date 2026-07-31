@@ -1,6 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../../lib/api.js';
 import { resolveExperience, STAGE_ORDER, STAGE_DEFS, STAGE_METRICS, METRIC_DEFS } from '../../lib/experienceEngine/lonetreeExperience.js';
+import { LONETREE_PROSPECT_EXPERIENCE } from '../../config/visual/lonetreeProspectExperience.js';
+import SpatialJourneyWorld from '../SpatialJourneyWorld.jsx';
+import SaltBasinCrystal from '../SaltBasinCrystal.jsx';
 
 // Lonetree MVP — Interaction Layer v1 (2026-07-29, per Betsy's "20% of the
 // way there" feedback): every semantic object shares one click/inspect model
@@ -13,6 +16,20 @@ import { resolveExperience, STAGE_ORDER, STAGE_DEFS, STAGE_METRICS, METRIC_DEFS 
 // prefetched so focus changes never load — they re-contextualize.
 
 const fmtPct = (n) => (n === null || n === undefined ? '—' : `${(Number(n) * 100).toFixed(1)}%`);
+
+// Stored envelopes can outlive a deployment. Merge them onto the current
+// schema so a previously saved theme/navigation override cannot erase a new
+// required block such as proposalNarrative. Arrays remain intentional
+// replacements; nested objects inherit newly introduced defaults.
+function mergeProspectConfig(defaultValue, storedValue) {
+  if (!storedValue || typeof storedValue !== 'object' || Array.isArray(storedValue)) return defaultValue;
+  return Object.fromEntries(Object.entries(defaultValue).map(([key, fallback]) => {
+    const stored = storedValue[key];
+    if (stored === undefined) return [key, fallback];
+    if (fallback && typeof fallback === 'object' && !Array.isArray(fallback)) return [key, mergeProspectConfig(fallback, stored)];
+    return [key, stored];
+  }));
+}
 
 const SB_GOLD = '#C4843A', SB_GOLD_300 = '#DDAA66', SB_GOLD_700 = '#9C6329';
 const SB_TEAL = '#4A7C8E', SB_TEAL_300 = '#8FADB6';
@@ -58,6 +75,9 @@ function GlobalStyle() {
       .sb-lt-ev-row { cursor: default; transition: background 0.15s ease; }
       .sb-lt-ev-row.focusable { cursor: pointer; }
       .sb-lt-ev-row.focusable:hover { background: rgba(196,132,58,0.08); }
+      .sb-lt-experience { background: var(--lt-page); color: var(--lt-text); font-family: var(--lt-font-body); }
+      .sb-lt-crystal { transition: transform 0.22s ease, filter 0.22s ease; }
+      .sb-lt-crystal:hover, .sb-lt-crystal:focus-visible { transform: translate(-50%, -50%) scale(1.08); filter: drop-shadow(0 8px 12px rgba(52,90,104,0.24)); }
     `}</style>
   );
 }
@@ -168,28 +188,144 @@ function Breadcrumb({ crumbs, onFocus }) {
   );
 }
 
-function Landing({ onBegin }) {
+function Landing({ config, onBegin }) {
+  const { narrative } = config;
   return (
-    <div className="sb-lt-fadein" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '70vh', textAlign: 'center', gap: '1.5rem' }}>
-      <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.75rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--sb-gold)' }}>
-        Salt Basin — Operational Intelligence
+    <div className="sb-lt-fadein sbh-hero-grid" style={{ minHeight: '70vh', alignItems: 'center' }}>
+      <div className="sbh-hero-copy" style={{ textAlign: 'left' }}>
+        <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.75rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--sb-gold)' }}>
+          {narrative.eyebrow}
+        </div>
+        <h1 style={{ fontFamily: 'var(--sb-font-display, serif)', fontSize: '2.2rem', color: 'var(--sb-cream)', margin: '0.7rem 0', maxWidth: 560 }}>
+          {narrative.landingTitle}
+        </h1>
+        <div style={{ color: 'var(--lt-teal-deep)', maxWidth: 610, fontFamily: 'var(--sb-font-display)', fontSize: '1.22rem', fontWeight: 700, lineHeight: 1.35, marginTop: '1rem' }}>{narrative.landingBlurbLead}</div>
+        <p style={{ color: 'var(--sb-cream)', maxWidth: 610, fontSize: '1rem', lineHeight: 1.65, marginTop: '0.4rem' }}>{narrative.landingBlurb}</p>
+        <p style={{ color: 'var(--sb-dusty)', maxWidth: 480 }}>{narrative.landingBody}</p>
+        <div
+          className="sb-lt-node"
+          onClick={onBegin}
+          style={{
+            display: 'inline-flex', border: '1px solid var(--sb-gold)', borderRadius: 999, padding: '1rem 2.5rem',
+            color: 'var(--sb-gold)', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.1em', textTransform: 'uppercase',
+            fontSize: '0.85rem', background: 'rgba(196,132,58,0.08)',
+          }}
+        >
+          {narrative.companyAction}
+        </div>
       </div>
-      <h1 style={{ fontFamily: 'var(--sb-font-display, serif)', fontSize: '2.2rem', color: 'var(--sb-cream)', margin: 0, maxWidth: 560 }}>
-        Welcome to the LoneTree Operational Intelligence Demo
-      </h1>
-      <p style={{ color: 'var(--sb-dusty)', maxWidth: 480 }}>Select a portfolio company to begin the diagnostic — watch the business come alive.</p>
-      <div
-        className="sb-lt-node"
-        onClick={onBegin}
-        style={{
-          border: '1px solid var(--sb-gold)', borderRadius: 999, padding: '1rem 2.5rem',
-          color: 'var(--sb-gold)', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.1em', textTransform: 'uppercase',
-          fontSize: '0.85rem', background: 'rgba(196,132,58,0.08)',
-        }}
-      >
-        ○ Veradigm — Explore
+      <div className="sbh-orbit-stage" aria-label="Animated Salt Basin crystal orbit">
+        <SaltBasinCrystal variant="signature" size="hero" interactive />
+        <div className="sbh-orbit-line sbh-orbit-line-a" />
+        <div className="sbh-orbit-line sbh-orbit-line-b" />
       </div>
-      <div style={{ color: 'var(--sb-dusty)', fontSize: '0.75rem' }}>Begin Diagnostic → Watch the Business Come Alive</div>
+    </div>
+  );
+}
+
+function CrystalNavigation({ config, onBack, onSelect }) {
+  const { narrative, navigation } = config;
+  return (
+    <div className="sb-lt-fadein" style={{ minHeight: '70vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}>
+      <div style={{ color: 'var(--sb-gold)', fontFamily: 'var(--sb-font-label)', fontSize: '0.72rem', letterSpacing: '0.16em', textTransform: 'uppercase' }}>{narrative.navigationEyebrow}</div>
+      <h1 style={{ color: 'var(--sb-cream)', fontFamily: 'var(--sb-font-display)', fontSize: '2rem', margin: '0.65rem 0 0.45rem', textAlign: 'center' }}>{narrative.navigationTitle}</h1>
+      <p style={{ color: 'var(--sb-dusty)', maxWidth: 590, textAlign: 'center', margin: 0 }}>{narrative.navigationBody}</p>
+      <div style={{ position: 'relative', width: 'min(620px, 82vw)', height: 400, marginTop: '1.25rem' }}>
+        <div style={{ position: 'absolute', left: '50%', top: '50%', width: 330, height: 220, transform: 'translate(-50%, -50%)', border: '1px solid var(--lt-border)', borderRadius: '50%' }} />
+        <div style={{ position: 'absolute', left: '50%', top: '50%', width: 210, height: 140, transform: 'translate(-50%, -50%)', border: '1px solid var(--lt-border)', borderRadius: '50%' }} />
+        <div aria-hidden="true" style={{ position: 'absolute', left: '50%', top: '50%', width: 92, height: 112, transform: 'translate(-50%, -50%)', clipPath: 'polygon(50% 0, 92% 24%, 82% 78%, 50% 100%, 18% 78%, 8% 24%)', background: 'linear-gradient(145deg, var(--lt-surface) 5%, var(--lt-rose) 48%, var(--lt-gold) 100%)', border: '2px solid var(--lt-teal-deep)', filter: 'drop-shadow(0 10px 16px rgba(52,90,104,0.2))' }} />
+        {navigation.nodes.map((node) => {
+          const radians = (node.angle * Math.PI) / 180;
+          const left = 50 + Math.cos(radians) * 38;
+          const top = 50 + Math.sin(radians) * 39;
+          return (
+            <button key={node.destination} className="sb-lt-crystal" onClick={() => onSelect(node.destination)} style={{ position: 'absolute', left: `${left}%`, top: `${top}%`, transform: 'translate(-50%, -50%)', width: 138, minHeight: 88, padding: '0.7rem 0.75rem', border: '1px solid var(--lt-teal-deep)', clipPath: 'polygon(12% 18%, 50% 0, 88% 18%, 100% 70%, 50% 100%, 0 70%)', background: 'var(--lt-surface)', color: 'var(--lt-text)', fontFamily: 'var(--sb-font-label)', fontWeight: 700, fontSize: '0.7rem', letterSpacing: '0.05em', textTransform: 'uppercase', cursor: 'pointer' }}>{node.label}</button>
+          );
+        })}
+      </div>
+      <a href={navigation.downloadUrl} download style={{ marginTop: '0.75rem', border: '1px solid var(--lt-gold)', borderRadius: 999, padding: '0.7rem 1.25rem', color: 'var(--lt-text)', background: 'var(--lt-surface)', fontFamily: 'var(--sb-font-label)', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', textDecoration: 'none' }}>↓ {narrative.downloadLabel}</a>
+      <button onClick={onBack} style={{ border: 0, background: 'transparent', color: 'var(--lt-teal-deep)', fontFamily: 'var(--sb-font-label)', fontWeight: 700, cursor: 'pointer' }}>← {narrative.navigationBackLabel}</button>
+    </div>
+  );
+}
+
+function ProspectReturn({ onReturn }) {
+  return <button onClick={onReturn} style={{ marginBottom: '1rem', border: 0, background: 'transparent', color: 'var(--lt-teal-deep)', fontFamily: 'var(--sb-font-label)', fontWeight: 700, cursor: 'pointer' }}>← Prospect Experience</button>;
+}
+
+function ProspectNarrativeExperience({ config, canSave, saveBlockedMessage, onSave }) {
+  const iframeRef = useRef(null);
+  const [index, setIndex] = useState(0);
+  const [playing, setPlaying] = useState(Boolean(config.proposalNarrative.playback.startAutomatically));
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(config);
+  const [saveState, setSaveState] = useState('');
+  const effectiveConfig = editing ? draft : config;
+  const narrative = effectiveConfig.proposalNarrative;
+  const sections = narrative.sections;
+  const activeSection = sections[index];
+
+  const activate = (nextIndex) => {
+    const bounded = Math.max(0, Math.min(nextIndex, sections.length - 1));
+    setIndex(bounded);
+    const input = iframeRef.current?.contentDocument?.getElementById(sections[bounded].targetId);
+    if (input) input.click();
+  };
+
+  useEffect(() => {
+    if (!playing) return undefined;
+    const timer = setInterval(() => setIndex((current) => {
+      const next = current >= sections.length - 1 ? 0 : current + 1;
+      const input = iframeRef.current?.contentDocument?.getElementById(sections[next].targetId);
+      if (input) input.click();
+      return next;
+    }), narrative.playback.intervalMs);
+    return () => clearInterval(timer);
+  }, [playing, narrative.playback.intervalMs, sections]);
+
+  const save = async () => {
+    if (!canSave) {
+      setSaveState(saveBlockedMessage);
+      return;
+    }
+    setSaveState('Saving…');
+    try {
+      await onSave(draft);
+      setEditing(false);
+      setSaveState('Draft saved. Publish from the admin prospect toolbar when it is ready for the member.');
+    } catch (error) {
+      setSaveState(error.message);
+    }
+  };
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flexWrap: 'wrap', marginBottom: '0.85rem' }}>
+        {sections.map((section, sectionIndex) => <button key={section.id} onClick={() => activate(sectionIndex)} style={{ border: `1px solid ${sectionIndex === index ? 'var(--lt-teal-deep)' : 'var(--lt-border)'}`, borderRadius: 999, padding: '0.45rem 0.7rem', background: sectionIndex === index ? 'var(--lt-surface-muted)' : 'var(--lt-surface)', color: 'var(--lt-text)', fontFamily: 'var(--sb-font-label)', fontSize: '0.68rem', cursor: 'pointer' }}>{sectionIndex + 1}. {section.label}</button>)}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.8rem', marginBottom: '0.75rem' }}>
+        <div style={{ display: 'flex', gap: '0.45rem' }}>
+          <button onClick={() => activate(index - 1)} disabled={index === 0}>← Previous</button>
+          <button onClick={() => setPlaying((value) => !value)}>{playing ? 'Pause' : 'Play narrative'}</button>
+          <button onClick={() => activate(index + 1)} disabled={index === sections.length - 1}>Next →</button>
+        </div>
+        <button onClick={() => { setDraft(config); setEditing((value) => !value); }} style={{ color: 'var(--lt-teal-deep)', background: 'transparent', border: '1px solid var(--lt-border)', borderRadius: 8, padding: '0.45rem 0.7rem', cursor: 'pointer' }}>Configure narrative</button>
+      </div>
+      <div key={activeSection.id} className="sb-lt-fadein" style={{ position: 'relative', overflow: 'hidden', background: 'var(--lt-surface)', border: '1px solid var(--lt-border)', borderRadius: 14, padding: '1.35rem 1.5rem', marginBottom: '0.85rem' }}>
+        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 7, background: 'linear-gradient(var(--lt-teal), var(--lt-gold), var(--lt-rose))' }} />
+        <div style={{ color: 'var(--lt-teal-deep)', fontFamily: 'var(--sb-font-label)', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.13em', textTransform: 'uppercase' }}>{activeSection.eyebrow} · {index + 1} of {sections.length}</div>
+        <h2 style={{ color: 'var(--lt-text)', fontFamily: 'var(--sb-font-display)', fontSize: '1.8rem', margin: '0.45rem 0' }}>{activeSection.title}</h2>
+        <p style={{ color: 'var(--lt-text-muted)', lineHeight: 1.65, margin: 0, maxWidth: 920 }}>{activeSection.narrative}</p>
+      </div>
+      {editing && <div style={{ background: 'var(--lt-surface-muted)', border: '1px solid var(--lt-border)', borderRadius: 10, padding: '1rem', marginBottom: '0.9rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.7rem' }}>
+          <label>Playback interval (ms)<input type="number" min="1000" value={draft.proposalNarrative.playback.intervalMs} onChange={(event) => setDraft({ ...draft, proposalNarrative: { ...draft.proposalNarrative, playback: { ...draft.proposalNarrative.playback, intervalMs: Number(event.target.value) } } })} style={{ display: 'block', width: '100%' }} /></label>
+          <label>Visual height (px)<input type="number" min="400" value={draft.proposalNarrative.visual.iframeHeight} onChange={(event) => setDraft({ ...draft, proposalNarrative: { ...draft.proposalNarrative, visual: { ...draft.proposalNarrative.visual, iframeHeight: Number(event.target.value) } } })} style={{ display: 'block', width: '100%' }} /></label>
+          {draft.proposalNarrative.sections.map((section, sectionIndex) => <div key={section.id} style={{ gridColumn: '1 / -1', background: 'var(--lt-surface)', border: '1px solid var(--lt-border)', borderRadius: 8, padding: '0.75rem' }}><strong>Section {sectionIndex + 1}</strong>{['label', 'eyebrow', 'title', 'narrative'].map((field) => <label key={field} style={{ display: 'block', marginTop: '0.45rem', textTransform: 'capitalize' }}>{field}{field === 'narrative' ? <textarea rows="3" value={section[field]} onChange={(event) => setDraft({ ...draft, proposalNarrative: { ...draft.proposalNarrative, sections: draft.proposalNarrative.sections.map((item, itemIndex) => itemIndex === sectionIndex ? { ...item, [field]: event.target.value } : item) } })} style={{ display: 'block', width: '100%' }} /> : <input value={section[field]} onChange={(event) => setDraft({ ...draft, proposalNarrative: { ...draft.proposalNarrative, sections: draft.proposalNarrative.sections.map((item, itemIndex) => itemIndex === sectionIndex ? { ...item, [field]: event.target.value } : item) } })} style={{ display: 'block', width: '100%' }} />}</label>)}</div>)}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', marginTop: '0.8rem' }}><button onClick={save}>Save configuration</button><span>{saveState}</span></div>
+      </div>}
+      <iframe ref={iframeRef} title="Complete LoneTree Prospect Experience" src={narrative.sourceUrl} onLoad={() => activate(index)} style={{ display: 'block', width: '100%', height: narrative.visual.iframeHeight, border: '1px solid var(--lt-border)', borderRadius: 12, background: 'var(--lt-page)' }} />
     </div>
   );
 }
@@ -509,13 +645,18 @@ function SignalOrbit({ signals, related, hasFocus, onFocus }) {
   );
 }
 
-export default function LonetreeMvpPanel() {
+export default function LonetreeMvpPanel({ scope = 'member' }) {
   const [data, setData] = useState(null);
+  const [prospectConfig, setProspectConfig] = useState(LONETREE_PROSPECT_EXPERIENCE);
   const [error, setError] = useState(null);
-  const [view, setView] = useState('landing'); // landing | highway
+  const [view, setView] = useState('landing'); // landing | navigation | proposal | demo | spatial
   const [focus, setFocus] = useState(null);
   const [hoveredStage, setHoveredStage] = useState(null);
   const [demo, setDemo] = useState(null); // { steps, idx, playing }
+  const [prospects, setProspects] = useState([]);
+  const [selectedProspectId, setSelectedProspectId] = useState(null);
+  const [configKind, setConfigKind] = useState('draft');
+  const [publishState, setPublishState] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -533,6 +674,42 @@ export default function LonetreeMvpPanel() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    if (scope === 'admin') {
+      api.listLonetreeProposalProspects().then(({ prospects: rows }) => {
+        setProspects(rows || []);
+        const preferred = (rows || []).find((row) => row.email === 'saltbasin-networks@breckgolden.com') || rows?.[0];
+        if (preferred) setSelectedProspectId(preferred.id);
+      }).catch((e) => setError(e.body?.error || e.message));
+    } else {
+      api.getMyLonetreeProposalConfig().then((result) => setProspectConfig(mergeProspectConfig(LONETREE_PROSPECT_EXPERIENCE, result.value))).catch((e) => setError(e.body?.error || e.message));
+    }
+  }, [scope]);
+
+  useEffect(() => {
+    if (scope !== 'admin' || !selectedProspectId) return;
+    api.getLonetreeProspectConfig(selectedProspectId, configKind)
+      .then((result) => setProspectConfig(mergeProspectConfig(LONETREE_PROSPECT_EXPERIENCE, result.value)))
+      .catch((e) => setError(e.body?.error || e.message));
+  }, [scope, selectedProspectId, configKind]);
+
+  const saveProspectDraft = async (value) => {
+    const result = await api.saveLonetreeProspectDraft(selectedProspectId, value);
+    setProspectConfig(mergeProspectConfig(LONETREE_PROSPECT_EXPERIENCE, result.value));
+    setConfigKind('draft');
+  };
+
+  const publishProspect = async () => {
+    setPublishState('Publishing…');
+    try {
+      const result = await api.publishLonetreeProspectConfig(selectedProspectId);
+      setProspectConfig(mergeProspectConfig(LONETREE_PROSPECT_EXPERIENCE, result.value));
+      setPublishState('Published to the prospect.');
+    } catch (e) {
+      setPublishState(e.body?.error || e.message);
+    }
+  };
 
   const experience = useMemo(() => (data ? resolveExperience(focus, data) : null), [focus, data]);
 
@@ -579,13 +756,51 @@ export default function LonetreeMvpPanel() {
   const { breadcrumb, highlightStages, expandedStage, related, inspector } = experience;
   const hasFocus = focus !== null && focus.kind !== 'stage';
   const stageGlow = STAGE_GLOW[expandedStage];
+  const theme = prospectConfig.theme;
+  const experienceStyle = {
+    '--lt-page': theme.page, '--lt-surface': theme.surface, '--lt-surface-muted': theme.surfaceMuted,
+    '--lt-text': theme.text, '--lt-text-muted': theme.textMuted, '--lt-teal': theme.teal,
+    '--lt-teal-deep': theme.tealDeep, '--lt-gold': theme.gold, '--lt-rose': theme.rose, '--lt-border': theme.border,
+    '--lt-font-body': theme.fontBody, '--sb-font-body': theme.fontBody, '--sb-font-display': theme.fontDisplay, '--sb-font-label': theme.fontLabel,
+    '--sb-navy-deep': theme.surface, '--sb-cream': theme.text, '--sb-dusty': theme.textMuted,
+    '--sb-gold': theme.gold, '--sb-teal': theme.teal,
+  };
 
   return (
-    <div style={{ flex: 1, width: '100%', minWidth: 0, display: 'flex', overflow: 'hidden' }}>
+    <div className="sb-lt-experience" style={{ ...experienceStyle, flex: 1, width: '100%', minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <GlobalStyle />
+      {scope === 'admin' && <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap', padding: '0.7rem 1rem', background: 'var(--lt-surface)', borderBottom: '1px solid var(--lt-border)' }}>
+        <strong style={{ color: 'var(--lt-teal-deep)' }}>Proposal administration</strong>
+        <label>Prospect <select value={selectedProspectId || ''} onChange={(event) => setSelectedProspectId(Number(event.target.value))}>{prospects.map((prospect) => <option key={prospect.id} value={prospect.id}>{prospect.displayName} · {prospect.email}</option>)}</select></label>
+        <button onClick={() => setConfigKind('draft')} disabled={configKind === 'draft'}>Edit draft</button>
+        <button onClick={() => setConfigKind('published')} disabled={configKind === 'published'}>View published replica</button>
+        <button onClick={publishProspect} disabled={!selectedProspectId}>Publish draft to prospect</button>
+        <span style={{ color: 'var(--lt-text-muted)', fontSize: '0.75rem' }}>{publishState}</span>
+      </div>}
       {view === 'landing' ? (
         <div style={{ flex: 1, minWidth: 0, padding: '1.5rem 2rem', overflowY: 'auto' }}>
-          <Landing onBegin={() => { setView('highway'); setFocus({ kind: 'stage', id: 'commercial' }); }} />
+          <Landing config={prospectConfig} onBegin={() => setView('navigation')} />
+        </div>
+      ) : view === 'navigation' ? (
+        <div style={{ flex: 1, minWidth: 0, padding: '1.5rem 2rem', overflowY: 'auto' }}>
+          <CrystalNavigation config={prospectConfig} onBack={() => setView('landing')} onSelect={(destination) => { setView(destination); if (destination === 'demo') setFocus({ kind: 'stage', id: 'commercial' }); }} />
+        </div>
+      ) : view === 'proposal' ? (
+        <div style={{ flex: 1, minWidth: 0, padding: '1.25rem 1.75rem', overflowY: 'auto' }}>
+          <ProspectReturn onReturn={() => setView('navigation')} />
+          <ProspectNarrativeExperience
+            config={prospectConfig}
+            canSave={scope === 'admin' && configKind === 'draft'}
+            saveBlockedMessage={scope === 'member'
+              ? 'Member users are not able to save proposal configuration changes directly. Your edits remain available as a local preview until you leave this screen.'
+              : 'Published replicas are read-only. Switch to Edit draft to save configuration changes.'}
+            onSave={saveProspectDraft}
+          />
+        </div>
+      ) : view === 'spatial' ? (
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <ProspectReturn onReturn={() => setView('navigation')} />
+          <SpatialJourneyWorld />
         </div>
       ) : (
         <>

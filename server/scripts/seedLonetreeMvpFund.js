@@ -107,18 +107,18 @@ async function main() {
   }
   console.log(`[seed-lonetree-mvp] Seeded ${repo.MVP_22_Fund_Economics.length} fund economics inputs on Fund Rod.`);
 
-  // 4. Portfolio Company Rod — "Veradigm" (ORG-0006), a Tributary child of the Fund Rod.
+  // 4. Portfolio Company Rod — "HealthCare Portco Example" (ORG-0006), a Tributary child of the Fund Rod.
   let portcoRod = await db.prepare(`SELECT * FROM journey_data_rods WHERE rod_type='portfolio_company' AND parent_rod_id=$1`).get(fundRod.id);
   const portcoRodIsNew = !portcoRod;
   if (!portcoRod) {
-    const veradigmOrg = repo.MVP_02_Enterprise_Structure.find((o) => o.Organization_Name === 'Veradigm');
+    const healthcarePortcoOrg = repo.MVP_02_Enterprise_Structure.find((o) => o.Organization_Name === 'HealthCare Portco Example');
     portcoRod = await createJourneyTributary({
       parentJourney: fundRod,
       tributaryType: 'fund_portfolio_company_provisioning',
       stage: 'commercial',
-      metadata: { entityName: veradigmOrg.Organization_Name, sourceOrgId: veradigmOrg.Organization_ID, sector: 'Healthcare IT / Software' },
+      metadata: { entityName: healthcarePortcoOrg.Organization_Name, sourceOrgId: healthcarePortcoOrg.Organization_ID, sector: 'Healthcare IT / Software' },
     });
-    console.log(`[seed-lonetree-mvp] Created Portfolio Company Rod ${portcoRod.id} (Veradigm), child of Fund Rod ${fundRod.id}.`);
+    console.log(`[seed-lonetree-mvp] Created Portfolio Company Rod ${portcoRod.id} (HealthCare Portco Example), child of Fund Rod ${fundRod.id}.`);
   } else {
     console.log(`[seed-lonetree-mvp] Portfolio Company Rod ${portcoRod.id} already exists — reusing.`);
   }

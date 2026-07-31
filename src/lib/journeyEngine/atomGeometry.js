@@ -32,6 +32,20 @@ export function getBipyramidParts(THREE, radialSegments) {
   return geometryCache[key];
 }
 
+export function getConfiguredAtomParts(THREE, geometryKey, radialSegments = 6) {
+  const key = `${geometryKey}-${radialSegments}`;
+  if (geometryCache[key]) return geometryCache[key];
+  let geometry;
+  if (geometryKey === 'octahedron') geometry = new THREE.OctahedronGeometry(0.82, 0);
+  else if (geometryKey === 'icosahedron') geometry = new THREE.IcosahedronGeometry(0.78, 0);
+  else if (geometryKey === 'tetrahedron') geometry = new THREE.TetrahedronGeometry(0.9, 0);
+  else if (geometryKey === 'hex_crystal') geometry = new THREE.CylinderGeometry(0.62, 0.62, 1.65, 6);
+  else if (geometryKey === 'prism') geometry = new THREE.CylinderGeometry(0.56, 0.72, 1.55, 5);
+  else return getBipyramidParts(THREE, radialSegments);
+  geometryCache[key] = { primary: geometry };
+  return geometryCache[key];
+}
+
 export function buildAtomMaterial(THREE, visual) {
   return new THREE.MeshPhysicalMaterial({
     color: visual.colorHex,
@@ -47,9 +61,22 @@ export function buildAtomMaterial(THREE, visual) {
   });
 }
 
-export function buildStageAnchorMesh(THREE, { color, radiusTop = 2.05, radiusBottom = 2.4, height = 0.45 }) {
-  const geometry = new THREE.CylinderGeometry(radiusTop, radiusBottom, height, 6);
-  const material = new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.25, transparent: true, opacity: 0.88 });
+export function buildStageAnchorMesh(THREE, { color, radiusTop = 2.05, radiusBottom = 2.4, height = 0.45, geometryStyle = 'hex_drum' }) {
+  const geometry = geometryStyle === 'coral_checkpoint'
+    ? new THREE.LatheGeometry([
+      new THREE.Vector2(0.35, 0),
+      new THREE.Vector2(radiusBottom, 0.18),
+      new THREE.Vector2(radiusTop * 0.82, 0.58),
+      new THREE.Vector2(radiusTop * 0.45, 1.25),
+      new THREE.Vector2(radiusTop * 0.62, 1.75),
+      new THREE.Vector2(0.2, 2.25),
+    ], 9)
+    : new THREE.CylinderGeometry(radiusTop, radiusBottom, height, 6);
+  const material = new THREE.MeshStandardMaterial({
+    color, roughness: geometryStyle === 'coral_checkpoint' ? 0.72 : 0.5,
+    metalness: geometryStyle === 'coral_checkpoint' ? 0.08 : 0.25,
+    transparent: true, opacity: 0.9,
+  });
   return new THREE.Mesh(geometry, material);
 }
 

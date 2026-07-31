@@ -3276,6 +3276,27 @@ async function bootstrap() {
     );
     CREATE INDEX IF NOT EXISTS idx_career_intake_runs_user ON career_intake_runs (user_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_career_intake_runs_status ON career_intake_runs (status, created_at DESC);
+
+    CREATE TABLE IF NOT EXISTS career_source_mappings (
+      id BIGSERIAL PRIMARY KEY,
+      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      document_id BIGINT REFERENCES career_intake_documents(id) ON DELETE SET NULL,
+      source_kind TEXT NOT NULL,
+      source_filename TEXT,
+      source_location TEXT,
+      source_label TEXT,
+      entry_type TEXT NOT NULL,
+      target_table TEXT NOT NULL,
+      target_id BIGINT NOT NULL,
+      atom_key TEXT NOT NULL,
+      original_value JSONB,
+      committed_value JSONB,
+      match_type TEXT,
+      affinity DOUBLE PRECISION,
+      created_at BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_career_source_mappings_target ON career_source_mappings (target_table, target_id);
+    CREATE INDEX IF NOT EXISTS idx_career_source_mappings_document ON career_source_mappings (document_id);
   `);
 
   // One-shot: inject "Career Master" tab into the admin_nav content view.

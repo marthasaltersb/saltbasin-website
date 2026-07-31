@@ -100,6 +100,28 @@ const PROPOSE_TOOL = {
           },
         },
       },
+      domains: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            groupType: { type: 'string' }, title: { type: 'string' }, description: { type: 'string' },
+            items: { type: 'array', items: { type: 'string' } }, confidence: { type: 'number' },
+          },
+        },
+      },
+      deals: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            dealName: { type: 'string' }, portfolioCompany: { type: 'string' }, employerAtTime: { type: 'string' },
+            dealRole: { type: 'string' }, investmentType: { type: 'string' }, dealSize: { type: 'string' },
+            entryDate: { type: 'string' }, exitDate: { type: 'string' }, outcomeStatus: { type: 'string' },
+            notes: { type: 'string' }, confidence: { type: 'number' },
+          },
+        },
+      },
     },
     required: [],
   },
@@ -129,6 +151,8 @@ const ENTRY_TYPE_BY_GROUP = {
   tools: 'career_tool_entry',
   engagements: 'career_engagement_entry',
   certifications: 'career_certification_entry',
+  domains: 'career_domain_entry',
+  deals: 'career_deal_entry',
 };
 
 // Bonds each proposed field (keyed by the AI's own field name, e.g.
@@ -153,7 +177,7 @@ export function bondProposedMappings(proposal) {
         const candidates = bondLabelsToCareerAtoms([fieldKey], { entryType })[0].candidates;
         const match = candidates[0] || null;
         if (match) {
-          fieldBonds[match.atomKey] = { value, header: fieldKey, matchType: 'ai_extracted', affinity: match.affinity, label: match.label };
+          fieldBonds[match.atomKey] = { value, header: fieldKey, matchType: 'ai_extracted', affinity: match.affinity, label: match.label, sourceLocation: `Resume text identified as “${fieldKey}” within this ${entryType.replaceAll('_', ' ')}` };
         } else {
           unresolvedHeaders.push({ header: fieldKey, value });
         }

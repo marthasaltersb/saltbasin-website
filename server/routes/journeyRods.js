@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { db } from '../db.js';
 import { requireUser, requireAdmin } from '../auth.js';
-import { evaluateJourneyRod, upsertJourneyEvidence } from '../lib/journeyRods.js';
+import { createUserJourneyRod, evaluateJourneyRod, upsertJourneyEvidence } from '../lib/journeyRods.js';
 import { generateScenarioMatrix, estimateMatrixSize, DRAFT_DIMENSION_DEFINITIONS } from '../lib/scenarioGenerator.js';
 import { applyScenarioLibrary } from '../lib/scenarioLibraryApply.js';
 import { resolveConfigEnvelope } from '../lib/configEnvelope.js';
@@ -29,6 +29,34 @@ async function requireRodOwnerOrAdmin(req, res) {
 router.get('/me', requireUser, async (req, res) => {
   const rods = await db.prepare(`SELECT * FROM journey_data_rods WHERE user_id=$1 ORDER BY rod_type, org_id NULLS FIRST`).all(req.user.id);
   res.json({ rods: rods.map(normalizeRod) });
+});
+
+// Member-facing configuration contract for the journey builder. The client
+// receives the definitions that already govern evaluation; it does not carry
+// a second hardcoded list of deal fields or stages.
+router.get('/catalog', requireUser, async (_req, res) => {
+  const [scenarios, gates, clusters, molecules] = await Promise.all([
+    db.prepare(`SELECT * FROM journey_scenarios WHERE is_active=true ORDER BY label`).all(),
+    db.prepare(`SELECT * FROM journey_gate_definitions WHERE is_active=true ORDER BY scenario_id, sort_order`).all(),
+    db.prepare(`SELECT * FROM journey_metadata_clusters WHERE is_active=true ORDER BY cluster_key`).all(),
+    db.prepare(`SELECT * FROM journey_metadata_molecules WHERE is_active=true ORDER BY molecule_key`).all(),
+  ]);
+  res.json({ scenarios, gates, clusters, molecules });
+});
+
+router.post('/', requireUser, async (req, res) => {
+  const { scenarioKey, label } = req.body || {};
+  if (!scenarioKey || !String(label || '').trim()) {
+    return res.status(400).json({ error: 'scenarioKey and label are required' });
+  }
+  try {
+    res.status(201).json(await createUserJourneyRod(req.user.id, {
+      scenarioKey,
+      label: String(label).trim(),
+    }));
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 router.get('/lead/:leadId', requireAdmin, async (req, res) => {
@@ -131,9 +159,29 @@ router.post('/:rodId/actors', requireAdmin, async (req,res)=>{ const b=req.body|
 router.get('/:rodId/threshold-profile', requireUser, async (req,res)=>{ if(!await requireRodOwnerOrAdmin(req,res)) return; res.json({profile:await db.prepare(`SELECT * FROM journey_rod_threshold_profiles WHERE rod_id=$1`).get(req.params.rodId)}); });
 router.put('/:rodId/threshold-profile', requireUser, async (req,res)=>{ if(!await requireRodOwnerOrAdmin(req,res)) return; const b=req.body||{},now=Date.now(); if(!Array.isArray(b.dimensionDefinitions)||!Array.isArray(b.combinations)) return res.status(400).json({error:'dimensionDefinitions and combinations must be arrays'}); await db.prepare(`INSERT INTO journey_rod_threshold_profiles (rod_id,dimension_definitions,combinations,configured_by,created_at,updated_at) VALUES ($1,$2::jsonb,$3::jsonb,$4,$5,$5) ON CONFLICT (rod_id) DO UPDATE SET dimension_definitions=EXCLUDED.dimension_definitions,combinations=EXCLUDED.combinations,configured_by=EXCLUDED.configured_by,updated_at=EXCLUDED.updated_at`).run(req.params.rodId,b.dimensionDefinitions,b.combinations,req.user.id,now); res.json(await evaluateJourneyRod(Number(req.params.rodId))); });
 
-router.post('/:rodId/evidence', requireAdmin, async (req,res)=>{ try { res.json(await upsertJourneyEvidence(Number(req.params.rodId),req.body||{})); } catch(e){ res.status(400).json({error:e.message}); } });
-router.post('/:rodId/evaluate', requireAdmin, async (req,res)=>{ try { res.json(await evaluateJourneyRod(Number(req.params.rodId))); } catch(e){ res.status(400).json({error:e.message}); } });
+router.post('/:rodId/evidence', requireUser, async (req,res)=>{
+  if (!await requireRodOwnerOrAdmin(req,res)) return;
+  try { res.json(await upsertJourneyEvidence(Number(req.params.rodId),req.body||{})); } catch(e){ res.status(400).json({error:e.message}); }
+});
+router.post('/:rodId/evaluate', requireUser, async (req,res)=>{
+  if (!await requireRodOwnerOrAdmin(req,res)) return;
+  try { res.json(await evaluateJourneyRod(Number(req.params.rodId))); } catch(e){ res.status(400).json({error:e.message}); }
+});
 router.get('/decisions/pending', requireAdmin, async (_req,res)=>res.json({decisions:await db.prepare(`SELECT * FROM journey_rod_decisions WHERE status='pending' ORDER BY requested_at`).all()}));
+router.get('/:rodId', requireUser, async (req, res) => {
+  if (!await requireRodOwnerOrAdmin(req, res)) return;
+  try {
+    const result = await evaluateJourneyRod(Number(req.params.rodId), { requestJudgment: false });
+    const evidence = await db.prepare(`
+      SELECT * FROM journey_rod_evidence
+      WHERE rod_id=$1
+      ORDER BY molecule_key, observed_at DESC
+    `).all(req.params.rodId);
+    res.json({ ...result, evidence });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
 router.post('/decisions/:id/resolve', requireAdmin, async (req,res)=>{ const status=req.body?.status; if(!['approved','rejected'].includes(status)) return res.status(400).json({error:'status must be approved or rejected'}); await db.prepare(`UPDATE journey_rod_decisions SET status=$1,decided_at=$2,decided_by=$3,decision_notes=$4 WHERE id=$5 AND status='pending'`).run(status,Date.now(),req.user.id,req.body?.notes||null,req.params.id); res.json({ok:true}); });
 
 function normalizeRod(row) {

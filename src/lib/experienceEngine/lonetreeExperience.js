@@ -239,7 +239,7 @@ export const STAGE_METRICS = {
 
 const baseCrumbs = (data) => [
   { label: data.summary.fund.name || 'LoneTree', focus: null },
-  { label: data.summary.portco.name || 'Veradigm', focus: null },
+  { label: data.summary.portco.name || 'HealthCare Portco Example', focus: null },
 ];
 
 // The one resolver every component consults. Pure and synchronous — all trace

@@ -9,7 +9,7 @@ import { resolvePathColor } from '../lib/journeyEngine/pathColor.js';
 import { classifyStratum, computeCrossDomainContributionRatio, contributionRatioBand, basinFor, resuspendAtom } from '../lib/journeyEngine/basin.js';
 import { computeHeterosemanticDivergence, classifyDivergence, isReconciliationBoundaryExceedance } from '../lib/journeyEngine/divergence.js';
 import {
-  getBipyramidParts, buildAtomMaterial, buildStageAnchorMesh, buildMoleculeShellMesh,
+  getBipyramidParts, getConfiguredAtomParts, buildAtomMaterial, buildStageAnchorMesh, buildMoleculeShellMesh,
   buildHashNodeMesh, buildReconciliationRingMesh, buildHomeAnchorPinMesh, buildGateBeaconMesh, buildGlowSprite,
 } from '../lib/journeyEngine/atomGeometry.js';
 import { computeRodLayout, computeGateDimensionRibs } from '../lib/journeyEngine/layout.js';
@@ -20,7 +20,7 @@ import {
   describeOutputsAgentAvailability, describeModuleAccess,
 } from '../lib/journeyEngine/mockAgentProvider.js';
 import { ROD_TEMPLATES, MOLECULE_DEFINITIONS, OBJECTIVES, SEED_LEADS } from '../data/journeyWorldConfig.js';
-import { WORLD_REGISTRY, getWorldDefinition } from '../config/visual/worldRegistry.js';
+import { WORLD_REGISTRY, ROTATION_CHOREOGRAPHY_REGISTRY, getWorldDefinition } from '../config/visual/worldRegistry.js';
 import { api } from '../lib/api.js';
 import { QUERY_INTERACTION_REGISTRY, QUERY_CONTEXT_REGISTRY } from '../config/metrics/queryContextRegistry.js';
 import { METRIC_DEFINITION_REGISTRY } from '../config/metrics/metricDefinitionRegistry.js';
@@ -28,6 +28,7 @@ import { shellRadiusForBand } from '../config/visual/worldVariantEncodingProfile
 import { describeRelevanceComponents, generateElementBusinessMeaning } from '../config/metrics/queryRelevanceNarrative.js';
 import { MATURITY_MODEL, maturityToneFor } from '../config/metrics/maturityModel.js';
 import { bandForMaturity } from '../lib/journeyEngine/maturity.js';
+import { JOURNEY_WORLD_EXPERIENCE, resolveJourneyObjectGroup } from '../config/visual/journeyWorldExperience.js';
 
 // ---------------------------------------------------------------------------
 // Brand palette read straight from brand.css custom properties at mount, so
@@ -92,6 +93,7 @@ export default function SpatialJourneyWorld() {
   const [devStatsOpen, setDevStatsOpen] = useState(false);
   const [devStats, setDevStats] = useState({ fps: 0, meshes: 0, atoms: 0 });
   const [ready, setReady] = useState(false);
+  const [worldLayer, setWorldLayer] = useState('journey');
 
   const toastTimeoutRef = useRef(null);
   const viewingTimeoutRef = useRef(null);
@@ -117,6 +119,7 @@ export default function SpatialJourneyWorld() {
   // with new band labels/colors when it arrives. Both start from the shipped
   // MATURITY_MODEL so nothing renders unbanded during the fetch.
   const maturityModelRef = useRef(MATURITY_MODEL);
+  const journeyExperienceRef = useRef(JOURNEY_WORLD_EXPERIENCE);
   const [maturityModel, setMaturityModel] = useState(MATURITY_MODEL);
 
   useEffect(() => {
@@ -133,6 +136,22 @@ export default function SpatialJourneyWorld() {
       .catch(() => { /* keeps the shipped default */ });
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.getConfigEnvelope('journey-world-experience')
+      .then((res) => {
+        if (cancelled || !res?.value) return;
+        journeyExperienceRef.current = res.value;
+        apiRef.current?.applyLayerVisibility?.('journey');
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    apiRef.current?.applyLayerVisibility?.(worldLayer);
+  }, [worldLayer]);
 
   // Enterprise Objectives from the SEEDED value-creation initiatives (per
   // Betsy 2026-07-29: "objectives seem to be hardcoded... match the seeded
@@ -319,7 +338,10 @@ export default function SpatialJourneyWorld() {
     function recomputeLayout() {
       syncBranchPseudoRods();
       const all = world.rods.concat(world.tributaryRods);
-      world.stagePositions = computeRodLayout(THREE, all, { stageSpacing: STAGE_SPACING });
+      world.stagePositions = computeRodLayout(THREE, all, {
+        stageSpacing: journeyExperienceRef.current.scene.stageSpacing || STAGE_SPACING,
+        rootPath: journeyExperienceRef.current.scene.path,
+      });
       recomputeOrbitCenter();
     }
 
@@ -364,22 +386,29 @@ export default function SpatialJourneyWorld() {
     function buildAtomMesh(rod, stage, atomInstance, homePos) {
       const gKey = keyFor(rod, atomInstance);
       const rodColor = pathColorFor(rod);
-      const visual = computeAtomVisual(atomInstance, rodColor, { riskColor: palette.risk, paleColor: palette.champagne, dimColor: palette.greige, model: maturityModelRef.current });
-      const parts = getBipyramidParts(THREE, visual.facet);
+      const groupDefinition = resolveJourneyObjectGroup(atomInstance, journeyExperienceRef.current);
+      const groupColor = hexToNum(groupDefinition.color, rodColor);
+      const visual = computeAtomVisual(atomInstance, groupColor, { riskColor: palette.risk, paleColor: palette.champagne, dimColor: palette.greige, model: maturityModelRef.current });
+      const parts = getConfiguredAtomParts(THREE, groupDefinition.geometry, visual.facet);
       const matTop = buildAtomMaterial(THREE, visual);
-      const matBottom = matTop.clone();
-      const topMesh = new THREE.Mesh(parts.top, matTop);
-      const bottomMesh = new THREE.Mesh(parts.bottom, matBottom);
+      const topMesh = new THREE.Mesh(parts.primary || parts.top, matTop);
+      const bottomMesh = parts.bottom ? new THREE.Mesh(parts.bottom, matTop.clone()) : null;
       const group = new THREE.Group();
-      group.add(topMesh, bottomMesh);
+      group.add(topMesh);
+      if (bottomMesh) group.add(bottomMesh);
       const orbitParams = orbitParamsFor(gKey);
       const initial = orbitPosition(orbitParams, 0, new THREE.Vector3());
       group.position.copy(initial);
       group.scale.set(0.8, visual.scaleY * 0.85, 0.8);
-      group.userData = { state: 'orbit', orbitParams, homePos: homePos.clone(), globalKey: gKey };
+      group.userData = {
+        state: 'orbit', orbitParams, homePos: homePos.clone(), globalKey: gKey,
+        objectLayer: 'atom', populated: atomInstance.value !== null && atomInstance.value !== undefined && atomInstance.value !== '',
+        groupKey: groupDefinition.key,
+      };
       scene.add(group);
 
       const halo = buildGlowSprite(THREE, atomInstance.conflict ? palette.risk : visual.colorHex, 2 + visual.haloIntensity * 2);
+      halo.userData.globalKey = gKey;
       halo.material.opacity = visual.haloIntensity * 0.55;
       halo.position.copy(initial);
       scene.add(halo);
@@ -403,21 +432,21 @@ export default function SpatialJourneyWorld() {
       }
 
       world.atomGroups[gKey] = group;
-      world.atomParts[gKey] = [topMesh, bottomMesh];
+      world.atomParts[gKey] = [topMesh, bottomMesh].filter(Boolean);
       world.atomHalos[gKey] = halo;
       world.atomLines[gKey] = line;
       if (conflictRing) world.atomConflictRings[gKey] = conflictRing;
 
       const entry = { kind: 'atom', atomInstance, stage, rod, globalKey: gKey };
       registerInteractive(topMesh, entry);
-      registerInteractive(bottomMesh, entry);
+      if (bottomMesh) registerInteractive(bottomMesh, entry);
       registerInteractive(pin, entry);
     }
 
     function buildStageMesh(rod, stage, pos) {
       const sKey = keyFor(rod, stage);
       const color = pathColorFor(rod);
-      const mesh = buildStageAnchorMesh(THREE, { color });
+      const mesh = buildStageAnchorMesh(THREE, { color, geometryStyle: journeyExperienceRef.current.stage.geometry });
       mesh.position.copy(pos);
       mesh.position.y = -0.95;
       scene.add(mesh);
@@ -457,8 +486,10 @@ export default function SpatialJourneyWorld() {
           .map((g) => g.position);
         if (!memberPositions.length) return;
         const center = memberPositions.reduce((acc, p) => acc.add(p.clone()), new THREE.Vector3()).divideScalar(memberPositions.length);
+        const populated = molecule.memberAtomIds.some((atomId) => world.atomGroups[`${rod.id}::${atomId}`]?.userData.populated);
         const shell = buildMoleculeShellMesh(THREE, { color: pathColorFor(rod), radius: 3.2 });
         shell.position.copy(center);
+        shell.userData = { objectLayer: 'molecule', populated };
         scene.add(shell);
         world.moleculeShells[`${rod.id}::${molecule.moleculeId}`] = { mesh: shell, rod, molecule, memberKeys: molecule.memberAtomIds.map((id) => `${rod.id}::${id}`) };
       });
@@ -612,7 +643,7 @@ export default function SpatialJourneyWorld() {
       if (topMesh?.geometry?.parameters?.radialSegments !== visual.facet) {
         const newParts = getBipyramidParts(THREE, visual.facet);
         topMesh.geometry = newParts.top;
-        bottomMesh.geometry = newParts.bottom;
+        if (bottomMesh) bottomMesh.geometry = newParts.bottom;
       }
       parts.forEach((mesh) => { mesh.userData.targetVisual = visual; });
       const halo = world.atomHalos[gKey];
@@ -726,6 +757,12 @@ export default function SpatialJourneyWorld() {
     let convergenceProgressInterval = null;
     function runCustomerOrbit(entityLabel, onProgress, onComplete) {
       const involvedRods = world.rods.filter((r) => r.entityLabel === entityLabel);
+      const focusedPositions = involvedRods.flatMap((rod) => world.stagePositions[rod.id] || []);
+      if (focusedPositions.length) {
+        const sphere = new THREE.Box3().setFromPoints(focusedPositions).getBoundingSphere(new THREE.Sphere());
+        cameraTargetGoal = sphere.center.clone().setY(2.5);
+        sphericalGoal.radius = Math.max(18, Math.min(72, sphere.radius * 3.1));
+      }
       const queryResult = triangulateEntity(world.rods, entityLabel, { queryContextId: QUERY_INTERACTION_REGISTRY.customerOrbit.contextId });
       const relevanceByKey = new Map(queryResult.perRod.flatMap((rod) => (rod.queryRelevance || []).map((entry) => [`${rod.rodId}::${entry.atomId}`, entry])));
       const allAtomKeys = [];
@@ -740,6 +777,8 @@ export default function SpatialJourneyWorld() {
           const gKey = keyFor(rod, e.atomInstance);
           const group = world.atomGroups[gKey];
           if (!group) return;
+          group.visible = true;
+          if (world.atomHalos[gKey]) world.atomHalos[gKey].visible = true;
           const angle = (i / Math.max(atoms.length, 1)) * Math.PI * 2;
           const target = new THREE.Vector3(centroid.x + Math.cos(angle) * 2.2, centroid.y, centroid.z + Math.sin(angle) * 2.2);
           group.userData.state = 'converging';
@@ -1148,12 +1187,61 @@ export default function SpatialJourneyWorld() {
           evaluateStageGates(rod);
         });
       },
+      applyLayerVisibility: (layer) => {
+        const config = journeyExperienceRef.current;
+        Object.values(world.atomGroups).forEach((group) => {
+          const progressiveVisible = group.userData.populated || config.visibility.showUnpopulatedAtoms;
+          group.visible = layer === 'all' || (layer === 'structures' && progressiveVisible);
+        });
+        Object.values(world.atomHalos).forEach((halo) => {
+          const group = world.atomGroups[halo.userData?.globalKey];
+          halo.visible = layer === 'all' || (layer === 'structures' && (group?.userData.populated || config.visibility.showUnpopulatedAtoms));
+        });
+        Object.values(world.atomLines).forEach((line) => { line.visible = layer === 'all'; });
+        Object.values(world.moleculeShells).forEach(({ mesh }) => {
+          mesh.visible = layer === 'all' || (layer === 'structures' && mesh.userData.populated);
+        });
+      },
+      activateWorld: (nextWorldId) => {
+        const definition = getWorldDefinition(nextWorldId);
+        const choreography = ROTATION_CHOREOGRAPHY_REGISTRY[definition.choreography];
+        if (choreography) {
+          sphericalGoal.radius = choreography.distance;
+          sphericalGoal.phi = Math.max(0.35, Math.min(1.45, 1.15 - choreography.elevation));
+          sphericalGoal.theta += choreography.angularVelocity * 18;
+        }
+        if (definition.focus === 'pricing') {
+          const keys = Object.entries(world.atomGroups).filter(([, group]) => group.userData.groupKey === 'deal').map(([key]) => key);
+          world.highlightedKeys = keys.length ? new Set(keys) : null;
+        } else if (definition.focus === 'career') {
+          const careerRods = world.rods.filter((rod) => rod.rodType === 'career_master');
+          const points = careerRods.flatMap((rod) => world.stagePositions[rod.id] || []);
+          if (points.length) cameraTargetGoal = new THREE.Box3().setFromPoints(points).getCenter(new THREE.Vector3());
+          world.highlightedKeys = null;
+        } else {
+          world.highlightedKeys = null;
+          resetView();
+        }
+      },
       getGateStatus: (rod, stage) => stage.gate?._result || null,
       getMoleculesForRod: (rodId) => world.moleculesByRod[rodId] || [],
       listAllAtoms: () => world.rods.flatMap((rod) => allAtomsOf(rod).map(({ atomInstance, stage }) => ({
         globalKey: keyFor(rod, atomInstance), rodType: rod.rodType, rodId: rod.id, stageName: stage.name, name: atomInstance.name, conflict: atomInstance.conflict, maturity: atomInstance.maturity,
       }))),
-      listEntities: () => [...new Set(world.rods.map((r) => r.entityLabel).filter(Boolean))],
+      listEntities: () => [...new Set(world.rods.map((r) => r.entityLabel).filter(Boolean))].map((label) => {
+        const rods = world.rods.filter((rod) => rod.entityLabel === label && rod.rodType !== 'masterData');
+        const revenueRod = rods.find((rod) => rod.rodType === 'revenue');
+        const conflicts = rods.flatMap(allAtomsOf).filter(({ atomInstance }) => atomInstance.conflict).length;
+        const currentStage = revenueRod?.stages?.findLast?.((stage) => (stage.atoms || []).some((atom) => atom.value != null))
+          || revenueRod?.stages?.[0] || rods[0]?.stages?.[0];
+        return {
+          label,
+          stage: currentStage?.name || 'Not started',
+          openAmount: revenueRod?.potentialRevenueCents ? `$${(revenueRod.potentialRevenueCents / 100).toLocaleString()}` : null,
+          conflictCount: conflicts,
+          journeyCount: rods.length,
+        };
+      }),
       getRodsByEntity: (entityLabel) => world.rods.filter((r) => r.entityLabel === entityLabel),
       setHighlighted: (keys) => { world.highlightedKeys = keys ? new Set(keys) : null; },
       getReconciliationZone: (globalKey) => {
@@ -1167,8 +1255,9 @@ export default function SpatialJourneyWorld() {
       pulseToast,
       pulseViewingLabel,
     };
+    apiRef.current.applyLayerVisibility(worldLayer);
 
-    setEntityOptions(world.rods.map((r) => r.entityLabel).filter((v, i, arr) => v && arr.indexOf(v) === i));
+    setEntityOptions(apiRef.current.listEntities());
 
     return () => {
       disposed = true;
@@ -1267,8 +1356,10 @@ export default function SpatialJourneyWorld() {
   const openAtomIndex = () => { setAtomIndexRows(apiRef.current?.listAllAtoms() || []); setAtomIndexOpen(true); };
   const openCustomerOrbitPicker = () => { setEntityOptions(apiRef.current?.listEntities() || []); setCustomerOrbitOpen(true); };
 
-  const handleNewLead = (leadContext, entityLabel) => {
-    apiRef.current?.spawnFromLead(leadContext, entityLabel);
+  const handleNewLead = async ({ scenarioKey, entityLabel }) => {
+    await api.createJourneyRod({ scenarioKey, label: entityLabel });
+    apiRef.current?.spawnFromLead({ origin: 'internal' }, entityLabel);
+    apiRef.current?.applyLayerVisibility?.(worldLayer);
     apiRef.current?.pulseToast(`New lead routed — ${entityLabel}`);
     setNewLeadOpen(false);
   };
@@ -1342,7 +1433,11 @@ export default function SpatialJourneyWorld() {
             <div className="sjw-top-controls">
               <label className="sjw-world-picker">
                 <span>World</span>
-                <select value={worldId} onChange={(event) => { setWorldId(event.target.value); apiRef.current?.pulseViewingLabel(getWorldDefinition(event.target.value).label); }}>
+                <select value={worldId} onChange={(event) => {
+                  setWorldId(event.target.value);
+                  apiRef.current?.activateWorld?.(event.target.value);
+                  apiRef.current?.pulseViewingLabel(getWorldDefinition(event.target.value).label);
+                }}>
                   {Object.values(WORLD_REGISTRY).map((world) => <option key={world.id} value={world.id}>{world.label}</option>)}
                 </select>
               </label>
@@ -1350,7 +1445,7 @@ export default function SpatialJourneyWorld() {
               <button type="button" className={`sjw-icon-btn${role === 'observer' ? ' sjw-role-observer' : ''}`} onClick={() => setRole((r) => (r === 'reviewer' ? 'observer' : 'reviewer'))}>
                 Role: {permissions.label}
               </button>
-              <button type="button" className="sjw-icon-btn" onClick={() => setNewLeadOpen(true)}>+ New Lead</button>
+              <button type="button" className="sjw-icon-btn sjw-primary-nav" onClick={() => setNewLeadOpen(true)}>Configure Deal</button>
               <button type="button" className="sjw-icon-btn" onClick={openAtomIndex}>Atom Index</button>
               <button type="button" className="sjw-icon-btn" onClick={() => setLegendOpen((v) => !v)}>Legend</button>
               <button type="button" className="sjw-icon-btn" onClick={() => setDevStatsOpen((v) => !v)}>Stats</button>
@@ -1358,6 +1453,13 @@ export default function SpatialJourneyWorld() {
           </div>
 
           <div className="sjw-instructions">Drag to orbit · Pinch or scroll to zoom · Click a crystal to inspect · 0 resets view</div>
+
+          <div className="sjw-layer-controls" aria-label="World detail">
+            <span>World detail</span>
+            {[['journey', 'Journey only'], ['structures', 'Formed structures'], ['all', 'All evidence']].map(([value, label]) => (
+              <button key={value} type="button" className={worldLayer === value ? 'active' : ''} onClick={() => setWorldLayer(value)}>{label}</button>
+            ))}
+          </div>
 
           {hashProgress.active && (
             <div className="sjw-hash-progress">
@@ -1429,7 +1531,7 @@ export default function SpatialJourneyWorld() {
           {legendOpen && <LegendPanel onClose={() => setLegendOpen(false)} maturityModel={maturityModel} />}
           {atomIndexOpen && <AtomIndexOverlay rows={atomIndexRows} onSelect={handleSelectFromIndex} onClose={() => setAtomIndexOpen(false)} />}
           {customerOrbitOpen && <CustomerOrbitPicker entities={entityOptions} onRun={handleRunCustomerOrbit} onClose={() => setCustomerOrbitOpen(false)} />}
-          {newLeadOpen && <NewLeadForm onSubmit={handleNewLead} onClose={() => setNewLeadOpen(false)} />}
+          {newLeadOpen && <DealConfigForm onSubmit={handleNewLead} onClose={() => setNewLeadOpen(false)} />}
 
           {toast && <div className="sjw-toast sjw-toast-visible">{toast}</div>}
         </React.Fragment>
@@ -1630,9 +1732,9 @@ function HashResultPanel({ result, onHighlight, onRelease }) {
       <h3>{interaction.activatedLabel} — {result.entityLabel}</h3>
       <p className="sjw-agent-line">{interaction.summaryTemplate}</p>
       <div className="sjw-evidence-list">
-        <div className="sjw-outcome-card"><div className="sjw-evidence-source">{definitions.QUERY_COVERAGE.displayName}</div><div className="sjw-outcome-value">{result.queryCoverage ? `${Math.round(result.queryCoverage.percent)}%` : interaction.unavailableLabel}</div></div>
-        <div className="sjw-outcome-card"><div className="sjw-evidence-source">{definitions.QUERY_CONFIDENCE.displayName}</div><div className="sjw-outcome-value">{formatMetric(result.queryConfidence)}</div></div>
-        <div className="sjw-outcome-card"><div className="sjw-evidence-source">{definitions.CONVERGENCE_STABILITY.displayName}</div><div className="sjw-outcome-value">{formatMetric(result.convergenceStability)}</div></div>
+        <div className="sjw-outcome-card"><div className="sjw-evidence-source">Related journeys</div><div className="sjw-outcome-value">{result.perRod.length}</div></div>
+        <div className="sjw-outcome-card"><div className="sjw-evidence-source">Journey fields in view</div><div className="sjw-outcome-value">{result.perRod.reduce((sum, rod) => sum + rod.atoms.length, 0)}</div></div>
+        <div className="sjw-outcome-card"><div className="sjw-evidence-source">Items requiring review</div><div className="sjw-outcome-value">{result.perRod.reduce((sum, rod) => sum + rod.atoms.filter((atom) => atom.conflict).length, 0)}</div></div>
       </div>
       <div className="sjw-evidence-list">
         {result.perRod.map((r) => {
@@ -1695,6 +1797,14 @@ function LegendPanel({ onClose, maturityModel = MATURITY_MODEL }) {
     <div className="sjw-legend-panel">
       <button type="button" className="sjw-panel-close" onClick={onClose}>&times;</button>
       <h4>Legend</h4>
+      <div className="sjw-legend-section"><b>Evidence structures</b>
+        <div className="sjw-shape-legend">
+          <div><i className="sjw-shape sjw-shape-atom" /><span>Atom</span><small>One governed field</small></div>
+          <div><i className="sjw-shape sjw-shape-molecule" /><span>Molecule</span><small>Bounded compound</small></div>
+          <div><i className="sjw-shape sjw-shape-mineral" /><span>Mineral</span><small>Persistent structure</small></div>
+          <div><i className="sjw-shape sjw-shape-conflict" /><span>Conflict</span><small>Needs resolution</small></div>
+        </div>
+      </div>
       <div className="sjw-legend-section"><b>Shape</b>
         <p>Bipyramid — atom · Hex drum — stage anchor · Wire icosahedron — molecule shell · Large icosahedron — Customer-360 hash node · Torus — reconciliation zone · Cone pin — home anchor · Light column — gate beacon</p>
       </div>
@@ -1754,12 +1864,66 @@ function CustomerOrbitPicker({ entities, onRun, onClose }) {
       <h4>Customer Orbit</h4>
       <p className="sjw-compound-sub">Pick a real entity — a deal, an org, or a person. Every rod connected to it via Member-Organization branches converges into one triangulated hash.</p>
       <div className="sjw-compound-list">
-        {entities.map((entityLabel) => (
-          <div key={entityLabel} className="sjw-compound-stage-row" onClick={() => onRun(entityLabel)}>
-            <span>{entityLabel}</span>
+        {entities.map((entity) => (
+          <div key={entity.label || entity} className="sjw-customer-card" onClick={() => onRun(entity.label || entity)}>
+            <div className="sjw-customer-card-head"><span>{entity.label || entity}</span><b>{entity.stage || 'Not started'}</b></div>
+            <div className="sjw-customer-card-meta">
+              <span>{entity.journeyCount || 0} related journeys</span>
+              {entity.openAmount && <span>{entity.openAmount} open</span>}
+              <span className={entity.conflictCount ? 'risk' : ''}>{entity.conflictCount || 0} conflicts</span>
+            </div>
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function DealConfigForm({ onSubmit, onClose }) {
+  const [entityLabel, setEntityLabel] = useState('');
+  const [scenarios, setScenarios] = useState([]);
+  const [scenarioKey, setScenarioKey] = useState('');
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    api.getJourneyCatalog()
+      .then(({ scenarios: rows }) => {
+        setScenarios(rows || []);
+        setScenarioKey(rows?.[0]?.scenario_key || '');
+      })
+      .catch((e) => setError(e.body?.error || 'Sign in to configure a deal journey.'));
+  }, []);
+
+  const submit = async () => {
+    if (!entityLabel.trim() || !scenarioKey) return;
+    setSaving(true);
+    setError('');
+    try {
+      await onSubmit({ scenarioKey, entityLabel: entityLabel.trim() });
+    } catch (e) {
+      setError(e.body?.error || 'Could not create the deal journey.');
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="sjw-compound-overlay sjw-compound-open">
+      <button type="button" className="sjw-panel-close" onClick={onClose}>&times;</button>
+      <h4>Configure Deal Journey</h4>
+      <p className="sjw-compound-sub">Choose a configured journey definition. Its stages, gates, fields, business rules, and maturity evaluation come from the editable journey catalog.</p>
+      <div className="sjw-new-lead-form">
+        <label>Deal name
+          <input value={entityLabel} onChange={(e) => setEntityLabel(e.target.value)} placeholder="e.g. Acme Corp acquisition" />
+        </label>
+        <label>Journey definition
+          <select value={scenarioKey} onChange={(e) => setScenarioKey(e.target.value)}>
+            {scenarios.map((scenario) => <option key={scenario.scenario_key} value={scenario.scenario_key}>{scenario.label}</option>)}
+          </select>
+        </label>
+      </div>
+      {error && <p className="sjw-form-error">{error}</p>}
+      <button type="button" className="sjw-btn sjw-btn-primary" disabled={saving || !scenarioKey || !entityLabel.trim()} onClick={submit}>{saving ? 'Creating…' : 'Enter deal journey'}</button>
     </div>
   );
 }

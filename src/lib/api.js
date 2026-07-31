@@ -26,6 +26,11 @@ export const api = {
   getProposalDiagnostic: () => request('/api/proposal-experience/diagnostic'),
   getProposalOpportunity: () => request('/api/proposal-experience/opportunity'),
   getProposalEvidence: () => request('/api/proposal-experience/evidence'),
+  getMyLonetreeProposalConfig: () => request('/api/lonetree-mvp/proposal-config'),
+  listLonetreeProposalProspects: () => request('/api/lonetree-mvp/admin/prospects'),
+  getLonetreeProspectConfig: (userId, kind = 'draft') => request(`/api/lonetree-mvp/admin/prospects/${userId}/proposal-config?kind=${encodeURIComponent(kind)}`),
+  saveLonetreeProspectDraft: (userId, value) => request(`/api/lonetree-mvp/admin/prospects/${userId}/proposal-config/draft`, { method: 'PUT', body: JSON.stringify({ value }) }),
+  publishLonetreeProspectConfig: (userId) => request(`/api/lonetree-mvp/admin/prospects/${userId}/proposal-config/publish`, { method: 'POST' }),
   recordProposalStageViewed: (stageId) => request('/api/proposal-experience/events/stage-viewed', { method: 'POST', body: JSON.stringify({ stageId }) }),
   recordProposalScenarioExpanded: (scenarioId) => request('/api/proposal-experience/events/scenario-expanded', { method: 'POST', body: JSON.stringify({ scenarioId }) }),
   recordProposalEvidenceOpened: (evidenceId) => request('/api/proposal-experience/events/evidence-opened', { method: 'POST', body: JSON.stringify({ evidenceId }) }),
@@ -189,6 +194,7 @@ export const api = {
 
   // Career Master (admin-only CRUD; getCareerMaster is the public redacted read)
   getCareerMaster: () => request('/api/career/master'),
+  getCareerCatalogs: () => request('/api/career/catalogs'),
   seedCareerMaster: () => request('/api/career/seed', { method: 'POST' }),
   listCareerJobs: () => request('/api/career/jobs'),
   createCareerJob: (item) => request('/api/career/jobs', { method: 'POST', body: JSON.stringify(item) }),
@@ -226,6 +232,8 @@ export const api = {
   listCareerIntakeRuns: () => request('/api/career/intake-runs'),
   createCareerIntakeRun: (body) =>
     request('/api/career/intake-runs', { method: 'POST', body: JSON.stringify(body) }),
+  runCareerIntakeAnalysis: (id) =>
+    request(`/api/career/intake-runs/${id}/run`, { method: 'POST', body: '{}' }),
   syncCareerSiteMetadata: (body = {}) =>
     request('/api/career/sync-site-metadata', { method: 'POST', body: JSON.stringify(body) }),
   uploadCareerIntakeDocument: async (formData) => {
@@ -352,6 +360,12 @@ export const api = {
   listEidosGateDefinitions: () => request('/api/journey-rods/gate-definitions'),
   saveEidosGateDefinition: (scenarioKey, stageKey, item) =>
     request(`/api/journey-rods/scenarios/${scenarioKey}/gates/${stageKey}`, { method: 'PUT', body: JSON.stringify(item) }),
+  getMyJourneyRods: () => request('/api/journey-rods/me'),
+  getJourneyCatalog: () => request('/api/journey-rods/catalog'),
+  createJourneyRod: (item) => request('/api/journey-rods', { method: 'POST', body: JSON.stringify(item) }),
+  getJourneyRod: (rodId) => request(`/api/journey-rods/${rodId}`),
+  saveJourneyEvidence: (rodId, item) =>
+    request(`/api/journey-rods/${rodId}/evidence`, { method: 'POST', body: JSON.stringify(item) }),
 
   getEidosSettlementStates: (rodId) => request(`/api/eidos/settlement-states/${rodId}`),
   computeEidosSettlement: (rodId, moleculeKey) =>

@@ -1,55 +1,30 @@
-// CareerMasterEntryPoint (2026-07-16) — the member-facing entry point for
-// "Career Master": consent gate first, then Choose Your Path (Enter Career
-// Orbit / Upload Data / classic editor / public-site career layout). Keeps
-// this state out of AdminShell.jsx, which just renders this component for
-// the 'careerMaster' tab.
 import React, { useState } from 'react';
 import CareerConsentGate from './CareerConsentGate.jsx';
-import ChooseYourPathScreen from './ChooseYourPathScreen.jsx';
 import UploadDataScreen from './UploadDataScreen.jsx';
 import CareerMasterPanel from './CareerMasterPanel.jsx';
+import CareerOrbit from './CareerOrbit.jsx';
 
-const S = {
-  back: { padding: '1rem 1.5rem 0', fontSize: '0.8rem', color: 'var(--sb-teal-deep, #02a1a6)', cursor: 'pointer' },
-  comingSoon: { maxWidth: 640, margin: '3rem auto', padding: '2rem', textAlign: 'center', color: '#888', background: 'white', border: '0.5px solid rgba(0,0,0,0.1)', borderRadius: 12 },
-};
+const choices = [
+  ['orbit', 'Career Orbit', 'Guided maturity, resume, and case-study journeys.'],
+  ['upload', 'Upload & Map', 'Attach a resume or workbook, then review every mapped fact.'],
+  ['manual', 'Manual Intake', 'Add and maintain Career Master records directly.'],
+];
 
 export default function CareerMasterEntryPoint({ scope = 'member' }) {
-  const [view, setView] = useState('choose'); // choose | upload | orbit | classic
-
-  return (
-    <CareerConsentGate>
-      {view === 'choose' && (
-        <ChooseYourPathScreen
-          orbitAvailable={false}
-          onEnterOrbit={() => setView('orbit')}
-          onUploadData={() => setView('upload')}
-          onGoToSiteLayout={() => window.dispatchEvent(new CustomEvent('sb-admin-switch-tab', { detail: { tab: 'content' } }))}
-          // The 'content' tab (site editor) is off the member nav — public
-          // profiles stay disabled for members for now (2026-07-30) — so this
-          // deep link would otherwise land on the site editor UI outside any
-          // tab it's actually reachable from. Re-enable alongside 'content'.
-          showSiteLayoutLink={scope !== 'member'}
-        />
-      )}
-      {view === 'orbit' && (
-        <div style={S.comingSoon}>
-          <div onClick={() => setView('choose')} style={{ ...S.back, textAlign: 'center', marginBottom: '1rem' }}>← Back</div>
-          Career Orbit Projection is coming soon — the 3D per-job/case-study configuration experience.
-        </div>
-      )}
-      {view === 'upload' && (
-        <>
-          <div style={S.back} onClick={() => setView('choose')}>← Back to Choose Your Path</div>
-          <UploadDataScreen onOpenClassicEditor={() => setView('classic')} />
-        </>
-      )}
-      {view === 'classic' && (
-        <>
-          <div style={S.back} onClick={() => setView('choose')}>← Back to Choose Your Path</div>
-          <CareerMasterPanel scope={scope} />
-        </>
-      )}
-    </CareerConsentGate>
-  );
+  const [view, setView] = useState('manual');
+  return <CareerConsentGate>
+    <div className="career-master-entry-layout">
+      <div className="career-master-paths">
+        {choices.map(([id, title, desc]) => <button className="career-master-path-card" key={id} onClick={() => setView(id)} style={{ border: view === id ? '2px solid var(--sb-gold, #c4843a)' : '1px solid rgba(0,0,0,.12)', background: view === id ? 'rgba(196,132,58,.08)' : '#fff' }}>
+          <div style={{ fontWeight: 700, color: 'var(--sb-navy, #1b2a3b)' }}>{title}</div>
+          <div style={{ fontSize: '.76rem', color: '#6d7278', lineHeight: 1.45, marginTop: '.25rem' }}>{desc}</div>
+        </button>)}
+      </div>
+      <div className="career-master-active-view">
+        {view === 'orbit' && <CareerOrbit />}
+        {view === 'upload' && <UploadDataScreen onOpenClassicEditor={() => setView('manual')} onCommitted={() => setView('manual')} />}
+        {view === 'manual' && <CareerMasterPanel scope={scope} />}
+      </div>
+    </div>
+  </CareerConsentGate>;
 }

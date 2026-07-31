@@ -67,7 +67,7 @@ export function parseCareerSemanticWorkbook(buffer) {
         const value = row[h.colIndex];
         if (value === null || value === undefined || String(value).trim() === '') return;
         if (h.atomMatch) {
-          fieldBonds[h.atomMatch.atomKey] = { value, header: h.header, matchType: h.matchType, affinity: h.atomMatch.affinity, label: h.atomMatch.label };
+          fieldBonds[h.atomMatch.atomKey] = { value, header: h.header, matchType: h.matchType, affinity: h.atomMatch.affinity, label: h.atomMatch.label, sourceLocation: `${sheetName}, row ${idx + 2}, column “${h.header}”` };
         } else {
           unresolvedHeaders.push({ header: h.header, value });
         }
