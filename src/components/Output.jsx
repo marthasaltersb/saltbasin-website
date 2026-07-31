@@ -15,7 +15,7 @@ import {
 import { api } from '../lib/api.js';
 import BackLink from './BackLink.jsx';
 import PortfolioRequestPrompt from './PortfolioRequestFlow.jsx';
-import { renderBlockToHtml, buildBlocksFromLayerConfig, renderMemberFooterHtml } from '../lib/outputBlocks.js';
+import { renderBlockToHtml, buildStatBlocksFromLayerConfig, buildInfographicBlocksFromLayerConfig, renderMemberFooterHtml } from '../lib/outputBlocks.js';
 import { fetchCareerMaster, tierFillPct, toolWheelBucket } from '../lib/careerMaster.js';
 import { RenderSection } from './blocks/index.jsx';
 
@@ -164,7 +164,7 @@ function PrintModeActions({ onPrint }) {
 // print rule below strips it whenever the page sets
 // data-print-mode="static" before calling window.print(), giving a clean
 // static export that starts right at the content instead of the controls.
-function OutputFrame({ title, eyebrow, children, gated, hideTitle, printActions, printDocTitle, afterFooter }) {
+function OutputFrame({ title, eyebrow, children, gated, hideTitle, printActions, printDocTitle, afterFooter, subHeader }) {
   const { user } = useAuthState();
   const canPrint = !!user;
   return (
@@ -268,6 +268,11 @@ function OutputFrame({ title, eyebrow, children, gated, hideTitle, printActions,
             >
               {title}
             </h1>
+            {subHeader && (
+              <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.72rem', letterSpacing: '0.04em', color: 'var(--sbh-ink)', opacity: 0.75, marginBottom: '0.3rem' }}>
+                {subHeader}
+              </div>
+            )}
             <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--sbh-teal-deep)' }}>
               saltbasin.net · We build for the customer you keep
             </div>
@@ -1153,15 +1158,23 @@ const SERVICE_OFFERINGS = [
 // exists, resolves to `{ config: null }` so callers keep their existing
 // hardcoded layout as the fallback — no output type regresses for members
 // who haven't configured a template yet.
+// `?profile=<slug>` (CareerPortfolioHubOutput's existing convention) or
+// `?owner=<slug|me>` (used by the builder's live-preview iframe) — both
+// thread through to fetchCareerMaster's owner param so the right member's
+// data backs the /output/* page instead of silently defaulting to the
+// platform admin's (Betsy's) data (server/routes/careerMaster.js
+// resolveOwnerUserId falls back to the admin when no owner is given).
+// Shared so every /output/* page resolves this the same way instead of
+// duplicating the URLSearchParams read.
+function useOutputOwnerSlug() {
+  const location = useLocation();
+  return new URLSearchParams(location.search).get('owner') || new URLSearchParams(location.search).get('profile') || '';
+}
+
 function useOutputTemplateConfig(outputType) {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  // `?profile=<slug>` (CareerPortfolioHubOutput's existing convention) or
-  // `?owner=<slug|me>` (used by the builder's live-preview iframe) — both
-  // thread through to Career Master's owner= param so the right member's
-  // data backs the page instead of always defaulting to the platform
-  // admin's (Betsy's) data.
-  const owner = searchParams.get('owner') || searchParams.get('profile') || '';
+  const owner = useOutputOwnerSlug();
   const isPreviewDraft = searchParams.get('previewDraft') === '1';
   // `?preset=<templateId>` — view a specific named preset (e.g. from the
   // Resume Portfolio index) instead of the owner's primary template. Only
@@ -1270,10 +1283,27 @@ function OutputTemplateBody({ config, ctx, sitePages, master }) {
     items.push({ order: order++, key: 'l1-tagline', kind: 'html', html: `<div style="font-size:0.85rem;color:#8b9bae;font-style:italic;margin-bottom:0.75rem">${tagline}</div>` });
   }
 
+  // Infographics render before Sections content (case studies, job history,
+  // site sections) — a dashboard-style overview reads before the detail.
+  // Each infographic's own sequence (set in the Infographics tab) controls
+  // its position relative to other infographics; buildInfographicBlocksFromLayerConfig
+  // already sorts by that field.
+  const infographicBlocks = buildInfographicBlocksFromLayerConfig(config);
+  for (const block of infographicBlocks) {
+    items.push({ order: order++, key: `l3-${block.id}`, kind: 'html', html: renderBlockToHtml(block, ctx) });
+  }
+
   for (const sec of (config.layer4_sections?.sections || []).filter((s) => s.visible !== false)) {
     if (sec.sourceType === 'job_experience') {
       const job = (master?.jobs || []).find((j) => String(j.id) === String(sec.jobId));
       if (job) items.push({ order: order++, key: `l4-job-${sec.id}`, kind: 'html', html: buildJobExperienceHtml(job) });
+    } else if (sec.sourceType === 'case_study_engagement') {
+      // Reuses the exact same card component as the Case Study Portfolio
+      // output (CareerCaseStudyPortfolioOutput) — employer color band,
+      // pill badges, dark client-voice quote block — so a case study
+      // selected here looks identical to its portfolio-grid appearance.
+      const engagement = (master?.engagements || []).find((e) => String(e.id) === String(sec.engagementId));
+      if (engagement) items.push({ order: order++, key: `l4-case-${sec.id}`, kind: 'react', element: <div style={{ marginBottom: '1.5rem' }}><CareerCaseStudyCard e={engagement} /></div> });
     } else if (sec.sourceType === 'site_section') {
       const section = sitePages?.[sec.pageKey]?.sections?.find((s) => s.id === sec.sectionId);
       if (section) items.push({ order: order++, key: `l4-site-${sec.id}`, kind: 'react', element: <RenderSection section={section} mode="preview" /> });
@@ -1283,9 +1313,9 @@ function OutputTemplateBody({ config, ctx, sitePages, master }) {
     }
   }
 
-  const statBlocks = buildBlocksFromLayerConfig(config, ctx);
+  const statBlocks = buildStatBlocksFromLayerConfig(config, ctx);
   for (const block of statBlocks) {
-    items.push({ order: order++, key: `l23-${block.id}`, kind: 'html', html: renderBlockToHtml(block, ctx) });
+    items.push({ order: order++, key: `l2-${block.id}`, kind: 'html', html: renderBlockToHtml(block, ctx) });
   }
 
   if (!items.length) return null;
@@ -1313,6 +1343,7 @@ function MemberFooterSlot({ config }) {
 // ── Resume ──
 export function ResumeOutput() {
   const location = useLocation();
+  const ownerSlug = useOutputOwnerSlug();
   const { loading: authLoading, user } = useAuthState();
   const [page, setPage] = useState(null);
   const [wheel, setWheel] = useState(null);
@@ -1341,7 +1372,7 @@ export function ResumeOutput() {
         setWheel(home?.sections.find((s) => s.type === 'industryWheel')?.fields || {});
       })
       .catch((e) => setSiteError(e.message || 'Failed to load'));
-    fetchCareerMaster().then(setMaster);
+    fetchCareerMaster(ownerSlug).then(setMaster);
 
     fetch('/api/output-templates/primary?output_type=resume')
       .then(r => r.json())
@@ -1608,8 +1639,10 @@ const CASE_STUDY_SLUGS = {
 
 export function CaseStudyOutput() {
   const { slug } = useParams();
+  const ownerSlug = useOutputOwnerSlug();
   const { loading, user } = useAuthState();
   const [data, setData] = useState(null);
+  const [about, setAbout] = useState({});
   const [master, setMaster] = useState(null);
   const templateV2 = useOutputTemplateConfig('case-study');
   useEffect(() => {
@@ -1617,9 +1650,10 @@ export function CaseStudyOutput() {
       .then((site) => {
         const cases = site.pages['home']?.sections.find((s) => s.type === 'caseStudies')?.fields || {};
         setData(cases);
+        setAbout(getHomeAboutFields(site.pages['home']));
       })
       .catch(() => setData(null));
-    fetchCareerMaster().then(setMaster);
+    fetchCareerMaster(ownerSlug).then(setMaster);
   }, []);
 
   if (loading || !data || !master || templateV2.loading) return null;
@@ -1670,9 +1704,22 @@ export function CaseStudyOutput() {
 
   // ── 4-layer template-driven render (schemaVersion 2) ──
   if (templateV2.config && hasOutputLayerContent(templateV2.config)) {
+    // When the Sections tab has one or more Career Master case studies
+    // selected, this page is functioning as a curated case-study portfolio
+    // (potentially several engagements, independent of whichever single
+    // engagement the URL slug happens to point at) — the frame title should
+    // read as a portfolio, not borrow the URL-slug engagement's own name.
+    const isPortfolio = (templateV2.config.layer4_sections?.sections || []).some((s) => s.sourceType === 'case_study_engagement' && s.visible !== false);
+    const memberName = about.name || about.heading || 'Betsy Salter';
+    const frameTitle = isPortfolio ? `Case Study Portfolio - ${memberName}` : title;
+    const frameEyebrow = isPortfolio ? 'Case Study Portfolio' : (subtitle || 'Case Study');
+    // Legal-name disclosure line, distinct from the public "Betsy Salter"
+    // brand name — shown only on the portfolio-wide render, not per-engagement
+    // case study pages.
+    const frameSubHeader = isPortfolio ? 'Legal Name: Martha Elizabeth Salter' : undefined;
     const ctx = { title, subtitle, context, role, actions, impact, metrics, engagement, rollupCatalog: templateV2.rollupCatalog };
     return (
-      <OutputFrame title={title} eyebrow={subtitle || 'Case Study'} afterFooter={<MemberFooterSlot config={templateV2.config} />}>
+      <OutputFrame title={frameTitle} eyebrow={frameEyebrow} subHeader={frameSubHeader} afterFooter={<MemberFooterSlot config={templateV2.config} />}>
         <OutputTemplateBody config={templateV2.config} ctx={ctx} sitePages={templateV2.sitePages} master={master} />
       </OutputFrame>
     );
@@ -1884,15 +1931,47 @@ function CareerCaseStudyCard({ e }) {
   );
 }
 
+// Pre-configured quick filters (design-system §"Case Study Portfolio" quick
+// filter row) — curated keyword sets matched against the engagement's
+// title/roles/scenarios only (deliberately narrower than the free-text
+// search haystack below), since none of these three groupings map onto one
+// existing column. A broad match against full context/actions/outcomes text
+// was tried first and tested at 24/24 (every engagement's narrative mentions
+// "implementation" or "build" somewhere) — useless as a filter. Matching
+// only the curated title/roles/scenarios fields against real
+// career_engagements data (verified 2026-07-29) gives real separation:
+// Salesforce CPQ 13/24, Hands-On Configuration 18/24, Advisory Business
+// Architecture 14/24 (overlapping, as expected — many engagements are both).
+const QUICK_CASE_STUDY_FILTERS = [
+  { id: 'salesforce-cpq', label: 'Salesforce CPQ', keywords: ['cpq', 'apttus'] },
+  { id: 'hands-on-configuration', label: 'Hands-On Configuration', keywords: ['implementation', 'build', 'configur', 'specialist', 'integration', 'migration', 'coordinator', 'support', 'uat'] },
+  { id: 'advisory-business-architecture', label: 'Advisory Business Architecture', keywords: ['architect', 'advisory', 'strategic operator', 'gtm advisor', 'sme'] },
+];
+
+// Narrower field set for the quick filters above — title/roles/scenarios
+// only, not free-text narrative (see comment above).
+function engagementQuickFilterHaystack(e) {
+  return [e.clientDisplayName, e.name, ...(e.roles || []), ...(e.scenarios || [])].filter(Boolean).join(' ').toLowerCase();
+}
+
+function engagementSearchHaystack(e) {
+  return [
+    e.clientDisplayName, e.name, e.employer, e.industry, e.context, e.actions,
+    ...(e.roles || []), ...(e.scenarios || []), ...(e.outcomes || []), ...(e.metrics || []),
+  ].filter(Boolean).join(' ').toLowerCase();
+}
+
 export function CareerCaseStudyPortfolioOutput() {
+  const ownerSlug = useOutputOwnerSlug();
   const { loading: authLoading, user } = useAuthState();
   const [master, setMaster] = useState(null);
   const [search, setSearch] = useState('');
   const [employerFilter, setEmployerFilter] = useState('');
   const [industryFilter, setIndustryFilter] = useState('');
   const [scenarioFilter, setScenarioFilter] = useState('');
+  const [quickFilter, setQuickFilter] = useState('');
   const [printMode, setPrintMode] = useState('interactive');
-  useEffect(() => { fetchCareerMaster().then(setMaster); }, []);
+  useEffect(() => { fetchCareerMaster(ownerSlug).then(setMaster); }, [ownerSlug]);
 
   const isLoading = authLoading || !master;
   if (isLoading) return (
@@ -1948,17 +2027,25 @@ export function CareerCaseStudyPortfolioOutput() {
     );
   }
 
+  const activeQuickFilter = QUICK_CASE_STUDY_FILTERS.find((f) => f.id === quickFilter) || null;
   const filtered = engagements.filter((e) => {
     if (employerFilter && e.employer !== employerFilter) return false;
     if (industryFilter && e.industry !== industryFilter) return false;
     if (scenarioFilter && !(e.scenarios || []).includes(scenarioFilter)) return false;
+    if (activeQuickFilter) {
+      const hay = engagementQuickFilterHaystack(e);
+      if (!activeQuickFilter.keywords.some((kw) => hay.includes(kw))) return false;
+    }
     if (search) {
       const q = search.toLowerCase();
-      const hay = [e.clientDisplayName, e.employer, e.industry, e.context, e.actions, ...(e.scenarios || [])].join(' ').toLowerCase();
-      if (!hay.includes(q)) return false;
+      if (!engagementSearchHaystack(e).includes(q)) return false;
     }
     return true;
   });
+  const anyFilterActive = !!(employerFilter || industryFilter || scenarioFilter || quickFilter || search);
+  function resetAllFilters() {
+    setEmployerFilter(''); setIndustryFilter(''); setScenarioFilter(''); setQuickFilter(''); setSearch('');
+  }
 
   return (
     <OutputFrame title="Case Study Portfolio" eyebrow="Strategic Operator Portfolio" printActions={<PrintModeActions onPrint={(m) => triggerPrint(setPrintMode, m, `Betsy-Salter_Case-Study-Portfolio_${m === 'static' ? 'Static' : 'Interactive'}_${new Date().toISOString().slice(0, 10)}`)} />}>
@@ -1968,6 +2055,37 @@ export function CareerCaseStudyPortfolioOutput() {
           <p style={{ fontSize: '0.85rem', fontStyle: 'italic', color: '#5a5a5a', marginBottom: '1.5rem' }}>
             {portfolioTagline} · "I build for the customer you keep, not just the deal you close."
           </p>
+
+          {/* ── Pre-configured quick filters — curated one-click groupings,
+               separate from the free-text/dropdown filters below ── */}
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center', marginBottom: '0.85rem', fontFamily: 'sans-serif' }}>
+            {QUICK_CASE_STUDY_FILTERS.map((qf) => {
+              const active = quickFilter === qf.id;
+              return (
+                <button
+                  key={qf.id}
+                  onClick={() => setQuickFilter(active ? '' : qf.id)}
+                  style={{
+                    padding: '0.4rem 0.9rem', borderRadius: 20, fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer',
+                    border: active ? '1.5px solid #c4843a' : '1px solid #e8ddd0',
+                    background: active ? '#1b2a3b' : 'white',
+                    color: active ? '#f5edd8' : '#1b2a3b',
+                  }}
+                >
+                  {qf.label}
+                </button>
+              );
+            })}
+            {anyFilterActive && (
+              <button
+                onClick={resetAllFilters}
+                style={{ padding: '0.4rem 0.9rem', borderRadius: 20, fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer', border: '1px solid #e8ddd0', background: 'transparent', color: '#888' }}
+              >
+                ✕ Reset Filters
+              </button>
+            )}
+          </div>
+
           <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '1.5rem', fontFamily: 'sans-serif' }}>
             <input
               value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search case studies…"
@@ -2334,11 +2452,12 @@ function InvestorProfileDashboard({ master }) {
 }
 
 export function CareerMasterDatabaseOutput() {
+  const ownerSlug = useOutputOwnerSlug();
   const { loading: authLoading, user } = useAuthState();
   const [master, setMaster] = useState(null);
   const [tab, setTab] = useState('skills');
   const [printMode, setPrintMode] = useState('interactive');
-  useEffect(() => { fetchCareerMaster().then(setMaster); }, []);
+  useEffect(() => { fetchCareerMaster(ownerSlug).then(setMaster); }, [ownerSlug]);
 
   const isLoading = authLoading || !master;
   if (isLoading) return (
@@ -2597,7 +2716,7 @@ export function CareerPortfolioHubOutput() {
   const [resumeUrl, setResumeUrl] = useState('/output/resume');
   const [portfolioPresetCount, setPortfolioPresetCount] = useState(0);
   const targetProfile = new URLSearchParams(location.search).get('profile');
-  useEffect(() => { fetchCareerMaster().then(setMaster); }, []);
+  useEffect(() => { fetchCareerMaster(targetProfile || '').then(setMaster); }, [targetProfile]);
   useEffect(() => {
     // The hub always shows the site owner's portfolio, so without an explicit
     // ?profile= it resolves the owner's primary preset — never the viewer's.
@@ -2737,6 +2856,7 @@ export function ResumePortfolioOutput() {
 // A single printable document stacking all three views — for members who
 // want the whole thing as one PDF instead of three separate saves.
 export function CareerFullPortfolioOutput() {
+  const ownerSlug = useOutputOwnerSlug();
   const { loading: authLoading, user } = useAuthState();
   const [page, setPage] = useState(null);
   const [wheel, setWheel] = useState(null);
@@ -2747,7 +2867,7 @@ export function CareerFullPortfolioOutput() {
       setPage(home);
       setWheel(home?.sections.find((s) => s.type === 'industryWheel')?.fields || {});
     }).catch(() => {});
-    fetchCareerMaster().then(setMaster);
+    fetchCareerMaster(ownerSlug).then(setMaster);
   }, []);
 
   const isLoading = authLoading || !master || !page;
@@ -2839,6 +2959,7 @@ export function CareerFullPortfolioOutput() {
 // Showcases core domains, niche solutions, industry experience, and technology
 // in a multi-column boho-style card layout adapted to SB brand.
 export function DomainsOutput() {
+  const ownerSlug = useOutputOwnerSlug();
   const { loading, user } = useAuthState();
   const [about, setAbout] = useState({});
   const [wheel, setWheel] = useState({});
@@ -2849,7 +2970,7 @@ export function DomainsOutput() {
       setAbout(getHomeAboutFields(home));
       setWheel(home?.sections.find(s => s.type === 'industryWheel')?.fields || {});
     }).catch(() => {});
-    fetchCareerMaster().then(setMaster);
+    fetchCareerMaster(ownerSlug).then(setMaster);
   }, []);
 
   if (loading || !master) return null;
@@ -3078,9 +3199,10 @@ function computeHeroMetrics(master) {
 }
 
 export function StrategicOperatorOutput() {
+  const ownerSlug = useOutputOwnerSlug();
   const { loading: authLoading, user } = useAuthState();
   const [master, setMaster] = useState(null);
-  useEffect(() => { fetchCareerMaster().then(setMaster); }, []);
+  useEffect(() => { fetchCareerMaster(ownerSlug).then(setMaster); }, [ownerSlug]);
 
   const isLoading = authLoading || !master;
   if (isLoading) return (
@@ -3212,9 +3334,11 @@ export function StrategicOperatorOutput() {
 }
 
 export function PortfolioAppendixOutput() {
+  const ownerSlug = useOutputOwnerSlug();
   const { loading: authLoading, user } = useAuthState();
   const [master, setMaster] = useState(null);
-  useEffect(() => { fetchCareerMaster().then(setMaster); }, []);
+  const [printMode, setPrintMode] = useState('interactive');
+  useEffect(() => { fetchCareerMaster(ownerSlug).then(setMaster); }, [ownerSlug]);
 
   const isLoading = authLoading || !master;
   if (isLoading) return (
@@ -3232,8 +3356,8 @@ export function PortfolioAppendixOutput() {
             kind="portfolio appendix"
             teaser={{
               label: 'Industry & Skills Proficiency Dashboard',
-              paragraphs: ['Proficiency-tier breakdown, category rollups, and a full skills inventory.'],
-              bullets: [`${master.skills.length} skills tracked`, `${master.engagements.length} engagements`, 'Live proficiency distribution'],
+              paragraphs: ['Proficiency-tier breakdown, category rollups, career timeline, tool inventory, and certifications — the full Career Master database.'],
+              bullets: [`${master.skills.length} skills tracked`, `${master.jobs.length} roles`, `${master.tools.length} tools`, `${master.engagements.length} engagements`],
             }}
           />
         ) : (
@@ -3245,6 +3369,9 @@ export function PortfolioAppendixOutput() {
 
   const skills = master.skills;
   const engagements = master.engagements;
+  const jobs = sortMostRecentRoles(master.jobs || []);
+  const tools = [...(master.tools || [])].sort((a, b) => (TIER_ORDER.indexOf(a.tier) - TIER_ORDER.indexOf(b.tier)) || (Number(b.numRoles) || 0) - (Number(a.numRoles) || 0));
+  const certifications = master.certifications || [];
 
   const tierCounts = TIER_ORDER.reduce((acc, t) => ({ ...acc, [t]: skills.filter((s) => s.tier === t).length }), {});
   const totalSkills = skills.length || 1;
@@ -3275,8 +3402,8 @@ export function PortfolioAppendixOutput() {
   const sortedSkills = [...skills].sort((a, b) => (a.category || '').localeCompare(b.category || '') || TIER_ORDER.indexOf(a.tier) - TIER_ORDER.indexOf(b.tier));
 
   return (
-    <OutputFrame title="Portfolio Appendix" eyebrow="Industry & Skills Proficiency Dashboard" printDocTitle={`Betsy-Salter_Portfolio-Appendix_${new Date().toISOString().slice(0, 10)}`}>
-      <div style={{ fontFamily: 'Georgia, serif', color: '#1b2a3b' }}>
+    <OutputFrame title="Portfolio Appendix" eyebrow="Industry & Skills Proficiency Dashboard" printActions={<PrintModeActions onPrint={(m) => triggerPrint(setPrintMode, m, `Betsy-Salter_Portfolio-Appendix_${m === 'static' ? 'Static' : 'Interactive'}_${new Date().toISOString().slice(0, 10)}`)} />}>
+      <div style={{ fontFamily: 'Georgia, serif', color: '#1b2a3b' }} data-print-mode={printMode}>
 
         {/* ── Proficiency Level Definitions ── */}
         <section style={{ marginBottom: '1.75rem' }}>
@@ -3387,6 +3514,85 @@ export function PortfolioAppendixOutput() {
             </tbody>
           </table>
         </section>
+
+        {/* ── Career Timeline (Career Master career_jobs — the full role
+             history, not the website's About/timeline copy) ── */}
+        {jobs.length > 0 && (
+          <section style={{ marginTop: '1.75rem' }}>
+            <DomainsHead>Career Timeline ({jobs.length} roles)</DomainsHead>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
+              <thead>
+                <tr style={{ background: '#1b2a3b', color: 'white' }}>
+                  <th style={{ textAlign: 'left', padding: '0.4rem 0.6rem', fontSize: '0.6rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Employer</th>
+                  <th style={{ textAlign: 'left', padding: '0.4rem 0.6rem', fontSize: '0.6rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Title</th>
+                  <th style={{ textAlign: 'left', padding: '0.4rem 0.6rem', fontSize: '0.6rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Dates</th>
+                  <th style={{ textAlign: 'left', padding: '0.4rem 0.6rem', fontSize: '0.6rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Industry / Function</th>
+                </tr>
+              </thead>
+              <tbody>
+                {jobs.map((j, i) => (
+                  <tr key={j.id} style={{ background: i % 2 ? '#faf8f4' : 'white', pageBreakInside: 'avoid' }}>
+                    <td style={{ padding: '0.35rem 0.6rem', borderBottom: '0.5px solid rgba(0,0,0,0.06)', fontWeight: 600 }}>{j.company}</td>
+                    <td style={{ padding: '0.35rem 0.6rem', borderBottom: '0.5px solid rgba(0,0,0,0.06)' }}>{j.title}</td>
+                    <td style={{ padding: '0.35rem 0.6rem', borderBottom: '0.5px solid rgba(0,0,0,0.06)', color: '#5a5a5a' }}>{[j.startDate, j.endDate].filter(Boolean).join(' – ')}</td>
+                    <td style={{ padding: '0.35rem 0.6rem', borderBottom: '0.5px solid rgba(0,0,0,0.06)', color: '#5a5a5a' }}>{[j.industry, j.jobFunction].filter(Boolean).join(' · ')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        )}
+
+        {/* ── Tools & Platform Inventory (career_tools — every tool tracked,
+             not just the Expert/Advanced highlight bars used elsewhere) ── */}
+        {tools.length > 0 && (
+          <section style={{ marginTop: '1.75rem' }}>
+            <DomainsHead>Tools &amp; Platform Inventory ({tools.length} tools)</DomainsHead>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.76rem' }}>
+              <thead>
+                <tr style={{ background: '#1b2a3b', color: 'white' }}>
+                  <th style={{ textAlign: 'left', padding: '0.4rem 0.6rem', fontSize: '0.6rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Tool</th>
+                  <th style={{ textAlign: 'left', padding: '0.4rem 0.6rem', fontSize: '0.6rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Category</th>
+                  <th style={{ textAlign: 'left', padding: '0.4rem 0.6rem', fontSize: '0.6rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Tier</th>
+                  <th style={{ textAlign: 'left', padding: '0.4rem 0.6rem', fontSize: '0.6rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>First Used</th>
+                  <th style={{ textAlign: 'left', padding: '0.4rem 0.6rem', fontSize: '0.6rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Roles</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tools.map((t, i) => (
+                  <tr key={t.id} style={{ background: i % 2 ? '#faf8f4' : 'white', pageBreakInside: 'avoid' }}>
+                    <td style={{ padding: '0.35rem 0.6rem', borderBottom: '0.5px solid rgba(0,0,0,0.06)', fontWeight: 600 }}>
+                      {t.currentName || t.nameUsed}
+                      {t.currentName && t.nameUsed && t.currentName !== t.nameUsed && (
+                        <span style={{ fontWeight: 400, fontStyle: 'italic', color: '#999', fontSize: '0.68rem' }}> · formerly {t.nameUsed}</span>
+                      )}
+                    </td>
+                    <td style={{ padding: '0.35rem 0.6rem', borderBottom: '0.5px solid rgba(0,0,0,0.06)', color: '#5a5a5a' }}>{t.category}</td>
+                    <td style={{ padding: '0.35rem 0.6rem', borderBottom: '0.5px solid rgba(0,0,0,0.06)', color: TIER_BAR_COLOR[t.tier] || '#5a5a5a', fontWeight: 700 }}>{t.tier}</td>
+                    <td style={{ padding: '0.35rem 0.6rem', borderBottom: '0.5px solid rgba(0,0,0,0.06)', color: '#5a5a5a' }}>{t.firstUsed}</td>
+                    <td style={{ padding: '0.35rem 0.6rem', borderBottom: '0.5px solid rgba(0,0,0,0.06)', color: '#5a5a5a' }}>{t.numRoles}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        )}
+
+        {/* ── Certifications (career_certifications) ── */}
+        {certifications.length > 0 && (
+          <section style={{ marginTop: '1.75rem' }}>
+            <DomainsHead>Certifications ({certifications.length})</DomainsHead>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem' }}>
+              {certifications.map((c) => (
+                <div key={c.id} style={{ background: '#faf8f4', borderLeft: '3px solid #c4843a', padding: '0.65rem 0.8rem', pageBreakInside: 'avoid' }}>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#1b2a3b' }}>{c.name}</div>
+                  <div style={{ fontSize: '0.68rem', color: '#5a5a5a', marginTop: '0.15rem' }}>{[c.issuer, c.category].filter(Boolean).join(' · ')}</div>
+                  <div style={{ fontSize: '0.66rem', color: '#888', marginTop: '0.15rem' }}>{[c.status, c.firstEarned && `Earned ${c.firstEarned}`, c.expires && `Expires ${c.expires}`].filter(Boolean).join(' · ')}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </OutputFrame>
   );

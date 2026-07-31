@@ -1,6 +1,15 @@
 import crypto from 'node:crypto';
 import { db } from '../db.js';
+import { grantCustomerViewEntitlement } from './customerEntitlements.js';
+import { classifyEmailDomain, emailDomainOf } from './emailDomain.js';
+import { getCurrent } from './currentRegistry.js';
+import { recordCurrentArc } from './eidosBonding.js';
 
+// sql.unsafe(query, params) (server/db.js) double-encodes a pre-JSON.stringify'd
+// string into a ::jsonb param (the column ends up holding a JSON *string*
+// scalar, not an object — jsonb_typeof() shows 'string' — silently masked
+// everywhere a reader does `row.metadata?.x || default`). Pass the raw
+// object/array and let postgres.js serialize it.
 async function ensureRod({ rodType, leadId = null, userId = null, personalProfileId = null, orgId = null, stage, metadata = {} }) {
   const existing = await db.prepare(`
     SELECT * FROM journey_data_rods
@@ -12,10 +21,10 @@ async function ensureRod({ rodType, leadId = null, userId = null, personalProfil
   const result = await db.prepare(`
     INSERT INTO journey_data_rods (rod_type, lead_id, user_id, personal_profile_id, org_id, current_stage, metadata, created_at, updated_at)
     VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8,$8) RETURNING id
-  `).run(rodType, leadId, userId, personalProfileId, orgId, stage, JSON.stringify(metadata), now);
+  `).run(rodType, leadId, userId, personalProfileId, orgId, stage, metadata, now);
   const rodId = Number(result.lastInsertRowid);
   await db.prepare(`INSERT INTO journey_rod_events (rod_id,event_type,to_stage,metadata,created_at) VALUES ($1,'rod_created',$2,$3::jsonb,$4)`)
-    .run(rodId, stage, JSON.stringify(metadata), now);
+    .run(rodId, stage, metadata, now);
   return await db.prepare(`SELECT * FROM journey_data_rods WHERE id=$1`).get(rodId);
 }
 
@@ -38,6 +47,14 @@ export async function ensureMemberJourneyRods(userId, leadId = null) {
   const member = await ensureRod({ rodType: 'member', userId, personalProfileId: profile?.id || null, stage: 'member_active', metadata: { sourceLeadId: leadId } });
   const orgs = await db.prepare(`SELECT org_id FROM org_memberships WHERE user_id=$1`).all(userId);
   for (const org of orgs) await ensureMemberOrganizationRods(userId, Number(org.org_id));
+  // Every member gets a Proposal/Member Experience Channel Rod — the guided
+  // 9-stage journey that is now the landing experience on /member login (see
+  // proposalExperienceRegistry.js's ensureProposalExperienceRod). Import
+  // inlined here (not top-level) to avoid a circular import, since
+  // tributaryRegistry.js -> proposalExperienceRegistry.js and this module is
+  // already imported broadly.
+  const { ensureProposalExperienceRod } = await import('./proposalExperienceRegistry.js');
+  await ensureProposalExperienceRod(member);
   return member;
 }
 
@@ -73,7 +90,7 @@ export async function transitionRodOwnership(rodId, { toUserId = null, toOrgId =
     WHERE id = $5
   `).run(clearLeadId, toUserId, toOrgId, now, rodId);
   await db.prepare(`INSERT INTO journey_rod_events (rod_id,event_type,metadata,created_at) VALUES ($1,'ownership_transitioned',$2::jsonb,$3)`)
-    .run(rodId, JSON.stringify({ toUserId, toOrgId }), now);
+    .run(rodId, { toUserId, toOrgId }, now);
   return db.prepare(`SELECT * FROM journey_data_rods WHERE id=$1`).get(rodId);
 }
 
@@ -87,13 +104,13 @@ export async function upsertAccountRecord({ accountType, userId = null, orgId = 
   const existing = await db.prepare(`SELECT id FROM account_records WHERE ${conflictCol} = $1`).get(conflictVal);
   if (existing) {
     await db.prepare(`UPDATE account_records SET display_name = COALESCE($1, display_name), metadata = metadata || $2::jsonb, updated_at = $3 WHERE id = $4`)
-      .run(displayName, JSON.stringify(metadata), now, existing.id);
+      .run(displayName, metadata, now, existing.id);
     return existing;
   }
   const result = await db.prepare(`
     INSERT INTO account_records (account_type, user_id, org_id, lead_id, display_name, metadata, created_at, updated_at)
     VALUES ($1,$2,$3,$4,$5,$6::jsonb,$7,$7) RETURNING id
-  `).run(accountType, userId, orgId, leadId, displayName, JSON.stringify(metadata), now);
+  `).run(accountType, userId, orgId, leadId, displayName, metadata, now);
   return { id: Number(result.lastInsertRowid) };
 }
 
@@ -106,8 +123,14 @@ export async function upsertAccountRecord({ accountType, userId = null, orgId = 
 // 'qualified_opportunity' gate, evaluateJourneyRod (below) promotes it —
 // transitions the SAME rod row from lead-linked to org-linked — which is
 // this lead "becoming" the organization's Revenue Journey Data Rod.
-export async function promoteLeadToOrganizationLead(memberUserId, { orgSignalSource = null, emailDomain = null, orgName = null } = {}) {
-  const member = await db.prepare(`SELECT email FROM users WHERE id=$1`).get(memberUserId);
+// `memberUserId` is nullable — a real Member Entitlement/conversion isn't
+// required to create an org-first Revenue lead (see the BestyStaff
+// pre-conversion path in server/routes/bestyStaff.js, which has a lead's
+// email but no `users` row yet). `sourceEmail` covers that case; a real
+// member's own `users.email` still wins when `memberUserId` is given.
+export async function promoteLeadToOrganizationLead(memberUserId, { orgSignalSource = null, emailDomain = null, orgName = null, sourceEmail = null } = {}) {
+  const member = memberUserId ? await db.prepare(`SELECT email FROM users WHERE id=$1`).get(memberUserId) : null;
+  const resolvedEmail = member?.email || sourceEmail || null;
   const publicId = crypto.randomBytes(12).toString('hex');
   const now = Date.now();
   const result = await db.prepare(`
@@ -117,15 +140,64 @@ export async function promoteLeadToOrganizationLead(memberUserId, { orgSignalSou
   const leadId = Number(result.lastInsertRowid);
   const rod = await ensureLeadRevenueRod(leadId, {
     isOrganizationLead: true, sourceMemberUserId: memberUserId, orgSignalSource, emailDomain,
-    memberEmail: member?.email || null,
+    memberEmail: resolvedEmail,
   });
   return { leadId, publicId, rod };
+}
+
+// Existing-member counterpart to promoteLeadToOrganizationLead above — same
+// "email domain is an organization signal" idea, but reachable from a
+// member verifying a work email (server/routes/members.js) instead of a
+// lead's revenue rod reaching qualified_opportunity. Idempotent: a second
+// call for the same user+domain finds the existing org/membership/rods and
+// no-ops the creates. Never called for a free-mail domain — those aren't a
+// real organization signal (classifyEmailDomain is the same shared check
+// leads.js/bestyStaff.js already use, not a second copy of the domain list).
+export async function ensureCustomerOrgFromWorkEmail(userId, email) {
+  const domain = emailDomainOf(email);
+  if (!domain || classifyEmailDomain(email) !== 'custom') return null;
+
+  let org = await db.prepare(`SELECT id FROM organization_profiles WHERE email_domain=$1`).get(domain);
+  let isNewOrg = false;
+  if (!org) {
+    const slug = `org-${domain.replace(/[^a-z0-9]+/g, '-')}-${crypto.randomBytes(3).toString('hex')}`;
+    const now = Date.now();
+    const result = await db.prepare(`
+      INSERT INTO organization_profiles (slug, name, org_type, email_domain, created_at, updated_at)
+      VALUES ($1,$2,'client_org',$3,$4,$4) RETURNING id
+    `).run(slug, domain, domain, now);
+    org = { id: Number(result.lastInsertRowid) };
+    isNewOrg = true;
+  }
+  const orgId = Number(org.id);
+
+  // Every org must have at least one admin (org_memberships' own schema
+  // comment, db.js) — the person whose work email created the org is its
+  // founding admin, same precedent as promoteOrganizationLeadRod below.
+  // Someone verifying a work email for an org that already exists joins as
+  // an ordinary member instead.
+  await db.prepare(`
+    INSERT INTO org_memberships (user_id, org_id, role) VALUES ($1,$2,$3)
+    ON CONFLICT (user_id, org_id) DO NOTHING
+  `).run(userId, orgId, isNewOrg ? 'admin' : 'member');
+
+  await ensureMemberOrganizationRods(userId, orgId);
+  const customer = await db.prepare(`SELECT * FROM journey_data_rods WHERE rod_type='customer' AND user_id=$1 AND org_id=$2`).get(userId, orgId);
+  if (customer) {
+    await upsertJourneyEvidence(customer.id, {
+      moleculeKey: 'work_email_domain_verified', value: domain, sourceType: 'verification', sourceReference: `user_email_domain:${domain}`,
+    });
+  }
+
+  await grantCustomerViewEntitlement(userId, orgId);
+
+  return { orgId, customerRod: customer };
 }
 
 export async function recordRodEvent(rodId, { eventType, fromStage = null, toStage = null, scoreDelta = 0, potentialRevenueDeltaCents = 0, metadata = {} }) {
   const now = Date.now();
   await db.prepare(`INSERT INTO journey_rod_events (rod_id,event_type,from_stage,to_stage,score_delta,potential_revenue_delta_cents,metadata,created_at)
-    VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8)`).run(rodId,eventType,fromStage,toStage,scoreDelta,potentialRevenueDeltaCents,JSON.stringify(metadata),now);
+    VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8)`).run(rodId,eventType,fromStage,toStage,scoreDelta,potentialRevenueDeltaCents,metadata,now);
   await db.prepare(`UPDATE journey_data_rods SET current_stage=COALESCE($1,current_stage), stage_score=stage_score+$2, potential_revenue_cents=potential_revenue_cents+$3, updated_at=$4 WHERE id=$5`)
     .run(toStage,scoreDelta,potentialRevenueDeltaCents,now,rodId);
 }
@@ -210,7 +282,28 @@ export async function evaluateJourneyRod(rodId, { requestJudgment = true } = {})
     await promoteOrganizationLeadRod(rodId, rod);
   }
 
-  return { rod: await db.prepare(`SELECT * FROM journey_data_rods WHERE id=$1`).get(rodId), scenario, thresholdProfile, dimensions: Object.fromEntries(dimensions), eligibleStage, gates: results };
+  // Channel Current enrichment — additive only, no change to the gate
+  // computation above. When the scenario declares a current_key, resolve
+  // the Current definition and record this evaluation as a Current Arc
+  // (event-sourced in journey_rod_events, never a second "current state"
+  // row) so the Current's temporal trajectory is reconstructable later.
+  // When current_key is unset (every pre-existing scenario), `current`
+  // resolves to null and nothing is recorded — zero behavior change.
+  let current = null;
+  if (scenario.current_key) {
+    current = await getCurrent(scenario.current_key, rod.org_id);
+    if (current) {
+      const portStageMaturity = results.length ? results.filter((r) => r.passed).length / results.length : 0;
+      await recordCurrentArc(rodId, {
+        currentKey: scenario.current_key,
+        portStage: eligibleStage,
+        portStageMaturity,
+        stateSnapshot: { dimensions: Object.fromEntries(dimensions), gates: results.map((r) => ({ stageKey: r.stageKey, passed: r.passed })) },
+      });
+    }
+  }
+
+  return { rod: await db.prepare(`SELECT * FROM journey_data_rods WHERE id=$1`).get(rodId), scenario, thresholdProfile, dimensions: Object.fromEntries(dimensions), eligibleStage, gates: results, current };
 }
 
 // Creates (or reuses) the organization_profiles row for a qualifying Member
@@ -252,14 +345,14 @@ export async function upsertJourneyEvidence(rodId, { moleculeKey, value, sourceT
   await db.prepare(`INSERT INTO journey_rod_evidence (rod_id,molecule_key,value,source_type,source_reference,actor_key,confidence,observed_at,metadata)
     VALUES ($1,$2,$3::jsonb,$4,$5,$6,$7,$8,$9::jsonb)
     ON CONFLICT (rod_id,molecule_key,source_reference) DO UPDATE SET value=EXCLUDED.value,confidence=EXCLUDED.confidence,observed_at=EXCLUDED.observed_at,metadata=EXCLUDED.metadata`)
-    .run(rodId,moleculeKey,JSON.stringify(value),sourceType,reference,actorKey,confidence,Date.now(),JSON.stringify(metadata));
+    .run(rodId,moleculeKey,value,sourceType,reference,actorKey,confidence,Date.now(),metadata);
   return evaluateJourneyRod(rodId);
 }
 
 export async function requestJourneyDecision(rodId, decisionType, proposedAction, humanPrompt) {
-  const existing = await db.prepare(`SELECT id FROM journey_rod_decisions WHERE rod_id=$1 AND decision_type=$2 AND proposed_action=$3::jsonb AND status='pending'`).get(rodId,decisionType,JSON.stringify(proposedAction));
+  const existing = await db.prepare(`SELECT id FROM journey_rod_decisions WHERE rod_id=$1 AND decision_type=$2 AND proposed_action=$3::jsonb AND status='pending'`).get(rodId,decisionType,proposedAction);
   if (existing) return existing;
   const result = await db.prepare(`INSERT INTO journey_rod_decisions (rod_id,decision_type,proposed_action,human_prompt,requested_at) VALUES ($1,$2,$3::jsonb,$4,$5) RETURNING id`)
-    .run(rodId,decisionType,JSON.stringify(proposedAction),humanPrompt,Date.now());
+    .run(rodId,decisionType,proposedAction,humanPrompt,Date.now());
   return { id: Number(result.lastInsertRowid) };
 }

@@ -46,10 +46,10 @@ const SECTION_THEME_OPTS = [
 function segBtnStyle(selected) {
   return {
     padding: '0.35rem 0.75rem',
-    background: selected ? 'rgba(196,132,58,0.18)' : 'transparent',
-    border: '0.5px solid rgba(139,155,174,0.25)',
+    background: selected ? 'var(--sb-admin-gold-tint)' : 'transparent',
+    border: '0.5px solid var(--sb-admin-border-strong)',
     borderRadius: 'var(--sb-radius)',
-    color: selected ? 'var(--sb-gold)' : 'var(--sb-dusty)',
+    color: selected ? 'var(--sb-admin-gold-warm)' : 'var(--sb-admin-text-soft)',
     fontSize: '0.68rem',
     letterSpacing: '0.05em',
     cursor: 'pointer',

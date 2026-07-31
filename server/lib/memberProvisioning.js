@@ -20,7 +20,7 @@ async function advanceStage(rodId, toStage, eventType, metadata = {}) {
   const now = Date.now();
   await db.prepare(`UPDATE journey_data_rods SET current_stage=$1, updated_at=$2 WHERE id=$3`).run(toStage, now, rodId);
   await db.prepare(`INSERT INTO journey_rod_events (rod_id,event_type,to_stage,metadata,created_at) VALUES ($1,$2,$3,$4::jsonb,$5)`)
-    .run(rodId, eventType, toStage, JSON.stringify(metadata), now);
+    .run(rodId, eventType, toStage, metadata, now);
 }
 
 // Does this user's account already have working login credentials that

@@ -18,13 +18,52 @@ import { toast } from '../../lib/toast.js';
 const TABS = ['Header / Footer', 'Stat Cards', 'Infographics', 'Sections'];
 
 const INFOGRAPHIC_TYPES = [
-  { type: 'capacity-gauge', label: 'Capacity Gauge' },
-  { type: 'bar-chart-h', label: 'Bar Chart (Horizontal)' },
-  { type: 'bar-chart-v', label: 'Bar Chart (Vertical)' },
-  { type: 'venn-overlap', label: 'Overlap (Venn)' },
-  { type: 'cert-badges', label: 'Certification Badges' },
-  { type: 'tool-usage-snapshot', label: 'Tool & Tech Snapshot' },
+  { type: 'capacity-gauge', label: 'Capacity Gauge', needsSource: 'key' },
+  { type: 'bar-chart-h', label: 'Bar Chart (Horizontal)', needsSource: 'group' },
+  { type: 'bar-chart-v', label: 'Bar Chart (Vertical)', needsSource: 'group' },
+  { type: 'venn-overlap', label: 'Overlap (Venn)', needsSource: null },
+  { type: 'cert-badges', label: 'Certification Badges', needsSource: null },
+  { type: 'tool-usage-snapshot', label: 'Tool & Tech Snapshot', needsSource: null },
 ];
+
+// Friendly labels for the grouped rollup-key prefixes computed server-side
+// (server/lib/rollupMetrics.js computeStaticRollups) — covers all six
+// Career Master objects (skills, jobs, tools, case studies, certifications,
+// domains). Falls back to the raw prefix for any future grouping added
+// there without a matching label here.
+const ROLLUP_GROUP_LABELS = {
+  skills_by_category: 'Skills — by Category',
+  jobs_by_industry: 'Roles — by Industry',
+  tools_by_bucket: 'Tools — by Wheel Bucket',
+  engagements_by_industry: 'Case Studies — by Industry',
+  engagements_by_employer: 'Case Studies — by Employer',
+  certifications_by_category: 'Certifications — by Category',
+  certifications_by_status: 'Certifications — by Status',
+  domains_by_group: 'Domains — by Group',
+};
+
+// Bar charts (Layer 3) read a GROUP of rollup rows sharing a `prefix:value`
+// key (e.g. every `skills_by_category:*` row) — one bar per value. Derived
+// from whatever grouped keys are actually present in the live rollup
+// catalog, so a member with no certifications simply won't see a
+// "Certifications — by Category" option rather than an empty chart.
+function rollupGroupOptions(rollupCatalog) {
+  const seen = new Map();
+  for (const r of rollupCatalog?.staticRollups || []) {
+    if (!r.key.includes(':')) continue;
+    const prefix = r.key.split(':')[0];
+    if (!seen.has(prefix)) seen.set(prefix, ROLLUP_GROUP_LABELS[prefix] || prefix);
+  }
+  return [...seen.entries()].map(([value, label]) => ({ value, label }));
+}
+
+// Capacity Gauge (Layer 3) reads a SINGLE rollup value by exact key —
+// offers every static + delta rollup key present in the catalog.
+function rollupKeyOptions(rollupCatalog) {
+  const statics = (rollupCatalog?.staticRollups || []).map((r) => ({ value: r.key, label: r.label }));
+  const deltas = (rollupCatalog?.deltaRollups || []).map((r) => ({ value: r.key, label: r.label }));
+  return [...statics, ...deltas];
+}
 
 // Where a preview iframe should point for a given output type. Resume /
 // one-pager / build-summary need no extra path segment; proposal needs a
@@ -132,6 +171,7 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
   const [master, setMaster] = useState(null);
   const [tab, setTab] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [newInfographic, setNewInfographic] = useState({ type: 'bar-chart-v', source: '', title: '' });
   const iframeRef = useRef(null);
   const postTimer = useRef(null);
 
@@ -378,23 +418,94 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
 
             {tab === 2 && (
               <div style={S.card}>
-                <div style={S.label}>Infographic Blocks</div>
-                {INFOGRAPHIC_TYPES.map((it) => {
-                  const selected = config.layer3_infographics.items.some((i) => i.blockType === it.type);
-                  return (
-                    <span key={it.type} style={S.chip(selected)} onClick={() => {
-                      const items = selected
-                        ? config.layer3_infographics.items.filter((i) => i.blockType !== it.type)
-                        : [...config.layer3_infographics.items, { id: `infographic-${it.type}`, blockType: it.type, sourceKey: '', params: { title: it.label }, order: config.layer3_infographics.items.length, visible: true }];
-                      update('layer3_infographics.items', items);
-                    }}>
-                      {it.label}
-                    </span>
-                  );
-                })}
-                <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.75rem', lineHeight: 1.6 }}>
-                  Bar charts read from the rollup-count categories in the Stat Cards tab. Certification badges pull finance/banking/accounting/investing certs marked in Career Master. Tool & Tech Snapshot reflects actual engagement usage, not a static list.
+                <div style={S.label}>+ Add Infographic</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem', marginBottom: '0.6rem' }}>
+                  <select
+                    value={newInfographic.type}
+                    onChange={(e) => setNewInfographic((p) => ({ ...p, type: e.target.value, source: '' }))}
+                    style={{ padding: '0.5rem 0.7rem', borderRadius: 7, border: '0.5px solid rgba(0,0,0,0.18)', fontSize: '0.8rem' }}
+                  >
+                    {INFOGRAPHIC_TYPES.map((it) => <option key={it.type} value={it.type}>{it.label}</option>)}
+                  </select>
+                  <input
+                    style={S.input}
+                    placeholder="Title (optional)"
+                    value={newInfographic.title}
+                    onChange={(e) => setNewInfographic((p) => ({ ...p, title: e.target.value }))}
+                  />
                 </div>
+                {(() => {
+                  const typeDef = INFOGRAPHIC_TYPES.find((it) => it.type === newInfographic.type);
+                  if (!typeDef?.needsSource) return null;
+                  const options = typeDef.needsSource === 'group' ? rollupGroupOptions(rollupCatalog) : rollupKeyOptions(rollupCatalog);
+                  return (
+                    <select
+                      value={newInfographic.source}
+                      onChange={(e) => setNewInfographic((p) => ({ ...p, source: e.target.value }))}
+                      style={{ padding: '0.5rem 0.7rem', borderRadius: 7, border: '0.5px solid rgba(0,0,0,0.18)', fontSize: '0.8rem', width: '100%', marginBottom: '0.6rem' }}
+                    >
+                      <option value="">— Select which Career Master data rolls up into this infographic —</option>
+                      {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                  );
+                })()}
+                <button
+                  style={S.btn('outline')}
+                  disabled={!!INFOGRAPHIC_TYPES.find((it) => it.type === newInfographic.type)?.needsSource && !newInfographic.source}
+                  onClick={() => {
+                    const typeDef = INFOGRAPHIC_TYPES.find((it) => it.type === newInfographic.type);
+                    const item = {
+                      id: `infographic-${newInfographic.type}-${Date.now()}`,
+                      blockType: newInfographic.type,
+                      sourceKey: newInfographic.source || '',
+                      params: { title: newInfographic.title || typeDef.label },
+                      order: config.layer3_infographics.items.length,
+                      visible: true,
+                    };
+                    update('layer3_infographics.items', [...config.layer3_infographics.items, item]);
+                    setNewInfographic({ type: 'bar-chart-v', source: '', title: '' });
+                  }}
+                >
+                  + Add
+                </button>
+
+                <div style={{ fontSize: '0.75rem', color: '#888', margin: '0.9rem 0', lineHeight: 1.6 }}>
+                  Bar charts and the capacity gauge read from a Career Master rollup you pick — skills, roles, tools, case studies, certifications, or domains. Certification badges pull finance/banking/accounting/investing certs marked in Career Master. Tool & Tech Snapshot reflects actual engagement usage. Overlap (Venn), Certification Badges, and Tool & Tech Snapshot always read their own fixed rollup — no source to pick.
+                </div>
+                {!rollupCatalog && <div style={{ fontSize: '0.76rem', color: '#aaa', marginBottom: '0.75rem' }}>Loading Career Master rollups…</div>}
+
+                {config.layer3_infographics.items.length > 0 ? (
+                  <>
+                    <div style={S.label}>
+                      Configured Infographics — render first, before Site Sections / Case Studies / Job Experience; sequence controls order among infographics only
+                    </div>
+                    {[...config.layer3_infographics.items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((item, idx, sorted) => {
+                      const typeDef = INFOGRAPHIC_TYPES.find((t) => t.type === item.blockType);
+                      const sourceOptions = typeDef?.needsSource === 'group' ? rollupGroupOptions(rollupCatalog) : typeDef?.needsSource === 'key' ? rollupKeyOptions(rollupCatalog) : [];
+                      const sourceLabel = item.sourceKey ? (sourceOptions.find((o) => o.value === item.sourceKey)?.label || item.sourceKey) : null;
+                      const reorder = (from, to) => {
+                        const next = [...sorted];
+                        const [moved] = next.splice(from, 1);
+                        next.splice(to, 0, moved);
+                        update('layer3_infographics.items', next.map((it, i) => ({ ...it, order: i })));
+                      };
+                      const remove = () => update('layer3_infographics.items', config.layer3_infographics.items.filter((i) => i.id !== item.id));
+                      return (
+                        <div key={item.id} style={S.row}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '0.8rem', color: '#1b2a3b' }}>{idx + 1}. {item.params?.title || typeDef?.label}</div>
+                            <div style={{ fontSize: '0.68rem', color: '#aaa' }}>{typeDef?.label}{sourceLabel ? ` · ${sourceLabel}` : ''}</div>
+                          </div>
+                          <button style={S.smallBtn} disabled={idx === 0} onClick={() => reorder(idx, idx - 1)}>▲</button>
+                          <button style={S.smallBtn} disabled={idx === sorted.length - 1} onClick={() => reorder(idx, idx + 1)}>▼</button>
+                          <button style={S.smallBtn} onClick={remove}>✕</button>
+                        </div>
+                      );
+                    })}
+                  </>
+                ) : (
+                  <div style={{ fontSize: '0.76rem', color: '#aaa' }}>No infographics added yet.</div>
+                )}
               </div>
             )}
 
@@ -416,6 +527,26 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
                     </div>
                   );
                 })}
+
+                <div style={{ ...S.label, marginTop: '1.25rem' }}>Case Studies (Career Master — Case Study Registry)</div>
+                {(master?.engagements || []).map((eng) => {
+                  const key = `case:${eng.id}`;
+                  const selected = config.layer4_sections.sections.some((s) => s.sourceType === 'case_study_engagement' && String(s.engagementId) === String(eng.id));
+                  return (
+                    <div key={key} style={S.row}>
+                      <input type="checkbox" checked={selected} onChange={() => {
+                        const sections = selected
+                          ? config.layer4_sections.sections.filter((s) => !(s.sourceType === 'case_study_engagement' && String(s.engagementId) === String(eng.id)))
+                          : [...config.layer4_sections.sections, { id: key, sourceType: 'case_study_engagement', engagementId: eng.id, order: config.layer4_sections.sections.length, visible: true }];
+                        update('layer4_sections.sections', sections);
+                      }} />
+                      <span>{eng.clientDisplayName || eng.name} <span style={{ color: '#aaa', fontSize: '0.7rem' }}>({[eng.employer, eng.industry].filter(Boolean).join(' · ')})</span></span>
+                    </div>
+                  );
+                })}
+                {(!master?.engagements || master.engagements.length === 0) && (
+                  <div style={{ fontSize: '0.76rem', color: '#aaa' }}>No case studies published yet — mark an engagement "Publish as Case Study" in Career Master.</div>
+                )}
 
                 <div style={{ ...S.label, marginTop: '1.25rem' }}>Job Experience — proficiency qualifiers + activities per role</div>
                 {(master?.jobs || []).map((job) => {

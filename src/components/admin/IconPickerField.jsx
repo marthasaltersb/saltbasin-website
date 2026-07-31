@@ -28,8 +28,8 @@ export default function IconPickerField({ value, onChange }) {
           gap: '0.75rem',
           alignItems: 'center',
           padding: '0.75rem',
-          background: 'var(--sb-navy)',
-          border: dragOver ? '1.5px dashed var(--sb-gold)' : '0.5px solid rgba(196,132,58,0.25)',
+          background: 'var(--sb-admin-surface)',
+          border: dragOver ? '1.5px dashed var(--sb-admin-gold)' : '0.5px solid var(--sb-admin-border-strong)',
           borderRadius: 'var(--sb-radius)',
           transition: 'border-color 0.15s',
         }}
@@ -38,8 +38,8 @@ export default function IconPickerField({ value, onChange }) {
           style={{
             width: 44,
             height: 44,
-            background: 'var(--sb-navy-deep)',
-            border: '0.5px solid var(--sb-taupe)',
+            background: 'var(--sb-admin-surface-alt)',
+            border: '0.5px solid var(--sb-admin-border)',
             borderRadius: 'var(--sb-radius)',
             display: 'flex',
             alignItems: 'center',
@@ -48,7 +48,7 @@ export default function IconPickerField({ value, onChange }) {
           }}
         >
           {value ? <Icon name={value} size={26} /> : (
-            <span style={{ fontSize: '0.6rem', color: 'var(--sb-teal-deep)' }}>None</span>
+            <span style={{ fontSize: '0.6rem', color: 'var(--sb-admin-teal-deep)' }}>None</span>
           )}
         </div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
@@ -72,7 +72,7 @@ export default function IconPickerField({ value, onChange }) {
               </button>
             )}
           </div>
-          <div style={{ fontSize: '0.68rem', color: 'var(--sb-dusty)' }}>
+          <div style={{ fontSize: '0.68rem', color: 'var(--sb-admin-text-soft)' }}>
             {value ? value : 'Drag an icon here from the library, or browse.'}
           </div>
         </div>

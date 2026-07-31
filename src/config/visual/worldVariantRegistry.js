@@ -53,7 +53,8 @@ export const WORLD_VARIANT_SEMANTIC_INVARIANTS = Object.freeze([
   'ROD_POSITION', // spec: "Journey Position"
   'STAGE_COMPLETENESS',
   'STAGE_READINESS',
-  'ROD_MATURITY',
+  'CHANNEL_MATURITY',
+  'STATE_CONFIDENCE',
   'JOURNEY_DENSITY',
   'ROD_COHERENCE',
   'CROSS_ROD_ALIGNMENT',
@@ -162,9 +163,9 @@ export const WORLD_VARIANT_REGISTRY = Object.freeze({
     variantId: 'world-variant-maturity-lattice',
     variantKey: 'MATURITY_LATTICE',
     displayName: 'Crystal Lattice Observatory',
-    description: 'A navigable crystal-growth hierarchy — Atoms as base crystal units nesting into Cluster crystal formations, nesting into Molecule composite structures — where Rod Maturity\'s 7-dimension composite (Definition / Evidence / Lineage / Validation / Temporal / Relationship / Reconciliation) drives structural complexity, facet depth, and internal lattice at every level. Reconciliation Maturity — how well definitions, evidence, and lineage agree once compared across departments, systems, and users — should read as internal lattice clarity/fracture at each node, distinct from cross-Rod Coherence. No active query context required: this variant is for inspecting how well-defined, evidenced, governed, and cross-source-reconciled the metadata itself is, independent of relevance to any selected Orbit. Extends the same atomGeometry.js crystal vocabulary and computeAtomVisual() maturity-to-rendering mapping Crystal Basin uses (§XII, do not fork a second crystal system) — the difference is the spatial organizing principle (hierarchical nesting by maturity depth, not radial distance from a query anchor), not the geometry language.',
+    description: 'A navigable crystal-growth hierarchy — Atoms as base crystal units nesting into Cluster crystal formations, nesting into Molecule composite structures — where CHANNEL_MATURITY\'s per-purpose scores (legal, participation coverage, billing readiness, rev-rec readiness, renewal stability, expected realization) drive structural complexity, facet depth, and internal lattice at every level. Because maturity is purpose-scoped rather than a single composite, this variant renders a SET of readings per node, not one: the same crystal can be fully formed along its legal axis while visibly unfinished along billing readiness. STATE_CONFIDENCE is the separate axis and should read as internal lattice clarity/fracture — how much the node can be trusted, distinct from how mature it is, and distinct again from cross-Rod Coherence. No active query context required: this variant inspects how mature and how trustworthy the metadata itself is, independent of relevance to any selected Orbit. Extends the same atomGeometry.js crystal vocabulary and computeAtomVisual() maturity-to-rendering mapping Crystal Basin uses (§XII, do not fork a second crystal system) — the difference is the spatial organizing principle (hierarchical nesting by maturity depth, not radial distance from a query anchor), not the geometry language.',
     worldFamily: WORLD_VARIANT_FAMILY.LATTICE,
-    semanticModelVersion: 'rod-mathematics-v1',
+    semanticModelVersion: 'rod-mathematics-v2',
     status: WORLD_VARIANT_STATUS.REGISTERED,
   })),
 });

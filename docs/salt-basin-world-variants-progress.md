@@ -10,9 +10,9 @@ duplicate that content here, just track status and findings.
 |---|-------|--------|-------|
 | 1 | Inspect Existing 3D Implementation & Naming-Collision Audit | done | See findings below. |
 | 2 | World Variant Domain, Registry & Semantic Invariant Reconciliation | done | `src/config/visual/worldVariantRegistry.js`. See below. |
-| 3 | Visual Encoding Profile + Variant Configuration Schema + Validation | not started | Depends on Phase 2; unblocked — `salt-basin-visual-metrics` Phase 5 (Visual Encoding Registry) is done |
-| 4 | Variant Component Profiles | not started | Depends on Phase 3 |
-| 5 | First 3 fully rendered/interactive variants (Crystal Basin, Orbital Intelligence, Temporal Canyon) | not started | Depends on Phases 2–4 |
+| 3 | Visual Encoding Profile + Variant Configuration Schema + Validation | done | `src/config/visual/worldVariantEncodingProfiles.js`. See below. |
+| 4 | Variant Component Profiles | done | `src/config/visual/worldVariantComponentProfiles.js`. See below. |
+| 5 | First 3 fully rendered/interactive variants (Crystal Basin, Orbital Intelligence, Temporal Canyon) | in progress (Crystal Basin slice done) | See below. Orbital Intelligence and Temporal Canyon not started; Crystal Basin itself not fully DoD-item-7-complete either (see remaining gaps). |
 | 6 | Remaining 3 structural variants (Monetary River, Enterprise Highway, Neural Constellation) | not started | Depends on Phases 2–4. `MATURITY_LATTICE` (7th variant, added 2026-07-12) is not yet assigned to Phase 5 or 6 — schedule it when its build is picked up. |
 | 7 | Variant Switcher, Interaction Intent Layer & Comparison Mode | not started | Depends on Phase 5 |
 | 8 | Presets/Inheritance, Variant Creation Studio, Explanation Mode, Temporal Playback | not started | Depends on Phases 3, 5/6 |
@@ -260,9 +260,179 @@ Built `src/config/visual/worldVariantRegistry.js`:
   skill's Phase 5 output) is the one global encoding registry today and is exactly what Phase 3 of this skill
   generalizes into six per-variant profiles, not a second registry to reconcile against.
 
+## Visual Encoding Profile + Variant Configuration Schema + Validation (Phase 3 — done 2026-07-30)
+
+Built `src/config/visual/worldVariantEncodingProfiles.js`:
+
+- **`VISUAL_CHANNEL` enum + `CURVE_TYPE` enum** — the §IV channel vocabulary (radial distance,
+  orbital radius, crystal complexity, crystal clarity, bounded movement, settlement state, route
+  priority, gate visibility, graph attraction, illumination intensity, nesting depth, ...) as fixed
+  values, not free-text strings a profile could misspell into a silent duplicate. `crystal_clarity`
+  is deliberately its own channel, not `opacity` — the master prompt explicitly warns against using
+  flat opacity where it would make the object unreadable (§V Variant 1).
+- **Seven `VisualEncodingProfile` objects**, one per registered variant (all six named + `MATURITY_LATTICE`),
+  each a short list of `{ metricKey, visualChannel, curveType, min/maxVisualValue, animationBehavior,
+  labelBehavior, interactionBehavior, explanationText, implementedBy }` entries — not every one of
+  the 12 metric invariants forced into every variant (§IV: "one visual channel should represent one
+  primary semantic concept within a variant"); which metrics appear per variant follows the master
+  prompt's own §V per-variant sections and §XVI's cross-variant Customer Orbit reference verbatim,
+  not an invented grouping. `implementedBy` names the real function where one already exists
+  (`resolveQueryDistance()` for Crystal Basin's relevance→radial-distance, `facetCountForMaturity()`
+  for maturity→crystal-complexity in both Crystal Basin and Temporal Canyon) and is `null` where
+  Phase 4+ still needs to build the renderer — this file declares and validates the mapping, it does
+  not invent a second rendering-math layer.
+- **`MATURITY_LATTICE`'s deliberate exception.** Its own Phase 2 registry entry already documents
+  "no active query context required" — this phase adds `requiresQueryContext: false` on its profile
+  so the validator can exempt it from the Query-Relevance-required rule explicitly, not silently.
+  All six query-convergence variants keep a required `QUERY_RELEVANCE` encoding.
+- **`QUERY_RELEVANCE_BANDS`** — one shared CORE/STRONGLY_RELATED/CONTEXTUAL/WEAK/PERIPHERAL band
+  definition (§III/§V's semantic bands), reused by every relevance-driven variant's profile rather
+  than five variants each inventing their own thresholds.
+- **`validateVisualEncodingProfile()` / `validateAllVisualEncodingProfiles()`** — real §VII
+  validation, not a described-but-unenforced rule: fails if Query Relevance has no encoding (unless
+  `requiresQueryContext: false`), fails if two encodings in the same variant claim the same visual
+  channel for different metrics (channel-collision), fails if a metric key isn't in
+  `METRIC_DEFINITION_REGISTRY`, fails if a rendering-only value (`cameraDistance`,
+  `animationProgress`, raw `x`/`y`/`z`, ...) is registered as if it were a semantic metric. Ran
+  live via direct Node ESM import (no test runner in this repo per `CLAUDE.md`): **0 errors across
+  all 7 variants.**
+- **`resolveWorldVariantConfig(variantKey)` / `validateWorldVariantConfig(variantKey)`** — the §VII
+  typed `WorldVariantConfig`, composing Phase 2's registry entry (profile IDs, mostly still `null`
+  pending Phase 4) with this phase's real `visualEncodingProfile`. The "required profile is missing"
+  validation rule only fires once a variant's `status` is `structural`/`interactive` — a `null`
+  `geometryProfile` on a `registered`-status variant is expected (Phase 4 hasn't run yet), not a
+  permanent failure; this keeps the validator honest about what Phase 3 vs. Phase 4 actually owns.
+- **Config-audit self-check.** Follows the same `Object.freeze` source-registry idiom as
+  `worldVariantRegistry.js`/`visualSemanticRegistry.js`; no calculation weights added (correctly out
+  of scope, same boundary Phase 2 and `salt-basin-visual-metrics` Phase 2/3 already drew); no
+  hardcoded per-member/org differentiation; fixed enums match the existing fixed-taxonomy pattern.
+  No findings requiring conversion.
+- **Reused, not rebuilt:** `resolveQueryDistance()` (already live in `runCustomerOrbit()`) and
+  `facetCountForMaturity()`/`computeAtomVisual()` (already live, see Task #14 in this session's
+  separate LoneTree/SpatialJourneyWorld work) are referenced by `implementedBy`, confirming Crystal
+  Basin's relevance-distance and maturity-complexity channels are not just declared but already
+  rendering in the live app today — ahead of where this skill's own Phase 1 audit found things,
+  because `salt-basin-visual-metrics` Phase 6 and a concurrent maturity-engine build landed in
+  between.
+
+## Variant Component Profiles (Phase 4 — done 2026-07-30)
+
+Built `src/config/visual/worldVariantComponentProfiles.js`: nine §VI profile-type factories
+(`orbitProfile`, `atomProfile`, `moleculeProfile`, `rodProfile`, `lineageProfile`,
+`convergenceProfile`, `environmentProfile`, `cameraProfile`, `labelProfile`), each enforcing the
+exact field set §VI names — a missing field is a real object-shape error, not a silent gap.
+
+- **Depth over breadth, and said so explicitly.** Crystal Basin and Temporal Journey Canyon (the two
+  variants phases.md's own Phase 5 note flags as extending real existing code) got fully real
+  profiles: every `builder` field names the actual function it composes
+  (`getBipyramidParts()`/`buildAtomMaterial()`/`computeAtomVisual()` for atoms,
+  `computeRodLayout()` for Temporal Canyon's rod geometry, `resetView()`/`focusPoint()`/`zoomBy()`/
+  `enterWorld()` formalized once as `BASELINE_CAMERA` and reused by every variant, not
+  reimplemented seven times). Where a field genuinely has no renderer yet (confidence-as-clarity,
+  stability-driven motion, discrete relevance-shell banding, dashed/segmented inferred-lineage
+  paths), the value says `'not yet built'` or `null` — matching Phase 3's `implementedBy: null`
+  convention — rather than a fabricated implementation claim.
+- **The other five variants (Orbital Intelligence, Monetary River, Enterprise Highway, Neural
+  Constellation, Maturity Lattice)** got real, spec-faithful profile structure — every field's
+  content is drawn directly from that variant's own §V section (e.g. Enterprise Highway's
+  `readinessEncoding` is literally "named, selectable unresolved gates... the strongest fit of any
+  variant for Stage Readiness," matching §V Variant 4's PRICING TERM CONFLICT example) — with
+  `builder: null` throughout, since none of their renderers exist yet. This satisfies DoD item 6
+  (six-plus variants registered) honestly; it does not claim DoD items 7/8 (rendered/interactive),
+  which are Phase 5/6's job.
+- **Baseline Camera and Environment profiles formalized once**, not duplicated per variant —
+  `BASELINE_CAMERA` documents the real current hand-rolled spherical camera
+  (`spherical{radius,theta,phi}`, lerp factors `0.07/0.08` entered vs. `0.012/0.01` pre-entry,
+  `resetView()`→`{radius:62,theta:0.6,phi:1.05}`), every variant either reuses it directly or
+  overrides only the specific field it needs (Temporal Canyon's `rodTraversalBehavior`).
+- **Validation.** `validateWorldVariantComponentProfile()`/`validateAllWorldVariantComponentProfiles()`
+  check that a variant has a real `VisualEncodingProfile` (Phase 3) before a component profile can
+  reference it, and that all nine required profile systems are present (a whole missing system is a
+  real §VII "required profile is missing" failure). Ran live via direct Node ESM import: **0 errors
+  across all 7 variants.**
+- **Status intentionally NOT bumped.** `WORLD_VARIANT_STATUS` stays `registered` for every variant
+  after this phase, including Crystal Basin — this file is a config/documentation layer describing
+  what's real and what isn't; `SpatialJourneyWorld.jsx` does not yet import or resolve through
+  `worldVariantComponentProfiles.js` at all, so nothing about the live renderer changed in this
+  phase. Bumping to `structural` ("profiles wired and rendering") is Phase 5's claim to earn, not
+  this phase's.
+- **Config-audit self-check.** Same `Object.freeze` factory-function idiom as every other registry
+  in this file family; no calculation weights, no member/org hardcoding. No findings requiring
+  conversion.
+
+## First Three Variants — Crystal Basin slice (Phase 5, partial — 2026-07-30)
+
+Real rendering changes landed in `SpatialJourneyWorld.jsx`'s `runCustomerOrbit()` and its `animate()`
+loop — the first Phase 5 work that touches the live renderer, not just config:
+
+- **Organized dimensional shells, for real.** Atoms converging on the hash node are now grouped by
+  their real per-atom `QUERY_RELEVANCE` band (`entry.band.key`, already computed by
+  `calculateQueryRelevance()`/`bandFor()` in `queryConvergence.js`) and placed at a discrete shell
+  radius (`shellRadiusForBand()`, new export in `worldVariantEncodingProfiles.js`) instead of one
+  continuous relevance-to-radius gradient — closing the exact gap §V Variant 1 names ("organized
+  dimensional shells... rather than one dense ball"). Within a shell, atoms fan out evenly
+  (`angle = i/n * 2pi` per band, not globally), so same-band atoms read as a clean ring.
+- **Fixed a real duplication caught mid-build**: `worldVariantEncodingProfiles.js`'s
+  `QUERY_RELEVANCE_BANDS` was a second, differently-cased copy of
+  `QUERY_CONVERGENCE_METHODOLOGY.relevance.bands` (`CORE` vs `core`, etc.) — the exact "one metric,
+  two names" drift the config-audit discipline exists to catch. Fixed to re-export the real
+  methodology bands directly; `shellRadiusForBand()` and every atom's actual `.band.key` now agree
+  by construction, not by two lists staying in sync manually.
+- **Query Confidence -> crystal clarity, Query Stability -> bounded motion, both real** — applied to
+  `world.hashNode`'s material (`roughness`/`clearcoat` lerp toward confidence-derived targets) and
+  position (sinusoidal bounded wobble scaled by `1 - stability`, zero at full stability) in the
+  `animate()` loop. Only entity-level values exist today (`triangulateEntity()`'s
+  `queryConfidence`/`convergenceStability`) — per-atom confidence/stability isn't calculated
+  anywhere yet, so this applies to the one object (the hash node) where a real value exists, not to
+  every atom individually. Both null-guarded: when the seeded entity has "not enough governed
+  evidence" for confidence, the clarity treatment correctly does not run rather than fabricating a
+  value — confirmed live (see verification below), this is the honest, expected behavior for the
+  current seed data, not a bug.
+- **Live browser verification** (not just syntax-checked): ran two full Customer Orbit convergences
+  end-to-end (Ridgeline Data — Buyout by Meridian Capital; Ridgeline Data — Dana Whit) against the
+  real seeded genesis data. Zero console errors through intro -> enter world -> picker -> full
+  convergence animation on both runs. Both entities returned `QUERY_CONFIDENCE: "Not enough governed
+  evidence"` (null, correctly skipped) and `CONVERGENCE_STABILITY: 0.99` (real, non-crashing,
+  correctly near-zero wobble). Real per-atom relevance scores (0.02-0.37 range) and band assignments
+  confirmed flowing into `HashResultPanel` unchanged by the rendering-side edit. Draw calls 728 /
+  Logical atoms 99 in the dev stats overlay — scene populated, not empty.
+- **Remaining gaps before Crystal Basin can be called DoD-item-7 "fully rendered and interactive"**
+  (tracked honestly, not silently left implicit): confidence-as-crystal-clarity is per-hash-node
+  only, not per-atom; stability-driven motion is the same; inferred-vs-observed lineage path
+  treatment (dashed/segmented vs. solid) is not built; hover state is not distinguished from
+  selected state; molecule-level labels are not built. These are real `builder: null` /
+  `'not yet built'` entries already documented honestly in `worldVariantComponentProfiles.js`
+  (Phase 4) — this pass closed the single highest-leverage gap (shell organization) plus the
+  cheapest-to-reach real win (hash-node confidence/stability), not the full remaining list.
+- **Orbital Intelligence and Temporal Journey Canyon — not started this pass.** phases.md flags
+  Phase 5 as the largest phase in the build and explicitly permits splitting it
+  ("if a single turn can't cover all three, build Crystal Basin and Temporal Canyon first"); this
+  pass built the Crystal Basin slice only. Temporal Canyon (extends real `layout.js`) is the
+  next-cheapest target per that same guidance.
+
 ## Changelog
 
 <!-- Newest entry on top. One entry per /world-variants invocation. -->
+
+- **2026-07-30** — Ran Phase 5 (partial — Crystal Basin slice only). See the section above for full
+  detail. Real rendering code changed in `SpatialJourneyWorld.jsx` for the first time in this build
+  (Phases 1-4 were config-only); live-verified in browser with zero console errors across two full
+  Customer Orbit runs against real seed data. Temporal Journey Canyon and Orbital Intelligence remain
+  for Phase 5 to close out, plus Crystal Basin's own remaining gaps (per-atom confidence/stability,
+  lineage dashing, hover state, molecule labels) before DoD item 7 is fully satisfied.
+
+- **2026-07-30** — Ran Phase 4 (Variant Component Profiles). Built
+  `src/config/visual/worldVariantComponentProfiles.js` — see the Phase 4 section above for full
+  detail. Phase 5 (first three fully rendered/interactive variants — Crystal Basin, Orbital
+  Intelligence, Temporal Canyon) is next and is now unblocked; it's flagged in phases.md as the
+  largest phase in the whole build ("if a single turn can't cover all three, build Crystal Basin and
+  Temporal Canyon first").
+
+- **2026-07-30** — Ran Phase 3 (Visual Encoding Profile + Variant Configuration Schema + Validation)
+  via the `world-variants` skill, prompted by Betsy asking to continue the SpatialJourneyWorld
+  "orbit UX + aesthetic pass" using everything already established rather than redefining it. Built
+  `src/config/visual/worldVariantEncodingProfiles.js` — see the Phase 3 section above for full
+  detail. Phase 4 (Variant Component Profiles) is next and is now unblocked.
 
 - **2026-07-12** — Betsy added a 7th dimension to `ROD_MATURITY` itself: **Reconciliation Maturity** — "how
   well do the definitions, evidence and lineage reconcile across departments, systems, users, etc. to

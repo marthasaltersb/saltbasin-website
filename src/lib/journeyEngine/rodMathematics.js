@@ -31,8 +31,90 @@ export function calculateStageReadiness({ completeness, minimumDefinitions, requ
   return { metricKey: 'STAGE_READINESS', score: clamp(weighted(components, methodology.stageReadiness.weights)), components, blockers: [...blockers, ...generatedBlockers], methodologyId: methodology.methodologyId };
 }
 
-export function calculateRodMaturity(dimensions, methodology = DEFAULT_METHODOLOGY) {
-  return { metricKey: 'ROD_MATURITY', score: clamp(weighted(dimensions, methodology.rodMaturity.weights)), dimensions: Object.fromEntries(Object.entries(methodology.rodMaturity.weights).map(([key, weight]) => [key, { score: clamp(dimensions[key]), weight }])), methodologyId: methodology.methodologyId };
+// CHANNEL_MATURITY — purpose-scoped, per the Maturity principle.
+//
+// Returns a SET of independent purpose scores. There is deliberately no
+// `score` field: averaging the purposes would collapse "100% legal, 40%
+// billing readiness" back into the single number the principle exists to
+// reject. Callers that need a headline figure must name which purpose they
+// mean.
+//
+// `signals` is { [purposeKey]: 0-1 } — how much of that purpose's required
+// evidence is present, supplied by the caller (the engine knows the evidence;
+// this module stays pure math). Purposes are resolved in dependency order so a
+// dependency cap always applies to an already-final value.
+export function calculateChannelMaturity(signals = {}, methodology = DEFAULT_METHODOLOGY) {
+  const config = methodology.channelMaturity;
+  const byKey = new Map(config.purposes.map((p) => [p.key, p]));
+  const resolved = {};
+
+  const resolve = (key, seen = new Set()) => {
+    if (key in resolved) return resolved[key];
+    const purpose = byKey.get(key);
+    if (!purpose) return 0;
+    // A dependency cycle would otherwise recurse forever; treat it as uncapped
+    // rather than throwing, and let validation catch the cycle at config time.
+    if (seen.has(key)) return clamp(signals[key]);
+    seen.add(key);
+
+    let value = clamp(signals[key]);
+    for (const dependencyKey of purpose.dependsOn || []) {
+      const cap = resolve(dependencyKey, seen) * (config.dependencyCapFactor ?? 1);
+      if (value > cap) value = cap;
+    }
+    resolved[key] = value;
+    return value;
+  };
+
+  const purposes = {};
+  for (const purpose of config.purposes) {
+    const raw = clamp(signals[purpose.key]);
+    const score = resolve(purpose.key);
+    purposes[purpose.key] = {
+      score,
+      raw,
+      // Surfaced so a UI can explain "billing readiness is held at 0.4 by legal"
+      // rather than showing an unexplained drop.
+      cappedBy: score < raw ? (purpose.dependsOn || []).find((d) => resolve(d) * (config.dependencyCapFactor ?? 1) === score) || null : null,
+      label: purpose.label,
+      definition: purpose.definition,
+      networkScope: purpose.networkScope,
+      dependsOn: purpose.dependsOn || [],
+    };
+  }
+
+  return { metricKey: 'CHANNEL_MATURITY', purposes, methodologyId: methodology.methodologyId };
+}
+
+// STATE_CONFIDENCE — separate axis, per the Confidence principle.
+//
+// Six positive inputs weighted to 1, then the scenario's own risk applied as a
+// penalty. Risk is subtracted rather than weighted in, because a high risk
+// value must never be able to raise confidence.
+export function calculateStateConfidence(inputs = {}, methodology = DEFAULT_METHODOLOGY, { scenarioRisk } = {}) {
+  const config = methodology.stateConfidence;
+  const base = weighted(inputs, config.weights);
+  const risk = clamp(scenarioRisk ?? config.riskAdjustment.defaultScenarioRisk);
+  const penalty = risk * config.riskAdjustment.maxPenalty;
+  return {
+    metricKey: 'STATE_CONFIDENCE',
+    score: clamp(base - penalty),
+    base: clamp(base),
+    penalty,
+    components: Object.fromEntries(Object.entries(config.weights).map(([key, weight]) => [key, { score: clamp(inputs[key]), weight }])),
+    methodologyId: methodology.methodologyId,
+  };
+}
+
+// Converts an evidence row's age into the CONF-002 recency input. A banded step
+// function, not a decay curve: the sheet specifies discrete bands, and fitting
+// a smooth curve to them gave different answers either side of each boundary.
+export function recencyScore(observedAtMs, nowMs = Date.now(), methodology = DEFAULT_METHODOLOGY) {
+  const ageDays = Math.max(0, nowMs - Number(observedAtMs || 0)) / 86400000;
+  for (const band of methodology.stateConfidence.recencyBands) {
+    if (band.maxAgeDays === null || ageDays <= band.maxAgeDays) return band.value;
+  }
+  return 0;
 }
 
 export function calculateJourneyDensity(events, methodology = DEFAULT_METHODOLOGY) {

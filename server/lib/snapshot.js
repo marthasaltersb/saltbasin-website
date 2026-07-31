@@ -113,7 +113,7 @@ export async function captureBaselineIfEmpty() {
       totals.traditionalCostUsd,
       totals.aiSavingsUsd,
       totals.monthlyTierSavings,
-      JSON.stringify(fullPayload),
+      fullPayload,
       `Baseline captured ${new Date().toISOString().slice(0, 10)} — first day of snapshot tracking`
     );
 

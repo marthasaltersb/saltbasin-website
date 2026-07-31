@@ -22,6 +22,7 @@ import { defaultConfig } from '../data/defaultSite.js';
 import { getUserFromCookie } from '../auth.js';
 import { actorScope, buildAgentDataContext, agentDataPolicyPrompt, inferAgentPurpose } from '../lib/agentDataPolicy.js';
 import { classifyEmailDomain } from '../lib/emailDomain.js';
+import { promoteLeadToOrganizationLead } from '../lib/journeyRods.js';
 import { getOrRefresh, invalidate } from '../lib/contextCache.js';
 import { renderContextCacheKey, resolveAgentContextPolicy } from '../lib/agentContextRegistry.js';
 
@@ -166,6 +167,28 @@ async function executeTool(name, input, sourceOutput, attribution = null, contex
     if (input.loginEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.loginEmail)) {
       return { error: 'loginEmail does not look like a valid email address — ask again.' };
     }
+
+    // Org-intake gating: "other" (not personal) + a custom/work domain is
+    // the visitor telling us this is an organization, not themself — create
+    // the Revenue Channel Journey Lead now, before any conversion/Member
+    // Entitlement exists. Reuses promoteLeadToOrganizationLead (the same
+    // path server/routes/commerce.js's /request-custom-scoping already
+    // calls for an already-converted member) — best-effort, never blocks
+    // the real member conversion that follows.
+    let orgLeadCreated = false;
+    if (input.personalOrOther === 'other' && context.leadEmailDomainKind === 'custom') {
+      try {
+        await promoteLeadToOrganizationLead(null, {
+          orgSignalSource: 'bestystaff-conversion-intent',
+          emailDomain: context.leadEmailDomain,
+          sourceEmail: context.leadEmail,
+        });
+        orgLeadCreated = true;
+      } catch (e) {
+        console.error('[bestystaff] org-lead creation failed:', e.message);
+      }
+    }
+
     // No account is created here — see the tool description. The client
     // surfaces its own password-confirmation UI and calls
     // POST /api/leads/public/:publicId/convert directly.
@@ -175,6 +198,7 @@ async function executeTool(name, input, sourceOutput, attribution = null, contex
         personalOrOther: input.personalOrOther,
         loginEmail: input.loginEmail || null,
       },
+      ...(orgLeadCreated ? { orgLeadCreated: true } : {}),
     };
   }
 
@@ -392,7 +416,12 @@ router.post('/', chatLimiter, async (req, res) => {
           block.input,
           typeof sourceOutput === 'string' ? sourceOutput : null,
           attribution && typeof attribution === 'object' ? attribution : null,
-          { hasKnownLead: !!prior }
+          {
+            hasKnownLead: !!prior,
+            leadEmail: prior?.email || null,
+            leadEmailDomain: storedDomain,
+            leadEmailDomainKind: classifyEmailDomain(prior?.email),
+          }
         );
         if (block.name === 'submit_portfolio_request' && result.ok) {
           submitted = {

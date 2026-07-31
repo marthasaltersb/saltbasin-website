@@ -21,7 +21,7 @@ router.post('/registry/sync', async (req, res) => {
       metric_subfamily=excluded.metric_subfamily, definition_json=excluded.definition_json,
       calculation_version=excluded.calculation_version, updated_at=excluded.updated_at`).run(
     item.metricId, item.metricKey, item.displayName, item.family, item.subfamily,
-    JSON.stringify(item.definition), item.calculationVersion, now
+    item.definition, item.calculationVersion, now
   );
   res.json({ ok: true, synced: items.map((item) => item.metricId) });
 });
@@ -58,13 +58,13 @@ router.post('/calculate', async (req, res) => {
       (metric_id,metric_key,display_name,metric_family,metric_subfamily,definition_json,calculation_version,effective_from,updated_at)
       VALUES ($1,$2,$3,$4,$5,$6::jsonb,$7,$8,$8) ON CONFLICT (metric_id) DO NOTHING`).run(
       definition.metricId, definition.metricKey, definition.displayName, definition.family,
-      definition.subfamily, JSON.stringify(definition.definition), definition.calculationVersion, now);
+      definition.subfamily, definition.definition, definition.calculationVersion, now);
     const inserted = await db.raw.unsafe(`INSERT INTO metric_calculations
       (metric_id,variant_key,calculation_version,as_of,value,unit,confidence,formula_json,inputs_json,methodology,context_json,created_by)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9::jsonb,$10,$11::jsonb,$12) RETURNING id`, [
       calculation.metricId, calculation.variantKey, calculation.calculationVersion, calculation.asOf,
-      calculation.value, calculation.unit, calculation.confidence, JSON.stringify(calculation.formula),
-      JSON.stringify(calculation.inputs), calculation.methodology, JSON.stringify(req.body.context || {}), req.user.id]);
+      calculation.value, calculation.unit, calculation.confidence, calculation.formula,
+      calculation.inputs, calculation.methodology, req.body.context || {}, req.user.id]);
     const entityId = req.body.entityId || 'synthetic-portfolio-company';
     await db.prepare(`INSERT INTO metric_observations
       (calculation_id,entity_type,entity_id,period_start,period_end,observed_value)

@@ -557,7 +557,7 @@ router.get('/summary', async (req, res) => {
         totals.traditionalCostUsd,
         totals.aiSavingsUsd,
         totals.monthlyTierSavings,
-        JSON.stringify(payload)
+        payload
       );
   } catch (e) {
     console.warn('[backlog/summary] snapshot capture failed (non-fatal):', e.message);
@@ -649,7 +649,7 @@ router.post('/snapshot', async (req, res) => {
       t.traditionalCostUsd,
       t.aiSavingsUsd,
       t.monthlyTierSavings,
-      JSON.stringify(payload),
+      payload,
       source,
       note || null
     );

@@ -120,7 +120,7 @@ export async function recordCurrentArc(rodId, { currentKey, portStage, portStage
   await db.prepare(`
     INSERT INTO journey_rod_events (rod_id, event_type, to_stage, metadata, created_at)
     VALUES ($1, 'current_arc_evaluated', $2, $3::jsonb, $4)
-  `).run(rodId, portStage || null, JSON.stringify({ currentKey, portStage, portStageMaturity, stateSnapshot }), now);
+  `).run(rodId, portStage || null, { currentKey, portStage, portStageMaturity, stateSnapshot }, now);
   return { rodId, currentKey, portStage, portStageMaturity, evaluatedAt: now };
 }
 

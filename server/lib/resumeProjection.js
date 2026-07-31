@@ -57,7 +57,7 @@ export async function createResumeOutputProjection(userId, { presetId, presetNam
       (user_id, preset_id, preset_name, included_sections, career_state_fingerprint, atom_count, generated_at, effective_career_state_at, output_status, lineage_root_id, target_job_description, targeting_result, created_at)
     VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7,$7,'draft',$8,$9,$10::jsonb,$7)
     RETURNING id
-  `).run(userId, presetId, presetName || null, JSON.stringify(includedSections), fingerprint, atomCount, now, lineageRootId, targetJobDescription || null, targetingResult ? JSON.stringify(targetingResult) : null);
+  `).run(userId, presetId, presetName || null, includedSections, fingerprint, atomCount, now, lineageRootId, targetJobDescription || null, targetingResult || null);
   const id = Number(result.lastInsertRowid);
   if (!lineageRootId) {
     // First projection in this lineage — it's its own root.

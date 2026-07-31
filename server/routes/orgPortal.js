@@ -4,6 +4,8 @@ import { requireUser } from '../auth.js';
 import { defaultMemberSite } from '../data/defaultMemberSite.js';
 import { defaultMemberConfig } from '../data/defaultMemberConfig.js';
 import { consentDefinition, recordConsent } from '../lib/consentRegistry.js';
+import { hasCapability } from '../lib/customerEntitlements.js';
+import { listOrgDocuments, getOrgDocument } from '../lib/orgDocumentProjection.js';
 const router = Router();
 router.use(requireUser);
 
@@ -81,5 +83,29 @@ for (const r of [{path:'site',table:'org_sites',key:'version'},{path:'config',ta
   router.get(`/:orgId/${r.path}`, async (req,res) => { const ctx=await access(req,res); if(!ctx)return; const kind=ctx.canEdit?'draft':'published'; let data=await read(r.table,ctx.orgId,kind); if(!data&&ctx.canEdit){data=r.path==='site'?defaultMemberSite({displayName:ctx.name,slug:ctx.slug}):defaultMemberConfig({displayName:ctx.name});await write(r.table,ctx.orgId,'draft',data,r.key);} if(!data)return res.status(404).json({error:'organization portal is not published'});res.json(data); });
   router.put(`/:orgId/${r.path}`, async (req,res) => { const ctx=await access(req,res);if(!ctx)return;if(!ctx.canEdit)return res.status(403).json({error:'organization portal is read-only'});if(!req.body||typeof req.body!=='object')return res.status(400).json({error:'expected JSON object'});await write(r.table,ctx.orgId,'draft',req.body,r.key);res.json({ok:true}); });
 }
+// GET /:orgId/documents — gated proposal + product-resource documents
+// (org_document_projections), delivered via the 'view_proposal' /
+// 'view_product_resources' capabilities granted by grantCustomerViewEntitlement
+// (server/lib/customerEntitlements.js) when the member's work email resolved
+// this organization. Membership + org consent alone (access()) is not
+// enough — the entitlement is the actual gate for document content.
+router.get('/:orgId/documents', async (req, res) => {
+  const ctx = await access(req, res);
+  if (!ctx) return;
+  const allowed = (await hasCapability(req.user.id, ctx.orgId, 'view_proposal')) || (await hasCapability(req.user.id, ctx.orgId, 'view_product_resources'));
+  if (!allowed) return res.status(403).json({ error: 'entitlement_required' });
+  res.json({ documents: await listOrgDocuments(ctx.orgId) });
+});
+
+router.get('/:orgId/documents/:id', async (req, res) => {
+  const ctx = await access(req, res);
+  if (!ctx) return;
+  const doc = await getOrgDocument(ctx.orgId, req.params.id);
+  if (!doc) return res.status(404).json({ error: 'not found' });
+  const capability = doc.document_type === 'proposal' ? 'view_proposal' : 'view_product_resources';
+  if (!(await hasCapability(req.user.id, ctx.orgId, capability))) return res.status(403).json({ error: 'entitlement_required' });
+  res.json(doc);
+});
+
 router.post('/:orgId/publish', async (req,res) => { const ctx=await access(req,res);if(!ctx)return;if(!ctx.canEdit)return res.status(403).json({error:'organization portal is read-only'});for(const [table,key] of [['org_sites','version'],['org_configs','schemaVersion']]){const draft=await read(table,ctx.orgId,'draft');if(!draft)return res.status(404).json({error:`no ${table} draft`});await write(table,ctx.orgId,'published',draft,key);}res.json({ok:true}); });
 export default router;

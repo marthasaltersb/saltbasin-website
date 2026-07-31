@@ -78,8 +78,8 @@ export async function writeAudit({
       entityType,
       Number(entityId),
       action,
-      beforeValue == null ? null : JSON.stringify(beforeValue),
-      afterValue == null ? null : JSON.stringify(afterValue),
+      beforeValue == null ? null : beforeValue,
+      afterValue == null ? null : afterValue,
       source,
       reason
     );

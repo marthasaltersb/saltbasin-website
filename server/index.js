@@ -53,6 +53,9 @@ import presenceRouter from './routes/presence.js';
 import memberEntitlementsRouter from './routes/memberEntitlements.js';
 import resumeOutputsRouter from './routes/resumeOutputs.js';
 import scenariosRouter from './routes/scenarios.js';
+import configEnvelopesRouter from './routes/configEnvelopes.js';
+import lonetreeMvpRouter from './routes/lonetreeMvp.js';
+import proposalExperienceRouter from './routes/proposalExperience.js';
 
 // Safety net: an unhandled promise rejection in any async route handler
 // (e.g. a bad column reference in a PATCH) is fatal by default in Node —
@@ -107,6 +110,9 @@ app.use(
 app.use('/api/auth', authRouter);
 app.use('/api/site', siteRouter);
 app.use('/api/config', configRouter);
+app.use('/api/config-envelopes', configEnvelopesRouter);
+app.use('/api/lonetree-mvp', lonetreeMvpRouter);
+app.use('/api/proposal-experience', proposalExperienceRouter);
 app.use('/api/leads', leadsRouter);
 app.use('/api/lead-integrations', leadIntegrationsRouter);
 app.use('/api/journey-rods', journeyRodsRouter);

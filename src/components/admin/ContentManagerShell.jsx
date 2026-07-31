@@ -17,8 +17,8 @@ export default function ContentManagerShell() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Sub-tab navigation */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 0, borderBottom: '0.5px solid rgba(196,132,58,0.18)', background: 'var(--sb-navy-deep)', padding: '0 1.25rem', flexShrink: 0 }}>
-        <span style={{ fontSize: '0.6rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--sb-dusty)', fontFamily: 'var(--sb-font-label)', marginRight: '1rem' }}>Content Manager</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 0, borderBottom: '0.5px solid var(--sb-admin-border)', background: 'var(--sb-admin-surface)', padding: '0 1.25rem', flexShrink: 0 }}>
+        <span style={{ fontSize: '0.6rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--sb-admin-text-soft)', fontFamily: 'var(--sb-font-label)', marginRight: '1rem' }}>Content Manager</span>
         {SUB_TABS.map(t => (
           <button
             key={t.id}
@@ -30,9 +30,9 @@ export default function ContentManagerShell() {
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               background: 'transparent',
-              color: active === t.id ? 'var(--sb-gold)' : 'var(--sb-dusty)',
+              color: active === t.id ? 'var(--sb-admin-gold-warm)' : 'var(--sb-admin-text-soft)',
               border: 'none',
-              borderBottom: active === t.id ? '2px solid var(--sb-gold)' : '2px solid transparent',
+              borderBottom: active === t.id ? '2px solid var(--sb-admin-gold-warm)' : '2px solid transparent',
               cursor: 'pointer',
               transition: 'color 0.15s, border-color 0.15s',
               marginBottom: -1,

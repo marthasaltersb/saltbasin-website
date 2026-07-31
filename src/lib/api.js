@@ -20,6 +20,16 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  getProposalExperienceState: () => request('/api/proposal-experience/state'),
+  getProposalHighways: () => request('/api/proposal-experience/highways'),
+  getProposalSections: () => request('/api/proposal-experience/sections'),
+  getProposalDiagnostic: () => request('/api/proposal-experience/diagnostic'),
+  getProposalOpportunity: () => request('/api/proposal-experience/opportunity'),
+  getProposalEvidence: () => request('/api/proposal-experience/evidence'),
+  recordProposalStageViewed: (stageId) => request('/api/proposal-experience/events/stage-viewed', { method: 'POST', body: JSON.stringify({ stageId }) }),
+  recordProposalScenarioExpanded: (scenarioId) => request('/api/proposal-experience/events/scenario-expanded', { method: 'POST', body: JSON.stringify({ scenarioId }) }),
+  recordProposalEvidenceOpened: (evidenceId) => request('/api/proposal-experience/events/evidence-opened', { method: 'POST', body: JSON.stringify({ evidenceId }) }),
+  submitProposalDecision: (option, rationale) => request('/api/proposal-experience/decision', { method: 'POST', body: JSON.stringify({ option, rationale }) }),
   getMemberEntitlements: () => request('/api/member-entitlements'),
   getCareerConsentStatus: (consentType = 'career_portfolio') => request(`/api/career/consent-status?consentType=${consentType}`),
   recordCareerConsent: (consentType, granted) => request('/api/career/consent', { method: 'POST', body: JSON.stringify({ consentType, granted }) }),
@@ -39,6 +49,11 @@ export const api = {
   syncMetricRegistry: () => request('/api/metric-intelligence/registry/sync', { method: 'POST' }),
   calculateMetric: (body) => request('/api/metric-intelligence/calculate', { method: 'POST', body: JSON.stringify(body) }),
   getMetricObservations: (filters = {}) => request(`/api/metric-intelligence/observations?${new URLSearchParams(filters)}`),
+  // Config envelopes (generic runtime-editable config — see server/lib/configEnvelope.js)
+  listConfigEnvelopes: () => request('/api/config-envelopes'),
+  getConfigEnvelope: (id) => request(`/api/config-envelopes/${encodeURIComponent(id)}`),
+  writeConfigEnvelope: (id, value) => request(`/api/config-envelopes/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify({ value }) }),
+  resetConfigEnvelope: (id) => request(`/api/config-envelopes/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   // Auth
   me: () => request('/api/auth/me'),
   login: (email, password) =>
@@ -95,6 +110,8 @@ export const api = {
   getOrgPageTypes: (id) => request(`/api/org-portal/${id}/page-types`),
   getOrgConsentStatus: (id) => request(`/api/org-portal/${id}/consent-status`),
   recordOrgConsent: (id, body) => request(`/api/org-portal/${id}/consent`, { method: 'POST', body: JSON.stringify(body) }),
+  getOrgDocuments: (id) => request(`/api/org-portal/${id}/documents`),
+  getOrgDocument: (id, docId) => request(`/api/org-portal/${id}/documents/${docId}`),
   getMemberEmails: () => request('/api/members/me/emails'),
 
   // Public — used by the Salt Basin home page Net Works banner.
@@ -364,4 +381,16 @@ export const api = {
   getEidosPendingDecisions: () => request('/api/journey-rods/decisions/pending'),
   resolveEidosDecision: (id, status, notes) =>
     request(`/api/journey-rods/decisions/${id}/resolve`, { method: 'POST', body: JSON.stringify({ status, notes }) }),
+
+  getLonetreeMvpSummary: () => request('/api/lonetree-mvp/summary'),
+  getLonetreeMvpReconciliation: () => request('/api/lonetree-mvp/reconciliation'),
+  getLonetreeMvpFundEconomics: () => request('/api/lonetree-mvp/fund-economics'),
+  getLonetreeMvpSignals: () => request('/api/lonetree-mvp/signals'),
+  getLonetreeMvpHypotheses: () => request('/api/lonetree-mvp/hypotheses'),
+  getLonetreeMvpValueCreation: () => request('/api/lonetree-mvp/value-creation'),
+  advanceLonetreeMvpInitiative: (initiativeId) => request(`/api/lonetree-mvp/value-creation/${encodeURIComponent(initiativeId)}/advance`, { method: 'PATCH' }),
+  getLonetreeMvpTheses: () => request('/api/lonetree-mvp/theses'),
+  getLonetreeMvpTraceMetric: (metric) => request(`/api/lonetree-mvp/trace/${encodeURIComponent(metric)}`),
+  getLonetreeMvpTraceEvDrivers: () => request('/api/lonetree-mvp/trace-ev-drivers'),
+  getLonetreeMvpDemonstration: (signalId) => request(`/api/lonetree-mvp/demonstration${signalId ? `?signalId=${encodeURIComponent(signalId)}` : ''}`),
 };

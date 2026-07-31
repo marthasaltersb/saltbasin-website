@@ -2161,10 +2161,10 @@ export const DEFAULT_INDUSTRY_WHEEL_NODES = INDUSTRIES.map((ind) => ({
 // Data-driven wheel section — reads section.fields.wheelNodes/wheelCenterLabel
 // if the admin has edited them, otherwise falls back to the hardcoded
 // industries above so this section renders unchanged until edited.
-function IndustryWheelBlock({ section }) {
+function IndustryWheelBlock({ section, memberSlug }) {
   const f = section.fields || {};
   const [master, setMaster] = React.useState(null);
-  React.useEffect(() => { fetchCareerMaster().then(setMaster); }, []);
+  React.useEffect(() => { fetchCareerMaster(memberSlug).then(setMaster); }, [memberSlug]);
 
   // Career Master (career_domains group_type='industry' + career_tools) is
   // the source of truth when populated; falls back to the legacy
@@ -3313,10 +3313,10 @@ function ActionButtons({ actions, placement, liveSlugs }) {
   );
 }
 
-function TimelineBlock({ section, liveSlugs }) {
+function TimelineBlock({ section, liveSlugs, memberSlug }) {
   const f = section.fields || {};
   const [master, setMaster] = React.useState(null);
-  React.useEffect(() => { fetchCareerMaster().then(setMaster); }, []);
+  React.useEffect(() => { fetchCareerMaster(memberSlug).then(setMaster); }, [memberSlug]);
 
   // Career Master (career_jobs) is the source of truth when populated —
   // uncapped, unlike the legacy job1..job10 fixed-slot fields it replaces.
@@ -3927,10 +3927,10 @@ function engagementToCase(e) {
   };
 }
 
-function CaseStudiesBlock({ section }) {
+function CaseStudiesBlock({ section, memberSlug }) {
   const f = section.fields || {};
   const [master, setMaster] = React.useState(null);
-  React.useEffect(() => { fetchCareerMaster().then(setMaster); }, []);
+  React.useEffect(() => { fetchCareerMaster(memberSlug).then(setMaster); }, [memberSlug]);
 
   // Supports four shapes, in priority order:
   //  1. Career Master (career_engagements, publish_case_study=true) — uncapped
@@ -5328,10 +5328,10 @@ function OutputGeneratorBlock({ section, mode }) {
 // block's legend already uses (expert / proficient / familiar).
 const TIER_TO_LEVEL = { Expert: 'expert', Advanced: 'expert', Proficient: 'proficient', Foundational: 'familiar' };
 
-function SkillsBlock({ section }) {
+function SkillsBlock({ section, memberSlug }) {
   const f = section.fields || {};
   const [master, setMaster] = React.useState(null);
-  React.useEffect(() => { fetchCareerMaster().then(setMaster); }, []);
+  React.useEffect(() => { fetchCareerMaster(memberSlug).then(setMaster); }, [memberSlug]);
 
   // Career Master (career_skills) is the source of truth when populated —
   // grouped by category with tier mapped onto this block's expert/proficient/
@@ -5402,10 +5402,10 @@ function SkillsBlock({ section }) {
 // Each client is an entry: {name, industry, employerSponsor, capabilitiesDelivered,
 //   capabilitiesTouched, techDelivered, techTouched, revenueRange, tags}
 // The block renders a grouped rollup view: groupBy = 'industry'|'capability'|'revenue'
-function ClientSnapshotBlock({ section }) {
+function ClientSnapshotBlock({ section, memberSlug }) {
   const f = section.fields || {};
   const [master, setMaster] = React.useState(null);
-  React.useEffect(() => { fetchCareerMaster().then(setMaster); }, []);
+  React.useEffect(() => { fetchCareerMaster(memberSlug).then(setMaster); }, [memberSlug]);
 
   // Career Master (career_engagements) is the source of truth when
   // populated. Falls back to the manually-authored f.clients list.

@@ -1,0 +1,3746 @@
+{
+  "MVP_00_Read_Me": [
+    {
+      "Topic": "Repository purpose",
+      "Definition": "Executable seed-data and configuration repository for a demonstrable Salt Basin MVP.",
+      "Implementation Note": "Build and test an end-to-end Market-to-Exit story with Veradigm as the illustrative PortCo.",
+      "Status": "Active"
+    },
+    {
+      "Topic": "Public vs. synthetic boundary",
+      "Definition": "Public facts are sourced in MVP_01_Source_Index. Transactional, contract, customer, valuation and fund data are synthetic unless explicitly labeled public.",
+      "Implementation Note": "Avoid implying an actual LoneTree transaction, ownership, LP relationship, valuation, or operating result.",
+      "Status": "Active"
+    },
+    {
+      "Topic": "Firm structure",
+      "Definition": "LoneTree Capital is the Firm and illustrative GP/manager. The public inaugural fund is represented as LoneTree Fund I; 'Apex' is modeled as the operating/value-creation platform and may also be used as a demo-facing fund alias.",
+      "Implementation Note": "Website describes Apex as the operating team, not the legal fund.",
+      "Status": "Active"
+    },
+    {
+      "Topic": "Targets",
+      "Definition": "Hazel Health and Veradigm are modeled as illustrative acquisition targets.",
+      "Implementation Note": "Veradigm is selected for the detailed PortCo scenario because public reporting, revenue-cycle products, usage signals, accounting remediation and relisting create a richer reconciliation story.",
+      "Status": "Active"
+    },
+    {
+      "Topic": "Primary runtime proof",
+      "Definition": "Every metric must trace through semantic lineage from source event \u2192 atom/molecule \u2192 highway \u2192 metric \u2192 value-creation thesis \u2192 fund economics.",
+      "Implementation Note": "No KPI-only demo values without source events.",
+      "Status": "Active"
+    },
+    {
+      "Topic": "MVP completion definition",
+      "Definition": "User can replay the transaction, open any evidence chain, observe maturity/confidence changes, reconcile PortCo performance to fund economics, and render the thesis convergence view.",
+      "Implementation Note": "Acceptance tests are in MVP_21_Test_Cases.",
+      "Status": "Active"
+    }
+  ],
+  "MVP_01_Source_Index": [
+    {
+      "Source_ID": "SRC-LT-001",
+      "Source_Name": "LoneTree Capital",
+      "Scope": "Firm approach, investment criteria, inaugural $200M fund, portfolio and team",
+      "Source_Type": "Public",
+      "URL": "https://lonetreecap.com/",
+      "Retrieved_Date": "2026-07-29",
+      "Use_in_Model": "LoneTree targets $10M-$75M investments, >$5M revenue, >10% growth and recurring/re-occurring revenue."
+    },
+    {
+      "Source_ID": "SRC-LT-002",
+      "Source_Name": "LoneTree Value Creation",
+      "Scope": "Apex operating team and value-creation focus",
+      "Source_Type": "Public",
+      "URL": "https://lonetreecap.com/valueCreation.html",
+      "Retrieved_Date": "2026-07-29",
+      "Use_in_Model": "Apex focuses on human capital, GTM optimization, data analytics and strategic M&A."
+    },
+    {
+      "Source_ID": "SRC-HZ-001",
+      "Source_Name": "Hazel Health About",
+      "Scope": "Scale and operating footprint",
+      "Source_Type": "Public",
+      "URL": "https://www.hazel.co/company/about-us",
+      "Retrieved_Date": "2026-07-29",
+      "Use_in_Model": "21 states, 200+ districts, 6,000+ schools and 5M students served."
+    },
+    {
+      "Source_ID": "SRC-HZ-002",
+      "Source_Name": "Hazel School Districts",
+      "Scope": "Outcomes and district footprint",
+      "Source_Type": "Public",
+      "URL": "https://www.hazel.co/schools/home",
+      "Retrieved_Date": "2026-07-29",
+      "Use_in_Model": "8 of 10 show reduced anxiety/depression within six sessions; +11 school days in a case study."
+    },
+    {
+      "Source_ID": "SRC-HZ-003",
+      "Source_Name": "Hazel Pricing FAQ",
+      "Scope": "District pricing structure",
+      "Source_Type": "Public",
+      "URL": "https://www.hazel.co/faq/what-is-the-key-financial-takeaway-for-districts",
+      "Retrieved_Date": "2026-07-29",
+      "Use_in_Model": "Predictable annual district fee; Hazel bears billing, compliance and utilization risk."
+    },
+    {
+      "Source_ID": "SRC-VD-001",
+      "Source_Name": "Veradigm 2025 Financial Update",
+      "Scope": "2024 revenue estimate and 2025 outlook",
+      "Source_Type": "Public",
+      "URL": "https://www.nasdaq.com/press-release/veradigm-provides-2025-financial-business-update-2025-06-23",
+      "Retrieved_Date": "2026-07-29",
+      "Use_in_Model": "2024 revenue estimated at $583M-$588M; 2025 expected approximately flat."
+    },
+    {
+      "Source_ID": "SRC-VD-002",
+      "Source_Name": "Veradigm 2023/2024 10-K Filing Update",
+      "Scope": "SEC filing remediation and relisting intent",
+      "Source_Type": "Public",
+      "URL": "https://investor.veradigm.com/news-releases/news-release-details/veradigm-files-2023-and-2024-form-10-k",
+      "Retrieved_Date": "2026-07-29",
+      "Use_in_Model": "Company filed 2023 and 2024 10-Ks and remains focused on becoming current and relisting."
+    },
+    {
+      "Source_ID": "SRC-VD-003",
+      "Source_Name": "Veradigm Business Update",
+      "Scope": "2025 estimated performance and 2026 strategy",
+      "Source_Type": "Public",
+      "URL": "https://investor.veradigm.com/news-releases/news-release-details/veradigm-provides-business-and-strategy-update",
+      "Retrieved_Date": "2026-07-29",
+      "Use_in_Model": "Reset, Recover, Reignite strategy; 2025 performance described as in line with expectations."
+    },
+    {
+      "Source_ID": "SRC-DEMO-001",
+      "Source_Name": "Salt Basin Synthetic Seed Policy",
+      "Scope": "All non-public contracts, customers, pricing, usage, debt, valuation and fund economics",
+      "Source_Type": "Synthetic",
+      "URL": "Internal demonstration assumption",
+      "Retrieved_Date": "2026-07-29",
+      "Use_in_Model": "Illustrative only; not a representation of any actual company or transaction."
+    }
+  ],
+  "MVP_02_Enterprise_Structure": [
+    {
+      "Organization_ID": "ORG-0001",
+      "Organization_Name": "LoneTree Capital",
+      "Organization_Type": "Firm",
+      "Data_Status": "Public",
+      "Role_Definition": "Parent firm and investment manager",
+      "Location": "New York, NY",
+      "Lifecycle_Status": "Active",
+      "Source_ID": "SRC-LT-001"
+    },
+    {
+      "Organization_ID": "ORG-0002",
+      "Organization_Name": "LoneTree Capital Management (Illustrative)",
+      "Organization_Type": "General Partner / Manager",
+      "Data_Status": "Synthetic legal mapping",
+      "Role_Definition": "Illustrative GP/manager entity for the demo",
+      "Location": "New York, NY",
+      "Lifecycle_Status": "Active",
+      "Source_ID": "SRC-DEMO-001"
+    },
+    {
+      "Organization_ID": "ORG-0003",
+      "Organization_Name": "LoneTree Inaugural Fund I",
+      "Organization_Type": "Fund",
+      "Data_Status": "Public fact / synthetic operating details",
+      "Role_Definition": "$200M inaugural fund announced March 2025",
+      "Location": "Delaware (Illustrative)",
+      "Lifecycle_Status": "Active",
+      "Source_ID": "SRC-LT-001"
+    },
+    {
+      "Organization_ID": "ORG-0004",
+      "Organization_Name": "Apex Value Creation Platform",
+      "Organization_Type": "Operating Team",
+      "Data_Status": "Public concept",
+      "Role_Definition": "LoneTree's operating/value-creation platform",
+      "Location": "New York, NY",
+      "Lifecycle_Status": "Active",
+      "Source_ID": "SRC-LT-002"
+    },
+    {
+      "Organization_ID": "ORG-0005",
+      "Organization_Name": "Hazel Health",
+      "Organization_Type": "Acquisition Target",
+      "Data_Status": "Public",
+      "Role_Definition": "K-12 school-based telehealth provider",
+      "Location": "United States",
+      "Lifecycle_Status": "Target",
+      "Source_ID": "SRC-HZ-001"
+    },
+    {
+      "Organization_ID": "ORG-0006",
+      "Organization_Name": "Veradigm",
+      "Organization_Type": "Acquisition Target / Selected PortCo",
+      "Data_Status": "Public + synthetic scenario",
+      "Role_Definition": "Clinical and revenue-cycle technology/services company",
+      "Location": "Chicago, IL",
+      "Lifecycle_Status": "Selected",
+      "Source_ID": "SRC-VD-001"
+    },
+    {
+      "Organization_ID": "ORG-0007",
+      "Organization_Name": "NorthStar Public Pension",
+      "Organization_Type": "Limited Partner",
+      "Data_Status": "Synthetic",
+      "Role_Definition": "Institutional LP commitment",
+      "Location": "United States",
+      "Lifecycle_Status": "Active",
+      "Source_ID": "SRC-DEMO-001"
+    },
+    {
+      "Organization_ID": "ORG-0008",
+      "Organization_Name": "Harbor University Endowment",
+      "Organization_Type": "Limited Partner",
+      "Data_Status": "Synthetic",
+      "Role_Definition": "Endowment LP commitment",
+      "Location": "United States",
+      "Lifecycle_Status": "Active",
+      "Source_ID": "SRC-DEMO-001"
+    },
+    {
+      "Organization_ID": "ORG-0009",
+      "Organization_Name": "Cedar Family Office",
+      "Organization_Type": "Limited Partner",
+      "Data_Status": "Synthetic",
+      "Role_Definition": "Family office LP commitment",
+      "Location": "United States",
+      "Lifecycle_Status": "Active",
+      "Source_ID": "SRC-DEMO-001"
+    },
+    {
+      "Organization_ID": "ORG-0010",
+      "Organization_Name": "Atlas Insurance Capital",
+      "Organization_Type": "Limited Partner",
+      "Data_Status": "Synthetic",
+      "Role_Definition": "Insurance LP commitment",
+      "Location": "United States",
+      "Lifecycle_Status": "Active",
+      "Source_ID": "SRC-DEMO-001"
+    }
+  ],
+  "MVP_03_Fund_Capital": [
+    {
+      "Investor_ID": "LP-001",
+      "Investor_Name": "NorthStar Public Pension",
+      "Commitment_$": 70000000,
+      "Commitment_%": 0.35,
+      "Called_Capital_$": 0,
+      "Uncalled_Capital_$": 70000000,
+      "Investor_Type": "Institutional pension",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Investor_ID": "LP-002",
+      "Investor_Name": "Harbor University Endowment",
+      "Commitment_$": 50000000,
+      "Commitment_%": 0.25,
+      "Called_Capital_$": 0,
+      "Uncalled_Capital_$": 50000000,
+      "Investor_Type": "University endowment",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Investor_ID": "LP-003",
+      "Investor_Name": "Cedar Family Office",
+      "Commitment_$": 30000000,
+      "Commitment_%": 0.15,
+      "Called_Capital_$": 0,
+      "Uncalled_Capital_$": 30000000,
+      "Investor_Type": "Family office",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Investor_ID": "LP-004",
+      "Investor_Name": "Atlas Insurance Capital",
+      "Commitment_$": 30000000,
+      "Commitment_%": 0.15,
+      "Called_Capital_$": 0,
+      "Uncalled_Capital_$": 30000000,
+      "Investor_Type": "Insurance capital",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Investor_ID": "GP-001",
+      "Investor_Name": "LoneTree GP Commitment",
+      "Commitment_$": 20000000,
+      "Commitment_%": 0.1,
+      "Called_Capital_$": 0,
+      "Uncalled_Capital_$": 20000000,
+      "Investor_Type": "GP commitment",
+      "Data_Status": "Synthetic"
+    }
+  ],
+  "MVP_04_Targets": [
+    {
+      "Target_ID": "TGT-HZ",
+      "Target_Name": "Hazel Health",
+      "Sector": "Healthcare IT / Services",
+      "Business_Model": "K-12 telehealth; predictable annual district fee; physical and mental health",
+      "Ownership_Status": "Private",
+      "Public_Revenue": "Not publicly disclosed",
+      "Public_Growth": "Not publicly disclosed",
+      "Public_Scale": "200+ districts; 6K+ schools; 5M students",
+      "Pricing_Model": "District annual fee; usage/output tracked operationally",
+      "Sector_Fit": 82,
+      "Recurring_Revenue_Fit": 88,
+      "Growth_Fit": 78,
+      "Execution_Risk_Score": 72,
+      "Composite_Score": 84,
+      "Decision": "Shortlist",
+      "Source_IDs": "SRC-HZ-001; SRC-HZ-003"
+    },
+    {
+      "Target_ID": "TGT-VD",
+      "Target_Name": "Veradigm",
+      "Sector": "Healthcare IT / Software",
+      "Business_Model": "Clinical, practice, revenue-cycle and data solutions",
+      "Ownership_Status": "Public OTC",
+      "Public_Revenue": "$583M-$588M estimated 2024",
+      "Public_Growth": "Approximately flat 2025 outlook",
+      "Public_Scale": "20,000+ provider practices referenced in 2026 update",
+      "Pricing_Model": "Subscription, transaction and consumption-oriented services",
+      "Sector_Fit": 90,
+      "Recurring_Revenue_Fit": 76,
+      "Growth_Fit": 65,
+      "Execution_Risk_Score": 58,
+      "Composite_Score": 74,
+      "Decision": "Selected",
+      "Source_IDs": "SRC-VD-001; SRC-VD-002"
+    }
+  ],
+  "MVP_05_Investment_Thesis": [
+    {
+      "Thesis_ID": "TH-001",
+      "Thesis_Name": "Healthcare IT recurring revenue",
+      "Thesis_Statement": "Acquire a scaled healthcare technology platform with repeatable subscription/transaction revenue.",
+      "Value_Creation_Pillar": "Revenue durability",
+      "Primary_Metric": "Recurring revenue %",
+      "Target_Outcome": "Increase recurring/re-occurring revenue quality",
+      "Status": "Active",
+      "Initial_Confidence": 0.76,
+      "Data_Status": "Public + Synthetic"
+    },
+    {
+      "Thesis_ID": "TH-002",
+      "Thesis_Name": "Revenue-cycle monetization",
+      "Thesis_Statement": "Improve monetization through standardized provider, visit, claim and payment usage definitions.",
+      "Value_Creation_Pillar": "Commercial optimization",
+      "Primary_Metric": "Net revenue retention",
+      "Target_Outcome": "Increase retention and expansion while reducing leakage",
+      "Status": "Active",
+      "Initial_Confidence": 0.72,
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Thesis_ID": "TH-003",
+      "Thesis_Name": "Reporting remediation",
+      "Thesis_Statement": "Complete filing remediation, restore control confidence and support national-exchange relisting readiness.",
+      "Value_Creation_Pillar": "Governance and reporting",
+      "Primary_Metric": "Control effectiveness / filing currency",
+      "Target_Outcome": "Reduce governance discount and execution risk",
+      "Status": "Active",
+      "Initial_Confidence": 0.64,
+      "Data_Status": "Public + Synthetic"
+    },
+    {
+      "Thesis_ID": "TH-004",
+      "Thesis_Name": "Data and AI operating leverage",
+      "Thesis_Statement": "Create governed source-to-GL and source-to-fund-economics lineage.",
+      "Value_Creation_Pillar": "Data analytics & insights",
+      "Primary_Metric": "Reconciliation coverage",
+      "Target_Outcome": "Increase decision speed and reduce manual reconciliation",
+      "Status": "Active",
+      "Initial_Confidence": 0.69,
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Thesis_ID": "TH-005",
+      "Thesis_Name": "Strategic product simplification",
+      "Thesis_Statement": "Prioritize independent-practice clinical and revenue-cycle workflows.",
+      "Value_Creation_Pillar": "Product and GTM",
+      "Primary_Metric": "Product gross retention",
+      "Target_Outcome": "Improve adoption and margin",
+      "Status": "Active",
+      "Initial_Confidence": 0.67,
+      "Data_Status": "Synthetic"
+    }
+  ],
+  "MVP_06_Highway_Registry": [
+    {
+      "Highway_ID": "HW-01",
+      "Highway_Name": "Market Intelligence Highway",
+      "Definition": "Market universe to qualified target",
+      "Value_Flow_Type": "Market",
+      "Start_State": "Market Universe",
+      "End_State": "Qualified Target",
+      "Render_Order": 1,
+      "Primary_Scope": "LoneTree Fund I"
+    },
+    {
+      "Highway_ID": "HW-02",
+      "Highway_Name": "Acquisition Highway",
+      "Definition": "Qualified target through close",
+      "Value_Flow_Type": "Capital / Deal",
+      "Start_State": "Qualified Target",
+      "End_State": "Closed Investment",
+      "Render_Order": 2,
+      "Primary_Scope": "LoneTree Fund I"
+    },
+    {
+      "Highway_ID": "HW-03",
+      "Highway_Name": "PortCo Highway",
+      "Definition": "Ownership through exit readiness",
+      "Value_Flow_Type": "Asset / Operating",
+      "Start_State": "Closed Investment",
+      "End_State": "Exit Ready PortCo",
+      "Render_Order": 3,
+      "Primary_Scope": "Veradigm"
+    },
+    {
+      "Highway_ID": "HW-04",
+      "Highway_Name": "PortCo Commercial Highway",
+      "Definition": "Lead/contract/usage/bill/collect/renew",
+      "Value_Flow_Type": "Commercial",
+      "Start_State": "Prospect",
+      "End_State": "Renewed / Expanded / Churned",
+      "Render_Order": 4,
+      "Primary_Scope": "Veradigm"
+    },
+    {
+      "Highway_ID": "HW-05",
+      "Highway_Name": "PortCo Revenue Highway",
+      "Definition": "Contract events through revenue recognition",
+      "Value_Flow_Type": "Revenue",
+      "Start_State": "Contract Event",
+      "End_State": "Recognized Revenue",
+      "Render_Order": 5,
+      "Primary_Scope": "Veradigm"
+    },
+    {
+      "Highway_ID": "HW-06",
+      "Highway_Name": "PortCo Finance Highway",
+      "Definition": "Subledger through GL, statements and cash",
+      "Value_Flow_Type": "Finance",
+      "Start_State": "Subledger Event",
+      "End_State": "Financial Statement / Cash",
+      "Render_Order": 6,
+      "Primary_Scope": "Veradigm"
+    },
+    {
+      "Highway_ID": "HW-07",
+      "Highway_Name": "Value Creation Highway",
+      "Definition": "Operational initiative to realized enterprise value",
+      "Value_Flow_Type": "Value Creation",
+      "Start_State": "Evidence-backed Initiative",
+      "End_State": "Realized Value",
+      "Render_Order": 7,
+      "Primary_Scope": "LoneTree + Veradigm"
+    },
+    {
+      "Highway_ID": "HW-08",
+      "Highway_Name": "Fund Economics Highway",
+      "Definition": "Investment cost through LP economics",
+      "Value_Flow_Type": "Capital",
+      "Start_State": "Invested Capital",
+      "End_State": "MOIC / IRR / Distribution",
+      "Render_Order": 8,
+      "Primary_Scope": "LoneTree Fund I"
+    },
+    {
+      "Highway_ID": "HW-09",
+      "Highway_Name": "Exit Highway",
+      "Definition": "Exit readiness through realized proceeds",
+      "Value_Flow_Type": "Capital / Exit",
+      "Start_State": "Exit Ready",
+      "End_State": "Realized Exit",
+      "Render_Order": 9,
+      "Primary_Scope": "LoneTree Fund I"
+    },
+    {
+      "Highway_ID": "HW-10",
+      "Highway_Name": "Evidence Highway",
+      "Definition": "Source event through governed claim and attribution",
+      "Value_Flow_Type": "Evidence",
+      "Start_State": "Source Observation",
+      "End_State": "Validated Evidence",
+      "Render_Order": 10,
+      "Primary_Scope": "All"
+    }
+  ],
+  "MVP_07_Channels_Stages": [
+    {
+      "Stage_ID": "CH-MKT-01",
+      "Highway_ID": "HW-01",
+      "Channel_Code": "CH-MKT",
+      "Channel_Name": "Target Intelligence",
+      "Channel_Sequence": 1,
+      "Stage_Sequence": 1,
+      "Stage_Name": "Market Universe",
+      "Gate_Type": "Required",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-MKT-02",
+      "Highway_ID": "HW-01",
+      "Channel_Code": "CH-MKT",
+      "Channel_Name": "Target Intelligence",
+      "Channel_Sequence": 1,
+      "Stage_Sequence": 2,
+      "Stage_Name": "Sector Screen",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-MKT-03",
+      "Highway_ID": "HW-01",
+      "Channel_Code": "CH-MKT",
+      "Channel_Name": "Target Intelligence",
+      "Channel_Sequence": 1,
+      "Stage_Sequence": 3,
+      "Stage_Name": "Target Screen",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-MKT-04",
+      "Highway_ID": "HW-01",
+      "Channel_Code": "CH-MKT",
+      "Channel_Name": "Target Intelligence",
+      "Channel_Sequence": 1,
+      "Stage_Sequence": 4,
+      "Stage_Name": "Qualified Target",
+      "Gate_Type": "Required",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-ACQ-01",
+      "Highway_ID": "HW-02",
+      "Channel_Code": "CH-ACQ",
+      "Channel_Name": "Acquisition Journey",
+      "Channel_Sequence": 2,
+      "Stage_Sequence": 1,
+      "Stage_Name": "Origination",
+      "Gate_Type": "Required",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-ACQ-02",
+      "Highway_ID": "HW-02",
+      "Channel_Code": "CH-ACQ",
+      "Channel_Name": "Acquisition Journey",
+      "Channel_Sequence": 2,
+      "Stage_Sequence": 2,
+      "Stage_Name": "Initial Review",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-ACQ-03",
+      "Highway_ID": "HW-02",
+      "Channel_Code": "CH-ACQ",
+      "Channel_Name": "Acquisition Journey",
+      "Channel_Sequence": 2,
+      "Stage_Sequence": 3,
+      "Stage_Name": "Management Meeting",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-ACQ-04",
+      "Highway_ID": "HW-02",
+      "Channel_Code": "CH-ACQ",
+      "Channel_Name": "Acquisition Journey",
+      "Channel_Sequence": 2,
+      "Stage_Sequence": 4,
+      "Stage_Name": "IOI",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-ACQ-05",
+      "Highway_ID": "HW-02",
+      "Channel_Code": "CH-ACQ",
+      "Channel_Name": "Acquisition Journey",
+      "Channel_Sequence": 2,
+      "Stage_Sequence": 5,
+      "Stage_Name": "LOI",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-ACQ-06",
+      "Highway_ID": "HW-02",
+      "Channel_Code": "CH-ACQ",
+      "Channel_Name": "Acquisition Journey",
+      "Channel_Sequence": 2,
+      "Stage_Sequence": 6,
+      "Stage_Name": "Due Diligence",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-ACQ-07",
+      "Highway_ID": "HW-02",
+      "Channel_Code": "CH-ACQ",
+      "Channel_Name": "Acquisition Journey",
+      "Channel_Sequence": 2,
+      "Stage_Sequence": 7,
+      "Stage_Name": "Investment Committee",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-ACQ-08",
+      "Highway_ID": "HW-02",
+      "Channel_Code": "CH-ACQ",
+      "Channel_Name": "Acquisition Journey",
+      "Channel_Sequence": 2,
+      "Stage_Sequence": 8,
+      "Stage_Name": "Definitive Agreement",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-ACQ-09",
+      "Highway_ID": "HW-02",
+      "Channel_Code": "CH-ACQ",
+      "Channel_Name": "Acquisition Journey",
+      "Channel_Sequence": 2,
+      "Stage_Sequence": 9,
+      "Stage_Name": "Close",
+      "Gate_Type": "Required",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-PCO-01",
+      "Highway_ID": "HW-03",
+      "Channel_Code": "CH-PCO",
+      "Channel_Name": "PortCo Ownership Journey",
+      "Channel_Sequence": 3,
+      "Stage_Sequence": 1,
+      "Stage_Name": "Day 0 Baseline",
+      "Gate_Type": "Required",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-PCO-02",
+      "Highway_ID": "HW-03",
+      "Channel_Code": "CH-PCO",
+      "Channel_Name": "PortCo Ownership Journey",
+      "Channel_Sequence": 3,
+      "Stage_Sequence": 2,
+      "Stage_Name": "100-Day Plan",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-PCO-03",
+      "Highway_ID": "HW-03",
+      "Channel_Code": "CH-PCO",
+      "Channel_Name": "PortCo Ownership Journey",
+      "Channel_Sequence": 3,
+      "Stage_Sequence": 3,
+      "Stage_Name": "Operating Cadence",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-PCO-04",
+      "Highway_ID": "HW-03",
+      "Channel_Code": "CH-PCO",
+      "Channel_Name": "PortCo Ownership Journey",
+      "Channel_Sequence": 3,
+      "Stage_Sequence": 4,
+      "Stage_Name": "Value Creation",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-PCO-05",
+      "Highway_ID": "HW-03",
+      "Channel_Code": "CH-PCO",
+      "Channel_Name": "PortCo Ownership Journey",
+      "Channel_Sequence": 3,
+      "Stage_Sequence": 5,
+      "Stage_Name": "Exit Readiness",
+      "Gate_Type": "Required",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-COM-01",
+      "Highway_ID": "HW-04",
+      "Channel_Code": "CH-COM",
+      "Channel_Name": "Commercial Lifecycle",
+      "Channel_Sequence": 4,
+      "Stage_Sequence": 1,
+      "Stage_Name": "Lead",
+      "Gate_Type": "Required",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-COM-02",
+      "Highway_ID": "HW-04",
+      "Channel_Code": "CH-COM",
+      "Channel_Name": "Commercial Lifecycle",
+      "Channel_Sequence": 4,
+      "Stage_Sequence": 2,
+      "Stage_Name": "Opportunity",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-COM-03",
+      "Highway_ID": "HW-04",
+      "Channel_Code": "CH-COM",
+      "Channel_Name": "Commercial Lifecycle",
+      "Channel_Sequence": 4,
+      "Stage_Sequence": 3,
+      "Stage_Name": "Proposal",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-COM-04",
+      "Highway_ID": "HW-04",
+      "Channel_Code": "CH-COM",
+      "Channel_Name": "Commercial Lifecycle",
+      "Channel_Sequence": 4,
+      "Stage_Sequence": 4,
+      "Stage_Name": "Quote",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-COM-05",
+      "Highway_ID": "HW-04",
+      "Channel_Code": "CH-COM",
+      "Channel_Name": "Commercial Lifecycle",
+      "Channel_Sequence": 4,
+      "Stage_Sequence": 5,
+      "Stage_Name": "Contract",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-COM-06",
+      "Highway_ID": "HW-04",
+      "Channel_Code": "CH-COM",
+      "Channel_Name": "Commercial Lifecycle",
+      "Channel_Sequence": 4,
+      "Stage_Sequence": 6,
+      "Stage_Name": "Order",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-COM-07",
+      "Highway_ID": "HW-04",
+      "Channel_Code": "CH-COM",
+      "Channel_Name": "Commercial Lifecycle",
+      "Channel_Sequence": 4,
+      "Stage_Sequence": 7,
+      "Stage_Name": "Subscription",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-COM-08",
+      "Highway_ID": "HW-04",
+      "Channel_Code": "CH-COM",
+      "Channel_Name": "Commercial Lifecycle",
+      "Channel_Sequence": 4,
+      "Stage_Sequence": 8,
+      "Stage_Name": "Usage",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-COM-09",
+      "Highway_ID": "HW-04",
+      "Channel_Code": "CH-COM",
+      "Channel_Name": "Commercial Lifecycle",
+      "Channel_Sequence": 4,
+      "Stage_Sequence": 9,
+      "Stage_Name": "Bill",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-COM-10",
+      "Highway_ID": "HW-04",
+      "Channel_Code": "CH-COM",
+      "Channel_Name": "Commercial Lifecycle",
+      "Channel_Sequence": 4,
+      "Stage_Sequence": 10,
+      "Stage_Name": "Invoice",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-COM-11",
+      "Highway_ID": "HW-04",
+      "Channel_Code": "CH-COM",
+      "Channel_Name": "Commercial Lifecycle",
+      "Channel_Sequence": 4,
+      "Stage_Sequence": 11,
+      "Stage_Name": "Collect",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-COM-12",
+      "Highway_ID": "HW-04",
+      "Channel_Code": "CH-COM",
+      "Channel_Name": "Commercial Lifecycle",
+      "Channel_Sequence": 4,
+      "Stage_Sequence": 12,
+      "Stage_Name": "Renew / Expand / Amend",
+      "Gate_Type": "Required",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-REV-01",
+      "Highway_ID": "HW-05",
+      "Channel_Code": "CH-REV",
+      "Channel_Name": "Revenue Lifecycle",
+      "Channel_Sequence": 5,
+      "Stage_Sequence": 1,
+      "Stage_Name": "Contract Event",
+      "Gate_Type": "Required",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-REV-02",
+      "Highway_ID": "HW-05",
+      "Channel_Code": "CH-REV",
+      "Channel_Name": "Revenue Lifecycle",
+      "Channel_Sequence": 5,
+      "Stage_Sequence": 2,
+      "Stage_Name": "Performance Obligation",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-REV-03",
+      "Highway_ID": "HW-05",
+      "Channel_Code": "CH-REV",
+      "Channel_Name": "Revenue Lifecycle",
+      "Channel_Sequence": 5,
+      "Stage_Sequence": 3,
+      "Stage_Name": "Revenue Schedule",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-REV-04",
+      "Highway_ID": "HW-05",
+      "Channel_Code": "CH-REV",
+      "Channel_Name": "Revenue Lifecycle",
+      "Channel_Sequence": 5,
+      "Stage_Sequence": 4,
+      "Stage_Name": "Recognize",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-REV-05",
+      "Highway_ID": "HW-05",
+      "Channel_Code": "CH-REV",
+      "Channel_Name": "Revenue Lifecycle",
+      "Channel_Sequence": 5,
+      "Stage_Sequence": 5,
+      "Stage_Name": "Adjust",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-REV-06",
+      "Highway_ID": "HW-05",
+      "Channel_Code": "CH-REV",
+      "Channel_Name": "Revenue Lifecycle",
+      "Channel_Sequence": 5,
+      "Stage_Sequence": 6,
+      "Stage_Name": "Reconcile",
+      "Gate_Type": "Required",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-FIN-01",
+      "Highway_ID": "HW-06",
+      "Channel_Code": "CH-FIN",
+      "Channel_Name": "Finance Lifecycle",
+      "Channel_Sequence": 6,
+      "Stage_Sequence": 1,
+      "Stage_Name": "Subledger",
+      "Gate_Type": "Required",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-FIN-02",
+      "Highway_ID": "HW-06",
+      "Channel_Code": "CH-FIN",
+      "Channel_Name": "Finance Lifecycle",
+      "Channel_Sequence": 6,
+      "Stage_Sequence": 2,
+      "Stage_Name": "Journal",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-FIN-03",
+      "Highway_ID": "HW-06",
+      "Channel_Code": "CH-FIN",
+      "Channel_Name": "Finance Lifecycle",
+      "Channel_Sequence": 6,
+      "Stage_Sequence": 3,
+      "Stage_Name": "General Ledger",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-FIN-04",
+      "Highway_ID": "HW-06",
+      "Channel_Code": "CH-FIN",
+      "Channel_Name": "Finance Lifecycle",
+      "Channel_Sequence": 6,
+      "Stage_Sequence": 4,
+      "Stage_Name": "Financial Statements",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-FIN-05",
+      "Highway_ID": "HW-06",
+      "Channel_Code": "CH-FIN",
+      "Channel_Name": "Finance Lifecycle",
+      "Channel_Sequence": 6,
+      "Stage_Sequence": 5,
+      "Stage_Name": "Cash",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-FIN-06",
+      "Highway_ID": "HW-06",
+      "Channel_Code": "CH-FIN",
+      "Channel_Name": "Finance Lifecycle",
+      "Channel_Sequence": 6,
+      "Stage_Sequence": 6,
+      "Stage_Name": "Close / Reconcile",
+      "Gate_Type": "Required",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-VC-01",
+      "Highway_ID": "HW-07",
+      "Channel_Code": "CH-VC",
+      "Channel_Name": "Value Creation Journey",
+      "Channel_Sequence": 7,
+      "Stage_Sequence": 1,
+      "Stage_Name": "Signal",
+      "Gate_Type": "Required",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-VC-02",
+      "Highway_ID": "HW-07",
+      "Channel_Code": "CH-VC",
+      "Channel_Name": "Value Creation Journey",
+      "Channel_Sequence": 7,
+      "Stage_Sequence": 2,
+      "Stage_Name": "Hypothesis",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-VC-03",
+      "Highway_ID": "HW-07",
+      "Channel_Code": "CH-VC",
+      "Channel_Name": "Value Creation Journey",
+      "Channel_Sequence": 7,
+      "Stage_Sequence": 3,
+      "Stage_Name": "Initiative",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-VC-04",
+      "Highway_ID": "HW-07",
+      "Channel_Code": "CH-VC",
+      "Channel_Name": "Value Creation Journey",
+      "Channel_Sequence": 7,
+      "Stage_Sequence": 4,
+      "Stage_Name": "Execution",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-VC-05",
+      "Highway_ID": "HW-07",
+      "Channel_Code": "CH-VC",
+      "Channel_Name": "Value Creation Journey",
+      "Channel_Sequence": 7,
+      "Stage_Sequence": 5,
+      "Stage_Name": "Outcome",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-VC-06",
+      "Highway_ID": "HW-07",
+      "Channel_Code": "CH-VC",
+      "Channel_Name": "Value Creation Journey",
+      "Channel_Sequence": 7,
+      "Stage_Sequence": 6,
+      "Stage_Name": "Thesis Evidence",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-VC-07",
+      "Highway_ID": "HW-07",
+      "Channel_Code": "CH-VC",
+      "Channel_Name": "Value Creation Journey",
+      "Channel_Sequence": 7,
+      "Stage_Sequence": 7,
+      "Stage_Name": "Enterprise Value",
+      "Gate_Type": "Required",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-FE-01",
+      "Highway_ID": "HW-08",
+      "Channel_Code": "CH-FE",
+      "Channel_Name": "Fund Economics",
+      "Channel_Sequence": 8,
+      "Stage_Sequence": 1,
+      "Stage_Name": "Capital Call",
+      "Gate_Type": "Required",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-FE-02",
+      "Highway_ID": "HW-08",
+      "Channel_Code": "CH-FE",
+      "Channel_Name": "Fund Economics",
+      "Channel_Sequence": 8,
+      "Stage_Sequence": 2,
+      "Stage_Name": "Investment Cost",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-FE-03",
+      "Highway_ID": "HW-08",
+      "Channel_Code": "CH-FE",
+      "Channel_Name": "Fund Economics",
+      "Channel_Sequence": 8,
+      "Stage_Sequence": 3,
+      "Stage_Name": "NAV",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-FE-04",
+      "Highway_ID": "HW-08",
+      "Channel_Code": "CH-FE",
+      "Channel_Name": "Fund Economics",
+      "Channel_Sequence": 8,
+      "Stage_Sequence": 4,
+      "Stage_Name": "MOIC",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-FE-05",
+      "Highway_ID": "HW-08",
+      "Channel_Code": "CH-FE",
+      "Channel_Name": "Fund Economics",
+      "Channel_Sequence": 8,
+      "Stage_Sequence": 5,
+      "Stage_Name": "IRR",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-FE-06",
+      "Highway_ID": "HW-08",
+      "Channel_Code": "CH-FE",
+      "Channel_Name": "Fund Economics",
+      "Channel_Sequence": 8,
+      "Stage_Sequence": 6,
+      "Stage_Name": "Distribution",
+      "Gate_Type": "Required",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-EXIT-01",
+      "Highway_ID": "HW-09",
+      "Channel_Code": "CH-EXIT",
+      "Channel_Name": "Exit Journey",
+      "Channel_Sequence": 9,
+      "Stage_Sequence": 1,
+      "Stage_Name": "Readiness",
+      "Gate_Type": "Required",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-EXIT-02",
+      "Highway_ID": "HW-09",
+      "Channel_Code": "CH-EXIT",
+      "Channel_Name": "Exit Journey",
+      "Channel_Sequence": 9,
+      "Stage_Sequence": 2,
+      "Stage_Name": "Process Launch",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-EXIT-03",
+      "Highway_ID": "HW-09",
+      "Channel_Code": "CH-EXIT",
+      "Channel_Name": "Exit Journey",
+      "Channel_Sequence": 9,
+      "Stage_Sequence": 3,
+      "Stage_Name": "Buyer Diligence",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-EXIT-04",
+      "Highway_ID": "HW-09",
+      "Channel_Code": "CH-EXIT",
+      "Channel_Name": "Exit Journey",
+      "Channel_Sequence": 9,
+      "Stage_Sequence": 4,
+      "Stage_Name": "Signing",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-EXIT-05",
+      "Highway_ID": "HW-09",
+      "Channel_Code": "CH-EXIT",
+      "Channel_Name": "Exit Journey",
+      "Channel_Sequence": 9,
+      "Stage_Sequence": 5,
+      "Stage_Name": "Closing",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-EXIT-06",
+      "Highway_ID": "HW-09",
+      "Channel_Code": "CH-EXIT",
+      "Channel_Name": "Exit Journey",
+      "Channel_Sequence": 9,
+      "Stage_Sequence": 6,
+      "Stage_Name": "Distribution",
+      "Gate_Type": "Required",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-EVD-01",
+      "Highway_ID": "HW-10",
+      "Channel_Code": "CH-EVD",
+      "Channel_Name": "Evidence Lifecycle",
+      "Channel_Sequence": 10,
+      "Stage_Sequence": 1,
+      "Stage_Name": "Observation",
+      "Gate_Type": "Required",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-EVD-02",
+      "Highway_ID": "HW-10",
+      "Channel_Code": "CH-EVD",
+      "Channel_Name": "Evidence Lifecycle",
+      "Channel_Sequence": 10,
+      "Stage_Sequence": 2,
+      "Stage_Name": "Attribution",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-EVD-03",
+      "Highway_ID": "HW-10",
+      "Channel_Code": "CH-EVD",
+      "Channel_Name": "Evidence Lifecycle",
+      "Channel_Sequence": 10,
+      "Stage_Sequence": 3,
+      "Stage_Name": "Claim",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-EVD-04",
+      "Highway_ID": "HW-10",
+      "Channel_Code": "CH-EVD",
+      "Channel_Name": "Evidence Lifecycle",
+      "Channel_Sequence": 10,
+      "Stage_Sequence": 4,
+      "Stage_Name": "Validation",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-EVD-05",
+      "Highway_ID": "HW-10",
+      "Channel_Code": "CH-EVD",
+      "Channel_Name": "Evidence Lifecycle",
+      "Channel_Sequence": 10,
+      "Stage_Sequence": 5,
+      "Stage_Name": "Authority",
+      "Gate_Type": "Conditional",
+      "Status": "Active"
+    },
+    {
+      "Stage_ID": "CH-EVD-06",
+      "Highway_ID": "HW-10",
+      "Channel_Code": "CH-EVD",
+      "Channel_Name": "Evidence Lifecycle",
+      "Channel_Sequence": 10,
+      "Stage_Sequence": 6,
+      "Stage_Name": "Projection",
+      "Gate_Type": "Required",
+      "Status": "Active"
+    }
+  ],
+  "MVP_08_Deal_Journey": [
+    {
+      "Event_ID": "EVT-ACQ-001",
+      "Event_Date": "2026-08-03",
+      "Target_ID": "TGT-HZ",
+      "Channel_Code": "CH-ACQ",
+      "Stage": "Initial Review",
+      "Event_Type": "Create",
+      "Event_Name": "Hazel enters formal target review",
+      "Business_Rationale": "Public scale and recurring district contracts fit healthcare IT thesis.",
+      "Evidence_Source_ID": "SRC-HZ-001",
+      "Maturity_After": 0.2,
+      "Confidence_After": 0.6
+    },
+    {
+      "Event_ID": "EVT-ACQ-002",
+      "Event_Date": "2026-08-03",
+      "Target_ID": "TGT-VD",
+      "Channel_Code": "CH-ACQ",
+      "Stage": "Initial Review",
+      "Event_Type": "Create",
+      "Event_Name": "Veradigm enters formal target review",
+      "Business_Rationale": "Scaled revenue-cycle platform with public reporting-remediation risk.",
+      "Evidence_Source_ID": "SRC-VD-001",
+      "Maturity_After": 0.2,
+      "Confidence_After": 0.72
+    },
+    {
+      "Event_ID": "EVT-ACQ-003",
+      "Event_Date": "2026-08-04",
+      "Target_ID": "TGT-HZ",
+      "Channel_Code": "CH-ACQ",
+      "Stage": "Due Diligence",
+      "Event_Type": "Advance",
+      "Event_Name": "Hazel commercial diligence opened",
+      "Business_Rationale": "Validate pricing, district retention, utilization and payer mix.",
+      "Evidence_Source_ID": "SRC-HZ-003",
+      "Maturity_After": 0.55,
+      "Confidence_After": 0.54
+    },
+    {
+      "Event_ID": "EVT-ACQ-004",
+      "Event_Date": "2026-08-04",
+      "Target_ID": "TGT-VD",
+      "Channel_Code": "CH-ACQ",
+      "Stage": "Due Diligence",
+      "Event_Type": "Advance",
+      "Event_Name": "Veradigm diligence opened",
+      "Business_Rationale": "Validate normalized revenue, retention, filing remediation, product usage and cash.",
+      "Evidence_Source_ID": "SRC-VD-002",
+      "Maturity_After": 0.55,
+      "Confidence_After": 0.6
+    },
+    {
+      "Event_ID": "EVT-ACQ-005",
+      "Event_Date": "2026-08-05",
+      "Target_ID": "TGT-VD",
+      "Channel_Code": "CH-ACQ",
+      "Stage": "Investment Committee",
+      "Event_Type": "Advance",
+      "Event_Name": "Veradigm selected for illustrative IC",
+      "Business_Rationale": "MVP demonstration value outweighs execution risk in synthetic scenario.",
+      "Evidence_Source_ID": "SRC-DEMO-001",
+      "Maturity_After": 0.78,
+      "Confidence_After": 0.68
+    },
+    {
+      "Event_ID": "EVT-ACQ-006",
+      "Event_Date": "2026-08-06",
+      "Target_ID": "TGT-VD",
+      "Channel_Code": "CH-ACQ",
+      "Stage": "Close",
+      "Event_Type": "Converge",
+      "Event_Name": "Synthetic acquisition closes",
+      "Business_Rationale": "Illustrative purchase price and financing become authoritative for demo.",
+      "Evidence_Source_ID": "SRC-DEMO-001",
+      "Maturity_After": 1,
+      "Confidence_After": 0.95
+    }
+  ],
+  "MVP_09_Diligence": [
+    {
+      "Diligence_ID": "DD-001",
+      "Target_ID": "TGT-VD",
+      "Domain": "Commercial",
+      "Question": "Revenue quality",
+      "Required_Analysis": "Normalize recurring, transaction and services revenue.",
+      "Status": "Open",
+      "Owner": "Investment Team",
+      "Linked_Thesis_ID": "TH-001",
+      "Maturity": 0.7,
+      "Confidence": 0.75
+    },
+    {
+      "Diligence_ID": "DD-002",
+      "Target_ID": "TGT-VD",
+      "Domain": "Customer",
+      "Question": "Retention",
+      "Required_Analysis": "Reconstruct gross and net retention from customer/contract/usage events.",
+      "Status": "Open",
+      "Owner": "Operating Team",
+      "Linked_Thesis_ID": "TH-002",
+      "Maturity": 0.55,
+      "Confidence": 0.6
+    },
+    {
+      "Diligence_ID": "DD-003",
+      "Target_ID": "TGT-VD",
+      "Domain": "Finance",
+      "Question": "Reporting remediation",
+      "Required_Analysis": "Validate filed periods, remaining filing gaps and control remediation.",
+      "Status": "Open",
+      "Owner": "Finance Team",
+      "Linked_Thesis_ID": "TH-003",
+      "Maturity": 0.65,
+      "Confidence": 0.7
+    },
+    {
+      "Diligence_ID": "DD-004",
+      "Target_ID": "TGT-VD",
+      "Domain": "Product",
+      "Question": "Usage monetization",
+      "Required_Analysis": "Map provider, visit, claim and payment usage to contract pricing.",
+      "Status": "Open",
+      "Owner": "Operating Team",
+      "Linked_Thesis_ID": "TH-002",
+      "Maturity": 0.6,
+      "Confidence": 0.62
+    },
+    {
+      "Diligence_ID": "DD-005",
+      "Target_ID": "TGT-VD",
+      "Domain": "Technology",
+      "Question": "Source-to-GL lineage",
+      "Required_Analysis": "Trace source event to invoice, revenue schedule, GL and fund metric.",
+      "Status": "Open",
+      "Owner": "Data Team",
+      "Linked_Thesis_ID": "TH-004",
+      "Maturity": 0.48,
+      "Confidence": 0.55
+    },
+    {
+      "Diligence_ID": "DD-006",
+      "Target_ID": "TGT-HZ",
+      "Domain": "Commercial",
+      "Question": "District economics",
+      "Required_Analysis": "Validate annual fee, district renewal and covered-student growth.",
+      "Status": "Open",
+      "Owner": "Investment Team",
+      "Linked_Thesis_ID": "TH-001",
+      "Maturity": 0.5,
+      "Confidence": 0.48
+    },
+    {
+      "Diligence_ID": "DD-007",
+      "Target_ID": "TGT-HZ",
+      "Domain": "Operations",
+      "Question": "Clinical capacity",
+      "Required_Analysis": "Validate provider supply, visit utilization and service outcomes.",
+      "Status": "Open",
+      "Owner": "Operating Team",
+      "Linked_Thesis_ID": "TH-005",
+      "Maturity": 0.45,
+      "Confidence": 0.52
+    }
+  ],
+  "MVP_10_PortCo_Products": [
+    {
+      "Product_ID": "PRD-001",
+      "Product_Name": "Veradigm Practice Platform",
+      "Product_Family": "Clinical / Practice Software",
+      "Revenue_Model": "Subscription",
+      "Pricing_Lever": "Provider per month",
+      "Target_Customer": "Independent physician practices",
+      "Status": "Active",
+      "Illustrative_Unit_Price_$": 275,
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Product_ID": "PRD-002",
+      "Product_Name": "Veradigm Revenue Cycle Services",
+      "Product_Family": "Revenue Cycle",
+      "Revenue_Model": "Consumption",
+      "Pricing_Lever": "Visit / claim transaction",
+      "Target_Customer": "Independent practices and groups",
+      "Status": "Active",
+      "Illustrative_Unit_Price_$": 4.25,
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Product_ID": "PRD-003",
+      "Product_Name": "Veradigm Payment Enablement",
+      "Product_Family": "Payments",
+      "Revenue_Model": "Consumption",
+      "Pricing_Lever": "Successful payment transaction",
+      "Target_Customer": "Provider organizations",
+      "Status": "Active",
+      "Illustrative_Unit_Price_$": 1.1,
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Product_ID": "PRD-004",
+      "Product_Name": "Veradigm Data Insights",
+      "Product_Family": "Data / Analytics",
+      "Revenue_Model": "Subscription + usage",
+      "Pricing_Lever": "Organization annual subscription + data volume",
+      "Target_Customer": "Health plans / biopharma",
+      "Status": "Active",
+      "Illustrative_Unit_Price_$": 180000,
+      "Data_Status": "Synthetic"
+    }
+  ],
+  "MVP_11_PortCo_Customers": [
+    {
+      "Customer_ID": "CUS-001",
+      "Customer_Name": "Summit Independent Medical Group",
+      "Customer_Type": "Independent Practice Group",
+      "Region": "Southeast",
+      "Provider_Count": 420,
+      "Customer_Status": "Active",
+      "Segment": "Strategic",
+      "Health_Score": 0.91,
+      "Renewal_Confidence": 0.84
+    },
+    {
+      "Customer_ID": "CUS-002",
+      "Customer_Name": "Lakeview Physician Network",
+      "Customer_Type": "Independent Practice Group",
+      "Region": "Midwest",
+      "Provider_Count": 285,
+      "Customer_Status": "Active",
+      "Segment": "Enterprise",
+      "Health_Score": 0.86,
+      "Renewal_Confidence": 0.79
+    },
+    {
+      "Customer_ID": "CUS-003",
+      "Customer_Name": "Harbor Primary Care Alliance",
+      "Customer_Type": "Independent Practice Group",
+      "Region": "Northeast",
+      "Provider_Count": 160,
+      "Customer_Status": "At Risk",
+      "Segment": "Enterprise",
+      "Health_Score": 0.64,
+      "Renewal_Confidence": 0.58
+    },
+    {
+      "Customer_ID": "CUS-004",
+      "Customer_Name": "Crescent Specialty Partners",
+      "Customer_Type": "Specialty Group",
+      "Region": "Southwest",
+      "Provider_Count": 95,
+      "Customer_Status": "Active",
+      "Segment": "Mid-Market",
+      "Health_Score": 0.88,
+      "Renewal_Confidence": 0.82
+    },
+    {
+      "Customer_ID": "CUS-005",
+      "Customer_Name": "North County Pediatrics",
+      "Customer_Type": "Pediatric Group",
+      "Region": "West",
+      "Provider_Count": 48,
+      "Customer_Status": "Active",
+      "Segment": "SMB",
+      "Health_Score": 0.93,
+      "Renewal_Confidence": 0.87
+    }
+  ],
+  "MVP_12_Contracts": [
+    {
+      "Contract_ID": "CTR-001",
+      "Customer_ID": "CUS-001",
+      "Product_ID": "PRD-001",
+      "Start_Date": "2026-01-01",
+      "End_Date": "2028-12-31",
+      "Committed_Quantity": 420,
+      "Unit_Price_$": 275,
+      "Billing_Frequency": "Monthly",
+      "Renewal_Frequency": "Annual",
+      "Annual_Escalator": 0.04,
+      "Contract_Status": "Active",
+      "Annualized_Contract_Value_$": 1386000
+    },
+    {
+      "Contract_ID": "CTR-002",
+      "Customer_ID": "CUS-001",
+      "Product_ID": "PRD-002",
+      "Start_Date": "2026-01-01",
+      "End_Date": "2028-12-31",
+      "Committed_Quantity": 240000,
+      "Unit_Price_$": 4.25,
+      "Billing_Frequency": "Monthly usage",
+      "Renewal_Frequency": "Annual",
+      "Annual_Escalator": 0.04,
+      "Contract_Status": "Active",
+      "Annualized_Contract_Value_$": 1020000
+    },
+    {
+      "Contract_ID": "CTR-003",
+      "Customer_ID": "CUS-002",
+      "Product_ID": "PRD-001",
+      "Start_Date": "2025-07-01",
+      "End_Date": "2028-06-30",
+      "Committed_Quantity": 285,
+      "Unit_Price_$": 265,
+      "Billing_Frequency": "Monthly",
+      "Renewal_Frequency": "Annual",
+      "Annual_Escalator": 0.03,
+      "Contract_Status": "Active",
+      "Annualized_Contract_Value_$": 906300
+    },
+    {
+      "Contract_ID": "CTR-004",
+      "Customer_ID": "CUS-003",
+      "Product_ID": "PRD-001",
+      "Start_Date": "2025-10-01",
+      "End_Date": "2027-09-30",
+      "Committed_Quantity": 160,
+      "Unit_Price_$": 285,
+      "Billing_Frequency": "Monthly",
+      "Renewal_Frequency": "Annual",
+      "Annual_Escalator": 0,
+      "Contract_Status": "Amendment Review",
+      "Annualized_Contract_Value_$": 547200
+    },
+    {
+      "Contract_ID": "CTR-005",
+      "Customer_ID": "CUS-003",
+      "Product_ID": "PRD-002",
+      "Start_Date": "2025-10-01",
+      "End_Date": "2027-09-30",
+      "Committed_Quantity": 90000,
+      "Unit_Price_$": 4.5,
+      "Billing_Frequency": "Monthly usage",
+      "Renewal_Frequency": "Annual",
+      "Annual_Escalator": 0,
+      "Contract_Status": "Amendment Review",
+      "Annualized_Contract_Value_$": 405000
+    },
+    {
+      "Contract_ID": "CTR-006",
+      "Customer_ID": "CUS-004",
+      "Product_ID": "PRD-003",
+      "Start_Date": "2026-01-01",
+      "End_Date": "2026-12-31",
+      "Committed_Quantity": 300000,
+      "Unit_Price_$": 1.1,
+      "Billing_Frequency": "Monthly usage",
+      "Renewal_Frequency": "Annual",
+      "Annual_Escalator": 0.05,
+      "Contract_Status": "Active",
+      "Annualized_Contract_Value_$": 330000
+    },
+    {
+      "Contract_ID": "CTR-007",
+      "Customer_ID": "CUS-005",
+      "Product_ID": "PRD-001",
+      "Start_Date": "2026-04-01",
+      "End_Date": "2027-03-31",
+      "Committed_Quantity": 48,
+      "Unit_Price_$": 295,
+      "Billing_Frequency": "Monthly",
+      "Renewal_Frequency": "Annual",
+      "Annual_Escalator": 0,
+      "Contract_Status": "Active",
+      "Annualized_Contract_Value_$": 169920
+    }
+  ],
+  "MVP_13_Usage_Events": [
+    {
+      "Usage_Event_ID": "USE-002-202601",
+      "Usage_Month": "2026-01",
+      "Customer_ID": "CUS-001",
+      "Contract_ID": "CTR-002",
+      "Usage_Metric": "Visit_Count",
+      "Actual_Quantity": 20000,
+      "Baseline_Quantity": 20000,
+      "Variance_to_Baseline": 0,
+      "Authority_State": "Authoritative",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Usage_Event_ID": "USE-002-202602",
+      "Usage_Month": "2026-02",
+      "Customer_ID": "CUS-001",
+      "Contract_ID": "CTR-002",
+      "Usage_Metric": "Visit_Count",
+      "Actual_Quantity": 20500,
+      "Baseline_Quantity": 20000,
+      "Variance_to_Baseline": 0.02499999999999991,
+      "Authority_State": "Authoritative",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Usage_Event_ID": "USE-002-202603",
+      "Usage_Month": "2026-03",
+      "Customer_ID": "CUS-001",
+      "Contract_ID": "CTR-002",
+      "Usage_Metric": "Visit_Count",
+      "Actual_Quantity": 21000,
+      "Baseline_Quantity": 20000,
+      "Variance_to_Baseline": 0.050000000000000044,
+      "Authority_State": "Authoritative",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Usage_Event_ID": "USE-002-202604",
+      "Usage_Month": "2026-04",
+      "Customer_ID": "CUS-001",
+      "Contract_ID": "CTR-002",
+      "Usage_Metric": "Visit_Count",
+      "Actual_Quantity": 19800,
+      "Baseline_Quantity": 20000,
+      "Variance_to_Baseline": -0.010000000000000009,
+      "Authority_State": "Authoritative",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Usage_Event_ID": "USE-002-202605",
+      "Usage_Month": "2026-05",
+      "Customer_ID": "CUS-001",
+      "Contract_ID": "CTR-002",
+      "Usage_Metric": "Visit_Count",
+      "Actual_Quantity": 19000,
+      "Baseline_Quantity": 20000,
+      "Variance_to_Baseline": -0.050000000000000044,
+      "Authority_State": "Authoritative",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Usage_Event_ID": "USE-002-202606",
+      "Usage_Month": "2026-06",
+      "Customer_ID": "CUS-001",
+      "Contract_ID": "CTR-002",
+      "Usage_Metric": "Visit_Count",
+      "Actual_Quantity": 18200,
+      "Baseline_Quantity": 20000,
+      "Variance_to_Baseline": -0.08999999999999997,
+      "Authority_State": "Authoritative",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Usage_Event_ID": "USE-005-202601",
+      "Usage_Month": "2026-01",
+      "Customer_ID": "CUS-003",
+      "Contract_ID": "CTR-005",
+      "Usage_Metric": "Visit_Count",
+      "Actual_Quantity": 7500,
+      "Baseline_Quantity": 7500,
+      "Variance_to_Baseline": 0,
+      "Authority_State": "Authoritative",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Usage_Event_ID": "USE-005-202602",
+      "Usage_Month": "2026-02",
+      "Customer_ID": "CUS-003",
+      "Contract_ID": "CTR-005",
+      "Usage_Metric": "Visit_Count",
+      "Actual_Quantity": 7400,
+      "Baseline_Quantity": 7500,
+      "Variance_to_Baseline": -0.013333333333333308,
+      "Authority_State": "Authoritative",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Usage_Event_ID": "USE-005-202603",
+      "Usage_Month": "2026-03",
+      "Customer_ID": "CUS-003",
+      "Contract_ID": "CTR-005",
+      "Usage_Metric": "Visit_Count",
+      "Actual_Quantity": 7200,
+      "Baseline_Quantity": 7500,
+      "Variance_to_Baseline": -0.040000000000000036,
+      "Authority_State": "Authoritative",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Usage_Event_ID": "USE-005-202604",
+      "Usage_Month": "2026-04",
+      "Customer_ID": "CUS-003",
+      "Contract_ID": "CTR-005",
+      "Usage_Metric": "Visit_Count",
+      "Actual_Quantity": 6100,
+      "Baseline_Quantity": 7500,
+      "Variance_to_Baseline": -0.18666666666666665,
+      "Authority_State": "Authoritative",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Usage_Event_ID": "USE-005-202605",
+      "Usage_Month": "2026-05",
+      "Customer_ID": "CUS-003",
+      "Contract_ID": "CTR-005",
+      "Usage_Metric": "Visit_Count",
+      "Actual_Quantity": 5200,
+      "Baseline_Quantity": 7500,
+      "Variance_to_Baseline": -0.30666666666666664,
+      "Authority_State": "Authoritative",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Usage_Event_ID": "USE-005-202606",
+      "Usage_Month": "2026-06",
+      "Customer_ID": "CUS-003",
+      "Contract_ID": "CTR-005",
+      "Usage_Metric": "Visit_Count",
+      "Actual_Quantity": 4750,
+      "Baseline_Quantity": 7500,
+      "Variance_to_Baseline": -0.3666666666666667,
+      "Authority_State": "Authoritative",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Usage_Event_ID": "USE-006-202601",
+      "Usage_Month": "2026-01",
+      "Customer_ID": "CUS-004",
+      "Contract_ID": "CTR-006",
+      "Usage_Metric": "Successful_Payment_Count",
+      "Actual_Quantity": 24000,
+      "Baseline_Quantity": 24000,
+      "Variance_to_Baseline": 0,
+      "Authority_State": "Authoritative",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Usage_Event_ID": "USE-006-202602",
+      "Usage_Month": "2026-02",
+      "Customer_ID": "CUS-004",
+      "Contract_ID": "CTR-006",
+      "Usage_Metric": "Successful_Payment_Count",
+      "Actual_Quantity": 25000,
+      "Baseline_Quantity": 24000,
+      "Variance_to_Baseline": 0.04166666666666674,
+      "Authority_State": "Authoritative",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Usage_Event_ID": "USE-006-202603",
+      "Usage_Month": "2026-03",
+      "Customer_ID": "CUS-004",
+      "Contract_ID": "CTR-006",
+      "Usage_Metric": "Successful_Payment_Count",
+      "Actual_Quantity": 26500,
+      "Baseline_Quantity": 24000,
+      "Variance_to_Baseline": 0.10416666666666674,
+      "Authority_State": "Authoritative",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Usage_Event_ID": "USE-006-202604",
+      "Usage_Month": "2026-04",
+      "Customer_ID": "CUS-004",
+      "Contract_ID": "CTR-006",
+      "Usage_Metric": "Successful_Payment_Count",
+      "Actual_Quantity": 27000,
+      "Baseline_Quantity": 24000,
+      "Variance_to_Baseline": 0.125,
+      "Authority_State": "Authoritative",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Usage_Event_ID": "USE-006-202605",
+      "Usage_Month": "2026-05",
+      "Customer_ID": "CUS-004",
+      "Contract_ID": "CTR-006",
+      "Usage_Metric": "Successful_Payment_Count",
+      "Actual_Quantity": 28000,
+      "Baseline_Quantity": 24000,
+      "Variance_to_Baseline": 0.16666666666666674,
+      "Authority_State": "Authoritative",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Usage_Event_ID": "USE-006-202606",
+      "Usage_Month": "2026-06",
+      "Customer_ID": "CUS-004",
+      "Contract_ID": "CTR-006",
+      "Usage_Metric": "Successful_Payment_Count",
+      "Actual_Quantity": 29500,
+      "Baseline_Quantity": 24000,
+      "Variance_to_Baseline": 0.22916666666666674,
+      "Authority_State": "Authoritative",
+      "Data_Status": "Synthetic"
+    }
+  ],
+  "MVP_14_Invoices_AR": [
+    {
+      "Invoice_ID": "INV-0001",
+      "Invoice_Month": "2026-01",
+      "Customer_ID": "CUS-001",
+      "Contract_ID": "CTR-002",
+      "Usage_Event_ID": "USE-002-202601",
+      "Billed_Quantity": 20000,
+      "Unit_Price_$": 4.25,
+      "Invoice_Amount_$": 85000,
+      "Cash_Collected_$": 83300,
+      "Invoice_Status": "Paid",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Invoice_ID": "INV-0002",
+      "Invoice_Month": "2026-02",
+      "Customer_ID": "CUS-001",
+      "Contract_ID": "CTR-002",
+      "Usage_Event_ID": "USE-002-202602",
+      "Billed_Quantity": 20500,
+      "Unit_Price_$": 4.25,
+      "Invoice_Amount_$": 87125,
+      "Cash_Collected_$": 85382.5,
+      "Invoice_Status": "Paid",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Invoice_ID": "INV-0003",
+      "Invoice_Month": "2026-03",
+      "Customer_ID": "CUS-001",
+      "Contract_ID": "CTR-002",
+      "Usage_Event_ID": "USE-002-202603",
+      "Billed_Quantity": 21000,
+      "Unit_Price_$": 4.25,
+      "Invoice_Amount_$": 89250,
+      "Cash_Collected_$": 87465,
+      "Invoice_Status": "Paid",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Invoice_ID": "INV-0004",
+      "Invoice_Month": "2026-04",
+      "Customer_ID": "CUS-001",
+      "Contract_ID": "CTR-002",
+      "Usage_Event_ID": "USE-002-202604",
+      "Billed_Quantity": 19800,
+      "Unit_Price_$": 4.25,
+      "Invoice_Amount_$": 84150,
+      "Cash_Collected_$": 82467,
+      "Invoice_Status": "Paid",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Invoice_ID": "INV-0005",
+      "Invoice_Month": "2026-05",
+      "Customer_ID": "CUS-001",
+      "Contract_ID": "CTR-002",
+      "Usage_Event_ID": "USE-002-202605",
+      "Billed_Quantity": 19000,
+      "Unit_Price_$": 4.25,
+      "Invoice_Amount_$": 80750,
+      "Cash_Collected_$": 79135,
+      "Invoice_Status": "Paid",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Invoice_ID": "INV-0006",
+      "Invoice_Month": "2026-06",
+      "Customer_ID": "CUS-001",
+      "Contract_ID": "CTR-002",
+      "Usage_Event_ID": "USE-002-202606",
+      "Billed_Quantity": 18200,
+      "Unit_Price_$": 4.25,
+      "Invoice_Amount_$": 77350,
+      "Cash_Collected_$": 75803,
+      "Invoice_Status": "Open",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Invoice_ID": "INV-0007",
+      "Invoice_Month": "2026-01",
+      "Customer_ID": "CUS-003",
+      "Contract_ID": "CTR-005",
+      "Usage_Event_ID": "USE-005-202601",
+      "Billed_Quantity": 7500,
+      "Unit_Price_$": 4.5,
+      "Invoice_Amount_$": 33750,
+      "Cash_Collected_$": 25312.5,
+      "Invoice_Status": "Paid",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Invoice_ID": "INV-0008",
+      "Invoice_Month": "2026-02",
+      "Customer_ID": "CUS-003",
+      "Contract_ID": "CTR-005",
+      "Usage_Event_ID": "USE-005-202602",
+      "Billed_Quantity": 7400,
+      "Unit_Price_$": 4.5,
+      "Invoice_Amount_$": 33300,
+      "Cash_Collected_$": 24975,
+      "Invoice_Status": "Paid",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Invoice_ID": "INV-0009",
+      "Invoice_Month": "2026-03",
+      "Customer_ID": "CUS-003",
+      "Contract_ID": "CTR-005",
+      "Usage_Event_ID": "USE-005-202603",
+      "Billed_Quantity": 7200,
+      "Unit_Price_$": 4.5,
+      "Invoice_Amount_$": 32400,
+      "Cash_Collected_$": 24300,
+      "Invoice_Status": "Paid",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Invoice_ID": "INV-0010",
+      "Invoice_Month": "2026-04",
+      "Customer_ID": "CUS-003",
+      "Contract_ID": "CTR-005",
+      "Usage_Event_ID": "USE-005-202604",
+      "Billed_Quantity": 6100,
+      "Unit_Price_$": 4.5,
+      "Invoice_Amount_$": 27450,
+      "Cash_Collected_$": 20587.5,
+      "Invoice_Status": "Paid",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Invoice_ID": "INV-0011",
+      "Invoice_Month": "2026-05",
+      "Customer_ID": "CUS-003",
+      "Contract_ID": "CTR-005",
+      "Usage_Event_ID": "USE-005-202605",
+      "Billed_Quantity": 5200,
+      "Unit_Price_$": 4.5,
+      "Invoice_Amount_$": 23400,
+      "Cash_Collected_$": 17550,
+      "Invoice_Status": "Paid",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Invoice_ID": "INV-0012",
+      "Invoice_Month": "2026-06",
+      "Customer_ID": "CUS-003",
+      "Contract_ID": "CTR-005",
+      "Usage_Event_ID": "USE-005-202606",
+      "Billed_Quantity": 4750,
+      "Unit_Price_$": 4.5,
+      "Invoice_Amount_$": 21375,
+      "Cash_Collected_$": 16031.25,
+      "Invoice_Status": "Open",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Invoice_ID": "INV-0013",
+      "Invoice_Month": "2026-01",
+      "Customer_ID": "CUS-004",
+      "Contract_ID": "CTR-006",
+      "Usage_Event_ID": "USE-006-202601",
+      "Billed_Quantity": 24000,
+      "Unit_Price_$": 1.1,
+      "Invoice_Amount_$": 26400,
+      "Cash_Collected_$": 25872,
+      "Invoice_Status": "Paid",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Invoice_ID": "INV-0014",
+      "Invoice_Month": "2026-02",
+      "Customer_ID": "CUS-004",
+      "Contract_ID": "CTR-006",
+      "Usage_Event_ID": "USE-006-202602",
+      "Billed_Quantity": 25000,
+      "Unit_Price_$": 1.1,
+      "Invoice_Amount_$": 27500,
+      "Cash_Collected_$": 26950,
+      "Invoice_Status": "Paid",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Invoice_ID": "INV-0015",
+      "Invoice_Month": "2026-03",
+      "Customer_ID": "CUS-004",
+      "Contract_ID": "CTR-006",
+      "Usage_Event_ID": "USE-006-202603",
+      "Billed_Quantity": 26500,
+      "Unit_Price_$": 1.1,
+      "Invoice_Amount_$": 29150,
+      "Cash_Collected_$": 28567,
+      "Invoice_Status": "Paid",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Invoice_ID": "INV-0016",
+      "Invoice_Month": "2026-04",
+      "Customer_ID": "CUS-004",
+      "Contract_ID": "CTR-006",
+      "Usage_Event_ID": "USE-006-202604",
+      "Billed_Quantity": 27000,
+      "Unit_Price_$": 1.1,
+      "Invoice_Amount_$": 29700,
+      "Cash_Collected_$": 29106,
+      "Invoice_Status": "Paid",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Invoice_ID": "INV-0017",
+      "Invoice_Month": "2026-05",
+      "Customer_ID": "CUS-004",
+      "Contract_ID": "CTR-006",
+      "Usage_Event_ID": "USE-006-202605",
+      "Billed_Quantity": 28000,
+      "Unit_Price_$": 1.1,
+      "Invoice_Amount_$": 30800,
+      "Cash_Collected_$": 30184,
+      "Invoice_Status": "Paid",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Invoice_ID": "INV-0018",
+      "Invoice_Month": "2026-06",
+      "Customer_ID": "CUS-004",
+      "Contract_ID": "CTR-006",
+      "Usage_Event_ID": "USE-006-202606",
+      "Billed_Quantity": 29500,
+      "Unit_Price_$": 1.1,
+      "Invoice_Amount_$": 32450,
+      "Cash_Collected_$": 31801,
+      "Invoice_Status": "Open",
+      "Data_Status": "Synthetic"
+    }
+  ],
+  "MVP_15_Revenue_Schedules": [
+    {
+      "Revenue_Schedule_ID": "REV-0001",
+      "Invoice_ID": "INV-0001",
+      "Revenue_Month": "2026-01",
+      "Customer_ID": "CUS-001",
+      "Contract_ID": "CTR-002",
+      "Scheduled_Revenue_$": 85000,
+      "Recognized_Revenue_$": 85000,
+      "Recognition_Basis": "Usage service delivered in month",
+      "Status": "Recognized",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Revenue_Schedule_ID": "REV-0002",
+      "Invoice_ID": "INV-0002",
+      "Revenue_Month": "2026-02",
+      "Customer_ID": "CUS-001",
+      "Contract_ID": "CTR-002",
+      "Scheduled_Revenue_$": 87125,
+      "Recognized_Revenue_$": 87125,
+      "Recognition_Basis": "Usage service delivered in month",
+      "Status": "Recognized",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Revenue_Schedule_ID": "REV-0003",
+      "Invoice_ID": "INV-0003",
+      "Revenue_Month": "2026-03",
+      "Customer_ID": "CUS-001",
+      "Contract_ID": "CTR-002",
+      "Scheduled_Revenue_$": 89250,
+      "Recognized_Revenue_$": 89250,
+      "Recognition_Basis": "Usage service delivered in month",
+      "Status": "Recognized",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Revenue_Schedule_ID": "REV-0004",
+      "Invoice_ID": "INV-0004",
+      "Revenue_Month": "2026-04",
+      "Customer_ID": "CUS-001",
+      "Contract_ID": "CTR-002",
+      "Scheduled_Revenue_$": 84150,
+      "Recognized_Revenue_$": 84150,
+      "Recognition_Basis": "Usage service delivered in month",
+      "Status": "Recognized",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Revenue_Schedule_ID": "REV-0005",
+      "Invoice_ID": "INV-0005",
+      "Revenue_Month": "2026-05",
+      "Customer_ID": "CUS-001",
+      "Contract_ID": "CTR-002",
+      "Scheduled_Revenue_$": 80750,
+      "Recognized_Revenue_$": 80750,
+      "Recognition_Basis": "Usage service delivered in month",
+      "Status": "Recognized",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Revenue_Schedule_ID": "REV-0006",
+      "Invoice_ID": "INV-0006",
+      "Revenue_Month": "2026-06",
+      "Customer_ID": "CUS-001",
+      "Contract_ID": "CTR-002",
+      "Scheduled_Revenue_$": 77350,
+      "Recognized_Revenue_$": 77350,
+      "Recognition_Basis": "Usage service delivered in month",
+      "Status": "Recognized",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Revenue_Schedule_ID": "REV-0007",
+      "Invoice_ID": "INV-0007",
+      "Revenue_Month": "2026-01",
+      "Customer_ID": "CUS-003",
+      "Contract_ID": "CTR-005",
+      "Scheduled_Revenue_$": 33750,
+      "Recognized_Revenue_$": 33750,
+      "Recognition_Basis": "Usage service delivered in month",
+      "Status": "Recognized",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Revenue_Schedule_ID": "REV-0008",
+      "Invoice_ID": "INV-0008",
+      "Revenue_Month": "2026-02",
+      "Customer_ID": "CUS-003",
+      "Contract_ID": "CTR-005",
+      "Scheduled_Revenue_$": 33300,
+      "Recognized_Revenue_$": 33300,
+      "Recognition_Basis": "Usage service delivered in month",
+      "Status": "Recognized",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Revenue_Schedule_ID": "REV-0009",
+      "Invoice_ID": "INV-0009",
+      "Revenue_Month": "2026-03",
+      "Customer_ID": "CUS-003",
+      "Contract_ID": "CTR-005",
+      "Scheduled_Revenue_$": 32400,
+      "Recognized_Revenue_$": 32400,
+      "Recognition_Basis": "Usage service delivered in month",
+      "Status": "Recognized",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Revenue_Schedule_ID": "REV-0010",
+      "Invoice_ID": "INV-0010",
+      "Revenue_Month": "2026-04",
+      "Customer_ID": "CUS-003",
+      "Contract_ID": "CTR-005",
+      "Scheduled_Revenue_$": 27450,
+      "Recognized_Revenue_$": 27450,
+      "Recognition_Basis": "Usage service delivered in month",
+      "Status": "Recognized",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Revenue_Schedule_ID": "REV-0011",
+      "Invoice_ID": "INV-0011",
+      "Revenue_Month": "2026-05",
+      "Customer_ID": "CUS-003",
+      "Contract_ID": "CTR-005",
+      "Scheduled_Revenue_$": 23400,
+      "Recognized_Revenue_$": 23400,
+      "Recognition_Basis": "Usage service delivered in month",
+      "Status": "Recognized",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Revenue_Schedule_ID": "REV-0012",
+      "Invoice_ID": "INV-0012",
+      "Revenue_Month": "2026-06",
+      "Customer_ID": "CUS-003",
+      "Contract_ID": "CTR-005",
+      "Scheduled_Revenue_$": 21375,
+      "Recognized_Revenue_$": 21375,
+      "Recognition_Basis": "Usage service delivered in month",
+      "Status": "Recognized",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Revenue_Schedule_ID": "REV-0013",
+      "Invoice_ID": "INV-0013",
+      "Revenue_Month": "2026-01",
+      "Customer_ID": "CUS-004",
+      "Contract_ID": "CTR-006",
+      "Scheduled_Revenue_$": 26400,
+      "Recognized_Revenue_$": 26400,
+      "Recognition_Basis": "Usage service delivered in month",
+      "Status": "Recognized",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Revenue_Schedule_ID": "REV-0014",
+      "Invoice_ID": "INV-0014",
+      "Revenue_Month": "2026-02",
+      "Customer_ID": "CUS-004",
+      "Contract_ID": "CTR-006",
+      "Scheduled_Revenue_$": 27500,
+      "Recognized_Revenue_$": 27500,
+      "Recognition_Basis": "Usage service delivered in month",
+      "Status": "Recognized",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Revenue_Schedule_ID": "REV-0015",
+      "Invoice_ID": "INV-0015",
+      "Revenue_Month": "2026-03",
+      "Customer_ID": "CUS-004",
+      "Contract_ID": "CTR-006",
+      "Scheduled_Revenue_$": 29150,
+      "Recognized_Revenue_$": 29150,
+      "Recognition_Basis": "Usage service delivered in month",
+      "Status": "Recognized",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Revenue_Schedule_ID": "REV-0016",
+      "Invoice_ID": "INV-0016",
+      "Revenue_Month": "2026-04",
+      "Customer_ID": "CUS-004",
+      "Contract_ID": "CTR-006",
+      "Scheduled_Revenue_$": 29700,
+      "Recognized_Revenue_$": 29700,
+      "Recognition_Basis": "Usage service delivered in month",
+      "Status": "Recognized",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Revenue_Schedule_ID": "REV-0017",
+      "Invoice_ID": "INV-0017",
+      "Revenue_Month": "2026-05",
+      "Customer_ID": "CUS-004",
+      "Contract_ID": "CTR-006",
+      "Scheduled_Revenue_$": 30800,
+      "Recognized_Revenue_$": 30800,
+      "Recognition_Basis": "Usage service delivered in month",
+      "Status": "Recognized",
+      "Data_Status": "Synthetic"
+    },
+    {
+      "Revenue_Schedule_ID": "REV-0018",
+      "Invoice_ID": "INV-0018",
+      "Revenue_Month": "2026-06",
+      "Customer_ID": "CUS-004",
+      "Contract_ID": "CTR-006",
+      "Scheduled_Revenue_$": 32450,
+      "Recognized_Revenue_$": 32450,
+      "Recognition_Basis": "Usage service delivered in month",
+      "Status": "Recognized",
+      "Data_Status": "Synthetic"
+    }
+  ],
+  "MVP_16_GL_Entries": [
+    {
+      "Journal_Line_ID": "JE-0001-A",
+      "Accounting_Month": "2026-01",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 85000,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0001",
+      "Journal_Description": "Invoice posting",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0001-R",
+      "Accounting_Month": "2026-01",
+      "GL_Account": "4000 Revenue",
+      "Debit_$": 0,
+      "Credit_$": 85000,
+      "Source_Document_ID": "INV-0001",
+      "Journal_Description": "Revenue recognition",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0001-C1",
+      "Accounting_Month": "2026-01",
+      "GL_Account": "1000 Cash",
+      "Debit_$": 83300,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0001",
+      "Journal_Description": "Cash receipt",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0001-C2",
+      "Accounting_Month": "2026-01",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 0,
+      "Credit_$": 83300,
+      "Source_Document_ID": "INV-0001",
+      "Journal_Description": "AR settlement",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0002-A",
+      "Accounting_Month": "2026-02",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 87125,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0002",
+      "Journal_Description": "Invoice posting",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0002-R",
+      "Accounting_Month": "2026-02",
+      "GL_Account": "4000 Revenue",
+      "Debit_$": 0,
+      "Credit_$": 87125,
+      "Source_Document_ID": "INV-0002",
+      "Journal_Description": "Revenue recognition",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0002-C1",
+      "Accounting_Month": "2026-02",
+      "GL_Account": "1000 Cash",
+      "Debit_$": 85382.5,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0002",
+      "Journal_Description": "Cash receipt",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0002-C2",
+      "Accounting_Month": "2026-02",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 0,
+      "Credit_$": 85382.5,
+      "Source_Document_ID": "INV-0002",
+      "Journal_Description": "AR settlement",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0003-A",
+      "Accounting_Month": "2026-03",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 89250,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0003",
+      "Journal_Description": "Invoice posting",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0003-R",
+      "Accounting_Month": "2026-03",
+      "GL_Account": "4000 Revenue",
+      "Debit_$": 0,
+      "Credit_$": 89250,
+      "Source_Document_ID": "INV-0003",
+      "Journal_Description": "Revenue recognition",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0003-C1",
+      "Accounting_Month": "2026-03",
+      "GL_Account": "1000 Cash",
+      "Debit_$": 87465,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0003",
+      "Journal_Description": "Cash receipt",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0003-C2",
+      "Accounting_Month": "2026-03",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 0,
+      "Credit_$": 87465,
+      "Source_Document_ID": "INV-0003",
+      "Journal_Description": "AR settlement",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0004-A",
+      "Accounting_Month": "2026-04",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 84150,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0004",
+      "Journal_Description": "Invoice posting",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0004-R",
+      "Accounting_Month": "2026-04",
+      "GL_Account": "4000 Revenue",
+      "Debit_$": 0,
+      "Credit_$": 84150,
+      "Source_Document_ID": "INV-0004",
+      "Journal_Description": "Revenue recognition",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0004-C1",
+      "Accounting_Month": "2026-04",
+      "GL_Account": "1000 Cash",
+      "Debit_$": 82467,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0004",
+      "Journal_Description": "Cash receipt",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0004-C2",
+      "Accounting_Month": "2026-04",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 0,
+      "Credit_$": 82467,
+      "Source_Document_ID": "INV-0004",
+      "Journal_Description": "AR settlement",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0005-A",
+      "Accounting_Month": "2026-05",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 80750,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0005",
+      "Journal_Description": "Invoice posting",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0005-R",
+      "Accounting_Month": "2026-05",
+      "GL_Account": "4000 Revenue",
+      "Debit_$": 0,
+      "Credit_$": 80750,
+      "Source_Document_ID": "INV-0005",
+      "Journal_Description": "Revenue recognition",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0005-C1",
+      "Accounting_Month": "2026-05",
+      "GL_Account": "1000 Cash",
+      "Debit_$": 79135,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0005",
+      "Journal_Description": "Cash receipt",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0005-C2",
+      "Accounting_Month": "2026-05",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 0,
+      "Credit_$": 79135,
+      "Source_Document_ID": "INV-0005",
+      "Journal_Description": "AR settlement",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0006-A",
+      "Accounting_Month": "2026-06",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 77350,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0006",
+      "Journal_Description": "Invoice posting",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0006-R",
+      "Accounting_Month": "2026-06",
+      "GL_Account": "4000 Revenue",
+      "Debit_$": 0,
+      "Credit_$": 77350,
+      "Source_Document_ID": "INV-0006",
+      "Journal_Description": "Revenue recognition",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0006-C1",
+      "Accounting_Month": "2026-06",
+      "GL_Account": "1000 Cash",
+      "Debit_$": 75803,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0006",
+      "Journal_Description": "Cash receipt",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0006-C2",
+      "Accounting_Month": "2026-06",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 0,
+      "Credit_$": 75803,
+      "Source_Document_ID": "INV-0006",
+      "Journal_Description": "AR settlement",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0007-A",
+      "Accounting_Month": "2026-01",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 33750,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0007",
+      "Journal_Description": "Invoice posting",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0007-R",
+      "Accounting_Month": "2026-01",
+      "GL_Account": "4000 Revenue",
+      "Debit_$": 0,
+      "Credit_$": 33750,
+      "Source_Document_ID": "INV-0007",
+      "Journal_Description": "Revenue recognition",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0007-C1",
+      "Accounting_Month": "2026-01",
+      "GL_Account": "1000 Cash",
+      "Debit_$": 25312.5,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0007",
+      "Journal_Description": "Cash receipt",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0007-C2",
+      "Accounting_Month": "2026-01",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 0,
+      "Credit_$": 25312.5,
+      "Source_Document_ID": "INV-0007",
+      "Journal_Description": "AR settlement",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0008-A",
+      "Accounting_Month": "2026-02",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 33300,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0008",
+      "Journal_Description": "Invoice posting",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0008-R",
+      "Accounting_Month": "2026-02",
+      "GL_Account": "4000 Revenue",
+      "Debit_$": 0,
+      "Credit_$": 33300,
+      "Source_Document_ID": "INV-0008",
+      "Journal_Description": "Revenue recognition",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0008-C1",
+      "Accounting_Month": "2026-02",
+      "GL_Account": "1000 Cash",
+      "Debit_$": 24975,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0008",
+      "Journal_Description": "Cash receipt",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0008-C2",
+      "Accounting_Month": "2026-02",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 0,
+      "Credit_$": 24975,
+      "Source_Document_ID": "INV-0008",
+      "Journal_Description": "AR settlement",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0009-A",
+      "Accounting_Month": "2026-03",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 32400,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0009",
+      "Journal_Description": "Invoice posting",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0009-R",
+      "Accounting_Month": "2026-03",
+      "GL_Account": "4000 Revenue",
+      "Debit_$": 0,
+      "Credit_$": 32400,
+      "Source_Document_ID": "INV-0009",
+      "Journal_Description": "Revenue recognition",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0009-C1",
+      "Accounting_Month": "2026-03",
+      "GL_Account": "1000 Cash",
+      "Debit_$": 24300,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0009",
+      "Journal_Description": "Cash receipt",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0009-C2",
+      "Accounting_Month": "2026-03",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 0,
+      "Credit_$": 24300,
+      "Source_Document_ID": "INV-0009",
+      "Journal_Description": "AR settlement",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0010-A",
+      "Accounting_Month": "2026-04",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 27450,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0010",
+      "Journal_Description": "Invoice posting",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0010-R",
+      "Accounting_Month": "2026-04",
+      "GL_Account": "4000 Revenue",
+      "Debit_$": 0,
+      "Credit_$": 27450,
+      "Source_Document_ID": "INV-0010",
+      "Journal_Description": "Revenue recognition",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0010-C1",
+      "Accounting_Month": "2026-04",
+      "GL_Account": "1000 Cash",
+      "Debit_$": 20587.5,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0010",
+      "Journal_Description": "Cash receipt",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0010-C2",
+      "Accounting_Month": "2026-04",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 0,
+      "Credit_$": 20587.5,
+      "Source_Document_ID": "INV-0010",
+      "Journal_Description": "AR settlement",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0011-A",
+      "Accounting_Month": "2026-05",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 23400,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0011",
+      "Journal_Description": "Invoice posting",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0011-R",
+      "Accounting_Month": "2026-05",
+      "GL_Account": "4000 Revenue",
+      "Debit_$": 0,
+      "Credit_$": 23400,
+      "Source_Document_ID": "INV-0011",
+      "Journal_Description": "Revenue recognition",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0011-C1",
+      "Accounting_Month": "2026-05",
+      "GL_Account": "1000 Cash",
+      "Debit_$": 17550,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0011",
+      "Journal_Description": "Cash receipt",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0011-C2",
+      "Accounting_Month": "2026-05",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 0,
+      "Credit_$": 17550,
+      "Source_Document_ID": "INV-0011",
+      "Journal_Description": "AR settlement",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0012-A",
+      "Accounting_Month": "2026-06",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 21375,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0012",
+      "Journal_Description": "Invoice posting",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0012-R",
+      "Accounting_Month": "2026-06",
+      "GL_Account": "4000 Revenue",
+      "Debit_$": 0,
+      "Credit_$": 21375,
+      "Source_Document_ID": "INV-0012",
+      "Journal_Description": "Revenue recognition",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0012-C1",
+      "Accounting_Month": "2026-06",
+      "GL_Account": "1000 Cash",
+      "Debit_$": 16031.25,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0012",
+      "Journal_Description": "Cash receipt",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0012-C2",
+      "Accounting_Month": "2026-06",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 0,
+      "Credit_$": 16031.25,
+      "Source_Document_ID": "INV-0012",
+      "Journal_Description": "AR settlement",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0013-A",
+      "Accounting_Month": "2026-01",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 26400,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0013",
+      "Journal_Description": "Invoice posting",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0013-R",
+      "Accounting_Month": "2026-01",
+      "GL_Account": "4000 Revenue",
+      "Debit_$": 0,
+      "Credit_$": 26400,
+      "Source_Document_ID": "INV-0013",
+      "Journal_Description": "Revenue recognition",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0013-C1",
+      "Accounting_Month": "2026-01",
+      "GL_Account": "1000 Cash",
+      "Debit_$": 25872,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0013",
+      "Journal_Description": "Cash receipt",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0013-C2",
+      "Accounting_Month": "2026-01",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 0,
+      "Credit_$": 25872,
+      "Source_Document_ID": "INV-0013",
+      "Journal_Description": "AR settlement",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0014-A",
+      "Accounting_Month": "2026-02",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 27500,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0014",
+      "Journal_Description": "Invoice posting",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0014-R",
+      "Accounting_Month": "2026-02",
+      "GL_Account": "4000 Revenue",
+      "Debit_$": 0,
+      "Credit_$": 27500,
+      "Source_Document_ID": "INV-0014",
+      "Journal_Description": "Revenue recognition",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0014-C1",
+      "Accounting_Month": "2026-02",
+      "GL_Account": "1000 Cash",
+      "Debit_$": 26950,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0014",
+      "Journal_Description": "Cash receipt",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0014-C2",
+      "Accounting_Month": "2026-02",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 0,
+      "Credit_$": 26950,
+      "Source_Document_ID": "INV-0014",
+      "Journal_Description": "AR settlement",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0015-A",
+      "Accounting_Month": "2026-03",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 29150,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0015",
+      "Journal_Description": "Invoice posting",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0015-R",
+      "Accounting_Month": "2026-03",
+      "GL_Account": "4000 Revenue",
+      "Debit_$": 0,
+      "Credit_$": 29150,
+      "Source_Document_ID": "INV-0015",
+      "Journal_Description": "Revenue recognition",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0015-C1",
+      "Accounting_Month": "2026-03",
+      "GL_Account": "1000 Cash",
+      "Debit_$": 28567,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0015",
+      "Journal_Description": "Cash receipt",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0015-C2",
+      "Accounting_Month": "2026-03",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 0,
+      "Credit_$": 28567,
+      "Source_Document_ID": "INV-0015",
+      "Journal_Description": "AR settlement",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0016-A",
+      "Accounting_Month": "2026-04",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 29700,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0016",
+      "Journal_Description": "Invoice posting",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0016-R",
+      "Accounting_Month": "2026-04",
+      "GL_Account": "4000 Revenue",
+      "Debit_$": 0,
+      "Credit_$": 29700,
+      "Source_Document_ID": "INV-0016",
+      "Journal_Description": "Revenue recognition",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0016-C1",
+      "Accounting_Month": "2026-04",
+      "GL_Account": "1000 Cash",
+      "Debit_$": 29106,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0016",
+      "Journal_Description": "Cash receipt",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0016-C2",
+      "Accounting_Month": "2026-04",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 0,
+      "Credit_$": 29106,
+      "Source_Document_ID": "INV-0016",
+      "Journal_Description": "AR settlement",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0017-A",
+      "Accounting_Month": "2026-05",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 30800,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0017",
+      "Journal_Description": "Invoice posting",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0017-R",
+      "Accounting_Month": "2026-05",
+      "GL_Account": "4000 Revenue",
+      "Debit_$": 0,
+      "Credit_$": 30800,
+      "Source_Document_ID": "INV-0017",
+      "Journal_Description": "Revenue recognition",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0017-C1",
+      "Accounting_Month": "2026-05",
+      "GL_Account": "1000 Cash",
+      "Debit_$": 30184,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0017",
+      "Journal_Description": "Cash receipt",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0017-C2",
+      "Accounting_Month": "2026-05",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 0,
+      "Credit_$": 30184,
+      "Source_Document_ID": "INV-0017",
+      "Journal_Description": "AR settlement",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0018-A",
+      "Accounting_Month": "2026-06",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 32450,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0018",
+      "Journal_Description": "Invoice posting",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0018-R",
+      "Accounting_Month": "2026-06",
+      "GL_Account": "4000 Revenue",
+      "Debit_$": 0,
+      "Credit_$": 32450,
+      "Source_Document_ID": "INV-0018",
+      "Journal_Description": "Revenue recognition",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0018-C1",
+      "Accounting_Month": "2026-06",
+      "GL_Account": "1000 Cash",
+      "Debit_$": 31801,
+      "Credit_$": 0,
+      "Source_Document_ID": "INV-0018",
+      "Journal_Description": "Cash receipt",
+      "Posting_Status": "Posted"
+    },
+    {
+      "Journal_Line_ID": "JE-0018-C2",
+      "Accounting_Month": "2026-06",
+      "GL_Account": "1100 Accounts Receivable",
+      "Debit_$": 0,
+      "Credit_$": 31801,
+      "Source_Document_ID": "INV-0018",
+      "Journal_Description": "AR settlement",
+      "Posting_Status": "Posted"
+    }
+  ],
+  "MVP_17_Signals": [
+    {
+      "Signal_ID": "SIG-001",
+      "Observed_Date": "2026-06-30",
+      "Primary_Subject_ID": "CUS-003",
+      "Signal_Type": "Usage Decline",
+      "Observation": "CTR-005 visit volume declined 36.7% versus January baseline.",
+      "Magnitude": -0.367,
+      "Confidence": 0.93,
+      "Origin_Highway": "HW-04",
+      "Affected_Highways": "Customer; Commercial; Revenue; Finance; Value Creation",
+      "Status": "Open",
+      "Evidence_Reference": "USE-005-202606"
+    },
+    {
+      "Signal_ID": "SIG-002",
+      "Observed_Date": "2026-06-30",
+      "Primary_Subject_ID": "CUS-003",
+      "Signal_Type": "Collection Friction",
+      "Observation": "Only 75% of current invoiced amount collected.",
+      "Magnitude": -0.25,
+      "Confidence": 0.88,
+      "Origin_Highway": "HW-06",
+      "Affected_Highways": "Customer; Commercial; Finance; Value Creation",
+      "Status": "Open",
+      "Evidence_Reference": "INV linked to CUS-003"
+    },
+    {
+      "Signal_ID": "SIG-003",
+      "Observed_Date": "2026-05-12",
+      "Primary_Subject_ID": "ORG-0006",
+      "Signal_Type": "Reporting / Listing Risk",
+      "Observation": "SEC filing remediation remains incomplete and relisting depends on becoming current.",
+      "Magnitude": -0.3,
+      "Confidence": 0.96,
+      "Origin_Highway": "HW-03",
+      "Affected_Highways": "Finance; Value Creation; Fund Economics; Exit",
+      "Status": "Open",
+      "Evidence_Reference": "SRC-VD-002"
+    },
+    {
+      "Signal_ID": "SIG-004",
+      "Observed_Date": "2026-06-30",
+      "Primary_Subject_ID": "CUS-004",
+      "Signal_Type": "Usage Expansion",
+      "Observation": "Payment transaction usage increased 22.9% versus January baseline.",
+      "Magnitude": 0.229,
+      "Confidence": 0.92,
+      "Origin_Highway": "HW-04",
+      "Affected_Highways": "Commercial; Revenue; Value Creation",
+      "Status": "Open",
+      "Evidence_Reference": "USE-006-202606"
+    }
+  ],
+  "MVP_18_Hypotheses": [
+    {
+      "Hypothesis_ID": "HYP-001",
+      "Signal_IDs": "SIG-001",
+      "Hypothesis_Name": "Customer organizational downsizing",
+      "Hypothesis_Statement": "Lower provider headcount is reducing visit volume and may require a contract amendment.",
+      "Alternative_Explanations": "Headcount reduction; product replacement; adoption issue; seasonality",
+      "Required_Validation": "Customer Success validation call; provider roster comparison; contract review",
+      "Confidence": 0.55,
+      "Validation_Status": "Validation Required",
+      "Linked_Thesis_ID": "TH-002",
+      "Lifecycle_Status": "Open"
+    },
+    {
+      "Hypothesis_ID": "HYP-002",
+      "Signal_IDs": "SIG-001; SIG-002",
+      "Hypothesis_Name": "Usage decline is creating future invoice dispute risk",
+      "Hypothesis_Statement": "Lower utilization plus partial collections indicates potential pricing/allowance misalignment.",
+      "Alternative_Explanations": "Administrative delay; temporary cash issue; service dissatisfaction",
+      "Required_Validation": "Executive business review; invoice dispute review; usage forecast",
+      "Confidence": 0.68,
+      "Validation_Status": "Validation Required",
+      "Linked_Thesis_ID": "TH-002",
+      "Lifecycle_Status": "Open"
+    },
+    {
+      "Hypothesis_ID": "HYP-003",
+      "Signal_IDs": "SIG-003",
+      "Hypothesis_Name": "Reporting remediation creates valuation discount",
+      "Hypothesis_Statement": "Delayed filing currency and relisting uncertainty reduce buyer confidence and exit multiple.",
+      "Alternative_Explanations": "Market multiple compression; business performance weakness",
+      "Required_Validation": "Control testing; filing milestone plan; audit evidence; relisting readiness checklist",
+      "Confidence": 0.78,
+      "Validation_Status": "Supported",
+      "Linked_Thesis_ID": "TH-003",
+      "Lifecycle_Status": "Open"
+    },
+    {
+      "Hypothesis_ID": "HYP-004",
+      "Signal_IDs": "SIG-004",
+      "Hypothesis_Name": "Customer expansion opportunity",
+      "Hypothesis_Statement": "Sustained transaction growth supports tier expansion or adjacent product cross-sell.",
+      "Alternative_Explanations": "Temporary volume spike",
+      "Required_Validation": "Three-month trend validation; payment product expansion proposal",
+      "Confidence": 0.74,
+      "Validation_Status": "Validation Required",
+      "Linked_Thesis_ID": "TH-002",
+      "Lifecycle_Status": "Open"
+    }
+  ],
+  "MVP_19_Value_Creation": [
+    {
+      "Initiative_ID": "VCI-001",
+      "Origin_References": "HYP-001; HYP-002",
+      "Initiative_Name": "Customer Health and Contract Alignment",
+      "Objective": "Validate CUS-003 operating change and align contract without destroying lifetime value.",
+      "Value_Creation_Pillar": "Commercial Optimization",
+      "Owner": "Customer Success",
+      "Start_Date": "2026-07-01",
+      "Target_Date": "2026-08-15",
+      "Status": "In Progress",
+      "Expected_Annual_EBITDA_Impact_$": -85000,
+      "Expected_Retention_Lift": 0.18,
+      "Expected_Enterprise_Value_Impact_$": 425000,
+      "Confidence": 0.7,
+      "Linked_Thesis_ID": "TH-002"
+    },
+    {
+      "Initiative_ID": "VCI-002",
+      "Origin_References": "HYP-003",
+      "Initiative_Name": "Reporting Remediation and Relisting Readiness",
+      "Objective": "Complete controls, filings and evidence chain required for relisting readiness.",
+      "Value_Creation_Pillar": "Data Analytics & Insights",
+      "Owner": "CFO / Controller",
+      "Start_Date": "2026-06-01",
+      "Target_Date": "2026-12-31",
+      "Status": "In Progress",
+      "Expected_Annual_EBITDA_Impact_$": -320000,
+      "Expected_Retention_Lift": 0.12,
+      "Expected_Enterprise_Value_Impact_$": 28000000,
+      "Confidence": 0.64,
+      "Linked_Thesis_ID": "TH-003"
+    },
+    {
+      "Initiative_ID": "VCI-003",
+      "Origin_References": "HYP-004",
+      "Initiative_Name": "Payment Product Expansion",
+      "Objective": "Expand payment enablement into additional CUS-004 locations.",
+      "Value_Creation_Pillar": "GTM Optimization",
+      "Owner": "Sales",
+      "Start_Date": "2026-07-15",
+      "Target_Date": "2026-09-30",
+      "Status": "Planned",
+      "Expected_Annual_EBITDA_Impact_$": 145000,
+      "Expected_Retention_Lift": 0.05,
+      "Expected_Enterprise_Value_Impact_$": 1200000,
+      "Confidence": 0.74,
+      "Linked_Thesis_ID": "TH-002"
+    },
+    {
+      "Initiative_ID": "VCI-004",
+      "Origin_References": "DD-005",
+      "Initiative_Name": "Source-to-GL Reconciliation Layer",
+      "Objective": "Implement governed lineage from usage to fund economics.",
+      "Value_Creation_Pillar": "Data Analytics & Insights",
+      "Owner": "Data / Finance",
+      "Start_Date": "2026-07-01",
+      "Target_Date": "2026-10-31",
+      "Status": "Planned",
+      "Expected_Annual_EBITDA_Impact_$": -450000,
+      "Expected_Retention_Lift": 0.08,
+      "Expected_Enterprise_Value_Impact_$": 7500000,
+      "Confidence": 0.69,
+      "Linked_Thesis_ID": "TH-004"
+    }
+  ],
+  "MVP_20_Maturity_Rules": [
+    {
+      "Rule_ID": "MAT-001",
+      "Scope": "Acquisition Journey",
+      "Component": "Stage completion",
+      "Weight": 0.4,
+      "Formula_Logic": "Completed required stage weight / total required stage weight",
+      "Scenario_Adjustment": "Required gates carry 2x stage weight.",
+      "Interpretation": "0.0 at market universe; 1.0 at close"
+    },
+    {
+      "Rule_ID": "MAT-002",
+      "Scope": "Evidence",
+      "Component": "Required evidence coverage",
+      "Weight": 0.25,
+      "Formula_Logic": "Validated required evidence / required evidence",
+      "Scenario_Adjustment": "Authoritative source = 1.0; inferred = 0.4; missing = 0.",
+      "Interpretation": "Applied to deal, initiative and metric"
+    },
+    {
+      "Rule_ID": "MAT-003",
+      "Scope": "Reconciliation",
+      "Component": "Reconciliation completeness",
+      "Weight": 0.2,
+      "Formula_Logic": "Reconciled required links / required links",
+      "Scenario_Adjustment": "Usage\u2192Invoice\u2192Revenue\u2192GL\u2192Fund required for 1.0.",
+      "Interpretation": "Blocks converged state below 0.8"
+    },
+    {
+      "Rule_ID": "MAT-004",
+      "Scope": "Approval",
+      "Component": "Required approvals",
+      "Weight": 0.15,
+      "Formula_Logic": "Completed approvals / required approvals",
+      "Scenario_Adjustment": "IC, finance and owner approval weighted equally in MVP.",
+      "Interpretation": "Final maturity = weighted sum"
+    }
+  ],
+  "MVP_20B_Confidence_Rules": [
+    {
+      "Rule_ID": "CONF-001",
+      "Component": "Source authority",
+      "Weight": 0.25,
+      "Calculation_Logic": "Public filing or authoritative system = 1.0; internal approved = 0.8; synthetic authoritative demo = 0.7; inferred = 0.4"
+    },
+    {
+      "Rule_ID": "CONF-002",
+      "Component": "Evidence recency",
+      "Weight": 0.15,
+      "Calculation_Logic": "<=30 days = 1.0; 31-90 = 0.8; 91-365 = 0.6; >365 = 0.4"
+    },
+    {
+      "Rule_ID": "CONF-003",
+      "Component": "Evidence agreement",
+      "Weight": 0.2,
+      "Calculation_Logic": "1 - weighted contradiction ratio"
+    },
+    {
+      "Rule_ID": "CONF-004",
+      "Component": "Calculation completeness",
+      "Weight": 0.15,
+      "Calculation_Logic": "Populated required inputs / required inputs"
+    },
+    {
+      "Rule_ID": "CONF-005",
+      "Component": "Reconciliation status",
+      "Weight": 0.15,
+      "Calculation_Logic": "Fully reconciled = 1.0; partial = 0.6; unreconciled = 0.2"
+    },
+    {
+      "Rule_ID": "CONF-006",
+      "Component": "Validation status",
+      "Weight": 0.1,
+      "Calculation_Logic": "Validated = 1.0; supported = 0.8; pending = 0.5; contradicted = 0.1"
+    }
+  ],
+  "MVP_21_Metric_Registry": [
+    {
+      "Metric_ID": "MET-001",
+      "Metric_Name": "Revenue",
+      "Scope": "PortCo",
+      "Definition": "Sum recognized revenue",
+      "Formula_Logic": "SUM(Recognized_Revenue)",
+      "Frequency": "Monthly",
+      "Required_Lineage": "GL revenue account",
+      "Linked_Thesis": "TH-001"
+    },
+    {
+      "Metric_ID": "MET-002",
+      "Metric_Name": "Cash Collections",
+      "Scope": "PortCo",
+      "Definition": "Sum cash receipts",
+      "Formula_Logic": "SUM(Cash_Collected)",
+      "Frequency": "Monthly",
+      "Required_Lineage": "Cash journal entries",
+      "Linked_Thesis": "TH-002"
+    },
+    {
+      "Metric_ID": "MET-003",
+      "Metric_Name": "Collection Rate",
+      "Scope": "PortCo",
+      "Definition": "Cash collected / invoices",
+      "Formula_Logic": "Cash / Invoice Amount",
+      "Frequency": "Monthly",
+      "Required_Lineage": "Invoice and payment lineage",
+      "Linked_Thesis": "TH-002"
+    },
+    {
+      "Metric_ID": "MET-004",
+      "Metric_Name": "Usage Growth",
+      "Scope": "Customer",
+      "Definition": "Current usage / baseline - 1",
+      "Formula_Logic": "Current_Usage / Baseline - 1",
+      "Frequency": "Monthly",
+      "Required_Lineage": "Usage events",
+      "Linked_Thesis": "TH-002"
+    },
+    {
+      "Metric_ID": "MET-005",
+      "Metric_Name": "Gross Retention",
+      "Scope": "PortCo",
+      "Definition": "Beginning recurring revenue retained excluding expansion",
+      "Formula_Logic": "Retained_Beginning_ARR / Beginning_ARR",
+      "Frequency": "Quarterly",
+      "Required_Lineage": "Contract and renewal events",
+      "Linked_Thesis": "TH-001"
+    },
+    {
+      "Metric_ID": "MET-006",
+      "Metric_Name": "Net Revenue Retention",
+      "Scope": "PortCo",
+      "Definition": "Ending recurring revenue including expansion / beginning recurring revenue",
+      "Formula_Logic": "(Retained + Expansion - Contraction - Churn)/Beginning",
+      "Frequency": "Quarterly",
+      "Required_Lineage": "Contract events",
+      "Linked_Thesis": "TH-002"
+    },
+    {
+      "Metric_ID": "MET-007",
+      "Metric_Name": "Adjusted EBITDA",
+      "Scope": "PortCo",
+      "Definition": "Revenue less operating costs plus approved adjustments",
+      "Formula_Logic": "Revenue - COGS - Opex + Adjustments",
+      "Frequency": "Monthly",
+      "Required_Lineage": "GL and adjustment evidence",
+      "Linked_Thesis": "TH-001"
+    },
+    {
+      "Metric_ID": "MET-008",
+      "Metric_Name": "Enterprise Value",
+      "Scope": "Investment",
+      "Definition": "Adjusted EBITDA \u00d7 selected multiple",
+      "Formula_Logic": "EBITDA * Exit_Multiple",
+      "Frequency": "Quarterly",
+      "Required_Lineage": "Valuation assumptions",
+      "Linked_Thesis": "TH-001; TH-003"
+    },
+    {
+      "Metric_ID": "MET-009",
+      "Metric_Name": "MOIC",
+      "Scope": "Fund",
+      "Definition": "Gross value / invested equity",
+      "Formula_Logic": "Gross_Value / Invested_Equity",
+      "Frequency": "Quarterly",
+      "Required_Lineage": "Fund investment ledger",
+      "Linked_Thesis": "All"
+    },
+    {
+      "Metric_ID": "MET-010",
+      "Metric_Name": "IRR",
+      "Scope": "Fund",
+      "Definition": "Discount rate making investment cash flows net to zero",
+      "Formula_Logic": "XIRR(Cash_Flows, Dates)",
+      "Frequency": "Quarterly",
+      "Required_Lineage": "Capital calls and distributions",
+      "Linked_Thesis": "All"
+    },
+    {
+      "Metric_ID": "MET-011",
+      "Metric_Name": "Thesis Confidence",
+      "Scope": "Thesis",
+      "Definition": "Weighted evidence confidence",
+      "Formula_Logic": "SUM(Evidence_Weight * Evidence_Confidence) / SUM(Evidence_Weight)",
+      "Frequency": "Event-driven",
+      "Required_Lineage": "Evidence lineage",
+      "Linked_Thesis": "Specific thesis"
+    },
+    {
+      "Metric_ID": "MET-012",
+      "Metric_Name": "Reconciliation Coverage",
+      "Scope": "Platform",
+      "Definition": "Reconciled required links / required links",
+      "Formula_Logic": "Reconciled_Links / Required_Links",
+      "Frequency": "Event-driven",
+      "Required_Lineage": "Lineage registry",
+      "Linked_Thesis": "TH-004"
+    }
+  ],
+  "MVP_22_Fund_Economics": [
+    {
+      "Input": "Purchase Enterprise Value",
+      "Value": 525000000,
+      "Unit": "$",
+      "Source / Note": "Synthetic illustrative transaction",
+      "Calculated Fund Economics": null
+    },
+    {
+      "Input": "Debt Financing",
+      "Value": 210000000,
+      "Unit": "$",
+      "Source / Note": "Synthetic acquisition financing; distinct from LP commitments",
+      "Calculated Fund Economics": null
+    },
+    {
+      "Input": "Equity Purchase Price",
+      "Value": 315000000,
+      "Unit": "$",
+      "Source / Note": "EV less debt",
+      "Calculated Fund Economics": null
+    },
+    {
+      "Input": "Fund Ownership",
+      "Value": 0.65,
+      "Unit": "%",
+      "Source / Note": "Illustrative control ownership",
+      "Calculated Fund Economics": null
+    },
+    {
+      "Input": "Entry Adjusted EBITDA",
+      "Value": 52500000,
+      "Unit": "$",
+      "Source / Note": "Synthetic normalized EBITDA",
+      "Calculated Fund Economics": null
+    },
+    {
+      "Input": "Entry Multiple",
+      "Value": 10,
+      "Unit": "x",
+      "Source / Note": "Synthetic valuation assumption",
+      "Calculated Fund Economics": null
+    },
+    {
+      "Input": "Base Exit EBITDA",
+      "Value": 69000000,
+      "Unit": "$",
+      "Source / Note": "Synthetic pre-initiative exit EBITDA",
+      "Calculated Fund Economics": null
+    },
+    {
+      "Input": "Value Creation EBITDA Uplift",
+      "Value": 0,
+      "Unit": "$",
+      "Source / Note": "Formula-linked from initiatives in dashboard",
+      "Calculated Fund Economics": null
+    },
+    {
+      "Input": "Exit Multiple",
+      "Value": 11,
+      "Unit": "x",
+      "Source / Note": "Synthetic exit assumption",
+      "Calculated Fund Economics": null
+    },
+    {
+      "Input": "Hold Period",
+      "Value": 5,
+      "Unit": "years",
+      "Source / Note": "Illustrative",
+      "Calculated Fund Economics": null
+    }
+  ],
+  "MVP_23_Evidence_Lineage": [
+    {
+      "Lineage_ID": "LIN-001",
+      "From_Object_ID": "USE-005-202606",
+      "From_Type": "Usage Event",
+      "To_Object_ID": "SIG-001",
+      "To_Type": "Signal",
+      "Transformation_or_Relationship": "Observed usage decline creates signal",
+      "Authority_State": "Authoritative",
+      "Scope": "CUS-003 / CTR-005"
+    },
+    {
+      "Lineage_ID": "LIN-002",
+      "From_Object_ID": "SIG-001",
+      "From_Type": "Signal",
+      "To_Object_ID": "HYP-001",
+      "To_Type": "Business Hypothesis",
+      "Transformation_or_Relationship": "Signal creates validation hypothesis",
+      "Authority_State": "Derived",
+      "Scope": "CUS-003"
+    },
+    {
+      "Lineage_ID": "LIN-003",
+      "From_Object_ID": "HYP-001",
+      "From_Type": "Business Hypothesis",
+      "To_Object_ID": "VCI-001",
+      "To_Type": "Value Creation Initiative",
+      "Transformation_or_Relationship": "Validated hypothesis initiates customer-health workflow",
+      "Authority_State": "Governed",
+      "Scope": "TH-002"
+    },
+    {
+      "Lineage_ID": "LIN-004",
+      "From_Object_ID": "USE-005-202606",
+      "From_Type": "Usage Event",
+      "To_Object_ID": "Invoice linked to CUS-003",
+      "To_Type": "Invoice",
+      "Transformation_or_Relationship": "Usage quantity \u00d7 contract unit price",
+      "Authority_State": "Authoritative",
+      "Scope": "CTR-005"
+    },
+    {
+      "Lineage_ID": "LIN-005",
+      "From_Object_ID": "Invoice linked to CUS-003",
+      "From_Type": "Invoice",
+      "To_Object_ID": "Revenue Schedule",
+      "To_Type": "Revenue",
+      "Transformation_or_Relationship": "Delivered usage recognized in same month",
+      "Authority_State": "Authoritative",
+      "Scope": "CTR-005"
+    },
+    {
+      "Lineage_ID": "LIN-006",
+      "From_Object_ID": "Revenue Schedule",
+      "From_Type": "Revenue",
+      "To_Object_ID": "4000 Revenue",
+      "To_Type": "GL Account",
+      "Transformation_or_Relationship": "Revenue schedule posts to GL",
+      "Authority_State": "Posted",
+      "Scope": "Veradigm"
+    },
+    {
+      "Lineage_ID": "LIN-007",
+      "From_Object_ID": "4000 Revenue",
+      "From_Type": "GL Account",
+      "To_Object_ID": "MET-007",
+      "To_Type": "Adjusted EBITDA",
+      "Transformation_or_Relationship": "GL revenue contributes to EBITDA",
+      "Authority_State": "Calculated",
+      "Scope": "Veradigm"
+    },
+    {
+      "Lineage_ID": "LIN-008",
+      "From_Object_ID": "MET-007",
+      "From_Type": "Adjusted EBITDA",
+      "To_Object_ID": "MET-008",
+      "To_Type": "Enterprise Value",
+      "Transformation_or_Relationship": "EBITDA \u00d7 valuation multiple",
+      "Authority_State": "Calculated",
+      "Scope": "Investment"
+    },
+    {
+      "Lineage_ID": "LIN-009",
+      "From_Object_ID": "MET-008",
+      "From_Type": "Enterprise Value",
+      "To_Object_ID": "MET-009",
+      "To_Type": "MOIC",
+      "Transformation_or_Relationship": "Enterprise value less debt creates equity proceeds",
+      "Authority_State": "Calculated",
+      "Scope": "LoneTree Fund I"
+    },
+    {
+      "Lineage_ID": "LIN-010",
+      "From_Object_ID": "VCI-002",
+      "From_Type": "Value Creation Initiative",
+      "To_Object_ID": "TH-003",
+      "To_Type": "Investment Thesis",
+      "Transformation_or_Relationship": "Reporting remediation evidence updates thesis confidence",
+      "Authority_State": "Governed",
+      "Scope": "LoneTree + Veradigm"
+    }
+  ],
+  "MVP_24_Rendering_Map": [
+    {
+      "Render_ID": "RN-001",
+      "Object_Name": "LoneTree Firm",
+      "Render_Type": "Firm Orbit",
+      "Visual_Form": "Central parent sphere",
+      "Source_Object_ID": "ORG-0001",
+      "Visual_Mapping_Rule": "Size = committed capital; brightness = firm confidence",
+      "Interaction": "Click opens firm/fund hierarchy"
+    },
+    {
+      "Render_ID": "RN-002",
+      "Object_Name": "LoneTree Fund I",
+      "Render_Type": "Fund Orbit",
+      "Visual_Form": "Capital reservoir ring",
+      "Source_Object_ID": "ORG-0003",
+      "Visual_Mapping_Rule": "Ring fill = deployed capital; pulse = capital event",
+      "Interaction": "Click opens LP, investment and return layers"
+    },
+    {
+      "Render_ID": "RN-003",
+      "Object_Name": "Hazel Health",
+      "Render_Type": "Target Node",
+      "Visual_Form": "Amber target crystal",
+      "Source_Object_ID": "TGT-HZ",
+      "Visual_Mapping_Rule": "Density = diligence maturity; opacity = confidence",
+      "Interaction": "Compare against Veradigm"
+    },
+    {
+      "Render_ID": "RN-004",
+      "Object_Name": "Veradigm",
+      "Render_Type": "Selected Target / PortCo",
+      "Visual_Form": "Blue selected crystal transitioning to PortCo world",
+      "Source_Object_ID": "TGT-VD",
+      "Visual_Mapping_Rule": "Color transition at synthetic close",
+      "Interaction": "Fly into PortCo highways"
+    },
+    {
+      "Render_ID": "RN-005",
+      "Object_Name": "Commercial Highway",
+      "Render_Type": "Highway",
+      "Visual_Form": "Flowing channel with contract and usage rods",
+      "Source_Object_ID": "HW-04",
+      "Visual_Mapping_Rule": "Flow rate = event volume; turbulence = signal count",
+      "Interaction": "Click any molecule to trace lineage"
+    },
+    {
+      "Render_ID": "RN-006",
+      "Object_Name": "Value Creation Thesis",
+      "Render_Type": "Thesis Crystal",
+      "Visual_Form": "Suspended convergence crystal",
+      "Source_Object_ID": "TH-001..005",
+      "Visual_Mapping_Rule": "Brightness = confidence; dimensions = evidence categories",
+      "Interaction": "Click shows supporting and contradicting evidence"
+    },
+    {
+      "Render_ID": "RN-007",
+      "Object_Name": "Fund Economics",
+      "Render_Type": "Fund Economics Reservoir",
+      "Visual_Form": "Exit-value basin",
+      "Source_Object_ID": "MVP_22_Fund_Economics",
+      "Visual_Mapping_Rule": "Level = equity value; rings = MOIC and IRR",
+      "Interaction": "Trace backward to initiatives and source events"
+    },
+    {
+      "Render_ID": "RN-008",
+      "Object_Name": "Usage Decline",
+      "Render_Type": "Signal Pulse",
+      "Visual_Form": "Red pulse traveling across highways",
+      "Source_Object_ID": "SIG-001",
+      "Visual_Mapping_Rule": "Magnitude = signal size; decay = age",
+      "Interaction": "Shows cross-highway propagation"
+    }
+  ],
+  "MVP_25_Test_Cases": [
+    {
+      "Test_Case_ID": "TC-001",
+      "Feature": "Market-to-Target",
+      "Test_Action": "Load target universe",
+      "Expected_Result": "Hazel and Veradigm appear with public/synthetic badges and target scores.",
+      "Status": "Not Run",
+      "Priority": "Critical"
+    },
+    {
+      "Test_Case_ID": "TC-002",
+      "Feature": "Target Selection",
+      "Test_Action": "Advance Veradigm to IC and close",
+      "Expected_Result": "Journey maturity reaches 1.0 and selected target converts to PortCo state.",
+      "Status": "Not Run",
+      "Priority": "Critical"
+    },
+    {
+      "Test_Case_ID": "TC-003",
+      "Feature": "Usage-to-Invoice",
+      "Test_Action": "Open CUS-003 June usage event",
+      "Expected_Result": "Invoice amount equals usage quantity \u00d7 contract price and links to contract.",
+      "Status": "Not Run",
+      "Priority": "Critical"
+    },
+    {
+      "Test_Case_ID": "TC-004",
+      "Feature": "Invoice-to-GL",
+      "Test_Action": "Trace one invoice",
+      "Expected_Result": "Debit AR equals credit revenue; cash entry settles AR by collected amount.",
+      "Status": "Not Run",
+      "Priority": "Critical"
+    },
+    {
+      "Test_Case_ID": "TC-005",
+      "Feature": "Signal Propagation",
+      "Test_Action": "Trigger SIG-001",
+      "Expected_Result": "Signal appears in Commercial, Customer, Revenue, Finance and Value Creation views.",
+      "Status": "Not Run",
+      "Priority": "Critical"
+    },
+    {
+      "Test_Case_ID": "TC-006",
+      "Feature": "Hypothesis Safety",
+      "Test_Action": "Open SIG-001",
+      "Expected_Result": "System presents alternatives and validation steps; it does not assert layoffs as fact.",
+      "Status": "Not Run",
+      "Priority": "Critical"
+    },
+    {
+      "Test_Case_ID": "TC-007",
+      "Feature": "Anticipatory Accounting",
+      "Test_Action": "Apply usage decline projection",
+      "Expected_Result": "Forecast changes; no posted GL entry is created without an authoritative amendment/event.",
+      "Status": "Not Run",
+      "Priority": "Critical"
+    },
+    {
+      "Test_Case_ID": "TC-008",
+      "Feature": "Value Creation",
+      "Test_Action": "Approve VCI-001",
+      "Expected_Result": "Expected EBITDA, retention and enterprise-value impacts update with confidence.",
+      "Status": "Not Run",
+      "Priority": "High"
+    },
+    {
+      "Test_Case_ID": "TC-009",
+      "Feature": "Fund Reconciliation",
+      "Test_Action": "Open MOIC",
+      "Expected_Result": "User can trace proceeds to EV, EBITDA, GL revenue, invoices, contracts and usage.",
+      "Status": "Not Run",
+      "Priority": "Critical"
+    },
+    {
+      "Test_Case_ID": "TC-010",
+      "Feature": "Thesis Convergence",
+      "Test_Action": "Open TH-003",
+      "Expected_Result": "Public filing evidence and VCI-002 appear as thesis-supporting evidence with confidence.",
+      "Status": "Not Run",
+      "Priority": "High"
+    },
+    {
+      "Test_Case_ID": "TC-011",
+      "Feature": "Rendering",
+      "Test_Action": "Replay Market-to-Exit timeline",
+      "Expected_Result": "Target converts to PortCo and evidence streams converge into thesis and fund economics.",
+      "Status": "Not Run",
+      "Priority": "High"
+    },
+    {
+      "Test_Case_ID": "TC-012",
+      "Feature": "Metadata Configuration",
+      "Test_Action": "Change a confidence weight",
+      "Expected_Result": "Confidence recalculates without changing application code.",
+      "Status": "Not Run",
+      "Priority": "Critical"
+    }
+  ],
+  "MVP_26_Dashboard": [
+    {
+      "Selected Target": "Modeled PortCo",
+      "Veradigm": "Veradigm",
+      "Deal Maturity": "Open Signals",
+      "100.0%": "4"
+    },
+    {
+      "Selected Target": "Fund Size",
+      "Veradigm": "$200.0M",
+      "Deal Maturity": "Value Creation Initiatives",
+      "100.0%": "4"
+    },
+    {
+      "Selected Target": "Modeled Exit MOIC",
+      "Veradigm": 2.018063492063492,
+      "Deal Maturity": "Modeled Gross IRR",
+      "100.0%": 0.15076584955606953
+    },
+    {
+      "Selected Target": "Thesis",
+      "Veradigm": "Initial Confidence",
+      "Deal Maturity": "Primary Evidence",
+      "100.0%": "Primary Initiative"
+    },
+    {
+      "Selected Target": "Healthcare IT recurring revenue",
+      "Veradigm": 0.76,
+      "Deal Maturity": "Public + operating evidence",
+      "100.0%": "Pending"
+    },
+    {
+      "Selected Target": "Revenue-cycle monetization",
+      "Veradigm": 0.72,
+      "Deal Maturity": "CTR-005 visit volume declined 36.7% versus January baseline.",
+      "100.0%": "Customer Health and Contract Alignment"
+    },
+    {
+      "Selected Target": "Reporting remediation",
+      "Veradigm": 0.64,
+      "Deal Maturity": "SEC filing remediation remains incomplete and relisting depends on becoming current.",
+      "100.0%": "Reporting Remediation and Relisting Readiness"
+    },
+    {
+      "Selected Target": "Data and AI operating leverage",
+      "Veradigm": 0.69,
+      "Deal Maturity": "Public + operating evidence",
+      "100.0%": "Source-to-GL Reconciliation Layer"
+    },
+    {
+      "Selected Target": "Strategic product simplification",
+      "Veradigm": 0.67,
+      "Deal Maturity": "Public + operating evidence",
+      "100.0%": "Pending"
+    }
+  ]
+}

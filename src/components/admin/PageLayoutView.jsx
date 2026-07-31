@@ -54,7 +54,7 @@ export default function PageLayoutView({ page, currentSectionId, onSelectSection
 
   if (!page) {
     return (
-      <div style={{ ...styles.editorPane, alignItems: 'center', justifyContent: 'center', color: 'var(--sb-teal-deep)' }}>
+      <div style={{ ...styles.editorPane, alignItems: 'center', justifyContent: 'center', color: 'var(--sb-admin-teal-deep)' }}>
         Select a page to view its layout.
       </div>
     );
@@ -63,13 +63,13 @@ export default function PageLayoutView({ page, currentSectionId, onSelectSection
   return (
     <div style={styles.editorPane}>
       <div style={styles.editorHeader}>
-        <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.78rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--sb-sage)' }}>
+        <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.78rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--sb-admin-text-soft)' }}>
           Page Layout — {page.name}
         </div>
       </div>
       <div style={{ ...styles.editorBody, maxWidth: 620 }}>
         {sections.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--sb-teal-deep)' }}>
+          <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--sb-admin-teal-deep)' }}>
             This page has no sections yet.
           </div>
         ) : (
@@ -115,19 +115,19 @@ function SortableSectionCard({ section, active, open, onClick, onUpdate }) {
           {...listeners}
           title="Drag to reorder"
           onClick={(e) => e.stopPropagation()}
-          style={{ cursor: 'grab', color: 'var(--sb-teal-deep)', fontSize: '0.85rem', padding: '0 0.2rem', touchAction: 'none' }}
+          style={{ cursor: 'grab', color: 'var(--sb-admin-teal-deep)', fontSize: '0.85rem', padding: '0 0.2rem', touchAction: 'none' }}
         >
           ⋮⋮
         </span>
         <span className={`sb-badge ${b.cls}`} style={{ fontSize: '0.55rem' }}>{b.txt}</span>
-        <span style={{ flex: 1, fontSize: '0.85rem', color: active ? 'var(--sb-gold)' : 'var(--sb-cream)' }}>
+        <span style={{ flex: 1, fontSize: '0.85rem', color: active ? 'var(--sb-admin-gold-warm)' : 'var(--sb-admin-text)' }}>
           {section.name}
-          <span style={{ marginLeft: 8, fontSize: '0.68rem', color: 'var(--sb-dusty)' }}>{humanType(section.type)}</span>
+          <span style={{ marginLeft: 8, fontSize: '0.68rem', color: 'var(--sb-admin-text-soft)' }}>{humanType(section.type)}</span>
         </span>
-        <span style={{ fontSize: '0.62rem', color: 'var(--sb-dusty)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        <span style={{ fontSize: '0.62rem', color: 'var(--sb-admin-text-soft)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
           {WIDTH_LABEL[layout.width]} · {section.columns || 1}col · {section.bg || 'ivory'}
         </span>
-        <span style={{ fontSize: '0.7rem', color: 'var(--sb-teal-deep)' }}>{open ? '▲' : '▼'}</span>
+        <span style={{ fontSize: '0.7rem', color: 'var(--sb-admin-teal-deep)' }}>{open ? '▲' : '▼'}</span>
       </div>
       {open && (
         <div style={{ marginTop: '0.9rem', paddingTop: '0.9rem', borderTop: '0.5px solid rgba(196,132,58,0.15)' }}>

@@ -487,7 +487,10 @@ export default function MyResumePanel({ scope = 'member' }) {
       api.getMemberDraftSite().then(s => { if (s) setSite(s); }).catch(() => {});
     }
     loadPresets();
-    fetchCareerMaster().then(setCareerMaster);
+    // 'me' — this panel always edits the logged-in user's own Career Master,
+    // never a slug. Passing nothing here would silently fall back to the
+    // platform admin's data (see fetchCareerMaster's own doc comment).
+    fetchCareerMaster('me').then(setCareerMaster);
     loadResumeOutputs();
   }, []);
 

@@ -44,7 +44,7 @@ function fmtPct(n) {
 
 // ── Layer 2: static rollup counts ────────────────────────────────────────────
 export function computeStaticRollups(master) {
-  const { jobs = [], skills = [], tools = [], engagements = [], certifications = [], deals = [] } = master;
+  const { jobs = [], skills = [], tools = [], engagements = [], certifications = [], domains = [], deals = [] } = master;
   const out = [];
 
   out.push({ key: 'total_jobs', label: 'Roles Held', value: jobs.length, category: 'career' });
@@ -62,6 +62,25 @@ export function computeStaticRollups(master) {
   }
   for (const { key, count } of groupCount(tools, (t) => t.wheelBucket)) {
     out.push({ key: `tools_by_bucket:${key}`, label: `Tools · ${key}`, value: count, category: 'tools' });
+  }
+  // Case study, certification, and domain groupings — the remaining Career
+  // Master objects (skills/jobs/tools were already grouped above) — so the
+  // Infographics builder can roll up any of the six Career Master tables,
+  // not just three of them.
+  for (const { key, count } of groupCount(engagements, (e) => e.industry)) {
+    out.push({ key: `engagements_by_industry:${key}`, label: `Case Studies · ${key}`, value: count, category: 'case_studies' });
+  }
+  for (const { key, count } of groupCount(engagements, (e) => e.employer)) {
+    out.push({ key: `engagements_by_employer:${key}`, label: `Case Studies · ${key}`, value: count, category: 'case_studies' });
+  }
+  for (const { key, count } of groupCount(certifications, (c) => c.category)) {
+    out.push({ key: `certifications_by_category:${key}`, label: `Certifications · ${key}`, value: count, category: 'certifications' });
+  }
+  for (const { key, count } of groupCount(certifications, (c) => c.status)) {
+    out.push({ key: `certifications_by_status:${key}`, label: `Certifications · ${key}`, value: count, category: 'certifications' });
+  }
+  for (const { key, count } of groupCount(domains, (d) => d.groupType)) {
+    out.push({ key: `domains_by_group:${key}`, label: `Domains · ${key}`, value: count, category: 'domains' });
   }
   const activeCerts = certifications.filter((c) => c.status === 'active').length;
   if (certifications.length) out.push({ key: 'active_certifications', label: 'Active Certifications', value: activeCerts, category: 'career' });

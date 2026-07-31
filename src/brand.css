@@ -197,6 +197,82 @@
   --sb-theme-pink: var(--sb-pink-500);
 }
 
+/* ── Admin/member chrome — light "Crystal Basin" palette (2026-07-31) ──────
+   Admin (/admin/*) and the member dashboard (/member) render through the
+   same AdminShell and never receive a [data-theme] attribute, so unlike the
+   public-site themes above these tokens are NOT gated behind a selector —
+   they're always-on additions at :root.
+
+   These are deliberately separate names from --sb-navy/--sb-cream/--sb-ivory
+   rather than a reuse of those tokens: within admin JSX, --sb-navy and
+   --sb-cream are already used in the *opposite* role in a few spots (e.g.
+   PreviewPane's live-preview surface is intentionally light background /
+   dark text — background: var(--sb-ivory), color: var(--sb-navy)). Flipping
+   the shared tokens' values would silently invert that spot along with
+   every genuine dark-chrome usage. New tokens avoid that collision entirely.
+
+   Every admin/member JSX file was migrated off var(--sb-navy)/var(--sb-cream)
+   /var(--sb-gold)/var(--sb-teal)/var(--sb-dusty)/var(--sb-taupe)/var(--sb-sage)
+   onto these --sb-admin-* equivalents on 2026-07-31 — do not reintroduce the
+   old dark-chrome tokens in new admin panels. */
+:root {
+  --sb-admin-bg:            #F8F4EC;  /* page/shell background — cream */
+  --sb-admin-surface:       #F1EBDD;  /* topbar/sidebar/card surface — parchment */
+  --sb-admin-surface-deep:  #ECE3D0;  /* nested/deeper surface — parchment-deep */
+  --sb-admin-surface-alt:   #FFFDF8;  /* lightest surface, e.g. inputs — paper */
+  --sb-admin-text:          #2B2A28;  /* primary text — ink */
+  --sb-admin-text-soft:     rgba(43,42,40,0.65);  /* secondary/muted text — ink-soft */
+  --sb-admin-border:        rgba(43,42,40,0.12);  /* hairline dividers/borders */
+  --sb-admin-border-strong: rgba(43,42,40,0.22);
+  --sb-admin-gold:          #C4843A;  /* accent — unchanged hue from Strategic Operator */
+  --sb-admin-gold-warm:     #9C6329;  /* gold hover/active state */
+  --sb-admin-gold-tint:     rgba(196,132,58,0.12);  /* active/hover chip background */
+  --sb-admin-teal:          #4A7C8E;  /* secondary accent — unchanged hue */
+  --sb-admin-teal-deep:     #345A68;
+  --sb-admin-teal-tint:     #DCE9EC;
+  --sb-admin-pink:          #D98CA0;  /* mark/underline/border only — never a fill */
+  --sb-admin-danger:        #B25252; /* error/risk state on light bg */
+  --sb-admin-success:       #4E8A63;
+}
+
+/* Admin/member chrome scoped overrides — .sb-input/.sb-btn-outline/.sb-badge-*
+   /option/.sb-toast are shared with public-facing pages (LandingGate,
+   SignupPage, OrgPortal, public blocks) and stay dark there by design, so
+   they're re-pointed at the light --sb-admin-* tokens only inside the admin
+   shell, mirroring the existing .sb-login-brand-page scoping below. */
+.sb-admin-shell .sb-input,
+.sb-login-brand-page .sb-input {
+  background: var(--sb-admin-surface-alt);
+  color: var(--sb-admin-text);
+  border-color: var(--sb-admin-border);
+}
+.sb-admin-shell .sb-input:focus,
+.sb-login-brand-page .sb-input:focus { border-color: var(--sb-admin-gold); }
+.sb-admin-shell .sb-btn-outline,
+.sb-login-brand-page .sb-btn-outline {
+  border-color: var(--sb-admin-border-strong);
+  color: var(--sb-admin-text);
+}
+.sb-admin-shell .sb-btn-outline:hover,
+.sb-login-brand-page .sb-btn-outline:hover {
+  border-color: var(--sb-admin-gold);
+  color: var(--sb-admin-gold-warm);
+}
+.sb-admin-shell .sb-btn-gold { color: #FFFDF8; }
+.sb-admin-shell .sb-badge-live  { background: rgba(78,138,99,0.16); color: var(--sb-admin-success); }
+.sb-admin-shell .sb-badge-draft { background: rgba(43,42,40,0.08); color: var(--sb-admin-text-soft); }
+.sb-admin-shell .sb-badge-soon  { background: var(--sb-admin-gold-tint); color: var(--sb-admin-gold-warm); }
+.sb-admin-shell option {
+  background: var(--sb-admin-surface-alt);
+  color: var(--sb-admin-text);
+}
+.sb-admin-shell .sb-toast {
+  background: var(--sb-admin-surface-alt);
+  border-color: var(--sb-admin-gold);
+  color: var(--sb-admin-text);
+  box-shadow: 0 8px 24px rgba(43,42,40,0.18);
+}
+
 /* Pink usage primitives — the only three approved applications, wired to the
    active theme's pink role. Never combine these with a background-color. */
 .sb-pink-mark { color: var(--sb-theme-pink); }
@@ -3435,6 +3511,9 @@ option {
 .sjw-obj-check{color:var(--sb-sage);font-size:.8rem;min-width:.9rem}
 .sjw-objective-done .sjw-obj-check{color:var(--sb-champagne)}
 .sjw-objective-done .sjw-obj-title{color:var(--sb-sage);text-decoration:line-through}
+.sjw-obj-title{flex:1}
+.sjw-obj-advance{flex-shrink:0;margin-left:auto;background:none;border:1px solid rgba(196,132,58,.4);border-radius:5px;color:var(--sb-gold);font-size:.7rem;line-height:1;padding:.2rem .35rem;cursor:pointer}
+.sjw-obj-advance:hover{border-color:var(--sb-gold);background:rgba(196,132,58,.12)}
 
 .sjw-inspector-panel{position:absolute;z-index:30;right:0;top:0;bottom:0;width:360px;max-width:90vw;background:rgba(10,13,17,.96);border-left:1px solid rgba(196,132,58,.35);padding:4.2rem 1.3rem 1.3rem;overflow-y:auto;box-shadow:-20px 0 40px rgba(0,0,0,.4)}
 .sjw-panel-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--sb-sage);font-size:1.3rem;cursor:pointer;line-height:1}
@@ -3476,6 +3555,10 @@ option {
 .sjw-legend-section{margin-bottom:.6rem}
 .sjw-legend-section b{font-family:var(--sb-font-label);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--sb-gold)}
 .sjw-legend-section p{margin:.25rem 0 0;font-size:.68rem;line-height:1.5;color:var(--sb-sage)}
+.sjw-legend-bands{list-style:none;margin:.4rem 0 0;padding:0;display:flex;flex-direction:column;gap:.22rem}
+.sjw-legend-bands li{display:flex;align-items:center;gap:.4rem;font-size:.66rem;color:var(--sb-sage)}
+.sjw-legend-swatch{width:.7rem;height:.7rem;border-radius:2px;flex:0 0 auto;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.sjw-legend-range{margin-left:auto;opacity:.65;font-variant-numeric:tabular-nums}
 
 .sjw-map-overlay,.sjw-compound-overlay{position:absolute;inset:0;z-index:40;background:rgba(10,13,17,.97);padding:4.8rem 1.2rem 1.2rem;overflow-y:auto}
 .sjw-map-overlay h4,.sjw-compound-overlay h4{font-family:var(--sbh-font-display);color:var(--sb-cream);font-size:1.2rem;margin-bottom:.6rem}

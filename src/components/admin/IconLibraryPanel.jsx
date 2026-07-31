@@ -12,8 +12,8 @@ export default function IconLibraryPanel({ onPick, activeName }) {
     <div
       style={{
         padding: '0.85rem',
-        background: 'var(--sb-navy)',
-        border: '0.5px solid rgba(196,132,58,0.25)',
+        background: 'var(--sb-admin-surface)',
+        border: '0.5px solid var(--sb-admin-border-strong)',
         borderRadius: 'var(--sb-radius)',
         maxHeight: 380,
         overflowY: 'auto',
@@ -27,7 +27,7 @@ export default function IconLibraryPanel({ onPick, activeName }) {
               fontSize: '0.6rem',
               letterSpacing: '0.14em',
               textTransform: 'uppercase',
-              color: 'var(--sb-teal)',
+              color: 'var(--sb-admin-teal-deep)',
               marginBottom: '0.5rem',
             }}
           >
@@ -52,15 +52,15 @@ export default function IconLibraryPanel({ onPick, activeName }) {
                   padding: '0.4rem 0.2rem',
                   borderRadius: 'var(--sb-radius)',
                   cursor: 'grab',
-                  border: activeName === def.key ? '1.5px solid var(--sb-gold)' : '0.5px solid transparent',
-                  background: activeName === def.key ? 'rgba(196,132,58,0.12)' : 'transparent',
+                  border: activeName === def.key ? '1.5px solid var(--sb-admin-gold)' : '0.5px solid transparent',
+                  background: activeName === def.key ? 'var(--sb-admin-gold-tint)' : 'transparent',
                 }}
               >
                 <Icon name={def.key} size={22} />
                 <span
                   style={{
                     fontSize: '0.52rem',
-                    color: 'var(--sb-dusty)',
+                    color: 'var(--sb-admin-text-soft)',
                     textAlign: 'center',
                     lineHeight: 1.15,
                     wordBreak: 'break-word',
@@ -73,7 +73,7 @@ export default function IconLibraryPanel({ onPick, activeName }) {
           </div>
         </div>
       ))}
-      <div style={{ fontSize: '0.62rem', color: 'var(--sb-dusty)', lineHeight: 1.5, marginTop: '0.25rem' }}>
+      <div style={{ fontSize: '0.62rem', color: 'var(--sb-admin-text-soft)', lineHeight: 1.5, marginTop: '0.25rem' }}>
         Drag an icon onto any Icon field, or click a tile to assign it directly.
       </div>
     </div>

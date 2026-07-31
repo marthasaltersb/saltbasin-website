@@ -72,7 +72,7 @@ router.post('/posts', async (req, res) => {
       INSERT INTO unified_content_items
         (id, app_id, type, title, topic, summary, body, series_ref, domain_refs, capability_refs, audience_refs, export_status, created_by, updated_by, created_at, updated_at, metadata)
       VALUES ($1,'app.herq','post',$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$11,$12,$12,'{}')
-    `).run(id, title, topic || null, summary || null, body ? JSON.stringify(body) : null, series_ref || null, domain_refs || null, capability_refs || null, audience_refs || null, export_status || 'draft', user.id, now);
+    `).run(id, title, topic || null, summary || null, body || null, series_ref || null, domain_refs || null, capability_refs || null, audience_refs || null, export_status || 'draft', user.id, now);
 
     res.json({ ok: true, id });
   } catch (e) {
@@ -100,7 +100,7 @@ router.put('/posts/:id', async (req, res) => {
     await db.prepare(`
       UPDATE unified_content_items SET title=$1, topic=$2, summary=$3, body=$4, series_ref=$5, domain_refs=$6, capability_refs=$7, audience_refs=$8, export_status=$9, updated_by=$10, updated_at=$11
       WHERE id=$12 AND app_id='app.herq'
-    `).run(title, topic || null, summary || null, body ? JSON.stringify(body) : null, series_ref || null, domain_refs || null, capability_refs || null, audience_refs || null, export_status || 'draft', user.id, now, req.params.id);
+    `).run(title, topic || null, summary || null, body || null, series_ref || null, domain_refs || null, capability_refs || null, audience_refs || null, export_status || 'draft', user.id, now, req.params.id);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: 'Failed to update post' });
@@ -201,7 +201,7 @@ router.post('/outputs', async (req, res) => {
     await db.prepare(`
       INSERT INTO unified_outputs (id, app_id, title, purpose, template_ref, source_item_ids, config, export_status, created_by, updated_at)
       VALUES ($1,'app.herq',$2,$3,$4,$5,$6,'draft',$7,$8)
-    `).run(id, title, purpose || null, template_ref || null, source_item_ids || null, JSON.stringify(config || {}), user.id, Date.now());
+    `).run(id, title, purpose || null, template_ref || null, source_item_ids || null, config || {}, user.id, Date.now());
     res.json({ ok: true, id });
   } catch (e) {
     res.status(500).json({ error: 'Failed to create output' });
@@ -219,11 +219,11 @@ router.put('/outputs/:id', async (req, res) => {
 
     // Version history on block template changes
     let history = [];
-    try { history = JSON.parse(current.version_history || '[]'); } catch {}
+    try { history = typeof current.version_history === 'string' ? JSON.parse(current.version_history) : (current.version_history || []); } catch {}
     if (template_config && current.template_config) {
       history.unshift({ saved_at: now, template_config: current.template_config });
     } else if (config) {
-      history.unshift({ saved_at: now, config: JSON.parse(current.config || '{}') });
+      history.unshift({ saved_at: now, config: typeof current.config === 'string' ? JSON.parse(current.config) : (current.config || {}) });
     }
     if (history.length > 20) history = history.slice(0, 20);
 
@@ -244,10 +244,10 @@ router.put('/outputs/:id', async (req, res) => {
       purpose || null,
       template_ref || null,
       source_item_ids || null,
-      JSON.stringify(config || {}),
+      config || {},
       export_status || current.export_status || 'draft',
       published_at,
-      JSON.stringify(history),
+      history,
       now,
       output_type || null,
       template_config || null,

@@ -40,8 +40,8 @@ export default function ImageUploadField({ value, onChange }) {
           gap: '0.75rem',
           alignItems: 'flex-start',
           padding: '0.75rem',
-          background: 'var(--sb-navy)',
-          border: '0.5px solid rgba(196,132,58,0.25)',
+          background: 'var(--sb-admin-surface)',
+          border: '0.5px solid var(--sb-admin-border-strong)',
           borderRadius: 'var(--sb-radius)',
         }}
       >
@@ -50,13 +50,13 @@ export default function ImageUploadField({ value, onChange }) {
           style={{
             width: 80,
             height: 100,
-            background: 'var(--sb-navy-deep)',
-            border: '0.5px solid var(--sb-taupe)',
+            background: 'var(--sb-admin-surface-alt)',
+            border: '0.5px solid var(--sb-admin-border)',
             borderRadius: 'var(--sb-radius)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'var(--sb-teal-deep)',
+            color: 'var(--sb-admin-teal-deep)',
             fontSize: '0.7rem',
             flexShrink: 0,
             overflow: 'hidden',

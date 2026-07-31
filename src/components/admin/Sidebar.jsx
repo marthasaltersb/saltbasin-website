@@ -86,7 +86,7 @@ export default function Sidebar({
               style={{ ...styles.pageItem, ...(active ? styles.pageItemActive : null) }}
             >
               <span className={`sb-badge ${b.cls}`}>{b.txt}</span>
-              <span style={{ fontSize: '0.83rem', flex: 1, color: active ? 'var(--sb-gold)' : 'var(--sb-sage)' }}>
+              <span style={{ fontSize: '0.83rem', flex: 1, color: active ? 'var(--sb-admin-gold-warm)' : 'var(--sb-admin-text-soft)' }}>
                 {pg.navLabel || pg.name}
               </span>
               <button
@@ -106,7 +106,7 @@ export default function Sidebar({
       <div style={{ padding: '0.75rem 1rem 0.25rem', flexShrink: 0 }}>
         <div style={styles.sidebarLabel}>
           Sections —{' '}
-          <span style={{ color: 'var(--sb-cream)', textTransform: 'none', letterSpacing: 0, fontSize: '0.75rem' }}>
+          <span style={{ color: 'var(--sb-admin-text)', textTransform: 'none', letterSpacing: 0, fontSize: '0.75rem' }}>
             {currentPage?.name || ''}
           </span>
         </div>
@@ -165,17 +165,17 @@ function SortableSectionRow({ section, active, open, onSelect, onToggleOpen, onC
           {...listeners}
           title="Drag to reorder"
           onClick={(e) => e.stopPropagation()}
-          style={{ color: 'var(--sb-teal-deep)', fontSize: '0.7rem', cursor: 'grab', touchAction: 'none' }}
+          style={{ color: 'var(--sb-admin-teal-deep)', fontSize: '0.7rem', cursor: 'grab', touchAction: 'none' }}
         >⋮⋮</span>
         <span className={`sb-badge ${b.cls}`} style={{ fontSize: '0.55rem' }}>{b.txt}</span>
-        <span style={{ fontSize: '0.8rem', flex: 1, color: 'var(--sb-sage)' }}>{section.name}</span>
+        <span style={{ fontSize: '0.8rem', flex: 1, color: 'var(--sb-admin-text-soft)' }}>{section.name}</span>
         {section.navSubPage && (
-          <span title="Shows as a sub-page link in the nav" style={{ fontSize: '0.62rem', color: 'var(--sb-gold)' }}>▾ nav</span>
+          <span title="Shows as a sub-page link in the nav" style={{ fontSize: '0.62rem', color: 'var(--sb-admin-gold-warm)' }}>▾ nav</span>
         )}
         <button
           title="Layout settings"
           onClick={(e) => { e.stopPropagation(); onToggleOpen(); }}
-          style={{ ...iconBtn, color: open ? 'var(--sb-gold)' : 'var(--sb-teal-deep)' }}
+          style={{ ...iconBtn, color: open ? 'var(--sb-admin-gold-warm)' : 'var(--sb-admin-teal-deep)' }}
         >{open ? '▲' : '▼'}</button>
         <button
           title="Cycle status"
@@ -189,7 +189,7 @@ function SortableSectionRow({ section, active, open, onSelect, onToggleOpen, onC
         >✕</button>
       </div>
       {open && (
-        <div style={{ padding: '0.75rem 0.6rem 1rem', marginBottom: '0.3rem', background: 'rgba(0,0,0,0.15)', borderRadius: 'var(--sb-radius)' }}>
+        <div style={{ padding: '0.75rem 0.6rem 1rem', marginBottom: '0.3rem', background: 'var(--sb-admin-surface-deep)', borderRadius: 'var(--sb-radius)' }}>
           <SectionLayoutFields section={section} onUpdate={onUpdateSection} />
         </div>
       )}
@@ -200,7 +200,7 @@ function SortableSectionRow({ section, active, open, onSelect, onToggleOpen, onC
 const iconBtn = {
   background: 'none',
   border: 'none',
-  color: 'var(--sb-teal-deep)',
+  color: 'var(--sb-admin-teal-deep)',
   cursor: 'pointer',
   fontSize: '0.7rem',
   padding: '2px 4px',

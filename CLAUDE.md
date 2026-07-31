@@ -80,6 +80,8 @@ db.raw                                 // direct tagged-template postgres client
 
 **Critical**: `postgres` rejects `undefined` params — always pass `null` for absent optional values.
 
+**Critical**: for a parameter bound to a `JSONB` column (with or without an explicit `::jsonb` cast in the SQL), always pass the raw JS value (object/array/string/number) — **never** `JSON.stringify()` it first. `db.prepare(sql).run/get/all(...)` wraps `sql.unsafe(query, params)`, and a pre-stringified string double-encodes: the column ends up holding a JSON *string scalar* containing the JSON text, not the actual object (`jsonb_typeof(col)` shows `'string'` instead of `'object'`/`'array'`). This corrupts silently — every reader does `row.col?.someKey || default`, and a JS string has no such property, so it just falls through to the default instead of erroring. Confirmed by direct reproduction 2026-07-27; audited and fixed across the codebase that day (see the "jsonb param convention" note at the top of `db.js`). Columns that are plain `TEXT` (`site_state.data`, `config_state.data`, `member_profiles.draft`/`published`, `org_sites.data`, `org_configs.data`) are unaffected and correctly keep using `JSON.stringify()` — check the column's actual `CREATE TABLE` type before treating a `JSON.stringify()` call as a bug.
+
 SQL uses `$1, $2` numbered placeholders (not `?`). All timestamps are `BIGINT` milliseconds (`Date.now()`), not SQL timestamps.
 
 Schema migrations run at every boot via idempotent `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` calls at the bottom of `db.js bootstrap()`. Add new columns there.

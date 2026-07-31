@@ -25,6 +25,11 @@ export default function CareerMasterEntryPoint({ scope = 'member' }) {
           onEnterOrbit={() => setView('orbit')}
           onUploadData={() => setView('upload')}
           onGoToSiteLayout={() => window.dispatchEvent(new CustomEvent('sb-admin-switch-tab', { detail: { tab: 'content' } }))}
+          // The 'content' tab (site editor) is off the member nav — public
+          // profiles stay disabled for members for now (2026-07-30) — so this
+          // deep link would otherwise land on the site editor UI outside any
+          // tab it's actually reachable from. Re-enable alongside 'content'.
+          showSiteLayoutLink={scope !== 'member'}
         />
       )}
       {view === 'orbit' && (

@@ -77,7 +77,7 @@ async function grantAccess({ userId, pkg, purchaseKind, paymentId }) {
   await db.prepare(`
     INSERT INTO data_entitlements (license_id, scope)
     VALUES ($1, $2)
-  `).run(license.id, JSON.stringify({ deliverablePackageId: pkg.id, allowExport }));
+  `).run(license.id, { deliverablePackageId: pkg.id, allowExport });
 
   if (purchaseKind === 'annual_entitlement') {
     await db.prepare(`
@@ -356,7 +356,7 @@ router.post('/onboarding-runs', requireUser, async (req, res) => {
       INSERT INTO product_onboarding_runs (user_id, product_id, answers, status, created_at, updated_at)
       VALUES ($1, $2, $3::jsonb, 'completed', $4, $4)
       RETURNING *
-    `).get(req.user.id, productId, JSON.stringify(answers.slice(0, 5)), now);
+    `).get(req.user.id, productId, answers.slice(0, 5), now);
 
     // Best-effort: a completed sample journey is meaningful commercial
     // signal — record it against the member's revenue_lifecycle rod exactly

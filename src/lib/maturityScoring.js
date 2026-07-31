@@ -60,6 +60,13 @@ export function scoreDestinationMaturity(destination, densityConfig, confidence 
 
 // Looks up which named maturity band (Unresolved/Observed/.../Trusted) a 0-1
 // score falls into, using the same bands the color spectrum legend shows.
+// Bands are half-open [min, max) so a score sitting exactly on a boundary
+// belongs to the band it opens, not the one it closes. With inclusive-both-ends
+// matching, 0.6 satisfied both [0.4, 0.6] and [0.6, 0.8] and the earlier band
+// won — so a fully Reconciled (level 3) chain rendered as Reproducible (level
+// 2). The top band stays closed at 1 so a perfect score has a home.
 export function maturityBandFor(score, bands = []) {
-  return bands.find((band) => score >= band.min && score <= band.max) || bands[bands.length - 1] || null;
+  if (!bands.length) return null;
+  const last = bands[bands.length - 1];
+  return bands.find((band) => score >= band.min && (score < band.max || (band === last && score <= band.max))) || last;
 }

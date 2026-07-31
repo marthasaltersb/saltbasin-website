@@ -358,7 +358,7 @@ function rowToCamel(row, fieldMap, jsonFields = new Set()) {
 }
 
 function serializeVal(camel, value, jsonFields) {
-  if (jsonFields.has(camel)) return JSON.stringify(value ?? (camel === 'extra' ? {} : []));
+  if (jsonFields.has(camel)) return value ?? (camel === 'extra' ? {} : []);
   return value === undefined ? null : value;
 }
 
@@ -746,13 +746,13 @@ router.post('/intake-runs', requireUser, async (req, res) => {
       ownerScope,
       cleanText(body.runKind, 80) || 'career_master_mapping',
       'queued',
-      JSON.stringify(documentIds),
+      documentIds,
       passes,
       primaryResumeRequested,
       publicResearch,
       !!primaryResume,
       `Queued ${passes} Career Master analysis pass${passes === 1 ? '' : 'es'} across ${documentIds.length} uploaded source${documentIds.length === 1 ? '' : 's'}.`,
-      JSON.stringify(metadata),
+      metadata,
       now
     );
 
@@ -895,7 +895,7 @@ router.post('/mappings/commit', requireUser, async (req, res) => {
         if (typeof rawValue === 'string') {
           try { jsonValue = JSON.parse(rawValue); } catch { jsonValue = [rawValue]; }
         }
-        vals.push(JSON.stringify(Array.isArray(jsonValue) ? jsonValue : [jsonValue]));
+        vals.push(Array.isArray(jsonValue) ? jsonValue : [jsonValue]);
       } else {
         placeholders.push(`$${i++}`);
         vals.push(rawValue);
@@ -930,9 +930,9 @@ router.post('/mappings/commit', requireUser, async (req, res) => {
       req.user.id,
       req.user.role === 'admin' ? 'admin' : 'member',
       cleanText(body.source, 80) || 'career_mapping_commit',
-      JSON.stringify([]),
+      [],
       `Committed ${created.length} Career Master entr${created.length === 1 ? 'y' : 'ies'} from ${body.source === 'ai_resume_extraction' ? 'AI resume analysis' : 'semantic Excel import'}.`,
-      JSON.stringify({ created, errors, source: body.source || null }),
+      { created, errors, source: body.source || null },
       now
     );
   } catch (e) {
@@ -1027,8 +1027,8 @@ router.post('/seed', async (req, res) => {
       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$22)
     `).run(
       e.name, e.employer, e.clientNameReal ?? null, e.clientDisplayName, e.industry ?? null, e.period ?? null, e.scale ?? null,
-      JSON.stringify(e.roles || []), e.context ?? null, e.actions ?? null, JSON.stringify(e.outcomes || []),
-      JSON.stringify(e.metrics || []), e.testimonial ?? null, e.testimonialAttr ?? null, JSON.stringify(e.scenarios || []),
+      e.roles || [], e.context ?? null, e.actions ?? null, e.outcomes || [],
+      e.metrics || [], e.testimonial ?? null, e.testimonialAttr ?? null, e.scenarios || [],
       e.investmentType ?? null, e.acquiredDetail ?? null, e.exitDetail ?? null, e.financialReturn ?? null, e.outcomeStatus ?? null,
       idx, now
     );
@@ -1039,7 +1039,7 @@ router.post('/seed', async (req, res) => {
     await db.prepare(`
       INSERT INTO career_domains (group_type, title, icon, description, items, accent_color, extra, order_index, created_at, updated_at)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$9)
-    `).run(d.groupType, d.title, d.icon ?? null, d.description ?? null, JSON.stringify(d.items || []), d.accentColor ?? null, JSON.stringify(d.extra || {}), idx, now);
+    `).run(d.groupType, d.title, d.icon ?? null, d.description ?? null, d.items || [], d.accentColor ?? null, d.extra || {}, idx, now);
   }
 
   for (let idx = 0; idx < certifications.length; idx++) {

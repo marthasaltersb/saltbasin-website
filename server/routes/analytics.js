@@ -53,7 +53,7 @@ router.post('/events', async (req, res) => {
       session_id || null,
       hashIp(ip),
       getReferrerDomain(referrer),
-      JSON.stringify(metadata || {}),
+      metadata || {},
       Date.now()
     );
 
@@ -209,7 +209,7 @@ router.post('/member/resume-download', async (req, res) => {
       member_user_id ? Number(member_user_id) : null,
       visitor.id,
       hashIp(ip),
-      JSON.stringify({ reason: reason.trim(), visitor_email: visitor.email }),
+      { reason: reason.trim(), visitor_email: visitor.email },
       Date.now()
     );
 

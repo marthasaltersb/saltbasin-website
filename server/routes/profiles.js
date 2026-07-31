@@ -79,7 +79,7 @@ router.patch('/me/personal', express.json(), async (req, res) => {
     const avatar_url   = b.avatar_url ?? null;
     const location     = b.location ?? null;
     const pronouns     = b.pronouns ?? null;
-    const metadataJson = b.metadata !== undefined ? JSON.stringify(b.metadata) : null;
+    const metadataJson = b.metadata !== undefined ? b.metadata : null;
     await db.prepare(`
       INSERT INTO personal_profiles (user_id, display_name, bio, avatar_url, location, pronouns, updated_at)
       VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -440,7 +440,7 @@ router.post('/admin/licenses', express.json(), async (req, res) => {
     `).all(user_id, org_id || null, product_id, tier, user.id, expires_at || null);
 
     if (scope) {
-      await db.prepare(`INSERT INTO data_entitlements (license_id, scope) VALUES ($1, $2)`).run(license.id, JSON.stringify(scope));
+      await db.prepare(`INSERT INTO data_entitlements (license_id, scope) VALUES ($1, $2)`).run(license.id, scope);
     }
 
     await audit({ req, actor: user, action: 'license.grant', entityType: 'license', entityId: license.id,

@@ -128,7 +128,7 @@ router.post('/', async (req, res) => {
     await db.prepare(`
       INSERT INTO output_templates (id, user_id, output_type, name, is_primary, config, created_at, updated_at)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $7)
-    `).run(id, user.id, output_type, name, is_primary ?? false, JSON.stringify(config || {}), now);
+    `).run(id, user.id, output_type, name, is_primary ?? false, config || {}, now);
     res.json({ ok: true, id });
   } catch (e) {
     res.status(500).json({ error: 'Failed to create template' });
@@ -149,7 +149,7 @@ router.put('/:id', async (req, res) => {
     }
     await db.prepare(`
       UPDATE output_templates SET name = COALESCE($1, name), config = COALESCE($2, config), is_primary = $3, updated_at = $4 WHERE id = $5
-    `).run(name || null, config ? JSON.stringify(config) : null, is_primary ?? row.is_primary, Date.now(), req.params.id);
+    `).run(name || null, config || null, is_primary ?? row.is_primary, Date.now(), req.params.id);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: 'Failed to update template' });

@@ -22,7 +22,7 @@ const S = {
   linkTile: { marginTop: '1.5rem', textAlign: 'center', fontSize: '0.8rem' },
 };
 
-export default function ChooseYourPathScreen({ onEnterOrbit, onUploadData, onGoToSiteLayout, orbitAvailable = false }) {
+export default function ChooseYourPathScreen({ onEnterOrbit, onUploadData, onGoToSiteLayout, orbitAvailable = false, showSiteLayoutLink = true }) {
   const [hover, setHover] = useState(null);
 
   return (
@@ -50,11 +50,13 @@ export default function ChooseYourPathScreen({ onEnterOrbit, onUploadData, onGoT
           <div style={S.tileDesc}>Download a semantic Excel template mapped to real Career Atoms, or upload an existing resume for layout ingestion and agentic mapping suggestions.</div>
         </div>
       </div>
-      <div style={S.linkTile}>
-        <a href="#" onClick={(e) => { e.preventDefault(); onGoToSiteLayout?.(); }} style={{ color: 'var(--sb-teal-deep, #02a1a6)' }}>
-          Configure how your career shows up on your public site →
-        </a>
-      </div>
+      {showSiteLayoutLink && (
+        <div style={S.linkTile}>
+          <a href="#" onClick={(e) => { e.preventDefault(); onGoToSiteLayout?.(); }} style={{ color: 'var(--sb-teal-deep, #02a1a6)' }}>
+            Configure how your career shows up on your public site →
+          </a>
+        </div>
+      )}
     </div>
   );
 }

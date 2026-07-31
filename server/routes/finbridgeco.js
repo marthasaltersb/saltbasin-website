@@ -35,7 +35,7 @@ router.post('/configs', async (req, res) => {
       INSERT INTO finbridgeco_configs (id, config_key, config_value, description, updated_by, updated_at)
       VALUES ($1,$2,$3,$4,$5,$6)
       ON CONFLICT (id) DO NOTHING
-    `).run(id, config_key, JSON.stringify(config_value ?? {}), description || null, user.id, Date.now());
+    `).run(id, config_key, config_value ?? {}, description || null, user.id, Date.now());
     res.json({ ok: true, id });
   } catch (e) {
     res.status(500).json({ error: 'Failed to create config' });
@@ -50,7 +50,7 @@ router.put('/configs/:id', async (req, res) => {
     const { config_key, config_value, description } = req.body;
     await db.prepare(`
       UPDATE finbridgeco_configs SET config_key=$1, config_value=$2, description=$3, updated_by=$4, updated_at=$5 WHERE id=$6
-    `).run(config_key, JSON.stringify(config_value ?? {}), description || null, user.id, Date.now(), req.params.id);
+    `).run(config_key, config_value ?? {}, description || null, user.id, Date.now(), req.params.id);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: 'Failed to update config' });

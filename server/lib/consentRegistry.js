@@ -68,7 +68,7 @@ export async function recordConsent(userId, consentType, granted, { ip, userAgen
   await db.prepare(`
     INSERT INTO consent_actions (user_id, consent_type, action, consent_version, context, ip, user_agent, created_at)
     VALUES ($1,$2,$3,$4,$5::jsonb,$6,$7,$8)
-  `).run(userId, consentType, granted ? 'granted' : 'revoked', def.consentVersion, JSON.stringify(context), ip || null, userAgent || null, now);
+  `).run(userId, consentType, granted ? 'granted' : 'revoked', def.consentVersion, context, ip || null, userAgent || null, now);
   return { consentType, granted, consentVersion: def.consentVersion, recordedAt: now };
 }
 

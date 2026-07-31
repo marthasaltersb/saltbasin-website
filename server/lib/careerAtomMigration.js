@@ -63,7 +63,7 @@ export async function migrateCareerDataForUser(userId) {
           VALUES ($1,$2,$3::jsonb,'legacy_career_master_migration',$4,1,$5,$6::jsonb,$7::jsonb)
           ON CONFLICT (rod_id, molecule_key, source_reference) DO NOTHING
           RETURNING id
-        `).run(rod.id, atomKey, JSON.stringify(rawValue), sourceReference, observedAt, JSON.stringify({ entryType: source.entryType, sourceTable: source.table, sourceRowId: Number(row.id) }), JSON.stringify([source.entryType]));
+        `).run(rod.id, atomKey, rawValue, sourceReference, observedAt, { entryType: source.entryType, sourceTable: source.table, sourceRowId: Number(row.id) }, [source.entryType]);
         if (result.lastInsertRowid) { migratedAtoms += 1; touchedThisEntry = true; } else { skippedExisting += 1; }
       }
       if (touchedThisEntry) migratedEntries += 1;
@@ -100,7 +100,7 @@ export async function syncSingleEntry(userId, table, rowId) {
     await db.prepare(`
       INSERT INTO journey_rod_evidence (rod_id, molecule_key, value, source_type, source_reference, confidence, observed_at, metadata, magnetic_properties)
       VALUES ($1,$2,$3::jsonb,'legacy_career_master_migration',$4,1,$5,$6::jsonb,$7::jsonb)
-    `).run(rod.id, atomKey, JSON.stringify(rawValue), sourceReference, observedAt, JSON.stringify({ entryType: source.entryType, sourceTable: table, sourceRowId: Number(rowId) }), JSON.stringify([source.entryType]));
+    `).run(rod.id, atomKey, rawValue, sourceReference, observedAt, { entryType: source.entryType, sourceTable: table, sourceRowId: Number(rowId) }, [source.entryType]);
     migratedAtoms += 1;
   }
   return { rod, migratedAtoms };

@@ -21,10 +21,13 @@ import {
 } from '../lib/journeyEngine/mockAgentProvider.js';
 import { ROD_TEMPLATES, MOLECULE_DEFINITIONS, OBJECTIVES, SEED_LEADS } from '../data/journeyWorldConfig.js';
 import { WORLD_REGISTRY, getWorldDefinition } from '../config/visual/worldRegistry.js';
+import { api } from '../lib/api.js';
 import { QUERY_INTERACTION_REGISTRY, QUERY_CONTEXT_REGISTRY } from '../config/metrics/queryContextRegistry.js';
 import { METRIC_DEFINITION_REGISTRY } from '../config/metrics/metricDefinitionRegistry.js';
-import { resolveQueryDistance } from '../config/visual/metricVisualEncodingRegistry.js';
+import { shellRadiusForBand } from '../config/visual/worldVariantEncodingProfiles.js';
 import { describeRelevanceComponents, generateElementBusinessMeaning } from '../config/metrics/queryRelevanceNarrative.js';
+import { MATURITY_MODEL, maturityToneFor } from '../config/metrics/maturityModel.js';
+import { bandForMaturity } from '../lib/journeyEngine/maturity.js';
 
 // ---------------------------------------------------------------------------
 // Brand palette read straight from brand.css custom properties at mount, so
@@ -92,6 +95,66 @@ export default function SpatialJourneyWorld() {
 
   const toastTimeoutRef = useRef(null);
   const viewingTimeoutRef = useRef(null);
+  // Resolved server-side once on mount (Config Envelope: 'rod-mathematics-methodology',
+  // see server/lib/configEnvelope.js) — a ref, not state, so the imperative scene closures
+  // below always read the latest value without re-running the mount effect. Stays null
+  // until the fetch resolves; calculateRodCoherence() already defaults to its own
+  // DEFAULT_METHODOLOGY when passed undefined, so a slow/failed fetch degrades safely.
+  const rodMathematicsMethodologyRef = useRef(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.getConfigEnvelope('rod-mathematics-methodology')
+      .then((res) => { if (!cancelled) rodMathematicsMethodologyRef.current = res.value; })
+      .catch(() => { /* stays null; calculateRodCoherence falls back to its own default */ });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Maturity Model (Config Envelope: 'maturity-model', publicRead — this is an
+  // unauthenticated /output route, so it must not need a session to get the
+  // admin's saved override). Held twice on purpose: a ref for the imperative
+  // Three.js closures below, and state so the React inspector panels re-render
+  // with new band labels/colors when it arrives. Both start from the shipped
+  // MATURITY_MODEL so nothing renders unbanded during the fetch.
+  const maturityModelRef = useRef(MATURITY_MODEL);
+  const [maturityModel, setMaturityModel] = useState(MATURITY_MODEL);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.getConfigEnvelope('maturity-model')
+      .then((res) => {
+        if (cancelled || !res?.value) return;
+        maturityModelRef.current = res.value;
+        setMaturityModel(res.value);
+        // The scene is built imperatively, so a model that lands after first
+        // paint has to be pushed onto the existing meshes.
+        apiRef.current?.refreshAllVisuals?.();
+      })
+      .catch(() => { /* keeps the shipped default */ });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Enterprise Objectives from the SEEDED value-creation initiatives (per
+  // Betsy 2026-07-29: "objectives seem to be hardcoded... match the seeded
+  // data value creation initiatives at least"). The static OBJECTIVES config
+  // stays as the fallback for logged-out viewers of this public /output route
+  // (the lonetree-mvp API requires an authenticated session) — real data
+  // replaces it whenever the fetch succeeds.
+  useEffect(() => {
+    let cancelled = false;
+    api.getLonetreeMvpValueCreation()
+      .then((initiatives) => {
+        if (cancelled || !Array.isArray(initiatives) || initiatives.length === 0) return;
+        setObjectives(initiatives.map((i) => ({
+          id: i.initiativeId,
+          title: i.Initiative_Name || i.initiativeId,
+          complete: /complete|done|closed|delivered/i.test(String(i.Status || '')),
+          initiativeDetail: [i.Objective, i.Status && `Status: ${i.Status}`].filter(Boolean).join(' — '),
+        })));
+      })
+      .catch(() => { /* not authenticated or demo not seeded — keep static fallback objectives */ });
+    return () => { cancelled = true; };
+  }, []);
 
   const pulseToast = useCallback((message) => {
     setToast(message);
@@ -301,7 +364,7 @@ export default function SpatialJourneyWorld() {
     function buildAtomMesh(rod, stage, atomInstance, homePos) {
       const gKey = keyFor(rod, atomInstance);
       const rodColor = pathColorFor(rod);
-      const visual = computeAtomVisual(atomInstance, rodColor, { riskColor: palette.risk, paleColor: palette.champagne, dimColor: palette.greige });
+      const visual = computeAtomVisual(atomInstance, rodColor, { riskColor: palette.risk, paleColor: palette.champagne, dimColor: palette.greige, model: maturityModelRef.current });
       const parts = getBipyramidParts(THREE, visual.facet);
       const matTop = buildAtomMaterial(THREE, visual);
       const matBottom = matTop.clone();
@@ -516,7 +579,7 @@ export default function SpatialJourneyWorld() {
         if (!stage.gate) return;
         const atomsById = {};
         stage.atoms.forEach((a) => { atomsById[a.atomId] = a; });
-        const result = evaluateGate(stage.gate, atomsById);
+        const result = evaluateGate(stage.gate, atomsById, maturityModelRef.current);
         stage.gate._result = result;
         if (result.producesMolecule && !stage.gate._produced) {
           stage.gate._produced = true;
@@ -539,8 +602,18 @@ export default function SpatialJourneyWorld() {
       const group = world.atomGroups[gKey];
       const parts = world.atomParts[gKey];
       if (!group || !parts) return;
-      const visual = computeAtomVisual(atomInstance, pathColorFor(rod), { riskColor: palette.risk, paleColor: palette.champagne, dimColor: palette.greige });
+      const visual = computeAtomVisual(atomInstance, pathColorFor(rod), { riskColor: palette.risk, paleColor: palette.champagne, dimColor: palette.greige, model: maturityModelRef.current });
       group.userData.targetScaleY = visual.scaleY * 0.85;
+      // Facet count is a structural (geometry) channel, not a material one —
+      // it can't be smoothly lerped frame-by-frame like color/opacity below,
+      // so swap the shared cached geometry outright when maturity has moved
+      // the atom into a different facet band (e.g. after a resolve action).
+      const [topMesh, bottomMesh] = parts;
+      if (topMesh?.geometry?.parameters?.radialSegments !== visual.facet) {
+        const newParts = getBipyramidParts(THREE, visual.facet);
+        topMesh.geometry = newParts.top;
+        bottomMesh.geometry = newParts.bottom;
+      }
       parts.forEach((mesh) => { mesh.userData.targetVisual = visual; });
       const halo = world.atomHalos[gKey];
       if (halo) halo.userData = { targetOpacity: visual.haloIntensity * 0.55 };
@@ -654,7 +727,7 @@ export default function SpatialJourneyWorld() {
     function runCustomerOrbit(entityLabel, onProgress, onComplete) {
       const involvedRods = world.rods.filter((r) => r.entityLabel === entityLabel);
       const queryResult = triangulateEntity(world.rods, entityLabel, { queryContextId: QUERY_INTERACTION_REGISTRY.customerOrbit.contextId });
-      const relevanceByKey = new Map(queryResult.perRod.flatMap((rod) => (rod.queryRelevance || []).map((entry) => [`${rod.rodId}::${entry.atomId}`, entry.score])));
+      const relevanceByKey = new Map(queryResult.perRod.flatMap((rod) => (rod.queryRelevance || []).map((entry) => [`${rod.rodId}::${entry.atomId}`, entry])));
       const allAtomKeys = [];
       const elapsed0 = clockElapsed();
       involvedRods.forEach((rod) => {
@@ -678,20 +751,47 @@ export default function SpatialJourneyWorld() {
       });
       world.hashAtomKeys = allAtomKeys;
       world.hashActive = true;
-      if (world.hashNode) { world.hashNode.userData.compiling = true; world.hashNode.userData.compiled = false; world.hashNode.userData.compileStart = elapsed0; world.hashNode.userData.compileDuration = HASH_PHASE1 + HASH_HOLD + 1.6; }
+      if (world.hashNode) {
+        world.hashNode.userData.compiling = true; world.hashNode.userData.compiled = false;
+        world.hashNode.userData.compileStart = elapsed0; world.hashNode.userData.compileDuration = HASH_PHASE1 + HASH_HOLD + 1.6;
+        // Confidence -> crystal clarity and Stability -> bounded motion (Crystal Basin Visual
+        // Encoding Profile, worldVariantEncodingProfiles.js) — both real, entity-level values
+        // already computed by triangulateEntity(), applied to the one object they're actually
+        // available for today. Per-atom confidence/stability isn't calculated anywhere yet.
+        world.hashNode.userData.confidenceScore = queryResult.queryConfidence?.score ?? null;
+        world.hashNode.userData.stabilityScore = queryResult.convergenceStability?.score ?? null;
+      }
+
+      // Crystal Basin §V: "converge into organized dimensional shells rather than one dense
+      // ball." Group atoms by their real Query Relevance band, then fan each band out evenly
+      // around its own discrete shell radius (shellRadiusForBand) — a readable ring per band,
+      // not a single continuous relevance-to-radius gradient.
+      const byBand = new Map();
+      allAtomKeys.forEach((gKey) => {
+        const entry = relevanceByKey.get(gKey);
+        const bandKey = entry?.band?.key || 'peripheral';
+        if (!byBand.has(bandKey)) byBand.set(bandKey, []);
+        byBand.get(bandKey).push(gKey);
+      });
 
       setTimeout(() => {
-        const n = Math.max(allAtomKeys.length, 1);
-        allAtomKeys.forEach((gKey, i) => {
-          const group = world.atomGroups[gKey];
-          if (!group) return;
-          const angle = (i / n) * Math.PI * 2;
-          const ring = resolveQueryDistance(relevanceByKey.get(gKey));
-          const target = new THREE.Vector3(world.hashNodePos.x + Math.cos(angle) * ring, world.hashNodePos.y + Math.sin(i * 1.7) * 1.2, world.hashNodePos.z + Math.sin(angle) * ring);
-          group.userData.state = 'hashConverging';
-          group.userData.hashFrom = group.position.clone();
-          group.userData.hashTarget = target;
-          group.userData.hashStateStart = clockElapsed();
+        byBand.forEach((keysInBand, bandKey) => {
+          const shellRadius = shellRadiusForBand(bandKey, 'CRYSTAL_BASIN') ?? 4;
+          const n = Math.max(keysInBand.length, 1);
+          keysInBand.forEach((gKey, i) => {
+            const group = world.atomGroups[gKey];
+            if (!group) return;
+            const angle = (i / n) * Math.PI * 2;
+            const target = new THREE.Vector3(
+              world.hashNodePos.x + Math.cos(angle) * shellRadius,
+              world.hashNodePos.y + Math.sin(i * 1.7) * 1.2,
+              world.hashNodePos.z + Math.sin(angle) * shellRadius,
+            );
+            group.userData.state = 'hashConverging';
+            group.userData.hashFrom = group.position.clone();
+            group.userData.hashTarget = target;
+            group.userData.hashStateStart = clockElapsed();
+          });
         });
       }, (HASH_PHASE1 + HASH_HOLD) * 1000);
 
@@ -714,7 +814,10 @@ export default function SpatialJourneyWorld() {
               divergences.push({
                 rodTypeA: involved[i].rodType, rodTypeB: involved[j].rodType,
                 ...divergence, classification: classifyDivergence(divergence), boundaryExceeded: isReconciliationBoundaryExceedance(divergence),
-                coherence: calculateRodCoherence({ axialDivergence: divergence.axialDivergence, densityDivergence: divergence.densityDivergence }),
+                coherence: calculateRodCoherence(
+                  { axialDivergence: divergence.axialDivergence, densityDivergence: divergence.densityDivergence },
+                  rodMathematicsMethodologyRef.current || undefined
+                ),
               });
             }
           }
@@ -974,6 +1077,34 @@ export default function SpatialJourneyWorld() {
         world.hashNode.material.opacity = lerp(world.hashNode.material.opacity, targetOpacity, 0.06);
         world.hashNode.rotation.y += dt * 0.25;
         if (world.hashGlow) world.hashGlow.material.opacity = lerp(world.hashGlow.material.opacity, targetGlow, 0.06);
+
+        // Query Confidence -> crystal clarity. High confidence settles toward a clear, low-
+        // roughness/high-clearcoat surface; low confidence stays diffuse/refracted — never just
+        // fainter, per §V Variant 1's explicit "do not use simple opacity if it makes the object
+        // unreadable." Only meaningful once compiled (a settled query result has a real score).
+        if (ud.compiled && ud.confidenceScore !== null && ud.confidenceScore !== undefined) {
+          const targetRoughness = lerp(0.55, 0.05, clamp01(ud.confidenceScore));
+          const targetClearcoat = lerp(0.15, 0.85, clamp01(ud.confidenceScore));
+          world.hashNode.material.roughness = lerp(world.hashNode.material.roughness, targetRoughness, 0.05);
+          world.hashNode.material.clearcoat = lerp(world.hashNode.material.clearcoat, targetClearcoat, 0.05);
+        }
+
+        // Convergence Stability -> bounded motion vs. settlement. Low stability keeps a subtle
+        // bounded oscillation around the hash node's true position (the result may still
+        // reorganize); high stability holds it anchored. Motion communicates state — never
+        // decorative — so this only runs once compiled, and the wobble amplitude is directly
+        // proportional to (1 - stability), collapsing to zero at full stability.
+        if (ud.compiled && ud.stabilityScore !== null && ud.stabilityScore !== undefined) {
+          const wobble = (1 - clamp01(ud.stabilityScore)) * 0.55;
+          world.hashNode.position.set(
+            world.hashNodePos.x + Math.sin(elapsed * 1.3) * wobble,
+            world.hashNodePos.y + Math.cos(elapsed * 1.7) * wobble * 0.6,
+            world.hashNodePos.z + Math.cos(elapsed * 1.1) * wobble,
+          );
+        } else {
+          world.hashNode.position.copy(world.hashNodePos);
+        }
+        if (world.hashGlow) world.hashGlow.position.copy(world.hashNode.position);
       }
 
       renderer.render(scene, camera);
@@ -1006,6 +1137,17 @@ export default function SpatialJourneyWorld() {
       focusStage: (sKey) => { const e = world.stageMeshes[sKey]; if (e) focusPoint(e.mesh.position, 22); },
       focusAtom: (gKey) => { const group = world.atomGroups[gKey]; if (group) focusPoint(group.position, 12); },
       findAtomEverywhere,
+      // Repaints every atom/stage against the current Maturity Model. Called
+      // when the 'maturity-model' envelope resolves after first paint, so an
+      // admin's saved bands/visual ranges reach a scene that is already built.
+      refreshAllVisuals: () => {
+        world.rods.forEach((rod) => {
+          allAtomsOf(rod).forEach(({ atomInstance }) => refreshAtomVisual(rod, atomInstance));
+          rod.stages.forEach((stage) => refreshStageVisual(rod, stage));
+          refreshConnectorsForRod(rod);
+          evaluateStageGates(rod);
+        });
+      },
       getGateStatus: (rod, stage) => stage.gate?._result || null,
       getMoleculesForRod: (rodId) => world.moleculesByRod[rodId] || [],
       listAllAtoms: () => world.rods.flatMap((rod) => allAtomsOf(rod).map(({ atomInstance, stage }) => ({
@@ -1061,6 +1203,17 @@ export default function SpatialJourneyWorld() {
 
   const handleEnter = () => { apiRef.current?.enterWorld(); setWorldEntered(true); };
   const closePanel = () => setSelection(null);
+
+  // Clicking a related atom/objective while scrolled down in this panel
+  // used to leave the scroll position wherever it was, landing the user
+  // mid-way through the NEW selection's content instead of at its top
+  // (Betsy 2026-07-30: "the variant data expansion is all the way at the
+  // bottom"). Reset to top whenever the selected object actually changes.
+  const inspectorScrollRef = useRef(null);
+  const selectionKey = selection ? `${selection.kind}::${selection.globalKey || ''}` : null;
+  useEffect(() => {
+    if (inspectorScrollRef.current) inspectorScrollRef.current.scrollTop = 0;
+  }, [selectionKey]);
   const permissions = getPermissionProfile(role);
   const activeWorld = getWorldDefinition(worldId);
 
@@ -1127,6 +1280,14 @@ export default function SpatialJourneyWorld() {
   };
 
   const handleObjectiveClick = (objective) => {
+    // LoneTree-sourced objectives (real seeded value-creation initiatives,
+    // wired 2026-07-29) have no matching atom in this world's genesis scene
+    // graph — there's nothing to select in 3D, so surface the initiative's
+    // own detail instead of silently doing nothing.
+    if (objective.initiativeDetail !== undefined) {
+      apiRef.current?.pulseToast(objective.initiativeDetail || objective.title);
+      return;
+    }
     if (objective.targetAtomId?.startsWith('confluence::') || objective.targetAtomId?.startsWith('masterdata-merge::')) {
       const zone = apiRef.current?.getReconciliationZone(objective.targetAtomId);
       if (zone) setSelection(zone);
@@ -1135,6 +1296,23 @@ export default function SpatialJourneyWorld() {
     const rows = apiRef.current?.listAllAtoms() || [];
     const row = rows.find((r) => r.globalKey.endsWith(`::${objective.targetAtomId}`));
     if (row) handleSelectFromIndex(row);
+  };
+
+  // Prompted real-time update action (per Betsy 2026-07-29): advances a
+  // LoneTree value-creation initiative's Status one step and persists it via
+  // PATCH /api/lonetree-mvp/value-creation/:id/advance, then reflects the
+  // new status straight into the objectives list — no reload.
+  const handleAdvanceInitiative = async (event, objective) => {
+    event.stopPropagation();
+    try {
+      const result = await api.advanceLonetreeMvpInitiative(objective.id);
+      setObjectives((prev) => prev.map((o) => (o.id === objective.id
+        ? { ...o, status: result.status, complete: result.status === 'Complete', initiativeDetail: o.initiativeDetail?.replace(/Status: .+$/, `Status: ${result.status}`) }
+        : o)));
+      apiRef.current?.pulseToast(`${objective.title} → ${result.status}`);
+    } catch (e) {
+      apiRef.current?.pulseToast(e.body?.error || 'Could not advance initiative status.');
+    }
   };
 
   return (
@@ -1203,13 +1381,16 @@ export default function SpatialJourneyWorld() {
                 <li key={o.id} className={`sjw-objective${o.complete ? ' sjw-objective-done' : ''}`} onClick={() => handleObjectiveClick(o)}>
                   <span className="sjw-obj-check">{o.complete ? '✓' : '○'}</span>
                   <span className="sjw-obj-title">{o.title}</span>
+                  {o.initiativeDetail !== undefined && !o.complete && (
+                    <button type="button" className="sjw-obj-advance" onClick={(e) => handleAdvanceInitiative(e, o)} title="Advance status">↷</button>
+                  )}
                 </li>
               ))}
             </ul>
           </div>
 
           {selection && (
-            <div className="sjw-inspector-panel sjw-panel-open">
+            <div className="sjw-inspector-panel sjw-panel-open" ref={inspectorScrollRef}>
               <button type="button" className="sjw-panel-close" onClick={closePanel}>&times;</button>
               <div className="sjw-inspector-body">
                 {selection.kind === 'atom' && (
@@ -1218,10 +1399,11 @@ export default function SpatialJourneyWorld() {
                     role={role}
                     onResolve={handleResolve}
                     onRunOutputsAgent={handleOutputsAgent}
+                    maturityModel={maturityModel}
                   />
                 )}
                 {selection.kind === 'stage' && (
-                  <StagePanel selection={selection} role={role} onRunQuery={handleRunQuery} onRunOutputsAgent={handleOutputsAgent} apiRef={apiRef} />
+                  <StagePanel selection={selection} role={role} onRunQuery={handleRunQuery} onRunOutputsAgent={handleOutputsAgent} apiRef={apiRef} maturityModel={maturityModel} />
                 )}
                 {selection.kind === 'reconciliation' && (
                   <ReconciliationPanel selection={selection} role={role} onApprove={handleApproveMerge} />
@@ -1244,7 +1426,7 @@ export default function SpatialJourneyWorld() {
             FPS {devStats.fps}<br />Draw calls {devStats.meshes}<br />Logical atoms {devStats.atoms}
           </div>
 
-          {legendOpen && <LegendPanel onClose={() => setLegendOpen(false)} />}
+          {legendOpen && <LegendPanel onClose={() => setLegendOpen(false)} maturityModel={maturityModel} />}
           {atomIndexOpen && <AtomIndexOverlay rows={atomIndexRows} onSelect={handleSelectFromIndex} onClose={() => setAtomIndexOpen(false)} />}
           {customerOrbitOpen && <CustomerOrbitPicker entities={entityOptions} onRun={handleRunCustomerOrbit} onClose={() => setCustomerOrbitOpen(false)} />}
           {newLeadOpen && <NewLeadForm onSubmit={handleNewLead} onClose={() => setNewLeadOpen(false)} />}
@@ -1260,8 +1442,10 @@ export default function SpatialJourneyWorld() {
 // HUD sub-components
 // ---------------------------------------------------------------------------
 
-function AtomPanel({ selection, role, onResolve, onRunOutputsAgent }) {
+function AtomPanel({ selection, role, onResolve, onRunOutputsAgent, maturityModel = MATURITY_MODEL }) {
   const { atomInstance, stage, rod, globalKey } = selection;
+  const bands = maturityModel.bands;
+  const atomBand = bandForMaturity(atomInstance.maturity, bands);
   const lineage = getAtomLineage(atomInstance);
   const [offset, setOffset] = useState(0);
   const [lineageOpen, setLineageOpen] = useState(false);
@@ -1278,8 +1462,11 @@ function AtomPanel({ selection, role, onResolve, onRunOutputsAgent }) {
       <div className="sjw-eyebrow">{rod.templateName || rod.rodType} · {stage.name}</div>
       <h3>{atomInstance.name}</h3>
       <div className="sjw-meta-row">
-        <span className={`sjw-badge ${atomInstance.conflict ? 'sjw-badge-risk' : atomInstance.maturity > 0.85 ? 'sjw-badge-ok' : 'sjw-badge-mid'}`}>
-          {atomInstance.conflict ? 'Conflict' : `Maturity ${pctLabel(atomInstance.maturity)}`}
+        <span
+          className={`sjw-badge ${atomInstance.conflict ? 'sjw-badge-risk' : `sjw-badge-${maturityToneFor(atomInstance.maturity, bands)}`}`}
+          style={atomInstance.conflict ? undefined : { borderColor: atomBand?.color }}
+        >
+          {atomInstance.conflict ? 'Conflict' : `${atomBand?.label || 'Maturity'} · ${pctLabel(atomInstance.maturity)}`}
         </span>
         {' '}
         <span className="sjw-badge sjw-badge-mid" title={stratum.note}>{stratum.label}</span>
@@ -1339,7 +1526,7 @@ function AtomPanel({ selection, role, onResolve, onRunOutputsAgent }) {
   );
 }
 
-function StagePanel({ selection, role, onRunQuery, onRunOutputsAgent, apiRef }) {
+function StagePanel({ selection, role, onRunQuery, onRunOutputsAgent, apiRef, maturityModel = MATURITY_MODEL }) {
   const { stage, rod } = selection;
   const gate = stage.gate;
   const gateResult = gate ? apiRef.current?.getGateStatus(rod, stage) : null;
@@ -1351,7 +1538,12 @@ function StagePanel({ selection, role, onRunQuery, onRunOutputsAgent, apiRef }) 
       <div className="sjw-eyebrow">{rod.templateName || rod.rodType}</div>
       <h3>{stage.name}</h3>
       <div className="sjw-meta-row">
-        <span className={`sjw-badge ${stage.maturity > 0.7 ? 'sjw-badge-ok' : stage.maturity > 0.45 ? 'sjw-badge-mid' : 'sjw-badge-risk'}`}>Stage maturity {pctLabel(stage.maturity)}</span>
+        <span
+          className={`sjw-badge sjw-badge-${maturityToneFor(stage.maturity, maturityModel.bands)}`}
+          style={{ borderColor: bandForMaturity(stage.maturity, maturityModel.bands)?.color }}
+        >
+          Stage maturity {bandForMaturity(stage.maturity, maturityModel.bands)?.label} · {pctLabel(stage.maturity)}
+        </span>
       </div>
       <p className="sjw-agent-line">{stage.atoms.length} metadata atom{stage.atoms.length === 1 ? '' : 's'} live as master data, contextually owned by this stage.</p>
       <button type="button" className="sjw-btn sjw-btn-primary" onClick={() => onRunQuery(rod, stage)}>Run Query — pull master data for this stage</button>
@@ -1498,7 +1690,7 @@ function HashResultPanel({ result, onHighlight, onRelease }) {
   );
 }
 
-function LegendPanel({ onClose }) {
+function LegendPanel({ onClose, maturityModel = MATURITY_MODEL }) {
   return (
     <div className="sjw-legend-panel">
       <button type="button" className="sjw-panel-close" onClick={onClose}>&times;</button>
@@ -1509,8 +1701,16 @@ function LegendPanel({ onClose }) {
       <div className="sjw-legend-section"><b>Color</b>
         <p>Terracotta — Revenue rod · Steel teal — Customer rod · Dusty mauve — Member rod · Risk red — unresolved conflict, overrides rod color</p>
       </div>
-      <div className="sjw-legend-section"><b>Material</b>
-        <p>Metalness, roughness, and clearcoat scale with maturity band (Unresolved → Trusted).</p>
+      <div className="sjw-legend-section"><b>Maturity bands</b>
+        <p>Facet count, metalness and roughness all scale with maturity: an unresolved atom is a rough, low-poly bipyramid, a trusted one a polished many-faceted crystal. Bands come from the Maturity Model config, so this legend always shows what is actually rendering.</p>
+        <ul className="sjw-legend-bands">
+          {maturityModel.bands.map((band) => (
+            <li key={band.label}>
+              <span className="sjw-legend-swatch" style={{ background: band.color }} />
+              {band.label} <span className="sjw-legend-range">{Math.round(band.min * 100)}–{Math.round(band.max * 100)}%</span>
+            </li>
+          ))}
+        </ul>
       </div>
       <div className="sjw-legend-section"><b>Dimension</b>
         <p>Height reflects completeness · thickness/glow reflects evidence strength or instability.</p>

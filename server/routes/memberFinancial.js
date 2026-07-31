@@ -50,8 +50,8 @@ router.post('/connections', async (req, res) => {
     return res.status(400).json({ error: 'Invalid permitted account classes' });
   }
   const now = Date.now();
-  const consent = await db.prepare(`INSERT INTO financial_consents (user_id,provider_id,permitted_account_classes,granted_at) VALUES ($1,$2,$3,$4) RETURNING id`).get(req.user.id, provider.providerId, JSON.stringify(requested), now);
-  const connection = await db.prepare(`INSERT INTO external_financial_connections (user_id,provider_id,provider_connection_ref,connection_type,consent_id,permitted_account_classes,security_policy_id,retention_policy_id,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$9) RETURNING *`).get(req.user.id, provider.providerId, req.body.providerConnectionRef ?? null, provider.connectionType, consent.id, JSON.stringify(requested), policy.securityPolicyId, policy.retentionPolicyId, now);
+  const consent = await db.prepare(`INSERT INTO financial_consents (user_id,provider_id,permitted_account_classes,granted_at) VALUES ($1,$2,$3,$4) RETURNING id`).get(req.user.id, provider.providerId, requested, now);
+  const connection = await db.prepare(`INSERT INTO external_financial_connections (user_id,provider_id,provider_connection_ref,connection_type,consent_id,permitted_account_classes,security_policy_id,retention_policy_id,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$9) RETURNING *`).get(req.user.id, provider.providerId, req.body.providerConnectionRef ?? null, provider.connectionType, consent.id, requested, policy.securityPolicyId, policy.retentionPolicyId, now);
   res.status(201).json({ connection });
 });
 
@@ -62,7 +62,7 @@ router.post('/connections/:connectionId/accounts', async (req, res) => {
   const liabilityClass = classifyLiability(req.body.accountClass, req.body.liabilityClass);
   if (!liabilityClass) return res.status(400).json({ error: 'Invalid account class' });
   const now = Date.now();
-  const account = await db.prepare(`INSERT INTO financial_account_definitions (user_id,connection_id,provider_account_ref,account_class,liability_class,institution_name,account_display_name,masked_account_reference,currency,semantic_atom_refs,security_policy_id,effective_from) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`).get(req.user.id, connection.id, req.body.providerAccountRef ?? null, req.body.accountClass, liabilityClass, req.body.institutionName, req.body.accountDisplayName, req.body.maskedAccountReference ?? null, req.body.currency || 'USD', JSON.stringify(req.body.semanticAtomRefs || {}), policy.securityPolicyId, now);
+  const account = await db.prepare(`INSERT INTO financial_account_definitions (user_id,connection_id,provider_account_ref,account_class,liability_class,institution_name,account_display_name,masked_account_reference,currency,semantic_atom_refs,security_policy_id,effective_from) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`).get(req.user.id, connection.id, req.body.providerAccountRef ?? null, req.body.accountClass, liabilityClass, req.body.institutionName, req.body.accountDisplayName, req.body.maskedAccountReference ?? null, req.body.currency || 'USD', req.body.semanticAtomRefs || {}, policy.securityPolicyId, now);
   res.status(201).json({ account });
 });
 
@@ -74,7 +74,7 @@ router.post('/shares', async (req, res) => {
   const owned = sourceIds.length ? await db.prepare(`SELECT id FROM financial_account_definitions WHERE user_id=$1 AND id = ANY($2::bigint[])`).all(req.user.id, sourceIds) : [];
   if (owned.length !== sourceIds.length) return res.status(403).json({ error: 'Source account ownership mismatch' });
   const now = Date.now();
-  const share = await db.prepare(`INSERT INTO financial_output_shares (user_id,org_id,output_type,output_payload,source_account_ids,consent_statement,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$7) RETURNING *`).get(req.user.id, req.body.orgId, req.body.outputType, JSON.stringify(req.body.outputPayload), JSON.stringify(sourceIds), req.body.consentStatement, now);
+  const share = await db.prepare(`INSERT INTO financial_output_shares (user_id,org_id,output_type,output_payload,source_account_ids,consent_statement,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$7) RETURNING *`).get(req.user.id, req.body.orgId, req.body.outputType, req.body.outputPayload, sourceIds, req.body.consentStatement, now);
   res.status(201).json({ share });
 });
 

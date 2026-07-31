@@ -51,7 +51,7 @@ router.post('/proposals', async (req, res) => {
       INSERT INTO unified_content_items
         (id, app_id, type, title, summary, body, domain_refs, audience_refs, export_status, created_by, updated_by, created_at, updated_at, metadata)
       VALUES ($1,'app.services','proposal',$2,$3,$4,$5,$6,'draft',$7,$7,$8,$8,'{}')
-    `).run(id, title, summary || null, body ? JSON.stringify(body) : null, domain_refs || null, audience_refs || null, user.id, now);
+    `).run(id, title, summary || null, body || null, domain_refs || null, audience_refs || null, user.id, now);
     res.json({ ok: true, id });
   } catch (e) {
     console.error('[services] create proposal error:', e.message);
@@ -100,7 +100,7 @@ router.put('/proposals/:id', async (req, res) => {
     await db.prepare(`
       UPDATE unified_content_items SET title=$1, summary=$2, body=$3, domain_refs=$4, audience_refs=$5, export_status=$6, export_status_updated_at=$7, updated_by=$8, updated_at=$9
       WHERE id=$10 AND app_id='app.services'
-    `).run(title, summary || null, body ? JSON.stringify(body) : null, domain_refs || null, audience_refs || null, export_status || 'draft', statusUpdatedAt || null, user.id, Date.now(), req.params.id);
+    `).run(title, summary || null, body || null, domain_refs || null, audience_refs || null, export_status || 'draft', statusUpdatedAt || null, user.id, Date.now(), req.params.id);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: 'Failed to update proposal' });

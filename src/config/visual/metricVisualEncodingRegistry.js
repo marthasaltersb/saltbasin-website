@@ -13,14 +13,19 @@ export const METRIC_VISUAL_ENCODING_REGISTRY = Object.freeze({
   merge_geometry: Object.freeze({ channel: 'merge_geometry', sourceType: 'semantic_object', semanticKey: 'CONFLUENCE', transform: 'confluence_profile' }),
   rod_segmentation: Object.freeze({ channel: 'rod_segmentation', sourceType: 'metric', metricKey: 'ROD_POSITION', semanticRule: 'segments_are_stages_and_cycles', transform: 'stage_cycle_segments' }),
   rod_fill: Object.freeze({ channel: 'rod_fill', sourceType: 'metric', metricKey: 'STAGE_COMPLETENESS', semanticRule: 'fill_is_stage_completeness_only', transform: 'linear' }),
-  rod_crystal_complexity: Object.freeze({ channel: 'crystal_complexity', sourceType: 'metric', metricKey: 'ROD_MATURITY', semanticRule: 'complexity_is_semantic_depth', transform: 'bounded_facets' }),
+  rod_crystal_complexity: Object.freeze({ channel: 'crystal_complexity', sourceType: 'metric', metricKey: 'CHANNEL_MATURITY', semanticRule: 'complexity_is_semantic_depth', transform: 'bounded_facets' }),
 });
 
 export const ATOM_RENDER_PROFILE = Object.freeze({
   profileId: 'atom-semantic-render-v2',
   channels: Object.freeze({
     scaleY: Object.freeze({ value: 1, semanticKey: 'ATOM_METADATA_TYPE' }),
-    facet: Object.freeze({ value: 7, semanticKey: 'ATOM_METADATA_TYPE' }),
+    // Structural (not just material) maturity encoding, per rod_crystal_complexity
+    // above ("complexity_is_semantic_depth" / "bounded_facets") — an Unresolved
+    // atom renders as a simple low-poly bipyramid, a Trusted one as a refined
+    // many-faceted crystal. min/max are radial segment counts fed straight into
+    // atomGeometry.js's getBipyramidParts(THREE, radialSegments).
+    facet: Object.freeze({ min: 5, max: 11, metricKey: 'CHANNEL_MATURITY' }),
     opacity: Object.freeze({ min: 0.4, max: 1, metricKey: 'QUERY_CONFIDENCE', missingValue: 1 }),
     metalness: Object.freeze({ value: 0.35, semanticKey: 'MATERIAL_PROFILE' }),
     roughness: Object.freeze({ value: 0.35, semanticKey: 'MATERIAL_PROFILE' }),

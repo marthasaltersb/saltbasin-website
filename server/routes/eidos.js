@@ -46,12 +46,12 @@ router.put('/ports/:key', requireAdmin, async (req, res) => {
   if (existing) {
     await db.prepare(
       `UPDATE data_ports SET name=$1,port_type=$2,native_system_type=$3,environment=$4,query_mode=$5,centralization_allowed=$6,policy=$7::jsonb,is_active=$8,updated_at=$9 WHERE id=$10`
-    ).run(b.name, b.portType || 'crm', b.nativeSystemType || null, b.environment || 'production', b.queryMode || 'pull', b.centralizationAllowed !== false, JSON.stringify(b.policy || {}), b.isActive !== false, now, existing.id);
+    ).run(b.name, b.portType || 'crm', b.nativeSystemType || null, b.environment || 'production', b.queryMode || 'pull', b.centralizationAllowed !== false, b.policy || {}, b.isActive !== false, now, existing.id);
   } else {
     await db.prepare(
       `INSERT INTO data_ports (port_key,org_id,name,port_type,native_system_type,environment,query_mode,centralization_allowed,policy,is_active,created_at,updated_at)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10,$11,$11)`
-    ).run(req.params.key, orgId, b.name, b.portType || 'crm', b.nativeSystemType || null, b.environment || 'production', b.queryMode || 'pull', b.centralizationAllowed !== false, JSON.stringify(b.policy || {}), b.isActive !== false, now);
+    ).run(req.params.key, orgId, b.name, b.portType || 'crm', b.nativeSystemType || null, b.environment || 'production', b.queryMode || 'pull', b.centralizationAllowed !== false, b.policy || {}, b.isActive !== false, now);
   }
   res.json({ ok: true });
 });
@@ -69,7 +69,7 @@ router.put('/ports/:portId/source-objects/:key', requireAdmin, async (req, res) 
     `INSERT INTO port_source_objects (port_id,object_key,native_object_name,business_definition,natural_key_definition,system_of_record_claim,metadata,created_at,updated_at)
      VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8,$8)
      ON CONFLICT (port_id,object_key) DO UPDATE SET native_object_name=EXCLUDED.native_object_name,business_definition=EXCLUDED.business_definition,natural_key_definition=EXCLUDED.natural_key_definition,system_of_record_claim=EXCLUDED.system_of_record_claim,metadata=EXCLUDED.metadata,updated_at=EXCLUDED.updated_at`
-  ).run(req.params.portId, req.params.key, b.nativeObjectName || req.params.key, b.businessDefinition || null, b.naturalKeyDefinition || null, b.systemOfRecordClaim || null, JSON.stringify(b.metadata || {}), now);
+  ).run(req.params.portId, req.params.key, b.nativeObjectName || req.params.key, b.businessDefinition || null, b.naturalKeyDefinition || null, b.systemOfRecordClaim || null, b.metadata || {}, now);
   res.json({ ok: true });
 });
 router.get('/source-objects/:sourceObjectId/fields', requireAdmin, async (req, res) => {
@@ -81,7 +81,7 @@ router.put('/source-objects/:sourceObjectId/fields/:key', requireAdmin, async (r
     `INSERT INTO port_source_fields (source_object_id,field_key,native_field_name,business_definition,value_domain,editable_roles,metadata,created_at,updated_at)
      VALUES ($1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,$8,$8)
      ON CONFLICT (source_object_id,field_key) DO UPDATE SET native_field_name=EXCLUDED.native_field_name,business_definition=EXCLUDED.business_definition,value_domain=EXCLUDED.value_domain,editable_roles=EXCLUDED.editable_roles,metadata=EXCLUDED.metadata,updated_at=EXCLUDED.updated_at`
-  ).run(req.params.sourceObjectId, req.params.key, b.nativeFieldName || req.params.key, b.businessDefinition || null, b.valueDomain || null, JSON.stringify(b.editableRoles || []), JSON.stringify(b.metadata || {}), now);
+  ).run(req.params.sourceObjectId, req.params.key, b.nativeFieldName || req.params.key, b.businessDefinition || null, b.valueDomain || null, b.editableRoles || [], b.metadata || {}, now);
   res.json({ ok: true });
 });
 
@@ -96,12 +96,12 @@ router.put('/affinity-rules/:clusterKey/:moleculeKey', requireAdmin, async (req,
     const existing = await db.prepare(`SELECT id FROM journey_atom_affinity_rules WHERE cluster_key=$1 AND molecule_key=$2 AND org_id IS NOT DISTINCT FROM $3`).get(req.params.clusterKey, req.params.moleculeKey, orgId);
     if (existing) {
       await db.prepare(`UPDATE journey_atom_affinity_rules SET minimum_affinity=$1,source_authority_modifier=$2,metadata=$3::jsonb,is_active=$4,updated_at=$5 WHERE id=$6`)
-        .run(b.minimumAffinity ?? 0.5, b.sourceAuthorityModifier ?? 0, JSON.stringify(b.metadata || {}), b.isActive !== false, now, existing.id);
+        .run(b.minimumAffinity ?? 0.5, b.sourceAuthorityModifier ?? 0, b.metadata || {}, b.isActive !== false, now, existing.id);
     } else {
       await db.prepare(
         `INSERT INTO journey_atom_affinity_rules (cluster_key,molecule_key,org_id,minimum_affinity,source_authority_modifier,metadata,is_active,created_at,updated_at)
          VALUES ($1,$2,$3,$4,$5,$6::jsonb,$7,$8,$8)`
-      ).run(req.params.clusterKey, req.params.moleculeKey, orgId, b.minimumAffinity ?? 0.5, b.sourceAuthorityModifier ?? 0, JSON.stringify(b.metadata || {}), b.isActive !== false, now);
+      ).run(req.params.clusterKey, req.params.moleculeKey, orgId, b.minimumAffinity ?? 0.5, b.sourceAuthorityModifier ?? 0, b.metadata || {}, b.isActive !== false, now);
     }
     res.json({ ok: true });
   } catch (e) { res.status(400).json({ error: e.message }); }
@@ -130,7 +130,7 @@ router.put('/accounting-policies/:key', requireAdmin, async (req, res) => {
   const b = req.body || {}, now = Date.now();
   const orgId = b.orgId ? Number(b.orgId) : null;
   const existing = await db.prepare(`SELECT id FROM accounting_policies WHERE policy_key=$1 AND org_id IS NOT DISTINCT FROM $2`).get(req.params.key, orgId);
-  const args = [b.framework || 'GAAP', b.legalEntity || null, b.jurisdiction || null, JSON.stringify(b.recognitionRules || {}), JSON.stringify(b.measurementRules || {}), JSON.stringify(b.allocationRules || {}), b.isActive !== false, now];
+  const args = [b.framework || 'GAAP', b.legalEntity || null, b.jurisdiction || null, b.recognitionRules || {}, b.measurementRules || {}, b.allocationRules || {}, b.isActive !== false, now];
   if (existing) {
     await db.prepare(`UPDATE accounting_policies SET framework=$1,legal_entity=$2,jurisdiction=$3,recognition_rules=$4::jsonb,measurement_rules=$5::jsonb,allocation_rules=$6::jsonb,is_active=$7,updated_at=$8 WHERE id=$9`).run(...args, existing.id);
   } else {
@@ -151,7 +151,7 @@ router.put('/gl-accounts/:key', requireAdmin, async (req, res) => {
   const b = req.body || {}, now = Date.now();
   const orgId = b.orgId ? Number(b.orgId) : null;
   const existing = await db.prepare(`SELECT id FROM gl_accounts WHERE account_key=$1 AND org_id IS NOT DISTINCT FROM $2`).get(req.params.key, orgId);
-  const args = [b.nativeAccountId || null, b.legalEntity || null, b.accountType || 'asset', b.normalBalance || 'debit', b.semanticDefinition || null, JSON.stringify(b.permittedEventClasses || []), b.isActive !== false, now];
+  const args = [b.nativeAccountId || null, b.legalEntity || null, b.accountType || 'asset', b.normalBalance || 'debit', b.semanticDefinition || null, b.permittedEventClasses || [], b.isActive !== false, now];
   if (existing) {
     await db.prepare(`UPDATE gl_accounts SET native_account_id=$1,legal_entity=$2,account_type=$3,normal_balance=$4,semantic_definition=$5,permitted_event_classes=$6::jsonb,is_active=$7,updated_at=$8 WHERE id=$9`).run(...args, existing.id);
   } else {
@@ -173,7 +173,7 @@ router.put('/accounting-topologies/:key', requireAdmin, async (req, res) => {
   if (!b.label) return res.status(400).json({ error: 'label is required' });
   const orgId = b.orgId ? Number(b.orgId) : null;
   const existing = await db.prepare(`SELECT id FROM accounting_topology_definitions WHERE topology_key=$1 AND org_id IS NOT DISTINCT FROM $2`).get(req.params.key, orgId);
-  const args = [b.label, JSON.stringify(b.economicCompositionRequirements || []), JSON.stringify(b.requiredAccountRoles || []), JSON.stringify(b.balancingConstraints || {}), b.policyId || null, b.isActive !== false, now];
+  const args = [b.label, b.economicCompositionRequirements || [], b.requiredAccountRoles || [], b.balancingConstraints || {}, b.policyId || null, b.isActive !== false, now];
   if (existing) {
     await db.prepare(`UPDATE accounting_topology_definitions SET label=$1,economic_composition_requirements=$2::jsonb,required_account_roles=$3::jsonb,balancing_constraints=$4::jsonb,policy_id=$5,is_active=$6,updated_at=$7 WHERE id=$8`).run(...args, existing.id);
   } else {
@@ -208,13 +208,13 @@ router.post('/journal-entries', requireAdmin, async (req, res) => {
   const entry = await db.prepare(
     `INSERT INTO journal_entries (org_id,rod_id,native_journal_id,legal_entity,accounting_date,posting_date,effective_date,currency,total_debit,total_credit,source_type,metadata,created_at,updated_at)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb,$13,$13) RETURNING *`
-  ).get(b.orgId || null, b.rodId || null, b.nativeJournalId || null, b.legalEntity || null, b.accountingDate || now, b.postingDate || now, b.effectiveDate || now, b.currency || 'USD', totalDebit, totalCredit, b.sourceType || 'manual', JSON.stringify(b.metadata || {}), now);
+  ).get(b.orgId || null, b.rodId || null, b.nativeJournalId || null, b.legalEntity || null, b.accountingDate || now, b.postingDate || now, b.effectiveDate || now, b.currency || 'USD', totalDebit, totalCredit, b.sourceType || 'manual', b.metadata || {}, now);
   for (let i = 0; i < b.lines.length; i += 1) {
     const line = b.lines[i];
     await db.prepare(
       `INSERT INTO journal_entry_lines (journal_entry_id,line_sequence,gl_account_id,debit_amount,credit_amount,dimensions,description,metadata)
        VALUES ($1,$2,$3,$4,$5,$6::jsonb,$7,$8::jsonb)`
-    ).run(entry.id, i, line.glAccountId || null, line.debitAmount || 0, line.creditAmount || 0, JSON.stringify(line.dimensions || {}), line.description || null, JSON.stringify(line.metadata || {}));
+    ).run(entry.id, i, line.glAccountId || null, line.debitAmount || 0, line.creditAmount || 0, line.dimensions || {}, line.description || null, line.metadata || {});
   }
   res.json({ ok: true, entry });
 });

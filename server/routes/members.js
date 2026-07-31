@@ -13,6 +13,7 @@ import { defaultMemberProfile } from '../data/defaultMemberProfile.js';
 import { verifyRecaptcha } from '../lib/recaptcha.js';
 import { sendVerificationEmail } from '../lib/email.js';
 import { audit } from '../lib/audit.js';
+import { ensureCustomerOrgFromWorkEmail } from '../lib/journeyRods.js';
 import { recordConsent } from '../lib/consentRegistry.js';
 import { resumeUrlFromPreset, pickPrimaryPreset, normalizePrimaryFlags } from '../lib/resumePresets.js';
 import { makeRateLimiter } from '../lib/rateLimit.js';
@@ -172,13 +173,23 @@ router.post('/me/emails/:id/verify', requireUser, async (req, res) => {
   const { code } = req.body || {};
   const id = Number(req.params.id);
   const row = await db
-    .prepare('SELECT id, user_id, verification_code, code_expires_at, verified FROM user_emails WHERE id = $1')
+    .prepare('SELECT id, user_id, email, type, verification_code, code_expires_at, verified FROM user_emails WHERE id = $1')
     .get(id);
   if (!row || Number(row.user_id) !== req.user.id) return res.status(404).json({ error: 'not found' });
   if (row.verified) return res.json({ ok: true, already: true });
   if (Date.now() > Number(row.code_expires_at)) return res.status(400).json({ error: 'code expired — resend to get a new one' });
   if (String(row.verification_code) !== String(code)) return res.status(400).json({ error: 'incorrect code' });
   await db.prepare('UPDATE user_emails SET verified = true, verification_code = NULL, code_expires_at = NULL WHERE id = $1').run(id);
+
+  // Best-effort — a rod/entitlement hiccup must never block an already-
+  // successful email verification. Only fires for type='work' emails; see
+  // ensureCustomerOrgFromWorkEmail's own free-mail-domain skip.
+  if (row.type === 'work') {
+    ensureCustomerOrgFromWorkEmail(req.user.id, row.email).catch((e) =>
+      console.error('[members] ensureCustomerOrgFromWorkEmail failed:', e.message)
+    );
+  }
+
   res.json({ ok: true });
 });
 

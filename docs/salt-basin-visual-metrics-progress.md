@@ -209,3 +209,36 @@ environment, inspected directly in `src/lib/journeyEngine/*`, `src/lib/maturityS
   Phase 5's Visual Encoding Registry, not rebuilt from scratch. One open naming question recorded at the
   time (was "Orbin" a new term or shorthand for "Orbit"?) rather than resolved by fiat — since resolved by
   Betsy in favor of "Orbit," see Resolved decisions above. Phases 2–7 not started.
+
+## 2026-07-29 — Maturity/Confidence split (rod-mathematics-v2)
+
+Betsy supplied a consolidated principle set whose **Maturity principle** ("Maturity is purpose-, stage-,
+dependency-, and network-aware. A signed master contract may have 100% legal maturity while participation
+coverage, billing readiness, rev-rec readiness, renewal stability, and expected realization remain below
+100%.") and **Confidence principle** ("Confidence is separate from maturity. It is calculated from evidence
+quality, completeness, recency, consistency, authority, dependency resolution, and scenario-specific risk
+adjustments.") are structurally incompatible with the v1 model. Acted on rather than filed:
+
+- **`ROD_MATURITY` -> `CHANNEL_MATURITY`, and it is no longer a composite.** The v1 metric collapsed seven
+  abstract dimensions into one 0-1 score per rod, which cannot express "100% legal, 40% billing readiness"
+  simultaneously. `calculateChannelMaturity()` now returns a SET of independent purpose scores with **no
+  `score` field at all** — averaging them would reintroduce exactly the number the principle rejects. Any
+  surface wanting a headline figure must name its purpose. Purposes are configuration, so an org can add
+  its own. Dependency capping is real: billing readiness is hard-capped at legal maturity, and the result
+  carries `cappedBy` so a UI can say *why* a score is held down.
+- **The seven v1 dimensions were retired, not relabelled.** On inspection they described how much we TRUST
+  the state, not how far along it is — i.e. the Confidence principle's territory. New `STATE_CONFIDENCE`
+  metric: weighted composite of the six positive inputs the principle names, with the seventh
+  ("scenario-specific risk adjustments") applied as a **penalty**, so high risk can never raise confidence.
+  Distinct from the pre-existing `QUERY_CONFIDENCE`, which scores an answer to an active query;
+  `STATE_CONFIDENCE` scores the underlying state with no query context.
+- **Key rename follows the canon's own precedent** — `worldRegistry.js` already carries
+  `canonicalId: 'channel'` + `legacyAliases: ['Journey Rod']` for the same Journey -> Channel move.
+  `ROD_MATURITY` is kept as a `legacyAliases` entry, not deleted. `ROD_POSITION` and `ROD_COHERENCE` are
+  stale in the same way but were **not** renamed — out of scope, flag before touching.
+- Envelope validator now rejects dependency cycles and unknown `dependsOn` references, and deliberately
+  does **not** apply the sum-to-1 constraint to purposes.
+
+`metricDefinitionRegistry.js` is now 12 entries. Both new metrics remain `calculated_not_rendered` — the
+math and config are real and unit-tested (11/11 in `tests/rodMathematics.test.js`), but nothing renders a
+purpose breakdown yet. That, plus the per-variant Visual Encoding Profile (Phase 3), is the open work.

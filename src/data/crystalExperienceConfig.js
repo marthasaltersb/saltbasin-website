@@ -1,3 +1,5 @@
+import { MATURITY_MODEL } from '../config/metrics/maturityModel.js';
+
 // Config contract for every CrystalMovementSystems scene. Product/member/client
 // surfaces can override any branch without forking the renderer. Every tunable
 // number that shapes the rendered experience — camera, movement, lighting,
@@ -25,13 +27,12 @@ export const DEFAULT_CRYSTAL_EXPERIENCE = {
   lighting: { hemisphere: .75, entry: 2.4, city: 2, pulse: .35 },
   layout: { minBuildings: 6, maxBuildings: 14, laneSpacing: 6.5, roadWidth: 3.8, roadLength: 64 },
   motion: { shellRotation: .012, markerFlowSpeed: 2.2 },
-  maturity: [
-    { min: 0, max: .2, label: 'Unresolved', color: '#3D4452' },
-    { min: .2, max: .4, label: 'Observed', color: '#345A68' },
-    { min: .4, max: .65, label: 'Defined', color: '#4A7C8E' },
-    { min: .65, max: .85, label: 'Connected', color: '#dca64c' },
-    { min: .85, max: 1, label: 'Trusted', color: '#f3d98a' },
-  ],
+  // The 5-band model is no longer defined here — it is the canonical
+  // MATURITY_MODEL.bands (src/config/metrics/maturityModel.js), which is also
+  // what the runtime-editable `maturity-model` Config Envelope serves. Kept as
+  // this key so every existing `config.maturity` reader and any
+  // mergeCrystalExperience({ maturity }) override keeps working unchanged.
+  maturity: MATURITY_MODEL.bands,
   // Data-density scoring — how the system computes a real 0-1 maturity value
   // instead of a hand-picked number. fieldWeights says how much each captured
   // field counts toward "complete"; dimensionFieldMap groups those same

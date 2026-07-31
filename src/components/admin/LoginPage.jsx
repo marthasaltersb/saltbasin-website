@@ -246,7 +246,7 @@ export default function LoginPage() {
 
 function Label({ children }) {
   return (
-    <label className="sb-label" style={{ color: 'var(--sb-dusty)', display: 'block', marginBottom: 4 }}>
+    <label className="sb-label" style={{ color: 'var(--sbh-ink-soft)', display: 'block', marginBottom: 4 }}>
       {children}
     </label>
   );
@@ -262,7 +262,7 @@ function ErrorBox({ children }) {
 
 const subtitleStyle = {
   fontSize: '0.85rem',
-  color: 'var(--sb-sage)',
+  color: 'var(--sbh-ink-soft)',
   lineHeight: 1.55,
   marginBottom: '1.25rem',
 };
@@ -277,7 +277,7 @@ const linkRow = {
 const linkBtn = {
   background: 'transparent',
   border: 'none',
-  color: 'var(--sb-gold)',
+  color: 'var(--sbh-gold)',
   cursor: 'pointer',
   fontSize: '0.78rem',
   padding: '0.25rem 0',

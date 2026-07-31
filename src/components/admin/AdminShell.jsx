@@ -41,6 +41,10 @@ const MemberFinancialPanel = lazy(() => import('./MemberFinancialPanel.jsx'));
 const MemberEntitlementsPanel = lazy(() => import('./MemberEntitlementsPanel.jsx'));
 const CareerConsentGate = lazy(() => import('./CareerConsentGate.jsx'));
 const CareerMasterEntryPoint = lazy(() => import('./CareerMasterEntryPoint.jsx'));
+const OrgDocumentsPanel = lazy(() => import('./OrgDocumentsPanel.jsx'));
+const MethodologyConfigPanel = lazy(() => import('./MethodologyConfigPanel.jsx'));
+const LonetreeMvpPanel = lazy(() => import('./LonetreeMvpPanel.jsx'));
+const ProposalExperiencePanel = lazy(() => import('./ProposalExperiencePanel.jsx'));
 
 // Tab component registry: the one piece that can't be data-driven, because
 // React components have to be referenced by import. The nav structure stored
@@ -75,6 +79,8 @@ const TAB_COMPONENTS = {
   eidos:          () => <EidosOperatingModelPanel />,
   websiteIntelligence: () => <WebsiteIntelligencePanel />,
   metricIntelligence: () => <MetricIntelligencePanel />,
+  methodologyConfig: () => <MethodologyConfigPanel />,
+  lonetreeMvp:    () => <LonetreeMvpPanel />,
   // config: handled inline below (ConfigPanel needs draft + setters from shell)
   // content: handled inline below (Sidebar/EditorPane/PreviewPane composition)
 };
@@ -120,6 +126,7 @@ const FALLBACK_ADMIN_NAV = {
       { id: 'config',   label: 'Config',       componentId: 'config',   sortOrder: 0 },
       { id: 'lineage',  label: 'Data Lineage', componentId: 'lineage',  sortOrder: 1 },
       { id: 'command-center', label: 'Command Center', componentId: 'commandCenter', sortOrder: 2 },
+      { id: 'methodology-config', label: 'Methodology Config', componentId: 'methodologyConfig', sortOrder: 3 },
     ]},
     { id: 'eidos', label: 'EIDOS Operating Model', sortOrder: 4, tabs: [
       { id: 'eidos', label: 'EIDOS Operating Model', componentId: 'eidos', sortOrder: 0 },
@@ -213,7 +220,13 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
   const [configDraft, setConfigDraft] = useState(null);
   const [profileSlug, setProfileSlug] = useState(null); // members get a /u/:slug
 
-  const [tab, setTab] = useState('content'); // active tab id (from nav.views[].tabs[].id)
+  // Members land on the Lonetree Fund & Portfolio Demo (2026-07-30, Member
+  // Experience Module — mirrors defaultMemberConfig.js's memberTabs order)
+  // instead of the site editor; admin/org scopes keep the old 'content'
+  // default unchanged. The tab-guard effect below corrects this against
+  // configDraft.navigation.memberTabs once it loads, so a member whose own
+  // memberTabs don't start with 'lonetreeMvp' still lands correctly.
+  const [tab, setTab] = useState(scope === 'member' ? 'lonetreeMvp' : 'content'); // active tab id (from nav.views[].tabs[].id)
   const [view, setView] = useState('split'); // 'split' | 'editor' | 'preview' (content editor sub-mode)
 
   // Data-driven nav (admin only). Members keep the hardcoded 2-tab strip.
@@ -333,6 +346,21 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
     window.addEventListener('sb-admin-switch-tab', handler);
     return () => window.removeEventListener('sb-admin-switch-tab', handler);
   }, []);
+
+  // Member-scope equivalent of switchView's guard above: 'tab' must always be
+  // one of the member's own memberTabs. The 'content'/'config' fallback
+  // branches below are gated off for scope === 'member' (public profile
+  // editing stays disabled for members for now, 2026-07-30), so if `tab` ever
+  // points outside memberTabs — the sb-admin-switch-tab event above, stale
+  // localStorage/URL state, a future bug — this snaps it back to the
+  // member's first configured tab instead of leaving the workspace blank.
+  useEffect(() => {
+    if (scope !== 'member' || !configDraft) return;
+    const tabs = (configDraft.navigation?.memberTabs || []).filter((t) => t.enabled !== false);
+    if (tabs.length === 0 || tabs.some((t) => t.id === tab)) return;
+    const firstTab = [...tabs].sort((a, b) => a.sortOrder - b.sortOrder)[0];
+    setTab(firstTab.id);
+  }, [scope, configDraft, tab]);
 
   // ── Load ──
   useEffect(() => {
@@ -550,7 +578,7 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
   if (!draft || !configDraft) return null;
 
   return (
-    <div style={styles.shell}>
+    <div className="sb-admin-shell" style={styles.shell}>
       <div style={styles.topbar}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           {tab === 'content' && (
@@ -571,7 +599,7 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
                 fontWeight: 500,
                 letterSpacing: '0.15em',
                 textTransform: 'uppercase',
-                color: 'var(--sb-cream)',
+                color: 'var(--sb-admin-text)',
               }}
             >
               {isMember ? (configDraft?.site?.ownerName || 'My Profile') : 'Salt Basin Net Works'}
@@ -582,7 +610,7 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
                 fontSize: '0.6rem',
                 letterSpacing: '0.18em',
                 textTransform: 'uppercase',
-                color: 'var(--sb-gold)',
+                color: 'var(--sb-admin-gold-warm)',
                 marginTop: 1,
               }}
             >
@@ -684,8 +712,8 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
             display: 'flex',
             gap: '0.5rem',
             padding: '0.5rem 1.5rem',
-            background: 'var(--sb-navy-deep)',
-            borderBottom: '0.5px solid rgba(196,132,58,0.18)',
+            background: 'var(--sb-admin-surface)',
+            borderBottom: '0.5px solid var(--sb-admin-border)',
             flexShrink: 0,
           }}>
             <TabToggle
@@ -724,7 +752,15 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
           }
           // Inline 'content' case: the page/section editor composes the
           // Sidebar + EditorPane + PreviewPane and needs lots of shell state.
-          if (componentId === 'content') {
+          // Gated to scope !== 'member' (2026-07-30): the public profile site
+          // editor stays disabled for members for now, and this branch has no
+          // TAB_COMPONENTS/isMember guard of its own — anything that ever sets
+          // `tab` to 'content' for a member (a stale event, old URL/
+          // localStorage state, ...) would otherwise render the full editor
+          // regardless of memberTabs. The tab-guard effect above resets `tab`
+          // back to a valid member tab in this situation; re-enable alongside
+          // the 'content' memberTabs entry.
+          if (componentId === 'content' && scope !== 'member') {
             return (
           <>
             <div className={`sb-admin-sidebar${sidebarOpen ? '' : ' collapsed'}`}>
@@ -818,9 +854,17 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
           if (componentId === 'memberPlm')       return <MemberPlmPanel scope={scope} />;
           if (componentId === 'financial')       return <MemberFinancialPanel />;
           if (componentId === 'entitlements')     return <MemberEntitlementsPanel />;
+          if (componentId === 'orgDocuments')     return <OrgDocumentsPanel orgId={orgId} />;
+          if (componentId === 'proposalExperience') return <ProposalExperiencePanel />;
+          if (componentId === 'lonetreeMvp')       return <LonetreeMvpPanel />;
 
           // Inline 'config' case: the panel needs draft + setter + scope from
-          // the shell. Treated as the default fallback when nothing else matched.
+          // the shell. Treated as the default fallback when nothing else
+          // matched — gated the same way as 'content' above: a member scope
+          // has no 'config' memberTabs entry (site config editing stays off
+          // for now), so an unrecognized componentId should never fall
+          // through to it. The tab-guard effect corrects `tab` right after.
+          if (scope === 'member') return null;
           return (
             <ConfigPanel config={configDraft} onChange={setConfigDraft} scope={scope} site={draft} />
           );
@@ -831,8 +875,17 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
           that produce publishable changes (content / config). The data-driven
           set of "non-publish" tabs is derived from the registry — anything
           in TAB_COMPONENTS is a self-contained panel that handles its own
-          persistence, so it gets the PublishBar hidden. */}
-      {!readOnly && !TAB_COMPONENTS[(() => {
+          persistence, so it gets the PublishBar hidden.
+          `scope === 'member'` is excluded outright (2026-07-30): the personal
+          public profile stays disabled for members for now, and 'content'/
+          'config' are already unlinked from memberTabs — but 'proposalExperience'
+          (the member's default tab) isn't in TAB_COMPONENTS and isn't a
+          self-persisting panel, so without this guard the bar (and its
+          Publish button, which promotes member_sites/member_configs straight
+          to published) would render underneath it. Org portal scopes
+          (org-admin) still need PublishBar for their own site/config publish,
+          so this only excludes personal member scope, not `isMember` broadly. */}
+      {!readOnly && scope !== 'member' && !TAB_COMPONENTS[(() => {
         if (!adminNav || isMember) return tab;
         const v = adminNav.views.find((x) => x.id === activeViewId);
         const t = v?.tabs.find((x) => x.id === tab);
@@ -888,7 +941,7 @@ function PublishBar({ dirty, siteDirty, configDirty, onSave, onDiscard, onPublis
     : 'All changes saved';
   return (
     <div style={styles.saveBar}>
-      <span style={{ flex: 1, fontSize: '0.78rem', color: dirty ? 'var(--sb-gold)' : 'var(--sb-green)' }}>
+      <span style={{ flex: 1, fontSize: '0.78rem', color: dirty ? 'var(--sb-admin-gold-warm)' : 'var(--sb-admin-success)' }}>
         {status}
       </span>
       <button
@@ -958,7 +1011,7 @@ function TabToggle({ items, active, onChange }) {
     <div
       style={{
         display: 'flex',
-        border: '0.5px solid rgba(181,196,193,0.2)',
+        border: '0.5px solid var(--sb-admin-border)',
         borderRadius: 'var(--sb-radius)',
         overflow: 'hidden',
       }}
@@ -969,8 +1022,8 @@ function TabToggle({ items, active, onChange }) {
           onClick={() => onChange(it.val)}
           style={{
             padding: '0.4rem 0.9rem',
-            background: active === it.val ? 'var(--sb-gold)' : 'transparent',
-            color: active === it.val ? 'var(--sb-ivory)' : 'var(--sb-dusty)',
+            background: active === it.val ? 'var(--sb-admin-gold)' : 'transparent',
+            color: active === it.val ? '#FFFDF8' : 'var(--sb-admin-text-soft)',
             border: 'none',
             fontFamily: 'var(--sb-font-body)',
             fontSize: '0.7rem',
@@ -1003,15 +1056,15 @@ function Modal({ title, children, onCancel, onSubmit, submitLabel }) {
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: 'var(--sb-navy-deep)',
-          border: '0.5px solid var(--sb-gold)',
+          background: 'var(--sb-admin-surface-alt)',
+          border: '0.5px solid var(--sb-admin-gold)',
           borderRadius: 'var(--sb-radius)',
           padding: '1.75rem',
           width: '100%',
           maxWidth: 460,
         }}
       >
-        <div className="sb-display" style={{ fontSize: '1.4rem', marginBottom: '1rem', color: 'var(--sb-cream)' }}>
+        <div className="sb-display" style={{ fontSize: '1.4rem', marginBottom: '1rem', color: 'var(--sb-admin-text)' }}>
           {title}
         </div>
         {children}
@@ -1070,7 +1123,7 @@ function PageModal({ value, onChange, onSubmit, onCancel, pageTypes, isMember, o
         </div>
       </div>
       {selectedType?.description && (
-        <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', lineHeight: 1.5, marginTop: '-0.5rem', marginBottom: '0.75rem' }}>
+        <div style={{ fontSize: '0.7rem', color: 'var(--sb-admin-text-soft)', lineHeight: 1.5, marginTop: '-0.5rem', marginBottom: '0.75rem' }}>
           {selectedType.description}
         </div>
       )}

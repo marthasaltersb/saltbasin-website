@@ -9,6 +9,7 @@ import { db, getJSON } from '../db.js';
 import { requireUser } from '../auth.js';
 import { defaultMemberConfig } from '../data/defaultMemberConfig.js';
 import { encrypt } from '../lib/crypto.js';
+import { hasCareerPortfolioContent } from '../lib/careerAtomRollups.js';
 
 const router = Router();
 
@@ -106,6 +107,11 @@ router.put('/draft', requireUser, async (req, res) => {
 router.post('/publish', requireUser, async (req, res) => {
   const draft = await readState(req.user.id, 'draft');
   if (!draft) return res.status(404).json({ error: 'no draft to publish' });
+  // Rollout gate: mirrors memberSite.js's /publish — a member's public
+  // profile can't go live before their Career Master data exists.
+  if (!(await hasCareerPortfolioContent(req.user.id))) {
+    return res.status(400).json({ error: 'career portfolio not yet defined — add at least one Career Master entry before publishing' });
+  }
   await writeState(req.user.id, 'published', draft);
   res.json({ ok: true });
 });

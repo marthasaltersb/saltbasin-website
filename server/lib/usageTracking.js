@@ -21,7 +21,7 @@ export async function recordLogin(userId) {
     await db.prepare(`
       INSERT INTO analytics_events (event_type, object_type, object_id, member_user_id, metadata, occurred_at)
       VALUES ('login','member_entitlement_rod',$1,$2,$3::jsonb,$4)
-    `).run(String(rod.id), userId, JSON.stringify({ moduleKey: rod.module_key }), now);
+    `).run(String(rod.id), userId, { moduleKey: rod.module_key }, now);
   }
 }
 
@@ -41,7 +41,7 @@ export async function recordInteraction({ userId, moduleKey, interactionType, me
   await db.prepare(`
     INSERT INTO analytics_events (event_type, object_type, object_id, member_user_id, metadata, occurred_at)
     VALUES ($1,'member_entitlement_rod',$2,$3,$4::jsonb,$5)
-  `).run(interactionType, String(rod.id), userId, JSON.stringify(metadata), Date.now());
+  `).run(interactionType, String(rod.id), userId, metadata, Date.now());
 }
 
 // Rollup for admin/member-facing display — real counts computed on demand

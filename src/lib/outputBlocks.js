@@ -482,10 +482,19 @@ export function renderBlockToHtml(block, ctx = {}) {
     case 'bar-chart-v': {
       const catalog = ctx.rollupCatalog || {};
       const prefix = p.sourceKey || '';
-      const rows = (catalog.staticRollups || []).filter((r) => !prefix || r.key.startsWith(prefix));
-      if (!rows.length) return '';
-      const max = Math.max(...rows.map((r) => Number(r.value) || 0), 1);
       const horizontal = block.type === 'bar-chart-h';
+      let rows = (catalog.staticRollups || []).filter((r) => !prefix || r.key.startsWith(prefix));
+      if (!rows.length) return '';
+      // Vertical bars sit side-by-side in a fixed-height row — with no
+      // responsive constraint, a fixed per-bar width (52px) times a large
+      // category count (e.g. 15 skill categories) overflowed the container
+      // width instead of fitting it. Sorting + capping to the top 8 by
+      // value keeps the chart readable at any container width; horizontal
+      // bars stack vertically instead so they don't have this problem and
+      // are left uncapped.
+      rows = [...rows].sort((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0));
+      if (!horizontal && rows.length > 8) rows = rows.slice(0, 8);
+      const max = Math.max(...rows.map((r) => Number(r.value) || 0), 1);
       const barsHtml = rows.map((r) => {
         const pct = Math.round(((Number(r.value) || 0) / max) * 100);
         return horizontal
@@ -496,15 +505,18 @@ export function renderBlockToHtml(block, ctx = {}) {
               </div>
               <div style="width:28px;font-size:0.7rem;color:#1B2A3B;font-weight:700;text-align:right">${r.value}</div>
             </div>`
-          : `<div style="display:inline-flex;flex-direction:column;align-items:center;width:52px;vertical-align:bottom">
-              <div style="font-size:0.66rem;color:#1B2A3B;font-weight:700">${r.value}</div>
-              <div style="width:22px;height:${Math.max(pct, 4)}px;background:#4A9EBF;border-radius:2px 2px 0 0;margin-top:2px"></div>
-              <div style="font-size:0.58rem;color:#536173;text-align:center;margin-top:0.25rem;line-height:1.2">${ip(r.label)}</div>
+          : `<div style="display:flex;flex-direction:column;align-items:center;min-width:0;width:100%">
+              <div style="font-size:0.62rem;color:#1B2A3B;font-weight:700">${r.value}</div>
+              <div style="width:70%;max-width:26px;height:${Math.max(pct, 4)}px;background:#4A9EBF;border-radius:2px 2px 0 0;margin-top:2px"></div>
+              <div style="font-size:0.54rem;color:#536173;text-align:center;margin-top:0.25rem;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word">${ip(r.label)}</div>
             </div>`;
       }).join('');
-      return `<div style="${styleStr(s)}">
+      const wrapStyle = horizontal
+        ? ''
+        : `display:grid;grid-template-columns:repeat(${rows.length},minmax(0,1fr));align-items:end;gap:0.3rem;height:110px;width:100%`;
+      return `<div style="${styleStr(s)};max-width:100%;overflow:hidden">
   ${p.title ? `<div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:#536173;margin-bottom:0.5rem;font-family:sans-serif">${ip(p.title)}</div>` : ''}
-  <div style="${horizontal ? '' : 'display:flex;align-items:flex-end;gap:0.5rem;height:110px'}">${barsHtml}</div>
+  <div style="${wrapStyle}">${barsHtml}</div>
 </div>`;
     }
 
@@ -671,11 +683,16 @@ export function renderMemberFooterHtml(config) {
 // the flat blocks[] array renderBlockToHtml()/renderTemplateToHtml() already
 // consume. Layer 2 (stat cards) is resolved here against ctx.rollupCatalog
 // since block selection/order/labels live in config, not in the catalog.
-export function buildBlocksFromLayerConfig(config, ctx = {}) {
+//
+// Stats and infographics are built by separate functions (not one combined
+// list) so a caller can place infographics ahead of other content — a
+// portfolio-style dashboard read before the detail sections — while stat
+// cards stay wherever the caller puts them. Each infographic item carries
+// its own `order` field (set in the Infographics tab's sequence control),
+// respected here via an explicit sort rather than array-push order.
+export function buildStatBlocksFromLayerConfig(config, ctx = {}) {
   const blocks = [];
-  let order = 1;
   const catalog = ctx.rollupCatalog || {};
-
   const layer2 = config?.layer2_stats?.cards || [];
   const visibleCards = layer2.filter((c) => c.visible !== false);
   if (visibleCards.length) {
@@ -689,22 +706,30 @@ export function buildBlocksFromLayerConfig(config, ctx = {}) {
         sublabel: c.sublabel || rollup?.sublabel,
       };
     });
-    blocks.push({ id: `l2-stats`, type: 'stat-cards', visible: true, order: order++, props: { cards: resolvedCards }, style: { margin: '0.75rem 0' } });
+    blocks.push({ id: `l2-stats`, type: 'stat-cards', visible: true, order: 1, props: { cards: resolvedCards }, style: { margin: '0.75rem 0' } });
   }
+  return blocks;
+}
 
+export function buildInfographicBlocksFromLayerConfig(config) {
   const layer3 = config?.layer3_infographics?.items || [];
-  for (const item of layer3.filter((i) => i.visible !== false)) {
-    blocks.push({
-      id: item.id || `l3-${item.blockType}-${order}`,
+  return layer3
+    .filter((i) => i.visible !== false)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .map((item, i) => ({
+      id: item.id || `l3-${item.blockType}-${i}`,
       type: item.blockType,
       visible: true,
-      order: order++,
+      order: item.order ?? i,
       props: { sourceKey: item.sourceKey, title: item.params?.title || '', ...(item.params || {}) },
       style: { margin: '0.75rem 0' },
-    });
-  }
+    }));
+}
 
-  return blocks;
+// Back-compat combined builder (stats then infographics) for any caller
+// that doesn't need the two interleaved with other content.
+export function buildBlocksFromLayerConfig(config, ctx = {}) {
+  return [...buildStatBlocksFromLayerConfig(config, ctx), ...buildInfographicBlocksFromLayerConfig(config)];
 }
 
 // ── Default template configs ──────────────────────────────────────────────────

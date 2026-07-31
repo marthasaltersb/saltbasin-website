@@ -105,3 +105,15 @@ export async function buildCareerAtomRollupCatalog(userId) {
     moleculeMaturity: { skills: skillsMaturity, jobs: jobsMaturity, tools: toolsMaturity },
   };
 }
+
+// Rollout gate (2026-07-30): a member's public profile should never go live
+// before their Career Master data exists — reuses the same atomCount signal
+// this module already computes for the public rollup display, rather than a
+// second, possibly-drifting "has content" check against the legacy tables
+// directly. Called from memberSite.js's and memberConfig.js's /publish routes.
+export async function hasCareerPortfolioContent(userId) {
+  const rod = await getOrBackfillRod(userId);
+  if (!rod) return false;
+  const row = await db.prepare(`SELECT COUNT(*)::int AS n FROM journey_rod_evidence WHERE rod_id=$1`).get(rod.id);
+  return (row?.n || 0) > 0;
+}

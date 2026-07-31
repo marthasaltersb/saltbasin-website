@@ -10,22 +10,28 @@ export function defaultMemberConfig({ displayName, email }) {
     // assumptions. Mirrors `version` in defaultMemberSite.js.
     schemaVersion: 1,
     navigation: {
+      // Member Experience Module (2026-07-30, Betsy's direction, superseding
+      // the 2026-07-29 version): the Lonetree Fund & Portfolio Demo (the
+      // orbit-ring interaction layer, LonetreeMvpPanel.jsx) is now the
+      // member's landing tab, with Career Master and Output Templates as the
+      // only two additional tabs — explicitly NOT the guided Proposal
+      // Experience ("Your Experience") and NOT My Resume, both removed from
+      // the default nav per this direction. Every other prior member tab (My
+      // Profile/site editor, Products, Messages, My Access, Config, Profiles,
+      // Stats, Activity, Agent, Network, platform Analytics/PLM, org
+      // Documents, Your Experience, My Resume) is intentionally left out of
+      // the default nav, not deleted as code — their panels/routes still
+      // exist, just unlinked here. Restore by re-adding an entry, same as
+      // 'financial' was previously handled. The "My Profile" site editor
+      // especially stays off: the public /u/:slug profile stays disabled for
+      // members for now; re-add 'content' only when that's ready to turn on.
+      // AdminShell.jsx's initial `tab` state for scope === 'member' mirrors
+      // this landing choice (lonetreeMvp, not proposalExperience) — keep both
+      // in sync if this array's first entry ever changes.
       memberTabs: [
-        { id: 'content', label: 'My Profile', componentId: 'content', sortOrder: 10 },
-        { id: 'products', label: 'Products', componentId: 'products', sortOrder: 20 },
-        { id: 'inbox', label: 'Messages', componentId: 'inbox', sortOrder: 30 },
-        { id: 'entitlements', label: 'My Access', componentId: 'entitlements', sortOrder: 35 },
-        { id: 'resume', label: 'My Resume', componentId: 'resume', sortOrder: 40 },
-        { id: 'careerMaster', label: 'Career Master', componentId: 'careerMaster', sortOrder: 45 },
-        { id: 'config', label: 'Config', componentId: 'config', sortOrder: 50 },
-        { id: 'profiles', label: 'Profiles', componentId: 'profiles', sortOrder: 60 },
-        { id: 'stats', label: 'Stats', componentId: 'stats', sortOrder: 70 },
-        { id: 'audit', label: 'Activity', componentId: 'audit', sortOrder: 80 },
-        { id: 'agent', label: 'Agent', componentId: 'agent', sortOrder: 90 },
-        { id: 'memberNrm', label: 'Network', componentId: 'memberNrm', sortOrder: 100 },
-        { id: 'memberAnalytics', label: 'Analytics', componentId: 'memberAnalytics', sortOrder: 110 },
-        { id: 'memberPlm', label: 'Platform', componentId: 'memberPlm', sortOrder: 120 },
-        { id: 'financial', label: 'Financial', componentId: 'financial', sortOrder: 130 },
+        { id: 'lonetreeMvp', label: 'Fund & Portfolio Demo', componentId: 'lonetreeMvp', sortOrder: 0 },
+        { id: 'careerMaster', label: 'Career Master', componentId: 'careerMaster', sortOrder: 10 },
+        { id: 'outputTemplates', label: 'Output Templates', componentId: 'outputTemplates', sortOrder: 20 },
       ],
     },
     site: {

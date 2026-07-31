@@ -73,7 +73,7 @@ router.get('/:provider/connect', async (req, res) => {
             access_token_enc = EXCLUDED.access_token_enc, token_expires_at = EXCLUDED.token_expires_at,
             metadata = EXCLUDED.metadata, updated_at = EXCLUDED.updated_at
         `).run(user.id, provider, identity.externalId, identity.label, accessEnc,
-               expiresAt, p.scopes.join(' ') || '', JSON.stringify(extra), now);
+               expiresAt, p.scopes.join(' ') || '', extra, now);
         const appBase = process.env.APP_BASE_URL || 'http://localhost:5173';
         return res.redirect(`${appBase}/admin?oauthSuccess=${provider}`);
       } catch (err) {
@@ -161,7 +161,7 @@ router.get('/:provider/callback', async (req, res) => {
         updated_at        = EXCLUDED.updated_at
     `).run(
       pending.userId, provider, externalId, label, accessEnc, refreshEnc,
-      expiresAt, p.scopes.join(' '), JSON.stringify(extra), now,
+      expiresAt, p.scopes.join(' '), extra, now,
     );
 
     res.redirect(`${appBase}/admin?oauthSuccess=${provider}`);
@@ -202,7 +202,7 @@ router.post('/supabase/pat', express.json(), async (req, res) => {
         external_id = EXCLUDED.external_id, label = EXCLUDED.label,
         access_token_enc = EXCLUDED.access_token_enc, metadata = EXCLUDED.metadata,
         updated_at = EXCLUDED.updated_at
-    `).run(user.id, profile.id, profile.username || 'Supabase', accessEnc, JSON.stringify(meta), now);
+    `).run(user.id, profile.id, profile.username || 'Supabase', accessEnc, meta, now);
 
     res.json({ ok: true, label: profile.username || 'Supabase' });
   } catch (err) {

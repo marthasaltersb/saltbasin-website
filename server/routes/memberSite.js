@@ -22,6 +22,7 @@ import { defaultMemberSite } from '../data/defaultMemberSite.js';
 import { audit } from '../lib/audit.js';
 import { form, react } from '../lib/molecule.js';
 import { resumeUrlFromPreset, pickPrimaryPreset } from '../lib/resumePresets.js';
+import { hasCareerPortfolioContent } from '../lib/careerAtomRollups.js';
 
 const router = Router();
 
@@ -112,6 +113,11 @@ router.post('/publish', requireUser, async (req, res) => {
     conditions: async () => {
       if (!draft) throw new Error('no draft to publish');
       if (!draft.pages?.length) throw new Error('draft has no pages — cannot publish');
+      // Rollout gate: a member's public profile can't go live before their
+      // Career Master data exists — see hasCareerPortfolioContent's header.
+      if (!(await hasCareerPortfolioContent(req.user.id))) {
+        throw new Error('career portfolio not yet defined — add at least one Career Master entry before publishing');
+      }
     },
     produce: async () => {
       await form({

@@ -18,9 +18,25 @@
 //
 // The schema migration helpers below are idempotent — safe to run on every
 // boot. ALTER TABLE ADD COLUMN IF NOT EXISTS works natively in Postgres 9.6+.
+//
+// jsonb param convention (2026-07-27): db.prepare(sql).run/get/all(...params)
+// wraps sql.unsafe(query, params) below. For a param bound to a JSONB column
+// (with or without an explicit ::jsonb cast in the SQL text), ALWAYS pass the
+// raw JS value (object/array/string/number) — NEVER JSON.stringify() it
+// first. Doing so double-encodes: the column ends up holding a JSON *string*
+// scalar containing the JSON text (jsonb_typeof(col) = 'string', not
+// 'object'/'array'), which every `row.col?.x` reader then silently reads as
+// undefined instead of throwing, masking the corruption. This is a real,
+// confirmed driver behavior (verified by direct reproduction against this
+// Supabase connection), not a hypothetical. Columns that are plain TEXT
+// (site_state.data, config_state.data, member_profiles.draft/published) are
+// unaffected and must keep using JSON.stringify() — check the column's
+// actual CREATE TABLE type before "fixing" a call site.
 import 'dotenv/config';
 import postgres from 'postgres';
 import { generateCareerAtomDefinitions, generateCareerMoleculeDefinitions } from './lib/careerAtomRegistry.js';
+import { generateSignalMoleculeDefinitions, generateBusinessHypothesisMoleculeDefinitions, generateRecordAtomDefinitions } from './lib/lonetreeDemoRegistry.js';
+import { generateDeltaAtomDefinitions, generateRecordMoleculeAtomDefinitions } from './lib/proposalExperienceRegistry.js';
 
 const url = process.env.DATABASE_URL;
 if (!url) {
@@ -827,6 +843,31 @@ async function bootstrap() {
     );
     CREATE INDEX IF NOT EXISTS idx_resume_output_projections_user ON resume_output_projections (user_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_resume_output_projections_lineage ON resume_output_projections (lineage_root_id);
+
+    -- ── Organization Document Projections (2026-07-27) ──────────────────────
+    -- Satellite table for the 'customer_document_delivery' Tributary
+    -- (server/lib/tributaryRegistry.js) — gated proposal / product-resource
+    -- documents delivered to a Customer Channel Journey's organization.
+    -- Mirrors resume_output_projections' satellite shape: a real, typed table
+    -- (not a journey_data_rods row pretending to be generic), linked back to
+    -- its parent Customer rod via parent_rod_id + rod_relationship_type.
+    CREATE TABLE IF NOT EXISTS org_document_projections (
+      id BIGSERIAL PRIMARY KEY,
+      org_id BIGINT NOT NULL REFERENCES organization_profiles(id) ON DELETE CASCADE,
+      parent_rod_id BIGINT REFERENCES journey_data_rods(id) ON DELETE SET NULL,
+      rod_relationship_type TEXT,
+      document_type TEXT NOT NULL,
+        -- 'proposal' | 'product_resource'
+      title TEXT NOT NULL,
+      summary TEXT,
+      content JSONB NOT NULL DEFAULT '{}',
+      status TEXT NOT NULL DEFAULT 'draft',
+        -- draft | published | archived
+      created_by BIGINT REFERENCES users(id),
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_org_doc_projections_org ON org_document_projections (org_id, document_type);
   `);
   // Additive — job-description-targeted resume output (2026-07-27). Both
   // columns are nullable and absent for every pre-existing projection row.
@@ -882,7 +923,7 @@ async function bootstrap() {
     await sql.unsafe(
       `INSERT INTO journey_metadata_clusters (cluster_key,label,description,molecule_keys,completion_rule,minimum_count,is_active,alignment_rules,created_at,updated_at)
        VALUES ($1,$2,$3,$4::jsonb,'all',NULL,true,'[]'::jsonb,$5,$5) ON CONFLICT (cluster_key) DO NOTHING`,
-      [key, label, description, JSON.stringify(moleculeKeys), nowAtomSeed]
+      [key, label, description, moleculeKeys, nowAtomSeed]
     );
   }
 
@@ -905,7 +946,7 @@ async function bootstrap() {
     await sql.unsafe(
       `INSERT INTO journey_metadata_clusters (cluster_key,label,description,molecule_keys,completion_rule,minimum_count,is_active,alignment_rules,created_at,updated_at)
        VALUES ($1,$2,$3,$4::jsonb,'all',NULL,true,'[]'::jsonb,$5,$5) ON CONFLICT (cluster_key) DO NOTHING`,
-      [molecule.entryType, molecule.label, `Migrated from legacy ${molecule.sourceTable} rows — one Career Molecule instance per row, distinguished by source_reference on the underlying journey_rod_evidence.`, JSON.stringify(molecule.atomKeys), nowCareerAtomSeed]
+      [molecule.entryType, molecule.label, `Migrated from legacy ${molecule.sourceTable} rows — one Career Molecule instance per row, distinguished by source_reference on the underlying journey_rod_evidence.`, molecule.atomKeys, nowCareerAtomSeed]
     );
   }
 
@@ -925,6 +966,63 @@ async function bootstrap() {
        VALUES ($1,$2,1.0,0,'{}'::jsonb,true,$3,$3) ON CONFLICT (cluster_key, molecule_key) WHERE org_id IS NULL DO NOTHING`,
       [atom.entryType, atom.atomKey, nowCareerAtomSeed]
     );
+  }
+
+  // Signal + Business Hypothesis Atom/Molecule vocabulary seed (OBJ-013/
+  // OBJ-014, 2026-07-29 Lonetree MVP build) — same reuse-first mechanism as
+  // the EIDOS worked-example and Career Atom seeds above: new Atom
+  // definitions in journey_metadata_molecules, grouped by a new cluster_key
+  // in journey_metadata_clusters. No new tables. Instances are
+  // journey_rod_evidence rows against these molecule_keys on whichever
+  // Channel Rod (e.g. a Portfolio Company's commercial/revenue rod)
+  // originates the Signal or Hypothesis.
+  const nowLonetreeAtomSeed = Date.now();
+  for (const def of [generateSignalMoleculeDefinitions(), generateBusinessHypothesisMoleculeDefinitions()]) {
+    for (const atom of def.atoms) {
+      await sql.unsafe(
+        `INSERT INTO journey_metadata_molecules (molecule_key,label,data_type,source_paths,validation_config,is_sensitive,is_active,canonical_definition,value_domain,mutability_class,created_at,updated_at)
+         VALUES ($1,$2,$3,'[]'::jsonb,'{}'::jsonb,false,true,$4,NULL,'revisable',$5,$5) ON CONFLICT (molecule_key) DO NOTHING`,
+        [atom.atomKey, atom.label, atom.dataType, atom.canonicalDefinition, nowLonetreeAtomSeed]
+      );
+    }
+    await sql.unsafe(
+      `INSERT INTO journey_metadata_clusters (cluster_key,label,description,molecule_keys,completion_rule,minimum_count,is_active,alignment_rules,created_at,updated_at)
+       VALUES ($1,$2,$3,$4::jsonb,'any',1,true,'[]'::jsonb,$5,$5) ON CONFLICT (cluster_key) DO NOTHING`,
+      [def.cluster.clusterKey, def.cluster.label, def.cluster.description, def.cluster.atomKeys, nowLonetreeAtomSeed]
+    );
+  }
+
+  // Record-level Atom definitions for the Lonetree PortCo commercial/fund
+  // reconciliation chain (2026-07-29) — see lonetreeDemoRegistry.js's own
+  // header comment for why these are record-level (one atom per business
+  // object type, not per field). Definitions only; no cluster (each is used
+  // standalone against a rod, not as a completion-gated group).
+  const recordAtomSeed = generateRecordAtomDefinitions();
+  for (const atom of recordAtomSeed.atoms) {
+    await sql.unsafe(
+      `INSERT INTO journey_metadata_molecules (molecule_key,label,data_type,source_paths,validation_config,is_sensitive,is_active,canonical_definition,value_domain,mutability_class,created_at,updated_at)
+       VALUES ($1,$2,$3,'[]'::jsonb,'{}'::jsonb,false,true,$4,NULL,'revisable',$5,$5) ON CONFLICT (molecule_key) DO NOTHING`,
+      [atom.atomKey, atom.label, atom.dataType, atom.canonicalDefinition, recordAtomSeed.now]
+    );
+  }
+
+  // Member Experience Module — Proposal Experience record-atom + delta-atom
+  // vocabulary seed (2026-07-29, Salt_Basin_MVP_Proposal_Experience_Delta_
+  // Spec_v0.1). Same reuse-first mechanism as the Lonetree Signal/Business
+  // Hypothesis seed above and the EIDOS worked example: new Atom definitions
+  // in journey_metadata_molecules, no new tables. Definitions only — no
+  // cluster, since each record atom is used standalone against a member's
+  // proposal_experience rod, not as a completion-gated group (same choice as
+  // generateRecordAtomDefinitions() above).
+  const nowProposalAtomSeed = Date.now();
+  for (const atomSeed of [generateDeltaAtomDefinitions(), generateRecordMoleculeAtomDefinitions()]) {
+    for (const atom of atomSeed.atoms) {
+      await sql.unsafe(
+        `INSERT INTO journey_metadata_molecules (molecule_key,label,data_type,source_paths,validation_config,is_sensitive,is_active,canonical_definition,value_domain,mutability_class,created_at,updated_at)
+         VALUES ($1,$2,$3,'[]'::jsonb,'{}'::jsonb,false,true,$4,NULL,'revisable',$5,$5) ON CONFLICT (molecule_key) DO NOTHING`,
+        [atom.atomKey, atom.label, atom.dataType, atom.canonicalDefinition, nowProposalAtomSeed]
+      );
+    }
   }
 
   // journey_rod_types backfill — insert-only (never overwrite an admin's
@@ -947,6 +1045,7 @@ async function bootstrap() {
     ['member_entitlement', 'Member Entitlement', 'A Member\'s provisioned access to one product/feature module — one rod per module, formed from the Member Channel Rod.', true, 2],
     ['public_site', 'Public Site', "A Member's Personal Brand Website/World, governed as a Channel Rod per the Salt Basin data model.", true, 3],
     ['career_master', 'Career Master', "A Member's Career Master — Career Atoms and Resume Output Projection source, governed as a Channel Rod.", true, 4],
+    ['proposal_experience', 'Proposal / Member Experience', "A Member's guided 9-stage Proposal Experience journey (Welcome->Workspace) — the landing experience on /member login, governed as a Channel Rod (2026-07-29, Member Experience Module).", true, 5],
   ]) {
     await sql.unsafe(
       `INSERT INTO journey_rod_types (id, label, description, is_active, sort_order, created_at, updated_at)
@@ -1332,8 +1431,14 @@ async function bootstrap() {
       updated_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
     );
     ALTER TABLE organization_profiles ADD COLUMN IF NOT EXISTS originating_lead_id BIGINT REFERENCES leads(id) ON DELETE SET NULL;
+    -- Lets a verified work email's domain find-or-create its organization —
+    -- see ensureCustomerOrgFromWorkEmail() in server/lib/journeyRods.js.
+    -- Null for every org created through any other path (lead promotion,
+    -- self-service dashboard creation).
+    ALTER TABLE organization_profiles ADD COLUMN IF NOT EXISTS email_domain TEXT;
     CREATE INDEX IF NOT EXISTS idx_org_profiles_slug ON organization_profiles (slug);
     CREATE INDEX IF NOT EXISTS idx_org_profiles_originating_lead ON organization_profiles (originating_lead_id);
+    CREATE INDEX IF NOT EXISTS idx_org_profiles_email_domain ON organization_profiles (email_domain) WHERE email_domain IS NOT NULL;
 
     -- ── Master data account records ──────────────────────────────────────────
     -- One row per Member (created at lead→member conversion) and one row per
@@ -3220,6 +3325,31 @@ async function bootstrap() {
     console.warn('[db] output-templates nav injection skipped:', e.message);
   }
 
+  // One-shot: inject "Methodology Config" tab into the admin_nav system view
+  // — the generic Config Envelope editor (src/components/admin/
+  // MethodologyConfigPanel.jsx, server/lib/configEnvelope.js), additive
+  // alongside Config/Data Lineage/Command Center rather than replacing them.
+  try {
+    const navRow5 = await sql.unsafe(`SELECT data FROM config_state WHERE id = 'admin_nav'`);
+    if (navRow5.length > 0) {
+      const nav = JSON.parse(navRow5[0].data);
+      const systemView = (nav.views || []).find((v) => v.id === 'system');
+      if (systemView) {
+        systemView.tabs = systemView.tabs || [];
+        const hasMethodologyConfig = systemView.tabs.some((t) => t.id === 'methodology-config');
+        if (!hasMethodologyConfig) {
+          systemView.tabs.push({ id: 'methodology-config', label: 'Methodology Config', componentId: 'methodologyConfig', sortOrder: 3 });
+          await sql.unsafe(
+            `UPDATE config_state SET data = $1, updated_at = $2 WHERE id = 'admin_nav'`,
+            [JSON.stringify(nav), Date.now()]
+          );
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[db] methodology-config nav injection skipped:', e.message);
+  }
+
   // ── Member product onboarding + self-service commerce ──────────────────
   //
   // product_licenses already carries the fields this needs (user/org scope,
@@ -3397,6 +3527,31 @@ async function bootstrap() {
     }
   } catch (e) {
     console.warn('[db] eidos nav injection skipped:', e.message);
+  }
+
+  // One-shot: inject "Lonetree MVP" as its own top-level admin_nav view
+  // (2026-07-29) — Betsy's Fund/PortCo demonstration surface, single
+  // componentId backing its own internal tab bar, same pattern as EIDOS.
+  try {
+    const navRowLonetree = await sql.unsafe(`SELECT data FROM config_state WHERE id = 'admin_nav'`);
+    if (navRowLonetree.length > 0) {
+      const nav = JSON.parse(navRowLonetree[0].data);
+      nav.views = nav.views || [];
+      const hasLonetree = nav.views.some((v) => v.id === 'lonetreeMvp');
+      if (!hasLonetree) {
+        nav.views.push({
+          id: 'lonetreeMvp', label: 'Lonetree MVP', sortOrder: 5, tabs: [
+            { id: 'lonetreeMvp', label: 'Lonetree MVP', componentId: 'lonetreeMvp', sortOrder: 0 },
+          ],
+        });
+        await sql.unsafe(
+          `UPDATE config_state SET data = $1, updated_at = $2 WHERE id = 'admin_nav'`,
+          [JSON.stringify(nav), Date.now()]
+        );
+      }
+    }
+  } catch (e) {
+    console.warn('[db] lonetreeMvp nav injection skipped:', e.message);
   }
 
   // Metric Intelligence is a governed finance capability surfaced inside
@@ -3667,6 +3822,38 @@ Rod state, per event:
     console.warn('[db] journey_metadata_clusters attraction_tags backfill warning:', e.message);
   }
 
+  // One-time repair of the JSONB double-encoding damage in
+  // journey_metadata_clusters.molecule_keys (found 2026-07-29: 9 of 11 rows
+  // held a JSON *string* of the array rather than the array). The seed writers
+  // above have all passed raw JS arrays since the 2026-07-27 audit — verified
+  // by direct reproduction — but every one of them uses ON CONFLICT DO NOTHING,
+  // so an already-corrupt row can never self-heal no matter how many times
+  // bootstrap runs. Hence an explicit repair rather than relying on reseed.
+  //
+  // This mattered more than it looked: clusterPassed() (server/lib/journeyRods.js)
+  // calls .filter() on this value, which throws TypeError against a string. It
+  // had never fired only because journey_scenarios is empty, so
+  // evaluateJourneyRod() returns before reaching cluster logic — seeding the
+  // first scenario would have detonated it for 9 clusters at once.
+  //
+  // Idempotent by construction: the WHERE clause matches only non-array rows,
+  // so a repaired row is never touched again. Rows whose text does not parse to
+  // a JSON array are left alone and reported rather than coerced.
+  try {
+    const repaired = await sql.unsafe(`
+      UPDATE journey_metadata_clusters
+      SET molecule_keys = (molecule_keys #>> '{}')::jsonb
+      WHERE jsonb_typeof(molecule_keys) = 'string'
+        AND jsonb_typeof((molecule_keys #>> '{}')::jsonb) = 'array'
+      RETURNING cluster_key
+    `);
+    if (repaired.length) console.log(`[db] repaired double-encoded molecule_keys on ${repaired.length} cluster(s): ${repaired.map((r) => r.cluster_key).join(', ')}`);
+    const stillBad = await sql.unsafe(`SELECT cluster_key FROM journey_metadata_clusters WHERE jsonb_typeof(molecule_keys) <> 'array'`);
+    if (stillBad.length) console.warn(`[db] journey_metadata_clusters rows whose molecule_keys is still not an array (manual review needed): ${stillBad.map((r) => r.cluster_key).join(', ')}`);
+  } catch (e) {
+    console.warn('[db] journey_metadata_clusters molecule_keys repair warning:', e.message);
+  }
+
   // One-shot: tag every existing journey_rod_evidence row's magnetic_properties
   // with its own entryType (from metadata.entryType, already stamped by
   // careerAtomMigration.js and any other evidence writer that sets it) —
@@ -3678,21 +3865,125 @@ Rod state, per event:
   // entryType, from any rod_type.
   //
   // Done row-by-row in JS, not a single SQL UPDATE using metadata->>'entryType'
-  // — this adapter's jsonb columns are written as double-encoded JSON text
-  // (confirmed via jsonb_typeof(metadata) = 'string', not 'object', for every
-  // existing row), so Postgres's native ->> operator can't extract from them
-  // server-side. Every other reader of this column already works around the
-  // same quirk with `JSON.parse()` on the JS side; this backfill does the same.
+  // — sql.unsafe(query, params) double-encodes a pre-JSON.stringify'd string
+  // passed to a ::jsonb param (fixed at every write call site 2026-07-27; see
+  // db.js's jsonb-param convention note near the top of this file), but rows
+  // written before that fix still hold double-encoded JSON text
+  // (jsonb_typeof(metadata) = 'string', not 'object'), so Postgres's native
+  // ->> operator can't extract from them server-side. This backfill reads
+  // with a JS-side JSON.parse() fallback to cope with both old and new rows.
   try {
     const untagged = await sql.unsafe(`SELECT id, metadata FROM journey_rod_evidence WHERE magnetic_properties = '[]'::jsonb`);
     for (const row of untagged) {
       let meta;
       try { meta = typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata; } catch { continue; }
       if (!meta?.entryType) continue;
-      await sql.unsafe(`UPDATE journey_rod_evidence SET magnetic_properties = $1::jsonb WHERE id = $2`, [JSON.stringify([meta.entryType]), row.id]);
+      await sql.unsafe(`UPDATE journey_rod_evidence SET magnetic_properties = $1::jsonb WHERE id = $2`, [[meta.entryType], row.id]);
     }
   } catch (e) {
     console.warn('[db] journey_rod_evidence magnetic_properties backfill warning:', e.message);
+  }
+
+  // ── Peer-link Tributaries + Channel Current definitions (2026-07-28) ──
+  // Two additions, per the salt-basin-channel-journey-architecture skill's
+  // reuse-first law:
+  //   1. journey_rod_tributary_links — a genuinely new relationship shape
+  //      (relationshipKind:'peer' Tributaries connect two INDEPENDENTLY
+  //      existing rods that share Atoms/Molecules — never parent_rod_id,
+  //      which encodes containment/ownership and is reserved for
+  //      relationshipKind:'hierarchical' Tributaries). Many-to-many by
+  //      design since a rod may end up peer-linked more than once.
+  //   2. journey_current_definitions — every Channel (rod_type) can have a
+  //      business-defined Current: which journey_scenarios stage sequence
+  //      it uses, minimum atom/molecule maturity, and (for now, declarative-
+  //      only — no executor yet) transition and Tributary-trigger rules.
+  //      Replaces server/lib/currentRegistry.js's static object with a real,
+  //      admin-editable table — same org_id-NULL-is-default/org_id-set-is-
+  //      override seam as journey_atom_affinity_rules/data_ports.
+  try {
+    await sql.unsafe(`
+      CREATE TABLE IF NOT EXISTS journey_rod_tributary_links (
+        id BIGSERIAL PRIMARY KEY,
+        tributary_type TEXT NOT NULL,
+        rod_a_id BIGINT NOT NULL REFERENCES journey_data_rods(id) ON DELETE CASCADE,
+        rod_b_id BIGINT NOT NULL REFERENCES journey_data_rods(id) ON DELETE CASCADE,
+        metadata JSONB NOT NULL DEFAULT '{}',
+        created_at BIGINT NOT NULL
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_rod_tributary_links_pair ON journey_rod_tributary_links (tributary_type, rod_a_id, rod_b_id);
+      CREATE INDEX IF NOT EXISTS idx_rod_tributary_links_a ON journey_rod_tributary_links (rod_a_id);
+      CREATE INDEX IF NOT EXISTS idx_rod_tributary_links_b ON journey_rod_tributary_links (rod_b_id);
+    `);
+  } catch (e) {
+    console.warn('[db] journey_rod_tributary_links schema warning:', e.message);
+  }
+
+  try {
+    await sql.unsafe(`
+      CREATE TABLE IF NOT EXISTS journey_current_definitions (
+        id BIGSERIAL PRIMARY KEY,
+        current_key TEXT NOT NULL,
+        org_id BIGINT REFERENCES organization_profiles(id) ON DELETE CASCADE,
+        label TEXT NOT NULL,
+        rod_type TEXT NOT NULL REFERENCES journey_rod_types(id),
+        scope_type TEXT NOT NULL DEFAULT 'channel_current',
+        primary_scenario_key TEXT,
+        port_stages JSONB NOT NULL DEFAULT '[]',
+        entry_criteria JSONB NOT NULL DEFAULT '{}',
+        minimum_carry JSONB NOT NULL DEFAULT '[]',
+        transition_rules JSONB NOT NULL DEFAULT '[]',
+        tributary_trigger_rules JSONB NOT NULL DEFAULT '[]',
+        is_active BOOLEAN NOT NULL DEFAULT true,
+        created_at BIGINT NOT NULL,
+        updated_at BIGINT NOT NULL
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_current_def_key_global ON journey_current_definitions (current_key) WHERE org_id IS NULL;
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_current_def_key_org ON journey_current_definitions (current_key, org_id) WHERE org_id IS NOT NULL;
+    `);
+  } catch (e) {
+    console.warn('[db] journey_current_definitions schema warning:', e.message);
+  }
+
+  try {
+    await sql.unsafe(`ALTER TABLE journey_rod_threshold_profiles ADD COLUMN IF NOT EXISTS current_key TEXT`);
+    await sql.unsafe(`ALTER TABLE journey_scenarios ADD COLUMN IF NOT EXISTS current_key TEXT`);
+  } catch (e) {
+    console.warn('[db] current_key schema warning:', e.message);
+  }
+
+  // One-shot seed: migrate the previously-hardcoded career_master_intake
+  // Current into the new table, plus the new Revenue Channel Current.
+  // scenario_key/gate_definitions for 'default_revenue' are NOT created here
+  // — this only registers that the Current, once evaluated, should look
+  // there; whether that scenario row exists yet is a separate, pre-existing
+  // question this change doesn't resolve.
+  try {
+    const now = Date.now();
+    await sql.unsafe(`
+      INSERT INTO journey_current_definitions
+        (current_key, org_id, label, rod_type, scope_type, primary_scenario_key, port_stages, entry_criteria, minimum_carry, transition_rules, tributary_trigger_rules, created_at, updated_at)
+      VALUES
+        ('career_master_intake', NULL, 'Career Master Intake Current', 'career_master', 'master_data', NULL, $1::jsonb, $2::jsonb, $3::jsonb, '[]'::jsonb, '[]'::jsonb, $4, $4)
+      ON CONFLICT (current_key) WHERE org_id IS NULL DO NOTHING
+    `, [
+      JSON.stringify(['requested', 'atoms_captured', 'molecules_bonded']),
+      JSON.stringify({ minAtoms: 1 }),
+      JSON.stringify(['career_skill_skill', 'career_job_title']),
+      now,
+    ]);
+    await sql.unsafe(`
+      INSERT INTO journey_current_definitions
+        (current_key, org_id, label, rod_type, scope_type, primary_scenario_key, port_stages, entry_criteria, minimum_carry, transition_rules, tributary_trigger_rules, created_at, updated_at)
+      VALUES
+        ('revenue_deal_lifecycle', NULL, 'Revenue Channel Current — Deal Lifecycle', 'revenue_lifecycle', 'channel_current', 'default_revenue', $1::jsonb, $2::jsonb, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, $3, $3)
+      ON CONFLICT (current_key) WHERE org_id IS NULL DO NOTHING
+    `, [
+      JSON.stringify(['qualified_context', 'qualified_opportunity', 'solution_fit', 'scope_defined', 'proposal', 'committed', 'customer']),
+      JSON.stringify({ minAtoms: 1 }),
+      now,
+    ]);
+  } catch (e) {
+    console.warn('[db] journey_current_definitions seed warning:', e.message);
   }
 }
 
