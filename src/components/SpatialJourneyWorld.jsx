@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { hasWebGL } from './SaltBasinCrystal.jsx';
 import { assembleMolecules } from '../lib/journeyEngine/bonding.js';
-import { fromLead, fromMoleculeProduction, buildRodFromPlan } from '../lib/journeyEngine/genesis.js';
+import { fromLead, fromMoleculeProduction, buildRodFromPlan, buildRodFromJourneyDefinition } from '../lib/journeyEngine/genesis.js';
 import { clamp01, rollupStageMaturity, evaluateGate, computeAtomVisual } from '../lib/journeyEngine/maturity.js';
 import { getAtomLineage, lineageValueAtOffset, bumpVersion } from '../lib/journeyEngine/lineage.js';
 import { resolvePathColor } from '../lib/journeyEngine/pathColor.js';
@@ -29,6 +29,7 @@ import { describeRelevanceComponents, generateElementBusinessMeaning } from '../
 import { MATURITY_MODEL, maturityToneFor } from '../config/metrics/maturityModel.js';
 import { bandForMaturity } from '../lib/journeyEngine/maturity.js';
 import { JOURNEY_WORLD_EXPERIENCE, resolveJourneyObjectGroup } from '../config/visual/journeyWorldExperience.js';
+import { DEAL_JOURNEY_EXPERIENCE } from '../data/dealJourneyExperience.js';
 
 // ---------------------------------------------------------------------------
 // Brand palette read straight from brand.css custom properties at mount, so
@@ -85,6 +86,7 @@ export default function SpatialJourneyWorld() {
   const [atomIndexOpen, setAtomIndexOpen] = useState(false);
   const [atomIndexRows, setAtomIndexRows] = useState([]);
   const [newLeadOpen, setNewLeadOpen] = useState(false);
+  const [activeDeal, setActiveDeal] = useState(null);
   const [customerOrbitOpen, setCustomerOrbitOpen] = useState(false);
   const [entityOptions, setEntityOptions] = useState([]);
   const [hashProgress, setHashProgress] = useState({ active: false, pct: 0 });
@@ -887,6 +889,13 @@ export default function SpatialJourneyWorld() {
       return { plan, rods: newRods };
     }
 
+    function spawnConfiguredJourney(definition, entityLabel) {
+      const result = buildRodFromJourneyDefinition(definition, { entityLabel });
+      addRodsToWorld(result.rods, entityLabel);
+      setEntityOptions((prev) => (prev.includes(entityLabel) ? prev : prev.concat(entityLabel)));
+      return result;
+    }
+
     // ---------------------------- hash node mesh -----------------------------
     world.hashNode = buildHashNodeMesh(THREE, { color: palette.gold });
     world.hashNode.position.copy(world.hashNodePos);
@@ -1172,6 +1181,7 @@ export default function SpatialJourneyWorld() {
       runCustomerOrbit,
       releaseHash,
       spawnFromLead,
+      spawnConfiguredJourney,
       focusPoint,
       focusStage: (sKey) => { const e = world.stageMeshes[sKey]; if (e) focusPoint(e.mesh.position, 22); },
       focusAtom: (gKey) => { const group = world.atomGroups[gKey]; if (group) focusPoint(group.position, 12); },
@@ -1356,11 +1366,22 @@ export default function SpatialJourneyWorld() {
   const openAtomIndex = () => { setAtomIndexRows(apiRef.current?.listAllAtoms() || []); setAtomIndexOpen(true); };
   const openCustomerOrbitPicker = () => { setEntityOptions(apiRef.current?.listEntities() || []); setCustomerOrbitOpen(true); };
 
-  const handleNewLead = async ({ scenarioKey, entityLabel }) => {
+  const handleNewLead = async ({ scenarioKey, scenarioRodType, entityLabel }) => {
     await api.createJourneyRod({ scenarioKey, label: entityLabel });
-    apiRef.current?.spawnFromLead({ origin: 'internal' }, entityLabel);
+    const definition = DEAL_JOURNEY_EXPERIENCE.scenarioRodTypes.includes(scenarioRodType) ? DEAL_JOURNEY_EXPERIENCE : null;
+    const spawned = definition
+      ? apiRef.current?.spawnConfiguredJourney(definition, entityLabel)
+      : apiRef.current?.spawnFromLead({ origin: 'internal' }, entityLabel);
     apiRef.current?.applyLayerVisibility?.(worldLayer);
-    apiRef.current?.pulseToast(`New lead routed — ${entityLabel}`);
+    const primaryRod = spawned?.rods?.[0];
+    const entryStage = primaryRod?.stages?.[0];
+    if (primaryRod && entryStage) {
+      apiRef.current?.focusStage(`${primaryRod.id}::${entryStage.id}`);
+      setSelection({ kind: 'stage', globalKey: `${primaryRod.id}::${entryStage.id}`, stage: entryStage, rod: primaryRod });
+      if (definition) setActiveDeal({ entityLabel, rod: primaryRod, definition, selectedIndex: 0 });
+    }
+    apiRef.current?.pulseViewingLabel(`Deal Journey — ${entityLabel}`);
+    apiRef.current?.pulseToast(`Deal journey created — ${entityLabel}`);
     setNewLeadOpen(false);
   };
 
@@ -1532,6 +1553,12 @@ export default function SpatialJourneyWorld() {
           {atomIndexOpen && <AtomIndexOverlay rows={atomIndexRows} onSelect={handleSelectFromIndex} onClose={() => setAtomIndexOpen(false)} />}
           {customerOrbitOpen && <CustomerOrbitPicker entities={entityOptions} onRun={handleRunCustomerOrbit} onClose={() => setCustomerOrbitOpen(false)} />}
           {newLeadOpen && <DealConfigForm onSubmit={handleNewLead} onClose={() => setNewLeadOpen(false)} />}
+          {activeDeal && <DealJourneyPanel activeDeal={activeDeal} onClose={() => setActiveDeal(null)} onSelectStage={(index) => {
+            const stage = activeDeal.rod.stages[index];
+            apiRef.current?.focusStage(`${activeDeal.rod.id}::${stage.id}`);
+            setSelection({ kind: 'stage', globalKey: `${activeDeal.rod.id}::${stage.id}`, stage, rod: activeDeal.rod });
+            setActiveDeal((current) => ({ ...current, selectedIndex: index }));
+          }} />}
 
           {toast && <div className="sjw-toast sjw-toast-visible">{toast}</div>}
         </React.Fragment>
@@ -1879,6 +1906,28 @@ function CustomerOrbitPicker({ entities, onRun, onClose }) {
   );
 }
 
+function DealJourneyPanel({ activeDeal, onSelectStage, onClose }) {
+  const { definition, selectedIndex, entityLabel } = activeDeal;
+  const stage = definition.stages[selectedIndex];
+  return (
+    <div style={{ position: 'absolute', zIndex: 32, left: 18, right: 18, bottom: 18, maxHeight: '46vh', overflowY: 'auto', border: '1px solid var(--sb-teal-400)', borderRadius: 16, background: 'rgba(20,25,31,.96)', boxShadow: '0 -12px 42px rgba(0,0,0,.38)', padding: '1rem 1.1rem', color: 'var(--sb-cream)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start' }}>
+        <div><div className="sjw-eyebrow">Deal Journey · {entityLabel}</div><h3 style={{ margin: '0.25rem 0 0' }}>{stage.title} <span style={{ color: 'var(--sb-gold)', fontSize: '.8rem' }}>· {stage.short}</span></h3></div>
+        <button type="button" className="sjw-panel-close" style={{ position: 'static' }} onClick={onClose}>&times;</button>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${definition.stages.length}, minmax(92px, 1fr))`, gap: 8, overflowX: 'auto', padding: '0.9rem 0' }}>
+        {definition.stages.map((item, index) => <button key={item.key} type="button" onClick={() => onSelectStage(index)} style={{ border: index === selectedIndex ? '1px solid var(--sb-gold)' : '1px solid rgba(218,211,206,.22)', borderRadius: 10, background: index === selectedIndex ? 'rgba(196,132,58,.18)' : 'rgba(255,255,255,.035)', color: 'var(--sb-cream)', padding: '.6rem', textAlign: 'left', cursor: 'pointer' }}><span style={{ display: 'block', color: item.source === 'live' ? 'var(--sb-teal-300)' : 'var(--sb-dusty)', fontSize: '.62rem', letterSpacing: '.08em' }}>{String(item.id).padStart(2, '0')} · {item.source === 'live' ? 'SOURCED' : 'TEMPLATE'}</span><strong style={{ fontSize: '.76rem' }}>{item.title}</strong></button>)}
+      </div>
+      <p style={{ color: 'var(--sb-dusty)', fontSize: '.78rem', margin: '0 0 .8rem', maxWidth: 980 }}>{stage.description}</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(220px, .8fr) minmax(320px, 1.2fr)', gap: 18 }}>
+        <div><div className="sjw-eyebrow">Metrics</div>{stage.metrics.length ? stage.metrics.map((metric) => <div key={metric.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '.35rem 0', borderBottom: '1px dashed rgba(218,211,206,.14)' }}><span style={{ color: 'var(--sb-dusty)', fontSize: '.74rem' }}>{metric.label}</span><strong style={{ color: metric.flag === 'red' ? 'var(--sb-rose)' : 'var(--sb-cream)', fontSize: '.76rem' }}>{metric.value}</strong></div>) : <span style={{ color: 'var(--sb-dusty)', fontSize: '.74rem' }}>Populates as stage data is entered.</span>}</div>
+        <div><div className="sjw-eyebrow">Journey fields</div>{stage.fields.map((field) => <div key={field.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 16, padding: '.35rem 0', borderBottom: '1px dashed rgba(218,211,206,.14)' }}><span style={{ color: 'var(--sb-dusty)', fontSize: '.74rem' }}>{field.label}</span><strong style={{ color: field.placeholder ? 'var(--sb-dusty)' : 'var(--sb-cream)', fontStyle: field.placeholder ? 'italic' : 'normal', fontSize: '.76rem', textAlign: 'right' }}>{field.value}</strong></div>)}</div>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '.85rem' }}><button type="button" className="sjw-btn" disabled={selectedIndex === 0} onClick={() => onSelectStage(selectedIndex - 1)}>← Prev Stage</button><button type="button" className="sjw-btn sjw-btn-primary" disabled={selectedIndex === definition.stages.length - 1} onClick={() => onSelectStage(selectedIndex + 1)}>Next Stage →</button></div>
+    </div>
+  );
+}
+
 function DealConfigForm({ onSubmit, onClose }) {
   const [entityLabel, setEntityLabel] = useState('');
   const [scenarios, setScenarios] = useState([]);
@@ -1896,11 +1945,19 @@ function DealConfigForm({ onSubmit, onClose }) {
   }, []);
 
   const submit = async () => {
-    if (!entityLabel.trim() || !scenarioKey) return;
+    if (!scenarioKey) {
+      setError('Choose a journey definition.');
+      return;
+    }
+    if (!entityLabel.trim()) {
+      setError('Enter a deal name before entering the journey.');
+      return;
+    }
     setSaving(true);
     setError('');
     try {
-      await onSubmit({ scenarioKey, entityLabel: entityLabel.trim() });
+      const scenario = scenarios.find((item) => item.scenario_key === scenarioKey);
+      await onSubmit({ scenarioKey, scenarioRodType: scenario?.rod_type, entityLabel: entityLabel.trim() });
     } catch (e) {
       setError(e.body?.error || 'Could not create the deal journey.');
       setSaving(false);
@@ -1923,7 +1980,7 @@ function DealConfigForm({ onSubmit, onClose }) {
         </label>
       </div>
       {error && <p className="sjw-form-error">{error}</p>}
-      <button type="button" className="sjw-btn sjw-btn-primary" disabled={saving || !scenarioKey || !entityLabel.trim()} onClick={submit}>{saving ? 'Creating…' : 'Enter deal journey'}</button>
+      <button type="button" className="sjw-btn sjw-btn-primary" disabled={saving} onClick={submit}>{saving ? 'Creating…' : 'Enter deal journey'}</button>
     </div>
   );
 }

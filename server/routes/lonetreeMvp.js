@@ -13,6 +13,7 @@ import { LONETREE_PROSPECT_EXPERIENCE, validateLonetreeProspectExperience } from
 
 const router = express.Router();
 const prospectPackagePath = fileURLToPath(new URL('../assets/lonetree-proposal/Salt_Basin_LoneTree_Prospect_Experience_v5.zip', import.meta.url));
+const completeProposalPackagePath = fileURLToPath(new URL('../assets/lonetree-proposal/Salt_Basin_x_LoneTree_Complete_Proposal_and_Notes.zip', import.meta.url));
 const prospectHtmlPath = fileURLToPath(new URL('../assets/lonetree-proposal/OPEN_SALT_BASIN_EXPERIENCE.html', import.meta.url));
 
 async function requireAdmin(req, res) {
@@ -61,6 +62,11 @@ async function getEvidenceRows(rodId, moleculeKey) {
 router.get('/prospect-package', async (req, res) => {
   const user = await requireAdmin(req, res); if (!user) return;
   res.download(prospectPackagePath, 'Salt_Basin_LoneTree_Prospect_Experience_v5.zip');
+});
+
+router.get('/complete-proposal-package', async (req, res) => {
+  const user = await requireAdmin(req, res); if (!user) return;
+  res.download(completeProposalPackagePath, 'Salt_Basin_x_LoneTree_Complete_Proposal_and_Notes.zip');
 });
 
 router.get('/prospect-html', async (req, res) => {

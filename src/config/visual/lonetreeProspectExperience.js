@@ -1,8 +1,10 @@
+import { LONETREE_PROPOSAL_NARRATIVE } from './lonetreeProposalNarrative.js';
+
 // Prospect-demo presentation configuration. Defaults reproduce the supplied
 // LoneTree v5 original-design package; the Config Envelope lets an authorized
 // editor change copy, navigation, fonts, and color tokens without a code edit.
 export const LONETREE_PROSPECT_EXPERIENCE = {
-  schemaVersion: 1,
+  schemaVersion: 3,
   narrative: {
     eyebrow: 'Salt Basin Advisory Partner Proposal & Demo',
     landingTitle: 'Welcome to the LoneTree Operational Intelligence Demo',
@@ -16,6 +18,7 @@ export const LONETREE_PROSPECT_EXPERIENCE = {
     navigationTitle: 'LoneTree Prospect Experience',
     navigationBody: 'Choose Proposal Narrative, Demo, or Spatial Journey.',
     navigationBackLabel: 'Back to portfolio selection',
+    proposalHomeBackLabel: 'Back to Proposal Home',
     downloadLabel: 'Download Complete Prospect Experience',
   },
   navigation: {
@@ -27,10 +30,8 @@ export const LONETREE_PROSPECT_EXPERIENCE = {
       { destination: 'spatial', label: 'Spatial Journey', angle: 150 },
     ],
   },
-  proposalNarrative: {
-    sourceUrl: '/api/lonetree-mvp/prospect-html',
-    playback: { intervalMs: 6500, startAutomatically: false },
-    visual: { iframeHeight: 760, showSourceNavigation: true },
+  proposalNarrative: LONETREE_PROPOSAL_NARRATIVE,
+  legacyProposalNarrative: {
     sections: [
       { id: 'executive-brief', label: 'Executive Brief', targetId: 'd-exec', eyebrow: 'Executive Brief', title: 'Validate the evidence model with LoneTree’s history—then use it across the next fund journey.', narrative: 'Phase 1 validation: can LoneTree reconstruct, reconcile and defend the fund thesis and selected PortCo value-creation claims using the evidence already produced through underwriting, quarterly reporting and operating history? Long-term hypothesis: can the same governed evidence improve portfolio decisions, LP diligence, lead-to-cash performance and exit readiness over time?' },
       { id: 'methodology', label: 'Methodology', targetId: 'd-method', eyebrow: 'Authoritative Methodology', title: 'Belief becomes defensible proof.', narrative: 'Preserve what LoneTree believed, connect it to what actually happened, test competing explanations and produce a claim that an investment committee, LP, lender or buyer can independently follow.' },
@@ -68,7 +69,7 @@ const HEX = /^#[0-9a-fA-F]{6}$/;
 export function validateLonetreeProspectExperience(value) {
   if (!value || typeof value !== 'object') return ['value must be an object'];
   const errors = [];
-  for (const key of ['eyebrow', 'landingTitle', 'landingBody', 'landingBlurbLead', 'landingBlurb', 'companyLabel', 'companyAction', 'landingInstruction', 'navigationEyebrow', 'navigationTitle', 'navigationBody', 'navigationBackLabel', 'downloadLabel']) {
+  for (const key of ['eyebrow', 'landingTitle', 'landingBody', 'landingBlurbLead', 'landingBlurb', 'companyLabel', 'companyAction', 'landingInstruction', 'navigationEyebrow', 'navigationTitle', 'navigationBody', 'navigationBackLabel', 'proposalHomeBackLabel', 'downloadLabel']) {
     if (typeof value.narrative?.[key] !== 'string' || !value.narrative[key].trim()) errors.push(`narrative.${key}: must be a non-empty string`);
   }
   const nodes = value.navigation?.nodes;
@@ -86,13 +87,15 @@ export function validateLonetreeProspectExperience(value) {
     });
     if (!destinations.has(value.navigation?.initialDestination)) errors.push('navigation.initialDestination: must reference a configured node destination');
   }
-  if (typeof value.proposalNarrative?.sourceUrl !== 'string' || !value.proposalNarrative.sourceUrl.trim()) errors.push('proposalNarrative.sourceUrl: must be a non-empty string');
   if (!Number.isFinite(value.proposalNarrative?.playback?.intervalMs) || value.proposalNarrative.playback.intervalMs < 1000) errors.push('proposalNarrative.playback.intervalMs: must be at least 1000');
-  if (!Number.isFinite(value.proposalNarrative?.visual?.iframeHeight) || value.proposalNarrative.visual.iframeHeight < 400) errors.push('proposalNarrative.visual.iframeHeight: must be at least 400');
+  if (typeof value.proposalNarrative?.visual?.highlightGlow !== 'string' || !value.proposalNarrative.visual.highlightGlow.trim()) errors.push('proposalNarrative.visual.highlightGlow: must be a non-empty string');
+  if (!Number.isFinite(value.proposalNarrative?.visual?.revealIntervalMs) || value.proposalNarrative.visual.revealIntervalMs < 100) errors.push('proposalNarrative.visual.revealIntervalMs: must be at least 100');
+  for (const key of ['headerLabel', 'breadcrumbLabel']) if (typeof value.proposalNarrative?.[key] !== 'string' || !value.proposalNarrative[key].trim()) errors.push(`proposalNarrative.${key}: must be a non-empty string`);
+  for (const downloadKey of ['completeDownload', 'archiveDownload']) for (const key of ['label', 'url']) if (typeof value.proposalNarrative?.[downloadKey]?.[key] !== 'string' || !value.proposalNarrative[downloadKey][key].trim()) errors.push(`proposalNarrative.${downloadKey}.${key}: must be a non-empty string`);
   const narrativeSections = value.proposalNarrative?.sections;
   if (!Array.isArray(narrativeSections) || !narrativeSections.length) errors.push('proposalNarrative.sections: must be a non-empty array');
   else narrativeSections.forEach((section, index) => {
-    for (const key of ['id', 'label', 'targetId', 'eyebrow', 'title', 'narrative']) if (typeof section?.[key] !== 'string' || !section[key].trim()) errors.push(`proposalNarrative.sections[${index}].${key}: must be a non-empty string`);
+    for (const key of ['id', 'label', 'eyebrow', 'title', 'narrative']) if (typeof section?.[key] !== 'string' || !section[key].trim()) errors.push(`proposalNarrative.sections[${index}].${key}: must be a non-empty string`);
   });
   for (const key of ['fontDisplay', 'fontBody', 'fontLabel']) {
     if (typeof value.theme?.[key] !== 'string' || !value.theme[key].trim()) errors.push(`theme.${key}: must be a non-empty string`);

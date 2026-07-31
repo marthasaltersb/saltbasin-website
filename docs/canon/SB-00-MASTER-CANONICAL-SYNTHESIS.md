@@ -206,7 +206,7 @@ Salt Basin Highways™ — platform/methodology trademark underlying MES Solutio
 - Salt Basin Net Works: "Bottom Lines with a Rising Tide."
 
 ### Copyright / Trademark Footer (Standard — all decks and client-facing documents)
-- Every slide/page: © 2026 Salt Basin Holdings. All rights reserved. (preceded by small 4-point star logo icon)
+- Every slide/page: © 2026 Martha Elizabeth Salter - The Salter Influence LLC All Rights Reserved. (preceded by small 4-point star logo icon)
 - Title/closing slides additionally: SaltTide™, Salt Basin Highways™, Highway Vision™, and Monetary River System™ are trademarks claimed by Salt Basin Holdings.
 - Deck layout: ST★ monogram top-right on every slide; star icon precedes footer copyright.
 

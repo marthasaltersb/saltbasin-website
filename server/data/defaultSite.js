@@ -723,7 +723,7 @@ export const defaultConfig = {
     name: 'Salt Basin Net Works',
     tagline: 'Bottom Lines with a Rising Tide',
     domain: 'saltbasin.net',
-    copyrightLine: '© 2026 Martha Elizabeth Salter aka Betsy Salter · Salt Basin Net Works',
+    copyrightLine: '© 2026 Martha Elizabeth Salter - The Salter Influence LLC All Rights Reserved.',
   },
   // Brand palette — same shape as member configs. Admin can edit these in
   // the Config panel; overrides apply to saltbasin.net public pages.

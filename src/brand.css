@@ -4372,3 +4372,22 @@ option {
 @media (prefers-reduced-motion: reduce) {
   .career-analysis-ring, .career-analysis-core { animation: none; }
 }
+
+/* The Fund Demo uses the shared public-site orbit classes, whose mobile
+   defaults intentionally reserve a tall storytelling stage. In the member
+   console that produces excessive whitespace and undersizes the focal
+   crystal, so keep this override scoped to the demo. */
+@media (max-width: 720px) {
+  .sb-lt-experience .sbh-hero-grid { gap: .65rem !important; }
+  .sb-lt-experience .sbh-orbit-stage {
+    min-height: 390px;
+    padding-top: .5rem;
+    align-content: center;
+  }
+  .sb-lt-experience .sbh-orbit-stage > .sbh-webgl-crystal-hero {
+    width: min(82vw, 340px);
+    height: min(82vw, 340px);
+    margin: 0;
+  }
+  .sb-lt-experience .sbh-orbit-line { width: min(88vw, 360px); height: min(88vw, 360px); }
+}

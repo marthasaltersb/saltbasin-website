@@ -669,6 +669,8 @@ export function renderMemberFooterHtml(config) {
   const layer1 = config?.layer1_header || {};
   const lines = Array.isArray(layer1.memberFooterLines) ? layer1.memberFooterLines.filter(Boolean) : [];
   const links = Array.isArray(layer1.memberFooterLinks) ? layer1.memberFooterLinks.filter((l) => l?.label) : [];
+  if (layer1.contactEmail) links.unshift({ label: layer1.contactEmail, url: `mailto:${layer1.contactEmail}` });
+  if (layer1.websiteUrl) links.push({ label: layer1.websiteUrl.replace(/^https?:\/\//, ''), url: /^https?:\/\//.test(layer1.websiteUrl) ? layer1.websiteUrl : `https://${layer1.websiteUrl}` });
   if (!lines.length && !links.length) return '';
   const linesHtml = lines.map((l) => `<div>${l}</div>`).join('');
   const linksHtml = links.length

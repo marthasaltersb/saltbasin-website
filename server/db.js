@@ -412,14 +412,15 @@ async function bootstrap() {
       updated_at BIGINT NOT NULL
     );
     CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_lead_type ON journey_data_rods (lead_id, rod_type) WHERE lead_id IS NOT NULL AND user_id IS NULL AND org_id IS NULL;
-    -- A member can hold multiple member_entitlement rods (one per module) —
-    -- refined below to exclude that rod_type from the one-per-(user,type)
-    -- rule, then given its own (user, module_key) uniqueness instead.
+    -- A member can hold multiple member_entitlement rods (one per module) and
+    -- multiple explicitly configured deal journeys (identified by the
+    -- scenarioKey stored in metadata). Ordinary member/customer/revenue rods
+    -- remain singleton records per user and type.
     -- DROP+CREATE changes only the constraint's WHERE clause, not any row
     -- data, and existing rod_types (member/customer/revenue_lifecycle etc.)
     -- keep exactly the enforcement they always had.
     DROP INDEX IF EXISTS idx_rods_user_type;
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_user_type ON journey_data_rods (user_id, rod_type) WHERE user_id IS NOT NULL AND org_id IS NULL AND rod_type <> 'member_entitlement';
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_user_type ON journey_data_rods (user_id, rod_type) WHERE user_id IS NOT NULL AND org_id IS NULL AND rod_type <> 'member_entitlement' AND NOT (metadata ? 'scenarioKey');
     CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_user_entitlement_module ON journey_data_rods (user_id, module_key) WHERE user_id IS NOT NULL AND org_id IS NULL AND rod_type = 'member_entitlement';
     CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_user_org_type ON journey_data_rods (user_id, org_id, rod_type) WHERE user_id IS NOT NULL AND org_id IS NOT NULL;
     CREATE INDEX IF NOT EXISTS idx_rods_org ON journey_data_rods (org_id, rod_type);

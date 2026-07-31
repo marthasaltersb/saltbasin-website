@@ -38,6 +38,26 @@ function getHomeAboutFields(page) {
   };
 }
 
+// Member sites use a conventional hero rather than the platform owner's
+// aboutIntro/execDashboard pair. Source identity only from the member draft.
+function getMemberAboutFields(page, user) {
+  const hero = page?.sections?.find((s) => s.type === 'hero')?.fields || {};
+  return {
+    heading: hero.heading || user?.displayName || '',
+    name: hero.heading || user?.displayName || '',
+    title: hero.subtitle || '',
+    photoUrl: hero.photoUrl || '',
+    p1: hero.concept || '',
+    p2: '',
+    p3: '',
+    howIWork: '',
+  };
+}
+
+function escapeOutputText(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+}
+
 // ── Auth state hook ──
 function useAuthState() {
   const [state, setState] = useState({ loading: true, user: null });
@@ -57,7 +77,7 @@ function useAuthState() {
 // Changing them requires editing this source file directly.
 const AUTHORSHIP = Object.freeze({
   authorLine: 'Authored by Betsy Salter · Co-Authored with Claude (Anthropic AI)',
-  copyright: () => `© ${new Date().getFullYear()} Salt Basin Holdings. All Rights Reserved. This output was generated from saltbasin.net and leverages AI LLM API to render the output formatting.`,
+  copyright: () => `© ${new Date().getFullYear()} Martha Elizabeth Salter - The Salter Influence LLC All Rights Reserved. This output was generated from saltbasin.net and leverages AI LLM API to render the output formatting.`,
   contact: 'saltbasin.net · betsysalter@saltbasin.net',
   chips: Object.freeze([
     '© Betsy Salter — Author',
@@ -740,9 +760,9 @@ function PrioritizedExperienceSection({ items, summary }) {
   );
 }
 
-function ResumeLayoutModern({ about, timeline, jobs, handsOn, integrationDesign, adjacent, execKpis, capabilityMeters, industryDurations = [], toolBars = [], clientQuotes = [], prioritizedExperience = [], agentSummary = '' }) {
-  const name = about.name || about.heading || 'Betsy Salter';
-  const tagline = about.tagline || 'Strategic Operator · Revenue Systems · Private Equity';
+function ResumeLayoutModern({ about, timeline, jobs, handsOn, integrationDesign, adjacent, execKpis, capabilityMeters, industryDurations = [], toolBars = [], clientQuotes = [], prioritizedExperience = [], agentSummary = '', memberOwned = false }) {
+  const name = about.name || about.heading || (memberOwned ? 'Your Name' : 'Betsy Salter');
+  const tagline = about.title || about.tagline || (memberOwned ? 'Add your professional title' : 'Strategic Operator · Revenue Systems · Private Equity');
   const photoUrl = about.photoUrl || about.photo || null;
 
   return (
@@ -759,7 +779,7 @@ function ResumeLayoutModern({ about, timeline, jobs, handsOn, integrationDesign,
         </div>
         <div style={{ textAlign: 'right', fontSize: '0.78rem', color: '#666', lineHeight: 1.9, flexShrink: 0 }}>
           <div style={{ fontWeight: 600, color: '#1b2a3b' }}>saltbasin.net</div>
-          <div>betsysalter@saltbasin.net</div>
+          {!memberOwned && <div>betsysalter@saltbasin.net</div>}
           {about.location && <div>{about.location}</div>}
         </div>
       </header>
@@ -785,7 +805,7 @@ function ResumeLayoutModern({ about, timeline, jobs, handsOn, integrationDesign,
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '1.5rem' }}>
         <div>
           <SectionHeadingMod>Core Domains</SectionHeadingMod>
-          {DOMAIN_CATEGORIES.map(cat => (
+          {!memberOwned && DOMAIN_CATEGORIES.map(cat => (
             <div key={cat.title} style={{ marginBottom: '0.8rem' }}>
               <div style={{ fontSize: '0.62rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: '#c4843a', fontFamily: 'sans-serif', marginBottom: '0.2rem' }}>{cat.icon} {cat.title}</div>
               {cat.items.map((item, i) => (
@@ -804,7 +824,7 @@ function ResumeLayoutModern({ about, timeline, jobs, handsOn, integrationDesign,
               <div style={{ fontSize: '0.78rem', color: '#3a3a3a', lineHeight: 1.6 }}>{items.join(' · ')}</div>
             </div>
           ))}
-          {NICHE_SOLUTIONS.map(ns => (
+          {!memberOwned && NICHE_SOLUTIONS.map(ns => (
             <div key={ns.label} style={{ marginBottom: '0.75rem' }}>
               <div style={{ fontSize: '0.62rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#02a1a6', fontFamily: 'sans-serif', marginBottom: '0.2rem' }}>{ns.icon} {ns.label}</div>
               {ns.items.map((item, i) => (
@@ -818,7 +838,7 @@ function ResumeLayoutModern({ about, timeline, jobs, handsOn, integrationDesign,
       </div>
 
       {/* ── Industry Experience — 3-col cards ── */}
-      <section style={{ marginBottom: '1.5rem' }}>
+      {!memberOwned && <section style={{ marginBottom: '1.5rem' }}>
         <SectionHeadingMod>Industry Experience</SectionHeadingMod>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem' }}>
           {INDUSTRIES.map(ind => (
@@ -828,7 +848,7 @@ function ResumeLayoutModern({ about, timeline, jobs, handsOn, integrationDesign,
             </div>
           ))}
         </div>
-      </section>
+      </section>}
 
       {/* ── Philosophy / Work Style — 3-col ── */}
       {(about.philosophy || about.interpersonalStyle || about.workEthic) && (
@@ -877,9 +897,9 @@ function ResumeLayoutModern({ about, timeline, jobs, handsOn, integrationDesign,
 
 // ── Layout: Corporate SB ──────────────────────────────────────────────────────
 // Bold structured layout — clean columns, strong navy headers, gold rule lines.
-function ResumeLayoutCorporate({ about, timeline, jobs, handsOn, integrationDesign, adjacent, execKpis, capabilityMeters, industryDurations = [], toolBars = [], clientQuotes = [], prioritizedExperience = [], agentSummary = '' }) {
-  const name = about.name || about.heading || 'Betsy Salter';
-  const tagline = about.tagline || 'Strategic Operator · Revenue Systems · Private Equity';
+function ResumeLayoutCorporate({ about, timeline, jobs, handsOn, integrationDesign, adjacent, execKpis, capabilityMeters, industryDurations = [], toolBars = [], clientQuotes = [], prioritizedExperience = [], agentSummary = '', memberOwned = false }) {
+  const name = about.name || about.heading || (memberOwned ? 'Your Name' : 'Betsy Salter');
+  const tagline = about.title || about.tagline || (memberOwned ? 'Add your professional title' : 'Strategic Operator · Revenue Systems · Private Equity');
   const photoUrl = about.photoUrl || about.photo || null;
 
   return (
@@ -896,7 +916,7 @@ function ResumeLayoutCorporate({ about, timeline, jobs, handsOn, integrationDesi
         </div>
         <div style={{ textAlign: 'right', fontSize: '0.75rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.9, flexShrink: 0 }}>
           <div style={{ color: '#c4843a', fontFamily: 'sans-serif', fontSize: '0.7rem' }}>saltbasin.net</div>
-          <div>betsysalter@saltbasin.net</div>
+          {!memberOwned && <div>betsysalter@saltbasin.net</div>}
           {about.location && <div>{about.location}</div>}
         </div>
       </header>
@@ -937,7 +957,7 @@ function ResumeLayoutCorporate({ about, timeline, jobs, handsOn, integrationDesi
           </section>
 
           {/* Industry Experience */}
-          <section>
+          {!memberOwned && <section>
             <CorpHead>Industry Experience</CorpHead>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
               {INDUSTRIES.map(ind => (
@@ -947,13 +967,13 @@ function ResumeLayoutCorporate({ about, timeline, jobs, handsOn, integrationDesi
                 </div>
               ))}
             </div>
-          </section>
+          </section>}
         </div>
 
         {/* Sidebar */}
         <div>
           {/* Core Domains */}
-          <section style={{ marginBottom: '1.25rem', padding: '0.9rem', background: '#1b2a3b', color: 'white', borderRadius: 2 }}>
+          {!memberOwned && <section style={{ marginBottom: '1.25rem', padding: '0.9rem', background: '#1b2a3b', color: 'white', borderRadius: 2 }}>
             <div style={{ fontSize: '0.6rem', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#c4843a', fontFamily: 'sans-serif', marginBottom: '0.6rem' }}>Core Domains</div>
             {DOMAIN_CATEGORIES.map(cat => (
               <div key={cat.title} style={{ marginBottom: '0.6rem' }}>
@@ -963,10 +983,10 @@ function ResumeLayoutCorporate({ about, timeline, jobs, handsOn, integrationDesi
                 ))}
               </div>
             ))}
-          </section>
+          </section>}
 
           {/* Technology */}
-          <section style={{ marginBottom: '1.25rem' }}>
+          {!memberOwned && <section style={{ marginBottom: '1.25rem' }}>
             <CorpHead>Technology</CorpHead>
             {[['Hands-On', handsOn], ['Integration', integrationDesign], ['Adjacent', adjacent]].map(([label, items]) => items.length > 0 && (
               <div key={label} style={{ marginBottom: '0.6rem' }}>
@@ -974,7 +994,7 @@ function ResumeLayoutCorporate({ about, timeline, jobs, handsOn, integrationDesi
                 <div style={{ fontSize: '0.74rem', color: '#3a3a3a', lineHeight: 1.6 }}>{items.join(', ')}</div>
               </div>
             ))}
-          </section>
+          </section>}
 
           {/* Niche Solutions */}
           <section style={{ marginBottom: '1.25rem' }}>
@@ -1217,7 +1237,9 @@ function useOutputTemplateConfig(outputType) {
     Promise.all([
       templateFetch,
       fetch(`/api/career/rollups${ownerParam}`).then((r) => r.json()).catch(() => null),
-      api.getPublishedSite().then((site) => site.pages).catch(() => null),
+      owner === 'me'
+        ? api.getMemberDraftSite().then((site) => site.pages).catch(() => null)
+        : api.getPublishedSite().then((site) => site.pages).catch(() => null),
     ]).then(([tplRes, rollupCatalog, sitePages]) => {
       if (cancelled) return;
       let config = null;
@@ -1238,7 +1260,9 @@ function useOutputTemplateConfig(outputType) {
     const ownerParam = owner ? `?owner=${encodeURIComponent(owner)}` : '';
     Promise.all([
       fetch(`/api/career/rollups${ownerParam}`).then((r) => r.json()).catch(() => null),
-      api.getPublishedSite().then((site) => site.pages).catch(() => null),
+      owner === 'me'
+        ? api.getMemberDraftSite().then((site) => site.pages).catch(() => null)
+        : api.getPublishedSite().then((site) => site.pages).catch(() => null),
     ]).then(([rollupCatalog, sitePages]) => {
       setState((s) => ({ ...s, rollupCatalog, sitePages }));
     });
@@ -1266,7 +1290,7 @@ function buildJobExperienceHtml(job) {
 
 function hasOutputLayerContent(config) {
   if (!config) return false;
-  const l1 = !!config.layer1_header?.memberTagline;
+  const l1 = ['memberName', 'headerText', 'memberTagline', 'contactEmail', 'websiteUrl'].some((key) => !!config.layer1_header?.[key]);
   const l2 = (config.layer2_stats?.cards || []).some((c) => c.visible !== false);
   const l3 = (config.layer3_infographics?.items || []).some((i) => i.visible !== false);
   const l4 = (config.layer4_sections?.sections || []).some((s) => s.visible !== false);
@@ -1279,6 +1303,11 @@ function OutputTemplateBody({ config, ctx, sitePages, master }) {
   let order = 0;
 
   const tagline = config.layer1_header?.memberTagline;
+  const identity = config.layer1_header || {};
+  if (identity.memberName || identity.headerText || identity.contactEmail || identity.websiteUrl) {
+    const contact = [identity.contactEmail, identity.websiteUrl].filter(Boolean).map(escapeOutputText).join(' · ');
+    items.push({ order: order++, key: 'l1-identity', kind: 'html', html: `<header style="margin-bottom:1rem;padding-bottom:.8rem;border-bottom:2px solid #c4843a"><div style="font-size:1.65rem;font-weight:700;color:#1b2a3b">${escapeOutputText(identity.memberName)}</div>${identity.headerText ? `<div style="font-size:.9rem;color:#4a7c8e;margin-top:.2rem">${escapeOutputText(identity.headerText)}</div>` : ''}${contact ? `<div style="font-size:.72rem;color:#687786;margin-top:.35rem">${contact}</div>` : ''}</header>` });
+  }
   if (tagline) {
     items.push({ order: order++, key: 'l1-tagline', kind: 'html', html: `<div style="font-size:0.85rem;color:#8b9bae;font-style:italic;margin-bottom:0.75rem">${tagline}</div>` });
   }
@@ -1364,7 +1393,9 @@ export function ResumeOutput() {
   const showClientVoice = searchParams.get('clientVoice') !== '0';
 
   useEffect(() => {
-    api.getPublishedSite()
+    if (ownerSlug === 'me' && authLoading) return undefined;
+    const siteRequest = ownerSlug === 'me' && user ? api.getMemberDraftSite() : api.getPublishedSite();
+    siteRequest
       .then((site) => {
         const home = site.pages['home'];
         if (!home) { setSiteError('Home page not found — check that the site is published.'); return; }
@@ -1374,7 +1405,7 @@ export function ResumeOutput() {
       .catch((e) => setSiteError(e.message || 'Failed to load'));
     fetchCareerMaster(ownerSlug).then(setMaster);
 
-    fetch('/api/output-templates/primary?output_type=resume')
+    fetch('/api/output-templates/primary?output_type=resume', { credentials: 'include' })
       .then(r => r.json())
       .then(d => {
         if (d.template?.config) {
@@ -1385,7 +1416,7 @@ export function ResumeOutput() {
         }
       })
       .catch(() => setPrimaryTemplate(null));
-  }, []);
+  }, [ownerSlug, authLoading, user?.id]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -1400,7 +1431,7 @@ export function ResumeOutput() {
           selected = presets.find((p) => p.id === requestedPresetId) || presets.find((p) => p.primaryResume) || presets[0] || null;
         } catch { /* fall through to site owner's primary */ }
       }
-      if (!selected) {
+      if (!selected && ownerSlug !== 'me') {
         // Viewer has no presets of their own (or isn't the owner): this is
         // the site owner's resume, so render the owner's primary preset.
         try {
@@ -1449,7 +1480,8 @@ export function ResumeOutput() {
     );
   }
 
-  const about = getHomeAboutFields(page);
+  const isMemberOwnedPreview = ownerSlug === 'me';
+  const about = isMemberOwnedPreview ? getMemberAboutFields(page, user) : getHomeAboutFields(page);
   const timeline = page.sections.find((s) => s.type === 'timeline')?.fields || {};
   const jobs = buildResumeJobs(master, timeline);
 
@@ -1464,8 +1496,9 @@ export function ResumeOutput() {
     ['TP', showToolBars], ['CV', showClientVoice],
   ].filter(([, on]) => on).map(([code]) => code).join('-') || 'BASE';
   const templateName = String(resumePreset?.name || layoutParam || 'Resume').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-');
+  const resumeOwnerName = templateV2.config?.layer1_header?.memberName || about.name || about.heading || user?.displayName || 'Member';
   const printDocTitle = [
-    'Betsy-Salter-Resume',
+    `${String(resumeOwnerName).replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-')}-Resume`,
     templateName,
     resumePreset ? (resumePreset.primaryResume ? 'Primary' : 'Alt') : 'Default',
     sectionCodes,
@@ -1475,8 +1508,9 @@ export function ResumeOutput() {
   // ── 4-layer template-driven render (schemaVersion 2) ──
   if (templateV2.config && hasOutputLayerContent(templateV2.config)) {
     const ctx = { about, timeline, jobs, execKpis, capabilityMeters, resumePreset, rollupCatalog: templateV2.rollupCatalog };
+    const configuredName = templateV2.config.layer1_header?.memberName;
     return (
-      <OutputFrame title={about.heading || about.name || 'Betsy Salter'} eyebrow="Resume" printDocTitle={printDocTitle} afterFooter={<MemberFooterSlot config={templateV2.config} />}>
+      <OutputFrame title={configuredName || about.heading || about.name || user?.displayName || 'Resume'} eyebrow="Resume" printDocTitle={printDocTitle} afterFooter={<MemberFooterSlot config={templateV2.config} />} hideTitle={!!configuredName}>
         <OutputTemplateBody config={templateV2.config} ctx={ctx} sitePages={templateV2.sitePages} master={master} />
       </OutputFrame>
     );
@@ -1492,7 +1526,7 @@ export function ResumeOutput() {
     // suppress OutputFrame's generic h1 so the header isn't repeated.
     const hasOwnHeader = sorted.some((b) => b.type === 'page-header');
     return (
-      <OutputFrame title={about.heading || about.name || 'Betsy Salter'} eyebrow="Resume" hideTitle={hasOwnHeader} printDocTitle={printDocTitle}>
+      <OutputFrame title={about.heading || about.name || 'Resume'} eyebrow="Resume" hideTitle={hasOwnHeader} printDocTitle={printDocTitle}>
         <div style={{ fontFamily: 'Georgia, serif' }}>
           {sorted.map(block => {
             // experience-block with _dynamic = 'jobs' expands into one block per job
@@ -1527,13 +1561,14 @@ export function ResumeOutput() {
     industryDurations: showIndustryBars ? computeIndustryDurations(master) : [],
     toolBars: showToolBars ? computeToolProficiency(master) : [],
     clientQuotes: showClientVoice ? computeClientQuotes(master, 1) : [],
+    memberOwned: isMemberOwnedPreview,
   };
 
   if (layoutParam === 'modern') {
     return (
       // ResumeLayoutModern renders its own name/tagline header — hideTitle
       // avoids showing the name twice.
-      <OutputFrame title={about.name || about.heading || 'Betsy Salter'} eyebrow="Resume · Modern" hideTitle printDocTitle={printDocTitle}>
+      <OutputFrame title={about.name || about.heading || 'Resume'} eyebrow="Resume · Modern" hideTitle printDocTitle={printDocTitle}>
         <ResumeLayoutModern {...resumeProps} />
       </OutputFrame>
     );
@@ -1542,7 +1577,7 @@ export function ResumeOutput() {
     return (
       // ResumeLayoutCorporate renders its own navy header bar — hideTitle
       // avoids showing the name twice.
-      <OutputFrame title={about.name || about.heading || 'Betsy Salter'} eyebrow="Resume · Corporate" hideTitle printDocTitle={printDocTitle}>
+      <OutputFrame title={about.name || about.heading || 'Resume'} eyebrow="Resume · Corporate" hideTitle printDocTitle={printDocTitle}>
         <ResumeLayoutCorporate {...resumeProps} />
       </OutputFrame>
     );
@@ -1550,7 +1585,7 @@ export function ResumeOutput() {
 
   // Classic fallback
   return (
-      <OutputFrame title={about.heading || 'Betsy Salter'} eyebrow="Resume" printDocTitle={printDocTitle}>
+      <OutputFrame title={about.heading || 'Resume'} eyebrow="Resume" printDocTitle={printDocTitle}>
       <>
         <PrioritizedExperienceSection items={resumeProps.prioritizedExperience} summary={resumeProps.agentSummary} />
         <section style={{ marginBottom: '1.5rem' }}>
@@ -1564,7 +1599,7 @@ export function ResumeOutput() {
             </p>
           )}
         </section>
-        <section style={{ marginBottom: '1.5rem' }}>
+        {!isMemberOwnedPreview && <section style={{ marginBottom: '1.5rem' }}>
           <OutputHeading>Industries Served</OutputHeading>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.6rem' }}>
             {INDUSTRIES.map((ind) => (
@@ -1578,17 +1613,20 @@ export function ResumeOutput() {
               </div>
             ))}
           </div>
-        </section>
-        <section style={{ marginBottom: '1.5rem' }}>
+        </section>}
+        {(!isMemberOwnedPreview || handsOn.length + integrationDesign.length + adjacent.length > 0) && <section style={{ marginBottom: '1.5rem' }}>
           <OutputHeading>Technology & Capability</OutputHeading>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.6rem' }}>
             <TechColumn label="Hands-On" items={handsOn} />
             <TechColumn label="Integration Designs" items={integrationDesign} />
             <TechColumn label="Adjacent Exposure" items={adjacent} />
           </div>
-        </section>
+        </section>}
         <section>
           <OutputHeading>Professional Experience</OutputHeading>
+          {jobs.length === 0 && isMemberOwnedPreview && (
+            <p style={paraStyle}>Add experience in Career Master, then configure this resume from Output Templates.</p>
+          )}
           {jobs.map((job, i) => (
             <div key={i} style={{ marginBottom: '1rem', pageBreakInside: 'avoid' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '0.5rem' }}>
@@ -5405,7 +5443,7 @@ export function MethodologyOutput() {
         </div>
         <div style={IP_STYLES.ipBadge}>
           <div style={{ fontWeight: 700, color: '#c9a84c', marginBottom: 2 }}>INTELLECTUAL PROPERTY</div>
-          © 2026 Martha Elizabeth Salter<br />aka Betsy Salter<br />Salt Basin Net Works<br />All rights reserved
+          © {new Date().getFullYear()} Martha Elizabeth Salter<br />The Salter Influence LLC<br />All Rights Reserved
         </div>
       </div>
 
@@ -5414,7 +5452,7 @@ export function MethodologyOutput() {
       </div>
 
       <div style={IP_STYLES.footer}>
-        <span>© 2026 <strong style={{ color: '#888' }}>Martha Elizabeth Salter aka Betsy Salter</strong> · Salt Basin Net Works · Contribution Intelligence Methodology™ · Master Enterprise Solution Best Bets™ · All rights reserved</span>
+        <span>© {new Date().getFullYear()} <strong style={{ color: '#888' }}>Martha Elizabeth Salter - The Salter Influence LLC</strong> All Rights Reserved. · Contribution Intelligence Methodology™ · Master Enterprise Solution Best Bets™</span>
         <span>saltbasin.net · {tier !== 'public' && user ? `Viewed by: ${user.email}` : 'Public overview'}</span>
       </div>
     </div>
@@ -5542,7 +5580,7 @@ export function L2RModelOutput() {
         </div>
         <div style={IP_STYLES.ipBadge}>
           <div style={{ fontWeight: 700, color: '#c9a84c', marginBottom: 2 }}>INTELLECTUAL PROPERTY</div>
-          © 2026 Martha Elizabeth Salter<br />aka Betsy Salter<br />Salt Basin Net Works<br />All rights reserved
+          © {new Date().getFullYear()} Martha Elizabeth Salter<br />The Salter Influence LLC<br />All Rights Reserved
         </div>
       </div>
 
@@ -5551,7 +5589,7 @@ export function L2RModelOutput() {
       </div>
 
       <div style={IP_STYLES.footer}>
-        <span>© 2026 <strong style={{ color: '#888' }}>Martha Elizabeth Salter aka Betsy Salter</strong> · Salt Basin Net Works · Lead to Revenue Capability Model™ · Master Enterprise Solution Best Bets™ · All rights reserved · Not for redistribution</span>
+        <span>© {new Date().getFullYear()} <strong style={{ color: '#888' }}>Martha Elizabeth Salter - The Salter Influence LLC</strong> All Rights Reserved. · Lead to Revenue Capability Model™ · Master Enterprise Solution Best Bets™ · Not for redistribution</span>
         <span>saltbasin.net · {tier !== 'public' && user ? `Viewed by: ${user.email}` : 'Public overview'}</span>
       </div>
     </div>

@@ -23,6 +23,7 @@ const fmtPct = (n) => (n === null || n === undefined ? '—' : `${(Number(n) * 1
 // replacements; nested objects inherit newly introduced defaults.
 function mergeProspectConfig(defaultValue, storedValue) {
   if (!storedValue || typeof storedValue !== 'object' || Array.isArray(storedValue)) return defaultValue;
+  if (defaultValue?.schemaVersion && storedValue?.schemaVersion && storedValue.schemaVersion < defaultValue.schemaVersion) return defaultValue;
   return Object.fromEntries(Object.entries(defaultValue).map(([key, fallback]) => {
     const stored = storedValue[key];
     if (stored === undefined) return [key, fallback];
@@ -53,6 +54,8 @@ function GlobalStyle() {
       @keyframes sb-lt-fadein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
       @keyframes sb-lt-breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.045); } }
       @keyframes sb-lt-orbit { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      @keyframes sb-lt-highlight-pop { 0% { transform: translateY(8px) scale(.98); box-shadow: 0 0 0 rgba(74,124,142,0); } 55% { transform: translateY(-5px) scale(1.025); box-shadow: 0 18px 38px var(--lt-highlight-glow); } 100% { transform: translateY(-2px) scale(1.01); box-shadow: 0 12px 30px var(--lt-highlight-glow); } }
+      @keyframes sb-lt-reveal { from { opacity: 0; transform: translateY(18px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
       @keyframes sb-lt-flow {
         0% { left: var(--from); opacity: 0; }
         12% { opacity: var(--peak, 0.9); }
@@ -78,6 +81,9 @@ function GlobalStyle() {
       .sb-lt-experience { background: var(--lt-page); color: var(--lt-text); font-family: var(--lt-font-body); }
       .sb-lt-crystal { transition: transform 0.22s ease, filter 0.22s ease; }
       .sb-lt-crystal:hover, .sb-lt-crystal:focus-visible { transform: translate(-50%, -50%) scale(1.08); filter: drop-shadow(0 8px 12px rgba(52,90,104,0.24)); }
+      .sb-lt-proposal-highlight { animation: sb-lt-highlight-pop .8s ease both; }
+      .sb-lt-proposal-reveal { animation: sb-lt-reveal .55s cubic-bezier(.2,.8,.2,1) both; }
+      .sb-lt-proposal-crystal { position: absolute !important; left: 50%; top: 50%; width: min(140px, 78%) !important; height: min(140px, 78%) !important; transform: translate(-50%, -50%); }
     `}</style>
   );
 }
@@ -243,20 +249,22 @@ function CrystalNavigation({ config, onBack, onSelect }) {
           );
         })}
       </div>
-      <a href={navigation.downloadUrl} download style={{ marginTop: '0.75rem', border: '1px solid var(--lt-gold)', borderRadius: 999, padding: '0.7rem 1.25rem', color: 'var(--lt-text)', background: 'var(--lt-surface)', fontFamily: 'var(--sb-font-label)', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', textDecoration: 'none' }}>↓ {narrative.downloadLabel}</a>
       <button onClick={onBack} style={{ border: 0, background: 'transparent', color: 'var(--lt-teal-deep)', fontFamily: 'var(--sb-font-label)', fontWeight: 700, cursor: 'pointer' }}>← {narrative.navigationBackLabel}</button>
     </div>
   );
 }
 
-function ProspectReturn({ onReturn }) {
-  return <button onClick={onReturn} style={{ marginBottom: '1rem', border: 0, background: 'transparent', color: 'var(--lt-teal-deep)', fontFamily: 'var(--sb-font-label)', fontWeight: 700, cursor: 'pointer' }}>← Prospect Experience</button>;
+function ProspectReturn({ onReturn, label = 'Prospect Experience' }) {
+  return <button onClick={onReturn} style={{ marginBottom: '1rem', border: 0, background: 'transparent', color: 'var(--lt-teal-deep)', fontFamily: 'var(--sb-font-label)', fontWeight: 700, cursor: 'pointer' }}>← {label}</button>;
 }
 
 function ProspectNarrativeExperience({ config, canSave, saveBlockedMessage, onSave }) {
-  const iframeRef = useRef(null);
+  const viewRef = useRef(null);
+  const presentationRef = useRef(null);
   const [index, setIndex] = useState(0);
-  const [playing, setPlaying] = useState(Boolean(config.proposalNarrative.playback.startAutomatically));
+  const [revealStep, setRevealStep] = useState(0);
+  const [replayKey, setReplayKey] = useState(0);
+  const [playing, setPlaying] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(config);
   const [saveState, setSaveState] = useState('');
@@ -264,24 +272,34 @@ function ProspectNarrativeExperience({ config, canSave, saveBlockedMessage, onSa
   const narrative = effectiveConfig.proposalNarrative;
   const sections = narrative.sections;
   const activeSection = sections[index];
+  const primaryCards = activeSection.cards || activeSection.rail || [];
+  const totalRevealSteps = 2 + primaryCards.length + (activeSection.panels?.length || 0) + (activeSection.rows ? 1 : 0) + (activeSection.banner ? 1 : 0);
 
-  const activate = (nextIndex) => {
-    const bounded = Math.max(0, Math.min(nextIndex, sections.length - 1));
-    setIndex(bounded);
-    const input = iframeRef.current?.contentDocument?.getElementById(sections[bounded].targetId);
-    if (input) input.click();
-  };
+  const activate = (nextIndex) => setIndex(Math.max(0, Math.min(nextIndex, sections.length - 1)));
 
   useEffect(() => {
     if (!playing) return undefined;
-    const timer = setInterval(() => setIndex((current) => {
-      const next = current >= sections.length - 1 ? 0 : current + 1;
-      const input = iframeRef.current?.contentDocument?.getElementById(sections[next].targetId);
-      if (input) input.click();
-      return next;
-    }), narrative.playback.intervalMs);
+    if (index >= sections.length - 1) {
+      setPlaying(false);
+      return undefined;
+    }
+    const sectionDuration = Math.max(narrative.playback.intervalMs, (totalRevealSteps + 2) * (narrative.visual.revealIntervalMs || 1100));
+    const timer = setTimeout(() => setIndex((current) => Math.min(current + 1, sections.length - 1)), sectionDuration);
+    return () => clearTimeout(timer);
+  }, [playing, index, narrative.playback.intervalMs, narrative.visual.revealIntervalMs, sections.length, totalRevealSteps]);
+
+  useEffect(() => {
+    setRevealStep(0);
+    requestAnimationFrame(() => presentationRef.current?.scrollIntoView({ behavior: narrative.visual.motionEnabled ? 'smooth' : 'auto', block: 'center' }));
+    const timer = setInterval(() => setRevealStep((current) => {
+      if (current >= totalRevealSteps) {
+        clearInterval(timer);
+        return current;
+      }
+      return current + 1;
+    }), narrative.visual.revealIntervalMs || 420);
     return () => clearInterval(timer);
-  }, [playing, narrative.playback.intervalMs, sections]);
+  }, [index, replayKey, narrative.visual.motionEnabled, narrative.visual.revealIntervalMs, totalRevealSteps]);
 
   const save = async () => {
     if (!canSave) {
@@ -299,33 +317,62 @@ function ProspectNarrativeExperience({ config, canSave, saveBlockedMessage, onSa
   };
 
   return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flexWrap: 'wrap', marginBottom: '0.85rem' }}>
-        {sections.map((section, sectionIndex) => <button key={section.id} onClick={() => activate(sectionIndex)} style={{ border: `1px solid ${sectionIndex === index ? 'var(--lt-teal-deep)' : 'var(--lt-border)'}`, borderRadius: 999, padding: '0.45rem 0.7rem', background: sectionIndex === index ? 'var(--lt-surface-muted)' : 'var(--lt-surface)', color: 'var(--lt-text)', fontFamily: 'var(--sb-font-label)', fontSize: '0.68rem', cursor: 'pointer' }}>{sectionIndex + 1}. {section.label}</button>)}
+    <div ref={viewRef} style={{ '--lt-highlight-glow': narrative.visual.highlightGlow, scrollMarginTop: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', padding: '0.65rem 0 0.9rem' }}>
+        <div><div style={{ color: 'var(--lt-teal-deep)', fontFamily: 'var(--sb-font-label)', fontWeight: 800, fontSize: '0.72rem', letterSpacing: '0.12em', textTransform: 'uppercase' }}>{narrative.breadcrumbLabel}</div><div style={{ color: 'var(--lt-text-muted)', fontSize: '0.72rem' }}>{narrative.headerLabel}</div></div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '.4rem' }}><a href={narrative.completeDownload.url} download style={{ border: '1px solid var(--lt-teal-deep)', borderRadius: 999, padding: '0.55rem 0.85rem', color: 'white', background: 'var(--lt-teal-deep)', fontFamily: 'var(--sb-font-label)', fontSize: '0.68rem', fontWeight: 800, textAlign: 'center', textDecoration: 'none' }}>{narrative.completeDownload.label}</a><a href={narrative.archiveDownload.url} download style={{ border: '1px solid var(--lt-border)', borderRadius: 999, padding: '0.45rem 0.75rem', color: 'var(--lt-teal-deep)', background: 'var(--lt-surface)', fontFamily: 'var(--sb-font-label)', fontSize: '0.62rem', fontWeight: 700, textAlign: 'center', textDecoration: 'none' }}>{narrative.archiveDownload.label}</a></div>
       </div>
+      <section style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.35fr) minmax(220px,.65fr)', gap: '1.25rem', alignItems: 'center', minHeight: 190, maxHeight: 230, overflow: 'hidden', border: '1px solid var(--lt-border)', borderRadius: 18, background: 'var(--lt-surface)', padding: '1rem 1.25rem', marginBottom: '0.8rem' }}>
+        <div>
+          <div style={{ color: 'var(--lt-teal-deep)', fontFamily: 'var(--sb-font-label)', fontSize: '.65rem', fontWeight: 800, letterSpacing: '.14em', textTransform: 'uppercase' }}>{narrative.cover.eyebrow}</div>
+          <h1 style={{ color: 'var(--lt-text)', fontFamily: 'var(--sb-font-display)', fontSize: 'clamp(1.65rem,3vw,2.7rem)', lineHeight: 1.02, letterSpacing: '-.03em', margin: '.35rem 0' }}>{narrative.cover.title}</h1>
+          <p style={{ color: 'var(--lt-text-muted)', fontSize: '.78rem', lineHeight: 1.45, margin: 0, maxWidth: 760 }}>{narrative.cover.body}</p>
+        </div>
+        <div style={{ position: 'relative', height: 180, minWidth: 0, overflow: 'hidden', borderRadius: 15, background: 'radial-gradient(circle at center, rgba(74,124,142,.24), rgba(20,40,63,.98) 68%)' }} aria-label="Salt Basin truth convergence orbit">
+          <SaltBasinCrystal variant="signature" size="orbit" className="sb-lt-proposal-crystal" interactive />
+        </div>
+      </section>
+      <nav aria-label={narrative.breadcrumbLabel} style={{ display: 'grid', gridTemplateColumns: `repeat(${sections.length}, minmax(110px, 1fr))`, overflowX: 'auto', borderBlock: '1px solid var(--lt-border)', background: 'var(--lt-page)', marginBottom: '0.75rem' }}>
+        {sections.map((section, sectionIndex) => { const isNextPrompt = revealStep >= totalRevealSteps && sectionIndex === index + 1; return <button key={section.id} className={isNextPrompt ? 'sb-lt-proposal-highlight' : ''} onClick={() => activate(sectionIndex)} style={{ border: 0, borderLeft: '1px solid var(--lt-border)', borderBottom: sectionIndex === index ? '4px solid var(--lt-teal)' : isNextPrompt ? '4px solid var(--lt-gold)' : '4px solid transparent', padding: '0.75rem 0.45rem', background: sectionIndex === index ? 'var(--lt-surface)' : isNextPrompt ? 'rgba(196,132,58,.12)' : 'transparent', color: sectionIndex === index ? 'var(--lt-teal-deep)' : isNextPrompt ? 'var(--lt-gold)' : 'var(--lt-text-muted)', fontFamily: 'var(--sb-font-label)', fontSize: '0.68rem', fontWeight: 800, cursor: 'pointer' }}>{String(sectionIndex + 1).padStart(2, '0')} {section.label}</button>; })}
+      </nav>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.8rem', marginBottom: '0.75rem' }}>
         <div style={{ display: 'flex', gap: '0.45rem' }}>
           <button onClick={() => activate(index - 1)} disabled={index === 0}>← Previous</button>
-          <button onClick={() => setPlaying((value) => !value)}>{playing ? 'Pause' : 'Play narrative'}</button>
+          <button onClick={() => {
+            if (playing) {
+              setPlaying(false);
+              return;
+            }
+            setRevealStep(0);
+            setReplayKey((value) => value + 1);
+            setPlaying(true);
+          }} aria-pressed={playing}>{playing ? '❚❚ Pause narrative' : revealStep >= totalRevealSteps ? '↻ Replay this tab' : '▶ Play narrative'}</button>
           <button onClick={() => activate(index + 1)} disabled={index === sections.length - 1}>Next →</button>
         </div>
         <button onClick={() => { setDraft(config); setEditing((value) => !value); }} style={{ color: 'var(--lt-teal-deep)', background: 'transparent', border: '1px solid var(--lt-border)', borderRadius: 8, padding: '0.45rem 0.7rem', cursor: 'pointer' }}>Configure narrative</button>
       </div>
-      <div key={activeSection.id} className="sb-lt-fadein" style={{ position: 'relative', overflow: 'hidden', background: 'var(--lt-surface)', border: '1px solid var(--lt-border)', borderRadius: 14, padding: '1.35rem 1.5rem', marginBottom: '0.85rem' }}>
-        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 7, background: 'linear-gradient(var(--lt-teal), var(--lt-gold), var(--lt-rose))' }} />
-        <div style={{ color: 'var(--lt-teal-deep)', fontFamily: 'var(--sb-font-label)', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.13em', textTransform: 'uppercase' }}>{activeSection.eyebrow} · {index + 1} of {sections.length}</div>
-        <h2 style={{ color: 'var(--lt-text)', fontFamily: 'var(--sb-font-display)', fontSize: '1.8rem', margin: '0.45rem 0' }}>{activeSection.title}</h2>
-        <p style={{ color: 'var(--lt-text-muted)', lineHeight: 1.65, margin: 0, maxWidth: 920 }}>{activeSection.narrative}</p>
+      <div ref={presentationRef} key={activeSection.id} className="sb-lt-fadein" style={{ padding: '0.9rem 0 1.2rem', scrollMarginBlock: '2rem' }}>
+        <div className="sb-lt-proposal-reveal" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.15fr) minmax(280px,.85fr)', gap: '1.4rem', alignItems: 'end', marginBottom: '1.2rem' }}><div><div style={{ color: 'var(--lt-teal-deep)', fontFamily: 'var(--sb-font-label)', fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.13em', textTransform: 'uppercase' }}>{activeSection.eyebrow}</div><h1 style={{ color: 'var(--lt-text)', fontFamily: 'var(--sb-font-display)', fontSize: 'clamp(2rem,4vw,3.6rem)', lineHeight: 1.02, letterSpacing: '-0.03em', margin: '0.35rem 0 0' }}>{activeSection.title}</h1></div>{revealStep >= 1 && <p className="sb-lt-proposal-reveal" style={{ color: 'var(--lt-text-muted)', lineHeight: 1.6, margin: 0 }}>{activeSection.narrative}</p>}</div>
+        {activeSection.heading && revealStep >= 2 && <h2 className="sb-lt-proposal-reveal" style={{ color: 'var(--lt-text)', fontFamily: 'var(--sb-font-display)', fontSize: '1.8rem' }}>{activeSection.heading}</h2>}
+        {primaryCards.length > 0 && <div style={{ display: 'grid', gridTemplateColumns: `repeat(${primaryCards.length}, minmax(145px, 1fr))`, gap: '0.8rem', overflowX: 'auto', padding: activeSection.rail ? '1.15rem' : '0.25rem 0 1rem', borderRadius: 18, background: activeSection.rail ? 'var(--lt-teal-deep)' : 'transparent' }}>{primaryCards.map((card, cardIndex) => revealStep >= cardIndex + 2 ? <article key={`${card.marker}-${card.title}`} className={`${narrative.visual.motionEnabled && cardIndex === activeSection.highlightIndex ? 'sb-lt-proposal-highlight ' : ''}sb-lt-proposal-reveal`} style={{ minWidth: 145, background: activeSection.rail ? 'rgba(255,255,255,.09)' : 'var(--lt-surface)', border: '1px solid var(--lt-border)', borderTop: `5px solid ${['var(--lt-teal)','var(--lt-gold)','var(--lt-rose)','var(--lt-teal-deep)'][cardIndex % 4]}`, borderRadius: 16, padding: '1.15rem', color: activeSection.rail ? 'white' : 'var(--lt-text)' }}><span style={{ color: 'var(--lt-gold)', fontFamily: 'var(--sb-font-display)', fontWeight: 800 }}>{card.marker}</span><h3 style={{ fontFamily: 'var(--sb-font-display)', fontSize: '1.15rem', margin: '.35rem 0' }}>{card.title}</h3><p style={{ color: activeSection.rail ? 'rgba(255,255,255,.76)' : 'var(--lt-text-muted)', fontSize: '.78rem', margin: 0 }}>{card.body}</p></article> : <div key={`${card.marker}-placeholder`} style={{ minWidth: 145 }} />)}</div>}
+        {activeSection.panels && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '1rem', marginTop: '1rem' }}>{activeSection.panels.map((panel, panelIndex) => revealStep >= 2 + primaryCards.length + panelIndex ? <article key={panel.title} className="sb-lt-proposal-reveal" style={{ borderRadius: 18, padding: '1.5rem', background: panel.dark ? 'var(--lt-teal-deep)' : 'var(--lt-surface)', color: panel.dark ? 'white' : 'var(--lt-text)', border: '1px solid var(--lt-border)' }}><div style={{ color: 'var(--lt-gold)', fontSize: '.66rem', fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase' }}>{panel.eyebrow}</div><h2 style={{ fontFamily: 'var(--sb-font-display)', margin: '.4rem 0' }}>{panel.title}</h2>{panel.body && <p>{panel.body}</p>}{panel.items && <ul>{panel.items.map((item) => <li key={item}>{item}</li>)}</ul>}</article> : <div key={`${panel.title}-placeholder`} />)}</div>}
+        {activeSection.rows && revealStep >= 2 + primaryCards.length && <div className="sb-lt-proposal-reveal" style={{ overflowX: 'auto', border: '1px solid var(--lt-border)', borderRadius: 16, background: 'var(--lt-surface)' }}><div style={{ minWidth: 980 }}>{[activeSection.columns, ...activeSection.rows].map((row, rowIndex) => <div key={rowIndex} style={{ display: 'grid', gridTemplateColumns: '1.05fr 1.35fr 1fr .9fr 1.35fr', gap: 14, padding: '0.9rem 1rem', borderTop: rowIndex ? '1px solid var(--lt-border)' : 0, background: rowIndex ? 'transparent' : 'var(--lt-teal-deep)', color: rowIndex ? 'var(--lt-text)' : 'white', fontSize: '.76rem', fontWeight: rowIndex ? 400 : 800 }}>{row.map((cell, cellIndex) => <span key={cellIndex}>{cell}</span>)}</div>)}</div></div>}
+        {activeSection.banner && revealStep >= totalRevealSteps && <div className="sb-lt-proposal-highlight" style={{ marginTop: '1rem', padding: '1rem 1.2rem', borderRadius: 14, background: 'var(--lt-teal-deep)', color: 'white' }}>{activeSection.banner}</div>}
+        {revealStep >= totalRevealSteps && index < sections.length - 1 && <div className="sb-lt-proposal-reveal" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '.75rem', marginTop: '1.1rem', paddingTop: '.9rem', borderTop: '1px solid var(--lt-border)' }}><span style={{ color: 'var(--lt-text-muted)', fontSize: '.78rem' }}>This view is complete.</span><button className="sb-lt-proposal-highlight" onClick={() => activate(index + 1)} style={{ border: 0, borderRadius: 999, background: 'var(--lt-teal-deep)', color: 'white', padding: '.7rem 1rem', fontWeight: 800, cursor: 'pointer' }}>Continue to {sections[index + 1].label} →</button></div>}
       </div>
       {editing && <div style={{ background: 'var(--lt-surface-muted)', border: '1px solid var(--lt-border)', borderRadius: 10, padding: '1rem', marginBottom: '0.9rem' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.7rem' }}>
-          <label>Playback interval (ms)<input type="number" min="1000" value={draft.proposalNarrative.playback.intervalMs} onChange={(event) => setDraft({ ...draft, proposalNarrative: { ...draft.proposalNarrative, playback: { ...draft.proposalNarrative.playback, intervalMs: Number(event.target.value) } } })} style={{ display: 'block', width: '100%' }} /></label>
-          <label>Visual height (px)<input type="number" min="400" value={draft.proposalNarrative.visual.iframeHeight} onChange={(event) => setDraft({ ...draft, proposalNarrative: { ...draft.proposalNarrative, visual: { ...draft.proposalNarrative.visual, iframeHeight: Number(event.target.value) } } })} style={{ display: 'block', width: '100%' }} /></label>
-          {draft.proposalNarrative.sections.map((section, sectionIndex) => <div key={section.id} style={{ gridColumn: '1 / -1', background: 'var(--lt-surface)', border: '1px solid var(--lt-border)', borderRadius: 8, padding: '0.75rem' }}><strong>Section {sectionIndex + 1}</strong>{['label', 'eyebrow', 'title', 'narrative'].map((field) => <label key={field} style={{ display: 'block', marginTop: '0.45rem', textTransform: 'capitalize' }}>{field}{field === 'narrative' ? <textarea rows="3" value={section[field]} onChange={(event) => setDraft({ ...draft, proposalNarrative: { ...draft.proposalNarrative, sections: draft.proposalNarrative.sections.map((item, itemIndex) => itemIndex === sectionIndex ? { ...item, [field]: event.target.value } : item) } })} style={{ display: 'block', width: '100%' }} /> : <input value={section[field]} onChange={(event) => setDraft({ ...draft, proposalNarrative: { ...draft.proposalNarrative, sections: draft.proposalNarrative.sections.map((item, itemIndex) => itemIndex === sectionIndex ? { ...item, [field]: event.target.value } : item) } })} style={{ display: 'block', width: '100%' }} />}</label>)}</div>)}
+           <label>Playback interval (ms)<input type="number" min="1000" value={draft.proposalNarrative.playback.intervalMs} onChange={(event) => setDraft({ ...draft, proposalNarrative: { ...draft.proposalNarrative, playback: { ...draft.proposalNarrative.playback, intervalMs: Number(event.target.value) } } })} style={{ display: 'block', width: '100%' }} /></label>
+           <label>Content reveal interval (ms)<input type="number" min="100" value={draft.proposalNarrative.visual.revealIntervalMs} onChange={(event) => setDraft({ ...draft, proposalNarrative: { ...draft.proposalNarrative, visual: { ...draft.proposalNarrative.visual, revealIntervalMs: Number(event.target.value) } } })} style={{ display: 'block', width: '100%' }} /></label>
+           <label>Content reveal interval (ms)<input type="number" min="100" value={draft.proposalNarrative.visual.revealIntervalMs} onChange={(event) => setDraft({ ...draft, proposalNarrative: { ...draft.proposalNarrative, visual: { ...draft.proposalNarrative.visual, revealIntervalMs: Number(event.target.value) } } })} style={{ display: 'block', width: '100%' }} /></label>
+           <label>Highlight glow<input value={draft.proposalNarrative.visual.highlightGlow} onChange={(event) => setDraft({ ...draft, proposalNarrative: { ...draft.proposalNarrative, visual: { ...draft.proposalNarrative.visual, highlightGlow: event.target.value } } })} style={{ display: 'block', width: '100%' }} /></label>
+           <label>Archive button label<input value={draft.proposalNarrative.archiveDownload.label} onChange={(event) => setDraft({ ...draft, proposalNarrative: { ...draft.proposalNarrative, archiveDownload: { ...draft.proposalNarrative.archiveDownload, label: event.target.value } } })} style={{ display: 'block', width: '100%' }} /></label>
+           <label>Complete download label<input value={draft.proposalNarrative.completeDownload.label} onChange={(event) => setDraft({ ...draft, proposalNarrative: { ...draft.proposalNarrative, completeDownload: { ...draft.proposalNarrative.completeDownload, label: event.target.value } } })} style={{ display: 'block', width: '100%' }} /></label>
+           {['eyebrow', 'title', 'body'].map((field) => <label key={field}>Header {field}<textarea rows={field === 'body' ? 3 : 2} value={draft.proposalNarrative.cover[field]} onChange={(event) => setDraft({ ...draft, proposalNarrative: { ...draft.proposalNarrative, cover: { ...draft.proposalNarrative.cover, [field]: event.target.value } } })} style={{ display: 'block', width: '100%' }} /></label>)}
+          {draft.proposalNarrative.sections.map((section, sectionIndex) => <div key={section.id} style={{ gridColumn: '1 / -1', background: 'var(--lt-surface)', border: '1px solid var(--lt-border)', borderRadius: 8, padding: '0.75rem' }}><strong>Section {sectionIndex + 1}</strong>{['label', 'eyebrow', 'title', 'narrative'].map((field) => <label key={field} style={{ display: 'block', marginTop: '0.45rem', textTransform: 'capitalize' }}>{field}{field === 'narrative' ? <textarea rows="3" value={section[field]} onChange={(event) => setDraft({ ...draft, proposalNarrative: { ...draft.proposalNarrative, sections: draft.proposalNarrative.sections.map((item, itemIndex) => itemIndex === sectionIndex ? { ...item, [field]: event.target.value } : item) } })} style={{ display: 'block', width: '100%' }} /> : <input value={section[field]} onChange={(event) => setDraft({ ...draft, proposalNarrative: { ...draft.proposalNarrative, sections: draft.proposalNarrative.sections.map((item, itemIndex) => itemIndex === sectionIndex ? { ...item, [field]: event.target.value } : item) } })} style={{ display: 'block', width: '100%' }} />}</label>)}<label style={{ display: 'block', marginTop: '.65rem' }}>Structured cards, panels, table, and banner configuration<textarea key={`${section.id}-${editing}`} rows="8" defaultValue={JSON.stringify(section, null, 2)} onBlur={(event) => { try { const parsed = JSON.parse(event.target.value); setDraft({ ...draft, proposalNarrative: { ...draft.proposalNarrative, sections: draft.proposalNarrative.sections.map((item, itemIndex) => itemIndex === sectionIndex ? parsed : item) } }); setSaveState(''); } catch { setSaveState(`Section ${sectionIndex + 1} configuration must be valid JSON.`); } }} style={{ display: 'block', width: '100%', fontFamily: 'monospace', fontSize: '.72rem' }} /></label></div>)}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', marginTop: '0.8rem' }}><button onClick={save}>Save configuration</button><span>{saveState}</span></div>
       </div>}
-      <iframe ref={iframeRef} title="Complete LoneTree Prospect Experience" src={narrative.sourceUrl} onLoad={() => activate(index)} style={{ display: 'block', width: '100%', height: narrative.visual.iframeHeight, border: '1px solid var(--lt-border)', borderRadius: 12, background: 'var(--lt-page)' }} />
     </div>
   );
 }
@@ -803,8 +850,9 @@ export default function LonetreeMvpPanel({ scope = 'member' }) {
           <SpatialJourneyWorld />
         </div>
       ) : (
-        <>
+        <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', overflow: 'hidden' }}>
           <div className="sb-lt-fadein" style={{ flex: 1, minWidth: 0, padding: '1.25rem 1.75rem', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <ProspectReturn onReturn={() => setView('navigation')} label={prospectConfig.narrative.proposalHomeBackLabel} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
               <Breadcrumb crumbs={breadcrumb} onFocus={setFocus} />
               {!demo && (
@@ -868,7 +916,7 @@ export default function LonetreeMvpPanel({ scope = 'member' }) {
           </div>
 
           <InspectorPanel inspector={inspector} onFocus={setFocus} onClear={() => setFocus(null)} />
-        </>
+        </div>
       )}
     </div>
   );

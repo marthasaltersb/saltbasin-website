@@ -68,7 +68,7 @@ This is the top-level legal/IP structure — the frame everything else sits insi
 - "We leverage existing rails. We reveal better routes."
 
 **Standard copyright footer (all decks and client-facing documents, including the website):**
-- `© 2026 Salt Basin Holdings. All rights reserved.` preceded by the small 4-point star logo icon.
+- `© 2026 Martha Elizabeth Salter - The Salter Influence LLC All Rights Reserved.` preceded by the small 4-point star logo icon.
 - Title/closing slides additionally carry: `SaltTide™, Salt Basin Highways™, Highway Vision™, and Monetary River System™ are trademarks claimed by Salt Basin Holdings.`
 - Deck layout standard: ST★ monogram (correct light/dark variant) top-right on every slide; star icon precedes the footer copyright line.
 

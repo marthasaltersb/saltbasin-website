@@ -46,7 +46,7 @@ export default function PublicFooter({ config }) {
             </Link>
           </div>
           <div className="sb-public-footer-copy">
-            {site.copyrightLine || '© 2026 Salt Basin Holdings. All rights reserved.'}
+            {site.copyrightLine || `© ${new Date().getFullYear()} Martha Elizabeth Salter - The Salter Influence LLC All Rights Reserved.`}
           </div>
           <div className="sb-public-footer-trademark">
             SaltTide™, RLMM™, and The Salter Momentum™* are trademarks claimed by Salt Basin Holdings. Salt Basin MRS and the HOS™ methodology are Salt Basin Holdings marks pending confirmation.

@@ -80,7 +80,7 @@ function emptyConfig(outputType) {
     schemaVersion: 2,
     outputType,
     meta: { roleLabel: '', industryLabel: '', portfolioVisible: false },
-    layer1_header: { memberTagline: '', memberFooterLines: [], memberFooterLinks: [] },
+    layer1_header: { memberName: '', headerText: '', memberTagline: '', contactEmail: '', websiteUrl: '', memberFooterLines: [], memberFooterLinks: [] },
     layer2_stats: { cards: [] },
     layer3_infographics: { items: [] },
     layer4_sections: { sections: [], densityMode: 'auto' },
@@ -163,9 +163,9 @@ export function OutputTemplateConfiguratorHub({ scope = 'member' }) {
 }
 
 export default function OutputTemplateConfigurator({ outputType, scope = 'member' }) {
-  const [presets, setPresets] = useState(null); // [{id, name, is_primary, config}]
+  const [presets, setPresets] = useState([]); // [{id, name, is_primary, config}]
   const [templateId, setTemplateId] = useState(null);
-  const [config, setConfig] = useState(null);
+  const [config, setConfig] = useState(() => emptyConfig(outputType));
   const [rollupCatalog, setRollupCatalog] = useState(null);
   const [sitePages, setSitePages] = useState(null);
   const [master, setMaster] = useState(null);
@@ -202,6 +202,11 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
   }
 
   useEffect(() => {
+    // Make tab entry immediate even when the local/remote database is waking
+    // up. Saved presets replace this usable draft as soon as they arrive.
+    setTemplateId(null);
+    setPresets([]);
+    setConfig(emptyConfig(outputType));
     loadPresets();
     fetch(`/api/career/rollups${ownerParam}`, { credentials: 'include' }).then((r) => r.json()).then(setRollupCatalog).catch(() => setRollupCatalog(null));
     fetch(`/api/career/master${ownerParam}`, { credentials: 'include' }).then((r) => r.json()).then(setMaster).catch(() => setMaster(null));
@@ -282,7 +287,7 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
     loadPresets();
   }
 
-  if (!config || !presets) return <div style={S.wrap}>Loading…</div>;
+  if (!config) return <div style={S.wrap}>Preparing template…</div>;
 
   const update = (path, value) => {
     setConfig((prev) => {
@@ -357,6 +362,17 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
 
             {tab === 0 && (
               <div style={S.card}>
+                <div style={S.label}>Document Identity</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem', marginBottom: '0.75rem' }}>
+                  <input style={S.input} value={config.layer1_header.memberName || ''}
+                    onChange={(e) => update('layer1_header.memberName', e.target.value)} placeholder="Your name" />
+                  <input style={S.input} value={config.layer1_header.headerText || ''}
+                    onChange={(e) => update('layer1_header.headerText', e.target.value)} placeholder="Header text or professional title" />
+                  <input style={S.input} type="email" value={config.layer1_header.contactEmail || ''}
+                    onChange={(e) => update('layer1_header.contactEmail', e.target.value)} placeholder="Email displayed on output" />
+                  <input style={S.input} type="url" value={config.layer1_header.websiteUrl || ''}
+                    onChange={(e) => update('layer1_header.websiteUrl', e.target.value)} placeholder="Website URL displayed on output" />
+                </div>
                 <div style={S.label}>Header Tagline (suggested from Career Master job history)</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', marginBottom: '0.6rem' }}>
                   {(master?.jobs || []).map((j) => j.jobFunction).filter((v, i, a) => v && a.indexOf(v) === i).map((tagline) => (

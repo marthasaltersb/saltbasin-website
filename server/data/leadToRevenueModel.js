@@ -1,5 +1,5 @@
 // Lead to Revenue Capability Model
-// © 2026 Martha Elizabeth Salter aka Betsy Salter · Salt Basin Net Works · All rights reserved
+// © 2026 Martha Elizabeth Salter - The Salter Influence LLC All Rights Reserved.
 //
 // Master Enterprise Solution Best Bets™ — the practitioner's best perspectives on how to master
 // your organization's measurements to produce returns on paper that exist, and are defensible.
@@ -22,7 +22,7 @@ export const ARTIFACT = {
   parentBrandDescriptor: "The practitioner's best perspectives on how to master your organization's measurements to produce returns on paper that exist, and are defensible.",
   author: 'Martha Elizabeth Salter aka Betsy Salter',
   organization: 'Salt Basin Net Works',
-  copyright: '© 2026 Martha Elizabeth Salter aka Betsy Salter · Salt Basin Net Works · All rights reserved',
+  copyright: '© 2026 Martha Elizabeth Salter - The Salter Influence LLC All Rights Reserved.',
   tagline: 'Where the practitioner meets AI augmentation — practitioner-derived, AI-augmented, practitioner-signed.',
   version: '1.0',
   publishedAt: '2026-06-30',
@@ -32,7 +32,7 @@ export const ARTIFACT = {
     member: 'read_only_framework',
     client: 'engagement_licensed',
   },
-  watermarkTemplate: '© 2026 Martha Elizabeth Salter aka Betsy Salter · Salt Basin Net Works · Lead to Revenue Capability Model™ · Master Enterprise Solution Best Bets™ · Licensed to: {{licensee}} · {{date}}',
+  watermarkTemplate: '© 2026 Martha Elizabeth Salter - The Salter Influence LLC All Rights Reserved. · Lead to Revenue Capability Model™ · Master Enterprise Solution Best Bets™ · Licensed to: {{licensee}} · {{date}}',
 };
 
 // ── GTM Architecture Layer ──────────────────────────────────────────────────

@@ -183,3 +183,45 @@ export function buildRodFromPlan(plan, { rodTemplates, entityLabel }) {
 
   return { rods, ruleId: plan.ruleId };
 }
+
+export function buildRodFromJourneyDefinition(definition, { entityLabel }) {
+  const rod = {
+    id: nextRodId('deal'),
+    rodType: 'revenue',
+    templateName: definition.templateName,
+    name: entityLabel,
+    entityLabel,
+    createdAt: Date.now(),
+    stages: definition.stages.map((stage) => ({
+      id: `deal-${stage.key}`,
+      name: stage.title,
+      short: stage.short,
+      description: stage.description,
+      source: stage.source,
+      maturity: stage.source === 'live' ? 0.85 : 0.05,
+      dealStageKey: stage.key,
+      atoms: [...stage.metrics.map((metric, index) => ({
+        atomId: `${stage.key}-metric-${index}`,
+        elementId: metric.elementId || definition.defaultElementId,
+        name: metric.label,
+        meaning: metric.label,
+        maturity: stage.source === 'live' ? 0.85 : 0.05,
+        magneticProperties: [stage.key],
+        value: metric.value,
+        risk: metric.flag === 'red' ? 0.8 : 0,
+        security: { scope: 'org' },
+      })), ...stage.fields.map((field, index) => ({
+        atomId: `${stage.key}-field-${index}`,
+        elementId: field.elementId || definition.defaultElementId,
+        name: field.label,
+        meaning: field.label,
+        maturity: field.placeholder ? 0.05 : 0.85,
+        magneticProperties: [stage.key],
+        value: field.value,
+        risk: 0,
+        security: { scope: 'org' },
+      }))],
+    })),
+  };
+  return { plan: { ruleId: 'configured-deal-journey' }, rods: [rod] };
+}
