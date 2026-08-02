@@ -1,0 +1,48 @@
+name: GTM Deliverable Agent — Benchmark Refresh Fetch
+
+on:
+  schedule:
+    # Daily -- batches usually finish within an hour, max 24h. This just
+    # checks whether anything pending has finished; it's a no-op otherwise.
+    - cron: "0 15 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: agents/gtm-deliverable-agent
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Fetch any finished batches
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python fetch_batch_results.py
+
+      - name: Upload generated deliverables as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gtm-deliverables-${{ github.run_id }}
+          path: agents/gtm-deliverable-agent/output/**
+          if-no-files-found: ignore
+          retention-days: 90
+
+      - name: Commit updated pending batch record
+        run: |
+          git config user.name "gtm-deliverable-agent"
+          git config user.email "actions@github.com"
+          [ -f output/pending_batches.json ] && git add output/pending_batches.json
+          git diff --staged --quiet || git commit -m "Update pending GTM benchmark-refresh batch record"
+          git push

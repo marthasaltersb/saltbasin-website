@@ -1,0 +1,18 @@
+# Client data never gets committed.
+secure_input/*
+!secure_input/.gitkeep
+
+# Generated deliverables never get committed -- except the pending-batch
+# record, which the GitHub Actions submit/fetch workflows read and write
+# to track batches across runs.
+output/*
+!output/.gitkeep
+!output/pending_batches.json
+
+golden_tests/output/
+
+__pycache__/
+*.pyc
+.env
+venv/
+.venv/

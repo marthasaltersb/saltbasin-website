@@ -1,0 +1,10 @@
+{
+  "_readme": "Default topic watchlist for the recurring benchmark-refresh cron. Edit freely -- one deliverable gets drafted per topic per cycle. Seeded from the HandoverOS Q2R domains in CLAUDE.md and the real Revenue Leakage deliverable's scenario set.",
+  "topics": [
+    "Revenue leakage in usage-based billing",
+    "Contract-to-billing divergence in PE-backed SaaS",
+    "Data readiness for AI-first RevOps automation",
+    "Revenue recognition (ASC 606) restatement risk from dirty CRM/billing data",
+    "M&A quality-of-earnings risk from contract-billing discrepancies"
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "_readme": "Two target schemas a client export might normalize against. capability_taxonomy_fields is REAL — pulled directly from Betsy's own Lead-to-Revenue Intelligence V3 Mapping Template (source-docs/schema/Lead_to_Revenue_Intelligence_V3_Full_Capability_Breakdown.xlsx, 'Mapping Template' tab). contract_revenue_fields is a DRAFT inferred from the roadmap doc's own description (ARR/MRR, fee structures, renewal/escalation terms, amendment/cancellation ARR impact) since Betsy hasn't yet supplied her literal Contract Metadata Master / Contract Revenue Fields schema — replace this section wholesale once she does. lib/client_data.py's deterministic pass tries alias matches against both; whichever a client export's columns actually resemble determines which schema applies for that engagement. A column that matches neither schema confidently is a legitimate data-quality-gap finding, not something to force a guess on.",
+
+  "capability_taxonomy_fields": {
+    "_source": "Lead_to_Revenue_Intelligence_V3_Full_Capability_Breakdown.xlsx — Mapping Template tab, real production schema",
+    "fields": [
+      {"key": "capability_id", "label": "Capability ID", "aliases": ["capability id", "capability_id", "cap id", "ltr id", "ltr-id"]},
+      {"key": "level2_capability", "label": "Level 2 Capability", "aliases": ["level 2 capability", "l2 capability", "capability domain", "parent capability"]},
+      {"key": "level3_subcapability", "label": "Level 3 Sub-Capability", "aliases": ["level 3 sub-capability", "l3 sub-capability", "sub-capability", "subcapability"]},
+      {"key": "level4_operational_subcapability", "label": "Level 4 Operational Sub-Capability", "aliases": ["level 4 operational sub-capability", "l4", "operational sub-capability", "operational capability"]},
+      {"key": "process", "label": "Process", "aliases": ["process", "process name", "business process"]},
+      {"key": "activity", "label": "Activity", "aliases": ["activity", "activity name", "task"]},
+      {"key": "system_of_record", "label": "System of Record", "aliases": ["system of record", "sor", "system", "source system", "platform"]},
+      {"key": "source_data_object", "label": "Source Data Object", "aliases": ["source data object", "data object", "object", "entity"]},
+      {"key": "kpi", "label": "KPI", "aliases": ["kpi", "metric", "key metric"]},
+      {"key": "control_risk", "label": "Control / Risk", "aliases": ["control / risk", "control", "risk", "control/risk"]},
+      {"key": "ai_detection_rule", "label": "AI Detection Rule", "aliases": ["ai detection rule", "detection rule", "validation rule"]},
+      {"key": "maturity_score", "label": "Maturity Score 1-5", "aliases": ["maturity score", "maturity", "maturity score 1-5"]},
+      {"key": "priority", "label": "Priority", "aliases": ["priority", "priority level"]},
+      {"key": "owner", "label": "Owner", "aliases": ["owner", "likely owner", "responsible party", "raci owner"]}
+    ]
+  },
+
+  "contract_revenue_fields": {
+    "_source": "DRAFT — inferred from the roadmap doc's field list (ARR/MRR, fee structures, renewal/escalation terms, amendment/cancellation ARR impact). Not yet confirmed against Betsy's real Contract Metadata Master / Contract Revenue Fields schema — replace when she provides it.",
+    "fields": [
+      {"key": "contract_id", "label": "Contract ID", "aliases": ["contract id", "contract_id", "agreement id", "contract number"]},
+      {"key": "customer_name", "label": "Customer / Account Name", "aliases": ["customer", "customer name", "account", "account name", "client name"]},
+      {"key": "arr", "label": "ARR", "aliases": ["arr", "annual recurring revenue", "annualized revenue"]},
+      {"key": "mrr", "label": "MRR", "aliases": ["mrr", "monthly recurring revenue"]},
+      {"key": "fee_structure", "label": "Fee Structure", "aliases": ["fee structure", "pricing model", "billing model", "fee type"]},
+      {"key": "billing_frequency", "label": "Billing Frequency", "aliases": ["billing frequency", "invoice frequency", "billing cycle"]},
+      {"key": "contract_start_date", "label": "Contract Start Date", "aliases": ["contract start date", "start date", "effective date"]},
+      {"key": "contract_end_date", "label": "Contract End Date", "aliases": ["contract end date", "end date", "expiration date", "expiry date"]},
+      {"key": "renewal_term", "label": "Renewal Term", "aliases": ["renewal term", "renewal period", "term length"]},
+      {"key": "escalation_clause", "label": "Escalation Clause", "aliases": ["escalation clause", "price escalation", "escalator", "price increase rider"]},
+      {"key": "discount_terms", "label": "Discount Terms", "aliases": ["discount terms", "discount", "discount rate", "discount %"]},
+      {"key": "amendment_history", "label": "Amendment History", "aliases": ["amendment history", "amendments", "contract amendments"]},
+      {"key": "cancellation_arr_impact", "label": "Cancellation ARR Impact", "aliases": ["cancellation arr impact", "churned arr", "cancelled arr", "lost arr"]},
+      {"key": "currency", "label": "Currency", "aliases": ["currency", "currency code"]}
+    ]
+  }
+}
