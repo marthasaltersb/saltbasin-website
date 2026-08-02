@@ -15,6 +15,17 @@ confidence mapping), and an Impact Quantification ROI calculator with live
 formulas. Anything it can't verify to a primary source gets flagged, never
 invented.
 
+The default topic list (`schema/topics.json`), the anchor case studies and
+exposure-formula grounding, and the variance-threshold/exception-class logic
+used in Data Quality Gaps are all pulled directly from Betsy's own source
+material — the Q2R Diagnostic Framework playbook and the FinBridgeCo /
+HandoverOS Enterprise Data Architecture doc — not invented for this agent.
+See `context/salt_basin_context.md` for the specifics and citations back to
+those source docs. The executive summary can also be generated in one of
+three styles pulled from her real exec-templates library
+(`--exec-style financial_first|narrative_first|dashboard`, defaults to
+`financial_first`).
+
 When a client export is provided (`run_engagement.py --client-file ...`),
 it also normalizes the client's raw columns against
 `schema/capability_mapping_schema.json`, runs the client's actual figures
@@ -55,9 +66,14 @@ then:
 python run_engagement.py \
   --topic "Revenue leakage in usage-based billing" \
   --client-file acme_contracts.csv \
-  --client-name "Acme Inc"
+  --client-name "Acme Inc" \
+  --exec-style dashboard
 python fetch_batch_results.py --batch-id <id-from-above>
 ```
+
+`--exec-style` works on both `run_engagement.py` and `benchmark_refresh.py`
+(`financial_first` / `narrative_first` / `dashboard`, default
+`financial_first` — see `context/salt_basin_context.md` for what each means).
 
 **Recurring benchmark refresh** (the cadence Betsy chose — cron now, via
 GitHub Actions):

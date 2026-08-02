@@ -6,7 +6,23 @@ import pandas as pd
 
 from lib.anthropic_client import SCHEMA_PATH
 
-_NUMERIC_LIKE_FIELDS = {"arr", "mrr", "cancellation_arr_impact"}
+_NUMERIC_LIKE_FIELDS = {
+    "arr",
+    "mrr",
+    "cancellation_arr_impact",
+    "nrr",
+    "grr",
+    "ebitda_margin_pct",
+    "churn_rate_pct",
+    "expansion_arr",
+    "contraction_arr",
+    "moic",
+    "irr",
+    "tvpi",
+    "dpi",
+    "leakage_exposure_usd",
+    "confidence_score",
+}
 
 
 def _normalize(text: str) -> str:

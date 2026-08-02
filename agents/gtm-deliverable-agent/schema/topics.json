@@ -1,10 +1,13 @@
 {
-  "_readme": "Default topic watchlist for the recurring benchmark-refresh cron. Edit freely -- one deliverable gets drafted per topic per cycle. Seeded from the HandoverOS Q2R domains in CLAUDE.md and the real Revenue Leakage deliverable's scenario set.",
+  "_readme": "Default topic watchlist for the recurring benchmark-refresh cron. Edit freely -- one deliverable gets drafted per topic per cycle. Replaced 2026-08-02 with the real 8-Scenario Revenue Leakage Library from Betsy's own 'Q2R Diagnostic Framework: An EBITDA Recovery Playbook for PE Operating Principals' -- these are the actual defect patterns she's built a 13-year track record diagnosing, not generic GTM topics. Root cause / EBITDA impact detail for each lives in context/salt_basin_context.md's leakage-library section (cached, so the model always has it); this list stays flat strings for lib/batch_jobs.py's RESEARCH_INSTRUCTIONS.format(topic=...).",
   "topics": [
-    "Revenue leakage in usage-based billing",
-    "Contract-to-billing divergence in PE-backed SaaS",
-    "Data readiness for AI-first RevOps automation",
-    "Revenue recognition (ASC 606) restatement risk from dirty CRM/billing data",
-    "M&A quality-of-earnings risk from contract-billing discrepancies"
+    "Siloed spreadsheet pricing and quoting (the iCIMS defect pattern) -- audit-grade control failure from fragmented Excel-based pricing workflows",
+    "Broken billing/order handshake and fragile system integrations (the TIBCO defect pattern) -- manual order error re-processing and delayed revenue recognition",
+    "Automated renewal failure from inconsistent data migration logic (the Apptio scenario) -- risk to recurring ARR automation at scale",
+    "Unscalable SKU/catalog fragility in formula-heavy spreadsheet pricing engines (the Pearson defect pattern) -- lead-time friction and configuration errors at high SKU volume",
+    "ASC 606 compliance gaps from fragile variable-consideration handling -- audit risk and exit due-diligence exposure",
+    "M&A integration friction from fragmented data models across merged entities -- inability to realize synergies or produce a unified customer master",
+    "Usage-based monetization gaps -- architectural inability to launch or track usage-based pricing models in modern SaaS GTM",
+    "Front-end billing opacity -- lack of payment-status visibility for Sales and Customer Success teams, and its cash-flow/collections impact"
   ]
 }

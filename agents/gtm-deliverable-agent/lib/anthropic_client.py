@@ -211,6 +211,40 @@ DELIVERABLE_SCHEMA = {
                         "type": "string",
                         "enum": ["critical", "moderate", "minor"],
                     },
+                    "variance_pct": {
+                        "anyOf": [{"type": "number"}, {"type": "null"}]
+                    },
+                    "threshold_action": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "enum": [
+                                    "no_action",
+                                    "warning",
+                                    "confidence_reduction",
+                                    "escalation",
+                                ],
+                            },
+                            {"type": "null"},
+                        ]
+                    },
+                    "exception_class": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "enum": [
+                                    "timing",
+                                    "mapping",
+                                    "source_quality",
+                                    "rule_defect",
+                                    "entitlement",
+                                    "approved_adjustment",
+                                    "other",
+                                ],
+                            },
+                            {"type": "null"},
+                        ]
+                    },
                 }
             ),
         },

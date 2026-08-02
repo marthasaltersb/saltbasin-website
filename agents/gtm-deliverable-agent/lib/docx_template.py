@@ -166,7 +166,20 @@ def build_docx(deliverable: dict, output_path: Path) -> None:
     gaps = deliverable.get("data_quality_gaps") or []
     if gaps:
         _section_header(doc, "Data Quality Gaps")
-        _add_table(doc, ["Description", "Severity"], [[g["description"], g["severity"]] for g in gaps])
+        _add_table(
+            doc,
+            ["Description", "Severity", "Variance %", "Threshold Action", "Exception Class"],
+            [
+                [
+                    g["description"],
+                    g["severity"],
+                    f"{g['variance_pct']}%" if g.get("variance_pct") is not None else "—",
+                    (g.get("threshold_action") or "—").replace("_", " "),
+                    (g.get("exception_class") or "—").replace("_", " "),
+                ]
+                for g in gaps
+            ],
+        )
 
     flags = deliverable.get("unverified_flags") or []
     if flags:

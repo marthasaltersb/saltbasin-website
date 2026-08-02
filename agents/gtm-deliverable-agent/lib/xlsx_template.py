@@ -357,10 +357,26 @@ def _build_data_quality_gaps(wb: Workbook, deliverable: dict):
         return
     ws = wb.create_sheet("Data Quality Gaps")
     _title(ws, "Data Quality Gaps")
-    _header_row(ws, 3, ["Description", "Severity"], widths=[60, 14])
+    _header_row(
+        ws,
+        3,
+        ["Description", "Severity", "Variance %", "Threshold Action", "Exception Class"],
+        widths=[50, 14, 12, 20, 18],
+    )
     row = 4
     for item in gaps:
-        _write_row(ws, row, [item["description"], item["severity"]])
+        variance = item.get("variance_pct")
+        _write_row(
+            ws,
+            row,
+            [
+                item["description"],
+                item["severity"],
+                f"{variance}%" if variance is not None else "—",
+                (item.get("threshold_action") or "—").replace("_", " "),
+                (item.get("exception_class") or "—").replace("_", " "),
+            ],
+        )
         fill = _SEVERITY_FILL.get(item["severity"])
         if fill:
             ws.cell(row=row, column=2).fill = fill

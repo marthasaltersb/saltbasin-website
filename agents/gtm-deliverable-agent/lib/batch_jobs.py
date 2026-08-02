@@ -16,12 +16,16 @@ from lib.anthropic_client import (
 AGENT_ROOT = Path(__file__).resolve().parent.parent
 PENDING_BATCHES_PATH = AGENT_ROOT / "output" / "pending_batches.json"
 
+EXEC_STYLES = ("financial_first", "narrative_first", "dashboard")
+
 RESEARCH_INSTRUCTIONS = (
     "Research current developments (last 12 months unless the topic is "
     "inherently evergreen) on: {topic}. Follow the deliverable structure, "
     "citation standard, and Assumptions & Methodology three-section pattern "
     "specified in your system context exactly. Search for primary-sourced "
-    "benchmarks before drafting -- do not draft from memory alone."
+    "benchmarks before drafting -- do not draft from memory alone. "
+    "Write the executive_summary in the '{exec_style}' style as defined in "
+    "your system context."
 )
 
 CLIENT_MAPPING_INSTRUCTIONS = (
@@ -47,9 +51,14 @@ CLIENT_MAPPING_INSTRUCTIONS = (
 
 
 def _build_request(
-    custom_id: str, topic: str, client_summary: dict | None
+    custom_id: str,
+    topic: str,
+    client_summary: dict | None,
+    exec_style: str = "financial_first",
 ) -> Request:
-    user_text = RESEARCH_INSTRUCTIONS.format(topic=topic)
+    if exec_style not in EXEC_STYLES:
+        raise ValueError(f"exec_style must be one of {EXEC_STYLES}, got {exec_style!r}")
+    user_text = RESEARCH_INSTRUCTIONS.format(topic=topic, exec_style=exec_style)
     if client_summary:
         user_text += CLIENT_MAPPING_INSTRUCTIONS.format(
             client_name=client_summary["client_name"],
@@ -76,9 +85,16 @@ def _build_request(
     )
 
 
-def submit_benchmark_refresh_batch(topics: list[str]) -> str:
+def submit_benchmark_refresh_batch(
+    topics: list[str], exec_style: str = "financial_first"
+) -> str:
     requests = [
-        _build_request(custom_id=f"benchmark-{i}", topic=topic, client_summary=None)
+        _build_request(
+            custom_id=f"benchmark-{i}",
+            topic=topic,
+            client_summary=None,
+            exec_style=exec_style,
+        )
         for i, topic in enumerate(topics)
     ]
     client = get_client()
@@ -87,9 +103,14 @@ def submit_benchmark_refresh_batch(topics: list[str]) -> str:
     return batch.id
 
 
-def submit_engagement_batch(topic: str, client_summary: dict | None) -> str:
+def submit_engagement_batch(
+    topic: str, client_summary: dict | None, exec_style: str = "financial_first"
+) -> str:
     request = _build_request(
-        custom_id="engagement-0", topic=topic, client_summary=client_summary
+        custom_id="engagement-0",
+        topic=topic,
+        client_summary=client_summary,
+        exec_style=exec_style,
     )
     client = get_client()
     batch = client.messages.batches.create(requests=[request])

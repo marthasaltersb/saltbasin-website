@@ -22,7 +22,7 @@
   },
 
   "contract_revenue_fields": {
-    "_source": "DRAFT — inferred from the roadmap doc's field list (ARR/MRR, fee structures, renewal/escalation terms, amendment/cancellation ARR impact). Not yet confirmed against Betsy's real Contract Metadata Master / Contract Revenue Fields schema — replace when she provides it.",
+    "_source": "Contract-level fields are DRAFT -- inferred from the roadmap doc's field list (ARR/MRR, fee structures, renewal/escalation terms, amendment/cancellation ARR impact), not yet confirmed against Betsy's real Contract Metadata Master. The canonical_metric fields below (nrr through confidence_score) are NOT a draft -- they're pulled directly from the FinBridgeCo/HandoverOS Enterprise Data Architecture doc's own 'Canonical Metric Framework' (section 7.1), the same metric vocabulary her platform's Mapping Engine resolves against multiple source systems. Added 2026-08-02.",
     "fields": [
       {"key": "contract_id", "label": "Contract ID", "aliases": ["contract id", "contract_id", "agreement id", "contract number"]},
       {"key": "customer_name", "label": "Customer / Account Name", "aliases": ["customer", "customer name", "account", "account name", "client name"]},
@@ -37,7 +37,20 @@
       {"key": "discount_terms", "label": "Discount Terms", "aliases": ["discount terms", "discount", "discount rate", "discount %"]},
       {"key": "amendment_history", "label": "Amendment History", "aliases": ["amendment history", "amendments", "contract amendments"]},
       {"key": "cancellation_arr_impact", "label": "Cancellation ARR Impact", "aliases": ["cancellation arr impact", "churned arr", "cancelled arr", "lost arr"]},
-      {"key": "currency", "label": "Currency", "aliases": ["currency", "currency code"]}
+      {"key": "currency", "label": "Currency", "aliases": ["currency", "currency code"]},
+
+      {"key": "nrr", "label": "Net Revenue Retention", "aliases": ["nrr", "net revenue retention", "net dollar retention", "ndr"]},
+      {"key": "grr", "label": "Gross Revenue Retention", "aliases": ["grr", "gross revenue retention", "gross dollar retention"]},
+      {"key": "ebitda_margin_pct", "label": "EBITDA Margin", "aliases": ["ebitda margin", "ebitda margin pct", "ebitda %"]},
+      {"key": "churn_rate_pct", "label": "Churn Rate", "aliases": ["churn rate", "churn %", "customer churn", "logo churn"]},
+      {"key": "expansion_arr", "label": "Expansion ARR", "aliases": ["expansion arr", "upsell arr", "upsell growth"]},
+      {"key": "contraction_arr", "label": "Contraction ARR", "aliases": ["contraction arr", "downgrade arr", "revenue shrinkage"]},
+      {"key": "moic", "label": "MOIC", "aliases": ["moic", "multiple on invested capital"]},
+      {"key": "irr", "label": "IRR", "aliases": ["irr", "internal rate of return"]},
+      {"key": "tvpi", "label": "TVPI", "aliases": ["tvpi", "total value to paid-in"]},
+      {"key": "dpi", "label": "DPI", "aliases": ["dpi", "distributed to paid-in"]},
+      {"key": "leakage_exposure_usd", "label": "Leakage Exposure", "aliases": ["leakage exposure", "estimated leakage", "revenue leakage exposure"]},
+      {"key": "confidence_score", "label": "Confidence Score", "aliases": ["confidence score", "composite trust score", "data confidence"]}
     ]
   }
 }

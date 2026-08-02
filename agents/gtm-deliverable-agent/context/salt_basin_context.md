@@ -39,6 +39,51 @@ silently dropped or, worse, kept anyway. Follow that same discipline — it is
 what makes a Salt Basin deliverable defensible under an investor's or
 acquirer's own diligence review.
 
+### Verified anchor case studies — Betsy's own track record
+
+These are Betsy's own delivered engagements. Treat them as **primary
+sources already verified** — cite them directly in `benchmark_master` or
+`industry_breakdown` where relevant to the topic, no `web_search` needed to
+confirm them, and never route them into `unverified_flags`:
+
+- **Apptio** — automated $500M+ in ARR renewals via proprietary data
+  migration and L2C infrastructure. Result: $4.6B exit to IBM (142% return,
+  2.4x money multiple).
+- **Integral Ad Science (IAS)** — built proprietary ARR tracking and
+  retention models for audit-grade investor reporting. Result: valuation
+  trajectory from an $850M acquisition to a $1.9B exit.
+- **TIBCO** — re-architected the Salesforce Billing/Order integration to
+  eliminate manual error re-processing and "swivel-chair" data entry
+  between Sales Ops and Finance.
+- **CentralSquare** (Vista Equity Partners portfolio) — unified Lead-to-Cash
+  across a $4.81B three-company merger (Superion, TriTech, Zuercher) using
+  the Vista "BOSS" (Business Operations and System Standards) methodology.
+- **Pearson / Accenture** — rationalized a 2M+ ISBN catalog off an 8-tab
+  workbook with a 200+ formula pricing engine onto system-governed CPQ.
+
+Use these to ground a scenario's plausibility and severity, not as a
+substitute for topic-specific third-party benchmark research — a deliverable
+that only cited Betsy's own engagements would read as anecdotal. Pair them
+with external primary sources per the citation standard above.
+
+### The 8-Scenario Revenue Leakage Library
+
+Betsy's own defect-pattern taxonomy, codified from 13 years of enterprise
+Lead-to-Cash transformation work. When a topic maps to one of these, use its
+root cause and EBITDA impact tier as the spine of the Executive Summary and
+Industry Breakdown rather than reinventing the framing:
+
+| Scenario | Root Cause (Defect Pattern) | EBITDA Impact |
+|---|---|---|
+| Siloed Spreadsheet Pricing | Over-reliance on fragmented pricing workflows (6+ Excel workbooks) | High — pricing inaccuracies, no audit-grade controls |
+| Broken Billing/Order Handshake | Fragile integrations requiring manual order error re-processing | Moderate — operational drag, delayed revenue recognition |
+| Automated Renewal Failure | Inconsistent data migration logic blocking automated renewal streams | Critical — threatens automation of $500M+ recurring ARR |
+| Unscalable SKU Fragility | Managing high-volume catalogs via multi-tab workbooks with 200+ formula engines | High — lead-time friction, configuration errors |
+| ASC 606 Compliance Gaps | Fragile handling of variable consideration and revenue recognition rules | Critical — audit risk, exit due-diligence failure |
+| M&A Integration Friction | Fragmented data models across merged entities | High — inability to realize synergies or produce a unified customer master |
+| Usage-Based Monetization Gaps | Architectural inability to launch or track usage-based pricing | High — missed revenue streams in modern SaaS GTM |
+| Front-End Billing Opacity | Lack of payment-status visibility for Sales/Success teams | Moderate — poor cash-flow management, collection delays |
+
 ## Deliverable shape
 
 Structured after a real, working HandoverOS deliverable — not a generic
@@ -46,7 +91,26 @@ report template. Populate the structured output schema's fields per this
 model:
 
 **Executive Summary** — leads with financial exposure or strategic risk in
-the first sentence. No throat-clearing.
+the first sentence. No throat-clearing. Write it in the requested style
+(passed in the user turn; defaults to `financial_first` if none is given) —
+these three styles are Betsy's own, from her executive-templates library, not
+options invented for this agent:
+
+- **`financial_first`** — opens with the dollar exposure or valuation impact
+  before any narrative context. Numbers first, story second. Best for
+  PE/finance-primary audiences.
+- **`narrative_first`** — opens with the operational story (what's breaking,
+  why it compounds) and lands on the financial exposure at the end of the
+  paragraph. Best when the audience needs to be walked to the number, not
+  handed it cold.
+- **`dashboard`** — written as short, scannable statements built around 3-4
+  discrete callouts (a KPI tile pattern: one line each for exposure, root
+  cause, recommended action, timeline) rather than flowing prose. Best for a
+  slide-first or board-packet context.
+
+Whichever style is used, the underlying facts and citations are identical —
+this changes framing and structure only, never the substance or the
+citation standard above.
 
 **Benchmark Master** — one row per benchmark stat: the metric it speaks to,
 the value, source, year, and a one-line note on why it's relevant to this
@@ -92,6 +156,13 @@ fields as clean numbers is what lets the deliverable recalculate live when
 someone changes the ARR input cell — do not embed the "%" or units in the
 value.
 
+This `rate% × ARR` shape is not an invented convenience — it's the same
+exposure-formula pattern the actual FinBridgeCo/HandoverOS platform uses in
+its Scenario Rules Engine (e.g. a "Price Escalation Not Applied" rule fires
+with `Exposure Formula: ARR × 1%`). When you write a scenario's
+`methodology_note`, ground it the same way: name the mechanism that drives
+the rate, not just the rate itself.
+
 **Client Actuals vs. Benchmark** (only when client data was provided for
 this run) — the client's own normalized figures placed next to the
 benchmark, with the same conservative/base/high framing, plus every mapping
@@ -102,6 +173,19 @@ units/currency, anything the client-data normalization pass flagged rather
 than guessed at. Treat this as a real deliverable finding, not an apology —
 it's evidence for a readiness-assessment upsell, and should be framed that
 way.
+
+When a gap involves a variance between two figures (e.g. client-reported ARR
+vs. a system-of-record total, or two conflicting client columns for the same
+metric), classify its severity using the same variance-threshold logic the
+FinBridgeCo/HandoverOS reconciliation engine applies: **<2% → no action,
+2-5% → warning, 5-10% → confidence reduction, >10% → escalation.** Say the
+variance percentage explicitly when you can compute or estimate it from what
+was provided, and use one of that platform's own exception classes to name
+the failure mode where it fits — **timing** (expected latency/close-boundary
+difference), **mapping** (unmapped or misapplied account/entity/field),
+**source quality** (missing, duplicated, malformed, or contradictory
+source data), or **rule defect** (a generation/recognition/allocation/
+formula error) — rather than a vague "data issue."
 
 ## Client source-data mapping (when a client export is included in this run)
 

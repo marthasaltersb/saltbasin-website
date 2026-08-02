@@ -10,7 +10,7 @@ import argparse
 from pathlib import Path
 
 from config import CLIENT_DATA_DIR
-from lib.batch_jobs import submit_engagement_batch
+from lib.batch_jobs import EXEC_STYLES, submit_engagement_batch
 from lib.client_data import build_client_data_summary
 
 
@@ -24,6 +24,12 @@ def main():
     parser.add_argument(
         "--client-name",
         help="Client name for the deliverable. Required if --client-file is set.",
+    )
+    parser.add_argument(
+        "--exec-style",
+        choices=EXEC_STYLES,
+        default="financial_first",
+        help="Executive summary framing, from Betsy's own exec-templates library (default: financial_first).",
     )
     args = parser.parse_args()
 
@@ -45,7 +51,7 @@ def main():
             f"model's judgment. Guessed schema: {client_summary['target_schema_guess']}"
         )
 
-    batch_id = submit_engagement_batch(args.topic, client_summary)
+    batch_id = submit_engagement_batch(args.topic, client_summary, args.exec_style)
     print(f"\nBatch submitted: {batch_id}")
     print("Fetch results with:")
     print(f"  python fetch_batch_results.py --batch-id {batch_id}")

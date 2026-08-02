@@ -6,7 +6,7 @@ import argparse
 import json
 
 from config import AGENT_ROOT
-from lib.batch_jobs import submit_benchmark_refresh_batch
+from lib.batch_jobs import EXEC_STYLES, submit_benchmark_refresh_batch
 
 TOPICS_PATH = AGENT_ROOT / "schema" / "topics.json"
 
@@ -24,6 +24,12 @@ def main():
         dest="topics",
         help="Override schema/topics.json -- repeat for multiple topics.",
     )
+    parser.add_argument(
+        "--exec-style",
+        choices=EXEC_STYLES,
+        default="financial_first",
+        help="Executive summary framing, from Betsy's own exec-templates library (default: financial_first).",
+    )
     args = parser.parse_args()
 
     topics = args.topics or load_topics()
@@ -31,7 +37,7 @@ def main():
     for topic in topics:
         print(f"  - {topic}")
 
-    batch_id = submit_benchmark_refresh_batch(topics)
+    batch_id = submit_benchmark_refresh_batch(topics, args.exec_style)
     print(f"\nBatch submitted: {batch_id}")
     print("Most batches finish within an hour (max 24h). Fetch results with:")
     print(f"  python fetch_batch_results.py --batch-id {batch_id}")
