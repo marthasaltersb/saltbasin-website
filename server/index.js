@@ -56,6 +56,7 @@ import scenariosRouter from './routes/scenarios.js';
 import configEnvelopesRouter from './routes/configEnvelopes.js';
 import lonetreeMvpRouter from './routes/lonetreeMvp.js';
 import proposalExperienceRouter from './routes/proposalExperience.js';
+import gtmDeliverablesRouter from './routes/gtmDeliverables.js';
 
 // Safety net: an unhandled promise rejection in any async route handler
 // (e.g. a bad column reference in a PATCH) is fatal by default in Node —
@@ -157,6 +158,7 @@ app.use('/api/member-financial', memberFinancialRouter);
 app.use('/api/member-entitlements', memberEntitlementsRouter);
 app.use('/api/resume-outputs', resumeOutputsRouter);
 app.use('/api/scenarios', scenariosRouter);
+app.use('/api/gtm-deliverables', gtmDeliverablesRouter);
 
 // Uploaded files now live on Supabase Storage at <SUPABASE_URL>/storage/v1/object/public/uploads/<file>.
 // The returned URL from POST /api/uploads is already absolute, so the browser

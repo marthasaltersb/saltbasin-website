@@ -36,6 +36,12 @@ services:
       # ── Optional — leave blank until Phase 3 agent is wired ──
       - key: ANTHROPIC_API_KEY
         sync: false
+      # ── Optional — required only for the GTM Deliverable Agent's daily
+      #    cron trigger (.github/workflows/gtm-deliverables-cron.yml) to call
+      #    POST /api/gtm-deliverables/run-due. Generate a long random value;
+      #    set the same value as a GTM_CRON_SECRET repo secret in GitHub. ──
+      - key: GTM_CRON_SECRET
+        sync: false
       # ── Optional — only needed if frontend is hosted on a different domain ──
       # - key: FRONTEND_ORIGIN
       #   value: https://saltbasin.net

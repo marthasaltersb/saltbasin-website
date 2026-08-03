@@ -4007,6 +4007,188 @@ Rod state, per event:
   } catch (e) {
     console.warn('[db] journey_current_definitions seed warning:', e.message);
   }
+
+  // ── GTM Deliverable & Benchmark Research Agent (2026-08-02) ──────────────
+  // Native platform build replacing the standalone Python CLI at
+  // agents/gtm-deliverable-agent/. Audited against the Channel Journey
+  // substrate (salt-basin-channel-journey-architecture skill) before being
+  // added: none of these four are a Member/Customer/Career Channel Journey
+  // concept, so none of the six reuse-first checklist items apply. Isolated
+  // in its own try/catch, appended at the end of bootstrap() rather than
+  // folded into the large unisolated CREATE TABLE blocks above, matching
+  // this file's own established risk-mitigation convention for new schema.
+  try {
+    await sql.unsafe(`
+      -- Institutional scenario library. Matches the metric_definitions
+      -- precedent (a standalone governed-definitions table, unrelated to
+      -- journey_data_rods/journey_rod_types) rather than anything
+      -- Channel-Journey-specific -- this is Betsy's own content taxonomy for
+      -- what the research agent studies, not evidence about a Member/
+      -- Customer's journey. Seeded below with the real 8-Scenario Revenue
+      -- Leakage Library from context/salt_basin_context.md; extensible
+      -- directly or via annotation promotion (promoted_from_annotation_id,
+      -- added after gtm_deliverable_annotations exists below).
+      CREATE TABLE IF NOT EXISTS gtm_scenario_library (
+        id BIGSERIAL PRIMARY KEY,
+        scenario_key TEXT NOT NULL UNIQUE,
+        title TEXT NOT NULL,
+        root_cause TEXT NOT NULL,
+        ebitda_impact_tier TEXT NOT NULL,
+        topic_prompt TEXT NOT NULL,
+        source TEXT NOT NULL DEFAULT 'seeded',
+        is_active BOOLEAN NOT NULL DEFAULT true,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_by BIGINT REFERENCES users(id) ON DELETE SET NULL,
+        created_at BIGINT NOT NULL,
+        updated_at BIGINT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS gtm_schedules (
+        id BIGSERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        cadence TEXT NOT NULL DEFAULT 'monthly',
+          -- weekly | monthly | custom_days
+        cadence_days INTEGER,
+        topic_selection_mode TEXT NOT NULL DEFAULT 'all_active_scenarios',
+          -- all_active_scenarios | specific_scenario_ids | random_n
+        selected_scenario_ids JSONB NOT NULL DEFAULT '[]',
+        random_n INTEGER,
+        exec_style TEXT NOT NULL DEFAULT 'financial_first',
+        enabled BOOLEAN NOT NULL DEFAULT true,
+        next_run_at BIGINT NOT NULL,
+        last_run_at BIGINT,
+        last_run_status TEXT,
+        last_run_error TEXT,
+        created_at BIGINT NOT NULL,
+        updated_at BIGINT NOT NULL
+      );
+
+      -- Generated deliverables. Matches the resume_output_projections /
+      -- org_document_projections precedent for "generated artifact with
+      -- lineage" -- one deliberate divergence: those two satellites both
+      -- require a mandatory parent Channel Journey (career_master / customer)
+      -- via tributaryRegistry.js. GTM deliverables usually have none at all
+      -- (benchmark_refresh mode is pure admin research; engagement-mode
+      -- "clients" are often prospects with no organization_profiles row
+      -- yet), so this does NOT register as a Tributary -- linked_org_id is
+      -- an optional, nullable soft cross-reference only, for the case where
+      -- an engagement's client already happens to be a real onboarded org.
+      CREATE TABLE IF NOT EXISTS gtm_deliverables (
+        id BIGSERIAL PRIMARY KEY,
+        mode TEXT NOT NULL,
+          -- benchmark_refresh | engagement
+        schedule_id BIGINT REFERENCES gtm_schedules(id) ON DELETE SET NULL,
+        linked_org_id BIGINT REFERENCES organization_profiles(id) ON DELETE SET NULL,
+        topic TEXT NOT NULL,
+        exec_style TEXT NOT NULL DEFAULT 'financial_first',
+        engagement_client_name TEXT,
+        client_data_summary JSONB,
+          -- matched_fields/aggregates/unmatched-column samples only -- never
+          -- row-level client data, mirroring lib/client_data.py's contract.
+        deliverable_json JSONB,
+        xlsx_storage_url TEXT,
+        xlsx_storage_path TEXT,
+        status TEXT NOT NULL DEFAULT 'generating',
+          -- generating | draft | reviewed | approved | sent | failed
+          -- allowed values enforced in JS (server/lib/gtm/deliverableStatus.js),
+          -- not a DB CHECK, matching resumeProjection.js's ALLOWED_STATUSES pattern.
+        batch_id TEXT,
+        batch_custom_id TEXT,
+          -- correlates this row to its own request within a multi-topic
+          -- batch (e.g. 'benchmark-3') -- a batch_id alone isn't enough to
+          -- match a result back to the right row once results arrive.
+        generation_error TEXT,
+        requested_by BIGINT REFERENCES users(id) ON DELETE SET NULL,
+        created_at BIGINT NOT NULL,
+        updated_at BIGINT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_gtm_deliverables_status ON gtm_deliverables (status, created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_gtm_deliverables_mode ON gtm_deliverables (mode, created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_gtm_deliverables_batch ON gtm_deliverables (batch_id) WHERE batch_id IS NOT NULL;
+
+      -- Review-time annotations. Same event-log-child-of-parent shape as
+      -- journey_rod_events, scoped to the gtm_deliverables satellite instead
+      -- of a Channel Rod -- this is a log of what happened while reviewing a
+      -- deliverable, not evidence about a Member/Customer's journey, so
+      -- journey_rod_evidence doesn't apply.
+      CREATE TABLE IF NOT EXISTS gtm_deliverable_annotations (
+        id BIGSERIAL PRIMARY KEY,
+        deliverable_id BIGINT NOT NULL REFERENCES gtm_deliverables(id) ON DELETE CASCADE,
+        section_key TEXT,
+        type TEXT NOT NULL,
+          -- new_scenario | rule_note | decision | correction
+        body JSONB NOT NULL,
+        promoted_to_scenario_id BIGINT REFERENCES gtm_scenario_library(id) ON DELETE SET NULL,
+        created_by BIGINT REFERENCES users(id) ON DELETE SET NULL,
+        created_at BIGINT NOT NULL,
+        updated_at BIGINT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_gtm_annotations_deliverable ON gtm_deliverable_annotations (deliverable_id, created_at);
+
+      ALTER TABLE gtm_scenario_library ADD COLUMN IF NOT EXISTS promoted_from_annotation_id BIGINT REFERENCES gtm_deliverable_annotations(id) ON DELETE SET NULL;
+    `);
+
+    // One-shot seed: the real 8-Scenario Revenue Leakage Library, ported
+    // verbatim from context/salt_basin_context.md's table and
+    // schema/topics.json's topic_prompt strings -- same content, now the
+    // single editable copy of record (the Python agent's topics.json stops
+    // being read once this ships; see the README notice added alongside).
+    const scenarioSeed = [
+      ['siloed_spreadsheet_pricing', 'Siloed Spreadsheet Pricing', 'Over-reliance on fragmented pricing workflows (6+ Excel workbooks)', 'high',
+        'Siloed spreadsheet pricing and quoting (the iCIMS defect pattern) -- audit-grade control failure from fragmented Excel-based pricing workflows'],
+      ['broken_billing_order_handshake', 'Broken Billing/Order Handshake', 'Fragile integrations requiring manual order error re-processing', 'moderate',
+        'Broken billing/order handshake and fragile system integrations (the TIBCO defect pattern) -- manual order error re-processing and delayed revenue recognition'],
+      ['automated_renewal_failure', 'Automated Renewal Failure', 'Inconsistent data migration logic blocking automated renewal streams', 'critical',
+        'Automated renewal failure from inconsistent data migration logic (the Apptio scenario) -- risk to recurring ARR automation at scale'],
+      ['unscalable_sku_fragility', 'Unscalable SKU Fragility', 'Managing high-volume catalogs via multi-tab workbooks with 200+ formula engines', 'high',
+        'Unscalable SKU/catalog fragility in formula-heavy spreadsheet pricing engines (the Pearson defect pattern) -- lead-time friction and configuration errors at high SKU volume'],
+      ['asc606_compliance_gaps', 'ASC 606 Compliance Gaps', 'Fragile handling of variable consideration and revenue recognition rules', 'critical',
+        'ASC 606 compliance gaps from fragile variable-consideration handling -- audit risk and exit due-diligence exposure'],
+      ['ma_integration_friction', 'M&A Integration Friction', 'Fragmented data models across merged entities', 'high',
+        'M&A integration friction from fragmented data models across merged entities -- inability to realize synergies or produce a unified customer master'],
+      ['usage_based_monetization_gaps', 'Usage-Based Monetization Gaps', 'Architectural inability to launch or track usage-based pricing', 'high',
+        'Usage-based monetization gaps -- architectural inability to launch or track usage-based pricing models in modern SaaS GTM'],
+      ['front_end_billing_opacity', 'Front-End Billing Opacity', 'Lack of payment-status visibility for Sales/Success teams', 'moderate',
+        'Front-end billing opacity -- lack of payment-status visibility for Sales and Customer Success teams, and its cash-flow/collections impact'],
+    ];
+    const seedNow = Date.now();
+    for (let i = 0; i < scenarioSeed.length; i++) {
+      const [scenarioKey, title, rootCause, tier, topicPrompt] = scenarioSeed[i];
+      await sql.unsafe(
+        `INSERT INTO gtm_scenario_library
+           (scenario_key, title, root_cause, ebitda_impact_tier, topic_prompt, source, sort_order, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, 'seeded', $6, $7, $7)
+         ON CONFLICT (scenario_key) DO NOTHING`,
+        [scenarioKey, title, rootCause, tier, topicPrompt, i, seedNow]
+      );
+    }
+  } catch (e) {
+    console.warn('[db] gtm deliverable agent schema/seed warning:', e.message);
+  }
+
+  // One-shot: inject "GTM Deliverables" as its own top-level admin_nav view,
+  // same pattern as EIDOS/Lonetree MVP above -- single componentId backing
+  // its own internal tab bar (see GtmDeliverablesPanel.jsx).
+  try {
+    const navRowGtm = await sql.unsafe(`SELECT data FROM config_state WHERE id = 'admin_nav'`);
+    if (navRowGtm.length > 0) {
+      const nav = JSON.parse(navRowGtm[0].data);
+      nav.views = nav.views || [];
+      if (!nav.views.some((v) => v.id === 'gtmDeliverables')) {
+        nav.views.push({
+          id: 'gtmDeliverables', label: 'GTM Deliverables', sortOrder: 6, tabs: [
+            { id: 'gtmDeliverables', label: 'GTM Deliverables', componentId: 'gtmDeliverables', sortOrder: 0 },
+          ],
+        });
+        await sql.unsafe(
+          `UPDATE config_state SET data = $1, updated_at = $2 WHERE id = 'admin_nav'`,
+          [JSON.stringify(nav), Date.now()]
+        );
+      }
+    }
+  } catch (e) {
+    console.warn('[db] gtmDeliverables nav injection skipped:', e.message);
+  }
 }
 
 // Awaited at module import time so routes can use db without worrying about

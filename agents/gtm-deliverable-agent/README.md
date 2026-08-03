@@ -1,5 +1,21 @@
 # GTM Deliverable & Benchmark Research Agent
 
+> **Superseded (2026-08-02).** This standalone Python CLI is no longer the
+> maintained path — the same design now runs natively in the platform,
+> configurable from the admin "GTM Deliverables" tab
+> (`src/components/admin/GtmDeliverablesPanel.jsx`), using the server's own
+> already-provisioned `ANTHROPIC_API_KEY` (no personal key, no terminal, no
+> script to run). See `server/lib/gtm/` and `server/routes/gtmDeliverables.js`.
+> This directory is kept in place because its `context/` and `schema/` files
+> are the native build's own single-source-of-truth inputs (read directly off
+> disk at request time — see `server/lib/gtm/context.js` and
+> `clientDataNormalize.js`), and its `lib/*.py` remains a useful reference for
+> the original design (exact schema shapes, xlsx formula patterns, styling
+> constants). The two GitHub Actions workflows that used to run this script
+> (`gtm-benchmark-submit.yml` / `gtm-benchmark-fetch.yml`) have been removed
+> and replaced by `.github/workflows/gtm-deliverables-cron.yml`, which just
+> pings the server's own `/api/gtm-deliverables/run-due` endpoint.
+
 Agent #1 from the Autonomous Agent Roadmap, including the client
 source-data mapping expansion. Standalone Python — calls the Claude API
 directly with your own key, not through Cowork's managed scheduling.

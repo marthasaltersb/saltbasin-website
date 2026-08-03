@@ -1,0 +1,34 @@
+name: GTM Deliverables — Daily Cron Trigger
+
+# Replaces gtm-benchmark-submit.yml / gtm-benchmark-fetch.yml (2026-08-02).
+# The GTM Deliverable Agent now runs natively in the platform (see
+# server/routes/gtmDeliverables.js, server/lib/gtm/) using the server's own
+# ANTHROPIC_API_KEY -- this workflow no longer calls Anthropic or holds an
+# API key itself. It just pings the server once a day so any due schedule
+# (gtm_schedules, configured from the admin "GTM Deliverables" tab) gets
+# submitted and any finished batch gets fetched. Cadence/topic selection
+# live in the database, not in this cron expression -- daily is just how
+# often the server is asked to check, not how often deliverables generate.
+
+on:
+  schedule:
+    - cron: "0 15 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call run-due
+        env:
+          GTM_CRON_SECRET: ${{ secrets.GTM_CRON_SECRET }}
+          BASE_URL: ${{ vars.GTM_APP_BASE_URL || 'https://saltbasin.net' }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GTM_CRON_SECRET:-}" ]; then
+            echo "GTM_CRON_SECRET repo secret is not set -- add it (matching the GTM_CRON_SECRET env var on Render) before this workflow can call run-due." >&2
+            exit 1
+          fi
+          curl -sS -f -X POST "$BASE_URL/api/gtm-deliverables/run-due" \
+            -H "x-gtm-cron-secret: $GTM_CRON_SECRET" \
+            -H "Content-Type: application/json"
