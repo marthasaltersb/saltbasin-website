@@ -1,9 +1,10 @@
-# Salt Basin Genesis — Experience Proof
+# Salt Basin Genesis — Experience Proof (v2)
 
-A working, self-contained browser prototype proving the canonical Universe Builder / Active
-Avatar / Agent Delegation / Experience Studio interaction model for Salt Basin Genesis, ahead
-of any production backend, runtime, or mapping-compiler work (per `SB-GEN-SPEC-001`, this is a
-Phase 6 "Playable world" proof — it deliberately does not implement Phases 0–5).
+A working, self-contained browser prototype proving the canonical two-layer interaction model
+for Salt Basin Genesis: business rules are authored once in **Definition Studio**, then put
+into motion by end users in **Your Journeys** — nothing runs that wasn't governed first. This
+is ahead of any production backend, runtime, or mapping-compiler work (per `SB-GEN-SPEC-001`,
+this is a Phase 6 "Playable world" proof — it deliberately does not implement Phases 0–5).
 
 This lives entirely outside `src/` and `server/` and does not read from, write to, or require
 the production app, database, or auth. It is safe to open, edit, and delete independently of
@@ -18,147 +19,153 @@ No build step. Either:
 - Or serve the folder with any static server, e.g. `python3 -m http.server 8080` from inside
   `experience-proof/`, then open `http://localhost:8080/`.
 
-Tested headless in Chromium via Playwright on both `file://` and a local static server, with a
-scripted pass through the full scenario below — see **Validation** at the bottom.
+Click **Enter Your World** on the intro screen — the 3D scene only initializes after that
+click (matches the reference "Deal Journey Prototype" pattern this build adopted).
+
+## The two layers — and why they exist
+
+The real platform separates *what's governed* from *who's running it* (`SB-GEN-SPEC-001` §3:
+R4 Organization Configuration vs. R5 Runtime Event Store). This prototype makes that split
+literal and playable instead of leaving it as an abstract diagram:
+
+| Layer | World | Badge | What happens here |
+|---|---|---|---|
+| **R4 — Organization Configuration** | **Definition Studio** | teal `R4 · ORG CONFIGURATION` | Author policies, answer guided intake questions, add scenarios, assign approver roles, and *translate* an approved rule into governed predicate/transition logic. |
+| **R5 — Runtime Event Store** | **Your Journeys** | gold `R5 · RUNTIME EVENT STORE` | End users delegate agents, review evidence, and approve transitions — but only against atoms a compiled R4 policy actually governs. |
+
+The breadcrumb and a persistent layer badge (top of screen) always show which side you're on.
+Every governed atom in Your Journeys carries a **"Governed by → POL-xxx"** link that jumps
+straight back to the exact policy in Definition Studio that authorizes it — the cross-layer
+traceability the whole rebuild was about, not just a label.
+
+### The causality is real, not decorative
+
+Two atoms prove this two ways:
+
+- **Bill-To Party Definition** (Revenue Rod, Contract stage) ships **pre-governed** — `POL-BILLTO`
+  is already compiled, so its agent-delegation → evidence → approve loop works immediately.
+- **Renewal Risk Score Definition** (Customer Rod, Renewal stage) ships **ungoverned** — its
+  crystal renders dim with a dashed cage, and "Delegate to Agents" is disabled. It stays that
+  way until you go to Definition Studio → Business Definition Builder → select the *Renewal
+  Risk Score Policy* → answer the guided question → write the rule → assign and approve a role
+  → **Translate to Governed Logic**. Only then does the atom back in Your Journeys light up,
+  unlock delegation, and become mature-able — confirmed end-to-end in automated testing.
 
 ## What's here
 
-- **Universe Builder mode** — an elevated cosmos view of the three Journey Rods (Revenue,
-  Customer, Member) as orbiting clusters. Click a region or an individual governed definition
-  to inspect it; regions with open conflicts glow red instead of the rod's normal color.
-- **Active Avatar mode** — a placeholder avatar (clearly labeled as such in the HUD) that
-  travels toward a selected stage on request ("Approach"), with nearby structures pulsing as it
-  passes. Arrival opens the close-range inspector.
-- **Agent delegation** — two bounded agents per client config, each with an explicit stated
-  role, objective, and **capability limits** (what it is *not* allowed to do), spatially
-  anchored to the atom they're working on rather than living only in a chat panel. They run
-  concurrently with visible progress.
-- **Evidence review + approve / revise / reject / defer** — the Evidence Investigator returns
-  observations with confidence scores; the Definition Reconciliation Agent proposes a
-  transition with a predicate pass/fail table (mirroring the Decision Runtime pattern in
-  `SB-GEN-SPEC-001` Appendix B) and an explicit disposition. Nothing commits without your
-  action — matches the spec's Agent-Centric Security model (§12: agents may *propose* and
-  *stage*, never *commit*).
-- **World transformation** — approving a proposal changes the atom's underlying maturity/
-  conflict state, which deterministically recomputes its facet count, color band, and glow
-  (the render grammar from `SB-GEN-SPEC-001` §14.1), animates the crystal to its new geometry,
-  and leaves a fading wireframe "historical echo" at the old shape.
-- **Temporal history** — every user and agent action is logged with a stamped `EVAL-####` ID,
-  actor, and timestamp, and is reachable from any mode.
-- **Two client configurations** — Salt Basin HOS™ and Salt Basin × LoneTree Capital. Identity,
-  world name, terminology, role, agent names/objectives, visible metrics, accent color,
-  complexity, guidance level, and gamification level all vary; navigation, camera, selection,
-  delegation, and transition mechanics do not (the canonical kernel).
+- **Home (Work World hub)** — five crystals: Definition Studio, Your Journeys, and Configure
+  Profile are real and enterable; two ("Review Prospects", "Escalate Deals") are explicit
+  "World In Progress" states, demonstrating the roadmap without faking functionality.
+- **Definition Studio** — three modules:
+  - **Public Site Configuration** — org pages/sub-pages matching the real `site_state` page
+    shape (`key`/`name`/`slug`/`status`/`order`/`subpages`). Add a sub-page, publish/unpublish,
+    open a table view. Publishing a page visibly changes its crystal from dim/mauve to
+    lit/teal.
+  - **GTM & Operations Diagnostic** — a short guided assessment (3 questions) that computes a
+    real capability/maturity scorecard from your answers, not a canned score.
+  - **Business Definition Builder** — the deepest module: upload-source-file simulation,
+    guided intake questions, scenario tracking, plain-language policy authoring, approver-role
+    assignment + approval, and a **Translate** step that compiles the approved rule into
+    predicates and a lineage record an agent can cite but never author on its own.
+- **Your Journeys** — the Universe Builder / Active Avatar loop: an elevated cosmos view of
+  the three Journey Rods, a placeholder avatar (clearly labeled) that approaches a selected
+  stage, two bounded agents with explicit capability limits that delegate concurrently and are
+  spatially anchored to the atom they're working on (not chat-only), an Evidence & Proposed
+  Transition panel with a predicate pass/fail table (mirrors `SB-GEN-SPEC-001` Appendix B), and
+  Approve/Reject/Defer actions. Approving deterministically recomputes the atom's facet count,
+  color, and glow (the render grammar from §14.1), animates the crystal, and leaves a fading
+  wireframe "historical echo."
 - **Experience Studio** — Studio-mode toggle; a stable touchpoint registry (dot-notation IDs,
   never DOM selectors); click-to-annotate touchpoint markers; a Feedback Queue with the full
   lifecycle (`draft` → … → `accepted`/`rejected`/`superseded`); a Preserve Exactly ledger; an
-  Iteration Builder that only accepts `approved_for_iteration` feedback and generates a
-  paste-ready Codex brief; local autosave with a saved/unsaved indicator; JSON export/import of
-  the full Experience Memory with duplicate detection; and a lightweight before/after snapshot
-  comparison.
-
-## The vertical slice ("repair and mature an incomplete journey")
-
-Grounded in real flagged data already present across the reference prototypes, not invented:
-the **Bill-To Party Definition** on the Revenue Journey Rod's Contract stage, maturity 30%,
-`conflict: true`, source `Halt_Maturity_Rules HR-001`.
-
-1. Enter the world → Universe Builder shows the Revenue region.
-2. Select the region or the atom directly → progressive disclosure explains the contested
-   state without a dashboard dump.
-3. Enter Avatar Mode → approach the Contract stage.
-4. Delegate the Evidence Investigator and the Definition Reconciliation Agent — both run
-   concurrently, visible in-world.
-5. The Investigator returns two evidence records with confidence scores.
-6. The Reconciliation Agent proposes a definition and raises an approval request (2 of 4
-   predicates fail — a real dependency and human approval are both outstanding).
-7. Review evidence → Approve.
-8. The atom matures 30% → 82%, `conflict` clears, the crystal transforms live, a historical
-   echo fades out, and the event is logged with an eval ID.
-9. Builder mode reflects the new state on return.
-10. Annotate any of this via Studio mode at any point.
+  Iteration Builder that only accepts `approved_for_iteration` feedback; local autosave with a
+  saved/unsaved indicator (now flushed synchronously on `beforeunload`/`pagehide`, not just a
+  debounce, so a draft survives even an immediate reload); and JSON export/import.
+- **Unified pointer controls** — one control scheme for mouse drag, touch drag, pinch-zoom, and
+  wheel-zoom, with a tap/click distinguished from a drag by movement and duration thresholds
+  (adopted from the "Deal Journey Prototype" reference). Arrow keys nudge the camera; Escape
+  closes the topmost panel/modal.
+- **Visible failure, never silent** — a `window.onerror`/`unhandledrejection` handler surfaces
+  a banner instead of a blank screen; the render loop catches its own errors and halts cleanly
+  rather than spamming the console; a `hasWebGL()` guard runs before any Three.js call.
 
 ## Touchpoint registry
 
-18 stable IDs (`arrival.world-entry`, `navigation.orbit`, `navigation.zoom`,
-`navigation.mode-toggle`, `config.client-switch`, `builder.region-selection`,
-`builder.intervention-preview`, `avatar.enter-journey`, `avatar.approach-structure`,
-`agent.select`, `agent.delegate-task`, `agent.parallel-progress`, `agent.approval-request`,
-`evidence.review`, `journey.maturity-transformation`, `history.temporal-replay`,
-`studio.toggle`, `studio.annotation-create`, `studio.preserve-exactly`,
-`studio.iteration-build`) with full field definitions (objective, trigger, expected response,
-success condition, related component, status, introduced/modified version) inline in
-`index.html` (`TOUCHPOINTS` array) and browsable in-app via Studio → Touchpoint Registry.
-Not every ID currently has a live in-world marker — only the subset wired to a `[data-tp]`
-element does today (8 markers live in the shipped state); the rest are registered and
-documented for the next iteration to wire up, per the registry's own `status` field.
-
-## Reuse matrix (from the Asset Cartographer's discovery pass)
-
-| Reused from | For |
-|---|---|
-| `saltbasinvisuallibrary.html` (canonical visual candidate; already ported into production `src/components/SaltBasinCrystal.jsx`) | Palette, camera/orbit pointer handling, glow-sprite and env-map technique |
-| `saltbasincrystallineworldv5_2.html` / the "governed" v2–v4 variants | Maturity-driven facet count + color band (`symmetryClass`), rod/stage/atom world layout, flight/approach avatar mechanic |
-| `saltbasinimmersive.html` / `saltbasincollab.html` (admin-configurable journey) | Agent context-cache pattern, in-world chat/agent anchor projection technique, two-client-config demonstration pattern |
-| `spatialjourneyworldgood_camera_nav.html` (canonical functional candidate; ancestor of production `src/components/SpatialJourneyWorld.jsx`) | Confirms this prototype's world-building approach is consistent with what's already shipped — cross-referenced, not reimplemented from scratch |
-| `SB-GEN-SPEC-001` (Genesis Program & Technical Specification v1.0) | Vocabulary (Rod/Atom/Molecule/Orbit/Evidence Chain), the deterministic render-grammar table (§14.1), the Decision Runtime predicate-table pattern (Appendix B), the Agent-Centric Security action classes (§12) |
-
-Full lineage, duplicate-checksum, and missing-dependency findings are in the Asset
-Cartographer's discovery report (delivered in-conversation, not duplicated here per the
-token-discipline instruction against redundant documents).
+22 stable IDs spanning both layers — `arrival.world-entry`, `navigation.orbit`,
+`home.action-defstudio`, `home.action-journeys`, `defstudio.module-sitecfg`,
+`defstudio.module-gtm`, `defstudio.module-defbuilder`, `sitecfg.page-select`,
+`sitecfg.publish`, `gtm.wizard-step`, `gtm.results`, `defbuilder.upload`,
+`defbuilder.question-answer`, `defbuilder.scenario-add`, `defbuilder.policy-define`,
+`defbuilder.role-assign`, `defbuilder.translate`, `journeys.governed-link`,
+`avatar.approach-structure`, `agent.delegate-task`, `evidence.review`,
+`journey.maturity-transformation` — defined inline in `index.html` (`TOUCHPOINTS` array) and
+browsable in-app via Studio → Touchpoints. As in v1, only the subset wired to a live
+`[data-tp]` DOM element gets a clickable in-world marker today (8 confirmed live); the rest are
+registered for the next iteration to wire up.
 
 ## Known limitations and placeholders
 
 - **Avatar is a placeholder** — a labeled colored sphere, not an approved character asset.
 - **Agents are deterministic timers**, not real LLM calls — this proves the *interaction
-  grammar* (delegate → concurrent progress → evidence/exception → approve), not live model
-  behavior.
-- **Persistence uses `localStorage`**, not IndexedDB — sufficient for this prototype's data
-  volume; noted here so nobody assumes a heavier durability guarantee than exists. Durable
-  export is real (a downloaded JSON file), autosave between sessions is real, but it is
-  single-browser/single-profile, not synced anywhere.
-- **Two of three discovery agents commissioned for this build hit an account-wide session
-  limit mid-run** (Experience & Touchpoint Architect, Runtime/Feasibility Examiner) and did not
-  return their reports. The Asset Cartographer's report did complete and is reflected above.
-  Validation below is therefore my own direct Playwright-driven testing, not an independently
-  authored second pass — flagged honestly rather than presented as fully independent QA.
-- **Raycasting precision in the tightly-packed cosmos cluster view** can be fiddly at small
-  scale (confirmed during testing — a click near a cluster's center can land on a neighboring
-  atom rather than the intended one). Avatar mode, where atoms are laid out at full stage
-  spacing, does not have this problem. Worth a pass in the next iteration if cosmos-view
-  precision matters more than it does today.
-- Only 8 of the 18 registered touchpoints currently have a live, clickable in-world marker
-  (see Touchpoint registry above).
+  grammar*, not live model behavior.
+- **Persistence uses `localStorage`**, not IndexedDB — durable export is a real downloaded
+  JSON file; autosave is real but single-browser/single-profile.
+- **File upload in Business Definition Builder is simulated** — clicking the dropzone appends a
+  fixed placeholder file record; it does not read a real file from disk. Deliberate for a
+  local-state-only prototype, flagged so it isn't mistaken for real ingestion.
+- **Cosmos-view raycasting precision**: clicking very close to a cluster's center can land on a
+  neighboring atom rather than the intended one at small scale. Avatar mode (full stage
+  spacing) doesn't have this problem.
+- **Cross-view mesh sync**: an atom's `_mesh` reference points at whichever view (cosmos or
+  avatar) built it most recently. Approving a transition while the *other* view is what's
+  currently mounted will still update the data model and history log correctly, but that other
+  view's crystal won't visually refresh until you re-enter it. The demoed flow (approve while
+  the target atom's own view is open) is unaffected; noted here rather than fixed, given time
+  budget, since it's cosmetic staleness, not a data-correctness issue.
+- Only 8 of 22 registered touchpoints currently have a live in-world marker.
 - Iteration Builder generates and exports a real package, but no build loop consumes it
   automatically — by design, per the brief's mandatory stopping point.
 
 ## Validation performed
 
-Headless Chromium via Playwright (browsers pre-installed in this environment), scripted
-end-to-end: world load → region selection → atom inspection → Enter Avatar Mode → Approach →
-delegate both agents → evidence returned → proposal raised → Approve → maturity/conflict/facet
-change confirmed in state → history log confirmed → Studio mode → touchpoint marker → annotate
-→ save → page reload → feedback confirmed still present. Also checked cold `file://` load with
-zero network dependency. Two real bugs were found and fixed during this pass:
+Headless Chromium via Playwright, scripted end-to-end for v2: Home → Definition Studio →
+Business Definition Builder → work the *ungoverned* Renewal Risk policy through every wizard
+step (question → rule → role assignment → approval → translate, confirming all three predicates
+pass and status flips to `compiled`) → Home → Your Journeys → Customer Rod → confirm the atom
+now shows "Governed by POL-RENEWAL →" and Delegate is enabled → delegate both agents → evidence
+returned → proposal raised → Approve → confirmed maturity 40%→82%, `conflict` cleared, source
+cites the policy → jumped the Bill-To atom's lineage link back to Definition Studio → published
+a Site Config page → completed the GTM Diagnostic wizard and scorecard → Studio annotate → save
+→ reload → confirmed the draft feedback survived. Also confirmed cold `file://` load.
 
-1. `[data-tp]{position:relative}` (added for the Studio marker system) had equal CSS
-   specificity to `.panel{position:fixed}` and came later in source order, silently breaking
-   every side panel's fixed positioning. Removed — unnecessary, since touchpoint markers are
-   positioned via `getBoundingClientRect()` into a dedicated fixed layer, not by relying on the
-   marked element's own position.
-2. Touchpoint markers were appended into `#worldLayer` (`z-index:12`), which sits below the
-   side panels (`z-index:50`) and — because it establishes its own stacking context — no child
-   z-index could ever raise them above those panels. Added a dedicated `#markerLayer`
-   (`z-index:70`) above all chrome.
+Real bugs found and fixed during this pass (in order found):
 
-Also caught and fixed: the reference prototypes' CDN-loaded Three.js (`cdnjs.cloudflare.com`)
-is blocked by this environment's outbound network policy — confirmed via direct `curl` (403)
-before assuming it was a Playwright-only artifact. Vendored `three@0.128.0` (matching the `r128`
-the reference prototypes use) locally via the npm registry instead, removing the dependency
-entirely rather than working around a network condition that might not generalize.
+1. `App._setLevel()` called `UI.hideComingSoon()`, which didn't exist on the `UI` object (lost
+   in translation from the v1 `App`-scoped version). It threw on **every** level transition,
+   including the very first one at boot — so `STATE.LEVEL` never actually updated and every
+   world group stayed hidden. This was the root cause of "nothing is clickable."
+2. `UI.renderBreadcrumb()` was called throughout but never implemented — added it along with
+   the R4/R5 layer badge logic.
+3. `Studio.decorateMarkers()` was called on every animation frame (60/sec) whenever Studio mode
+   was on, destroying and recreating every touchpoint-marker DOM node continuously — a click had
+   almost no chance of landing before its target was replaced. Touchpoint markers sit on static
+   2D panel elements, not moving 3D objects, so they never needed per-frame repositioning;
+   removed the per-frame call, kept the event-driven one (panel open/close, resize).
+4. `GLOW_TEX` (the shared radial-gradient sprite texture for every crystal's glow) was built but
+   never actually assigned — every glow rendered as a flat square instead of a soft radial
+   highlight. Fixed the missing `GLOW_TEX = new THREE.CanvasTexture(c)` assignment.
+5. `levelToGroupKey('journeyAvatar')` incorrectly mapped to the cosmos group, so raycasting in
+   Avatar mode would have silently checked the wrong Three.js group. Fixed the mapping, and
+   added pickables cleanup on repeated avatar-mode entry to prevent stale references
+   accumulating across visits.
+6. Studio's autosave was purely debounced (400ms) with no flush on page unload — a draft saved
+   right before a reload could be lost if the reload happened inside the debounce window. Added
+   `beforeunload`/`pagehide` listeners that flush synchronously, so "draft feedback survives
+   reload" (an explicit acceptance criterion) holds even under fast navigation, not just when
+   the user pauses first.
 
-Not yet independently re-validated: full keyboard-only navigation coverage, screen-reader
-behavior, and a second reviewer's pass on visual/interaction fidelity — the two discovery
-agents scoped for exactly that did not complete (see Known limitations). Escape-to-close,
-Enter/Space marker activation, and `prefers-reduced-motion` handling are implemented in code
-and exercised once each during scripted testing, but not stress-tested.
+As with v1: not yet independently re-validated by a second reviewer — this is my own
+Playwright-driven testing. Full keyboard-only navigation coverage and screen-reader behavior
+are implemented in code (Escape closes panels, Enter/Space activate touchpoint markers,
+`prefers-reduced-motion` disables idle rotation) but exercised only lightly during scripted
+testing, not stress-tested.
