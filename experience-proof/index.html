@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Salt Basin Genesis — Experience Proof v2</title>
+<title>Salt Basin Genesis — Experience Proof v3</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Jost:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -63,7 +63,8 @@ canvas{display:block;touch-action:none}
 .panel .close-x{position:absolute;top:10px;right:12px;cursor:pointer;color:var(--mauve);font-size:16px;line-height:1;padding:4px}
 .panel .close-x:hover{color:var(--gold)}
 
-#home-panel, #defstudio-panel, #sitecfg-panel, #gtm-panel, #defbuilder-panel, #journeys-panel, #profile-panel{
+#home-panel, #defstudio-panel, #sitecfg-panel, #gtm-panel, #defbuilder-panel, #journeys-panel,
+#agenthub-panel, #agenthierarchy-panel, #agentschedules-panel, #agentexperience-panel, #userconfig-panel, #daytoday-panel{
   top:130px;left:22px;width:320px;max-height:calc(100vh - 220px);overflow-y:auto;
 }
 #agent-panel, #evidence-panel{ top:130px;right:22px;width:320px;max-height:calc(100vh - 220px);overflow-y:auto; }
@@ -158,13 +159,6 @@ table.datatable tr:hover td{background:rgba(74,124,142,.1)}
 #diff-toast{position:fixed;left:50%;top:78px;transform:translateX(-50%) translateY(-10px);z-index:60;background:rgba(15,22,26,.95);border:1px solid var(--gold);border-radius:8px;padding:12px 18px;font-size:12px;opacity:0;pointer-events:none;transition:.3s;box-shadow:0 10px 30px rgba(0,0,0,.5);display:flex;align-items:center;gap:10px;max-width:90vw;flex-wrap:wrap}
 #diff-toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
 
-/* Coming soon */
-#comingsoon-overlay{position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(8,12,14,.55);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .3s ease}
-#comingsoon-overlay.show{opacity:1;pointer-events:auto}
-#comingsoon-overlay .cs-card{width:min(360px,86vw);background:rgba(15,22,26,.96);border:1px solid rgba(196,132,58,.35);border-radius:12px;padding:26px 24px;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.55)}
-#comingsoon-overlay h3{font-family:'Fraunces',serif;font-size:19px;color:var(--cream);margin:6px 0 12px}
-#comingsoon-overlay p{font-size:12.5px;line-height:1.6;color:#c9c3b6;margin-bottom:14px}
-
 /* Studio touchpoint markers */
 #markerLayer{position:fixed;inset:0;pointer-events:none;z-index:70}
 .touchpoint-marker{position:absolute;width:14px;height:14px;border:1.5px dashed #9fd3e0;border-radius:50%;transform:translate(-50%,-50%);pointer-events:auto;cursor:pointer;opacity:0;transition:opacity .2s}
@@ -208,7 +202,7 @@ body.studio-on .touchpoint-marker{opacity:.85}
 
 #bottom-hint{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:20;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.08em;color:var(--mauve);display:flex;gap:18px;opacity:.75}
 ::selection{background:rgba(196,132,58,.4)}
-@media(max-width:760px){ #home-panel,#defstudio-panel,#sitecfg-panel,#gtm-panel,#defbuilder-panel,#journeys-panel,#profile-panel,#agent-panel,#evidence-panel,.studio-panel{width:92vw} #breadcrumb{display:none} }
+@media(max-width:760px){ #home-panel,#defstudio-panel,#sitecfg-panel,#gtm-panel,#defbuilder-panel,#journeys-panel,#agenthub-panel,#agenthierarchy-panel,#agentschedules-panel,#agentexperience-panel,#userconfig-panel,#daytoday-panel,#agent-panel,#evidence-panel,.studio-panel{width:92vw} #breadcrumb{display:none} }
 @media (prefers-reduced-motion: reduce){ .status-dot.working{animation:none} }
 </style>
 </head>
@@ -218,7 +212,7 @@ body.studio-on .touchpoint-marker{opacity:.85}
   <div class="mark" style="width:44px;height:44px;border:1.5px solid #C4843A;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;color:#C4843A;font-size:20px;margin-bottom:22px;">◈</div>
   <h1>Salt Basin Genesis</h1>
   <div class="tag">Your Work World</div>
-  <p>A governed enterprise universe where data is matter, layered the way the real platform is layered: business rules are authored in <b style="color:#9fd3e0">Definition Studio</b>, then end users put those rules into motion in <b style="color:#C4843A">Your Journeys</b>. Nothing runs that wasn't governed first.</p>
+  <p>A governed enterprise universe where data is matter, layered the way the real platform is layered: author rules in <b style="color:#9fd3e0">Definition Studio</b>, delegate work through <b style="color:#C4843A">The Agent Hub</b>, tune your own settings in <b style="color:#D98CA0">User Configuration</b>, then run it all in <b style="color:#6B8F71">Day to Day</b>.</p>
   <button class="btn btn-gold enter-btn" onclick="App.enterApp()">Enter Your World</button>
   <div class="hint">drag / touch to orbit · scroll or pinch to zoom · tap a crystal to enter</div>
 </div>
@@ -226,7 +220,7 @@ body.studio-on .touchpoint-marker{opacity:.85}
 <div id="topbar">
   <div id="brand">
     <div class="mark">◈</div>
-    <div><div class="name">SALT BASIN</div><div class="sub">Genesis Experience Proof v2</div></div>
+    <div><div class="name">SALT BASIN</div><div class="sub">Genesis Experience Proof v3</div></div>
   </div>
   <div id="breadcrumb"></div>
   <div id="layer-badge" class="mono"></div>
@@ -248,12 +242,15 @@ body.studio-on .touchpoint-marker{opacity:.85}
 <div class="panel left" id="sitecfg-panel"></div>
 <div class="panel left" id="gtm-panel"></div>
 <div class="panel left" id="defbuilder-panel"></div>
+<div class="panel left" id="agenthub-panel"></div>
+<div class="panel left" id="agenthierarchy-panel"></div>
+<div class="panel left" id="agentschedules-panel"></div>
+<div class="panel left" id="agentexperience-panel"></div>
+<div class="panel left" id="userconfig-panel"></div>
+<div class="panel left" id="daytoday-panel"></div>
 <div class="panel left" id="journeys-panel"></div>
-<div class="panel left" id="profile-panel"></div>
 <div class="panel" id="agent-panel"></div>
 <div class="panel" id="evidence-panel"></div>
-
-<div id="comingsoon-overlay"></div>
 
 <div id="table-drawer">
   <div class="drawer-head">
@@ -443,15 +440,134 @@ function decorate(rods){
 }
 const RODS = decorate(baseRods());
 
-/* ---- Agents (R5 instance layer, bounded, cannot commit) ---- */
+/* ---- Agents (R5 instance layer, bounded, cannot commit) ----
+   tier/reportsTo model The Agent Hub's Agent Hierarchy module: tier-0
+   agents are roots, tier-1 agents roll their context up to a tier-0
+   agent named in reportsTo. */
 const AGENTS = [
-  { id:'investigator', name:'Evidence Investigator', color:'#4A7C8E', role:'Read-only research agent',
+  { id:'investigator', name:'Evidence Investigator', color:'#4A7C8E', role:'Read-only research agent', tier:0, reportsTo:null,
     objective:'Search Source_Assertions and Semantic_Nodes for prior definitions and supporting contract documents.',
     capabilities:['Read Source_Assertions','Read Semantic_Nodes','Cannot approve or commit changes'] },
-  { id:'reconciler', name:'Definition Reconciliation Agent', color:'#D98CA0', role:'Proposal agent',
+  { id:'reconciler', name:'Definition Reconciliation Agent', color:'#D98CA0', role:'Proposal agent', tier:1, reportsTo:'investigator',
     objective:'Propose a canonical definition, citing the governing R4 policy, for a human to approve.',
-    capabilities:['Propose a governed transition','Cite the compiled R4 policy','Cannot commit without human approval'] }
+    capabilities:['Propose a governed transition','Cite the compiled R4 policy','Cannot commit without human approval'] },
+  { id:'pricing-scout', name:'Pricing Scout Agent', color:'#C4843A', role:'Read-only research agent', tier:0, reportsTo:null,
+    objective:'Monitor pricing exception requests across live deals for anomalies against Pricing Governance.',
+    capabilities:['Read Source_Assertions','Cannot approve or commit changes'] },
+  { id:'renewal-analyst', name:'Renewal Analyst Agent', color:'#6B8F71', role:'Proposal agent', tier:1, reportsTo:'pricing-scout',
+    objective:'Roll up renewal-risk signals from the Customer Rod and propose a re-score, citing the governing R4 policy.',
+    capabilities:['Propose a governed transition','Cannot commit without human approval'] },
 ];
+
+/* ---- Agent Schedules (R5): when an agent runs on its own, without being manually delegated ---- */
+const AgentSchedules = [
+  {id:'sch-investigator', agentId:'investigator', cadence:'On demand (manual delegation)', active:true},
+  {id:'sch-pricing-scout', agentId:'pricing-scout', cadence:'Daily · 06:00', active:true},
+  {id:'sch-renewal-analyst', agentId:'renewal-analyst', cadence:'Weekly · Mondays', active:false},
+];
+
+/* ---- Agent Approval Workflow (R5): the gate every agent proposal must clear before it can commit ---- */
+const AgentApprovalWorkflow = {
+  steps:[
+    {id:'wf-1', name:'Evidence Review', requiredRoleId:null, note:'Any bounded agent may surface evidence — no approval gate.'},
+    {id:'wf-2', name:'Proposal Approval', requiredRoleId:'ROLE-DEALDESK', note:'A human holding this role must approve before a proposal commits.'},
+  ]
+};
+
+/* ---- User Configuration (per-user, not org-governed) ---- */
+const UserSettings = {
+  account: { name:'Betsy Salter', email:'betsy@saltbasin.net', role:'Owner', timezone:'America/Chicago' },
+  payment: { plan:'Growth', billingCycle:'Annual', cardLast4:'4242' },
+  orgAlignment: { orgName:'Salt Basin', team:'Platform', reportsTo:'—', costCenter:'GTM-Ops' },
+  emailConfig: { notifyOnApproval:true, notifyOnPolicyChange:true, weeklyDigest:false, digestDay:'Monday' },
+};
+
+/* ---- Generic module config — drives the "lighter" orbit items without any
+   bespoke render code per module, the config-driven principle applied to
+   User Configuration, Day to Day, and two Definition Studio modules. A
+   non-engineer could extend this object to add a new configurable item. ---- */
+const LIST_MODULES = {
+  futurestate: {
+    kind:'list', title:'Future State Process Definitions', eyebrow:'R4 · Organization Configuration',
+    desc:'The target-state process flow this org is converging to — each step is a process definition an R4 policy will eventually govern.',
+    itemNoun:'Process Step',
+    items:[
+      {id:'fs-1', name:'Quote-to-Cash: auto-approve standard terms', detail:'Target: fully automated, no Deal Desk touch'},
+      {id:'fs-2', name:'Renewal: proactive risk escalation at 45 days out', detail:'Target: CS notified before the customer notices'},
+    ],
+  },
+  kpis: {
+    kind:'list', title:'KPI Definitions & Outcomes Mapping', eyebrow:'R4 · Organization Configuration',
+    desc:'Metric equations mapped to the atoms and molecules that produce them — the outcomes this org is accountable for.',
+    itemNoun:'KPI',
+    items:[
+      {id:'kpi-1', name:'Net Revenue Retention', detail:'(Starting ARR + Expansion − Contraction − Churn) ÷ Starting ARR · target ≥ 108%'},
+      {id:'kpi-2', name:'Renewal Risk Coverage', detail:'% of at-risk accounts with an active mitigation motion · target 100%'},
+    ],
+  },
+  account: {
+    kind:'form', title:'Account Settings', eyebrow:'User Configuration', desc:'Your identity within Salt Basin Genesis.',
+    dataRef: UserSettings.account,
+    fields:[
+      {key:'name', label:'Name', type:'text'},
+      {key:'email', label:'Email', type:'text'},
+      {key:'role', label:'Role', type:'select', options:['Owner','Admin','Member']},
+      {key:'timezone', label:'Timezone', type:'select', options:['America/Chicago','America/New_York','America/Los_Angeles','UTC']},
+    ],
+  },
+  payment: {
+    kind:'form', title:'Payment Settings', eyebrow:'User Configuration', desc:'Billing plan and payment method on file.',
+    dataRef: UserSettings.payment,
+    fields:[
+      {key:'plan', label:'Plan', type:'select', options:['Starter','Growth','Enterprise']},
+      {key:'billingCycle', label:'Billing Cycle', type:'select', options:['Monthly','Annual']},
+      {key:'cardLast4', label:'Card on file (last 4)', type:'text'},
+    ],
+  },
+  orgalign: {
+    kind:'form', title:'Organization Alignment', eyebrow:'User Configuration', desc:'How you roll up within the org.',
+    dataRef: UserSettings.orgAlignment,
+    fields:[
+      {key:'orgName', label:'Organization', type:'text'},
+      {key:'team', label:'Team', type:'text'},
+      {key:'reportsTo', label:'Reports To', type:'text'},
+      {key:'costCenter', label:'Cost Center', type:'text'},
+    ],
+  },
+  emailcfg: {
+    kind:'form', title:'Email Configuration', eyebrow:'User Configuration', desc:'What Salt Basin Genesis emails you about.',
+    dataRef: UserSettings.emailConfig,
+    fields:[
+      {key:'notifyOnApproval', label:'Notify on approvals needed', type:'toggle'},
+      {key:'notifyOnPolicyChange', label:'Notify on policy changes', type:'toggle'},
+      {key:'weeklyDigest', label:'Weekly digest', type:'toggle'},
+      {key:'digestDay', label:'Digest day', type:'select', options:['Monday','Wednesday','Friday']},
+    ],
+  },
+  visual: { kind:'visual', title:'Visual Interface', eyebrow:'User Configuration', desc:'Customize the accent colors of your world — applied live, no reload.' },
+  customerhealth: {
+    kind:'list', title:'Customer Health', eyebrow:'Day to Day · R5', desc:'SimCity view of account health across your book.', itemNoun:'Account',
+    items:[
+      {id:'ch-1', name:'Meridian Logistics', detail:'Health 82 · trending up'},
+      {id:'ch-2', name:'Halyard Systems', detail:'Health 41 · trending down — renewal at risk'},
+      {id:'ch-3', name:'Prospect Bay Co.', detail:'Health 67 · stable'},
+    ],
+  },
+  pipeline: {
+    kind:'list', title:'Pipeline', eyebrow:'Day to Day · R5', desc:'Open deals by stage.', itemNoun:'Deal',
+    items:[
+      {id:'pl-1', name:'Halyard Systems — Expansion', detail:'Stage: Negotiation · $84,000'},
+      {id:'pl-2', name:'Northwind Data — New Business', detail:'Stage: Contract · $122,000'},
+    ],
+  },
+  accountplanning: {
+    kind:'list', title:'Account Planning', eyebrow:'Day to Day · R5', desc:'Strategic objectives per account.', itemNoun:'Objective',
+    items:[
+      {id:'ap-1', name:'Halyard Systems — Renewal Save Plan', detail:'Owner: CS Lead · Status: In progress'},
+      {id:'ap-2', name:'Meridian Logistics — Expansion into APAC', detail:'Owner: AE · Status: Scoping'},
+    ],
+  },
+};
 
 /* =====================================================================
    2. STATE
@@ -461,6 +577,8 @@ let backStack = [];
 let selectedAtom = null, selectedRodKey = null;
 let selectedPolicyId = null, defBuilderStep = 0;
 let selectedPage = null;
+let selectedDefStudioModule = null, selectedUserConfigModule = null, selectedDayToDayModule = null;
+let selectedAgentId = null, selectedScheduleId = null, selectedWorkflowStepId = null;
 let agentsRuntime = [];
 let history = [];
 let evalCounter = 0;
@@ -515,7 +633,8 @@ function initThree(){
   starGeo.setAttribute('position', new THREE.BufferAttribute(pos,3));
   scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color:0xF1EBDD, size:.6, transparent:true, opacity:.5})));
 
-  ['home','defstudio','sitecfg','gtm','defbuilder','journeysCosmos','profile'].forEach(k=>{
+  ['home','defstudio','sitecfg','gtm','defbuilder','journeysCosmos',
+   'agenthub','agenthierarchy','agentschedules','agentexperience','userconfig','daytoday'].forEach(k=>{
     groups[k] = new THREE.Group(); groups[k].visible=false; scene.add(groups[k]);
   });
   groups.home.visible = true;
@@ -528,7 +647,12 @@ function initThree(){
   World.buildGTM();
   World.buildDefBuilder();
   World.buildJourneysCosmos();
-  World.buildProfile();
+  World.buildAgentHub();
+  World.buildAgentHierarchy();
+  World.buildAgentSchedules();
+  World.buildAgentExperience();
+  World.buildUserConfig();
+  World.buildDayToDay();
 
   window.addEventListener('resize', onResize);
   setupPointerControls(renderer.domElement);
@@ -600,6 +724,22 @@ function crystalGroup(color, scale=1, glow=0.55){
   g.userData.mesh = mesh;
   return g;
 }
+/* Distinct from crystalGroup(): a low-poly humanoid figure used to orbit
+   The Agent Hub's crystal, since agents are actors, not data. */
+function personFigure(color, scale=1, glow=0.55){
+  const g = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({color, transparent:true, opacity:0.9, roughness:.3, metalness:.1, emissive:color, emissiveIntensity:glow, flatShading:true});
+  const head = new THREE.Mesh(new THREE.OctahedronGeometry(.32*scale,0), mat);
+  head.position.y = 1.35*scale; g.add(head);
+  const torso = new THREE.Mesh(new THREE.ConeGeometry(.42*scale,1.05*scale,6,1,true), mat.clone());
+  torso.position.y = .6*scale; g.add(torso);
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(.5*scale,.58*scale,.12*scale,6), mat.clone());
+  base.position.y = .02*scale; g.add(base);
+  const core = new THREE.Mesh(new THREE.OctahedronGeometry(.12*scale,0), new THREE.MeshBasicMaterial({color, transparent:true, opacity:.6}));
+  core.position.y = .7*scale; g.add(core);
+  g.userData.mesh = torso;
+  return g;
+}
 function particleRing(radius, color, count=32){
   const geo = new THREE.BufferGeometry(); const pos = new Float32Array(count*3);
   for(let i=0;i<count;i++){ const a=(i/count)*Math.PI*2; pos[i*3]=Math.cos(a)*radius; pos[i*3+1]=(Math.random()-.5)*.3; pos[i*3+2]=Math.sin(a)*radius; }
@@ -668,7 +808,9 @@ function activePickables(){
 }
 function levelToGroupKey(level){
   return { home:'home', defstudio:'defstudio', sitecfg:'sitecfg', gtm:'gtm', defbuilder:'defbuilder',
-    journeysCosmos:'journeysCosmos', journeyAvatar:'journeyAvatar', profile:'profile' }[level];
+    journeysCosmos:'journeysCosmos', journeyAvatar:'journeyAvatar',
+    agenthub:'agenthub', agenthierarchy:'agenthierarchy', agentschedules:'agentschedules', agentexperience:'agentexperience',
+    userconfig:'userconfig', daytoday:'daytoday' }[level];
 }
 function isDescendant(node, root){ let cur=node; while(cur){ if(cur===root) return true; cur=cur.parent; } return false; }
 function updateHoverAtClient(cx,cy){
@@ -733,45 +875,161 @@ function updateTravel(){
    ===================================================================== */
 const World = {
   buildHome(){
-    const HOME_ACTIONS = [
-      {id:'defstudio', label:'Definition Studio', color:PALETTE.teal, desc:'Author business rules, policies, and roles — R4 Organization Configuration.', status:'ready'},
-      {id:'journeys', label:'Your Journeys', color:PALETTE.gold, desc:'Put governed rules into motion as an end user — R5 Runtime Event Store.', status:'ready'},
-      {id:'profile', label:'Configure Profile', color:PALETTE.cream, desc:'Your career data matter — atoms, molecules, and crystallized domains.', status:'ready'},
-      {id:'prospects', label:'Review Prospects', color:PALETTE.pink, desc:'Market signals mapped to qualified accounts.', status:'soon'},
-      {id:'escalate', label:'Escalate Deals', color:PALETTE.red, desc:'Flag at-risk deals and route them to the right owner.', status:'soon'},
+    const HOME_HUBS = [
+      {id:'defstudio', label:'Definition Studio', color:PALETTE.teal, desc:'Author current/future-state definitions, policies, and KPIs — R4 Organization Configuration.'},
+      {id:'agenthub', label:'The Agent Hub', color:PALETTE.gold, desc:'Define, schedule, and govern the agents that work on your behalf.'},
+      {id:'userconfig', label:'User Configuration', color:PALETTE.pink, desc:'Account, payment, org alignment, email, and visual preferences.'},
+      {id:'daytoday', label:'Day to Day', color:PALETTE.green, desc:'Customer health, pipeline, account planning, deal journeys, and your task list.'},
     ];
-    const n = HOME_ACTIONS.length, radius=10;
-    HOME_ACTIONS.forEach((a,i)=>{
+    window.__HOME_HUBS = HOME_HUBS;
+    const n = HOME_HUBS.length, radius=11;
+    HOME_HUBS.forEach((a,i)=>{
       const angle=(i/n)*Math.PI*2 - Math.PI/2, x=Math.cos(angle)*radius, z=Math.sin(angle)*radius;
-      const ready = a.status==='ready';
-      const cg = crystalGroup(a.color, ready?1.15:0.85, ready?0.65:0.28);
-      cg.position.set(x,0,z); cg.userData.spin = .2+Math.random()*.1;
+      const cg = crystalGroup(a.color, 1.3, 0.62);
+      cg.position.set(x,0,z); cg.userData.spin = .16+Math.random()*.08;
       groups.home.add(cg);
-      pickables.push({obj:cg.userData.mesh, group:cg, kind:'home-action', id:a.id, label:a.label});
-      groups.home.add(makeLabel(a.label.toUpperCase(), [x,2.9,z], ready?10:9));
-      if(ready) { const ring=particleRing(2.1,a.color,24); ring.position.set(x,0,z); groups.home.add(ring); }
+      pickables.push({obj:cg.userData.mesh, group:cg, kind:'home-hub', id:a.id, label:a.label});
+      groups.home.add(makeLabel(a.label.toUpperCase(), [x,3.2,z], 11));
+      const ring=particleRing(2.4,a.color,28); ring.position.set(x,0,z); groups.home.add(ring);
     });
-    window.__HOME_ACTIONS = HOME_ACTIONS;
-    const core = crystalGroup(PALETTE.gold, 1.5, 0.5); core.userData.spin=.05; groups.home.add(core);
-    groups.home.add(makeLabel('YOUR WORK WORLD', [0,3.6,0], 12));
+    const core = crystalGroup(PALETTE.gold, 1.6, 0.5); core.userData.spin=.05; groups.home.add(core);
+    groups.home.add(makeLabel('YOUR WORK WORLD', [0,3.9,0], 12));
   },
 
   buildDefStudio(){
     const items = [
-      {id:'sitecfg', label:'Public Site Configuration', color:PALETTE.teal},
-      {id:'gtm', label:'GTM & Operations Diagnostic', color:PALETTE.pink},
-      {id:'defbuilder', label:'Business Definition Builder', color:PALETTE.gold},
+      {id:'diagnostic', label:'Current State Diagnostic', color:PALETTE.pink},
+      {id:'futurestate', label:'Future State Process Definitions', color:PALETTE.teal},
+      {id:'policies', label:'Policies & Business Rules', color:PALETTE.gold},
+      {id:'kpis', label:'KPI Definitions & Outcomes Mapping', color:PALETTE.green},
+      {id:'sitecfg', label:'Public Site Configuration', color:PALETTE.mauve},
+    ];
+    const n=items.length, radius=7.5;
+    items.forEach((it,i)=>{
+      const angle=(i/n)*Math.PI*2, x=Math.cos(angle)*radius, z=Math.sin(angle)*radius;
+      const cg = crystalGroup(it.color, 1.05, 0.5); cg.position.set(x,0,z); cg.userData.spin=.18;
+      groups.defstudio.add(cg);
+      pickables.push({obj:cg.userData.mesh, group:cg, kind:'defstudio-item', id:it.id, label:it.label});
+      groups.defstudio.add(makeLabel(it.label, [x,2.6,z], 9.5));
+    });
+    const core = crystalGroup(PALETTE.teal, 1.3, 0.45); core.userData.spin=.04; groups.defstudio.add(core);
+    groups.defstudio.add(makeLabel('DEFINITION STUDIO · R4', [0,3.2,0], 11));
+  },
+
+  buildAgentHub(){
+    const items = [
+      {id:'hierarchy', label:'Agent Hierarchy', color:PALETTE.teal},
+      {id:'schedules', label:'Agent Schedules', color:PALETTE.gold},
+      {id:'experience', label:'Agent Experience', color:PALETTE.pink},
+    ];
+    const n=items.length, radius=6.5;
+    items.forEach((it,i)=>{
+      const angle=(i/n)*Math.PI*2, x=Math.cos(angle)*radius, z=Math.sin(angle)*radius;
+      const pg = personFigure(it.color, 1.35, 0.55); pg.position.set(x,0,z); pg.userData.spin=.14;
+      groups.agenthub.add(pg);
+      pickables.push({obj:pg.userData.mesh, group:pg, kind:'agenthub-item', id:it.id, label:it.label});
+      groups.agenthub.add(makeLabel(it.label, [x,2.6,z], 10));
+    });
+    const core = crystalGroup(PALETTE.gold, 1.3, 0.5); core.userData.spin=.04; groups.agenthub.add(core);
+    groups.agenthub.add(makeLabel('THE AGENT HUB · R5', [0,3.3,0], 11));
+  },
+
+  buildAgentHierarchy(){
+    const roots = AGENTS.filter(a=>!a.reportsTo);
+    const radius=6;
+    roots.forEach((root,ri)=>{
+      const angle=(ri/roots.length)*Math.PI*2;
+      const rx=Math.cos(angle)*radius, rz=Math.sin(angle)*radius;
+      const colorInt = parseInt(root.color.slice(1),16);
+      const pg = personFigure(colorInt, 1.1, 0.55); pg.position.set(rx,0,rz); pg.userData.spin=.1;
+      groups.agenthierarchy.add(pg);
+      pickables.push({obj:pg.userData.mesh, group:pg, kind:'agent-node', id:root.id, label:root.name});
+      groups.agenthierarchy.add(makeLabel(root.name+' · TIER 0', [rx,2.4,rz], 9));
+      const children = AGENTS.filter(a=>a.reportsTo===root.id);
+      children.forEach((child,ci)=>{
+        const cAngle = angle + (ci+1)*0.55 - (children.length*0.55)/2;
+        const cx=Math.cos(cAngle)*(radius+2.2), cz=Math.sin(cAngle)*(radius+2.2);
+        const childColorInt = parseInt(child.color.slice(1),16);
+        const cg = personFigure(childColorInt, 0.85, 0.45); cg.position.set(cx,0,cz); cg.userData.spin=.13;
+        groups.agenthierarchy.add(cg);
+        pickables.push({obj:cg.userData.mesh, group:cg, kind:'agent-node', id:child.id, label:child.name});
+        groups.agenthierarchy.add(makeLabel(child.name+' · TIER 1', [cx,1.8,cz], 8.5));
+        const curve = new THREE.LineCurve3(new THREE.Vector3(rx,.8,rz), new THREE.Vector3(cx,.6,cz));
+        const tube = new THREE.Mesh(new THREE.TubeGeometry(curve,8,.03,6,false), new THREE.MeshBasicMaterial({color:colorInt, transparent:true, opacity:.5}));
+        groups.agenthierarchy.add(tube);
+      });
+    });
+    groups.agenthierarchy.add(makeLabel('AGENT HIERARCHY', [0,4.2,0], 11));
+  },
+
+  buildAgentSchedules(){
+    const n=AgentSchedules.length, radius=5.5;
+    AgentSchedules.forEach((s,i)=>{
+      const angle=(i/n)*Math.PI*2, x=Math.cos(angle)*radius, z=Math.sin(angle)*radius;
+      const agent = AGENTS.find(a=>a.id===s.agentId);
+      const colorInt = agent ? parseInt(agent.color.slice(1),16) : PALETTE.mauve;
+      const cg = crystalGroup(colorInt, s.active?0.95:0.65, s.active?0.55:0.2);
+      cg.position.set(x,0,z); cg.userData.spin=.15;
+      groups.agentschedules.add(cg);
+      pickables.push({obj:cg.userData.mesh, group:cg, kind:'schedule-node', id:s.id, label:(agent?agent.name:s.agentId)+' — '+s.cadence});
+      groups.agentschedules.add(makeLabel(agent?agent.name:s.agentId, [x,2.2,z], 9));
+    });
+    const core = crystalGroup(PALETTE.gold, 1.15, 0.4); core.userData.spin=.04; groups.agentschedules.add(core);
+    groups.agentschedules.add(makeLabel('AGENT SCHEDULES', [0,2.9,0], 10));
+  },
+
+  buildAgentExperience(){
+    const n=AgentApprovalWorkflow.steps.length, radius=5;
+    AgentApprovalWorkflow.steps.forEach((s,i)=>{
+      const angle=(i/n)*Math.PI*2, x=Math.cos(angle)*radius, z=Math.sin(angle)*radius;
+      const cg = crystalGroup(s.requiredRoleId?PALETTE.gold:PALETTE.teal, 0.95, s.requiredRoleId?0.55:0.35);
+      cg.position.set(x,0,z); cg.userData.spin=.15;
+      groups.agentexperience.add(cg);
+      pickables.push({obj:cg.userData.mesh, group:cg, kind:'workflow-step', id:s.id, label:s.name});
+      groups.agentexperience.add(makeLabel(s.name, [x,2.1,z], 9));
+    });
+    const core = crystalGroup(PALETTE.pink, 1.1, 0.4); core.userData.spin=.04; groups.agentexperience.add(core);
+    groups.agentexperience.add(makeLabel('AGENT EXPERIENCE', [0,2.8,0], 10));
+  },
+
+  buildUserConfig(){
+    const items = [
+      {id:'account', label:'Account Settings', color:PALETTE.teal},
+      {id:'payment', label:'Payment Settings', color:PALETTE.gold},
+      {id:'orgalign', label:'Organization Alignment', color:PALETTE.mauve},
+      {id:'emailcfg', label:'Email Configuration', color:PALETTE.pink},
+      {id:'visual', label:'Visual Interface', color:PALETTE.green},
+    ];
+    const n=items.length, radius=6;
+    items.forEach((it,i)=>{
+      const angle=(i/n)*Math.PI*2, x=Math.cos(angle)*radius, z=Math.sin(angle)*radius;
+      const cg = crystalGroup(it.color, 0.85, 0.45); cg.position.set(x,0,z); cg.userData.spin=.17;
+      groups.userconfig.add(cg);
+      pickables.push({obj:cg.userData.mesh, group:cg, kind:'userconfig-item', id:it.id, label:it.label});
+      groups.userconfig.add(makeLabel(it.label, [x,2.1,z], 9));
+    });
+    const core = crystalGroup(PALETTE.pink, 1.1, 0.4); core.userData.spin=.04; groups.userconfig.add(core);
+    groups.userconfig.add(makeLabel('USER CONFIGURATION', [0,2.9,0], 10));
+  },
+
+  buildDayToDay(){
+    const items = [
+      {id:'customerhealth', label:'Customer Health', color:PALETTE.teal},
+      {id:'pipeline', label:'Pipeline', color:PALETTE.gold},
+      {id:'accountplanning', label:'Account Planning', color:PALETTE.mauve},
+      {id:'dealjourneys', label:'Deal Journeys', color:PALETTE.pink},
+      {id:'tasklist', label:'Task List', color:PALETTE.green},
     ];
     const n=items.length, radius=7;
     items.forEach((it,i)=>{
       const angle=(i/n)*Math.PI*2, x=Math.cos(angle)*radius, z=Math.sin(angle)*radius;
-      const cg = crystalGroup(it.color, 1.1, 0.55); cg.position.set(x,0,z); cg.userData.spin=.18;
-      groups.defstudio.add(cg);
-      pickables.push({obj:cg.userData.mesh, group:cg, kind:'defstudio-module', id:it.id, label:it.label});
-      groups.defstudio.add(makeLabel(it.label, [x,2.6,z], 10));
+      const cg = crystalGroup(it.color, 1.0, 0.5); cg.position.set(x,0,z); cg.userData.spin=.16;
+      groups.daytoday.add(cg);
+      pickables.push({obj:cg.userData.mesh, group:cg, kind:'daytoday-item', id:it.id, label:it.label});
+      groups.daytoday.add(makeLabel(it.label, [x,2.4,z], 9.5));
     });
-    const core = crystalGroup(PALETTE.teal, 1.3, 0.45); core.userData.spin=.04; groups.defstudio.add(core);
-    groups.defstudio.add(makeLabel('DEFINITION STUDIO · R4', [0,3.2,0], 11));
+    const core = crystalGroup(PALETTE.green, 1.25, 0.45); core.userData.spin=.04; groups.daytoday.add(core);
+    groups.daytoday.add(makeLabel('DAY TO DAY · R5', [0,3.1,0], 11));
   },
 
   buildSiteConfig(){
@@ -844,26 +1102,6 @@ const World = {
       cluster.userData.regionKey = rk;
       groups.journeysCosmos.add(cluster);
       pickables.push({obj:glow, group:cluster, kind:'region', id:rk, label:rod.label, isRegionGlow:true});
-    });
-  },
-
-  buildProfile(){
-    const PROFILE_DOMAINS = [
-      {id:'strategy', label:'Strategy & Planning', color:PALETTE.pink, blurb:'GTM strategy, transformation roadmaps, and executive advisory.'},
-      {id:'revops', label:'Revenue Operations', color:PALETTE.teal, blurb:'Quote-to-Revenue transformation, CPQ, billing & monetization.'},
-      {id:'finance', label:'Financial Systems', color:PALETTE.gold, blurb:'Revenue recognition and systems integration for scaling software companies.'},
-    ];
-    window.__PROFILE_DOMAINS = PROFILE_DOMAINS;
-    const centerMesh = new THREE.Mesh(new THREE.OctahedronGeometry(1.2,0), new THREE.MeshStandardMaterial({color:PALETTE.gold, transparent:true, opacity:.85, roughness:.2, metalness:.15, emissive:PALETTE.gold, emissiveIntensity:.55, flatShading:true}));
-    centerMesh.scale.y=1.6; groups.profile.add(centerMesh);
-    groups.profile.add(makeLabel('LEADERSHIP', [0,3.0,0], 11));
-    const n = PROFILE_DOMAINS.length;
-    PROFILE_DOMAINS.forEach((d,i)=>{
-      const angle=(i/n)*Math.PI*2, radius=5.2, x=Math.cos(angle)*radius, z=Math.sin(angle)*radius;
-      const cg = crystalGroup(d.color, .75, .5); cg.position.set(x,0,z); cg.userData.spin=.2;
-      groups.profile.add(cg);
-      pickables.push({obj:cg.userData.mesh, group:cg, kind:'profile-domain', id:d.id, label:d.label});
-      groups.profile.add(makeLabel(d.label, [x,2.2,z], 9));
     });
   },
 
@@ -945,20 +1183,27 @@ const App = {
   },
   _setLevel(level){
     Object.keys(groups).forEach(k=>groups[k].visible=false);
-    ['home-panel','defstudio-panel','sitecfg-panel','gtm-panel','defbuilder-panel','journeys-panel','profile-panel','agent-panel','evidence-panel'].forEach(UI.hidePanel);
-    UI.hideComingSoon(); UI.closeDrawer();
+    ['home-panel','defstudio-panel','sitecfg-panel','gtm-panel','defbuilder-panel','journeys-panel',
+     'agenthub-panel','agenthierarchy-panel','agentschedules-panel','agentexperience-panel',
+     'userconfig-panel','daytoday-panel','agent-panel','evidence-panel'].forEach(UI.hidePanel);
+    UI.closeDrawer();
     STATE.LEVEL = level;
     const gk = levelToGroupKey(level);
     if (gk) groups[gk].visible = true;
     document.getElementById('back-btn').style.display = level==='home' ? 'none' : 'flex';
     orbitAngle=0;
     if (level==='home'){ orbitRadius=32; orbitElev=.28; UI.renderHome(); UI.showPanel('home-panel'); }
-    if (level==='defstudio'){ orbitRadius=18; orbitElev=.35; UI.renderDefStudio(); UI.showPanel('defstudio-panel'); }
+    if (level==='defstudio'){ orbitRadius=19; orbitElev=.35; UI.renderDefStudio(); UI.showPanel('defstudio-panel'); }
     if (level==='sitecfg'){ orbitRadius=14; orbitElev=.4; UI.renderSiteConfig(); UI.showPanel('sitecfg-panel'); }
     if (level==='gtm'){ orbitRadius=13; orbitElev=.4; UI.renderGTM(); UI.showPanel('gtm-panel'); }
     if (level==='defbuilder'){ orbitRadius=15; orbitElev=.4; UI.renderDefBuilder(); UI.showPanel('defbuilder-panel'); }
     if (level==='journeysCosmos'){ orbitRadius=30; orbitElev=.35; UI.renderJourneysCosmos(); UI.showPanel('journeys-panel'); }
-    if (level==='profile'){ orbitRadius=13; orbitElev=.42; UI.renderProfile(); UI.showPanel('profile-panel'); }
+    if (level==='agenthub'){ orbitRadius=16; orbitElev=.35; UI.renderAgentHub(); UI.showPanel('agenthub-panel'); }
+    if (level==='agenthierarchy'){ orbitRadius=19; orbitElev=.38; UI.renderAgentHierarchy(); UI.showPanel('agenthierarchy-panel'); }
+    if (level==='agentschedules'){ orbitRadius=12; orbitElev=.4; UI.renderAgentSchedules(); UI.showPanel('agentschedules-panel'); }
+    if (level==='agentexperience'){ orbitRadius=11; orbitElev=.4; UI.renderAgentExperience(); UI.showPanel('agentexperience-panel'); }
+    if (level==='userconfig'){ orbitRadius=13; orbitElev=.4; UI.renderUserConfig(); UI.showPanel('userconfig-panel'); }
+    if (level==='daytoday'){ orbitRadius=16; orbitElev=.35; UI.renderDayToDay(); UI.showPanel('daytoday-panel'); }
     UI.renderBreadcrumb();
   },
   enterHome(){ backStack=[]; App._setLevel('home'); },
@@ -966,8 +1211,13 @@ const App = {
   enterSiteConfig(){ App.goTo('sitecfg'); },
   enterGTM(){ App.goTo('gtm'); },
   enterDefBuilder(){ App.goTo('defbuilder'); },
-  enterJourneysCosmos(){ App.goTo('journeysCosmos'); logHistory('user','journeys.enter','Entered Your Journeys (R5)'); },
-  enterProfile(){ App.goTo('profile'); },
+  enterJourneysCosmos(){ App.goTo('journeysCosmos'); logHistory('user','journeys.enter','Entered Deal Journeys (R5)'); },
+  enterAgentHub(){ App.goTo('agenthub'); logHistory('user','agenthub.enter','Entered The Agent Hub (R5)'); },
+  enterAgentHierarchy(){ App.goTo('agenthierarchy'); },
+  enterAgentSchedules(){ App.goTo('agentschedules'); },
+  enterAgentExperience(){ App.goTo('agentexperience'); },
+  enterUserConfig(){ App.goTo('userconfig'); },
+  enterDayToDay(){ App.goTo('daytoday'); logHistory('user','daytoday.enter','Entered Day to Day (R5)'); },
   enterJourneyAvatar(rodKey){
     selectedRodKey = rodKey;
     backStack.push('journeysCosmos');
@@ -985,37 +1235,39 @@ const App = {
     UI.renderBreadcrumb();
     logHistory('user','avatar.enter-journey','Entered Avatar Mode for '+RODS[rodKey].label);
   },
-  showComingSoon(action){
-    backStack.push(STATE.LEVEL);
-    STATE.LEVEL='comingsoon';
-    document.getElementById('back-btn').style.display='flex';
-    UI.renderBreadcrumb();
-    const el = document.getElementById('comingsoon-overlay');
-    el.innerHTML = `<div class="cs-card"><span class="eyebrow mono" style="font-size:9.5px;letter-spacing:.14em;color:var(--gold);text-transform:uppercase;">World In Progress</span><h3>${action.label}</h3><p>${action.desc}</p><button class="btn btn-gold" onclick="App.goBack()">Back</button></div>`;
-    el.classList.add('show');
-  },
   handleHomeAction(id){
-    const action = (window.__HOME_ACTIONS||[]).find(a=>a.id===id);
-    if (!action) return;
     if (id==='defstudio') return App.enterDefStudio();
-    if (id==='journeys') return App.enterJourneysCosmos();
-    if (id==='profile') return App.enterProfile();
-    App.showComingSoon(action);
+    if (id==='agenthub') return App.enterAgentHub();
+    if (id==='userconfig') return App.enterUserConfig();
+    if (id==='daytoday') return App.enterDayToDay();
   },
   handleSelect(item){
     try{
-      if (item.kind==='home-action') return App.handleHomeAction(item.id);
-      if (item.kind==='defstudio-module'){
+      if (item.kind==='home-hub') return App.handleHomeAction(item.id);
+      if (item.kind==='defstudio-item'){
+        if (item.id==='diagnostic') return App.enterGTM();
+        if (item.id==='policies') return App.enterDefBuilder();
         if (item.id==='sitecfg') return App.enterSiteConfig();
-        if (item.id==='gtm') return App.enterGTM();
-        if (item.id==='defbuilder') return App.enterDefBuilder();
+        return UI.selectDefStudioModule(item.id);
       }
+      if (item.kind==='agenthub-item'){
+        if (item.id==='hierarchy') return App.enterAgentHierarchy();
+        if (item.id==='schedules') return App.enterAgentSchedules();
+        if (item.id==='experience') return App.enterAgentExperience();
+      }
+      if (item.kind==='userconfig-item') return UI.selectUserConfigModule(item.id);
+      if (item.kind==='daytoday-item'){
+        if (item.id==='dealjourneys') return App.enterJourneysCosmos();
+        return UI.selectDayToDayModule(item.id);
+      }
+      if (item.kind==='agent-node') return UI.selectAgentNode(item.id);
+      if (item.kind==='schedule-node') return UI.selectScheduleNode(item.id);
+      if (item.kind==='workflow-step') return UI.selectWorkflowStep(item.id);
       if (item.kind==='region') return App.enterJourneyAvatar(item.id);
       if (item.kind==='atom') return UI.openJourneyAtom(item.atom);
       if (item.kind==='site-page') return UI.selectSitePage(item.id);
       if (item.kind==='gtm-question') return UI.focusGTMQuestion(item.id);
       if (item.kind==='policy') return UI.selectPolicy(item.id);
-      if (item.kind==='profile-domain') return UI.selectProfileDomain(item.id);
     }catch(err){ showError('handleSelect error: '+(err&&err.message?err.message:err)); }
   },
   approachSelectedAtom(){
@@ -1128,7 +1380,6 @@ const UI = {
   closeTop(){ ['annotateBackdrop'].forEach(id=>document.getElementById(id).classList.remove('open')); document.getElementById('studioPanel').classList.remove('open'); },
   closeStudio(){ document.getElementById('studioPanel').classList.remove('open'); },
   closeDrawer(){ document.getElementById('table-drawer').classList.remove('show'); },
-  hideComingSoon(){ const el = document.getElementById('comingsoon-overlay'); if (el) el.classList.remove('show'); },
   openDrawer(title, theadHtml, tbodyHtml){
     document.getElementById('drawer-title').textContent = title;
     document.getElementById('drawer-thead').innerHTML = theadHtml;
@@ -1139,25 +1390,33 @@ const UI = {
   renderHome(){
     const el = document.getElementById('home-panel');
     el.innerHTML = `<span class="eyebrow">Work World</span><h3>Choose Your Path</h3>
-      <p style="font-size:11.5px;color:#a9a49a;margin:6px 0 14px;line-height:1.5">Two layers, like the real platform: define rules once, run them many times.</p>
+      <p style="font-size:11.5px;color:#a9a49a;margin:6px 0 14px;line-height:1.5">Four worlds, mapped to how the real platform is layered: define once in Definition Studio, delegate through The Agent Hub, tune it in User Configuration, then run it in Day to Day.</p>
       <div id="home-list"></div>`;
-    document.getElementById('home-list').innerHTML = (window.__HOME_ACTIONS||[]).map(a=>{
+    document.getElementById('home-list').innerHTML = (window.__HOME_HUBS||[]).map(a=>{
       const hex = '#'+a.color.toString(16).padStart(6,'0');
-      const tag = a.status==='soon' ? '<span class="tag tag-soon">SOON</span>' : '';
-      return `<div class="list-item" data-tp="home.action-${a.id}" onclick="App.handleHomeAction('${a.id}')"><div class="label"><span class="dot" style="background:${hex}"></span>${a.label}${tag}</div></div>`;
+      return `<div class="list-item" data-tp="home.action-${a.id}" onclick="App.handleHomeAction('${a.id}')"><div class="label"><span class="dot" style="background:${hex}"></span>${a.label}</div></div><div style="font-size:10.5px;color:#8b8578;margin:-4px 0 8px 22px;line-height:1.4">${a.desc}</div>`;
     }).join('');
   },
 
+  /* ---------------- Definition Studio ---------------- */
+  selectDefStudioModule(key){
+    selectedDefStudioModule = key;
+    logHistory('user','defstudio.module-select','Opened '+LIST_MODULES[key].title);
+    UI.renderDefStudio();
+  },
   renderDefStudio(){
     const el = document.getElementById('defstudio-panel');
     const compiled = DefinitionRegistry.policies.filter(p=>p.status==='compiled').length;
     el.innerHTML = `<span class="eyebrow">R4 · Organization Configuration</span><h3>Definition Studio</h3>
-      <p style="font-size:11.5px;color:#a9a49a;margin:6px 0 14px;line-height:1.5">Where business rules, policies, and approver roles are authored — before anything is allowed to run in Your Journeys.</p>
+      <p style="font-size:11.5px;color:#a9a49a;margin:6px 0 14px;line-height:1.5">Current state, future state, policies, KPIs, and your public site — authored once, before anything is allowed to run.</p>
       <div class="metric-row"><span>Compiled Policies</span><span class="v">${compiled} / ${DefinitionRegistry.policies.length}</span></div>
-      <div class="metric-row"><span>Open Scenarios</span><span class="v">${DefinitionRegistry.scenarios.filter(s=>!s.policyId).length}</span></div>
-      <div class="list-item" data-tp="defstudio.module-sitecfg" onclick="App.enterSiteConfig()"><div class="label"><span class="dot" style="background:#4A7C8E"></span>Public Site Configuration</div></div>
-      <div class="list-item" data-tp="defstudio.module-gtm" onclick="App.enterGTM()"><div class="label"><span class="dot" style="background:#D98CA0"></span>GTM &amp; Operations Diagnostic</div></div>
-      <div class="list-item" data-tp="defstudio.module-defbuilder" onclick="App.enterDefBuilder()"><div class="label"><span class="dot" style="background:#C4843A"></span>Business Definition Builder</div></div>`;
+      <div class="list-item" data-tp="defstudio.module-diagnostic" onclick="App.enterGTM()"><div class="label"><span class="dot" style="background:#D98CA0"></span>Current State Diagnostic</div></div>
+      <div class="list-item" data-tp="defstudio.module-futurestate" onclick="UI.selectDefStudioModule('futurestate')"><div class="label"><span class="dot" style="background:#4A7C8E"></span>Future State Process Definitions</div></div>
+      <div class="list-item" data-tp="defstudio.module-policies" onclick="App.enterDefBuilder()"><div class="label"><span class="dot" style="background:#C4843A"></span>Policies &amp; Business Rules</div></div>
+      <div class="list-item" data-tp="defstudio.module-kpis" onclick="UI.selectDefStudioModule('kpis')"><div class="label"><span class="dot" style="background:#6B8F71"></span>KPI Definitions &amp; Outcomes Mapping</div></div>
+      <div class="list-item" data-tp="defstudio.module-sitecfg" onclick="App.enterSiteConfig()"><div class="label"><span class="dot" style="background:#8C6B7A"></span>Public Site Configuration</div></div>
+      <div id="defstudio-module-detail"></div>`;
+    if (selectedDefStudioModule) UI.renderModuleDetail('defstudio-module-detail', selectedDefStudioModule);
   },
 
   /* ---------------- Public Site Configuration ---------------- */
@@ -1472,15 +1731,22 @@ const UI = {
     const badge = document.getElementById('layer-badge');
     const LEVEL_LABELS = {
       home:'Home', defstudio:'Definition Studio', sitecfg:'Public Site Configuration',
-      gtm:'GTM & Operations Diagnostic', defbuilder:'Business Definition Builder',
-      journeysCosmos:'Your Journeys', journeyAvatar: selectedRodKey ? (RODS[selectedRodKey].label) : 'Journey',
-      profile:'Configure Profile', comingsoon:'World In Progress'
+      gtm:'Current State Diagnostic', defbuilder:'Policies & Business Rules',
+      agenthub:'The Agent Hub', agenthierarchy:'Agent Hierarchy', agentschedules:'Agent Schedules', agentexperience:'Agent Experience',
+      userconfig:'User Configuration',
+      daytoday:'Day to Day', journeysCosmos:'Deal Journeys',
+      journeyAvatar: selectedRodKey ? (RODS[selectedRodKey].label) : 'Journey',
+    };
+    const PARENT = {
+      sitecfg:'defstudio', gtm:'defstudio', defbuilder:'defstudio',
+      agenthierarchy:'agenthub', agentschedules:'agenthub', agentexperience:'agenthub',
+      journeysCosmos:'daytoday', journeyAvatar:'journeysCosmos',
     };
     const trail = [{l:'Home', lvl:'home'}];
     if (STATE.LEVEL !== 'home'){
-      if (['sitecfg','gtm','defbuilder'].indexOf(STATE.LEVEL) >= 0) trail.push({l:'Definition Studio', lvl:'defstudio'});
-      if (STATE.LEVEL === 'journeyAvatar') trail.push({l:'Your Journeys', lvl:'journeysCosmos'});
-      trail.push({l: LEVEL_LABELS[STATE.LEVEL] || STATE.LEVEL, lvl: STATE.LEVEL});
+      const chain = [STATE.LEVEL]; let cur = STATE.LEVEL;
+      while (PARENT[cur]) { cur = PARENT[cur]; chain.unshift(cur); }
+      chain.forEach(lvl => trail.push({l: LEVEL_LABELS[lvl] || lvl, lvl}));
     }
     bc.innerHTML = trail.map((t,i)=>{
       const active = i===trail.length-1;
@@ -1488,26 +1754,231 @@ const UI = {
     }).join('');
     badge.className = 'mono';
     if (['defstudio','sitecfg','gtm','defbuilder'].indexOf(STATE.LEVEL) >= 0){ badge.classList.add('r4'); badge.textContent='R4 · ORG CONFIGURATION'; }
-    else if (['journeysCosmos','journeyAvatar'].indexOf(STATE.LEVEL) >= 0){ badge.classList.add('r5'); badge.textContent='R5 · RUNTIME EVENT STORE'; }
+    else if (['agenthub','agenthierarchy','agentschedules','agentexperience','daytoday','journeysCosmos','journeyAvatar'].indexOf(STATE.LEVEL) >= 0){ badge.classList.add('r5'); badge.textContent='R5 · RUNTIME EVENT STORE'; }
     else { badge.textContent=''; }
   },
   jumpTo(lvl){
     if (lvl==='home') return App.enterHome();
     if (lvl==='defstudio') return App.enterDefStudio();
+    if (lvl==='agenthub') return App.enterAgentHub();
+    if (lvl==='daytoday') return App.enterDayToDay();
     if (lvl==='journeysCosmos') return App.enterJourneysCosmos();
     App.goTo(lvl);
   },
 
-  /* ---------------- Profile ---------------- */
-  selectProfileDomain(id){ UI.renderProfile(id); },
-  renderProfile(focusId){
-    const el = document.getElementById('profile-panel');
-    const domains = window.__PROFILE_DOMAINS || [];
-    const d = domains.find(x=>x.id===focusId);
-    el.innerHTML = `<span class="eyebrow">Configure Profile</span><h3>Your Career Data</h3>
-      <div class="metric-row"><span>Core Domains</span><span class="v">${domains.length}</span></div>
-      ` + domains.map(x=>`<div class="list-item ${x.id===focusId?'active-item':''}" onclick="UI.selectProfileDomain('${x.id}')"><div class="label">${x.label}</div></div>`).join('') +
-      (d? `<div style="font-size:11px;color:#a9a49a;line-height:1.6;margin-top:10px"><b style="color:var(--cream)">${d.label}.</b> ${d.blurb}</div>` : '');
+  /* ---------------- Generic module renderer — drives every "lighter"
+     config-driven item (LIST_MODULES) without bespoke code per module. ---------------- */
+  renderModuleDetail(containerId, moduleKey){
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const mod = LIST_MODULES[moduleKey];
+    if (!mod) return;
+    let html = `<div class="eyebrow" style="margin-top:14px">${mod.eyebrow||''}</div><h3 style="font-size:14px">${mod.title}</h3>
+      <p style="font-size:11px;color:#a9a49a;margin:6px 0 10px;line-height:1.5">${mod.desc||''}</p>`;
+    if (mod.kind==='list'){
+      html += mod.items.map(it=>`<div class="list-item"><div class="label">${it.name}</div></div><div style="font-size:10.5px;color:#8b8578;margin:-4px 0 8px 4px">${it.detail||''}</div>`).join('');
+      html += `<div class="field" style="margin-top:8px"><label>Add ${mod.itemNoun||'Item'}</label><input id="newModuleItem-${containerId}-${moduleKey}" placeholder="Describe it"></div>
+        <button class="btn btn-teal" onclick="UI.addModuleItem('${moduleKey}','${containerId}')">Add ${mod.itemNoun||'Item'}</button>`;
+    } else if (mod.kind==='form'){
+      html += mod.fields.map(f=>{
+        const val = mod.dataRef[f.key];
+        if (f.type==='toggle'){
+          return `<div class="field"><label>${f.label}</label><select onchange="UI.setModuleField('${moduleKey}','${f.key}', this.value==='true')"><option value="true" ${val?'selected':''}>On</option><option value="false" ${!val?'selected':''}>Off</option></select></div>`;
+        }
+        if (f.type==='select'){
+          return `<div class="field"><label>${f.label}</label><select onchange="UI.setModuleField('${moduleKey}','${f.key}', this.value)">`+f.options.map(o=>`<option ${o===val?'selected':''}>${o}</option>`).join('')+`</select></div>`;
+        }
+        return `<div class="field"><label>${f.label}</label><input value="${val!=null?val:''}" onchange="UI.setModuleField('${moduleKey}','${f.key}', this.value)"></div>`;
+      }).join('');
+    } else if (mod.kind==='visual'){
+      const swatches = [
+        {name:'Teal &amp; Gold (default)', gold:'#C4843A', teal:'#4A7C8E'},
+        {name:'Rose &amp; Deep Teal', gold:'#D98CA0', teal:'#345A68'},
+        {name:'Sage &amp; Amber', gold:'#B58A3E', teal:'#6B8F71'},
+        {name:'Ember &amp; Slate', gold:'#B5433A', teal:'#5B93A6'},
+      ];
+      html += swatches.map(s=>`<div class="list-item" data-tp="userconfig.visual-apply" onclick="UI.applyAccent('${s.gold}','${s.teal}')"><div class="label"><span class="dot" style="background:${s.gold}"></span><span class="dot" style="background:${s.teal};margin-left:-4px"></span>${s.name}</div></div>`).join('');
+    }
+    container.innerHTML = html;
+  },
+  addModuleItem(moduleKey, containerId){
+    const mod = LIST_MODULES[moduleKey]; if (!mod || mod.kind!=='list') return;
+    const input = document.getElementById('newModuleItem-'+containerId+'-'+moduleKey); if (!input) return;
+    const name = input.value.trim(); if (!name) return;
+    mod.items.push({id:moduleKey+'-'+Date.now(), name, detail:''});
+    logHistory('user','module.item-add','Added "'+name+'" to '+mod.title);
+    UI.renderModuleDetail(containerId, moduleKey);
+    Studio.markUnsaved();
+  },
+  setModuleField(moduleKey, key, value){
+    const mod = LIST_MODULES[moduleKey]; if (!mod || mod.kind!=='form') return;
+    mod.dataRef[key] = value;
+    logHistory('user','module.field-set', mod.title+' — set '+key+' = '+value);
+    Studio.markUnsaved();
+  },
+  applyAccent(goldHex, tealHex){
+    document.documentElement.style.setProperty('--gold', goldHex);
+    document.documentElement.style.setProperty('--teal', tealHex);
+    logHistory('user','userconfig.visual-apply','Applied accent '+goldHex+' / '+tealHex);
+    Studio.markUnsaved();
+  },
+
+  /* ---------------- The Agent Hub ---------------- */
+  renderAgentHub(){
+    const el = document.getElementById('agenthub-panel');
+    el.innerHTML = `<span class="eyebrow">R5 · Runtime Event Store</span><h3>The Agent Hub</h3>
+      <p style="font-size:11.5px;color:#a9a49a;margin:6px 0 14px;line-height:1.5">Define which agents exist, how they're scheduled, who reports to whom, and how their proposals get approved.</p>
+      <div class="list-item" data-tp="agenthub.module-hierarchy" onclick="App.enterAgentHierarchy()"><div class="label"><span class="dot" style="background:#4A7C8E"></span>Agent Hierarchy</div></div>
+      <div class="list-item" data-tp="agenthub.module-schedules" onclick="App.enterAgentSchedules()"><div class="label"><span class="dot" style="background:#C4843A"></span>Agent Schedules</div></div>
+      <div class="list-item" data-tp="agenthub.module-experience" onclick="App.enterAgentExperience()"><div class="label"><span class="dot" style="background:#D98CA0"></span>Agent Experience</div></div>`;
+  },
+  selectAgentNode(id){ selectedAgentId = id; UI.renderAgentHierarchy(); },
+  renderAgentHierarchy(){
+    const el = document.getElementById('agenthierarchy-panel');
+    const roots = AGENTS.filter(a=>!a.reportsTo);
+    let html = `<span class="eyebrow">The Agent Hub</span><h3>Agent Hierarchy</h3>
+      <p style="font-size:11px;color:#a9a49a;margin:6px 0 12px;line-height:1.5">Who reports to whom, and what context rolls up.</p>`;
+    roots.forEach(root=>{
+      html += `<div class="list-item ${selectedAgentId===root.id?'active-item':''}" onclick="UI.selectAgentNode('${root.id}')"><div class="label"><span class="dot" style="background:${root.color}"></span>${root.name}</div><span class="tag tag-governed">TIER 0</span></div>`;
+      AGENTS.filter(a=>a.reportsTo===root.id).forEach(child=>{
+        html += `<div class="list-item ${selectedAgentId===child.id?'active-item':''}" style="margin-left:16px" onclick="UI.selectAgentNode('${child.id}')"><div class="label"><span class="dot" style="background:${child.color}"></span>${child.name}</div><span class="tag tag-draft">TIER 1</span></div>`;
+      });
+    });
+    const sel = AGENTS.find(a=>a.id===selectedAgentId);
+    if (sel){
+      html += `<div class="eyebrow" style="margin-top:14px">${sel.name}</div>
+        <p style="font-size:11px;color:#a9a49a;line-height:1.6">${sel.objective}</p>
+        <div class="field"><label>Reports To</label><select data-tp="agenthierarchy.assign-report" onchange="UI.reassignAgentReport('${sel.id}', this.value)">
+          <option value="" ${!sel.reportsTo?'selected':''}>— none (Tier 0) —</option>
+          ${AGENTS.filter(a=>a.id!==sel.id && !a.reportsTo).map(a=>`<option value="${a.id}" ${sel.reportsTo===a.id?'selected':''}>${a.name}</option>`).join('')}
+        </select></div>`;
+    }
+    el.innerHTML = html;
+  },
+  reassignAgentReport(agentId, reportsTo){
+    const a = AGENTS.find(x=>x.id===agentId); if (!a) return;
+    a.reportsTo = reportsTo || null;
+    logHistory('user','agenthierarchy.assign-report', a.name+' now reports to '+(reportsTo?AGENTS.find(x=>x.id===reportsTo).name:'nobody (Tier 0)'));
+    World.rebuildAgentHierarchy();
+    UI.renderAgentHierarchy();
+    Studio.markUnsaved();
+  },
+  selectScheduleNode(id){ selectedScheduleId = id; UI.renderAgentSchedules(); },
+  renderAgentSchedules(){
+    const el = document.getElementById('agentschedules-panel');
+    let html = `<span class="eyebrow">The Agent Hub</span><h3>Agent Schedules</h3>
+      <p style="font-size:11px;color:#a9a49a;margin:6px 0 12px;line-height:1.5">When each agent runs on its own, without being manually delegated to an atom.</p>`;
+    AgentSchedules.forEach(s=>{
+      const agent = AGENTS.find(a=>a.id===s.agentId);
+      html += `<div class="list-item ${selectedScheduleId===s.id?'active-item':''}" onclick="UI.selectScheduleNode('${s.id}')"><div class="label"><span class="dot" style="background:${agent?agent.color:'#8C6B7A'}"></span>${agent?agent.name:s.agentId}</div><span class="tag ${s.active?'tag-published':'tag-soon'}">${s.active?'ACTIVE':'PAUSED'}</span></div>`;
+    });
+    const sel = AgentSchedules.find(s=>s.id===selectedScheduleId);
+    if (sel){
+      const agent = AGENTS.find(a=>a.id===sel.agentId);
+      html += `<div class="eyebrow" style="margin-top:14px">${agent?agent.name:sel.agentId}</div>
+        <div class="field"><label>Cadence</label><select onchange="UI.setScheduleCadence('${sel.id}', this.value)">
+          ${['On demand (manual delegation)','Daily · 06:00','Weekly · Mondays','Hourly'].map(c=>`<option ${sel.cadence===c?'selected':''}>${c}</option>`).join('')}
+        </select></div>
+        <button class="btn ${sel.active?'btn-ghost':'btn-teal'}" data-tp="agentschedules.toggle-active" onclick="UI.toggleSchedule('${sel.id}')">${sel.active?'Pause':'Activate'}</button>`;
+    }
+    el.innerHTML = html;
+  },
+  setScheduleCadence(id, cadence){
+    const s = AgentSchedules.find(x=>x.id===id); if (!s) return;
+    s.cadence = cadence;
+    logHistory('user','agentschedules.cadence-set','Set cadence for '+id+' to '+cadence);
+    World.rebuildAgentSchedules(); UI.renderAgentSchedules(); Studio.markUnsaved();
+  },
+  toggleSchedule(id){
+    const s = AgentSchedules.find(x=>x.id===id); if (!s) return;
+    s.active = !s.active;
+    logHistory('user','agentschedules.toggle-active', (s.active?'Activated':'Paused')+' schedule '+id);
+    World.rebuildAgentSchedules(); UI.renderAgentSchedules(); Studio.markUnsaved();
+  },
+  selectWorkflowStep(id){ selectedWorkflowStepId = id; UI.renderAgentExperience(); },
+  renderAgentExperience(){
+    const el = document.getElementById('agentexperience-panel');
+    let html = `<span class="eyebrow">The Agent Hub</span><h3>Agent Experience</h3>
+      <p style="font-size:11px;color:#a9a49a;margin:6px 0 12px;line-height:1.5">The approval workflow every agent proposal must clear before it can commit — plus a live feed of what your agents have actually done.</p>`;
+    AgentApprovalWorkflow.steps.forEach(s=>{
+      const role = DefinitionRegistry.roles.find(r=>r.id===s.requiredRoleId);
+      html += `<div class="list-item ${selectedWorkflowStepId===s.id?'active-item':''}" onclick="UI.selectWorkflowStep('${s.id}')"><div class="label"><span class="dot" style="background:${s.requiredRoleId?'#C4843A':'#4A7C8E'}"></span>${s.name}</div><span class="tag ${s.requiredRoleId?'tag-locked':'tag-published'}">${role?role.name.toUpperCase():'NO GATE'}</span></div>`;
+    });
+    const sel = AgentApprovalWorkflow.steps.find(s=>s.id===selectedWorkflowStepId);
+    if (sel){
+      html += `<div class="eyebrow" style="margin-top:14px">${sel.name}</div>
+        <p style="font-size:11px;color:#a9a49a;line-height:1.6">${sel.note}</p>
+        <div class="field"><label>Required Approver Role</label><select data-tp="agentexperience.workflow-step" onchange="UI.setWorkflowRole('${sel.id}', this.value)">
+          <option value="" ${!sel.requiredRoleId?'selected':''}>No gate — auto-advance</option>
+          ${DefinitionRegistry.roles.map(r=>`<option value="${r.id}" ${sel.requiredRoleId===r.id?'selected':''}>${r.name}</option>`).join('')}
+        </select></div>`;
+    }
+    html += `<div class="eyebrow" style="margin-top:16px">Recent Agent Activity</div>`;
+    const feed = history.filter(h=>h.actor.indexOf('agent:')===0 || h.action.indexOf('agent.')===0).slice(0,8);
+    html += feed.length ? feed.map(h=>`<div class="history-item"><div class="t mono">${new Date(h.t).toLocaleTimeString()}</div>${h.detail}</div>`).join('') : '<div class="empty-state" style="color:#8b8578;border-color:rgba(255,255,255,.15)">No agent activity yet — delegate an agent from Day to Day → Deal Journeys.</div>';
+    el.innerHTML = html;
+  },
+  setWorkflowRole(stepId, roleId){
+    const s = AgentApprovalWorkflow.steps.find(x=>x.id===stepId); if (!s) return;
+    s.requiredRoleId = roleId || null;
+    logHistory('user','agentexperience.workflow-step','Set required approver for "'+s.name+'" to '+(roleId?DefinitionRegistry.roles.find(r=>r.id===roleId).name:'no gate'));
+    World.rebuildAgentExperience(); UI.renderAgentExperience(); Studio.markUnsaved();
+  },
+
+  /* ---------------- User Configuration ---------------- */
+  selectUserConfigModule(key){ selectedUserConfigModule = key; UI.renderUserConfig(); },
+  renderUserConfig(){
+    const el = document.getElementById('userconfig-panel');
+    el.innerHTML = `<span class="eyebrow">User Configuration</span><h3>Your Preferences</h3>
+      <p style="font-size:11.5px;color:#a9a49a;margin:6px 0 14px;line-height:1.5">Account, payment, org alignment, email, and visual preferences — scoped to you, not the org's governed rules.</p>
+      <div class="list-item" data-tp="userconfig.module-account" onclick="UI.selectUserConfigModule('account')"><div class="label"><span class="dot" style="background:#4A7C8E"></span>Account Settings</div></div>
+      <div class="list-item" data-tp="userconfig.module-payment" onclick="UI.selectUserConfigModule('payment')"><div class="label"><span class="dot" style="background:#C4843A"></span>Payment Settings</div></div>
+      <div class="list-item" data-tp="userconfig.module-orgalign" onclick="UI.selectUserConfigModule('orgalign')"><div class="label"><span class="dot" style="background:#8C6B7A"></span>Organization Alignment</div></div>
+      <div class="list-item" data-tp="userconfig.module-emailcfg" onclick="UI.selectUserConfigModule('emailcfg')"><div class="label"><span class="dot" style="background:#D98CA0"></span>Email Configuration</div></div>
+      <div class="list-item" data-tp="userconfig.module-visual" onclick="UI.selectUserConfigModule('visual')"><div class="label"><span class="dot" style="background:#6B8F71"></span>Visual Interface</div></div>
+      <div id="userconfig-module-detail"></div>`;
+    if (selectedUserConfigModule) UI.renderModuleDetail('userconfig-module-detail', selectedUserConfigModule);
+  },
+
+  /* ---------------- Day to Day ---------------- */
+  selectDayToDayModule(key){ selectedDayToDayModule = key; UI.renderDayToDay(); },
+  renderDayToDay(){
+    const el = document.getElementById('daytoday-panel');
+    el.innerHTML = `<span class="eyebrow">R5 · Runtime Event Store</span><h3>Day to Day</h3>
+      <p style="font-size:11.5px;color:#a9a49a;margin:6px 0 14px;line-height:1.5">Where the governed rules from Definition Studio actually get run, deal by deal, account by account.</p>
+      <div class="list-item" data-tp="daytoday.module-customerhealth" onclick="UI.selectDayToDayModule('customerhealth')"><div class="label"><span class="dot" style="background:#4A7C8E"></span>Customer Health</div></div>
+      <div class="list-item" data-tp="daytoday.module-pipeline" onclick="UI.selectDayToDayModule('pipeline')"><div class="label"><span class="dot" style="background:#C4843A"></span>Pipeline</div></div>
+      <div class="list-item" data-tp="daytoday.module-accountplanning" onclick="UI.selectDayToDayModule('accountplanning')"><div class="label"><span class="dot" style="background:#8C6B7A"></span>Account Planning</div></div>
+      <div class="list-item" data-tp="daytoday.module-dealjourneys" onclick="App.enterJourneysCosmos()"><div class="label"><span class="dot" style="background:#D98CA0"></span>Deal Journeys</div></div>
+      <div class="list-item" data-tp="daytoday.module-tasklist" onclick="UI.selectDayToDayModule('tasklist')"><div class="label"><span class="dot" style="background:#6B8F71"></span>Task List</div></div>
+      <div id="daytoday-module-detail"></div>`;
+    if (selectedDayToDayModule) UI.renderDayToDayModule(selectedDayToDayModule);
+  },
+  renderDayToDayModule(key){
+    const container = document.getElementById('daytoday-module-detail'); if (!container) return;
+    if (key==='tasklist'){
+      const tasks = UI.computeTaskList();
+      let html = `<div class="eyebrow" style="margin-top:14px">Day to Day · R5</div><h3 style="font-size:14px">Task List</h3>
+        <p style="font-size:11px;color:#a9a49a;margin:6px 0 10px;line-height:1.5">Computed live from real app state — nothing here is hardcoded.</p>`;
+      html += tasks.length ? tasks.map(t=>`<div class="list-item" data-tp="daytoday.tasklist-item" onclick="${t.onclick}"><div class="label"><span class="dot" style="background:${t.color}"></span>${t.label}</div><span class="tag tag-${t.tag}">${t.tag.toUpperCase()}</span></div>`).join('') : '<div class="empty-state" style="color:#8b8578;border-color:rgba(255,255,255,.15)">Nothing needs your attention right now.</div>';
+      container.innerHTML = html;
+      return;
+    }
+    UI.renderModuleDetail('daytoday-module-detail', key);
+  },
+  computeTaskList(){
+    const tasks = [];
+    DefinitionRegistry.policies.filter(p=>p.status==='draft'||p.status==='approved').forEach(p=>{
+      tasks.push({label:'Finish "'+p.name+'"', color:'#C4843A', tag: p.status==='approved'?'approved':'draft', onclick:`App.jumpToPolicy('${p.id}')`});
+    });
+    OrgSite.pages.concat(OrgSite.pages.flatMap(p=>p.subpages)).filter(p=>p.status==='draft').forEach(p=>{
+      tasks.push({label:'Publish "'+p.name+'"', color:'#8C6B7A', tag:'draft', onclick:`App.enterSiteConfig()`});
+    });
+    if (!GTMDiagnostic.completed) tasks.push({label:'Complete Current State Diagnostic', color:'#D98CA0', tag:'draft', onclick:`App.enterGTM()`});
+    agentsRuntime.filter(a=>a.proposal && !a.proposal.locked && a.proposal.disposition && a.proposal.disposition.indexOf('needs your approval')>=0).forEach(a=>{
+      tasks.push({label:'Review proposal from '+a.name, color:'#4A7C8E', tag:'approved', onclick:`UI.showPanel('evidence-panel')`});
+    });
+    return tasks;
   },
 };
 
@@ -1515,6 +1986,9 @@ const UI = {
 World.rebuildSiteConfig = function(){ groups.sitecfg.clear(); pickables = pickables.filter(p=>p.kind!=='site-page'); World.buildSiteConfig(); };
 World.rebuildGTM = function(){ groups.gtm.clear(); pickables = pickables.filter(p=>p.kind!=='gtm-question'); World.buildGTM(); };
 World.rebuildDefBuilder = function(){ groups.defbuilder.clear(); pickables = pickables.filter(p=>p.kind!=='policy'); World.buildDefBuilder(); };
+World.rebuildAgentHierarchy = function(){ groups.agenthierarchy.clear(); pickables = pickables.filter(p=>p.kind!=='agent-node'); World.buildAgentHierarchy(); };
+World.rebuildAgentSchedules = function(){ groups.agentschedules.clear(); pickables = pickables.filter(p=>p.kind!=='schedule-node'); World.buildAgentSchedules(); };
+World.rebuildAgentExperience = function(){ groups.agentexperience.clear(); pickables = pickables.filter(p=>p.kind!=='workflow-step'); World.buildAgentExperience(); };
 World.rebuildJourneysAtomFor = function(atomId){
   // find the atom's mesh in whichever journey group is currently built and re-transform it so the "ungoverned" cage clears
   const groupsToCheck = [groups.journeysCosmos, groups.journeyAvatar].filter(Boolean);
@@ -1534,10 +2008,14 @@ const TOUCHPOINTS = [
   {id:'arrival.world-entry', name:'World Entry', mode:'any'},
   {id:'navigation.orbit', name:'Orbit Camera', mode:'any'},
   {id:'home.action-defstudio', name:'Home → Definition Studio', mode:'home'},
-  {id:'home.action-journeys', name:'Home → Your Journeys', mode:'home'},
+  {id:'home.action-agenthub', name:'Home → The Agent Hub', mode:'home'},
+  {id:'home.action-userconfig', name:'Home → User Configuration', mode:'home'},
+  {id:'home.action-daytoday', name:'Home → Day to Day', mode:'home'},
+  {id:'defstudio.module-diagnostic', name:'Definition Studio → Current State Diagnostic', mode:'defstudio'},
+  {id:'defstudio.module-futurestate', name:'Definition Studio → Future State Process Definitions', mode:'defstudio'},
+  {id:'defstudio.module-policies', name:'Definition Studio → Policies & Business Rules', mode:'defstudio'},
+  {id:'defstudio.module-kpis', name:'Definition Studio → KPI Definitions & Outcomes Mapping', mode:'defstudio'},
   {id:'defstudio.module-sitecfg', name:'Definition Studio → Site Config', mode:'defstudio'},
-  {id:'defstudio.module-gtm', name:'Definition Studio → GTM Diagnostic', mode:'defstudio'},
-  {id:'defstudio.module-defbuilder', name:'Definition Studio → Definition Builder', mode:'defstudio'},
   {id:'sitecfg.page-select', name:'Site Page Select', mode:'sitecfg'},
   {id:'sitecfg.publish', name:'Publish Page', mode:'sitecfg'},
   {id:'gtm.wizard-step', name:'GTM Wizard Answer', mode:'gtm'},
@@ -1548,6 +2026,24 @@ const TOUCHPOINTS = [
   {id:'defbuilder.policy-define', name:'Define Policy Rule', mode:'defbuilder'},
   {id:'defbuilder.role-assign', name:'Assign / Approve Role', mode:'defbuilder'},
   {id:'defbuilder.translate', name:'Translate to Governed Logic', mode:'defbuilder'},
+  {id:'agenthub.module-hierarchy', name:'Agent Hub → Agent Hierarchy', mode:'agenthub'},
+  {id:'agenthub.module-schedules', name:'Agent Hub → Agent Schedules', mode:'agenthub'},
+  {id:'agenthub.module-experience', name:'Agent Hub → Agent Experience', mode:'agenthub'},
+  {id:'agenthierarchy.assign-report', name:'Reassign Agent Report-To', mode:'agenthierarchy'},
+  {id:'agentschedules.toggle-active', name:'Toggle Agent Schedule', mode:'agentschedules'},
+  {id:'agentexperience.workflow-step', name:'Set Approval Workflow Role', mode:'agentexperience'},
+  {id:'userconfig.module-account', name:'User Config → Account Settings', mode:'userconfig'},
+  {id:'userconfig.module-payment', name:'User Config → Payment Settings', mode:'userconfig'},
+  {id:'userconfig.module-orgalign', name:'User Config → Organization Alignment', mode:'userconfig'},
+  {id:'userconfig.module-emailcfg', name:'User Config → Email Configuration', mode:'userconfig'},
+  {id:'userconfig.module-visual', name:'User Config → Visual Interface', mode:'userconfig'},
+  {id:'userconfig.visual-apply', name:'Apply Accent Theme', mode:'userconfig'},
+  {id:'daytoday.module-customerhealth', name:'Day to Day → Customer Health', mode:'daytoday'},
+  {id:'daytoday.module-pipeline', name:'Day to Day → Pipeline', mode:'daytoday'},
+  {id:'daytoday.module-accountplanning', name:'Day to Day → Account Planning', mode:'daytoday'},
+  {id:'daytoday.module-dealjourneys', name:'Day to Day → Deal Journeys', mode:'daytoday'},
+  {id:'daytoday.module-tasklist', name:'Day to Day → Task List', mode:'daytoday'},
+  {id:'daytoday.tasklist-item', name:'Task List Item', mode:'daytoday'},
   {id:'journeys.governed-link', name:'Governed-By Cross-Layer Link', mode:'journeys'},
   {id:'avatar.approach-structure', name:'Approach Structure', mode:'journeyAvatar'},
   {id:'agent.delegate-task', name:'Delegate Task', mode:'journeys'},
@@ -1690,7 +2186,9 @@ document.getElementById('annotateBackdrop').addEventListener('click', (e)=>{ if(
 window.App = App; window.UI = UI; window.Studio = Studio; window.delegateAgent = delegateAgent;
 window.approveProposal = approveProposal; window.rejectProposal = rejectProposal; window.deferProposal = deferProposal;
 window.__SB_DEBUG__ = { STATE, camera:()=>camera, controls:()=>({get orbitAngle(){return orbitAngle}, set orbitAngle(v){orbitAngle=v}, get orbitRadius(){return orbitRadius}, set orbitRadius(v){orbitRadius=v}, get autoRotate(){return false}, set autoRotate(v){}}),
-  pickables:()=>pickables, groups:()=>groups, RODS, DefinitionRegistry, OrgSite, GTMDiagnostic, history:()=>history, selectedAtom:()=>selectedAtom };
+  pickables:()=>pickables, groups:()=>groups, RODS, DefinitionRegistry, OrgSite, GTMDiagnostic,
+  AGENTS, AgentSchedules, AgentApprovalWorkflow, UserSettings, LIST_MODULES,
+  history:()=>history, selectedAtom:()=>selectedAtom };
 
 Studio.init();
 </script>
