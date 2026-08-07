@@ -9,9 +9,10 @@
 // of whether a record matched — the server has the matching logic but never
 // tells the client whether an email or phone is on file (anti-enumeration).
 //
-// On successful login the redirect target depends on user.role: admins land at
-// /admin, members at /member. A ?next= URL param overrides this if it's a path
-// (not an external URL, for safety).
+// On successful login everyone lands at /world (the WorldShell crystal-orbit
+// landing experience, 2026-08-07) — both roles share it, WorldShell itself
+// branches chrome/data by role. A ?next= URL param overrides this if it's a
+// path (not an external URL, for safety).
 
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -39,8 +40,10 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       const body = await api.login(email, password);
-      const role = body?.user?.role;
-      const target = next || (role === 'admin' ? '/admin' : '/member');
+      // Land on the World Shell — the shared crystal-orbit landing experience
+      // for both roles — unless the caller was redirected here from a
+      // specific deep link (`?next=`), which still wins.
+      const target = next || '/world';
       nav(target, { replace: true });
     } catch (e) {
       setErr(e.message || 'Login failed');

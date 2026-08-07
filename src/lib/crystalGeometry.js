@@ -354,6 +354,60 @@ export function buildGemMesh(THREE, { color = 0xC4843A, size = 0.22, metalness =
   );
 }
 
+// A "river of light" flowing from one world position to another — the World
+// Shell's islands connect to the Crystal Core this way. A single additive-
+// blended THREE.Points stream sampled along a CatmullRomCurve3, each point
+// given a random offset along the curve and re-wrapped every frame by the
+// caller (see `advanceRiverParticles`) rather than re-created, so the flow
+// reads as continuous motion instead of a static dotted line. Reused by any
+// world that needs a link between two crystals — never fork a bespoke
+// particle system per consumer, per this file's header rule.
+export function buildRiverParticles(THREE, { from, to, color = 0xC4843A, count = 60, curveLift = 0.6 } = {}) {
+  const mid = from.clone().add(to).multiplyScalar(0.5);
+  mid.y += curveLift;
+  const curve = new THREE.CatmullRomCurve3([from.clone(), mid, to.clone()]);
+  const positions = new Float32Array(count * 3);
+  const offsets = new Float32Array(count);
+  for (let i = 0; i < count; i += 1) {
+    const t = i / count;
+    offsets[i] = t;
+    const p = curve.getPoint(t);
+    positions[i * 3] = p.x;
+    positions[i * 3 + 1] = p.y;
+    positions[i * 3 + 2] = p.z;
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const material = new THREE.PointsMaterial({
+    color,
+    size: 0.09,
+    transparent: true,
+    opacity: 0.85,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true,
+  });
+  const points = new THREE.Points(geometry, material);
+  points.userData.curve = curve;
+  points.userData.offsets = offsets;
+  points.userData.speed = 0.12 + Math.random() * 0.05;
+  return points;
+}
+
+// Advances a river's flow by `dt` seconds — call once per animation frame per
+// river. Wraps each point back to the curve start once it reaches the end so
+// the stream loops seamlessly.
+export function advanceRiverParticles(points, dt) {
+  const { curve, offsets, speed } = points.userData;
+  const posAttr = points.geometry.getAttribute('position');
+  for (let i = 0; i < offsets.length; i += 1) {
+    offsets[i] = (offsets[i] + dt * speed) % 1;
+    const p = curve.getPoint(offsets[i]);
+    posAttr.setXYZ(i, p.x, p.y, p.z);
+  }
+  posAttr.needsUpdate = true;
+}
+
 // Projects a world position through `camera` into CSS pixel coordinates
 // within an element sized `width` x `height`. Returns null when the point is
 // behind the camera (so callers can hide the HTML hit-target instead of

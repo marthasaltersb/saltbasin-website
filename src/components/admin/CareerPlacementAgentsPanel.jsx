@@ -3,21 +3,9 @@
 // server/lib/opportunityPipelineRegistry.js + careerOpportunityRollups.js.
 // Member-scoped: every fetch/write is implicitly scoped to the logged-in
 // member via the requireUser session cookie, same as CareerIntakePanel.jsx.
-import React, { useEffect, useState, useCallback } from 'react';
-import { api } from '../../lib/api.js';
-import { toast } from '../../lib/toast.js';
+import React from 'react';
 import OpportunityAgentOrbitWorld from '../OpportunityAgentOrbitWorld.jsx';
-
-const DIMENSION_FIELDS = [
-  { key: 'scope_altitude', label: 'Role scope & altitude' },
-  { key: 'strategic_ops_transformation', label: 'Strategic ops & transformation' },
-  { key: 'revenue_systems_q2r', label: 'Revenue systems / Q2R' },
-  { key: 'ai_validation_data_intel', label: 'AI validation & data intelligence' },
-  { key: 'pe_value_creation_finance', label: 'PE / value creation / finance' },
-  { key: 'leadership_stakeholder_fit', label: 'Leadership & stakeholder fit' },
-  { key: 'transferable_industry_fit', label: 'Transferable industry fit' },
-  { key: 'practical_fit', label: 'Practical fit' },
-];
+import { useCareerPlacementAgents, CAREER_DIMENSION_FIELDS as DIMENSION_FIELDS } from '../../lib/hooks/useCareerPlacementAgents.js';
 
 const S = {
   wrap: { background: '#0d1417', color: '#f5f0e8', minHeight: '100%', padding: '1.5rem' },
@@ -55,89 +43,13 @@ function scoreColor(score) {
 }
 
 export default function CareerPlacementAgentsPanel({ scope }) {
-  const [loading, setLoading] = useState(true);
-  const [agents, setAgents] = useState([]);
-  const [workflow, setWorkflow] = useState([]);
-  const [opportunities, setOpportunities] = useState([]);
-  const [selectedAgentKey, setSelectedAgentKey] = useState(null);
-  const [selectedOpportunityId, setSelectedOpportunityId] = useState(null);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [addForm, setAddForm] = useState({ jobTitle: '', companyName: '', url: '', location: '' });
-  const [scoreDraft, setScoreDraft] = useState({});
-  const [saving, setSaving] = useState(false);
-
-  const load = useCallback(async () => {
-    try {
-      const [hub, oppResult] = await Promise.all([api.getCareerAgentHub(), api.listCareerOpportunities()]);
-      setAgents(hub.agents);
-      setWorkflow(hub.workflow);
-      setOpportunities(oppResult.opportunities);
-    } catch (e) {
-      toast('Failed to load Career Placement Agents: ' + e.message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
-
-  const selectedAgent = agents.find((a) => a.key === selectedAgentKey) || null;
-  const selectedOpportunity = opportunities.find((o) => o.id === selectedOpportunityId) || null;
-
-  useEffect(() => {
-    if (selectedOpportunity) {
-      const next = {};
-      DIMENSION_FIELDS.forEach((d) => {
-        const existing = selectedOpportunity.score?.components?.find((c) => c.key === d.key);
-        next[d.key] = existing?.rawScore ?? '';
-      });
-      setScoreDraft(next);
-    }
-  }, [selectedOpportunityId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  async function handleAddOpportunity(e) {
-    e.preventDefault();
-    if (!addForm.jobTitle.trim()) { toast('Job title is required.'); return; }
-    setSaving(true);
-    try {
-      const created = await api.createCareerOpportunity({
-        jobTitle: addForm.jobTitle.trim(),
-        companyName: addForm.companyName.trim() || null,
-        url: addForm.url.trim() || null,
-        location: addForm.location.trim() || null,
-      });
-      setOpportunities((prev) => [created, ...prev]);
-      setSelectedOpportunityId(created.id);
-      setShowAddForm(false);
-      setAddForm({ jobTitle: '', companyName: '', url: '', location: '' });
-      toast('Tracked "' + created.metadata.jobTitle + '".');
-    } catch (e) {
-      toast('Could not add opportunity: ' + e.message);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleSaveScore() {
-    if (!selectedOpportunity) return;
-    const dimensionScores = {};
-    for (const d of DIMENSION_FIELDS) {
-      const raw = scoreDraft[d.key];
-      if (raw === '' || raw == null) continue;
-      dimensionScores[d.key] = Number(raw);
-    }
-    if (!Object.keys(dimensionScores).length) { toast('Enter at least one dimension score.'); return; }
-    setSaving(true);
-    try {
-      const updated = await api.scoreCareerOpportunity(selectedOpportunity.id, { dimensionScores, sourceReference: 'manual-review-' + Date.now() });
-      setOpportunities((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
-      toast(updated.score?.complete ? `Scored: ${updated.score.score} / 100` : 'Scores saved (some dimensions still unscored).');
-    } catch (e) {
-      toast('Could not save scores: ' + e.message);
-    } finally {
-      setSaving(false);
-    }
-  }
+  const {
+    loading, agents, workflow, opportunities,
+    selectedAgentKey, selectedOpportunityId, selectedAgent, selectedOpportunity,
+    selectAgent, selectOpportunity,
+    showAddForm, setShowAddForm, addForm, setAddForm, handleAddOpportunity,
+    scoreDraft, setScoreDraft, handleSaveScore, saving,
+  } = useCareerPlacementAgents();
 
   if (loading) {
     const { padding: _wrapPadding, ...wrapRest } = S.wrap;
@@ -164,8 +76,8 @@ export default function CareerPlacementAgentsPanel({ scope }) {
               opportunities={opportunities}
               selectedAgentKey={selectedAgentKey}
               selectedOpportunityId={selectedOpportunityId}
-              onSelectAgent={(key) => { setSelectedAgentKey(key); setSelectedOpportunityId(null); }}
-              onSelectOpportunity={(id) => { setSelectedOpportunityId(id); setSelectedAgentKey(null); }}
+              onSelectAgent={selectAgent}
+              onSelectOpportunity={selectOpportunity}
               height={420}
             />
           </div>
@@ -202,7 +114,7 @@ export default function CareerPlacementAgentsPanel({ scope }) {
               </div>
             )}
             {opportunities.map((o) => (
-              <div key={o.id} style={S.listItem(selectedOpportunityId === o.id)} onClick={() => { setSelectedOpportunityId(o.id); setSelectedAgentKey(null); }}>
+              <div key={o.id} style={S.listItem(selectedOpportunityId === o.id)} onClick={() => selectOpportunity(o.id)}>
                 <span>{o.metadata?.jobTitle}{o.entities?.[0] ? ` — ${o.entities[0].canonicalName}` : ''}</span>
                 <span style={{ color: scoreColor(o.score?.score), fontWeight: 600 }}>{o.score ? Math.round(o.score.score) : '—'}</span>
               </div>

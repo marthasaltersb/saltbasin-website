@@ -6,6 +6,7 @@ const LandingGate = lazy(() => import('./components/LandingGate.jsx'));
 const LoginPage = lazy(() => import('./components/admin/LoginPage.jsx'));
 const AdminShell = lazy(() => import('./components/admin/AdminShell.jsx'));
 const MemberDashboard = lazy(() => import('./components/MemberDashboard.jsx'));
+const WorldShell = lazy(() => import('./components/WorldShell.jsx'));
 const PublicProfile = lazy(() => import('./components/PublicProfile.jsx'));
 const LeadView = lazy(() => import('./components/LeadView.jsx'));
 const ResetPasswordPage = lazy(() => import('./components/ResetPasswordPage.jsx'));
@@ -88,6 +89,7 @@ export default function App() {
       <Route path="/reset/:token" element={<ResetPasswordPage />} />
       <Route path="/signup" element={<SignupRoute />} />
       <Route path="/member" element={<MemberDashboard />} />
+      <Route path="/world" element={<WorldShell />} />
       <Route path="/org/:orgId" element={<OrgPortal />} />
       <Route path="/u/:slug" element={<PublicProfile />} />
       <Route path="/u/:slug/*" element={<PublicProfile />} />
