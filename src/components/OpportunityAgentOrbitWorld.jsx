@@ -1,14 +1,17 @@
-// Career Agent Orbit World (2026-08-06, Phase 2 — Career Placement Agents
-// vertical slice). Anchored around the same baseline crystal design system
-// every user-facing crystal in the product already shares
-// (src/lib/crystalGeometry.js's CRYSTAL_VARIANTS + buildGemMesh) — per
-// explicit direction: user "world" views are variants of one crystal
-// family, orbited by 3D objects, never bespoke geometry invented per panel.
-// This world's anchor is the 'agentHub' variant; agents orbit as person
-// figures (their own approved shape, distinct from data crystals — agents
-// are actors, not data); tracked opportunities orbit as buildGemMesh() gems,
-// colored/sized by their real score. Selecting an orbit object animates a
-// brief dolly-toward-it ("entering" the object) before the side panel opens.
+// Opportunity Agent Orbit World (2026-08-06, Phase 2 — Career Placement
+// Agents; generalized Phase 3 for the commercial pipeline too). Anchored
+// around the same baseline crystal design system every user-facing crystal
+// in the product already shares (src/lib/crystalGeometry.js's
+// CRYSTAL_VARIANTS + buildGemMesh) — per explicit direction: user "world"
+// views are variants of one crystal family, orbited by 3D objects, never
+// bespoke geometry invented per panel. The `variant` prop selects which
+// CRYSTAL_VARIANTS anchor to build ('agentHub' for career,
+// 'commercialPipeline' for commercial — both pipelines share this one
+// component, not a forked copy). Agents orbit as person figures (their own
+// approved shape, distinct from data crystals — agents are actors, not
+// data); tracked opportunities orbit as buildGemMesh() gems, colored/sized
+// by their real score. Selecting an orbit object animates a brief
+// dolly-toward-it ("entering" the object) before the side panel opens.
 //
 // Deliberately does NOT touch or extend SpatialJourneyWorld.jsx — assessed
 // and rejected as disproportionate risk for this phase (see git history);
@@ -61,13 +64,14 @@ const OPPORTUNITY_RING_RADIUS = 5.6;
 
 /**
  * Props:
+ *   variant          — CRYSTAL_VARIANTS key for the anchor crystal (default 'agentHub')
  *   agents          — [{ key, name, tier, reportsToAgentId, id, pipeline }]
  *   opportunities    — [{ id, metadata:{jobTitle}, score:{score}|null }]
  *   selectedAgentKey / selectedOpportunityId — current selection (string/number|null)
  *   onSelectAgent(key) / onSelectOpportunity(id) — click callbacks
  *   height           — canvas height in px (default 440)
  */
-export default function CareerAgentOrbitWorld({ agents = [], opportunities = [], selectedAgentKey = null, selectedOpportunityId = null, onSelectAgent, onSelectOpportunity, height = 440 }) {
+export default function OpportunityAgentOrbitWorld({ variant = 'agentHub', agents = [], opportunities = [], selectedAgentKey = null, selectedOpportunityId = null, onSelectAgent, onSelectOpportunity, height = 440 }) {
   const hostRef = useRef(null);
   const engineRef = useRef(null);
 
@@ -94,7 +98,8 @@ export default function CareerAgentOrbitWorld({ agents = [], opportunities = [],
 
     // The world anchor — every user world is a variant of the same crystal family.
     const anchorGroup = new THREE.Group();
-    const anchorHandles = CRYSTAL_VARIANTS.agentHub(anchorGroup, THREE);
+    const anchorVariantFn = CRYSTAL_VARIANTS[variant] || CRYSTAL_VARIANTS.agentHub;
+    const anchorHandles = anchorVariantFn(anchorGroup, THREE);
     scene.add(anchorGroup);
 
     const contentGroup = new THREE.Group();
@@ -224,7 +229,7 @@ export default function CareerAgentOrbitWorld({ agents = [], opportunities = [],
       engineRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [height]);
+  }, [height, variant]);
 
   // Data changes: rebuild the orbit rings without recreating the renderer/anchor.
   useEffect(() => {
