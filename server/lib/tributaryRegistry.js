@@ -36,6 +36,21 @@
 //     validateTributary() — but the actual INSERT stays with the satellite
 //     table's own module (resumeProjection.js), which adds parent_rod_id +
 //     rod_relationship_type columns alongside its specific fields.
+//
+// A third relationshipKind, 'reference' (2026-08-06, Career Placement
+// Agents / Weekly Research & Outreach pipeline), for a shape neither
+// 'hierarchical' nor 'peer' covers: a Channel Rod referencing a *shared
+// master-data record* (an Entity or Person from entities/persons) that many
+// independent rods can point at — Vista Equity Partners as an Entity is
+// referenced by every commercial_opportunity_target rod about it, not owned
+// by exactly one. 'satellite' assumes exclusive parent_rod_id ownership
+// (wrong here — no single rod owns an Entity); 'peer' assumes both sides are
+// journey_data_rods rows (also wrong — entities/persons aren't rods). See
+// server/lib/opportunityPipelineRegistry.js for the full reuse-first
+// classification this shape was audited against before landing, and
+// linkRodToEntity()/linkRodToPerson() below for the generic insert path —
+// same one-mechanism principle as createJourneyTributary/linkJourneyTributary,
+// extended to cover a shape the original two didn't have.
 import { db } from '../db.js';
 
 export const TRIBUTARY_TYPES = Object.freeze({
@@ -119,6 +134,30 @@ export const TRIBUTARY_TYPES = Object.freeze({
     toType: 'customer',
     cardinality: 'many_to_many',
     description: 'Connects a Member Entitlement Channel Journey to the Customer Channel Journey for the same Member Organization relationship — the two rods share Atoms/Molecules; neither is the other\'s structural parent.',
+  },
+  career_opportunity_provisioning: {
+    relationshipKind: 'hierarchical',
+    parentJourneyType: 'career_master',
+    childKind: 'journey',
+    childJourneyType: 'career_opportunity_target',
+    cardinality: 'one_to_many',
+    description: "A Member's Career Master Channel Journey provisions a Career Opportunity Target Channel Journey per tracked external role — match scoring reads the parent's real Career Atoms/Molecules, never a fabricated profile (2026-08-06, Career Placement Agents).",
+  },
+  opportunity_entity_reference: {
+    relationshipKind: 'reference',
+    fromJourneyTypes: ['commercial_opportunity_target', 'career_opportunity_target'],
+    childTable: 'entities',
+    linkTable: 'journey_rod_entity_links',
+    cardinality: 'many_to_many',
+    description: 'A commercial or career opportunity rod references a shared Entity (company/fund/org) — the same Entity may be referenced by many rods, so this is never a parent_rod_id relationship. Carries the target-expansion ring/parent-target/reason metadata (spec Section 4).',
+  },
+  opportunity_person_reference: {
+    relationshipKind: 'reference',
+    fromJourneyTypes: ['commercial_opportunity_target', 'career_opportunity_target'],
+    childTable: 'persons',
+    linkTable: 'journey_rod_person_links',
+    cardinality: 'many_to_many',
+    description: 'A commercial or career opportunity rod references a shared Person (a discovered contact) — the same Person may be referenced by many rods (e.g. one functional leader relevant to several tracked opportunities at their company).',
   },
 });
 
@@ -231,4 +270,83 @@ export async function getLinkedRods(rodId, tributaryType = null) {
     metadata: typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata,
     createdAt: Number(row.created_at),
   }));
+}
+
+/**
+ * Validates that `tributaryType` is a real, implemented, `relationshipKind:
+ * 'reference'` Tributary and that `rod`'s rod_type is one of its allowed
+ * fromJourneyTypes — the gate every reference-Tributary creator (below)
+ * passes through, same role validateTributary()/validatePeerTributary() play
+ * for the other two relationshipKinds.
+ */
+export function validateReferenceTributary(tributaryType, rod) {
+  const def = TRIBUTARY_TYPES[tributaryType];
+  if (!def) throw new Error(`Unknown Tributary type: "${tributaryType}"`);
+  if (def.relationshipKind !== 'reference') throw new Error(`Tributary "${tributaryType}" is relationshipKind="${def.relationshipKind}", not "reference" — use validateTributary()/validatePeerTributary() instead.`);
+  if (!rod || !def.fromJourneyTypes.includes(rod.rod_type)) {
+    throw new Error(`Tributary "${tributaryType}" requires rod_type in {${def.fromJourneyTypes.join(', ')}}, got "${rod?.rod_type}".`);
+  }
+  return def;
+}
+
+/**
+ * Links a Channel Rod to a shared Entity — the generic insert path for
+ * every opportunity_entity_reference-shaped Tributary, so no caller writes
+ * its own bespoke INSERT into journey_rod_entity_links. Idempotent
+ * (ON CONFLICT DO NOTHING on the rod/entity/type triple) and records a
+ * `entity_referenced` journey_rod_events row on the rod for an event-sourced
+ * trail, matching linkJourneyTributary()'s peer-link precedent.
+ */
+export async function linkRodToEntity({ rod, tributaryType, entityId, roleInContext = null, expansionRing = null, parentEntityId = null, reason = null, metadata = {} }) {
+  validateReferenceTributary(tributaryType, rod);
+  const now = Date.now();
+  const result = await db.prepare(`
+    INSERT INTO journey_rod_entity_links (rod_id, entity_id, tributary_type, role_in_context, expansion_ring, parent_entity_id, reason, metadata, created_at)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9)
+    ON CONFLICT (rod_id, entity_id, tributary_type) DO NOTHING
+    RETURNING id
+  `).run(rod.id, entityId, tributaryType, roleInContext, expansionRing, parentEntityId, reason, metadata, now);
+  await db.prepare(`INSERT INTO journey_rod_events (rod_id,event_type,metadata,created_at) VALUES ($1,'entity_referenced',$2::jsonb,$3)`)
+    .run(rod.id, { tributaryType, entityId, expansionRing, parentEntityId, reason }, now);
+  return result.lastInsertRowid
+    ? db.prepare(`SELECT * FROM journey_rod_entity_links WHERE id=$1`).get(Number(result.lastInsertRowid))
+    : db.prepare(`SELECT * FROM journey_rod_entity_links WHERE rod_id=$1 AND entity_id=$2 AND tributary_type=$3`).get(rod.id, entityId, tributaryType);
+}
+
+/**
+ * Links a Channel Rod to a shared Person — same shape as linkRodToEntity()
+ * above, for opportunity_person_reference-kind Tributaries.
+ */
+export async function linkRodToPerson({ rod, tributaryType, personId, roleInContext = null, metadata = {} }) {
+  validateReferenceTributary(tributaryType, rod);
+  const now = Date.now();
+  const result = await db.prepare(`
+    INSERT INTO journey_rod_person_links (rod_id, person_id, tributary_type, role_in_context, metadata, created_at)
+    VALUES ($1,$2,$3,$4,$5::jsonb,$6)
+    ON CONFLICT (rod_id, person_id, tributary_type) DO NOTHING
+    RETURNING id
+  `).run(rod.id, personId, tributaryType, roleInContext, metadata, now);
+  await db.prepare(`INSERT INTO journey_rod_events (rod_id,event_type,metadata,created_at) VALUES ($1,'person_referenced',$2::jsonb,$3)`)
+    .run(rod.id, { tributaryType, personId, roleInContext }, now);
+  return result.lastInsertRowid
+    ? db.prepare(`SELECT * FROM journey_rod_person_links WHERE id=$1`).get(Number(result.lastInsertRowid))
+    : db.prepare(`SELECT * FROM journey_rod_person_links WHERE rod_id=$1 AND person_id=$2 AND tributary_type=$3`).get(rod.id, personId, tributaryType);
+}
+
+/** Every Entity a rod references, newest link first. */
+export async function getLinkedEntities(rodId) {
+  return db.prepare(`
+    SELECT l.*, e.canonical_name, e.entity_type, e.aliases, e.metadata AS entity_metadata
+    FROM journey_rod_entity_links l JOIN entities e ON e.id = l.entity_id
+    WHERE l.rod_id=$1 ORDER BY l.created_at DESC
+  `).all(rodId);
+}
+
+/** Every Person a rod references, newest link first. */
+export async function getLinkedPersons(rodId) {
+  return db.prepare(`
+    SELECT l.*, p.full_name, p.public_role, p.confidence_label
+    FROM journey_rod_person_links l JOIN persons p ON p.id = l.person_id
+    WHERE l.rod_id=$1 ORDER BY l.created_at DESC
+  `).all(rodId);
 }

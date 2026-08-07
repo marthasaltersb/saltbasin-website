@@ -1047,6 +1047,8 @@ async function bootstrap() {
     ['public_site', 'Public Site', "A Member's Personal Brand Website/World, governed as a Channel Rod per the Salt Basin data model.", true, 3],
     ['career_master', 'Career Master', "A Member's Career Master — Career Atoms and Resume Output Projection source, governed as a Channel Rod.", true, 4],
     ['proposal_experience', 'Proposal / Member Experience', "A Member's guided 9-stage Proposal Experience journey (Welcome->Workspace) — the landing experience on /member login, governed as a Channel Rod (2026-07-29, Member Experience Module).", true, 5],
+    ['commercial_opportunity_target', 'Commercial Opportunity Target', 'A tracked company/event-pair opportunity in the Salt Basin commercial pipeline — one rod per company-event pair per the Weekly Research & Outreach Master Agent spec (2026-08-06).', true, 6],
+    ['career_opportunity_target', 'Career Opportunity Target', "A tracked external job opening/lead in a Member's career pipeline, Tributary-linked to their own Career Master rod — one rod per opportunity per the Weekly Research & Outreach Master Agent spec (2026-08-06).", true, 7],
   ]) {
     await sql.unsafe(
       `INSERT INTO journey_rod_types (id, label, description, is_active, sort_order, created_at, updated_at)
@@ -4006,6 +4008,374 @@ Rod state, per event:
     ]);
   } catch (e) {
     console.warn('[db] journey_current_definitions seed warning:', e.message);
+  }
+
+  // ── Career Placement Agents / Weekly Research & Outreach pipeline
+  // (2026-08-06) — reuse-first audit performed via the
+  // salt-basin-channel-journey-architecture skill before this landed. See
+  // server/lib/opportunityPipelineRegistry.js's header comment for the full
+  // classification. Summary: Signal/Event taxonomy, source tiers, and
+  // Claim/Evidence reuse the existing journey_rod_evidence +
+  // journey_metadata_molecules substrate (signal/business_hypothesis cluster
+  // keys already exist from the Lonetree build); scoring dimensions and
+  // outreach cadence reuse journey_current_definitions (org-override seam
+  // already built); target-expansion adjacency reuses tributaryRegistry.js's
+  // TRIBUTARY_TYPES (new 'reference' relationshipKind, since Entity/Person
+  // are shared master data referenced by many rods, not owned by exactly one
+  // parent rod the way a 'satellite' is). Entity, Person, Relationship, and
+  // the agent role/schedule/approval-workflow registry are genuinely new
+  // shapes with no existing surface — justified in that same header comment.
+  try {
+    await sql.unsafe(`
+      -- Entity: a governed company/fund/org/product master record, shared
+      -- across every opportunity rod that references it (many-to-many via
+      -- journey_rod_entity_links below) — not owned by any single parent
+      -- rod, so it does NOT use the existing hierarchical 'satellite'
+      -- Tributary shape (which assumes exclusive parent_rod_id ownership).
+      CREATE TABLE IF NOT EXISTS entities (
+        id                 BIGSERIAL PRIMARY KEY,
+        org_id             BIGINT REFERENCES organization_profiles(id) ON DELETE CASCADE,
+        owner_user_id      BIGINT REFERENCES users(id) ON DELETE CASCADE,
+        canonical_name     TEXT NOT NULL,
+        aliases            JSONB NOT NULL DEFAULT '[]',
+        entity_type        TEXT NOT NULL DEFAULT 'company',
+        ownership_summary  TEXT,
+        metadata           JSONB NOT NULL DEFAULT '{}',
+        merged_into_id     BIGINT REFERENCES entities(id) ON DELETE SET NULL,
+        merged_from_ids    JSONB NOT NULL DEFAULT '[]',
+        created_at         BIGINT NOT NULL,
+        updated_at         BIGINT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_entities_org ON entities (org_id);
+      CREATE INDEX IF NOT EXISTS idx_entities_owner ON entities (owner_user_id);
+      CREATE INDEX IF NOT EXISTS idx_entities_name ON entities (canonical_name);
+
+      -- Person: a public professional identity, optionally affiliated with
+      -- an Entity. Same shared-master-data reasoning as Entity above.
+      CREATE TABLE IF NOT EXISTS persons (
+        id                 BIGSERIAL PRIMARY KEY,
+        org_id             BIGINT REFERENCES organization_profiles(id) ON DELETE CASCADE,
+        owner_user_id      BIGINT REFERENCES users(id) ON DELETE CASCADE,
+        entity_id          BIGINT REFERENCES entities(id) ON DELETE SET NULL,
+        full_name          TEXT NOT NULL,
+        public_role        TEXT,
+        -- confidence_label per the spec's Section 11 contact-confidence
+        -- taxonomy: confirmed_by_employer | strong_public_functional_evidence
+        -- | plausible_function_only | recruiter_route | unverified_lead.
+        confidence_label   TEXT NOT NULL DEFAULT 'unverified_lead',
+        source_type        TEXT,
+        source_reference   TEXT,
+        metadata           JSONB NOT NULL DEFAULT '{}',
+        merged_into_id     BIGINT REFERENCES persons(id) ON DELETE SET NULL,
+        merged_from_ids    JSONB NOT NULL DEFAULT '[]',
+        created_at         BIGINT NOT NULL,
+        updated_at         BIGINT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_persons_org ON persons (org_id);
+      CREATE INDEX IF NOT EXISTS idx_persons_entity ON persons (entity_id);
+
+      -- Relationship: the known connection between a Person and/or Entity
+      -- and a specific member (owner_user_id) — persists independent of any
+      -- one opportunity rod, so it is not evidence on a single rod either.
+      CREATE TABLE IF NOT EXISTS relationships (
+        id                   BIGSERIAL PRIMARY KEY,
+        org_id               BIGINT REFERENCES organization_profiles(id) ON DELETE CASCADE,
+        owner_user_id        BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        person_id            BIGINT REFERENCES persons(id) ON DELETE CASCADE,
+        entity_id            BIGINT REFERENCES entities(id) ON DELETE CASCADE,
+        route                TEXT,
+        strength             TEXT,
+        origin               TEXT,
+        consent              BOOLEAN NOT NULL DEFAULT false,
+        last_interaction_at  BIGINT,
+        metadata             JSONB NOT NULL DEFAULT '{}',
+        created_at           BIGINT NOT NULL,
+        updated_at           BIGINT NOT NULL,
+        CONSTRAINT relationships_target_chk CHECK (person_id IS NOT NULL OR entity_id IS NOT NULL)
+      );
+      CREATE INDEX IF NOT EXISTS idx_relationships_owner ON relationships (owner_user_id);
+      CREATE INDEX IF NOT EXISTS idx_relationships_person ON relationships (person_id);
+      CREATE INDEX IF NOT EXISTS idx_relationships_entity ON relationships (entity_id);
+
+      -- The 'reference' Tributary join tables — a Channel Rod (typically a
+      -- commercial_opportunity_target or career_opportunity_target rod)
+      -- referencing a shared Entity/Person, carrying the target-expansion
+      -- adjacency metadata (which ring, which parent target, why) from the
+      -- spec's Section 4. See tributaryRegistry.js's new 'reference'
+      -- relationshipKind.
+      CREATE TABLE IF NOT EXISTS journey_rod_entity_links (
+        id                BIGSERIAL PRIMARY KEY,
+        rod_id            BIGINT NOT NULL REFERENCES journey_data_rods(id) ON DELETE CASCADE,
+        entity_id         BIGINT NOT NULL REFERENCES entities(id) ON DELETE CASCADE,
+        tributary_type    TEXT NOT NULL,
+        role_in_context   TEXT,
+        expansion_ring    TEXT,
+        parent_entity_id  BIGINT REFERENCES entities(id) ON DELETE SET NULL,
+        reason            TEXT,
+        metadata          JSONB NOT NULL DEFAULT '{}',
+        created_at        BIGINT NOT NULL,
+        UNIQUE(rod_id, entity_id, tributary_type)
+      );
+      CREATE INDEX IF NOT EXISTS idx_rod_entity_links_rod ON journey_rod_entity_links (rod_id);
+      CREATE INDEX IF NOT EXISTS idx_rod_entity_links_entity ON journey_rod_entity_links (entity_id);
+
+      CREATE TABLE IF NOT EXISTS journey_rod_person_links (
+        id                BIGSERIAL PRIMARY KEY,
+        rod_id            BIGINT NOT NULL REFERENCES journey_data_rods(id) ON DELETE CASCADE,
+        person_id         BIGINT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+        tributary_type    TEXT NOT NULL,
+        role_in_context   TEXT,
+        metadata          JSONB NOT NULL DEFAULT '{}',
+        created_at        BIGINT NOT NULL,
+        UNIQUE(rod_id, person_id, tributary_type)
+      );
+      CREATE INDEX IF NOT EXISTS idx_rod_person_links_rod ON journey_rod_person_links (rod_id);
+      CREATE INDEX IF NOT EXISTS idx_rod_person_links_person ON journey_rod_person_links (person_id);
+
+      -- Agent Boundary gap (per salt-basin-channel-journey-architecture's own
+      -- surface table: "Design-stage only — not implemented anywhere.
+      -- Reserve a nullable agent_boundary_ref JSONB column; do not claim
+      -- enforcement that doesn't exist.") agent_definitions is the genuinely
+      -- new worker/capability registry that gap calls for — a role isn't a
+      -- rod_type (not a subject progressing through journey stages), isn't a
+      -- Tributary, isn't an event_type, isn't a tracked interaction, and
+      -- isn't an Atom/Molecule definition (those describe evidence about a
+      -- rod, not a standalone capability-bearing worker). Agent *actions*
+      -- (delegate/evidence-return/propose/approve) reuse journey_rod_events
+      -- against whichever rod the agent is working — only the role/
+      -- capability/schedule *definitions* are new tables.
+      CREATE TABLE IF NOT EXISTS agent_definitions (
+        id                   BIGSERIAL PRIMARY KEY,
+        org_id               BIGINT REFERENCES organization_profiles(id) ON DELETE CASCADE,
+        owner_user_id        BIGINT REFERENCES users(id) ON DELETE CASCADE,
+        key                  TEXT NOT NULL,
+        name                 TEXT NOT NULL,
+        -- pipeline: 'commercial' | 'career' | 'shared' — which half of the
+        -- spec's two non-collapsing pipelines this agent serves.
+        pipeline             TEXT NOT NULL DEFAULT 'shared',
+        role_description     TEXT,
+        objective            TEXT,
+        capabilities         JSONB NOT NULL DEFAULT '[]',
+        boundaries           JSONB NOT NULL DEFAULT '[]',
+        reports_to_agent_id  BIGINT REFERENCES agent_definitions(id) ON DELETE SET NULL,
+        tier                 INTEGER NOT NULL DEFAULT 0,
+        agent_boundary_ref   JSONB,
+        is_active            BOOLEAN NOT NULL DEFAULT true,
+        created_at           BIGINT NOT NULL,
+        updated_at           BIGINT NOT NULL
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_agent_def_key_global ON agent_definitions (key) WHERE org_id IS NULL AND owner_user_id IS NULL;
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_agent_def_key_org ON agent_definitions (key, org_id) WHERE org_id IS NOT NULL;
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_agent_def_key_user ON agent_definitions (key, owner_user_id) WHERE owner_user_id IS NOT NULL;
+
+      CREATE TABLE IF NOT EXISTS agent_schedules (
+        id                    BIGSERIAL PRIMARY KEY,
+        agent_definition_id   BIGINT NOT NULL REFERENCES agent_definitions(id) ON DELETE CASCADE,
+        org_id                BIGINT REFERENCES organization_profiles(id) ON DELETE CASCADE,
+        owner_user_id         BIGINT REFERENCES users(id) ON DELETE CASCADE,
+        cadence               TEXT NOT NULL DEFAULT 'on_demand',
+        cadence_detail        JSONB NOT NULL DEFAULT '{}',
+        is_active             BOOLEAN NOT NULL DEFAULT true,
+        last_run_at           BIGINT,
+        next_run_at           BIGINT,
+        created_at            BIGINT NOT NULL,
+        updated_at            BIGINT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_agent_schedules_agent ON agent_schedules (agent_definition_id);
+
+      CREATE TABLE IF NOT EXISTS agent_approval_workflows (
+        id                    BIGSERIAL PRIMARY KEY,
+        org_id                BIGINT REFERENCES organization_profiles(id) ON DELETE CASCADE,
+        pipeline              TEXT NOT NULL DEFAULT 'shared',
+        step_key              TEXT NOT NULL,
+        name                  TEXT NOT NULL,
+        sort_order            INTEGER NOT NULL DEFAULT 0,
+        -- required_role_label is a free-text business-function label (e.g.
+        -- "Deal Desk", "Customer Success Lead") — the platform has no
+        -- generic org-approver-role registry yet (org_memberships.role is
+        -- only admin|member|viewer, a coarser concept). A real approver-role
+        -- registry is a follow-up, not smuggled into this table.
+        required_role_label   TEXT,
+        note                  TEXT,
+        is_active             BOOLEAN NOT NULL DEFAULT true,
+        created_at            BIGINT NOT NULL,
+        updated_at            BIGINT NOT NULL
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_agent_workflow_step_global ON agent_approval_workflows (pipeline, step_key) WHERE org_id IS NULL;
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_agent_workflow_step_org ON agent_approval_workflows (pipeline, step_key, org_id) WHERE org_id IS NOT NULL;
+    `);
+  } catch (e) {
+    console.warn('[db] opportunity-pipeline schema warning:', e.message);
+  }
+
+  try {
+    await sql.unsafe(`ALTER TABLE journey_rod_evidence ADD COLUMN IF NOT EXISTS source_tier SMALLINT`);
+  } catch (e) {
+    console.warn('[db] journey_rod_evidence.source_tier schema warning:', e.message);
+  }
+
+  // Platform-default (org_id NULL) seed for the 8 spec agent roles and the
+  // shared 2-step approval workflow — seed DATA an org can override via the
+  // same org_id seam used everywhere else in this file, never hardcoded
+  // logic. Insert-only (ON CONFLICT DO NOTHING), matching the
+  // journey_rod_types backfill convention above — never overwrites an
+  // admin's later edit.
+  try {
+    const nowAgentSeed = Date.now();
+    const AGENT_ROSTER = [
+      { key: 'orchestrator', name: 'Orchestrator / Weekly Research Lead', pipeline: 'shared', tier: 0, reportsTo: null,
+        roleDescription: 'Loads canonical state, sets time window, allocates searches, resolves conflicts, ranks results and produces the final run manifest.',
+        objective: 'Run the next governed weekly research cycle across both pipelines without losing history.',
+        capabilities: ['Load canonical registries and prior run state', 'Allocate searches to other agents', 'Resolve conflicts between agent outputs', 'Produce the run manifest'],
+        boundaries: ['Erase history', 'Merge the two pipelines into one score or one message', 'Publish unsupported conclusions'] },
+      { key: 'market_signal_researcher', name: 'Market Signal Researcher', pipeline: 'commercial', tier: 1, reportsTo: 'orchestrator',
+        roleDescription: 'Finds verified funding, ownership, financing, exit, growth, AI, product, restructuring and partnership events.',
+        objective: 'Surface net-new or materially-changed company-event pairs, never syndicated repeats.',
+        capabilities: ['Search Tier 1-3 sources for consequential events', 'Link a material update to its prior signal'],
+        boundaries: ['Treat syndication as novelty', 'Infer internal problems as facts'] },
+      { key: 'target_expansion_researcher', name: 'Target Expansion Researcher', pipeline: 'commercial', tier: 1, reportsTo: 'orchestrator',
+        roleDescription: 'Traverses ownership, peer, event, talent and ecosystem graphs; qualifies net-new entities.',
+        objective: 'Grow the target universe in relevance, not just size, recording why each entity was added.',
+        capabilities: ['Add a new Entity with a recorded parent target, expansion ring and reason'],
+        boundaries: ['Expand indiscriminately', 'Add entities without an adjacency reason'] },
+      { key: 'salt_basin_opportunity_analyst', name: 'Salt Basin Opportunity Analyst', pipeline: 'commercial', tier: 1, reportsTo: 'orchestrator',
+        roleDescription: 'Maps events to solutions, KPIs, evidence gaps, value classification and diagnostic hypotheses.',
+        objective: 'Turn a verified company-event record into a testable, honestly-scoped opportunity hypothesis.',
+        capabilities: ['Score a company-event pair against the commercial scoring Current', 'Keep fact, inference and modeled value separate'],
+        boundaries: ['Claim modeled or potential value as realized'] },
+      { key: 'career_researcher', name: 'Career Researcher', pipeline: 'career', tier: 1, reportsTo: 'orchestrator',
+        roleDescription: 'Finds and revalidates open roles; scores experience fit and commercial relevance.',
+        objective: 'Only ever queue a role that was re-opened and verified this run.',
+        capabilities: ['Re-open every employer-controlled job URL before scoring it', 'Score a role against the career scoring Current'],
+        boundaries: ['Use stale aggregators as proof of availability'] },
+      { key: 'contact_relationship_analyst', name: 'Contact & Relationship Analyst', pipeline: 'shared', tier: 1, reportsTo: 'orchestrator',
+        roleDescription: 'Finds accountable functions, public leaders, recruiters and warm routes; maintains confidence labels.',
+        objective: 'Find the best route to a person without ever inventing one.',
+        capabilities: ['Search warm routes before cold routes', 'Label a Person record with the correct confidence tier'],
+        boundaries: ['Invent identities, emails, phone numbers or relationships'] },
+      { key: 'outreach_strategist', name: 'Outreach Strategist', pipeline: 'shared', tier: 1, reportsTo: 'orchestrator',
+        roleDescription: "Drafts first contacts and follow-ups based on verified facts and Betsy's proof points.",
+        objective: 'Produce one individualized, review-ready draft per queued action.',
+        capabilities: ['Draft an outreach action citing one verified trigger, one proof point and one CTA'],
+        boundaries: ['Send messages', 'Overstate fit', 'Repeat generic outreach'] },
+      { key: 'evidence_qa_controller', name: 'Evidence & QA Controller', pipeline: 'shared', tier: 1, reportsTo: 'orchestrator',
+        roleDescription: 'Deduplicates, checks sources, timestamps, financial classification, job status, claims and output completeness.',
+        objective: 'Issue a pass/fail manifest for the run — never approve records that fail a gate to meet a volume target.',
+        capabilities: ['Audit a run against the quality gates', 'Reject a record that fails a gate'],
+        boundaries: ['Approve records that fail a gate merely to meet a volume target'] },
+    ];
+    const idByKey = {};
+    for (const a of AGENT_ROSTER) {
+      const inserted = await sql.unsafe(
+        `INSERT INTO agent_definitions (org_id, owner_user_id, key, name, pipeline, role_description, objective, capabilities, boundaries, reports_to_agent_id, tier, is_active, created_at, updated_at)
+         VALUES (NULL, NULL, $1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,NULL,$8,true,$9,$9)
+         ON CONFLICT (key) WHERE org_id IS NULL AND owner_user_id IS NULL DO NOTHING
+         RETURNING id`,
+        [a.key, a.name, a.pipeline, a.roleDescription, a.objective, a.capabilities, a.boundaries, a.tier, nowAgentSeed]
+      );
+      const existingId = inserted[0]?.id
+        ?? (await sql.unsafe(`SELECT id FROM agent_definitions WHERE key=$1 AND org_id IS NULL AND owner_user_id IS NULL`, [a.key]))[0]?.id;
+      idByKey[a.key] = existingId;
+    }
+    for (const a of AGENT_ROSTER) {
+      if (a.reportsTo && idByKey[a.key] && idByKey[a.reportsTo]) {
+        await sql.unsafe(`UPDATE agent_definitions SET reports_to_agent_id=$1 WHERE id=$2 AND reports_to_agent_id IS NULL`, [idByKey[a.reportsTo], idByKey[a.key]]);
+      }
+    }
+
+    for (const [pipeline, stepKey, name, sortOrder, requiredRoleLabel, note] of [
+      ['shared', 'evidence_review', 'Evidence Review', 0, null, 'Any bounded agent may surface evidence — no approval gate.'],
+      ['shared', 'proposal_approval', 'Proposal Approval', 1, 'Deal Desk', 'A human holding this role must approve before a proposal commits — nothing is ever sent, applied, or posted automatically (spec Section 2).'],
+    ]) {
+      await sql.unsafe(
+        `INSERT INTO agent_approval_workflows (org_id, pipeline, step_key, name, sort_order, required_role_label, note, is_active, created_at, updated_at)
+         VALUES (NULL,$1,$2,$3,$4,$5,$6,true,$7,$7)
+         ON CONFLICT (pipeline, step_key) WHERE org_id IS NULL DO NOTHING`,
+        [pipeline, stepKey, name, sortOrder, requiredRoleLabel, note, nowAgentSeed]
+      );
+    }
+  } catch (e) {
+    console.warn('[db] agent roster/workflow seed warning:', e.message);
+  }
+
+  // Scoring + cadence Currents (journey_current_definitions) for the two
+  // pipelines — entryCriteria carries a `dimensions`/`tiers` (scoring) or
+  // `touches` (cadence) shape here rather than the simpler `minAtoms`-style
+  // shape currentRegistry.js's own evaluateEntryCriteria() reads; see
+  // opportunityPipelineRegistry.js's evaluateWeightedScore(), which
+  // interprets this shape the same way eidosBonding.js interprets
+  // journey_atom_affinity_rules — currentRegistry.js itself stays
+  // domain-agnostic. Depends on the commercial_opportunity_target/
+  // career_opportunity_target rod_types seeded earlier in this function.
+  try {
+    const nowCurrentSeed = Date.now();
+    for (const [currentKey, label, rodType, dimensions, tiers] of [
+      ['commercial_opportunity_scoring_v1', 'Salt Basin Commercial Opportunity Scoring', 'commercial_opportunity_target',
+        [
+          { key: 'trigger_strength', label: 'Trigger strength', weight: 0.20 },
+          { key: 'solution_fit', label: 'Salt Basin problem/solution fit', weight: 0.20 },
+          { key: 'economic_materiality', label: 'Economic materiality', weight: 0.15 },
+          { key: 'timing_urgency', label: 'Timing and urgency', weight: 0.15 },
+          { key: 'evidence_gap_plausibility', label: 'Evidence gap plausibility', weight: 0.10 },
+          { key: 'access_relationship_path', label: 'Access and relationship path', weight: 0.10 },
+          { key: 'serviceability', label: 'Serviceability', weight: 0.10 },
+        ],
+        [
+          { tierLabel: 'A — Act now', min: 80, max: 100 },
+          { tierLabel: 'B — Develop', min: 65, max: 79 },
+          { tierLabel: 'C — Monitor', min: 50, max: 64 },
+          { tierLabel: 'D — Archive/weak', min: 0, max: 49 },
+        ]],
+      ['career_match_scoring_v1', 'Career Match Scoring', 'career_opportunity_target',
+        [
+          { key: 'scope_altitude', label: 'Role scope and altitude', weight: 0.15 },
+          { key: 'strategic_ops_transformation', label: 'Strategic operations and transformation', weight: 0.15 },
+          { key: 'revenue_systems_q2r', label: 'Revenue systems / Q2R / monetization', weight: 0.15 },
+          { key: 'ai_validation_data_intel', label: 'AI validation and data intelligence', weight: 0.15 },
+          { key: 'pe_value_creation_finance', label: 'PE / value creation / finance relevance', weight: 0.15 },
+          { key: 'leadership_stakeholder_fit', label: 'Leadership and stakeholder fit', weight: 0.10 },
+          { key: 'transferable_industry_fit', label: 'Transferable industry fit', weight: 0.05 },
+          { key: 'practical_fit', label: 'Practical fit', weight: 0.10 },
+        ],
+        []],
+    ]) {
+      await sql.unsafe(
+        `INSERT INTO journey_current_definitions (current_key, org_id, label, rod_type, scope_type, primary_scenario_key, port_stages, entry_criteria, minimum_carry, transition_rules, tributary_trigger_rules, created_at, updated_at)
+         VALUES ($1,NULL,$2,$3,'master_data',NULL,'[]'::jsonb,$4::jsonb,'[]'::jsonb,'[]'::jsonb,'[]'::jsonb,$5,$5)
+         ON CONFLICT (current_key) WHERE org_id IS NULL DO NOTHING`,
+        [currentKey, label, rodType, { scoringModel: 'weighted_sum_x20', dimensions, tiers }, nowCurrentSeed]
+      );
+    }
+
+    for (const [currentKey, label, rodType, touches] of [
+      ['commercial_outreach_cadence_v1', 'Commercial Outreach Cadence', 'commercial_opportunity_target',
+        [
+          { touch: 0, name: 'Warm-route check', timing: 'Before cold outreach', purpose: 'Look for a sponsor, portco, former colleague, partner, board, recruiter, event or shared professional route.' },
+          { touch: 1, name: 'Trigger-led first contact', timing: 'Day 0', purpose: 'Reference one verified event, frame one testable value question, offer a focused diagnostic conversation.' },
+          { touch: 2, name: 'Evidence contribution', timing: 'Day 4-5', purpose: 'Share one concise KPI/evidence-chain insight relevant to the event.' },
+          { touch: 3, name: 'Role-specific route', timing: 'Day 10-12', purpose: 'Approach an adjacent accountable function or request a correct referral.' },
+          { touch: 4, name: 'New-signal follow-up', timing: 'Day 21-30 or upon catalyst', purpose: 'Only follow up with new information, a changed event or a distinct useful artifact.' },
+          { touch: 5, name: 'Nurture', timing: 'Every 30-60 days', purpose: 'Continue only while the target remains qualified; stop on opt-out, irrelevance or repeated non-response.' },
+        ]],
+      ['career_outreach_cadence_v1', 'Career Outreach Cadence', 'career_opportunity_target',
+        [
+          { touch: 0, name: 'Application readiness', timing: 'Before contact', purpose: 'Re-open the role, tailor resume proof, identify function and recruiter, log the requisition.' },
+          { touch: 1, name: 'Hiring-function contact', timing: 'Day 0-1', purpose: 'Short role-specific note linking 2-3 requirements to credible outcomes and one substantive question.' },
+          { touch: 2, name: 'Recruiter/application follow-up', timing: 'Day 4-6', purpose: 'Confirm application and restate differentiated fit in one paragraph.' },
+          { touch: 3, name: 'Value contribution', timing: 'Day 10-12', purpose: 'Share a concise perspective relevant to the role mandate.' },
+          { touch: 4, name: 'Final active follow-up', timing: 'Day 18-21', purpose: 'Close the loop respectfully; ask about adjacent roles if the role has moved.' },
+          { touch: 5, name: 'Nurture', timing: 'On new role or material company event', purpose: 'Reconnect based on a new and relevant reason, not a mechanical cadence.' },
+        ]],
+    ]) {
+      await sql.unsafe(
+        `INSERT INTO journey_current_definitions (current_key, org_id, label, rod_type, scope_type, primary_scenario_key, port_stages, entry_criteria, minimum_carry, transition_rules, tributary_trigger_rules, created_at, updated_at)
+         VALUES ($1,NULL,$2,$3,'channel_current',NULL,'[]'::jsonb,$4::jsonb,'[]'::jsonb,'[]'::jsonb,'[]'::jsonb,$5,$5)
+         ON CONFLICT (current_key) WHERE org_id IS NULL DO NOTHING`,
+        [currentKey, label, rodType, { cadenceModel: 'touch_sequence', touches }, nowCurrentSeed]
+      );
+    }
+  } catch (e) {
+    console.warn('[db] opportunity scoring/cadence Current seed warning:', e.message);
   }
 }
 
