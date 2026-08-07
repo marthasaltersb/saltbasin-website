@@ -21,14 +21,20 @@ export function defaultMemberConfig({ displayName, email }) {
       // NOT the guided Proposal Experience ("Your Experience") and NOT My
       // Resume, both removed from the default nav 2026-07-30. Every other
       // prior member tab (My Profile/site editor, Products, Messages, My
-      // Access, Config, Profiles, Stats, Activity, Agent, Network, platform
+      // Access, Profiles, Stats, Activity, Agent, Network, platform
       // Analytics/PLM, org Documents, Your Experience, My Resume) is
       // intentionally left out of the default nav, not deleted as code —
       // their panels/routes still exist, just unlinked here. Restore by
-      // re-adding an entry, same as 'financial' was previously handled. The
-      // "My Profile" site editor especially stays off: the public /u/:slug
-      // profile stays disabled for members for now; re-add 'content' only
-      // when that's ready to turn on.
+      // re-adding an entry, same as 'financial' was previously handled.
+      // 'config' (Site Configuration) was re-added 2026-08-07 per the
+      // salt-basin-pre-build skill's Phase 2 (Personal Brand Website &
+      // World, member-org-admin-config.md §2/§3) — Betsy's explicit
+      // direction that members should be able to configure their own public
+      // site as a real World Shell island. The full page/section content
+      // editor ('content', the Sidebar+EditorPane+PreviewPane composition)
+      // stays off for now — the public /u/:slug profile itself remains
+      // disabled for members; 'config' only covers identity/theme/social/
+      // tagline, not publishing page content.
       // AdminShell.jsx's initial `tab` state for scope === 'member' mirrors
       // this landing choice (careerPlacementAgents) — keep both in sync if
       // this array's first entry ever changes.
@@ -37,6 +43,7 @@ export function defaultMemberConfig({ displayName, email }) {
         { id: 'lonetreeMvp', label: 'Fund & Portfolio Demo', componentId: 'lonetreeMvp', sortOrder: 5 },
         { id: 'careerMaster', label: 'Career Master', componentId: 'careerMaster', sortOrder: 10 },
         { id: 'outputTemplates', label: 'Output Templates', componentId: 'outputTemplates', sortOrder: 20 },
+        { id: 'config', label: 'Site Configuration', componentId: 'config', sortOrder: 15 },
       ],
     },
     site: {

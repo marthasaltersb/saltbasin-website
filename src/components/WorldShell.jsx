@@ -22,6 +22,8 @@ import { resolveWorldIslands } from '../lib/worldIslands.js';
 import { useCareerPlacementAgents, CAREER_DIMENSION_FIELDS } from '../lib/hooks/useCareerPlacementAgents.js';
 import { useCommercialOpportunities, COMMERCIAL_DIMENSION_FIELDS, EXPANSION_RING_OPTIONS } from '../lib/hooks/useCommercialOpportunities.js';
 import AdminShell from './admin/AdminShell.jsx';
+import ConfigPanel from './admin/ConfigPanel.jsx';
+import { toast } from '../lib/toast.js';
 
 const ISLAND_RADIUS = 9;
 const ACCENT_HEX = { gold: 0xc4843a, teal: 0x4a7c8e, pink: 0xd98ca0 };
@@ -99,8 +101,13 @@ export default function WorldShell() {
     if (user.role === 'admin') {
       api.getAdminNav()
         .then((navData) => {
-          const crm = (navData.views || []).find((v) => v.id === 'crm');
-          setTabsConfig(crm?.tabs || []);
+          // Islands pull from every admin_nav view that has at least one
+          // ISLAND_REGISTRY-known componentId, not just 'crm' — e.g. 'content'
+          // owns 'config' (Site Configuration). resolveWorldIslands already
+          // silently skips anything unregistered, so combining views here is
+          // safe even as admin_nav grows tabs with no island yet.
+          const tabs = (navData.views || []).flatMap((v) => v.tabs || []);
+          setTabsConfig(tabs);
         })
         .catch(() => setTabsConfig([]));
     } else {
@@ -383,6 +390,10 @@ export default function WorldShell() {
     );
   }
 
+  if (focused?.kind === 'embed' && focused.componentId === 'config') {
+    return <SiteConfigView scope={user?.role === 'admin' ? 'admin' : 'member'} onClear={clearFocus} />;
+  }
+
   if (user === undefined || !tabsConfig) {
     return <div style={S.loading}>Entering your world…</div>;
   }
@@ -628,10 +639,74 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
   );
 }
 
+// Public Site Configuration island's full-screen destination (kind:'embed').
+// Wraps the existing ConfigPanel.jsx wholesale — it's 1600+ lines (theme,
+// brand colors, social, SEO, page types...), far too much for the ~300px
+// docked rail, so this island gets real screen space instead of a cut-down
+// duplicate. Self-contained data loading/save/publish per role, matching
+// the salt-basin-pre-build skill's Phase 2 (Personal Brand Website & World,
+// member-org-admin-config.md §2/§3) — "Do not require the Member to edit
+// source code," "public / private / draft state." `site` is intentionally
+// not fetched/passed — ConfigPanel already defaults it to null and this
+// island is scoped to identity/theme/social config, not page content.
+function SiteConfigView({ scope, onClear }) {
+  const [config, setConfig] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+
+  useEffect(() => {
+    const load = scope === 'admin' ? api.getDraftConfig : api.getMemberDraftConfig;
+    load().then(setConfig).catch((e) => toast('Failed to load site configuration: ' + e.message));
+  }, [scope]);
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      await (scope === 'admin' ? api.saveDraftConfig(config) : api.saveMemberDraftConfig(config));
+      toast('Saved.');
+    } catch (e) {
+      toast('Could not save: ' + e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handlePublish() {
+    setPublishing(true);
+    try {
+      await (scope === 'admin' ? api.saveDraftConfig(config).then(api.publish) : api.saveMemberDraftConfig(config).then(api.publishMemberConfig));
+      toast('Published.');
+    } catch (e) {
+      toast('Could not publish: ' + e.message);
+    } finally {
+      setPublishing(false);
+    }
+  }
+
+  return (
+    <div style={S.embedShell}>
+      <div style={S.embedHeader}>
+        <button style={S.backBtn} onClick={onClear}>← Back to World</button>
+        <div style={S.embedTitle}>Site Configuration</div>
+        <div style={{ flex: 1 }} />
+        <button style={S.ghostSmall} onClick={handleSave} disabled={saving || !config}>{saving ? 'Saving…' : 'Save Draft'}</button>
+        <button style={{ ...S.ghostSmall, marginLeft: '0.5rem', background: '#c4843a', color: '#1c1410', border: 'none' }} onClick={handlePublish} disabled={publishing || !config}>{publishing ? 'Publishing…' : 'Publish'}</button>
+      </div>
+      <div style={S.embedBody}>
+        {!config ? <div style={S.railEmpty}>Loading…</div> : <ConfigPanel config={config} onChange={setConfig} scope={scope} site={null} />}
+      </div>
+    </div>
+  );
+}
+
 const glass = { background: 'rgba(13,20,23,0.72)', backdropFilter: 'blur(10px)', border: '0.5px solid rgba(245,240,232,0.1)' };
 
 const S = {
   shell: { position: 'fixed', inset: 0, background: '#05090b', color: '#f5f0e8', fontFamily: 'DM Sans, sans-serif', display: 'flex', flexDirection: 'column', zIndex: 5 },
+  embedShell: { position: 'fixed', inset: 0, background: '#0d1417', color: '#f5f0e8', zIndex: 10, display: 'flex', flexDirection: 'column' },
+  embedHeader: { display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.8rem 1.5rem', borderBottom: '0.5px solid rgba(255,255,255,0.08)', flexShrink: 0 },
+  embedTitle: { fontFamily: 'Fraunces, serif', fontSize: '1rem' },
+  embedBody: { flex: 1, overflowY: 'auto', padding: '1.5rem' },
   loading: { position: 'fixed', inset: 0, background: '#05090b', color: '#c4843a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Fraunces, serif', fontSize: '1.1rem', letterSpacing: '0.04em' },
   topbar: { ...glass, display: 'flex', alignItems: 'center', gap: '2rem', padding: '0.75rem 1.5rem', flexShrink: 0, borderTop: 'none', borderLeft: 'none', borderRight: 'none' },
   brand: { display: 'flex', alignItems: 'center', gap: '0.6rem' },

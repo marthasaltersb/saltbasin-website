@@ -870,11 +870,10 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
 
           // Inline 'config' case: the panel needs draft + setter + scope from
           // the shell. Treated as the default fallback when nothing else
-          // matched — gated the same way as 'content' above: a member scope
-          // has no 'config' memberTabs entry (site config editing stays off
-          // for now), so an unrecognized componentId should never fall
-          // through to it. The tab-guard effect corrects `tab` right after.
-          if (scope === 'member') return null;
+          // matched. Member site config editing (2026-08-07, World Shell
+          // Public Site Configuration island) is now enabled — ConfigPanel
+          // is already scope-aware (`scope='member'`), it was only ever
+          // gated off here, not incapable of rendering for members.
           return (
             <ConfigPanel config={configDraft} onChange={setConfigDraft} scope={scope} site={draft} />
           );
