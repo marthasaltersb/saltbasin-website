@@ -4,8 +4,6 @@ import { api } from './lib/api.js';
 import PublicSite from './components/PublicSite.jsx';
 const LandingGate = lazy(() => import('./components/LandingGate.jsx'));
 const LoginPage = lazy(() => import('./components/admin/LoginPage.jsx'));
-const AdminShell = lazy(() => import('./components/admin/AdminShell.jsx'));
-const MemberDashboard = lazy(() => import('./components/MemberDashboard.jsx'));
 const WorldShell = lazy(() => import('./components/WorldShell.jsx'));
 const PublicProfile = lazy(() => import('./components/PublicProfile.jsx'));
 const LeadView = lazy(() => import('./components/LeadView.jsx'));
@@ -50,18 +48,6 @@ function PublicRoute() {
   return <PublicSite />;
 }
 
-function RequireAdmin({ children }) {
-  const [state, setState] = useState({ loading: true, user: null });
-  useEffect(() => {
-    api.me().then(({ user }) => setState({ loading: false, user })).catch(() =>
-      setState({ loading: false, user: null })
-    );
-  }, []);
-  if (state.loading) return null;
-  if (!state.user) return <Navigate to="/login" replace />;
-  return children;
-}
-
 function SignupRoute() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
@@ -88,7 +74,16 @@ export default function App() {
       <Route path="/admin/login" element={<LoginPage />} />
       <Route path="/reset/:token" element={<ResetPasswordPage />} />
       <Route path="/signup" element={<SignupRoute />} />
-      <Route path="/member" element={<MemberDashboard />} />
+      {/* The World Shell (2026-08-07) is now the primary logged-in surface
+          for both roles — /admin and /member render it directly instead of
+          the flat AdminShell/MemberDashboard tab UI, so users never have to
+          navigate to a separate /world URL to see it. Both those components
+          still exist and still work — WorldShell's own "Classic Tools" tab
+          mounts AdminShell inline as an escape hatch for modules that don't
+          have an in-world view yet — they're just no longer what a bare
+          /admin or /member hit shows by default. /world itself stays as a
+          direct alias. */}
+      <Route path="/member" element={<WorldShell />} />
       <Route path="/world" element={<WorldShell />} />
       <Route path="/org/:orgId" element={<OrgPortal />} />
       <Route path="/u/:slug" element={<PublicProfile />} />
@@ -116,14 +111,10 @@ export default function App() {
       <Route path="/output/methodology" element={<MethodologyOutput />} />
       <Route path="/output/l2r-model" element={<L2RModelOutput />} />
       <Route path="/output/business-definition-experience" element={<BusinessDefinitionExperience />} />
-      <Route
-        path="/admin/*"
-        element={
-          <RequireAdmin>
-            <AdminShell />
-          </RequireAdmin>
-        }
-      />
+      {/* WorldShell does its own auth check (api.me(), redirect to /login),
+          the same self-contained pattern /member and /world already use —
+          no RequireAdmin wrapper needed here anymore. */}
+      <Route path="/admin/*" element={<WorldShell />} />
       <Route path="/*" element={<PublicRoute />} />
     </Routes>
     </Suspense>
