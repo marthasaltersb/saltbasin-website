@@ -10,33 +10,33 @@ export function defaultMemberConfig({ displayName, email }) {
     // assumptions. Mirrors `version` in defaultMemberSite.js.
     schemaVersion: 1,
     navigation: {
-      // Member Experience Module (2026-07-30, Betsy's direction, superseding
-      // the 2026-07-29 version): the Lonetree Fund & Portfolio Demo (the
-      // orbit-ring interaction layer, LonetreeMvpPanel.jsx) is now the
-      // member's landing tab, with Career Master and Output Templates as the
-      // only two additional tabs — explicitly NOT the guided Proposal
-      // Experience ("Your Experience") and NOT My Resume, both removed from
-      // the default nav per this direction. Every other prior member tab (My
-      // Profile/site editor, Products, Messages, My Access, Config, Profiles,
-      // Stats, Activity, Agent, Network, platform Analytics/PLM, org
-      // Documents, Your Experience, My Resume) is intentionally left out of
-      // the default nav, not deleted as code — their panels/routes still
-      // exist, just unlinked here. Restore by re-adding an entry, same as
-      // 'financial' was previously handled. The "My Profile" site editor
-      // especially stays off: the public /u/:slug profile stays disabled for
-      // members for now; re-add 'content' only when that's ready to turn on.
+      // Member Experience Module, updated 2026-08-07: Career Placement
+      // Agents (the crystal orbit world, OpportunityAgentOrbitWorld.jsx
+      // variant='agentHub') is now the member's landing tab — Betsy's
+      // direction that logged-in users should land on their orbit world
+      // instead of a flat dashboard. Fund & Portfolio Demo (the older
+      // Lonetree orbit-ring interaction layer, LonetreeMvpPanel.jsx,
+      // landing tab 2026-07-30 through 2026-08-06) stays second. Career
+      // Master and Output Templates remain the other two tabs — explicitly
+      // NOT the guided Proposal Experience ("Your Experience") and NOT My
+      // Resume, both removed from the default nav 2026-07-30. Every other
+      // prior member tab (My Profile/site editor, Products, Messages, My
+      // Access, Config, Profiles, Stats, Activity, Agent, Network, platform
+      // Analytics/PLM, org Documents, Your Experience, My Resume) is
+      // intentionally left out of the default nav, not deleted as code —
+      // their panels/routes still exist, just unlinked here. Restore by
+      // re-adding an entry, same as 'financial' was previously handled. The
+      // "My Profile" site editor especially stays off: the public /u/:slug
+      // profile stays disabled for members for now; re-add 'content' only
+      // when that's ready to turn on.
       // AdminShell.jsx's initial `tab` state for scope === 'member' mirrors
-      // this landing choice (lonetreeMvp, not proposalExperience) — keep both
-      // in sync if this array's first entry ever changes.
+      // this landing choice (careerPlacementAgents) — keep both in sync if
+      // this array's first entry ever changes.
       memberTabs: [
-        { id: 'lonetreeMvp', label: 'Fund & Portfolio Demo', componentId: 'lonetreeMvp', sortOrder: 0 },
+        { id: 'careerPlacementAgents', label: 'Career Placement Agents', componentId: 'careerPlacementAgents', sortOrder: 0 },
+        { id: 'lonetreeMvp', label: 'Fund & Portfolio Demo', componentId: 'lonetreeMvp', sortOrder: 5 },
         { id: 'careerMaster', label: 'Career Master', componentId: 'careerMaster', sortOrder: 10 },
         { id: 'outputTemplates', label: 'Output Templates', componentId: 'outputTemplates', sortOrder: 20 },
-        // 2026-08-06, Career Placement Agents (Weekly Research & Outreach
-        // pipeline, Phase 2 vertical slice) — an existing member's stored
-        // config additively gains this via memberConfig.js's GET /draft
-        // merge, never a direct write to their row.
-        { id: 'careerPlacementAgents', label: 'Career Placement Agents', componentId: 'careerPlacementAgents', sortOrder: 15 },
       ],
     },
     site: {

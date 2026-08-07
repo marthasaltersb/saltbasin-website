@@ -107,6 +107,7 @@ const FALLBACK_ADMIN_NAV = {
     ]},
     { id: 'crm', label: 'Customer Relationship Management', sortOrder: 2, tabs: [
       { id: 'leads', label: 'Leads', componentId: 'leads', sortOrder: 0 },
+      { id: 'commercial-opportunities', label: 'Commercial Opportunity Pipeline', componentId: 'commercialOpportunities', sortOrder: 1 },
     ]},
     { id: 'content-manager', label: 'Content Manager', sortOrder: 3, tabs: [
       { id: 'content-manager', label: 'Content Manager', componentId: 'contentManager', sortOrder: 0 },
@@ -222,13 +223,19 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
   const [configDraft, setConfigDraft] = useState(null);
   const [profileSlug, setProfileSlug] = useState(null); // members get a /u/:slug
 
-  // Members land on the Lonetree Fund & Portfolio Demo (2026-07-30, Member
-  // Experience Module — mirrors defaultMemberConfig.js's memberTabs order)
-  // instead of the site editor; admin/org scopes keep the old 'content'
-  // default unchanged. The tab-guard effect below corrects this against
-  // configDraft.navigation.memberTabs once it loads, so a member whose own
-  // memberTabs don't start with 'lonetreeMvp' still lands correctly.
-  const [tab, setTab] = useState(scope === 'member' ? 'lonetreeMvp' : 'content'); // active tab id (from nav.views[].tabs[].id)
+  // Landing tab (2026-08-07): both roles land on their crystal orbit world
+  // instead of the site editor — members on Career Placement Agents
+  // (mirrors defaultMemberConfig.js's memberTabs order, first entry), admins
+  // (Betsy) on the Commercial Opportunity Pipeline (the 'crm' view's
+  // 'commercial-opportunities' tab id, seeded into admin_nav by db.js's
+  // one-shot migration). Org scopes keep the old 'content' default — orgs
+  // have no orbit-world tab wired yet. The tab-guard effect below corrects
+  // the member case against configDraft.navigation.memberTabs once it
+  // loads, so a member whose own memberTabs don't include
+  // 'careerPlacementAgents' still lands correctly; for admin, the adminNav-
+  // load effect resolves activeViewId from whichever view owns this tab id,
+  // so it self-corrects the same way if admin_nav is ever edited.
+  const [tab, setTab] = useState(scope === 'member' ? 'careerPlacementAgents' : scope === 'admin' ? 'commercial-opportunities' : 'content'); // active tab id (from nav.views[].tabs[].id)
   const [view, setView] = useState('split'); // 'split' | 'editor' | 'preview' (content editor sub-mode)
 
   // Data-driven nav (admin only). Members keep the hardcoded 2-tab strip.
