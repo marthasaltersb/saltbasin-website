@@ -341,6 +341,41 @@ export const CRYSTAL_VARIANTS = {
 
     return { spin: helixGems, core };
   },
+
+  // Publication journey world anchor (2026-08-07) — HERQ Publications now,
+  // Marketing Ads / Research Reports follow on the same anchor once their
+  // islands exist (per this file's own rule: extend the registry, never
+  // fork geometry per consumer). An octahedron core (a third distinct
+  // silhouette alongside agentHub's icosahedron and commercialPipeline's
+  // dodecahedron) with three fanned "page" plates evoking a published
+  // output stack.
+  publication(group, THREE) {
+    const core = new THREE.Mesh(
+      new THREE.OctahedronGeometry(1.4, 0),
+      new THREE.MeshStandardMaterial({ color: 0xF1EBDD, metalness: 0.22, roughness: 0.36, flatShading: true })
+    );
+    group.add(core);
+
+    const wire = new THREE.Mesh(
+      new THREE.OctahedronGeometry(1.54, 0),
+      new THREE.MeshBasicMaterial({ color: 0xC4843A, wireframe: true, transparent: true, opacity: 0.5 })
+    );
+    group.add(wire);
+
+    const pages = [];
+    for (let i = 0; i < 3; i += 1) {
+      const plate = new THREE.Mesh(
+        new THREE.BoxGeometry(0.9, 0.06, 1.2),
+        new THREE.MeshStandardMaterial({ color: 0xDCE9EC, metalness: 0.2, roughness: 0.3 })
+      );
+      plate.position.set(0, -0.6 + i * 0.16, 0);
+      plate.rotation.y = (i - 1) * 0.12;
+      group.add(plate);
+      pages.push(plate);
+    }
+
+    return { spin: pages, core };
+  },
 };
 
 // Small crystal used for metadata-orbit / capability-context nodes — a single

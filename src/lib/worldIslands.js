@@ -24,6 +24,7 @@ export const ISLAND_REGISTRY = {
   careerPlacementAgents: { variant: 'agentHub', kind: 'docked', accent: 'gold' },
   commercialOpportunities: { variant: 'commercialPipeline', kind: 'docked', accent: 'gold' },
   config: { variant: 'table', kind: 'embed', accent: 'teal' },
+  herqPublications: { variant: 'publication', kind: 'docked', accent: 'gold' },
   lonetreeMvp: { variant: 'engine', kind: 'classic', accent: 'teal' },
   careerMaster: { variant: 'founder', kind: 'classic', accent: 'pink' },
   outputTemplates: { variant: 'token', kind: 'classic', accent: 'gold' },

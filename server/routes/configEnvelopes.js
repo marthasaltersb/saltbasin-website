@@ -7,6 +7,7 @@ import express from 'express';
 import { getUserFromCookie } from '../auth.js';
 import { listConfigEnvelopes, getConfigEnvelope, resolveConfigEnvelope, writeConfigEnvelope, resetConfigEnvelope } from '../lib/configEnvelope.js';
 import '../lib/methodologyEnvelopes.js'; // side effect: registers the P0 envelopes
+import '../lib/publicationFlowEnvelopes.js'; // side effect: registers the Publication journey's flow envelopes
 
 const router = express.Router();
 

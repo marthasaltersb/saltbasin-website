@@ -21,6 +21,7 @@ import { CRYSTAL_VARIANTS, addCrystalLights, buildRiverParticles, advanceRiverPa
 import { resolveWorldIslands } from '../lib/worldIslands.js';
 import { useCareerPlacementAgents, CAREER_DIMENSION_FIELDS } from '../lib/hooks/useCareerPlacementAgents.js';
 import { useCommercialOpportunities, COMMERCIAL_DIMENSION_FIELDS, EXPANSION_RING_OPTIONS } from '../lib/hooks/useCommercialOpportunities.js';
+import { usePublicationPipeline } from '../lib/hooks/usePublicationPipeline.js';
 import AdminShell from './admin/AdminShell.jsx';
 import ConfigPanel from './admin/ConfigPanel.jsx';
 import { toast } from '../lib/toast.js';
@@ -120,8 +121,10 @@ export default function WorldShell() {
   const islands = useMemo(() => resolveWorldIslands(tabsConfig || []), [tabsConfig]);
   const hasCareerIsland = islands.some((i) => i.componentId === 'careerPlacementAgents');
   const hasCommercialIsland = islands.some((i) => i.componentId === 'commercialOpportunities');
+  const hasHerqIsland = islands.some((i) => i.componentId === 'herqPublications');
   const career = useCareerPlacementAgents({ enabled: hasCareerIsland });
   const commercial = useCommercialOpportunities({ enabled: hasCommercialIsland });
+  const herq = usePublicationPipeline({ enabled: hasHerqIsland });
 
   const focused = islands.find((i) => i.key === focusedKey) || null;
 
@@ -344,7 +347,9 @@ export default function WorldShell() {
         ? `${career.opportunities.length} tracked`
         : isl.componentId === 'commercialOpportunities' && hasCommercialIsland
           ? `${commercial.opportunities.length} tracked`
-          : null;
+          : isl.componentId === 'herqPublications' && hasHerqIsland
+            ? `${herq.items.length} items`
+            : null;
       const label = labelSprite(THREE, isl.label, liveStat, ACCENT_HEX[isl.accent] || ACCENT_HEX.gold);
       label.position.set(0, 2.1, 0);
       holder.add(label);
@@ -366,7 +371,7 @@ export default function WorldShell() {
     // the renderer via the effect above) re-populates the fresh engine's
     // now-empty islands/rivers groups, not just genuine data changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [islands, hasCareerIsland, hasCommercialIsland, career.opportunities.length, commercial.opportunities.length, view]);
+  }, [islands, hasCareerIsland, hasCommercialIsland, hasHerqIsland, career.opportunities.length, commercial.opportunities.length, herq.items.length, view]);
 
   // Dolly the camera when focus changes from outside the canvas (e.g. the
   // right-rail "Back to World" control), not just from an in-canvas click.
@@ -410,7 +415,7 @@ export default function WorldShell() {
         hasCommercialIsland={hasCommercialIsland}
       />
       {view === 'journeys' ? (
-        <JourneysGrid islands={islands} career={career} commercial={commercial} onOpen={(key) => { setFocusedKey(key); setView('world'); }} />
+        <JourneysGrid islands={islands} career={career} commercial={commercial} herq={herq} onOpen={(key) => { setFocusedKey(key); setView('world'); }} />
       ) : (
         <div style={S.stage}>
           {hasWebGL() ? (
@@ -432,6 +437,7 @@ export default function WorldShell() {
           onOpenClassic={() => setView('classic')}
           career={career}
           commercial={commercial}
+          herq={herq}
           hasCareerIsland={hasCareerIsland}
           hasCommercialIsland={hasCommercialIsland}
         />
@@ -475,16 +481,23 @@ function TopBar({ user, view, setView, career, commercial, hasCareerIsland, hasC
   );
 }
 
-function JourneysGrid({ islands, career, commercial, onOpen }) {
+function JourneysGrid({ islands, career, commercial, herq, onOpen }) {
   return (
     <div style={S.journeysGrid}>
       {islands.map((isl) => {
         const opp = isl.componentId === 'careerPlacementAgents' ? career : isl.componentId === 'commercialOpportunities' ? commercial : null;
+        const sub = opp
+          ? `${opp.opportunities.length} tracked · ${opp.agents.length} agents`
+          : isl.componentId === 'herqPublications'
+            ? `${herq.items.length} items · ${herq.agents.length} agents`
+            : isl.kind === 'embed'
+              ? 'Open configuration'
+              : 'Open in Classic Tools';
         return (
           <div key={isl.key} style={S.journeyCard} onClick={() => onOpen(isl.key)}>
             <div style={{ ...S.journeyAccent, background: '#' + (ACCENT_HEX[isl.accent] || ACCENT_HEX.gold).toString(16).padStart(6, '0') }} />
             <div style={S.journeyLabel}>{isl.label}</div>
-            <div style={S.journeySub}>{opp ? `${opp.opportunities.length} tracked · ${opp.agents.length} agents` : 'Open in Classic Tools'}</div>
+            <div style={S.journeySub}>{sub}</div>
           </div>
         );
       })}
@@ -492,8 +505,11 @@ function JourneysGrid({ islands, career, commercial, onOpen }) {
   );
 }
 
-function RightRail({ focused, onClear, onOpenClassic, career, commercial, hasCareerIsland, hasCommercialIsland }) {
+function RightRail({ focused, onClear, onOpenClassic, career, commercial, herq, hasCareerIsland, hasCommercialIsland }) {
   if (focused) {
+    if (focused.componentId === 'herqPublications') {
+      return <PublicationDockedPanel label={focused.label} herq={herq} onClear={onClear} />;
+    }
     if (focused.kind === 'docked') {
       const pipeline = focused.componentId === 'careerPlacementAgents' ? career : commercial;
       const dimensionFields = focused.componentId === 'careerPlacementAgents' ? CAREER_DIMENSION_FIELDS : COMMERCIAL_DIMENSION_FIELDS;
@@ -635,6 +651,122 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
           ))}
         </>
       )}
+    </div>
+  );
+}
+
+const OUTPUT_DESTINATION_OPTIONS = [
+  { value: 'salt_basin_site', label: 'Salt Basin site' },
+  { value: 'linkedin', label: 'LinkedIn' },
+  { value: 'external', label: 'External / other' },
+];
+
+const HERQ_STATUS_COLOR = { idea: '#8b877c', drafting: '#c4843a', scheduled: '#8fadb6', published: '#8fbf98', referenced: '#4a7c8e', paused: '#d98ca0' };
+
+// HERQ Publications docked panel (2026-08-07, Publication journey, first
+// slice — see /root/.claude/plans/nested-tickling-micali.md). Shows real
+// unified_content_items (app_id='app.herq'), the real HERQ Content &
+// Publication Agent + shared approval workflow, its schedule (cadence +
+// the new observation-gating flag), and the flow config (criteria/stages/
+// output destination) via the config-envelopes API. Agent creation/editing
+// and actual publishing are not built here — same "config/tracking
+// scaffolding a human operates, real data, no fabricated autonomy" honesty
+// as the Career/Commercial docked panels.
+function PublicationDockedPanel({ label, herq, onClear }) {
+  const { loading, items, workflow, flow, contentAgent, latestSchedule, saveFlow, saveSchedule, saving } = herq;
+  const [criteriaDraft, setCriteriaDraft] = useState('');
+  const [destinationDraft, setDestinationDraft] = useState('salt_basin_site');
+  const [cadenceDraft, setCadenceDraft] = useState('on_demand');
+  const [observationRequired, setObservationRequired] = useState(false);
+  const [moleculeKeyDraft, setMoleculeKeyDraft] = useState('signal');
+  const [initialized, setInitialized] = useState(false);
+
+  useEffect(() => {
+    if (!initialized && flow) {
+      setCriteriaDraft((flow.criteria || []).join(', '));
+      setDestinationDraft(flow.outputDestination?.type || 'salt_basin_site');
+      setObservationRequired(!!flow.observation?.required);
+      setMoleculeKeyDraft(flow.observation?.moleculeKey || 'signal');
+      setInitialized(true);
+    }
+  }, [flow, initialized]);
+
+  useEffect(() => {
+    if (latestSchedule) setCadenceDraft(latestSchedule.cadence || 'on_demand');
+  }, [latestSchedule]);
+
+  function handleSaveFlow() {
+    saveFlow({
+      criteria: criteriaDraft.split(',').map((c) => c.trim()).filter(Boolean),
+      stages: flow?.stages || ['idea', 'drafting', 'scheduled', 'published', 'referenced', 'paused'],
+      outputDestination: { type: destinationDraft, detail: flow?.outputDestination?.detail || '' },
+      observation: { required: observationRequired, moleculeKey: observationRequired ? moleculeKeyDraft : null },
+    });
+  }
+
+  function handleSaveSchedule() {
+    saveSchedule({
+      cadence: cadenceDraft,
+      triggerMode: observationRequired ? 'observation_required' : 'scheduled',
+      triggerMoleculeKey: observationRequired ? moleculeKeyDraft : null,
+    });
+  }
+
+  if (loading) return <div style={S.rail}><div style={S.railEmpty}>Loading…</div></div>;
+
+  return (
+    <div style={S.rail}>
+      <button style={S.backBtn} onClick={onClear}>← Back to World</button>
+      <div style={S.railTitle}>{label}</div>
+
+      {contentAgent && (
+        <>
+          <div style={S.railSubtitle}>{contentAgent.name}</div>
+          <p style={S.railText}>{contentAgent.roleDescription}</p>
+        </>
+      )}
+      {!!workflow.length && (
+        <>
+          <div style={S.railSubtitle}>Approval Workflow</div>
+          {workflow.map((step) => (
+            <div key={step.stepKey} style={S.railRow}>
+              <span>{step.name}</span>
+              <span style={{ color: step.requiredRoleLabel ? '#c4843a' : '#8fbf98' }}>{step.requiredRoleLabel || 'No gate'}</span>
+            </div>
+          ))}
+        </>
+      )}
+
+      <div style={S.railSubtitle}>Schedule</div>
+      <select style={S.dimInputWide} value={cadenceDraft} onChange={(e) => setCadenceDraft(e.target.value)}>
+        {['on_demand', 'daily', 'weekly', 'hourly'].map((c) => <option key={c} value={c}>{c.replace('_', ' ')}</option>)}
+      </select>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.74rem', margin: '0.4rem 0', color: '#cfc9bd' }}>
+        <input type="checkbox" checked={observationRequired} onChange={(e) => setObservationRequired(e.target.checked)} />
+        Requires an observation before acting
+      </label>
+      {observationRequired && (
+        <input style={S.dimInputWide} placeholder="Molecule key (e.g. signal)" value={moleculeKeyDraft} onChange={(e) => setMoleculeKeyDraft(e.target.value)} />
+      )}
+      <button style={S.ghost} onClick={handleSaveSchedule} disabled={saving || !contentAgent}>{saving ? 'Saving…' : 'Save Schedule'}</button>
+
+      <div style={S.railSubtitle}>Flow Config</div>
+      <label style={S.dimLabel}>Research criteria (comma-separated)</label>
+      <input style={S.dimInputWide} value={criteriaDraft} onChange={(e) => setCriteriaDraft(e.target.value)} placeholder="e.g. RevOps trends, PE portfolio ops" />
+      <label style={S.dimLabel}>Output destination</label>
+      <select style={S.dimInputWide} value={destinationDraft} onChange={(e) => setDestinationDraft(e.target.value)}>
+        {OUTPUT_DESTINATION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+      <button style={S.gold} onClick={handleSaveFlow} disabled={saving}>{saving ? 'Saving…' : 'Save Flow Config'}</button>
+
+      <div style={S.railSubtitle}>Content Items ({items.length})</div>
+      {!items.length && <div style={S.railEmpty}>Nothing published yet.</div>}
+      {items.map((it) => (
+        <div key={it.id} style={S.railRow}>
+          <span>{it.title}</span>
+          <span style={{ color: HERQ_STATUS_COLOR[it.exportStatus] || '#8b877c', fontWeight: 600, fontSize: '0.68rem', textTransform: 'uppercase' }}>{it.exportStatus}</span>
+        </div>
+      ))}
     </div>
   );
 }

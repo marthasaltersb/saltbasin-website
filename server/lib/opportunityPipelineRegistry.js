@@ -216,12 +216,12 @@ export async function createAgentDefinition({ orgId = null, ownerUserId = null, 
   return db.prepare(`SELECT * FROM agent_definitions WHERE id=$1`).get(Number(result.lastInsertRowid));
 }
 
-export async function assignAgentSchedule({ agentDefinitionId, orgId = null, ownerUserId = null, cadence = 'on_demand', cadenceDetail = {} }) {
+export async function assignAgentSchedule({ agentDefinitionId, orgId = null, ownerUserId = null, cadence = 'on_demand', cadenceDetail = {}, triggerMode = 'scheduled', triggerMoleculeKey = null }) {
   const now = Date.now();
   const result = await db.prepare(`
-    INSERT INTO agent_schedules (agent_definition_id, org_id, owner_user_id, cadence, cadence_detail, is_active, created_at, updated_at)
-    VALUES ($1,$2,$3,$4,$5::jsonb,true,$6,$6) RETURNING id
-  `).run(agentDefinitionId, orgId, ownerUserId, cadence, cadenceDetail, now);
+    INSERT INTO agent_schedules (agent_definition_id, org_id, owner_user_id, cadence, cadence_detail, trigger_mode, trigger_molecule_key, is_active, created_at, updated_at)
+    VALUES ($1,$2,$3,$4,$5::jsonb,$6,$7,true,$8,$8) RETURNING id
+  `).run(agentDefinitionId, orgId, ownerUserId, cadence, cadenceDetail, triggerMode, triggerMoleculeKey, now);
   return db.prepare(`SELECT * FROM agent_schedules WHERE id=$1`).get(Number(result.lastInsertRowid));
 }
 

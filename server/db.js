@@ -3607,6 +3607,34 @@ async function bootstrap() {
     console.warn('[db] lonetreeMvp nav injection skipped:', e.message);
   }
 
+  // One-shot: inject "Publication" as its own top-level admin_nav view
+  // (2026-08-07) — Betsy's content-publication journey (HERQ now; Marketing
+  // Ads / Research Reports follow the identical pattern once their own
+  // content model exists, see server/lib/publicationFlowEnvelopes.js's
+  // header). Single componentId backing the World Shell island, same
+  // pattern as lonetreeMvp/eidos above.
+  try {
+    const navRowPub = await sql.unsafe(`SELECT data FROM config_state WHERE id = 'admin_nav'`);
+    if (navRowPub.length > 0) {
+      const nav = JSON.parse(navRowPub[0].data);
+      nav.views = nav.views || [];
+      const hasPublication = nav.views.some((v) => v.id === 'publication');
+      if (!hasPublication) {
+        nav.views.push({
+          id: 'publication', label: 'Publication', sortOrder: 7, tabs: [
+            { id: 'herqPublications', label: 'HERQ Publications', componentId: 'herqPublications', sortOrder: 0 },
+          ],
+        });
+        await sql.unsafe(
+          `UPDATE config_state SET data = $1, updated_at = $2 WHERE id = 'admin_nav'`,
+          [JSON.stringify(nav), Date.now()]
+        );
+      }
+    }
+  } catch (e) {
+    console.warn('[db] publication nav injection skipped:', e.message);
+  }
+
   // Metric Intelligence is a governed finance capability surfaced inside
   // Analytics. Additive and idempotent: existing admin navigation edits are
   // preserved and only the missing tab is appended.
@@ -4204,6 +4232,16 @@ Rod state, per event:
         owner_user_id         BIGINT REFERENCES users(id) ON DELETE CASCADE,
         cadence               TEXT NOT NULL DEFAULT 'on_demand',
         cadence_detail        JSONB NOT NULL DEFAULT '{}',
+        -- trigger_mode (2026-08-07, Publication Journey): 'scheduled' runs
+        -- purely on cadence; 'observation_required' means the agent must not
+        -- act until a matching Signal/Hypothesis Atom (journey_rod_evidence
+        -- under journey_metadata_clusters key trigger_molecule_key, e.g.
+        -- 'signal') exists — the first real link between the Lonetree-demo
+        -- Signal cluster (server/lib/lonetreeDemoRegistry.js) and an agent's
+        -- schedule. No executor reads this yet (no live scheduler exists for
+        -- any pipeline) — this records the rule for when one is built.
+        trigger_mode          TEXT NOT NULL DEFAULT 'scheduled',
+        trigger_molecule_key  TEXT,
         is_active             BOOLEAN NOT NULL DEFAULT true,
         last_run_at           BIGINT,
         next_run_at           BIGINT,
@@ -4235,6 +4273,16 @@ Rod state, per event:
     `);
   } catch (e) {
     console.warn('[db] opportunity-pipeline schema warning:', e.message);
+  }
+
+  // Additive columns for an already-existing agent_schedules table (the
+  // CREATE TABLE IF NOT EXISTS above no-ops once the table is real, same
+  // idempotent-ALTER pattern as every other schema addition in this file).
+  try {
+    await sql.unsafe(`ALTER TABLE agent_schedules ADD COLUMN IF NOT EXISTS trigger_mode TEXT NOT NULL DEFAULT 'scheduled'`);
+    await sql.unsafe(`ALTER TABLE agent_schedules ADD COLUMN IF NOT EXISTS trigger_molecule_key TEXT`);
+  } catch (e) {
+    console.warn('[db] agent_schedules trigger columns warning:', e.message);
   }
 
   try {
@@ -4277,6 +4325,11 @@ Rod state, per event:
         objective: 'Only ever queue a role that was re-opened and verified this run.',
         capabilities: ['Re-open every employer-controlled job URL before scoring it', 'Score a role against the career scoring Current'],
         boundaries: ['Use stale aggregators as proof of availability'] },
+      { key: 'herq_content_agent', name: 'HERQ Content & Publication Agent', pipeline: 'herq', tier: 1, reportsTo: 'orchestrator',
+        roleDescription: 'Researches a HERQ Series\' assigned scope, drafts post/output recommendations against real research inputs and comment insights, and flags when a draft is ready for review.',
+        objective: 'Turn a governed research scope into a review-ready HERQ post or output — never a published one.',
+        capabilities: ['Research within an assigned Series scope', 'Draft a post referencing recorded research inputs', 'Flag a draft ready for human review'],
+        boundaries: ['Publish, post, or send anything without human approval', 'Generate or select a final image without human review', 'Invent a statistic, quote, or source it did not record as research input'] },
       { key: 'contact_relationship_analyst', name: 'Contact & Relationship Analyst', pipeline: 'shared', tier: 1, reportsTo: 'orchestrator',
         roleDescription: 'Finds accountable functions, public leaders, recruiters and warm routes; maintains confidence labels.',
         objective: 'Find the best route to a person without ever inventing one.',

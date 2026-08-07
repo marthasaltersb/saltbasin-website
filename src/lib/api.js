@@ -417,4 +417,9 @@ export const api = {
   listCommercialOpportunities: () => request('/api/commercial-opportunities/opportunities'),
   createCommercialOpportunity: (body) => request('/api/commercial-opportunities/opportunities', { method: 'POST', body: JSON.stringify(body) }),
   scoreCommercialOpportunity: (id, body) => request(`/api/commercial-opportunities/opportunities/${id}/scores`, { method: 'POST', body: JSON.stringify(body) }),
+
+  getPublicationAgentHub: (pipeline) => request(`/api/publication-pipelines/agent-hub?pipeline=${encodeURIComponent(pipeline)}`),
+  listPublicationItems: (appId) => request(`/api/publication-pipelines/items?appId=${encodeURIComponent(appId)}`),
+  getPublicationSchedule: (agentDefinitionId) => request(`/api/publication-pipelines/schedule?agentDefinitionId=${agentDefinitionId}`),
+  savePublicationSchedule: (body) => request('/api/publication-pipelines/schedule', { method: 'POST', body: JSON.stringify(body) }),
 };
