@@ -265,6 +265,45 @@ export const CRYSTAL_VARIANTS = {
 
     return { spin: [head, body, halo, signal], core: body };
   },
+
+  // Agent Hub world anchor (2026-08-06, Career Placement Agents) — a
+  // governed-orchestration variant: a signature-family icosahedron core (so
+  // it reads as the same crystal, not a foreign shape) with a coordinating
+  // ring gizmo, echoing 'rings' variant's gold/teal split for the two
+  // agent-pipeline accent colors (gold=commercial, teal=shared/orchestration).
+  // Every "user world" (Definition Studio, Agent Hub, User Configuration, Day
+  // to Day, ...) gets its own named variant here, never bespoke geometry in
+  // the consuming panel — see this file's header rule.
+  agentHub(group, THREE) {
+    const core = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(1.5, 1),
+      new THREE.MeshStandardMaterial({ color: 0xF1EBDD, metalness: 0.25, roughness: 0.32, flatShading: true })
+    );
+    group.add(core);
+
+    const wire = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(1.64, 1),
+      new THREE.MeshBasicMaterial({ color: 0xC4843A, wireframe: true, transparent: true, opacity: 0.5 })
+    );
+    group.add(wire);
+
+    const ringGold = new THREE.Mesh(
+      new THREE.TorusGeometry(1.95, 0.05, 12, 64),
+      new THREE.MeshStandardMaterial({ color: 0xC4843A, metalness: 0.3, roughness: 0.4 })
+    );
+    ringGold.rotation.x = Math.PI / 2.2;
+    group.add(ringGold);
+
+    const ringTeal = new THREE.Mesh(
+      new THREE.TorusGeometry(1.95, 0.05, 12, 64),
+      new THREE.MeshStandardMaterial({ color: 0x4A7C8E, metalness: 0.3, roughness: 0.4 })
+    );
+    ringTeal.rotation.x = -Math.PI / 2.2;
+    ringTeal.rotation.y = Math.PI / 3;
+    group.add(ringTeal);
+
+    return { spin: [ringGold, ringTeal], core };
+  },
 };
 
 // Small crystal used for metadata-orbit / capability-context nodes — a single

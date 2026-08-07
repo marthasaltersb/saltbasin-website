@@ -32,6 +32,11 @@ export function defaultMemberConfig({ displayName, email }) {
         { id: 'lonetreeMvp', label: 'Fund & Portfolio Demo', componentId: 'lonetreeMvp', sortOrder: 0 },
         { id: 'careerMaster', label: 'Career Master', componentId: 'careerMaster', sortOrder: 10 },
         { id: 'outputTemplates', label: 'Output Templates', componentId: 'outputTemplates', sortOrder: 20 },
+        // 2026-08-06, Career Placement Agents (Weekly Research & Outreach
+        // pipeline, Phase 2 vertical slice) — an existing member's stored
+        // config additively gains this via memberConfig.js's GET /draft
+        // merge, never a direct write to their row.
+        { id: 'careerPlacementAgents', label: 'Career Placement Agents', componentId: 'careerPlacementAgents', sortOrder: 15 },
       ],
     },
     site: {

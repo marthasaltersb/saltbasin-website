@@ -73,7 +73,21 @@ async function ensureDraft(user) {
 router.get('/draft', requireUser, async (req, res) => {
   const cfg = await ensureDraft(req.user);
   const defaults = defaultMemberConfig({ displayName: req.user.displayName, email: req.user.email });
-  res.json(redactForClient({ ...cfg, navigation: cfg.navigation || defaults.navigation }));
+  const navigation = cfg.navigation || defaults.navigation;
+  // Additive-only merge (2026-08-06, Career Placement Agents tab): a member
+  // whose stored member_configs row predates a newly-added default tab
+  // still gets it, appended after their existing tabs (never reordering or
+  // overwriting anything they already have) — a read-time overlay, not a
+  // persisted write, so this never touches the stored row per the
+  // never-write-member-rows-from-seed/bootstrap invariant. Existing tabs
+  // (including a member's own customizations, once that's editable) always
+  // win; this only fills in tabs missing entirely.
+  const existingIds = new Set((navigation.memberTabs || []).map((t) => t.id));
+  const missingDefaultTabs = (defaults.navigation.memberTabs || []).filter((t) => !existingIds.has(t.id));
+  const mergedNavigation = missingDefaultTabs.length
+    ? { ...navigation, memberTabs: [...(navigation.memberTabs || []), ...missingDefaultTabs] }
+    : navigation;
+  res.json(redactForClient({ ...cfg, navigation: mergedNavigation }));
 });
 
 router.put('/draft', requireUser, async (req, res) => {

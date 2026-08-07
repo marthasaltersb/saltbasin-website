@@ -44,6 +44,7 @@ const OrgDocumentsPanel = lazy(() => import('./OrgDocumentsPanel.jsx'));
 const MethodologyConfigPanel = lazy(() => import('./MethodologyConfigPanel.jsx'));
 const LonetreeMvpPanel = lazy(() => import('./LonetreeMvpPanel.jsx'));
 const ProposalExperiencePanel = lazy(() => import('./ProposalExperiencePanel.jsx'));
+const CareerPlacementAgentsPanel = lazy(() => import('./CareerPlacementAgentsPanel.jsx'));
 
 // Tab component registry: the one piece that can't be data-driven, because
 // React components have to be referenced by import. The nav structure stored
@@ -856,6 +857,7 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
           if (componentId === 'orgDocuments')     return <OrgDocumentsPanel orgId={orgId} />;
           if (componentId === 'proposalExperience') return <ProposalExperiencePanel />;
           if (componentId === 'lonetreeMvp')       return <LonetreeMvpPanel scope={scope} />;
+          if (componentId === 'careerPlacementAgents') return <CareerPlacementAgentsPanel scope={scope} />;
 
           // Inline 'config' case: the panel needs draft + setter + scope from
           // the shell. Treated as the default fallback when nothing else
@@ -889,7 +891,7 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
         const v = adminNav.views.find((x) => x.id === activeViewId);
         const t = v?.tabs.find((x) => x.id === tab);
         return t?.componentId || tab;
-      })()] && !['stats', 'audit', 'agent', 'profiles', 'resume', 'memberNrm', 'memberAnalytics', 'memberPlm', 'financial', 'governance'].includes(tab) && (
+      })()] && !['stats', 'audit', 'agent', 'profiles', 'resume', 'memberNrm', 'memberAnalytics', 'memberPlm', 'financial', 'governance', 'careerPlacementAgents'].includes(tab) && (
         <PublishBar
           dirty={dirty}
           siteDirty={siteDirty}

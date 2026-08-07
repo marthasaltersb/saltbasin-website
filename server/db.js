@@ -412,17 +412,22 @@ async function bootstrap() {
       updated_at BIGINT NOT NULL
     );
     CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_lead_type ON journey_data_rods (lead_id, rod_type) WHERE lead_id IS NOT NULL AND user_id IS NULL AND org_id IS NULL;
-    -- A member can hold multiple member_entitlement rods (one per module) and
+    -- A member can hold multiple member_entitlement rods (one per module),
     -- multiple explicitly configured deal journeys (identified by the
-    -- scenarioKey stored in metadata). Ordinary member/customer/revenue rods
-    -- remain singleton records per user and type.
+    -- scenarioKey stored in metadata), and multiple commercial_opportunity_
+    -- target / career_opportunity_target rods (2026-08-06, Career Placement
+    -- Agents — a member tracks many independent opportunities, each its own
+    -- rod, with no natural per-user dedup key the way member_entitlement has
+    -- module_key). Ordinary member/customer/revenue rods remain singleton
+    -- records per user and type.
     -- DROP+CREATE changes only the constraint's WHERE clause, not any row
     -- data, and existing rod_types (member/customer/revenue_lifecycle etc.)
     -- keep exactly the enforcement they always had.
     DROP INDEX IF EXISTS idx_rods_user_type;
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_user_type ON journey_data_rods (user_id, rod_type) WHERE user_id IS NOT NULL AND org_id IS NULL AND rod_type <> 'member_entitlement' AND NOT (metadata ? 'scenarioKey');
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_user_type ON journey_data_rods (user_id, rod_type) WHERE user_id IS NOT NULL AND org_id IS NULL AND rod_type NOT IN ('member_entitlement','commercial_opportunity_target','career_opportunity_target') AND NOT (metadata ? 'scenarioKey');
     CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_user_entitlement_module ON journey_data_rods (user_id, module_key) WHERE user_id IS NOT NULL AND org_id IS NULL AND rod_type = 'member_entitlement';
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_user_org_type ON journey_data_rods (user_id, org_id, rod_type) WHERE user_id IS NOT NULL AND org_id IS NOT NULL;
+    DROP INDEX IF EXISTS idx_rods_user_org_type;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_rods_user_org_type ON journey_data_rods (user_id, org_id, rod_type) WHERE user_id IS NOT NULL AND org_id IS NOT NULL AND rod_type NOT IN ('commercial_opportunity_target','career_opportunity_target');
     CREATE INDEX IF NOT EXISTS idx_rods_org ON journey_data_rods (org_id, rod_type);
     CREATE INDEX IF NOT EXISTS idx_rods_parent ON journey_data_rods (parent_rod_id);
 
@@ -4376,6 +4381,36 @@ Rod state, per event:
     }
   } catch (e) {
     console.warn('[db] opportunity scoring/cadence Current seed warning:', e.message);
+  }
+
+  // Career scoring dimension Atom definitions (2026-08-06, Phase 2 — Career
+  // Placement Agents vertical slice) — a dimension score an agent (or a
+  // member, manually) records against a career_opportunity_target rod is
+  // real evidence, not an ad-hoc unregistered molecule_key string. Same
+  // convention as every other Atom definition in this file (career atoms,
+  // Lonetree signal/hypothesis atoms): register in journey_metadata_molecules
+  // first. Keys match career_match_scoring_v1's entry_criteria.dimensions[].key
+  // 1:1, prefixed career_dim_ to namespace them as Atoms.
+  try {
+    const nowCareerDimSeed = Date.now();
+    for (const [dimKey, label, definition] of [
+      ['scope_altitude', 'Role Scope & Altitude Score', 'Rated 0-5: real decision ownership at COO/portfolio-operator/C-suite-partner/director/VP scope, not title alone.'],
+      ['strategic_ops_transformation', 'Strategic Operations & Transformation Score', 'Rated 0-5: operating-model, enterprise-transformation, cross-functional-governance, executive-partnership fit.'],
+      ['revenue_systems_q2r', 'Revenue Systems / Q2R / Monetization Score', 'Rated 0-5: CPQ, CLM, billing, RevOps, pricing, GTM systems, revenue architecture, monetization fit.'],
+      ['ai_validation_data_intel', 'AI Validation & Data Intelligence Score', 'Rated 0-5: AI workflow validation, evidence, data governance, model benefit realization, explainability fit.'],
+      ['pe_value_creation_finance', 'PE / Value Creation / Finance Relevance Score', 'Rated 0-5: portfolio operations, office of CFO, underwriting, EBITDA, cash, valuation, diligence, exit-readiness fit.'],
+      ['leadership_stakeholder_fit', 'Leadership & Stakeholder Fit Score', 'Rated 0-5: C-suite partnership, team leadership, difficult stakeholders, consulting/operator credibility.'],
+      ['transferable_industry_fit', 'Transferable Industry Fit Score', 'Rated 0-5: enterprise software, SaaS, healthcare technology, PE, manufacturing, education, or adjacent-sector fit.'],
+      ['practical_fit', 'Practical Fit Score', 'Rated 0-5: location/remote, disclosed compensation, travel, employment type, seniority, application feasibility.'],
+    ]) {
+      await sql.unsafe(
+        `INSERT INTO journey_metadata_molecules (molecule_key,label,data_type,source_paths,validation_config,is_sensitive,is_active,canonical_definition,value_domain,mutability_class,created_at,updated_at)
+         VALUES ($1,$2,'decimal','[]'::jsonb,'{}'::jsonb,false,true,$3,'0-5','revisable',$4,$4) ON CONFLICT (molecule_key) DO NOTHING`,
+        [`career_dim_${dimKey}`, label, definition, nowCareerDimSeed]
+      );
+    }
+  } catch (e) {
+    console.warn('[db] career scoring dimension Atom seed warning:', e.message);
   }
 }
 

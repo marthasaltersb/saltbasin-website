@@ -407,4 +407,9 @@ export const api = {
   getLonetreeMvpTraceMetric: (metric) => request(`/api/lonetree-mvp/trace/${encodeURIComponent(metric)}`),
   getLonetreeMvpTraceEvDrivers: () => request('/api/lonetree-mvp/trace-ev-drivers'),
   getLonetreeMvpDemonstration: (signalId) => request(`/api/lonetree-mvp/demonstration${signalId ? `?signalId=${encodeURIComponent(signalId)}` : ''}`),
+
+  getCareerAgentHub: () => request('/api/career-agents/agent-hub'),
+  listCareerOpportunities: () => request('/api/career-agents/opportunities'),
+  createCareerOpportunity: (body) => request('/api/career-agents/opportunities', { method: 'POST', body: JSON.stringify(body) }),
+  scoreCareerOpportunity: (id, body) => request(`/api/career-agents/opportunities/${id}/scores`, { method: 'POST', body: JSON.stringify(body) }),
 };
