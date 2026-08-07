@@ -3354,6 +3354,30 @@ async function bootstrap() {
     console.warn('[db] output-templates nav injection skipped:', e.message);
   }
 
+  // One-shot: inject "Commercial Opportunity Pipeline" tab into the admin_nav
+  // crm view (2026-08-06, Phase 3 — Weekly Research & Outreach commercial
+  // pipeline), alongside the existing "Leads" tab rather than replacing it.
+  try {
+    const navRow4b = await sql.unsafe(`SELECT data FROM config_state WHERE id = 'admin_nav'`);
+    if (navRow4b.length > 0) {
+      const nav = JSON.parse(navRow4b[0].data);
+      const crmView = (nav.views || []).find((v) => v.id === 'crm');
+      if (crmView) {
+        crmView.tabs = crmView.tabs || [];
+        const hasCommercialOpportunities = crmView.tabs.some((t) => t.id === 'commercial-opportunities');
+        if (!hasCommercialOpportunities) {
+          crmView.tabs.push({ id: 'commercial-opportunities', label: 'Commercial Opportunity Pipeline', componentId: 'commercialOpportunities', sortOrder: 1 });
+          await sql.unsafe(
+            `UPDATE config_state SET data = $1, updated_at = $2 WHERE id = 'admin_nav'`,
+            [JSON.stringify(nav), Date.now()]
+          );
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[db] commercial-opportunities nav injection skipped:', e.message);
+  }
+
   // One-shot: inject "Methodology Config" tab into the admin_nav system view
   // — the generic Config Envelope editor (src/components/admin/
   // MethodologyConfigPanel.jsx, server/lib/configEnvelope.js), additive
@@ -4411,6 +4435,33 @@ Rod state, per event:
     }
   } catch (e) {
     console.warn('[db] career scoring dimension Atom seed warning:', e.message);
+  }
+
+  // Commercial scoring dimension Atom definitions (2026-08-06, Phase 3 —
+  // Commercial Opportunity Pipeline vertical slice), same convention and
+  // reasoning as the career_dim_* seed above. Keys match
+  // commercial_opportunity_scoring_v1's entry_criteria.dimensions[].key 1:1,
+  // prefixed commercial_dim_. Deferred from Phase 1 since nothing consumed
+  // them yet; needed now that a real UI records real scores.
+  try {
+    const nowCommercialDimSeed = Date.now();
+    for (const [dimKey, label, definition] of [
+      ['trigger_strength', 'Trigger Strength Score', 'Rated 0-5: 0 rumor/weak lead, 1 indirect, 3 credible event, 5 consequential primary-sourced event.'],
+      ['solution_fit', 'Salt Basin Problem/Solution Fit Score', 'Rated 0-5: fit to evidence chain, revenue lifecycle, journey rods, Data Basin, value-creation registry, AI validation, diligence, financing, or exit readiness.'],
+      ['economic_materiality', 'Economic Materiality Score', 'Rated 0-5: potential relevance to revenue, EBITDA, cash, risk, or transaction value — never counted as fact.'],
+      ['timing_urgency', 'Timing & Urgency Score', 'Rated 0-5: event recency, deadline, financing/exit window, integration milestone, announced launch, or hiring need.'],
+      ['evidence_gap_plausibility', 'Evidence Gap Plausibility Score', 'Rated 0-5: how strongly the event implies a need to reconcile claims to source events, stated as a testable hypothesis.'],
+      ['access_relationship_path', 'Access & Relationship Path Score', 'Rated 0-5: named function, warm route, sponsor/portfolio link, public contact channel, or partner path.'],
+      ['serviceability', 'Serviceability Score', 'Rated 0-5: can Salt Basin credibly deliver a diagnostic, operating design, value registry, AI validation, or Q2R intervention.'],
+    ]) {
+      await sql.unsafe(
+        `INSERT INTO journey_metadata_molecules (molecule_key,label,data_type,source_paths,validation_config,is_sensitive,is_active,canonical_definition,value_domain,mutability_class,created_at,updated_at)
+         VALUES ($1,$2,'decimal','[]'::jsonb,'{}'::jsonb,false,true,$3,'0-5','revisable',$4,$4) ON CONFLICT (molecule_key) DO NOTHING`,
+        [`commercial_dim_${dimKey}`, label, definition, nowCommercialDimSeed]
+      );
+    }
+  } catch (e) {
+    console.warn('[db] commercial scoring dimension Atom seed warning:', e.message);
   }
 }
 

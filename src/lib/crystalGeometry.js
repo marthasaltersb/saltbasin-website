@@ -304,6 +304,43 @@ export const CRYSTAL_VARIANTS = {
 
     return { spin: [ringGold, ringTeal], core };
   },
+
+  // Commercial Opportunity Pipeline world anchor (2026-08-06, Career
+  // Placement Agents Phase 3) — an expansion/growth variant: a dodecahedron
+  // core (a distinct silhouette from agentHub's icosahedron, so the two
+  // worlds read as visibly different members of the same family) with an
+  // ascending helix of small satellite gems evoking the spec's Ring 0-5
+  // target-expansion model, in gold/mauve tones (commercial's accent pair).
+  commercialPipeline(group, THREE) {
+    const core = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(1.45, 0),
+      new THREE.MeshStandardMaterial({ color: 0xF1EBDD, metalness: 0.28, roughness: 0.3, flatShading: true })
+    );
+    group.add(core);
+
+    const wire = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(1.58, 0),
+      new THREE.MeshBasicMaterial({ color: 0xC4843A, wireframe: true, transparent: true, opacity: 0.5 })
+    );
+    group.add(wire);
+
+    const helixGems = [];
+    const helixCount = 6;
+    for (let i = 0; i < helixCount; i += 1) {
+      const t = i / helixCount;
+      const gem = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.14 + t * 0.08, 0),
+        new THREE.MeshStandardMaterial({ color: 0x785D69, metalness: 0.3, roughness: 0.4, flatShading: true })
+      );
+      const angle = t * Math.PI * 2.4;
+      const radius = 1.9 + t * 0.5;
+      gem.position.set(Math.cos(angle) * radius, -0.9 + t * 1.8, Math.sin(angle) * radius);
+      group.add(gem);
+      helixGems.push(gem);
+    }
+
+    return { spin: helixGems, core };
+  },
 };
 
 // Small crystal used for metadata-orbit / capability-context nodes — a single

@@ -6,7 +6,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
-import CareerAgentOrbitWorld from '../CareerAgentOrbitWorld.jsx';
+import OpportunityAgentOrbitWorld from '../OpportunityAgentOrbitWorld.jsx';
 
 const DIMENSION_FIELDS = [
   { key: 'scope_altitude', label: 'Role scope & altitude' },
@@ -158,7 +158,8 @@ export default function CareerPlacementAgentsPanel({ scope }) {
       <div style={S.layout}>
         <div>
           <div style={S.canvasCard}>
-            <CareerAgentOrbitWorld
+            <OpportunityAgentOrbitWorld
+              variant="agentHub"
               agents={agents}
               opportunities={opportunities}
               selectedAgentKey={selectedAgentKey}

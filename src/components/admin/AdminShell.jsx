@@ -45,6 +45,7 @@ const MethodologyConfigPanel = lazy(() => import('./MethodologyConfigPanel.jsx')
 const LonetreeMvpPanel = lazy(() => import('./LonetreeMvpPanel.jsx'));
 const ProposalExperiencePanel = lazy(() => import('./ProposalExperiencePanel.jsx'));
 const CareerPlacementAgentsPanel = lazy(() => import('./CareerPlacementAgentsPanel.jsx'));
+const CommercialOpportunityPanel = lazy(() => import('./CommercialOpportunityPanel.jsx'));
 
 // Tab component registry: the one piece that can't be data-driven, because
 // React components have to be referenced by import. The nav structure stored
@@ -81,6 +82,7 @@ const TAB_COMPONENTS = {
   metricIntelligence: () => <MetricIntelligencePanel />,
   methodologyConfig: () => <MethodologyConfigPanel />,
   lonetreeMvp:    (props) => <LonetreeMvpPanel {...props} />,
+  commercialOpportunities: () => <CommercialOpportunityPanel />,
   // config: handled inline below (ConfigPanel needs draft + setters from shell)
   // content: handled inline below (Sidebar/EditorPane/PreviewPane composition)
 };
