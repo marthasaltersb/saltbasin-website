@@ -15,7 +15,10 @@ import { generateResumeContent } from '../lib/resumeTargeting.js';
 import { generateCoverLetterContent } from '../lib/coverLetterTargeting.js';
 import { runQualificationGatesForUser } from '../lib/careerVerificationAgent.js';
 import { autoQueueOutputsForNewlyApproved } from '../lib/autoQueueAgent.js';
-import { createResumeOutputProjection, listResumeOutputProjectionsForOpportunity, listResumeOutputProjections } from '../lib/resumeProjection.js';
+import { createResumeOutputProjection, listResumeOutputProjectionsForOpportunity, listResumeOutputProjections, getResumeOutputProjectionRaw } from '../lib/resumeProjection.js';
+import { summarizeProjectionForView, renderProjectionToPdfBuffer, filenameFor } from '../lib/outputRendering.js';
+import { dispatchRaw } from '../lib/email.js';
+import archiver from 'archiver';
 import { parseCareerPipelineWorkbook, rowToOpportunityPayload } from '../lib/careerPipelineImport.js';
 import { upsertAgentSchedule, GATE_ACTION_KEYS } from '../lib/opportunityPipelineRegistry.js';
 import { resolveConfigEnvelope } from '../lib/configEnvelope.js';
@@ -177,6 +180,99 @@ router.get('/opportunities/:id/resume-outputs', requireUser, async (req, res) =>
     await requireOwnedOpportunity(req.user.id, Number(req.params.id));
     const projections = await listResumeOutputProjectionsForOpportunity(req.user.id, Number(req.params.id));
     res.json({ projections });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Output rendering (2026-08-09) — "the digital view equivalent should be
+// accessible... no further edits, but can be downloaded again if
+// necessary." Nothing here ever persists a file — every PDF is generated
+// fresh from generated_content, every time (server/lib/outputRendering.js).
+// Authenticated + ownership-checked throughout, unlike the public
+// unauthenticated /output/* convention — this is private application
+// material, not a shareable profile page.
+router.get('/resume-outputs/:id/view', requireUser, async (req, res) => {
+  try {
+    const projection = await getResumeOutputProjectionRaw(Number(req.params.id), req.user.id);
+    if (!projection) return res.status(404).json({ error: 'Output not found.' });
+    res.json(summarizeProjectionForView(projection));
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.get('/resume-outputs/:id/download.pdf', requireUser, async (req, res) => {
+  try {
+    const projection = await getResumeOutputProjectionRaw(Number(req.params.id), req.user.id);
+    if (!projection) return res.status(404).json({ error: 'Output not found.' });
+    const buffer = await renderProjectionToPdfBuffer(projection);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filenameFor(projection)}"`);
+    res.send(buffer);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Streams a ZIP directly to the response — never written to disk. Every
+// member PDF inside it is generated fresh from the same source
+// generated_content the single-download route uses.
+router.post('/resume-outputs/export-zip', requireUser, async (req, res) => {
+  try {
+    const { projectionIds } = req.body || {};
+    if (!Array.isArray(projectionIds) || !projectionIds.length) return res.status(400).json({ error: 'projectionIds is required.' });
+
+    const projections = [];
+    for (const id of projectionIds) {
+      const p = await getResumeOutputProjectionRaw(Number(id), req.user.id);
+      if (p) projections.push(p);
+    }
+    if (!projections.length) return res.status(404).json({ error: 'None of the requested outputs were found.' });
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', 'attachment; filename="career-outputs.zip"');
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    archive.on('error', (err) => res.status(500).end(err.message));
+    archive.pipe(res);
+    for (const projection of projections) {
+      const buffer = await renderProjectionToPdfBuffer(projection);
+      archive.append(buffer, { name: filenameFor(projection) });
+    }
+    await archive.finalize();
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Reuses the existing generic dispatchRaw() (server/lib/email.js) — already
+// supports attachments, no leadId/lead-thread coupling required. PDFs are
+// generated fresh for the attachment and never stored.
+router.post('/resume-outputs/email', requireUser, async (req, res) => {
+  try {
+    const { projectionIds, toEmail } = req.body || {};
+    if (!Array.isArray(projectionIds) || !projectionIds.length) return res.status(400).json({ error: 'projectionIds is required.' });
+    if (!toEmail || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(toEmail)) return res.status(400).json({ error: 'A valid destination email is required.' });
+
+    const attachments = [];
+    const titles = [];
+    for (const id of projectionIds) {
+      const p = await getResumeOutputProjectionRaw(Number(id), req.user.id);
+      if (!p) continue;
+      const buffer = await renderProjectionToPdfBuffer(p);
+      attachments.push({ name: filenameFor(p), content: buffer });
+      titles.push(p.preset_name || p.output_type);
+    }
+    if (!attachments.length) return res.status(404).json({ error: 'None of the requested outputs were found.' });
+
+    const result = await dispatchRaw({
+      to: toEmail,
+      subject: `Career outputs: ${titles.join(', ')}`,
+      html: `<p>Attached: ${titles.map((t) => `<strong>${t}</strong>`).join(', ')}.</p>`,
+      text: `Attached: ${titles.join(', ')}.`,
+      attachments,
+    });
+    res.json({ ok: true, sent: attachments.length, stub: result?.stub || false });
   } catch (e) {
     res.status(400).json({ error: e.message });
   }

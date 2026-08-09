@@ -5,6 +5,7 @@ import PublicSite from './components/PublicSite.jsx';
 const LandingGate = lazy(() => import('./components/LandingGate.jsx'));
 const LoginPage = lazy(() => import('./components/admin/LoginPage.jsx'));
 const MemberDashboard = lazy(() => import('./components/MemberDashboard.jsx'));
+const WorldShell = lazy(() => import('./components/WorldShell.jsx'));
 const PublicProfile = lazy(() => import('./components/PublicProfile.jsx'));
 const LeadView = lazy(() => import('./components/LeadView.jsx'));
 const ResetPasswordPage = lazy(() => import('./components/ResetPasswordPage.jsx'));
@@ -74,17 +75,18 @@ export default function App() {
       <Route path="/admin/login" element={<LoginPage />} />
       <Route path="/reset/:token" element={<ResetPasswordPage />} />
       <Route path="/signup" element={<SignupRoute />} />
-      {/* The World Shell (2026-08-07) is now the primary logged-in surface
-          for both roles — /admin and /member render it directly instead of
-          the flat AdminShell/MemberDashboard tab UI, so users never have to
-          navigate to a separate /world URL to see it. Both those components
-          still exist and still work — WorldShell's own "Classic Tools" tab
-          mounts AdminShell inline as an escape hatch for modules that don't
-          have an in-world view yet — they're just no longer what a bare
-          /admin or /member hit shows by default. /world itself stays as a
-          direct alias. */}
+      {/* /member and /admin (2026-08-09) land on the newer Crystal Orbit ->
+          AdminShell flow (MemberDashboard.jsx / MemberCrystalOrbit.jsx) —
+          that redesign is now the primary logged-in landing for both roles.
+          /world is kept as its own dedicated route straight to WorldShell
+          (the full-screen crystal-orbit docked-panel experience, with
+          Automation & Scheduling, Approve, Cover Letter, Import Pipeline,
+          Generate Resume Queue, etc.) — restored 2026-08-09 after the
+          Crystal Orbit merge silently orphaned it (nothing routed to it).
+          WorldShell's own "Classic Tools" tab still mounts AdminShell inline
+          as an escape hatch for modules without an in-world view. */}
       <Route path="/member" element={<MemberDashboard />} />
-      <Route path="/world" element={<MemberDashboard />} />
+      <Route path="/world" element={<WorldShell />} />
       <Route path="/org/:orgId" element={<OrgPortal />} />
       <Route path="/u/:slug" element={<PublicProfile />} />
       <Route path="/u/:slug/*" element={<PublicProfile />} />
@@ -111,9 +113,8 @@ export default function App() {
       <Route path="/output/methodology" element={<MethodologyOutput />} />
       <Route path="/output/l2r-model" element={<L2RModelOutput />} />
       <Route path="/output/business-definition-experience" element={<BusinessDefinitionExperience />} />
-      {/* WorldShell does its own auth check (api.me(), redirect to /login),
-          the same self-contained pattern /member and /world already use —
-          no RequireAdmin wrapper needed here anymore. */}
+      {/* MemberDashboard does its own auth check (api.me(), redirect to
+          /login) — no RequireAdmin wrapper needed here. */}
       <Route path="/admin/*" element={<MemberDashboard />} />
       <Route path="/*" element={<PublicRoute />} />
     </Routes>

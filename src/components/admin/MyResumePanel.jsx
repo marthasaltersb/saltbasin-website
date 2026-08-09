@@ -460,6 +460,67 @@ export default function MyResumePanel({ scope = 'member' }) {
   const [generatingOutput, setGeneratingOutput] = useState(false);
   const [targetJobDescription, setTargetJobDescription] = useState('');
 
+  // Output view/export (2026-08-09) — the read-only "digital view" + PDF/ZIP/
+  // email actions for any resume_output_projections row (career-agent
+  // generated, imported, or the general preset-based ones this panel already
+  // creates) — see server/lib/outputRendering.js.
+  const [selectedOutputIds, setSelectedOutputIds] = useState(new Set());
+  const [viewingOutput, setViewingOutput] = useState(null); // fetched digital-view JSON, or null
+  const [exportingZip, setExportingZip] = useState(false);
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [emailAddress, setEmailAddress] = useState('');
+  const [sendingEmail, setSendingEmail] = useState(false);
+
+  function toggleOutputSelected(id) {
+    setSelectedOutputIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  async function openOutputView(id) {
+    try {
+      const view = await api.getResumeOutputView(id);
+      setViewingOutput(view);
+    } catch (e) {
+      toast('Could not load output: ' + e.message);
+    }
+  }
+
+  async function exportSelectedZip() {
+    if (!selectedOutputIds.size) { toast('Select at least one output first.'); return; }
+    setExportingZip(true);
+    try {
+      const blob = await api.exportResumeOutputsZip([...selectedOutputIds]);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'career-outputs.zip';
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      toast('ZIP export failed: ' + e.message);
+    } finally {
+      setExportingZip(false);
+    }
+  }
+
+  async function sendSelectedEmail() {
+    if (!selectedOutputIds.size) { toast('Select at least one output first.'); return; }
+    if (!emailAddress.trim()) { toast('Enter a destination email.'); return; }
+    setSendingEmail(true);
+    try {
+      const result = await api.emailResumeOutputs([...selectedOutputIds], emailAddress.trim());
+      toast(result.stub ? `Email queued (${result.sent} attachment(s)) — no email provider configured, logged to server instead.` : `Sent ${result.sent} attachment(s) to ${emailAddress.trim()}.`);
+      setEmailModalOpen(false);
+      setEmailAddress('');
+    } catch (e) {
+      toast('Email failed: ' + e.message);
+    } finally {
+      setSendingEmail(false);
+    }
+  }
+
   // Agent state
   const [jobDesc, setJobDesc] = useState('');
   const [selectedPresetId, setSelectedPresetId] = useState('');
@@ -773,16 +834,36 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
           stale one is flagged, never silently regenerated. */}
       {resumeOutputs.length > 0 && (
         <div style={{ marginBottom: '1.5rem' }}>
-          <div style={S.label}>Resume Output History</div>
-          <div style={{ display: 'grid', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div style={S.label}>Resume Output History</div>
+            {selectedOutputIds.size > 0 && (
+              <div style={{ display: 'flex', gap: '0.4rem' }}>
+                <span style={{ fontSize: '0.72rem', color: '#888', alignSelf: 'center' }}>{selectedOutputIds.size} selected</span>
+                <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={exportSelectedZip} disabled={exportingZip}>
+                  {exportingZip ? 'Exporting…' : 'Export ZIP'}
+                </button>
+                <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setEmailModalOpen(true)}>
+                  Email Selected
+                </button>
+              </div>
+            )}
+          </div>
+          <div style={{ display: 'grid', gap: '0.5rem', marginTop: '0.5rem' }}>
             {resumeOutputs.map((output) => (
               <div key={output.id} style={{
                 background: 'white', border: `1px solid ${output.isStale ? 'var(--sb-gold, #c4843a)' : 'rgba(0,0,0,0.1)'}`,
                 borderRadius: 8, padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap',
               }}>
+                <input type="checkbox" checked={selectedOutputIds.has(output.id)} onChange={() => toggleOutputSelected(output.id)} style={{ flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 200 }}>
                   <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--sb-navy, #1b2a3b)' }}>
-                    {output.presetName || output.presetId} <span style={{ fontWeight: 400, color: '#999', fontSize: '0.72rem' }}>· {output.atomCount} Career Atoms</span>
+                    {output.presetName || output.presetId}
+                    {output.outputType && output.outputType !== 'resume' && (
+                      <span style={{ fontWeight: 400, color: '#999', fontSize: '0.72rem' }}> · {output.outputType.replace('_', ' ')}</span>
+                    )}
+                    {output.source === 'imported' && (
+                      <span style={{ fontWeight: 400, color: '#8b877c', fontSize: '0.68rem', textTransform: 'uppercase', marginLeft: '0.4rem' }}>Imported</span>
+                    )}
                   </div>
                   <div style={{ fontSize: '0.72rem', color: '#888' }}>
                     Generated {new Date(output.generatedAt).toLocaleString()} · <span style={{ textTransform: 'capitalize' }}>{output.outputStatus}</span>
@@ -799,6 +880,12 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  {output.generatedContent && (
+                    <>
+                      <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => openOutputView(output.id)}>View</button>
+                      <a href={api.downloadResumeOutputUrl(output.id)} style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Download PDF</a>
+                    </>
+                  )}
                   {output.outputStatus === 'draft' && (
                     <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setOutputStatus(output.id, 'approved')}>Approve</button>
                   )}
@@ -808,7 +895,7 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
                   {output.outputStatus !== 'archived' && (
                     <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setOutputStatus(output.id, 'archived')}>Archive</button>
                   )}
-                  {output.isStale && (
+                  {output.isStale && !output.generatedContent && (
                     <button
                       style={{ ...S.btn('gold'), padding: '4px 10px', fontSize: '0.72rem' }}
                       onClick={() => generateOutput({ id: output.presetId, name: output.presetName, includedSections: [] })}
@@ -819,6 +906,64 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Read-only digital view — "no further edits being able to be made, but
+          can be downloaded again if necessary." */}
+      {viewingOutput && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setViewingOutput(null)}>
+          <div style={{ background: 'white', borderRadius: 10, padding: '1.5rem', maxWidth: 600, maxHeight: '80vh', overflowY: 'auto', width: '90%' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <h3 style={{ margin: 0, color: 'var(--sb-navy, #1b2a3b)' }}>{viewingOutput.title}</h3>
+                <div style={{ fontSize: '0.72rem', color: '#888' }}>
+                  Generated {new Date(viewingOutput.generatedAt).toLocaleString()} · Read-only — no edits can be made here.
+                </div>
+              </div>
+              <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setViewingOutput(null)}>Close</button>
+            </div>
+            <div style={{ marginTop: '1rem', fontSize: '0.85rem', lineHeight: 1.6, color: '#333' }}>
+              {viewingOutput.content?.rawText ? (
+                <div style={{ whiteSpace: 'pre-wrap' }}>{viewingOutput.content.rawText}</div>
+              ) : viewingOutput.outputType === 'cover_letter' ? (
+                <>
+                  <p>{viewingOutput.content?.openingHook}</p>
+                  {(viewingOutput.content?.bodyParagraphs || []).map((p, i) => <p key={i}>{p.text}</p>)}
+                  <p>{viewingOutput.content?.closing}</p>
+                </>
+              ) : (
+                <>
+                  <p>{viewingOutput.content?.professionalSummary}</p>
+                  {(viewingOutput.content?.selectedExperience || []).map((exp, i) => (
+                    <ul key={i}>{(exp.bullets || []).map((b, j) => <li key={j}>{b}</li>)}</ul>
+                  ))}
+                  {viewingOutput.content?.emphasizedSkills?.length > 0 && (
+                    <p style={{ fontSize: '0.78rem', color: '#666' }}><strong>Emphasized skills:</strong> {viewingOutput.content.emphasizedSkills.join(', ')}</p>
+                  )}
+                </>
+              )}
+            </div>
+            <a href={api.downloadResumeOutputUrl(viewingOutput.id)} style={{ ...S.btn('gold'), padding: '6px 14px', fontSize: '0.78rem', textDecoration: 'none', display: 'inline-block', marginTop: '1rem' }}>Download PDF</a>
+          </div>
+        </div>
+      )}
+
+      {emailModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setEmailModalOpen(false)}>
+          <div style={{ background: 'white', borderRadius: 10, padding: '1.5rem', maxWidth: 420, width: '90%' }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ marginTop: 0, color: 'var(--sb-navy, #1b2a3b)' }}>Email {selectedOutputIds.size} output(s)</h3>
+            <input
+              type="email" placeholder="recipient@example.com" value={emailAddress} onChange={(e) => setEmailAddress(e.target.value)}
+              style={{ width: '100%', padding: '0.5rem', borderRadius: 6, border: '1px solid rgba(0,0,0,0.15)', fontSize: '0.85rem', boxSizing: 'border-box' }}
+            />
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
+              <button style={{ ...S.btn('outline'), padding: '6px 14px', fontSize: '0.78rem' }} onClick={() => setEmailModalOpen(false)}>Cancel</button>
+              <button style={{ ...S.btn('gold'), padding: '6px 14px', fontSize: '0.78rem' }} onClick={sendSelectedEmail} disabled={sendingEmail}>
+                {sendingEmail ? 'Sending…' : 'Send'}
+              </button>
+            </div>
           </div>
         </div>
       )}

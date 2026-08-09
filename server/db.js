@@ -876,6 +876,17 @@ async function bootstrap() {
     console.warn('[db] resume_output_projections output_type column warning:', e.message);
   }
 
+  // source (2026-08-09, output view/export/import): distinguishes a
+  // member-imported document (an existing resume/cover-letter PDF or DOCX
+  // they already had) from one this platform generated — both go through
+  // the identical view/PDF/ZIP/email pipeline, this only labels provenance
+  // for the UI, never gates functionality.
+  try {
+    await sql.unsafe(`ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'ai_generated'`);
+  } catch (e) {
+    console.warn('[db] resume_output_projections source column warning:', e.message);
+  }
+
   await sql.unsafe(`
     -- ── Organization Document Projections (2026-07-27) ──────────────────────
     -- Satellite table for the 'customer_document_delivery' Tributary

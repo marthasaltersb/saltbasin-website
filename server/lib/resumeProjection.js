@@ -30,7 +30,7 @@ export async function computeCareerStateFingerprint(userId) {
   return { fingerprint: hash.digest('hex'), atomCount: rows.length, rodId: Number(rod.id) };
 }
 
-export async function createResumeOutputProjection(userId, { presetId, presetName, includedSections = [], regenerateFromId = null, targetJobDescription = null, careerOpportunityRodId = null, generatedContent = null, outputType = 'resume' }) {
+export async function createResumeOutputProjection(userId, { presetId, presetName, includedSections = [], regenerateFromId = null, targetJobDescription = null, careerOpportunityRodId = null, generatedContent = null, outputType = 'resume', source = 'ai_generated' }) {
   const { fingerprint, atomCount } = await computeCareerStateFingerprint(userId);
   if (!fingerprint) throw new Error('No Career Master Channel Rod or evidence found for this member — nothing to project yet.');
   const now = Date.now();
@@ -54,10 +54,10 @@ export async function createResumeOutputProjection(userId, { presetId, presetNam
 
   const result = await db.prepare(`
     INSERT INTO resume_output_projections
-      (user_id, preset_id, preset_name, included_sections, career_state_fingerprint, atom_count, generated_at, effective_career_state_at, output_status, lineage_root_id, target_job_description, targeting_result, career_opportunity_rod_id, generated_content, output_type, created_at)
-    VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7,$7,'draft',$8,$9,$10::jsonb,$11,$12::jsonb,$13,$7)
+      (user_id, preset_id, preset_name, included_sections, career_state_fingerprint, atom_count, generated_at, effective_career_state_at, output_status, lineage_root_id, target_job_description, targeting_result, career_opportunity_rod_id, generated_content, output_type, source, created_at)
+    VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7,$7,'draft',$8,$9,$10::jsonb,$11,$12::jsonb,$13,$14,$7)
     RETURNING id
-  `).run(userId, presetId, presetName || null, includedSections, fingerprint, atomCount, now, lineageRootId, targetJobDescription || null, targetingResult || null, careerOpportunityRodId, generatedContent, outputType);
+  `).run(userId, presetId, presetName || null, includedSections, fingerprint, atomCount, now, lineageRootId, targetJobDescription || null, targetingResult || null, careerOpportunityRodId, generatedContent, outputType, source);
   const id = Number(result.lastInsertRowid);
   if (!lineageRootId) {
     // First projection in this lineage — it's its own root.
@@ -105,6 +105,7 @@ export async function listResumeOutputProjections(userId) {
         ? (typeof row.generated_content === 'string' ? JSON.parse(row.generated_content) : row.generated_content)
         : null,
       outputType: row.output_type || 'resume',
+      source: row.source || 'ai_generated',
     });
   }
   return out;
@@ -114,6 +115,11 @@ export async function listResumeOutputProjections(userId) {
 export async function listResumeOutputProjectionsForOpportunity(userId, careerOpportunityRodId) {
   const all = await listResumeOutputProjections(userId);
   return all.filter((p) => p.careerOpportunityRodId === Number(careerOpportunityRodId));
+}
+
+/** Single ownership-checked fetch — the raw row (not the list-shaped rollup) for rendering/export routes. */
+export async function getResumeOutputProjectionRaw(projectionId, userId) {
+  return db.prepare(`SELECT * FROM resume_output_projections WHERE id=$1 AND user_id=$2`).get(projectionId, userId);
 }
 
 const ALLOWED_STATUSES = ['draft', 'approved', 'published', 'archived'];

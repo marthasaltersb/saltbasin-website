@@ -684,6 +684,13 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
                 </a>
               )}
               <a
+                href="/world"
+                className="sb-btn sb-btn-outline sb-toggle-hide-mobile"
+                style={{ padding: '0.4rem 0.9rem', fontSize: '0.7rem' }}
+              >
+                World View ↗
+              </a>
+              <a
                 href="/"
                 target="_blank"
                 rel="noreferrer"

@@ -422,6 +422,17 @@ export const api = {
   generateResumeForOpportunity: (id, body) => request(`/api/career-agents/opportunities/${id}/generate-resume`, { method: 'POST', body: JSON.stringify(body || {}) }),
   approveResumeForOpportunity: (id, body) => request(`/api/career-agents/opportunities/${id}/resume-outputs`, { method: 'POST', body: JSON.stringify(body) }),
   listResumeOutputsForOpportunity: (id) => request(`/api/career-agents/opportunities/${id}/resume-outputs`),
+  getResumeOutputView: (id) => request(`/api/career-agents/resume-outputs/${id}/view`),
+  downloadResumeOutputUrl: (id) => `/api/career-agents/resume-outputs/${id}/download.pdf`,
+  exportResumeOutputsZip: async (projectionIds) => {
+    const res = await fetch('/api/career-agents/resume-outputs/export-zip', {
+      method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projectionIds }),
+    });
+    if (!res.ok) { const body = await res.json().catch(() => ({})); const e = new Error(body?.error || `Request failed: ${res.status}`); e.status = res.status; throw e; }
+    return res.blob();
+  },
+  emailResumeOutputs: (projectionIds, toEmail) => request('/api/career-agents/resume-outputs/email', { method: 'POST', body: JSON.stringify({ projectionIds, toEmail }) }),
   generateResumeQueue: (limit) => request('/api/career-agents/generate-resume-queue', { method: 'POST', body: JSON.stringify({ limit }) }),
   approveCareerOpportunity: (id) => request(`/api/career-agents/opportunities/${id}/approve`, { method: 'POST' }),
   generateCoverLetterForOpportunity: (id, body) => request(`/api/career-agents/opportunities/${id}/generate-cover-letter`, { method: 'POST', body: JSON.stringify(body || {}) }),
