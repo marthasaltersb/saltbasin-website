@@ -56,6 +56,7 @@ export const MEMBER_WORLD_REGISTRY = [
     id: 'client', label: 'Organization Salt Basin', shortLabel: 'Organization', accent: '#4A7C8E', organizationScoped: true,
     description: 'A client-scoped Salt Basin environment with its own site, definitions, permissions, templates, agents, and intelligence.',
     variants: [
+      { id: 'definition-studio', label: 'Definition Studio', icon: 'DEF', tab: 'methodology-config' },
       { id: 'org-definition', label: 'Organization Definition', icon: 'ORG', tab: 'profiles' },
       { id: 'org-site', label: 'Public Site & Routing', icon: 'WEB', tab: 'content' },
       { id: 'org-access', label: 'Members & Permissions', icon: 'ACL', tab: 'access' },
@@ -63,6 +64,7 @@ export const MEMBER_WORLD_REGISTRY = [
       { id: 'org-agents', label: 'Organization Agent Orbit', icon: 'AI', tab: 'agent-hub-config' },
     ],
     journeys: [
+      { id: 'definition-to-operation', label: 'Definition to operation', stages: ['Semantic definition', 'Configuration rules', 'Agent deployment', 'Evidence review', 'Approval convergence'] },
       { id: 'org-provisioning', label: 'Organization provisioning', stages: ['Select template', 'Define semantics', 'Map systems', 'Provision modules', 'Invite members', 'Publish'] },
       { id: 'interface-intelligence', label: 'Interface intelligence', stages: ['Observe', 'Classify', 'Trace', 'Explain', 'Detect', 'Recommend', 'Remember'] },
     ],

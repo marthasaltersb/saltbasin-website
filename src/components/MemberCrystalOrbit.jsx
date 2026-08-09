@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import SaltBasinCrystal from './SaltBasinCrystal.jsx';
 import CrystalSolarSystem from './CrystalSolarSystem.jsx';
 import DefinitionStudioJourney from './DefinitionStudioJourney.jsx';
+import CrystalWorldCityScene from './CrystalWorldCityScene.jsx';
 import { api } from '../lib/api.js';
 import { DEFAULT_EDGE_CARDS, provisionMemberWorlds } from '../data/memberWorldRegistry.js';
 import { toast } from '../lib/toast.js';
@@ -113,16 +114,26 @@ function EdgeCard({ card, collapsed, onToggle }) {
 
 function WorldCity({ world, activeJourney, setActiveJourney, activeVariant, setActiveVariant, onBack, onLaunch }) {
   const [journeyStep, setJourneyStep] = useState(0);
+  function selectVariant(variant) {
+    const definitionJourney = world.journeys.find((journey) => journey.id === 'definition-to-operation');
+    if (definitionJourney && (variant.id === 'definition-studio' || variant.id === 'org-definition')) {
+      setJourneyStep(0); setActiveVariant(null); setActiveJourney(definitionJourney); return;
+    }
+    setActiveVariant(variant);
+  }
   return <section className="mco-city-scene" style={{ '--accent': world.accent }}>
+    <CrystalWorldCityScene world={world} />
     <div className="mco-city-sky" /><header><button type="button" onClick={onBack}>â† All worlds</button><div><span>{world.shortLabel} world</span><h1>{world.label}</h1><p>{world.description}</p></div><HealthPill /></header>
     <div className="mco-river river-one" /><div className="mco-river river-two" />
-    <div className="mco-city-grid">{world.variants.map((variant, index) => <button type="button" key={variant.id} className={`mco-building${activeVariant?.id === variant.id ? ' active' : ''}`} style={{ '--h': `${100 + (index % 4) * 34}px`, '--delay': `${index * 60}ms` }} onClick={() => setActiveVariant(variant)}>
+    <div className="mco-city-grid">{world.variants.map((variant, index) => <button type="button" key={variant.id} className={`mco-building${activeVariant?.id === variant.id ? ' active' : ''}`} style={{ '--h': `${100 + (index % 4) * 34}px`, '--delay': `${index * 60}ms` }} onClick={() => selectVariant(variant)}>
       <span className="mco-building-crystal"><SaltBasinCrystal size="orbit" variant={index % 2 ? 'rings' : 'engine'} /></span><i /><b>{variant.icon}</b><strong>{variant.label}</strong><small>{72 + ((index * 7) % 27)}% mature / {2 + index} agents</small>
     </button>)}</div>
     <aside className="mco-journey-dock"><span>FLOWING JOURNEYS</span>{world.journeys.map((journey) => <button key={journey.id} type="button" className={activeJourney?.id === journey.id ? 'active' : ''} onClick={() => { setJourneyStep(0); setActiveJourney(journey); }}>{journey.label}<small>{journey.stages.length} gates</small></button>)}</aside>
     {activeJourney && <div className="mco-journey-path"><button type="button" onClick={() => setActiveJourney(null)}>Close</button><span>ENTERED JOURNEY</span><h2>{activeJourney.label}</h2><div>{activeJourney.stages.map((stage, index) => <React.Fragment key={stage}><button type="button" className={index === 0 ? 'current' : ''}><b>{index + 1}</b><span>{stage}</span></button>{index < activeJourney.stages.length - 1 && <i />}</React.Fragment>)}</div></div>}
     {activeVariant && !activeJourney && <SpatialWorkspace variant={activeVariant} journeys={world.journeys} onClose={() => setActiveVariant(null)} onLaunch={() => onLaunch(activeVariant)} onJourney={(journey) => { setJourneyStep(0); setActiveJourney(journey); }} />}
     {activeJourney && <div className="mco-journey-motion" style={{ '--journey-step': journeyStep, '--journey-count': Math.max(activeJourney.stages.length - 1, 1) }}><span /></div>}
+    <aside className="mco-world-legend"><span>WORLD SYSTEMS</span><b>{world.variants.length} capability districts</b><b>{world.journeys.length} active rivers</b><b>{world.variants.length * 3} governed agents</b></aside>
+    <footer className="mco-world-kpis"><article><span>MATURITY</span><strong>0.82</strong></article><article><span>DATA INTEGRITY</span><strong>98.7%</strong></article><article><span>LIVE DEFINITIONS</span><strong>{world.variants.length * 12}</strong></article><article><span>REVIEW QUEUE</span><strong>7</strong></article></footer>
   </section>;
 }
 

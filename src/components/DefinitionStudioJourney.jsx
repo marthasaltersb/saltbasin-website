@@ -45,7 +45,8 @@ function JourneyScene({ current, completed }) {
       const point = path.points[i];
       const group = new THREE.Group();
       group.position.copy(point);
-      const crystal = crystalBuilders[i % crystalBuilders.length](THREE, i % 2 ? 0x4a7c8e : 0xc4843a);
+      const crystal = new THREE.Group();
+      crystalBuilders[i % crystalBuilders.length](crystal, THREE);
       crystal.scale.setScalar(i === current ? 1.35 : .92);
       group.add(crystal);
       const ring = new THREE.Mesh(new THREE.TorusGeometry(1.45, .035, 8, 72), new THREE.MeshBasicMaterial({ color: completed.includes(gate.id) ? 0x8dbf9f : 0xc4843a, transparent: true, opacity: .8 }));
