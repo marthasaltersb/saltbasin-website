@@ -591,10 +591,21 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
     verifyingPipeline, verifyPipelineNow, runningAutoQueue, runAutoQueueNow,
     automation, loadingAutomation, loadAutomation, setSchedule,
     importingOutput, importOutputForOpportunity,
+    outreach, loadingOutreach, loadOutreach, startingOutreach, startOutreach,
+    researchingContacts, researchContacts,
+    draftingOutreachMessage, outreachDraft, draftMessage, discardOutreachDraft,
+    savingOutreachMessage, saveOutreachMessage,
+    mergingOutcome, mergeOutcome,
   } = pipeline;
   const importInputRef = useRef(null);
   const importOutputInputRef = useRef(null);
   const [showAutomation, setShowAutomation] = useState(false);
+
+  const outreachEligible = !isCommercial && selectedOpportunity && ['applied', 'interviewing'].includes(selectedOpportunity.currentStage);
+  useEffect(() => {
+    if (outreachEligible) loadOutreach(selectedOpportunity.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedOpportunity?.id, outreachEligible]);
 
   return (
     <div style={S.rail}>
@@ -713,6 +724,26 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
               >
                 {importingOutput ? 'Importing…' : 'Import Cover Letter'}
               </button>
+
+              {outreachEligible && (
+                <OutreachSection
+                  opportunityId={selectedOpportunity.id}
+                  outreach={outreach}
+                  loading={loadingOutreach}
+                  startingOutreach={startingOutreach}
+                  startOutreach={startOutreach}
+                  researchingContacts={researchingContacts}
+                  researchContacts={researchContacts}
+                  draftingOutreachMessage={draftingOutreachMessage}
+                  outreachDraft={outreachDraft}
+                  draftMessage={draftMessage}
+                  discardOutreachDraft={discardOutreachDraft}
+                  savingOutreachMessage={savingOutreachMessage}
+                  saveOutreachMessage={saveOutreachMessage}
+                  mergingOutcome={mergingOutcome}
+                  mergeOutcome={mergeOutcome}
+                />
+              )}
             </>
           )}
           <button style={S.ghost} onClick={() => selectOpportunity(null)}>← Tracked list</button>
@@ -804,6 +835,73 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
 // qualification gate chain (editing it is an admin-only JSON surface, not
 // built into this member-facing panel — see verification-current's PUT
 // route, requireAdmin-gated).
+// "After applied, there should be a nested tributary process for hiring
+// manager research and direct job outreach that can merge back to the
+// application process." Real research (findOrCreatePerson/linkRodToPerson)
+// and real drafting (reusing the M1 output pipeline via output_type
+// 'outreach_message'), never auto-sent — the member marks the real-world
+// outcome, which is what merges back into the parent opportunity's stage.
+function OutreachSection({
+  opportunityId, outreach, loading, startingOutreach, startOutreach,
+  researchingContacts, researchContacts, draftingOutreachMessage, outreachDraft, draftMessage, discardOutreachDraft,
+  savingOutreachMessage, saveOutreachMessage, mergingOutcome, mergeOutcome,
+}) {
+  return (
+    <div style={{ marginTop: '0.75rem' }}>
+      <div style={S.railSubtitle}>Outreach &amp; Hiring Manager Research</div>
+      {loading || !outreach ? (
+        <div style={S.railEmpty}>Loading…</div>
+      ) : !outreach.effort ? (
+        <button style={S.gold} onClick={() => startOutreach(opportunityId)} disabled={startingOutreach}>
+          {startingOutreach ? 'Starting…' : 'Start Outreach'}
+        </button>
+      ) : (
+        <>
+          <button style={S.ghost} onClick={() => researchContacts(opportunityId)} disabled={researchingContacts}>
+            {researchingContacts ? 'Researching…' : 'Research Hiring Manager'}
+          </button>
+          {outreach.contacts.length > 0 && (
+            <div style={{ margin: '0.4rem 0' }}>
+              {outreach.contacts.map((c) => (
+                <div key={c.id} style={S.railRow}>
+                  <span>{c.fullName} — {c.publicRole || '—'}</span>
+                  <span style={{ fontSize: '0.62rem', color: '#8b877c', textTransform: 'uppercase' }}>{c.confidenceLabel}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {outreachDraft ? (
+            <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '0.6rem', fontSize: '0.74rem', color: '#cfc9bd', margin: '0.5rem 0' }}>
+              <p style={{ margin: '0 0 0.4rem', color: '#f5f0e8', fontWeight: 600 }}>{outreachDraft.subject}</p>
+              <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{outreachDraft.body}</p>
+              <p style={{ fontSize: '0.68rem', color: '#8b877c', margin: '0.4rem 0' }}>Review before saving — never sent automatically.</p>
+              <button style={S.gold} onClick={() => saveOutreachMessage(opportunityId)} disabled={savingOutreachMessage}>{savingOutreachMessage ? 'Saving…' : 'Save Draft'}</button>
+              <button style={S.ghost} onClick={discardOutreachDraft}>Discard</button>
+            </div>
+          ) : (
+            <button style={S.ghost} onClick={() => draftMessage(opportunityId)} disabled={draftingOutreachMessage}>
+              {draftingOutreachMessage ? 'Drafting…' : 'Draft Outreach Message'}
+            </button>
+          )}
+
+          <div style={{ marginTop: '0.5rem' }}>
+            <div style={{ fontSize: '0.68rem', color: '#8b877c', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Mark Outcome</div>
+            {['response_received', 'interview_scheduled', 'no_response'].map((outcome) => (
+              <button
+                key={outcome} style={{ ...S.ghostSmall, marginRight: '0.3rem', marginBottom: '0.3rem' }}
+                onClick={() => mergeOutcome(outreach.effort.id, outcome, opportunityId)} disabled={mergingOutcome}
+              >
+                {outcome.replace(/_/g, ' ')}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function AutomationPanel({ automation, loading, setSchedule, verifyingPipeline, verifyPipelineNow, runningAutoQueue, runAutoQueueNow }) {
   if (loading || !automation) return <div style={S.railEmpty}>Loading automation settings…</div>;
   const { schedules, presets, gates } = automation;

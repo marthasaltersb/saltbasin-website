@@ -1092,6 +1092,7 @@ async function bootstrap() {
     ['proposal_experience', 'Proposal / Member Experience', "A Member's guided 9-stage Proposal Experience journey (Welcome->Workspace) — the landing experience on /member login, governed as a Channel Rod (2026-07-29, Member Experience Module).", true, 5],
     ['commercial_opportunity_target', 'Commercial Opportunity Target', 'A tracked company/event-pair opportunity in the Salt Basin commercial pipeline — one rod per company-event pair per the Weekly Research & Outreach Master Agent spec (2026-08-06).', true, 6],
     ['career_opportunity_target', 'Career Opportunity Target', "A tracked external job opening/lead in a Member's career pipeline, Tributary-linked to their own Career Master rod — one rod per opportunity per the Weekly Research & Outreach Master Agent spec (2026-08-06).", true, 7],
+    ['career_outreach_effort', 'Career Outreach Effort', "A member's hiring-manager-research + direct-outreach process for one applied-to career opportunity — Tributary-linked (hierarchical) to the career_opportunity_target rod it's pursuing outreach for (2026-08-09).", true, 8],
   ]) {
     await sql.unsafe(
       `INSERT INTO journey_rod_types (id, label, description, is_active, sort_order, created_at, updated_at)

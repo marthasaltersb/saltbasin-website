@@ -21,6 +21,9 @@ import { dispatchRaw } from '../lib/email.js';
 import archiver from 'archiver';
 import { parseCareerPipelineWorkbook, rowToOpportunityPayload } from '../lib/careerPipelineImport.js';
 import { extractResumeText } from '../lib/careerResumeExtraction.js';
+import { getOutreachEffort, startOutreachEffort, mergeOutreachOutcomeToApplication } from '../lib/careerOutreachRollups.js';
+import { researchHiringManagers } from '../lib/hiringManagerResearchAgent.js';
+import { draftOutreachMessage } from '../lib/outreachDraftAgent.js';
 import { upsertAgentSchedule, GATE_ACTION_KEYS } from '../lib/opportunityPipelineRegistry.js';
 import { resolveConfigEnvelope } from '../lib/configEnvelope.js';
 import '../lib/agentCadenceEnvelope.js';
@@ -550,6 +553,82 @@ router.put('/verification-current', requireAdmin, async (req, res) => {
     `).run({ gateModel: 'qualification_gate_chain', gates }, now);
     const updated = await getCurrent('career_opportunity_verification_v1');
     res.json({ currentKey: updated.currentKey, label: updated.label, gates: updated.entryCriteria.gates });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Nested outreach Tributary (2026-08-09) — "after applied, there should be
+// a nested tributary process for hiring manager research and direct job
+// outreach that can merge back to the application process." See
+// careerOutreachRollups.js's header for the orchestration; the actual
+// research/drafting logic lives in hiringManagerResearchAgent.js/
+// outreachDraftAgent.js.
+router.get('/opportunities/:id/outreach', requireUser, async (req, res) => {
+  try {
+    const effort = await getOutreachEffort(req.user.id, Number(req.params.id));
+    res.json(effort);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.post('/opportunities/:id/outreach/start', requireUser, async (req, res) => {
+  try {
+    const effort = await startOutreachEffort(req.user.id, Number(req.params.id));
+    res.status(201).json(effort);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.post('/opportunities/:id/outreach/research-contacts', requireUser, async (req, res) => {
+  try {
+    const contacts = await researchHiringManagers(req.user.id, Number(req.params.id));
+    res.json({ contacts });
+  } catch (e) {
+    res.status(e.status === 429 ? 429 : 400).json({ error: e.message });
+  }
+});
+
+// Review-only, same shape as generate-resume/generate-cover-letter — does
+// NOT persist anything until the member explicitly approves via
+// POST /opportunities/:id/outreach/messages.
+router.post('/opportunities/:id/outreach/draft-message', requireUser, async (req, res) => {
+  try {
+    const draft = await draftOutreachMessage(req.user.id, Number(req.params.id));
+    res.json({ draft });
+  } catch (e) {
+    res.status(e.status === 429 ? 429 : 400).json({ error: e.message });
+  }
+});
+
+// Persists an approved outreach draft through the exact same
+// createResumeOutputProjection() path resume/cover-letter outputs use —
+// output_type: 'outreach_message' — so it's viewable/downloadable/emailable
+// via the identical M1 routes with zero new mechanism.
+router.post('/opportunities/:id/outreach/messages', requireUser, async (req, res) => {
+  try {
+    await requireOwnedOpportunity(req.user.id, Number(req.params.id));
+    const { subject, body, sourceRowId } = req.body || {};
+    const projection = await createResumeOutputProjection(req.user.id, {
+      presetId: 'agent_generated',
+      presetName: `Outreach Message — ${subject || 'Untitled'}`,
+      careerOpportunityRodId: Number(req.params.id),
+      generatedContent: { rawText: `Subject: ${subject}\n\n${body}` },
+      outputType: 'outreach_message',
+    });
+    res.status(201).json(projection);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.post('/outreach/:id/merge-outcome', requireUser, async (req, res) => {
+  try {
+    const { outcome } = req.body || {};
+    const result = await mergeOutreachOutcomeToApplication(req.user.id, Number(req.params.id), outcome);
+    res.json(result);
   } catch (e) {
     res.status(400).json({ error: e.message });
   }

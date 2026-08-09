@@ -71,6 +71,100 @@ export function useCareerPlacementAgents({ enabled = true } = {}) {
   const [loadingAutomation, setLoadingAutomation] = useState(false);
   const [importingOutput, setImportingOutput] = useState(false);
 
+  // Nested outreach Tributary (2026-08-09) — "after applied, a nested
+  // tributary process for hiring manager research and direct job outreach
+  // that can merge back to the application process."
+  const [outreach, setOutreach] = useState(null); // { effort, contacts } — loaded on demand
+  const [loadingOutreach, setLoadingOutreach] = useState(false);
+  const [startingOutreach, setStartingOutreach] = useState(false);
+  const [researchingContacts, setResearchingContacts] = useState(false);
+  const [draftingOutreachMessage, setDraftingOutreachMessage] = useState(false);
+  const [outreachDraft, setOutreachDraft] = useState(null);
+  const [savingOutreachMessage, setSavingOutreachMessage] = useState(false);
+  const [mergingOutcome, setMergingOutcome] = useState(false);
+
+  async function loadOutreach(opportunityId) {
+    setLoadingOutreach(true);
+    try {
+      const effort = await api.getOutreachEffort(opportunityId);
+      setOutreach(effort);
+    } catch (e) {
+      toast('Could not load outreach: ' + e.message);
+    } finally {
+      setLoadingOutreach(false);
+    }
+  }
+
+  async function startOutreach(opportunityId) {
+    setStartingOutreach(true);
+    try {
+      const effort = await api.startOutreachEffort(opportunityId);
+      setOutreach(effort);
+    } catch (e) {
+      toast('Could not start outreach: ' + e.message);
+    } finally {
+      setStartingOutreach(false);
+    }
+  }
+
+  async function researchContacts(opportunityId) {
+    setResearchingContacts(true);
+    try {
+      const { contacts } = await api.researchHiringContacts(opportunityId);
+      toast(`Found ${contacts.length} contact(s).`);
+      loadOutreach(opportunityId);
+    } catch (e) {
+      toast('Research failed: ' + e.message);
+    } finally {
+      setResearchingContacts(false);
+    }
+  }
+
+  async function draftMessage(opportunityId) {
+    setDraftingOutreachMessage(true);
+    setOutreachDraft(null);
+    try {
+      const { draft } = await api.draftOutreachMessage(opportunityId);
+      setOutreachDraft(draft);
+    } catch (e) {
+      toast('Drafting failed: ' + e.message);
+    } finally {
+      setDraftingOutreachMessage(false);
+    }
+  }
+
+  async function saveOutreachMessage(opportunityId) {
+    if (!outreachDraft) return;
+    setSavingOutreachMessage(true);
+    try {
+      await api.saveOutreachMessage(opportunityId, outreachDraft);
+      toast('Outreach message saved — see My Resume for the full text.');
+      setOutreachDraft(null);
+    } catch (e) {
+      toast('Could not save: ' + e.message);
+    } finally {
+      setSavingOutreachMessage(false);
+    }
+  }
+
+  function discardOutreachDraft() {
+    setOutreachDraft(null);
+  }
+
+  async function mergeOutcome(outreachId, outcome, opportunityId) {
+    setMergingOutcome(true);
+    try {
+      const result = await api.mergeOutreachOutcome(outreachId, outcome);
+      toast(result.mergedOpportunity ? 'Outcome recorded — application advanced to Interviewing.' : 'Outcome recorded.');
+      loadOutreach(opportunityId);
+      pipeline.reload();
+    } catch (e) {
+      toast('Could not record outcome: ' + e.message);
+    } finally {
+      setMergingOutcome(false);
+    }
+  }
+
   async function importOutputForOpportunity(opportunityId, file, outputType = 'resume') {
     setImportingOutput(true);
     try {
@@ -299,5 +393,10 @@ export function useCareerPlacementAgents({ enabled = true } = {}) {
     runningAutoQueue, runAutoQueueNow,
     automation, loadingAutomation, loadAutomation, setSchedule,
     importingOutput, importOutputForOpportunity,
+    outreach, loadingOutreach, loadOutreach, startingOutreach, startOutreach,
+    researchingContacts, researchContacts,
+    draftingOutreachMessage, outreachDraft, draftMessage, discardOutreachDraft,
+    savingOutreachMessage, saveOutreachMessage,
+    mergingOutcome, mergeOutcome,
   };
 }
