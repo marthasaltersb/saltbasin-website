@@ -48,6 +48,42 @@ export function useCareerPlacementAgents({ enabled = true } = {}) {
   const [generatingResume, setGeneratingResume] = useState(false);
   const [resumeReview, setResumeReview] = useState(null); // { content, jobDescriptionUsed } — pending human approval
   const [approvingResume, setApprovingResume] = useState(false);
+  const [importingPipeline, setImportingPipeline] = useState(false);
+  const [generatingQueue, setGeneratingQueue] = useState(false);
+
+  async function generateQueue(limit = 10) {
+    setGeneratingQueue(true);
+    try {
+      const result = await api.generateResumeQueue(limit);
+      toast(`Generated ${result.generated} resume draft(s)${result.attempted > result.generated ? ` — see My Resume for details on the rest` : ''}. Review them in My Resume → Resume Output History.`);
+      pipeline.reload();
+      return result;
+    } catch (e) {
+      toast('Resume queue generation failed: ' + e.message);
+      return null;
+    } finally {
+      setGeneratingQueue(false);
+    }
+  }
+
+  async function importPipeline(file) {
+    setImportingPipeline(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const result = await api.importCareerPipelineWorkbook(formData);
+      toast(`Imported ${result.imported} opportunit${result.imported === 1 ? 'y' : 'ies'}${result.skipped ? `, skipped ${result.skipped} already-tracked` : ''}.`);
+      if (result.errors?.length) toast(`${result.errors.length} row(s) failed to import — see console.`);
+      if (result.errors?.length) console.warn('[career pipeline import] row errors:', result.errors);
+      pipeline.reload();
+      return result;
+    } catch (e) {
+      toast('Pipeline import failed: ' + e.message);
+      return null;
+    } finally {
+      setImportingPipeline(false);
+    }
+  }
 
   async function runResearch() {
     setRunningResearch(true);
@@ -105,5 +141,7 @@ export function useCareerPlacementAgents({ enabled = true } = {}) {
     runningResearch, runResearch,
     generatingResume, resumeReview, generateResume, discardResumeReview,
     approvingResume, approveResume,
+    importingPipeline, importPipeline,
+    generatingQueue, generateQueue,
   };
 }

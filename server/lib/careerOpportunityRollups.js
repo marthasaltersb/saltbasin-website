@@ -104,7 +104,7 @@ export async function listCareerOpportunities(userId) {
  * (agent execution itself is a later phase). Optionally links a company
  * Entity by name (find-or-create, deduped).
  */
-export async function createCareerOpportunity(userId, { jobTitle, companyName = null, url = null, location = null, notes = null, proposedByAgent = false, agentRationale = null }) {
+export async function createCareerOpportunity(userId, { jobTitle, companyName = null, url = null, location = null, notes = null, proposedByAgent = false, agentRationale = null, extraMetadata = null }) {
   if (!jobTitle) throw new Error('jobTitle is required.');
   const careerRod = await getOrCreateCareerMasterRod(userId);
   const oppRod = await createJourneyTributary({
@@ -114,7 +114,11 @@ export async function createCareerOpportunity(userId, { jobTitle, companyName = 
     // proposedByAgent (2026-08-07, real job research agent): additive
     // metadata flag, never presented as equivalent to a human-verified
     // entry until reviewed — the World Shell surfaces it distinctly.
-    metadata: { jobTitle, url, location, notes, verifiedOpenAt: null, proposedByAgent, agentRationale },
+    // extraMetadata (2026-08-09, spreadsheet bulk import): additive bag for
+    // fields a specific source (e.g. a member's own pipeline tracker) wants
+    // to carry that the core rod shape doesn't name — never overrides the
+    // named fields above, which always win on key collision.
+    metadata: { ...(extraMetadata || {}), jobTitle, url, location, notes, verifiedOpenAt: null, proposedByAgent, agentRationale },
   });
   if (companyName) {
     const entity = await findOrCreateEntity({ ownerUserId: userId, canonicalName: companyName, entityType: 'company' });

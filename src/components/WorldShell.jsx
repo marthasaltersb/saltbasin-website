@@ -584,7 +584,10 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
     scoreDraft, setScoreDraft, handleSaveScore, saving,
     runningResearch, runResearch,
     generatingResume, resumeReview, generateResume, discardResumeReview, approvingResume, approveResume,
+    importingPipeline, importPipeline,
+    generatingQueue, generateQueue,
   } = pipeline;
+  const importInputRef = useRef(null);
 
   return (
     <div style={S.rail}>
@@ -649,9 +652,21 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
             <button style={S.ghostSmall} onClick={() => setShowAddForm((v) => !v)}>{showAddForm ? 'Cancel' : '+ Add'}</button>
           </div>
           {!isCommercial && (
-            <button style={S.ghost} onClick={runResearch} disabled={runningResearch}>
-              {runningResearch ? 'Researching…' : 'Run Job Research'}
-            </button>
+            <>
+              <button style={S.ghost} onClick={runResearch} disabled={runningResearch}>
+                {runningResearch ? 'Researching…' : 'Run Job Research'}
+              </button>
+              <input
+                ref={importInputRef} type="file" accept=".xlsx,.xls" style={{ display: 'none' }}
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) importPipeline(f); e.target.value = ''; }}
+              />
+              <button style={S.ghost} onClick={() => importInputRef.current?.click()} disabled={importingPipeline}>
+                {importingPipeline ? 'Importing…' : 'Import Pipeline Spreadsheet'}
+              </button>
+              <button style={S.ghost} onClick={() => generateQueue(10)} disabled={generatingQueue}>
+                {generatingQueue ? 'Generating queue…' : 'Generate Resume Queue (top 10)'}
+              </button>
+            </>
           )}
           {showAddForm && (
             <form onSubmit={handleAddOpportunity} style={S.addForm}>
@@ -678,6 +693,10 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
               <span>
                 {o.metadata?.jobTitle || o.metadata?.companyName}
                 {o.metadata?.proposedByAgent && <span style={{ color: '#c4843a', fontSize: '0.62rem', marginLeft: '0.4rem', textTransform: 'uppercase' }}>Agent-proposed</span>}
+                {o.metadata?.priority && <span style={{ color: '#8fadb6', fontSize: '0.62rem', marginLeft: '0.4rem', textTransform: 'uppercase' }}>{o.metadata.priority}</span>}
+                {o.metadata?.applicationStage && o.metadata.applicationStage !== 'Not Started' && (
+                  <span style={{ color: '#8fbf98', fontSize: '0.62rem', marginLeft: '0.4rem', textTransform: 'uppercase' }}>{o.metadata.applicationStage}</span>
+                )}
               </span>
               <span style={{ color: scoreColor(o.score?.score), fontWeight: 600 }}>{o.score ? Math.round(o.score.score) : '—'}</span>
             </div>

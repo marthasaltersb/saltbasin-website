@@ -416,6 +416,13 @@ export const api = {
   generateResumeForOpportunity: (id, body) => request(`/api/career-agents/opportunities/${id}/generate-resume`, { method: 'POST', body: JSON.stringify(body || {}) }),
   approveResumeForOpportunity: (id, body) => request(`/api/career-agents/opportunities/${id}/resume-outputs`, { method: 'POST', body: JSON.stringify(body) }),
   listResumeOutputsForOpportunity: (id) => request(`/api/career-agents/opportunities/${id}/resume-outputs`),
+  generateResumeQueue: (limit) => request('/api/career-agents/generate-resume-queue', { method: 'POST', body: JSON.stringify({ limit }) }),
+  importCareerPipelineWorkbook: async (formData) => {
+    const res = await fetch('/api/career-agents/import', { method: 'POST', credentials: 'include', body: formData });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) { const e = new Error(body?.error || `Request failed: ${res.status}`); e.status = res.status; throw e; }
+    return body;
+  },
 
   getCommercialAgentHub: () => request('/api/commercial-opportunities/agent-hub'),
   listCommercialOpportunities: () => request('/api/commercial-opportunities/opportunities'),
