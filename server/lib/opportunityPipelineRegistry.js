@@ -307,6 +307,83 @@ export function evaluateWeightedScore(current, dimensionScores = {}) {
   return { score, tier: tier?.tierLabel || null, components, missingDimensions: missing, complete: missing.length === 0 };
 }
 
+// ── Qualification gates — interprets a journey_current_definitions row whose
+// entryCriteria carries the {gateModel:'qualification_gate_chain', gates:[...]}
+// shape seeded for career_opportunity_verification_v1 (server/db.js). Same
+// sibling-interpreter relationship to currentRegistry.js as
+// evaluateWeightedScore/readCadencePlan above — currentRegistry.js itself
+// stays domain-agnostic. Deliberately pipeline-agnostic: a commercial (or
+// any future) gate chain Current can reuse readQualificationGates/
+// applyGateOutcome unchanged — "pipeline nurturing" generally, not a
+// career-specific mechanism. ──
+
+/** Pure read of a gate-chain Current's ordered gate definitions — no execution. */
+export function readQualificationGates(current) {
+  const criteria = current?.entryCriteria;
+  if (!criteria || criteria.gateModel !== 'qualification_gate_chain') {
+    throw new Error(`readQualificationGates requires a Current with entryCriteria.gateModel === 'qualification_gate_chain', got "${criteria?.gateModel}".`);
+  }
+  return criteria.gates || [];
+}
+
+function fillGateTemplate(template, vars) {
+  return String(template || '').replace(/\{(\w+)\}/g, (m, key) => (vars[key] != null ? String(vars[key]) : m));
+}
+
+function parseRodMetadata(rod) {
+  return typeof rod.metadata === 'string' ? JSON.parse(rod.metadata) : (rod.metadata || {});
+}
+
+// Extensible, action-name-keyed — "the resulting actions of those [gates]"
+// the config describes, never a per-pipeline fork. Add a new action here
+// once, every gate chain in every pipeline can reference it by name.
+const GATE_ACTION_HANDLERS = {
+  archive: async (rod, reason) => {
+    const now = Date.now();
+    const metadata = { ...parseRodMetadata(rod), archiveReason: reason, archivedAt: now };
+    await db.prepare(`UPDATE journey_data_rods SET current_stage='archived', metadata=$1::jsonb, updated_at=$2 WHERE id=$3`).run(metadata, now, rod.id);
+    return { toStage: 'archived' };
+  },
+  flag_for_review: async (rod, reason) => {
+    const now = Date.now();
+    const metadata = { ...parseRodMetadata(rod), flaggedForReview: true, flagReason: reason };
+    await db.prepare(`UPDATE journey_data_rods SET metadata=$1::jsonb, updated_at=$2 WHERE id=$3`).run(metadata, now, rod.id);
+    return { toStage: rod.current_stage };
+  },
+  advance_stage: async (rod, reason, params) => {
+    if (!params?.targetStage) throw new Error('advance_stage gate action requires params.targetStage.');
+    const now = Date.now();
+    await db.prepare(`UPDATE journey_data_rods SET current_stage=$1, updated_at=$2 WHERE id=$3`).run(params.targetStage, now, rod.id);
+    return { toStage: params.targetStage };
+  },
+  none: async (rod) => ({ toStage: rod.current_stage }),
+};
+
+/**
+ * Applies whichever action a gate's outcome (pass/fail) is configured to
+ * trigger, updates the rod, and always writes one journey_rod_events row
+ * (event_type 'qualification_gate_evaluated') — "how the events get
+ * tracked" for any pipeline's gates, reusing the existing event table, never
+ * a new log. templateVars fills {placeholders} in the configured
+ * reasonTemplate (e.g. {company}, {date} — date defaults to today if omitted).
+ */
+export async function applyGateOutcome(rod, gate, outcome, templateVars = {}) {
+  const directive = outcome.passed ? gate.onPass : gate.onFail;
+  const actionKey = directive?.action || 'none';
+  const handler = GATE_ACTION_HANDLERS[actionKey];
+  if (!handler) throw new Error(`Unknown qualification gate action "${actionKey}".`);
+  const reason = directive?.reasonTemplate
+    ? fillGateTemplate(directive.reasonTemplate, { date: new Date().toISOString().slice(0, 10), ...templateVars })
+    : null;
+  const result = await handler(rod, reason, directive?.params);
+  const now = Date.now();
+  await db.prepare(`
+    INSERT INTO journey_rod_events (rod_id, event_type, from_stage, to_stage, metadata, created_at)
+    VALUES ($1,'qualification_gate_evaluated',$2,$3,$4::jsonb,$5)
+  `).run(rod.id, rod.current_stage, result.toStage, { gateKey: gate.key, checkType: gate.checkType, passed: outcome.passed, detail: outcome.detail || null, action: actionKey, reason }, now);
+  return { action: actionKey, reason, toStage: result.toStage };
+}
+
 /** Reads the {touches:[...]} cadence definition off an outreach-cadence Current, unchanged — no scoring math, just the ordered touch plan. */
 export function readCadencePlan(current) {
   const criteria = current?.entryCriteria;
