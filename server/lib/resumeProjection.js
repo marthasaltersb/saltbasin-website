@@ -30,7 +30,7 @@ export async function computeCareerStateFingerprint(userId) {
   return { fingerprint: hash.digest('hex'), atomCount: rows.length, rodId: Number(rod.id) };
 }
 
-export async function createResumeOutputProjection(userId, { presetId, presetName, includedSections = [], regenerateFromId = null, targetJobDescription = null, careerOpportunityRodId = null, generatedContent = null }) {
+export async function createResumeOutputProjection(userId, { presetId, presetName, includedSections = [], regenerateFromId = null, targetJobDescription = null, careerOpportunityRodId = null, generatedContent = null, outputType = 'resume' }) {
   const { fingerprint, atomCount } = await computeCareerStateFingerprint(userId);
   if (!fingerprint) throw new Error('No Career Master Channel Rod or evidence found for this member — nothing to project yet.');
   const now = Date.now();
@@ -54,10 +54,10 @@ export async function createResumeOutputProjection(userId, { presetId, presetNam
 
   const result = await db.prepare(`
     INSERT INTO resume_output_projections
-      (user_id, preset_id, preset_name, included_sections, career_state_fingerprint, atom_count, generated_at, effective_career_state_at, output_status, lineage_root_id, target_job_description, targeting_result, career_opportunity_rod_id, generated_content, created_at)
-    VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7,$7,'draft',$8,$9,$10::jsonb,$11,$12::jsonb,$7)
+      (user_id, preset_id, preset_name, included_sections, career_state_fingerprint, atom_count, generated_at, effective_career_state_at, output_status, lineage_root_id, target_job_description, targeting_result, career_opportunity_rod_id, generated_content, output_type, created_at)
+    VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7,$7,'draft',$8,$9,$10::jsonb,$11,$12::jsonb,$13,$7)
     RETURNING id
-  `).run(userId, presetId, presetName || null, includedSections, fingerprint, atomCount, now, lineageRootId, targetJobDescription || null, targetingResult || null, careerOpportunityRodId, generatedContent);
+  `).run(userId, presetId, presetName || null, includedSections, fingerprint, atomCount, now, lineageRootId, targetJobDescription || null, targetingResult || null, careerOpportunityRodId, generatedContent, outputType);
   const id = Number(result.lastInsertRowid);
   if (!lineageRootId) {
     // First projection in this lineage — it's its own root.
@@ -104,6 +104,7 @@ export async function listResumeOutputProjections(userId) {
       generatedContent: row.generated_content
         ? (typeof row.generated_content === 'string' ? JSON.parse(row.generated_content) : row.generated_content)
         : null,
+      outputType: row.output_type || 'resume',
     });
   }
   return out;

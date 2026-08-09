@@ -158,6 +158,35 @@ export async function recordDimensionScores(userId, rodId, { dimensionScores, so
   return rollupOneOpportunity(await db.prepare(`SELECT * FROM journey_data_rods WHERE id=$1`).get(rodId), await getCurrent('career_match_scoring_v1'));
 }
 
+/**
+ * Approves a tracked opportunity — the real, new "human confirms this is
+ * worth pursuing" stage transition (2026-08-09). Nothing in this codebase
+ * ever transitioned current_stage off 'discovered' before this; every
+ * opportunity sat at 'discovered' forever. This is the trigger event the
+ * auto-queue dispatcher action watches for (generate resume + cover letter
+ * for a newly-approved role without the member having to click generate
+ * themselves), and it also exempts the opportunity from the qualification-
+ * gate re-verification loop, which only re-checks 'discovered' rods — an
+ * approved opportunity is the member's own confirmed decision, never
+ * silently pulled by a re-check.
+ */
+export async function approveCareerOpportunity(userId, rodId) {
+  const rod = await db.prepare(`SELECT * FROM journey_data_rods WHERE id=$1 AND rod_type='career_opportunity_target'`).get(rodId);
+  if (!rod) throw new Error('Career opportunity not found.');
+  const careerRod = await db.prepare(`SELECT * FROM journey_data_rods WHERE id=$1`).get(rod.parent_rod_id);
+  if (!careerRod || Number(careerRod.user_id) !== Number(userId)) throw new Error('Not your career opportunity.');
+  if (rod.current_stage === 'archived') throw new Error('This opportunity was archived (posting no longer live) and cannot be approved.');
+
+  const now = Date.now();
+  await db.prepare(`UPDATE journey_data_rods SET current_stage='approved', updated_at=$1 WHERE id=$2`).run(now, rodId);
+  await db.prepare(`
+    INSERT INTO journey_rod_events (rod_id, event_type, from_stage, to_stage, created_at)
+    VALUES ($1,'career_opportunity_approved',$2,'approved',$3)
+  `).run(rodId, rod.current_stage, now);
+
+  return rollupOneOpportunity(await db.prepare(`SELECT * FROM journey_data_rods WHERE id=$1`).get(rodId), await getCurrent('career_match_scoring_v1'));
+}
+
 /** Agent roster + hierarchy scoped to the career pipeline (+ shared agents), for the Agent Hub view. */
 export async function getCareerAgentHub(userId) {
   const memberships = await db.prepare(`SELECT org_id FROM org_memberships WHERE user_id=$1 LIMIT 1`).all(userId);
