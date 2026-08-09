@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SaltBasinCrystal from './SaltBasinCrystal.jsx';
 import CrystalSolarSystem from './CrystalSolarSystem.jsx';
+import DefinitionStudioJourney from './DefinitionStudioJourney.jsx';
 import { api } from '../lib/api.js';
 import { DEFAULT_EDGE_CARDS, provisionMemberWorlds } from '../data/memberWorldRegistry.js';
 import { toast } from '../lib/toast.js';
@@ -91,7 +92,7 @@ export default function MemberCrystalOrbit({ user, onOpenWorkspace }) {
       </div>
     </header>
 
-    {!activeWorld ? <section className="mco-orbit-scene" aria-label="Member crystal worlds">
+    {activeJourney?.id === 'definition-to-operation' ? <DefinitionStudioJourney onClose={() => setActiveJourney(null)} onOpenStudio={() => launchVariant(activeWorld.variants.find((variant) => variant.id === 'definition-studio'))} /> : !activeWorld ? <section className="mco-orbit-scene" aria-label="Member crystal worlds">
       <div className="mco-scene-copy"><span>YOUR PROVISIONED UNIVERSE</span><h1>Choose a world.</h1><p>Every crystal is one governed operating context. Its orbiting variants are the capabilities you can enter directly.</p></div>
       <CrystalSolarSystem worlds={worlds} memberLabel={user?.displayName?.split(' ')[0] || 'Member'} onEnterWorld={enterWorld} />
       <nav className="mco-accessible-worlds" aria-label="Available worlds">{worlds.map((world) => <button type="button" key={world.id} onClick={() => enterWorld(world)}>{world.label}</button>)}</nav>
