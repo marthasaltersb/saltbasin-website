@@ -34,10 +34,11 @@ export default function MemberDashboard() {
   if (!user) return null;
   if (params.get('workspace') === '1') {
     const orgId = params.get('org');
-    return <AdminShell scope={orgId ? 'org-admin' : 'member'} orgId={orgId || null} />;
+    const workspaceScope = orgId ? 'org-admin' : params.get('scope') === 'admin' && user.role === 'admin' ? 'admin' : 'member';
+    return <AdminShell scope={workspaceScope} orgId={orgId || null} />;
   }
-  return <MemberCrystalOrbit user={user} onOpenWorkspace={(tab, orgId) => {
-    const next = { workspace: '1', tab };
+  return <MemberCrystalOrbit user={user} onOpenWorkspace={(tab, orgId, scope = 'member') => {
+    const next = { workspace: '1', tab, scope };
     if (orgId) next.org = String(orgId);
     setParams(next);
   }} />;
