@@ -9,6 +9,7 @@ import { listConfigEnvelopes, getConfigEnvelope, resolveConfigEnvelope, writeCon
 import '../lib/methodologyEnvelopes.js'; // side effect: registers the P0 envelopes
 import '../lib/publicationFlowEnvelopes.js'; // side effect: registers the Publication journey's flow envelopes
 import '../lib/agentRunGovernance.js'; // side effect: registers the agent_run_daily_cap envelope
+import '../lib/agentCadenceEnvelope.js'; // side effect: registers the agent_cadence_presets envelope
 
 const router = express.Router();
 

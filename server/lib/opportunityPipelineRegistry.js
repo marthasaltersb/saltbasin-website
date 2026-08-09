@@ -216,17 +216,47 @@ export async function createAgentDefinition({ orgId = null, ownerUserId = null, 
   return db.prepare(`SELECT * FROM agent_definitions WHERE id=$1`).get(Number(result.lastInsertRowid));
 }
 
-export async function assignAgentSchedule({ agentDefinitionId, orgId = null, ownerUserId = null, cadence = 'on_demand', cadenceDetail = {}, triggerMode = 'scheduled', triggerMoleculeKey = null }) {
+export async function assignAgentSchedule({ agentDefinitionId, orgId = null, ownerUserId = null, cadence = 'on_demand', cadenceDetail = {}, triggerMode = 'scheduled', triggerMoleculeKey = null, actionKey = null }) {
   const now = Date.now();
   const result = await db.prepare(`
-    INSERT INTO agent_schedules (agent_definition_id, org_id, owner_user_id, cadence, cadence_detail, trigger_mode, trigger_molecule_key, is_active, created_at, updated_at)
-    VALUES ($1,$2,$3,$4,$5::jsonb,$6,$7,true,$8,$8) RETURNING id
-  `).run(agentDefinitionId, orgId, ownerUserId, cadence, cadenceDetail, triggerMode, triggerMoleculeKey, now);
+    INSERT INTO agent_schedules (agent_definition_id, org_id, owner_user_id, cadence, cadence_detail, trigger_mode, trigger_molecule_key, action_key, is_active, created_at, updated_at)
+    VALUES ($1,$2,$3,$4,$5::jsonb,$6,$7,$8,true,$9,$9) RETURNING id
+  `).run(agentDefinitionId, orgId, ownerUserId, cadence, cadenceDetail, triggerMode, triggerMoleculeKey, actionKey, now);
   return db.prepare(`SELECT * FROM agent_schedules WHERE id=$1`).get(Number(result.lastInsertRowid));
 }
 
-export async function resolveAgentSchedules(agentDefinitionId) {
-  return db.prepare(`SELECT * FROM agent_schedules WHERE agent_definition_id=$1 AND is_active=true ORDER BY created_at DESC`).all(agentDefinitionId);
+/**
+ * Create-or-update the single schedule row for a given (agent, owner/org,
+ * action) — the Automation UI changes cadence in place rather than
+ * accumulating duplicate rows every time a member re-picks a preset.
+ * next_run_at is (re)computed by the caller (agentDispatcher.js on each due
+ * run, or the schedule route on save) from the cadence preset's intervalMs —
+ * this function only persists the selection.
+ */
+export async function upsertAgentSchedule({ agentDefinitionId, orgId = null, ownerUserId = null, actionKey = null, cadence, cadenceDetail = {}, nextRunAt = null }) {
+  const existing = await db.prepare(`
+    SELECT * FROM agent_schedules
+    WHERE agent_definition_id=$1 AND action_key IS NOT DISTINCT FROM $2
+      AND org_id IS NOT DISTINCT FROM $3 AND owner_user_id IS NOT DISTINCT FROM $4
+  `).get(agentDefinitionId, actionKey, orgId, ownerUserId);
+  const now = Date.now();
+  if (existing) {
+    await db.prepare(`
+      UPDATE agent_schedules SET cadence=$1, cadence_detail=$2::jsonb, next_run_at=$3, is_active=true, updated_at=$4 WHERE id=$5
+    `).run(cadence, cadenceDetail, nextRunAt, now, existing.id);
+    return db.prepare(`SELECT * FROM agent_schedules WHERE id=$1`).get(existing.id);
+  }
+  const result = await db.prepare(`
+    INSERT INTO agent_schedules (agent_definition_id, org_id, owner_user_id, cadence, cadence_detail, action_key, next_run_at, is_active, created_at, updated_at)
+    VALUES ($1,$2,$3,$4,$5::jsonb,$6,$7,true,$8,$8) RETURNING id
+  `).run(agentDefinitionId, orgId, ownerUserId, cadence, cadenceDetail, actionKey, nextRunAt, now);
+  return db.prepare(`SELECT * FROM agent_schedules WHERE id=$1`).get(Number(result.lastInsertRowid));
+}
+
+export async function resolveAgentSchedules(agentDefinitionId, { ownerUserId = null } = {}) {
+  return ownerUserId
+    ? db.prepare(`SELECT * FROM agent_schedules WHERE agent_definition_id=$1 AND is_active=true AND (owner_user_id=$2 OR owner_user_id IS NULL) ORDER BY action_key NULLS FIRST, created_at DESC`).all(agentDefinitionId, ownerUserId)
+    : db.prepare(`SELECT * FROM agent_schedules WHERE agent_definition_id=$1 AND is_active=true ORDER BY action_key NULLS FIRST, created_at DESC`).all(agentDefinitionId);
 }
 
 /** Same org-override precedence as resolveAgentRoster(), for the approval-gate steps. */

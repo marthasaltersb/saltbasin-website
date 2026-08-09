@@ -866,6 +866,16 @@ async function bootstrap() {
     console.warn('[db] resume_output_projections agent-generation columns warning:', e.message);
   }
 
+  // output_type (2026-08-09, cover letters): distinguishes a resume
+  // projection from a cover-letter projection in the SAME table/list/status
+  // workflow rather than a parallel one — cover letters are just another
+  // kind of generated output attached to an opportunity.
+  try {
+    await sql.unsafe(`ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS output_type TEXT NOT NULL DEFAULT 'resume'`);
+  } catch (e) {
+    console.warn('[db] resume_output_projections output_type column warning:', e.message);
+  }
+
   await sql.unsafe(`
     -- ── Organization Document Projections (2026-07-27) ──────────────────────
     -- Satellite table for the 'customer_document_delivery' Tributary
@@ -4319,6 +4329,18 @@ Rod state, per event:
     console.warn('[db] agent_schedules trigger columns warning:', e.message);
   }
 
+  // action_key (2026-08-09, real dispatcher): NULL means "this agent's
+  // default action"; a non-null value scopes the schedule to one specific
+  // action a multi-action agent performs (e.g. Career Researcher's
+  // 'research' vs 'posting_verification') so each can carry its own
+  // independently-configured cadence rather than sharing one schedule row
+  // per agent.
+  try {
+    await sql.unsafe(`ALTER TABLE agent_schedules ADD COLUMN IF NOT EXISTS action_key TEXT`);
+  } catch (e) {
+    console.warn('[db] agent_schedules action_key column warning:', e.message);
+  }
+
   try {
     await sql.unsafe(`ALTER TABLE journey_rod_evidence ADD COLUMN IF NOT EXISTS source_tier SMALLINT`);
   } catch (e) {
@@ -4488,6 +4510,35 @@ Rod state, per event:
          VALUES ($1,NULL,$2,$3,'channel_current',NULL,'[]'::jsonb,$4::jsonb,'[]'::jsonb,'[]'::jsonb,'[]'::jsonb,$5,$5)
          ON CONFLICT (current_key) WHERE org_id IS NULL DO NOTHING`,
         [currentKey, label, rodType, { cadenceModel: 'touch_sequence', touches }, nowCurrentSeed]
+      );
+    }
+
+    // Qualification gate chain Currents (2026-08-09) — a third entryCriteria
+    // shape (gateModel) alongside scoringModel/cadenceModel above, same
+    // org-overridable seam. Interpreted by readQualificationGates()/
+    // applyGateOutcome() in opportunityPipelineRegistry.js. Only career is
+    // seeded this pass — commercial's equivalent research/verification agent
+    // doesn't exist yet, so a commercial gate chain would have nothing to
+    // execute it; add commercial_opportunity_verification_v1 when that agent
+    // is built, not before.
+    for (const [currentKey, label, rodType, gates] of [
+      ['career_opportunity_verification_v1', 'Career Opportunity Verification', 'career_opportunity_target',
+        [
+          {
+            key: 'posting_still_live',
+            label: 'Posting still live on company careers site',
+            checkType: 'posting_still_live',
+            params: {},
+            onFail: { action: 'archive', reasonTemplate: 'Posting no longer found on {company}\'s careers site as of {date}.' },
+            onPass: { action: 'none' },
+          },
+        ]],
+    ]) {
+      await sql.unsafe(
+        `INSERT INTO journey_current_definitions (current_key, org_id, label, rod_type, scope_type, primary_scenario_key, port_stages, entry_criteria, minimum_carry, transition_rules, tributary_trigger_rules, created_at, updated_at)
+         VALUES ($1,NULL,$2,$3,'channel_current',NULL,'[]'::jsonb,$4::jsonb,'[]'::jsonb,'[]'::jsonb,'[]'::jsonb,$5,$5)
+         ON CONFLICT (current_key) WHERE org_id IS NULL DO NOTHING`,
+        [currentKey, label, rodType, { gateModel: 'qualification_gate_chain', gates }, nowCurrentSeed]
       );
     }
   } catch (e) {
