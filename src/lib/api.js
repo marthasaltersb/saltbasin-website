@@ -107,6 +107,7 @@ export const api = {
     request('/api/member-config/draft', { method: 'PUT', body: JSON.stringify(config) }),
   publishMemberConfig: () => request('/api/member-config/publish', { method: 'POST' }),
   getOrgPortalContext: (id) => request(`/api/org-portal/${id}/context`),
+  getMyOrganizations: () => request('/api/profiles/me/orgs'),
   getOrgSite: (id) => request(`/api/org-portal/${id}/site`),
   saveOrgSite: (id, data) => request(`/api/org-portal/${id}/site`, { method: 'PUT', body: JSON.stringify(data) }),
   getOrgConfig: (id) => request(`/api/org-portal/${id}/config`),
@@ -118,6 +119,11 @@ export const api = {
   getOrgDocuments: (id) => request(`/api/org-portal/${id}/documents`),
   getOrgDocument: (id, docId) => request(`/api/org-portal/${id}/documents/${docId}`),
   getMemberEmails: () => request('/api/members/me/emails'),
+  addMemberEmail: (email, type) => request('/api/members/me/emails', { method: 'POST', body: JSON.stringify({ email, type }) }),
+  verifyMemberEmail: (id, code) => request(`/api/members/me/emails/${id}/verify`, { method: 'POST', body: JSON.stringify({ code }) }),
+  resendMemberEmailVerification: (id) => request(`/api/members/me/emails/${id}/resend`, { method: 'POST' }),
+  removeMemberEmail: (id) => request(`/api/members/me/emails/${id}`, { method: 'DELETE' }),
+  getMyLicenses: () => request('/api/profiles/me/licenses'),
 
   // Public — used by the Salt Basin home page Net Works banner.
   listFeaturedMembers: () => request('/api/member-site/featured'),

@@ -1,0 +1,143 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import SaltBasinCrystal from './SaltBasinCrystal.jsx';
+import { api } from '../lib/api.js';
+import { DEFAULT_EDGE_CARDS, provisionMemberWorlds } from '../data/memberWorldRegistry.js';
+import { toast } from '../lib/toast.js';
+
+const STORAGE_KEY = 'sb_member_orbit_preferences_v1';
+
+function loadPreferences() {
+  try { return { cards: DEFAULT_EDGE_CARDS, shortcuts: [], ...JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') }; }
+  catch { return { cards: DEFAULT_EDGE_CARDS, shortcuts: [] }; }
+}
+
+function HealthPill({ value = 82 }) {
+  const tone = value >= 80 ? 'healthy' : value >= 55 ? 'watch' : 'risk';
+  return <span className={`mco-health ${tone}`}>{value}% healthy</span>;
+}
+
+export default function MemberCrystalOrbit({ user, onOpenWorkspace }) {
+  const navigate = useNavigate();
+  const [entitlements, setEntitlements] = useState([]);
+  const [organizations, setOrganizations] = useState([]);
+  const [emails, setEmails] = useState([]);
+  const [licenses, setLicenses] = useState([]);
+  const [activeWorldId, setActiveWorldId] = useState(null);
+  const [activeJourney, setActiveJourney] = useState(null);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [customizeOpen, setCustomizeOpen] = useState(false);
+  const [agentOpen, setAgentOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState({});
+  const [preferences, setPreferences] = useState(loadPreferences);
+  const [newEmail, setNewEmail] = useState('');
+  const [emailType, setEmailType] = useState('personal');
+  const [verification, setVerification] = useState({});
+
+  useEffect(() => {
+    Promise.allSettled([api.getMemberEntitlements(), api.getMyOrganizations(), api.getMemberEmails(), api.getMyLicenses()])
+      .then(([e, o, m, l]) => {
+        if (e.status === 'fulfilled') setEntitlements(e.value.entitlements || e.value || []);
+        if (o.status === 'fulfilled') setOrganizations(o.value.organizations || o.value || []);
+        if (m.status === 'fulfilled') setEmails(m.value.emails || []);
+        if (l.status === 'fulfilled') setLicenses(l.value || []);
+      });
+  }, []);
+
+  useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences)); }, [preferences]);
+
+  const worlds = useMemo(() => provisionMemberWorlds({ user, entitlements, organizations }), [user, entitlements, organizations]);
+  const activeWorld = worlds.find((world) => world.id === activeWorldId) || null;
+
+  function enterWorld(world) {
+    if (world.id === 'account') { setAccountOpen(true); return; }
+    setActiveJourney(null);
+    setActiveWorldId(world.id);
+  }
+
+  function launchVariant(variant) {
+    if (variant.action === 'account') { setAccountOpen(true); return; }
+    const orgId = activeWorld?.organization?.id;
+    onOpenWorkspace(variant.tab || 'content', orgId);
+  }
+
+  async function addEmail(event) {
+    event.preventDefault();
+    try {
+      const result = await api.addMemberEmail(newEmail, emailType);
+      setEmails((items) => [...items, result]); setNewEmail(''); toast.success('Verification code sent');
+    } catch (error) { toast.error(error.message); }
+  }
+
+  async function verifyEmail(id) {
+    try {
+      await api.verifyMemberEmail(id, verification[id]);
+      setEmails((items) => items.map((item) => item.id === id ? { ...item, verified: true } : item));
+      toast.success('Email verified');
+    } catch (error) { toast.error(error.message); }
+  }
+
+  const visibleCards = preferences.cards.filter((card) => card.enabled);
+  return <main className="mco-shell">
+    <header className="mco-topbar">
+      <button type="button" className="mco-brand" onClick={() => { setActiveWorldId(null); setActiveJourney(null); }}>SALT BASIN <span>CRYSTAL ORBIT</span></button>
+      <div className="mco-top-actions">
+        <button type="button" onClick={() => setCustomizeOpen(true)}>Shape my home</button>
+        <button type="button" onClick={() => setAccountOpen(true)}>{user?.displayName || user?.email || 'My account'}</button>
+      </div>
+    </header>
+
+    {!activeWorld ? <section className="mco-orbit-scene" aria-label="Member crystal worlds">
+      <div className="mco-scene-copy"><span>YOUR PROVISIONED UNIVERSE</span><h1>Choose a world.</h1><p>Every crystal is one governed operating context. Its orbiting variants are the capabilities you can enter directly.</p></div>
+      <div className="mco-world-system" style={{ '--world-count': worlds.length }}>
+        <div className="mco-orbit-ring ring-a" /><div className="mco-orbit-ring ring-b" />
+        {worlds.map((world, index) => <button key={world.id} type="button" className={`mco-world-node world-${index}`} style={{ '--i': index, '--accent': world.accent }} onClick={() => enterWorld(world)}>
+          <SaltBasinCrystal size="orbit" variant={index % 3 === 0 ? 'engine' : index % 3 === 1 ? 'rings' : 'hourglass'} />
+          <strong>{world.label}</strong><span>{world.variants.length} capability orbits</span>
+        </button>)}
+        <button type="button" className="mco-center-crystal" onClick={() => enterWorld(worlds.find((world) => world.id === 'member') || worlds[0])} aria-label="Enter primary member world">
+          <SaltBasinCrystal size="hero" variant="rings" /><b>{user?.displayName?.split(' ')[0] || 'Member'}</b><span>Enter your universe</span>
+        </button>
+      </div>
+      <div className="mco-edge-cards left">{visibleCards.slice(0, 2).map((card) => <EdgeCard key={card.id} card={card} collapsed={collapsed[card.id]} onToggle={() => setCollapsed((v) => ({ ...v, [card.id]: !v[card.id] }))} />)}</div>
+      <div className="mco-edge-cards right">{visibleCards.slice(2).map((card) => <EdgeCard key={card.id} card={card} collapsed={collapsed[card.id]} onToggle={() => setCollapsed((v) => ({ ...v, [card.id]: !v[card.id] }))} />)}</div>
+    </section> : <WorldCity world={activeWorld} activeJourney={activeJourney} setActiveJourney={setActiveJourney} onBack={() => { setActiveWorldId(null); setActiveJourney(null); }} onLaunch={launchVariant} />}
+
+    <button type="button" className="mco-besty" onClick={() => setAgentOpen((v) => !v)} aria-expanded={agentOpen}><SaltBasinCrystal size="orbit" variant="engine" /><span>BestyStaff</span></button>
+    {agentOpen && <aside className="mco-agent-panel"><button type="button" onClick={() => setAgentOpen(false)}>Close</button><span>CONTEXTUAL GUIDANCE</span><h2>BestyStaff is in this world with you.</h2><p>I can explain the selected capability, trace its definitions and evidence, prepare an agent action, or guide you through the next journey gate.</p><div className="mco-agent-prompts"><button>What needs my review?</button><button>Explain this worldâ€™s health</button><button>Continue my highest-priority journey</button></div></aside>}
+    {accountOpen && <AccountDrawer user={user} emails={emails} licenses={licenses} organizations={organizations} newEmail={newEmail} setNewEmail={setNewEmail} emailType={emailType} setEmailType={setEmailType} verification={verification} setVerification={setVerification} addEmail={addEmail} verifyEmail={verifyEmail} onClose={() => setAccountOpen(false)} onCustomize={() => { setAccountOpen(false); setCustomizeOpen(true); }} />}
+    {customizeOpen && <CustomizeDrawer worlds={worlds} preferences={preferences} setPreferences={setPreferences} onClose={() => setCustomizeOpen(false)} />}
+  </main>;
+}
+
+function EdgeCard({ card, collapsed, onToggle }) {
+  return <article className={`mco-edge-card${collapsed ? ' collapsed' : ''}`}><button type="button" onClick={onToggle} aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${card.label}`}>{collapsed ? '+' : 'âˆ’'}</button><span>{card.label}</span><strong>{card.value}</strong>{!collapsed && <p>{card.detail}</p>}</article>;
+}
+
+function WorldCity({ world, activeJourney, setActiveJourney, onBack, onLaunch }) {
+  return <section className="mco-city-scene" style={{ '--accent': world.accent }}>
+    <div className="mco-city-sky" /><header><button type="button" onClick={onBack}>â† All worlds</button><div><span>{world.shortLabel} world</span><h1>{world.label}</h1><p>{world.description}</p></div><HealthPill /></header>
+    <div className="mco-river river-one" /><div className="mco-river river-two" />
+    <div className="mco-city-grid">{world.variants.map((variant, index) => <button type="button" key={variant.id} className="mco-building" style={{ '--h': `${100 + (index % 4) * 34}px`, '--delay': `${index * 60}ms` }} onClick={() => onLaunch(variant)}>
+      <span className="mco-building-crystal"><SaltBasinCrystal size="orbit" variant={index % 2 ? 'rings' : 'engine'} /></span><i /><b>{variant.icon}</b><strong>{variant.label}</strong><small>{72 + ((index * 7) % 27)}% mature Â· {2 + index} agents</small>
+    </button>)}</div>
+    <aside className="mco-journey-dock"><span>FLOWING JOURNEYS</span>{world.journeys.map((journey) => <button key={journey.id} type="button" className={activeJourney?.id === journey.id ? 'active' : ''} onClick={() => setActiveJourney(journey)}>{journey.label}<small>{journey.stages.length} gates</small></button>)}</aside>
+    {activeJourney && <div className="mco-journey-path"><button type="button" onClick={() => setActiveJourney(null)}>Ã—</button><span>ENTERED JOURNEY</span><h2>{activeJourney.label}</h2><div>{activeJourney.stages.map((stage, index) => <React.Fragment key={stage}><button type="button" className={index === 0 ? 'current' : ''}><b>{index + 1}</b><span>{stage}</span></button>{index < activeJourney.stages.length - 1 && <i />}</React.Fragment>)}</div></div>}
+  </section>;
+}
+
+function AccountDrawer({ user, emails, licenses, organizations, newEmail, setNewEmail, emailType, setEmailType, verification, setVerification, addEmail, verifyEmail, onClose, onCustomize }) {
+  return <aside className="mco-drawer wide"><header><div><span>ACCOUNT CRYSTAL</span><h2>Member account settings</h2></div><button type="button" onClick={onClose}>Ã—</button></header><div className="mco-account-grid">
+    <section><h3>Identity & verified emails</h3><p className="mco-muted">{user?.displayName || 'Salt Basin Member'} Â· {user?.role || 'member'}</p>{emails.map((email) => <div className="mco-email-row" key={email.id}><div><strong>{email.email}</strong><span>{email.type} Â· {email.verified ? 'Verified' : 'Verification pending'}</span></div>{!email.verified && <div><input aria-label="Verification code" placeholder="6-digit code" value={verification[email.id] || ''} onChange={(e) => setVerification((v) => ({ ...v, [email.id]: e.target.value }))}/><button type="button" onClick={() => verifyEmail(email.id)}>Verify</button></div>}</div>)}<form onSubmit={addEmail} className="mco-inline-form"><input type="email" required placeholder="Add another email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)}/><select value={emailType} onChange={(e) => setEmailType(e.target.value)}><option value="personal">Personal</option><option value="work">Work</option></select><button>Add & verify</button></form></section>
+    <section><h3>Payment & sponsoring accounts</h3><div className="mco-setting-card"><strong>Direct purchase methods</strong><span>Managed through secure checkout when a paid plan is selected.</span><button type="button" disabled>Add payment method Â· coming next</button></div>{organizations.length ? organizations.map((org) => <div className="mco-setting-card" key={org.id}><strong>{org.name}</strong><span>Linked entitlement organization Â· organization-sponsored access</span></div>) : <p className="mco-muted">No sponsoring organization is linked yet.</p>}</section>
+    <section><h3>Subscriptions & licensed modules</h3>{licenses.length ? licenses.map((license) => <div className="mco-license" key={license.id || license.license_id}><span>{license.product_id || license.productId || 'Salt Basin module'}</span><strong>{license.tier || license.access_mode || 'Active'}</strong></div>) : <div className="mco-setting-card"><strong>Career Foundation</strong><span>Provisioned member baseline Â· active</span></div>}<button type="button" className="mco-text-action" onClick={onCustomize}>Configure home shortcuts and cards â†’</button></section>
+    <section><h3>Security & approvals</h3><div className="mco-setting-card"><strong>Journey permissions</strong><span>Collaboration invitations and agent actions inherit world, organization, capability, and record-level permission checks.</span></div><button type="button" className="mco-text-action">Change password in security workspace â†’</button></section>
+  </div></aside>;
+}
+
+function CustomizeDrawer({ worlds, preferences, setPreferences, onClose }) {
+  function toggleCard(id) { setPreferences((p) => ({ ...p, cards: p.cards.map((card) => card.id === id ? { ...card, enabled: !card.enabled } : card) })); }
+  function toggleShortcut(id) { setPreferences((p) => ({ ...p, shortcuts: p.shortcuts.includes(id) ? p.shortcuts.filter((item) => item !== id) : [...p.shortcuts, id] })); }
+  return <aside className="mco-drawer"><header><div><span>HOME CONFIGURATION</span><h2>Shape your orbit</h2></div><button type="button" onClick={onClose}>Ã—</button></header><section><h3>Edge dashboard cards</h3>{preferences.cards.map((card) => <label className="mco-toggle-row" key={card.id}><div><strong>{card.label}</strong><span>{card.detail}</span></div><input type="checkbox" checked={card.enabled} onChange={() => toggleCard(card.id)} /></label>)}</section><section><h3>Shortcut crystals</h3>{worlds.flatMap((world) => world.variants.map((variant) => ({ ...variant, world: world.label }))).slice(0, 14).map((variant) => <label className="mco-toggle-row" key={`${variant.world}-${variant.id}`}><div><strong>{variant.label}</strong><span>{variant.world}</span></div><input type="checkbox" checked={preferences.shortcuts.includes(variant.id)} onChange={() => toggleShortcut(variant.id)} /></label>)}</section></aside>;
+}
+
