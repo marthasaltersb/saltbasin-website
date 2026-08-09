@@ -590,8 +590,10 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
     generatingCoverLetter, coverLetterReview, generateCoverLetter, discardCoverLetterReview, approvingCoverLetter, approveCoverLetter,
     verifyingPipeline, verifyPipelineNow, runningAutoQueue, runAutoQueueNow,
     automation, loadingAutomation, loadAutomation, setSchedule,
+    importingOutput, importOutputForOpportunity,
   } = pipeline;
   const importInputRef = useRef(null);
+  const importOutputInputRef = useRef(null);
   const [showAutomation, setShowAutomation] = useState(false);
 
   return (
@@ -675,6 +677,28 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
                   {generatingCoverLetter ? 'Generating…' : 'Generate Cover Letter for This Opportunity'}
                 </button>
               )}
+
+              <div style={S.railSubtitle}>Or Import an Existing Document</div>
+              <input
+                ref={importOutputInputRef} type="file" accept=".pdf,.docx,.txt" style={{ display: 'none' }}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) importOutputForOpportunity(selectedOpportunity.id, f, importOutputInputRef.current?.dataset.outputType || 'resume');
+                  e.target.value = '';
+                }}
+              />
+              <button
+                style={S.ghost} disabled={importingOutput}
+                onClick={() => { importOutputInputRef.current.dataset.outputType = 'resume'; importOutputInputRef.current?.click(); }}
+              >
+                {importingOutput ? 'Importing…' : 'Import Resume (PDF/DOCX/TXT)'}
+              </button>{' '}
+              <button
+                style={S.ghost} disabled={importingOutput}
+                onClick={() => { importOutputInputRef.current.dataset.outputType = 'cover_letter'; importOutputInputRef.current?.click(); }}
+              >
+                {importingOutput ? 'Importing…' : 'Import Cover Letter'}
+              </button>
             </>
           )}
           <button style={S.ghost} onClick={() => selectOpportunity(null)}>← Tracked list</button>

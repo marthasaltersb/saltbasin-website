@@ -58,6 +58,22 @@ export function useCareerPlacementAgents({ enabled = true } = {}) {
   const [runningAutoQueue, setRunningAutoQueue] = useState(false);
   const [automation, setAutomation] = useState(null); // { schedules, presets, gates } — loaded on demand
   const [loadingAutomation, setLoadingAutomation] = useState(false);
+  const [importingOutput, setImportingOutput] = useState(false);
+
+  async function importOutputForOpportunity(opportunityId, file, outputType = 'resume') {
+    setImportingOutput(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('outputType', outputType);
+      await api.importOutputForOpportunity(opportunityId, formData);
+      toast('Imported — view it in My Resume → Resume Output History.');
+    } catch (e) {
+      toast('Import failed: ' + e.message);
+    } finally {
+      setImportingOutput(false);
+    }
+  }
 
   async function loadAutomation() {
     setLoadingAutomation(true);
@@ -258,5 +274,6 @@ export function useCareerPlacementAgents({ enabled = true } = {}) {
     verifyingPipeline, verifyPipelineNow,
     runningAutoQueue, runAutoQueueNow,
     automation, loadingAutomation, loadAutomation, setSchedule,
+    importingOutput, importOutputForOpportunity,
   };
 }

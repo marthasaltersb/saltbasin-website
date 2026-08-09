@@ -20,6 +20,7 @@ import { summarizeProjectionForView, renderProjectionToPdfBuffer, filenameFor } 
 import { dispatchRaw } from '../lib/email.js';
 import archiver from 'archiver';
 import { parseCareerPipelineWorkbook, rowToOpportunityPayload } from '../lib/careerPipelineImport.js';
+import { extractResumeText } from '../lib/careerResumeExtraction.js';
 import { upsertAgentSchedule, GATE_ACTION_KEYS } from '../lib/opportunityPipelineRegistry.js';
 import { resolveConfigEnvelope } from '../lib/configEnvelope.js';
 import '../lib/agentCadenceEnvelope.js';
@@ -138,6 +139,42 @@ router.post('/research', requireUser, async (req, res) => {
   } catch (e) {
     res.status(e.status === 429 ? 429 : 400).json({ error: e.message });
   }
+});
+
+// Import an existing resume/cover-letter file the member already has for
+// this opportunity ("the import functionality can be a spreadsheet, resume
+// pdf, doc, etc.") — an alternative to AI generation, not a different
+// mechanism: reuses extractResumeText() (careerResumeExtraction.js, already
+// used by Career Master's semantic-import path) to pull the text, then goes
+// through the exact same createResumeOutputProjection() path AI-generated
+// content uses, marked source:'imported'. The uploaded binary is discarded
+// the moment its text is extracted — never written to disk or object
+// storage, matching every other output's "digital view, not the file
+// itself" rule.
+const importUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } });
+router.post('/opportunities/:id/import-output', requireUser, (req, res) => {
+  importUpload.single('file')(req, res, async (err) => {
+    if (err) return res.status(400).json({ error: err.message });
+    if (!req.file) return res.status(400).json({ error: 'file is required' });
+    try {
+      await requireOwnedOpportunity(req.user.id, Number(req.params.id));
+      const outputType = req.body?.outputType === 'cover_letter' ? 'cover_letter' : 'resume';
+      const rawText = await extractResumeText(req.file.buffer, req.file.mimetype, req.file.originalname);
+      if (!rawText.trim()) return res.status(400).json({ error: 'No text could be extracted from this file.' });
+
+      const projection = await createResumeOutputProjection(req.user.id, {
+        presetId: 'imported',
+        presetName: `Imported ${outputType === 'cover_letter' ? 'Cover Letter' : 'Resume'} — ${req.file.originalname}`,
+        careerOpportunityRodId: Number(req.params.id),
+        generatedContent: { rawText },
+        outputType,
+        source: 'imported',
+      });
+      res.status(201).json(projection);
+    } catch (e) {
+      res.status(400).json({ error: e.message });
+    }
+  });
 });
 
 // Real, evidence-grounded resume generation attached to a specific tracked

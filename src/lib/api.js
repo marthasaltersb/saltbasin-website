@@ -433,6 +433,12 @@ export const api = {
     return res.blob();
   },
   emailResumeOutputs: (projectionIds, toEmail) => request('/api/career-agents/resume-outputs/email', { method: 'POST', body: JSON.stringify({ projectionIds, toEmail }) }),
+  importOutputForOpportunity: async (opportunityId, formData) => {
+    const res = await fetch(`/api/career-agents/opportunities/${opportunityId}/import-output`, { method: 'POST', credentials: 'include', body: formData });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) { const e = new Error(body?.error || `Request failed: ${res.status}`); e.status = res.status; throw e; }
+    return body;
+  },
   generateResumeQueue: (limit) => request('/api/career-agents/generate-resume-queue', { method: 'POST', body: JSON.stringify({ limit }) }),
   approveCareerOpportunity: (id) => request(`/api/career-agents/opportunities/${id}/approve`, { method: 'POST' }),
   generateCoverLetterForOpportunity: (id, body) => request(`/api/career-agents/opportunities/${id}/generate-cover-letter`, { method: 'POST', body: JSON.stringify(body || {}) }),
