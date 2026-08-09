@@ -230,6 +230,11 @@ app.listen(port, async () => {
   // Daily digest email — fires once per day at 07:00 local server time.
   // Uses a setInterval aligned to the next 07:00 crossing.
   scheduleDailyDigest();
+
+  // Real background agent dispatcher (2026-08-09) — reads agent_schedules
+  // rows with a non-'on_demand' cadence and runs them unattended. See
+  // server/lib/agentDispatcher.js's header for why now / what it runs.
+  import('./lib/agentDispatcher.js').then(({ startAgentDispatcher }) => startAgentDispatcher());
 });
 
 function scheduleDailyDigest() {
