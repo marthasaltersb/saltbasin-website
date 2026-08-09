@@ -359,6 +359,9 @@ const GATE_ACTION_HANDLERS = {
   none: async (rod) => ({ toStage: rod.current_stage }),
 };
 
+/** The known gate action names — exported so routes can validate an admin-edited gate chain without duplicating this list. */
+export const GATE_ACTION_KEYS = Object.keys(GATE_ACTION_HANDLERS);
+
 /**
  * Applies whichever action a gate's outcome (pass/fail) is configured to
  * trigger, updates the rod, and always writes one journey_rod_events row

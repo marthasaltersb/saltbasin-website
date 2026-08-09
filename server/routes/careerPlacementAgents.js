@@ -8,12 +8,20 @@
 // so a member can track opportunities and record evidence-backed scores now.
 import { Router } from 'express';
 import multer from 'multer';
-import { requireUser } from '../auth.js';
-import { listCareerOpportunities, createCareerOpportunity, recordDimensionScores, getCareerAgentHub } from '../lib/careerOpportunityRollups.js';
+import { requireUser, requireAdmin } from '../auth.js';
+import { listCareerOpportunities, createCareerOpportunity, recordDimensionScores, getCareerAgentHub, approveCareerOpportunity } from '../lib/careerOpportunityRollups.js';
 import { researchCareerOpportunities } from '../lib/careerResearchAgent.js';
 import { generateResumeContent } from '../lib/resumeTargeting.js';
+import { generateCoverLetterContent } from '../lib/coverLetterTargeting.js';
+import { runQualificationGatesForUser } from '../lib/careerVerificationAgent.js';
+import { autoQueueOutputsForNewlyApproved } from '../lib/autoQueueAgent.js';
 import { createResumeOutputProjection, listResumeOutputProjectionsForOpportunity, listResumeOutputProjections } from '../lib/resumeProjection.js';
 import { parseCareerPipelineWorkbook, rowToOpportunityPayload } from '../lib/careerPipelineImport.js';
+import { upsertAgentSchedule, GATE_ACTION_KEYS } from '../lib/opportunityPipelineRegistry.js';
+import { resolveConfigEnvelope } from '../lib/configEnvelope.js';
+import '../lib/agentCadenceEnvelope.js';
+import { CHECKERS } from '../lib/qualificationGateCheckers.js';
+import { getCurrent } from '../lib/currentRegistry.js';
 import { db } from '../db.js';
 
 const router = Router();
@@ -174,6 +182,72 @@ router.get('/opportunities/:id/resume-outputs', requireUser, async (req, res) =>
   }
 });
 
+// The real "human confirms this is worth pursuing" stage transition
+// (2026-08-09) — see careerOpportunityRollups.js's approveCareerOpportunity
+// header for what this triggers (auto-queue eligibility, gate-loop exemption).
+router.post('/opportunities/:id/approve', requireUser, async (req, res) => {
+  try {
+    const opportunity = await approveCareerOpportunity(req.user.id, Number(req.params.id));
+    res.json(opportunity);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Cover letter generation — same review-then-explicit-approve shape as
+// generate-resume/resume-outputs above, coverLetterTargeting.js's sibling
+// generator, persisted with outputType: 'cover_letter' into the same table.
+router.post('/opportunities/:id/generate-cover-letter', requireUser, async (req, res) => {
+  try {
+    const rod = await requireOwnedOpportunity(req.user.id, Number(req.params.id));
+    const metadata = typeof rod.metadata === 'string' ? JSON.parse(rod.metadata) : rod.metadata;
+    const jobDescription = req.body?.jobDescription || metadata?.notes || metadata?.jobTitle || '';
+    const content = await generateCoverLetterContent(req.user.id, jobDescription);
+    res.json({ content, jobDescriptionUsed: jobDescription });
+  } catch (e) {
+    res.status(e.status === 429 ? 429 : 400).json({ error: e.message });
+  }
+});
+
+router.post('/opportunities/:id/cover-letter-outputs', requireUser, async (req, res) => {
+  try {
+    await requireOwnedOpportunity(req.user.id, Number(req.params.id));
+    const { generatedContent, targetJobDescription } = req.body || {};
+    const projection = await createResumeOutputProjection(req.user.id, {
+      presetId: 'agent_generated',
+      presetName: 'Agent-Generated Cover Letter',
+      careerOpportunityRodId: Number(req.params.id),
+      generatedContent,
+      targetJobDescription,
+      outputType: 'cover_letter',
+    });
+    res.status(201).json(projection);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// On-demand triggers for the same actions the dispatcher runs
+// automatically once a schedule is set below — a member shouldn't have to
+// wait for a cadence to fire just to try "Verify Pipeline Now" once.
+router.post('/verify-pipeline', requireUser, async (req, res) => {
+  try {
+    const result = await runQualificationGatesForUser(req.user.id);
+    res.json(result);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.post('/auto-queue-outputs', requireUser, async (req, res) => {
+  try {
+    const result = await autoQueueOutputsForNewlyApproved(req.user.id);
+    res.json(result);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
 const PRIORITY_ORDER = ['Very High', 'High', 'Medium', 'Low', 'Monitor'];
 function priorityRank(p) {
   const i = PRIORITY_ORDER.indexOf(p);
@@ -227,6 +301,108 @@ router.post('/generate-resume-queue', requireUser, async (req, res) => {
       }
     }
     res.json({ attempted: results.length, generated: results.filter((r) => r.status === 'generated').length, results });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// The career pipeline's schedulable agent actions — a small static list
+// (mirrors ACTION_EXECUTORS in agentDispatcher.js 1:1) rather than trying to
+// auto-derive "schedulable actions" from agent_definitions.capabilities,
+// which is free text, not a machine-checkable action registry.
+const SCHEDULABLE_ACTIONS = [
+  { agentKey: 'career_researcher', actionKey: 'research', label: 'Job Research', description: 'Search the web for new open roles matching your Career Master profile.' },
+  { agentKey: 'career_researcher', actionKey: 'posting_verification', label: 'Posting Verification', description: 'Re-check open, unapproved postings are still live; auto-archives ones that are no longer found.' },
+  { agentKey: 'resume_generator', actionKey: 'auto_queue_on_approval', label: 'Auto-Generate on Approval', description: 'Generate a resume + cover letter draft automatically for any newly-approved opportunity.' },
+];
+
+// Automation schedule config ("where can I configure the autonomous
+// agents for scheduling," 2026-08-09) — per agent-action cadence, sourced
+// from the platform-configurable agent_cadence_presets envelope.
+router.get('/schedule', requireUser, async (req, res) => {
+  try {
+    const { value: cadenceValue } = await resolveConfigEnvelope('agent_cadence_presets');
+    const rows = await db.prepare(`
+      SELECT s.*, d.key AS agent_key FROM agent_schedules s
+      JOIN agent_definitions d ON d.id = s.agent_definition_id
+      WHERE s.owner_user_id=$1 AND s.is_active=true
+    `).all(req.user.id);
+    const byActionKey = {};
+    for (const r of rows) byActionKey[`${r.agent_key}:${r.action_key}`] = r;
+
+    const schedules = SCHEDULABLE_ACTIONS.map((a) => {
+      const row = byActionKey[`${a.agentKey}:${a.actionKey}`];
+      return {
+        ...a,
+        cadence: row?.cadence || 'on_demand',
+        lastRunAt: row?.last_run_at ? Number(row.last_run_at) : null,
+        nextRunAt: row?.next_run_at ? Number(row.next_run_at) : null,
+      };
+    });
+    res.json({ schedules, presets: cadenceValue.presets });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.post('/schedule', requireUser, async (req, res) => {
+  try {
+    const { agentKey, actionKey, cadence } = req.body || {};
+    const action = SCHEDULABLE_ACTIONS.find((a) => a.agentKey === agentKey && a.actionKey === actionKey);
+    if (!action) return res.status(400).json({ error: `Unknown schedulable action "${agentKey}:${actionKey}".` });
+
+    const { value: cadenceValue } = await resolveConfigEnvelope('agent_cadence_presets');
+    const preset = cadenceValue.presets.find((p) => p.key === cadence);
+    if (!preset) return res.status(400).json({ error: `Unknown cadence "${cadence}".` });
+
+    const agentDef = await db.prepare(`SELECT id FROM agent_definitions WHERE key=$1 AND org_id IS NULL AND owner_user_id IS NULL`).get(agentKey);
+    if (!agentDef) return res.status(400).json({ error: `Unknown agent "${agentKey}".` });
+
+    const nextRunAt = preset.intervalMs ? Date.now() + preset.intervalMs : null;
+    const schedule = await upsertAgentSchedule({
+      agentDefinitionId: agentDef.id,
+      ownerUserId: req.user.id,
+      actionKey,
+      cadence,
+      nextRunAt,
+    });
+    res.json({ agentKey, actionKey, cadence: schedule.cadence, nextRunAt: schedule.next_run_at ? Number(schedule.next_run_at) : null });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Qualification gate chain — read-only view for every member (transparency:
+// "what rule decides whether my pipeline gets auto-archived"), edit is
+// admin-governed (platform default, same tier as every other cross-cutting
+// policy surface in this codebase) since a per-member override tier doesn't
+// exist for journey_current_definitions.
+router.get('/verification-current', requireUser, async (req, res) => {
+  try {
+    const current = await getCurrent('career_opportunity_verification_v1');
+    if (!current) return res.status(404).json({ error: 'career_opportunity_verification_v1 Current is not configured.' });
+    res.json({ currentKey: current.currentKey, label: current.label, gates: current.entryCriteria.gates, availableCheckTypes: Object.keys(CHECKERS), availableActions: GATE_ACTION_KEYS });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.put('/verification-current', requireAdmin, async (req, res) => {
+  try {
+    const { gates } = req.body || {};
+    if (!Array.isArray(gates) || !gates.length) return res.status(400).json({ error: 'gates must be a non-empty array.' });
+    for (const g of gates) {
+      if (!g.key || !g.checkType || !CHECKERS[g.checkType]) return res.status(400).json({ error: `Gate "${g.key || '(no key)'}" has unknown checkType "${g.checkType}".` });
+      if (g.onFail?.action && !GATE_ACTION_KEYS.includes(g.onFail.action)) return res.status(400).json({ error: `Gate "${g.key}" onFail.action "${g.onFail.action}" is not a known action (${GATE_ACTION_KEYS.join(', ')}).` });
+      if (g.onPass?.action && !GATE_ACTION_KEYS.includes(g.onPass.action)) return res.status(400).json({ error: `Gate "${g.key}" onPass.action "${g.onPass.action}" is not a known action (${GATE_ACTION_KEYS.join(', ')}).` });
+    }
+    const now = Date.now();
+    await db.prepare(`
+      UPDATE journey_current_definitions SET entry_criteria=$1::jsonb, updated_at=$2
+      WHERE current_key='career_opportunity_verification_v1' AND org_id IS NULL
+    `).run({ gateModel: 'qualification_gate_chain', gates }, now);
+    const updated = await getCurrent('career_opportunity_verification_v1');
+    res.json({ currentKey: updated.currentKey, label: updated.label, gates: updated.entryCriteria.gates });
   } catch (e) {
     res.status(400).json({ error: e.message });
   }

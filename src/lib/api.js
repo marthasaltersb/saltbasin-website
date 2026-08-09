@@ -417,6 +417,14 @@ export const api = {
   approveResumeForOpportunity: (id, body) => request(`/api/career-agents/opportunities/${id}/resume-outputs`, { method: 'POST', body: JSON.stringify(body) }),
   listResumeOutputsForOpportunity: (id) => request(`/api/career-agents/opportunities/${id}/resume-outputs`),
   generateResumeQueue: (limit) => request('/api/career-agents/generate-resume-queue', { method: 'POST', body: JSON.stringify({ limit }) }),
+  approveCareerOpportunity: (id) => request(`/api/career-agents/opportunities/${id}/approve`, { method: 'POST' }),
+  generateCoverLetterForOpportunity: (id, body) => request(`/api/career-agents/opportunities/${id}/generate-cover-letter`, { method: 'POST', body: JSON.stringify(body || {}) }),
+  approveCoverLetterForOpportunity: (id, body) => request(`/api/career-agents/opportunities/${id}/cover-letter-outputs`, { method: 'POST', body: JSON.stringify(body) }),
+  verifyCareerPipelineNow: () => request('/api/career-agents/verify-pipeline', { method: 'POST' }),
+  autoQueueCareerOutputsNow: () => request('/api/career-agents/auto-queue-outputs', { method: 'POST' }),
+  getCareerAgentSchedule: () => request('/api/career-agents/schedule'),
+  setCareerAgentSchedule: (body) => request('/api/career-agents/schedule', { method: 'POST', body: JSON.stringify(body) }),
+  getCareerVerificationCurrent: () => request('/api/career-agents/verification-current'),
   importCareerPipelineWorkbook: async (formData) => {
     const res = await fetch('/api/career-agents/import', { method: 'POST', credentials: 'include', body: formData });
     const body = await res.json().catch(() => ({}));

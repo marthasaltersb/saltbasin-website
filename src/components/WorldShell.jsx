@@ -586,8 +586,13 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
     generatingResume, resumeReview, generateResume, discardResumeReview, approvingResume, approveResume,
     importingPipeline, importPipeline,
     generatingQueue, generateQueue,
+    approvingOpportunity, approveOpportunity,
+    generatingCoverLetter, coverLetterReview, generateCoverLetter, discardCoverLetterReview, approvingCoverLetter, approveCoverLetter,
+    verifyingPipeline, verifyPipelineNow, runningAutoQueue, runAutoQueueNow,
+    automation, loadingAutomation, loadAutomation, setSchedule,
   } = pipeline;
   const importInputRef = useRef(null);
+  const [showAutomation, setShowAutomation] = useState(false);
 
   return (
     <div style={S.rail}>
@@ -623,6 +628,17 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
 
           {!isCommercial && (
             <>
+              {selectedOpportunity.currentStage === 'discovered' && (
+                <button style={S.gold} onClick={() => approveOpportunity(selectedOpportunity.id)} disabled={approvingOpportunity}>
+                  {approvingOpportunity ? 'Approving…' : 'Approve (eligible for auto-generated outputs)'}
+                </button>
+              )}
+              {selectedOpportunity.currentStage === 'archived' && (
+                <div style={{ fontSize: '0.72rem', color: '#c4843a', margin: '0.4rem 0' }}>
+                  Archived{selectedOpportunity.metadata?.archiveReason ? `: ${selectedOpportunity.metadata.archiveReason}` : ''}
+                </div>
+              )}
+
               <div style={S.railSubtitle}>Resume for This Opportunity</div>
               {resumeReview ? (
                 <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '0.6rem', fontSize: '0.74rem', color: '#cfc9bd', marginBottom: '0.5rem' }}>
@@ -639,6 +655,24 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
               ) : (
                 <button style={S.ghost} onClick={() => generateResume(selectedOpportunity.id)} disabled={generatingResume}>
                   {generatingResume ? 'Generating…' : 'Generate Resume for This Opportunity'}
+                </button>
+              )}
+
+              <div style={S.railSubtitle}>Cover Letter for This Opportunity</div>
+              {coverLetterReview ? (
+                <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '0.6rem', fontSize: '0.74rem', color: '#cfc9bd', marginBottom: '0.5rem' }}>
+                  <p style={{ margin: '0 0 0.5rem', color: '#f5f0e8' }}>{coverLetterReview.content?.openingHook}</p>
+                  {(coverLetterReview.content?.bodyParagraphs || []).map((p, i) => (
+                    <p key={i} style={{ margin: '0 0 0.4rem' }}>{p.text}</p>
+                  ))}
+                  <p style={{ margin: '0 0 0.5rem' }}>{coverLetterReview.content?.closing}</p>
+                  <p style={{ fontSize: '0.68rem', color: '#8b877c', margin: '0.4rem 0' }}>Review before approving — nothing is saved until you approve it.</p>
+                  <button style={S.gold} onClick={() => approveCoverLetter(selectedOpportunity.id)} disabled={approvingCoverLetter}>{approvingCoverLetter ? 'Saving…' : 'Approve & Save'}</button>
+                  <button style={S.ghost} onClick={discardCoverLetterReview}>Discard</button>
+                </div>
+              ) : (
+                <button style={S.ghost} onClick={() => generateCoverLetter(selectedOpportunity.id)} disabled={generatingCoverLetter}>
+                  {generatingCoverLetter ? 'Generating…' : 'Generate Cover Letter for This Opportunity'}
                 </button>
               )}
             </>
@@ -666,6 +700,23 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
               <button style={S.ghost} onClick={() => generateQueue(10)} disabled={generatingQueue}>
                 {generatingQueue ? 'Generating queue…' : 'Generate Resume Queue (top 10)'}
               </button>
+              <button
+                style={S.ghost}
+                onClick={() => { setShowAutomation((v) => !v); if (!showAutomation && !automation) loadAutomation(); }}
+              >
+                {showAutomation ? 'Hide Automation' : 'Automation & Scheduling'}
+              </button>
+              {showAutomation && (
+                <AutomationPanel
+                  automation={automation}
+                  loading={loadingAutomation}
+                  setSchedule={setSchedule}
+                  verifyingPipeline={verifyingPipeline}
+                  verifyPipelineNow={verifyPipelineNow}
+                  runningAutoQueue={runningAutoQueue}
+                  runAutoQueueNow={runAutoQueueNow}
+                />
+              )}
             </>
           )}
           {showAddForm && (
@@ -703,6 +754,57 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
           ))}
         </>
       )}
+    </div>
+  );
+}
+
+// "Where can I configure the autonomous agents for scheduling" (2026-08-09)
+// — per agent-action cadence, sourced from the platform-configurable
+// agent_cadence_presets envelope (GET/POST /api/career-agents/schedule),
+// plus on-demand triggers for the same two actions the dispatcher runs
+// automatically once a cadence is set, plus a read-only view of the active
+// qualification gate chain (editing it is an admin-only JSON surface, not
+// built into this member-facing panel — see verification-current's PUT
+// route, requireAdmin-gated).
+function AutomationPanel({ automation, loading, setSchedule, verifyingPipeline, verifyPipelineNow, runningAutoQueue, runAutoQueueNow }) {
+  if (loading || !automation) return <div style={S.railEmpty}>Loading automation settings…</div>;
+  const { schedules, presets, gates } = automation;
+
+  return (
+    <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: '0.6rem', margin: '0.4rem 0', fontSize: '0.74rem' }}>
+      <div style={S.railSubtitle}>Schedules</div>
+      {schedules.map((s) => (
+        <div key={`${s.agentKey}:${s.actionKey}`} style={{ marginBottom: '0.5rem' }}>
+          <div style={{ color: '#f5f0e8', fontWeight: 600 }}>{s.label}</div>
+          <div style={{ color: '#8b877c', fontSize: '0.68rem', marginBottom: '0.25rem' }}>{s.description}</div>
+          <select
+            style={S.dimInputWide}
+            value={s.cadence}
+            onChange={(e) => setSchedule(s.agentKey, s.actionKey, e.target.value)}
+          >
+            {presets.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
+          </select>
+          {s.nextRunAt && <div style={{ color: '#8b877c', fontSize: '0.65rem', marginTop: '0.15rem' }}>Next run: {new Date(s.nextRunAt).toLocaleString()}</div>}
+        </div>
+      ))}
+
+      <div style={S.railSubtitle}>Run Now</div>
+      <button style={S.ghostSmall} onClick={verifyPipelineNow} disabled={verifyingPipeline}>
+        {verifyingPipeline ? 'Verifying…' : 'Verify Pipeline Now'}
+      </button>{' '}
+      <button style={S.ghostSmall} onClick={runAutoQueueNow} disabled={runningAutoQueue}>
+        {runningAutoQueue ? 'Generating…' : 'Auto-Queue Outputs Now'}
+      </button>
+
+      <div style={S.railSubtitle}>Qualification Rule (platform default)</div>
+      {gates.map((g) => (
+        <div key={g.key} style={{ color: '#cfc9bd', marginBottom: '0.35rem' }}>
+          <div>{g.label}</div>
+          <div style={{ color: '#8b877c', fontSize: '0.65rem' }}>
+            If not still live → {g.onFail?.action || 'none'}{g.onFail?.reasonTemplate ? `: "${g.onFail.reasonTemplate}"` : ''}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

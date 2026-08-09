@@ -50,6 +50,115 @@ export function useCareerPlacementAgents({ enabled = true } = {}) {
   const [approvingResume, setApprovingResume] = useState(false);
   const [importingPipeline, setImportingPipeline] = useState(false);
   const [generatingQueue, setGeneratingQueue] = useState(false);
+  const [approvingOpportunity, setApprovingOpportunity] = useState(false);
+  const [generatingCoverLetter, setGeneratingCoverLetter] = useState(false);
+  const [coverLetterReview, setCoverLetterReview] = useState(null);
+  const [approvingCoverLetter, setApprovingCoverLetter] = useState(false);
+  const [verifyingPipeline, setVerifyingPipeline] = useState(false);
+  const [runningAutoQueue, setRunningAutoQueue] = useState(false);
+  const [automation, setAutomation] = useState(null); // { schedules, presets, gates } — loaded on demand
+  const [loadingAutomation, setLoadingAutomation] = useState(false);
+
+  async function loadAutomation() {
+    setLoadingAutomation(true);
+    try {
+      const [scheduleData, verificationData] = await Promise.all([
+        api.getCareerAgentSchedule(),
+        api.getCareerVerificationCurrent().catch(() => ({ gates: [] })),
+      ]);
+      setAutomation({ schedules: scheduleData.schedules, presets: scheduleData.presets, gates: verificationData.gates || [] });
+    } catch (e) {
+      toast('Could not load automation settings: ' + e.message);
+    } finally {
+      setLoadingAutomation(false);
+    }
+  }
+
+  async function setSchedule(agentKey, actionKey, cadence) {
+    try {
+      await api.setCareerAgentSchedule({ agentKey, actionKey, cadence });
+      toast('Schedule updated.');
+      loadAutomation();
+    } catch (e) {
+      toast('Could not update schedule: ' + e.message);
+    }
+  }
+
+  async function approveOpportunity(opportunityId) {
+    setApprovingOpportunity(true);
+    try {
+      await api.approveCareerOpportunity(opportunityId);
+      toast('Approved — eligible for auto-generated resume + cover letter.');
+      pipeline.reload();
+    } catch (e) {
+      toast('Could not approve: ' + e.message);
+    } finally {
+      setApprovingOpportunity(false);
+    }
+  }
+
+  async function generateCoverLetter(opportunityId, jobDescription) {
+    setGeneratingCoverLetter(true);
+    setCoverLetterReview(null);
+    try {
+      const result = await api.generateCoverLetterForOpportunity(opportunityId, { jobDescription });
+      setCoverLetterReview(result);
+    } catch (e) {
+      toast('Cover letter generation failed: ' + e.message);
+    } finally {
+      setGeneratingCoverLetter(false);
+    }
+  }
+
+  async function approveCoverLetter(opportunityId) {
+    if (!coverLetterReview) return;
+    setApprovingCoverLetter(true);
+    try {
+      await api.approveCoverLetterForOpportunity(opportunityId, {
+        generatedContent: coverLetterReview.content,
+        targetJobDescription: coverLetterReview.jobDescriptionUsed,
+      });
+      toast('Cover letter approved and saved.');
+      setCoverLetterReview(null);
+    } catch (e) {
+      toast('Could not save approved cover letter: ' + e.message);
+    } finally {
+      setApprovingCoverLetter(false);
+    }
+  }
+
+  function discardCoverLetterReview() {
+    setCoverLetterReview(null);
+  }
+
+  async function verifyPipelineNow() {
+    setVerifyingPipeline(true);
+    try {
+      const result = await api.verifyCareerPipelineNow();
+      toast(`Checked ${result.checked} posting(s)${result.archived ? `, archived ${result.archived} no-longer-live` : ''}.`);
+      pipeline.reload();
+      return result;
+    } catch (e) {
+      toast('Pipeline verification failed: ' + e.message);
+      return null;
+    } finally {
+      setVerifyingPipeline(false);
+    }
+  }
+
+  async function runAutoQueueNow() {
+    setRunningAutoQueue(true);
+    try {
+      const result = await api.autoQueueCareerOutputsNow();
+      toast(`Generated ${result.generated} output(s) for approved opportunities.`);
+      return result;
+    } catch (e) {
+      toast('Auto-queue failed: ' + e.message);
+      return null;
+    } finally {
+      setRunningAutoQueue(false);
+    }
+  }
 
   async function generateQueue(limit = 10) {
     setGeneratingQueue(true);
@@ -143,5 +252,11 @@ export function useCareerPlacementAgents({ enabled = true } = {}) {
     approvingResume, approveResume,
     importingPipeline, importPipeline,
     generatingQueue, generateQueue,
+    approvingOpportunity, approveOpportunity,
+    generatingCoverLetter, coverLetterReview, generateCoverLetter, discardCoverLetterReview,
+    approvingCoverLetter, approveCoverLetter,
+    verifyingPipeline, verifyPipelineNow,
+    runningAutoQueue, runAutoQueueNow,
+    automation, loadingAutomation, loadAutomation, setSchedule,
   };
 }
