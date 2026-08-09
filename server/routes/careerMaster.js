@@ -1071,6 +1071,19 @@ async function nextOrderIndex(table, userId) {
 // already-shipped syncSingleEntry() to populate journey_rod_evidence —
 // same single write-path every other Career Master create already uses, not
 // a second parallel evidence-only write.
+router.get('/mappings/lineage', requireUser, async (req, res) => {
+  const rows = await db.prepare(`
+    SELECT id, document_id, source_kind, source_filename, source_location, source_label,
+      entry_type, target_table, target_id, atom_key, original_value, committed_value,
+      match_type, affinity, created_at
+    FROM career_source_mappings
+    WHERE user_id=$1
+    ORDER BY created_at DESC, id DESC
+    LIMIT 500
+  `).all(req.user.id);
+  res.json({ mappings: rows });
+});
+
 router.post('/mappings/commit', requireUser, async (req, res) => {
   const body = req.body || {};
   const source = typeof body.source === 'object' && body.source ? body.source : { kind: body.source || 'career_mapping_commit' };

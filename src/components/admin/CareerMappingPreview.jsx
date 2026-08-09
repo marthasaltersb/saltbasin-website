@@ -62,7 +62,7 @@ function buildInitialEntries(proposal) {
   return out;
 }
 
-export default function CareerMappingPreview({ proposal, source, sheetWarnings = [], missingSheets = [], onCommitted, onCancel }) {
+export default function CareerMappingPreview({ proposal, source, sheetWarnings = [], missingSheets = [], onCommitted, onCancel, embedded = false }) {
   const [entries, setEntries] = useState(() => buildInitialEntries(proposal));
   const [saving, setSaving] = useState(false);
   const [classifications, setClassifications] = useState([]);
@@ -123,7 +123,7 @@ export default function CareerMappingPreview({ proposal, source, sheetWarnings =
 
   if (!entries.length) {
     return (
-      <div style={S.wrap}>
+      <div className={embedded ? 'career-mapping-preview embedded' : 'career-mapping-preview'} style={S.wrap}>
         <div style={S.empty}>No mappable Career Atom facts were found. Try a different file, or check the reference sheets in the semantic template for the expected format.</div>
         <div style={S.actions}><button style={S.btn(true, false)} onClick={onCancel}>← Back</button></div>
       </div>
@@ -131,7 +131,7 @@ export default function CareerMappingPreview({ proposal, source, sheetWarnings =
   }
 
   return (
-    <div style={S.wrap}>
+    <div className={embedded ? 'career-mapping-preview embedded' : 'career-mapping-preview'} style={S.wrap}>
       <div style={S.banner}>
         Nothing has been saved yet. Review each proposed entry below — uncheck anything you don't want, edit any value, then click "Confirm &amp; Save" to write only what's checked to your Career Master.
         {missingSheets?.length > 0 && ` (${missingSheets.length} entry-type sheet${missingSheets.length === 1 ? '' : 's'} not present in this workbook — skipped, not an error.)`}

@@ -282,6 +282,7 @@ export const api = {
   },
   commitCareerMappings: (entries, source) =>
     request('/api/career/mappings/commit', { method: 'POST', body: JSON.stringify({ entries, source }) }),
+  listCareerMappingLineage: () => request('/api/career/mappings/lineage'),
 
   // Admin nav structure (data-driven AdminShell)
   getAdminNav: () => request('/api/config/admin-nav'),
