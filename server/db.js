@@ -4617,6 +4617,23 @@ Rod state, per event:
       schedule_cron TEXT, enabled BOOLEAN NOT NULL DEFAULT FALSE, auto_branch BOOLEAN NOT NULL DEFAULT FALSE,
       config JSONB NOT NULL DEFAULT '{}', created_at BIGINT NOT NULL, updated_at BIGINT NOT NULL
     );
+    -- Production had an earlier agent_hub_definitions table. CREATE TABLE IF
+    -- NOT EXISTS does not reconcile that legacy shape, so upgrade every field
+    -- used by the scoped Agent Hub before creating indexes or seeding rows.
+    ALTER TABLE agent_hub_definitions ADD COLUMN IF NOT EXISTS public_key TEXT;
+    ALTER TABLE agent_hub_definitions ADD COLUMN IF NOT EXISTS label TEXT NOT NULL DEFAULT 'Agent';
+    ALTER TABLE agent_hub_definitions ADD COLUMN IF NOT EXISTS description TEXT;
+    ALTER TABLE agent_hub_definitions ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'code_review';
+    ALTER TABLE agent_hub_definitions ADD COLUMN IF NOT EXISTS execution_mode TEXT NOT NULL DEFAULT 'scheduled';
+    ALTER TABLE agent_hub_definitions ADD COLUMN IF NOT EXISTS scope_type TEXT NOT NULL DEFAULT 'platform';
+    ALTER TABLE agent_hub_definitions ADD COLUMN IF NOT EXISTS scope_id BIGINT;
+    ALTER TABLE agent_hub_definitions ADD COLUMN IF NOT EXISTS schedule_cron TEXT;
+    ALTER TABLE agent_hub_definitions ADD COLUMN IF NOT EXISTS enabled BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE agent_hub_definitions ADD COLUMN IF NOT EXISTS auto_branch BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE agent_hub_definitions ADD COLUMN IF NOT EXISTS config JSONB NOT NULL DEFAULT '{}';
+    ALTER TABLE agent_hub_definitions ADD COLUMN IF NOT EXISTS created_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint;
+    ALTER TABLE agent_hub_definitions ADD COLUMN IF NOT EXISTS updated_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_agent_hub_public_key ON agent_hub_definitions(public_key) WHERE public_key IS NOT NULL;
     CREATE INDEX IF NOT EXISTS idx_agent_hub_scope ON agent_hub_definitions(scope_type, scope_id);
     ALTER TABLE portfolio_requests ADD COLUMN IF NOT EXISTS agent_definition_id BIGINT REFERENCES agent_hub_definitions(id) ON DELETE SET NULL;
     ALTER TABLE portfolio_requests ADD COLUMN IF NOT EXISTS org_id BIGINT REFERENCES organization_profiles(id) ON DELETE SET NULL;
