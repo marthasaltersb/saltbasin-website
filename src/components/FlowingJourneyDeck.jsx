@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { api } from '../lib/api.js';
 
 const LAYERS = [
   { id: 'journey', label: 'Journey' },
@@ -15,29 +16,52 @@ function savedState(journeyId) {
 export default function FlowingJourneyDeck({ journey, world, onClose, onOpenTools }) {
   const [state, setState] = useState(() => savedState(journey.id));
   const [collapsed, setCollapsed] = useState(false);
+  const [careerData, setCareerData] = useState({ master: null, documents: [], runs: [] });
   const stages = journey.stages || [];
   const stage = stages[state.current] || stages[0];
   const completion = Math.round((state.completed.length / Math.max(stages.length, 1)) * 100);
   const isResume = /resume|portfolio/i.test(`${journey.id} ${journey.label}`);
-  const cards = useMemo(() => isResume ? [
-    ['Evidence coverage', `${Math.min(100, 46 + completion)}%`, 'Source records mapped to claims'],
-    ['Output readiness', `${Math.min(100, 32 + completion)}%`, 'Target-role aligned content'],
-    ['Lineage gaps', String(Math.max(0, 7 - state.completed.length)), 'Claims needing source confirmation'],
-    ['Agent reviews', String(Math.max(1, stages.length - state.completed.length)), 'Draft improvements awaiting review'],
-  ] : [
-    ['Journey health', `${Math.min(100, 54 + completion)}%`, 'Rules, evidence, and approvals'],
-    ['Structures formed', String(state.completed.length * 3 + 2), 'Atoms bonded into governed objects'],
-    ['Lineage links', String(state.completed.length * 5 + 4), 'Traceable source relationships'],
-    ['Agent reviews', String(Math.max(1, stages.length - state.completed.length)), 'Outputs awaiting convergence'],
-  ], [completion, isResume, stages.length, state.completed.length]);
+  const calculations = useMemo(() => {
+    const master = careerData.master || {};
+    const records = ['jobs', 'skills', 'tools', 'engagements'].flatMap((key) => master[key] || []);
+    const populated = records.reduce((sum, record) => sum + Object.values(record).filter((value) => value != null && value !== '' && (!Array.isArray(value) || value.length)).length, 0);
+    const possible = records.reduce((sum, record) => sum + Object.keys(record).filter((key) => !['id', 'userId', 'orderIndex'].includes(key)).length, 0);
+    const completeness = possible ? Math.round((populated / possible) * 100) : 0;
+    const traceability = records.length ? Math.min(100, Math.round((careerData.documents.length / Math.max(1, records.length / 5)) * 100)) : 0;
+    const validation = careerData.runs.length ? Math.round((careerData.runs.filter((run) => run.status === 'completed').length / careerData.runs.length) * 100) : 0;
+    const freshness = careerData.runs.some((run) => run.status === 'completed') ? 100 : 25;
+    const integrity = Math.round(completeness * .4 + traceability * .3 + validation * .2 + freshness * .1);
+    const evidenceCoverage = Math.round((completeness + traceability) / 2);
+    const approvalCoverage = Math.round((validation + completion) / 2);
+    const maturity = Math.round(completion * .45 + evidenceCoverage * .3 + approvalCoverage * .15 + traceability * .1);
+    return { records: records.length, completeness, traceability, validation, freshness, integrity, evidenceCoverage, approvalCoverage, maturity };
+  }, [careerData, completion]);
+  const cards = useMemo(() => [
+    ['Maturity', `${calculations.maturity}%`, 'Weighted journey readiness'],
+    ['Data integrity', `${calculations.integrity}%`, 'Completeness and traceability'],
+    ['Career records', String(calculations.records), 'Jobs, skills, tools, and projects'],
+    ['Mapped sources', String(careerData.documents.length), 'Uploaded evidence documents'],
+  ], [calculations, careerData.documents.length]);
 
   useEffect(() => { localStorage.setItem(`sb_flowing_journey_${journey.id}`, JSON.stringify(state)); }, [journey.id, state]);
+  useEffect(() => {
+    if (!/career|resume|placement|application/i.test(`${journey.id} ${journey.label}`)) return;
+    Promise.allSettled([api.getCareerMaster(), api.listCareerIntakeDocuments(), api.listCareerIntakeRuns()]).then(([master, documents, runs]) => setCareerData({
+      master: master.status === 'fulfilled' ? master.value : null,
+      documents: documents.status === 'fulfilled' ? (documents.value.documents || documents.value || []) : [],
+      runs: runs.status === 'fulfilled' ? (runs.value.runs || runs.value || []) : [],
+    }));
+  }, [journey.id, journey.label]);
 
   function completeCurrent() {
     setState((value) => {
       const completed = value.completed.includes(state.current) ? value.completed : [...value.completed, state.current];
       return { ...value, completed, current: Math.min(value.current + 1, stages.length - 1) };
     });
+  }
+  function openConnectedTools() {
+    if (journey.id === 'career-foundation') sessionStorage.setItem('sb_career_entry_view', state.current < 3 ? 'upload' : 'manual');
+    onOpenTools();
   }
 
   return <section className="fjd-shell" data-layer={state.view}>
@@ -48,9 +72,10 @@ export default function FlowingJourneyDeck({ journey, world, onClose, onOpenTool
     <aside className={`fjd-control-panel${collapsed ? ' collapsed' : ''}`}>
       <header><div><span>{state.view.toUpperCase()} INSPECTOR</span><h3>{stage}</h3></div><button type="button" onClick={() => setCollapsed((value) => !value)}>{collapsed ? 'Expand' : 'Collapse'}</button></header>
       {!collapsed && <><div className="fjd-cards">{cards.map(([label, value, detail]) => <article key={label}><span>{label}</span><strong>{value}</strong><small>{detail}</small></article>)}</div>
+      <details className="fjd-calculation"><summary>Show score calculations</summary><div><b>Maturity =</b><span>Gate completion {completion}% x 45%</span><span>Evidence coverage {calculations.evidenceCoverage}% x 30%</span><span>Approval coverage {calculations.approvalCoverage}% x 15%</span><span>Lineage coverage {calculations.traceability}% x 10%</span><strong>= {calculations.maturity}%</strong></div><div><b>Data integrity =</b><span>Field completeness {calculations.completeness}% x 40%</span><span>Source traceability {calculations.traceability}% x 30%</span><span>Mapping validation {calculations.validation}% x 20%</span><span>Evidence freshness {calculations.freshness}% x 10%</span><strong>= {calculations.integrity}%</strong></div></details>
       <label className="fjd-note">What should change at this coordinate?<textarea value={state.notes[state.current] || ''} placeholder={isResume ? 'Add evidence, refine the target role, or describe the output change...' : 'Define the decision, evidence, rule, or collaborator needed here...'} onChange={(event) => setState((value) => ({ ...value, notes: { ...value.notes, [state.current]: event.target.value } }))} /></label>
       <section className="fjd-agent"><span>BESTYSTAFF / CONTEXT AGENT</span><p>{isResume ? 'I can trace every claim to its source, identify evidence gaps, and preview how this coordinate changes the resume.' : 'I can explain the active structure, gather missing definitions, and prepare the next bounded action for review.'}</p><button type="button">Ask about this coordinate</button></section>
-      <div className="fjd-actions"><button type="button" onClick={onOpenTools}>Open connected tools</button><button type="button" className="primary" onClick={completeCurrent}>Form structure and continue</button></div></>}
+      <div className="fjd-actions"><button type="button" onClick={openConnectedTools}>Open connected tools</button><button type="button" className="primary" onClick={completeCurrent}>Form structure and continue</button></div></>}
     </aside>
     <footer className="fjd-status"><span>CAMERA FOCUS: COORDINATE {state.current + 1}</span><span>{state.view === 'lineage' ? 'Source-to-output paths visible' : state.view === 'structures' ? 'Atoms, molecules, and crystals visible' : state.view === 'records' ? 'Record references visible' : 'Journey river visible'}</span></footer>
   </section>;

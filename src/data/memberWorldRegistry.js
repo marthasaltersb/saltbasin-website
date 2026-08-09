@@ -47,8 +47,10 @@ export const MEMBER_WORLD_REGISTRY = [
       { id: 'career-agents', label: 'Career Agents', icon: 'AI', featureKey: 'career_agents', tab: 'agent' },
     ],
     journeys: [
-      { id: 'career-foundation', label: 'Enriched career foundation', stages: ['Source evidence', 'Define roles', 'Map capabilities', 'Approve claims', 'Compose outputs'] },
-      { id: 'resume-to-portfolio', label: 'Resume to portfolio', stages: ['Choose target role', 'Map source evidence', 'Strengthen capability claims', 'Review output language', 'Approve resume', 'Publish portfolio'] },
+      { id: 'career-foundation', label: 'Career foundation', stages: ['Upload source documents', 'Parse and map evidence', 'Review recommended mappings', 'Define jobs and roles', 'Link skills, tools, and projects', 'Approve Career Master'] },
+      { id: 'career-placement', label: 'Career placement', stages: ['Configure research agents', 'Research jobs and market signals', 'Review recommendations', 'Validate active postings', 'Approve target opportunities'] },
+      { id: 'resume-to-portfolio', label: 'Resume output review', stages: ['Select target opportunity', 'Configure resume output', 'Generate evidence-backed draft', 'Edit and review resume', 'Approve output'] },
+      { id: 'application-pipeline', label: 'Job application pipeline', stages: ['Apply for role', 'Update pipeline record', 'Track interviews', 'Record offer or outcome', 'Capture learning'] },
       { id: 'opportunity-pipeline', label: 'Career opportunity pipeline', stages: ['Discover', 'Qualify', 'Tailor', 'Engage', 'Interview', 'Convert'] },
       { id: 'member-connection', label: 'Member connection', stages: ['Discover member', 'Permission check', 'Request', 'Collaborate', 'Close loop'] },
     ],

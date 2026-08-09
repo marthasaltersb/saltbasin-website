@@ -15,7 +15,11 @@ const choices = [
 ];
 
 export default function CareerMasterEntryPoint({ scope = 'member' }) {
-  const [view, setView] = useState('manual');
+  const [view, setView] = useState(() => {
+    const requested = sessionStorage.getItem('sb_career_entry_view');
+    sessionStorage.removeItem('sb_career_entry_view');
+    return choices.some(([id]) => id === requested) ? requested : 'manual';
+  });
   return <CareerConsentGate>
     <div className="career-master-entry-layout">
       <div className="career-master-paths">

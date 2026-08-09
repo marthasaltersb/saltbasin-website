@@ -122,12 +122,13 @@ function WorldCity({ world, activeJourney, setActiveJourney, activeVariant, setA
     }
     const careerJourney = variant.id === 'career' && world.journeys.find((journey) => journey.id === 'career-foundation');
     const resumeJourney = variant.id === 'outputs' && world.journeys.find((journey) => journey.id === 'resume-to-portfolio');
-    if (careerJourney || resumeJourney) {
-      setJourneyStep(0); setActiveVariant(null); setActiveJourney(careerJourney || resumeJourney); return;
+    const placementJourney = variant.id === 'career-agents' && world.journeys.find((journey) => journey.id === 'career-placement');
+    if (careerJourney || resumeJourney || placementJourney) {
+      setJourneyStep(0); setActiveVariant(null); setActiveJourney(careerJourney || resumeJourney || placementJourney); return;
     }
     setActiveVariant(variant);
   }
-  return <section className="mco-city-scene" style={{ '--accent': world.accent }}>
+  return <section className={`mco-city-scene${activeJourney ? ' journey-active' : ''}`} style={{ '--accent': world.accent }}>
     <CrystalWorldCityScene world={world} />
     <div className="mco-city-sky" /><header><button type="button" onClick={onBack}>â† All worlds</button><div><span>{world.shortLabel} world</span><h1>{world.label}</h1><p>{world.description}</p></div><HealthPill /></header>
     <div className="mco-river river-one" /><div className="mco-river river-two" />
@@ -135,7 +136,7 @@ function WorldCity({ world, activeJourney, setActiveJourney, activeVariant, setA
       <span className="mco-building-crystal"><SaltBasinCrystal size="orbit" variant={index % 2 ? 'rings' : 'engine'} /></span><i /><b>{variant.icon}</b><strong>{variant.label}</strong><small>{72 + ((index * 7) % 27)}% mature / {2 + index} agents</small>
     </button>)}</div>
     <aside className="mco-journey-dock"><span>FLOWING JOURNEYS</span>{world.journeys.map((journey) => <button key={journey.id} type="button" className={activeJourney?.id === journey.id ? 'active' : ''} onClick={() => { setJourneyStep(0); setActiveJourney(journey); }}>{journey.label}<small>{journey.stages.length} gates</small></button>)}</aside>
-    {activeJourney && <FlowingJourneyDeck journey={activeJourney} world={world} onClose={() => setActiveJourney(null)} onOpenTools={() => onLaunch(world.variants.find((variant) => activeJourney.id === 'resume-to-portfolio' ? variant.id === 'outputs' : variant.id === 'career') || world.variants[0])} />}
+    {activeJourney && <FlowingJourneyDeck journey={activeJourney} world={world} onClose={() => setActiveJourney(null)} onOpenTools={() => onLaunch(world.variants.find((variant) => activeJourney.id === 'resume-to-portfolio' ? variant.id === 'outputs' : activeJourney.id === 'career-placement' || activeJourney.id === 'application-pipeline' ? variant.id === 'career-agents' : variant.id === 'career') || world.variants[0])} />}
     {activeVariant && !activeJourney && <SpatialWorkspace variant={activeVariant} journeys={world.journeys} onClose={() => setActiveVariant(null)} onLaunch={() => onLaunch(activeVariant)} onJourney={(journey) => { setJourneyStep(0); setActiveJourney(journey); }} />}
     {activeJourney && <div className="mco-journey-motion" style={{ '--journey-step': journeyStep, '--journey-count': Math.max(activeJourney.stages.length - 1, 1) }}><span /></div>}
     <aside className="mco-world-legend"><span>WORLD SYSTEMS</span><b>{world.variants.length} capability districts</b><b>{world.journeys.length} active rivers</b><b>{world.variants.length * 3} governed agents</b></aside>
