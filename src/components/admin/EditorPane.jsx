@@ -6,6 +6,7 @@ import ImageUploadField from './ImageUploadField.jsx';
 import IconPickerField from './IconPickerField.jsx';
 import FlexColumnsEditor, { WheelNodesEditor, FormConfig } from './FlexColumnsEditor.jsx';
 import { DEFAULT_INDUSTRY_WHEEL_NODES } from '../blocks/index.jsx';
+import { api } from '../../lib/api.js';
 
 // ── Field source-type badge + inline meta editor ──────────────────────────────
 
@@ -388,6 +389,16 @@ export default function EditorPane({ section, page, site, config, onUpdateSectio
   const [openMetaKey, setOpenMetaKey] = React.useState(null);
   const [addFieldKey, setAddFieldKey] = React.useState('');
   const [showAddField, setShowAddField] = React.useState(false);
+  const [careerDisplayDefinitions, setCareerDisplayDefinitions] = React.useState([]);
+
+  React.useEffect(() => {
+    if (section?.type !== 'careerRollupShowcase') return;
+    let cancelled = false;
+    api.getCareerExperienceDefinitions().then((result) => {
+      if (!cancelled) setCareerDisplayDefinitions((result.definitions || []).filter((x) => x.type === 'display' && x.isActive));
+    }).catch(() => { if (!cancelled) setCareerDisplayDefinitions([]); });
+    return () => { cancelled = true; };
+  }, [section?.type]);
 
   const memberDbs = site?.config?.integrations?.memberDbs || [];
 
@@ -472,11 +483,14 @@ export default function EditorPane({ section, page, site, config, onUpdateSectio
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginTop: '0.25rem' }}>
               <input
                 type="checkbox"
-                checked={!!page.hideFromNav}
-                onChange={(e) => onUpdatePage?.({ hideFromNav: e.target.checked })}
+                checked={!page.hideFromNav}
+                onChange={(e) => onUpdatePage?.({ hideFromNav: !e.target.checked })}
               />
-              <span style={{ fontSize: '0.82rem', color: 'var(--sb-sage)' }}>Hide from navigation</span>
+              <span style={{ fontSize: '0.82rem', color: 'var(--sb-sage)' }}>Show this page in the site navigation</span>
             </label>
+            <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginTop: '0.35rem', lineHeight: 1.5 }}>
+              Controls the top-level public site menu. Section sub-page links are configured separately within each section.
+            </div>
           </div>
 
           <div style={styles.card}>
@@ -666,7 +680,7 @@ export default function EditorPane({ section, page, site, config, onUpdateSectio
                 checked={!!section.navSubPage}
                 onChange={(e) => patchTop('navSubPage', e.target.checked)}
               />
-              Show as a sub-page link in the nav
+              Show this section as a sub-page link under its page
             </label>
             <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginTop: '0.35rem', lineHeight: 1.5 }}>
               When on, this section gets its own dropdown link under this page's nav item (jumps to this section). When off, the section still appears on the page — it just won't have a dedicated nav link.
@@ -732,6 +746,16 @@ export default function EditorPane({ section, page, site, config, onUpdateSectio
         )}
 
         <div style={styles.card}>
+          {section.type === 'careerRollupShowcase' && (
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={styles.cardTitle}>Connected Rollup Display</div>
+              <div style={{ fontSize: '.72rem', color: '#737980', lineHeight: 1.5, marginBottom: '.55rem' }}>Select a governed display definition from Career Master. Its rollup policy, visualization, limits, and publication visibility stay connected.</div>
+              <select className="sb-input" value={section.fields?.displayDefinitionKey || ''} onChange={(e) => patchField('displayDefinitionKey', e.target.value)}>
+                <option value="">Legacy section configuration</option>
+                {careerDisplayDefinitions.map((display) => <option key={display.key} value={display.key}>{display.label} · {display.definition?.visibility || 'private'}</option>)}
+              </select>
+            </div>
+          )}
           <div style={styles.cardTitle}>Content Fields</div>
           {section.status === 'soon' && (
             <div style={styles.fieldGroup}>
@@ -745,7 +769,7 @@ export default function EditorPane({ section, page, site, config, onUpdateSectio
             </div>
           )}
           {Object.entries(section.fields || {})
-            .filter(([k]) => k !== 'soonMsg')
+            .filter(([k]) => k !== 'soonMsg' && k !== 'displayDefinitionKey')
             // Hide legacy fixed-slot fields when the equivalent dynamic array
             // is in use — otherwise the editor would show the dynamic list
             // editor AND the redundant single-string fields below it.

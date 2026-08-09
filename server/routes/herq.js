@@ -135,16 +135,130 @@ router.post('/research', async (req, res) => {
   const user = await requireAdmin(req, res);
   if (!user) return;
   try {
-    const { title, source_name, source_type, url, stat, why_it_matters, verification_status, linked_post_refs } = req.body;
+    const {
+      title, source_name, source_type, url, stat, why_it_matters, verification_status, linked_post_refs,
+      credibility_rating, relevance_rating, novelty_rating, signal_type, topic_ref, claim_ref, evidence_status,
+    } = req.body;
     if (!title) return res.status(400).json({ error: 'Title required' });
     const id = newId('research');
     await db.prepare(`
-      INSERT INTO herq_research_inputs (id, title, source_name, source_type, url, stat, why_it_matters, verification_status, linked_post_refs, created_by, created_at)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-    `).run(id, title, source_name || null, source_type || null, url || null, stat || null, why_it_matters || null, verification_status || 'needsVerification', linked_post_refs || null, user.id, Date.now());
+      INSERT INTO herq_research_inputs
+        (id, title, source_name, source_type, url, stat, why_it_matters, verification_status, linked_post_refs, created_by, created_at,
+         credibility_rating, relevance_rating, novelty_rating, signal_type, topic_ref, claim_ref, evidence_status)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+    `).run(
+      id, title, source_name || null, source_type || null, url || null, stat || null, why_it_matters || null, verification_status || 'needsVerification', linked_post_refs || null, user.id, Date.now(),
+      credibility_rating || null, relevance_rating || null, novelty_rating || null, signal_type || null, topic_ref || null, claim_ref || null, evidence_status || 'candidate',
+    );
     res.json({ ok: true, id });
   } catch (e) {
+    console.error('[herq] create research error:', e.message);
     res.status(500).json({ error: 'Failed to create research input' });
+  }
+});
+
+router.put('/research/:id', async (req, res) => {
+  const user = await requireAdmin(req, res);
+  if (!user) return;
+  try {
+    const {
+      title, source_name, source_type, url, stat, why_it_matters, verification_status, linked_post_refs,
+      credibility_rating, relevance_rating, novelty_rating, signal_type, topic_ref, claim_ref, evidence_status,
+    } = req.body;
+    await db.prepare(`
+      UPDATE herq_research_inputs SET
+        title=COALESCE($1,title), source_name=$2, source_type=$3, url=$4, stat=$5, why_it_matters=$6,
+        verification_status=COALESCE($7,verification_status), linked_post_refs=$8,
+        credibility_rating=$9, relevance_rating=$10, novelty_rating=$11, signal_type=$12, topic_ref=$13, claim_ref=$14,
+        evidence_status=COALESCE($15,evidence_status)
+      WHERE id=$16
+    `).run(
+      title, source_name || null, source_type || null, url || null, stat || null, why_it_matters || null,
+      verification_status, linked_post_refs || null,
+      credibility_rating || null, relevance_rating || null, novelty_rating || null, signal_type || null, topic_ref || null, claim_ref || null,
+      evidence_status, req.params.id,
+    );
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[herq] update research error:', e.message);
+    res.status(500).json({ error: 'Failed to update research input' });
+  }
+});
+
+// ── Content Entry Journey items (Observation / Season / Theme / Topic /
+// Framework) — generic type-tagged rows on unified_content_items, the same
+// table /posts already uses for type='post'. No new tables: body/metadata
+// JSONB carry whatever fields a given type needs (a Topic's core
+// question/tension, a Framework's argument/evidence-sequence, etc.).
+// ────────────────────────────────────────────────────────────────────────────
+
+const ITEM_TYPES = new Set(['observation', 'season', 'theme', 'topic', 'framework']);
+
+router.get('/items', async (req, res) => {
+  const user = await requireAdmin(req, res);
+  if (!user) return;
+  const { type, parent_item_id } = req.query;
+  if (!type || !ITEM_TYPES.has(type)) return res.status(400).json({ error: `type must be one of: ${[...ITEM_TYPES].join(', ')}` });
+  try {
+    let q = `SELECT * FROM unified_content_items WHERE app_id = 'app.herq' AND type = $1`;
+    const params = [type];
+    if (parent_item_id) { params.push(parent_item_id); q += ` AND parent_item_id = $${params.length}`; }
+    q += ` ORDER BY created_at DESC LIMIT 500`;
+    const items = await db.prepare(q).all(...params);
+    res.json({ items });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to load items' });
+  }
+});
+
+router.post('/items', async (req, res) => {
+  const user = await requireAdmin(req, res);
+  if (!user) return;
+  try {
+    const { type, title, topic, summary, body, series_ref, parent_item_id, domain_refs, audience_refs, export_status } = req.body;
+    if (!type || !ITEM_TYPES.has(type)) return res.status(400).json({ error: `type must be one of: ${[...ITEM_TYPES].join(', ')}` });
+    if (!title) return res.status(400).json({ error: 'Title required' });
+    const id = newId(type);
+    const now = Date.now();
+    await db.prepare(`
+      INSERT INTO unified_content_items
+        (id, app_id, type, title, topic, summary, body, series_ref, parent_item_id, domain_refs, audience_refs, export_status, created_by, updated_by, created_at, updated_at, metadata)
+      VALUES ($1,'app.herq',$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$12,$13,$13,'{}')
+    `).run(id, type, title, topic || null, summary || null, body || null, series_ref || null, parent_item_id || null, domain_refs || null, audience_refs || null, export_status || 'draft', user.id, now);
+    res.json({ ok: true, id });
+  } catch (e) {
+    console.error('[herq] create item error:', e.message);
+    res.status(500).json({ error: 'Failed to create item' });
+  }
+});
+
+router.put('/items/:id', async (req, res) => {
+  const user = await requireAdmin(req, res);
+  if (!user) return;
+  try {
+    const { title, topic, summary, body, series_ref, parent_item_id, domain_refs, audience_refs, export_status, approvals } = req.body;
+    await db.prepare(`
+      UPDATE unified_content_items SET
+        title=COALESCE($1,title), topic=$2, summary=$3, body=$4, series_ref=$5, parent_item_id=$6,
+        domain_refs=$7, audience_refs=$8, export_status=COALESCE($9,export_status), approvals=COALESCE($10,approvals),
+        updated_by=$11, updated_at=$12
+      WHERE id=$13 AND app_id='app.herq'
+    `).run(title, topic || null, summary || null, body || null, series_ref || null, parent_item_id || null, domain_refs || null, audience_refs || null, export_status, approvals, user.id, Date.now(), req.params.id);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[herq] update item error:', e.message);
+    res.status(500).json({ error: 'Failed to update item' });
+  }
+});
+
+router.delete('/items/:id', async (req, res) => {
+  const user = await requireAdmin(req, res);
+  if (!user) return;
+  try {
+    await db.prepare(`DELETE FROM unified_content_items WHERE id = $1 AND app_id = 'app.herq'`).run(req.params.id);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to delete item' });
   }
 });
 

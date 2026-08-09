@@ -23,6 +23,7 @@ import { audit } from '../lib/audit.js';
 import { form, react } from '../lib/molecule.js';
 import { resumeUrlFromPreset, pickPrimaryPreset } from '../lib/resumePresets.js';
 import { hasCareerPortfolioContent } from '../lib/careerAtomRollups.js';
+import { MEMBER_FEATURES, requireMemberFeature } from '../lib/memberAccess.js';
 
 const router = Router();
 
@@ -70,7 +71,7 @@ router.get('/draft', requireUser, async (req, res) => {
   res.json(site);
 });
 
-router.put('/draft', requireUser, async (req, res) => {
+router.put('/draft', requireUser, requireMemberFeature(MEMBER_FEATURES.MEMBER_SITE), async (req, res) => {
   const incoming = req.body;
 
   const result = await form({
@@ -105,7 +106,7 @@ router.put('/draft', requireUser, async (req, res) => {
   res.json({ ok: true, updatedAt: result.result.updatedAt });
 });
 
-router.post('/publish', requireUser, async (req, res) => {
+router.post('/publish', requireUser, requireMemberFeature(MEMBER_FEATURES.MEMBER_SITE), async (req, res) => {
   const draft = await readState(req.user.id, 'draft');
 
   const result = await react({

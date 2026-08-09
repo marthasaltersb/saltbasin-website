@@ -1,17 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from '../../lib/toast.js';
 import HerqOutputConfigurator from './HerqOutputConfigurator.jsx';
+import AttachmentList from './AttachmentList.jsx';
+import ContentItemsPanel from './ContentItemsPanel.jsx';
 
 // HERQ panel renders inside [data-brand-mode="herq"] — Salter Momentum™ aesthetic.
 // Uses herq CSS variables, NOT sb- variables.
 
 const HERQ_TABS = [
-  { id: 'framework', label: 'Framework' },
-  { id: 'series',    label: 'Series' },
-  { id: 'tracker',   label: 'Post Tracker' },
-  { id: 'research',  label: 'Research' },
-  { id: 'insights',  label: 'Insights' },
-  { id: 'outputs',   label: 'Outputs' },
+  { id: 'framework',    label: 'Framework' },
+  { id: 'observations', label: 'Observations' },
+  { id: 'seasons',      label: 'Seasons' },
+  { id: 'themes',       label: 'Themes' },
+  { id: 'topics',       label: 'Topics' },
+  { id: 'frameworks',   label: 'Entry Frameworks' },
+  { id: 'series',       label: 'Series' },
+  { id: 'tracker',      label: 'Post Tracker' },
+  { id: 'research',     label: 'Research' },
+  { id: 'insights',     label: 'Insights' },
+  { id: 'outputs',      label: 'Outputs' },
 ];
 
 const STATUS_OPTIONS = ['idea', 'drafting', 'scheduled', 'published', 'referenced', 'paused'];
@@ -95,7 +102,12 @@ export default function HerqPanel() {
 
       {loading && <div style={{ color: 'var(--herq-teal, #4A7C8E)', fontSize: '0.85rem' }}>Loading HERQ data…</div>}
 
-      {!loading && tab === 'framework'  && <FrameworkPanel series={series} />}
+      {!loading && tab === 'framework'    && <FrameworkPanel series={series} />}
+      {!loading && tab === 'observations' && <ContentItemsPanel itemType="observation" label="Observation" />}
+      {!loading && tab === 'seasons'      && <ContentItemsPanel itemType="season" label="Season" />}
+      {!loading && tab === 'themes'       && <ContentItemsPanel itemType="theme" label="Theme" parentType="season" />}
+      {!loading && tab === 'topics'       && <ContentItemsPanel itemType="topic" label="Topic" parentType="theme" />}
+      {!loading && tab === 'frameworks'   && <ContentItemsPanel itemType="framework" label="Entry Framework" parentType="topic" />}
       {!loading && tab === 'series'     && <SeriesPanel series={series} onRefresh={loadAll} />}
       {!loading && tab === 'tracker'    && <PostTracker posts={posts} series={series} onRefresh={loadAll} />}
       {!loading && tab === 'research'   && <ResearchPanel research={research} onRefresh={loadAll} />}
@@ -390,6 +402,7 @@ function ResearchPanel({ research, onRefresh }) {
             {r.source_name && <div style={{ fontSize: '0.72rem', color: 'var(--herq-teal)' }}>{r.source_name}</div>}
             {r.stat && <div style={{ fontSize: '0.82rem', fontStyle: 'italic', color: 'var(--herq-accent)', margin: '0.35rem 0' }}>"{r.stat}"</div>}
             {r.why_it_matters && <div style={{ fontSize: '0.78rem', color: '#555' }}>{r.why_it_matters}</div>}
+            <AttachmentList entityType="herq_research_input" entityId={r.id} compact />
           </div>
         ))}
         {research.length === 0 && <div style={{ color: 'var(--herq-teal)', fontSize: '0.85rem' }}>No research inputs yet.</div>}

@@ -349,7 +349,7 @@ export default function HerqOutputConfigurator({ outputs, onRefresh }) {
   // Push HTML into iframe whenever config changes
   useEffect(() => {
     if (!iframeRef.current || !config) return;
-    const html = renderTemplateToHtml(config.blocks || [], {}, { pageMargin: config.pageMargin });
+    const html = renderTemplateToHtml(config.blocks || [], {}, { pageMargin: config.pageMargin, pageBackground: config.pageBackground });
     iframeRef.current.srcdoc = html;
   }, [config]);
 

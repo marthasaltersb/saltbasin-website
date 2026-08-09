@@ -112,8 +112,8 @@ export default function CareerIntakePanel({ compact = false, onPrimaryResumeCrea
     intakeKind: 'initial_mapping',
     sourceTruthStatus: 'user_attested',
     sourceUseScope: 'career_master_and_outputs',
-    clientNamePolicy: 'generalize_private_clients',
-    portfolioNamePolicy: 'allow_if_user_provided',
+    clientNamePolicy: 'never_publish_client_names',
+    portfolioNamePolicy: 'generalize_all',
     caseStudyTitlePolicy: 'industry_company_type',
     publicPrimaryResearch: true,
     primaryResumeRequested: true,
@@ -247,24 +247,8 @@ export default function CareerIntakePanel({ compact = false, onPrimaryResumeCrea
         Upload redacted source documents for initial mapping, additional context, or case study portfolio material. Do not enter private client names into notes. If private names appear in a source, the default captured case study title is generalized by industry and company type; the user must validate that volunteered names do not transfer into public outputs.
       </div>
 
-      <div style={S.grid}>
-        <SelectField label="Intake type" value={form.intakeKind} onChange={(v) => update('intakeKind', v)} options={INTAKE_KINDS} />
-        <SelectField label="Source status" value={form.sourceTruthStatus} onChange={(v) => update('sourceTruthStatus', v)} options={SOURCE_TRUTH} />
-        <SelectField label="Use scope" value={form.sourceUseScope} onChange={(v) => update('sourceUseScope', v)} options={SOURCE_USE} />
-        <SelectField label="Client-name handling" value={form.clientNamePolicy} onChange={(v) => update('clientNamePolicy', v)} options={CLIENT_POLICIES} />
-        <SelectField label="Portfolio-name handling" value={form.portfolioNamePolicy} onChange={(v) => update('portfolioNamePolicy', v)} options={PORTFOLIO_POLICIES} />
-        <SelectField label="Case-study title policy" value={form.caseStudyTitlePolicy} onChange={(v) => update('caseStudyTitlePolicy', v)} options={CASE_TITLE_POLICIES} />
-        <label>
-          <span style={S.label}>Analysis passes</span>
-          <input
-            type="number"
-            min="1"
-            max="5"
-            style={S.input}
-            value={form.analysisPassesRequested}
-            onChange={(e) => update('analysisPassesRequested', Math.max(1, Math.min(5, Number(e.target.value) || 3)))}
-          />
-        </label>
+      <div style={{ padding: '.75rem', borderRadius: 8, background: 'rgba(2,161,166,.07)', color: '#31545a', fontSize: '.78rem', lineHeight: 1.55 }}>
+        The first source you approve establishes your Career Master foundation. Later uploads are treated as cautious updates: proposed additions and changes must be reviewed before commit. Client and portfolio-company names are never included in generated case studies or public outputs.
       </div>
 
       <div style={{ marginTop: '0.75rem' }}>

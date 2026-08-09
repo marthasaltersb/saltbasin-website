@@ -4606,6 +4606,93 @@ Rod state, per event:
   } catch (e) {
     console.warn('[db] commercial scoring dimension Atom seed warning:', e.message);
   }
+
+  // Agent worlds: shared definitions, world scope, LLM budgets, scheduled
+  // run history, findings, and cross-feature notifications.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS agent_hub_definitions (
+      id BIGSERIAL PRIMARY KEY, key TEXT NOT NULL UNIQUE, public_key TEXT UNIQUE,
+      label TEXT NOT NULL, description TEXT, kind TEXT NOT NULL DEFAULT 'code_review',
+      execution_mode TEXT NOT NULL DEFAULT 'scheduled', scope_type TEXT NOT NULL DEFAULT 'platform', scope_id BIGINT,
+      schedule_cron TEXT, enabled BOOLEAN NOT NULL DEFAULT FALSE, auto_branch BOOLEAN NOT NULL DEFAULT FALSE,
+      config JSONB NOT NULL DEFAULT '{}', created_at BIGINT NOT NULL, updated_at BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_agent_hub_scope ON agent_hub_definitions(scope_type, scope_id);
+    ALTER TABLE portfolio_requests ADD COLUMN IF NOT EXISTS agent_definition_id BIGINT REFERENCES agent_hub_definitions(id) ON DELETE SET NULL;
+    ALTER TABLE portfolio_requests ADD COLUMN IF NOT EXISTS org_id BIGINT REFERENCES organization_profiles(id) ON DELETE SET NULL;
+    ALTER TABLE portfolio_requests ADD COLUMN IF NOT EXISTS member_user_id BIGINT REFERENCES users(id) ON DELETE SET NULL;
+    ALTER TABLE leads ADD COLUMN IF NOT EXISTS agent_definition_id BIGINT REFERENCES agent_hub_definitions(id) ON DELETE SET NULL;
+    ALTER TABLE leads ADD COLUMN IF NOT EXISTS org_id BIGINT REFERENCES organization_profiles(id) ON DELETE SET NULL;
+
+    CREATE TABLE IF NOT EXISTS agent_llm_usage (
+      id BIGSERIAL PRIMARY KEY, definition_id BIGINT NOT NULL REFERENCES agent_hub_definitions(id) ON DELETE CASCADE,
+      provider TEXT NOT NULL, model TEXT NOT NULL, period_key TEXT NOT NULL,
+      input_tokens BIGINT NOT NULL DEFAULT 0, output_tokens BIGINT NOT NULL DEFAULT 0,
+      request_count BIGINT NOT NULL DEFAULT 0, updated_at BIGINT NOT NULL,
+      UNIQUE(definition_id, provider, model, period_key)
+    );
+    CREATE TABLE IF NOT EXISTS agent_hub_runs (
+      id BIGSERIAL PRIMARY KEY, definition_id BIGINT NOT NULL REFERENCES agent_hub_definitions(id) ON DELETE CASCADE,
+      status TEXT NOT NULL DEFAULT 'queued', trigger TEXT NOT NULL DEFAULT 'schedule', started_at BIGINT, finished_at BIGINT,
+      summary TEXT, stats JSONB NOT NULL DEFAULT '{}', branch_name TEXT, pr_url TEXT, report_path TEXT,
+      codebase_fingerprint TEXT, error TEXT, created_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE TABLE IF NOT EXISTS agent_hub_run_findings (
+      id BIGSERIAL PRIMARY KEY, run_id BIGINT NOT NULL REFERENCES agent_hub_runs(id) ON DELETE CASCADE,
+      category TEXT NOT NULL, severity TEXT NOT NULL DEFAULT 'medium', file_path TEXT, line INTEGER,
+      title TEXT NOT NULL, detail TEXT, status TEXT NOT NULL DEFAULT 'open',
+      created_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE TABLE IF NOT EXISTS notifications (
+      id BIGSERIAL PRIMARY KEY, user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      source_type TEXT NOT NULL, source_id BIGINT, title TEXT NOT NULL, body TEXT,
+      severity TEXT NOT NULL DEFAULT 'info', action_url TEXT, read_at BIGINT,
+      created_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE TABLE IF NOT EXISTS user_tasks (
+      id BIGSERIAL PRIMARY KEY, user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      source_type TEXT NOT NULL, source_id BIGINT, title TEXT NOT NULL, detail TEXT,
+      status TEXT NOT NULL DEFAULT 'open', due_at BIGINT, created_at BIGINT NOT NULL, completed_at BIGINT
+    );
+
+    INSERT INTO agent_hub_definitions (key,public_key,label,description,kind,execution_mode,scope_type,enabled,config,created_at,updated_at) VALUES
+      ('bestystaff-salt-basin','bestystaff','BestyStaff · Salt Basin','Deterministic-first Salt Basin lead intake.','lead_intake','interactive','platform',TRUE,
+       '{"identity":{"name":"BestyStaff","organizationName":"Salt Basin Net Works","ownerName":"Betsy Salter"},"deployment":{"saltBasinSite":true,"memberSubpage":false,"externalEmbed":false},"conversation":{"deferredResponseMs":650,"loopBack":{"enabled":true,"afterTurns":6,"prompt":"Before we wrap up, did you get all of your questions answered?"},"memory":{"enabled":true,"maxHistoryTurns":24,"capture":["businessNeed","desiredOutcome","contact","consent","openQuestions"]}},"llm":{"mode":"conditional","required":false,"provider":"anthropic","model":"claude-opus-4-8","purpose":"Optional fallback for uncovered open-ended reasoning; deterministic journeys and lead actions do not require an LLM.","maxOutputTokensPerResponse":4096,"tokenCap":500000,"capPeriod":"month","maxToolIterations":5},"emailPolicy":{"requirePersonalEmail":false,"allowedDomains":[],"blockedDomains":[],"notifyScopeUsers":true},"actions":{"createLead":true,"createRequest":true,"sendNotifications":true},"journey":{"introQuestions":[],"inferredPaths":[],"alternativeQuestions":[]}}'::jsonb,
+       (EXTRACT(EPOCH FROM NOW())*1000)::bigint,(EXTRACT(EPOCH FROM NOW())*1000)::bigint),
+      ('code-review-agent',NULL,'Code Review Agent','Static-first audit with conditional LLM escalation.','code_review','scheduled','platform',FALSE,
+       '{"runtimeBinding":"server/lib/agents/codeReviewAgent.js","aiEnabled":true,"llm":{"mode":"conditional","required":false,"provider":"anthropic","model":"claude-sonnet-5","purpose":"Classify candidates found by static heuristics.","maxOutputTokensPerResponse":8192,"tokenCap":1000000,"capPeriod":"month","maxToolIterations":1}}'::jsonb,
+       (EXTRACT(EPOCH FROM NOW())*1000)::bigint,(EXTRACT(EPOCH FROM NOW())*1000)::bigint),
+      ('content-research-connection-audit',NULL,'Content Research Connection Audit','Deterministic data-port readiness audit.','content_research','scheduled','platform',FALSE,
+       '{"runtimeBinding":"server/lib/agents/contentResearchAgent.js","llm":{"mode":"none","required":false,"provider":null,"model":null,"purpose":"Database and connection checks only.","maxOutputTokensPerResponse":0,"tokenCap":0,"capPeriod":"month","maxToolIterations":0}}'::jsonb,
+       (EXTRACT(EPOCH FROM NOW())*1000)::bigint,(EXTRACT(EPOCH FROM NOW())*1000)::bigint),
+      ('member-personal-brand-staff',NULL,'Personal Brand Staff','Member agent template.','internal_chat','internal_chat','platform',TRUE,
+       '{"templateDefinition":true,"runtimeBinding":"server/routes/memberAgent.js#personal_brand","llm":{"mode":"required","required":true,"provider":"anthropic","model":"claude-sonnet-4-5","purpose":"Interpret member requests and choose bounded draft-site tools.","maxOutputTokensPerResponse":4096,"tokenCap":500000,"capPeriod":"month","maxToolIterations":8}}'::jsonb,
+       (EXTRACT(EPOCH FROM NOW())*1000)::bigint,(EXTRACT(EPOCH FROM NOW())*1000)::bigint),
+      ('member-profile-builder-staff',NULL,'Profile Builder Staff','Member profile-builder template.','internal_chat','internal_chat','platform',TRUE,
+       '{"templateDefinition":true,"runtimeBinding":"server/routes/memberAgent.js#profile_builder","llm":{"mode":"required","required":true,"provider":"anthropic","model":"claude-sonnet-4-5","purpose":"Interpret member requests and select bounded profile tools.","maxOutputTokensPerResponse":4096,"tokenCap":500000,"capPeriod":"month","maxToolIterations":8}}'::jsonb,
+       (EXTRACT(EPOCH FROM NOW())*1000)::bigint,(EXTRACT(EPOCH FROM NOW())*1000)::bigint),
+      ('career-world-bestystaff',NULL,'Career World BestyStaff','Deterministic career mutation template.','internal_chat','internal_chat','platform',TRUE,
+       '{"templateDefinition":true,"runtimeBinding":"server/routes/careerMaster.js","llm":{"mode":"none","required":false,"provider":null,"model":null,"purpose":"Schema-bounded deterministic patches.","maxOutputTokensPerResponse":0,"tokenCap":0,"capPeriod":"month","maxToolIterations":0}}'::jsonb,
+       (EXTRACT(EPOCH FROM NOW())*1000)::bigint,(EXTRACT(EPOCH FROM NOW())*1000)::bigint),
+      ('scrum-agent',NULL,'Scrum Agent','Internal backlog planning chat.','internal_chat','internal_chat','platform',TRUE,
+       '{"runtimeBinding":"server/routes/agent.js","llm":{"mode":"required","required":true,"provider":"anthropic","model":"claude-sonnet-4-5","purpose":"Backlog reasoning and requirements drafting.","maxOutputTokensPerResponse":2048,"tokenCap":300000,"capPeriod":"month","maxToolIterations":1}}'::jsonb,
+       (EXTRACT(EPOCH FROM NOW())*1000)::bigint,(EXTRACT(EPOCH FROM NOW())*1000)::bigint)
+    ON CONFLICT (key) DO NOTHING;
+  `);
+
+  try {
+    const navRow = await db.prepare(`SELECT data FROM config_state WHERE id='admin_nav'`).get();
+    const nav = navRow?.data ? JSON.parse(navRow.data) : { views: [] };
+    if (!nav.views.some((view) => view.id === 'agent-hub')) {
+      nav.views.push({ id: 'agent-hub', label: 'Agent Orbit', sortOrder: 4.7, tabs: [
+        { id: 'agent-hub-config', label: 'Agent Worlds', componentId: 'agentHubConfig', sortOrder: 0 },
+        { id: 'agent-hub-outputs', label: 'Outputs', componentId: 'agentHubOutputs', sortOrder: 1 },
+      ] });
+      await db.prepare(`UPDATE config_state SET data=$1, updated_at=$2 WHERE id='admin_nav'`).run(JSON.stringify(nav), Date.now());
+    }
+  } catch (error) {
+    console.warn('[db] Agent Orbit navigation seed warning:', error.message);
+  }
 }
 
 // Awaited at module import time so routes can use db without worrying about

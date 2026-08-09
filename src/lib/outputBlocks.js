@@ -16,6 +16,10 @@ function iconSvg(name, color, size = 22) {
 
 const OUTPUT_ACCENT_SWATCH = { gold: '#C4843A', teal: '#4A7C8E', pink: '#E8407A', sage: '#B5C4C1' };
 
+// Torn-paper edges on the left/right, straight top/bottom — the black
+// washi-tape "ZERO.POST"-style subtitle strip used across HERQ output docs.
+const TAPE_CLIP_PATH = 'polygon(3% 0%,100% 0%,97% 15%,100% 30%,96% 45%,100% 60%,97% 75%,100% 90%,97% 100%,0% 100%,3% 85%,0% 70%,4% 55%,0% 40%,3% 25%,0% 10%)';
+
 export const BLOCK_DEFS = {
   'exec-kpi-dashboard': {
     label: 'Executive Summary (KPI Dashboard)', icon: '◫',
@@ -167,6 +171,73 @@ export const BLOCK_DEFS = {
       { key: 'style.borderLeft', label: 'Accent Border', type: 'text' },
       { key: 'style.background', label: 'Background', type: 'color' },
     ],
+  },
+  'tape-label': {
+    label: 'Tape Label (Zero.Post style)', icon: '▬',
+    defaultProps: { text: 'ZERO.POST', rotate: -1.5 },
+    defaultStyle: { background: '#1A1A1A', color: '#FFFDF8' },
+    fields: [
+      { key: 'props.text', label: 'Label Text', type: 'text' },
+      { key: 'props.rotate', label: 'Rotation (deg)', type: 'text' },
+      { key: 'style.background', label: 'Tape Color', type: 'color' },
+      { key: 'style.color', label: 'Text Color', type: 'color' },
+    ],
+  },
+  'photo-hero': {
+    label: 'Photo Hero', icon: '⬒',
+    // Structural pattern lifted from the Canva reference templates (full-
+    // bleed photo + text overlay). imageUrl is blank by default — no stock
+    // photography is baked in; the gradient below is a Salt Basin-toned
+    // placeholder until real professional scene photography is dropped in.
+    defaultProps: { imageUrl: '', headline: 'Headline goes here', subhead: '', badges: [] },
+    defaultStyle: { minHeight: '320px', padding: '3rem 2.5rem', color: '#FFFDF8', borderRadius: '4px' },
+    fields: [
+      { key: 'props.imageUrl', label: 'Photo URL (leave blank for placeholder)', type: 'text' },
+      { key: 'props.headline', label: 'Headline', type: 'text' },
+      { key: 'props.subhead', label: 'Subhead', type: 'textarea' },
+      { key: 'props.badges', label: 'Badges (one per line)', type: 'items' },
+      { key: 'style.minHeight', label: 'Height', type: 'text' },
+    ],
+  },
+  'stat-icon-row': {
+    label: 'Stat Icon Row', icon: '▦',
+    // Structural pattern from the real-estate newsletter reference
+    // (icon + big number + label, side by side) — icons here are always
+    // Salt Basin brand icons (brandIconData.js), not the stock template's.
+    defaultProps: {
+      stats: [
+        { icon: 'buoy', value: '12', label: 'Active Sources' },
+        { icon: 'crystalOrbit', value: '0.78', label: 'Convergence' },
+        { icon: 'queensCrown', value: 'A+', label: 'Tier' },
+      ],
+    },
+    defaultStyle: { margin: '0.75rem 0' },
+    fields: [{
+      key: 'props.stats', label: 'Stats', type: 'cardList', itemLabel: 'Stat',
+      itemFields: [
+        { key: 'icon', label: 'Icon', placeholder: 'e.g. buoy, crystalOrbit, coralReef', half: true },
+        { key: 'value', label: 'Value', placeholder: 'e.g. 12, $755K', half: true },
+        { key: 'label', label: 'Label', placeholder: 'Label' },
+      ],
+    }],
+  },
+  'status-pill-row': {
+    label: 'Status Pill Row', icon: '●',
+    defaultProps: {
+      pills: [
+        { label: 'Published', color: '#CDEEDC' },
+        { label: 'Up Next', color: '#FFD6A5' },
+        { label: 'Planned', color: '#BDE4FF' },
+      ],
+    },
+    defaultStyle: { margin: '0.5rem 0' },
+    fields: [{
+      key: 'props.pills', label: 'Pills', type: 'cardList', itemLabel: 'Pill',
+      itemFields: [
+        { key: 'label', label: 'Label', placeholder: 'e.g. Published, Up Next' },
+        { key: 'color', label: 'Color', placeholder: '#CDEEDC' },
+      ],
+    }],
   },
   'contact-line': {
     label: 'Contact Line', icon: '@',
@@ -441,6 +512,49 @@ export function renderBlockToHtml(block, ctx = {}) {
   ${p.context ? `<div style="font-size:0.8rem;color:#8b9bae;margin-top:0.6rem;font-style:normal;font-family:sans-serif">${ip(p.context)}</div>` : ''}
 </div>`;
 
+    case 'tape-label': {
+      const rotate = p.rotate ?? -1.5;
+      return `<div style="display:inline-block;transform:rotate(${rotate}deg);${styleStr(s)};clip-path:${TAPE_CLIP_PATH};padding:0.35rem 1.1rem;font-family:'Courier New',monospace;font-weight:700;font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;box-shadow:0 2px 4px rgba(0,0,0,0.25)">${ip(p.text)}</div>`;
+    }
+
+    case 'photo-hero': {
+      const badges = Array.isArray(p.badges) ? p.badges : [];
+      // No stock photo baked in — a Salt Basin-toned gradient stands in
+      // until a real photo URL is configured.
+      const bg = p.imageUrl
+        ? `background-image:linear-gradient(rgba(27,42,59,0.45),rgba(27,42,59,0.45)),url('${p.imageUrl}');background-size:cover;background-position:center`
+        : `background-image:linear-gradient(135deg,#345A68,#4A7C8E 55%,#C4843A)`;
+      const badgesHtml = badges.length
+        ? `<div style="margin-top:1rem">${badges.map((b) => `<span style="display:inline-block;padding:0.25rem 0.85rem;margin-right:0.5rem;border-radius:20px;background:rgba(255,253,248,0.15);border:0.5px solid rgba(255,253,248,0.4);font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;font-family:sans-serif">${ip(b)}</span>`).join('')}</div>`
+        : '';
+      return `<div style="${styleStr(s)};${bg};display:flex;flex-direction:column;justify-content:center;background-color:#345A68">
+  <div style="font-size:1.9rem;font-family:Georgia,serif;font-weight:700;line-height:1.15;max-width:70%">${ip(p.headline)}</div>
+  ${p.subhead ? `<div style="font-size:1rem;margin-top:0.6rem;max-width:60%;opacity:0.9">${ip(p.subhead)}</div>` : ''}
+  ${badgesHtml}
+</div>`;
+    }
+
+    case 'stat-icon-row': {
+      const stats = Array.isArray(p.stats) ? p.stats : [];
+      if (!stats.length) return '';
+      const itemsHtml = stats.map((st) => `
+        <div style="display:flex;align-items:center;gap:0.6rem">
+          ${st.icon ? `<div style="flex-shrink:0">${iconSvg(st.icon, '#345A68', 30)}</div>` : ''}
+          <div>
+            <div style="font-size:1.15rem;font-weight:700;color:#1B2A3B;font-family:Georgia,serif;line-height:1.1">${ip(st.value)}</div>
+            <div style="font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;color:#536173;font-family:sans-serif">${ip(st.label)}</div>
+          </div>
+        </div>`).join('');
+      return `<div style="${styleStr(s)};display:flex;gap:1.75rem;flex-wrap:wrap">${itemsHtml}</div>`;
+    }
+
+    case 'status-pill-row': {
+      const pills = Array.isArray(p.pills) ? p.pills : [];
+      if (!pills.length) return '';
+      const pillsHtml = pills.map((pl) => `<span style="display:inline-block;padding:0.2rem 0.75rem;margin:0 0.35rem 0.35rem 0;border-radius:20px;background:${pl.color || '#eee'};font-size:0.68rem;font-weight:700;color:#1A1A1A;font-family:sans-serif">${ip(pl.label)}</span>`).join('');
+      return `<div style="${styleStr(s)}">${pillsHtml}</div>`;
+    }
+
     case 'contact-line': {
       const items = Array.isArray(p.items) ? p.items : [];
       const itemsHtml = items.map(item => `<span>${ip(item)}</span>`).join('<span style="color:#C4843A;opacity:0.5"> · </span>');
@@ -634,7 +748,7 @@ export function renderBlockToHtml(block, ctx = {}) {
 }
 
 export function renderTemplateToHtml(blocks = [], ctx = {}, options = {}) {
-  const { pageMargin = '0.75in', fontBase = 'Georgia, serif' } = options;
+  const { pageMargin = '0.75in', fontBase = 'Georgia, serif', pageBackground = 'white' } = options;
   const sorted = [...blocks]
     .filter(b => b.visible !== false)
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -648,8 +762,8 @@ export function renderTemplateToHtml(blocks = [], ctx = {}, options = {}) {
 *{box-sizing:border-box;margin:0;padding:0}
 @page{size:letter;margin:${pageMargin}}
 @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
-body{font-family:${fontBase};color:#1B2A3B;background:white;font-size:14px}
-.page{max-width:8.5in;margin:0 auto;padding:${pageMargin}}
+body{font-family:${fontBase};color:#1B2A3B;background:${pageBackground};font-size:14px}
+.page{max-width:8.5in;margin:0 auto;padding:${pageMargin};background:${pageBackground}}
 @media print{.page{padding:0}}
 </style>
 </head>
@@ -741,8 +855,10 @@ export const DEFAULT_TEMPLATES = {
     name: 'HERQ Framework Overview',
     outputType: 'HERQFramework',
     pageMargin: '0.75in',
+    pageBackground: '#F5F0E8',
     blocks: [
-      { id: 'b1', type: 'page-header', visible: true, order: 1, props: { eyebrow: 'HERQ · Salter Momentum™', title: 'Hot Elephant Resident Question', subtitle: 'A framework for asking the questions that change how enterprise platforms get built.' }, style: {} },
+      { id: 'b1', type: 'page-header', visible: true, order: 1, props: { eyebrow: 'HERQ · Salter Momentum™', title: 'Hot Elephant Resident Question', subtitle: 'A framework for asking the questions that change how enterprise platforms get built.' }, style: { background: '#F5F0E8', color: '#1A1A1A', fontFamily: 'sans-serif', textAlign: 'left' } },
+      { id: 'b1b', type: 'tape-label', visible: true, order: 1.5, props: { text: 'Phase 0 of All the Things', rotate: -1.5 }, style: { background: '#1A1A1A', color: '#FFFDF8', marginBottom: '0.75rem' } },
       { id: 'b2', type: 'color-band', visible: true, order: 2, props: {}, style: { background: '#E8407A', height: '4px' } },
       { id: 'b3', type: 'section-label', visible: true, order: 3, props: { text: 'THE FRAMEWORK' }, style: {} },
       { id: 'b4', type: 'body', visible: true, order: 4, props: { text: 'HERQ stands for Hot Elephant Resident Question — the question that is always in the room but never on the agenda. Every enterprise platform initiative has one. Naming it is the first act of clarity.' }, style: {} },
@@ -752,7 +868,7 @@ export const DEFAULT_TEMPLATES = {
       { id: 'b8', type: 'hr', visible: true, order: 8, props: {}, style: {} },
       { id: 'b9', type: 'two-column', visible: true, order: 9, props: { leftLabel: 'WHAT A HERQ IS', leftText: 'A strategic inflection point disguised as an operational question. Usually lives in the room where decisions get made — and gets avoided precisely because it\'s the most important thing to answer.', rightLabel: 'WHAT A HERQ IS NOT', rightText: 'A project status question. A scope clarification. A technical requirement. Those are legitimate — but they\'re not the HERQ.' }, style: {} },
       { id: 'b10', type: 'spacer', visible: true, order: 10, props: { height: '2rem' }, style: {} },
-      { id: 'b11', type: 'color-band', visible: true, order: 11, props: {}, style: { background: '#1B2A3B', height: '2px' } },
+      { id: 'b11', type: 'color-band', visible: true, order: 11, props: {}, style: { background: '#1A1A1A', height: '2px' } },
       { id: 'b12', type: 'body', visible: true, order: 12, props: { text: 'Salt Basin Net Works · Salter Momentum™ · saltbasin.net' }, style: { fontSize: '0.7rem', color: '#8b9bae', fontFamily: 'sans-serif', paddingTop: '0.75rem', textAlign: 'center' } },
     ],
   },
@@ -760,13 +876,16 @@ export const DEFAULT_TEMPLATES = {
     name: 'HERQ Series Tracker',
     outputType: 'HERQSeriesTracker',
     pageMargin: '0.75in',
+    pageBackground: '#F5F0E8',
     blocks: [
-      { id: 'b1', type: 'page-header', visible: true, order: 1, props: { eyebrow: 'HERQ · Series Reference', title: 'Series Tracker', subtitle: 'Active question series and their current status.' }, style: {} },
+      { id: 'b1', type: 'page-header', visible: true, order: 1, props: { eyebrow: 'HERQ · Series Reference', title: 'Series Tracker', subtitle: 'Active question series and their current status.' }, style: { background: '#F5F0E8', color: '#1A1A1A', fontFamily: 'sans-serif', textAlign: 'left' } },
+      { id: 'b1b', type: 'tape-label', visible: true, order: 1.5, props: { text: 'Hot Elephant Resident Question', rotate: -1.5 }, style: { background: '#1A1A1A', color: '#FFFDF8', marginBottom: '0.75rem' } },
       { id: 'b2', type: 'color-band', visible: true, order: 2, props: {}, style: { background: '#E8407A', height: '4px' } },
       { id: 'b3', type: 'section-label', visible: true, order: 3, props: { text: 'ACTIVE SERIES' }, style: {} },
       { id: 'b4', type: 'body', visible: true, order: 4, props: { text: 'Each series represents a named question arc. Series are distinguished by target audience and the type of enterprise reality they surface.' }, style: {} },
       { id: 'b5', type: 'spacer', visible: true, order: 5, props: { height: '1rem' }, style: {} },
       { id: 'b6', type: 'section-label', visible: true, order: 6, props: { text: 'POST TRACKER SUMMARY' }, style: {} },
+      { id: 'b6b', type: 'status-pill-row', visible: true, order: 6.5, props: { pills: [ { label: 'Published', color: '#CDEEDC' }, { label: 'Up Next', color: '#FFD6A5' }, { label: 'Planned', color: '#BDE4FF' }, { label: 'Referenced', color: '#C7B7FF' }, { label: 'Paused', color: '#FFD6A5' } ] }, style: {} },
       { id: 'b7', type: 'body', visible: true, order: 7, props: { text: 'Posts are logged here by series. Zero.Post is the pinned framework reference — all other posts reference it.' }, style: {} },
     ],
   },
@@ -774,8 +893,10 @@ export const DEFAULT_TEMPLATES = {
     name: 'HERQ One-Pager',
     outputType: 'HERQSeriesPostOnePager',
     pageMargin: '0.75in',
+    pageBackground: '#F5F0E8',
     blocks: [
-      { id: 'b1', type: 'page-header', visible: true, order: 1, props: { eyebrow: 'HERQ', title: 'Series One-Pager', subtitle: '' }, style: { background: '#1B2A3B' } },
+      { id: 'b1', type: 'page-header', visible: true, order: 1, props: { eyebrow: 'HERQ', title: 'Series One-Pager', subtitle: '' }, style: { background: '#F5F0E8', color: '#1A1A1A', fontFamily: 'sans-serif', textAlign: 'left' } },
+      { id: 'b1b', type: 'tape-label', visible: true, order: 1.5, props: { text: 'Zero.Post', rotate: -1.5 }, style: { background: '#1A1A1A', color: '#FFFDF8', marginBottom: '0.75rem' } },
       { id: 'b2', type: 'color-band', visible: true, order: 2, props: {}, style: { background: '#E8407A', height: '4px' } },
       { id: 'b3', type: 'herq-question', visible: true, order: 3, props: { question: 'What is the real question in the room?', series: 'HERQ', context: '' }, style: {} },
       { id: 'b4', type: 'section-label', visible: true, order: 4, props: { text: 'CONTEXT' }, style: {} },
@@ -784,7 +905,7 @@ export const DEFAULT_TEMPLATES = {
       { id: 'b7', type: 'body', visible: true, order: 7, props: { text: 'Explain the significance of this question in the enterprise context.' }, style: {} },
       { id: 'b8', type: 'hr', visible: true, order: 8, props: {}, style: {} },
       { id: 'b9', type: 'callout', visible: true, order: 9, props: { text: 'The answer to this question is never what the org thought it would be.' }, style: {} },
-      { id: 'b10', type: 'color-band', visible: true, order: 10, props: {}, style: { background: '#1B2A3B', height: '2px', marginTop: '2rem' } },
+      { id: 'b10', type: 'color-band', visible: true, order: 10, props: {}, style: { background: '#1A1A1A', height: '2px', marginTop: '2rem' } },
       { id: 'b11', type: 'body', visible: true, order: 11, props: { text: 'Salt Basin Net Works · Salter Momentum™ · saltbasin.net' }, style: { fontSize: '0.7rem', color: '#8b9bae', fontFamily: 'sans-serif', paddingTop: '0.75rem', textAlign: 'center' } },
     ],
   },

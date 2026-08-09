@@ -439,4 +439,19 @@ export const api = {
   listPublicationItems: (appId) => request(`/api/publication-pipelines/items?appId=${encodeURIComponent(appId)}`),
   getPublicationSchedule: (agentDefinitionId) => request(`/api/publication-pipelines/schedule?agentDefinitionId=${agentDefinitionId}`),
   savePublicationSchedule: (body) => request('/api/publication-pipelines/schedule', { method: 'POST', body: JSON.stringify(body) }),
+
+  getNotifications: (unreadOnly = false) => request(`/api/notifications/${unreadOnly ? '?unreadOnly=1' : ''}`),
+  markNotificationRead: (id) => request(`/api/notifications/${id}/read`, { method: 'PATCH' }),
+  markAllNotificationsRead: () => request('/api/notifications/read-all', { method: 'POST' }),
+  getMyTasks: (status) => request(`/api/notifications/tasks${status ? `?status=${status}` : ''}`),
+  updateMyTask: (id, status) => request(`/api/notifications/tasks/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+
+  getAgentHubDefinitions: (scopeType, scopeId) => request(`/api/agent-hub/definitions${scopeType ? `?scopeType=${encodeURIComponent(scopeType)}${scopeId ? `&scopeId=${encodeURIComponent(scopeId)}` : ''}` : ''}`),
+  createAgentHubDefinition: (definition) => request('/api/agent-hub/definitions', { method: 'POST', body: JSON.stringify(definition) }),
+  updateAgentHubDefinition: (id, patch) => request(`/api/agent-hub/definitions/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  deleteAgentHubDefinition: (id) => request(`/api/agent-hub/definitions/${id}`, { method: 'DELETE' }),
+  runAgentHubDefinitionNow: (id) => request(`/api/agent-hub/definitions/${id}/run-now`, { method: 'POST' }),
+  getAgentHubRuns: (definitionId) => request(`/api/agent-hub/runs${definitionId ? `?definitionId=${definitionId}` : ''}`),
+  getAgentHubRun: (id) => request(`/api/agent-hub/runs/${id}`),
+  updateAgentHubFinding: (id, status) => request(`/api/agent-hub/findings/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
 };

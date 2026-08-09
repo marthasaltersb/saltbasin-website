@@ -4,39 +4,49 @@ import { recordBestyTouch } from '../lib/bestyStaffAttribution.js';
 
 function buildNav(pages) {
   const ordered = Object.values(pages || {})
-    .filter((p) => p.status !== 'draft' && !p.hideFromNav && p.slug !== 'creative')
+    .filter((p) => p.status !== 'draft' && !p.hideFromNav)
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-  const normalized = ordered.map((p) => ({
-    ...p,
-    navLabel: p.slug === 'platform' ? 'Solutions & Services' : p.navLabel,
-    navParent: p.navParent || (p.slug === 'consulting' ? 'platform' : p.slug === 'methodology' ? 'resources' : null),
-  }));
-
-  return normalized.filter((p) => !p.navParent).map((p) => {
+  const pageItem = (p) => {
     const slug = '/' + (p.slug || '');
     const subPages = (p.sections || []).filter((s) =>
+      s.navSubPage === true &&
       s.status !== 'draft' &&
       s.status !== 'placeholder' &&
       !s.hideFromNav &&
       !['conversationalDemo', 'journeyRods'].includes(s.type)
     );
-    const childPages = normalized.filter((candidate) => candidate.navParent === p.slug);
-    const resourceLinks = p.slug === 'resources'
-      ? [{ label: 'Architecture & Roadmap', to: '/platform#architecture-map' }]
-      : [];
+    const childPages = ordered.filter((candidate) => candidate.navParent === p.slug);
     return {
       label: p.navLabel || p.name,
       to: slug,
-      children: (subPages.length || childPages.length || resourceLinks.length)
+      children: (subPages.length || childPages.length)
         ? [
             ...childPages.map((child) => ({ label: child.navLabel || child.name, to: '/' + child.slug })),
             ...subPages.map((s) => ({ label: s.navLabel || s.name, anchor: s.id, pageSlug: slug })),
-            ...resourceLinks,
           ]
         : undefined,
     };
-  });
+  };
+
+  const nav = [];
+  const seenGroups = new Set();
+  for (const page of ordered) {
+    if (page.navParent) continue;
+    if (!page.navGroup) {
+      nav.push(pageItem(page));
+      continue;
+    }
+    if (seenGroups.has(page.navGroup)) continue;
+    seenGroups.add(page.navGroup);
+    nav.push({
+      label: page.navGroup,
+      children: ordered
+        .filter((candidate) => candidate.navGroup === page.navGroup && !candidate.navParent)
+        .map((candidate) => ({ label: candidate.navLabel || candidate.name, to: '/' + (candidate.slug || '') })),
+    });
+  }
+  return nav;
 }
 
 export default function PublicNav({ site, pages }) {
@@ -82,14 +92,14 @@ export default function PublicNav({ site, pages }) {
           />
         ))}
         <li>
-          <AuthButton user={authUser} />
+          <AuthButton user={authUser} isMobile={mobileOpen} />
         </li>
       </ul>
     </nav>
   );
 }
 
-function AuthButton({ user }) {
+function AuthButton({ user, isMobile = false }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const closeTimer = useRef(null);
@@ -123,6 +133,21 @@ function AuthButton({ user }) {
         {handle}
         <span aria-hidden="true">-&gt;</span>
       </Link>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <div className="sb-public-auth-mobile">
+        <Link className="sb-public-auth-mobile-link" to="/login">Sign In</Link>
+        <a
+          className="sb-public-auth-mobile-link"
+          href="/signup?intakeSource=networks-sign-up"
+          onClick={() => recordBestyTouch('networks-sign-up', { action: 'sign-up-menu' })}
+        >
+          Sign Up
+        </a>
+      </div>
     );
   }
 
@@ -171,7 +196,7 @@ function NavItem({ item, pathname, isMobile }) {
     closeTimer.current = setTimeout(() => setOpen(false), 120);
   }
 
-  const isActive = pathname === item.to || (item.to !== '/' && pathname.startsWith(item.to));
+  const isActive = !!item.to && (pathname === item.to || (item.to !== '/' && pathname.startsWith(item.to)));
 
   return (
     <li
@@ -180,14 +205,25 @@ function NavItem({ item, pathname, isMobile }) {
       onMouseLeave={handleLeave}
       className="sb-public-nav-item"
     >
-      <Link
-        className={`sb-public-nav-link${isActive ? ' active' : ''}${item.featured ? ' sb-public-nav-featured' : ''}`}
-        to={item.to}
-        onClick={() => hasChildren && setOpen((current) => !current)}
-      >
-        {item.label}
-        {hasChildren && <span className="sb-public-nav-caret">v</span>}
-      </Link>
+      {item.to ? (
+        <Link
+          className={`sb-public-nav-link${isActive ? ' active' : ''}${item.featured ? ' sb-public-nav-featured' : ''}`}
+          to={item.to}
+          onClick={() => hasChildren && setOpen((current) => !current)}
+        >
+          {item.label}
+          {hasChildren && <span className="sb-public-nav-caret">v</span>}
+        </Link>
+      ) : (
+        <button
+          className="sb-public-nav-link sb-public-nav-group-button"
+          type="button"
+          aria-expanded={open || inlineMode}
+          onClick={() => setOpen((current) => !current)}
+        >
+          {item.label} <span className="sb-public-nav-caret">v</span>
+        </button>
+      )}
 
       {hasChildren && (open || inlineMode) && (
         <div className={`sb-public-nav-menu${inlineMode ? ' inline' : ''}`}>

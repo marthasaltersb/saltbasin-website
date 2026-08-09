@@ -6,6 +6,7 @@ export const MEMBER_WORLD_REGISTRY = [
     id: 'account', label: 'My Account', shortLabel: 'Account', accent: '#E8DCC4', alwaysAvailable: true,
     description: 'Identity, verification, payment sponsorship, plans, licenses, shortcuts, and dashboard cards.',
     variants: [
+      { id: 'account-agents', label: 'Account Agent Orbit', icon: 'AI', tab: 'agent-hub-config' },
       { id: 'identity', label: 'Identity & Email', icon: 'ID', action: 'account' },
       { id: 'commerce', label: 'Payments & Plans', icon: '$', action: 'account' },
       { id: 'access', label: 'Licenses & Entitlements', icon: 'KEY', action: 'account' },
@@ -17,6 +18,7 @@ export const MEMBER_WORLD_REGISTRY = [
     id: 'salt-basin', label: 'Salt Basin', shortLabel: 'Platform', accent: '#C4843A', adminOnly: true,
     description: 'The Salt Basin organization control plane, definitions, intelligence domains, and platform operations.',
     variants: [
+      { id: 'platform-agents', label: 'Platform Agent Orbit', icon: 'AI', tab: 'agent-hub-config' },
       { id: 'definition-studio', label: 'Definition Studio', icon: 'DEF', tab: 'methodology-config' },
       { id: 'platform-settings', label: 'Platform Settings', icon: 'CFG', tab: 'config' },
       { id: 'executive', label: 'Executive Intelligence', icon: 'EXE', tab: 'analytics' },
@@ -37,6 +39,7 @@ export const MEMBER_WORLD_REGISTRY = [
     id: 'member', label: 'Salt Basin Member', shortLabel: 'Member', accent: '#785D69', featureKeys: ['career_core', 'member_site'],
     description: 'Personal brand, member connections, intake, career evidence, opportunity pipelines, and portfolio outputs.',
     variants: [
+      { id: 'member-agent-orbit', label: 'Member Agent Orbit', icon: 'AI', tab: 'agent-hub-config' },
       { id: 'profile-site', label: 'Profile Site', icon: 'WEB', featureKey: 'member_site', tab: 'content' },
       { id: 'networking', label: 'Networking Intelligence', icon: 'NET', tab: 'networks' },
       { id: 'career', label: 'Career Intelligence', icon: 'CAR', featureKey: 'career_core', tab: 'careerMaster' },
@@ -57,7 +60,7 @@ export const MEMBER_WORLD_REGISTRY = [
       { id: 'org-site', label: 'Public Site & Routing', icon: 'WEB', tab: 'content' },
       { id: 'org-access', label: 'Members & Permissions', icon: 'ACL', tab: 'access' },
       { id: 'org-intelligence', label: 'Deployed Intelligence', icon: 'INT', tab: 'analytics' },
-      { id: 'org-agents', label: 'Agents & Approvals', icon: 'AI', tab: 'agent-hub-config' },
+      { id: 'org-agents', label: 'Organization Agent Orbit', icon: 'AI', tab: 'agent-hub-config' },
     ],
     journeys: [
       { id: 'org-provisioning', label: 'Organization provisioning', stages: ['Select template', 'Define semantics', 'Map systems', 'Provision modules', 'Invite members', 'Publish'] },

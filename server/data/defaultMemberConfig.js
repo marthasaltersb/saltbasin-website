@@ -38,7 +38,8 @@ export function defaultMemberConfig({ displayName, email }) {
       // AdminShell.jsx's initial `tab` state for scope === 'member' mirrors
       // this landing choice (careerPlacementAgents) — keep both in sync if
       // this array's first entry ever changes.
-      memberTabs: [
+        memberTabs: [
+          { id: 'agent-hub-config', label: 'My Agent Orbit', componentId: 'agentHubConfig', sortOrder: 1 },
         { id: 'careerPlacementAgents', label: 'Career Placement Agents', componentId: 'careerPlacementAgents', sortOrder: 0 },
         { id: 'lonetreeMvp', label: 'Fund & Portfolio Demo', componentId: 'lonetreeMvp', sortOrder: 5 },
         { id: 'careerMaster', label: 'Career Master', componentId: 'careerMaster', sortOrder: 10 },

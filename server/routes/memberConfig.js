@@ -10,6 +10,7 @@ import { requireUser } from '../auth.js';
 import { defaultMemberConfig } from '../data/defaultMemberConfig.js';
 import { encrypt } from '../lib/crypto.js';
 import { hasCareerPortfolioContent } from '../lib/careerAtomRollups.js';
+import { MEMBER_FEATURES, requireMemberFeature } from '../lib/memberAccess.js';
 
 const router = Router();
 
@@ -90,7 +91,7 @@ router.get('/draft', requireUser, async (req, res) => {
   res.json(redactForClient({ ...cfg, navigation: mergedNavigation }));
 });
 
-router.put('/draft', requireUser, async (req, res) => {
+router.put('/draft', requireUser, requireMemberFeature(MEMBER_FEATURES.MEMBER_SITE), async (req, res) => {
   const incoming = req.body;
   if (!incoming || typeof incoming !== 'object') {
     return res.status(400).json({ error: 'expected config object' });
@@ -118,7 +119,7 @@ router.put('/draft', requireUser, async (req, res) => {
   res.json({ ok: true, updatedAt: Date.now() });
 });
 
-router.post('/publish', requireUser, async (req, res) => {
+router.post('/publish', requireUser, requireMemberFeature(MEMBER_FEATURES.MEMBER_SITE), async (req, res) => {
   const draft = await readState(req.user.id, 'draft');
   if (!draft) return res.status(404).json({ error: 'no draft to publish' });
   // Rollout gate: mirrors memberSite.js's /publish — a member's public

@@ -169,6 +169,170 @@ export const ICONS = {
     label: 'Status — Planned',
     paths: ['M24 42 A18 18 0 1 1 24 6 A18 18 0 0 1 24 42 Z', 'M24 14 V24 L32 29'],
   },
+
+  // ── Nautical / River System set — Salt Basin Buoys concept ──
+  hourglass: {
+    label: 'Hourglass — Salt Basin Buoys Mark',
+    paths: [
+      'M12 6 H36', 'M12 42 H36',
+      'M14 6 L24 24 L14 42', 'M34 6 L24 24 L34 42',
+    ],
+    circles: [{ cx: 24, cy: 24, r: 1.4 }],
+  },
+  buoy: {
+    label: 'Buoy — Channel Marker Float',
+    paths: [
+      'M18 44 H30',
+      'M18 44 C18 30 18 20 24 8 C30 20 30 30 30 44 Z',
+      'M17 26 H31',
+      'M17 34 H31',
+    ],
+    circles: [{ cx: 24, cy: 6, r: 2 }],
+  },
+  anchor: {
+    label: 'Anchor — Stability / Commitment',
+    paths: [
+      'M24 12 V38', 'M18 16 H30',
+      'M12 26 C12 34 18 40 24 40 C30 40 36 34 36 26',
+      'M12 26 L16 22', 'M36 26 L32 22',
+    ],
+    circles: [{ cx: 24, cy: 8, r: 4 }],
+  },
+  boat: {
+    label: 'Boat — Journey Vessel',
+    paths: ['M8 30 H40 L34 40 H14 Z', 'M24 30 V10', 'M24 12 L36 26 L24 26 Z'],
+  },
+  lifeboat: {
+    label: 'Lifeboat — Rescue / Support',
+    paths: ['M8 32 H40 L34 42 H14 Z', 'M24 8 V24', 'M16 16 H32'],
+    circles: [{ cx: 24, cy: 16, r: 8 }, { cx: 24, cy: 16, r: 4 }],
+  },
+  channelMarkerRed: {
+    label: 'Red Channel Marker — Odd / Return Boundary',
+    paths: ['M24 20 V44', 'M24 4 L34 20 H14 Z'],
+  },
+  channelMarkerGreen: {
+    label: 'Green Channel Marker — Even / Outbound Boundary',
+    paths: ['M24 20 V44', 'M14 4 H34 V20 H14 Z'],
+  },
+  jetSki: {
+    label: 'Jet Ski — Fast Track / Quick Action',
+    paths: [
+      'M6 30 C6 22 14 16 24 16 C34 16 42 22 42 30 C42 34 38 36 34 36 H14 C10 36 6 34 6 30 Z',
+      'M30 16 V8', 'M26 8 H34', 'M18 22 H30',
+    ],
+  },
+  island: {
+    label: 'Island — Destination / Milestone',
+    paths: [
+      'M4 38 H44',
+      'M8 34 C8 26 16 22 24 22 C32 22 40 26 40 34 Z',
+      'M24 22 V12',
+      'M24 12 L14 8', 'M24 12 L34 8', 'M24 12 L18 4', 'M24 12 L30 4',
+    ],
+  },
+  sailboat: {
+    label: 'Sailboat — Guided Journey',
+    paths: [
+      'M10 34 H38 L32 42 H16 Z', 'M24 34 V6',
+      'M24 8 L36 30 L24 30 Z', 'M24 14 L14 30 L24 30 Z',
+    ],
+  },
+  tugBoat: {
+    label: 'Tug Boat — Escort / Enablement',
+    paths: ['M6 30 H42 L36 40 H12 Z', 'M16 30 V18 H30 V30', 'M28 18 V10'],
+    circles: [{ cx: 20, cy: 23, r: 2 }],
+  },
+  shippingContainer: {
+    label: 'Shipping Container — Delivered Output',
+    paths: [
+      'M8 14 H40 V36 H8 Z', 'M8 14 L12 10 H44 L40 14',
+      'M14 14 V36', 'M20 14 V36', 'M26 14 V36', 'M32 14 V36',
+    ],
+  },
+  coralReef: {
+    label: 'Coral Reef — Ecosystem / Accumulated Evidence',
+    paths: [
+      'M4 42 H44',
+      'M10 42 V30 C10 26 6 24 6 18', 'M10 30 C10 26 14 24 14 18',
+      'M22 42 V26 C22 20 28 18 28 12', 'M22 30 C22 26 18 24 18 20',
+      'M34 42 V28 C34 24 38 22 38 16',
+    ],
+  },
+  mineralGold: {
+    label: 'Gold Mineral — High-Value Signal',
+    paths: [
+      'M14 20 L20 10 L30 12 L38 20 L36 32 L26 40 L16 36 L10 28 Z',
+      'M20 10 L24 24 L30 12', 'M10 28 L24 24 L16 36', 'M38 20 L24 24 L36 32',
+    ],
+  },
+  mineralIron: {
+    label: 'Iron Mineral — Structural / Foundational Signal',
+    paths: [
+      'M10 30 L16 14 L28 10 L38 18 L36 34 L22 40 L10 30 Z',
+      'M16 14 L22 26', 'M28 10 L22 26', 'M38 18 L22 26', 'M22 40 L22 26',
+    ],
+  },
+  crystalOrbit: {
+    label: 'Crystal with Orbit Rings — Convergence Core',
+    paths: [
+      'M24 6 L34 18 V28 L24 42 L14 28 V18 Z',
+      'M14 18 L24 24 L34 18', 'M24 24 V42',
+      'M4 24 A20 7 0 1 0 44 24 A20 7 0 1 0 4 24',
+      'M34 41.3 A20 7 60 1 1 14 6.7 A20 7 60 1 1 34 41.3',
+    ],
+  },
+  chatBubbles: {
+    label: 'Chat Bubbles — Comment / Interaction',
+    paths: [
+      'M6 8 H28 V22 H14 L8 28 V22 H6 Z',
+      'M20 16 H42 V30 H30 L36 36 V30 H20 Z',
+    ],
+  },
+  weatherSun: {
+    label: 'Weather — Sun (Emotional Weather: Clear)',
+    paths: [
+      'M24 4 V10', 'M24 38 V44', 'M4 24 H10', 'M38 24 H44',
+      'M10.5 10.5 L14.6 14.6', 'M33.4 33.4 L37.5 37.5',
+      'M10.5 37.5 L14.6 33.4', 'M33.4 14.6 L37.5 10.5',
+    ],
+    circles: [{ cx: 24, cy: 24, r: 8 }],
+  },
+  weatherCloud: {
+    label: 'Weather — Cloud (Emotional Weather: Overcast)',
+    paths: [
+      'M14 32 C8 32 4 28 4 23 C4 18 8 15 13 15 C15 9 21 5 27 7 C33 9 36 15 34 20 C40 21 44 25 44 30 C44 34 40 37 35 37 H14 Z',
+    ],
+  },
+  weatherRain: {
+    label: 'Weather — Rain (Emotional Weather: Strained)',
+    paths: [
+      'M12 24 C7 24 4 21 4 17 C4 13 8 10 12 10 C14 6 19 4 24 6 C29 8 31 13 29 17 C34 17 38 20 38 24 C38 27 35 29 31 29 H12 Z',
+      'M14 34 L12 40', 'M22 34 L20 40', 'M30 34 L28 40',
+    ],
+  },
+  weatherStorm: {
+    label: 'Weather — Storm (Emotional Weather: Crisis)',
+    paths: [
+      'M12 22 C7 22 4 19 4 15 C4 11 8 8 12 8 C14 4 19 2 24 4 C29 6 31 11 29 15 C34 15 38 18 38 22 C38 25 35 27 31 27 H12 Z',
+      'M24 28 L18 38 H24 L20 44 L32 32 H26 Z',
+    ],
+  },
+  brainFog: {
+    label: 'Brain Fog — Cognitive Load Signal',
+    paths: [
+      'M16 10 C10 10 7 15 8 20 C4 22 4 28 8 30 C7 35 11 39 17 38 C19 41 24 41 26 38 C32 39 36 35 35 30 C39 28 39 22 35 20 C36 15 33 10 27 10 C24 10 22 12 21 14 C20 12 18 10 16 10 Z',
+      'M2 20 H12', 'M36 20 H46', 'M0 27 H10', 'M38 27 H48',
+    ],
+  },
+  queensCrown: {
+    label: "Queen's Crown — Elevated / Executive Signal",
+    paths: [
+      'M8 34 H40 V40 H8 Z',
+      'M8 34 L14 18 L20 28 L24 14 L28 28 L34 18 L40 34',
+    ],
+    circles: [{ cx: 14, cy: 22, r: 1.5 }, { cx: 24, cy: 20, r: 1.5 }, { cx: 34, cy: 22, r: 1.5 }],
+  },
 };
 
 export const ICON_NAMES = Object.keys(ICONS);

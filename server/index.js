@@ -59,6 +59,11 @@ import scenariosRouter from './routes/scenarios.js';
 import configEnvelopesRouter from './routes/configEnvelopes.js';
 import lonetreeMvpRouter from './routes/lonetreeMvp.js';
 import proposalExperienceRouter from './routes/proposalExperience.js';
+import agentHubRouter from './routes/agentHub.js';
+import notificationsRouter from './routes/notifications.js';
+import { runDueDefinitions } from './lib/agentHubRunner.js';
+import { isCronDue } from './lib/cronMatch.js';
+import cron from 'node-cron';
 
 // Safety net: an unhandled promise rejection in any async route handler
 // (e.g. a bad column reference in a PATCH) is fatal by default in Node —
@@ -163,6 +168,8 @@ app.use('/api/member-financial', memberFinancialRouter);
 app.use('/api/member-entitlements', memberEntitlementsRouter);
 app.use('/api/resume-outputs', resumeOutputsRouter);
 app.use('/api/scenarios', scenariosRouter);
+app.use('/api/agent-hub', agentHubRouter);
+app.use('/api/notifications', notificationsRouter);
 
 // Uploaded files now live on Supabase Storage at <SUPABASE_URL>/storage/v1/object/public/uploads/<file>.
 // The returned URL from POST /api/uploads is already absolute, so the browser
@@ -230,12 +237,25 @@ app.listen(port, async () => {
   // Daily digest email — fires once per day at 07:00 local server time.
   // Uses a setInterval aligned to the next 07:00 crossing.
   scheduleDailyDigest();
+  startAgentHubScheduler();
 
   // Real background agent dispatcher (2026-08-09) — reads agent_schedules
   // rows with a non-'on_demand' cadence and runs them unattended. See
   // server/lib/agentDispatcher.js's header for why now / what it runs.
   import('./lib/agentDispatcher.js').then(({ startAgentDispatcher }) => startAgentDispatcher());
 });
+
+function startAgentHubScheduler() {
+  cron.schedule('* * * * *', async () => {
+    try {
+      const results = await runDueDefinitions((cronExpr) => isCronDue(cronExpr));
+      if (results.length) console.log(`[agent-hub] scheduler ran ${results.length} due agent(s)`);
+    } catch (error) {
+      console.error('[agent-hub] scheduler tick failed:', error.message);
+    }
+  });
+  console.log('[server] Agent Hub scheduler started');
+}
 
 function scheduleDailyDigest() {
   const adminEmail = process.env.ADMIN_EMAIL || 'marthasalter@gmail.com';
