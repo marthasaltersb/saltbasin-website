@@ -48,6 +48,7 @@ export const MEMBER_WORLD_REGISTRY = [
     ],
     journeys: [
       { id: 'career-foundation', label: 'Enriched career foundation', stages: ['Source evidence', 'Define roles', 'Map capabilities', 'Approve claims', 'Compose outputs'] },
+      { id: 'resume-to-portfolio', label: 'Resume to portfolio', stages: ['Choose target role', 'Map source evidence', 'Strengthen capability claims', 'Review output language', 'Approve resume', 'Publish portfolio'] },
       { id: 'opportunity-pipeline', label: 'Career opportunity pipeline', stages: ['Discover', 'Qualify', 'Tailor', 'Engage', 'Interview', 'Convert'] },
       { id: 'member-connection', label: 'Member connection', stages: ['Discover member', 'Permission check', 'Request', 'Collaborate', 'Close loop'] },
     ],
