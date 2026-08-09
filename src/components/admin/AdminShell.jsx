@@ -46,6 +46,8 @@ const LonetreeMvpPanel = lazy(() => import('./LonetreeMvpPanel.jsx'));
 const ProposalExperiencePanel = lazy(() => import('./ProposalExperiencePanel.jsx'));
 const CareerPlacementAgentsPanel = lazy(() => import('./CareerPlacementAgentsPanel.jsx'));
 const CommercialOpportunityPanel = lazy(() => import('./CommercialOpportunityPanel.jsx'));
+const AgentHubConfigPanel = lazy(() => import('./AgentHubConfigPanel.jsx'));
+const AgentOutputsPanel = lazy(() => import('./AgentOutputsPanel.jsx'));
 
 // Tab component registry: the one piece that can't be data-driven, because
 // React components have to be referenced by import. The nav structure stored
@@ -83,6 +85,8 @@ const TAB_COMPONENTS = {
   methodologyConfig: () => <MethodologyConfigPanel />,
   lonetreeMvp:    (props) => <LonetreeMvpPanel {...props} />,
   commercialOpportunities: () => <CommercialOpportunityPanel />,
+  agentHubConfig: (props) => <AgentHubConfigPanel {...props} />,
+  agentHubOutputs: () => <AgentOutputsPanel />,
   // config: handled inline below (ConfigPanel needs draft + setters from shell)
   // content: handled inline below (Sidebar/EditorPane/PreviewPane composition)
 };
@@ -366,7 +370,7 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
   useEffect(() => {
     if (scope !== 'member' || !configDraft) return;
     const tabs = (configDraft.navigation?.memberTabs || []).filter((t) => t.enabled !== false);
-    if (tabs.length === 0 || tabs.some((t) => t.id === tab)) return;
+    if (tab === 'agent-hub-config' || tabs.length === 0 || tabs.some((t) => t.id === tab)) return;
     const firstTab = [...tabs].sort((a, b) => a.sortOrder - b.sortOrder)[0];
     setTab(firstTab.id);
   }, [scope, configDraft, tab]);
@@ -867,6 +871,7 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
           if (componentId === 'proposalExperience') return <ProposalExperiencePanel />;
           if (componentId === 'lonetreeMvp')       return <LonetreeMvpPanel scope={scope} />;
           if (componentId === 'careerPlacementAgents') return <CareerPlacementAgentsPanel scope={scope} />;
+          if (componentId === 'agent-hub-config' || componentId === 'agentHubConfig') return <AgentHubConfigPanel scope={scope} orgId={orgId} />;
 
           // Inline 'config' case: the panel needs draft + setter + scope from
           // the shell. Treated as the default fallback when nothing else

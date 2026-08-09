@@ -18,14 +18,17 @@ import { requireUser } from '../auth.js';
 import { audit } from '../lib/audit.js';
 import { makeRateLimiter } from '../lib/rateLimit.js';
 import { decrypt } from '../lib/crypto.js';
+import { MEMBER_FEATURES, requireMemberFeature } from '../lib/memberAccess.js';
 import {
   canWriteMemberConfigPath,
   resolveMemberStaffTemplate,
   toolsForMemberStaff,
 } from '../lib/memberStaffTemplates.js';
+import { assertAgentLlmBudget, recordAgentLlmUsage } from '../lib/agentLlmUsage.js';
 
 const router = Router();
 router.use(requireUser);
+router.use(requireMemberFeature(MEMBER_FEATURES.CAREER_BESTYSTAFF));
 
 // LLM calls cost money per-token — cap abuse (runaway scripts, shared BYO keys,
 // or a member accidentally looping) at 20 messages/minute per IP.
@@ -280,8 +283,16 @@ async function executeTool(name, input, userId, memberDbPools, staffTemplate) {
 
 // ── System prompt ─────────────────────────────────────────────────────────────
 
-function buildSystemPrompt(member, hasMemberDb, staffTemplate) {
+function buildSystemPrompt(member, hasMemberDb, staffTemplate, context = 'personal_brand') {
+  const contextGuidance = {
+    personal_brand: 'Focus on personal-brand pages, layouts, navigation, header/footer language, calls to action, tags, SEO fields, and mappings from persisted member data into public fields.',
+    career_intake: 'Focus on career intake, source-to-master mapping definitions, career metadata, skills/tools/capabilities, proficiency definitions, and which approved data may feed public profile fields. Never claim an intake record changed unless a tool actually persisted it.',
+    resume_outputs: 'Focus on persisted resumePresets and reusable output configuration: selected career sections, ordering, audience rules, headings, summaries, tags, and mapping rules. Prefer configuration changes over one-off generated text.',
+  };
   return `You are ${staffTemplate.name}, a BestyStaff-derived agent for Salt Basin Net Works. You are helping ${member.email} configure their member-scoped draft environment.
+
+Current configuration workspace: ${context}.
+${contextGuidance[context] || contextGuidance.personal_brand}
 
 Purpose: ${staffTemplate.purpose}
 Workforce type: ${staffTemplate.workforceType}. You are not Channel Rod Staff unless explicitly assigned to a Channel Rod.
@@ -318,7 +329,7 @@ ${staffTemplate.instructions.map((instruction) => `- ${instruction}`).join('\n')
 // ── Main chat endpoint ────────────────────────────────────────────────────────
 
 router.post('/', agentLimiter, async (req, res) => {
-  const { message, history = [], staffTemplateId } = req.body || {};
+  const { message, history = [], staffTemplateId, context = 'personal_brand' } = req.body || {};
   if (!message || typeof message !== 'string') {
     return res.status(400).json({ error: 'message required' });
   }
@@ -334,6 +345,10 @@ router.post('/', agentLimiter, async (req, res) => {
   const cfg = await readConfig(req.user.id);
   const configuredTemplateId = cfg?.agents?.defaultMemberStaffTemplateId;
   const staffTemplate = resolveMemberStaffTemplate(staffTemplateId || configuredTemplateId);
+  const definitionKey = staffTemplate.id === 'profile_builder' ? 'member-profile-builder-staff' : 'member-personal-brand-staff';
+  const agentDefinition = await db.prepare(`SELECT id, config FROM agent_hub_definitions WHERE key=$1`).get(definitionKey);
+  const definitionConfig = typeof agentDefinition?.config === 'string' ? JSON.parse(agentDefinition.config) : (agentDefinition?.config || {});
+  const llmPolicy = definitionConfig.llm || { provider: 'anthropic', model: DEFAULT_MODEL, maxOutputTokensPerResponse: 4096, tokenCap: 500000, capPeriod: 'month', maxToolIterations: MAX_TOOL_ITERATIONS };
   const memberDbs = cfg?.integrations?.memberDbs || [];
   const memberDbPools = {};
   const activeTools = toolsForMemberStaff(staffTemplate, TOOLS);
@@ -360,7 +375,7 @@ router.post('/', agentLimiter, async (req, res) => {
   }
 
   const member = req.user;
-  const systemPrompt = buildSystemPrompt(member, Object.keys(memberDbPools).length > 0, staffTemplate);
+  const systemPrompt = buildSystemPrompt(member, Object.keys(memberDbPools).length > 0, staffTemplate, context);
 
   // Build message history for Claude
   const messages = [
@@ -373,8 +388,9 @@ router.post('/', agentLimiter, async (req, res) => {
   let toolCallLog = [];
 
   try {
-    while (iterations < MAX_TOOL_ITERATIONS) {
+    while (iterations < Number(llmPolicy.maxToolIterations || MAX_TOOL_ITERATIONS)) {
       iterations++;
+      if (agentDefinition) await assertAgentLlmBudget(Number(agentDefinition.id), llmPolicy);
 
       const claudeRes = await fetch(CLAUDE_API, {
         method: 'POST',
@@ -384,8 +400,8 @@ router.post('/', agentLimiter, async (req, res) => {
           'content-type': 'application/json',
         },
         body: JSON.stringify({
-          model: DEFAULT_MODEL,
-          max_tokens: 4096,
+          model: llmPolicy.model || DEFAULT_MODEL,
+          max_tokens: Number(llmPolicy.maxOutputTokensPerResponse || 4096),
           system: systemPrompt,
           tools: activeTools,
           messages,
@@ -397,6 +413,7 @@ router.post('/', agentLimiter, async (req, res) => {
         const errMsg = body?.error?.message || JSON.stringify(body);
         return res.status(claudeRes.status).json({ error: errMsg });
       }
+      if (agentDefinition) await recordAgentLlmUsage(Number(agentDefinition.id), llmPolicy, body.usage || {});
 
       // If Claude stopped with text (no tool calls), we're done
       if (body.stop_reason === 'end_turn' || !body.content?.some((c) => c.type === 'tool_use')) {
@@ -427,6 +444,7 @@ router.post('/', agentLimiter, async (req, res) => {
     res.json({ reply: 'I reached the tool-call limit on this request. Try breaking the task into smaller steps.', toolCalls: toolCallLog });
   } catch (e) {
     console.error('[memberAgent] error:', e.message);
+    if (e.code === 'AGENT_LLM_CAP_REACHED') return res.status(429).json({ error: 'This agent has reached its configured LLM token cap for the current period.', usage: e.usage });
     res.status(500).json({ error: e.message });
   } finally {
     for (const src of Object.values(memberDbPools)) {

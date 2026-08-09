@@ -271,6 +271,15 @@ router.get('/me/audit', requireUser, async (req, res) => {
   res.json({ entries: rows.map((r) => ({ ...r, id: Number(r.id), created_at: Number(r.created_at) })) });
 });
 
+// Immutable agreement history attached to the authenticated member profile.
+router.get('/me/consents', requireUser, async (req, res) => {
+  const rows = await db.prepare(`
+    SELECT id, consent_type, action, consent_version, context, ip, user_agent, created_at
+    FROM consent_actions WHERE user_id=$1 ORDER BY created_at DESC, id DESC
+  `).all(req.user.id);
+  res.json({ items: rows.map((row) => ({ ...row, id: Number(row.id), created_at: Number(row.created_at) })) });
+});
+
 // ── Stats — member's own page views ──
 router.get('/me/stats', requireUser, async (req, res) => {
   const mp = await db.prepare('SELECT slug FROM member_profiles WHERE user_id = $1').get(req.user.id);

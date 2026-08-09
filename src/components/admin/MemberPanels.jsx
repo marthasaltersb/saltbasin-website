@@ -256,7 +256,26 @@ export function MemberAuditPanel({ isAdmin = false }) {
 
 // ── Agent Chat Panel ──────────────────────────────────────────────────────────
 
-export function MemberAgentPanel() {
+const AGENT_CONTEXTS = {
+  personal_brand: {
+    label: 'Personal Brand Agent',
+    description: 'Configure your profile pages, navigation, layouts, field mappings, brand language, header, footer, calls to action, and tags.',
+    prompts: ['Show me my current site structure', 'Update my header and footer language', 'Help map my career data into my About page', 'Refine my page navigation and SEO tags'],
+  },
+  career_intake: {
+    label: 'Career Intake Agent',
+    description: 'Guide your source-document intake, career-master organization, metadata definitions, mappings, and proficiency context.',
+    prompts: ['Review my current career configuration', 'Help define my career metadata and mapping rules', 'Show which career fields can feed my public profile', 'Help me organize skills, tools, and capabilities'],
+  },
+  resume_outputs: {
+    label: 'Resume & Output Agent',
+    description: 'Configure reusable resume presets, output language, ordering, audience rules, and career-master-to-output mappings.',
+    prompts: ['Show my current resume presets', 'Create a tailored output configuration', 'Change the ordering rules for my resume', 'Help configure reusable header and summary language'],
+  },
+};
+
+export function MemberAgentPanel({ context = 'personal_brand' }) {
+  const agentContext = AGENT_CONTEXTS[context] || AGENT_CONTEXTS.personal_brand;
   const [history, setHistory] = React.useState([]);
   const [input, setInput] = React.useState('');
   const [loading, setLoading] = React.useState(false);
@@ -281,7 +300,7 @@ export function MemberAgentPanel() {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg, history }),
+        body: JSON.stringify({ message: msg, history, context }),
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || 'Agent error');
@@ -317,10 +336,10 @@ export function MemberAgentPanel() {
       {/* Header */}
       <div style={{ padding: '0.75rem 1.25rem', borderBottom: '0.5px solid rgba(196,132,58,0.15)', flexShrink: 0 }}>
         <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.72rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--sb-gold)' }}>
-          Profile Agent
+          {agentContext.label}
         </div>
         <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginTop: 2 }}>
-          Ask me to update your profile, add sections, set config values, or query your external database.
+          {agentContext.description}
           Changes go to your draft — you still control when to publish.
         </div>
       </div>
@@ -331,16 +350,10 @@ export function MemberAgentPanel() {
           <div style={{ color: 'var(--sb-dusty)', fontSize: '0.82rem', lineHeight: 1.7 }}>
             <strong style={{ color: 'var(--sb-sage)', display: 'block', marginBottom: '0.5rem' }}>Get started:</strong>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              {[
-                '"Show me my current site structure"',
-                '"Add a stat grid to my About page with 3 key metrics"',
-                '"Change my hero heading to [your headline]"',
-                '"Set my owner name in config to [your name]"',
-                '"What sections do I have on my home page?"',
-              ].map((s) => (
+              {agentContext.prompts.map((s) => (
                 <button
                   key={s}
-                  onClick={() => setInput(s.replace(/^"|"$/g, ''))}
+                  onClick={() => setInput(s)}
                   style={{ textAlign: 'left', background: 'rgba(196,132,58,0.06)', border: '0.5px solid rgba(196,132,58,0.2)', borderRadius: 'var(--sb-radius)', padding: '0.4rem 0.7rem', color: 'var(--sb-sage)', fontSize: '0.78rem', cursor: 'pointer', fontFamily: 'var(--sb-font-body)' }}
                 >
                   {s}

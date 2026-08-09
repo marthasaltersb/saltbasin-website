@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import HerqPanel from './HerqPanel.jsx';
 import ServicesPanel from './ServicesPanel.jsx';
 import GlobalStandardsPanel from './GlobalStandardsPanel.jsx';
+import PublicationsPanel from './PublicationsPanel.jsx';
 
 const SUB_TABS = [
-  { id: 'herq',     label: 'HERQ',     mode: 'herq'       },
-  { id: 'services', label: 'Services', mode: 'strategic'  },
-  { id: 'standards',label: 'Standards',mode: 'strategic'  },
+  { id: 'herq',        label: 'HERQ',         mode: 'herq'      },
+  { id: 'services',    label: 'Services',     mode: 'strategic' },
+  { id: 'publications',label: 'Publications', mode: 'strategic' },
+  { id: 'standards',   label: 'Standards',    mode: 'strategic' },
 ];
 
 export default function ContentManagerShell() {
@@ -49,9 +51,10 @@ export default function ContentManagerShell() {
         data-brand-mode={current.mode}
         style={{ flex: 1, overflowY: 'auto', background: current.mode === 'herq' ? 'var(--herq-bg, #F5F0E8)' : undefined }}
       >
-        {active === 'herq'     && <HerqPanel />}
-        {active === 'services' && <ServicesPanel />}
-        {active === 'standards'&& <GlobalStandardsPanel />}
+        {active === 'herq'         && <HerqPanel />}
+        {active === 'services'     && <ServicesPanel />}
+        {active === 'publications' && <PublicationsPanel />}
+        {active === 'standards'    && <GlobalStandardsPanel />}
       </div>
     </div>
   );

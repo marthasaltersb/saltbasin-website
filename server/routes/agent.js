@@ -14,6 +14,7 @@
 import { Router } from 'express';
 import { db } from '../db.js';
 import { requireAdmin } from '../auth.js';
+import { assertAgentLlmBudget, recordAgentLlmUsage } from '../lib/agentLlmUsage.js';
 
 const router = Router();
 router.use(requireAdmin);
@@ -118,6 +119,9 @@ router.post('/chat', async (req, res) => {
       error: 'No Anthropic API key configured. Set ANTHROPIC_API_KEY in Render env, or paste a BYO key in your member Config panel.',
     });
   }
+  const agentDefinition = await db.prepare(`SELECT id, config FROM agent_hub_definitions WHERE key='scrum-agent'`).get();
+  const definitionConfig = typeof agentDefinition?.config === 'string' ? JSON.parse(agentDefinition.config) : (agentDefinition?.config || {});
+  const llmPolicy = definitionConfig.llm || { provider: 'anthropic', model: DEFAULT_MODEL, maxOutputTokensPerResponse: 2048, tokenCap: 300000, capPeriod: 'month' };
 
   // Get or create thread
   let threadId = threadIdIn ? Number(threadIdIn) : null;
@@ -146,6 +150,7 @@ router.post('/chat', async (req, res) => {
 
   // Call Claude
   try {
+    if (agentDefinition) await assertAgentLlmBudget(Number(agentDefinition.id), llmPolicy);
     const claudeRes = await fetch(CLAUDE_API, {
       method: 'POST',
       headers: {
@@ -154,8 +159,8 @@ router.post('/chat', async (req, res) => {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: model || DEFAULT_MODEL,
-        max_tokens: 2048,
+        model: llmPolicy.model || model || DEFAULT_MODEL,
+        max_tokens: Number(llmPolicy.maxOutputTokensPerResponse || 2048),
         system: SYSTEM_PROMPT,
         messages,
       }),
@@ -166,6 +171,7 @@ router.post('/chat', async (req, res) => {
       console.error('[agent] Claude error:', claudeRes.status, body);
       return res.status(claudeRes.status).json({ error: errMsg });
     }
+    if (agentDefinition) await recordAgentLlmUsage(Number(agentDefinition.id), llmPolicy, body.usage || {});
     const assistantText = (body.content || []).filter((c) => c.type === 'text').map((c) => c.text).join('\n');
     // Persist the assistant reply
     await db
@@ -180,6 +186,7 @@ router.post('/chat', async (req, res) => {
     });
   } catch (e) {
     console.error('[agent] dispatch failed:', e.message);
+    if (e.code === 'AGENT_LLM_CAP_REACHED') return res.status(429).json({ error: 'This agent has reached its configured LLM token cap for the current period.', usage: e.usage });
     res.status(500).json({ error: e.message });
   }
 });

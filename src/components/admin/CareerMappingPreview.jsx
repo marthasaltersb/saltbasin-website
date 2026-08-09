@@ -7,7 +7,7 @@
 // component can render either source. Nothing is saved to the Career Master
 // until "Confirm & Save" calls POST /api/career/mappings/commit; every
 // checkbox here only controls what that one commit call will include.
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
 
@@ -65,6 +65,21 @@ function buildInitialEntries(proposal) {
 export default function CareerMappingPreview({ proposal, source, sheetWarnings = [], missingSheets = [], onCommitted, onCancel }) {
   const [entries, setEntries] = useState(() => buildInitialEntries(proposal));
   const [saving, setSaving] = useState(false);
+  const [classifications, setClassifications] = useState([]);
+
+  function commitPayload() {
+    return entries.filter((e) => e.included).map((e) => ({
+      entryType: e.entryType,
+      values: Object.fromEntries(e.fields.filter((f) => f.included).map((f) => [f.atomKey, f.value])),
+      mappings: e.fields.filter((f) => f.included).map((f) => ({ atomKey: f.atomKey, originalValue: f.originalValue, committedValue: f.value, sourceLocation: f.sourceLocation, sourceLabel: f.header, matchType: f.matchType, affinity: f.affinity, documentId: f.documentId, sourceFilename: f.sourceFilename })),
+    })).filter((e) => Object.keys(e.values).length > 0);
+  }
+
+  useEffect(() => {
+    const payload = commitPayload();
+    if (!payload.length) return;
+    api.classifyCareerMappings(payload).then((result) => setClassifications(result.classifications || [])).catch(() => setClassifications([]));
+  }, []);
 
   const groups = useMemo(() => {
     const byType = {};
@@ -88,19 +103,14 @@ export default function CareerMappingPreview({ proposal, source, sheetWarnings =
   }
 
   async function confirmSave() {
-    const payload = entries
-      .filter((e) => e.included)
-      .map((e) => ({
-        entryType: e.entryType,
-        values: Object.fromEntries(e.fields.filter((f) => f.included).map((f) => [f.atomKey, f.value])),
-        mappings: e.fields.filter((f) => f.included).map((f) => ({ atomKey: f.atomKey, originalValue: f.originalValue, committedValue: f.value, sourceLocation: f.sourceLocation, sourceLabel: f.header, matchType: f.matchType, affinity: f.affinity, documentId: f.documentId, sourceFilename: f.sourceFilename })),
-      }))
-      .filter((e) => Object.keys(e.values).length > 0);
+    const payload = commitPayload();
     if (!payload.length) return toast.error('Nothing selected to save');
     setSaving(true);
     try {
       const result = await api.commitCareerMappings(payload, source);
       toast.success(`Saved ${result.created?.length || 0} Career Master entr${(result.created?.length || 0) === 1 ? 'y' : 'ies'}`);
+      if (result.updated?.length) toast.success(`Applied ${result.updated.length} reviewed update${result.updated.length === 1 ? '' : 's'} to existing Career Master records`);
+      if (result.skipped?.length) toast.success(`Protected ${result.skipped.length} existing record${result.skipped.length === 1 ? '' : 's'} from duplicate creation`);
       if (result.errors?.length) toast.error(`${result.errors.length} entr${result.errors.length === 1 ? 'y' : 'ies'} could not be saved — see console`);
       if (result.errors?.length) console.warn('[CareerMappingPreview] commit errors:', result.errors);
       onCommitted?.(result);
@@ -140,6 +150,7 @@ export default function CareerMappingPreview({ proposal, source, sheetWarnings =
               <label style={S.cardHead}>
                 <input type="checkbox" checked={entry.included} onChange={() => toggleEntry(entry.idx)} />
                 {entry.included ? 'Include this entry' : 'Skipped'}
+                {classifications[entry.idx]?.status && <span style={{ marginLeft: 'auto', color: classifications[entry.idx].status === 'new' ? '#287a54' : classifications[entry.idx].status === 'exact_duplicate' ? '#777' : '#a56b18', fontSize: '.68rem', textTransform: 'uppercase' }}>{classifications[entry.idx].status.replaceAll('_', ' ')}</span>}
               </label>
               {entry.fields.map((f) => (
                 <div key={f.atomKey} style={S.field}>

@@ -150,31 +150,55 @@ const GROUP_KEYS_BY_SOURCE = {
   content_activity: { by_action: 'content_activity_by_action' },
 };
 const DEFAULT_GROUP_BY_SOURCE = { career: 'skills', content_activity: 'by_action' };
-const CHART_RENDERERS = { bar: BarChart, list: ListChart, meter: MeterChart };
+const CHART_RENDERERS = {
+  bar: BarChart,
+  list: ListChart,
+  meter: MeterChart,
+  table: ListChart,
+  matrix: MeterChart,
+  radar: MeterChart,
+  timeline: BarChart,
+};
 
 export function CareerRollupShowcaseBlock({ section, memberSlug }) {
   const f = section.fields || {};
   const bg = BG_VAR[section.bg] || 'var(--sb-ivory)';
   const dataSource = f.dataSource || 'career';
   const groupBy = f.groupBy || DEFAULT_GROUP_BY_SOURCE[dataSource] || 'skills';
-  const chartType = f.chartType || 'bar';
+  const displayDefinitionKey = f.displayDefinitionKey || '';
   const [catalog, setCatalog] = React.useState(null);
+  const [resolvedDisplay, setResolvedDisplay] = React.useState(null);
 
   React.useEffect(() => {
+    setCatalog(null);
+    setResolvedDisplay(null);
+    if (displayDefinitionKey) {
+      const request = memberSlug
+        ? fetch(`/api/career/public-rollup/${encodeURIComponent(memberSlug)}/${encodeURIComponent(displayDefinitionKey)}`).then((r) => r.ok ? r.json() : Promise.reject(new Error('Public rollup unavailable')))
+        : fetch('/api/career/experience-definitions', { credentials: 'include' }).then((r) => r.json()).then((defs) => {
+            const display = (defs.definitions || []).find((x) => x.type === 'display' && x.key === displayDefinitionKey);
+            if (!display?.definition?.rollupKey) throw new Error('Display definition unavailable');
+            return fetch(`/api/career/rollup-preview/${encodeURIComponent(display.definition.rollupKey)}`, { credentials: 'include' }).then((r) => r.json()).then((rollup) => ({ display: { key: display.key, label: display.label, description: display.description, chartType: display.definition.chartType, showEvidenceCount: display.definition.showEvidenceCount === true }, rollup }));
+          });
+      request.then((payload) => { setResolvedDisplay(payload.display || null); setCatalog({ configurableRows: payload.rollup?.groups || [] }); })
+        .catch(() => setCatalog({ configurableRows: [] }));
+      return;
+    }
     const ownerParam = memberSlug ? `?owner=${encodeURIComponent(memberSlug)}` : '';
     fetch(`/api/data-sources/${encodeURIComponent(dataSource)}/rollup${ownerParam}`).then((r) => r.json()).then(setCatalog).catch(() => setCatalog(null));
-  }, [memberSlug, dataSource]);
+  }, [memberSlug, dataSource, displayDefinitionKey]);
 
   const catalogKey = (GROUP_KEYS_BY_SOURCE[dataSource] || {})[groupBy] || 'skills_by_category';
-  const rows = catalog?.[catalogKey] || [];
+  const rows = displayDefinitionKey ? (catalog?.configurableRows || []) : (catalog?.[catalogKey] || []);
+  const chartType = resolvedDisplay?.chartType || f.chartType || 'bar';
   const ChartRenderer = CHART_RENDERERS[chartType] || BarChart;
 
   return (
     <section id={section.id} style={{ background: bg, padding: '5rem 2rem' }}>
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
         {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
-        {f.heading && <h2 className="sb-display" style={{ fontSize: '2.1rem', color: 'var(--sb-navy)', marginBottom: '0.75rem' }}>{f.heading}</h2>}
-        {f.intro && <p style={{ color: '#555', maxWidth: 700, marginBottom: '2rem' }}>{f.intro}</p>}
+        {(f.heading || resolvedDisplay?.label) && <h2 className="sb-display" style={{ fontSize: '2.1rem', color: 'var(--sb-navy)', marginBottom: '0.75rem' }}>{f.heading || resolvedDisplay?.label}</h2>}
+        {(f.intro || resolvedDisplay?.description) && <p style={{ color: '#555', maxWidth: 700, marginBottom: '2rem' }}>{f.intro || resolvedDisplay?.description}</p>}
 
         {!catalog ? (
           <div style={{ fontSize: '0.85rem', color: '#777' }}>Loading career data…</div>
@@ -183,7 +207,10 @@ export function CareerRollupShowcaseBlock({ section, memberSlug }) {
             No career data yet — add entries to your Career Master to populate this section.
           </div>
         ) : (
-          <ChartRenderer rows={rows} />
+          <>
+            <ChartRenderer rows={rows} />
+            {resolvedDisplay?.showEvidenceCount && <div style={{ marginTop: '1rem', fontSize: '.7rem', color: '#777' }}>{rows.reduce((sum, row) => sum + Number(row.evidenceCount || 0), 0)} supporting evidence records across {rows.length} displayed groups</div>}
+          </>
         )}
       </div>
     </section>

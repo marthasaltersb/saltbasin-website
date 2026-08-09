@@ -112,6 +112,7 @@ export default function SaltBasinCrystal({
     let renderer = null;
     let scene = null;
     let resizeObserver = null;
+    let firstFrameRendered = false;
 
     function onPointerMove(event) {
       const rect = hostRef.current?.getBoundingClientRect();
@@ -171,8 +172,6 @@ export default function SaltBasinCrystal({
 
         const clock = new THREE.Clock();
         const projected = new THREE.Vector3();
-        setRendered(true);
-
         function animate() {
           if (disposed || !renderer || !scene) return;
           frame = requestAnimationFrame(animate);
@@ -221,6 +220,14 @@ export default function SaltBasinCrystal({
           }
 
           renderer.render(scene, camera);
+          // Keep the deterministic CSS fallback visible until WebGL has
+          // completed an actual frame. Marking the canvas ready before the
+          // first render creates a blank-frame flash during cold starts and
+          // preview remounts.
+          if (!firstFrameRendered) {
+            firstFrameRendered = true;
+            setRendered(true);
+          }
         }
 
         animate();

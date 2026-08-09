@@ -10,6 +10,7 @@ import { ensureLeadRevenueRod, ensureMemberJourneyRods, upsertAccountRecord } fr
 import { provisionDefaultModulesForNewMember } from '../lib/memberProvisioning.js';
 import { classifyEmailDomain, emailDomainOf } from '../lib/emailDomain.js';
 import { recordConsent } from '../lib/consentRegistry.js';
+import { ensureCareerFoundationTrial } from '../lib/memberAccess.js';
 
 const router = Router();
 
@@ -261,7 +262,7 @@ router.post('/', async (req, res) => {
   // recaptchaToken. Keeping it off for now so this endpoint doesn't break when
   // RECAPTCHA_SECRET_KEY gets set — see scripts/add-tonight-defect-items.mjs
   // and task #28 in the session log for the rollout plan.
-  const { source, email, phone, name, message, answers, ctaLocation, memberSlug } = req.body || {};
+  const { source, email, phone, name, message, answers, ctaLocation, memberSlug, agentDefinitionId } = req.body || {};
 
   if (!isValidSource(source)) return res.status(400).json({ error: 'invalid source' });
   if (!isValidEmail(email)) return res.status(400).json({ error: 'a valid email is required' });
@@ -283,6 +284,11 @@ router.post('/', async (req, res) => {
     ? answers
     : null;
   const ctaLoc = typeof ctaLocation === 'string' ? ctaLocation.slice(0, 200) : null;
+  const scopedAgent = agentDefinitionId
+    ? await db.prepare(`SELECT id, scope_type, scope_id, config FROM agent_hub_definitions WHERE id=$1 AND enabled=true AND execution_mode='interactive'`).get(agentDefinitionId)
+    : null;
+  const scopedOrgId = scopedAgent?.scope_type === 'organization' ? Number(scopedAgent.scope_id) : null;
+  const scopedMemberId = scopedAgent?.scope_type === 'member' ? Number(scopedAgent.scope_id) : null;
 
   // Find any matching active leads (by email OR phone).
   const actorKey = req.cookies?.[ACTOR_COOKIE] || null;
@@ -359,6 +365,9 @@ router.post('/', async (req, res) => {
       updates.push(`answers = $${p++}`);
       params.push(JSON.stringify({ ...priorAnswers, ...structuredAnswers }));
     }
+    if (scopedAgent) { updates.push(`agent_definition_id = $${p++}`); params.push(Number(scopedAgent.id)); }
+    if (scopedOrgId) { updates.push(`org_id = $${p++}`); params.push(scopedOrgId); }
+    if (scopedMemberId) { updates.push(`originating_member_user_id = $${p++}`); params.push(scopedMemberId); }
     params.push(leadId);
     await db.prepare(`UPDATE leads SET ${updates.join(', ')} WHERE id = $${p}`).run(...params);
 
@@ -395,10 +404,10 @@ router.post('/', async (req, res) => {
     passwordHash = await bcrypt.hash(accessPassword, 10);
     const result = await db
       .prepare(
-        `INSERT INTO leads (source, email, phone, name, message, answers, public_id, access_token, password_hash, actor_key, provisional)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, false) RETURNING id`
+        `INSERT INTO leads (source, email, phone, name, message, answers, public_id, access_token, password_hash, actor_key, provisional, agent_definition_id, org_id, originating_member_user_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,false,$11,$12,$13) RETURNING id`
       )
-      .run(source, normEmail, normPhone, trimmedName, trimmedMsg, structuredAnswers ? JSON.stringify(structuredAnswers) : null, publicId, accessToken, passwordHash, actorKey);
+      .run(source, normEmail, normPhone, trimmedName, trimmedMsg, structuredAnswers ? JSON.stringify(structuredAnswers) : null, publicId, accessToken, passwordHash, actorKey, scopedAgent ? Number(scopedAgent.id) : null, scopedOrgId, scopedMemberId);
     leadId = Number(result.lastInsertRowid);
     isExisting = false;
   }
@@ -447,9 +456,17 @@ router.post('/', async (req, res) => {
     }).catch((e) => console.error('[email] member lookup failed:', e.message));
   }
 
-  // Notify Betsy in parallel. Fires on every new lead AND on activity for an
-  // existing lead (so she knows about repeat engagement, too).
-  sendNewLeadAlert({
+  // Route agent-created leads to the owning scope. Platform leads retain the
+  // Salt Basin admin alert; organization/member leads do not leak upstream.
+  if (scopedOrgId || scopedMemberId) {
+    const recipients = scopedOrgId
+      ? await db.prepare(`SELECT DISTINCT u.email, u.display_name FROM org_memberships om JOIN users u ON u.id=om.user_id WHERE om.org_id=$1 AND om.role IN ('admin','owner')`).all(scopedOrgId)
+      : await db.prepare(`SELECT email, display_name FROM users WHERE id=$1`).all(scopedMemberId);
+    for (const recipient of recipients) sendContactFormToMember({
+      toEmail: recipient.email, memberName: recipient.display_name, fromName: trimmedName,
+      fromEmail: normEmail, fromPhone: normPhone, message: trimmedMsg,
+    }).catch((e) => console.error('[email] scoped lead notify failed:', e.message));
+  } else sendNewLeadAlert({
     leadId,
     source,
     leadEmail: normEmail,
@@ -633,6 +650,9 @@ router.post('/public/:publicId/convert', async (req, res) => {
     .run(lowerEmail, lead.password_hash);
   const newUserId = Number(userInsert.lastInsertRowid);
   await recordConsent(newUserId, 'platform_terms', true, { ip: req.ip, userAgent: req.get('user-agent') });
+  await ensureCareerFoundationTrial(newUserId).catch((e) =>
+    console.error('[leads] Career Foundation trial provisioning failed:', e.message)
+  );
 
   // Member profile (separate from member_sites — both exist; profile holds
   // the slug + the simpler "about you" structure; sites holds the multi-page

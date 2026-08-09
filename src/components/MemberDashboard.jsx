@@ -7,27 +7,39 @@
 // Agent. The only thing scoped out of the member view is anything that would
 // expose other tenants: Leads + Net Works tabs are admin-only.
 
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import AdminShell from './admin/AdminShell.jsx';
+import MemberCrystalOrbit from './MemberCrystalOrbit.jsx';
 
 export default function MemberDashboard() {
   const nav = useNavigate();
+  const [params, setParams] = useSearchParams();
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // If the user lost their session or is actually an admin, send them to
-    // the right destination. AdminShell will still gate via /api/auth/me
-    // (it runs through RequireMember below), but we redirect proactively to
-    // avoid a flash of the wrong UI.
+    // Every Salt Basin identity also has a Member context. Admin users are
+    // intentionally allowed to remain here so they can configure their own
+    // founder/member profile without changing login identities.
     api
       .me()
       .then(({ user }) => {
         if (!user) return nav('/login', { replace: true });
-        if (user.role === 'admin') return nav('/admin', { replace: true });
+        setUser(user);
       })
       .catch(() => nav('/login', { replace: true }));
   }, [nav]);
 
-  return <AdminShell scope="member" />;
+  if (!user) return null;
+  if (params.get('workspace') === '1') {
+    const orgId = params.get('org');
+    const workspaceScope = orgId ? 'org-admin' : params.get('scope') === 'admin' && user.role === 'admin' ? 'admin' : 'member';
+    return <AdminShell scope={workspaceScope} orgId={orgId || null} />;
+  }
+  return <MemberCrystalOrbit user={user} onOpenWorkspace={(tab, orgId, scope = 'member') => {
+    const next = { workspace: '1', tab, scope };
+    if (orgId) next.org = String(orgId);
+    setParams(next);
+  }} />;
 }

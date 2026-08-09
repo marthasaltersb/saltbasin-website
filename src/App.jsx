@@ -4,7 +4,7 @@ import { api } from './lib/api.js';
 import PublicSite from './components/PublicSite.jsx';
 const LandingGate = lazy(() => import('./components/LandingGate.jsx'));
 const LoginPage = lazy(() => import('./components/admin/LoginPage.jsx'));
-const WorldShell = lazy(() => import('./components/WorldShell.jsx'));
+const MemberDashboard = lazy(() => import('./components/MemberDashboard.jsx'));
 const PublicProfile = lazy(() => import('./components/PublicProfile.jsx'));
 const LeadView = lazy(() => import('./components/LeadView.jsx'));
 const ResetPasswordPage = lazy(() => import('./components/ResetPasswordPage.jsx'));
@@ -83,8 +83,8 @@ export default function App() {
           have an in-world view yet — they're just no longer what a bare
           /admin or /member hit shows by default. /world itself stays as a
           direct alias. */}
-      <Route path="/member" element={<WorldShell />} />
-      <Route path="/world" element={<WorldShell />} />
+      <Route path="/member" element={<MemberDashboard />} />
+      <Route path="/world" element={<MemberDashboard />} />
       <Route path="/org/:orgId" element={<OrgPortal />} />
       <Route path="/u/:slug" element={<PublicProfile />} />
       <Route path="/u/:slug/*" element={<PublicProfile />} />
@@ -114,7 +114,7 @@ export default function App() {
       {/* WorldShell does its own auth check (api.me(), redirect to /login),
           the same self-contained pattern /member and /world already use —
           no RequireAdmin wrapper needed here anymore. */}
-      <Route path="/admin/*" element={<WorldShell />} />
+      <Route path="/admin/*" element={<MemberDashboard />} />
       <Route path="/*" element={<PublicRoute />} />
     </Routes>
     </Suspense>

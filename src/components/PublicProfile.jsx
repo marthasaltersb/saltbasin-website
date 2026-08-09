@@ -13,6 +13,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { RenderSection } from './blocks/index.jsx';
 import PublicFooter from './PublicFooter.jsx';
+import PublicNav from './PublicNav.jsx';
 import BackLink from './BackLink.jsx';
 import { track } from '../lib/analytics.js';
 import { toast } from '../lib/toast.js';
@@ -128,6 +129,7 @@ export default function PublicProfile() {
   const subPath = params['*'] || ''; // '' for home, 'about' for /u/:slug/about
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const [platformNav, setPlatformNav] = useState(null);
 
   useEffect(() => {
     fetch(`/api/member-site/by-slug/${encodeURIComponent(slug)}`)
@@ -138,6 +140,13 @@ export default function PublicProfile() {
       .then(setData)
       .catch((e) => setError(e.message));
   }, [slug]);
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/site/published').then((r) => r.ok ? r.json() : Promise.reject(new Error('site nav unavailable'))),
+      fetch('/api/config/public').then((r) => r.ok ? r.json() : Promise.reject(new Error('site config unavailable'))),
+    ]).then(([platformSite, platformConfig]) => setPlatformNav({ platformSite, platformConfig })).catch(() => setPlatformNav(null));
+  }, []);
 
   // Fire page-view beacon when the page + slug resolve
   useEffect(() => {
@@ -250,13 +259,15 @@ export default function PublicProfile() {
   ` : '';
 
   return (
-    <div className="sb-member-profile-root" data-theme={config?.theme || 'strategic'}>
+    <>
+      {platformNav && <PublicNav site={platformNav.platformConfig?.site || {}} pages={platformNav.platformSite?.pages || {}} />}
+      <div className="sb-member-profile-root" data-theme={config?.theme || 'strategic'}>
       {brandCss && <style>{brandCss}</style>}
 
       <nav
         style={{
           position: 'sticky',
-          top: 0,
+          top: platformNav ? 72 : 0,
           background: 'color-mix(in srgb, var(--sb-navy) 97%, transparent)',
           backdropFilter: 'blur(8px)',
           padding: '1rem 2.5rem',
@@ -314,7 +325,8 @@ export default function PublicProfile() {
         <RenderSection key={sec.id} section={sec} config={config} mode="public" memberSlug={slug} />
       ))}
       <PublicFooter config={config} />
-    </div>
+      </div>
+    </>
   );
 }
 

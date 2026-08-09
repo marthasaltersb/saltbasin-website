@@ -33,9 +33,38 @@ import { recordInteraction } from '../lib/usageTracking.js';
 import { buildCareerSemanticTemplateWorkbook } from '../lib/careerSemanticTemplate.js';
 import { parseCareerSemanticWorkbook } from '../lib/careerSemanticImport.js';
 import { extractResumeText, proposeCareerMappingsFromText, bondProposedMappings } from '../lib/careerResumeExtraction.js';
+import { calculateCareerProficiencyRollup } from '../lib/careerProficiencyRollups.js';
 
 const router = Router();
 const INTAKE_BUCKET = 'career-context';
+
+const EXPERIENCE_DEFINITION_TYPES = new Set(['period', 'proficiency_level', 'rollup', 'display']);
+const DEFAULT_EXPERIENCE_DEFINITIONS = [
+  ['period', 'foundation', 'Foundation', 'Initial exposure and capability development.', { startYear: null, endYear: null }, 10],
+  ['period', 'established', 'Established', 'Repeated application and growing responsibility.', { startYear: null, endYear: null }, 20],
+  ['period', 'current', 'Current', 'Recent and current-market proficiency.', { startYear: null, endYear: null }, 30],
+  ['proficiency_level', 'exposure', 'Exposure', 'Aware of the concept or participated with guidance.', { ordinal: 1 }, 10],
+  ['proficiency_level', 'foundational', 'Foundational', 'Can apply fundamentals with occasional guidance.', { ordinal: 2 }, 20],
+  ['proficiency_level', 'proficient', 'Proficient', 'Can apply independently in common scenarios.', { ordinal: 3 }, 30],
+  ['proficiency_level', 'advanced', 'Advanced', 'Handles complex scenarios and adapts the practice.', { ordinal: 4 }, 40],
+  ['proficiency_level', 'expert', 'Expert', 'Repeatedly solves complex problems and guides others.', { ordinal: 5 }, 50],
+  ['rollup', 'current_capability_strength', 'Current Capability Strength', 'Current-period weighted capability view.', { groupBy: 'capability', measure: 'weighted_proficiency', periodKeys: ['current'], weights: { proficiency: 0.5, recency: 0.2, engagementBreadth: 0.15, evidenceConfidence: 0.15 }, minimumEvidenceCount: 1 }, 10],
+  ['display', 'capability_bars', 'Capability Bars', 'Public-ready bar view of the current capability rollup.', { rollupKey: 'current_capability_strength', chartType: 'bar', showPeriodSelector: true, showEvidenceCount: true, maxGroups: 8, visibility: 'private' }, 10],
+];
+
+async function ensureExperienceDefinitions(userId) {
+  const existing = await db.prepare(`SELECT COUNT(*)::int AS count FROM career_experience_definitions WHERE user_id=$1`).get(userId);
+  if (Number(existing?.count) > 0) return;
+  const now = Date.now();
+  for (const [type, key, label, description, definition, sortOrder] of DEFAULT_EXPERIENCE_DEFINITIONS) {
+    await db.prepare(`
+      INSERT INTO career_experience_definitions
+        (user_id, definition_type, definition_key, label, description, definition, sort_order, created_at, updated_at)
+      VALUES ($1,$2,$3,$4,$5,$6::jsonb,$7,$8,$8)
+      ON CONFLICT (user_id, definition_type, definition_key) DO NOTHING
+    `).run(userId, type, key, label, description, definition, sortOrder, now);
+  }
+}
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -95,17 +124,19 @@ async function attachMappingSource(user, file, sourceKind) {
   const storageKey = `${user.role === 'admin' ? 'admin' : 'member'}/${user.id}/${now}-${crypto.randomBytes(10).toString('hex')}${ext}`;
   const { error } = await supabase.storage.from(INTAKE_BUCKET).upload(storageKey, file.buffer, { contentType: file.mimetype, upsert: false });
   if (error) throw new Error(`Could not attach source: ${error.message}`);
+  const prior = await db.prepare(`SELECT COUNT(*)::int AS count FROM career_intake_documents WHERE user_id=$1`).get(user.id);
+  const intakeKind = Number(prior?.count || 0) === 0 ? 'initial_mapping' : 'incremental_mapping';
   const inserted = await db.prepare(`
     INSERT INTO career_intake_documents (
       user_id, owner_scope, intake_kind, source_truth_status, source_use_scope,
       client_name_policy, portfolio_name_policy, case_study_title_policy,
       public_primary_research, primary_resume_requested, analysis_passes_requested,
       redaction_ack, public_output_validation_ack, no_private_name_persistence_ack,
-      original_filename, storage_bucket, storage_key, mime_type, file_size, status, created_at, updated_at
-    ) VALUES ($1,$2,$3,'user_attested','career_master_and_outputs','generalize_private_clients',
-      'allow_if_user_provided','industry_company_type',false,true,1,true,true,true,$4,$5,$6,$7,$8,'parsed',$9,$9)
+      original_filename, storage_bucket, storage_key, mime_type, file_size, status, retention_expires_at, created_at, updated_at
+    ) VALUES ($1,$2,$3,'user_attested','career_master_and_outputs','never_publish_client_names',
+      'generalize_all','industry_company_type',false,true,1,true,true,true,$4,$5,$6,$7,$8,'parsed',$9,$10,$10)
     RETURNING id
-  `).run(user.id, user.role === 'admin' ? 'admin' : 'member', sourceKind, file.originalname || 'upload', INTAKE_BUCKET, storageKey, file.mimetype || null, file.size ?? null, now);
+  `).run(user.id, user.role === 'admin' ? 'admin' : 'member', intakeKind, file.originalname || 'upload', INTAKE_BUCKET, storageKey, file.mimetype || null, file.size ?? null, now + 2_592_000_000, now);
   return { kind: sourceKind, documentId: Number(inserted.lastInsertRowid), filename: file.originalname || 'upload' };
 }
 
@@ -515,6 +546,7 @@ async function loadMasterPayload(req) {
   const engagements = engagementRows.map((row) => {
     const item = rowToCamel(row, ENGAGEMENT_FIELDS, ENGAGEMENT_JSON_FIELDS);
     delete item.clientNameReal; // never expose the private real client name publicly
+    item.clientDisplayName = item.industry ? `${item.industry} client` : 'Confidential client';
     return item;
   });
 
@@ -617,6 +649,46 @@ router.get('/atom-rollups', async (req, res) => {
 
 // Consent gate (2026-07-16) — required before any career configuration,
 // upload, or Career Orbit entry. See server/lib/consentRegistry.js.
+// Publication-safe configurable rollup. This resolves only a member with a
+// published site, an active display marked public, and public assertions.
+router.get('/public-rollup/:slug/:displayKey', async (req, res) => {
+  try {
+    const owner = await db.prepare(`
+      SELECT mp.user_id
+        FROM member_profiles mp
+        JOIN member_sites ms ON ms.user_id=mp.user_id AND ms.kind='published'
+       WHERE mp.slug=$1
+    `).get(req.params.slug);
+    if (!owner) return res.status(404).json({ error: 'published profile not found' });
+    const userId = Number(owner.user_id);
+    const [definitionRows, assertionRows, skillRows, toolRows] = await Promise.all([
+      db.prepare(`SELECT definition_type, definition_key, label, description, definition, sort_order, is_active FROM career_experience_definitions WHERE user_id=$1 AND is_active=true`).all(userId),
+      db.prepare(`SELECT * FROM career_proficiency_assertions WHERE user_id=$1 AND visibility='public'`).all(userId),
+      db.prepare(`SELECT id, skill, category FROM career_skills WHERE user_id=$1`).all(userId),
+      db.prepare(`SELECT id, name_used, current_name, category FROM career_tools WHERE user_id=$1`).all(userId),
+    ]);
+    const definitions = definitionRows.map((row) => ({ type: row.definition_type, key: row.definition_key, label: row.label, description: row.description, definition: row.definition || {}, sortOrder: Number(row.sort_order), isActive: true }));
+    const display = definitions.find((x) => x.type === 'display' && x.key === req.params.displayKey);
+    if (!display || display.definition?.visibility !== 'public') return res.status(404).json({ error: 'public display not found' });
+    const rollup = definitions.find((x) => x.type === 'rollup' && x.key === display.definition?.rollupKey);
+    if (!rollup) return res.status(404).json({ error: 'public rollup policy not found' });
+    const assertions = assertionRows.map((row) => ({ entityType: row.entity_type, entityId: Number(row.entity_id), periodKey: row.period_key, levelKey: row.level_key, confidence: Number(row.confidence), evidenceCount: Number(row.evidence_count), lastPracticedAt: row.last_practiced_at == null ? null : Number(row.last_practiced_at) }));
+    const entities = [
+      ...skillRows.map((row) => ({ type: 'skill', id: Number(row.id), label: row.skill, category: row.category })),
+      ...toolRows.map((row) => ({ type: 'tool', id: Number(row.id), label: row.current_name || row.name_used, category: row.category })),
+    ];
+    const result = calculateCareerProficiencyRollup({ assertions, levels: definitions.filter((x) => x.type === 'proficiency_level'), periods: definitions.filter((x) => x.type === 'period'), entities, rollup });
+    const maxGroups = Math.max(1, Math.min(50, Number(display.definition?.maxGroups) || 8));
+    res.json({
+      display: { key: display.key, label: display.label, description: display.description, chartType: display.definition?.chartType || 'bar', showPeriodSelector: display.definition?.showPeriodSelector === true, showEvidenceCount: display.definition?.showEvidenceCount === true },
+      rollup: { ...result, groups: result.groups.slice(0, maxGroups) },
+    });
+  } catch (e) {
+    console.error('[career] public configurable rollup failed:', e.message);
+    res.status(500).json({ error: 'Failed to load public rollup' });
+  }
+});
+
 router.get('/consent-status', requireUser, async (req, res) => {
   try {
     res.json(await getConsentStatus(req.user.id, req.query.consentType || 'career_portfolio'));
@@ -688,6 +760,8 @@ router.post('/intake-documents', requireUser, (req, res) => {
         });
       if (uploadErr) return res.status(500).json({ error: uploadErr.message });
 
+      const prior = await db.prepare(`SELECT COUNT(*)::int AS count FROM career_intake_documents WHERE user_id=$1`).get(req.user.id);
+      const intakeKind = Number(prior?.count || 0) === 0 ? 'initial_mapping' : 'incremental_mapping';
       const result = await db.prepare(`
         INSERT INTO career_intake_documents (
           user_id, owner_scope, intake_kind, source_truth_status, source_use_scope,
@@ -695,19 +769,19 @@ router.post('/intake-documents', requireUser, (req, res) => {
           public_primary_research, primary_resume_requested, analysis_passes_requested,
           redaction_ack, public_output_validation_ack, no_private_name_persistence_ack,
           original_filename, storage_bucket, storage_key, mime_type, file_size,
-          upload_notes, status, created_at, updated_at
+          upload_notes, status, retention_expires_at, created_at, updated_at
         ) VALUES (
-          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$22
+          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$23
         ) RETURNING id
       `).run(
         req.user.id,
         ownerScope,
-        cleanText(req.body.intakeKind, 80) || 'career_context',
+        intakeKind,
         cleanText(req.body.sourceTruthStatus, 80) || 'user_attested',
         cleanText(req.body.sourceUseScope, 80) || 'career_master_and_outputs',
-        cleanText(req.body.clientNamePolicy, 80) || 'generalize_private_clients',
-        cleanText(req.body.portfolioNamePolicy, 80) || 'allow_if_user_provided',
-        cleanText(req.body.caseStudyTitlePolicy, 80) || 'industry_company_type',
+        'never_publish_client_names',
+        'generalize_all',
+        'industry_company_type',
         boolVal(req.body.publicPrimaryResearch),
         boolVal(req.body.primaryResumeRequested),
         intVal(req.body.analysisPassesRequested, 3),
@@ -721,6 +795,7 @@ router.post('/intake-documents', requireUser, (req, res) => {
         req.file.size ?? null,
         cleanText(req.body.uploadNotes),
         'uploaded',
+        now + 2_592_000_000,
         now
       );
 
@@ -946,6 +1021,35 @@ router.post('/resume-analysis', requireUser, (req, res) => {
 });
 
 const TABLE_BY_ENTRY_TYPE = Object.fromEntries(CAREER_ENTRY_SOURCES.map((s) => [s.entryType, s.table]));
+const IDENTITY_COLUMNS_BY_ENTRY_TYPE = {
+  career_job_entry: ['company', 'title'], career_skill_entry: ['skill'], career_tool_entry: ['current_name', 'name_used'],
+  career_engagement_entry: ['name'], career_domain_entry: ['title'], career_certification_entry: ['name', 'issuer'], career_deal_entry: ['deal_name'],
+};
+
+router.post('/mappings/classify', requireUser, async (req, res) => {
+  const entries = Array.isArray(req.body?.entries) ? req.body.entries : [];
+  const classifications = [];
+  const normalize = (value) => value == null ? '' : String(value).trim().toLowerCase().replace(/\s+/g, ' ');
+  for (let index = 0; index < entries.length; index += 1) {
+    const entry = entries[index];
+    const table = TABLE_BY_ENTRY_TYPE[entry.entryType];
+    if (!table) { classifications.push({ index, status: 'invalid' }); continue; }
+    const columns = {};
+    for (const [atomKey, value] of Object.entries(entry.values || {})) {
+      const atom = atomDefinitionByKey(atomKey);
+      if (atom?.entryType === entry.entryType) columns[atom.sourceColumn] = value;
+    }
+    const identityColumns = (IDENTITY_COLUMNS_BY_ENTRY_TYPE[entry.entryType] || []).filter((column) => columns[column] != null && columns[column] !== '');
+    if (!identityColumns.length) { classifications.push({ index, status: 'new', reason: 'no_identity_match' }); continue; }
+    const rows = await db.prepare(`SELECT * FROM ${table} WHERE user_id=$1`).all(req.user.id);
+    const candidate = rows.find((row) => identityColumns.every((column) => normalize(row[column]) === normalize(columns[column])));
+    if (!candidate) { classifications.push({ index, status: 'new' }); continue; }
+    const changedFields = Object.entries(columns).filter(([column, value]) => normalize(candidate[column]) !== normalize(value)).map(([column]) => column);
+    classifications.push({ index, status: changedFields.length ? 'update_review' : 'exact_duplicate', targetId: Number(candidate.id), changedFields });
+  }
+  res.json({ classifications });
+});
+
 const nextOrderIndexCache = new Map();
 async function nextOrderIndex(table, userId) {
   const cacheKey = `${table}:${userId}`;
@@ -974,6 +1078,8 @@ router.post('/mappings/commit', requireUser, async (req, res) => {
   if (!entries.length) return res.status(400).json({ error: 'entries (non-empty array) is required' });
 
   const created = [];
+  const updated = [];
+  const skipped = [];
   const errors = [];
   const now = Date.now();
   nextOrderIndexCache.clear();
@@ -987,6 +1093,7 @@ router.post('/mappings/commit', requireUser, async (req, res) => {
     const vals = [req.user.id];
     let i = 2;
     let touchedAny = false;
+    const comparison = [];
     for (const [atomKey, rawValue] of Object.entries(values)) {
       if (rawValue === null || rawValue === undefined || rawValue === '') continue;
       const atomDef = atomDefinitionByKey(atomKey);
@@ -1002,14 +1109,47 @@ router.post('/mappings/commit', requireUser, async (req, res) => {
         if (typeof rawValue === 'string') {
           try { jsonValue = JSON.parse(rawValue); } catch { jsonValue = [rawValue]; }
         }
-        vals.push(Array.isArray(jsonValue) ? jsonValue : [jsonValue]);
+        const persistedValue = Array.isArray(jsonValue) ? jsonValue : [jsonValue];
+        vals.push(persistedValue);
+        comparison.push([column, persistedValue]);
       } else {
         placeholders.push(`$${i++}`);
         vals.push(rawValue);
+        comparison.push([column, rawValue]);
       }
       touchedAny = true;
     }
     if (!touchedAny) { errors.push({ entryType: entry.entryType, error: 'No recognized fields to save' }); continue; }
+
+    // Cautious incremental import: an exact normalized match is evidence that
+    // the fact already exists, so do not insert or double-count it. This is
+    // intentionally conservative; ambiguous near-matches remain reviewable
+    // additions rather than silently overwriting a member's foundation.
+    const existingRows = await db.prepare(`SELECT id, ${comparison.map(([column]) => column).join(', ')} FROM ${table} WHERE user_id=$1`).all(req.user.id);
+    const normalize = (value) => {
+      if (value === null || value === undefined) return '';
+      if (Array.isArray(value) || typeof value === 'object') return JSON.stringify(value);
+      return String(value).trim().toLowerCase().replace(/\s+/g, ' ');
+    };
+    const exact = existingRows.find((row) => comparison.every(([column, value]) => normalize(row[column]) === normalize(value)));
+    if (exact) {
+      skipped.push({ entryType: entry.entryType, table, id: Number(exact.id), reason: 'exact_duplicate' });
+      continue;
+    }
+    const identityColumns = (IDENTITY_COLUMNS_BY_ENTRY_TYPE[entry.entryType] || []).filter((column) => comparison.some(([candidate]) => candidate === column));
+    const identityMatch = identityColumns.length ? existingRows.find((row) => identityColumns.every((column) => normalize(row[column]) === normalize(comparison.find(([candidate]) => candidate === column)?.[1]))) : null;
+    if (identityMatch) {
+      const updateValues = comparison.map(([, value]) => value);
+      const updateAssignments = comparison.map(([column, value], index) => `${column}=$${index + 1}${Array.isArray(value) || (value && typeof value === 'object') ? '::jsonb' : ''}`);
+      updateValues.push(now, Number(identityMatch.id), req.user.id);
+      await db.prepare(`UPDATE ${table} SET ${updateAssignments.join(', ')}, updated_at=$${comparison.length + 1} WHERE id=$${comparison.length + 2} AND user_id=$${comparison.length + 3}`).run(...updateValues);
+      await syncSingleEntry(req.user.id, table, Number(identityMatch.id));
+      for (const mapping of Array.isArray(entry.mappings) ? entry.mappings : []) {
+        await db.prepare(`INSERT INTO career_source_mappings (user_id,document_id,source_kind,source_filename,source_location,source_label,entry_type,target_table,target_id,atom_key,original_value,committed_value,match_type,affinity,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12::jsonb,$13,$14,$15)`).run(req.user.id, mapping.documentId || source.documentId || null, source.kind, mapping.sourceFilename || source.filename || null, mapping.sourceLocation || null, mapping.sourceLabel || null, entry.entryType, table, Number(identityMatch.id), mapping.atomKey, JSON.stringify(mapping.originalValue ?? null), JSON.stringify(mapping.committedValue ?? null), mapping.matchType || 'incremental_update', Number.isFinite(Number(mapping.affinity)) ? Number(mapping.affinity) : null, now);
+      }
+      updated.push({ entryType: entry.entryType, table, id: Number(identityMatch.id), changedFields: comparison.map(([column]) => column) });
+      continue;
+    }
 
     cols.push('order_index', 'created_at', 'updated_at');
     placeholders.push(`$${i++}`, `$${i++}`, `$${i++}`);
@@ -1058,7 +1198,59 @@ router.post('/mappings/commit', requireUser, async (req, res) => {
     console.error('[career] failed to record intake run for mappings commit:', e.message);
   }
 
-  res.json({ ok: true, created, errors });
+  res.json({ ok: true, created, updated, skipped, errors });
+});
+
+// Bounded Career World BestyStaff: deterministic, schema-aware mutations
+// only. It does not call an LLM or external API. The UI submits an explicit
+// target and field patch, this route validates ownership/field authority,
+// applies the change, and returns an auditable summary.
+const BOUNDED_CAREER_TARGETS = {
+  job: ['career_jobs', JOB_FIELDS, new Set()],
+  skill: ['career_skills', SKILL_FIELDS, new Set()],
+  tool: ['career_tools', TOOL_FIELDS, new Set()],
+  engagement: ['career_engagements', ENGAGEMENT_FIELDS, ENGAGEMENT_JSON_FIELDS],
+  domain: ['career_domains', DOMAIN_FIELDS, DOMAIN_JSON_FIELDS],
+  certification: ['career_certifications', CERTIFICATION_FIELDS, new Set()],
+  deal: ['career_deals', DEAL_FIELDS, new Set()],
+};
+
+router.post('/bounded-agent/action', requireUser, async (req, res) => {
+  const { targetType, targetId, changes } = req.body || {};
+  if (targetType === 'resumePreset') {
+    if (!targetId || !changes || typeof changes !== 'object' || Array.isArray(changes)) return res.status(400).json({ error: 'Resume preset id and changes object are required' });
+    const row = await db.prepare(`SELECT data FROM member_configs WHERE user_id=$1 AND kind='draft'`).get(req.user.id);
+    const config = row ? JSON.parse(row.data) : {};
+    const presets = Array.isArray(config.resumePresets) ? config.resumePresets : [];
+    const index = presets.findIndex((preset) => String(preset.id) === String(targetId));
+    if (index < 0) return res.status(404).json({ error: 'Resume preset not found in this member scope' });
+    const allowed = ['name', 'isDefault', 'sections'];
+    const patch = Object.fromEntries(Object.entries(changes).filter(([field]) => allowed.includes(field)));
+    if (!Object.keys(patch).length) return res.status(400).json({ error: 'No authorized resume-template fields supplied' });
+    presets[index] = { ...presets[index], ...patch };
+    if (patch.isDefault === true) presets.forEach((preset, presetIndex) => { if (presetIndex !== index) preset.isDefault = false; });
+    config.resumePresets = presets;
+    await db.prepare(`INSERT INTO member_configs (user_id,kind,data,updated_at) VALUES ($1,'draft',$2,$3) ON CONFLICT (user_id,kind) DO UPDATE SET data=excluded.data,updated_at=excluded.updated_at`).run(req.user.id, JSON.stringify(config), Date.now());
+    return res.json({ ok: true, agent: 'Career World BestyStaff', runtime: 'deterministic_no_llm', targetType, targetId: String(targetId), updatedFields: Object.keys(patch) });
+  }
+  const definition = BOUNDED_CAREER_TARGETS[targetType];
+  if (!definition) return res.status(400).json({ error: 'Unsupported Career World target type' });
+  if (!Number.isInteger(Number(targetId)) || !changes || typeof changes !== 'object' || Array.isArray(changes)) return res.status(400).json({ error: 'targetId and changes object are required' });
+  const [table, fieldMap, jsonFields] = definition;
+  const blocked = new Set(['clientNameReal', 'clientDisplayName', 'portfolioCompany']);
+  const accepted = Object.entries(changes).filter(([field]) => fieldMap[field] && !blocked.has(field));
+  if (!accepted.length) return res.status(400).json({ error: 'No authorized fields supplied' });
+  const existing = await db.prepare(`SELECT id FROM ${table} WHERE id=$1 AND user_id=$2`).get(Number(targetId), req.user.id);
+  if (!existing) return res.status(404).json({ error: 'Career record not found in this member scope' });
+  const params = [];
+  const assignments = accepted.map(([field, value], index) => {
+    params.push(serializeVal(field, value, jsonFields));
+    return `${fieldMap[field]}=$${index + 1}${jsonFields.has(field) ? '::jsonb' : ''}`;
+  });
+  params.push(Date.now(), Number(targetId), req.user.id);
+  await db.prepare(`UPDATE ${table} SET ${assignments.join(', ')}, updated_at=$${accepted.length + 1} WHERE id=$${accepted.length + 2} AND user_id=$${accepted.length + 3}`).run(...params);
+  await syncSingleEntry(req.user.id, table, Number(targetId));
+  res.json({ ok: true, agent: 'Career World BestyStaff', runtime: 'deterministic_no_llm', targetType, targetId: Number(targetId), updatedFields: accepted.map(([field]) => field) });
 });
 
 // Career Master CRUD is member-owned from here down (multi-tenancy retrofit
@@ -1081,6 +1273,145 @@ router.use('/meta-options', requireAdmin, makeResourceRouter('career_meta_option
 // Idempotent per table (not per call): each table is only seeded when it is
 // empty, so re-running after adding a new table (e.g. certifications/deals/
 // meta options) fills just the new tables without duplicating the old ones.
+// Configurable vocabulary, aggregation, and display definitions for the
+// member's connected Career Master experience. Definitions are always scoped
+// to the authenticated user; a caller cannot select another owner by id.
+router.get('/experience-definitions', requireUser, async (req, res) => {
+  await ensureExperienceDefinitions(req.user.id);
+  const rows = await db.prepare(`
+    SELECT definition_type, definition_key, label, description, definition,
+           sort_order, is_active, updated_at
+      FROM career_experience_definitions
+     WHERE user_id=$1
+     ORDER BY definition_type, sort_order, definition_key
+  `).all(req.user.id);
+  res.json({ definitions: rows.map((row) => ({
+    type: row.definition_type,
+    key: row.definition_key,
+    label: row.label,
+    description: row.description,
+    definition: row.definition || {},
+    sortOrder: Number(row.sort_order),
+    isActive: row.is_active !== false,
+    updatedAt: Number(row.updated_at),
+  })) });
+});
+
+router.put('/experience-definitions/:type/:key', requireUser, async (req, res) => {
+  const type = String(req.params.type || '');
+  const key = String(req.params.key || '');
+  if (!EXPERIENCE_DEFINITION_TYPES.has(type)) return res.status(400).json({ error: 'invalid definition type' });
+  if (!/^[a-z][a-z0-9_]{1,79}$/.test(key)) return res.status(400).json({ error: 'definition key must be lowercase letters, numbers, and underscores' });
+  const body = req.body || {};
+  const label = String(body.label || '').trim().slice(0, 120);
+  if (!label) return res.status(400).json({ error: 'label is required' });
+  const definition = body.definition && typeof body.definition === 'object' && !Array.isArray(body.definition) ? body.definition : {};
+  const sortOrder = Number.isFinite(Number(body.sortOrder)) ? Math.trunc(Number(body.sortOrder)) : 0;
+  const now = Date.now();
+  await db.prepare(`
+    INSERT INTO career_experience_definitions
+      (user_id, definition_type, definition_key, label, description, definition, sort_order, is_active, created_at, updated_at)
+    VALUES ($1,$2,$3,$4,$5,$6::jsonb,$7,$8,$9,$9)
+    ON CONFLICT (user_id, definition_type, definition_key) DO UPDATE SET
+      label=EXCLUDED.label, description=EXCLUDED.description, definition=EXCLUDED.definition,
+      sort_order=EXCLUDED.sort_order, is_active=EXCLUDED.is_active, updated_at=EXCLUDED.updated_at
+  `).run(req.user.id, type, key, label, body.description ? String(body.description).slice(0, 600) : null,
+    definition, sortOrder, body.isActive !== false, now);
+  res.json({ ok: true, updatedAt: now });
+});
+
+router.delete('/experience-definitions/:type/:key', requireUser, async (req, res) => {
+  const type = String(req.params.type || '');
+  const key = String(req.params.key || '');
+  if (!EXPERIENCE_DEFINITION_TYPES.has(type)) return res.status(400).json({ error: 'invalid definition type' });
+  await db.prepare(`DELETE FROM career_experience_definitions WHERE user_id=$1 AND definition_type=$2 AND definition_key=$3`)
+    .run(req.user.id, type, key);
+  res.json({ ok: true });
+});
+
+router.get('/proficiency-assertions', async (req, res) => {
+  const rows = await db.prepare(`
+    SELECT id, entity_type, entity_id, period_key, level_key, confidence,
+           assessment_source, evidence_count, last_practiced_at, visibility,
+           notes, updated_at
+      FROM career_proficiency_assertions
+     WHERE user_id=$1
+     ORDER BY entity_type, entity_id, period_key
+  `).all(req.user.id);
+  res.json({ assertions: rows.map((row) => ({
+    id: Number(row.id), entityType: row.entity_type, entityId: Number(row.entity_id),
+    periodKey: row.period_key, levelKey: row.level_key, confidence: Number(row.confidence),
+    assessmentSource: row.assessment_source, evidenceCount: Number(row.evidence_count),
+    lastPracticedAt: row.last_practiced_at == null ? null : Number(row.last_practiced_at),
+    visibility: row.visibility, notes: row.notes, updatedAt: Number(row.updated_at),
+  })) });
+});
+
+router.put('/proficiency-assertions/:entityType/:entityId/:periodKey', async (req, res) => {
+  const entityType = String(req.params.entityType || '');
+  const entityId = Number(req.params.entityId);
+  const periodKey = String(req.params.periodKey || '');
+  const entityTable = entityType === 'skill' ? 'career_skills' : entityType === 'tool' ? 'career_tools' : null;
+  if (!entityTable || !Number.isInteger(entityId) || entityId <= 0) return res.status(400).json({ error: 'invalid career entity' });
+  const entity = await db.prepare(`SELECT id FROM ${entityTable} WHERE id=$1 AND user_id=$2`).get(entityId, req.user.id);
+  if (!entity) return res.status(404).json({ error: 'career entity not found' });
+  const period = await db.prepare(`SELECT 1 FROM career_experience_definitions WHERE user_id=$1 AND definition_type='period' AND definition_key=$2 AND is_active=true`).get(req.user.id, periodKey);
+  const levelKey = String(req.body?.levelKey || '');
+  const level = await db.prepare(`SELECT 1 FROM career_experience_definitions WHERE user_id=$1 AND definition_type='proficiency_level' AND definition_key=$2 AND is_active=true`).get(req.user.id, levelKey);
+  if (!period || !level) return res.status(400).json({ error: 'active period and proficiency level definitions are required' });
+  const confidence = Math.max(0, Math.min(1, Number(req.body?.confidence ?? 1)));
+  const evidenceCount = Math.max(0, Math.trunc(Number(req.body?.evidenceCount || 0)));
+  const lastPracticedAt = req.body?.lastPracticedAt == null ? null : Number(req.body.lastPracticedAt);
+  const visibility = ['private','resume','portfolio','public'].includes(req.body?.visibility) ? req.body.visibility : 'private';
+  const now = Date.now();
+  await db.prepare(`
+    INSERT INTO career_proficiency_assertions
+      (user_id, entity_type, entity_id, period_key, level_key, confidence, assessment_source,
+       evidence_count, last_practiced_at, visibility, notes, created_at, updated_at)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$12)
+    ON CONFLICT (user_id, entity_type, entity_id, period_key) DO UPDATE SET
+      level_key=EXCLUDED.level_key, confidence=EXCLUDED.confidence,
+      assessment_source=EXCLUDED.assessment_source, evidence_count=EXCLUDED.evidence_count,
+      last_practiced_at=EXCLUDED.last_practiced_at, visibility=EXCLUDED.visibility,
+      notes=EXCLUDED.notes, updated_at=EXCLUDED.updated_at
+  `).run(req.user.id, entityType, entityId, periodKey, levelKey, confidence,
+    String(req.body?.assessmentSource || 'user_confirmed').slice(0, 80), evidenceCount,
+    Number.isFinite(lastPracticedAt) ? lastPracticedAt : null, visibility,
+    req.body?.notes ? String(req.body.notes).slice(0, 1000) : null, now);
+  res.json({ ok: true, updatedAt: now });
+});
+
+router.delete('/proficiency-assertions/:entityType/:entityId/:periodKey', async (req, res) => {
+  await db.prepare(`DELETE FROM career_proficiency_assertions WHERE user_id=$1 AND entity_type=$2 AND entity_id=$3 AND period_key=$4`)
+    .run(req.user.id, req.params.entityType, Number(req.params.entityId), req.params.periodKey);
+  res.json({ ok: true });
+});
+
+router.get('/rollup-preview/:key', async (req, res) => {
+  await ensureExperienceDefinitions(req.user.id);
+  const [definitionRows, assertionRows, skillRows, toolRows] = await Promise.all([
+    db.prepare(`SELECT definition_type, definition_key, label, description, definition, sort_order, is_active FROM career_experience_definitions WHERE user_id=$1`).all(req.user.id),
+    db.prepare(`SELECT * FROM career_proficiency_assertions WHERE user_id=$1`).all(req.user.id),
+    db.prepare(`SELECT id, skill, category FROM career_skills WHERE user_id=$1`).all(req.user.id),
+    db.prepare(`SELECT id, name_used, current_name, category FROM career_tools WHERE user_id=$1`).all(req.user.id),
+  ]);
+  const definitions = definitionRows.map((row) => ({ type: row.definition_type, key: row.definition_key, label: row.label, description: row.description, definition: row.definition || {}, sortOrder: Number(row.sort_order), isActive: row.is_active !== false }));
+  const rollup = definitions.find((x) => x.type === 'rollup' && x.key === req.params.key && x.isActive);
+  if (!rollup) return res.status(404).json({ error: 'active rollup definition not found' });
+  const assertions = assertionRows.map((row) => ({ entityType: row.entity_type, entityId: Number(row.entity_id), periodKey: row.period_key, levelKey: row.level_key, confidence: Number(row.confidence), evidenceCount: Number(row.evidence_count), lastPracticedAt: row.last_practiced_at == null ? null : Number(row.last_practiced_at) }));
+  const entities = [
+    ...skillRows.map((row) => ({ type: 'skill', id: Number(row.id), label: row.skill, category: row.category })),
+    ...toolRows.map((row) => ({ type: 'tool', id: Number(row.id), label: row.current_name || row.name_used, category: row.category })),
+  ];
+  res.json(calculateCareerProficiencyRollup({
+    assertions,
+    levels: definitions.filter((x) => x.type === 'proficiency_level'),
+    periods: definitions.filter((x) => x.type === 'period'),
+    entities,
+    rollup,
+  }));
+});
+
 router.post('/seed', async (req, res) => {
   const counts = await db
     .prepare(

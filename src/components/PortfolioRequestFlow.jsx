@@ -371,7 +371,7 @@ function QuickReplies({ options, onPick }) {
   );
 }
 
-export default function PortfolioRequestPrompt({ sourceOutput, master, user, autoOpen = true, openOnHash = null, intakeConfig = null, onConversionIntent = null }) {
+export default function PortfolioRequestPrompt({ sourceOutput, master, user, autoOpen = true, openOnHash = null, intakeConfig = null, agentKey = 'bestystaff', onConversionIntent = null }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
     { role: 'assistant', text: intakeConfig?.greeting || GREETING },
@@ -558,6 +558,9 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
         name: leadCapture.contactName || null,
         message: transcript,
         answers: { ...(leadCapture.answers || {}), conversationStatus: 'completed', attribution: readBestyAttribution() },
+        agentDefinitionId: leadCapture.agentDefinitionId || null,
+        orgId: leadCapture.orgId || null,
+        originatingMemberUserId: leadCapture.memberUserId || null,
         ctaLocation: `${window.location.pathname}#bestystaff`,
       }),
     });
@@ -580,6 +583,7 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
           attachmentCount: files.length,
           leadMemory: readLeadMemory(),
           attribution: readBestyAttribution(),
+          agentKey,
         }),
       });
       const data = await res.json().catch(() => ({}));

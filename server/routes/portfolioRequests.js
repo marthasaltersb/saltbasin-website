@@ -165,6 +165,18 @@ export async function createPortfolioRequest(b = {}) {
     err.statusCode = 400;
     throw err;
   }
+  const domain = contactEmail.split('@')[1].toLowerCase();
+  const emailPolicy = b.emailPolicy && typeof b.emailPolicy === 'object' ? b.emailPolicy : {};
+  const personalDomains = new Set(['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com', 'proton.me', 'protonmail.com']);
+  if (emailPolicy.requirePersonalEmail && !personalDomains.has(domain)) {
+    const err = new Error('A personal email address is required for this intake'); err.statusCode = 400; throw err;
+  }
+  if (Array.isArray(emailPolicy.allowedDomains) && emailPolicy.allowedDomains.length && !emailPolicy.allowedDomains.map((d) => String(d).toLowerCase()).includes(domain)) {
+    const err = new Error(`Email must use an approved domain: ${emailPolicy.allowedDomains.join(', ')}`); err.statusCode = 400; throw err;
+  }
+  if (Array.isArray(emailPolicy.blockedDomains) && emailPolicy.blockedDomains.map((d) => String(d).toLowerCase()).includes(domain)) {
+    const err = new Error('That email domain is not accepted for this intake'); err.statusCode = 400; throw err;
+  }
 
   const showcase = jsonArray(b.showcase);
   const recommended = kind === 'build_own'
@@ -182,8 +194,8 @@ export async function createPortfolioRequest(b = {}) {
       job_description, coverage, coverage_notes, role_type, career_stage, goal,
       showcase, recommended_portfolio, contact_name, contact_email,
       contact_company, contact_title, contact_phone, notes, status,
-      public_token, top_questions, created_at, updated_at
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$23)
+      public_token, top_questions, agent_definition_id, org_id, member_user_id, created_at, updated_at
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$26)
     RETURNING id
   `).run(
     kind,
@@ -208,14 +220,20 @@ export async function createPortfolioRequest(b = {}) {
     'new',
     publicToken,
     clean(b.topQuestions, 2000),
+    b.agentDefinitionId || null,
+    b.orgId || null,
+    b.memberUserId || null,
     now
   );
   const requestId = Number(result.lastInsertRowid);
 
   // Notify Betsy (Brevo, or stdout stub in dev — never blocks the lead)
   const subjectKind = kind === 'build_own' ? 'Build-your-own portfolio intake' : "Request for Betsy's Career Portfolio";
-  dispatchRaw({
-    to: process.env.ADMIN_EMAIL || 'betsysalter@saltbasin.net',
+  const recipients = Array.isArray(b.notificationEmails) && b.notificationEmails.length
+    ? b.notificationEmails.filter(Boolean)
+    : [process.env.ADMIN_EMAIL || 'betsysalter@saltbasin.net'];
+  Promise.all(recipients.map((recipient) => dispatchRaw({
+    to: recipient,
     subject: `[Salt Basin] ${subjectKind} — ${contactEmail}`,
     text: [
       `${subjectKind} (request #${requestId})`,
@@ -229,7 +247,7 @@ export async function createPortfolioRequest(b = {}) {
       kind === 'build_own' ? `  Role type: ${clean(b.roleType, 120) || '—'} · Stage: ${clean(b.careerStage, 80) || '—'} · Goal: ${clean(b.goal, 120) || '—'}` : null,
       recommended ? `  Recommended: ${recommended}` : null,
     ].filter((l) => l !== null).join('\n'),
-  }).catch((e) => console.error('[portfolio-requests] notify failed:', e.message));
+  }))).catch((e) => console.error('[portfolio-requests] notify failed:', e.message));
 
   return { id: requestId, kind, recommendedPortfolio: recommended, publicToken };
 }

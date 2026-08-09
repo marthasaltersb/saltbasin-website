@@ -107,6 +107,7 @@ export const api = {
     request('/api/member-config/draft', { method: 'PUT', body: JSON.stringify(config) }),
   publishMemberConfig: () => request('/api/member-config/publish', { method: 'POST' }),
   getOrgPortalContext: (id) => request(`/api/org-portal/${id}/context`),
+  getMyOrganizations: () => request('/api/profiles/me/orgs'),
   getOrgSite: (id) => request(`/api/org-portal/${id}/site`),
   saveOrgSite: (id, data) => request(`/api/org-portal/${id}/site`, { method: 'PUT', body: JSON.stringify(data) }),
   getOrgConfig: (id) => request(`/api/org-portal/${id}/config`),
@@ -118,6 +119,11 @@ export const api = {
   getOrgDocuments: (id) => request(`/api/org-portal/${id}/documents`),
   getOrgDocument: (id, docId) => request(`/api/org-portal/${id}/documents/${docId}`),
   getMemberEmails: () => request('/api/members/me/emails'),
+  addMemberEmail: (email, type) => request('/api/members/me/emails', { method: 'POST', body: JSON.stringify({ email, type }) }),
+  verifyMemberEmail: (id, code) => request(`/api/members/me/emails/${id}/verify`, { method: 'POST', body: JSON.stringify({ code }) }),
+  resendMemberEmailVerification: (id) => request(`/api/members/me/emails/${id}/resend`, { method: 'POST' }),
+  removeMemberEmail: (id) => request(`/api/members/me/emails/${id}`, { method: 'DELETE' }),
+  getMyLicenses: () => request('/api/profiles/me/licenses'),
 
   // Public — used by the Salt Basin home page Net Works banner.
   listFeaturedMembers: () => request('/api/member-site/featured'),
@@ -441,4 +447,19 @@ export const api = {
   listPublicationItems: (appId) => request(`/api/publication-pipelines/items?appId=${encodeURIComponent(appId)}`),
   getPublicationSchedule: (agentDefinitionId) => request(`/api/publication-pipelines/schedule?agentDefinitionId=${agentDefinitionId}`),
   savePublicationSchedule: (body) => request('/api/publication-pipelines/schedule', { method: 'POST', body: JSON.stringify(body) }),
+
+  getNotifications: (unreadOnly = false) => request(`/api/notifications/${unreadOnly ? '?unreadOnly=1' : ''}`),
+  markNotificationRead: (id) => request(`/api/notifications/${id}/read`, { method: 'PATCH' }),
+  markAllNotificationsRead: () => request('/api/notifications/read-all', { method: 'POST' }),
+  getMyTasks: (status) => request(`/api/notifications/tasks${status ? `?status=${status}` : ''}`),
+  updateMyTask: (id, status) => request(`/api/notifications/tasks/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+
+  getAgentHubDefinitions: (scopeType, scopeId) => request(`/api/agent-hub/definitions${scopeType ? `?scopeType=${encodeURIComponent(scopeType)}${scopeId ? `&scopeId=${encodeURIComponent(scopeId)}` : ''}` : ''}`),
+  createAgentHubDefinition: (definition) => request('/api/agent-hub/definitions', { method: 'POST', body: JSON.stringify(definition) }),
+  updateAgentHubDefinition: (id, patch) => request(`/api/agent-hub/definitions/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  deleteAgentHubDefinition: (id) => request(`/api/agent-hub/definitions/${id}`, { method: 'DELETE' }),
+  runAgentHubDefinitionNow: (id) => request(`/api/agent-hub/definitions/${id}/run-now`, { method: 'POST' }),
+  getAgentHubRuns: (definitionId) => request(`/api/agent-hub/runs${definitionId ? `?definitionId=${definitionId}` : ''}`),
+  getAgentHubRun: (id) => request(`/api/agent-hub/runs/${id}`),
+  updateAgentHubFinding: (id, status) => request(`/api/agent-hub/findings/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
 };

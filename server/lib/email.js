@@ -64,11 +64,11 @@ async function logToDb({ leadId, to, from, subject, html, text, provider, status
 
 // Public: lets the admin "Test email" button verify Brevo is wired without
 // touching real lead records.
-export async function dispatchRaw({ to, subject, html, text }) {
-  return dispatch({ to, subject, html, text });
+export async function dispatchRaw({ to, subject, html, text, attachments }) {
+  return dispatch({ to, subject, html, text, attachments });
 }
 
-async function dispatch({ leadId, to, subject, html, text }) {
+async function dispatch({ leadId, to, subject, html, text, attachments = [] }) {
   const fromAddr = await configuredFrom();
 
   if (!isBrevoConfigured()) {
@@ -92,6 +92,7 @@ async function dispatch({ leadId, to, subject, html, text }) {
     htmlContent: html || `<p>${(text || '').replace(/\n/g, '<br/>')}</p>`,
     textContent: text || undefined,
   };
+  if (attachments.length) payload.attachment = attachments.map((item) => ({ name: item.name, content: Buffer.isBuffer(item.content) ? item.content.toString('base64') : item.content }));
 
   try {
     const res = await fetch(BREVO_API, {
