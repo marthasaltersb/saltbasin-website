@@ -104,14 +104,17 @@ export async function listCareerOpportunities(userId) {
  * (agent execution itself is a later phase). Optionally links a company
  * Entity by name (find-or-create, deduped).
  */
-export async function createCareerOpportunity(userId, { jobTitle, companyName = null, url = null, location = null, notes = null }) {
+export async function createCareerOpportunity(userId, { jobTitle, companyName = null, url = null, location = null, notes = null, proposedByAgent = false, agentRationale = null }) {
   if (!jobTitle) throw new Error('jobTitle is required.');
   const careerRod = await getOrCreateCareerMasterRod(userId);
   const oppRod = await createJourneyTributary({
     parentJourney: careerRod,
     tributaryType: 'career_opportunity_provisioning',
     stage: 'discovered',
-    metadata: { jobTitle, url, location, notes, verifiedOpenAt: null },
+    // proposedByAgent (2026-08-07, real job research agent): additive
+    // metadata flag, never presented as equivalent to a human-verified
+    // entry until reviewed — the World Shell surfaces it distinctly.
+    metadata: { jobTitle, url, location, notes, verifiedOpenAt: null, proposedByAgent, agentRationale },
   });
   if (companyName) {
     const entity = await findOrCreateEntity({ ownerUserId: userId, canonicalName: companyName, entityType: 'company' });

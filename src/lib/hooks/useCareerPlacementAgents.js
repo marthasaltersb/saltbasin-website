@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { api } from '../api.js';
 import { toast } from '../toast.js';
 import { useOpportunityPipeline } from './useOpportunityPipeline.js';
@@ -25,8 +26,12 @@ function buildCreatePayload(addForm) {
   };
 }
 
+// Real, on-demand job research + resume generation (2026-08-07) — layered on
+// top of the shared useOpportunityPipeline (add/select/score) rather than
+// folded into it, since these two actions are career-specific and would
+// have no meaning for the commercial pipeline that hook also serves.
 export function useCareerPlacementAgents({ enabled = true } = {}) {
-  return useOpportunityPipeline({
+  const pipeline = useOpportunityPipeline({
     getHub: api.getCareerAgentHub,
     listOpportunities: api.listCareerOpportunities,
     createOpportunity: api.createCareerOpportunity,
@@ -38,4 +43,67 @@ export function useCareerPlacementAgents({ enabled = true } = {}) {
     pipelineLabel: 'Career Placement Agents',
     enabled,
   });
+
+  const [runningResearch, setRunningResearch] = useState(false);
+  const [generatingResume, setGeneratingResume] = useState(false);
+  const [resumeReview, setResumeReview] = useState(null); // { content, jobDescriptionUsed } — pending human approval
+  const [approvingResume, setApprovingResume] = useState(false);
+
+  async function runResearch() {
+    setRunningResearch(true);
+    try {
+      const { opportunities } = await api.runCareerResearch();
+      if (opportunities.length) {
+        toast(`Job research found ${opportunities.length} real posting(s) — review before treating as tracked.`);
+        pipeline.reload();
+      } else {
+        toast('Job research found no new matching postings this run.');
+      }
+    } catch (e) {
+      toast('Job research failed: ' + e.message);
+    } finally {
+      setRunningResearch(false);
+    }
+  }
+
+  async function generateResume(opportunityId, jobDescription) {
+    setGeneratingResume(true);
+    setResumeReview(null);
+    try {
+      const result = await api.generateResumeForOpportunity(opportunityId, { jobDescription });
+      setResumeReview(result);
+    } catch (e) {
+      toast('Resume generation failed: ' + e.message);
+    } finally {
+      setGeneratingResume(false);
+    }
+  }
+
+  async function approveResume(opportunityId) {
+    if (!resumeReview) return;
+    setApprovingResume(true);
+    try {
+      await api.approveResumeForOpportunity(opportunityId, {
+        generatedContent: resumeReview.content,
+        targetJobDescription: resumeReview.jobDescriptionUsed,
+      });
+      toast('Resume approved and saved.');
+      setResumeReview(null);
+    } catch (e) {
+      toast('Could not save approved resume: ' + e.message);
+    } finally {
+      setApprovingResume(false);
+    }
+  }
+
+  function discardResumeReview() {
+    setResumeReview(null);
+  }
+
+  return {
+    ...pipeline,
+    runningResearch, runResearch,
+    generatingResume, resumeReview, generateResume, discardResumeReview,
+    approvingResume, approveResume,
+  };
 }

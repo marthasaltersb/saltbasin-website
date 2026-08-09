@@ -582,6 +582,8 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
     loading, opportunities, selectedOpportunityId, selectedOpportunity, selectOpportunity,
     showAddForm, setShowAddForm, addForm, setAddForm, handleAddOpportunity,
     scoreDraft, setScoreDraft, handleSaveScore, saving,
+    runningResearch, runResearch,
+    generatingResume, resumeReview, generateResume, discardResumeReview, approvingResume, approveResume,
   } = pipeline;
 
   return (
@@ -615,6 +617,29 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
             ))}
           </div>
           <button style={S.gold} onClick={handleSaveScore} disabled={saving}>{saving ? 'Saving…' : 'Save Scores'}</button>
+
+          {!isCommercial && (
+            <>
+              <div style={S.railSubtitle}>Resume for This Opportunity</div>
+              {resumeReview ? (
+                <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '0.6rem', fontSize: '0.74rem', color: '#cfc9bd', marginBottom: '0.5rem' }}>
+                  <p style={{ margin: '0 0 0.5rem', color: '#f5f0e8' }}>{resumeReview.content?.professionalSummary}</p>
+                  {(resumeReview.content?.selectedExperience || []).map((exp, i) => (
+                    <ul key={i} style={{ paddingLeft: '1rem', margin: '0 0 0.4rem' }}>
+                      {exp.bullets.map((b, j) => <li key={j}>{b}</li>)}
+                    </ul>
+                  ))}
+                  <p style={{ fontSize: '0.68rem', color: '#8b877c', margin: '0.4rem 0' }}>Review before approving — nothing is saved until you approve it.</p>
+                  <button style={S.gold} onClick={() => approveResume(selectedOpportunity.id)} disabled={approvingResume}>{approvingResume ? 'Saving…' : 'Approve & Save'}</button>
+                  <button style={S.ghost} onClick={discardResumeReview}>Discard</button>
+                </div>
+              ) : (
+                <button style={S.ghost} onClick={() => generateResume(selectedOpportunity.id)} disabled={generatingResume}>
+                  {generatingResume ? 'Generating…' : 'Generate Resume for This Opportunity'}
+                </button>
+              )}
+            </>
+          )}
           <button style={S.ghost} onClick={() => selectOpportunity(null)}>← Tracked list</button>
         </>
       ) : (
@@ -623,6 +648,11 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
             <div style={S.railSubtitle}>Tracked ({opportunities.length})</div>
             <button style={S.ghostSmall} onClick={() => setShowAddForm((v) => !v)}>{showAddForm ? 'Cancel' : '+ Add'}</button>
           </div>
+          {!isCommercial && (
+            <button style={S.ghost} onClick={runResearch} disabled={runningResearch}>
+              {runningResearch ? 'Researching…' : 'Run Job Research'}
+            </button>
+          )}
           {showAddForm && (
             <form onSubmit={handleAddOpportunity} style={S.addForm}>
               {isCommercial ? (
@@ -645,7 +675,10 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
           {!opportunities.length && !showAddForm && <div style={S.railEmpty}>Nothing tracked yet.</div>}
           {opportunities.map((o) => (
             <div key={o.id} style={S.railRow} onClick={() => selectOpportunity(o.id)} className="sb-world-row">
-              <span>{o.metadata?.jobTitle || o.metadata?.companyName}</span>
+              <span>
+                {o.metadata?.jobTitle || o.metadata?.companyName}
+                {o.metadata?.proposedByAgent && <span style={{ color: '#c4843a', fontSize: '0.62rem', marginLeft: '0.4rem', textTransform: 'uppercase' }}>Agent-proposed</span>}
+              </span>
               <span style={{ color: scoreColor(o.score?.score), fontWeight: 600 }}>{o.score ? Math.round(o.score.score) : '—'}</span>
             </div>
           ))}

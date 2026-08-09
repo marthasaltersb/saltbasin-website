@@ -412,6 +412,10 @@ export const api = {
   listCareerOpportunities: () => request('/api/career-agents/opportunities'),
   createCareerOpportunity: (body) => request('/api/career-agents/opportunities', { method: 'POST', body: JSON.stringify(body) }),
   scoreCareerOpportunity: (id, body) => request(`/api/career-agents/opportunities/${id}/scores`, { method: 'POST', body: JSON.stringify(body) }),
+  runCareerResearch: () => request('/api/career-agents/research', { method: 'POST' }),
+  generateResumeForOpportunity: (id, body) => request(`/api/career-agents/opportunities/${id}/generate-resume`, { method: 'POST', body: JSON.stringify(body || {}) }),
+  approveResumeForOpportunity: (id, body) => request(`/api/career-agents/opportunities/${id}/resume-outputs`, { method: 'POST', body: JSON.stringify(body) }),
+  listResumeOutputsForOpportunity: (id) => request(`/api/career-agents/opportunities/${id}/resume-outputs`),
 
   getCommercialAgentHub: () => request('/api/commercial-opportunities/agent-hub'),
   listCommercialOpportunities: () => request('/api/commercial-opportunities/opportunities'),

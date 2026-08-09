@@ -106,6 +106,27 @@ export async function buildCareerAtomRollupCatalog(userId) {
   };
 }
 
+/**
+ * The raw, full-field entries (2026-08-07, real resume generation) —
+ * `buildCareerAtomRollupCatalog()` above only returns aggregated category
+ * counts, not enough detail to write an actual resume bullet from. Reuses
+ * the exact same evidence fetch + reconstructEntries() this file already
+ * does, just returns the unreduced entries instead of chart-ready groups.
+ */
+export async function getCareerAtomEntries(userId) {
+  const rod = await getOrBackfillRod(userId);
+  if (!rod) return { jobs: [], skills: [], tools: [] };
+  const evidenceRows = await db
+    .prepare(`SELECT molecule_key, value, metadata FROM journey_rod_evidence WHERE rod_id=$1`)
+    .all(rod.id);
+  const entries = reconstructEntries(evidenceRows);
+  return {
+    jobs: entries.filter((e) => e.entryType === 'career_job_entry').map((e) => ({ sourceRowId: e.sourceRowId, ...e.fields })),
+    skills: entries.filter((e) => e.entryType === 'career_skill_entry').map((e) => ({ sourceRowId: e.sourceRowId, ...e.fields })),
+    tools: entries.filter((e) => e.entryType === 'career_tool_entry').map((e) => ({ sourceRowId: e.sourceRowId, ...e.fields })),
+  };
+}
+
 // Rollout gate (2026-07-30): a member's public profile should never go live
 // before their Career Master data exists — reuses the same atomCount signal
 // this module already computes for the public rollup display, rather than a

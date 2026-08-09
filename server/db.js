@@ -849,7 +849,24 @@ async function bootstrap() {
     );
     CREATE INDEX IF NOT EXISTS idx_resume_output_projections_user ON resume_output_projections (user_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_resume_output_projections_lineage ON resume_output_projections (lineage_root_id);
+  `);
 
+  // Additive columns for the already-existing resume_output_projections
+  // table (2026-08-07, real resume generation): career_opportunity_rod_id is
+  // the actual "attached to the career pipeline lead" link — a generated
+  // resume tied to the specific career_opportunity_target rod it was
+  // written for. generated_content holds the real, evidence-grounded resume
+  // section content generateResumeContent() (resumeTargeting.js) produces —
+  // distinct from the pre-existing targeting_result, which is only
+  // category-emphasis metadata, never actual resume prose.
+  try {
+    await sql.unsafe(`ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS career_opportunity_rod_id BIGINT REFERENCES journey_data_rods(id) ON DELETE SET NULL`);
+    await sql.unsafe(`ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS generated_content JSONB`);
+  } catch (e) {
+    console.warn('[db] resume_output_projections agent-generation columns warning:', e.message);
+  }
+
+  await sql.unsafe(`
     -- ── Organization Document Projections (2026-07-27) ──────────────────────
     -- Satellite table for the 'customer_document_delivery' Tributary
     -- (server/lib/tributaryRegistry.js) — gated proposal / product-resource
@@ -4249,6 +4266,23 @@ Rod state, per event:
         updated_at            BIGINT NOT NULL
       );
       CREATE INDEX IF NOT EXISTS idx_agent_schedules_agent ON agent_schedules (agent_definition_id);
+
+      -- agent_run_log (2026-08-07, real on-demand agent execution): one row
+      -- per agent-triggered Anthropic call (job research, resume
+      -- generation, ...). The only cost/rate governance that exists for a
+      -- non-HTTP-request-scoped AI call anywhere in this codebase —
+      -- server/lib/rateLimit.js is IP-keyed Express middleware, meaningless
+      -- here. checkAndRecordRunAllowance() in opportunityPipelineRegistry.js
+      -- reads today's count against the agent_run_daily_cap Config Envelope
+      -- before allowing a new run.
+      CREATE TABLE IF NOT EXISTS agent_run_log (
+        id           BIGSERIAL PRIMARY KEY,
+        user_id      BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        agent_key    TEXT NOT NULL,
+        run_type     TEXT NOT NULL,
+        created_at   BIGINT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_agent_run_log_user_day ON agent_run_log (user_id, agent_key, created_at);
 
       CREATE TABLE IF NOT EXISTS agent_approval_workflows (
         id                    BIGSERIAL PRIMARY KEY,
