@@ -19,7 +19,7 @@ import { api } from '../lib/api.js';
 import { hasWebGL } from './SaltBasinCrystal.jsx';
 import { CRYSTAL_VARIANTS, addCrystalLights, buildRiverParticles, advanceRiverParticles } from '../lib/crystalGeometry.js';
 import { resolveWorldIslands } from '../lib/worldIslands.js';
-import { useCareerPlacementAgents, CAREER_DIMENSION_FIELDS } from '../lib/hooks/useCareerPlacementAgents.js';
+import { useCareerPlacementAgents, CAREER_DIMENSION_FIELDS, STAGE_LABELS } from '../lib/hooks/useCareerPlacementAgents.js';
 import { useCommercialOpportunities, COMMERCIAL_DIMENSION_FIELDS, EXPANSION_RING_OPTIONS } from '../lib/hooks/useCommercialOpportunities.js';
 import { usePublicationPipeline } from '../lib/hooks/usePublicationPipeline.js';
 import AdminShell from './admin/AdminShell.jsx';
@@ -586,7 +586,7 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
     generatingResume, resumeReview, generateResume, discardResumeReview, approvingResume, approveResume,
     importingPipeline, importPipeline,
     generatingQueue, generateQueue,
-    approvingOpportunity, approveOpportunity,
+    approvingOpportunity, approveOpportunity, advanceStage,
     generatingCoverLetter, coverLetterReview, generateCoverLetter, discardCoverLetterReview, approvingCoverLetter, approveCoverLetter,
     verifyingPipeline, verifyPipelineNow, runningAutoQueue, runAutoQueueNow,
     automation, loadingAutomation, loadAutomation, setSchedule,
@@ -606,7 +606,7 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
       ) : selectedOpportunity ? (
         <>
           <div style={S.railSubtitle}>{selectedOpportunity.metadata?.jobTitle || selectedOpportunity.metadata?.companyName}</div>
-          <div style={S.railRow}><span>Stage</span><span>{selectedOpportunity.currentStage}</span></div>
+          <div style={S.railRow}><span>Stage</span><span>{STAGE_LABELS[selectedOpportunity.currentStage] || selectedOpportunity.currentStage}</span></div>
           <div style={S.railRow}>
             <span>Score</span>
             <span style={{ color: scoreColor(selectedOpportunity.score?.score), fontWeight: 600 }}>
@@ -630,7 +630,7 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
 
           {!isCommercial && (
             <>
-              {selectedOpportunity.currentStage === 'discovered' && (
+              {selectedOpportunity.currentStage === 'discovered' && (selectedOpportunity.allowedNextStages || []).includes('approved') && (
                 <button style={S.gold} onClick={() => approveOpportunity(selectedOpportunity.id)} disabled={approvingOpportunity}>
                   {approvingOpportunity ? 'Approving…' : 'Approve (eligible for auto-generated outputs)'}
                 </button>
@@ -638,6 +638,20 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
               {selectedOpportunity.currentStage === 'archived' && (
                 <div style={{ fontSize: '0.72rem', color: '#c4843a', margin: '0.4rem 0' }}>
                   Archived{selectedOpportunity.metadata?.archiveReason ? `: ${selectedOpportunity.metadata.archiveReason}` : ''}
+                </div>
+              )}
+              {/* Every other stage move — "apply and track to job applications." */}
+              {(selectedOpportunity.allowedNextStages || []).filter((s) => s !== 'approved').length > 0 && (
+                <div style={{ margin: '0.5rem 0' }}>
+                  <div style={{ fontSize: '0.68rem', color: '#8b877c', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Mark as</div>
+                  {selectedOpportunity.allowedNextStages.filter((s) => s !== 'approved').map((stage) => (
+                    <button
+                      key={stage} style={{ ...S.ghost, marginRight: '0.3rem', marginBottom: '0.3rem' }}
+                      onClick={() => advanceStage(selectedOpportunity.id, stage)} disabled={approvingOpportunity}
+                    >
+                      {STAGE_LABELS[stage] || stage}
+                    </button>
+                  ))}
                 </div>
               )}
 

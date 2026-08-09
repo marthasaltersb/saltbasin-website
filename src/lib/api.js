@@ -441,6 +441,7 @@ export const api = {
   },
   generateResumeQueue: (limit) => request('/api/career-agents/generate-resume-queue', { method: 'POST', body: JSON.stringify({ limit }) }),
   approveCareerOpportunity: (id) => request(`/api/career-agents/opportunities/${id}/approve`, { method: 'POST' }),
+  advanceCareerOpportunityStage: (id, stage) => request(`/api/career-agents/opportunities/${id}/advance-stage`, { method: 'POST', body: JSON.stringify({ stage }) }),
   generateCoverLetterForOpportunity: (id, body) => request(`/api/career-agents/opportunities/${id}/generate-cover-letter`, { method: 'POST', body: JSON.stringify(body || {}) }),
   approveCoverLetterForOpportunity: (id, body) => request(`/api/career-agents/opportunities/${id}/cover-letter-outputs`, { method: 'POST', body: JSON.stringify(body) }),
   verifyCareerPipelineNow: () => request('/api/career-agents/verify-pipeline', { method: 'POST' }),

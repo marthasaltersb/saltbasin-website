@@ -16,6 +16,17 @@ export const CAREER_DIMENSION_FIELDS = [
 
 const INITIAL_ADD_FORM = { jobTitle: '', companyName: '', url: '', location: '' };
 
+export const STAGE_LABELS = {
+  discovered: 'Discovered',
+  approved: 'Approved',
+  applied: 'Applied',
+  interviewing: 'Interviewing',
+  offer: 'Offer',
+  rejected: 'Rejected',
+  withdrawn: 'Withdrawn',
+  archived: 'Archived',
+};
+
 function buildCreatePayload(addForm) {
   if (!addForm.jobTitle.trim()) { toast('Job title is required.'); return null; }
   return {
@@ -108,6 +119,19 @@ export function useCareerPlacementAgents({ enabled = true } = {}) {
       pipeline.reload();
     } catch (e) {
       toast('Could not approve: ' + e.message);
+    } finally {
+      setApprovingOpportunity(false);
+    }
+  }
+
+  async function advanceStage(opportunityId, stage) {
+    setApprovingOpportunity(true);
+    try {
+      await api.advanceCareerOpportunityStage(opportunityId, stage);
+      toast(`Marked as ${STAGE_LABELS[stage] || stage}.`);
+      pipeline.reload();
+    } catch (e) {
+      toast('Could not update stage: ' + e.message);
     } finally {
       setApprovingOpportunity(false);
     }
@@ -268,7 +292,7 @@ export function useCareerPlacementAgents({ enabled = true } = {}) {
     approvingResume, approveResume,
     importingPipeline, importPipeline,
     generatingQueue, generateQueue,
-    approvingOpportunity, approveOpportunity,
+    approvingOpportunity, approveOpportunity, advanceStage,
     generatingCoverLetter, coverLetterReview, generateCoverLetter, discardCoverLetterReview,
     approvingCoverLetter, approveCoverLetter,
     verifyingPipeline, verifyPipelineNow,

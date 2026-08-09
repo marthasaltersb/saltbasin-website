@@ -9,7 +9,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { requireUser, requireAdmin } from '../auth.js';
-import { listCareerOpportunities, createCareerOpportunity, recordDimensionScores, getCareerAgentHub, approveCareerOpportunity } from '../lib/careerOpportunityRollups.js';
+import { listCareerOpportunities, createCareerOpportunity, recordDimensionScores, getCareerAgentHub, approveCareerOpportunity, advanceOpportunityStage } from '../lib/careerOpportunityRollups.js';
 import { researchCareerOpportunities } from '../lib/careerResearchAgent.js';
 import { generateResumeContent } from '../lib/resumeTargeting.js';
 import { generateCoverLetterContent } from '../lib/coverLetterTargeting.js';
@@ -321,6 +321,20 @@ router.post('/resume-outputs/email', requireUser, async (req, res) => {
 router.post('/opportunities/:id/approve', requireUser, async (req, res) => {
   try {
     const opportunity = await approveCareerOpportunity(req.user.id, Number(req.params.id));
+    res.json(opportunity);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// "Apply and track to job applications" — the general stage-advance route.
+// Validated server-side against ALLOWED_TRANSITIONS (careerOpportunityRollups.js)
+// — never an arbitrary stage jump.
+router.post('/opportunities/:id/advance-stage', requireUser, async (req, res) => {
+  try {
+    const { stage } = req.body || {};
+    if (!stage) return res.status(400).json({ error: 'stage is required.' });
+    const opportunity = await advanceOpportunityStage(req.user.id, Number(req.params.id), stage);
     res.json(opportunity);
   } catch (e) {
     res.status(400).json({ error: e.message });
