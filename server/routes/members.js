@@ -166,6 +166,8 @@ router.post('/me/emails', requireUser, async (req, res) => {
 
   sendVerificationEmail({ toEmail: lower, code }).catch((e) => console.error('[email] verify failed:', e.message));
 
+  await audit({ req, actor: req.user, action: 'member.email.added', entityType: 'user_email', entityId: String(result.lastInsertRowid), summary: `${lower} added as a ${emailType} email; verification pending` });
+
   res.json({ ok: true, id: Number(result.lastInsertRowid), email: lower, type: emailType, verified: false });
 });
 
@@ -180,6 +182,7 @@ router.post('/me/emails/:id/verify', requireUser, async (req, res) => {
   if (Date.now() > Number(row.code_expires_at)) return res.status(400).json({ error: 'code expired — resend to get a new one' });
   if (String(row.verification_code) !== String(code)) return res.status(400).json({ error: 'incorrect code' });
   await db.prepare('UPDATE user_emails SET verified = true, verification_code = NULL, code_expires_at = NULL WHERE id = $1').run(id);
+  await audit({ req, actor: req.user, action: 'member.email.verified', entityType: 'user_email', entityId: String(id), summary: `${row.email} verified` });
 
   // Best-effort — a rod/entitlement hiccup must never block an already-
   // successful email verification. Only fires for type='work' emails; see
@@ -215,6 +218,7 @@ router.delete('/me/emails/:id', requireUser, async (req, res) => {
   if (!row || Number(row.user_id) !== req.user.id) return res.status(404).json({ error: 'not found' });
   if (row.email === req.user.email) return res.status(400).json({ error: 'cannot remove the primary signup email' });
   await db.prepare('DELETE FROM user_emails WHERE id = $1').run(id);
+  await audit({ req, actor: req.user, action: 'member.email.removed', entityType: 'user_email', entityId: String(id), summary: `${row.email} removed` });
   res.json({ ok: true });
 });
 

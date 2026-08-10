@@ -6,7 +6,7 @@
 // createOrgDocumentProjection), seeded from the LoneTree Capital prospect
 // package (Salt_Basin_LoneTree_Prospect_Experience_v5_ORIGINAL_DESIGN).
 //
-// Usage: node server/scripts/seedLoneTreeDemo.js [--userId=<id>] [--email=<work-email>]
+// Usage: node server/scripts/seedLoneTreeDemo.js (--userId=<id>|--targetUserEmail=<primary-email>) [--email=<work-email>]
 import 'dotenv/config';
 import { db } from '../db.js';
 import { ensureCustomerOrgFromWorkEmail } from '../lib/journeyRods.js';
@@ -49,9 +49,12 @@ const PROPOSAL_CONTENT = {
 };
 
 async function main() {
+  if (!args.userId && !args.targetUserEmail) {
+    throw new Error('Explicit --userId or --targetUserEmail is required; refusing to attach demo data to an inferred user.');
+  }
   const user = args.userId
     ? await db.prepare('SELECT id, email FROM users WHERE id=$1').get(Number(args.userId))
-    : await db.prepare('SELECT id, email FROM users ORDER BY id ASC LIMIT 1').get();
+    : await db.prepare('SELECT id, email FROM users WHERE lower(email)=lower($1)').get(args.targetUserEmail);
   if (!user) throw new Error('No users found — create a member/admin user first.');
 
   const existingEmail = await db.prepare('SELECT id FROM user_emails WHERE user_id=$1 AND email=$2').get(user.id, workEmail);
