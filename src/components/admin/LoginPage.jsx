@@ -33,8 +33,22 @@ export default function LoginPage() {
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [challengeRequired, setChallengeRequired] = useState(false);
-  const [err, setErr] = useState('');
+  const [err, setErr] = useState(params.get('ssoError') || '');
   const [submitting, setSubmitting] = useState(false);
+
+  async function startOrganizationSso() {
+    setErr('');
+    if (!email) { setErr('Enter your organization email first.'); return; }
+    setSubmitting(true);
+    try {
+      const result = await api.discoverOrganizationSso(email);
+      if (!result.available || !result.authorizationUrl) throw new Error('Organization sign-in is not available for this account.');
+      window.location.assign(result.authorizationUrl);
+    } catch (e) {
+      setErr(e.message || 'Organization sign-in could not be started.');
+      setSubmitting(false);
+    }
+  }
 
   async function submitLogin(e) {
     e.preventDefault();
@@ -138,6 +152,9 @@ export default function LoginPage() {
               disabled={submitting}
             >
               {submitting ? 'Signing in…' : 'Sign In ↗'}
+            </button>
+            <button type="button" className="sb-btn sb-btn-outline" style={{ width: '100%', justifyContent: 'center', marginBottom: '1rem' }} disabled={submitting} onClick={startOrganizationSso}>
+              Sign in with your organization
             </button>
             <div style={linkRow}>
               <button type="button" style={linkBtn} onClick={() => go('forgot-password')}>

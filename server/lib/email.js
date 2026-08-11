@@ -68,7 +68,23 @@ export async function dispatchRaw({ leadId, to, subject, html, text, attachments
   return dispatch({ leadId, to, subject, html, text, attachments });
 }
 
+async function resolveLeadId(leadId, to) {
+  if (leadId) return leadId;
+  const email = String(to || '').trim().toLowerCase();
+  if (!email) return null;
+  const row = await db.prepare(`
+    SELECT l.id FROM leads l
+    WHERE l.merged_into_id IS NULL AND (
+      LOWER(l.email)=LOWER($1)
+      OR EXISTS (SELECT 1 FROM lead_email_addresses lea WHERE lea.lead_id=l.id AND LOWER(lea.email)=LOWER($1))
+      OR EXISTS (SELECT 1 FROM users u LEFT JOIN user_emails ue ON ue.user_id=u.id WHERE u.id=l.converted_user_id AND (LOWER(u.email)=LOWER($1) OR LOWER(ue.email)=LOWER($1)))
+    ) ORDER BY l.updated_at DESC,l.id DESC LIMIT 1
+  `).get(email);
+  return row?.id || null;
+}
+
 async function dispatch({ leadId, to, subject, html, text, attachments = [] }) {
+  leadId = await resolveLeadId(leadId, to);
   const fromAddr = await configuredFrom();
 
   if (!isBrevoConfigured()) {

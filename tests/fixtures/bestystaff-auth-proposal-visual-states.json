@@ -6,7 +6,7 @@
     "desktop": { "width": 1280, "height": 720 }
   },
   "states": [
-    { "id": "AUTH-LOGIN", "route": "/login", "auth": "anonymous", "assertText": ["Sign In", "Forgot password?", "Start with BestyStaff"], "assertNoHorizontalOverflow": true, "status": "verified-desktop", "evidence": { "viewport": "1280x720", "bodyScrollWidth": 1280, "bodyClientWidth": 1280, "clippedControls": 0 } },
+    { "id": "AUTH-LOGIN", "route": "/login", "auth": "anonymous", "assertText": ["Sign In", "Sign in with your organization", "Forgot password?", "Start with BestyStaff"], "assertNoHorizontalOverflow": true, "status": "verified-responsive", "evidence": { "viewports": ["390x844", "768x1024", "1280x720"], "horizontalOverflow": false, "clippedControls": 0, "consoleErrors": 0 } },
     { "id": "AUTH-FIRST-PASSWORD", "route": "/first-login-password", "auth": "must-change-member", "assertText": ["BestyStaff · required first step", "Set your own password", "Save password and continue"], "assertNoHorizontalOverflow": true, "status": "pending-capture" },
     { "id": "AUTH-RESET", "route": "/reset/:valid-test-token", "auth": "anonymous-fixture", "assertText": ["Set a new password", "cannot reuse a previous password"], "assertNoHorizontalOverflow": true, "status": "pending-capture" },
     { "id": "TERMS-CURRENT", "route": "/world", "auth": "member-current-terms", "assertAbsentText": ["required first prompt"], "status": "pending-capture" },

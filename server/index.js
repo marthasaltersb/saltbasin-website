@@ -277,9 +277,10 @@ app.listen(port, async () => {
     setInterval(() => runContentAttachmentRetention().catch((error) => console.error('[content-attachment-retention]', error.message)), 60 * 60 * 1000).unref();
   });
   import('./lib/proposalOperations.js').then(({ runProposalFeedbackReminders, runProposalFeedbackTriage }) => {
-    const run = () => Promise.all([runProposalFeedbackReminders(), runProposalFeedbackTriage()]).catch((error) => console.error('[proposal-operations]', error.message));
-    run();
-    setInterval(run, 60 * 60 * 1000).unref();
+    const remind = () => runProposalFeedbackReminders().catch((error) => console.error('[proposal-reminders]', error.message));
+    remind();
+    setInterval(remind, 60 * 60 * 1000).unref();
+    cron.schedule('0 2 * * *', () => runProposalFeedbackTriage().catch((error) => console.error('[proposal-triage]', error.message)));
   });
   import('./lib/customerMemory.js').then(({ refreshCustomerMemory }) => {
     refreshCustomerMemory().catch((error) => console.error('[customer-memory]', error.message));

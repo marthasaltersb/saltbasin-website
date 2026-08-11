@@ -85,6 +85,7 @@ export const api = {
   me: () => request('/api/auth/me'),
   login: (email, password, otp = null) =>
     request('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password, otp }) }),
+  discoverOrganizationSso: (email) => request('/api/auth/sso/discover', { method: 'POST', body: JSON.stringify({ email }) }),
   logout: () => request('/api/auth/logout', { method: 'POST' }),
   changePassword: (currentPassword, newPassword) =>
     request('/api/auth/change-password', {

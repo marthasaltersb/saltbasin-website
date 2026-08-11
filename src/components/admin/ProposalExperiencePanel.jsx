@@ -135,6 +135,30 @@ function useLoad(loader, deps = []) {
   return [data, loading];
 }
 
+function DetailNode({ node, depth = 0 }) {
+  const [open, setOpen] = useState(false);
+  const children = Array.isArray(node.children) ? node.children : [];
+  return <div style={{ marginTop: '.5rem', marginLeft: depth ? '.85rem' : 0, borderLeft: depth ? '1px solid rgba(196,132,58,.28)' : 'none', paddingLeft: depth ? '.75rem' : 0 }}>
+    <button type="button" onClick={(event) => { event.stopPropagation(); setOpen((value) => !value); }} style={{ border: 0, padding: 0, background: 'transparent', color: 'var(--sb-navy, #1b2a3b)', fontSize: '.76rem', fontWeight: 700, cursor: 'pointer', textAlign: 'left' }}>{open ? '−' : '+'} {node.label}</button>
+    {open && <div style={{ marginTop: '.35rem', fontSize: '.76rem', lineHeight: 1.55, color: '#555' }}>
+      {node.text && <div>{node.text}</div>}
+      {Array.isArray(node.items) && <ul style={{ margin: '.35rem 0', paddingLeft: '1.1rem' }}>{node.items.map((item, index) => <li key={index}>{typeof item === 'string' ? item : JSON.stringify(item)}</li>)}</ul>}
+      {children.map((child, index) => <DetailNode key={child.id || child.label || index} node={child} depth={depth + 1} />)}
+    </div>}
+  </div>;
+}
+
+function DataStoryDetails({ item }) {
+  const configured = Array.isArray(item.detailHierarchy) ? item.detailHierarchy : [];
+  const nodes = configured.length ? configured : [
+    { label: 'Detailed talk track', text: item.talkTrack || item.businessGoal || item.objective || item.claimOrAssumption || item.narrative || item.story },
+    { label: 'Additional considerations', items: item.considerations || [item.applicability, item.limitation, item.recoverability && `Recoverability: ${item.recoverability}`].filter(Boolean) },
+    { label: 'Supporting facts', items: item.facts || [item.publisherOrOwner && `Source: ${item.publisherOrOwner}`, item.year && `Year: ${item.year}`, item.confidence && `Confidence: ${item.confidence}`, item.primaryOutput && `Primary output: ${item.primaryOutput}`, item.ownerRole && `Owner: ${item.ownerRole}`].filter(Boolean) },
+  ].filter((node) => node.text || node.items?.length);
+  if (!nodes.length) return null;
+  return <div style={{ marginTop: '.65rem', paddingTop: '.5rem', borderTop: '1px solid rgba(0,0,0,.06)' }}>{nodes.map((node, index) => <DetailNode key={node.id || node.label || index} node={node} />)}</div>;
+}
+
 function SectionsStage({ stageId, onAdvance }) {
   const [data, loading] = useLoad(() => api.getProposalSections(), []);
   if (loading) return null;
@@ -147,6 +171,7 @@ function SectionsStage({ stageId, onAdvance }) {
           {s.illustrativeFlag && <div style={S.illustrativeBadge}>Illustrative</div>}
           <h3 style={S.cardTitle}>{s.title}</h3>
           <p style={S.cardBody}>{s.narrative}</p>
+          <DataStoryDetails item={s} />
         </div>
       ))}
       <NextButton stageId={stageId} onAdvance={onAdvance} />
@@ -171,12 +196,14 @@ function DemoStage({ onAdvance }) {
           {sc.illustrativeFlag && <div style={S.illustrativeBadge}>Illustrative</div>}
           <h3 style={S.cardTitle}>{sc.story}</h3>
           <p style={S.cardBody}>{sc.businessGoal}</p>
+          <DataStoryDetails item={sc} />
         </div>
       ))}
       {sections.map((s) => (
         <div key={s.id} data-proposal-component={`section:${s.id}`} title="Select this component for feedback" style={S.card}>
           <h3 style={S.cardTitle}>{s.title}</h3>
           <p style={S.cardBody}>{s.narrative}</p>
+          <DataStoryDetails item={s} />
         </div>
       ))}
       {!scenes.length && !sections.length && <EmptyState label="the demonstration" />}
@@ -199,6 +226,7 @@ function DiagnosticStage({ onAdvance }) {
             <h4 style={S.gridCardTitle}>{m.name}</h4>
             <p style={S.gridCardBody}>{m.objective}</p>
             <div style={S.gridCardMeta}>Owner: {m.ownerRole}</div>
+            <DataStoryDetails item={m} />
           </div>
         ))}
       </div>
@@ -238,6 +266,7 @@ function OpportunityStage({ onAdvance }) {
                   <div style={S.evidenceMeta}>Confidence: {e.confidence} · {e.limitation}</div>
                 </div>
               ))}
+              <DataStoryDetails item={s} />
             </div>
           )}
         </div>
@@ -261,6 +290,7 @@ function EvidenceStage({ onAdvance }) {
           <p style={S.cardBody}>{e.claimOrAssumption}</p>
           <div style={S.gridCardMeta}>Confidence: {e.confidence} · Applicability: {e.applicability}</div>
           <div style={S.gridCardMeta}>Limitation: {e.limitation}</div>
+          <DataStoryDetails item={e} />
         </div>
       ))}
       <NextButton stageId="J05" onAdvance={onAdvance} />

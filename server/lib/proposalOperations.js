@@ -10,15 +10,14 @@ export async function runProposalFeedbackReminders(now = Date.now()) {
     JOIN proposal_collaborators pc ON pc.proposal_version_id=pv.id
     JOIN users u ON u.id=pc.user_id
     WHERE pv.status='delivered' AND pv.delivered_at <= $1
-      AND EXISTS (SELECT 1 FROM proposal_feedback_entries pfe WHERE pfe.proposal_version_id=pv.id AND pfe.user_id=pc.user_id AND pfe.status='draft')
       AND NOT EXISTS (SELECT 1 FROM proposal_feedback_entries pfe WHERE pfe.proposal_version_id=pv.id AND pfe.user_id=pc.user_id AND pfe.status IN ('published','triaged','resolved'))
       AND NOT EXISTS (SELECT 1 FROM proposal_feedback_reminders pfr WHERE pfr.proposal_version_id=pv.id AND pfr.user_id=pc.user_id AND pfr.reminder_at > $2)
   `).all(now - DAY, now - DAY);
   for (const row of rows) {
     const emails = await db.prepare(`SELECT email FROM user_emails WHERE user_id=$1 AND verified=true AND type IN ('primary','personal','work','organization')`).all(row.user_id);
     const targets = new Set([row.email, ...emails.map((item) => item.email)]);
-    for (const email of targets) await dispatchRaw({ to: email, subject: `Finish your proposal feedback · version ${row.version_number}`, text: 'You have private draft feedback that has not been published. Sign in to review and publish it when ready.', html: '<p>You have private draft proposal feedback that has not been published.</p><p><a href="https://saltbasin.net/member?workspace=1&tab=proposal-experience">Review your proposal feedback</a></p>' });
-    await db.prepare(`INSERT INTO notifications (user_id,source_type,source_id,title,body,severity,action_url,created_at) VALUES ($1,'proposal_feedback_reminder',$2,'Finish your proposal feedback','Your saved feedback is still private. Review and publish it when ready.','info','/member?workspace=1&tab=proposal-experience',$3)`).run(row.user_id, row.version_id, now);
+    for (const email of targets) await dispatchRaw({ to: email, subject: `Finish your proposal feedback · version ${row.version_number}`, text: 'No feedback has been published for this delivered proposal. Sign in to add, review, and publish it when ready.', html: '<p>No feedback has been published for this delivered proposal.</p><p><a href="https://saltbasin.net/member?workspace=1&tab=proposal-experience">Review your proposal feedback</a></p>' });
+    await db.prepare(`INSERT INTO notifications (user_id,source_type,source_id,title,body,severity,action_url,created_at) VALUES ($1,'proposal_feedback_reminder',$2,'Finish your proposal feedback','No feedback has been published yet. Add or review feedback and publish it when ready.','info','/member?workspace=1&tab=proposal-experience',$3)`).run(row.user_id, row.version_id, now);
     await db.prepare(`INSERT INTO proposal_feedback_reminders (proposal_version_id,user_id,reminder_at,channel_summary) VALUES ($1,$2,$3,$4)`).run(row.version_id, row.user_id, now, { emailCount: targets.size, platformNotification: true });
   }
   return { reminded: rows.length };

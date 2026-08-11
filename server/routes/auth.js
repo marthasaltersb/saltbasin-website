@@ -22,11 +22,57 @@ import { recordLogin } from '../lib/usageTracking.js';
 import { replacePassword, validatePasswordPolicy, PASSWORD_POLICY } from '../lib/passwordPolicy.js';
 import { encrypt, decrypt } from '../lib/crypto.js';
 import { generateTotpSecret, verifyTotp, totpUri } from '../lib/totp.js';
+import { organizationSsoConfig, discoverOidc, exchangeOidcCode, hashSsoState, randomSsoValue } from '../lib/organizationSso.js';
 
 // 10 attempts per IP per 15 minutes on auth endpoints
 const authLimiter = makeRateLimiter({ windowMs: 15 * 60_000, max: 10, message: 'Too many attempts — please try again in 15 minutes' });
 
 const router = Router();
+const SSO_TTL_MS = 10 * 60_000;
+const SSO_BASE_URL = process.env.PUBLIC_BASE_URL || process.env.APP_BASE_URL || 'https://saltbasin.net';
+
+router.post('/sso/discover', authLimiter, async (req, res) => {
+  const email = String(req.body?.email || '').trim().toLowerCase();
+  if (!email) return res.status(400).json({ error: 'email required' });
+  const candidate = await db.prepare(`SELECT u.id AS user_id,p.org_id,p.sso_provider_key,p.allowed_routes FROM users u JOIN org_memberships om ON om.user_id=u.id JOIN organization_authentication_policies p ON p.org_id=om.org_id WHERE (u.email=$1 OR EXISTS (SELECT 1 FROM user_emails ue WHERE ue.user_id=u.id AND ue.email=$1 AND ue.verified=true)) AND EXISTS (SELECT 1 FROM jsonb_array_elements_text(p.allowed_routes) route WHERE route='sso') AND p.sso_provider_key IS NOT NULL ORDER BY (om.role='admin') DESC LIMIT 1`).get(email);
+  // Keep discovery non-enumerating: unavailable identities receive the same generic result.
+  if (!candidate || !organizationSsoConfig(candidate.sso_provider_key)) return res.json({ available: false });
+  const state = randomSsoValue();
+  const nonce = randomSsoValue();
+  const now = Date.now();
+  await db.prepare(`INSERT INTO organization_sso_login_states (token_hash,org_id,user_id,provider_key,nonce,expires_at,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7)`).run(hashSsoState(state), candidate.org_id, candidate.user_id, candidate.sso_provider_key, nonce, now + SSO_TTL_MS, now);
+  const config = organizationSsoConfig(candidate.sso_provider_key);
+  const metadata = await discoverOidc(config);
+  const redirectUri = `${SSO_BASE_URL}/api/auth/sso/callback`;
+  const url = new URL(metadata.authorization_endpoint);
+  for (const [key, value] of Object.entries({ response_type: 'code', client_id: config.clientId, redirect_uri: redirectUri, scope: config.scope, state, nonce })) url.searchParams.set(key, value);
+  res.json({ available: true, authorizationUrl: url.toString() });
+});
+
+router.get('/sso/callback', async (req, res) => {
+  const appLogin = `${SSO_BASE_URL}/login`;
+  try {
+    const state = String(req.query?.state || '');
+    const code = String(req.query?.code || '');
+    if (!state || !code || req.query?.error) throw new Error('SSO authorization was not completed');
+    const record = await db.prepare(`UPDATE organization_sso_login_states SET consumed_at=$2 WHERE token_hash=$1 AND consumed_at IS NULL AND expires_at>$2 RETURNING org_id,user_id,provider_key,nonce`).get(hashSsoState(state), Date.now());
+    if (!record) throw new Error('SSO state is invalid or expired');
+    const config = organizationSsoConfig(record.provider_key);
+    if (!config) throw new Error('SSO provider is not configured');
+    const metadata = await discoverOidc(config);
+    const identity = await exchangeOidcCode({ config, metadata, code, redirectUri: `${SSO_BASE_URL}/api/auth/sso/callback`, expectedNonce: record.nonce });
+    if (!identity.email || identity.email_verified === false) throw new Error('SSO provider did not return a verified email');
+    const matched = await db.prepare(`SELECT 1 FROM users u JOIN org_memberships om ON om.user_id=u.id AND om.org_id=$2 WHERE u.id=$1 AND (LOWER(u.email)=LOWER($3) OR EXISTS (SELECT 1 FROM user_emails ue WHERE ue.user_id=u.id AND LOWER(ue.email)=LOWER($3) AND ue.verified=true))`).get(record.user_id, record.org_id, identity.email);
+    if (!matched) throw new Error('SSO identity does not match the provisioned organization member');
+    await db.prepare(`INSERT INTO user_authentication_routes (user_id,route_type,provider_key,enabled,preferred,org_id,created_at) VALUES ($1,'sso',$2,true,true,$3,$4) ON CONFLICT (user_id,route_type,provider_key,org_id) DO UPDATE SET enabled=true`).run(record.user_id, record.provider_key, record.org_id, Date.now());
+    const { token } = await createSession(record.user_id);
+    setAdminCookie(res, token);
+    await audit({ req, actor: { id: record.user_id }, action: 'auth.sso.login', entityType: 'user', entityId: record.user_id, summary: `Organization SSO login via ${record.provider_key}` });
+    return res.redirect(`${SSO_BASE_URL}/world`);
+  } catch (error) {
+    return res.redirect(`${appLogin}?ssoError=${encodeURIComponent(error.message)}`);
+  }
+});
 
 router.post('/login', authLimiter, async (req, res) => {
   const { email, password, otp } = req.body || {};

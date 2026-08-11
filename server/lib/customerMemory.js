@@ -26,3 +26,17 @@ export async function permittedCustomerMemory(userId, moduleScope) {
   const orgIds = new Set((await db.prepare(`SELECT org_id FROM org_memberships WHERE user_id=$1`).all(userId)).map((row) => Number(row.org_id)));
   return rows.filter((row) => row.classification !== 'organization' || orgIds.has(Number(row.org_id))).map((row) => ({ scope: row.module_scope, key: row.memory_key, classification: row.classification, value: row.value, refreshedAt: Number(row.refreshed_at) }));
 }
+
+export async function captureMemberChatMemory({ userId, moduleScope = 'member', userMessage, assistantMessage, toolCalls = [] }) {
+  const now = Date.now();
+  const scope = String(moduleScope || 'member').slice(0, 80);
+  await db.prepare(`INSERT INTO member_agent_messages (user_id,module_scope,role,content,metadata,created_at) VALUES ($1,$2,'user',$3,$4,$5),($1,$2,'assistant',$6,$7,$5)`).run(userId, scope, String(userMessage).slice(0, 20000), { source: 'member_agent_chat' }, now, String(assistantMessage || '').slice(0, 20000), { source: 'member_agent_chat', toolCalls: toolCalls.slice(0, 20) });
+  const recent = await db.prepare(`SELECT role,content,created_at FROM member_agent_messages WHERE user_id=$1 AND module_scope=$2 ORDER BY created_at DESC,id DESC LIMIT 24`).all(userId, scope);
+  const signals = [];
+  const text = String(userMessage || '');
+  if (/urgent|asap|deadline|soon/i.test(text)) signals.push('urgency');
+  if (/budget|price|cost|afford/i.test(text)) signals.push('commercial_interest');
+  if (/hire|proposal|contract|engage/i.test(text)) signals.push('buying_intent');
+  if (/career|resume|portfolio|job|role/i.test(text)) signals.push('career_intent');
+  await upsertMemory({ userId, moduleScope: scope, key: 'chat_feedback', classification: 'private', value: { customerSignals: signals, latestQuote: text.slice(0, 2000), latestAssistantContext: String(assistantMessage || '').slice(0, 4000), transcript: recent.reverse(), updatedFromChatAt: now }, sourceType: 'member_agent_chat', sourceId: String(now), now });
+}

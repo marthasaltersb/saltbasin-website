@@ -25,7 +25,7 @@ import {
   toolsForMemberStaff,
 } from '../lib/memberStaffTemplates.js';
 import { assertAgentLlmBudget, recordAgentLlmUsage } from '../lib/agentLlmUsage.js';
-import { permittedCustomerMemory } from '../lib/customerMemory.js';
+import { permittedCustomerMemory, captureMemberChatMemory } from '../lib/customerMemory.js';
 
 const router = Router();
 router.use(requireUser);
@@ -424,6 +424,7 @@ router.post('/', agentLimiter, async (req, res) => {
       // If Claude stopped with text (no tool calls), we're done
       if (body.stop_reason === 'end_turn' || !body.content?.some((c) => c.type === 'tool_use')) {
         const text = (body.content || []).filter((c) => c.type === 'text').map((c) => c.text).join('\n');
+        await captureMemberChatMemory({ userId: req.user.id, moduleScope: context, userMessage: message, assistantMessage: text, toolCalls: toolCallLog });
         audit({
           req, actor: req.user, action: 'agent.chat',
           entityType: 'member_site', entityId: req.user.id,
@@ -447,7 +448,9 @@ router.post('/', agentLimiter, async (req, res) => {
     }
 
     // Hit iteration cap
-    res.json({ reply: 'I reached the tool-call limit on this request. Try breaking the task into smaller steps.', toolCalls: toolCallLog });
+    const limitReply = 'I reached the tool-call limit on this request. Try breaking the task into smaller steps.';
+    await captureMemberChatMemory({ userId: req.user.id, moduleScope: context, userMessage: message, assistantMessage: limitReply, toolCalls: toolCallLog });
+    res.json({ reply: limitReply, toolCalls: toolCallLog });
   } catch (e) {
     console.error('[memberAgent] error:', e.message);
     if (e.code === 'AGENT_LLM_CAP_REACHED') return res.status(429).json({ error: 'This agent has reached its configured LLM token cap for the current period.', usage: e.usage });

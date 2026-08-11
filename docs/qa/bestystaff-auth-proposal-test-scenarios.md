@@ -50,6 +50,8 @@ Visual runs use [bestystaff-auth-proposal-visual-states.json](../../tests/fixtur
 | AU-11 | IP-based reset routing | Configure exact/prefix IP rule for primary + organization/work, then request from matching and nonmatching IPs. | Matching request routes to configured verified roles; nonmatch uses default; unverified destinations never receive secrets. |
 | AU-12 | Reset completion | Use valid token with compliant unused password. | Token and sibling tokens are invalidated, sessions deleted, password history updated, and fresh login required. |
 | AU-13 | Secret exposure audit | Inspect auth/API responses, logs, lead metadata, and UI. | No password hashes, reset tokens, authenticator secrets, or verification secrets are exposed outside their required delivery channel. |
+| AU-14 | Organization SSO | Enter a provisioned organization email and choose organization sign-in. | OIDC discovery starts only for a configured org policy; callback consumes one-time state, validates nonce/issuer/audience/expiry, requires a verified matching email and org membership, and creates one platform session without also requiring password/TOTP. |
+| AU-15 | Multiple authentication routes | Provision password, personal authenticator, and organization SSO for one member. | Routes coexist; password+its configured second-factor challenge or organization SSO independently completes one login route. |
 
 ## Proposal versioning and collaboration
 
@@ -79,4 +81,4 @@ For every state in the JSON manifest:
 
 ## Not yet testable as complete
 
-The following remain environment-dependent or incomplete and must not be represented as fully passing until configured end to end: a real organization IdP callback for SSO (policy and route definitions exist), mobile/tablet authenticated screenshot capture, live Brevo delivery evidence, live Square payment confirmation/webhook evidence, and external approval-provider integrations beyond the built-in approval action registry.
+The following require deployment credentials or external systems before production evidence can be captured: live organization IdP credentials, mobile/tablet authenticated screenshot capture, live Brevo delivery evidence, a configured Square payment destination, and external approval-provider integrations beyond the built-in approval action registry. Their application paths and safe unconfigured states are implemented; the test pack does not claim a third-party transaction occurred without those credentials.
