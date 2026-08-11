@@ -168,7 +168,7 @@ export default function PublicationsPanel() {
 function PublicationForm({ initial, onSave, onCancel }) {
   const [form, setForm] = useState({
     app_id: 'app.herq', entry_ref: '', long_form_ref: '', channel: 'linkedin', channel_account_ref: '',
-    campaign_ref: '', scheduled_at: '', status: 'draft', destination_url: '',
+    campaign_ref: '', status: 'draft', destination_url: '',
     ...initial,
     scheduled_at: initial.scheduled_at ? new Date(Number(initial.scheduled_at)).toISOString().slice(0, 16) : '',
   });

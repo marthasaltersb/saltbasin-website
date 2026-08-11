@@ -1323,6 +1323,17 @@ async function bootstrap() {
       updated_by BIGINT REFERENCES users(id) ON DELETE SET NULL,
       updated_at BIGINT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS organization_sso_login_states (
+      token_hash TEXT PRIMARY KEY,
+      org_id BIGINT NOT NULL REFERENCES organization_profiles(id) ON DELETE CASCADE,
+      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      provider_key TEXT NOT NULL,
+      nonce TEXT NOT NULL,
+      expires_at BIGINT NOT NULL,
+      consumed_at BIGINT,
+      created_at BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_org_sso_state_expiry ON organization_sso_login_states(expires_at);
     CREATE TABLE IF NOT EXISTS member_capability_allocations (
       id BIGSERIAL PRIMARY KEY,
       org_id BIGINT NOT NULL REFERENCES organization_profiles(id) ON DELETE CASCADE,
@@ -1353,6 +1364,16 @@ async function bootstrap() {
       UNIQUE(user_id,module_scope,memory_key,org_id)
     );
     CREATE INDEX IF NOT EXISTS idx_customer_agent_memory_scope ON customer_agent_memory(user_id,module_scope,classification,refreshed_at DESC);
+    CREATE TABLE IF NOT EXISTS member_agent_messages (
+      id BIGSERIAL PRIMARY KEY,
+      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      module_scope TEXT NOT NULL,
+      role TEXT NOT NULL CHECK (role IN ('user','assistant')),
+      content TEXT NOT NULL,
+      metadata JSONB NOT NULL DEFAULT '{}',
+      created_at BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_member_agent_messages_scope ON member_agent_messages(user_id,module_scope,created_at DESC);
     CREATE TABLE IF NOT EXISTS lead_email_verifications (
       id BIGSERIAL PRIMARY KEY,
       lead_id BIGINT NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
@@ -5409,6 +5430,104 @@ Rod state, per event:
     }
   } catch (error) {
     console.warn('[db] Genesis Foundation navigation seed warning:', error.message);
+  }
+
+  // Content pipeline (HERQ + ads) — generic attachments, publication tracking,
+  // and interaction rollups. These tables were applied directly to the shared
+  // DB during the 2026-08-09/10 HERQ content-pipeline build; declared here now
+  // so a fresh database reproduces the same schema (matches the live shape
+  // exactly — verified against information_schema before writing this).
+  try {
+    await sql.unsafe(`
+      CREATE TABLE IF NOT EXISTS content_attachments (
+        id                    TEXT PRIMARY KEY,
+        entity_type           TEXT NOT NULL,
+        entity_id             TEXT NOT NULL,
+        original_filename     TEXT NOT NULL,
+        storage_bucket        TEXT NOT NULL,
+        storage_key           TEXT NOT NULL,
+        mime_type             TEXT,
+        file_size             BIGINT,
+        notes                 TEXT,
+        uploaded_by           BIGINT,
+        created_at            BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+        retention_expires_at  BIGINT,
+        deleted_at            BIGINT,
+        retention_error       TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_content_attachments_entity
+        ON content_attachments (entity_type, entity_id);
+      CREATE INDEX IF NOT EXISTS idx_content_attachments_retention
+        ON content_attachments (retention_expires_at)
+        WHERE retention_expires_at IS NOT NULL AND deleted_at IS NULL;
+    `);
+
+    await sql.unsafe(`
+      CREATE TABLE IF NOT EXISTS content_publications (
+        id                   TEXT PRIMARY KEY,
+        app_id               TEXT NOT NULL,
+        entry_ref            TEXT,
+        variant_ref          TEXT,
+        long_form_ref        TEXT,
+        channel              TEXT NOT NULL,
+        channel_account_ref  TEXT,
+        campaign_ref         TEXT,
+        scheduled_at         BIGINT,
+        timezone             TEXT,
+        status               TEXT NOT NULL DEFAULT 'draft',
+        destination_url      TEXT,
+        external_post_id     TEXT,
+        actual_published_at  BIGINT,
+        failure_reason       TEXT,
+        retry_count          INTEGER NOT NULL DEFAULT 0,
+        metadata             JSONB NOT NULL DEFAULT '{}',
+        created_by           BIGINT,
+        created_at           BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+        updated_at           BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+      );
+      CREATE INDEX IF NOT EXISTS idx_content_pub_app    ON content_publications (app_id, status);
+      CREATE INDEX IF NOT EXISTS idx_content_pub_entry  ON content_publications (entry_ref) WHERE entry_ref IS NOT NULL;
+      CREATE INDEX IF NOT EXISTS idx_content_pub_channel ON content_publications (channel, scheduled_at);
+    `);
+
+    await sql.unsafe(`
+      CREATE TABLE IF NOT EXISTS content_interactions (
+        id                      TEXT PRIMARY KEY,
+        publication_ref         TEXT NOT NULL,
+        platform                TEXT NOT NULL,
+        interaction_type        TEXT NOT NULL,
+        occurred_at              BIGINT NOT NULL,
+        external_user_ref       TEXT,
+        public_profile_info     JSONB NOT NULL DEFAULT '{}',
+        comment_content         TEXT,
+        sentiment                TEXT,
+        response_status          TEXT NOT NULL DEFAULT 'none',
+        attribution_confidence   TEXT NOT NULL DEFAULT 'platform_attributed',
+        metadata                 JSONB NOT NULL DEFAULT '{}',
+        created_by               BIGINT,
+        created_at               BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+      );
+      CREATE INDEX IF NOT EXISTS idx_content_int_pub
+        ON content_interactions (publication_ref, occurred_at DESC);
+    `);
+  } catch (error) {
+    console.warn('[db] content_attachments/content_publications/content_interactions warning:', error.message);
+  }
+
+  // Additive HERQ content-hierarchy, approval-gate, and evidence-rating columns
+  try {
+    await sql.unsafe(`ALTER TABLE unified_content_items ADD COLUMN IF NOT EXISTS parent_item_id TEXT`);
+    await sql.unsafe(`ALTER TABLE unified_content_items ADD COLUMN IF NOT EXISTS approvals JSONB NOT NULL DEFAULT '{}'`);
+    await sql.unsafe(`ALTER TABLE unified_outputs ADD COLUMN IF NOT EXISTS approvals JSONB NOT NULL DEFAULT '{}'`);
+    await sql.unsafe(`ALTER TABLE herq_research_inputs ADD COLUMN IF NOT EXISTS credibility_rating TEXT`);
+    await sql.unsafe(`ALTER TABLE herq_research_inputs ADD COLUMN IF NOT EXISTS relevance_rating TEXT`);
+    await sql.unsafe(`ALTER TABLE herq_research_inputs ADD COLUMN IF NOT EXISTS novelty_rating TEXT`);
+    await sql.unsafe(`ALTER TABLE herq_research_inputs ADD COLUMN IF NOT EXISTS signal_type TEXT`);
+    await sql.unsafe(`ALTER TABLE herq_research_inputs ADD COLUMN IF NOT EXISTS topic_ref TEXT`);
+    await sql.unsafe(`ALTER TABLE herq_research_inputs ADD COLUMN IF NOT EXISTS evidence_status TEXT NOT NULL DEFAULT 'candidate'`);
+    await sql.unsafe(`ALTER TABLE herq_research_inputs ADD COLUMN IF NOT EXISTS claim_ref TEXT`);
+  } catch (error) {
+    console.warn('[db] HERQ content-hierarchy column warning:', error.message);
   }
 }
 
