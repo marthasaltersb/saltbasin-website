@@ -140,6 +140,7 @@ router.post('/reset-request', authLimiter, async (req, res) => {
         subject: 'Salt Basin Net Works · Reset your password',
         text,
         html,
+        authorization: { mode: 'user_requested' },
       });
     } catch (e) {
       // Log but don't reveal failure to the requester — same 200 response
@@ -239,6 +240,7 @@ router.post('/email-recover', async (req, res) => {
         subject: 'Salt Basin Net Works · Account email reminder',
         text,
         html,
+        authorization: { mode: 'user_requested' },
       });
     } catch (e) {
       console.error('[auth/email-recover] dispatch failed:', e.message);

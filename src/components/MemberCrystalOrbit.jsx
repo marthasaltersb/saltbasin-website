@@ -38,14 +38,16 @@ export default function MemberCrystalOrbit({ user, onOpenWorkspace }) {
   const [newEmail, setNewEmail] = useState('');
   const [emailType, setEmailType] = useState('personal');
   const [verification, setVerification] = useState({});
+  const [emailPreference, setEmailPreference] = useState({ automatic_enabled: false, recipient_attribute: 'primary_email' });
 
   useEffect(() => {
-    Promise.allSettled([api.getMemberEntitlements(), api.getMyOrganizations(), api.getMemberEmails(), api.getMyLicenses()])
-      .then(([e, o, m, l]) => {
+    Promise.allSettled([api.getMemberEntitlements(), api.getMyOrganizations(), api.getMemberEmails(), api.getMyLicenses(), api.getEmailDeliveryPreference()])
+      .then(([e, o, m, l, p]) => {
         if (e.status === 'fulfilled') setEntitlements(e.value.entitlements || e.value || []);
         if (o.status === 'fulfilled') setOrganizations(o.value.organizations || o.value || []);
         if (m.status === 'fulfilled') setEmails(m.value.emails || []);
         if (l.status === 'fulfilled') setLicenses(l.value || []);
+        if (p.status === 'fulfilled') setEmailPreference(p.value);
       });
   }, []);
 
@@ -90,6 +92,15 @@ export default function MemberCrystalOrbit({ user, onOpenWorkspace }) {
     navigate('/login', { replace: true });
   }
 
+  async function updateEmailPreference(automaticEnabled, recipientAttribute = emailPreference.recipient_attribute) {
+    if (automaticEnabled && !window.confirm(`Allow Salt Basin workflows to send automatic emails using your ${recipientAttribute.replaceAll('_', ' ')}? You can turn this off at any time.`)) return;
+    try {
+      const next = await api.updateEmailDeliveryPreference(automaticEnabled, recipientAttribute);
+      setEmailPreference(next);
+      toast.success(`Automatic email is ${automaticEnabled ? 'enabled' : 'disabled'}`);
+    } catch (error) { toast.error(error.message); }
+  }
+
   const visibleCards = preferences.cards.filter((card) => card.enabled);
   return <main className="mco-shell">
     <header className="mco-topbar">
@@ -110,7 +121,7 @@ export default function MemberCrystalOrbit({ user, onOpenWorkspace }) {
 
     <button type="button" className="mco-besty" onClick={() => setAgentOpen((v) => !v)} aria-expanded={agentOpen}><SaltBasinCrystal size="orbit" variant="engine" /><span>BestyStaff</span></button>
     {agentOpen && <aside className="mco-agent-panel"><button type="button" onClick={() => setAgentOpen(false)}>Close</button><span>CONTEXTUAL GUIDANCE</span><h2>BestyStaff is in this world with you.</h2><p>I can explain the selected capability, trace its definitions and evidence, prepare an agent action, or guide you through the next journey gate.</p><div className="mco-agent-prompts"><button>What needs my review?</button><button>Explain this worldâ€™s health</button><button>Continue my highest-priority journey</button></div></aside>}
-    {accountOpen && <AccountDrawer user={user} emails={emails} licenses={licenses} organizations={organizations} newEmail={newEmail} setNewEmail={setNewEmail} emailType={emailType} setEmailType={setEmailType} verification={verification} setVerification={setVerification} addEmail={addEmail} verifyEmail={verifyEmail} onClose={() => setAccountOpen(false)} onCustomize={() => { setAccountOpen(false); setCustomizeOpen(true); }} onLogout={logout} />}
+    {accountOpen && <AccountDrawer user={user} emails={emails} licenses={licenses} organizations={organizations} newEmail={newEmail} setNewEmail={setNewEmail} emailType={emailType} setEmailType={setEmailType} verification={verification} setVerification={setVerification} addEmail={addEmail} verifyEmail={verifyEmail} emailPreference={emailPreference} updateEmailPreference={updateEmailPreference} onClose={() => setAccountOpen(false)} onCustomize={() => { setAccountOpen(false); setCustomizeOpen(true); }} onLogout={logout} />}
     {customizeOpen && <CustomizeDrawer worlds={worlds} preferences={preferences} setPreferences={setPreferences} onClose={() => setCustomizeOpen(false)} />}
   </main>;
 }
@@ -161,12 +172,12 @@ function SpatialWorkspace({ variant, journeys, onClose, onLaunch, onJourney }) {
   </section>;
 }
 
-function AccountDrawer({ user, emails, licenses, organizations, newEmail, setNewEmail, emailType, setEmailType, verification, setVerification, addEmail, verifyEmail, onClose, onCustomize, onLogout }) {
+function AccountDrawer({ user, emails, licenses, organizations, newEmail, setNewEmail, emailType, setEmailType, verification, setVerification, addEmail, verifyEmail, emailPreference, updateEmailPreference, onClose, onCustomize, onLogout }) {
   return <aside className="mco-drawer wide"><header><div><span>ACCOUNT CRYSTAL</span><h2>Member account settings</h2></div><button type="button" onClick={onClose}>Close</button></header><div className="mco-account-grid">
     <section><h3>Identity & verified emails</h3><p className="mco-muted">{user?.displayName || 'Salt Basin Member'} / {user?.role || 'member'}</p>{emails.map((email) => <div className="mco-email-row" key={email.id}><div><strong>{email.email}</strong><span>{email.type} / {email.verified ? 'Verified' : 'Verification pending'}</span></div>{!email.verified && <div><input aria-label="Verification code" placeholder="6-digit code" value={verification[email.id] || ''} onChange={(e) => setVerification((v) => ({ ...v, [email.id]: e.target.value }))}/><button type="button" onClick={() => verifyEmail(email.id)}>Verify</button></div>}</div>)}<form onSubmit={addEmail} className="mco-inline-form"><input type="email" required placeholder="Add another email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)}/><select value={emailType} onChange={(e) => setEmailType(e.target.value)}><option value="personal">Personal</option><option value="work">Work</option></select><button>Add & verify</button></form></section>
     <section><h3>Payment & sponsoring accounts</h3><div className="mco-setting-card"><strong>Direct purchase methods</strong><span>Managed through secure checkout when a paid plan is selected.</span><button type="button" disabled>Add payment method / coming next</button></div>{organizations.length ? organizations.map((org) => <div className="mco-setting-card" key={org.id}><strong>{org.name}</strong><span>Linked entitlement organization / organization-sponsored access</span></div>) : <p className="mco-muted">No sponsoring organization is linked yet.</p>}</section>
     <section><h3>Subscriptions & licensed modules</h3>{licenses.length ? licenses.map((license) => <div className="mco-license" key={license.id || license.license_id}><span>{license.product_id || license.productId || 'Salt Basin module'}</span><strong>{license.tier || license.access_mode || 'Active'}</strong></div>) : <div className="mco-setting-card"><strong>Career Foundation</strong><span>Provisioned member baseline / active</span></div>}<button type="button" className="mco-text-action" onClick={onCustomize}>Configure home shortcuts and cards</button></section>
-    <section><h3>Security & approvals</h3><div className="mco-setting-card"><strong>Journey permissions</strong><span>Collaboration invitations and agent actions inherit world, organization, capability, and record-level permission checks.</span></div><button type="button" className="mco-text-action">Change password in security workspace â†’</button><button type="button" className="mco-text-action mco-logout-action" onClick={onLogout}>Log out of Salt Basin</button></section>
+    <section><h3>Security & approvals</h3><div className="mco-setting-card"><strong>Journey permissions</strong><span>Collaboration invitations and agent actions inherit world, organization, capability, and record-level permission checks.</span></div><div className="mco-setting-card"><strong>Automatic email permission</strong><span>Default is off. Directly requested verification and account-recovery messages remain available.</span><label className="mco-email-approval"><input type="checkbox" checked={Boolean(emailPreference?.automatic_enabled)} onChange={(event) => updateEmailPreference(event.target.checked)} /> Allow approved workflows to email me automatically</label><select aria-label="Email recipient attribute" value={emailPreference?.recipient_attribute || 'primary_email'} onChange={(event) => updateEmailPreference(Boolean(emailPreference?.automatic_enabled), event.target.value)}><option value="primary_email">Primary account email</option><option value="verified_personal_email">Verified personal email</option><option value="verified_work_email">Verified work email</option></select></div><button type="button" className="mco-text-action">Change password in security workspace â†’</button><button type="button" className="mco-text-action mco-logout-action" onClick={onLogout}>Log out of Salt Basin</button></section>
   </div></aside>;
 }
 

@@ -144,6 +144,20 @@ router.get('/me/emails', requireUser, async (req, res) => {
   res.json({ emails: rows.map((r) => ({ ...r, id: Number(r.id), created_at: Number(r.created_at) })) });
 });
 
+router.get('/me/email-delivery-preference', requireUser, async (req, res) => {
+  const row = await db.prepare(`SELECT automatic_enabled,recipient_attribute,confirmed_at,updated_at FROM email_delivery_preferences WHERE user_id=$1`).get(req.user.id);
+  res.json(row || { automatic_enabled: false, recipient_attribute: 'primary_email', confirmed_at: null });
+});
+
+router.put('/me/email-delivery-preference', requireUser, async (req, res) => {
+  const enabled = req.body?.automaticEnabled === true;
+  const attribute = ['primary_email', 'verified_personal_email', 'verified_work_email'].includes(req.body?.recipientAttribute) ? req.body.recipientAttribute : 'primary_email';
+  const now = Date.now();
+  await db.prepare(`INSERT INTO email_delivery_preferences (user_id,automatic_enabled,recipient_attribute,confirmed_at,updated_at) VALUES ($1,$2,$3,$4,$4) ON CONFLICT (user_id) DO UPDATE SET automatic_enabled=$2,recipient_attribute=$3,confirmed_at=$4,updated_at=$4`).run(req.user.id, enabled, attribute, now);
+  await audit({ req, actor: req.user, action: 'member.email.delivery_preference', entityType: 'user', entityId: String(req.user.id), summary: `Automatic email ${enabled ? 'enabled' : 'disabled'} using ${attribute}` });
+  res.json({ automatic_enabled: enabled, recipient_attribute: attribute, confirmed_at: now });
+});
+
 router.post('/me/emails', requireUser, async (req, res) => {
   const { email, type } = req.body || {};
   if (!email || !email.includes('@')) return res.status(400).json({ error: 'valid email required' });

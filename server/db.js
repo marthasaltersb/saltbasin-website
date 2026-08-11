@@ -1180,6 +1180,14 @@ async function bootstrap() {
     );
     CREATE INDEX IF NOT EXISTS idx_user_emails_user ON user_emails (user_id);
     CREATE INDEX IF NOT EXISTS idx_user_emails_verified ON user_emails (email) WHERE verified = true;
+
+    CREATE TABLE IF NOT EXISTS email_delivery_preferences (
+      user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      automatic_enabled BOOLEAN NOT NULL DEFAULT false,
+      recipient_attribute TEXT NOT NULL DEFAULT 'primary_email',
+      confirmed_at BIGINT,
+      updated_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
   `);
 
   // ── Audit log — every write action across the platform. ──
