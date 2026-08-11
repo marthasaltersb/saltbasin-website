@@ -64,27 +64,22 @@ async function logToDb({ leadId, to, from, subject, html, text, provider, status
 
 // Public: lets the admin "Test email" button verify Brevo is wired without
 // touching real lead records.
-export async function dispatchRaw({ leadId, to, subject, html, text, attachments }) {
-  return dispatch({ leadId, to, subject, html, text, attachments });
+export async function dispatchRaw({ to, subject, html, text, attachments, authorization }) {
+  return dispatch({ to, subject, html, text, attachments, authorization });
 }
 
-async function resolveLeadId(leadId, to) {
-  if (leadId) return leadId;
-  const email = String(to || '').trim().toLowerCase();
-  if (!email) return null;
-  const row = await db.prepare(`
-    SELECT l.id FROM leads l
-    WHERE l.merged_into_id IS NULL AND (
-      LOWER(l.email)=LOWER($1)
-      OR EXISTS (SELECT 1 FROM lead_email_addresses lea WHERE lea.lead_id=l.id AND LOWER(lea.email)=LOWER($1))
-      OR EXISTS (SELECT 1 FROM users u LEFT JOIN user_emails ue ON ue.user_id=u.id WHERE u.id=l.converted_user_id AND (LOWER(u.email)=LOWER($1) OR LOWER(ue.email)=LOWER($1)))
-    ) ORDER BY l.updated_at DESC,l.id DESC LIMIT 1
-  `).get(email);
-  return row?.id || null;
+async function emailAuthorized(authorization) {
+  if (authorization?.mode === 'user_requested' || authorization?.mode === 'admin_confirmed') return true;
+  if (authorization?.mode !== 'automatic' || !authorization.userId || !authorization.recipientAttribute) return false;
+  const preference = await db.prepare(`SELECT automatic_enabled,recipient_attribute FROM email_delivery_preferences WHERE user_id=$1`).get(authorization.userId);
+  return Boolean(preference?.automatic_enabled) && preference.recipient_attribute === authorization.recipientAttribute;
 }
 
-async function dispatch({ leadId, to, subject, html, text, attachments = [] }) {
-  leadId = await resolveLeadId(leadId, to);
+async function dispatch({ leadId, to, subject, html, text, attachments = [], authorization }) {
+  if (!(await emailAuthorized(authorization))) {
+    console.warn(`[email] blocked pending recipient confirmation: ${subject}`);
+    return { ok: false, skipped: 'recipient_confirmation_required' };
+  }
   const fromAddr = await configuredFrom();
 
   if (!isBrevoConfigured()) {
@@ -249,7 +244,7 @@ export async function sendVerificationEmail({ toEmail, code }) {
     <p style="font-size:0.85rem;color:#4A6670;">This code expires in 15 minutes. If you did not request this, ignore this email.</p>
     <p style="font-size:0.75rem;color:#8B9BAE;margin-top:1.25rem;">— Salt Basin Net Works</p>
   `;
-  return dispatch({ to: toEmail, subject: 'Salt Basin Net Works — email verification code', html, text });
+  return dispatch({ to: toEmail, subject: 'Salt Basin Net Works — email verification code', html, text, authorization: { mode: 'user_requested' } });
 }
 
 export async function sendContactFormToMember({ toEmail, memberName, fromName, fromEmail, fromPhone, message }) {

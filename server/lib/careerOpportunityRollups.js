@@ -84,6 +84,7 @@ async function rollupOneOpportunity(rod, current) {
     // evidence yet reports score: null, not a 0 or a guessed placeholder —
     // same "honest empty state" discipline as careerAtomRollups.js.
     score: scored && current ? evaluateWeightedScore(current, dimensionScores) : null,
+    allowedNextStages: allowedNextStages(rod.current_stage),
   };
 }
 
@@ -158,33 +159,64 @@ export async function recordDimensionScores(userId, rodId, { dimensionScores, so
   return rollupOneOpportunity(await db.prepare(`SELECT * FROM journey_data_rods WHERE id=$1`).get(rodId), await getCurrent('career_match_scoring_v1'));
 }
 
+// The real application-stage machine (2026-08-09) — "apply and track to job
+// applications." Nothing in this codebase ever transitioned current_stage
+// off 'discovered' before approveCareerOpportunity() was added; this
+// generalizes that one hardcoded transition into the full pipeline a member
+// actually needs. Every move is validated against this map — never an
+// arbitrary stage jump — and every move writes one journey_rod_events row
+// (event_type 'career_opportunity_stage_changed'), same convention as
+// 'qualification_gate_evaluated'. 'archived' is reachable from 'discovered'/
+// 'approved' but only via the qualification-gate engine (applyGateOutcome),
+// not this function — a posting-delisted archive is a system decision, not
+// a member-initiated stage move.
+const ALLOWED_TRANSITIONS = {
+  discovered: ['approved'],
+  approved: ['applied'],
+  applied: ['interviewing', 'rejected', 'withdrawn'],
+  interviewing: ['offer', 'rejected', 'withdrawn'],
+  offer: ['withdrawn'],
+  rejected: [],
+  withdrawn: [],
+  archived: [],
+};
+
 /**
- * Approves a tracked opportunity — the real, new "human confirms this is
- * worth pursuing" stage transition (2026-08-09). Nothing in this codebase
- * ever transitioned current_stage off 'discovered' before this; every
- * opportunity sat at 'discovered' forever. This is the trigger event the
- * auto-queue dispatcher action watches for (generate resume + cover letter
- * for a newly-approved role without the member having to click generate
- * themselves), and it also exempts the opportunity from the qualification-
- * gate re-verification loop, which only re-checks 'discovered' rods — an
- * approved opportunity is the member's own confirmed decision, never
- * silently pulled by a re-check.
+ * Moves a tracked opportunity to a new, validated stage. Approving
+ * ('discovered'->'approved') is what the auto-queue dispatcher action
+ * watches for (generate resume + cover letter for a newly-approved role)
+ * and what exempts a rod from the qualification-gate re-verification loop
+ * (which only re-checks 'discovered' rods) — a member's own confirmed
+ * decision is never silently pulled by a re-check.
  */
-export async function approveCareerOpportunity(userId, rodId) {
+export async function advanceOpportunityStage(userId, rodId, toStage) {
   const rod = await db.prepare(`SELECT * FROM journey_data_rods WHERE id=$1 AND rod_type='career_opportunity_target'`).get(rodId);
   if (!rod) throw new Error('Career opportunity not found.');
   const careerRod = await db.prepare(`SELECT * FROM journey_data_rods WHERE id=$1`).get(rod.parent_rod_id);
   if (!careerRod || Number(careerRod.user_id) !== Number(userId)) throw new Error('Not your career opportunity.');
-  if (rod.current_stage === 'archived') throw new Error('This opportunity was archived (posting no longer live) and cannot be approved.');
+
+  const allowed = ALLOWED_TRANSITIONS[rod.current_stage] || [];
+  if (!allowed.includes(toStage)) {
+    throw new Error(`Cannot move from "${rod.current_stage}" to "${toStage}" — allowed next step(s): ${allowed.length ? allowed.join(', ') : 'none, this stage is terminal'}.`);
+  }
 
   const now = Date.now();
-  await db.prepare(`UPDATE journey_data_rods SET current_stage='approved', updated_at=$1 WHERE id=$2`).run(now, rodId);
+  await db.prepare(`UPDATE journey_data_rods SET current_stage=$1, updated_at=$2 WHERE id=$3`).run(toStage, now, rodId);
   await db.prepare(`
     INSERT INTO journey_rod_events (rod_id, event_type, from_stage, to_stage, created_at)
-    VALUES ($1,'career_opportunity_approved',$2,'approved',$3)
-  `).run(rodId, rod.current_stage, now);
+    VALUES ($1,'career_opportunity_stage_changed',$2,$3,$4)
+  `).run(rodId, rod.current_stage, toStage, now);
 
   return rollupOneOpportunity(await db.prepare(`SELECT * FROM journey_data_rods WHERE id=$1`).get(rodId), await getCurrent('career_match_scoring_v1'));
+}
+
+/** Thin convenience wrapper — kept as its own export since existing routes/hooks already call it by name. */
+export async function approveCareerOpportunity(userId, rodId) {
+  return advanceOpportunityStage(userId, rodId, 'approved');
+}
+
+export function allowedNextStages(currentStage) {
+  return ALLOWED_TRANSITIONS[currentStage] || [];
 }
 
 /** Agent roster + hierarchy scoped to the career pipeline (+ shared agents), for the Agent Hub view. */

@@ -4,6 +4,7 @@ import SaltBasinCrystal from './SaltBasinCrystal.jsx';
 import CrystalSolarSystem from './CrystalSolarSystem.jsx';
 import DefinitionStudioJourney from './DefinitionStudioJourney.jsx';
 import CrystalWorldCityScene from './CrystalWorldCityScene.jsx';
+import FlowingJourneyDeck from './FlowingJourneyDeck.jsx';
 import { api } from '../lib/api.js';
 import { DEFAULT_EDGE_CARDS, provisionMemberWorlds } from '../data/memberWorldRegistry.js';
 import { toast } from '../lib/toast.js';
@@ -37,14 +38,16 @@ export default function MemberCrystalOrbit({ user, onOpenWorkspace }) {
   const [newEmail, setNewEmail] = useState('');
   const [emailType, setEmailType] = useState('personal');
   const [verification, setVerification] = useState({});
+  const [emailPreference, setEmailPreference] = useState({ automatic_enabled: false, recipient_attribute: 'primary_email' });
 
   useEffect(() => {
-    Promise.allSettled([api.getMemberEntitlements(), api.getMyOrganizations(), api.getMemberEmails(), api.getMyLicenses()])
-      .then(([e, o, m, l]) => {
+    Promise.allSettled([api.getMemberEntitlements(), api.getMyOrganizations(), api.getMemberEmails(), api.getMyLicenses(), api.getEmailDeliveryPreference()])
+      .then(([e, o, m, l, p]) => {
         if (e.status === 'fulfilled') setEntitlements(e.value.entitlements || e.value || []);
         if (o.status === 'fulfilled') setOrganizations(o.value.organizations || o.value || []);
         if (m.status === 'fulfilled') setEmails(m.value.emails || []);
         if (l.status === 'fulfilled') setLicenses(l.value || []);
+        if (p.status === 'fulfilled') setEmailPreference(p.value);
       });
   }, []);
 
@@ -83,6 +86,21 @@ export default function MemberCrystalOrbit({ user, onOpenWorkspace }) {
     } catch (error) { toast.error(error.message); }
   }
 
+  async function logout() {
+    try { await api.logout(); }
+    catch { /* An expired session is already effectively logged out. */ }
+    navigate('/login', { replace: true });
+  }
+
+  async function updateEmailPreference(automaticEnabled, recipientAttribute = emailPreference.recipient_attribute) {
+    if (automaticEnabled && !window.confirm(`Allow Salt Basin workflows to send automatic emails using your ${recipientAttribute.replaceAll('_', ' ')}? You can turn this off at any time.`)) return;
+    try {
+      const next = await api.updateEmailDeliveryPreference(automaticEnabled, recipientAttribute);
+      setEmailPreference(next);
+      toast.success(`Automatic email is ${automaticEnabled ? 'enabled' : 'disabled'}`);
+    } catch (error) { toast.error(error.message); }
+  }
+
   const visibleCards = preferences.cards.filter((card) => card.enabled);
   return <main className="mco-shell">
     <header className="mco-topbar">
@@ -103,7 +121,7 @@ export default function MemberCrystalOrbit({ user, onOpenWorkspace }) {
 
     <button type="button" className="mco-besty" onClick={() => setAgentOpen((v) => !v)} aria-expanded={agentOpen}><SaltBasinCrystal size="orbit" variant="engine" /><span>BestyStaff</span></button>
     {agentOpen && <aside className="mco-agent-panel"><button type="button" onClick={() => setAgentOpen(false)}>Close</button><span>CONTEXTUAL GUIDANCE</span><h2>BestyStaff is in this world with you.</h2><p>I can explain the selected capability, trace its definitions and evidence, prepare an agent action, or guide you through the next journey gate.</p><div className="mco-agent-prompts"><button>What needs my review?</button><button>Explain this worldâ€™s health</button><button>Continue my highest-priority journey</button></div></aside>}
-    {accountOpen && <AccountDrawer user={user} emails={emails} licenses={licenses} organizations={organizations} newEmail={newEmail} setNewEmail={setNewEmail} emailType={emailType} setEmailType={setEmailType} verification={verification} setVerification={setVerification} addEmail={addEmail} verifyEmail={verifyEmail} onClose={() => setAccountOpen(false)} onCustomize={() => { setAccountOpen(false); setCustomizeOpen(true); }} />}
+    {accountOpen && <AccountDrawer user={user} emails={emails} licenses={licenses} organizations={organizations} newEmail={newEmail} setNewEmail={setNewEmail} emailType={emailType} setEmailType={setEmailType} verification={verification} setVerification={setVerification} addEmail={addEmail} verifyEmail={verifyEmail} emailPreference={emailPreference} updateEmailPreference={updateEmailPreference} onClose={() => setAccountOpen(false)} onCustomize={() => { setAccountOpen(false); setCustomizeOpen(true); }} onLogout={logout} />}
     {customizeOpen && <CustomizeDrawer worlds={worlds} preferences={preferences} setPreferences={setPreferences} onClose={() => setCustomizeOpen(false)} />}
   </main>;
 }
@@ -119,9 +137,15 @@ function WorldCity({ world, activeJourney, setActiveJourney, activeVariant, setA
     if (definitionJourney && (variant.id === 'definition-studio' || variant.id === 'org-definition')) {
       setJourneyStep(0); setActiveVariant(null); setActiveJourney(definitionJourney); return;
     }
+    const careerJourney = variant.id === 'career' && world.journeys.find((journey) => journey.id === 'career-foundation');
+    const resumeJourney = variant.id === 'outputs' && world.journeys.find((journey) => journey.id === 'resume-to-portfolio');
+    const placementJourney = variant.id === 'career-agents' && world.journeys.find((journey) => journey.id === 'career-placement');
+    if (careerJourney || resumeJourney || placementJourney) {
+      setJourneyStep(0); setActiveVariant(null); setActiveJourney(careerJourney || resumeJourney || placementJourney); return;
+    }
     setActiveVariant(variant);
   }
-  return <section className="mco-city-scene" style={{ '--accent': world.accent }}>
+  return <section className={`mco-city-scene${activeJourney ? ' journey-active' : ''}`} style={{ '--accent': world.accent }}>
     <CrystalWorldCityScene world={world} />
     <div className="mco-city-sky" /><header><button type="button" onClick={onBack}>â† All worlds</button><div><span>{world.shortLabel} world</span><h1>{world.label}</h1><p>{world.description}</p></div><HealthPill /></header>
     <div className="mco-river river-one" /><div className="mco-river river-two" />
@@ -129,7 +153,7 @@ function WorldCity({ world, activeJourney, setActiveJourney, activeVariant, setA
       <span className="mco-building-crystal"><SaltBasinCrystal size="orbit" variant={index % 2 ? 'rings' : 'engine'} /></span><i /><b>{variant.icon}</b><strong>{variant.label}</strong><small>{72 + ((index * 7) % 27)}% mature / {2 + index} agents</small>
     </button>)}</div>
     <aside className="mco-journey-dock"><span>FLOWING JOURNEYS</span>{world.journeys.map((journey) => <button key={journey.id} type="button" className={activeJourney?.id === journey.id ? 'active' : ''} onClick={() => { setJourneyStep(0); setActiveJourney(journey); }}>{journey.label}<small>{journey.stages.length} gates</small></button>)}</aside>
-    {activeJourney && <div className="mco-journey-path"><button type="button" onClick={() => setActiveJourney(null)}>Close</button><span>ENTERED JOURNEY</span><h2>{activeJourney.label}</h2><div>{activeJourney.stages.map((stage, index) => <React.Fragment key={stage}><button type="button" className={index === 0 ? 'current' : ''}><b>{index + 1}</b><span>{stage}</span></button>{index < activeJourney.stages.length - 1 && <i />}</React.Fragment>)}</div></div>}
+    {activeJourney && <FlowingJourneyDeck journey={activeJourney} world={world} onClose={() => setActiveJourney(null)} onOpenTools={() => onLaunch(world.variants.find((variant) => activeJourney.id === 'resume-to-portfolio' ? variant.id === 'outputs' : activeJourney.id === 'career-placement' || activeJourney.id === 'application-pipeline' ? variant.id === 'career-agents' : variant.id === 'career') || world.variants[0])} />}
     {activeVariant && !activeJourney && <SpatialWorkspace variant={activeVariant} journeys={world.journeys} onClose={() => setActiveVariant(null)} onLaunch={() => onLaunch(activeVariant)} onJourney={(journey) => { setJourneyStep(0); setActiveJourney(journey); }} />}
     {activeJourney && <div className="mco-journey-motion" style={{ '--journey-step': journeyStep, '--journey-count': Math.max(activeJourney.stages.length - 1, 1) }}><span /></div>}
     <aside className="mco-world-legend"><span>WORLD SYSTEMS</span><b>{world.variants.length} capability districts</b><b>{world.journeys.length} active rivers</b><b>{world.variants.length * 3} governed agents</b></aside>
@@ -148,12 +172,12 @@ function SpatialWorkspace({ variant, journeys, onClose, onLaunch, onJourney }) {
   </section>;
 }
 
-function AccountDrawer({ user, emails, licenses, organizations, newEmail, setNewEmail, emailType, setEmailType, verification, setVerification, addEmail, verifyEmail, onClose, onCustomize }) {
+function AccountDrawer({ user, emails, licenses, organizations, newEmail, setNewEmail, emailType, setEmailType, verification, setVerification, addEmail, verifyEmail, emailPreference, updateEmailPreference, onClose, onCustomize, onLogout }) {
   return <aside className="mco-drawer wide"><header><div><span>ACCOUNT CRYSTAL</span><h2>Member account settings</h2></div><button type="button" onClick={onClose}>Close</button></header><div className="mco-account-grid">
     <section><h3>Identity & verified emails</h3><p className="mco-muted">{user?.displayName || 'Salt Basin Member'} / {user?.role || 'member'}</p>{emails.map((email) => <div className="mco-email-row" key={email.id}><div><strong>{email.email}</strong><span>{email.type} / {email.verified ? 'Verified' : 'Verification pending'}</span></div>{!email.verified && <div><input aria-label="Verification code" placeholder="6-digit code" value={verification[email.id] || ''} onChange={(e) => setVerification((v) => ({ ...v, [email.id]: e.target.value }))}/><button type="button" onClick={() => verifyEmail(email.id)}>Verify</button></div>}</div>)}<form onSubmit={addEmail} className="mco-inline-form"><input type="email" required placeholder="Add another email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)}/><select value={emailType} onChange={(e) => setEmailType(e.target.value)}><option value="personal">Personal</option><option value="work">Work</option></select><button>Add & verify</button></form></section>
     <section><h3>Payment & sponsoring accounts</h3><div className="mco-setting-card"><strong>Direct purchase methods</strong><span>Managed through secure checkout when a paid plan is selected.</span><button type="button" disabled>Add payment method / coming next</button></div>{organizations.length ? organizations.map((org) => <div className="mco-setting-card" key={org.id}><strong>{org.name}</strong><span>Linked entitlement organization / organization-sponsored access</span></div>) : <p className="mco-muted">No sponsoring organization is linked yet.</p>}</section>
     <section><h3>Subscriptions & licensed modules</h3>{licenses.length ? licenses.map((license) => <div className="mco-license" key={license.id || license.license_id}><span>{license.product_id || license.productId || 'Salt Basin module'}</span><strong>{license.tier || license.access_mode || 'Active'}</strong></div>) : <div className="mco-setting-card"><strong>Career Foundation</strong><span>Provisioned member baseline / active</span></div>}<button type="button" className="mco-text-action" onClick={onCustomize}>Configure home shortcuts and cards</button></section>
-    <section><h3>Security & approvals</h3><div className="mco-setting-card"><strong>Journey permissions</strong><span>Collaboration invitations and agent actions inherit world, organization, capability, and record-level permission checks.</span></div><button type="button" className="mco-text-action">Change password in security workspace â†’</button></section>
+    <section><h3>Security & approvals</h3><div className="mco-setting-card"><strong>Journey permissions</strong><span>Collaboration invitations and agent actions inherit world, organization, capability, and record-level permission checks.</span></div><div className="mco-setting-card"><strong>Automatic email permission</strong><span>Default is off. Directly requested verification and account-recovery messages remain available.</span><label className="mco-email-approval"><input type="checkbox" checked={Boolean(emailPreference?.automatic_enabled)} onChange={(event) => updateEmailPreference(event.target.checked)} /> Allow approved workflows to email me automatically</label><select aria-label="Email recipient attribute" value={emailPreference?.recipient_attribute || 'primary_email'} onChange={(event) => updateEmailPreference(Boolean(emailPreference?.automatic_enabled), event.target.value)}><option value="primary_email">Primary account email</option><option value="verified_personal_email">Verified personal email</option><option value="verified_work_email">Verified work email</option></select></div><button type="button" className="mco-text-action">Change password in security workspace â†’</button><button type="button" className="mco-text-action mco-logout-action" onClick={onLogout}>Log out of Salt Basin</button></section>
   </div></aside>;
 }
 

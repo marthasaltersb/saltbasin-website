@@ -16,6 +16,17 @@ export const CAREER_DIMENSION_FIELDS = [
 
 const INITIAL_ADD_FORM = { jobTitle: '', companyName: '', url: '', location: '' };
 
+export const STAGE_LABELS = {
+  discovered: 'Discovered',
+  approved: 'Approved',
+  applied: 'Applied',
+  interviewing: 'Interviewing',
+  offer: 'Offer',
+  rejected: 'Rejected',
+  withdrawn: 'Withdrawn',
+  archived: 'Archived',
+};
+
 function buildCreatePayload(addForm) {
   if (!addForm.jobTitle.trim()) { toast('Job title is required.'); return null; }
   return {
@@ -50,6 +61,238 @@ export function useCareerPlacementAgents({ enabled = true } = {}) {
   const [approvingResume, setApprovingResume] = useState(false);
   const [importingPipeline, setImportingPipeline] = useState(false);
   const [generatingQueue, setGeneratingQueue] = useState(false);
+  const [approvingOpportunity, setApprovingOpportunity] = useState(false);
+  const [generatingCoverLetter, setGeneratingCoverLetter] = useState(false);
+  const [coverLetterReview, setCoverLetterReview] = useState(null);
+  const [approvingCoverLetter, setApprovingCoverLetter] = useState(false);
+  const [verifyingPipeline, setVerifyingPipeline] = useState(false);
+  const [runningAutoQueue, setRunningAutoQueue] = useState(false);
+  const [automation, setAutomation] = useState(null); // { schedules, presets, gates } — loaded on demand
+  const [loadingAutomation, setLoadingAutomation] = useState(false);
+  const [importingOutput, setImportingOutput] = useState(false);
+
+  // Nested outreach Tributary (2026-08-09) — "after applied, a nested
+  // tributary process for hiring manager research and direct job outreach
+  // that can merge back to the application process."
+  const [outreach, setOutreach] = useState(null); // { effort, contacts } — loaded on demand
+  const [loadingOutreach, setLoadingOutreach] = useState(false);
+  const [startingOutreach, setStartingOutreach] = useState(false);
+  const [researchingContacts, setResearchingContacts] = useState(false);
+  const [draftingOutreachMessage, setDraftingOutreachMessage] = useState(false);
+  const [outreachDraft, setOutreachDraft] = useState(null);
+  const [savingOutreachMessage, setSavingOutreachMessage] = useState(false);
+  const [mergingOutcome, setMergingOutcome] = useState(false);
+
+  async function loadOutreach(opportunityId) {
+    setLoadingOutreach(true);
+    try {
+      const effort = await api.getOutreachEffort(opportunityId);
+      setOutreach(effort);
+    } catch (e) {
+      toast('Could not load outreach: ' + e.message);
+    } finally {
+      setLoadingOutreach(false);
+    }
+  }
+
+  async function startOutreach(opportunityId) {
+    setStartingOutreach(true);
+    try {
+      const effort = await api.startOutreachEffort(opportunityId);
+      setOutreach(effort);
+    } catch (e) {
+      toast('Could not start outreach: ' + e.message);
+    } finally {
+      setStartingOutreach(false);
+    }
+  }
+
+  async function researchContacts(opportunityId) {
+    setResearchingContacts(true);
+    try {
+      const { contacts } = await api.researchHiringContacts(opportunityId);
+      toast(`Found ${contacts.length} contact(s).`);
+      loadOutreach(opportunityId);
+    } catch (e) {
+      toast('Research failed: ' + e.message);
+    } finally {
+      setResearchingContacts(false);
+    }
+  }
+
+  async function draftMessage(opportunityId) {
+    setDraftingOutreachMessage(true);
+    setOutreachDraft(null);
+    try {
+      const { draft } = await api.draftOutreachMessage(opportunityId);
+      setOutreachDraft(draft);
+    } catch (e) {
+      toast('Drafting failed: ' + e.message);
+    } finally {
+      setDraftingOutreachMessage(false);
+    }
+  }
+
+  async function saveOutreachMessage(opportunityId) {
+    if (!outreachDraft) return;
+    setSavingOutreachMessage(true);
+    try {
+      await api.saveOutreachMessage(opportunityId, outreachDraft);
+      toast('Outreach message saved — see My Resume for the full text.');
+      setOutreachDraft(null);
+    } catch (e) {
+      toast('Could not save: ' + e.message);
+    } finally {
+      setSavingOutreachMessage(false);
+    }
+  }
+
+  function discardOutreachDraft() {
+    setOutreachDraft(null);
+  }
+
+  async function mergeOutcome(outreachId, outcome, opportunityId) {
+    setMergingOutcome(true);
+    try {
+      const result = await api.mergeOutreachOutcome(outreachId, outcome);
+      toast(result.mergedOpportunity ? 'Outcome recorded — application advanced to Interviewing.' : 'Outcome recorded.');
+      loadOutreach(opportunityId);
+      pipeline.reload();
+    } catch (e) {
+      toast('Could not record outcome: ' + e.message);
+    } finally {
+      setMergingOutcome(false);
+    }
+  }
+
+  async function importOutputForOpportunity(opportunityId, file, outputType = 'resume') {
+    setImportingOutput(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('outputType', outputType);
+      await api.importOutputForOpportunity(opportunityId, formData);
+      toast('Imported — view it in My Resume → Resume Output History.');
+    } catch (e) {
+      toast('Import failed: ' + e.message);
+    } finally {
+      setImportingOutput(false);
+    }
+  }
+
+  async function loadAutomation() {
+    setLoadingAutomation(true);
+    try {
+      const [scheduleData, verificationData] = await Promise.all([
+        api.getCareerAgentSchedule(),
+        api.getCareerVerificationCurrent().catch(() => ({ gates: [] })),
+      ]);
+      setAutomation({ schedules: scheduleData.schedules, presets: scheduleData.presets, gates: verificationData.gates || [] });
+    } catch (e) {
+      toast('Could not load automation settings: ' + e.message);
+    } finally {
+      setLoadingAutomation(false);
+    }
+  }
+
+  async function setSchedule(agentKey, actionKey, cadence) {
+    try {
+      await api.setCareerAgentSchedule({ agentKey, actionKey, cadence });
+      toast('Schedule updated.');
+      loadAutomation();
+    } catch (e) {
+      toast('Could not update schedule: ' + e.message);
+    }
+  }
+
+  async function approveOpportunity(opportunityId) {
+    setApprovingOpportunity(true);
+    try {
+      await api.approveCareerOpportunity(opportunityId);
+      toast('Approved — eligible for auto-generated resume + cover letter.');
+      pipeline.reload();
+    } catch (e) {
+      toast('Could not approve: ' + e.message);
+    } finally {
+      setApprovingOpportunity(false);
+    }
+  }
+
+  async function advanceStage(opportunityId, stage) {
+    setApprovingOpportunity(true);
+    try {
+      await api.advanceCareerOpportunityStage(opportunityId, stage);
+      toast(`Marked as ${STAGE_LABELS[stage] || stage}.`);
+      pipeline.reload();
+    } catch (e) {
+      toast('Could not update stage: ' + e.message);
+    } finally {
+      setApprovingOpportunity(false);
+    }
+  }
+
+  async function generateCoverLetter(opportunityId, jobDescription) {
+    setGeneratingCoverLetter(true);
+    setCoverLetterReview(null);
+    try {
+      const result = await api.generateCoverLetterForOpportunity(opportunityId, { jobDescription });
+      setCoverLetterReview(result);
+    } catch (e) {
+      toast('Cover letter generation failed: ' + e.message);
+    } finally {
+      setGeneratingCoverLetter(false);
+    }
+  }
+
+  async function approveCoverLetter(opportunityId) {
+    if (!coverLetterReview) return;
+    setApprovingCoverLetter(true);
+    try {
+      await api.approveCoverLetterForOpportunity(opportunityId, {
+        generatedContent: coverLetterReview.content,
+        targetJobDescription: coverLetterReview.jobDescriptionUsed,
+      });
+      toast('Cover letter approved and saved.');
+      setCoverLetterReview(null);
+    } catch (e) {
+      toast('Could not save approved cover letter: ' + e.message);
+    } finally {
+      setApprovingCoverLetter(false);
+    }
+  }
+
+  function discardCoverLetterReview() {
+    setCoverLetterReview(null);
+  }
+
+  async function verifyPipelineNow() {
+    setVerifyingPipeline(true);
+    try {
+      const result = await api.verifyCareerPipelineNow();
+      toast(`Checked ${result.checked} posting(s)${result.archived ? `, archived ${result.archived} no-longer-live` : ''}.`);
+      pipeline.reload();
+      return result;
+    } catch (e) {
+      toast('Pipeline verification failed: ' + e.message);
+      return null;
+    } finally {
+      setVerifyingPipeline(false);
+    }
+  }
+
+  async function runAutoQueueNow() {
+    setRunningAutoQueue(true);
+    try {
+      const result = await api.autoQueueCareerOutputsNow();
+      toast(`Generated ${result.generated} output(s) for approved opportunities.`);
+      return result;
+    } catch (e) {
+      toast('Auto-queue failed: ' + e.message);
+      return null;
+    } finally {
+      setRunningAutoQueue(false);
+    }
+  }
 
   async function generateQueue(limit = 10) {
     setGeneratingQueue(true);
@@ -143,5 +386,17 @@ export function useCareerPlacementAgents({ enabled = true } = {}) {
     approvingResume, approveResume,
     importingPipeline, importPipeline,
     generatingQueue, generateQueue,
+    approvingOpportunity, approveOpportunity, advanceStage,
+    generatingCoverLetter, coverLetterReview, generateCoverLetter, discardCoverLetterReview,
+    approvingCoverLetter, approveCoverLetter,
+    verifyingPipeline, verifyPipelineNow,
+    runningAutoQueue, runAutoQueueNow,
+    automation, loadingAutomation, loadAutomation, setSchedule,
+    importingOutput, importOutputForOpportunity,
+    outreach, loadingOutreach, loadOutreach, startingOutreach, startOutreach,
+    researchingContacts, researchContacts,
+    draftingOutreachMessage, outreachDraft, draftMessage, discardOutreachDraft,
+    savingOutreachMessage, saveOutreachMessage,
+    mergingOutcome, mergeOutcome,
   };
 }

@@ -911,6 +911,17 @@ async function bootstrap() {
     console.warn('[db] resume_output_projections output_type column warning:', e.message);
   }
 
+  // source (2026-08-09, output view/export/import): distinguishes a
+  // member-imported document (an existing resume/cover-letter PDF or DOCX
+  // they already had) from one this platform generated — both go through
+  // the identical view/PDF/ZIP/email pipeline, this only labels provenance
+  // for the UI, never gates functionality.
+  try {
+    await sql.unsafe(`ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'ai_generated'`);
+  } catch (e) {
+    console.warn('[db] resume_output_projections source column warning:', e.message);
+  }
+
   await sql.unsafe(`
     -- ── Organization Document Projections (2026-07-27) ──────────────────────
     -- Satellite table for the 'customer_document_delivery' Tributary
@@ -1118,6 +1129,7 @@ async function bootstrap() {
     ['career_opportunity_target', 'Career Opportunity Target', "A tracked external job opening/lead in a Member's career pipeline, Tributary-linked to their own Career Master rod — one rod per opportunity per the Weekly Research & Outreach Master Agent spec (2026-08-06).", true, 7],
     ['l2r_diagnostic', 'Lead-to-Revenue Diagnostic', "A client engagement's Current-State Diagnostic against the Lead-to-Revenue capability hierarchy — one rod per purchasing client, observations captured as journey_rod_evidence against the seeded capability Atoms (2026-08-09, Definition Studio Phase 1).", true, 18],
     ['l2r_future_state', 'Future-State Definition', "A client's target-state definition per capability, Tributary-linked to its originating l2r_diagnostic rod — the Definition Studio's future-state half (2026-08-09, Phase 1; real UI deferred to Phase 3).", true, 19],
+    ['career_outreach_effort', 'Career Outreach Effort', "A member's hiring-manager-research + direct-outreach process for one applied-to career opportunity — Tributary-linked (hierarchical) to the career_opportunity_target rod it's pursuing outreach for (2026-08-09).", true, 8],
   ]) {
     await sql.unsafe(
       `INSERT INTO journey_rod_types (id, label, description, is_active, sort_order, created_at, updated_at)
@@ -1449,6 +1461,14 @@ async function bootstrap() {
     );
     CREATE INDEX IF NOT EXISTS idx_user_emails_user ON user_emails (user_id);
     CREATE INDEX IF NOT EXISTS idx_user_emails_verified ON user_emails (email) WHERE verified = true;
+
+    CREATE TABLE IF NOT EXISTS email_delivery_preferences (
+      user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      automatic_enabled BOOLEAN NOT NULL DEFAULT false,
+      recipient_attribute TEXT NOT NULL DEFAULT 'primary_email',
+      confirmed_at BIGINT,
+      updated_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
   `);
 
   // ── Audit log — every write action across the platform. ──

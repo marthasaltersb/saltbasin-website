@@ -8,12 +8,27 @@
 // so a member can track opportunities and record evidence-backed scores now.
 import { Router } from 'express';
 import multer from 'multer';
-import { requireUser } from '../auth.js';
-import { listCareerOpportunities, createCareerOpportunity, recordDimensionScores, getCareerAgentHub } from '../lib/careerOpportunityRollups.js';
+import { requireUser, requireAdmin } from '../auth.js';
+import { listCareerOpportunities, createCareerOpportunity, recordDimensionScores, getCareerAgentHub, approveCareerOpportunity, advanceOpportunityStage } from '../lib/careerOpportunityRollups.js';
 import { researchCareerOpportunities } from '../lib/careerResearchAgent.js';
 import { generateResumeContent } from '../lib/resumeTargeting.js';
-import { createResumeOutputProjection, listResumeOutputProjectionsForOpportunity, listResumeOutputProjections } from '../lib/resumeProjection.js';
+import { generateCoverLetterContent } from '../lib/coverLetterTargeting.js';
+import { runQualificationGatesForUser } from '../lib/careerVerificationAgent.js';
+import { autoQueueOutputsForNewlyApproved } from '../lib/autoQueueAgent.js';
+import { createResumeOutputProjection, listResumeOutputProjectionsForOpportunity, listResumeOutputProjections, getResumeOutputProjectionRaw } from '../lib/resumeProjection.js';
+import { summarizeProjectionForView, renderProjectionToPdfBuffer, filenameFor } from '../lib/outputRendering.js';
+import { dispatchRaw } from '../lib/email.js';
+import archiver from 'archiver';
 import { parseCareerPipelineWorkbook, rowToOpportunityPayload } from '../lib/careerPipelineImport.js';
+import { extractResumeText } from '../lib/careerResumeExtraction.js';
+import { getOutreachEffort, startOutreachEffort, mergeOutreachOutcomeToApplication } from '../lib/careerOutreachRollups.js';
+import { researchHiringManagers } from '../lib/hiringManagerResearchAgent.js';
+import { draftOutreachMessage } from '../lib/outreachDraftAgent.js';
+import { upsertAgentSchedule, GATE_ACTION_KEYS } from '../lib/opportunityPipelineRegistry.js';
+import { resolveConfigEnvelope } from '../lib/configEnvelope.js';
+import '../lib/agentCadenceEnvelope.js';
+import { CHECKERS } from '../lib/qualificationGateCheckers.js';
+import { getCurrent } from '../lib/currentRegistry.js';
 import { db } from '../db.js';
 
 const router = Router();
@@ -129,6 +144,42 @@ router.post('/research', requireUser, async (req, res) => {
   }
 });
 
+// Import an existing resume/cover-letter file the member already has for
+// this opportunity ("the import functionality can be a spreadsheet, resume
+// pdf, doc, etc.") — an alternative to AI generation, not a different
+// mechanism: reuses extractResumeText() (careerResumeExtraction.js, already
+// used by Career Master's semantic-import path) to pull the text, then goes
+// through the exact same createResumeOutputProjection() path AI-generated
+// content uses, marked source:'imported'. The uploaded binary is discarded
+// the moment its text is extracted — never written to disk or object
+// storage, matching every other output's "digital view, not the file
+// itself" rule.
+const importUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } });
+router.post('/opportunities/:id/import-output', requireUser, (req, res) => {
+  importUpload.single('file')(req, res, async (err) => {
+    if (err) return res.status(400).json({ error: err.message });
+    if (!req.file) return res.status(400).json({ error: 'file is required' });
+    try {
+      await requireOwnedOpportunity(req.user.id, Number(req.params.id));
+      const outputType = req.body?.outputType === 'cover_letter' ? 'cover_letter' : 'resume';
+      const rawText = await extractResumeText(req.file.buffer, req.file.mimetype, req.file.originalname);
+      if (!rawText.trim()) return res.status(400).json({ error: 'No text could be extracted from this file.' });
+
+      const projection = await createResumeOutputProjection(req.user.id, {
+        presetId: 'imported',
+        presetName: `Imported ${outputType === 'cover_letter' ? 'Cover Letter' : 'Resume'} — ${req.file.originalname}`,
+        careerOpportunityRodId: Number(req.params.id),
+        generatedContent: { rawText },
+        outputType,
+        source: 'imported',
+      });
+      res.status(201).json(projection);
+    } catch (e) {
+      res.status(400).json({ error: e.message });
+    }
+  });
+});
+
 // Real, evidence-grounded resume generation attached to a specific tracked
 // opportunity ("the attached career pipeline lead"). Returns the generated
 // content for review — does NOT persist a resume_output_projection until
@@ -169,6 +220,179 @@ router.get('/opportunities/:id/resume-outputs', requireUser, async (req, res) =>
     await requireOwnedOpportunity(req.user.id, Number(req.params.id));
     const projections = await listResumeOutputProjectionsForOpportunity(req.user.id, Number(req.params.id));
     res.json({ projections });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Output rendering (2026-08-09) — "the digital view equivalent should be
+// accessible... no further edits, but can be downloaded again if
+// necessary." Nothing here ever persists a file — every PDF is generated
+// fresh from generated_content, every time (server/lib/outputRendering.js).
+// Authenticated + ownership-checked throughout, unlike the public
+// unauthenticated /output/* convention — this is private application
+// material, not a shareable profile page.
+router.get('/resume-outputs/:id/view', requireUser, async (req, res) => {
+  try {
+    const projection = await getResumeOutputProjectionRaw(Number(req.params.id), req.user.id);
+    if (!projection) return res.status(404).json({ error: 'Output not found.' });
+    res.json(summarizeProjectionForView(projection));
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.get('/resume-outputs/:id/download.pdf', requireUser, async (req, res) => {
+  try {
+    const projection = await getResumeOutputProjectionRaw(Number(req.params.id), req.user.id);
+    if (!projection) return res.status(404).json({ error: 'Output not found.' });
+    const buffer = await renderProjectionToPdfBuffer(projection);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filenameFor(projection)}"`);
+    res.send(buffer);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Streams a ZIP directly to the response — never written to disk. Every
+// member PDF inside it is generated fresh from the same source
+// generated_content the single-download route uses.
+router.post('/resume-outputs/export-zip', requireUser, async (req, res) => {
+  try {
+    const { projectionIds } = req.body || {};
+    if (!Array.isArray(projectionIds) || !projectionIds.length) return res.status(400).json({ error: 'projectionIds is required.' });
+
+    const projections = [];
+    for (const id of projectionIds) {
+      const p = await getResumeOutputProjectionRaw(Number(id), req.user.id);
+      if (p) projections.push(p);
+    }
+    if (!projections.length) return res.status(404).json({ error: 'None of the requested outputs were found.' });
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', 'attachment; filename="career-outputs.zip"');
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    archive.on('error', (err) => res.status(500).end(err.message));
+    archive.pipe(res);
+    for (const projection of projections) {
+      const buffer = await renderProjectionToPdfBuffer(projection);
+      archive.append(buffer, { name: filenameFor(projection) });
+    }
+    await archive.finalize();
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Reuses the existing generic dispatchRaw() (server/lib/email.js) — already
+// supports attachments, no leadId/lead-thread coupling required. PDFs are
+// generated fresh for the attachment and never stored.
+router.post('/resume-outputs/email', requireUser, async (req, res) => {
+  try {
+    const { projectionIds, toEmail } = req.body || {};
+    if (!Array.isArray(projectionIds) || !projectionIds.length) return res.status(400).json({ error: 'projectionIds is required.' });
+    if (!toEmail || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(toEmail)) return res.status(400).json({ error: 'A valid destination email is required.' });
+
+    const attachments = [];
+    const titles = [];
+    for (const id of projectionIds) {
+      const p = await getResumeOutputProjectionRaw(Number(id), req.user.id);
+      if (!p) continue;
+      const buffer = await renderProjectionToPdfBuffer(p);
+      attachments.push({ name: filenameFor(p), content: buffer });
+      titles.push(p.preset_name || p.output_type);
+    }
+    if (!attachments.length) return res.status(404).json({ error: 'None of the requested outputs were found.' });
+
+    const result = await dispatchRaw({
+      to: toEmail,
+      subject: `Career outputs: ${titles.join(', ')}`,
+      html: `<p>Attached: ${titles.map((t) => `<strong>${t}</strong>`).join(', ')}.</p>`,
+      text: `Attached: ${titles.join(', ')}.`,
+      attachments,
+    });
+    res.json({ ok: true, sent: attachments.length, stub: result?.stub || false });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// The real "human confirms this is worth pursuing" stage transition
+// (2026-08-09) — see careerOpportunityRollups.js's approveCareerOpportunity
+// header for what this triggers (auto-queue eligibility, gate-loop exemption).
+router.post('/opportunities/:id/approve', requireUser, async (req, res) => {
+  try {
+    const opportunity = await approveCareerOpportunity(req.user.id, Number(req.params.id));
+    res.json(opportunity);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// "Apply and track to job applications" — the general stage-advance route.
+// Validated server-side against ALLOWED_TRANSITIONS (careerOpportunityRollups.js)
+// — never an arbitrary stage jump.
+router.post('/opportunities/:id/advance-stage', requireUser, async (req, res) => {
+  try {
+    const { stage } = req.body || {};
+    if (!stage) return res.status(400).json({ error: 'stage is required.' });
+    const opportunity = await advanceOpportunityStage(req.user.id, Number(req.params.id), stage);
+    res.json(opportunity);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Cover letter generation — same review-then-explicit-approve shape as
+// generate-resume/resume-outputs above, coverLetterTargeting.js's sibling
+// generator, persisted with outputType: 'cover_letter' into the same table.
+router.post('/opportunities/:id/generate-cover-letter', requireUser, async (req, res) => {
+  try {
+    const rod = await requireOwnedOpportunity(req.user.id, Number(req.params.id));
+    const metadata = typeof rod.metadata === 'string' ? JSON.parse(rod.metadata) : rod.metadata;
+    const jobDescription = req.body?.jobDescription || metadata?.notes || metadata?.jobTitle || '';
+    const content = await generateCoverLetterContent(req.user.id, jobDescription);
+    res.json({ content, jobDescriptionUsed: jobDescription });
+  } catch (e) {
+    res.status(e.status === 429 ? 429 : 400).json({ error: e.message });
+  }
+});
+
+router.post('/opportunities/:id/cover-letter-outputs', requireUser, async (req, res) => {
+  try {
+    await requireOwnedOpportunity(req.user.id, Number(req.params.id));
+    const { generatedContent, targetJobDescription } = req.body || {};
+    const projection = await createResumeOutputProjection(req.user.id, {
+      presetId: 'agent_generated',
+      presetName: 'Agent-Generated Cover Letter',
+      careerOpportunityRodId: Number(req.params.id),
+      generatedContent,
+      targetJobDescription,
+      outputType: 'cover_letter',
+    });
+    res.status(201).json(projection);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// On-demand triggers for the same actions the dispatcher runs
+// automatically once a schedule is set below — a member shouldn't have to
+// wait for a cadence to fire just to try "Verify Pipeline Now" once.
+router.post('/verify-pipeline', requireUser, async (req, res) => {
+  try {
+    const result = await runQualificationGatesForUser(req.user.id);
+    res.json(result);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.post('/auto-queue-outputs', requireUser, async (req, res) => {
+  try {
+    const result = await autoQueueOutputsForNewlyApproved(req.user.id);
+    res.json(result);
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
@@ -227,6 +451,184 @@ router.post('/generate-resume-queue', requireUser, async (req, res) => {
       }
     }
     res.json({ attempted: results.length, generated: results.filter((r) => r.status === 'generated').length, results });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// The career pipeline's schedulable agent actions — a small static list
+// (mirrors ACTION_EXECUTORS in agentDispatcher.js 1:1) rather than trying to
+// auto-derive "schedulable actions" from agent_definitions.capabilities,
+// which is free text, not a machine-checkable action registry.
+const SCHEDULABLE_ACTIONS = [
+  { agentKey: 'career_researcher', actionKey: 'research', label: 'Job Research', description: 'Search the web for new open roles matching your Career Master profile.' },
+  { agentKey: 'career_researcher', actionKey: 'posting_verification', label: 'Posting Verification', description: 'Re-check open, unapproved postings are still live; auto-archives ones that are no longer found.' },
+  { agentKey: 'resume_generator', actionKey: 'auto_queue_on_approval', label: 'Auto-Generate on Approval', description: 'Generate a resume + cover letter draft automatically for any newly-approved opportunity.' },
+];
+
+// Automation schedule config ("where can I configure the autonomous
+// agents for scheduling," 2026-08-09) — per agent-action cadence, sourced
+// from the platform-configurable agent_cadence_presets envelope.
+router.get('/schedule', requireUser, async (req, res) => {
+  try {
+    const { value: cadenceValue } = await resolveConfigEnvelope('agent_cadence_presets');
+    const rows = await db.prepare(`
+      SELECT s.*, d.key AS agent_key FROM agent_schedules s
+      JOIN agent_definitions d ON d.id = s.agent_definition_id
+      WHERE s.owner_user_id=$1 AND s.is_active=true
+    `).all(req.user.id);
+    const byActionKey = {};
+    for (const r of rows) byActionKey[`${r.agent_key}:${r.action_key}`] = r;
+
+    const schedules = SCHEDULABLE_ACTIONS.map((a) => {
+      const row = byActionKey[`${a.agentKey}:${a.actionKey}`];
+      return {
+        ...a,
+        cadence: row?.cadence || 'on_demand',
+        lastRunAt: row?.last_run_at ? Number(row.last_run_at) : null,
+        nextRunAt: row?.next_run_at ? Number(row.next_run_at) : null,
+      };
+    });
+    res.json({ schedules, presets: cadenceValue.presets });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.post('/schedule', requireUser, async (req, res) => {
+  try {
+    const { agentKey, actionKey, cadence } = req.body || {};
+    const action = SCHEDULABLE_ACTIONS.find((a) => a.agentKey === agentKey && a.actionKey === actionKey);
+    if (!action) return res.status(400).json({ error: `Unknown schedulable action "${agentKey}:${actionKey}".` });
+
+    const { value: cadenceValue } = await resolveConfigEnvelope('agent_cadence_presets');
+    const preset = cadenceValue.presets.find((p) => p.key === cadence);
+    if (!preset) return res.status(400).json({ error: `Unknown cadence "${cadence}".` });
+
+    const agentDef = await db.prepare(`SELECT id FROM agent_definitions WHERE key=$1 AND org_id IS NULL AND owner_user_id IS NULL`).get(agentKey);
+    if (!agentDef) return res.status(400).json({ error: `Unknown agent "${agentKey}".` });
+
+    const nextRunAt = preset.intervalMs ? Date.now() + preset.intervalMs : null;
+    const schedule = await upsertAgentSchedule({
+      agentDefinitionId: agentDef.id,
+      ownerUserId: req.user.id,
+      actionKey,
+      cadence,
+      nextRunAt,
+    });
+    res.json({ agentKey, actionKey, cadence: schedule.cadence, nextRunAt: schedule.next_run_at ? Number(schedule.next_run_at) : null });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Qualification gate chain — read-only view for every member (transparency:
+// "what rule decides whether my pipeline gets auto-archived"), edit is
+// admin-governed (platform default, same tier as every other cross-cutting
+// policy surface in this codebase) since a per-member override tier doesn't
+// exist for journey_current_definitions.
+router.get('/verification-current', requireUser, async (req, res) => {
+  try {
+    const current = await getCurrent('career_opportunity_verification_v1');
+    if (!current) return res.status(404).json({ error: 'career_opportunity_verification_v1 Current is not configured.' });
+    res.json({ currentKey: current.currentKey, label: current.label, gates: current.entryCriteria.gates, availableCheckTypes: Object.keys(CHECKERS), availableActions: GATE_ACTION_KEYS });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.put('/verification-current', requireAdmin, async (req, res) => {
+  try {
+    const { gates } = req.body || {};
+    if (!Array.isArray(gates) || !gates.length) return res.status(400).json({ error: 'gates must be a non-empty array.' });
+    for (const g of gates) {
+      if (!g.key || !g.checkType || !CHECKERS[g.checkType]) return res.status(400).json({ error: `Gate "${g.key || '(no key)'}" has unknown checkType "${g.checkType}".` });
+      if (g.onFail?.action && !GATE_ACTION_KEYS.includes(g.onFail.action)) return res.status(400).json({ error: `Gate "${g.key}" onFail.action "${g.onFail.action}" is not a known action (${GATE_ACTION_KEYS.join(', ')}).` });
+      if (g.onPass?.action && !GATE_ACTION_KEYS.includes(g.onPass.action)) return res.status(400).json({ error: `Gate "${g.key}" onPass.action "${g.onPass.action}" is not a known action (${GATE_ACTION_KEYS.join(', ')}).` });
+    }
+    const now = Date.now();
+    await db.prepare(`
+      UPDATE journey_current_definitions SET entry_criteria=$1::jsonb, updated_at=$2
+      WHERE current_key='career_opportunity_verification_v1' AND org_id IS NULL
+    `).run({ gateModel: 'qualification_gate_chain', gates }, now);
+    const updated = await getCurrent('career_opportunity_verification_v1');
+    res.json({ currentKey: updated.currentKey, label: updated.label, gates: updated.entryCriteria.gates });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Nested outreach Tributary (2026-08-09) — "after applied, there should be
+// a nested tributary process for hiring manager research and direct job
+// outreach that can merge back to the application process." See
+// careerOutreachRollups.js's header for the orchestration; the actual
+// research/drafting logic lives in hiringManagerResearchAgent.js/
+// outreachDraftAgent.js.
+router.get('/opportunities/:id/outreach', requireUser, async (req, res) => {
+  try {
+    const effort = await getOutreachEffort(req.user.id, Number(req.params.id));
+    res.json(effort);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.post('/opportunities/:id/outreach/start', requireUser, async (req, res) => {
+  try {
+    const effort = await startOutreachEffort(req.user.id, Number(req.params.id));
+    res.status(201).json(effort);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.post('/opportunities/:id/outreach/research-contacts', requireUser, async (req, res) => {
+  try {
+    const contacts = await researchHiringManagers(req.user.id, Number(req.params.id));
+    res.json({ contacts });
+  } catch (e) {
+    res.status(e.status === 429 ? 429 : 400).json({ error: e.message });
+  }
+});
+
+// Review-only, same shape as generate-resume/generate-cover-letter — does
+// NOT persist anything until the member explicitly approves via
+// POST /opportunities/:id/outreach/messages.
+router.post('/opportunities/:id/outreach/draft-message', requireUser, async (req, res) => {
+  try {
+    const draft = await draftOutreachMessage(req.user.id, Number(req.params.id));
+    res.json({ draft });
+  } catch (e) {
+    res.status(e.status === 429 ? 429 : 400).json({ error: e.message });
+  }
+});
+
+// Persists an approved outreach draft through the exact same
+// createResumeOutputProjection() path resume/cover-letter outputs use —
+// output_type: 'outreach_message' — so it's viewable/downloadable/emailable
+// via the identical M1 routes with zero new mechanism.
+router.post('/opportunities/:id/outreach/messages', requireUser, async (req, res) => {
+  try {
+    await requireOwnedOpportunity(req.user.id, Number(req.params.id));
+    const { subject, body, sourceRowId } = req.body || {};
+    const projection = await createResumeOutputProjection(req.user.id, {
+      presetId: 'agent_generated',
+      presetName: `Outreach Message — ${subject || 'Untitled'}`,
+      careerOpportunityRodId: Number(req.params.id),
+      generatedContent: { rawText: `Subject: ${subject}\n\n${body}` },
+      outputType: 'outreach_message',
+    });
+    res.status(201).json(projection);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.post('/outreach/:id/merge-outcome', requireUser, async (req, res) => {
+  try {
+    const { outcome } = req.body || {};
+    const result = await mergeOutreachOutcomeToApplication(req.user.id, Number(req.params.id), outcome);
+    res.json(result);
   } catch (e) {
     res.status(400).json({ error: e.message });
   }

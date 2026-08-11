@@ -151,6 +151,14 @@ export const TRIBUTARY_TYPES = Object.freeze({
     cardinality: 'one_to_many',
     description: "A Member's Career Master Channel Journey provisions a Career Opportunity Target Channel Journey per tracked external role — match scoring reads the parent's real Career Atoms/Molecules, never a fabricated profile (2026-08-06, Career Placement Agents).",
   },
+  career_outreach_provisioning: {
+    relationshipKind: 'hierarchical',
+    parentJourneyType: 'career_opportunity_target',
+    childKind: 'journey',
+    childJourneyType: 'career_outreach_effort',
+    cardinality: 'one_to_one',
+    description: "After a career opportunity is marked Applied, this provisions the nested hiring-manager-research + direct-outreach process for it — one outreach effort per opportunity. Its outcome merges back into the parent opportunity's stage (advanceOpportunityStage) rather than living as a disconnected side process (2026-08-09).",
+  },
   opportunity_entity_reference: {
     relationshipKind: 'reference',
     fromJourneyTypes: ['commercial_opportunity_target', 'career_opportunity_target'],

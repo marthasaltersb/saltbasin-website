@@ -19,7 +19,7 @@ import { api } from '../lib/api.js';
 import { hasWebGL } from './SaltBasinCrystal.jsx';
 import { CRYSTAL_VARIANTS, addCrystalLights, buildRiverParticles, advanceRiverParticles } from '../lib/crystalGeometry.js';
 import { resolveWorldIslands } from '../lib/worldIslands.js';
-import { useCareerPlacementAgents, CAREER_DIMENSION_FIELDS } from '../lib/hooks/useCareerPlacementAgents.js';
+import { useCareerPlacementAgents, CAREER_DIMENSION_FIELDS, STAGE_LABELS } from '../lib/hooks/useCareerPlacementAgents.js';
 import { useCommercialOpportunities, COMMERCIAL_DIMENSION_FIELDS, EXPANSION_RING_OPTIONS } from '../lib/hooks/useCommercialOpportunities.js';
 import { usePublicationPipeline } from '../lib/hooks/usePublicationPipeline.js';
 import AdminShell from './admin/AdminShell.jsx';
@@ -611,8 +611,26 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
     generatingResume, resumeReview, generateResume, discardResumeReview, approvingResume, approveResume,
     importingPipeline, importPipeline,
     generatingQueue, generateQueue,
+    approvingOpportunity, approveOpportunity, advanceStage,
+    generatingCoverLetter, coverLetterReview, generateCoverLetter, discardCoverLetterReview, approvingCoverLetter, approveCoverLetter,
+    verifyingPipeline, verifyPipelineNow, runningAutoQueue, runAutoQueueNow,
+    automation, loadingAutomation, loadAutomation, setSchedule,
+    importingOutput, importOutputForOpportunity,
+    outreach, loadingOutreach, loadOutreach, startingOutreach, startOutreach,
+    researchingContacts, researchContacts,
+    draftingOutreachMessage, outreachDraft, draftMessage, discardOutreachDraft,
+    savingOutreachMessage, saveOutreachMessage,
+    mergingOutcome, mergeOutcome,
   } = pipeline;
   const importInputRef = useRef(null);
+  const importOutputInputRef = useRef(null);
+  const [showAutomation, setShowAutomation] = useState(false);
+
+  const outreachEligible = !isCommercial && selectedOpportunity && ['applied', 'interviewing'].includes(selectedOpportunity.currentStage);
+  useEffect(() => {
+    if (outreachEligible) loadOutreach(selectedOpportunity.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedOpportunity?.id, outreachEligible]);
 
   return (
     <div style={S.rail}>
@@ -624,7 +642,7 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
       ) : selectedOpportunity ? (
         <>
           <div style={S.railSubtitle}>{selectedOpportunity.metadata?.jobTitle || selectedOpportunity.metadata?.companyName}</div>
-          <div style={S.railRow}><span>Stage</span><span>{selectedOpportunity.currentStage}</span></div>
+          <div style={S.railRow}><span>Stage</span><span>{STAGE_LABELS[selectedOpportunity.currentStage] || selectedOpportunity.currentStage}</span></div>
           <div style={S.railRow}>
             <span>Score</span>
             <span style={{ color: scoreColor(selectedOpportunity.score?.score), fontWeight: 600 }}>
@@ -648,6 +666,31 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
 
           {!isCommercial && (
             <>
+              {selectedOpportunity.currentStage === 'discovered' && (selectedOpportunity.allowedNextStages || []).includes('approved') && (
+                <button style={S.gold} onClick={() => approveOpportunity(selectedOpportunity.id)} disabled={approvingOpportunity}>
+                  {approvingOpportunity ? 'Approving…' : 'Approve (eligible for auto-generated outputs)'}
+                </button>
+              )}
+              {selectedOpportunity.currentStage === 'archived' && (
+                <div style={{ fontSize: '0.72rem', color: '#c4843a', margin: '0.4rem 0' }}>
+                  Archived{selectedOpportunity.metadata?.archiveReason ? `: ${selectedOpportunity.metadata.archiveReason}` : ''}
+                </div>
+              )}
+              {/* Every other stage move — "apply and track to job applications." */}
+              {(selectedOpportunity.allowedNextStages || []).filter((s) => s !== 'approved').length > 0 && (
+                <div style={{ margin: '0.5rem 0' }}>
+                  <div style={{ fontSize: '0.68rem', color: '#8b877c', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Mark as</div>
+                  {selectedOpportunity.allowedNextStages.filter((s) => s !== 'approved').map((stage) => (
+                    <button
+                      key={stage} style={{ ...S.ghost, marginRight: '0.3rem', marginBottom: '0.3rem' }}
+                      onClick={() => advanceStage(selectedOpportunity.id, stage)} disabled={approvingOpportunity}
+                    >
+                      {STAGE_LABELS[stage] || stage}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               <div style={S.railSubtitle}>Resume for This Opportunity</div>
               {resumeReview ? (
                 <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '0.6rem', fontSize: '0.74rem', color: '#cfc9bd', marginBottom: '0.5rem' }}>
@@ -665,6 +708,66 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
                 <button style={S.ghost} onClick={() => generateResume(selectedOpportunity.id)} disabled={generatingResume}>
                   {generatingResume ? 'Generating…' : 'Generate Resume for This Opportunity'}
                 </button>
+              )}
+
+              <div style={S.railSubtitle}>Cover Letter for This Opportunity</div>
+              {coverLetterReview ? (
+                <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '0.6rem', fontSize: '0.74rem', color: '#cfc9bd', marginBottom: '0.5rem' }}>
+                  <p style={{ margin: '0 0 0.5rem', color: '#f5f0e8' }}>{coverLetterReview.content?.openingHook}</p>
+                  {(coverLetterReview.content?.bodyParagraphs || []).map((p, i) => (
+                    <p key={i} style={{ margin: '0 0 0.4rem' }}>{p.text}</p>
+                  ))}
+                  <p style={{ margin: '0 0 0.5rem' }}>{coverLetterReview.content?.closing}</p>
+                  <p style={{ fontSize: '0.68rem', color: '#8b877c', margin: '0.4rem 0' }}>Review before approving — nothing is saved until you approve it.</p>
+                  <button style={S.gold} onClick={() => approveCoverLetter(selectedOpportunity.id)} disabled={approvingCoverLetter}>{approvingCoverLetter ? 'Saving…' : 'Approve & Save'}</button>
+                  <button style={S.ghost} onClick={discardCoverLetterReview}>Discard</button>
+                </div>
+              ) : (
+                <button style={S.ghost} onClick={() => generateCoverLetter(selectedOpportunity.id)} disabled={generatingCoverLetter}>
+                  {generatingCoverLetter ? 'Generating…' : 'Generate Cover Letter for This Opportunity'}
+                </button>
+              )}
+
+              <div style={S.railSubtitle}>Or Import an Existing Document</div>
+              <input
+                ref={importOutputInputRef} type="file" accept=".pdf,.docx,.txt" style={{ display: 'none' }}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) importOutputForOpportunity(selectedOpportunity.id, f, importOutputInputRef.current?.dataset.outputType || 'resume');
+                  e.target.value = '';
+                }}
+              />
+              <button
+                style={S.ghost} disabled={importingOutput}
+                onClick={() => { importOutputInputRef.current.dataset.outputType = 'resume'; importOutputInputRef.current?.click(); }}
+              >
+                {importingOutput ? 'Importing…' : 'Import Resume (PDF/DOCX/TXT)'}
+              </button>{' '}
+              <button
+                style={S.ghost} disabled={importingOutput}
+                onClick={() => { importOutputInputRef.current.dataset.outputType = 'cover_letter'; importOutputInputRef.current?.click(); }}
+              >
+                {importingOutput ? 'Importing…' : 'Import Cover Letter'}
+              </button>
+
+              {outreachEligible && (
+                <OutreachSection
+                  opportunityId={selectedOpportunity.id}
+                  outreach={outreach}
+                  loading={loadingOutreach}
+                  startingOutreach={startingOutreach}
+                  startOutreach={startOutreach}
+                  researchingContacts={researchingContacts}
+                  researchContacts={researchContacts}
+                  draftingOutreachMessage={draftingOutreachMessage}
+                  outreachDraft={outreachDraft}
+                  draftMessage={draftMessage}
+                  discardOutreachDraft={discardOutreachDraft}
+                  savingOutreachMessage={savingOutreachMessage}
+                  saveOutreachMessage={saveOutreachMessage}
+                  mergingOutcome={mergingOutcome}
+                  mergeOutcome={mergeOutcome}
+                />
               )}
             </>
           )}
@@ -691,6 +794,23 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
               <button style={S.ghost} onClick={() => generateQueue(10)} disabled={generatingQueue}>
                 {generatingQueue ? 'Generating queue…' : 'Generate Resume Queue (top 10)'}
               </button>
+              <button
+                style={S.ghost}
+                onClick={() => { setShowAutomation((v) => !v); if (!showAutomation && !automation) loadAutomation(); }}
+              >
+                {showAutomation ? 'Hide Automation' : 'Automation & Scheduling'}
+              </button>
+              {showAutomation && (
+                <AutomationPanel
+                  automation={automation}
+                  loading={loadingAutomation}
+                  setSchedule={setSchedule}
+                  verifyingPipeline={verifyingPipeline}
+                  verifyPipelineNow={verifyPipelineNow}
+                  runningAutoQueue={runningAutoQueue}
+                  runAutoQueueNow={runAutoQueueNow}
+                />
+              )}
             </>
           )}
           {showAddForm && (
@@ -728,6 +848,124 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
           ))}
         </>
       )}
+    </div>
+  );
+}
+
+// "Where can I configure the autonomous agents for scheduling" (2026-08-09)
+// — per agent-action cadence, sourced from the platform-configurable
+// agent_cadence_presets envelope (GET/POST /api/career-agents/schedule),
+// plus on-demand triggers for the same two actions the dispatcher runs
+// automatically once a cadence is set, plus a read-only view of the active
+// qualification gate chain (editing it is an admin-only JSON surface, not
+// built into this member-facing panel — see verification-current's PUT
+// route, requireAdmin-gated).
+// "After applied, there should be a nested tributary process for hiring
+// manager research and direct job outreach that can merge back to the
+// application process." Real research (findOrCreatePerson/linkRodToPerson)
+// and real drafting (reusing the M1 output pipeline via output_type
+// 'outreach_message'), never auto-sent — the member marks the real-world
+// outcome, which is what merges back into the parent opportunity's stage.
+function OutreachSection({
+  opportunityId, outreach, loading, startingOutreach, startOutreach,
+  researchingContacts, researchContacts, draftingOutreachMessage, outreachDraft, draftMessage, discardOutreachDraft,
+  savingOutreachMessage, saveOutreachMessage, mergingOutcome, mergeOutcome,
+}) {
+  return (
+    <div style={{ marginTop: '0.75rem' }}>
+      <div style={S.railSubtitle}>Outreach &amp; Hiring Manager Research</div>
+      {loading || !outreach ? (
+        <div style={S.railEmpty}>Loading…</div>
+      ) : !outreach.effort ? (
+        <button style={S.gold} onClick={() => startOutreach(opportunityId)} disabled={startingOutreach}>
+          {startingOutreach ? 'Starting…' : 'Start Outreach'}
+        </button>
+      ) : (
+        <>
+          <button style={S.ghost} onClick={() => researchContacts(opportunityId)} disabled={researchingContacts}>
+            {researchingContacts ? 'Researching…' : 'Research Hiring Manager'}
+          </button>
+          {outreach.contacts.length > 0 && (
+            <div style={{ margin: '0.4rem 0' }}>
+              {outreach.contacts.map((c) => (
+                <div key={c.id} style={S.railRow}>
+                  <span>{c.fullName} — {c.publicRole || '—'}</span>
+                  <span style={{ fontSize: '0.62rem', color: '#8b877c', textTransform: 'uppercase' }}>{c.confidenceLabel}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {outreachDraft ? (
+            <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '0.6rem', fontSize: '0.74rem', color: '#cfc9bd', margin: '0.5rem 0' }}>
+              <p style={{ margin: '0 0 0.4rem', color: '#f5f0e8', fontWeight: 600 }}>{outreachDraft.subject}</p>
+              <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{outreachDraft.body}</p>
+              <p style={{ fontSize: '0.68rem', color: '#8b877c', margin: '0.4rem 0' }}>Review before saving — never sent automatically.</p>
+              <button style={S.gold} onClick={() => saveOutreachMessage(opportunityId)} disabled={savingOutreachMessage}>{savingOutreachMessage ? 'Saving…' : 'Save Draft'}</button>
+              <button style={S.ghost} onClick={discardOutreachDraft}>Discard</button>
+            </div>
+          ) : (
+            <button style={S.ghost} onClick={() => draftMessage(opportunityId)} disabled={draftingOutreachMessage}>
+              {draftingOutreachMessage ? 'Drafting…' : 'Draft Outreach Message'}
+            </button>
+          )}
+
+          <div style={{ marginTop: '0.5rem' }}>
+            <div style={{ fontSize: '0.68rem', color: '#8b877c', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Mark Outcome</div>
+            {['response_received', 'interview_scheduled', 'no_response'].map((outcome) => (
+              <button
+                key={outcome} style={{ ...S.ghostSmall, marginRight: '0.3rem', marginBottom: '0.3rem' }}
+                onClick={() => mergeOutcome(outreach.effort.id, outcome, opportunityId)} disabled={mergingOutcome}
+              >
+                {outcome.replace(/_/g, ' ')}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function AutomationPanel({ automation, loading, setSchedule, verifyingPipeline, verifyPipelineNow, runningAutoQueue, runAutoQueueNow }) {
+  if (loading || !automation) return <div style={S.railEmpty}>Loading automation settings…</div>;
+  const { schedules, presets, gates } = automation;
+
+  return (
+    <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: '0.6rem', margin: '0.4rem 0', fontSize: '0.74rem' }}>
+      <div style={S.railSubtitle}>Schedules</div>
+      {schedules.map((s) => (
+        <div key={`${s.agentKey}:${s.actionKey}`} style={{ marginBottom: '0.5rem' }}>
+          <div style={{ color: '#f5f0e8', fontWeight: 600 }}>{s.label}</div>
+          <div style={{ color: '#8b877c', fontSize: '0.68rem', marginBottom: '0.25rem' }}>{s.description}</div>
+          <select
+            style={S.dimInputWide}
+            value={s.cadence}
+            onChange={(e) => setSchedule(s.agentKey, s.actionKey, e.target.value)}
+          >
+            {presets.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
+          </select>
+          {s.nextRunAt && <div style={{ color: '#8b877c', fontSize: '0.65rem', marginTop: '0.15rem' }}>Next run: {new Date(s.nextRunAt).toLocaleString()}</div>}
+        </div>
+      ))}
+
+      <div style={S.railSubtitle}>Run Now</div>
+      <button style={S.ghostSmall} onClick={verifyPipelineNow} disabled={verifyingPipeline}>
+        {verifyingPipeline ? 'Verifying…' : 'Verify Pipeline Now'}
+      </button>{' '}
+      <button style={S.ghostSmall} onClick={runAutoQueueNow} disabled={runningAutoQueue}>
+        {runningAutoQueue ? 'Generating…' : 'Auto-Queue Outputs Now'}
+      </button>
+
+      <div style={S.railSubtitle}>Qualification Rule (platform default)</div>
+      {gates.map((g) => (
+        <div key={g.key} style={{ color: '#cfc9bd', marginBottom: '0.35rem' }}>
+          <div>{g.label}</div>
+          <div style={{ color: '#8b877c', fontSize: '0.65rem' }}>
+            If not still live → {g.onFail?.action || 'none'}{g.onFail?.reasonTemplate ? `: "${g.onFail.reasonTemplate}"` : ''}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

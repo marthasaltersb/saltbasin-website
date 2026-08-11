@@ -19,7 +19,7 @@ const S = {
   linkBtn: { fontSize: '0.78rem', color: 'var(--sb-teal-deep, #02a1a6)', cursor: 'pointer', marginTop: '1rem', display: 'inline-block' },
 };
 
-export default function UploadDataScreen({ onOpenClassicEditor, onCommitted }) {
+export default function UploadDataScreen({ onOpenClassicEditor, onCommitted, embedded = false, onWorkflowChange }) {
   const [downloading, setDownloading] = useState(false);
   const [importing, setImporting] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -48,6 +48,7 @@ export default function UploadDataScreen({ onOpenClassicEditor, onCommitted }) {
       form.append('file', file);
       const result = await api.importCareerSemanticWorkbook(form);
       setPreview(result);
+      onWorkflowChange?.({ phase: 'review', result });
     } catch (e) {
       toast.error('Import failed: ' + e.message);
     } finally {
@@ -63,6 +64,7 @@ export default function UploadDataScreen({ onOpenClassicEditor, onCommitted }) {
       form.append('file', file);
       const result = await api.analyzeCareerResume(form);
       setPreview(result);
+      onWorkflowChange?.({ phase: 'review', result });
     } catch (e) {
       toast.error(e.status === 503 ? 'Resume analysis is not configured on this server yet.' : 'Analysis failed: ' + e.message);
     } finally {
@@ -79,12 +81,13 @@ export default function UploadDataScreen({ onOpenClassicEditor, onCommitted }) {
         missingSheets={preview.missingSheets}
         onCancel={() => setPreview(null)}
         onCommitted={(result) => { setPreview(null); onCommitted?.(result); }}
+        embedded={embedded}
       />
     );
   }
 
   return (
-    <div style={S.wrap}>
+    <div className={embedded ? 'career-upload-screen embedded' : 'career-upload-screen'} style={S.wrap}>
       <div style={S.card}>
         <div style={S.title}>Download Semantic Template</div>
         <div style={S.desc}>Get an Excel workbook with instructions and fill-in sheets mapped directly to your Career Atoms, Molecules, and bonding rules — fill it out and upload it back below.</div>

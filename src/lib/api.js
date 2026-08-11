@@ -152,6 +152,8 @@ export const api = {
   getOrgDocuments: (id) => request(`/api/org-portal/${id}/documents`),
   getOrgDocument: (id, docId) => request(`/api/org-portal/${id}/documents/${docId}`),
   getMemberEmails: () => request('/api/members/me/emails'),
+  getEmailDeliveryPreference: () => request('/api/members/me/email-delivery-preference'),
+  updateEmailDeliveryPreference: (automaticEnabled, recipientAttribute) => request('/api/members/me/email-delivery-preference', { method: 'PUT', body: JSON.stringify({ automaticEnabled, recipientAttribute }) }),
   addMemberEmail: (email, type) => request('/api/members/me/emails', { method: 'POST', body: JSON.stringify({ email, type }) }),
   verifyMemberEmail: (id, code) => request(`/api/members/me/emails/${id}/verify`, { method: 'POST', body: JSON.stringify({ code }) }),
   resendMemberEmailVerification: (id) => request(`/api/members/me/emails/${id}/resend`, { method: 'POST' }),
@@ -347,6 +349,7 @@ export const api = {
   },
   commitCareerMappings: (entries, source) =>
     request('/api/career/mappings/commit', { method: 'POST', body: JSON.stringify({ entries, source }) }),
+  listCareerMappingLineage: () => request('/api/career/mappings/lineage'),
 
   // Admin nav structure (data-driven AdminShell)
   getAdminNav: () => request('/api/config/admin-nav'),
@@ -487,7 +490,39 @@ export const api = {
   generateResumeForOpportunity: (id, body) => request(`/api/career-agents/opportunities/${id}/generate-resume`, { method: 'POST', body: JSON.stringify(body || {}) }),
   approveResumeForOpportunity: (id, body) => request(`/api/career-agents/opportunities/${id}/resume-outputs`, { method: 'POST', body: JSON.stringify(body) }),
   listResumeOutputsForOpportunity: (id) => request(`/api/career-agents/opportunities/${id}/resume-outputs`),
+  getResumeOutputView: (id) => request(`/api/career-agents/resume-outputs/${id}/view`),
+  downloadResumeOutputUrl: (id) => `/api/career-agents/resume-outputs/${id}/download.pdf`,
+  exportResumeOutputsZip: async (projectionIds) => {
+    const res = await fetch('/api/career-agents/resume-outputs/export-zip', {
+      method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projectionIds }),
+    });
+    if (!res.ok) { const body = await res.json().catch(() => ({})); const e = new Error(body?.error || `Request failed: ${res.status}`); e.status = res.status; throw e; }
+    return res.blob();
+  },
+  emailResumeOutputs: (projectionIds, toEmail) => request('/api/career-agents/resume-outputs/email', { method: 'POST', body: JSON.stringify({ projectionIds, toEmail }) }),
+  importOutputForOpportunity: async (opportunityId, formData) => {
+    const res = await fetch(`/api/career-agents/opportunities/${opportunityId}/import-output`, { method: 'POST', credentials: 'include', body: formData });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) { const e = new Error(body?.error || `Request failed: ${res.status}`); e.status = res.status; throw e; }
+    return body;
+  },
   generateResumeQueue: (limit) => request('/api/career-agents/generate-resume-queue', { method: 'POST', body: JSON.stringify({ limit }) }),
+  approveCareerOpportunity: (id) => request(`/api/career-agents/opportunities/${id}/approve`, { method: 'POST' }),
+  advanceCareerOpportunityStage: (id, stage) => request(`/api/career-agents/opportunities/${id}/advance-stage`, { method: 'POST', body: JSON.stringify({ stage }) }),
+  getOutreachEffort: (opportunityId) => request(`/api/career-agents/opportunities/${opportunityId}/outreach`),
+  startOutreachEffort: (opportunityId) => request(`/api/career-agents/opportunities/${opportunityId}/outreach/start`, { method: 'POST' }),
+  researchHiringContacts: (opportunityId) => request(`/api/career-agents/opportunities/${opportunityId}/outreach/research-contacts`, { method: 'POST' }),
+  draftOutreachMessage: (opportunityId) => request(`/api/career-agents/opportunities/${opportunityId}/outreach/draft-message`, { method: 'POST' }),
+  saveOutreachMessage: (opportunityId, body) => request(`/api/career-agents/opportunities/${opportunityId}/outreach/messages`, { method: 'POST', body: JSON.stringify(body) }),
+  mergeOutreachOutcome: (outreachId, outcome) => request(`/api/career-agents/outreach/${outreachId}/merge-outcome`, { method: 'POST', body: JSON.stringify({ outcome }) }),
+  generateCoverLetterForOpportunity: (id, body) => request(`/api/career-agents/opportunities/${id}/generate-cover-letter`, { method: 'POST', body: JSON.stringify(body || {}) }),
+  approveCoverLetterForOpportunity: (id, body) => request(`/api/career-agents/opportunities/${id}/cover-letter-outputs`, { method: 'POST', body: JSON.stringify(body) }),
+  verifyCareerPipelineNow: () => request('/api/career-agents/verify-pipeline', { method: 'POST' }),
+  autoQueueCareerOutputsNow: () => request('/api/career-agents/auto-queue-outputs', { method: 'POST' }),
+  getCareerAgentSchedule: () => request('/api/career-agents/schedule'),
+  setCareerAgentSchedule: (body) => request('/api/career-agents/schedule', { method: 'POST', body: JSON.stringify(body) }),
+  getCareerVerificationCurrent: () => request('/api/career-agents/verification-current'),
   importCareerPipelineWorkbook: async (formData) => {
     const res = await fetch('/api/career-agents/import', { method: 'POST', credentials: 'include', body: formData });
     const body = await res.json().catch(() => ({}));
