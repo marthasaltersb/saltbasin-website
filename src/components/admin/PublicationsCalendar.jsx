@@ -46,7 +46,15 @@ export default function PublicationsCalendar({ publications, onEdit, onRefresh }
       method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: 'published', actual_published_at: Date.now() }),
     });
-    if (!res.ok) { toast.error('Failed to confirm'); return; }
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (data.missingApprovals?.length) {
+        toast.error(`Missing approvals: ${data.missingApprovals.join(', ')}`);
+      } else {
+        toast.error(data.error || 'Failed to confirm');
+      }
+      return;
+    }
     toast.success('Marked as published');
     onRefresh();
   }

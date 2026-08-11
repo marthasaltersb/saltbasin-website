@@ -26,6 +26,7 @@ import {
   readLeadMemory, writeLeadMemory, welcomeBackLine, welcomeBackMemberLine,
 } from '../lib/bestyStaffScript.js';
 import { readBestyAttribution, recordBestyTouch } from '../lib/bestyStaffAttribution.js';
+import { getRecaptchaToken } from '../lib/recaptcha.js';
 
 const C = {
   navy: 'var(--sb-navy, #3D4452)',
@@ -375,13 +376,13 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
     { role: 'assistant', text: intakeConfig?.greeting || GREETING },
-    { role: 'assistant', text: intakeConfig?.consentPrompt || CONSENT_LINE },
+    { role: 'assistant', text: KNOWS_BETSY_QUESTION },
   ]);
   // Cache-layer phases run with zero network calls: consent → knowsBetsy →
   // (knowsBetsyDetail) → topQuestions → flowPick. 'chatting' hands off to the
   // API layer; 'awaitingClosing' is the required closing question.
-  const [phase, setPhase] = useState('consent');
-  const [cacheCtx, setCacheCtx] = useState({ consentGiven: null, knowsBetsy: null, knowsBetsyDetail: '', topQuestions: '' });
+  const [phase, setPhase] = useState('knowsBetsy');
+  const [cacheCtx, setCacheCtx] = useState({ consentGiven: null, knowsBetsy: null, knowsBetsyDetail: '', contactEmail: '', captchaPassed: false, topQuestions: '' });
   const [closingAsked, setClosingAsked] = useState(false);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -393,6 +394,10 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
   const [fallbackResult, setFallbackResult] = useState(null);
   const [fallbackKind, setFallbackKind] = useState(null);
   const [actorContext, setActorContext] = useState(null);
+  const [loginChallengeOpen, setLoginChallengeOpen] = useState(false);
+  const [loginChallenge, setLoginChallenge] = useState({ publicId: '', password: '' });
+  const [loginChallengeBusy, setLoginChallengeBusy] = useState(false);
+  const [loginChallengeError, setLoginChallengeError] = useState('');
   const scrollRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -511,19 +516,19 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, sending, open]);
 
-  function respondAssistant(text) { setMessages((m) => [...m, { role: 'assistant', text }]); }
+  function persistChatMessage(role, text, questionKey, answerValue) {
+    fetch('/api/leads/touch', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+      body: JSON.stringify({ source: 'bestystaff', role, message: text, questionKey, answerValue, ctaLocation: `${window.location.pathname}${window.location.search}#bestystaff`, attribution: readBestyAttribution() }),
+    }).catch(() => {});
+  }
+  function respondAssistant(text) {
+    setMessages((m) => [...m, { role: 'assistant', text }]);
+    persistChatMessage('assistant', text);
+  }
   function respondUser(text, questionKey = 'conversation', answerValue = text) {
     setMessages((m) => [...m, { role: 'user', text }]);
-    fetch('/api/leads/touch', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        source: 'bestystaff', message: text, questionKey, answerValue,
-        ctaLocation: `${window.location.pathname}${window.location.search}#bestystaff`,
-        attribution: readBestyAttribution(),
-      }),
-    }).catch(() => {});
+    persistChatMessage('user', text, questionKey, answerValue);
   }
 
   async function uploadAttachments(requestId) {
@@ -649,8 +654,8 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
     const yes = label === 'Yes';
     respondUser(label, 'consentGiven', yes);
     setCacheCtx((c) => ({ ...c, consentGiven: yes }));
-    setPhase('knowsBetsy');
-    respondAssistant(KNOWS_BETSY_QUESTION);
+    setPhase('topQuestions');
+    respondAssistant(TOP_QUESTIONS_QUESTION);
   }
 
   function pickKnowsBetsy(label) {
@@ -661,8 +666,8 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
       setPhase('knowsBetsyDetail');
       respondAssistant("Great — what's the connection?");
     } else {
-      setPhase('topQuestions');
-      respondAssistant(TOP_QUESTIONS_QUESTION);
+      setPhase('email');
+      respondAssistant('What email should be attached to your lead record? Next, I’ll run a CAPTCHA check and send a verification email. You need one verified email before becoming a member.');
     }
   }
 
@@ -689,8 +694,28 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
     if (phase === 'knowsBetsyDetail') {
       respondUser(trimmed, 'knowsBetsyDetail', trimmed);
       setCacheCtx((c) => ({ ...c, knowsBetsyDetail: trimmed }));
-      setPhase('topQuestions');
-      respondAssistant(TOP_QUESTIONS_QUESTION);
+      setPhase('email');
+      respondAssistant('What email should be attached to your lead record? Next, I’ll run a CAPTCHA check and send a verification email. You need one verified email before becoming a member.');
+      return;
+    }
+    if (phase === 'email') {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+        respondAssistant('That email format does not look valid. Please enter a complete email address.');
+        return;
+      }
+      respondUser(trimmed, 'contactEmail', trimmed);
+      setSending(true);
+      try {
+        const recaptchaToken = await getRecaptchaToken('bestystaff_lead_intake');
+        const res = await fetch('/api/leads/intake-email', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: trimmed, recaptchaToken, knowsBetsy: cacheCtx.knowsBetsy, knowsBetsyDetail: cacheCtx.knowsBetsyDetail, sourceOutput }) });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body.error || 'Email checkpoint failed');
+        setCacheCtx((c) => ({ ...c, contactEmail: trimmed.toLowerCase(), captchaPassed: true }));
+        respondAssistant('Thanks — your lead is created and your verification email is on the way. Please verify it before member conversion. May I save the rest of this conversation as lead context?');
+        setPhase('consent');
+      } catch (e) {
+        respondAssistant(e.message || 'I could not complete the CAPTCHA/email checkpoint. Please try again.');
+      } finally { setSending(false); }
       return;
     }
     if (phase === 'topQuestions') {
@@ -746,8 +771,30 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
     setOpen(false);
   }
 
-  const inputEnabled = phase === 'knowsBetsyDetail' || phase === 'topQuestions' || phase === 'chatting' || phase === 'awaitingClosing' || phase === 'returningWelcome';
+  async function completeLeadLoginChallenge(e) {
+    e.preventDefault();
+    const publicId = loginChallenge.publicId.trim().toUpperCase();
+    if (!publicId || !loginChallenge.password) return;
+    setLoginChallengeBusy(true);
+    setLoginChallengeError('');
+    try {
+      const res = await fetch(`/api/leads/public/${encodeURIComponent(publicId)}/unlock`, {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: loginChallenge.password }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || 'Lead login challenge failed');
+      window.location.assign(`/lead/${encodeURIComponent(publicId)}`);
+    } catch (error) {
+      setLoginChallengeError(error.message);
+    } finally {
+      setLoginChallengeBusy(false);
+    }
+  }
+
+  const inputEnabled = phase === 'knowsBetsyDetail' || phase === 'email' || phase === 'topQuestions' || phase === 'chatting' || phase === 'awaitingClosing' || phase === 'returningWelcome';
   const placeholder = phase === 'knowsBetsyDetail' ? 'e.g. former colleague, referral, LinkedIn…'
+    : phase === 'email' ? 'you@example.com'
     : phase === 'topQuestions' ? 'Type your top questions (1-5)…'
     : !inputEnabled ? 'Please choose an option above'
     : phase === 'returningWelcome' ? 'What can I help you with this visit?'
@@ -791,8 +838,21 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
                 Betsy's AI Proxy · Salt Basin Net Works
               </div>
             </div>
+            <button type="button" onClick={() => { setLoginChallengeOpen((value) => !value); setLoginChallengeError(''); }} aria-expanded={loginChallengeOpen} style={{ border: '0.5px solid rgba(247,242,232,.45)', borderRadius: 7, background: loginChallengeOpen ? 'rgba(247,242,232,.16)' : 'transparent', color: C.cream, padding: '.32rem .5rem', fontSize: '.58rem', cursor: 'pointer', fontFamily: 'sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' }}>Lead login</button>
             <button onClick={handleMinimizeClick} aria-label="Minimize chat" style={{ border: 'none', background: 'none', color: 'rgba(247,242,232,0.8)', fontSize: '1.1rem', cursor: 'pointer', padding: '0.2rem' }}>—</button>
           </div>
+
+          {loginChallengeOpen && (
+            <form onSubmit={completeLeadLoginChallenge} aria-label="Lead login challenge" style={{ padding: '.85rem .9rem', background: C.mist, borderBottom: '1px solid rgba(23,42,69,.14)', display: 'grid', gap: '.55rem', flexShrink: 0 }}>
+              <div style={{ fontFamily: 'sans-serif', color: C.navy, fontSize: '.72rem', lineHeight: 1.45 }}><strong>Open your private lead record</strong><br />Enter the lead ID and password from your Salt Basin email. Credentials stay out of the chat transcript.</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,.8fr) minmax(0,1.2fr)', gap: '.45rem' }}>
+                <input aria-label="Lead ID" autoComplete="username" value={loginChallenge.publicId} onChange={(e) => setLoginChallenge((current) => ({ ...current, publicId: e.target.value }))} placeholder="Lead ID" required style={S.input} />
+                <input aria-label="Lead password" autoComplete="current-password" type="password" value={loginChallenge.password} onChange={(e) => setLoginChallenge((current) => ({ ...current, password: e.target.value }))} placeholder="Password" required style={S.input} />
+              </div>
+              {loginChallengeError && <div role="alert" style={{ color: '#9b2c2c', fontFamily: 'sans-serif', fontSize: '.7rem' }}>{loginChallengeError}</div>}
+              <button type="submit" disabled={loginChallengeBusy || !loginChallenge.publicId.trim() || !loginChallenge.password} style={{ ...S.btnNavy, justifySelf: 'start', opacity: loginChallengeBusy ? .6 : 1 }}>{loginChallengeBusy ? 'Checking…' : 'Open lead record'}</button>
+            </form>
+          )}
 
           {/* Offline fallback: static intake forms inside the panel */}
           {offline ? (

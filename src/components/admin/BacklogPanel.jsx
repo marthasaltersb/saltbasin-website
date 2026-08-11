@@ -259,10 +259,10 @@ export default function BacklogPanel() {
         </div>
       </div>
 
-      {/* ── Scrum Agent panel ── */}
+      {/* ── Governed Codex / Claude code-agent studio ── */}
       <ScrumAgentPanel open={agentOpen} onClose={() => setAgentOpen(false)} />
 
-      {/* Floating "Open Scrum Agent" toggle — bottom-right */}
+      {/* Floating code-agent studio toggle — bottom-right */}
       {!agentOpen && (
         <button
           onClick={() => setAgentOpen(true)}
@@ -283,7 +283,7 @@ export default function BacklogPanel() {
             zIndex: 30,
           }}
         >
-          ✦ Scrum Agent
+          ✦ Codex + Claude Studio
         </button>
       )}
 

@@ -30,9 +30,12 @@ import { Router } from 'express';
 import { db } from '../db.js';
 import { requireAdmin } from '../auth.js';
 import { writeAudit, snapshotRow, diffRows } from '../audit.js';
+import { ensureBacklogIntelligenceSchema } from '../lib/backlogIntelligenceSchema.js';
+import { CODE_CONTEXT_JOURNEY_TESTS } from '../data/codeContextJourneyTests.js';
 
 const router = Router();
 router.use(requireAdmin);
+router.use(async (_req, _res, next) => { try { await ensureBacklogIntelligenceSchema(); next(); } catch (error) { next(error); } });
 
 // ── row mappers (snake_case → camelCase, parse Number ids) ──
 function rowToScenario(r) {
@@ -459,6 +462,9 @@ router.post('/runs', async (req, res) => {
     if (sr.result === 'fail') { overallResult = 'fail'; break; }
     if (sr.result === 'blocked' && overallResult !== 'fail') overallResult = 'blocked';
   }
+  if (stepResults.some((sr) => sr.result === 'fail' && !sr.evidenceUrl && !(sr.screenshotUrls || []).length)) {
+    return res.status(400).json({ error: 'Every failed test step requires at least one screenshot or evidence URL.' });
+  }
 
   const runInsert = await db
     .prepare(
@@ -608,6 +614,30 @@ router.get('/defects', async (req, res) => {
       createdAt: Number(r.created_at),
     })),
   });
+});
+
+router.post('/seed-code-context-journeys', async (req, res) => {
+  const now = Date.now();
+  let scenarios = 0, steps = 0;
+  for (const definition of CODE_CONTEXT_JOURNEY_TESTS) {
+    const backlog = await db.prepare(`SELECT id,capability_id FROM backlog_items WHERE LOWER(title) LIKE $1 ORDER BY id LIMIT 1`).get(`%${definition.backlogMatch.toLowerCase()}%`);
+    let scenario = await db.prepare(`SELECT id FROM test_scenarios WHERE title=$1`).get(definition.title);
+    if (!scenario) {
+      scenario = await db.prepare(`INSERT INTO test_scenarios (backlog_item_id,capability_id,title,summary,preconditions,environment_scope,priority,user_profile,process_steps,data_values,actions,required_for_promotion,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,'p1',$7::jsonb,$8::jsonb,'{}',$9::jsonb,true,$10,$10) RETURNING id`)
+        .get(backlog?.id || null, backlog?.capability_id || null, definition.title, `Reproducible ${definition.role} journey test.`, definition.preconditions || null, definition.environment, { role: definition.role }, definition.steps.map(([action], index) => ({ order: index + 1, action })), definition.steps.map(([action]) => action), now);
+      scenarios += 1;
+      if (backlog) await db.prepare(`INSERT INTO test_scenario_features (scenario_id,backlog_item_id,is_primary,sort_order,created_at) VALUES ($1,$2,true,0,$3) ON CONFLICT DO NOTHING`).run(scenario.id, backlog.id, now);
+    }
+    for (let index = 0; index < definition.steps.length; index += 1) {
+      const [action, expected] = definition.steps[index];
+      const exists = await db.prepare(`SELECT id FROM test_scenario_steps WHERE scenario_id=$1 AND step_order=$2`).get(scenario.id, index + 1);
+      if (!exists) {
+        await db.prepare(`INSERT INTO test_scenario_steps (scenario_id,step_order,action,expected_outcome,data_values,created_at) VALUES ($1,$2,$3,$4,'{}',$5)`).run(scenario.id, index + 1, action, expected, now);
+        steps += 1;
+      }
+    }
+  }
+  res.json({ ok: true, scenariosInserted: scenarios, stepsInserted: steps, catalogSize: CODE_CONTEXT_JOURNEY_TESTS.length });
 });
 
 export default router;

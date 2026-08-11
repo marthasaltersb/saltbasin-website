@@ -8,10 +8,11 @@
 // expose other tenants: Leads + Net Works tabs are admin-only.
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import AdminShell from './admin/AdminShell.jsx';
 import MemberCrystalOrbit from './MemberCrystalOrbit.jsx';
+import CareerConsentGate from './admin/CareerConsentGate.jsx';
 
 export default function MemberDashboard() {
   const nav = useNavigate();
@@ -32,14 +33,15 @@ export default function MemberDashboard() {
   }, [nav]);
 
   if (!user) return null;
+  if (user.mustChangePassword) return <CareerConsentGate><Navigate to="/first-login-password" replace /></CareerConsentGate>;
   if (params.get('workspace') === '1') {
     const orgId = params.get('org');
     const workspaceScope = orgId ? 'org-admin' : params.get('scope') === 'admin' && user.role === 'admin' ? 'admin' : 'member';
-    return <AdminShell scope={workspaceScope} orgId={orgId || null} />;
+    return <CareerConsentGate><AdminShell scope={workspaceScope} orgId={orgId || null} /></CareerConsentGate>;
   }
-  return <MemberCrystalOrbit user={user} onOpenWorkspace={(tab, orgId, scope = 'member') => {
+  return <CareerConsentGate><MemberCrystalOrbit user={user} onOpenWorkspace={(tab, orgId, scope = 'member') => {
     const next = { workspace: '1', tab, scope };
     if (orgId) next.org = String(orgId);
     setParams(next);
-  }} />;
+  }} /></CareerConsentGate>;
 }

@@ -20,6 +20,18 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  getGenesisSummary: () => request('/api/genesis/summary'),
+  getGenesisLayer: (layer) => request(`/api/genesis/catalog/${encodeURIComponent(layer)}`),
+  getGenesisTable: (layer, table, q = '') => request(`/api/genesis/catalog/${encodeURIComponent(layer)}/${encodeURIComponent(table)}?limit=200${q ? `&q=${encodeURIComponent(q)}` : ''}`),
+  getGenesisConfigurations: () => request('/api/genesis/configurations'),
+  saveGenesisConfiguration: (value) => request('/api/genesis/configurations', { method: 'PUT', body: JSON.stringify(value) }),
+  evaluateGenesisTransition: (transitionId, predicateResults) => request('/api/genesis/evaluate', { method: 'POST', body: JSON.stringify({ transitionId, predicateResults }) }),
+  getGenesisOverlapSummary: () => request('/api/genesis/overlaps/summary'),
+  getGenesisOverlaps: (filters = {}) => request(`/api/genesis/overlaps?${new URLSearchParams(Object.entries(filters).filter(([, value]) => value != null && value !== ''))}`),
+  updateGenesisOverlap: (id, patch) => request(`/api/genesis/overlaps/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  getGenesisOverlapRecommendation: (id) => request(`/api/genesis/overlaps/${encodeURIComponent(id)}/recommendation`),
+  previewGenesisOverlapResolution: (id, body) => request(`/api/genesis/overlaps/${encodeURIComponent(id)}/resolution-preview`, { method: 'POST', body: JSON.stringify(body) }),
+  decideGenesisOverlapResolution: (id, body) => request(`/api/genesis/overlaps/${encodeURIComponent(id)}/resolution-decision`, { method: 'POST', body: JSON.stringify(body) }),
   getProposalExperienceState: () => request('/api/proposal-experience/state'),
   getProposalHighways: () => request('/api/proposal-experience/highways'),
   getProposalSections: () => request('/api/proposal-experience/sections'),
@@ -35,9 +47,19 @@ export const api = {
   recordProposalScenarioExpanded: (scenarioId) => request('/api/proposal-experience/events/scenario-expanded', { method: 'POST', body: JSON.stringify({ scenarioId }) }),
   recordProposalEvidenceOpened: (evidenceId) => request('/api/proposal-experience/events/evidence-opened', { method: 'POST', body: JSON.stringify({ evidenceId }) }),
   submitProposalDecision: (option, rationale) => request('/api/proposal-experience/decision', { method: 'POST', body: JSON.stringify({ option, rationale }) }),
+  getProposalVersions: () => request('/api/proposal-experience/versions'),
+  getProposalFeedback: (versionId) => request(`/api/proposal-experience/feedback${versionId ? `?versionId=${versionId}` : ''}`),
+  saveProposalFeedback: (body) => request('/api/proposal-experience/feedback', { method: 'POST', body: JSON.stringify(body) }),
+  publishProposalFeedback: (versionId) => request('/api/proposal-experience/feedback/publish', { method: 'POST', body: JSON.stringify({ versionId }) }),
+  createProposalVersion: (userId, body) => request(`/api/proposal-experience/admin/${userId}/versions`, { method: 'POST', body: JSON.stringify(body) }),
+  compileProposalVersion: (userId, body) => request(`/api/proposal-experience/admin/${userId}/compile`, { method: 'POST', body: JSON.stringify(body) }),
+  getProposalVersionsForUser: (userId) => request(`/api/proposal-experience/admin/${userId}/versions`),
+  deliverProposalVersion: (userId, versionId) => request(`/api/proposal-experience/admin/${userId}/versions/${versionId}/deliver`, { method: 'POST' }),
+  approveProposalVersion: (userId, versionId, rationale = null) => request(`/api/proposal-experience/admin/${userId}/versions/${versionId}/approve`, { method: 'POST', body: JSON.stringify({ rationale }) }),
+  convertProposalToContract: (userId, versionId) => request(`/api/proposal-experience/admin/${userId}/versions/${versionId}/contract`, { method: 'POST' }),
   getMemberEntitlements: () => request('/api/member-entitlements'),
   getCareerConsentStatus: (consentType = 'career_portfolio') => request(`/api/career/consent-status?consentType=${consentType}`),
-  recordCareerConsent: (consentType, granted) => request('/api/career/consent', { method: 'POST', body: JSON.stringify({ consentType, granted }) }),
+  recordCareerConsent: (consentType, granted, acknowledgementKeys = []) => request('/api/career/consent', { method: 'POST', body: JSON.stringify({ consentType, granted, acknowledgementKeys }) }),
   listResumeOutputs: () => request('/api/resume-outputs'),
   createResumeOutput: (body) => request('/api/resume-outputs', { method: 'POST', body: JSON.stringify(body) }),
   getResumeOutputStaleness: (id) => request(`/api/resume-outputs/${id}/staleness`),
@@ -61,14 +83,24 @@ export const api = {
   resetConfigEnvelope: (id) => request(`/api/config-envelopes/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   // Auth
   me: () => request('/api/auth/me'),
-  login: (email, password) =>
-    request('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  login: (email, password, otp = null) =>
+    request('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password, otp }) }),
   logout: () => request('/api/auth/logout', { method: 'POST' }),
   changePassword: (currentPassword, newPassword) =>
     request('/api/auth/change-password', {
       method: 'POST',
       body: JSON.stringify({ currentPassword, newPassword }),
     }),
+  getPasswordPolicy: () => request('/api/auth/password-policy'),
+  getPasswordResetPreferences: () => request('/api/auth/password-reset-preferences'),
+  savePasswordResetPreferences: (defaultDestinations, ipRules) => request('/api/auth/password-reset-preferences', { method: 'PUT', body: JSON.stringify({ defaultDestinations, ipRules }) }),
+  getAuthenticationRoutes: () => request('/api/auth/authentication-routes'),
+  getOrgAuthenticationPolicy: (orgId) => request(`/api/org-portal/${orgId}/auth-policy`),
+  saveOrgAuthenticationPolicy: (orgId, body) => request(`/api/org-portal/${orgId}/auth-policy`, { method: 'PUT', body: JSON.stringify(body) }),
+  setOrgMemberCapability: (orgId, userId, capabilityKey, permissionLevel) => request(`/api/org-portal/${orgId}/members/${userId}/capabilities/${encodeURIComponent(capabilityKey)}`, { method: 'PUT', body: JSON.stringify({ permissionLevel }) }),
+  startTotpSetup: () => request('/api/auth/totp/setup', { method: 'POST' }),
+  enableTotp: (code) => request('/api/auth/totp/enable', { method: 'POST', body: JSON.stringify({ code }) }),
+  disableTotp: () => request('/api/auth/totp', { method: 'DELETE' }),
 
   // Landing gate
   landingStatus: () => request('/api/auth/landing-gate/status'),
@@ -136,11 +168,22 @@ export const api = {
 
   // Scrum Agent (admin-only, Phase A scaffold)
   listAgentThreads:   () => request('/api/agent/threads'),
-  createAgentThread:  (title) => request('/api/agent/threads', { method: 'POST', body: JSON.stringify({ title }) }),
+  createAgentThread:  (options) => request('/api/agent/threads', { method: 'POST', body: JSON.stringify(typeof options === 'string' ? { title: options } : options) }),
   getAgentMessages:   (threadId) => request(`/api/agent/threads/${threadId}/messages`),
   deleteAgentThread:  (threadId) => request(`/api/agent/threads/${threadId}`, { method: 'DELETE' }),
-  chatWithAgent:      (threadId, message) =>
-    request('/api/agent/chat', { method: 'POST', body: JSON.stringify({ threadId, message }) }),
+  chatWithAgent:      (threadId, message, options = {}) =>
+    request('/api/agent/chat', { method: 'POST', body: JSON.stringify({ threadId, message, ...options }) }),
+  listAgentContextProfiles: () => request('/api/agent/context-profiles'),
+  createAgentContextProfile: (profile) => request('/api/agent/context-profiles', { method: 'POST', body: JSON.stringify(profile) }),
+  listAgentKnowledge: () => request('/api/agent/knowledge'),
+  updateAgentKnowledge: (id, patch) => request(`/api/agent/knowledge/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  listAgentCodeRuns: (threadId) => request(`/api/agent/code-runs${threadId ? `?threadId=${threadId}` : ''}`),
+  proposeAgentCodeRun: (body) => request('/api/agent/code-runs', { method: 'POST', body: JSON.stringify(body) }),
+  approveAgentCodeRun: (id) => request(`/api/agent/code-runs/${id}/approve`, { method: 'POST', body: '{}' }),
+  rejectAgentCodeRun: (id, reason) => request(`/api/agent/code-runs/${id}/reject`, { method: 'POST', body: JSON.stringify({ reason }) }),
+  getAgentCodeRunEvents: (id, after = 0) => request(`/api/agent/code-runs/${id}/events?after=${after}`),
+  listBacklogReconciliationRuns: () => request('/api/agent/backlog-reconciliation'),
+  startBacklogReconciliation: (provider, limit = 0) => request('/api/agent/backlog-reconciliation', { method: 'POST', body: JSON.stringify({ provider, limit }) }),
 
   // Member templates (logged-in users)
   listMemberTemplates: () => request('/api/member-templates/'),
@@ -149,6 +192,16 @@ export const api = {
 
   // Backlog / Requirements Management (admin-only)
   getBacklog: () => request('/api/backlog/'),
+  getBacklogQualityCoverage: () => request('/api/backlog/quality-coverage'),
+  cloneBacklogItem: (id, title) => request(`/api/backlog/items/${id}/clone`, { method: 'POST', body: JSON.stringify({ title }) }),
+  seedCodeContextJourneyTests: () => request('/api/qa/seed-code-context-journeys', { method: 'POST', body: '{}' }),
+  postGithubDeploymentEvidence: (body) => request('/api/deployment-intelligence/github', { method: 'POST', body: JSON.stringify(body) }),
+  evaluateDeploymentPromotion: (id, toEnvironment = 'production') => request(`/api/deployment-intelligence/${id}/evaluate-promotion`, { method: 'POST', body: JSON.stringify({ toEnvironment }) }),
+  promoteDeploymentToProduction: (id, ref) => request(`/api/deployment-intelligence/${id}/promote-production`, { method: 'POST', body: JSON.stringify({ confirmation: 'PROMOTE TO PRODUCTION', ref }) }),
+  listBacklogOutputs: () => request('/api/backlog-outputs'),
+  generateBacklogOutput: (body) => request('/api/backlog-outputs/generate', { method: 'POST', body: JSON.stringify(body) }),
+  updateBacklogOutput: (id, patch) => request(`/api/backlog-outputs/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  createBacklogOutputImageJob: (id, body) => request(`/api/backlog-outputs/${id}/image-jobs`, { method: 'POST', body: JSON.stringify(body) }),
   // Build progress snapshots — time-series rollups for charting "how the
   // numbers changed week over week / month over month." Auto-captured daily
   // on /summary access; can also be force-captured via createSnapshot().
@@ -242,6 +295,17 @@ export const api = {
     request(`/api/career/intake-runs/${id}/run`, { method: 'POST', body: '{}' }),
   syncCareerSiteMetadata: (body = {}) =>
     request('/api/career/sync-site-metadata', { method: 'POST', body: JSON.stringify(body) }),
+  pullLinkedInProfileAsSource: () =>
+    request('/api/career/intake-documents/linkedin-pull', { method: 'POST', body: '{}' }),
+  listCareerReconciliationTasks: (status) =>
+    request(`/api/career-reconciliation/tasks${status ? `?status=${encodeURIComponent(status)}` : ''}`),
+  resolveCareerReconciliationTask: (taskId, resolution) =>
+    request(`/api/career-reconciliation/tasks/${taskId}/resolve`, { method: 'POST', body: JSON.stringify(resolution) }),
+  askBestyStaffCareer: (taskId, message, history = []) =>
+    request('/api/agent/bestystaff-career', { method: 'POST', body: JSON.stringify({ taskId, message, history }) }),
+  listCareerReasoningCandidates: () => request('/api/career-reasoning-admin/candidates'),
+  decideCareerReasoningCandidate: (id, body) =>
+    request(`/api/career-reasoning-admin/candidates/${id}/decide`, { method: 'POST', body: JSON.stringify(body) }),
   uploadCareerIntakeDocument: async (formData) => {
     const res = await fetch('/api/career/intake-documents', {
       method: 'POST',
@@ -454,4 +518,12 @@ export const api = {
   getAgentHubRuns: (definitionId) => request(`/api/agent-hub/runs${definitionId ? `?definitionId=${definitionId}` : ''}`),
   getAgentHubRun: (id) => request(`/api/agent-hub/runs/${id}`),
   updateAgentHubFinding: (id, status) => request(`/api/agent-hub/findings/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+
+  getL2rDomains: () => request('/api/l2r-diagnostics/domains'),
+  listL2rDiagnostics: () => request('/api/l2r-diagnostics/'),
+  createL2rDiagnostic: (body) => request('/api/l2r-diagnostics/', { method: 'POST', body: JSON.stringify(body) }),
+  getL2rDiagnostic: (id) => request(`/api/l2r-diagnostics/${id}`),
+  getL2rLandscape: (id) => request(`/api/l2r-diagnostics/${id}/landscape`),
+  recordL2rObservation: (id, body) => request(`/api/l2r-diagnostics/${id}/observations`, { method: 'POST', body: JSON.stringify(body) }),
+  recordL2rFinding: (id, body) => request(`/api/l2r-diagnostics/${id}/findings`, { method: 'POST', body: JSON.stringify(body) }),
 };

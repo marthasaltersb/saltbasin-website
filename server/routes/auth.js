@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import crypto from 'node:crypto';
-import bcrypt from 'bcryptjs';
 import {
   login,
   createSession,
@@ -12,7 +11,7 @@ import {
   unlockLanding,
   isLandingUnlocked,
   ADMIN_COOKIE,
-  requireAdmin,
+  requireUser,
 } from '../auth.js';
 import { db, getJSON } from '../db.js';
 import { dispatchRaw } from '../lib/email.js';
@@ -20,6 +19,9 @@ import { verifyRecaptcha } from '../lib/recaptcha.js';
 import { audit } from '../lib/audit.js';
 import { makeRateLimiter } from '../lib/rateLimit.js';
 import { recordLogin } from '../lib/usageTracking.js';
+import { replacePassword, validatePasswordPolicy, PASSWORD_POLICY } from '../lib/passwordPolicy.js';
+import { encrypt, decrypt } from '../lib/crypto.js';
+import { generateTotpSecret, verifyTotp, totpUri } from '../lib/totp.js';
 
 // 10 attempts per IP per 15 minutes on auth endpoints
 const authLimiter = makeRateLimiter({ windowMs: 15 * 60_000, max: 10, message: 'Too many attempts — please try again in 15 minutes' });
@@ -27,12 +29,19 @@ const authLimiter = makeRateLimiter({ windowMs: 15 * 60_000, max: 10, message: '
 const router = Router();
 
 router.post('/login', authLimiter, async (req, res) => {
-  const { email, password } = req.body || {};
+  const { email, password, otp } = req.body || {};
   if (!email || !password) return res.status(400).json({ error: 'email and password required' });
   const user = await login(email, password);
   if (!user) {
     await audit({ req, actor: null, action: 'auth.login.failed', entityType: 'user', summary: `Failed login attempt for ${email}` });
     return res.status(401).json({ error: 'invalid credentials' });
+  }
+  const totpRoute = await db.prepare(`SELECT secret_enc FROM user_authentication_routes WHERE user_id=$1 AND route_type='totp' AND enabled=true ORDER BY preferred DESC,id LIMIT 1`).get(user.id);
+  if (totpRoute) {
+    if (!otp) return res.status(202).json({ ok: false, challengeRequired: true, methods: ['totp'], message: 'Enter the code from your authenticator app.' });
+    let validOtp = false;
+    try { validOtp = verifyTotp(decrypt(totpRoute.secret_enc), otp); } catch { validOtp = false; }
+    if (!validOtp) return res.status(401).json({ error: 'invalid authentication code', challengeRequired: true, methods: ['totp'] });
   }
   const { token } = await createSession(user.id);
   setAdminCookie(res, token);
@@ -43,7 +52,7 @@ router.post('/login', authLimiter, async (req, res) => {
     // Channel Rod-backed identities.
     recordLogin(user.id).catch((e) => console.error('[auth] recordLogin failed:', e.message));
   }
-  res.json({ ok: true, user: { id: user.id, role: user.role, email } });
+  res.json({ ok: true, user: { id: user.id, role: user.role, email, mustChangePassword: user.mustChangePassword } });
 });
 
 router.post('/logout', async (req, res) => {
@@ -60,13 +69,54 @@ router.get('/me', async (req, res) => {
   res.json({ user });
 });
 
-router.post('/change-password', requireAdmin, async (req, res) => {
+router.get('/password-policy', (_req, res) => res.json(PASSWORD_POLICY));
+
+router.get('/authentication-routes', requireUser, async (req, res) => {
+  const rows = await db.prepare(`SELECT id,route_type,provider_key,enabled,preferred,org_id,created_at FROM user_authentication_routes WHERE user_id=$1 ORDER BY preferred DESC,id`).all(req.user.id);
+  res.json({ routes: rows.map((row) => ({ ...row, secret_enc: undefined })) });
+});
+
+router.post('/totp/setup', requireUser, async (req, res) => {
+  const secret = generateTotpSecret();
+  await db.prepare(`DELETE FROM user_authentication_routes WHERE user_id=$1 AND route_type='totp' AND provider_key='authenticator_app' AND org_id IS NULL`).run(req.user.id);
+  await db.prepare(`INSERT INTO user_authentication_routes (user_id,route_type,provider_key,secret_enc,enabled,preferred,created_at) VALUES ($1,'totp','authenticator_app',$2,false,false,$3)`).run(req.user.id, encrypt(secret), Date.now());
+  res.json({ secret, uri: totpUri({ secret, email: req.user.email }) });
+});
+
+router.post('/totp/enable', requireUser, async (req, res) => {
+  const route = await db.prepare(`SELECT id,secret_enc FROM user_authentication_routes WHERE user_id=$1 AND route_type='totp' AND provider_key='authenticator_app' ORDER BY id DESC LIMIT 1`).get(req.user.id);
+  if (!route) return res.status(404).json({ error: 'start authenticator setup first' });
+  let valid = false;
+  try { valid = verifyTotp(decrypt(route.secret_enc), req.body?.code); } catch { valid = false; }
+  if (!valid) return res.status(400).json({ error: 'invalid authentication code' });
+  await db.prepare(`UPDATE user_authentication_routes SET enabled=true,preferred=true WHERE id=$1 AND user_id=$2`).run(route.id, req.user.id);
+  res.json({ ok: true });
+});
+
+router.delete('/totp', requireUser, async (req, res) => {
+  await db.prepare(`DELETE FROM user_authentication_routes WHERE user_id=$1 AND route_type='totp' AND provider_key='authenticator_app'`).run(req.user.id);
+  res.json({ ok: true });
+});
+
+router.get('/password-reset-preferences', requireUser, async (req, res) => {
+  const row = await db.prepare(`SELECT default_destinations,ip_rules,updated_at FROM user_password_reset_preferences WHERE user_id=$1`).get(req.user.id);
+  res.json(row || { default_destinations: ['primary'], ip_rules: [], updated_at: null });
+});
+
+router.put('/password-reset-preferences', requireUser, async (req, res) => {
+  const allowed = new Set(['primary', 'personal', 'work', 'organization']);
+  const defaults = Array.isArray(req.body?.defaultDestinations) ? req.body.defaultDestinations.filter((v) => allowed.has(v)) : [];
+  const rules = Array.isArray(req.body?.ipRules) ? req.body.ipRules.slice(0, 20).map((rule) => ({ ip: String(rule?.ip || '').trim().slice(0, 80), destinations: Array.isArray(rule?.destinations) ? rule.destinations.filter((v) => allowed.has(v)) : [] })).filter((rule) => rule.ip && rule.destinations.length) : [];
+  if (!defaults.length) defaults.push('primary');
+  await db.prepare(`INSERT INTO user_password_reset_preferences (user_id,default_destinations,ip_rules,updated_at) VALUES ($1,$2,$3,$4) ON CONFLICT (user_id) DO UPDATE SET default_destinations=EXCLUDED.default_destinations,ip_rules=EXCLUDED.ip_rules,updated_at=EXCLUDED.updated_at`).run(req.user.id, defaults, rules, Date.now());
+  res.json({ ok: true, defaultDestinations: defaults, ipRules: rules });
+});
+
+router.post('/change-password', requireUser, async (req, res) => {
   const { currentPassword, newPassword } = req.body || {};
-  if (!currentPassword || !newPassword || newPassword.length < 8) {
-    return res.status(400).json({ error: 'newPassword must be at least 8 chars' });
-  }
-  const ok = await changePassword(req.user.id, currentPassword, newPassword);
-  if (!ok) return res.status(401).json({ error: 'current password incorrect' });
+  if (!currentPassword || !newPassword) return res.status(400).json({ error: 'current and new password required' });
+  const result = await changePassword(req.user.id, currentPassword, newPassword);
+  if (!result.ok) return res.status(result.error === 'current_password_incorrect' ? 401 : 400).json(result);
   res.json({ ok: true });
 });
 
@@ -135,8 +185,17 @@ router.post('/reset-request', authLimiter, async (req, res) => {
       `<p style="color:#8B9BAE;font-size:0.85rem;">If you didn't request this, you can safely ignore this email — your password stays unchanged.</p>`;
 
     try {
-      await dispatchRaw({
-        to: user.email,
+      const preference = await db.prepare(`SELECT default_destinations,ip_rules FROM user_password_reset_preferences WHERE user_id=$1`).get(user.id);
+      const requestIp = String(req.ip || req.socket?.remoteAddress || '');
+      const matchedRule = (preference?.ip_rules || []).find((rule) => requestIp === rule.ip || (rule.ip.endsWith('*') && requestIp.startsWith(rule.ip.slice(0, -1))));
+      const destinationTypes = matchedRule?.destinations || preference?.default_destinations || ['primary'];
+      const verified = await db.prepare(`SELECT email,type FROM user_emails WHERE user_id=$1 AND verified=true`).all(user.id);
+      const destinations = new Set();
+      if (destinationTypes.includes('primary')) destinations.add(user.email);
+      verified.forEach((entry) => { if (destinationTypes.includes(entry.type)) destinations.add(entry.email); });
+      if (!destinations.size) destinations.add(user.email);
+      for (const destination of destinations) await dispatchRaw({
+        to: destination,
         subject: 'Salt Basin Net Works · Reset your password',
         text,
         html,
@@ -156,9 +215,8 @@ router.post('/reset-confirm', async (req, res) => {
   if (!token || !password) {
     return res.status(400).json({ error: 'token and password required' });
   }
-  if (typeof password !== 'string' || password.length < 8) {
-    return res.status(400).json({ error: 'password must be at least 8 characters' });
-  }
+  const validation = validatePasswordPolicy(password);
+  if (!validation.valid) return res.status(400).json({ error: 'password_policy_failed', details: validation.errors, policy: validation.policy });
 
   const row = await db
     .prepare(`SELECT user_id, expires_at, used_at FROM password_reset_tokens WHERE token = $1`)
@@ -169,9 +227,9 @@ router.post('/reset-confirm', async (req, res) => {
     return res.status(400).json({ error: 'this link has expired — request a new one' });
   }
 
-  const hash = await bcrypt.hash(password, 10);
   const userId = Number(row.user_id);
-  await db.prepare(`UPDATE users SET password_hash = $1 WHERE id = $2`).run(hash, userId);
+  const replacement = await replacePassword(userId, password);
+  if (!replacement.ok) return res.status(400).json(replacement);
   // Mark this token used.
   await db
     .prepare(`UPDATE password_reset_tokens SET used_at = $1 WHERE token = $2`)

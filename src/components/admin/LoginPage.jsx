@@ -31,6 +31,8 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  const [challengeRequired, setChallengeRequired] = useState(false);
   const [err, setErr] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -39,10 +41,13 @@ export default function LoginPage() {
     setErr('');
     setSubmitting(true);
     try {
-      const body = await api.login(email, password);
+      const body = await api.login(email, password, challengeRequired ? otp : null);
+      if (body.challengeRequired) { setChallengeRequired(true); setErr(''); return; }
       // Land on the World Shell — the shared crystal-orbit landing experience
       // for both roles — unless the caller was redirected here from a
       // specific deep link (`?next=`), which still wins.
+      // The member shell owns onboarding order: current terms are always the
+      // first BestyStaff prompt, then a required temporary-password change.
       const target = next || '/world';
       nav(target, { replace: true });
     } catch (e) {
@@ -124,6 +129,7 @@ export default function LoginPage() {
               required
               style={{ marginBottom: '1.5rem' }}
             />
+            {challengeRequired && <><Label>Authenticator code</Label><input className="sb-input" value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" required minLength={6} maxLength={6} style={{ marginBottom: '1.5rem' }} /></>}
             {err && <ErrorBox>{err}</ErrorBox>}
             <button
               type="submit"
@@ -143,6 +149,9 @@ export default function LoginPage() {
             </div>
             <div style={{ marginTop: '1rem', fontSize: '0.78rem', color: 'var(--sbh-ink-soft)', textAlign: 'center' }}>
               New here? <a href="/?intakeSource=login-sign-up#bestystaff" style={{ color: 'var(--sbh-gold)' }}>Start with BestyStaff</a>
+            </div>
+            <div style={{ marginTop: '0.65rem', fontSize: '0.72rem', textAlign: 'center' }}>
+              <a href="/test/login" style={{ color: 'var(--sbh-gold)' }}>Test Sign In</a>
             </div>
           </form>
         )}

@@ -86,6 +86,14 @@ export const TRIBUTARY_TYPES = Object.freeze({
     cardinality: 'one_to_many',
     description: 'Career Master Channel Journey projects Resume Output snapshots (a satellite table, not a journey).',
   },
+  career_reasoning_approval: {
+    relationshipKind: 'hierarchical',
+    parentJourneyType: 'career_master',
+    childKind: 'satellite',
+    childTable: 'career_reasoning_approvals',
+    cardinality: 'one_to_many',
+    description: 'Career Master Channel Journey records member-approved extraction reasoning separately from the resolved career value.',
+  },
   resume_output_layout_tributary: {
     relationshipKind: 'hierarchical',
     parentKind: 'satellite',
@@ -158,6 +166,29 @@ export const TRIBUTARY_TYPES = Object.freeze({
     linkTable: 'journey_rod_person_links',
     cardinality: 'many_to_many',
     description: 'A commercial or career opportunity rod references a shared Person (a discovered contact) — the same Person may be referenced by many rods (e.g. one functional leader relevant to several tracked opportunities at their company).',
+  },
+  diagnostic_future_state_provisioning: {
+    relationshipKind: 'hierarchical',
+    parentJourneyType: 'l2r_diagnostic',
+    childKind: 'journey',
+    childJourneyType: 'l2r_future_state',
+    cardinality: 'one_to_many',
+    description: "A client's Lead-to-Revenue Diagnostic Channel Journey provisions a Future-State Definition Channel Journey — the Definition Studio's future-state half stays Tributary-linked to the current-state diagnostic it was defined from (2026-08-09, Definition Studio Phase 1).",
+  },
+  diagnostic_value_initiative_provisioning: {
+    relationshipKind: 'hierarchical',
+    parentJourneyType: 'l2r_diagnostic',
+    childKind: 'journey',
+    childJourneyType: 'value_creation',
+    cardinality: 'one_to_many',
+    description: "A client's Lead-to-Revenue Diagnostic Channel Journey provisions Value Creation Initiative Channel Journeys — one per business-case candidate rolled up from the diagnostic's current-state findings (2026-08-09, Definition Studio Phase 1). 'value_creation' was already a reserved rod_type (server/db.js) before this Tributary existed; this is its first real provisioning path.",
+  },
+  future_state_initiative_link: {
+    relationshipKind: 'peer',
+    fromType: 'l2r_future_state',
+    toType: 'value_creation',
+    cardinality: 'many_to_many',
+    description: "Connects a Future-State Definition Channel Journey to the Value Creation Initiative(s) it justifies — both exist independently (a Future-State Definition can predate the initiative it later gets linked to), and neither is the other's structural parent, same reasoning as member_entitlement_customer_link.",
   },
 });
 

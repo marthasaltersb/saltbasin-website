@@ -1,0 +1,42 @@
+HandoverOS / PE Buyer Translation — Source Brief
+Prepared for the Salt Basin × LoneTree Capital prospect experience
+
+Source context
+This brief preserves the prior authored HandoverOS and PE Buyer Translation concepts referenced in the project conversation and the source named HandoverOS_PE_Buyer_Translation.xlsx.
+
+Core translation
+Operational Intelligence → Portfolio Intelligence → Fund Intelligence
+
+HandoverOS purpose
+Identify what is lost when work moves between teams and systems, especially from lead through pricing, quote, contract, order, entitlement, usage, invoice, revenue, collections, renewal and expansion.
+
+Risk patterns
+- Missing assumptions and metadata
+- Contract interpretation gaps
+- Pricing, entitlement and billing mismatches
+- Reporting blind spots and reconciliation breaks
+- Revenue leakage and cash-conversion friction
+- Restatement, control and buyer-diligence risk
+
+PE buyer translation
+- Revenue leakage and recovery opportunity
+- EBITDA, margin, cash flow and working-capital impact
+- Repeatability of operating processes
+- Sponsor reporting and value-creation attribution
+- Exit readiness and reconstructability of claims
+
+Typical outputs
+- Handoff-risk map
+- Revenue reconciliation findings
+- Definition conflict inventory
+- Leakage hypotheses and root-cause analysis
+- Cash / AR friction analysis
+- 100-day operating initiatives
+- Measurement baselines and evidence requirements
+- Role-aware CEO, CFO, GP and LP reporting
+
+Commercial boundary
+This source supports operating, evidence and communications design. It does not authorize broker-dealer activity, investor solicitation or transaction-contingent compensation.
+
+Authorship: Martha Elizabeth Salter
+Copyright © 2026 Martha Elizabeth Salter. All Rights Reserved.

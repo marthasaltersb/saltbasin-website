@@ -1,0 +1,1856 @@
+{
+  "file": "Salt_Basin_Genesis_Program_and_Technical_Specification_v1.0.docx",
+  "paragraphs": [
+    {
+      "style": "Normal",
+      "text": "SALT BASIN"
+    },
+    {
+      "style": "Normal",
+      "text": "GENESIS"
+    },
+    {
+      "style": "Normal",
+      "text": "Program, Repository, Computational Mapping & Immersive Enterprise Experience Specification"
+    },
+    {
+      "style": "Normal",
+      "text": "From scientific foundation \u2192 governed enterprise emergence \u2192 playable operating reality"
+    },
+    {
+      "style": "Normal",
+      "text": "Version 1.0  |  2 August 2026  |  Program Owner: Martha Elizabeth Salter"
+    },
+    {
+      "style": "Normal",
+      "text": "Salt Basin Holdings  |  Proprietary & Confidential"
+    },
+    {
+      "style": "Heading 1",
+      "text": "Document Control"
+    },
+    {
+      "style": "Heading 2",
+      "text": "Purpose"
+    },
+    {
+      "style": "Normal",
+      "text": "This specification defines how a multidisciplinary team completes, governs, implements, and renders Salt Basin Genesis as one coherent system. It is the authoritative handoff for repository population, scientific-to-enterprise translation, configurable business equations, evidence-backed decisions, temporal simulation, and the immersive enterprise-management experience."
+    },
+    {
+      "style": "Heading 2",
+      "text": "Normative language"
+    },
+    {
+      "style": "Normal",
+      "text": "\u201cMust\u201d denotes a required control. \u201cShould\u201d denotes a recommended design with an allowed, documented exception. \u201cMay\u201d denotes an optional capability. Scientific analogy never supersedes law, accounting guidance, contracts, company policy, security, consent, agent scope, or user entitlement."
+    },
+    {
+      "style": "Heading 1",
+      "text": "Contents"
+    },
+    {
+      "style": "Normal",
+      "text": "1. Executive Definition"
+    },
+    {
+      "style": "Normal",
+      "text": "2. Fundamental Goal and Non-Goals"
+    },
+    {
+      "style": "Normal",
+      "text": "3. Governed Program Model"
+    },
+    {
+      "style": "Normal",
+      "text": "4. Repository System of Record"
+    },
+    {
+      "style": "Normal",
+      "text": "5. Canonical Scientific Foundation"
+    },
+    {
+      "style": "Normal",
+      "text": "6. Enterprise Canonical Foundation"
+    },
+    {
+      "style": "Normal",
+      "text": "7. Translation Compiler and Mapping Layer"
+    },
+    {
+      "style": "Normal",
+      "text": "8. Parallel Equation and KPI Registries"
+    },
+    {
+      "style": "Normal",
+      "text": "9. Configuration Journey"
+    },
+    {
+      "style": "Normal",
+      "text": "10. Decision and Control Runtime"
+    },
+    {
+      "style": "Normal",
+      "text": "11. Temporal, Evidence and Lineage Architecture"
+    },
+    {
+      "style": "Normal",
+      "text": "12. Agent-Centric Security and Distributed Data"
+    },
+    {
+      "style": "Normal",
+      "text": "13. Simulation and Computational Model"
+    },
+    {
+      "style": "Normal",
+      "text": "14. Immersive Enterprise World and Render Grammar"
+    },
+    {
+      "style": "Normal",
+      "text": "15. Initial Playable Vertical Slice"
+    },
+    {
+      "style": "Normal",
+      "text": "16. Team, Workstreams and Authority"
+    },
+    {
+      "style": "Normal",
+      "text": "17. Repository Population Playbook"
+    },
+    {
+      "style": "Normal",
+      "text": "18. Work Packages and Backlog"
+    },
+    {
+      "style": "Normal",
+      "text": "19. Quality, Testing and Acceptance"
+    },
+    {
+      "style": "Normal",
+      "text": "20. Delivery Roadmap"
+    },
+    {
+      "style": "Normal",
+      "text": "Appendices: Record contracts, decision example, RACI, glossary and handoff checklist"
+    },
+    {
+      "style": "Heading 1",
+      "text": "1. Executive Definition"
+    },
+    {
+      "style": "Normal",
+      "text": "Salt Basin Genesis is the governed creation and runtime framework that links a canonical scientific knowledge foundation to a separately governed enterprise operating model. It compiles validated structural mechanisms\u2014composition, identity, interaction, state, transformation, invariance, emergence, observation and retained history\u2014into enterprise patterns. Those patterns are then bound to organization-specific objects, journeys, policies, equations, evidence and authority."
+    },
+    {
+      "style": "Normal",
+      "text": "The output is not a themed dashboard. It is an auditable enterprise operating reality in which every visible form, movement, constraint and outcome can be traced backward to configured business meaning, source evidence, policy versions and\u2014where applicable\u2014the scientific mechanism that shaped the computational behavior."
+    },
+    {
+      "style": "Heading 1",
+      "text": "2. Fundamental Goal and Non-Goals"
+    },
+    {
+      "style": "Heading 2",
+      "text": "2.1 Fundamental goal"
+    },
+    {
+      "style": "Normal",
+      "text": "Enable an enterprise to configure and operate flexible, multi-party journeys that behave reproducibly under explicit rules; preserve meaning and evidence through change; show why an action is allowed, blocked or escalated; and project the governed state into an explorable world without sacrificing accounting controls, legal authority, security or historical truth."
+    },
+    {
+      "style": "Heading 2",
+      "text": "2.2 What Genesis is not"
+    },
+    {
+      "style": "List Bullet",
+      "text": "It is not a literal claim that a database field is a proton, a customer is an atom, or an enterprise is a mineral."
+    },
+    {
+      "style": "List Bullet",
+      "text": "It is not a system that lets a scientific metaphor authorize a contract, journal entry, payment, entitlement or disclosure."
+    },
+    {
+      "style": "List Bullet",
+      "text": "It is not a replacement for source-system permissions when sensitive data must remain distributed."
+    },
+    {
+      "style": "List Bullet",
+      "text": "It is not a static ontology, a single linear lifecycle, or a visualization detached from computational records."
+    },
+    {
+      "style": "List Bullet",
+      "text": "It is not a game whose mechanics can invent business outcomes without evidence and provenance."
+    },
+    {
+      "style": "Heading 1",
+      "text": "3. Governed Program Model"
+    },
+    {
+      "style": "Normal",
+      "text": "The three workbooks form one governed program but have different authority. They must not be delegated as three independent files to be \u201cfinished.\u201d Work is delegated in bounded definition packages, reviewed by domain owners, and released into controlled masters."
+    },
+    {
+      "style": "Heading 2",
+      "text": "3.1 Integration authority"
+    },
+    {
+      "style": "Normal",
+      "text": "A single Integration Architecture Council arbitrates cross-repository identity, namespaces, schemas, mapping acceptance and release readiness. The Program Owner retains final product authority. Scientific accuracy, enterprise meaning, financial control, security and visualization each have named veto authority within their defined domain."
+    },
+    {
+      "style": "Heading 2",
+      "text": "3.2 Record lifecycle"
+    },
+    {
+      "style": "Normal",
+      "text": "All governed records follow: Proposed \u2192 Researched \u2192 Reviewed \u2192 Approved \u2192 Implemented \u2192 Validated \u2192 Superseded/Retired. A record\u2019s status is independent from the release containing it. Approved records are changed through a versioned change request, never silent editing."
+    },
+    {
+      "style": "Heading 1",
+      "text": "4. Repository System of Record"
+    },
+    {
+      "style": "Heading 1",
+      "text": "5. Canonical Scientific Foundation"
+    },
+    {
+      "style": "Normal",
+      "text": "The scientific foundation remains an evidence-backed, versioned registry of scientific definitions. The 17-level navigational spine is a discovery view, not a claim that all of nature is one universally accepted linear taxonomy. Typed relationships represent composition, instantiation, transformation, classification and emergence without encoding known category errors."
+    },
+    {
+      "style": "Heading 2",
+      "text": "5.1 Required completion domains"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Quantum fields, elementary particles, antiparticles and composite particles"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Atomic nuclei, nuclides, isotopes, atoms, elements, ions and polyatomic species"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Bonding, interactions, molecular structures and transformations"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Crystal systems, lattices, unit cells, symmetry, minerals and rocks"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Geological structures, stratigraphy, sedimentary and evaporite basins"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Regional geological systems, ecosystems and Earth systems"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Properties, equations, laws, measurement methods, instruments, uncertainty and sources"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Coverage denominators, combination spaces, sufficiency gates and unresolved scientific questions"
+    },
+    {
+      "style": "Heading 2",
+      "text": "5.2 Completion acceptance"
+    },
+    {
+      "style": "Normal",
+      "text": "Every canonical scientific concept must have a stable ID, definition, type, applicable scope, evidence status and source assertions. Equations must link atomically to variables, units, assumptions and boundary conditions. Scientific render glyphs must be labeled as abstract visualization states unless they are direct measurements or accepted structural models."
+    },
+    {
+      "style": "Heading 1",
+      "text": "6. Enterprise Canonical Foundation"
+    },
+    {
+      "style": "Normal",
+      "text": "The enterprise foundation defines reusable business meaning across operating model, legal structure, multi-party relationships, offerings, commercial journeys, financial events, controls, evidence, attribution, risk and value. It is a typed polyhierarchy: one object may participate simultaneously in identity, contract, accounting, customer, entitlement and evidence contexts."
+    },
+    {
+      "style": "Heading 1",
+      "text": "7. Translation Compiler and Mapping Layer"
+    },
+    {
+      "style": "Normal",
+      "text": "The mapping layer is a compiler, not a synonym table. It extracts a reusable mechanism from science, proposes an enterprise structural equivalent, binds it in a specific context, tests evidence and counterexamples, and only then permits implementation as an equation, predicate, transition rule or render behavior."
+    },
+    {
+      "style": "Heading 2",
+      "text": "7.1 Twelve mapping gates"
+    },
+    {
+      "style": "Heading 2",
+      "text": "7.2 Mapping contract"
+    },
+    {
+      "style": "Normal",
+      "text": "Each accepted mapping must contain: Mapping ID; scientific source mechanism; abstract formal pattern; enterprise target; binding context; cardinality and grain; identity rule; state variables; executable expression or predicate; evidence requirements; counterexamples; authority sources; confidence; validation status; effective version; reviewer and decision record."
+    },
+    {
+      "style": "Heading 2",
+      "text": "7.3 Mapping classifications"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Exact formal correspondence \u2014 same mathematical or logical structure within stated boundaries."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Structural analogy \u2014 useful recurrent pattern with documented differences."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Context-dependent analogy \u2014 valid only for a named object, stage, policy or grain."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Visualization-only analogy \u2014 permissible render metaphor with no decision authority."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Rejected mapping \u2014 recorded to prevent rediscovery or misuse."
+    },
+    {
+      "style": "Heading 1",
+      "text": "8. Parallel Equation and KPI Registries"
+    },
+    {
+      "style": "Normal",
+      "text": "Genesis requires two independent equation systems plus an optional pattern linkage. Business equations may reuse a formal mechanism, but they cannot overwrite a scientific equation or gain authority simply because a scientific analogy exists."
+    },
+    {
+      "style": "Heading 2",
+      "text": "8.1 Variable binding"
+    },
+    {
+      "style": "Normal",
+      "text": "A configured KPI never embeds unresolved field names inside an opaque formula. Each variable links to a semantic property, grain, source event, aggregation rule, unit/currency, time window, missing-data behavior, reconciliation requirement and access policy. Formula evaluation stores the exact variable bindings and input evidence used."
+    },
+    {
+      "style": "Heading 2",
+      "text": "8.2 Example"
+    },
+    {
+      "style": "Heading 1",
+      "text": "9. Configuration Journey"
+    },
+    {
+      "style": "Normal",
+      "text": "A business is mapped into Genesis through a controlled configuration journey, not a one-time data import. Configuration produces a versioned operating model that can be simulated, tested, approved and activated."
+    },
+    {
+      "style": "List Number",
+      "text": "Establish organization namespace, legal boundary, environments and authoritative sources."
+    },
+    {
+      "style": "List Number",
+      "text": "Define parties, structures, roles, offerings, commitments and entitlements."
+    },
+    {
+      "style": "List Number",
+      "text": "Map current and target capabilities, processes, journeys, rods, stages, branches and merge rules."
+    },
+    {
+      "style": "List Number",
+      "text": "Register business definitions, policies, equations, KPIs, accounting rules, controls and thresholds."
+    },
+    {
+      "style": "List Number",
+      "text": "Bind source objects, fields, events and evidence to canonical semantics."
+    },
+    {
+      "style": "List Number",
+      "text": "Validate identity, grain, units, cardinality, state and temporal rules."
+    },
+    {
+      "style": "List Number",
+      "text": "Configure agents, user entitlements, consent, exposure, action permissions and approval boundaries."
+    },
+    {
+      "style": "List Number",
+      "text": "Compile predicates and state transitions; test valid, invalid, exception and rollback scenarios."
+    },
+    {
+      "style": "List Number",
+      "text": "Generate render bindings and world projections from governed properties."
+    },
+    {
+      "style": "List Number",
+      "text": "Run parallel simulation; reconcile outputs; approve effective-dated activation."
+    },
+    {
+      "style": "Heading 2",
+      "text": "9.1 Configuration artifacts"
+    },
+    {
+      "style": "Normal",
+      "text": "Every configuration release produces a manifest, schema bindings, policy bundle, equation bundle, journey graph, transition matrix, agent/security policy set, evidence requirements, render profile, migration plan, validation report and rollback reference."
+    },
+    {
+      "style": "Heading 1",
+      "text": "10. Decision and Control Runtime"
+    },
+    {
+      "style": "Normal",
+      "text": "The runtime evaluates whether a proposed movement is permitted and explainable. It does not infer permission from a visual state. A transition request is evaluated against effective authority, required evidence, reconciliation status, security, consent, agent scope, user entitlement and exception pathways."
+    },
+    {
+      "style": "Heading 1",
+      "text": "11. Temporal, Evidence and Lineage Architecture"
+    },
+    {
+      "style": "Normal",
+      "text": "Every atom, definition, mapping, equation, rod, branch, stage, action, observation, cache and decision is temporal. Genesis must answer what was known, what rule was effective, what evidence existed, what changed, who or which agent acted, and how the current state emerged."
+    },
+    {
+      "style": "Heading 2",
+      "text": "11.1 Evidence chain"
+    },
+    {
+      "style": "Normal",
+      "text": "Evidence links thesis or intent \u2192 definition \u2192 measurement \u2192 source events \u2192 reconciliation \u2192 attribution \u2192 financial outcome \u2192 exit defense. Confidence is computed from evidence quality, completeness, lineage, reconciliation, temporal coverage, ownership and counterexample strength; it is not a manually selected decoration."
+    },
+    {
+      "style": "Heading 2",
+      "text": "11.2 Branching and merging"
+    },
+    {
+      "style": "Normal",
+      "text": "Every journey rod and branch has a bounded agent. When a branch merges, the active branch agent closes and a Historical Lineage Agent preserves the complete branch context, evidence, decisions and contribution to the parent journey. No merge may erase divergent history."
+    },
+    {
+      "style": "Heading 1",
+      "text": "12. Agent-Centric Security and Distributed Data"
+    },
+    {
+      "style": "Normal",
+      "text": "Security is agent-centric as well as user-centric. Each agent has scoped source systems, data-access policy, allowed transformations, memory-retention rules, exposure rules and action permissions. The interacting user\u2019s organization, role, profile slice, consent and read/write entitlements further constrain what the agent may reveal, query, stage or commit."
+    },
+    {
+      "style": "Normal",
+      "text": "When source environments prohibit centralization, DataBasin operates as a governed aggregation, normalization and semantic projection layer. Scoped source-side queries and calculations execute under each source\u2019s native permissions. Only authorized outputs, metadata, evidence references and permitted aggregates enter the Genesis layer."
+    },
+    {
+      "style": "Heading 1",
+      "text": "13. Simulation and Computational Model"
+    },
+    {
+      "style": "Normal",
+      "text": "The simulation engine operates on the same governed objects, equations, policies and events as the production runtime but inside isolated scenario branches. It supports state propagation, counterfactuals, stress tests, forecasts, capacity constraints, resource flows, causal hypotheses and uncertainty."
+    },
+    {
+      "style": "Heading 2",
+      "text": "13.1 Required computational primitives"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Typed entities and compositions"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Directed and undirected interactions"
+    },
+    {
+      "style": "List Bullet",
+      "text": "State machines and eligible transitions"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Temporal event streams and effective-dated definitions"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Equations, predicates, constraints and optimization objectives"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Units, dimensions, currencies, conversions and rounding policies"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Probabilistic variables, uncertainty and confidence"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Branch, merge, replay and comparison"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Reconciliation and invariant checking"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Deterministic projection outputs for every committed simulation state"
+    },
+    {
+      "style": "Heading 2",
+      "text": "13.2 Emergence rule"
+    },
+    {
+      "style": "Normal",
+      "text": "A higher-order enterprise representation may emerge only from explicitly configured lower-level composition and validated transformations. The mineral representation is therefore a projection of governed data composition, maturity, evidence and process history\u2014not a new fact source. Its geometry and material state must be reproducible from the underlying records."
+    },
+    {
+      "style": "Heading 1",
+      "text": "14. Immersive Enterprise World and Render Grammar"
+    },
+    {
+      "style": "Normal",
+      "text": "The experience should feel like a rigorous management simulation\u2014closer to SimCity or RollerCoaster Tycoon in agency and systemic consequence\u2014while retaining enterprise-grade traceability. Users configure, observe, diagnose, simulate and act within a persistent world that can zoom from enterprise orbit to one evidence-bearing event."
+    },
+    {
+      "style": "Heading 2",
+      "text": "14.1 Deterministic render grammar"
+    },
+    {
+      "style": "Heading 2",
+      "text": "14.2 Seven-channel meaning"
+    },
+    {
+      "style": "Normal",
+      "text": "\u201c7D\u201d is an experience shorthand, not a claim of seven physical spatial dimensions. The initial scientific rendering channels are 3D position, time, compositional/structural state, velocity/change rate, lineage and uncertainty/confidence. Each channel is named, versioned and reversible to data."
+    },
+    {
+      "style": "Heading 2",
+      "text": "14.3 User capabilities"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Build or configure the enterprise and its multi-party ecosystem."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Watch journeys, evidence chains, capital flows and financial events form and move."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Inspect fractures, bottlenecks, weak evidence and control failures."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Rewind, replay and compare historical or simulated branches."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Change an authorized configuration and preview propagated consequences before commitment."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Ask bounded agents why a state exists, why an action is blocked and what evidence would remediate it."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Move between orbit, rod, molecule/object, atom/data element and source-evidence views without losing context."
+    },
+    {
+      "style": "Heading 1",
+      "text": "15. Initial Playable Vertical Slice"
+    },
+    {
+      "style": "Normal",
+      "text": "The first vertical slice proves the full chain from configuration through authoritative transaction, financial reconciliation, KPI movement, evidence and immersive projection. Recommended scope: Prospect \u2192 Executed Contract \u2192 Invoice \u2192 Cash \u2192 Reconciliation \u2192 ARR / EBITDA Evidence \u2192 Thesis Impact."
+    },
+    {
+      "style": "Heading 2",
+      "text": "15.1 Explicit exclusions"
+    },
+    {
+      "style": "Normal",
+      "text": "The first slice does not attempt full portfolio coverage, every scientific domain, unrestricted generative world-building, production payment initiation, autonomous contract execution, or universal causal attribution. Those follow only after the slice reconciles end to end."
+    },
+    {
+      "style": "Heading 1",
+      "text": "16. Team, Workstreams and Authority"
+    },
+    {
+      "style": "Heading 1",
+      "text": "17. Repository Population Playbook"
+    },
+    {
+      "style": "Heading 2",
+      "text": "17.1 Teams do not edit masters directly"
+    },
+    {
+      "style": "Normal",
+      "text": "Contributors work in controlled intake packages. Stable IDs are reserved centrally. Approved records are integrated through release automation with duplicate, orphan, schema, source, coverage and policy checks."
+    },
+    {
+      "style": "Heading 2",
+      "text": "17.2 Definition package workflow"
+    },
+    {
+      "style": "List Number",
+      "text": "Scope the bounded domain, denominator and dependencies."
+    },
+    {
+      "style": "List Number",
+      "text": "Reserve candidate IDs and assign owner, researcher and reviewer."
+    },
+    {
+      "style": "List Number",
+      "text": "Research authoritative sources and capture atomic assertions."
+    },
+    {
+      "style": "List Number",
+      "text": "Draft canonical definitions, properties, relationships, equations and examples."
+    },
+    {
+      "style": "List Number",
+      "text": "Record counterexamples, open questions and rejected mappings."
+    },
+    {
+      "style": "List Number",
+      "text": "Run automated structural checks and domain review."
+    },
+    {
+      "style": "List Number",
+      "text": "Approve or return with decision notes."
+    },
+    {
+      "style": "List Number",
+      "text": "Integrate into release candidate and execute cross-repository tests."
+    },
+    {
+      "style": "List Number",
+      "text": "Validate in runtime and projection where applicable."
+    },
+    {
+      "style": "List Number",
+      "text": "Publish release, coverage change and supersession lineage."
+    },
+    {
+      "style": "Heading 2",
+      "text": "17.3 Minimum completion criteria"
+    },
+    {
+      "style": "List Bullet",
+      "text": "No semicolon-delimited foreign keys where junction records are required."
+    },
+    {
+      "style": "List Bullet",
+      "text": "No duplicate canonical definition under multiple names without synonym control."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Every foreign key resolves; every approved assertion resolves to a source."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Every equation has variables, units/dimensions, assumptions, boundary conditions and applicability."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Every mapping has counterexamples and authority boundaries."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Every organization configuration is namespaced, versioned and effective-dated."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Every runtime transition has valid, invalid, unknown, exception and replay tests."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Every render binding is deterministic and reversible to underlying data."
+    },
+    {
+      "style": "Heading 1",
+      "text": "18. Work Packages and Backlog"
+    },
+    {
+      "style": "Heading 1",
+      "text": "19. Quality, Testing and Acceptance"
+    },
+    {
+      "style": "Heading 2",
+      "text": "19.1 Repository tests"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Primary-key uniqueness and namespace validity"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Foreign-key integrity and permitted cardinality"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Canonical-definition duplication and synonym collision"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Source/assertion traceability"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Equation-variable-unit completeness and dimensional consistency"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Coverage denominator type: exact, versioned, estimated, lower-bounded, open or unbounded"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Status, effective dates, supersession and change-request lineage"
+    },
+    {
+      "style": "Heading 2",
+      "text": "19.2 Runtime tests"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Authorized and unauthorized read/write paths"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Allowed, blocked, unknown, exception and expired transition states"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Policy-version and evidence-time replay"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Branch, merge, correction and rollback behavior"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Reconciliation invariants and rounding/currency rules"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Missing, late, conflicting and low-confidence evidence"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Agent scope and user-entitlement intersection"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Deterministic simulation seeds where reproducibility is required"
+    },
+    {
+      "style": "Heading 2",
+      "text": "19.3 Experience tests"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Same governed state produces same render under the same render-profile version."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Every visible object and motion resolves to underlying IDs and calculations."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Security changes visibility without corrupting shared lineage."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Users can distinguish measured state, calculated state, forecast, hypothesis and visual metaphor."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Zoom, rewind, replay and comparison preserve context."
+    },
+    {
+      "style": "List Bullet",
+      "text": "No decorative visual state is mistaken for a financial, legal or scientific fact."
+    },
+    {
+      "style": "Heading 1",
+      "text": "20. Delivery Roadmap"
+    },
+    {
+      "style": "Heading 1",
+      "text": "Appendix A \u2014 Canonical Record Contracts"
+    },
+    {
+      "style": "Heading 1",
+      "text": "Appendix B \u2014 Decision Runtime Example"
+    },
+    {
+      "style": "Normal",
+      "text": "Disposition: BLOCK. Remediation: obtain and verify the counterparty signature under the effective signature policy; re-evaluate using a new evaluation ID while preserving the failed evaluation. The scientific mechanism may explain bounded completion, but the signature policy is the authority that governs execution."
+    },
+    {
+      "style": "Heading 1",
+      "text": "Appendix C \u2014 Responsibility Matrix"
+    },
+    {
+      "style": "Heading 1",
+      "text": "Appendix D \u2014 Core Glossary"
+    },
+    {
+      "style": "Heading 1",
+      "text": "Appendix E \u2014 Team Handoff Checklist"
+    },
+    {
+      "style": "List Bullet",
+      "text": "Baseline workbooks frozen and checksummed."
+    },
+    {
+      "style": "List Bullet",
+      "text": "One master and one named owner established per repository."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Duplicate enterprise sheets in the mapping workbook converted to governed references/views."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Namespaces, ID policy and change-request process approved."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Contributor templates and bounded work packages issued."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Source and citation standard approved."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Parallel scientific, enterprise and organization equation registries created."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Mapping compiler records and twelve-gate reviews operational."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Organization configuration and runtime event-store schemas established."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Security/agent policies and distributed-source pattern approved."
+    },
+    {
+      "style": "List Bullet",
+      "text": "First vertical slice data, policies, events and evidence selected."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Test plan, acceptance gates and release calendar approved."
+    },
+    {
+      "style": "List Bullet",
+      "text": "Render grammar and visual-to-source trace contract approved."
+    },
+    {
+      "style": "List Bullet",
+      "text": "All deliverables carry ownership, version, status, effective date and copyright."
+    },
+    {
+      "style": "Heading 1",
+      "text": "Approval"
+    },
+    {
+      "style": "Normal",
+      "text": "This specification becomes the program baseline when approved by the Program Owner and acknowledged by the named domain authorities. Subsequent changes must identify affected repositories, mappings, configurations, runtime behavior, tests, visual bindings and migration requirements."
+    }
+  ],
+  "tables": [
+    [
+      [
+        "Field",
+        "Specification"
+      ],
+      [
+        "Document ID",
+        "SB-GEN-SPEC-001"
+      ],
+      [
+        "Title",
+        "Salt Basin Genesis"
+      ],
+      [
+        "Version",
+        "1.0"
+      ],
+      [
+        "Status",
+        "Program baseline / team handoff specification"
+      ],
+      [
+        "Owner",
+        "Martha Elizabeth Salter"
+      ],
+      [
+        "Authority",
+        "Program Owner with delegated Integration Architecture Council"
+      ],
+      [
+        "Source repositories",
+        "Scientific Foundation v3.0; Enterprise Operating System v0.1; Scientific-to-Enterprise Mapping Control Layer v0.2"
+      ],
+      [
+        "Classification",
+        "Proprietary & Confidential"
+      ],
+      [
+        "Copyright",
+        "\u00a9 2026 Martha Elizabeth Salter \u2014 The Salter Influence LLC. All Rights Reserved."
+      ]
+    ],
+    [
+      [
+        "",
+        "GOVERNING PREMISE  Science supplies reusable structural mechanisms. Enterprise authority determines permissible behavior. Evidence determines whether a state transition may occur."
+      ]
+    ],
+    [
+      [
+        "Layer",
+        "Primary output",
+        "Must remain separate from"
+      ],
+      [
+        "Scientific foundation",
+        "Canonical scientific objects, classifications, properties, equations, laws, measurements and sources",
+        "Enterprise customization"
+      ],
+      [
+        "Scientific mechanism library",
+        "Reusable formal patterns abstracted from validated science",
+        "Business authorization"
+      ],
+      [
+        "Enterprise canonical model",
+        "Parties, offerings, journeys, financial events, controls and evidence",
+        "One-company configuration"
+      ],
+      [
+        "Organization configuration",
+        "Company-specific stages, policies, thresholds, KPIs, permissions and mappings",
+        "Canonical scientific records"
+      ],
+      [
+        "Runtime control plane",
+        "Predicates, transitions, exceptions, approvals, reconciliation and replay",
+        "Presentation-only logic"
+      ],
+      [
+        "Projection world",
+        "Deterministic 2D/3D/7-channel representations and playable interactions",
+        "Untraceable artistic inference"
+      ]
+    ],
+    [
+      [
+        "Repository",
+        "System-of-record responsibility",
+        "Primary owner",
+        "Release constraint"
+      ],
+      [
+        "R1 \u2014 Scientific Foundation",
+        "Scientific truth claims and evidence-backed canonical definitions",
+        "Scientific Research Lead",
+        "No enterprise mapping may modify canonical science"
+      ],
+      [
+        "R2 \u2014 Enterprise Foundation",
+        "Canonical enterprise meaning and reusable operating structures",
+        "Enterprise Architecture Lead",
+        "No company configuration may redefine the canonical record"
+      ],
+      [
+        "R3 \u2014 Mapping + Control",
+        "Translation hypotheses, bindings, predicates, runtime controls and coverage",
+        "Integration / Platform Lead",
+        "Only validated mappings may become executable"
+      ],
+      [
+        "R4 \u2014 Organization Configuration (new)",
+        "Tenant-specific policies, stages, equations, KPIs, permissions and render choices",
+        "Customer Configuration Authority",
+        "Namespaced and effective-dated; never overwrites R1\u2013R3"
+      ],
+      [
+        "R5 \u2014 Runtime Event Store (new)",
+        "Events, observations, decisions, evidence, lineage, branches and simulations",
+        "Runtime/Data Platform",
+        "Append-preserving with correction and supersession, not destructive history"
+      ]
+    ],
+    [
+      [
+        "Canonical record family",
+        "Stored once",
+        "Linked through"
+      ],
+      [
+        "Classification",
+        "Meaning, scope, parent/typed hierarchy and status",
+        "Object\u2013classification junction"
+      ],
+      [
+        "Object",
+        "Stable identity and canonical definition",
+        "Composition, relationship, applicability and lineage junctions"
+      ],
+      [
+        "Property",
+        "Measurable or characterizing concept",
+        "Object/class\u2013property applicability"
+      ],
+      [
+        "Variable",
+        "Symbol, semantic meaning and datatype",
+        "Equation\u2013variable role"
+      ],
+      [
+        "Unit / dimension",
+        "Canonical unit and dimensional signature",
+        "Property\u2013unit and variable\u2013unit links"
+      ],
+      [
+        "Equation / invariant",
+        "Formal expression, assumptions and boundary conditions",
+        "Equation variables, applicability and sources"
+      ],
+      [
+        "Observation",
+        "Value in specimen/context/time",
+        "Property, unit, method, evidence and conditions"
+      ],
+      [
+        "Relationship",
+        "Typed relationship definition",
+        "Relationship instances and temporal validity"
+      ],
+      [
+        "Source / assertion",
+        "Source metadata and atomic supported claim",
+        "Source\u2013assertion\u2013record links"
+      ]
+    ],
+    [
+      [
+        "",
+        "NORMALIZATION RULE  Definitions are stored once. Observations, evaluations and events are repeated because context, time, evidence, uncertainty and policy version are part of their identity."
+      ]
+    ],
+    [
+      [
+        "Domain family",
+        "Minimum canonical scope"
+      ],
+      [
+        "Organization + operating model",
+        "Legal entities, funds, SPVs, business units, sites, teams, roles, capabilities and accountability"
+      ],
+      [
+        "Multi-party ecosystem",
+        "Customers, members, investors, LPs, vendors, partners, lenders, employees, agents, counterparties and relationship roles"
+      ],
+      [
+        "Offering + entitlement",
+        "Products, services, bundles, price structures, terms, commitments, licenses, access and fulfillment obligations"
+      ],
+      [
+        "Commercial journey",
+        "Marketing, lead, opportunity, proposal, quote, negotiation, contract, order, subscription, renewal and adjustment"
+      ],
+      [
+        "Financial journey",
+        "Billing, invoice, cash, collections, revenue recognition, GL posting, subledger reconciliation, bank reconciliation and reporting"
+      ],
+      [
+        "Investment journey",
+        "Prospecting, diligence, underwriting, IC memo, funding, acquisition, hold period, value creation, exit preparation and exit"
+      ],
+      [
+        "Governance + evidence",
+        "Definitions, policies, approvals, controls, consent, security, lineage, reconciliations, confidence, attribution and exit defense"
+      ],
+      [
+        "Salt Basin constructs",
+        "Revenue, Customer, Member and Data Channel rods; branches/merges; thesis, initiative, movement, evidence and maturity states"
+      ]
+    ],
+    [
+      [
+        "Gate",
+        "Question"
+      ],
+      [
+        "1",
+        "Composition \u2014 what constituents and boundaries create the whole?"
+      ],
+      [
+        "2",
+        "Identity \u2014 which properties determine persistence or changed identity?"
+      ],
+      [
+        "3",
+        "State \u2014 which variables describe the current condition?"
+      ],
+      [
+        "4",
+        "Interaction \u2014 what typed exchanges are permitted?"
+      ],
+      [
+        "5",
+        "Transformation \u2014 what input, rule and output define change?"
+      ],
+      [
+        "6",
+        "Stability \u2014 what range or constraint preserves the state?"
+      ],
+      [
+        "7",
+        "Measurement \u2014 how can the state be observed and with what uncertainty?"
+      ],
+      [
+        "8",
+        "Emergence \u2014 what higher-order behavior arises from lower-level composition?"
+      ],
+      [
+        "9",
+        "Invariant \u2014 what must remain balanced or conserved?"
+      ],
+      [
+        "10",
+        "Temporal behavior \u2014 how do sequence, duration, velocity and effective time matter?"
+      ],
+      [
+        "11",
+        "Counterexamples \u2014 where does the analogy fail or become misleading?"
+      ],
+      [
+        "12",
+        "Authority \u2014 which enterprise rule actually permits or prohibits action?"
+      ]
+    ],
+    [
+      [
+        "Registry",
+        "Namespace",
+        "Required fields",
+        "Mutability"
+      ],
+      [
+        "Scientific equation",
+        "SCI",
+        "Expression, variables, constants, units/dimensions, assumptions, boundary conditions, applicability, sources, scientific status",
+        "Changed only through scientific governance"
+      ],
+      [
+        "Enterprise canonical equation",
+        "ENT",
+        "Business definition, formal expression, grain, aggregation, variable roles, control purpose, reconciliation behavior, sources",
+        "Changed through enterprise architecture governance"
+      ],
+      [
+        "Organization KPI / equation",
+        "ORG:<tenant>",
+        "Tenant definition, variable bindings, currency/unit, effective dates, thresholds, owner, approver, evidence, restatement, security and reporting use",
+        "Configurable and versioned within tenant authority"
+      ],
+      [
+        "Simulation equation",
+        "SIM:<scenario>",
+        "Scenario variables, seed/baseline, horizon, assumptions, confidence and comparison target",
+        "Ephemeral or persisted as governed scenario"
+      ]
+    ],
+    [
+      [
+        "Layer",
+        "Illustrative record"
+      ],
+      [
+        "Scientific mechanism",
+        "Bounded system; conserved or balanced quantity; measured state change over time"
+      ],
+      [
+        "Enterprise canonical equation",
+        "Contracted ARR movement = opening ARR + additions + expansions \u2212 contractions \u2212 churn + governed adjustments"
+      ],
+      [
+        "Organization binding",
+        "LoneTree portfolio company definition, qualifying contract states, currency policy, FX date, amendment rules and source-event mapping"
+      ],
+      [
+        "Runtime output",
+        "Calculated movement, evidence set, confidence, reconciliation status, exceptions and decision eligibility"
+      ],
+      [
+        "Projection",
+        "Rod motion, magnitude, direction, luminosity and historical trail derived from governed values"
+      ]
+    ],
+    [
+      [
+        "Runtime step",
+        "Persisted result"
+      ],
+      [
+        "Receive intent",
+        "Actor, agent, organization, object, current state, requested transition, time and purpose"
+      ],
+      [
+        "Resolve effective configuration",
+        "Policy, equation, journey and security versions"
+      ],
+      [
+        "Assemble evidence",
+        "Source observations, documents, signatures, reconciliations and quality status"
+      ],
+      [
+        "Evaluate predicates",
+        "Pass/fail/unknown per predicate with calculation inputs"
+      ],
+      [
+        "Apply authority precedence",
+        "Law \u2192 accounting policy \u2192 contract \u2192 company control \u2192 security/consent \u2192 agent/user entitlement"
+      ],
+      [
+        "Determine disposition",
+        "Allow, block, stage, escalate, require remediation or permit governed exception"
+      ],
+      [
+        "Persist decision",
+        "Immutable evaluation, evidence references, reasoning code, owner and expiration"
+      ],
+      [
+        "Project state",
+        "Update authorized state and emit deterministic render/event changes"
+      ]
+    ],
+    [
+      [
+        "",
+        "ILLUSTRATIVE OUTCOME  A deal requesting movement from Negotiating to Executed is blocked when the counterparty signature predicate fails. The system returns the missing evidence, governing policy, accountable owner, allowed remediation and replayable evaluation ID\u2014not merely \u201cno.\u201d"
+      ]
+    ],
+    [
+      [
+        "Temporal field family",
+        "Requirement"
+      ],
+      [
+        "Business effective time",
+        "valid_from / valid_to for when the fact or rule applies"
+      ],
+      [
+        "System recording time",
+        "recorded_at / superseded_at for when Genesis learned or changed it"
+      ],
+      [
+        "Event time",
+        "occurred_at, duration, sequence and causal/correlation references"
+      ],
+      [
+        "Version time",
+        "definition, policy, equation, mapping and configuration release identifiers"
+      ],
+      [
+        "Simulation time",
+        "scenario clock, horizon, step, speed and branch origin"
+      ],
+      [
+        "Lineage time",
+        "predecessor, transformation, merge, split and correction chain"
+      ]
+    ],
+    [
+      [
+        "Action class",
+        "Default behavior"
+      ],
+      [
+        "Read / explain",
+        "Reveal only the intersection of agent policy, user entitlement, consent and source permission"
+      ],
+      [
+        "Propose",
+        "May create a staged recommendation with cited evidence and predicted impact"
+      ],
+      [
+        "Stage",
+        "May prepare a reversible change pending required approvals"
+      ],
+      [
+        "Commit",
+        "Requires explicit action permission, write entitlement, valid controls and durable audit event"
+      ],
+      [
+        "Simulate",
+        "Runs in a separated scenario namespace; never mutates production state"
+      ],
+      [
+        "Remember",
+        "Retains only permitted context for the configured duration and purpose"
+      ]
+    ],
+    [
+      [
+        "Visual channel",
+        "Governed source meaning"
+      ],
+      [
+        "Geometry",
+        "Structural classification and composition"
+      ],
+      [
+        "Material",
+        "Object/data classification and lifecycle family"
+      ],
+      [
+        "Color",
+        "Permanent semantic classification path"
+      ],
+      [
+        "Scale",
+        "Magnitude, capacity or bounded importance"
+      ],
+      [
+        "Density",
+        "Completeness, maturity or concentration"
+      ],
+      [
+        "Luminosity",
+        "Evidence strength and confidence"
+      ],
+      [
+        "Motion",
+        "Event flow or process movement"
+      ],
+      [
+        "Velocity",
+        "Rate of change over an explicit interval"
+      ],
+      [
+        "Direction",
+        "State-transition trajectory"
+      ],
+      [
+        "Bonding",
+        "Composition, commitment or governed interaction\u2014not generic relationship"
+      ],
+      [
+        "Fracture / deformation",
+        "Exception, volatility, control failure or unresolved inconsistency"
+      ],
+      [
+        "Historical trail",
+        "Temporal lineage, prior states, branches and transformations"
+      ],
+      [
+        "Occlusion / visibility",
+        "Security, entitlement, consent and permitted disclosure"
+      ],
+      [
+        "Uncertainty field",
+        "Measurement uncertainty, forecast distribution or incomplete evidence"
+      ]
+    ],
+    [
+      [
+        "Slice capability",
+        "Acceptance demonstration"
+      ],
+      [
+        "Configuration",
+        "One organization, two counterparties, one offering, pricing, policy bundle and security profile"
+      ],
+      [
+        "Journey",
+        "Revenue, Customer, Member and Data Channel rods advance in parallel with one branch and merge"
+      ],
+      [
+        "Decision",
+        "Executed transition is allowed only when all required signatures and controls pass"
+      ],
+      [
+        "Financial events",
+        "Order/contract drives invoice, cash and accounting/reconciliation evidence"
+      ],
+      [
+        "KPI",
+        "Configured ARR and cash metrics evaluate from governed variables"
+      ],
+      [
+        "Attribution",
+        "One thesis initiative links supported movement to outcome with confidence and counterfactual"
+      ],
+      [
+        "Simulation",
+        "Price or timing change runs in isolated branch and compares consequences"
+      ],
+      [
+        "World projection",
+        "All states render deterministically; user can zoom, replay, inspect and explain"
+      ],
+      [
+        "Audit",
+        "Every visible result resolves to source, definition, equation, policy, evidence and time"
+      ]
+    ],
+    [
+      [
+        "Role / workstream",
+        "Primary accountability",
+        "Required veto or approval"
+      ],
+      [
+        "Program Owner",
+        "Vision, priority, scope and final product decisions",
+        "Final approval"
+      ],
+      [
+        "Integration Architect",
+        "Cross-repository architecture, namespaces and release coherence",
+        "Architecture veto"
+      ],
+      [
+        "Scientific Research Lead",
+        "Scientific correctness, sources and coverage",
+        "Scientific veto"
+      ],
+      [
+        "Enterprise Architecture Lead",
+        "Canonical enterprise meaning and process completeness",
+        "Enterprise-model veto"
+      ],
+      [
+        "Finance / Controls Lead",
+        "Accounting, reconciliation, controls, KPIs and auditability",
+        "Financial-control veto"
+      ],
+      [
+        "Data / Semantic Architect",
+        "IDs, normalization, graphs, lineage and interoperability",
+        "Schema approval"
+      ],
+      [
+        "Rules / Simulation Architect",
+        "Compiler, equations, predicates, state and scenario engine",
+        "Runtime approval"
+      ],
+      [
+        "Agent / Security Architect",
+        "Permissions, consent, memory, exposure and action controls",
+        "Security veto"
+      ],
+      [
+        "Game Systems Designer",
+        "World rules, player agency, feedback loops and progression",
+        "Experience approval"
+      ],
+      [
+        "3D / Procedural Engineer",
+        "Deterministic geometry, materials, animation and performance",
+        "Render implementation"
+      ],
+      [
+        "UX / Interaction Lead",
+        "Navigation, explainability, accessibility and workflow",
+        "UX approval"
+      ],
+      [
+        "Evidence / QA Lead",
+        "Sources, test coverage, integrity, traceability and release gates",
+        "Release-quality veto"
+      ]
+    ],
+    [
+      [
+        "Package",
+        "Core sheets / registries",
+        "Output",
+        "Acceptance gate"
+      ],
+      [
+        "WP-01 Scientific completion",
+        "R1 classifications, objects, properties, equations, laws, sources",
+        "Approved domain releases + coverage",
+        "Scientific review and zero tested orphans"
+      ],
+      [
+        "WP-02 Enterprise journeys",
+        "R2 objects, stages, events, relationships, policies",
+        "End-to-end canonical journeys",
+        "Enterprise + controls approval"
+      ],
+      [
+        "WP-03 Equation registries",
+        "Scientific, enterprise and organization registries",
+        "Variable/unit/applicability model",
+        "Dimensional and reconciliation tests"
+      ],
+      [
+        "WP-04 Mapping compiler",
+        "R3 patterns, bindings, predicates and counterexamples",
+        "Accepted/rejected mapping library",
+        "All 12 gates evaluated"
+      ],
+      [
+        "WP-05 Configuration journey",
+        "R4 manifests, policies, mappings and approvals",
+        "Tenant configuration package",
+        "Simulation and activation tests"
+      ],
+      [
+        "WP-06 Runtime",
+        "State, evaluation, evidence, exception and lineage stores",
+        "Explainable transition engine",
+        "Replayable decision test suite"
+      ],
+      [
+        "WP-07 Security + agents",
+        "Agent policies, user entitlements, consent and source scopes",
+        "Bounded agent runtime",
+        "No unauthorized reveal/write tests"
+      ],
+      [
+        "WP-08 Simulation",
+        "Scenario branch, equations, propagation and comparison",
+        "Counterfactual engine",
+        "Production isolation and reconciliation"
+      ],
+      [
+        "WP-09 World experience",
+        "Render grammar, navigation, interaction and accessibility",
+        "Playable world slice",
+        "Reverse trace from visual to evidence"
+      ],
+      [
+        "WP-10 Vertical slice",
+        "Integrated commercial-to-financial scenario",
+        "Demonstrable Genesis product",
+        "End-to-end definition of done"
+      ]
+    ],
+    [
+      [
+        "",
+        "RELEASE GATE  A workstream is not complete because its workbook cells are populated. It is complete when definitions are approved, references resolve, behavior is tested, outputs reconcile, and the resulting state is explainable from source to projection."
+      ]
+    ],
+    [
+      [
+        "Phase",
+        "Objective",
+        "Exit criterion"
+      ],
+      [
+        "0 \u2014 Baseline freeze",
+        "Freeze current three workbooks and establish repository ownership",
+        "Checksums, IDs, issue register and release branches recorded"
+      ],
+      [
+        "1 \u2014 Architecture correction",
+        "Remove duplicated editable enterprise masters and create R4/R5 schemas",
+        "One authoritative record for each definition family"
+      ],
+      [
+        "2 \u2014 Bounded completion",
+        "Populate science and enterprise domains in controlled packages",
+        "Coverage and sufficiency gates agreed"
+      ],
+      [
+        "3 \u2014 Compiler + equations",
+        "Implement mapping gates and parallel equation registries",
+        "Mappings compile to tested predicates without authority leakage"
+      ],
+      [
+        "4 \u2014 Thin runtime",
+        "Evaluate transitions, evidence, policies and lineage",
+        "Replayable allow/block decision demonstrated"
+      ],
+      [
+        "5 \u2014 Vertical slice",
+        "Prove commercial-to-financial journey end to end",
+        "All acceptance demonstrations pass"
+      ],
+      [
+        "6 \u2014 Playable world",
+        "Render and interact with the same governed runtime state",
+        "Visual-to-source traceability and usability pass"
+      ],
+      [
+        "7 \u2014 Portfolio expansion",
+        "Add investment, value creation, capital formation and exit journeys",
+        "Cross-enterprise scenarios reconcile"
+      ],
+      [
+        "8 \u2014 Scale + ecosystem",
+        "Multi-party, distributed-source and production hardening",
+        "Security, performance, resilience and governance certified"
+      ]
+    ],
+    [
+      [
+        "Record",
+        "Minimum contract"
+      ],
+      [
+        "Object",
+        "object_id, namespace, canonical_name, definition, object_type, identity_rule_id, status, version, effective time"
+      ],
+      [
+        "Property",
+        "property_id, definition, datatype, dimensional signature, allowed units, measurement semantics"
+      ],
+      [
+        "Equation",
+        "equation_id, expression, equation_type, assumptions, boundary conditions, status and source lineage"
+      ],
+      [
+        "Equation variable",
+        "equation_id, variable_id, role, required/optional, unit constraint, grain and aggregation"
+      ],
+      [
+        "Mapping",
+        "mapping_id, mechanism_id, enterprise_target_id, context, mapping type, 12-gate results, confidence and authority references"
+      ],
+      [
+        "Predicate",
+        "predicate_id, formal expression, inputs, evidence rules, outcome codes, remediation and owner"
+      ],
+      [
+        "Transition",
+        "transition_id, state_from, state_to, applicable object/journey, predicate set, exception path and authority"
+      ],
+      [
+        "Observation",
+        "observation_id, subject_id, property_id, value, unit, method, conditions, uncertainty, time and evidence"
+      ],
+      [
+        "Decision evaluation",
+        "evaluation_id, intent, actor/agent, effective policy bundle, predicate results, evidence, disposition and time"
+      ],
+      [
+        "Render binding",
+        "binding_id, visual channel, semantic source, transform, range, precedence, security behavior and version"
+      ]
+    ],
+    [
+      [
+        "Predicate",
+        "Illustrative result",
+        "Effect"
+      ],
+      [
+        "P-01 Required commercial terms resolved",
+        "PASS",
+        "No block"
+      ],
+      [
+        "P-02 Customer identity verified",
+        "PASS",
+        "No block"
+      ],
+      [
+        "P-03 Authorized internal signature present",
+        "PASS",
+        "No block"
+      ],
+      [
+        "P-04 Authorized counterparty signature present",
+        "FAIL",
+        "Hard block"
+      ],
+      [
+        "P-05 Effective contract start date valid",
+        "PASS",
+        "No block"
+      ],
+      [
+        "P-06 Price and currency valid",
+        "PASS",
+        "No block"
+      ],
+      [
+        "P-07 Accounting treatment assigned",
+        "PASS",
+        "No block"
+      ],
+      [
+        "P-08 Entitlement/fulfillment obligation defined",
+        "PASS",
+        "No block"
+      ],
+      [
+        "P-09 Security and consent requirements met",
+        "PASS",
+        "No block"
+      ],
+      [
+        "P-10 Evidence lineage complete",
+        "PASS",
+        "No block"
+      ],
+      [
+        "P-11 User and agent may commit",
+        "PASS",
+        "No block"
+      ],
+      [
+        "P-12 No conflicting effective contract",
+        "PASS",
+        "No block"
+      ]
+    ],
+    [
+      [
+        "Deliverable",
+        "Accountable",
+        "Responsible",
+        "Required reviewers"
+      ],
+      [
+        "Scientific domain release",
+        "Scientific Lead",
+        "Researchers + ontology analysts",
+        "Integration, Evidence/QA"
+      ],
+      [
+        "Enterprise domain release",
+        "Enterprise Architecture Lead",
+        "Domain architects + analysts",
+        "Finance/Controls, Integration"
+      ],
+      [
+        "Mapping acceptance",
+        "Integration Architect",
+        "Mapping engineers",
+        "Scientific, Enterprise, Finance/Security as applicable"
+      ],
+      [
+        "Organization configuration",
+        "Customer Configuration Authority",
+        "Configuration team",
+        "Enterprise, Finance, Security"
+      ],
+      [
+        "Runtime release",
+        "Rules/Simulation Architect",
+        "Platform engineering",
+        "Integration, Security, Evidence/QA"
+      ],
+      [
+        "Render/world release",
+        "Game Systems Lead",
+        "UX + 3D/procedural engineering",
+        "Integration, Security, Accessibility"
+      ],
+      [
+        "Program release",
+        "Program Owner",
+        "Release manager",
+        "All domain authorities"
+      ]
+    ],
+    [
+      [
+        "Term",
+        "Genesis definition"
+      ],
+      [
+        "Atom",
+        "A Salt Basin source term for a bounded governed data truth or value-bearing unit; scientific equivalence is separately classified and never assumed."
+      ],
+      [
+        "Molecule",
+        "A governed composition or capability grouping of atoms; composition and identity rules must be explicit."
+      ],
+      [
+        "Rod",
+        "A persistent journey/state channel carrying a defined truth domain across time."
+      ],
+      [
+        "Orbit",
+        "A converged enterprise projection across rods, evidence and time; an illustrative world model, not a literal atomic orbit."
+      ],
+      [
+        "Basin Net Work",
+        "The future enterprise network framework into which validated Genesis structures may translate."
+      ],
+      [
+        "DataBasin",
+        "Governed aggregation, normalization and semantic projection layer across centralized or distributed sources."
+      ],
+      [
+        "Scientific mechanism",
+        "A validated recurrent formal structure abstracted from science for possible reuse."
+      ],
+      [
+        "Mapping compiler",
+        "The governed process and runtime that tests, binds and implements mechanisms as enterprise behavior."
+      ],
+      [
+        "Authority",
+        "The legal, accounting, contractual, policy, security, consent and entitlement basis that permits action."
+      ],
+      [
+        "Emergence",
+        "A higher-order state produced from explicit lower-level composition and transformations."
+      ],
+      [
+        "Evidence chain",
+        "Traceable linkage from intent and definition through events, reconciliation, attribution and outcome."
+      ],
+      [
+        "Seven-channel rendering",
+        "A deterministic experience using spatial, temporal, structural, motion, lineage and uncertainty channels; not a claim of seven-dimensional spacetime."
+      ]
+    ],
+    [
+      [
+        "Approval role",
+        "Name",
+        "Decision / date"
+      ],
+      [
+        "Program Owner",
+        "Martha Elizabeth Salter",
+        "____________________________"
+      ],
+      [
+        "Integration Architect",
+        "TBD",
+        "____________________________"
+      ],
+      [
+        "Scientific Research Lead",
+        "TBD",
+        "____________________________"
+      ],
+      [
+        "Enterprise Architecture Lead",
+        "TBD",
+        "____________________________"
+      ],
+      [
+        "Finance / Controls Lead",
+        "TBD",
+        "____________________________"
+      ],
+      [
+        "Agent / Security Architect",
+        "TBD",
+        "____________________________"
+      ],
+      [
+        "Evidence / QA Lead",
+        "TBD",
+        "____________________________"
+      ]
+    ],
+    [
+      [
+        "",
+        "SALT BASIN GENESIS  A governed path from foundational scientific definition to enterprise emergence\u2014configurable, explainable, replayable and alive in an immersive operating world."
+      ]
+    ]
+  ]
+}

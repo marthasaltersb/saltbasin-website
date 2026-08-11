@@ -28,15 +28,27 @@ import { buildRollupCatalog } from '../lib/rollupMetrics.js';
 import { syncSingleEntry, removeEntryEvidence } from '../lib/careerAtomMigration.js';
 import { buildCareerAtomRollupCatalog } from '../lib/careerAtomRollups.js';
 import { CAREER_ENTRY_SOURCES, sourceForTable, atomDefinitionByKey, isJsonbSourceColumn } from '../lib/careerAtomRegistry.js';
-import { getConsentStatus, recordConsent } from '../lib/consentRegistry.js';
+import { consentDefinition, getConsentStatus, recordConsent } from '../lib/consentRegistry.js';
 import { recordInteraction } from '../lib/usageTracking.js';
 import { buildCareerSemanticTemplateWorkbook } from '../lib/careerSemanticTemplate.js';
 import { parseCareerSemanticWorkbook } from '../lib/careerSemanticImport.js';
 import { extractResumeText, proposeCareerMappingsFromText, bondProposedMappings } from '../lib/careerResumeExtraction.js';
 import { calculateCareerProficiencyRollup } from '../lib/careerProficiencyRollups.js';
+import { getLiveToken } from './oauth.js';
+import { PROVIDERS } from '../lib/oauthProviders.js';
+import { TABLE_BY_ENTRY_TYPE, IDENTITY_COLUMNS_BY_ENTRY_TYPE, detectConflicts, detectAmbiguousMappings } from '../lib/careerReconciliation.js';
 
 const router = Router();
 const INTAKE_BUCKET = 'career-context';
+
+// Source-platform kinds a member can explicitly pick on upload (Phase 1,
+// 2026-08-10 — Career Foundation Sourcing & Reconciliation), alongside the
+// original initial/incremental/context/case-study kinds. 'linkedin_oauth_pull'
+// is written only by POST /intake-documents/linkedin-pull below, never
+// client-selectable — it's a distinct, lower-information source, not
+// something a member picks. intake_kind stays a free-text, display-only
+// column (server/db.js:3356) — no migration needed for new values.
+const PLATFORM_SOURCE_KINDS = new Set(['linkedin_export', 'indeed_export', 'fiverr_export']);
 
 const EXPERIENCE_DEFINITION_TYPES = new Set(['period', 'proficiency_level', 'rollup', 'display']);
 const DEFAULT_EXPERIENCE_DEFINITIONS = [
@@ -698,12 +710,20 @@ router.get('/consent-status', requireUser, async (req, res) => {
 });
 
 router.post('/consent', requireUser, async (req, res) => {
-  const { consentType = 'career_portfolio', granted } = req.body || {};
+  const { consentType = 'career_portfolio', granted, acknowledgementKeys } = req.body || {};
   if (typeof granted !== 'boolean') return res.status(400).json({ error: 'granted (boolean) is required' });
   try {
+    const definition = consentDefinition(consentType);
+    if (!definition) return res.status(400).json({ error: 'unknown consent type' });
+    if (granted) {
+      const supplied = new Set(Array.isArray(acknowledgementKeys) ? acknowledgementKeys : []);
+      const missing = definition.acknowledgements.filter((item) => !supplied.has(item.key)).map((item) => item.key);
+      if (missing.length) return res.status(400).json({ error: 'all current acknowledgements are required', missingAcknowledgements: missing });
+    }
     const result = await recordConsent(req.user.id, consentType, granted, {
       ip: req.ip,
       userAgent: req.get('user-agent'),
+      context: { acknowledgementKeys: acknowledgementKeys || [] },
     });
     res.json({ ok: true, ...result });
   } catch (e) {
@@ -761,7 +781,9 @@ router.post('/intake-documents', requireUser, (req, res) => {
       if (uploadErr) return res.status(500).json({ error: uploadErr.message });
 
       const prior = await db.prepare(`SELECT COUNT(*)::int AS count FROM career_intake_documents WHERE user_id=$1`).get(req.user.id);
-      const intakeKind = Number(prior?.count || 0) === 0 ? 'initial_mapping' : 'incremental_mapping';
+      const requestedKind = cleanText(req.body.intakeKind, 40);
+      const autoKind = Number(prior?.count || 0) === 0 ? 'initial_mapping' : 'incremental_mapping';
+      const intakeKind = PLATFORM_SOURCE_KINDS.has(requestedKind) ? requestedKind : autoKind;
       const result = await db.prepare(`
         INSERT INTO career_intake_documents (
           user_id, owner_scope, intake_kind, source_truth_status, source_use_scope,
@@ -806,6 +828,58 @@ router.post('/intake-documents', requireUser, (req, res) => {
       res.status(500).json({ error: 'Failed to save intake document' });
     }
   });
+});
+
+// Pulls whatever LinkedIn's OAuth API actually exposes (basic identity only
+// — see server/lib/oauthProviders.js's linkedin provider) and writes it
+// through the exact same intake pipeline as any other uploaded source, so a
+// LinkedIn connection is mechanically equal to a manual export upload, not a
+// privileged code path. Real position/skills/recommendation history still
+// requires the member exporting their LinkedIn data and uploading it as a
+// 'linkedin_export' source (see PLATFORM_SOURCE_KINDS above).
+router.post('/intake-documents/linkedin-pull', requireUser, async (req, res) => {
+  if (!supabase) return res.status(500).json({ error: 'storage not configured (missing SUPABASE_URL / SERVICE_ROLE_KEY)' });
+  try {
+    const live = await getLiveToken(req.user.id, 'linkedin');
+    if (!live) return res.status(400).json({ error: 'Connect LinkedIn first (Integrations) before pulling a profile source.' });
+    const identity = await PROVIDERS.linkedin.fetchIdentity(live.token);
+    const now = Date.now();
+    const text = [
+      'LinkedIn Profile Pull (via connected LinkedIn account)',
+      `Name: ${identity.label || 'Unknown'}`,
+      `LinkedIn Member ID: ${identity.externalId || 'unknown'}`,
+      '',
+      "Note: LinkedIn's OAuth API only exposes basic identity (name) for a connected account — it does not provide position history, skills, or recommendations. For real career history, export your LinkedIn data (Settings & Privacy > Data Privacy > Get a copy of your data) and upload the export as a separate source.",
+    ].join('\n');
+    const buffer = Buffer.from(text, 'utf-8');
+    await ensureIntakeBucket();
+    const ownerScope = req.user.role === 'admin' ? 'admin' : 'member';
+    const storageKey = `${ownerScope}/${req.user.id}/${now}-${crypto.randomBytes(10).toString('hex')}.txt`;
+    const { error: uploadErr } = await supabase.storage.from(INTAKE_BUCKET).upload(storageKey, buffer, { contentType: 'text/plain', upsert: false });
+    if (uploadErr) return res.status(500).json({ error: uploadErr.message });
+    const result = await db.prepare(`
+      INSERT INTO career_intake_documents (
+        user_id, owner_scope, intake_kind, source_truth_status, source_use_scope,
+        client_name_policy, portfolio_name_policy, case_study_title_policy,
+        public_primary_research, primary_resume_requested, analysis_passes_requested,
+        redaction_ack, public_output_validation_ack, no_private_name_persistence_ack,
+        original_filename, storage_bucket, storage_key, mime_type, file_size,
+        upload_notes, status, retention_expires_at, created_at, updated_at
+      ) VALUES (
+        $1,$2,'linkedin_oauth_pull','user_attested','career_master_and_outputs','never_publish_client_names',
+        'generalize_all','industry_company_type',false,true,1,true,true,true,
+        $3,$4,$5,'text/plain',$6,$7,'uploaded',$8,$9,$9
+      ) RETURNING id
+    `).run(
+      req.user.id, ownerScope, 'linkedin-profile-pull.txt', INTAKE_BUCKET, storageKey, buffer.length,
+      'Auto-captured from connected LinkedIn account (basic identity only).', now + 2_592_000_000, now
+    );
+    const row = await db.prepare(`SELECT * FROM career_intake_documents WHERE id = $1`).get(result.lastInsertRowid);
+    res.json({ ok: true, item: docRow(row), limited: true });
+  } catch (e) {
+    console.error('[career-intake] linkedin pull failed:', e.message);
+    res.status(500).json({ error: `LinkedIn pull failed: ${e.message}` });
+  }
 });
 
 router.get('/intake-runs', requireUser, async (req, res) => {
@@ -935,6 +1009,7 @@ router.post('/intake-runs/:id/run', requireUser, async (req, res) => {
       `Analysis completed with ${mappedEntries} proposed Career Master entries across ${documentIds.length} source${documentIds.length === 1 ? '' : 's'}.`,
       { mappedEntries, sourceErrors }, now, runId
     );
+    try { await detectAmbiguousMappings(req.user.id, proposal); } catch (e) { console.error('[career] ambiguous-mapping detection failed:', e.message); }
     res.json({ ok: true, runId, source: { kind: 'career_intake_run', runId, documentIds }, proposal, sheetWarnings, sourceErrors });
   } catch (e) {
     await db.prepare(`UPDATE career_intake_runs SET status = 'failed', summary = $1, updated_at = $2 WHERE id = $3`).run(e.message, Date.now(), runId);
@@ -1012,6 +1087,7 @@ router.post('/resume-analysis', requireUser, (req, res) => {
       const rawProposal = await proposeCareerMappingsFromText(text);
       if (rawProposal.offline) return res.status(503).json({ error: 'Resume analysis is not configured on this server (missing ANTHROPIC_API_KEY)' });
       const proposal = bondProposedMappings(rawProposal);
+      try { await detectAmbiguousMappings(req.user.id, proposal); } catch (e) { console.error('[career] ambiguous-mapping detection failed:', e.message); }
       res.json({ ok: true, source, proposal, sheetWarnings: [], missingSheets: [], recognizedSheets: [] });
     } catch (e) {
       console.error('[career] resume-analysis failed:', e.message);
@@ -1019,12 +1095,6 @@ router.post('/resume-analysis', requireUser, (req, res) => {
     }
   });
 });
-
-const TABLE_BY_ENTRY_TYPE = Object.fromEntries(CAREER_ENTRY_SOURCES.map((s) => [s.entryType, s.table]));
-const IDENTITY_COLUMNS_BY_ENTRY_TYPE = {
-  career_job_entry: ['company', 'title'], career_skill_entry: ['skill'], career_tool_entry: ['current_name', 'name_used'],
-  career_engagement_entry: ['name'], career_domain_entry: ['title'], career_certification_entry: ['name', 'issuer'], career_deal_entry: ['deal_name'],
-};
 
 router.post('/mappings/classify', requireUser, async (req, res) => {
   const entries = Array.isArray(req.body?.entries) ? req.body.entries : [];
@@ -1197,6 +1267,8 @@ router.post('/mappings/commit', requireUser, async (req, res) => {
   } catch (e) {
     console.error('[career] failed to record intake run for mappings commit:', e.message);
   }
+
+  try { await detectConflicts(req.user.id); } catch (e) { console.error('[career] conflict detection failed:', e.message); }
 
   res.json({ ok: true, created, updated, skipped, errors });
 });

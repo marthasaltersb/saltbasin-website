@@ -4,9 +4,12 @@ import { toast } from '../../lib/toast.js';
 import CareerMappingPreview from './CareerMappingPreview.jsx';
 
 const INTAKE_KINDS = [
-  { value: 'initial_mapping', label: 'Initial Career Master mapping' },
+  { value: 'initial_mapping', label: 'Resume or general career document' },
   { value: 'additional_context', label: 'Additional context documentation' },
   { value: 'case_study_portfolio', label: 'Case study portfolio upload' },
+  { value: 'linkedin_export', label: 'LinkedIn data export' },
+  { value: 'indeed_export', label: 'Indeed data export' },
+  { value: 'fiverr_export', label: 'Fiverr data export' },
 ];
 
 const SOURCE_TRUTH = [
@@ -108,6 +111,7 @@ export default function CareerIntakePanel({ compact = false, onPrimaryResumeCrea
   const [thinkingStep, setThinkingStep] = useState(0);
   const [file, setFile] = useState(null);
   const fileRef = useRef(null);
+  const [pullingLinkedIn, setPullingLinkedIn] = useState(false);
   const [form, setForm] = useState({
     intakeKind: 'initial_mapping',
     sourceTruthStatus: 'user_attested',
@@ -207,6 +211,21 @@ export default function CareerIntakePanel({ compact = false, onPrimaryResumeCrea
     }
   }
 
+  async function pullLinkedIn() {
+    setPullingLinkedIn(true);
+    try {
+      const result = await api.pullLinkedInProfileAsSource();
+      const item = result.item;
+      setDocs((current) => [item, ...current]);
+      setSelectedIds((current) => [item.id, ...current.filter((id) => id !== item.id)]);
+      toast('LinkedIn basic profile added as a source. For full history, upload a LinkedIn data export too.');
+    } catch (e) {
+      toast('LinkedIn pull failed: ' + e.message);
+    } finally {
+      setPullingLinkedIn(false);
+    }
+  }
+
   async function syncSiteMetadata() {
     setSyncingMetadata(true);
     try {
@@ -279,6 +298,10 @@ export default function CareerIntakePanel({ compact = false, onPrimaryResumeCrea
         </Check>
       </div>
 
+      <div style={{ marginTop: '0.75rem', maxWidth: 280 }}>
+        <SelectField label="Source type" value={form.intakeKind} onChange={(v) => update('intakeKind', v)} options={INTAKE_KINDS} />
+      </div>
+
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginTop: '0.9rem' }}>
         <input
           ref={fileRef}
@@ -296,6 +319,12 @@ export default function CareerIntakePanel({ compact = false, onPrimaryResumeCrea
         <button type="button" style={S.btn('outline')} onClick={syncSiteMetadata} disabled={syncingMetadata}>
           {syncingMetadata ? 'Syncing...' : 'Sync Site Metadata'}
         </button>
+        <button type="button" style={S.btn('outline')} onClick={pullLinkedIn} disabled={pullingLinkedIn}>
+          {pullingLinkedIn ? 'Pulling...' : 'Pull Connected LinkedIn Profile'}
+        </button>
+      </div>
+      <div style={{ fontSize: '0.68rem', color: '#888', marginTop: '0.3rem' }}>
+        LinkedIn's connected-account pull only captures your basic identity (name) — for real position history, skills, and recommendations, export your data from LinkedIn and upload it as a "LinkedIn data export" source above. Every source you add — resume, LinkedIn, Indeed, Fiverr — carries equal weight; nothing is auto-resolved if two sources disagree.
       </div>
 
       {!compact && (

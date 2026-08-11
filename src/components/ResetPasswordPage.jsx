@@ -21,8 +21,8 @@ export default function ResetPasswordPage() {
   async function submit(e) {
     e.preventDefault();
     setErr('');
-    if (password.length < 8) {
-      setErr('Password must be at least 8 characters.');
+    if (password.length < 12 || !/[A-Z]/.test(password) || !/[0-9]/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+      setErr('Use 12+ characters with a capital letter, number, and special character.');
       return;
     }
     if (password !== confirm) {
@@ -102,8 +102,7 @@ export default function ResetPasswordPage() {
                 marginBottom: '1.25rem',
               }}
             >
-              Pick something at least 8 characters. We'll sign you out everywhere else as a
-              precaution.
+              Use at least 12 characters with a capital letter, number, and special character. You cannot reuse a previous password.
             </p>
             <label
               className="sb-label"
@@ -118,7 +117,7 @@ export default function ResetPasswordPage() {
               type="password"
               required
               autoFocus
-              minLength={8}
+              minLength={12}
               style={{ marginBottom: '1rem' }}
             />
             <label
@@ -133,7 +132,7 @@ export default function ResetPasswordPage() {
               onChange={(e) => setConfirm(e.target.value)}
               type="password"
               required
-              minLength={8}
+              minLength={12}
               style={{ marginBottom: '1.5rem' }}
             />
             {err && (

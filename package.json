@@ -12,6 +12,7 @@
     "contribution:codex": "node scripts/run-codex-contribution-intelligence.mjs",
     "contribution:claude": "node scripts/run-claude-contribution-intelligence.mjs",
     "contribution:import-codex": "node scripts/import-codex-raw-events.mjs",
+    "backlog:reconcile-history": "node scripts/reconcile-backlog-history.mjs",
     "start": "node server/index.js",
     "preview": "vite preview",
     "seed": "node server/data/seed.js",
@@ -20,6 +21,8 @@
     "scenarios:validate": "node scripts/validate-scenario-registry.mjs",
     "scenarios:fixture": "node scripts/generate-scenario-fixture.mjs",
     "test:scenarios": "node --test tests/scenarios.test.js",
+    "test:bestystaff": "node --test tests/bestystaff-auth-proposal.test.js",
+    "verify:bestystaff": "node scripts/verify-besty-auth-proposal.mjs",
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js"
   },
   "engines": {

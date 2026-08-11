@@ -50,6 +50,7 @@ export default function LeadView() {
   // Pledge state
   const [pledging, setPledging] = useState(false);
   const [pledged, setPledged] = useState(false);
+  const [pledgePaymentUrl, setPledgePaymentUrl] = useState(null);
 
   // Member conversion — BestyStaff captures personalOrOther/loginEmail via
   // convert_lead_to_member, then this page collects the password
@@ -194,6 +195,16 @@ export default function LeadView() {
     } catch (_) {}
   }
 
+  async function resendEmailVerification(id) {
+    setEmailError('');
+    try {
+      const response = await fetch(`/api/leads/public/${publicId}/contact-emails/${id}/resend-verification`, { method: 'POST', credentials: 'include' });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.error || 'Could not resend verification');
+      await loadLead();
+    } catch (error) { setEmailError(error.message); }
+  }
+
   async function pledge() {
     setPledging(true);
     try {
@@ -201,8 +212,10 @@ export default function LeadView() {
         method: 'POST',
         credentials: 'include',
       });
-      if (!res.ok) throw new Error('Pledge failed');
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || 'Pledge failed');
       setPledged(true);
+      setPledgePaymentUrl(body.paymentUrl || null);
       await loadLead();
     } catch (_) {
       setPledged(false);
@@ -334,6 +347,7 @@ export default function LeadView() {
           <div className="sb-gold-rule" style={{ marginBottom: '1.5rem' }} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
             <SummaryRow label="Email" value={lead.email} />
+            <SummaryRow label="Email verification" value={lead.anyVerifiedEmail ? 'Verified' : 'Pending'} />
             <SummaryRow label="Phone" value={lead.phone || '—'} />
             <SummaryRow label="First source" value={sourceLabel(lead.source)} />
             <SummaryRow label="Created" value={new Date(lead.createdAt).toLocaleString()} />
@@ -342,6 +356,19 @@ export default function LeadView() {
               <SummaryRow label="Merged from" value={`${lead.mergedFromCount} prior submission${lead.mergedFromCount === 1 ? '' : 's'}`} />
             )}
           </div>
+
+          {!lead.convertedUserId && (
+            <div style={{ marginTop: '1.25rem', padding: '1rem 1.2rem', borderRadius: 'var(--sb-radius)', border: '0.5px solid rgba(196,132,58,.28)', background: 'rgba(15,27,45,.42)' }}>
+              <div className="sb-eyebrow" style={{ marginBottom: '.55rem' }}>Member conversion gates</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: '.55rem' }}>
+                <GateStatus label="Verified email" passed={lead.anyVerifiedEmail} detail={lead.anyVerifiedEmail ? 'At least one verified address' : 'Check your verification email'} />
+                <GateStatus label="Registration path" passed={lead.confirmedEarlyRegistrant || !!lead.pledgedAt} detail={lead.confirmedEarlyRegistrant ? 'Early registration confirmed' : lead.pledgedAt ? 'Pledge recorded' : 'Not confirmed yet'} />
+                {lead.conversionEligibility?.intentClass === 'b2b' && <GateStatus label="Work email review" passed={!lead.workEmailManualValidation} detail={lead.workEmailManualValidation ? 'Manual validation required' : 'Work email accepted'} />}
+                {lead.conversionEligibility?.intentClass === 'b2b' && <GateStatus label="Contract/output readiness" passed={lead.contractOutputReady} detail={lead.contractOutputReady ? 'Ready' : 'Waiting for Salt Basin'} />}
+              </div>
+              <div style={{ marginTop: '.65rem', fontSize: '.78rem', color: lead.conversionEligibility?.eligible ? 'var(--sb-sage)' : 'var(--sb-dusty)' }}>{lead.conversionEligibility?.eligible ? 'All configured conversion gates are satisfied.' : 'Your lead remains active while the remaining configured gates are completed.'}</div>
+            </div>
+          )}
 
           {/* Become a member — BestyStaff-driven conversion */}
           {!lead.convertedUserId && lead.email && (
@@ -385,6 +412,8 @@ export default function LeadView() {
                     {pledging ? 'Saving…' : pledged ? '✓ Pledged!' : 'Just pledge my spot instead'}
                   </button>
                 )}
+                {(pledgePaymentUrl || lead.pledgePaymentUrl) && <a className="sb-btn sb-btn-outline" href={pledgePaymentUrl || lead.pledgePaymentUrl} target="_blank" rel="noreferrer">Optionally support with a small Square deposit</a>}
+                <p style={{ fontSize: '.76rem', color: 'var(--sb-dusty)' }}>Payment is optional. Your early registration remains recorded even if you do not submit a deposit.</p>
               </div>
 
               {conversionIntent && (
@@ -540,6 +569,7 @@ export default function LeadView() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: '0.85rem', color: ce.subscribed ? 'var(--sb-cream)' : 'var(--sb-dusty)', textDecoration: ce.subscribed ? 'none' : 'line-through' }}>{ce.email}</div>
                     <div style={{ fontSize: '0.62rem', color: 'var(--sb-dusty)', marginTop: 2, display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <span style={{ color: ce.verified ? 'var(--sb-sage)' : 'var(--sb-gold)' }}>{ce.verified ? '✓ Verified' : '○ Verification pending'}</span>
                       <select
                         value={ce.emailType}
                         onChange={(ev) => updateEmail(ce.id, { emailType: ev.target.value })}
@@ -559,6 +589,7 @@ export default function LeadView() {
                     </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', flexShrink: 0 }}>
+                    {!ce.verified && <button onClick={() => resendEmailVerification(ce.id)} style={{ fontSize: '0.62rem', background: 'none', border: '0.5px solid rgba(196,132,58,0.4)', borderRadius: 3, color: 'var(--sb-gold)', padding: '2px 6px', cursor: 'pointer', whiteSpace: 'nowrap' }}>Resend verification</button>}
                     <button
                       onClick={() => updateEmail(ce.id, { isPrimary: true })}
                       style={{ fontSize: '0.62rem', background: 'none', border: '0.5px solid rgba(196,132,58,0.4)', borderRadius: 3, color: 'var(--sb-gold)', padding: '2px 6px', cursor: 'pointer', whiteSpace: 'nowrap' }}
@@ -688,6 +719,15 @@ function SummaryRow({ label, value }) {
         {label}
       </div>
       <div style={{ fontSize: '0.92rem', color: 'var(--sb-cream)', wordBreak: 'break-word' }}>{value}</div>
+    </div>
+  );
+}
+
+function GateStatus({ label, passed, detail }) {
+  return (
+    <div style={{ padding: '.65rem .75rem', borderRadius: 7, border: `0.5px solid ${passed ? 'rgba(168,184,154,.45)' : 'rgba(196,132,58,.3)'}`, background: passed ? 'rgba(168,184,154,.09)' : 'rgba(196,132,58,.06)' }}>
+      <div style={{ fontSize: '.68rem', color: passed ? 'var(--sb-sage)' : 'var(--sb-gold)', fontWeight: 700 }}>{passed ? '✓' : '○'} {label}</div>
+      <div style={{ marginTop: 3, fontSize: '.7rem', color: 'var(--sb-dusty)', lineHeight: 1.35 }}>{detail}</div>
     </div>
   );
 }

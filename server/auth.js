@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
 import { db, getJSON } from './db.js';
+import { replacePassword } from './lib/passwordPolicy.js';
 
 const ADMIN_COOKIE = 'sb_admin';
 const LANDING_COOKIE = 'sb_landing';
@@ -54,7 +55,7 @@ export async function getUserFromCookie(req) {
   if (!token) return null;
   const row = await db
     .prepare(
-      `SELECT u.id, u.email, u.role, u.display_name, s.expires_at
+      `SELECT u.id, u.email, u.role, u.display_name, u.must_change_password, s.expires_at
        FROM sessions s JOIN users u ON u.id = s.user_id
        WHERE s.token = $1`
     )
@@ -65,7 +66,7 @@ export async function getUserFromCookie(req) {
     return null;
   }
   maybePurgeExpiredSessions();
-  return { id: Number(row.id), email: row.email, role: row.role, displayName: row.display_name || null };
+  return { id: Number(row.id), email: row.email, role: row.role, displayName: row.display_name || null, mustChangePassword: !!row.must_change_password };
 }
 
 export async function login(email, password) {
@@ -79,13 +80,13 @@ export async function login(email, password) {
   const candidates = [];
 
   const primary = await db
-    .prepare('SELECT id, password_hash, role FROM users WHERE email = $1')
+    .prepare('SELECT id, password_hash, role, must_change_password FROM users WHERE email = $1')
     .get(lower);
   if (primary) candidates.push(primary);
 
   const secondaries = await db
     .prepare(
-      `SELECT u.id, u.password_hash, u.role
+      `SELECT u.id, u.password_hash, u.role, u.must_change_password
          FROM user_emails ue JOIN users u ON u.id = ue.user_id
         WHERE ue.email = $1 AND ue.verified = true`
     )
@@ -96,7 +97,7 @@ export async function login(email, password) {
 
   for (const c of candidates) {
     const ok = await bcrypt.compare(password, c.password_hash);
-    if (ok) return { id: Number(c.id), role: c.role };
+    if (ok) return { id: Number(c.id), role: c.role, mustChangePassword: !!c.must_change_password };
   }
   return null;
 }
@@ -105,12 +106,10 @@ export async function changePassword(userId, currentPassword, newPassword) {
   const row = await db
     .prepare('SELECT password_hash FROM users WHERE id = $1')
     .get(userId);
-  if (!row) return false;
+  if (!row) return { ok: false, error: 'user_not_found' };
   const ok = await bcrypt.compare(currentPassword, row.password_hash);
-  if (!ok) return false;
-  const hash = await bcrypt.hash(newPassword, 10);
-  await db.prepare('UPDATE users SET password_hash = $1 WHERE id = $2').run(hash, userId);
-  return true;
+  if (!ok) return { ok: false, error: 'current_password_incorrect' };
+  return replacePassword(userId, newPassword);
 }
 
 export function setAdminCookie(res, token) {
@@ -172,9 +171,30 @@ export async function requireUser(req, res, next) {
   next();
 }
 
+export async function enforceCurrentCareerTerms(req, res, next) {
+  const user = await getUserFromCookie(req);
+  if (!user) return next();
+  if (req.originalUrl.startsWith('/api/auth/') || req.originalUrl.startsWith('/api/career/consent')) return next();
+  const profile = await db.prepare(`SELECT 1 FROM member_profiles WHERE user_id=$1`).get(user.id);
+  if (!profile && user.role !== 'member') return next();
+  const { hasCurrentConsent, getConsentStatus } = await import('./lib/consentRegistry.js');
+  if (await hasCurrentConsent(user.id, 'career_portfolio')) return next();
+  const status = await getConsentStatus(user.id, 'career_portfolio');
+  return res.status(428).json({ error: 'career_terms_required', termsRequired: true, consentType: 'career_portfolio', consentVersion: status.consentVersion, lastAgreedAt: status.lastAgreedAt, stale: status.stale });
+}
+
+export async function enforceRequiredPasswordChange(req, res, next) {
+  const user = await getUserFromCookie(req);
+  if (!user || !user.mustChangePassword) return next();
+  if (req.originalUrl.startsWith('/api/auth/')) return next();
+  return res.status(428).json({ error: 'password_change_required', passwordChangeRequired: true });
+}
+
 export async function createMember(email, password, displayName) {
-  if (!email || !password || password.length < 8) {
-    return { error: 'email and 8+ char password required' };
+  const { validatePasswordPolicy } = await import('./lib/passwordPolicy.js');
+  const validation = validatePasswordPolicy(password);
+  if (!email || !validation.valid) {
+    return { error: !email ? 'email required' : 'password policy failed', details: validation.errors };
   }
   const lower = email.toLowerCase();
   const exists = await db.prepare('SELECT 1 FROM users WHERE email = $1').get(lower);
@@ -182,7 +202,7 @@ export async function createMember(email, password, displayName) {
   const hash = await bcrypt.hash(password, 10);
   const result = await db
     .prepare(
-      'INSERT INTO users (email, password_hash, role, display_name) VALUES ($1, $2, $3, $4) RETURNING id'
+      'INSERT INTO users (email, password_hash, role, display_name, must_change_password) VALUES ($1, $2, $3, $4, true) RETURNING id'
     )
     .run(lower, hash, 'member', displayName || null);
   const userId = Number(result.lastInsertRowid);

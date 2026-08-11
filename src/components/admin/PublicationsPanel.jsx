@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from '../../lib/toast.js';
 import PublicationsCalendar from './PublicationsCalendar.jsx';
+import PublicationsDashboard from './PublicationsDashboard.jsx';
 
 // Generic editorial calendar / publication tracker — leveraged by ALL
 // marketing content (HERQ posts, Services ads, future apps), not nested
@@ -82,7 +83,7 @@ export default function PublicationsPanel() {
         </select>
         <div style={{ flex: 1 }} />
         <div style={{ display: 'flex', border: '0.5px solid var(--sb-admin-border)', borderRadius: 2, overflow: 'hidden' }}>
-          {['calendar', 'list'].map((v) => (
+          {['calendar', 'list', 'dashboard'].map((v) => (
             <button key={v} onClick={() => setView(v)} style={{
               padding: '0.35rem 0.85rem', fontSize: '0.72rem', textTransform: 'capitalize', cursor: 'pointer',
               border: 'none', fontFamily: 'var(--sb-font-label)',
@@ -101,7 +102,15 @@ export default function PublicationsPanel() {
               const url = editId ? `/api/content-publications/${editId}` : '/api/content-publications';
               const method = editId ? 'PUT' : 'POST';
               const res = await fetch(url, { method, credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
-              if (!res.ok) { toast.error('Failed to save'); return; }
+              if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                if (data.missingApprovals?.length) {
+                  toast.error(`Missing approvals: ${data.missingApprovals.join(', ')}`);
+                } else {
+                  toast.error(data.error || 'Failed to save');
+                }
+                return;
+              }
               toast.success(editId ? 'Publication updated' : 'Publication created');
               setShowNew(false); setEditId(null); load();
             }}
@@ -112,6 +121,10 @@ export default function PublicationsPanel() {
 
       {loading && <div style={{ fontSize: '0.85rem', color: 'var(--sb-admin-text-soft)' }}>Loading…</div>}
       {!loading && publications.length === 0 && <div style={{ fontSize: '0.85rem', color: 'var(--sb-admin-text-soft)' }}>No publications scheduled yet.</div>}
+
+      {!loading && view === 'dashboard' && (
+        <PublicationsDashboard appFilter={filterApp} />
+      )}
 
       {!loading && view === 'calendar' && (
         <PublicationsCalendar

@@ -37,6 +37,8 @@ import postgres from 'postgres';
 import { generateCareerAtomDefinitions, generateCareerMoleculeDefinitions } from './lib/careerAtomRegistry.js';
 import { generateSignalMoleculeDefinitions, generateBusinessHypothesisMoleculeDefinitions, generateRecordAtomDefinitions } from './lib/lonetreeDemoRegistry.js';
 import { generateDeltaAtomDefinitions, generateRecordMoleculeAtomDefinitions } from './lib/proposalExperienceRegistry.js';
+import { genesisOverlapSeeds } from './data/genesisOverlapSeeds.js';
+import { L2R_DOMAINS, SUB_CAPABILITY_CLUSTERS, CAPABILITY_ATOMS, QTR_REFERENCE_ATOMS, QTR_SCENARIOS } from './data/l2rCapabilityHierarchySeed.js';
 
 const url = process.env.DATABASE_URL;
 if (!url) {
@@ -539,6 +541,39 @@ async function bootstrap() {
     ALTER TABLE journey_metadata_molecules ADD COLUMN IF NOT EXISTS canonical_definition TEXT;
     ALTER TABLE journey_metadata_molecules ADD COLUMN IF NOT EXISTS value_domain TEXT;
     ALTER TABLE journey_metadata_molecules ADD COLUMN IF NOT EXISTS mutability_class TEXT NOT NULL DEFAULT 'revisable';
+    -- Lead-to-Revenue Definition Studio (2026-08-09, Phase 1): molecule_kind
+    -- distinguishes what an Atom row IS FOR without a second table per kind —
+    -- 'capability' (the 945-row L2R taxonomy leaves), 'root_cause' | 'impact'
+    -- | 'control' | 'kpi' | 'leakage_pattern' | 'entity_object' |
+    -- 'handover_pattern' | 'ai_validation_test' | 'heuristic' (the QTR
+    -- reference library). Left NULL (no default) for every pre-existing Atom
+    -- seeded before this column existed (arr, career_*, signal, etc.) — those
+    -- are not part of the L2R taxonomy and it would misclassify them to
+    -- default this to 'capability' or any other single value. metadata is a
+    -- generic catch-all for the source workbook's per-row fields (owner,
+    -- classification, formula, severity, source citations, ...) that don't
+    -- warrant their own fixed column.
+    ALTER TABLE journey_metadata_molecules ADD COLUMN IF NOT EXISTS molecule_kind TEXT;
+    ALTER TABLE journey_metadata_molecules ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}';
+    -- domain_key tags a Level-3 sub-capability cluster with its Level-2 L2R
+    -- domain (Lead Intelligence, Pipeline Intelligence, ...) — the taxonomy's
+    -- Level 2 is not its own table, it's this tag plus the diagnostic
+    -- Current's port_stages array (seeded below). l2r_stage_ref is an
+    -- optional, purely informational cross-reference to
+    -- leadToRevenueModel.js's LIFECYCLE_STAGES[].id for narrative continuity
+    -- with Betsy's trademarked "Lead to Revenue Capability Model" content —
+    -- never enforced, never joined against at query time.
+    ALTER TABLE journey_metadata_clusters ADD COLUMN IF NOT EXISTS domain_key TEXT;
+    ALTER TABLE journey_metadata_clusters ADD COLUMN IF NOT EXISTS l2r_stage_ref TEXT;
+    ALTER TABLE journey_metadata_clusters ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}';
+    -- journey_scenarios/journey_gate_definitions had no generic metadata
+    -- catch-all before this — the QTR scenario registry's per-record fields
+    -- (financial risk, recovery potential, benchmark IDs, verification
+    -- status, the original QTR record ID, ...) need somewhere to live that
+    -- isn't a misuse of dimensions/dependency_rules (which mean something
+    -- specific already).
+    ALTER TABLE journey_scenarios ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}';
+    ALTER TABLE journey_gate_definitions ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}';
     ALTER TABLE journey_rod_evidence ADD COLUMN IF NOT EXISTS effective_from BIGINT;
     ALTER TABLE journey_rod_evidence ADD COLUMN IF NOT EXISTS effective_to BIGINT;
     ALTER TABLE journey_rod_evidence ADD COLUMN IF NOT EXISTS lineage_parent_id BIGINT REFERENCES journey_rod_evidence(id) ON DELETE SET NULL;
@@ -1081,12 +1116,29 @@ async function bootstrap() {
     ['proposal_experience', 'Proposal / Member Experience', "A Member's guided 9-stage Proposal Experience journey (Welcome->Workspace) — the landing experience on /member login, governed as a Channel Rod (2026-07-29, Member Experience Module).", true, 5],
     ['commercial_opportunity_target', 'Commercial Opportunity Target', 'A tracked company/event-pair opportunity in the Salt Basin commercial pipeline — one rod per company-event pair per the Weekly Research & Outreach Master Agent spec (2026-08-06).', true, 6],
     ['career_opportunity_target', 'Career Opportunity Target', "A tracked external job opening/lead in a Member's career pipeline, Tributary-linked to their own Career Master rod — one rod per opportunity per the Weekly Research & Outreach Master Agent spec (2026-08-06).", true, 7],
+    ['l2r_diagnostic', 'Lead-to-Revenue Diagnostic', "A client engagement's Current-State Diagnostic against the Lead-to-Revenue capability hierarchy — one rod per purchasing client, observations captured as journey_rod_evidence against the seeded capability Atoms (2026-08-09, Definition Studio Phase 1).", true, 18],
+    ['l2r_future_state', 'Future-State Definition', "A client's target-state definition per capability, Tributary-linked to its originating l2r_diagnostic rod — the Definition Studio's future-state half (2026-08-09, Phase 1; real UI deferred to Phase 3).", true, 19],
   ]) {
     await sql.unsafe(
       `INSERT INTO journey_rod_types (id, label, description, is_active, sort_order, created_at, updated_at)
        VALUES ($1,$2,$3,$4,$5,$6,$6) ON CONFLICT (id) DO NOTHING`,
       [rtId, rtLabel, rtDescription, rtActive, rtSort, nowRodTypes]
     );
+  }
+
+  // Definition Studio (2026-08-09, Phase 1): 'value_creation' was already
+  // reserved above as an aspirational rod_type (seeded inactive, "A
+  // value-creation initiative lifecycle") — the Value Creation Initiative
+  // this build needs is exactly that, not a new l2r_value_initiative id. This
+  // is a one-time, intentional activation of a previously-dormant type (no
+  // admin UI exists yet to toggle rod_type.is_active, so no admin edit can
+  // yet exist to clobber) — distinct from the insert-only backfill loop
+  // above, which deliberately never overwrites is_active once an admin can
+  // set it.
+  try {
+    await sql.unsafe(`UPDATE journey_rod_types SET is_active=true WHERE id='value_creation' AND is_active=false`);
+  } catch (e) {
+    console.warn('[db] value_creation rod_type activation warning:', e.message);
   }
 
   // Lead sessions — password-based access cookie scoped to one lead record.
@@ -1111,10 +1163,218 @@ async function bootstrap() {
       org_name    TEXT,
       is_primary  BOOLEAN NOT NULL DEFAULT false,
       subscribed  BOOLEAN NOT NULL DEFAULT true,
+      verified    BOOLEAN NOT NULL DEFAULT false,
+      verified_at BIGINT,
       created_at  BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
       UNIQUE(lead_id, email)
     );
     CREATE INDEX IF NOT EXISTS idx_lea_lead ON lead_email_addresses (lead_id);
+    ALTER TABLE lead_email_addresses ADD COLUMN IF NOT EXISTS verified BOOLEAN NOT NULL DEFAULT false;
+    ALTER TABLE lead_email_addresses ADD COLUMN IF NOT EXISTS verified_at BIGINT;
+    ALTER TABLE leads ADD COLUMN IF NOT EXISTS lead_intent TEXT;
+    ALTER TABLE leads ADD COLUMN IF NOT EXISTS work_email_manual_validation BOOLEAN NOT NULL DEFAULT false;
+    ALTER TABLE leads ADD COLUMN IF NOT EXISTS agent_memory JSONB NOT NULL DEFAULT '{}'::jsonb;
+    ALTER TABLE leads ADD COLUMN IF NOT EXISTS stage_gate_metadata JSONB NOT NULL DEFAULT '{}'::jsonb;
+    ALTER TABLE leads ADD COLUMN IF NOT EXISTS context_metadata JSONB NOT NULL DEFAULT '{}'::jsonb;
+    ALTER TABLE leads ADD COLUMN IF NOT EXISTS confirmed_early_registrant BOOLEAN NOT NULL DEFAULT false;
+    ALTER TABLE leads ADD COLUMN IF NOT EXISTS contract_output_ready BOOLEAN NOT NULL DEFAULT false;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS career_terms_version TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS career_terms_agreed_at BIGINT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT false;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at BIGINT;
+    CREATE TABLE IF NOT EXISTS user_password_history (
+      id BIGSERIAL PRIMARY KEY,
+      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      password_hash TEXT NOT NULL,
+      created_at BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_user_password_history ON user_password_history(user_id,created_at DESC);
+    CREATE TABLE IF NOT EXISTS user_password_reset_preferences (
+      user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      default_destinations JSONB NOT NULL DEFAULT '["primary"]',
+      ip_rules JSONB NOT NULL DEFAULT '[]',
+      updated_at BIGINT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS proposal_versions (
+      id BIGSERIAL PRIMARY KEY,
+      rod_id BIGINT NOT NULL REFERENCES journey_data_rods(id) ON DELETE CASCADE,
+      version_number INTEGER NOT NULL,
+      status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft','approved','delivered','archived','contracted')),
+      proposal_class TEXT NOT NULL DEFAULT 'budgetary' CHECK (proposal_class IN ('budgetary','final')),
+      snapshot JSONB NOT NULL DEFAULT '{}',
+      approval_caveat TEXT,
+      created_by BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      approved_by BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      approved_at BIGINT,
+      delivered_at BIGINT,
+      archived_at BIGINT,
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL,
+      UNIQUE(rod_id,version_number)
+    );
+    CREATE INDEX IF NOT EXISTS idx_proposal_versions_rod ON proposal_versions(rod_id,version_number DESC);
+    CREATE TABLE IF NOT EXISTS proposal_collaborators (
+      id BIGSERIAL PRIMARY KEY,
+      proposal_version_id BIGINT NOT NULL REFERENCES proposal_versions(id) ON DELETE CASCADE,
+      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      rights JSONB NOT NULL DEFAULT '["view","comment"]',
+      notified_at BIGINT,
+      created_at BIGINT NOT NULL,
+      UNIQUE(proposal_version_id,user_id)
+    );
+    CREATE TABLE IF NOT EXISTS proposal_feedback_entries (
+      id BIGSERIAL PRIMARY KEY,
+      proposal_version_id BIGINT NOT NULL REFERENCES proposal_versions(id) ON DELETE CASCADE,
+      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      component_key TEXT NOT NULL,
+      visual_layer_key TEXT,
+      entry_type TEXT NOT NULL DEFAULT 'comment' CHECK (entry_type IN ('comment','question','change_request')),
+      body TEXT NOT NULL,
+      context JSONB NOT NULL DEFAULT '{}',
+      status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft','published','triaged','resolved')),
+      triage JSONB NOT NULL DEFAULT '{}',
+      published_at BIGINT,
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_proposal_feedback_version ON proposal_feedback_entries(proposal_version_id,status,updated_at DESC);
+    CREATE TABLE IF NOT EXISTS proposal_delivery_emails (
+      id BIGSERIAL PRIMARY KEY,
+      proposal_version_id BIGINT NOT NULL REFERENCES proposal_versions(id) ON DELETE CASCADE,
+      recipient_user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      to_email TEXT NOT NULL,
+      provider_status TEXT NOT NULL,
+      provider_id TEXT,
+      sent_at BIGINT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS proposal_feedback_reminders (
+      id BIGSERIAL PRIMARY KEY,
+      proposal_version_id BIGINT NOT NULL REFERENCES proposal_versions(id) ON DELETE CASCADE,
+      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      reminder_at BIGINT NOT NULL,
+      channel_summary JSONB NOT NULL DEFAULT '{}'
+    );
+    CREATE INDEX IF NOT EXISTS idx_proposal_feedback_reminders ON proposal_feedback_reminders(proposal_version_id,user_id,reminder_at DESC);
+    CREATE TABLE IF NOT EXISTS proposal_contracts (
+      id BIGSERIAL PRIMARY KEY,
+      proposal_version_id BIGINT NOT NULL UNIQUE REFERENCES proposal_versions(id) ON DELETE RESTRICT,
+      rod_id BIGINT NOT NULL REFERENCES journey_data_rods(id) ON DELETE RESTRICT,
+      status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft','review','approved','executed')),
+      metadata JSONB NOT NULL DEFAULT '{}',
+      commercial_terms JSONB NOT NULL DEFAULT '{}',
+      performance_obligations JSONB NOT NULL DEFAULT '[]',
+      created_by BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS proposal_approval_actions (
+      id BIGSERIAL PRIMARY KEY,
+      proposal_version_id BIGINT NOT NULL REFERENCES proposal_versions(id) ON DELETE CASCADE,
+      action TEXT NOT NULL CHECK (action IN ('requested','approved','rejected')),
+      actor_user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      rationale TEXT,
+      metadata JSONB NOT NULL DEFAULT '{}',
+      created_at BIGINT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS client_basin_templates (
+      id BIGSERIAL PRIMARY KEY,
+      template_key TEXT NOT NULL UNIQUE,
+      label TEXT NOT NULL,
+      market_type TEXT NOT NULL,
+      entity_type TEXT NOT NULL,
+      opportunity_term TEXT NOT NULL CHECK (opportunity_term IN ('deal','opportunity')),
+      process_flow JSONB NOT NULL DEFAULT '[]',
+      entity_model JSONB NOT NULL DEFAULT '{}',
+      semantic_mappings JSONB NOT NULL DEFAULT '{}',
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS revenue_journeys (
+      id BIGSERIAL PRIMARY KEY,
+      org_id BIGINT REFERENCES organization_profiles(id) ON DELETE SET NULL,
+      template_id BIGINT REFERENCES client_basin_templates(id) ON DELETE SET NULL,
+      source_user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      source_lead_id BIGINT REFERENCES leads(id) ON DELETE SET NULL,
+      name TEXT NOT NULL,
+      channel_type TEXT NOT NULL DEFAULT 'Revenue',
+      current_stage TEXT NOT NULL DEFAULT 'proposal',
+      metadata JSONB NOT NULL DEFAULT '{}',
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS revenue_journey_contacts (
+      id BIGSERIAL PRIMARY KEY,
+      journey_id BIGINT NOT NULL REFERENCES revenue_journeys(id) ON DELETE CASCADE,
+      user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      contact_order INTEGER NOT NULL DEFAULT 1,
+      opportunity_role TEXT NOT NULL,
+      metadata JSONB NOT NULL DEFAULT '{}',
+      created_at BIGINT NOT NULL,
+      UNIQUE(journey_id,user_id)
+    );
+    CREATE TABLE IF NOT EXISTS organization_authentication_policies (
+      org_id BIGINT PRIMARY KEY REFERENCES organization_profiles(id) ON DELETE CASCADE,
+      allowed_routes JSONB NOT NULL DEFAULT '["password","totp"]',
+      preferred_route TEXT,
+      sso_provider_key TEXT,
+      authenticator_label TEXT,
+      require_one_route BOOLEAN NOT NULL DEFAULT true,
+      updated_by BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      updated_at BIGINT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS member_capability_allocations (
+      id BIGSERIAL PRIMARY KEY,
+      org_id BIGINT NOT NULL REFERENCES organization_profiles(id) ON DELETE CASCADE,
+      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      capability_key TEXT NOT NULL,
+      permission_level TEXT NOT NULL CHECK (permission_level IN ('view','collaborate','configure','admin')),
+      allocated_by BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL,
+      UNIQUE(org_id,user_id,capability_key)
+    );
+    INSERT INTO client_basin_templates (template_key,label,market_type,entity_type,opportunity_term,process_flow,entity_model,semantic_mappings,created_at,updated_at) VALUES
+      ('private-markets-fund','Private Markets · Fund','private_markets','fund','deal','["inquiry","qualification","proposal","diligence","contract"]','{"primaryEntity":"fund","related":["portfolio_company","sponsor","contact"]}','{"proposal":"investment_committee_proposal","contract":"services_agreement"}',(EXTRACT(EPOCH FROM NOW())*1000)::bigint,(EXTRACT(EPOCH FROM NOW())*1000)::bigint),
+      ('private-markets-portfolio-company','Private Markets · Portfolio Company','private_markets','portfolio_company','deal','["inquiry","qualification","proposal","diligence","contract"]','{"primaryEntity":"portfolio_company","related":["fund","sponsor","contact"]}','{"proposal":"value_creation_proposal","contract":"services_agreement"}',(EXTRACT(EPOCH FROM NOW())*1000)::bigint,(EXTRACT(EPOCH FROM NOW())*1000)::bigint),
+      ('enterprise-company','Enterprise / Public Company','enterprise','company','opportunity','["inquiry","discovery","proposal","procurement","contract"]','{"primaryEntity":"company","related":["business_unit","contact"]}','{"proposal":"commercial_proposal","contract":"master_services_agreement"}',(EXTRACT(EPOCH FROM NOW())*1000)::bigint,(EXTRACT(EPOCH FROM NOW())*1000)::bigint)
+    ON CONFLICT (template_key) DO NOTHING;
+    CREATE TABLE IF NOT EXISTS customer_agent_memory (
+      id BIGSERIAL PRIMARY KEY,
+      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      module_scope TEXT NOT NULL,
+      memory_key TEXT NOT NULL,
+      classification TEXT NOT NULL CHECK (classification IN ('private','organization','public')),
+      org_id BIGINT REFERENCES organization_profiles(id) ON DELETE CASCADE,
+      value JSONB NOT NULL DEFAULT '{}',
+      source_type TEXT NOT NULL,
+      source_id TEXT,
+      refreshed_at BIGINT NOT NULL,
+      UNIQUE(user_id,module_scope,memory_key,org_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_customer_agent_memory_scope ON customer_agent_memory(user_id,module_scope,classification,refreshed_at DESC);
+    CREATE TABLE IF NOT EXISTS lead_email_verifications (
+      id BIGSERIAL PRIMARY KEY,
+      lead_id BIGINT NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+      email TEXT NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at BIGINT NOT NULL,
+      verified_at BIGINT,
+      created_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_lead_email_verification_lead ON lead_email_verifications (lead_id, email);
+    CREATE TABLE IF NOT EXISTS user_authentication_routes (
+      id BIGSERIAL PRIMARY KEY,
+      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      route_type TEXT NOT NULL CHECK (route_type IN ('password','totp','sso')),
+      provider_key TEXT,
+      secret_enc TEXT,
+      enabled BOOLEAN NOT NULL DEFAULT false,
+      preferred BOOLEAN NOT NULL DEFAULT false,
+      org_id BIGINT REFERENCES organization_profiles(id) ON DELETE CASCADE,
+      created_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      UNIQUE(user_id, route_type, provider_key, org_id)
+    );
   `);
 
   // Multi-tenant CMS: each member gets their own draft + published site, plus
@@ -1420,6 +1680,106 @@ async function bootstrap() {
     );
     CREATE INDEX IF NOT EXISTS idx_agent_messages_thread ON agent_messages (thread_id, created_at);
     CREATE INDEX IF NOT EXISTS idx_agent_threads_user    ON agent_threads (user_id, updated_at DESC);
+
+    -- Code-agent session governance. Context profiles are reusable instructions
+    -- compiled into every new session; knowledge records are the normalized,
+    -- reviewable output of chat extraction rather than opaque transcript text.
+    CREATE TABLE IF NOT EXISTS agent_context_profiles (
+      id            BIGSERIAL PRIMARY KEY,
+      profile_key   TEXT NOT NULL UNIQUE,
+      label         TEXT NOT NULL,
+      instructions  TEXT NOT NULL,
+      source_config JSONB NOT NULL DEFAULT '{}',
+      is_default    BOOLEAN NOT NULL DEFAULT false,
+      is_active     BOOLEAN NOT NULL DEFAULT true,
+      created_by    BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      created_at    BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at    BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+
+    ALTER TABLE agent_threads ADD COLUMN IF NOT EXISTS provider TEXT NOT NULL DEFAULT 'anthropic';
+    ALTER TABLE agent_threads ADD COLUMN IF NOT EXISTS model TEXT;
+    ALTER TABLE agent_threads ADD COLUMN IF NOT EXISTS context_profile_id BIGINT REFERENCES agent_context_profiles(id) ON DELETE SET NULL;
+    ALTER TABLE agent_threads ADD COLUMN IF NOT EXISTS backlog_item_id BIGINT REFERENCES backlog_items(id) ON DELETE SET NULL;
+    ALTER TABLE agent_threads ADD COLUMN IF NOT EXISTS stage TEXT NOT NULL DEFAULT 'definition';
+    ALTER TABLE agent_threads ADD COLUMN IF NOT EXISTS context_snapshot JSONB NOT NULL DEFAULT '{}';
+    ALTER TABLE agent_threads ADD COLUMN IF NOT EXISTS provider_session_id TEXT;
+
+    CREATE TABLE IF NOT EXISTS agent_knowledge_records (
+      id                 BIGSERIAL PRIMARY KEY,
+      record_key         TEXT NOT NULL UNIQUE,
+      record_type        TEXT NOT NULL,
+      title              TEXT NOT NULL,
+      statement          TEXT NOT NULL,
+      rationale          TEXT,
+      status             TEXT NOT NULL DEFAULT 'proposed',
+      confidence         NUMERIC,
+      domain_keys        JSONB NOT NULL DEFAULT '[]',
+      capability_ids     JSONB NOT NULL DEFAULT '[]',
+      eidos_object_links JSONB NOT NULL DEFAULT '[]',
+      backlog_item_id    BIGINT REFERENCES backlog_items(id) ON DELETE SET NULL,
+      source_thread_id   BIGINT REFERENCES agent_threads(id) ON DELETE SET NULL,
+      source_message_id  BIGINT REFERENCES agent_messages(id) ON DELETE SET NULL,
+      implementation     JSONB NOT NULL DEFAULT '{}',
+      reuse_score        NUMERIC NOT NULL DEFAULT 0,
+      template_candidate BOOLEAN NOT NULL DEFAULT false,
+      metadata           JSONB NOT NULL DEFAULT '{}',
+      created_by         BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      created_at         BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at         BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_agent_knowledge_type ON agent_knowledge_records(record_type, status);
+    CREATE INDEX IF NOT EXISTS idx_agent_knowledge_backlog ON agent_knowledge_records(backlog_item_id) WHERE backlog_item_id IS NOT NULL;
+
+    CREATE TABLE IF NOT EXISTS agent_work_stage_events (
+      id              BIGSERIAL PRIMARY KEY,
+      thread_id       BIGINT NOT NULL REFERENCES agent_threads(id) ON DELETE CASCADE,
+      backlog_item_id BIGINT REFERENCES backlog_items(id) ON DELETE SET NULL,
+      stage           TEXT NOT NULL,
+      event_type      TEXT NOT NULL DEFAULT 'entered',
+      summary         TEXT,
+      evidence        JSONB NOT NULL DEFAULT '{}',
+      created_by      BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      created_at      BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_agent_stage_thread ON agent_work_stage_events(thread_id, created_at);
+
+    CREATE TABLE IF NOT EXISTS agent_code_runs (
+      id                 BIGSERIAL PRIMARY KEY,
+      thread_id          BIGINT NOT NULL REFERENCES agent_threads(id) ON DELETE CASCADE,
+      backlog_item_id    BIGINT REFERENCES backlog_items(id) ON DELETE SET NULL,
+      provider           TEXT NOT NULL,
+      model              TEXT,
+      objective          TEXT NOT NULL,
+      acceptance_criteria TEXT,
+      status             TEXT NOT NULL DEFAULT 'proposed',
+      approval_status    TEXT NOT NULL DEFAULT 'pending',
+      approved_by        BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      approved_at        BIGINT,
+      started_at         BIGINT,
+      finished_at        BIGINT,
+      exit_code          INTEGER,
+      summary            TEXT,
+      changed_files      JSONB NOT NULL DEFAULT '[]',
+      preexisting_files  JSONB NOT NULL DEFAULT '[]',
+      verification       JSONB NOT NULL DEFAULT '[]',
+      error              TEXT,
+      created_by         BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      created_at         BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at         BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_agent_code_runs_thread ON agent_code_runs(thread_id, created_at DESC);
+
+    CREATE TABLE IF NOT EXISTS agent_code_run_events (
+      id          BIGSERIAL PRIMARY KEY,
+      run_id      BIGINT NOT NULL REFERENCES agent_code_runs(id) ON DELETE CASCADE,
+      event_type  TEXT NOT NULL,
+      stream      TEXT,
+      message     TEXT,
+      payload     JSONB NOT NULL DEFAULT '{}',
+      created_at  BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_agent_code_run_events ON agent_code_run_events(run_id,id);
 
     -- backlog_items.jira_issue_key for round-trip identification.
     ALTER TABLE backlog_items ADD COLUMN IF NOT EXISTS jira_issue_key TEXT;
@@ -3332,7 +3692,74 @@ async function bootstrap() {
     );
     CREATE INDEX IF NOT EXISTS idx_career_source_mappings_target ON career_source_mappings (target_table, target_id);
     CREATE INDEX IF NOT EXISTS idx_career_source_mappings_document ON career_source_mappings (document_id);
+
+    -- Career Foundation Sourcing & Reconciliation, Phase 2 (2026-08-10) — a
+    -- fast-read review-task projection, justified the same way
+    -- journey_rod_settlement_states is justified (reconstructing "all open
+    -- review items" from journey_rod_events on every request doesn't scale).
+    -- Event-sourced lineage lives in journey_rod_events via the existing
+    -- recordRodEvent() helper (career_conflict_detected/resolved,
+    -- career_ambiguous_mapping_flagged/resolved) — this table is the
+    -- queryable snapshot, not the source of truth for history.
+    CREATE TABLE IF NOT EXISTS career_reconciliation_tasks (
+      id BIGSERIAL PRIMARY KEY,
+      rod_id BIGINT NOT NULL REFERENCES journey_data_rods(id) ON DELETE CASCADE,
+      task_type TEXT NOT NULL, -- 'source_conflict' | 'ambiguous_mapping'
+      entry_type TEXT NOT NULL,
+      atom_key TEXT,
+      target_table TEXT,
+      target_id BIGINT,
+      evidence_refs JSONB NOT NULL DEFAULT '[]',
+      reasoning JSONB,
+      status TEXT NOT NULL DEFAULT 'open', -- 'open' | 'resolved' | 'dismissed'
+      resolution JSONB,
+      resolved_by BIGINT REFERENCES users(id),
+      resolved_at BIGINT,
+      detected_at BIGINT NOT NULL,
+      metadata JSONB NOT NULL DEFAULT '{}',
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_reconciliation_tasks_rod ON career_reconciliation_tasks (rod_id, status);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_reconciliation_tasks_open_unique
+      ON career_reconciliation_tasks (rod_id, entry_type, atom_key, task_type) WHERE status = 'open';
+
+    CREATE TABLE IF NOT EXISTS career_reasoning_approvals (
+      id BIGSERIAL PRIMARY KEY,
+      rod_id BIGINT NOT NULL REFERENCES journey_data_rods(id) ON DELETE CASCADE,
+      task_id BIGINT NOT NULL REFERENCES career_reconciliation_tasks(id) ON DELETE CASCADE,
+      entry_type TEXT NOT NULL,
+      atom_key TEXT,
+      reasoning_pattern JSONB NOT NULL DEFAULT '{}',
+      raw_reasoning TEXT,
+      source_excerpt TEXT,
+      approved_by BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      approved_at BIGINT NOT NULL,
+      created_at BIGINT NOT NULL,
+      UNIQUE(task_id, approved_by)
+    );
+    CREATE INDEX IF NOT EXISTS idx_career_reasoning_approvals_pattern
+      ON career_reasoning_approvals ((reasoning_pattern->>'patternKey'));
+
+    CREATE TABLE IF NOT EXISTS career_reasoning_cache_candidates (
+      id BIGSERIAL PRIMARY KEY,
+      pattern_key TEXT NOT NULL UNIQUE,
+      entry_type TEXT NOT NULL,
+      atom_key TEXT,
+      approved_user_count INTEGER NOT NULL DEFAULT 0,
+      total_eligible_user_count INTEGER NOT NULL DEFAULT 0,
+      approval_ratio DOUBLE PRECISION NOT NULL DEFAULT 0,
+      sample_reasonings JSONB NOT NULL DEFAULT '[]',
+      status TEXT NOT NULL DEFAULT 'pending_review',
+      admin_decision_id BIGINT REFERENCES journey_rod_decisions(id) ON DELETE SET NULL,
+      computed_at BIGINT NOT NULL,
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL
+    );
   `);
+
+  await sql.unsafe(`ALTER TABLE journey_rod_decisions ALTER COLUMN rod_id DROP NOT NULL`);
+  await sql.unsafe(`ALTER TABLE journey_rod_decisions ADD COLUMN IF NOT EXISTS decision_scope TEXT NOT NULL DEFAULT 'rod'`);
 
   // One-shot: inject "Career Master" tab into the admin_nav content view.
   try {
@@ -3403,6 +3830,57 @@ async function bootstrap() {
     }
   } catch (e) {
     console.warn('[db] commercial-opportunities nav injection skipped:', e.message);
+  }
+
+  // One-shot: inject "Lead-to-Revenue Diagnostic" tab into the admin_nav crm
+  // view (2026-08-09, Definition Studio Phase 2), alongside the existing
+  // "Leads"/"Commercial Opportunity Pipeline" tabs rather than replacing
+  // them. Same additive-only pattern as the block above.
+  try {
+    const navRow4c = await sql.unsafe(`SELECT data FROM config_state WHERE id = 'admin_nav'`);
+    if (navRow4c.length > 0) {
+      const nav = JSON.parse(navRow4c[0].data);
+      const crmView = (nav.views || []).find((v) => v.id === 'crm');
+      if (crmView) {
+        crmView.tabs = crmView.tabs || [];
+        const hasL2rDiagnostics = crmView.tabs.some((t) => t.id === 'l2r-diagnostics');
+        if (!hasL2rDiagnostics) {
+          crmView.tabs.push({ id: 'l2r-diagnostics', label: 'Lead-to-Revenue Diagnostic', componentId: 'l2rDiagnostics', sortOrder: 2 });
+          await sql.unsafe(
+            `UPDATE config_state SET data = $1, updated_at = $2 WHERE id = 'admin_nav'`,
+            [JSON.stringify(nav), Date.now()]
+          );
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[db] l2r-diagnostics nav injection skipped:', e.message);
+  }
+
+  // One-shot: inject "Career Reasoning Compiler" tab into the admin_nav crm
+  // view (2026-08-10, Career Foundation Sourcing & Reconciliation Phase 4) —
+  // the admin-facing view of career_reasoning_cache_candidates, alongside
+  // the other recent admin platform-tooling tabs in this view. Same
+  // additive-only pattern as the two blocks above.
+  try {
+    const navRow4d = await sql.unsafe(`SELECT data FROM config_state WHERE id = 'admin_nav'`);
+    if (navRow4d.length > 0) {
+      const nav = JSON.parse(navRow4d[0].data);
+      const crmView = (nav.views || []).find((v) => v.id === 'crm');
+      if (crmView) {
+        crmView.tabs = crmView.tabs || [];
+        const hasReasoningCompiler = crmView.tabs.some((t) => t.id === 'career-reasoning-compiler');
+        if (!hasReasoningCompiler) {
+          crmView.tabs.push({ id: 'career-reasoning-compiler', label: 'Career Reasoning Compiler', componentId: 'careerReasoningCompiler', sortOrder: 3 });
+          await sql.unsafe(
+            `UPDATE config_state SET data = $1, updated_at = $2 WHERE id = 'admin_nav'`,
+            [JSON.stringify(nav), Date.now()]
+          );
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[db] career-reasoning-compiler nav injection skipped:', e.message);
   }
 
   // One-shot: inject "Methodology Config" tab into the admin_nav system view
@@ -4406,6 +4884,11 @@ Rod state, per event:
         objective: 'Issue a pass/fail manifest for the run — never approve records that fail a gate to meet a volume target.',
         capabilities: ['Audit a run against the quality gates', 'Reject a record that fails a gate'],
         boundaries: ['Approve records that fail a gate merely to meet a volume target'] },
+      { key: 'career_reconciliation_analyst', name: 'Career Reconciliation Analyst', pipeline: 'career', tier: 1, reportsTo: 'orchestrator',
+        roleDescription: 'Surfaces equal-standing career-source conflicts and ambiguous mappings, explains evidence and member-approved reasoning patterns, and prepares bounded resolution suggestions.',
+        objective: 'Help a member reconcile one Career Foundation fact without silently selecting a source or changing unrelated data.',
+        capabilities: ['Compare evidence attached to one reconciliation task', 'Normalize an explicitly dictated correction', 'Surface member-approved reasoning-pattern candidates for admin review'],
+        boundaries: ['Auto-resolve a conflict', 'Treat one source type as universally authoritative', 'Apply a cross-user reasoning pattern without member confirmation', 'Approve its own platform cache candidate', 'Claim enforcement of the Agent Boundary beyond this reserved, unenforced column'] },
     ];
     const idByKey = {};
     for (const a of AGENT_ROSTER) {
@@ -4607,6 +5090,192 @@ Rod state, per event:
     console.warn('[db] commercial scoring dimension Atom seed warning:', e.message);
   }
 
+  // Lead-to-Revenue Definition Studio — capability hierarchy + QTR reference
+  // library seed (2026-08-09, Phase 1). Source: Lead_to_Revenue_Intelligence_
+  // V3_Full_Capability_Breakdown.xlsx (945-row, 4-level capability taxonomy)
+  // and QTR_Operational_Intelligence_OS_V5_Prepopulated.xlsx (681-scenario
+  // reference library), converted into server/data/l2rCapabilityHierarchySeed.js.
+  // Reuse-first classification (see l2rDiagnosticRegistry.js's header
+  // comment for the full audit): Level 4 capabilities + every QTR reference
+  // fact (root cause/impact/control/KPI/leakage pattern/entity/handover
+  // pattern/AI test/heuristic) become journey_metadata_molecules rows
+  // (Atoms), distinguished by the molecule_kind column added above; Level 3
+  // sub-capabilities become journey_metadata_clusters rows tagged with
+  // domain_key (Level 2); QTR scenarios (681 records collapse to ~227 unique
+  // names) become journey_scenarios + one journey_gate_definitions row per
+  // Detection/Prevention/Escalation stage — QTR's own 3-stage shape maps
+  // directly onto stage_key. Chunked multi-row INSERTs (not one row-per-await
+  // like the smaller seeds above) because this is ~2,600 rows and bootstrap()
+  // runs on every boot, including every `npm run server` --watch reload.
+  try {
+    const nowL2rSeed = Date.now();
+    const CHUNK = 200;
+
+    async function chunkedInsert(table, columns, jsonbColumns, rowsOfValues, conflictSql) {
+      const jsonbSet = new Set(jsonbColumns);
+      for (let i = 0; i < rowsOfValues.length; i += CHUNK) {
+        const chunk = rowsOfValues.slice(i, i + CHUNK);
+        const params = [];
+        const valueGroups = chunk.map((row) => {
+          const placeholders = columns.map((col, idx) => {
+            params.push(row[idx]);
+            return jsonbSet.has(col) ? `$${params.length}::jsonb` : `$${params.length}`;
+          });
+          return `(${placeholders.join(',')})`;
+        });
+        await sql.unsafe(`INSERT INTO ${table} (${columns.join(',')}) VALUES ${valueGroups.join(',')} ${conflictSql}`, params);
+      }
+    }
+
+    // Diagnostic Current — Level 2 domains expressed as port_stages, not a
+    // table (currentRegistry.js's existing shape, master_data scope so it
+    // applies to every l2r_diagnostic rod).
+    await sql.unsafe(
+      `INSERT INTO journey_current_definitions (current_key, org_id, label, rod_type, scope_type, primary_scenario_key, port_stages, entry_criteria, minimum_carry, transition_rules, tributary_trigger_rules, created_at, updated_at)
+       VALUES ('l2r_diagnostic_scope',NULL,'Lead-to-Revenue Diagnostic Scope','l2r_diagnostic','master_data',NULL,$1::jsonb,'{"minAtoms":1}'::jsonb,'[]'::jsonb,'[]'::jsonb,'[]'::jsonb,$2,$2)
+       ON CONFLICT (current_key) WHERE org_id IS NULL DO NOTHING`,
+      [L2R_DOMAINS.map((d) => d.domainKey), nowL2rSeed]
+    );
+
+    // Capability Atoms (945) + QTR reference Atoms (400) — same
+    // journey_metadata_molecules columns as every other Atom seed in this
+    // file, plus molecule_kind + metadata.
+    const atomColumns = ['molecule_key', 'label', 'data_type', 'source_paths', 'validation_config', 'is_sensitive', 'is_active', 'canonical_definition', 'value_domain', 'mutability_class', 'molecule_kind', 'metadata', 'created_at', 'updated_at'];
+    const atomJsonbCols = ['source_paths', 'validation_config', 'metadata'];
+    const capabilityAtomRows = CAPABILITY_ATOMS.map((a) => [
+      a.moleculeKey, a.label, 'text', [], {}, false, true, a.canonicalDefinition, a.valueDomain, a.mutabilityClass, a.moleculeKind, a.metadata || {}, nowL2rSeed, nowL2rSeed,
+    ]);
+    await chunkedInsert('journey_metadata_molecules', atomColumns, atomJsonbCols, capabilityAtomRows, 'ON CONFLICT (molecule_key) DO NOTHING');
+
+    const qtrAtomRows = QTR_REFERENCE_ATOMS.map((a) => [
+      a.moleculeKey, a.label, 'text', [], {}, false, true, a.canonicalDefinition, a.valueDomain, a.mutabilityClass, a.moleculeKind, a.metadata || {}, nowL2rSeed, nowL2rSeed,
+    ]);
+    await chunkedInsert('journey_metadata_molecules', atomColumns, atomJsonbCols, qtrAtomRows, 'ON CONFLICT (molecule_key) DO NOTHING');
+
+    // Sub-Capability Clusters (189) — molecule_keys carried for backward-
+    // compatible readers (same convention as the Career Molecule seed
+    // above), but the REAL, enforced membership is the affinity-rule seed
+    // right after this: minimum_affinity=1.0 records "this Atom IS a member
+    // of this Cluster" (a fixed taxonomic fact from the source spreadsheet),
+    // not a fuzzy computed threshold — same reasoning as the Career Atom
+    // affinity seed's own comment.
+    const capabilityKeysByCluster = new Map();
+    for (const atom of CAPABILITY_ATOMS) {
+      if (!capabilityKeysByCluster.has(atom.clusterKey)) capabilityKeysByCluster.set(atom.clusterKey, []);
+      capabilityKeysByCluster.get(atom.clusterKey).push(atom.moleculeKey);
+    }
+    const clusterColumns = ['cluster_key', 'label', 'description', 'molecule_keys', 'completion_rule', 'minimum_count', 'is_active', 'alignment_rules', 'domain_key', 'l2r_stage_ref', 'metadata', 'created_at', 'updated_at'];
+    const clusterJsonbCols = ['molecule_keys', 'alignment_rules', 'metadata'];
+    const clusterRows = SUB_CAPABILITY_CLUSTERS.map((c) => [
+      c.clusterKey, c.label, c.description, capabilityKeysByCluster.get(c.clusterKey) || [], 'any', null, true, [], c.domainKey, null, {}, nowL2rSeed, nowL2rSeed,
+    ]);
+    await chunkedInsert('journey_metadata_clusters', clusterColumns, clusterJsonbCols, clusterRows, 'ON CONFLICT (cluster_key) DO NOTHING');
+
+    const affinityColumns = ['cluster_key', 'molecule_key', 'minimum_affinity', 'source_authority_modifier', 'metadata', 'is_active', 'created_at', 'updated_at'];
+    const affinityJsonbCols = ['metadata'];
+    const affinityRows = CAPABILITY_ATOMS.map((a) => [a.clusterKey, a.moleculeKey, 1.0, 0, {}, true, nowL2rSeed, nowL2rSeed]);
+    await chunkedInsert('journey_atom_affinity_rules', affinityColumns, affinityJsonbCols, affinityRows, 'ON CONFLICT (cluster_key, molecule_key) WHERE org_id IS NULL DO NOTHING');
+
+    // Scenarios (227) — needs each row's id back to attach gates, so this one
+    // stays row-at-a-time (RETURNING id doesn't compose with a chunked
+    // multi-row INSERT here without a second round trip anyway).
+    const gateRows = [];
+    for (const scenario of QTR_SCENARIOS) {
+      const inserted = await sql.unsafe(
+        `INSERT INTO journey_scenarios (scenario_key,rod_type,label,description,selected_cluster_keys,dimensions,actor_roles,metadata,is_active,created_at,updated_at)
+         VALUES ($1,$2,$3,$4,'[]'::jsonb,'[]'::jsonb,'[]'::jsonb,$5::jsonb,true,$6,$6)
+         ON CONFLICT (scenario_key) DO NOTHING RETURNING id`,
+        [scenario.scenarioKey, scenario.rodType, scenario.label, scenario.description, { domain: scenario.domain, processStage: scenario.processStage }, nowL2rSeed]
+      );
+      const scenarioId = inserted[0]?.id
+        ?? (await sql.unsafe(`SELECT id FROM journey_scenarios WHERE scenario_key=$1`, [scenario.scenarioKey]))[0]?.id;
+      if (!scenarioId) continue;
+      scenario.gates.forEach((gate, idx) => {
+        gateRows.push([
+          scenarioId, gate.stageKey, [], gate.requiredMolecules, [], [], [], 'when_ambiguous', gate.humanPrompt, idx, true, gate.metadata || {}, nowL2rSeed, nowL2rSeed,
+        ]);
+      });
+    }
+    const gateColumns = ['scenario_id', 'stage_key', 'required_clusters', 'required_molecules', 'required_dimensions', 'required_actor_roles', 'dependency_rules', 'judgment_policy', 'human_prompt', 'sort_order', 'is_active', 'metadata', 'created_at', 'updated_at'];
+    const gateJsonbCols = ['required_clusters', 'required_molecules', 'required_dimensions', 'required_actor_roles', 'dependency_rules', 'metadata'];
+    await chunkedInsert('journey_gate_definitions', gateColumns, gateJsonbCols, gateRows, 'ON CONFLICT (scenario_id, stage_key) DO NOTHING');
+  } catch (e) {
+    console.warn('[db] L2R Definition Studio capability/QTR seed warning:', e.message);
+  }
+
+  // Genesis R4 organization configuration. R1 scientific, R2 enterprise,
+  // and R3 translation records are shipped as immutable/versioned catalogs;
+  // tenant-specific executable bindings live here and never overwrite them.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS genesis_configurations (
+      id BIGSERIAL PRIMARY KEY,
+      namespace TEXT NOT NULL,
+      version TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'proposed',
+      data JSONB NOT NULL DEFAULT '{}',
+      effective_from BIGINT,
+      effective_to BIGINT,
+      created_by BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL,
+      UNIQUE(namespace, version)
+    );
+    CREATE INDEX IF NOT EXISTS idx_genesis_config_namespace_status
+      ON genesis_configurations(namespace, status, updated_at DESC);
+
+    CREATE TABLE IF NOT EXISTS genesis_object_overlaps (
+      overlap_id TEXT PRIMARY KEY,
+      domain TEXT NOT NULL,
+      source_kind TEXT NOT NULL,
+      source_key TEXT NOT NULL,
+      source_path TEXT,
+      canonical_repository TEXT NOT NULL,
+      canonical_type TEXT NOT NULL,
+      canonical_id TEXT NOT NULL,
+      mapping_relation TEXT NOT NULL,
+      overlap_status TEXT NOT NULL,
+      confidence NUMERIC NOT NULL,
+      rationale TEXT NOT NULL,
+      migration_action TEXT NOT NULL,
+      config_namespace TEXT,
+      review_status TEXT NOT NULL DEFAULT 'proposed',
+      reviewed_by BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      reviewed_at BIGINT,
+      metadata JSONB NOT NULL DEFAULT '{}',
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL,
+      UNIQUE(source_kind, source_key, canonical_repository, canonical_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_genesis_overlap_domain_status
+      ON genesis_object_overlaps(domain, overlap_status, review_status);
+    CREATE INDEX IF NOT EXISTS idx_genesis_overlap_canonical
+      ON genesis_object_overlaps(canonical_repository, canonical_type, canonical_id);
+    ALTER TABLE genesis_object_overlaps ADD COLUMN IF NOT EXISTS resolution_kind TEXT;
+    ALTER TABLE genesis_object_overlaps ADD COLUMN IF NOT EXISTS resolution_proposal JSONB NOT NULL DEFAULT '{}';
+    ALTER TABLE genesis_object_overlaps ADD COLUMN IF NOT EXISTS resolution_status TEXT NOT NULL DEFAULT 'not_started';
+    ALTER TABLE genesis_object_overlaps ADD COLUMN IF NOT EXISTS resolution_note TEXT;
+    ALTER TABLE genesis_object_overlaps ADD COLUMN IF NOT EXISTS decided_by BIGINT REFERENCES users(id) ON DELETE SET NULL;
+    ALTER TABLE genesis_object_overlaps ADD COLUMN IF NOT EXISTS decided_at BIGINT;
+  `);
+
+  for (const item of genesisOverlapSeeds) {
+    const now = Date.now();
+    await db.prepare(`
+      INSERT INTO genesis_object_overlaps (
+        overlap_id, domain, source_kind, source_key, source_path,
+        canonical_repository, canonical_type, canonical_id, mapping_relation,
+        overlap_status, confidence, rationale, migration_action, metadata,
+        created_at, updated_at
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$15)
+      ON CONFLICT (overlap_id) DO NOTHING
+    `).run(
+      item.id, item.domain, item.sourceKind, item.sourceKey, item.sourcePath,
+      item.canonicalRepository, item.canonicalType, item.canonicalId, item.mappingRelation,
+      item.overlapStatus, item.confidence, item.rationale, item.migrationAction,
+      item.metadata, now
+    );
+  }
+
   // Agent worlds: shared definitions, world scope, LLM budgets, scheduled
   // run history, findings, and cross-feature notifications.
   await sql.unsafe(`
@@ -4682,6 +5351,9 @@ Rod state, per event:
       ('content-research-connection-audit',NULL,'Content Research Connection Audit','Deterministic data-port readiness audit.','content_research','scheduled','platform',FALSE,
        '{"runtimeBinding":"server/lib/agents/contentResearchAgent.js","llm":{"mode":"none","required":false,"provider":null,"model":null,"purpose":"Database and connection checks only.","maxOutputTokensPerResponse":0,"tokenCap":0,"capPeriod":"month","maxToolIterations":0}}'::jsonb,
        (EXTRACT(EPOCH FROM NOW())*1000)::bigint,(EXTRACT(EPOCH FROM NOW())*1000)::bigint),
+      ('crystal-world-audit-agent',NULL,'Crystal World Audit Agent','Deterministic registry, scene-lineage, and 3D source audit.','crystal_world_audit','scheduled','platform',TRUE,
+       '{"runtimeBinding":"server/lib/agents/crystalWorldAuditAgent.js","auditScopes":["variant-registry","encoding-profiles","component-profiles","visual-semantics","runtime-scene-manifests","3d-accessibility","experiential-runtime"],"llm":{"mode":"none","required":false,"provider":null,"model":null,"purpose":"All checks are deterministic registry, runtime-manifest, and experiential validation.","maxOutputTokensPerResponse":0,"tokenCap":0,"capPeriod":"month","maxToolIterations":0}}'::jsonb,
+       (EXTRACT(EPOCH FROM NOW())*1000)::bigint,(EXTRACT(EPOCH FROM NOW())*1000)::bigint),
       ('member-personal-brand-staff',NULL,'Personal Brand Staff','Member agent template.','internal_chat','internal_chat','platform',TRUE,
        '{"templateDefinition":true,"runtimeBinding":"server/routes/memberAgent.js#personal_brand","llm":{"mode":"required","required":true,"provider":"anthropic","model":"claude-sonnet-4-5","purpose":"Interpret member requests and choose bounded draft-site tools.","maxOutputTokensPerResponse":4096,"tokenCap":500000,"capPeriod":"month","maxToolIterations":8}}'::jsonb,
        (EXTRACT(EPOCH FROM NOW())*1000)::bigint,(EXTRACT(EPOCH FROM NOW())*1000)::bigint),
@@ -4693,6 +5365,21 @@ Rod state, per event:
        (EXTRACT(EPOCH FROM NOW())*1000)::bigint,(EXTRACT(EPOCH FROM NOW())*1000)::bigint),
       ('scrum-agent',NULL,'Scrum Agent','Internal backlog planning chat.','internal_chat','internal_chat','platform',TRUE,
        '{"runtimeBinding":"server/routes/agent.js","llm":{"mode":"required","required":true,"provider":"anthropic","model":"claude-sonnet-4-5","purpose":"Backlog reasoning and requirements drafting.","maxOutputTokensPerResponse":2048,"tokenCap":300000,"capPeriod":"month","maxToolIterations":1}}'::jsonb,
+       (EXTRACT(EPOCH FROM NOW())*1000)::bigint,(EXTRACT(EPOCH FROM NOW())*1000)::bigint),
+      ('studio-coding-agent',NULL,'Coding Agent','Bounded implementation agent. Executes approved slices without product or design discretion.','coding','internal_chat','platform',TRUE,
+       '{"studioRole":"coding","contextSources":["repository","approved-work-order","ux-engine-contract"],"iteration":{"requireApprovalOnScopeChange":true},"llm":{"mode":"required","required":true,"provider":"anthropic","model":"claude-sonnet-4-5","purpose":"Implement approved repository changes through fixed build and verification gates.","maxOutputTokensPerResponse":8192,"tokenCap":1000000,"capPeriod":"month","maxToolIterations":12}}'::jsonb,
+       (EXTRACT(EPOCH FROM NOW())*1000)::bigint,(EXTRACT(EPOCH FROM NOW())*1000)::bigint),
+      ('studio-platform-config-agent',NULL,'Platform Config Agent','Schema-bound configuration agent. Stages validated draft configuration only.','platform_config','internal_chat','platform',TRUE,
+       '{"studioRole":"platform_config","contextSources":["configuration-envelopes","configuration-schemas","navigation-config"],"iteration":{"requireApprovalOnScopeChange":true},"llm":{"mode":"required","required":true,"provider":"anthropic","model":"claude-sonnet-4-5","purpose":"Translate configuration requests into schema-valid draft patches.","maxOutputTokensPerResponse":4096,"tokenCap":500000,"capPeriod":"month","maxToolIterations":8}}'::jsonb,
+       (EXTRACT(EPOCH FROM NOW())*1000)::bigint,(EXTRACT(EPOCH FROM NOW())*1000)::bigint),
+      ('studio-ux-agent',NULL,'UX Agent','Visual-system owner with complete visual, navigation, component, and 3D-variant context.','ux','internal_chat','platform',TRUE,
+       '{"studioRole":"ux","contextSources":["visual-registries","component-inventory","admin-navigation","world-variant-registry","responsive-rules"],"collaboratesWith":["studio-engine-agent","studio-ui-engine-agent"],"iteration":{"requireVisualQa":true},"llm":{"mode":"required","required":true,"provider":"anthropic","model":"claude-sonnet-4-5","purpose":"Improve governed UI, UX, graphics, scenes, and 3D variants within the existing visual language.","maxOutputTokensPerResponse":8192,"tokenCap":1000000,"capPeriod":"month","maxToolIterations":12}}'::jsonb,
+       (EXTRACT(EPOCH FROM NOW())*1000)::bigint,(EXTRACT(EPOCH FROM NOW())*1000)::bigint),
+      ('studio-engine-agent',NULL,'API / Engine Agent','Workflow, event, API, state-transition, and persistence owner.','engine','internal_chat','platform',TRUE,
+       '{"studioRole":"engine","contextSources":["api-routes","database-schema","workflow-registries","event-contracts"],"collaboratesWith":["studio-ux-agent","studio-ui-engine-agent"],"iteration":{"requireTransitionTests":true},"llm":{"mode":"required","required":true,"provider":"anthropic","model":"claude-sonnet-4-5","purpose":"Define and implement how state changes from user events and workflow rules.","maxOutputTokensPerResponse":8192,"tokenCap":1000000,"capPeriod":"month","maxToolIterations":12}}'::jsonb,
+       (EXTRACT(EPOCH FROM NOW())*1000)::bigint,(EXTRACT(EPOCH FROM NOW())*1000)::bigint),
+      ('studio-ui-engine-agent',NULL,'UI + Engine Agent','Roll-up orchestrator for coordinated visual and logic changes.','ui_engine','internal_chat','platform',TRUE,
+       '{"studioRole":"ui_engine","contextSources":["ux-context-packet","engine-context-packet","shared-ui-state-contract"],"rollsUp":["studio-ux-agent","studio-engine-agent"],"delegatesTo":["studio-ux-agent","studio-engine-agent","studio-coding-agent","studio-platform-config-agent"],"iteration":{"requireEndToEndVerification":true},"llm":{"mode":"required","required":true,"provider":"anthropic","model":"claude-sonnet-4-5","purpose":"Reconcile UX and engine context into one approved, end-to-end change plan.","maxOutputTokensPerResponse":8192,"tokenCap":1000000,"capPeriod":"month","maxToolIterations":16}}'::jsonb,
        (EXTRACT(EPOCH FROM NOW())*1000)::bigint,(EXTRACT(EPOCH FROM NOW())*1000)::bigint)
     ON CONFLICT (key) DO NOTHING;
   `);
@@ -4709,6 +5396,19 @@ Rod state, per event:
     }
   } catch (error) {
     console.warn('[db] Agent Orbit navigation seed warning:', error.message);
+  }
+
+  try {
+    const navRow = await db.prepare(`SELECT data FROM config_state WHERE id='admin_nav'`).get();
+    const nav = navRow?.data ? JSON.parse(navRow.data) : { views: [] };
+    if (!nav.views.some((view) => view.id === 'genesis-foundation')) {
+      nav.views.push({ id: 'genesis-foundation', label: 'Genesis Foundation', sortOrder: 4.6, tabs: [
+        { id: 'genesis-foundation', label: 'Scientific → Enterprise', componentId: 'genesisFoundation', sortOrder: 0 },
+      ] });
+      await db.prepare(`UPDATE config_state SET data=$1, updated_at=$2 WHERE id='admin_nav'`).run(JSON.stringify(nav), Date.now());
+    }
+  } catch (error) {
+    console.warn('[db] Genesis Foundation navigation seed warning:', error.message);
   }
 }
 

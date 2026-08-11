@@ -261,6 +261,18 @@ function LeadDetail({ lead, onDelete, onUpdate }) {
   const isJob = lead.lead_type === 'job';
   const [editing, setEditing] = useState(false);
   const [jobForm, setJobForm] = useState({ jobStatus: lead.job_status || 'new', company: lead.company || '', hiringManager: lead.hiring_manager || '', jobUrl: lead.job_url || '', jobDescription: lead.job_description || '' });
+  const [gateSaving, setGateSaving] = useState(false);
+
+  async function setStageGate(patch) {
+    setGateSaving(true);
+    try {
+      const response = await fetch(`/api/leads/${lead.id}/stage-gates`, { method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.error || 'Gate update failed');
+      await onUpdate();
+    } catch (error) { toast.error(error.message); }
+    finally { setGateSaving(false); }
+  }
   const [saving, setSaving] = useState(false);
 
   async function saveJob() {
@@ -307,6 +319,19 @@ function LeadDetail({ lead, onDelete, onUpdate }) {
       <Section label="Email" value={lead.email} />
       <Section label="Name" value={lead.name || '—'} />
       <Section label="Submitted" value={new Date(lead.created_at).toLocaleString()} />
+
+      {!isJob && (
+        <div style={{ marginTop: '1rem', background: 'var(--sb-navy-deep)', border: '0.5px solid rgba(196,132,58,0.22)', borderRadius: 6, padding: '1rem 1.25rem', marginBottom: '1rem' }}>
+          <div style={{ fontSize: '0.6rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--sb-gold)', fontFamily: 'var(--sb-font-label)', marginBottom: '.75rem' }}>Configurable conversion gates</div>
+          <Section label="Intent" value={lead.lead_intent || 'Unclassified'} />
+          <Section label="Primary email" value={lead.verified_email ? 'Verified' : 'Verification pending'} />
+          <div style={{ display: 'grid', gap: '.5rem' }}>
+            <GateToggle label="Confirmed early registrant" active={!!lead.confirmed_early_registrant} disabled={gateSaving} onClick={() => setStageGate({ confirmedEarlyRegistrant: !lead.confirmed_early_registrant })} />
+            <GateToggle label="Work email manually validated" active={!lead.work_email_manual_validation} disabled={gateSaving} onClick={() => setStageGate({ workEmailManualValidation: !lead.work_email_manual_validation })} />
+            <GateToggle label="Contract or binding output ready" active={!!lead.contract_output_ready} disabled={gateSaving} onClick={() => setStageGate({ contractOutputReady: !lead.contract_output_ready })} />
+          </div>
+        </div>
+      )}
 
       {/* Job-specific fields */}
       {isJob && !editing && (
@@ -386,4 +411,8 @@ function Section({ label, value }) {
       <div style={{ fontSize: '0.92rem', color: 'var(--sb-cream)', wordBreak: 'break-word' }}>{value}</div>
     </div>
   );
+}
+
+function GateToggle({ label, active, disabled, onClick }) {
+  return <button type="button" disabled={disabled} onClick={onClick} style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', padding: '.55rem .7rem', borderRadius: 5, border: `0.5px solid ${active ? 'rgba(168,184,154,.5)' : 'rgba(196,132,58,.3)'}`, background: active ? 'rgba(168,184,154,.09)' : 'rgba(196,132,58,.05)', color: 'var(--sb-cream)', cursor: disabled ? 'wait' : 'pointer', textAlign: 'left' }}><span>{label}</span><strong style={{ color: active ? 'var(--sb-sage)' : 'var(--sb-gold)' }}>{active ? 'Passed' : 'Pending'}</strong></button>;
 }

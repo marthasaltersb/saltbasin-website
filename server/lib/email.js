@@ -64,8 +64,8 @@ async function logToDb({ leadId, to, from, subject, html, text, provider, status
 
 // Public: lets the admin "Test email" button verify Brevo is wired without
 // touching real lead records.
-export async function dispatchRaw({ to, subject, html, text, attachments }) {
-  return dispatch({ to, subject, html, text, attachments });
+export async function dispatchRaw({ leadId, to, subject, html, text, attachments }) {
+  return dispatch({ leadId, to, subject, html, text, attachments });
 }
 
 async function dispatch({ leadId, to, subject, html, text, attachments = [] }) {
@@ -164,6 +164,13 @@ Salt Basin Net Works
     subject: `Your Salt Basin lead record · #${publicIdFromUrl(leadUrl)}`,
     html, text,
   });
+}
+
+export async function sendLeadEmailVerification({ leadId, toEmail, toName, verificationUrl }) {
+  const greeting = toName ? `Hi ${toName.split(' ')[0]},` : 'Hi,';
+  const text = `${greeting}\n\nBestyStaff saved your Salt Basin lead context. Verify this email address before member conversion:\n\n${verificationUrl}\n\nThis link expires in 24 hours. You can keep chatting and add other email addresses while verification is pending.\n\n— Betsy\nSalt Basin Net Works`;
+  const html = `<p>${greeting}</p><p>BestyStaff saved your Salt Basin lead context. Verify this email address before member conversion:</p><p><a href="${verificationUrl}" style="color:#C4843A;font-weight:700">Verify my email</a></p><p style="color:#4A6670;font-size:.85rem">This link expires in 24 hours. You can keep chatting and add other email addresses while verification is pending.</p><p>— Betsy<br/><em>Salt Basin Net Works</em></p>`;
+  return dispatch({ leadId, to: toEmail, subject: 'Verify your email · Salt Basin Net Works', text, html });
 }
 
 // ── Template: Notify Betsy when a new lead lands ──

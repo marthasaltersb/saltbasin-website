@@ -5,7 +5,7 @@ import PublicFooter from './PublicFooter.jsx';
 import BackLink from './BackLink.jsx';
 import { api } from '../lib/api.js';
 
-const EFFECTIVE_DATE = 'July 27, 2026';
+const EFFECTIVE_DATE = 'August 10, 2026';
 
 export default function TermsOfService() {
   const [config, setConfig] = React.useState(null);
@@ -67,6 +67,23 @@ export default function TermsOfService() {
             needed to host and display that content as you've configured it. You're responsible for the
             accuracy of what you publish and for not including information you're not entitled to share (for
             example, a former employer's confidential client names).
+          </Para>
+
+          <SectionHeading>Career Portfolio data conditions</SectionHeading>
+          <Para>
+            Career Portfolio members may provide career history, files, profile data, organization links,
+            instructions, and corrections for agent-assisted processing. BestyStaff and provisioned agents may
+            classify, summarize, transform, and connect that information to produce Career Portfolio records and
+            outputs, subject to user, record, module, and organization permissions. You must redact restricted
+            information, provide only information you are authorized to use, and review generated claims, dates,
+            metrics, client references, and publication settings before relying on or sharing an output.
+          </Para>
+          <Para>
+            Stored information is not made public merely because it is present in the platform; publication requires
+            a deliberate approved action. Organization-linked information may also be governed by that organization's
+            permissions, licenses, identity provider, and data policies. Career Portfolio records and consent history
+            may be retained for service operation, provenance, security, audit, and applicable contractual or legal
+            requirements.
           </Para>
 
           <SectionHeading>Third-party connections</SectionHeading>

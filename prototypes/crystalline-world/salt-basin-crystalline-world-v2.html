@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Salt Basin — Crystalline World: Genesis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Jost:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#F8F4EC;--parchment:#F1EBDD;--parchment-deep:#ECE3D0;--ink:#2B2A28;
+  --teal:#4A7C8E;--teal-deep:#345A68;--teal-tint:#DCE9EC;--gold:#C4843A;
+  --mauve:#8C6B7A;--risk:#B5433A;--green:#6B8F71;--night:#05070b;--panel:rgba(18,24,31,.84)
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--night);font-family:Jost,sans-serif;color:var(--cream)}
+button{font:inherit;cursor:pointer} canvas{display:block;touch-action:none}
+button:focus-visible{outline:2px solid var(--parchment);outline-offset:3px}
+.glass{background:var(--panel);backdrop-filter:blur(14px);border:1px solid rgba(241,235,221,.12);box-shadow:0 18px 55px rgba(0,0,0,.25)}
+#intro{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:
+ radial-gradient(circle at 50% 44%,rgba(74,124,142,.28),transparent 34%),
+ radial-gradient(circle at 65% 65%,rgba(196,132,58,.13),transparent 28%),#05070b;transition:.8s}
+#intro.hide{opacity:0;pointer-events:none}
+.intro-card{text-align:center;max-width:780px;padding:40px}
+.kicker{font:500 10px/1 JetBrains Mono;letter-spacing:.42em;text-transform:uppercase;color:var(--gold)}
+h1{font:600 clamp(36px,7vw,72px)/1.02 Fraunces;color:var(--parchment);margin:16px 0}
+h1 em{color:var(--teal);font-weight:500}
+.intro-copy{max-width:620px;margin:auto;color:rgba(241,235,221,.63);line-height:1.7;font-size:13px}
+.primary{border:0;border-radius:999px;background:var(--gold);color:#12181f;padding:13px 24px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:11px}
+#enter{margin-top:26px}
+.hint{margin-top:18px;font:9px/1.8 JetBrains Mono;color:rgba(241,235,221,.4)}
+#hud{position:fixed;inset:0;z-index:20;pointer-events:none;opacity:0;transition:.7s}
+#hud.on{opacity:1}.ui{pointer-events:auto}
+#brand{position:absolute;left:18px;top:16px}.brand{font:600 20px Fraunces;color:var(--parchment)}.brand em{color:var(--gold)}
+.sub{font:9px JetBrains Mono;letter-spacing:.18em;text-transform:uppercase;color:rgba(241,235,221,.45);margin-top:3px}
+#resources{position:absolute;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:7px}
+.resource{border-radius:999px;padding:8px 12px;display:flex;align-items:center;gap:8px;font:10px JetBrains Mono}
+.resource i{width:9px;height:9px;border-radius:50%;box-shadow:0 0 12px currentColor}
+#modebar{position:absolute;right:16px;top:14px;padding:5px;border-radius:999px;display:flex;gap:4px}
+.pill{border:0;border-radius:999px;padding:8px 12px;background:transparent;color:rgba(241,235,221,.6);font-size:10px;letter-spacing:.06em}
+.pill.on{background:rgba(241,235,221,.13);color:var(--parchment)}
+#questCard{position:absolute;left:18px;bottom:20px;width:min(340px,calc(100vw - 36px));border-radius:16px;padding:15px}
+.eyebrow{font:9px JetBrains Mono;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.quest-title{font:600 19px Fraunces;margin:5px 0;color:var(--parchment)}
+.quest-copy{font-size:11px;line-height:1.55;color:rgba(241,235,221,.56)}
+.progress{height:5px;background:rgba(241,235,221,.1);border-radius:5px;overflow:hidden;margin-top:10px}.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--gold));transition:.5s}
+#actions{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:7px}
+.action{border-radius:999px;padding:10px 15px;border:1px solid rgba(196,132,58,.35);background:rgba(18,24,31,.74);color:var(--parchment);font-size:10px;letter-spacing:.07em;text-transform:uppercase}
+.action:hover{border-color:var(--gold);color:var(--gold);transform:translateY(-1px)}
+#minimap{position:absolute;right:18px;bottom:18px;width:170px;height:120px;border-radius:14px;overflow:hidden}
+#miniCanvas{width:100%;height:100%}.mini-label{position:absolute;left:10px;top:8px;font:8px JetBrains Mono;letter-spacing:.12em;color:rgba(241,235,221,.5)}
+#inspector{position:fixed;right:0;top:0;width:min(410px,92vw);height:100%;z-index:50;transform:translateX(100%);transition:.42s;background:linear-gradient(180deg,rgba(18,24,31,.98),rgba(5,7,11,.99));border-left:1px solid rgba(196,132,58,.35);padding:54px 22px 24px;overflow:auto}
+#inspector.open{transform:none}.close{position:absolute;right:16px;top:14px;border:0;background:none;color:var(--parchment);font-size:24px}
+.ins-title{font:600 25px Fraunces;color:var(--parchment);margin:7px 0}.ins-copy{font-size:11px;line-height:1.6;color:rgba(241,235,221,.57)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0}.metric{padding:10px;border:1px solid rgba(241,235,221,.09);border-radius:10px;background:rgba(241,235,221,.035)}
+.metric b{display:block;font:700 16px JetBrains Mono;color:var(--parchment)}.metric span{font-size:9px;color:rgba(241,235,221,.45);text-transform:uppercase;letter-spacing:.08em}
+.section{margin-top:18px;font:9px JetBrains Mono;letter-spacing:.14em;color:var(--gold);text-transform:uppercase}
+.list{margin-top:8px;display:grid;gap:7px}.list-item{padding:10px;border-radius:9px;border:1px solid rgba(241,235,221,.08);background:rgba(241,235,221,.035);font-size:11px}
+#toast{position:fixed;z-index:80;left:50%;bottom:92px;transform:translate(-50%,20px);opacity:0;transition:.25s;background:rgba(18,24,31,.94);border:1px solid rgba(196,132,58,.45);border-radius:999px;padding:10px 16px;font-size:11px}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#eventBanner{position:fixed;z-index:40;left:50%;top:72px;transform:translateX(-50%) scale(.9);opacity:0;transition:.35s;border-radius:14px;padding:13px 18px;text-align:center;min-width:280px}
+#eventBanner.show{opacity:1;transform:translateX(-50%) scale(1)}
+#eventBanner b{font:600 16px Fraunces;color:var(--parchment)}#eventBanner span{display:block;font-size:9px;margin-top:3px;color:rgba(241,235,221,.52)}
+#stageRail{position:absolute;left:50%;top:58px;transform:translateX(-50%);display:flex;gap:5px;max-width:min(720px,72vw);overflow:auto;padding:6px;border-radius:999px;scrollbar-width:none}
+.stage-dot{border:0;background:transparent;color:rgba(241,235,221,.45);font:8px JetBrains Mono;padding:6px 9px;border-radius:999px;white-space:nowrap}.stage-dot.active{background:rgba(196,132,58,.2);color:var(--parchment);box-shadow:inset 0 0 0 1px rgba(196,132,58,.5)}
+#companionCard{position:absolute;right:18px;top:70px;width:190px;padding:11px;border-radius:14px;display:flex;gap:10px;align-items:center}.companion-gem{width:34px;height:34px;display:grid;place-items:center;color:var(--teal);font-size:24px;filter:drop-shadow(0 0 8px currentColor)}.companion-name{font:600 14px Fraunces}.companion-meta{font:8px JetBrains Mono;color:rgba(241,235,221,.5);margin-top:2px}
+#toolDock{position:absolute;right:18px;top:132px;display:grid;gap:5px}.tool{border:1px solid rgba(241,235,221,.12);background:rgba(18,24,31,.78);color:var(--parchment);border-radius:9px;padding:8px 10px;font-size:9px;text-align:left}.tool:hover{border-color:var(--gold)}
+.modal{position:fixed;inset:0;z-index:70;display:none;place-items:center;padding:18px;background:rgba(5,7,11,.72);backdrop-filter:blur(8px)}.modal.open{display:grid}.modal-card{width:min(760px,96vw);max-height:86vh;overflow:auto;background:linear-gradient(180deg,#151c24,#090d12);border:1px solid rgba(196,132,58,.35);border-radius:18px;padding:22px;box-shadow:0 28px 90px rgba(0,0,0,.55)}.modal-head{display:flex;justify-content:space-between;gap:20px;align-items:start}.modal-title{font:600 26px Fraunces}.modal-close{border:0;background:none;color:var(--parchment);font-size:24px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px;margin-top:16px}.card{border:1px solid rgba(241,235,221,.1);background:rgba(241,235,221,.035);border-radius:12px;padding:13px}.card h3{font:600 15px Fraunces;color:var(--parchment)}.card p{font-size:10px;line-height:1.5;color:rgba(241,235,221,.55);margin-top:5px}.card button,.modal-card select{margin-top:10px;border:1px solid rgba(196,132,58,.4);background:rgba(196,132,58,.08);color:var(--parchment);padding:8px;border-radius:8px;font-size:9px}
+#buildTray{position:fixed;z-index:45;left:50%;bottom:72px;transform:translate(-50%,30px);opacity:0;pointer-events:none;transition:.3s;width:min(720px,94vw);padding:10px;border-radius:14px;display:flex;gap:7px;overflow:auto}#buildTray.open{opacity:1;transform:translate(-50%,0);pointer-events:auto}.build-choice{min-width:130px;border:1px solid rgba(241,235,221,.12);background:rgba(5,7,11,.4);color:var(--parchment);border-radius:9px;padding:9px;text-align:left;font-size:9px}.build-choice.selected{border-color:var(--gold);background:rgba(196,132,58,.12)}.build-choice b{display:block;color:var(--gold);margin-bottom:3px}
+#perf{position:fixed;left:8px;top:104px;z-index:30;display:none;background:rgba(5,7,11,.75);padding:7px;border-radius:7px;font:8px/1.5 JetBrains Mono;color:var(--green)}#perf.on{display:block}
+.toggle-row{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(241,235,221,.08);font-size:11px}.toggle-row input{accent-color:var(--gold)}
+#startupStatus{margin:16px auto 0;min-height:18px;font:9px/1.6 JetBrains Mono;letter-spacing:.08em;color:rgba(241,235,221,.55)}
+#startupError{position:fixed;z-index:120;inset:auto 18px 18px 18px;max-width:680px;margin:auto;padding:18px;border:1px solid rgba(181,67,58,.75);border-radius:14px;background:rgba(28,12,14,.97);color:var(--cream);display:none;box-shadow:0 20px 70px rgba(0,0,0,.55)}
+#startupError.show{display:block}#startupError h2{font:600 20px Fraunces;color:#f0b4ac;margin-bottom:6px}#startupError p{font-size:11px;line-height:1.55;color:rgba(248,244,236,.72)}#startupError pre{max-height:120px;overflow:auto;margin-top:10px;font:9px/1.45 JetBrains Mono;white-space:pre-wrap;color:rgba(248,244,236,.55)}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+@media(max-width:760px){#resources{top:58px}.resource:nth-child(n+3){display:none}#minimap{display:none}#actions{bottom:150px;width:100%;justify-content:center;flex-wrap:wrap}.action{padding:11px 13px;min-height:42px}#questCard{bottom:18px}.brand{font-size:17px}#stageRail{top:96px;max-width:94vw}#companionCard{display:none}#toolDock{top:138px;right:8px}.tool{padding:9px}.modal{align-items:end;padding:8px}.modal-card{max-height:78vh;border-radius:16px}#buildTray{bottom:202px}}
+</style>
+</head>
+<body>
+<div id="intro"><div class="intro-card">
+  <div class="kicker">Salt Basin Net Works</div>
+  <h1>Crystalline <em>Genesis</em></h1>
+  <div class="intro-copy">Explore a living enterprise world. Mature governed data, stabilize journey rods, unlock districts, build lattice structures, and watch scientific geometry respond to real operational state.</div>
+  <button id="enter" class="primary" type="button" aria-describedby="startupStatus">Enter the Basin</button>
+  <div id="startupStatus" role="status" aria-live="polite">Preparing governed world systems…</div>
+  <div class="hint">DRAG orbit · WHEEL zoom · click structures · 1–3 switch rods · M world view · B build · SPACE ride</div>
+</div></div>
+
+<div id="hud">
+  <div id="brand"><div class="brand">Salt <em>Basin</em></div><div class="sub">Crystalline World · Genesis Build</div></div>
+  <div id="resources">
+    <div class="resource glass"><i style="background:#C4843A;color:#C4843A"></i><span id="points">0 DP</span></div>
+    <div class="resource glass"><i style="background:#4A7C8E;color:#4A7C8E"></i><span id="energy">72 Energy</span></div>
+    <div class="resource glass"><i style="background:#6B8F71;color:#6B8F71"></i><span id="stability">61% Stable</span></div>
+    <div class="resource glass"><i style="background:#F1EBDD;color:#F1EBDD"></i><span id="evidence">14 Evidence</span></div>
+    <div class="resource glass"><i style="background:#8C6B7A;color:#8C6B7A"></i><span id="trust">68 Trust</span></div>
+  </div>
+  <div id="modebar" class="glass ui">
+    <button class="pill on" data-mode="explore">Explore</button>
+    <button class="pill" data-mode="world">World</button>
+    <button class="pill" data-mode="build">Build</button>
+  </div>
+  <div id="stageRail" class="glass ui" aria-label="Journey stage rail"></div>
+  <div id="companionCard" class="glass ui"><div class="companion-gem" aria-hidden="true">◆</div><div><div class="companion-name">Shard</div><div class="companion-meta" id="companionMeta">Level 1 · 0 / 100 DP</div></div></div>
+  <div id="toolDock" class="ui"><button class="tool" data-open="dataModal">Data Story</button><button class="tool" data-open="taskModal">Tasks</button><button class="tool" data-open="simModal">Simulator</button><button class="tool" data-open="settingsModal">Settings</button></div>
+  <div id="questCard" class="glass ui">
+    <div class="eyebrow">Active Expedition</div>
+    <div class="quest-title" id="questTitle">Stabilize the Revenue District</div>
+    <div class="quest-copy" id="questCopy">Inspect three crystalline definitions and resolve one contested structure.</div>
+    <div class="progress"><i id="questProgress" style="width:0%"></i></div>
+  </div>
+  <div id="actions" class="ui">
+    <button class="action" id="prev">← Stage</button>
+    <button class="action" id="ride">▶ Ride</button>
+    <button class="action" id="next">Stage →</button>
+    <button class="action" id="event">✦ Event</button>
+  </div>
+  <div id="minimap" class="glass"><canvas id="miniCanvas"></canvas><div class="mini-label">BASIN MAP</div></div>
+</div>
+
+<div id="buildTray" class="glass ui" aria-label="Governed infrastructure"></div>
+<div id="perf" aria-label="Performance overlay"></div>
+<div class="modal" id="dataModal" role="dialog" aria-modal="true" aria-labelledby="dataTitle"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">Governed operating context</div><div class="modal-title" id="dataTitle">Data Story</div></div><button class="modal-close" aria-label="Close Data Story">×</button></div><div id="dataStoryBody"></div></div></div>
+<div class="modal" id="taskModal" role="dialog" aria-modal="true" aria-labelledby="taskTitle"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">Operational learning</div><div class="modal-title" id="taskTitle">Tasks &amp; Minigames</div></div><button class="modal-close" aria-label="Close Tasks">×</button></div><div class="cards" id="taskCards"></div></div></div>
+<div class="modal" id="simModal" role="dialog" aria-modal="true" aria-labelledby="simTitle"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">Alternate path model</div><div class="modal-title" id="simTitle">Journey Simulator</div></div><button class="modal-close" aria-label="Close Simulator">×</button></div><div class="cards" id="simCards"></div></div></div>
+<div class="modal" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><div class="modal-card"><div class="modal-head"><div><div class="eyebrow">Experience controls</div><div class="modal-title" id="settingsTitle">Pause &amp; Settings</div></div><button class="modal-close" aria-label="Close Settings">×</button></div><div id="settingsBody"></div></div></div>
+
+<div id="inspector"><button class="close">&times;</button><div id="insBody"></div></div>
+<div id="eventBanner" class="glass"><b id="eventTitle"></b><span id="eventCopy"></span></div>
+<div id="toast"></div>
+<div id="startupError" role="alert" aria-live="assertive"><h2>The Basin could not open</h2><p id="startupErrorCopy">A startup error occurred. Reload to try again, or review the diagnostic detail below.</p><pre id="startupErrorDetail"></pre></div>
+<div id="a11yStatus" class="sr-only" role="status" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(()=>{
+'use strict';
+let startupState='booting',startupBound=false;
+const startupError=document.getElementById('startupError');
+function showStartupError(message,error){startupState='failed';startupError.classList.add('show');document.getElementById('startupErrorCopy').textContent=message;document.getElementById('startupErrorDetail').textContent=error?.stack||error?.message||String(error||'Unknown startup failure');document.getElementById('startupStatus').textContent='Startup needs attention';console.error('[Salt Basin startup]',message,error||'')}
+window.addEventListener('error',event=>showStartupError('An unexpected startup error interrupted the world.',event.error||event.message),{once:true});
+window.addEventListener('unhandledrejection',event=>showStartupError('A required startup operation was rejected.',event.reason),{once:true});
+function hasWebGL(){try{const c=document.createElement('canvas');return Boolean(c.getContext('webgl2')||c.getContext('webgl')||c.getContext('experimental-webgl'))}catch{return false}}
+try{
+if(!hasWebGL())throw new Error('WebGL is unavailable in this browser or device configuration.');
+if(!window.THREE)throw new Error('Three.js did not load. Check the network connection and reload.');
+const C={cream:0xF8F4EC,parch:0xF1EBDD,teal:0x4A7C8E,tealDeep:0x345A68,gold:0xC4843A,mauve:0x8C6B7A,risk:0xB5433A,green:0x6B8F71,night:0x05070b};
+const SYSTEMS={
+ cubic:{label:'Cubic',angles:'90° / 90° / 90°',axes:'a = b = c',coordination:6,habit:'cube / octahedron',facets:'equal regular faces',growth:'isotropic',cleavage:'three orthogonal planes',deform:'uniform axial compression',geo:()=>new THREE.BoxGeometry(1.25,1.25,1.25,2,2,2)},
+ tetragonal:{label:'Tetragonal',angles:'90° / 90° / 90°',axes:'a = b ≠ c',coordination:6,habit:'square prism',facets:'fourfold axial faces',growth:'dominant c-axis',cleavage:'basal interpretation',deform:'c-axis variance',geo:()=>new THREE.CylinderGeometry(.78,.78,1.65,4,2)},
+ orthorhombic:{label:'Orthorhombic',angles:'90° / 90° / 90°',axes:'a ≠ b ≠ c',coordination:6,habit:'rectangular prism',facets:'three unequal axial pairs',growth:'three-rate axial',cleavage:'unequal orthogonal planes',deform:'axis-specific scaling',geo:()=>new THREE.BoxGeometry(1.05,1.55,.8,2,2,2)},
+ hexagonal:{label:'Hexagonal',angles:'90° / 90° / 120°',axes:'a = b ≠ c',coordination:12,habit:'six-sided prism',facets:'sixfold radial faces',growth:'basal ring then c-axis',cleavage:'prismatic interpretation',deform:'radial phase shift',geo:()=>new THREE.CylinderGeometry(.78,.78,1.6,6,2)},
+ trigonal:{label:'Trigonal',angles:'α = β = γ ≠ 90°',axes:'a = b = c',coordination:6,habit:'rhombohedral',facets:'threefold facets',growth:'threefold radial',cleavage:'rhombohedral interpretation',deform:'angular shear',geo:()=>new THREE.OctahedronGeometry(1,1)},
+ monoclinic:{label:'Monoclinic',angles:'α = γ = 90°, β ≠ 90°',axes:'a ≠ b ≠ c',coordination:4,habit:'inclined prism',facets:'single oblique axis',growth:'directionally biased',cleavage:'single dominant plane',deform:'controlled shear',geo:()=>new THREE.CylinderGeometry(.72,.92,1.5,5,1)},
+ triclinic:{label:'Triclinic',angles:'α ≠ β ≠ γ',axes:'a ≠ b ≠ c',coordination:2,habit:'asymmetric shard',facets:'lowest symmetry',growth:'irregular evidence-led',cleavage:'variable planes',deform:'multi-axis distortion',geo:()=>new THREE.TetrahedronGeometry(1,1)}
+};
+const RODS=[
+ {id:'revenue',label:'Revenue',color:C.gold,z:-18,stages:['Lead','Opportunity','Proposal','Quote','Contract','Order','Renew / Expand']},
+ {id:'customer',label:'Customer',color:C.teal,z:0,stages:['Prospect','Qualification','Signature','Onboarding','Active','Change Request','Renewal']},
+ {id:'member',label:'Member',color:C.mauve,z:18,stages:['Onboarded','Provisioned','Active','Change Request','Offboarding']}
+];
+const NAMES=['Identity Definition','Authority Rule','Pricing Version','Evidence Chain','Access Policy','Performance Obligation','Lineage Anchor','Approval Threshold'];
+const GROWTH_TIERS=['Seed','Shard','Cluster','Pillar','Structure','District Landmark','Mountain Formation'];
+const INFRASTRUCTURE={
+ bridge:{label:'Evidence Bridge',cost:12,prereq:0,capability:'Cross-stage lineage',benefit:'Relationship stability +3',form:'bridge'},
+ conduit:{label:'Data Conduit',cost:10,prereq:0,capability:'Source integration',benefit:'Basin Energy +4',form:'conduit'},
+ observatory:{label:'Evidence Observatory',cost:20,prereq:16,capability:'Evidence governance',benefit:'Evidence discovery +2',form:'observatory'},
+ validation:{label:'Validation Station',cost:18,prereq:8,capability:'Definition governance',benefit:'Trust +5',form:'station'},
+ courthouse:{label:'Contract Courthouse',cost:28,prereq:30,capability:'Contract lifecycle',benefit:'Revenue stability +6',form:'courthouse'},
+ cpq:{label:'CPQ Tower',cost:24,prereq:22,capability:'Configure-price-quote',benefit:'Quote maturity +5',form:'tower'},
+ beacon:{label:'Renewal Beacon',cost:22,prereq:18,capability:'Renewal intelligence',benefit:'Journey visibility +4',form:'beacon'}
+};
+const TASKS=[
+ {id:'inspect',label:'Trace a lineage path',copy:'Inspect three governed atoms to reveal their stage lineage.',goal:3,reward:24},
+ {id:'resolve',label:'Stabilize a contested atom',copy:'Resolve one definition conflict and observe re-crystallization.',goal:1,reward:40},
+ {id:'build',label:'Route evidence',copy:'Construct one governed infrastructure connection.',goal:1,reward:32}
+];
+const SIMULATOR_ROUTES=[
+ {id:'standard',label:'Standard',time:10,force:42,risk:18,trust:78,cost:8},
+ {id:'expedited',label:'Expedited',time:6,force:68,risk:38,trust:61,cost:18},
+ {id:'consensus',label:'Consensus-Building',time:14,force:34,risk:10,trust:92,cost:12},
+ {id:'evidence',label:'Evidence-First',time:12,force:38,risk:8,trust:95,cost:15},
+ {id:'contained',label:'Risk-Contained',time:16,force:28,risk:5,trust:88,cost:14}
+];
+const SAVE_KEY='saltBasin.crystallineWorld.v2',SCHEMA_VERSION=2;
+const SITE_MODEL_ADAPTER={siteState:'pages[] → rod worlds; sections[] → stage structures',section:{id:'atom identity',type:'molecule / crystal habit',status:'growth and validation state',content:'visible governed matter',fieldMeta:'evidence, lineage, source type, capability tags'},configState:'district, navigation, resource and rules registries',scope:{admin:'Betsy site operating world',member:'member-owned published world'},publishFlow:'draft maturity → validation → published stability'};
+let state={mode:'explore',rod:0,stage:0,points:0,energy:72,stability:61,evidence:14,trust:68,buildCapacity:3,inspected:new Set(),resolved:0,riding:false,built:[],completedTasks:[],events:[],settings:{reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches,sound:false,quality:'auto',sensitivity:1,performance:false}};
+function saveState(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({schemaVersion:SCHEMA_VERSION,game:{points:state.points,energy:state.energy,stability:state.stability,evidence:state.evidence,trust:state.trust,buildCapacity:state.buildCapacity},rods:{current:state.rod},stages:{current:state.stage},atoms:{inspected:[...state.inspected],resolved:state.resolved},tasks:{completed:state.completedTasks},companion:{level:1+Math.floor(state.points/100)},infrastructure:state.built,districts:{unlocked:['revenue','customer','member']},settings:state.settings,discoveries:[...state.inspected],events:state.events}))}catch(error){console.warn('[Salt Basin persistence] Save unavailable',error)}}
+function loadState(){try{const raw=localStorage.getItem(SAVE_KEY);if(!raw)return;const saved=JSON.parse(raw);if(!saved||!saved.schemaVersion)throw new Error('Unversioned save');const game=saved.game||{};Object.assign(state,game);state.rod=saved.rods?.current||0;state.stage=saved.stages?.current||0;state.inspected=new Set(saved.atoms?.inspected||[]);state.resolved=saved.atoms?.resolved||0;state.built=Array.isArray(saved.infrastructure)?saved.infrastructure:[];state.completedTasks=saved.tasks?.completed||[];state.events=saved.events||[];state.settings={...state.settings,...(saved.settings||{})}}catch(error){console.warn('[Salt Basin persistence] Corrupt save ignored',error);try{localStorage.removeItem(SAVE_KEY)}catch{}}}
+loadState();
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;document.body.appendChild(renderer.domElement);
+const scene=new THREE.Scene();scene.background=new THREE.Color(C.night);scene.fog=new THREE.FogExp2(C.night,.009);
+const camera=new THREE.PerspectiveCamera(52,innerWidth/innerHeight,.1,600);
+scene.add(new THREE.HemisphereLight(0xDCE9EC,0x05070b,1.25));
+const key=new THREE.PointLight(C.parch,3.2,180);scene.add(key);
+const tealL=new THREE.PointLight(C.teal,2.4,160);tealL.position.set(-35,20,-35);scene.add(tealL);
+const goldL=new THREE.PointLight(C.gold,2.3,150);goldL.position.set(30,-4,10);scene.add(goldL);
+const world=new THREE.Group();scene.add(world);
+const pickables=[],stageNodes=[],structures=[],roads=[];
+function mat(color,opacity=.9){return new THREE.MeshPhysicalMaterial({color,metalness:.28,roughness:.17,transparent:true,opacity,clearcoat:1,clearcoatRoughness:.12,emissive:color,emissiveIntensity:.22})}
+function glowTexture(){const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d'),g=x.createRadialGradient(64,64,0,64,64,64);g.addColorStop(0,'rgba(255,255,255,.8)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,128,128);return new THREE.CanvasTexture(c)}
+const GLOW=glowTexture();
+function glow(parent,color,s=4,o=.35){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW,color,transparent:true,opacity:o,blending:THREE.AdditiveBlending,depthWrite:false}));sp.scale.set(s,s,1);parent.add(sp)}
+function label(text,color='#F1EBDD'){const c=document.createElement('canvas'),x=c.getContext('2d');x.font='500 38px Jost';c.width=x.measureText(text).width+36;c.height=58;x.font='500 38px Jost';x.fillStyle='rgba(5,7,11,.65)';x.fillRect(0,0,c.width,c.height);x.fillStyle=color;x.textBaseline='middle';x.fillText(text,18,29);const t=new THREE.CanvasTexture(c);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthTest:false}));s.scale.set(3.3*c.width/c.height,3.3,1);return s}
+function systemFor(maturity,contested){if(contested)return'triclinic';if(maturity>.87)return'cubic';if(maturity>.75)return'hexagonal';if(maturity>.63)return'trigonal';if(maturity>.5)return'tetragonal';if(maturity>.35)return'monoclinic';return'orthorhombic'}
+function projectOperationalStateToCrystal(input){
+ const maturity=Math.max(0,Math.min(1,input.maturity||0)),evidence=input.evidenceDensity??Math.round(maturity*10),lineage=input.lineageDepth??Math.max(1,Math.round(maturity*6)),relationships=input.relationshipCount??Math.max(1,Math.round(maturity*8));
+ const contested=Boolean(input.contested),validated=Boolean(input.validated)||maturity>.74,system=systemFor(maturity,contested),growthScore=maturity*4+Math.min(1,evidence/12)+Math.min(1,relationships/10)+(validated?.45:0)-(contested?.8:0)+(input.forceApplications||0)*.18;
+ return {crystalSystem:system,habit:SYSTEMS[system].habit,geometryVariant:contested?'contested':evidence>8?'evidence-rich':lineage>5?'lineage-heavy':validated?'stabilized':'prismatic',facetCount:Math.max(4,Math.round(4+maturity*12)),axialScale:{x:1+(relationships%3)*.04,y:.78+maturity*.72,z:1+(lineage%3)*.035},angularDistortion:contested?.22:(1-maturity)*.06,transparency:.64+maturity*.3,roughness:.38-maturity*.24,emissiveIntensity:.12+maturity*.28,fractureLevel:contested?.7:Math.max(0,.28-maturity*.25),clusterCount:Math.max(1,Math.round(1+evidence/4)),growthTier:Math.max(0,Math.min(6,Math.floor(growthScore))),orbitCount:Math.max(1,Math.round(relationships/2)),evidenceParticleRate:Math.max(1,Math.round(evidence*maturity)),lineageBands:lineage,riskDistortion:contested?.8:0,evidenceDensity:evidence,lineageDepth:lineage,relationshipCount:relationships,validated};
+}
+function buildCrystal(data,scale=1){
+ const g=new THREE.Group(),projection=projectOperationalStateToCrystal(data),sys=SYSTEMS[projection.crystalSystem];data.system=projection.crystalSystem;data.projection=projection;
+ const coreMaterial=mat(data.color,projection.transparency);coreMaterial.roughness=projection.roughness;coreMaterial.emissiveIntensity=projection.emissiveIntensity;
+ const core=new THREE.Mesh(sys.geo(),coreMaterial);core.scale.set(scale*projection.axialScale.x,scale*projection.axialScale.y,scale*projection.axialScale.z);core.rotation.z=projection.angularDistortion;core.userData.crystalCore=true;g.add(core);
+ const cage=new THREE.LineSegments(new THREE.EdgesGeometry(sys.geo()),new THREE.LineBasicMaterial({color:data.contested?C.risk:C.parch,transparent:true,opacity:.45}));cage.scale.setScalar(scale*1.04);g.add(cage);
+ const orbit=new THREE.Mesh(new THREE.TorusGeometry(1.25*scale,.025,8,42),new THREE.MeshBasicMaterial({color:data.contested?C.risk:data.color,transparent:true,opacity:.55}));orbit.rotation.x=Math.PI/2;g.add(orbit);g.userData.orbit=orbit;
+ for(let i=0;i<Math.min(8,Math.max(2,Math.round(data.maturity*8)));i++){const ion=new THREE.Mesh(new THREE.SphereGeometry(.07*scale,8,8),new THREE.MeshBasicMaterial({color:C.parch}));const a=i/8*Math.PI*2;ion.position.set(Math.cos(a)*1.25*scale,Math.sin(a*.7)*.22,Math.sin(a)*1.25*scale);g.add(ion)}
+ glow(g,data.contested?C.risk:data.color,3.2*scale,.35);g.userData.data=data;g.userData.projection=projection;g.userData.baseScale=scale;return g
+}
+function recrystallize(group,data){const old=group.children.find(c=>c.userData.crystalCore),projection=projectOperationalStateToCrystal(data),sys=SYSTEMS[projection.crystalSystem],fresh=new THREE.Mesh(sys.geo(),mat(data.color,projection.transparency));fresh.userData.crystalCore=true;fresh.scale.set(.05,.05,.05);group.add(fresh);group.userData.projection=projection;data.system=projection.crystalSystem;data.projection=projection;const target=new THREE.Vector3(group.userData.baseScale*projection.axialScale.x,group.userData.baseScale*projection.axialScale.y,group.userData.baseScale*projection.axialScale.z),start=performance.now();function reform(){const p=Math.min(1,(performance.now()-start)/850),ease=1-Math.pow(1-p,3);fresh.scale.lerp(target,ease*.16);fresh.rotation.y=p*Math.PI;fresh.material.emissiveIntensity=projection.emissiveIntensity+Math.sin(p*Math.PI)*.8;if(old){old.scale.multiplyScalar(.91);old.material.opacity*=.91}if(p<1)requestAnimationFrame(reform);else if(old){group.remove(old);old.geometry.dispose();old.material.dispose()}}reform()}
+function stagePos(r,s){const rod=RODS[r],span=(rod.stages.length-1)*10;return new THREE.Vector3(s*10-span/2,0,rod.z)}
+RODS.forEach((rod,ri)=>{
+ const pts=[];
+ rod.stages.forEach((st,si)=>{
+  const p=stagePos(ri,si);pts.push(p);
+  const base=new THREE.Mesh(new THREE.CylinderGeometry(2.25,2.65,.5,8),mat(rod.color,.74));base.position.copy(p);base.userData.stage={ri,si};base.userData.tip=st;world.add(base);pickables.push(base);stageNodes.push(base);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(2.65,.035,8,48),new THREE.MeshBasicMaterial({color:rod.color,transparent:true,opacity:.5}));ring.rotation.x=Math.PI/2;ring.position.copy(p);ring.position.y=.28;world.add(ring);base.userData.ring=ring;
+  const lab=label(st,'#'+rod.color.toString(16).padStart(6,'0'));lab.position.copy(p);lab.position.y=4;world.add(lab);
+  for(let k=0;k<2+(si%2);k++){
+   const maturity=Math.max(.18,Math.min(.97,.42+si*.08+k*.12-Math.random()*.1)),contested=(si===3&&k===0)||(ri===2&&si===1&&k===1);
+   const data={id:`${rod.id}-${si}-${k}`,name:NAMES[(si*2+k+ri)%NAMES.length],rod:rod.label,stage:st,maturity,contested,validated:maturity>.72,color:contested?C.risk:rod.color,system:systemFor(maturity,contested),evidenceDensity:3+((si*3+k+ri)%10),lineageDepth:1+((si+k)%7),relationshipCount:2+((si*2+k)%8),forceApplications:0,atomType:['definition','evidence','rule','metric'][(si+k)%4],moleculeType:['bonded cluster','chain','ring','branching network'][(si+ri)%4]};
+   const cr=buildCrystal(data,.72+Math.random()*.15),a=k/(2+(si%2))*Math.PI*2;cr.position.set(p.x+Math.cos(a)*3,p.y+1.1,p.z+Math.sin(a)*3);cr.userData.home=cr.position.clone();world.add(cr);pickables.push(cr);structures.push(cr)
+  }
+ });
+ for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],road=new THREE.Mesh(new THREE.BoxGeometry(10,.08,.9),new THREE.MeshBasicMaterial({color:rod.color,transparent:true,opacity:.28}));road.position.set((a.x+b.x)/2,-.05,rod.z);world.add(road);roads.push(road)}
+ const rl=label(rod.label+' District','#'+rod.color.toString(16).padStart(6,'0'));rl.position.set(pts[0].x-8,2.8,rod.z);world.add(rl)
+});
+for(let i=0;i<420;i++){const src=RODS[i%3],m=.15+Math.random()*.8,d={name:'Ambient Data Mineral',rod:src.label,stage:'Field',maturity:m,contested:false,color:src.color,system:systemFor(m,false)};const c=buildCrystal(d,.08+Math.random()*.22);c.position.set((Math.random()-.5)*170,(Math.random()-.5)*45,(Math.random()-.5)*120);c.userData.ambient=true;c.userData.home=c.position.clone();world.add(c)}
+const ground=new THREE.Mesh(new THREE.CircleGeometry(115,96),new THREE.MeshStandardMaterial({color:0x091018,roughness:.88,metalness:.1,transparent:true,opacity:.8}));ground.rotation.x=-Math.PI/2;ground.position.y=-.3;scene.add(ground);
+const grid=new THREE.GridHelper(180,60,C.tealDeep,0x17222d);grid.position.y=-.28;scene.add(grid);
+function stars(n,r,c){const p=new Float32Array(n*3);for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,b=Math.acos(2*Math.random()-1),rr=r*(.45+Math.random()*.55);p[i*3]=rr*Math.sin(b)*Math.cos(a);p[i*3+1]=rr*Math.sin(b)*Math.sin(a);p[i*3+2]=rr*Math.cos(b)}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));return new THREE.Points(g,new THREE.PointsMaterial({color:c,size:.55,transparent:true,opacity:.55,depthWrite:false}))}
+scene.add(stars(2800,260,C.parch));scene.add(stars(1200,170,C.teal));
+const dust=stars(matchMedia('(pointer:coarse)').matches?220:620,95,C.gold);dust.material.size=.16;dust.material.opacity=.28;world.add(dust);
+const relationships=[];for(let ri=0;ri<RODS.length-1;ri++){for(let si=0;si<Math.min(RODS[ri].stages.length,RODS[ri+1].stages.length);si+=2){const a=stagePos(ri,si),b=stagePos(ri+1,si),curve=new THREE.CatmullRomCurve3([a.clone().add(new THREE.Vector3(0,.4,0)),a.clone().lerp(b,.5).add(new THREE.Vector3(0,3,0)),b.clone().add(new THREE.Vector3(0,.4,0))]),line=new THREE.Mesh(new THREE.TubeGeometry(curve,24,.035,5,false),new THREE.MeshBasicMaterial({color:C.parch,transparent:true,opacity:.12}));line.userData.relationship={type:'governed dependency',strength:.55+si*.04,evidence:3+si,maturityContribution:.02};world.add(line);relationships.push(line)}}
+const lockedDistricts=['Security','Evidence','Financial','Analytics','AI'];lockedDistricts.forEach((name,i)=>{const g=new THREE.Group(),base=new THREE.Mesh(new THREE.CylinderGeometry(3,3.7,.5,8),new THREE.MeshStandardMaterial({color:0x1b2229,roughness:.8,metalness:.35})),spire=new THREE.Mesh(new THREE.ConeGeometry(1.2,3.8,6),new THREE.MeshStandardMaterial({color:0x222b34,transparent:true,opacity:.58}));spire.position.y=2.1;g.add(base,spire);g.position.set(-52+i*26,-.05,38);g.userData.lockedDistrict=name;world.add(g);const l=label(name+' District · Locked','#6f7780');l.position.set(g.position.x,4.8,g.position.z);world.add(l)});
+const companion=new THREE.Group(),companionCore=buildCrystal({name:'Shard',rod:'Companion',stage:'Follow',maturity:.72,validated:true,color:C.teal,system:'trigonal',evidenceDensity:8,lineageDepth:5,relationshipCount:6},.42);companion.add(companionCore);scene.add(companion);
+let yaw=.2,pitch=.35,zoom=1,targetZoom=1,drag=false,lx=0,ly=0,ray=new THREE.Raycaster(),mouse=new THREE.Vector2(),hover=null;
+renderer.domElement.addEventListener('pointerdown',e=>{drag=true;lx=e.clientX;ly=e.clientY});
+addEventListener('pointerup',()=>drag=false);
+addEventListener('pointermove',e=>{if(drag){yaw-=(e.clientX-lx)*.006;pitch=Math.max(-.1,Math.min(1.15,pitch-(e.clientY-ly)*.004));lx=e.clientX;ly=e.clientY}});
+renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();targetZoom=Math.max(.42,Math.min(2.7,targetZoom+e.deltaY*.0012))},{passive:false});
+function cameraFocus(){return stagePos(state.rod,state.stage)}
+let selectedInfrastructure='bridge';
+function setMode(m){state.mode=m;document.querySelectorAll('.pill').forEach(b=>b.classList.toggle('on',b.dataset.mode===m));document.getElementById('buildTray').classList.toggle('open',m==='build');toast(m==='build'?'Build mode: choose governed infrastructure, then place in the active district':m==='world'?'World Map engaged · districts and dependencies visible':'Flight View engaged')}
+document.querySelectorAll('.pill').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+function inspect(data){
+ state.inspected.add(data.id);state.points+=8;updateHUD();
+ const projection=projectOperationalStateToCrystal(data),sys=SYSTEMS[projection.crystalSystem],conf=data.contested;
+ document.getElementById('insBody').innerHTML=`<div class="eyebrow">${data.rod} · ${data.stage}</div><div class="ins-title">${data.name}</div><div class="ins-copy">This object is projected from operational maturity into a scientifically grounded crystal-system envelope. Geometry communicates stability, symmetry, constraint, and unresolved variance.</div>
+ <div class="grid"><div class="metric"><b>${Math.round(data.maturity*100)}%</b><span>Maturity</span></div><div class="metric"><b>${sys.label}</b><span>Crystal system</span></div><div class="metric"><b>${sys.coordination}</b><span>Coordination no.</span></div><div class="metric"><b>${conf?'Contested':'Stable'}</b><span>State</span></div></div>
+ <div class="section">Scientific projection model</div><div class="list"><div class="list-item">System: ${sys.label} · Habit: ${sys.habit}</div><div class="list-item">Axes: ${sys.axes} · Angles: ${sys.angles}</div><div class="list-item">Coordination: ${sys.coordination} · Facets: ${sys.facets}</div><div class="list-item">Growth tier ${projection.growthTier}: ${GROWTH_TIERS[projection.growthTier]}</div><div class="list-item">Evidence ${projection.evidenceDensity} · Lineage ${projection.lineageDepth} · Relationships ${projection.relationshipCount}</div><div class="list-item">Governed projection only: enterprise data is not represented as a literal mineral.</div></div>
+ <div class="section">Game action</div><button class="primary" id="resolve" style="width:100%;margin-top:10px">${conf?'Resolve contested definition':'Reinforce lattice'}</button>`;
+ document.getElementById('inspector').classList.add('open');
+ document.getElementById('resolve').onclick=()=>{const group=structures.find(s=>s.userData.data===data);if(conf){data.contested=false;data.validated=true;data.maturity=Math.min(.92,data.maturity+.22);data.forceApplications=(data.forceApplications||0)+1;state.resolved++;state.points+=40;state.stability=Math.min(100,state.stability+8);state.trust=Math.min(100,state.trust+6);toast('Conflict resolved · lattice symmetry increased')}else{data.maturity=Math.min(.99,data.maturity+.08);data.forceApplications=(data.forceApplications||0)+1;state.points+=15;state.energy=Math.max(0,state.energy-4);toast('Computed Force applied · structure reinforced')}if(group)recrystallize(group,data);document.getElementById('inspector').classList.remove('open');saveState();updateHUD()}
+}
+document.querySelector('.close').onclick=()=>document.getElementById('inspector').classList.remove('open');
+let down={x:0,y:0};renderer.domElement.addEventListener('pointerdown',e=>down={x:e.clientX,y:e.clientY});
+renderer.domElement.addEventListener('pointerup',e=>{
+ if(Math.hypot(e.clientX-down.x,e.clientY-down.y)>6)return;
+ mouse.x=e.clientX/innerWidth*2-1;mouse.y=-(e.clientY/innerHeight)*2+1;ray.setFromCamera(mouse,camera);
+ const h=ray.intersectObjects(pickables,true)[0];
+ if(h){let o=h.object;while(o&&!o.userData.data&&!o.userData.stage)o=o.parent;if(o?.userData.data)inspect(o.userData.data);else if(o?.userData.stage){state.rod=o.userData.stage.ri;state.stage=o.userData.stage.si;updateHUD();toast(`${RODS[state.rod].label} · ${RODS[state.rod].stages[state.stage]}`)}return}
+ if(state.mode==='build'){const plane=new THREE.Plane(new THREE.Vector3(0,1,0),0),p=new THREE.Vector3();ray.ray.intersectPlane(plane,p);placeTower(p)}
+});
+function placeTower(p){const spec=INFRASTRUCTURE[selectedInfrastructure],activeZ=RODS[state.rod].z;if(Math.abs(p.z-activeZ)>9){toast(`Placement invalid · ${spec.label} is restricted to ${RODS[state.rod].label} District`);return}if(state.energy<spec.cost){toast(`Not enough Basin Energy · ${spec.cost} required`);return}if(state.points<spec.prereq){toast(`Prerequisite unmet · ${spec.prereq} Deal Points required`);return}state.energy-=spec.cost;state.points+=20;state.buildCapacity=Math.max(0,state.buildCapacity-1);const levels=spec.form==='bridge'?1:spec.form==='conduit'?2:3+Math.floor(Math.random()*3),g=new THREE.Group();if(spec.form==='bridge'){const deck=new THREE.Mesh(new THREE.BoxGeometry(5,.3,1.15),mat(RODS[state.rod].color,.8));deck.position.y=.8;g.add(deck);for(const x of[-2,2]){const pier=new THREE.Mesh(new THREE.CylinderGeometry(.22,.35,1.5,6),mat(C.gold,.82));pier.position.set(x,.25,0);g.add(pier)}}else{for(let i=0;i<levels;i++){const geo=i%2?new THREE.CylinderGeometry(.7,.8,1.2,6):new THREE.OctahedronGeometry(.8,0),m=new THREE.Mesh(geo,mat(RODS[state.rod].color,.86));m.position.y=i*1.05+.55;m.scale.set(1-i*.09,1,1-i*.09);g.add(m)}}glow(g,RODS[state.rod].color,4,.28);g.position.copy(p);g.userData.infrastructure={type:selectedInfrastructure,label:spec.label,rod:RODS[state.rod].id};world.add(g);state.built.push({type:selectedInfrastructure,rod:state.rod,x:p.x,z:p.z});toast(`${spec.label} constructed · ${spec.benefit}`);saveState();updateHUD()}
+function toast(s){const t=document.getElementById('toast');t.textContent=s;t.classList.add('show');clearTimeout(t._x);t._x=setTimeout(()=>t.classList.remove('show'),2100)}
+const EVENTS=[
+ ['Evidence Bloom','New lineage evidence raised district stability.'],
+ ['Constraint Storm','A contested rule is disrupting two neighboring stages.'],
+ ['Liquidity Current','Revenue energy is flowing faster across the basin.'],
+ ['Member Migration','Entitlement demand shifted toward the active district.'],
+ ['Definition Festival','Governed definitions earn double Deal Points.']
+];
+function randomEvent(){const e=EVENTS[Math.floor(Math.random()*EVENTS.length)],b=document.getElementById('eventBanner');document.getElementById('eventTitle').textContent=e[0];document.getElementById('eventCopy').textContent=e[1];b.classList.add('show');state.points+=10;state.energy=Math.min(100,state.energy+5);updateHUD();setTimeout(()=>b.classList.remove('show'),3500)}
+document.getElementById('event').onclick=randomEvent;
+document.getElementById('prev').onclick=()=>{state.stage=Math.max(0,state.stage-1);updateHUD()};
+document.getElementById('next').onclick=()=>{state.stage=Math.min(RODS[state.rod].stages.length-1,state.stage+1);updateHUD()};
+document.getElementById('ride').onclick=()=>{state.riding=!state.riding;document.getElementById('ride').textContent=state.riding?'❙❙ Pause':'▶ Ride'};
+addEventListener('keydown',e=>{if(e.key==='1')state.rod=0;if(e.key==='2')state.rod=1;if(e.key==='3')state.rod=2;if(e.key.toLowerCase()==='m')setMode(state.mode==='world'?'explore':'world');if(e.key.toLowerCase()==='b')setMode('build');if(e.code==='Space'){e.preventDefault();document.getElementById('ride').click()}updateHUD()});
+function updateHUD(){
+ document.getElementById('points').textContent=state.points+' DP';document.getElementById('energy').textContent=state.energy+' Energy';document.getElementById('stability').textContent=state.stability+'% Stable';
+ document.getElementById('evidence').textContent=state.evidence+' Evidence';document.getElementById('trust').textContent=state.trust+' Trust';
+ document.getElementById('companionMeta').textContent=`Level ${1+Math.floor(state.points/100)} · ${state.points%100} / 100 DP`;
+ const rail=document.getElementById('stageRail');rail.innerHTML=RODS[state.rod].stages.map((name,index)=>`<button class="stage-dot ${index===state.stage?'active':''}" data-stage="${index}" aria-label="${name}${index===state.stage?', current stage':''}">${index+1} ${name}</button>`).join('');rail.querySelectorAll('[data-stage]').forEach(button=>button.addEventListener('click',()=>arriveAtStage(Number(button.dataset.stage))));
+ const n=state.inspected.size+state.resolved*2,p=Math.min(100,n/5*100);document.getElementById('questProgress').style.width=p+'%';
+ if(p>=100){document.getElementById('questTitle').textContent='District Expedition Complete';document.getElementById('questCopy').textContent='World tier unlocked: governed city expansion.'}
+}
+function arriveAtStage(index){state.stage=Math.max(0,Math.min(RODS[state.rod].stages.length-1,index));updateHUD();toast(`${RODS[state.rod].label} · ${RODS[state.rod].stages[state.stage]} · stage arrival`);document.getElementById('a11yStatus').textContent=`Arrived at ${RODS[state.rod].stages[state.stage]} in ${RODS[state.rod].label} District`;saveState()}
+const mini=document.getElementById('miniCanvas'),mx=mini.getContext('2d');function drawMini(){mini.width=340;mini.height=240;mx.clearRect(0,0,340,240);RODS.forEach((r,ri)=>{mx.strokeStyle='#'+r.color.toString(16).padStart(6,'0');mx.globalAlpha=.55;mx.beginPath();mx.moveTo(30,60+ri*60);mx.lineTo(310,60+ri*60);mx.stroke();r.stages.forEach((_,si)=>{const x=30+si/(r.stages.length-1)*280;mx.beginPath();mx.arc(x,60+ri*60,si===state.stage&&ri===state.rod?7:4,0,Math.PI*2);mx.fillStyle=si===state.stage&&ri===state.rod?'#F1EBDD':'#'+r.color.toString(16).padStart(6,'0');mx.fill()})});mx.globalAlpha=1}
+const clock=new THREE.Clock();let rideT=0,frameCount=0,fpsTime=performance.now(),fps=60;
+function animate(){requestAnimationFrame(animate);const dt=clock.getDelta(),t=clock.elapsedTime;zoom+=(targetZoom-zoom)*.09;
+ if(state.riding){rideT+=dt*.35;if(rideT>1){rideT=0;state.stage=(state.stage+1)%RODS[state.rod].stages.length;updateHUD()}}
+ const f=cameraFocus(),worldMode=state.mode==='world',r=(worldMode?67:18)*zoom,h=(worldMode?52:12)*zoom;
+ camera.position.lerp(new THREE.Vector3(f.x+Math.sin(yaw)*r,h+pitch*12,f.z+Math.cos(yaw)*r),.07);camera.lookAt(f.x,worldMode?0:1.5,f.z);key.position.set(f.x+18,28,f.z+14);
+ structures.forEach((g,i)=>{g.rotation.y+=dt*(.12+(i%4)*.02);g.position.y=g.userData.home.y+Math.sin(t*.8+i)*.15;if(g.userData.orbit)g.userData.orbit.rotation.z+=dt*.45});
+ stageNodes.forEach((n,i)=>{if(n.userData.ring)n.userData.ring.rotation.z+=dt*(.18+(i%3)*.08);const s=n.userData.stage.ri===state.rod&&n.userData.stage.si===state.stage?1.08+Math.sin(t*2)*.015:1;n.scale.lerp(new THREE.Vector3(s,s,s),.12)});
+ dust.rotation.y+=dt*.008;dust.position.y=Math.sin(t*.11)*2;relationships.forEach((line,i)=>{line.material.opacity=.08+.08*(.5+.5*Math.sin(t*1.3+i))});goldL.intensity=2.1+.35*Math.sin(t*.45+state.stage);tealL.intensity=2.15+.3*Math.cos(t*.38+state.rod);
+ const follow=cameraFocus().clone().add(new THREE.Vector3(-3,2.5,4));companion.position.lerp(follow,.025);companion.rotation.y+=dt*.35;companion.position.y+=Math.sin(t*2.1)*.002;
+ frameCount++;if(performance.now()-fpsTime>1000){fps=Math.round(frameCount*1000/(performance.now()-fpsTime));frameCount=0;fpsTime=performance.now();document.getElementById('perf').textContent=`${fps} FPS\n${renderer.info.render.calls} calls\n${renderer.info.render.triangles} triangles\n${relationships.length} relations`}
+ drawMini();renderer.render(scene,camera)}
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+function openModal(id){document.getElementById(id)?.classList.add('open')}function closeModal(modal){modal.classList.remove('open')}
+document.querySelectorAll('[data-open]').forEach(button=>button.addEventListener('click',()=>{renderContextPanels();openModal(button.dataset.open)}));document.querySelectorAll('.modal').forEach(modal=>{modal.querySelector('.modal-close').addEventListener('click',()=>closeModal(modal));modal.addEventListener('pointerdown',event=>{if(event.target===modal)closeModal(modal)})});
+function renderContextPanels(){const rod=RODS[state.rod],stage=rod.stages[state.stage],stageAtoms=structures.filter(s=>s.userData.data?.rod===rod.label&&s.userData.data?.stage===stage).map(s=>s.userData.data),avg=stageAtoms.length?stageAtoms.reduce((n,a)=>n+a.maturity,0)/stageAtoms.length:0;
+ document.getElementById('dataStoryBody').innerHTML=`<div class="cards"><div class="card"><h3>${rod.label} · ${stage}</h3><p>Stage maturity ${Math.round(avg*100)}%. Required Structural Data includes governed identity, authority, evidence, lineage, and validation provenance.</p></div><div class="card"><h3>Cross-Journey Context</h3><p>${relationships.length} selective governed dependencies. Current stage contributes to downstream stability and trust.</p></div><div class="card"><h3>Computed Force</h3><p>Preview: +${Math.round((1-avg)*18)} maturity points. Force is derived from evidence density, contested state, validation, and related-stage maturity.</p></div><div class="card"><h3>Salt Basin site mapping</h3><p>Rod → journey; stage → section/workflow state; atom → field + fieldMeta; evidence → source; publish readiness → maturity and validation.</p></div></div>`;
+ document.getElementById('taskCards').innerHTML=TASKS.map(task=>{const progress=task.id==='inspect'?state.inspected.size:task.id==='resolve'?state.resolved:state.built.length,done=progress>=task.goal;return `<div class="card"><h3>${task.label}</h3><p>${task.copy}</p><p>${Math.min(progress,task.goal)} / ${task.goal} · ${task.reward} DP${done?' · Complete':''}</p><button data-task="${task.id}" ${done?'disabled':''}>${done?'Completed':'Focus task'}</button></div>`}).join('');
+ document.getElementById('simCards').innerHTML=SIMULATOR_ROUTES.map(route=>`<div class="card"><h3>${route.label}</h3><p>${route.time} days · Force ${route.force} · Risk ${route.risk}% · Trust ${route.trust}% · Cost ${route.cost}</p><button data-route="${route.id}">Preview in world</button></div>`).join('');document.querySelectorAll('[data-route]').forEach(button=>button.addEventListener('click',()=>{const route=SIMULATOR_ROUTES.find(r=>r.id===button.dataset.route);relationships.forEach((line,i)=>{line.material.color.set(i%2?C.gold:C.teal);line.material.opacity=.18+route.force/300});toast(`${route.label} path preview · projected trust ${route.trust}%`);closeModal(document.getElementById('simModal'))}));
+ document.getElementById('settingsBody').innerHTML=`<label class="toggle-row">Graphics quality <select id="quality"><option>auto</option><option>high</option><option>medium</option><option>mobile</option></select></label><label class="toggle-row">Reduced motion <input id="reducedMotion" type="checkbox" ${state.settings.reducedMotion?'checked':''}></label><label class="toggle-row">Sound hooks (off by default) <input id="sound" type="checkbox" ${state.settings.sound?'checked':''}></label><label class="toggle-row">Performance overlay <input id="performance" type="checkbox" ${state.settings.performance?'checked':''}></label><div class="cards"><div class="card"><button id="resetCamera">Reset camera</button></div><div class="card"><button id="exportDebug">Export debug state</button></div><div class="card"><button id="resetSave">Reset saved progress</button></div></div>`;document.getElementById('quality').value=state.settings.quality;['quality','reducedMotion','sound','performance'].forEach(id=>document.getElementById(id).addEventListener('change',event=>{state.settings[id]=event.target.type==='checkbox'?event.target.checked:event.target.value;document.getElementById('perf').classList.toggle('on',state.settings.performance);saveState()}));document.getElementById('resetCamera').onclick=()=>{yaw=.2;pitch=.35;targetZoom=1;toast('Camera reset')};document.getElementById('exportDebug').onclick=()=>{const blob=new Blob([JSON.stringify({schemaVersion:SCHEMA_VERSION,state:{...state,inspected:[...state.inspected]},renderer:renderer.info},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='salt-basin-debug-state.json';a.click();URL.revokeObjectURL(a.href)};document.getElementById('resetSave').onclick=()=>{localStorage.removeItem(SAVE_KEY);location.reload()};
+}
+const buildTray=document.getElementById('buildTray');buildTray.innerHTML=Object.entries(INFRASTRUCTURE).map(([id,spec])=>`<button class="build-choice ${id===selectedInfrastructure?'selected':''}" data-build="${id}"><b>${spec.label}</b>${spec.cost} Energy · ${spec.capability}</button>`).join('');buildTray.querySelectorAll('[data-build]').forEach(button=>button.addEventListener('click',()=>{selectedInfrastructure=button.dataset.build;buildTray.querySelectorAll('[data-build]').forEach(b=>b.classList.toggle('selected',b===button));toast(`${INFRASTRUCTURE[selectedInfrastructure].label} selected`)}));
+document.addEventListener('keydown',event=>{if(event.key==='Escape'){document.querySelectorAll('.modal.open').forEach(closeModal);document.getElementById('inspector').classList.remove('open')}if(event.key.toLowerCase()==='d')openModal('dataModal');if(event.key.toLowerCase()==='t')openModal('taskModal')});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)clock.stop();else clock.start()});
+let lastTap=0;renderer.domElement.addEventListener('pointerup',event=>{const now=Date.now();if(now-lastTap<320&&event.pointerType==='touch'){yaw=.2;pitch=.35;targetZoom=1;toast('Camera recentered')}lastTap=now},{passive:true});
+window.addEventListener('pagehide',saveState);document.getElementById('perf').classList.toggle('on',state.settings.performance);
+function enterWorld(event){if(event){event.preventDefault();event.stopPropagation()}if(startupState==='failed'||startupState==='entered')return;startupState='entered';document.getElementById('startupStatus').textContent='World ready';document.getElementById('intro').classList.add('hide');document.getElementById('hud').classList.add('on');document.getElementById('a11yStatus').textContent='Salt Basin Crystalline World entered';setTimeout(()=>document.getElementById('intro')?.remove(),850)}
+function bindStartupOnce(){if(startupBound)return;startupBound=true;const enter=document.getElementById('enter');enter.addEventListener('pointerup',enterWorld,{passive:false});enter.addEventListener('touchend',enterWorld,{passive:false});enter.addEventListener('click',enterWorld);enter.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){enterWorld(event)}})}
+bindStartupOnce();updateHUD();animate();startupState='ready';document.getElementById('startupStatus').textContent='World ready · tap or press Enter';
+window.__SB_SMOKE__=()=>({startup:startupState,three:Boolean(window.THREE),webgl:hasWebGL(),renderer:Boolean(renderer),rods:RODS.length,stages:RODS.map(r=>r.stages.length),pickables:pickables.length,structures:structures.length,controls:{prev:Boolean(document.getElementById('prev')),next:Boolean(document.getElementById('next')),ride:Boolean(document.getElementById('ride')),modes:document.querySelectorAll('.pill').length},pass:startupState!=='failed'&&RODS.length===3&&pickables.length>0});
+}catch(error){showStartupError('The 3D world could not initialize safely.',error)}
+})();
+</script>
+</body>
+</html>

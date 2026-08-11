@@ -704,6 +704,9 @@ export default function LonetreeMvpPanel({ scope = 'member' }) {
   const [selectedProspectId, setSelectedProspectId] = useState(null);
   const [configKind, setConfigKind] = useState('draft');
   const [publishState, setPublishState] = useState('');
+  const [proposalVersions, setProposalVersions] = useState([]);
+  const [proposalClass, setProposalClass] = useState('budgetary');
+  const [compilerPrompt, setCompilerPrompt] = useState('Compile the current LoneTree proposal metadata and initial interactive visual structure.');
 
   useEffect(() => {
     (async () => {
@@ -740,6 +743,22 @@ export default function LonetreeMvpPanel({ scope = 'member' }) {
       .then((result) => setProspectConfig(mergeProspectConfig(LONETREE_PROSPECT_EXPERIENCE, result.value)))
       .catch((e) => setError(e.body?.error || e.message));
   }, [scope, selectedProspectId, configKind]);
+
+  const loadVersions = useCallback(() => {
+    if (scope !== 'admin' || !selectedProspectId) return Promise.resolve();
+    return api.getProposalVersionsForUser(selectedProspectId).then((result) => setProposalVersions(result.versions || []));
+  }, [scope, selectedProspectId]);
+  useEffect(() => { loadVersions().catch(() => {}); }, [loadVersions]);
+
+  const createVersion = async () => {
+    setPublishState('Creating version…');
+    try { const result = await api.createProposalVersion(selectedProspectId, { proposalClass, snapshot: prospectConfig, approvalCaveat: proposalClass === 'budgetary' ? 'Modeled options are budgetary and subject to final approval. Detailed final pricing is not included.' : null }); setPublishState(`Created proposal version ${result.versionNumber}.`); await loadVersions(); }
+    catch (e) { setPublishState(e.body?.error || e.message); }
+  };
+  const compileVersion = async () => { setPublishState('Compiling proposal metadata…'); try { const result = await api.compileProposalVersion(selectedProspectId, { proposalClass, prompt: compilerPrompt }); setPublishState(`Compiler created version ${result.versionNumber}.`); await loadVersions(); } catch (e) { setPublishState(e.body?.error || e.message); } };
+  const deliverVersion = async (versionId) => { setPublishState('Delivering proposal…'); try { await api.deliverProposalVersion(selectedProspectId, versionId); setPublishState('Proposal delivered; prior delivered version archived.'); await loadVersions(); } catch (e) { setPublishState(e.body?.error || e.message); } };
+  const approveVersion = async (versionId) => { setPublishState('Approving proposal…'); try { await api.approveProposalVersion(selectedProspectId, versionId); setPublishState('Proposal approved.'); await loadVersions(); } catch (e) { setPublishState(e.body?.error || e.message); } };
+  const contractVersion = async (versionId) => { setPublishState('Creating contract draft…'); try { const result = await api.convertProposalToContract(selectedProspectId, versionId); setPublishState(`Contract draft ${result.contractId} created.`); await loadVersions(); } catch (e) { setPublishState(e.body?.error || e.message); } };
 
   const saveProspectDraft = async (value) => {
     const result = await api.saveLonetreeProspectDraft(selectedProspectId, value);
@@ -822,7 +841,12 @@ export default function LonetreeMvpPanel({ scope = 'member' }) {
         <button onClick={() => setConfigKind('draft')} disabled={configKind === 'draft'}>Edit draft</button>
         <button onClick={() => setConfigKind('published')} disabled={configKind === 'published'}>View published replica</button>
         <button onClick={publishProspect} disabled={!selectedProspectId}>Publish draft to prospect</button>
+        <select value={proposalClass} onChange={(event) => setProposalClass(event.target.value)}><option value="budgetary">Budgetary version</option><option value="final">Final version</option></select>
+        <button onClick={createVersion} disabled={!selectedProspectId}>Create immutable version</button>
+        <input value={compilerPrompt} onChange={(event) => setCompilerPrompt(event.target.value)} aria-label="Proposal compiler prompt" style={{ minWidth: 280 }} />
+        <button onClick={compileVersion} disabled={!selectedProspectId}>Run proposal compiler</button>
         <span style={{ color: 'var(--lt-text-muted)', fontSize: '0.75rem' }}>{publishState}</span>
+        {proposalVersions.map((version) => <div key={version.id} style={{ display: 'flex', gap: '.35rem', alignItems: 'center', fontSize: '.72rem' }}><strong>v{version.version_number}</strong><span>{version.proposal_class} · {version.status}</span>{version.status === 'draft' && <button onClick={() => approveVersion(version.id)}>Approve</button>}{(version.proposal_class === 'budgetary' ? ['draft','approved'] : ['approved']).includes(version.status) && <button onClick={() => deliverVersion(version.id)}>Deliver</button>}{version.proposal_class === 'final' && ['approved','delivered'].includes(version.status) && <button onClick={() => contractVersion(version.id)}>Create contract</button>}</div>)}
       </div>}
       {view === 'landing' ? (
         <div style={{ flex: 1, minWidth: 0, padding: '1.5rem 2rem', overflowY: 'auto' }}>

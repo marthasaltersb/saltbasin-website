@@ -84,7 +84,7 @@ export const PROVIDERS = {
     id: 'linkedin',
     label: 'LinkedIn',
     icon: '🔗',
-    description: 'Your own profile data — name, headline, positions, skills',
+    description: 'Basic identity only (name) — LinkedIn\'s OAuth API does not expose position history, skills, or recommendations; export your data from LinkedIn for full career history',
     authUrl: 'https://www.linkedin.com/oauth/v2/authorization',
     tokenUrl: 'https://www.linkedin.com/oauth/v2/accessToken',
     scopes: ['r_liteprofile', 'r_emailaddress'],

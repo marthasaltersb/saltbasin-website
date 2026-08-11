@@ -1,0 +1,22 @@
+{
+  "version": "2026-08-10.1",
+  "viewports": {
+    "mobile": { "width": 390, "height": 844 },
+    "tablet": { "width": 768, "height": 1024 },
+    "desktop": { "width": 1280, "height": 720 }
+  },
+  "states": [
+    { "id": "AUTH-LOGIN", "route": "/login", "auth": "anonymous", "assertText": ["Sign In", "Forgot password?", "Start with BestyStaff"], "assertNoHorizontalOverflow": true, "status": "verified-desktop", "evidence": { "viewport": "1280x720", "bodyScrollWidth": 1280, "bodyClientWidth": 1280, "clippedControls": 0 } },
+    { "id": "AUTH-FIRST-PASSWORD", "route": "/first-login-password", "auth": "must-change-member", "assertText": ["BestyStaff · required first step", "Set your own password", "Save password and continue"], "assertNoHorizontalOverflow": true, "status": "pending-capture" },
+    { "id": "AUTH-RESET", "route": "/reset/:valid-test-token", "auth": "anonymous-fixture", "assertText": ["Set a new password", "cannot reuse a previous password"], "assertNoHorizontalOverflow": true, "status": "pending-capture" },
+    { "id": "TERMS-CURRENT", "route": "/world", "auth": "member-current-terms", "assertAbsentText": ["required first prompt"], "status": "pending-capture" },
+    { "id": "TERMS-MISSING", "route": "/world", "auth": "member-no-terms", "assertText": ["BestyStaff · required first prompt", "Career Portfolio Terms & Data Conditions"], "assertBlockedBackground": true, "status": "pending-capture" },
+    { "id": "TERMS-STALE", "route": "/world", "auth": "member-stale-terms", "assertText": ["The current terms have changed", "agree"], "assertBlockedBackground": true, "status": "pending-capture" },
+    { "id": "BESTY-RELATIONSHIP", "route": "/?intakeSource=qa#bestystaff", "auth": "anonymous", "assertOrder": ["relationship", "primary_email", "captcha"], "status": "pending-capture" },
+    { "id": "BESTY-EMAIL-VERIFY", "route": "/?intakeSource=qa#bestystaff", "auth": "anonymous-fixture", "assertText": ["verification email", "verify"], "status": "pending-capture" },
+    { "id": "LEAD-LOGIN-CHALLENGE", "route": "/lead/:publicId", "auth": "anonymous-lead-fixture", "assertText": ["Sign in"], "status": "pending-capture" },
+    { "id": "PROPOSAL-DELIVERED", "route": "/member?workspace=1&tab=proposal-experience", "auth": "proposal-recipient", "assertText": ["Collaborator feedback", "Save private draft", "Publish feedback"], "status": "pending-capture" },
+    { "id": "PROPOSAL-DRAFT-FEEDBACK", "route": "/member?workspace=1&tab=proposal-experience", "auth": "proposal-recipient-with-draft", "assertText": ["private draft"], "status": "pending-capture" },
+    { "id": "PROPOSAL-PUBLISHED-FEEDBACK", "route": "/member?workspace=1&tab=proposal-experience", "auth": "proposal-recipient-with-published-feedback", "assertText": ["published"], "status": "pending-capture" }
+  ]
+}

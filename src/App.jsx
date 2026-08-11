@@ -2,17 +2,21 @@ import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { api } from './lib/api.js';
 import PublicSite from './components/PublicSite.jsx';
+import UxRuntimeAuditProbe from './components/UxRuntimeAuditProbe.jsx';
 const LandingGate = lazy(() => import('./components/LandingGate.jsx'));
 const LoginPage = lazy(() => import('./components/admin/LoginPage.jsx'));
+const TestLoginRedirect = lazy(() => import('./components/admin/TestLoginRedirect.jsx'));
 const MemberDashboard = lazy(() => import('./components/MemberDashboard.jsx'));
 const PublicProfile = lazy(() => import('./components/PublicProfile.jsx'));
 const LeadView = lazy(() => import('./components/LeadView.jsx'));
 const ResetPasswordPage = lazy(() => import('./components/ResetPasswordPage.jsx'));
+const FirstLoginPasswordPage = lazy(() => import('./components/FirstLoginPasswordPage.jsx'));
 const DataNotice = lazy(() => import('./components/DataNotice.jsx'));
 const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy.jsx'));
 const TermsOfService = lazy(() => import('./components/TermsOfService.jsx'));
 const BusinessDefinitionExperience = lazy(() => import('./components/BusinessDefinitionExperience.jsx'));
 const OrgPortal = lazy(() => import('./components/OrgPortal.jsx'));
+const ReferenceExperiencePage = lazy(() => import('./components/ReferenceExperiencePage.jsx'));
 
 const lazyOutput = (name) => lazy(() =>
   import('./components/Output.jsx').then((module) => ({ default: module[name] }))
@@ -64,6 +68,8 @@ function SignupRoute() {
 
 export default function App() {
   return (
+    <>
+    <UxRuntimeAuditProbe />
     <Suspense fallback={<RouteLoader />}>
     <Routes>
       {/* /login is the canonical sign-in URL. /admin/login is kept as an alias
@@ -72,7 +78,9 @@ export default function App() {
           login (the server figures out the role from the user record). */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/admin/login" element={<LoginPage />} />
+      <Route path="/test/login" element={<TestLoginRedirect />} />
       <Route path="/reset/:token" element={<ResetPasswordPage />} />
+      <Route path="/first-login-password" element={<FirstLoginPasswordPage />} />
       <Route path="/signup" element={<SignupRoute />} />
       {/* The World Shell (2026-08-07) is now the primary logged-in surface
           for both roles — /admin and /member render it directly instead of
@@ -86,6 +94,7 @@ export default function App() {
       <Route path="/member" element={<MemberDashboard />} />
       <Route path="/world" element={<MemberDashboard />} />
       <Route path="/org/:orgId" element={<OrgPortal />} />
+      <Route path="/experience/reference" element={<ReferenceExperiencePage />} />
       <Route path="/u/:slug" element={<PublicProfile />} />
       <Route path="/u/:slug/*" element={<PublicProfile />} />
       <Route path="/lead/:publicId" element={<LeadView />} />
@@ -118,6 +127,7 @@ export default function App() {
       <Route path="/*" element={<PublicRoute />} />
     </Routes>
     </Suspense>
+    </>
   );
 }
 

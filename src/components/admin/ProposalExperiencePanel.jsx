@@ -15,6 +15,7 @@ export default function ProposalExperiencePanel() {
   const [activeStage, setActiveStage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
+  const [selectedComponent, setSelectedComponent] = useState(null);
 
   useEffect(() => {
     api.getProposalExperienceState()
@@ -36,7 +37,7 @@ export default function ProposalExperiencePanel() {
   return (
     <div style={S.wrap}>
       <StageNav stages={state.stages} activeStage={activeStage} onSelect={goToStage} viewState={state.viewState} />
-      <div style={S.content}>
+      <div style={S.content} onClick={(event) => { const target = event.target.closest?.('[data-proposal-component]'); if (target) setSelectedComponent(target.getAttribute('data-proposal-component')); }}>
         {state.disclaimer && <div style={S.disclaimer}>{state.disclaimer}</div>}
         <div style={S.stageHeader}>
           <div style={S.stageEyebrow}>{stageDef ? `Stage ${stageDef.sequence} of ${state.stages.length}` : ''}</div>
@@ -44,9 +45,42 @@ export default function ProposalExperiencePanel() {
           <div style={S.stagePurpose}>{stageDef?.purpose}</div>
         </div>
         <StageBody stageId={activeStage} onAdvance={goToStage} onDecided={(s) => setState(s)} />
+        {state.activeVersion && <ProposalFeedback version={state.activeVersion} activeStage={activeStage} selectedComponent={selectedComponent} />}
       </div>
     </div>
   );
+}
+
+function ProposalFeedback({ version, activeStage, selectedComponent }) {
+  const [body, setBody] = useState('');
+  const [entries, setEntries] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const reload = useCallback(() => api.getProposalFeedback(version.id).then((r) => setEntries(r.feedback || [])).catch(() => {}), [version.id]);
+  useEffect(() => { reload(); }, [reload]);
+  const save = async () => {
+    if (!body.trim()) return;
+    setSaving(true);
+    try {
+      await api.saveProposalFeedback({ versionId: version.id, componentKey: selectedComponent || `stage:${activeStage}`, visualLayerKey: activeStage, entryType: 'comment', body, context: { entryEvent: 'proposal_component_feedback', stageId: activeStage, selectedComponent: selectedComponent || null } });
+      setBody(''); await reload(); toast.success('Feedback saved as a private draft');
+    } catch (e) { toast.error(e.message); } finally { setSaving(false); }
+  };
+  const publish = async () => {
+    try { await api.publishProposalFeedback(version.id); await reload(); toast.success('Your saved feedback was published to the proposal team'); }
+    catch (e) { toast.error(e.message); }
+  };
+  const drafts = entries.filter((entry) => entry.status === 'draft').length;
+  return <section style={{ ...S.card, marginTop: '2rem', borderColor: 'rgba(196,132,58,.45)' }}>
+    <div style={S.stageEyebrow}>Collaborator feedback · proposal v{version.version_number}</div>
+    <h3 style={S.cardTitle}>Comment on this visual layer</h3>
+    <p style={S.cardBody}>Your entry is automatically linked to {selectedComponent || activeStage}, this proposal version, your account, and the interaction time. Select any highlighted proposal component to target it. Saving keeps it private; only Publish sends it back to the proposal team.</p>
+    <textarea className="sb-input" value={body} onChange={(e) => setBody(e.target.value)} rows={4} placeholder="Add a question, consideration, or requested change…" style={{ width: '100%', marginBottom: '.75rem' }} />
+    <div style={{ display: 'flex', gap: '.65rem', flexWrap: 'wrap' }}>
+      <button className="sb-btn" onClick={save} disabled={saving || !body.trim()}>{saving ? 'Saving…' : 'Save private draft'}</button>
+      <button className="sb-btn sb-btn-gold" onClick={publish} disabled={!drafts}>Publish feedback {drafts ? `(${drafts})` : ''}</button>
+    </div>
+    {!!entries.length && <div style={{ marginTop: '1rem', fontSize: '.76rem', color: '#64717d' }}>{entries.length} entr{entries.length === 1 ? 'y' : 'ies'} · {drafts} private draft{drafts === 1 ? '' : 's'}</div>}
+  </section>;
 }
 
 function StageNav({ stages, activeStage, onSelect, viewState }) {
@@ -109,7 +143,7 @@ function SectionsStage({ stageId, onAdvance }) {
   return (
     <div>
       {sections.map((s) => (
-        <div key={s.id} style={S.card}>
+        <div key={s.id} data-proposal-component={`section:${s.id}`} title="Select this component for feedback" style={S.card}>
           {s.illustrativeFlag && <div style={S.illustrativeBadge}>Illustrative</div>}
           <h3 style={S.cardTitle}>{s.title}</h3>
           <p style={S.cardBody}>{s.narrative}</p>
@@ -133,14 +167,14 @@ function DemoStage({ onAdvance }) {
         <div style={S.riverSub}>Commercial · Operational · Financial · Evidence flows, one governed system</div>
       </div>
       {scenes.map((sc) => (
-        <div key={sc.id} style={S.card}>
+        <div key={sc.id} data-proposal-component={`scene:${sc.id}`} title="Select this component for feedback" style={S.card}>
           {sc.illustrativeFlag && <div style={S.illustrativeBadge}>Illustrative</div>}
           <h3 style={S.cardTitle}>{sc.story}</h3>
           <p style={S.cardBody}>{sc.businessGoal}</p>
         </div>
       ))}
       {sections.map((s) => (
-        <div key={s.id} style={S.card}>
+        <div key={s.id} data-proposal-component={`section:${s.id}`} title="Select this component for feedback" style={S.card}>
           <h3 style={S.cardTitle}>{s.title}</h3>
           <p style={S.cardBody}>{s.narrative}</p>
         </div>
@@ -160,7 +194,7 @@ function DiagnosticStage({ onAdvance }) {
     <div>
       <div style={S.grid}>
         {modules.map((m) => (
-          <div key={m.id} style={S.gridCard}>
+          <div key={m.id} data-proposal-component={`diagnostic:${m.id}`} title="Select this component for feedback" style={S.gridCard}>
             <div style={S.gridCardEyebrow}>{m.id} · {m.durationDays}d</div>
             <h4 style={S.gridCardTitle}>{m.name}</h4>
             <p style={S.gridCardBody}>{m.objective}</p>
@@ -187,7 +221,7 @@ function OpportunityStage({ onAdvance }) {
   return (
     <div>
       {scenarios.map((s) => (
-        <div key={s.id} style={S.card}>
+        <div key={s.id} data-proposal-component={`scenario:${s.id}`} title="Select this component for feedback" style={S.card}>
           {s.illustrativeFlag && <div style={S.illustrativeBadge}>Illustrative</div>}
           <div style={S.scenarioHead} onClick={() => toggle(s.id)}>
             <h4 style={S.cardTitle}>{s.category}: {s.mechanism}</h4>
@@ -221,7 +255,7 @@ function EvidenceStage({ onAdvance }) {
   return (
     <div>
       {evidence.map((e) => (
-        <div key={e.id} style={S.card} onClick={() => api.recordProposalEvidenceOpened(e.id).catch(() => {})}>
+        <div key={e.id} data-proposal-component={`evidence:${e.id}`} title="Select this component for feedback" style={S.card} onClick={() => api.recordProposalEvidenceOpened(e.id).catch(() => {})}>
           {e.illustrativeFlag && <div style={S.illustrativeBadge}>Illustrative</div>}
           <h4 style={S.cardTitle}>{e.evidenceType} — {e.publisherOrOwner} {e.year ? `(${e.year})` : ''}</h4>
           <p style={S.cardBody}>{e.claimOrAssumption}</p>

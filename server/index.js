@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 import { ensureSeeded } from './data/seed.js';
 import { createSeoMiddleware } from './lib/seoMiddleware.js';
+import { enforceCurrentCareerTerms, enforceRequiredPasswordChange } from './auth.js';
 import authRouter from './routes/auth.js';
 import siteRouter from './routes/site.js';
 import configRouter from './routes/config.js';
@@ -36,11 +37,15 @@ import governanceRouter from './routes/governance.js';
 import resumeAccessRouter from './routes/resumeAccess.js';
 import outputTemplatesRouter from './routes/outputTemplates.js';
 import careerMasterRouter from './routes/careerMaster.js';
+import careerReconciliationRouter from './routes/careerReconciliation.js';
+import careerReasoningAdminRouter from './routes/careerReasoningAdmin.js';
 import careerPlacementAgentsRouter from './routes/careerPlacementAgents.js';
 import commercialOpportunitiesRouter from './routes/commercialOpportunities.js';
+import l2rDiagnosticsRouter from './routes/l2rDiagnostics.js';
 import publicationPipelinesRouter from './routes/publicationPipelines.js';
 import portfolioRequestsRouter from './routes/portfolioRequests.js';
 import bestyStaffRouter from './routes/bestyStaff.js';
+import bestyStaffCareerRouter from './routes/bestyStaffCareer.js';
 import lineageRouter from './routes/lineage.js';
 import methodologyStatsRouter from './routes/methodologyStats.js';
 import leadIntegrationsRouter from './routes/leadIntegrations.js';
@@ -61,6 +66,12 @@ import lonetreeMvpRouter from './routes/lonetreeMvp.js';
 import proposalExperienceRouter from './routes/proposalExperience.js';
 import agentHubRouter from './routes/agentHub.js';
 import notificationsRouter from './routes/notifications.js';
+import genesisRouter from './routes/genesis.js';
+import contentAttachmentsRouter from './routes/contentAttachments.js';
+import contentPublicationsRouter from './routes/contentPublications.js';
+import experienceRouter from './routes/experience.js';
+import deploymentIntelligenceRouter from './routes/deploymentIntelligence.js';
+import backlogOutputsRouter from './routes/backlogOutputs.js';
 import { runDueDefinitions } from './lib/agentHubRunner.js';
 import { isCronDue } from './lib/cronMatch.js';
 import cron from 'node-cron';
@@ -116,6 +127,8 @@ app.use(
 );
 
 app.use('/api/auth', authRouter);
+app.use(enforceRequiredPasswordChange);
+app.use(enforceCurrentCareerTerms);
 app.use('/api/site', siteRouter);
 app.use('/api/config', configRouter);
 app.use('/api/config-envelopes', configEnvelopesRouter);
@@ -139,6 +152,7 @@ app.use('/api/member-templates', memberTemplatesRouter);
 // BestyStaff intake agent is PUBLIC (anonymous teaser visitors) — must mount
 // before /api/agent, whose router is admin-gated at the top.
 app.use('/api/agent/bestystaff', bestyStaffRouter);
+app.use('/api/agent/bestystaff-career', bestyStaffCareerRouter);
 app.use('/api/agent', agentRouter);
 app.use('/api/members/me/agent', memberAgentRouter);
 app.use('/api/events', eventsRouter);
@@ -156,8 +170,11 @@ app.use('/api/governance', governanceRouter);
 app.use('/api/resume', resumeAccessRouter);
 app.use('/api/output-templates', outputTemplatesRouter);
 app.use('/api/career', careerMasterRouter);
+app.use('/api/career-reconciliation', careerReconciliationRouter);
+app.use('/api/career-reasoning-admin', careerReasoningAdminRouter);
 app.use('/api/career-agents', careerPlacementAgentsRouter);
 app.use('/api/commercial-opportunities', commercialOpportunitiesRouter);
+app.use('/api/l2r-diagnostics', l2rDiagnosticsRouter);
 app.use('/api/publication-pipelines', publicationPipelinesRouter);
 app.use('/api/portfolio-requests', portfolioRequestsRouter);
 app.use('/api/lineage', lineageRouter);
@@ -170,6 +187,12 @@ app.use('/api/resume-outputs', resumeOutputsRouter);
 app.use('/api/scenarios', scenariosRouter);
 app.use('/api/agent-hub', agentHubRouter);
 app.use('/api/notifications', notificationsRouter);
+app.use('/api/genesis', genesisRouter);
+app.use('/api/content-attachments', contentAttachmentsRouter);
+app.use('/api/content-publications', contentPublicationsRouter);
+app.use('/api/experience', experienceRouter);
+app.use('/api/deployment-intelligence', deploymentIntelligenceRouter);
+app.use('/api/backlog-outputs', backlogOutputsRouter);
 
 // Uploaded files now live on Supabase Storage at <SUPABASE_URL>/storage/v1/object/public/uploads/<file>.
 // The returned URL from POST /api/uploads is already absolute, so the browser
@@ -238,6 +261,30 @@ app.listen(port, async () => {
   // Uses a setInterval aligned to the next 07:00 crossing.
   scheduleDailyDigest();
   startAgentHubScheduler();
+
+  // Retention sweeps — global table scans, not per-user agent_schedules
+  // actions, so these stay outside agentDispatcher.js's ACTION_EXECUTORS.
+  // Restored here 2026-08-09 after a refactor of this listen() callback
+  // silently dropped both (career's was already live; content-attachments'
+  // was new) — re-verify these two log lines appear on boot if this
+  // callback gets restructured again.
+  import('./lib/careerFileRetention.js').then(({ runCareerFileRetention }) => {
+    runCareerFileRetention().catch((error) => console.error('[career-retention]', error.message));
+    setInterval(() => runCareerFileRetention().catch((error) => console.error('[career-retention]', error.message)), 60 * 60 * 1000).unref();
+  });
+  import('./lib/contentAttachmentRetention.js').then(({ runContentAttachmentRetention }) => {
+    runContentAttachmentRetention().catch((error) => console.error('[content-attachment-retention]', error.message));
+    setInterval(() => runContentAttachmentRetention().catch((error) => console.error('[content-attachment-retention]', error.message)), 60 * 60 * 1000).unref();
+  });
+  import('./lib/proposalOperations.js').then(({ runProposalFeedbackReminders, runProposalFeedbackTriage }) => {
+    const run = () => Promise.all([runProposalFeedbackReminders(), runProposalFeedbackTriage()]).catch((error) => console.error('[proposal-operations]', error.message));
+    run();
+    setInterval(run, 60 * 60 * 1000).unref();
+  });
+  import('./lib/customerMemory.js').then(({ refreshCustomerMemory }) => {
+    refreshCustomerMemory().catch((error) => console.error('[customer-memory]', error.message));
+    setInterval(() => refreshCustomerMemory().catch((error) => console.error('[customer-memory]', error.message)), 6 * 60 * 60 * 1000).unref();
+  });
 
   // Real background agent dispatcher (2026-08-09) — reads agent_schedules
   // rows with a non-'on_demand' cadence and runs them unattended. See

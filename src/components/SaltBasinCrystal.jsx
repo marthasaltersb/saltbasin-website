@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { CRYSTAL_VARIANTS, addCrystalLights, projectToScreen } from '../lib/crystalGeometry.js';
+import { attachSceneManifestTree, publishSceneManifest, removePublishedSceneManifest } from '../lib/sceneManifest.js';
 
 const THREE_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
 let threePromise = null;
@@ -89,6 +90,7 @@ export default function SaltBasinCrystal({
   autoRotate = true,
   pulseActive = false,
 }) {
+  const sceneManifestId = `salt-basin-crystal:${useId()}`;
   const hostRef = useRef(null);
   const canvasRef = useRef(null);
   const mouseRef = useRef({ x: 0, y: 0 });
@@ -151,6 +153,21 @@ export default function SaltBasinCrystal({
         const orbitGroup = orbitTotal > 0 ? buildOrbitGroup(orbitTotal, THREE, orbitItems, orbitColorOverride || ORBIT_COLORS) : null;
         if (orbitGroup) group.add(orbitGroup);
         const orbitMeshes = orbitItems ? orbitGroup.children.filter((m) => m.userData.orbitId) : [];
+        attachSceneManifestTree(group, {
+          instanceId: sceneManifestId, semanticId: 'evidence_atom', variantId: variant,
+          source: { type: 'component-props', id: sceneManifestId, field: 'variant' },
+          visualRules: { geometryId: 'atom_crystal', materialId: `crystal-variant-${variant}`, colorRule: 'brand-crystal-palette' },
+          scene: { component: 'SaltBasinCrystal', builder: `CRYSTAL_VARIANTS.${variant}` },
+          interaction: { events: interactive ? ['POINTER_MOVE'] : [], stateTarget: interactive ? 'crystalParallax' : null },
+        });
+        orbitMeshes.forEach((mesh) => attachSceneManifestTree(mesh, {
+          instanceId: `${sceneManifestId}:orbit:${mesh.userData.orbitId}`, semanticId: 'atom_cluster', variantId: mesh.userData.orbitId,
+          source: { type: 'orbit-item', id: mesh.userData.orbitId, field: 'variant' },
+          visualRules: { geometryId: 'cluster_field', materialId: 'crystal-orbit', colorRule: 'orbit-item-palette' },
+          scene: { component: 'SaltBasinCrystal', builder: 'buildOrbitGroup', parent: sceneManifestId },
+          interaction: { events: ['HOVER', 'SELECT'], stateTarget: 'hoveredOrbitId' },
+        }));
+        publishSceneManifest(sceneManifestId, scene);
 
         function resize() {
           if (!hostRef.current || !renderer) return;
@@ -252,6 +269,7 @@ export default function SaltBasinCrystal({
         });
       }
       renderer?.dispose?.();
+      removePublishedSceneManifest(sceneManifestId);
     };
   }, [interactive, size, variant, orbitCount, orbitItems?.length, orbitColorOverride]);
 

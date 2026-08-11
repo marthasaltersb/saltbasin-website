@@ -39,6 +39,24 @@ function JourneyLane({ label, value = [], onChange, placeholder }) {
   </section>;
 }
 
+function StudioGovernance({ definition }) {
+  const governance = definition.governance;
+  if (!governance) return null;
+  const authority = governance.authority || {};
+  const gates = governance.iteration?.gates || [];
+  return <section className="mco-setting-card" style={{ padding: '1rem', marginTop: '.8rem' }}>
+    <span>CODE-OWNED ROLE BOUNDARY</span>
+    <h3 style={{ margin: '.35rem 0' }}>{definition.label}</h3>
+    <p style={{ color: 'var(--sb-admin-text-soft)' }}>These authority rules are enforced by the platform and cannot be expanded by the agent.</p>
+    <div style={grid}>
+      <div><strong>May change</strong><ul>{(authority.mayChange || []).map((item) => <li key={item}>{item}</li>)}</ul></div>
+      <div><strong>Must receive</strong><ul>{(governance.contextContract?.required || []).map((item) => <li key={item}>{item}</li>)}</ul></div>
+      <div><strong>Prohibited</strong><ul>{(authority.prohibited || []).map((item) => <li key={item}>{item}</li>)}</ul></div>
+    </div>
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.4rem', marginTop: '.6rem' }}>{gates.map((gate, index) => <React.Fragment key={gate}><span className="sb-badge">{index + 1}. {gate}</span>{index < gates.length - 1 && <span aria-hidden="true">→</span>}</React.Fragment>)}</div>
+  </section>;
+}
+
 function DefinitionEditor({ definition, onSaved }) {
   const [draft, setDraft] = useState(definition);
   const cfg = { ...starterConfig(), ...(draft.config || {}) };
@@ -65,7 +83,7 @@ function DefinitionEditor({ definition, onSaved }) {
       <section className="mco-setting-card"><span>CURRENT MODEL</span><strong>{cfg.llm?.mode === 'none' ? 'No model' : `${cfg.llm?.provider || 'anthropic'} · ${cfg.llm?.model || 'not selected'}`}</strong><Field label="Provider"><select className="sb-input" disabled={cfg.llm?.mode === 'none'} value={cfg.llm?.provider || 'anthropic'} onChange={(e) => setCfg('llm', { ...cfg.llm, provider: e.target.value })}><option value="anthropic">Anthropic</option><option value="openai">OpenAI · connection required</option></select></Field><Field label="Model ID"><input className="sb-input" disabled={cfg.llm?.mode === 'none'} value={cfg.llm?.model || ''} onChange={(e) => setCfg('llm', { ...cfg.llm, model: e.target.value })} /></Field></section>
       <section className="mco-setting-card"><span>PERIOD USAGE</span><strong>{Number(definition.llmUsage?.totalTokens || 0).toLocaleString()} / {Number(cfg.llm?.tokenCap || 0).toLocaleString()} tokens</strong><p>{definition.llmUsage?.requestCount || 0} calls · {definition.llmUsage?.periodKey || 'current period'}</p><Field label="Token cap"><input className="sb-input" type="number" min="0" value={cfg.llm?.tokenCap || 0} onChange={(e) => setCfg('llm', { ...cfg.llm, tokenCap: Number(e.target.value) })} /></Field><Field label="Period"><select className="sb-input" value={cfg.llm?.capPeriod || 'month'} onChange={(e) => setCfg('llm', { ...cfg.llm, capPeriod: e.target.value })}><option value="day">Daily</option><option value="month">Monthly</option><option value="year">Yearly</option></select></Field></section>
       <section className="mco-setting-card"><span>CALL BOUNDARY</span><strong>{Number(cfg.llm?.maxOutputTokensPerResponse || 0).toLocaleString()} output tokens</strong><Field label="Max output per call"><input className="sb-input" type="number" min="256" max="16384" value={cfg.llm?.maxOutputTokensPerResponse || 4096} onChange={(e) => setCfg('llm', { ...cfg.llm, maxOutputTokensPerResponse: Number(e.target.value) })} /></Field></section>
-    </div><div className="mco-setting-card" style={{ padding: '1rem', marginTop: '.8rem' }}><Field label="Why this agent may use an LLM"><textarea className="sb-input" rows="3" value={cfg.llm?.purpose || ''} onChange={(e) => setCfg('llm', { ...cfg.llm, purpose: e.target.value })} /></Field></div></>}
+    </div><div className="mco-setting-card" style={{ padding: '1rem', marginTop: '.8rem' }}><Field label="Why this agent may use an LLM"><textarea className="sb-input" rows="3" value={cfg.llm?.purpose || ''} onChange={(e) => setCfg('llm', { ...cfg.llm, purpose: e.target.value })} /></Field></div><StudioGovernance definition={definition} /></>}
     {draft.executionMode === 'interactive' && <>
       <h3>Identity and deployment</h3>
       <div style={grid}>

@@ -15,11 +15,12 @@ import { requireUser } from '../auth.js';
 import { runByDefinitionId } from '../lib/agentHubRunner.js';
 import { isValidCron } from '../lib/cronMatch.js';
 import { getAgentLlmUsage } from '../lib/agentLlmUsage.js';
+import { hydrateAgentStudioConfig, validateAgentStudioConfig } from '../lib/agentStudioGovernance.js';
 
 const router = Router();
 router.use(requireUser);
 
-const KNOWN_KINDS = ['code_review', 'content_research', 'lead_intake', 'internal_chat', 'workflow'];
+const KNOWN_KINDS = ['code_review', 'content_research', 'crystal_world_audit', 'lead_intake', 'internal_chat', 'workflow', 'coding', 'platform_config', 'ux', 'engine', 'ui_engine'];
 const EXECUTION_MODES = ['interactive', 'scheduled', 'internal_chat'];
 const SCOPE_TYPES = ['platform', 'organization', 'member'];
 
@@ -69,6 +70,7 @@ async function ensureWorldAgents(user, scopeType, scopeId) {
 }
 
 function rowToDefinition(r) {
+  const rawConfig = typeof r.config === 'string' ? JSON.parse(r.config) : (r.config || {});
   return {
     id: Number(r.id),
     key: r.key,
@@ -82,7 +84,8 @@ function rowToDefinition(r) {
     scheduleCron: r.schedule_cron,
     enabled: !!r.enabled,
     autoBranch: !!r.auto_branch,
-    config: typeof r.config === 'string' ? JSON.parse(r.config) : (r.config || {}),
+    config: rawConfig,
+    governance: rawConfig.studioRole ? hydrateAgentStudioConfig(rawConfig) : null,
     createdAt: Number(r.created_at),
     updatedAt: Number(r.updated_at),
   };
@@ -149,6 +152,8 @@ router.post('/definitions', async (req, res) => {
   if (!SCOPE_TYPES.includes(scopeType)) return res.status(400).json({ error: 'invalid scopeType' });
   if (!(await manageableScope(req.user, scopeType, scopeId))) return res.status(403).json({ error: 'agent scope is not manageable by this user' });
   if (scheduleCron && !isValidCron(scheduleCron)) return res.status(400).json({ error: 'scheduleCron is not a valid 5-field cron expression' });
+  const studioErrors = validateAgentStudioConfig(config || {});
+  if (studioErrors.length) return res.status(400).json({ error: studioErrors.join('; ') });
 
   const now = Date.now();
   try {
@@ -176,6 +181,8 @@ router.patch('/definitions/:id', async (req, res) => {
   }
   const existing = await requireManageableDefinition(req, res);
   if (!existing) return;
+  const studioErrors = validateAgentStudioConfig(config !== undefined ? config : (typeof existing.config === 'string' ? JSON.parse(existing.config) : existing.config));
+  if (studioErrors.length) return res.status(400).json({ error: studioErrors.join('; ') });
   if (executionMode !== undefined && !EXECUTION_MODES.includes(executionMode)) return res.status(400).json({ error: 'invalid executionMode' });
 
   await db.prepare(`

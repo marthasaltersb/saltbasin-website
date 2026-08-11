@@ -95,12 +95,13 @@ router.put('/posts/:id', async (req, res) => {
   const user = await requireAdmin(req, res);
   if (!user) return;
   try {
-    const { title, topic, summary, body, series_ref, domain_refs, capability_refs, audience_refs, export_status } = req.body;
+    const { title, topic, summary, body, series_ref, domain_refs, capability_refs, audience_refs, export_status, approvals } = req.body;
     const now = Date.now();
     await db.prepare(`
-      UPDATE unified_content_items SET title=$1, topic=$2, summary=$3, body=$4, series_ref=$5, domain_refs=$6, capability_refs=$7, audience_refs=$8, export_status=$9, updated_by=$10, updated_at=$11
-      WHERE id=$12 AND app_id='app.herq'
-    `).run(title, topic || null, summary || null, body || null, series_ref || null, domain_refs || null, capability_refs || null, audience_refs || null, export_status || 'draft', user.id, now, req.params.id);
+      UPDATE unified_content_items SET title=$1, topic=$2, summary=$3, body=$4, series_ref=$5, domain_refs=$6, capability_refs=$7, audience_refs=$8, export_status=$9,
+        approvals=COALESCE($10,approvals), updated_by=$11, updated_at=$12
+      WHERE id=$13 AND app_id='app.herq'
+    `).run(title, topic || null, summary || null, body || null, series_ref || null, domain_refs || null, capability_refs || null, audience_refs || null, export_status || 'draft', approvals, user.id, now, req.params.id);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: 'Failed to update post' });

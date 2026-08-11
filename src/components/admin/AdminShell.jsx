@@ -10,6 +10,7 @@ import PreviewPane from './PreviewPane.jsx';
 import PageLayoutView from './PageLayoutView.jsx';
 import PageTypeManagerPanel from './PageTypeManagerPanel.jsx';
 import ConfigPanel from './ConfigPanel.jsx';
+import CareerConsentGate from './CareerConsentGate.jsx';
 const MemberStatsPanel = lazy(() => import('./MemberPanels.jsx').then((module) => ({ default: module.MemberStatsPanel })));
 const MemberAuditPanel = lazy(() => import('./MemberPanels.jsx').then((module) => ({ default: module.MemberAuditPanel })));
 const MemberAgentPanel = lazy(() => import('./MemberPanels.jsx').then((module) => ({ default: module.MemberAgentPanel })));
@@ -38,16 +39,19 @@ const WebsiteIntelligencePanel = lazy(() => import('./WebsiteIntelligencePanel.j
 const MetricIntelligencePanel = lazy(() => import('./MetricIntelligencePanel.jsx'));
 const MemberFinancialPanel = lazy(() => import('./MemberFinancialPanel.jsx'));
 const MemberEntitlementsPanel = lazy(() => import('./MemberEntitlementsPanel.jsx'));
-const CareerConsentGate = lazy(() => import('./CareerConsentGate.jsx'));
 const CareerMasterEntryPoint = lazy(() => import('./CareerMasterEntryPoint.jsx'));
 const OrgDocumentsPanel = lazy(() => import('./OrgDocumentsPanel.jsx'));
 const MethodologyConfigPanel = lazy(() => import('./MethodologyConfigPanel.jsx'));
 const LonetreeMvpPanel = lazy(() => import('./LonetreeMvpPanel.jsx'));
 const ProposalExperiencePanel = lazy(() => import('./ProposalExperiencePanel.jsx'));
 const CareerPlacementAgentsPanel = lazy(() => import('./CareerPlacementAgentsPanel.jsx'));
+const CareerReconciliationPanel = lazy(() => import('./CareerReconciliationPanel.jsx'));
+const CareerReasoningCompilerPanel = lazy(() => import('./CareerReasoningCompilerPanel.jsx'));
 const CommercialOpportunityPanel = lazy(() => import('./CommercialOpportunityPanel.jsx'));
+const L2rDiagnosticPanel = lazy(() => import('./L2rDiagnosticPanel.jsx'));
 const AgentHubConfigPanel = lazy(() => import('./AgentHubConfigPanel.jsx'));
 const AgentOutputsPanel = lazy(() => import('./AgentOutputsPanel.jsx'));
+const GenesisFoundationPanel = lazy(() => import('./GenesisFoundationPanel.jsx'));
 
 // Tab component registry: the one piece that can't be data-driven, because
 // React components have to be referenced by import. The nav structure stored
@@ -85,8 +89,11 @@ const TAB_COMPONENTS = {
   methodologyConfig: () => <MethodologyConfigPanel />,
   lonetreeMvp:    (props) => <LonetreeMvpPanel {...props} />,
   commercialOpportunities: () => <CommercialOpportunityPanel />,
+  l2rDiagnostics: () => <L2rDiagnosticPanel />,
   agentHubConfig: (props) => <AgentHubConfigPanel {...props} />,
   agentHubOutputs: () => <AgentOutputsPanel />,
+  genesisFoundation: () => <GenesisFoundationPanel />,
+  careerReasoningCompiler: () => <CareerReasoningCompilerPanel />,
   // config: handled inline below (ConfigPanel needs draft + setters from shell)
   // content: handled inline below (Sidebar/EditorPane/PreviewPane composition)
 };
@@ -112,6 +119,7 @@ const FALLBACK_ADMIN_NAV = {
     { id: 'crm', label: 'Customer Relationship Management', sortOrder: 2, tabs: [
       { id: 'leads', label: 'Leads', componentId: 'leads', sortOrder: 0 },
       { id: 'commercial-opportunities', label: 'Commercial Opportunity Pipeline', componentId: 'commercialOpportunities', sortOrder: 1 },
+      { id: 'l2r-diagnostics', label: 'Lead-to-Revenue Diagnostic', componentId: 'l2rDiagnostics', sortOrder: 2 },
     ]},
     { id: 'content-manager', label: 'Content Manager', sortOrder: 3, tabs: [
       { id: 'content-manager', label: 'Content Manager', componentId: 'contentManager', sortOrder: 0 },
@@ -134,6 +142,9 @@ const FALLBACK_ADMIN_NAV = {
       { id: 'lineage',  label: 'Data Lineage', componentId: 'lineage',  sortOrder: 1 },
       { id: 'command-center', label: 'Command Center', componentId: 'commandCenter', sortOrder: 2 },
       { id: 'methodology-config', label: 'Methodology Config', componentId: 'methodologyConfig', sortOrder: 3 },
+    ]},
+    { id: 'genesis-foundation', label: 'Genesis Foundation', sortOrder: 4.6, tabs: [
+      { id: 'genesis-foundation', label: 'Scientific → Enterprise', componentId: 'genesisFoundation', sortOrder: 0 },
     ]},
     { id: 'eidos', label: 'EIDOS Operating Model', sortOrder: 4, tabs: [
       { id: 'eidos', label: 'EIDOS Operating Model', componentId: 'eidos', sortOrder: 0 },
@@ -856,6 +867,7 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
           if (componentId === 'resume')          return <CareerConsentGate><MyResumePanel scope={scope} /></CareerConsentGate>;
           if (componentId === 'outputTemplates') return <OutputTemplateConfiguratorHub scope={scope} />;
           if (componentId === 'careerMaster')    return <CareerMasterEntryPoint scope={scope} />;
+          if (componentId === 'careerReconciliation') return <CareerReconciliationPanel scope={scope} />;
           if (componentId === 'inbox')           return <InboxPanel />;
           if (componentId === 'products')        return <MemberProductsPanel />;
           if (componentId === 'stats')           return <MemberStatsPanel isAdmin={!isMember} />;

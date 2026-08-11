@@ -12,31 +12,37 @@ duplicate that content here, just track status and findings.
 | 2 | World Variant Domain, Registry & Semantic Invariant Reconciliation | done | `src/config/visual/worldVariantRegistry.js`. See below. |
 | 3 | Visual Encoding Profile + Variant Configuration Schema + Validation | done | `src/config/visual/worldVariantEncodingProfiles.js`. See below. |
 | 4 | Variant Component Profiles | done | `src/config/visual/worldVariantComponentProfiles.js`. See below. |
-| 5 | First 3 fully rendered/interactive variants (Crystal Basin, Orbital Intelligence, Temporal Canyon) | in progress (Crystal Basin slice done) | See below. Orbital Intelligence and Temporal Canyon not started; Crystal Basin itself not fully DoD-item-7-complete either (see remaining gaps). |
+| 5 | First 3 fully rendered/interactive variants (Crystal Basin, Orbital Intelligence, Temporal Canyon) | in progress (Crystal Basin + Temporal Canyon slices done) | See below. Orbital Intelligence not started; neither built variant is fully DoD-item-7-complete yet (see remaining gaps per variant). |
 | 6 | Remaining 3 structural variants (Monetary River, Enterprise Highway, Neural Constellation) | not started | Depends on Phases 2–4. `MATURITY_LATTICE` (7th variant, added 2026-07-12) is not yet assigned to Phase 5 or 6 — schedule it when its build is picked up. |
-| 7 | Variant Switcher, Interaction Intent Layer & Comparison Mode | not started | Depends on Phase 5 |
+| 7 | Variant Switcher, Interaction Intent Layer & Comparison Mode | not started | Depends on Phase 5. Its "side-by-side Variant Comparison mode" line item is now partially prototyped outside this skill's own phase sequence — see the "Dashboard Definition View" entry below (2026-08-10, `flickering-petting-brook` plan) — real split-viewport rendering exists (`activateDashboard()`, `dashboardDefinitionRegistry.js`) but with a shared camera (no independent per-lens framing) and selection disabled while active. Full Phase 7 (Interaction Intent layer, per-lens cameras, preserved semantic state across switches) is still not started. |
 | 8 | Presets/Inheritance, Variant Creation Studio, Explanation Mode, Temporal Playback | not started | Depends on Phases 3, 5/6 |
 | 9 | Performance, Cross-Variant Customer Orbit Reference, Evaluation Report & Closeout | not started | Depends on Phases 5–8 |
 
 ## Open decisions requiring a Betsy answer (do not default)
 
-1. **`WORLD_REGISTRY` naming collision.** `src/config/visual/worldRegistry.js`'s existing `WORLD_REGISTRY`
-   is a **content-domain** switcher (Foundation / Channel Rod / Query Channel / Career / Pricing /
-   Infrastructure / Templates worlds — different underlying data per entry) driven today only by a cosmetic
-   `<select>` + toast label, not wired into any actual rendering (`worldId` is never read by `orbitPosition()`,
-   camera setup, or scene construction; `ROTATION_CHOREOGRAPHY_REGISTRY`'s per-world motion values are
-   defined but unconsumed anywhere in `SpatialJourneyWorld.jsx`). This spec's `WorldVariant` (Crystal Basin,
-   Orbital Intelligence, Monetary River, ...) is a **different axis**: the same data rendered through
-   different spatial metaphors, not different data. Is the existing `WORLD_REGISTRY` concept: (a) meant to
-   be finished as originally scoped (a content-domain switcher, kept separate from the new variant engine —
-   two independent registries, two independent `<select>` controls), (b) intended to be renamed/retired now
-   that "World" collides with the new, higher-priority spec's vocabulary, or (c) meant to become a second
-   axis composed with variants (`worldId × variantKey`)? Not resolved here — blocks Phase 2's registry
-   naming, not Phase 1's audit.
+None currently open.
 
 ## Resolved decisions
 
-1. **7th variant concept — RESOLVED 2026-07-12.** Betsy asked to add a 7th variant beyond the master
+1. **`WORLD_REGISTRY` naming collision — RESOLVED 2026-08-10.** Betsy chose option (c): compose the two axes
+   as `worldId × variantKey` rather than finishing `WORLD_REGISTRY` as a fully separate switcher (a) or
+   renaming/retiring it (b). Built `src/config/visual/worldCompositionRegistry.js`: `resolveWorldComposition
+   (worldId, variantKey)` resolves a read-only `{ worldId, world, variantKey, variant, errors }` pair from the
+   two existing registries without merging or duplicating either one's data — content still comes from
+   `WORLD_REGISTRY`, spatial/rendering config still comes from `WORLD_VARIANT_REGISTRY`.
+   `resolveDefaultVariantForWorld(worldId)`/`WORLD_DEFAULT_VARIANT` give each content-domain world a default
+   variant (currently `CRYSTAL_BASIN` for all seven — the only variant with any real rendering behind it).
+   `validateWorldCompositionRegistry()`: 0 errors, all 7 worlds resolve. Not wired into
+   `SpatialJourneyWorld.jsx` — the live renderer still doesn't read `worldId` for scene construction (Phase 1's
+   finding stands); wiring the composed result into the renderer is Phase 7's (Variant Switcher) job, matching
+   this build's declare-before-render sequencing every other phase has followed. One open observation recorded
+   in the new file's header, not acted on: `WORLD_REGISTRY`'s `choreography` field is arguably a variant
+   (spatial-metaphor) concern, not a content-domain one — worth Phase 7's design attention, not a reason to
+   revisit this naming decision. Config-audit self-check: `Object.freeze` idiom throughout, no calculation
+   weights, no per-member/org hardcoding, `DEFAULT_VARIANT_KEY` is a presentation default not a business rule
+   — no findings requiring conversion.
+
+2. **7th variant concept — RESOLVED 2026-07-12.** Betsy asked to add a 7th variant beyond the master
    prompt's six named ones, initially chose "just reserve the slot" (registered as `RESERVED_VARIANT_7`,
    `status: 'planned'`, no concept), then supplied the concept in the same session: "Crystal Atom / Molecule
    / Cluster evidence maturity." Renamed to `MATURITY_LATTICE` ("Crystal Lattice Observatory"),
@@ -51,7 +57,7 @@ duplicate that content here, just track status and findings.
    other six, which are all query-convergence-driven. Now needs a Phase 5/6/7-equivalent build slot
    assigned once Phase 3/4 profile work reaches it — not yet scheduled into a specific phase number.
 
-2. **"Orbin" vs. "Orbit" — RESOLVED 2026-07-12.** Betsy confirmed "Orbin" (as it appeared in the master
+3. **"Orbin" vs. "Orbit" — RESOLVED 2026-07-12.** Betsy confirmed "Orbin" (as it appeared in the master
    prompt text) was shorthand/typo for "Orbit," not a new, intentional, distinct term. "Orbit" is canonical
    — matches the already-shipped code (`SpatialJourneyWorld.jsx`'s "Customer Orbit — {entityLabel}") and
    the same resolution already recorded in `docs/salt-basin-visual-metrics-progress.md`, which shared this
@@ -410,9 +416,123 @@ loop — the first Phase 5 work that touches the live renderer, not just config:
   pass built the Crystal Basin slice only. Temporal Canyon (extends real `layout.js`) is the
   next-cheapest target per that same guidance.
 
+## Temporal Journey Canyon — first slice (Phase 5 continuation, 2026-08-10)
+
+Real rendering changes landed in `SpatialJourneyWorld.jsx`, following the same "declare in Phase 3/4, render
+in Phase 5" discipline the Crystal Basin slice used, and immediately after resolving the `WORLD_REGISTRY`
+naming decision (same invocation — see Resolved decisions above):
+
+- **Canyon wall geometry, real, following the profile.** `TEMPORAL_CANYON_COMPONENT_PROFILE.rod.geometry`
+  calls canyon walls "the primary visual structure of this entire variant," built along `computeRodLayout()`
+  — no second layout algorithm. New `buildCanyonWalls(rod, positions)` builds two vertical wall ribbons
+  (`THREE.BufferGeometry`, manually indexed quads) following a `CatmullRomCurve3` fit through the rod's real
+  stage positions, called for every primary rod (`buildRodVisual`) and every branch pseudo-rod
+  (`buildBranchVisual`) — 10 canyon-wall meshes confirmed built against the live seeded scene (verified
+  below). Wall height/width is driven by the rod's average `stage.maturity` (the profile's
+  `maturityEncoding`: "local environment richness scales with maturity") — deliberately **not** a literal
+  completeness percentage, honoring that profile's explicit warning against the "literal wall-fraction" trap.
+- **Minimal, real variant toggle — explicitly not Phase 7.** A new `variantKey` state + "Spatial Variant"
+  `<select>` (only `CRYSTAL_BASIN`/`TEMPORAL_CANYON` listed — the other five registered variants have no
+  renderer yet, so they're honestly left off a live control rather than offered non-functionally) drives a
+  new `activateVariant(nextVariantKey)` on the imperative API: toggles canyon-wall mesh visibility, hides the
+  default ground plane, dims the grid, and does a **partial** `rodTraversalBehavior` (aligns the camera down
+  the root rod's canyon axis instead of the default top-down orbit — a real camera move, not the full moving
+  traversal path along the axis, which stays `'not yet built'` per the component profile). This is real but
+  intentionally narrow: no cross-switch semantic-state preservation, no comparison mode, no Interaction
+  Intent dispatch layer — those remain Phase 7's job.
+- **`worldId × variantKey` composition wired into a real consumer.** `activeWorld` in `SpatialJourneyWorld.jsx`
+  now resolves through `resolveWorldComposition(worldId, variantKey)` (the file built for the naming decision
+  above) instead of calling `getWorldDefinition(worldId)` directly — the first real usage of that resolver,
+  in the one place both axes were already being selected.
+- **Scene manifest compliance (DEC-007).** Every canyon-wall mesh is tagged via `attachSceneManifestTree()`
+  with `variantId: 'TEMPORAL_CANYON'`, matching the ~10 other call sites already wired into this file by a
+  concurrent session's Experience Compiler / scene-lineage work (`src/lib/sceneManifest.js`,
+  `experience-memory/EXPERIENCE_DECISIONS.md`'s `DEC-007`). Confirmed live: `window.__SB_SCENE_MANIFESTS__`
+  shows 10 `journey-canyon-wall:*` entries and **0 audit findings** from the already-mounted
+  `UxRuntimeAuditProbe` (`UX-3D-LINEAGE-001`/`UX-3D-STATE-001` checks) — the new meshes are correctly
+  registered, not silently unregistered renderables.
+- **Live browser verification** (own dev server, port 5177, not another session's): entered the world,
+  switched World detail unaffected, switched Spatial Variant `CRYSTAL_BASIN → TEMPORAL_CANYON → CRYSTAL_BASIN`
+  twice. Zero new console errors introduced by the switch (the 6 pre-existing 401s are unrelated
+  auth-gated endpoints — `config-envelopes/rod-mathematics-methodology`, `lonetree-mvp/value-creation` —
+  confirmed via network log, not a regression). Scene stayed populated (99 logical atoms, consistent with the
+  Crystal Basin slice's own earlier-recorded baseline) through both switches.
+- **Config-audit self-check.** No hardcoded per-member/org differentiation; wall geometry reuses existing
+  `clamp01`/`rollupStageMaturity`, no new weighting scheme invented; no calculation-weight or fixed-enum
+  additions. No findings requiring conversion.
+- **Remaining gaps before Temporal Canyon can be called DoD-item-7 "fully rendered and interactive"** (tracked
+  honestly, matching `TEMPORAL_CANYON_COMPONENT_PROFILE`'s own `'not yet built'` markers): `activePosition`
+  (ROD_POSITION as a longitudinal marker), `completenessEncoding` (internal stage lattice, explicitly not a
+  wall-fraction), `cycleBehavior` (renewal cycles as repeated regions), full `rodTraversalBehavior` (a moving
+  camera path, not just the initial alignment built here), fog-based atmospheric depth, world-space stage
+  region labels, and hover-vs-selected state are all still open. Branch pseudo-rod canyon walls also inherit
+  a real but narrower limitation: their `stage.maturity` values aren't recomputed by an equivalent of
+  `evaluateStageGates()` inside `buildBranchVisual()` the way primary-rod stages are before their walls are
+  built, so branch canyon richness may under-read until a later gate evaluation pass touches those stages —
+  not fixed in this pass, flagged for whoever picks up the remaining Temporal Canyon polish.
+- **`WORLD_VARIANT_STATUS` intentionally NOT bumped** for `TEMPORAL_CANYON` (still `registered`), same
+  discipline the Crystal Basin slice used — real rendering landed, but the DoD item 7 bar (full interaction
+  polish) isn't met yet.
+- **Orbital Intelligence — not started this pass**, same as the prior Crystal Basin entry noted. It remains
+  the last of the three Phase 5 variants.
+
+## Dashboard Definition View — first slice (2026-08-10, `flickering-petting-brook` plan)
+
+Built following DEC-001's amended wording (domain worlds = navigation, one shared state, variants =
+composable lenses over it, never separate copies) and Betsy's description of "dashboard definition views
+reorganizing the individual variants together to show the converged crystals that hold the scoped data
+results":
+
+- **Time Scope, real, reusing an already-threaded param.** `computeRodHash()`/`triangulateEntity()`
+  (`rodHash.js`) already accepted `atOffset` end-to-end — nothing consumed it above the per-atom `AtomPanel`
+  slider. Added a world-level `timeOffset` state + slider control; `runCustomerOrbit()` now passes
+  `world.activeTimeOffset` through, so the whole converged hash — not just one atom — reflects the offset
+  lineage values. Honestly labeled "illustrative" in the UI, since `lineage.js`'s history is a deterministic
+  synthesized reconstruction, not a replay of real `journey_rod_events` (that reconciliation is explicitly a
+  Non-Goal of this pass, flagged for later).
+- **Scenario Scope, real, reusing `QUERY_CONTEXT_REGISTRY` as-is.** Added a Scenario Scope selector
+  (customer/revenue/member, the existing registry — `journey_scenarios` was investigated and rejected as the
+  wrong fit, see the plan file). New `applyScenarioScope(contextId)` reuses the existing `highlightedKeys`
+  mechanism (already driving `activateWorld()`'s pricing/career focus) to highlight/dim atoms by
+  `magneticProperties` tag overlap with the selected context's `coreTags`/`relatedTags` — no new highlight
+  system. Selecting a scope also sets the `queryContextId` `runCustomerOrbit()` converges with, unifying
+  "browsing scope" and "converging scope."
+- **Dashboard Definition View, the genuinely new piece.** New `src/config/experience/
+  dashboardDefinitionRegistry.js` (`DASHBOARD_DEFINITION_REGISTRY`, code-owned config registry, not a new
+  table) + `resolveDashboardComposition(dashboardId, worldId)` in `worldCompositionRegistry.js` (maps
+  `resolveWorldComposition()` per lens, never re-deriving world/variant lookups). Seeded with one real
+  definition, `crystal-and-canyon` (Crystal Basin + Temporal Canyon — the only two variants with real
+  rendering). Rendering is "one scene, N passes" (`renderer.setScissor`/`setViewport` per lens,
+  `applyVariantVisualState()` toggling canyon-wall/ground visibility between passes) — not N separate WebGL
+  canvases, per the plan's explicit rejection of that approach.
+- **Real, honestly-scoped limitations**: both panes share the same user-controlled camera this pass — no
+  independent per-lens camera framing yet (that's a real Phase 7 gap, not silently claimed here).
+  Click-to-select is disabled while a dashboard is active (`handleClick`'s early return) since split-viewport
+  hit-testing isn't built.
+- **Validation**: `validateDashboardDefinitionRegistry()` — 0 errors. `resolveDashboardComposition
+  ('crystal-and-canyon', 'journey')` — 2 lenses resolved, 0 errors, direct `node` ESM import (no test runner
+  per `CLAUDE.md`).
+
 ## Changelog
 
 <!-- Newest entry on top. One entry per /world-variants invocation. -->
+
+- **2026-08-10** — Built the Dashboard Definition View first slice (plan `flickering-petting-brook`) — see
+  the section above for full detail. Time Scope and Scenario Scope exposed as real UI controls over
+  already-threaded engine params (`atOffset`, `QUERY_CONTEXT_REGISTRY`); new `dashboardDefinitionRegistry.js`
+  + `resolveDashboardComposition()` + split-viewport rendering is the first real prototype of Phase 7's
+  planned Comparison Mode, built ahead of that phase's own sequencing since it was directly requested. Real
+  gaps flagged honestly: shared camera across panes, selection disabled in dashboard mode, illustrative (not
+  event-replayed) time history.
+
+- **2026-08-10** — Resolved the `WORLD_REGISTRY` naming collision (Betsy: compose as `worldId × variantKey`),
+  then resumed Phase 5 with a real Temporal Journey Canyon slice — see both sections above for full detail.
+  Canyon wall geometry built along `computeRodLayout()`, a minimal real variant toggle (not the full Phase 7
+  switcher), `resolveWorldComposition()` wired into its first real consumer, scene-manifest tagging matching
+  the concurrent Experience Compiler work's `DEC-007`, live-verified with zero new console errors. Orbital
+  Intelligence remains for Phase 5 to close out, plus Temporal Canyon's own remaining gaps (position marker,
+  completeness encoding, cycle behavior, full traversal camera, atmospheric depth, labels, hover state) and
+  Crystal Basin's still-open gaps from the prior entry.
 
 - **2026-07-30** — Ran Phase 5 (partial — Crystal Basin slice only). See the section above for full
   detail. Real rendering code changed in `SpatialJourneyWorld.jsx` for the first time in this build

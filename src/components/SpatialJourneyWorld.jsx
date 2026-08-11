@@ -21,6 +21,9 @@ import {
 } from '../lib/journeyEngine/mockAgentProvider.js';
 import { ROD_TEMPLATES, MOLECULE_DEFINITIONS, OBJECTIVES, SEED_LEADS } from '../data/journeyWorldConfig.js';
 import { WORLD_REGISTRY, ROTATION_CHOREOGRAPHY_REGISTRY, getWorldDefinition } from '../config/visual/worldRegistry.js';
+import { getWorldVariantDefinition } from '../config/visual/worldVariantRegistry.js';
+import { resolveWorldComposition } from '../config/visual/worldCompositionRegistry.js';
+import { getDashboardDefinition, listDashboardDefinitions } from '../config/experience/dashboardDefinitionRegistry.js';
 import { api } from '../lib/api.js';
 import { QUERY_INTERACTION_REGISTRY, QUERY_CONTEXT_REGISTRY } from '../config/metrics/queryContextRegistry.js';
 import { METRIC_DEFINITION_REGISTRY } from '../config/metrics/metricDefinitionRegistry.js';
@@ -30,6 +33,7 @@ import { MATURITY_MODEL, maturityToneFor } from '../config/metrics/maturityModel
 import { bandForMaturity } from '../lib/journeyEngine/maturity.js';
 import { JOURNEY_WORLD_EXPERIENCE, resolveJourneyObjectGroup } from '../config/visual/journeyWorldExperience.js';
 import { DEAL_JOURNEY_EXPERIENCE } from '../data/dealJourneyExperience.js';
+import { attachSceneManifest, attachSceneManifestTree, publishSceneManifest, removePublishedSceneManifest } from '../lib/sceneManifest.js';
 
 // ---------------------------------------------------------------------------
 // Brand palette read straight from brand.css custom properties at mount, so
@@ -79,6 +83,14 @@ export default function SpatialJourneyWorld() {
 
   const [worldEntered, setWorldEntered] = useState(false);
   const [worldId, setWorldId] = useState('journey');
+  // Only Crystal Basin and Temporal Canyon have any real rendering behind them
+  // (salt-basin-world-variants Phase 5) — the other five registered variants
+  // are structure-only (builder: null throughout), so they're deliberately
+  // left out of this live selector rather than offered as a non-functional option.
+  const [variantKey, setVariantKey] = useState('CRYSTAL_BASIN');
+  const [scenarioScopeId, setScenarioScopeId] = useState('');
+  const [timeOffset, setTimeOffset] = useState(0);
+  const [dashboardId, setDashboardId] = useState('');
   const [role, setRole] = useState('reviewer');
   const [selection, setSelection] = useState(null);
   const [objectives, setObjectives] = useState(() => OBJECTIVES.map((o) => ({ ...o })));
@@ -230,7 +242,9 @@ export default function SpatialJourneyWorld() {
       const tex = new THREE.CanvasTexture(gradCanvas);
       const geo = new THREE.SphereGeometry(240, 24, 16);
       const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide, fog: false, depthWrite: false });
-      scene.add(new THREE.Mesh(geo, mat));
+      const background = new THREE.Mesh(geo, mat);
+      attachSceneManifest(background, { instanceId: 'journey-world:background', decorative: true, scene: { component: 'SpatialJourneyWorld', builder: 'buildGradientBackground' } });
+      scene.add(background);
     }());
 
     scene.add(new THREE.AmbientLight(palette.cream, 0.32));
@@ -250,11 +264,13 @@ export default function SpatialJourneyWorld() {
     );
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = -1.25;
+    attachSceneManifest(ground, { instanceId: 'journey-world:ground', decorative: true, scene: { component: 'SpatialJourneyWorld', builder: 'buildGroundPlane' } });
     scene.add(ground);
     const grid = new THREE.GridHelper(220, 56, palette.teal, palette.navy);
     grid.position.y = -1.24;
     grid.material.transparent = true;
     grid.material.opacity = 0.12;
+    attachSceneManifest(grid, { instanceId: 'journey-world:grid', decorative: true, scene: { component: 'SpatialJourneyWorld', builder: 'GridHelper' } });
     scene.add(grid);
 
     const raycaster = new THREE.Raycaster();
@@ -279,6 +295,11 @@ export default function SpatialJourneyWorld() {
       moleculeShells: {},
       gateBeacons: {},
       reconciliationZones: {},
+      canyonWalls: {},
+      activeVariantKey: 'CRYSTAL_BASIN',
+      activeScenarioScopeId: null,
+      activeTimeOffset: 0,
+      dashboardActive: null,
       orbitCenter: new THREE.Vector3(0, 15, 10),
       hashNodePos: new THREE.Vector3(0, 30, 10),
       hashNode: null,
@@ -291,6 +312,78 @@ export default function SpatialJourneyWorld() {
     function pathColorFor(rod) {
       if (rod.rodType === 'masterData') return palette.gold;
       return resolvePathColor(rod.rodType, { pinned: pinnedRodColors });
+    }
+
+    // TEMPORAL_CANYON_COMPONENT_PROFILE's rod.geometry: "canyon wall segments
+    // along computeRodLayout() — the primary visual structure of this entire
+    // variant." Two vertical wall ribbons follow the rod's real stage
+    // positions (same computeRodLayout() output every other variant uses —
+    // no second layout algorithm). Wall height/width is driven by the rod's
+    // average stage maturity ("local environment richness scales with
+    // maturity" per the profile's maturityEncoding) — deliberately NOT a
+    // literal completeness percentage, matching that profile's explicit
+    // warning against the "literal wall-fraction" trap. Hidden by default;
+    // only visible while TEMPORAL_CANYON is the active variant (see
+    // activateVariant below) so it never competes with Crystal Basin's
+    // default rendering.
+    function buildCanyonWalls(rod, positions) {
+      if (!positions || positions.length < 2) return;
+      const maturities = (rod.stages || []).map((s) => s.maturity || 0);
+      const richness = maturities.length ? clamp01(maturities.reduce((a, b) => a + b, 0) / maturities.length) : 0;
+      const halfWidth = 3 + richness * 1.5;
+      const wallHeight = 3 + richness * 6;
+      const floorY = -1.2;
+      const curve = new THREE.CatmullRomCurve3(positions, false, 'catmullrom', 0.15);
+      const segments = Math.max(positions.length * 6, 12);
+      const verts = [];
+      const uvs = [];
+      for (let i = 0; i <= segments; i += 1) {
+        const t = i / segments;
+        const p = curve.getPointAt(Math.min(t, 1));
+        const tangent = curve.getTangentAt(Math.min(t, 0.999)).normalize();
+        const side = new THREE.Vector3(-tangent.z, 0, tangent.x).normalize();
+        const left = p.clone().addScaledVector(side, halfWidth);
+        const right = p.clone().addScaledVector(side, -halfWidth);
+        verts.push(left.x, floorY, left.z, left.x, floorY + wallHeight, left.z, right.x, floorY, right.z, right.x, floorY + wallHeight, right.z);
+        uvs.push(0, t, 0, t, 1, t, 1, t);
+      }
+      const indices = [];
+      for (let i = 0; i < segments; i += 1) {
+        const a = i * 4; const b = (i + 1) * 4;
+        indices.push(a, a + 1, b + 1, a, b + 1, b); // left wall quad
+        indices.push(a + 2, b + 2, b + 3, a + 2, b + 3, a + 3); // right wall quad
+      }
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+      geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+      const material = new THREE.MeshStandardMaterial({
+        color: pathColorFor(rod), roughness: 0.85, metalness: 0.05, transparent: true, opacity: 0.55, side: THREE.DoubleSide,
+      });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.visible = world.activeVariantKey === 'TEMPORAL_CANYON';
+      attachSceneManifestTree(mesh, {
+        instanceId: `journey-canyon-wall:${rod.id}`, semanticId: 'journey_rod', variantId: 'TEMPORAL_CANYON',
+        source: { type: 'journey-rod', id: rod.id, field: 'stageMaturityAverage' },
+        visualRules: { geometryId: 'canyon_wall', materialId: 'canyon-terrain', colorRule: 'global-path-color' },
+        scene: { component: 'SpatialJourneyWorld', builder: 'buildCanyonWalls', parent: `journey-rod:${rod.id}` },
+        interaction: { events: [], stateTarget: null },
+      });
+      scene.add(mesh);
+      world.canyonWalls[rod.id] = mesh;
+    }
+
+    // Shared by activateVariant() (single-lens picker) and the Dashboard Definition View's split-viewport
+    // render passes (animate(), below) — one place toggles which mesh layer represents which variant's
+    // terrain, never duplicated per caller. Returns whether canyon terrain is now active, so callers can
+    // branch camera behavior without re-deriving the same check.
+    function applyVariantVisualState(nextVariantKey) {
+      const canyonActive = nextVariantKey === 'TEMPORAL_CANYON';
+      Object.values(world.canyonWalls).forEach((mesh) => { mesh.visible = canyonActive; });
+      ground.visible = !canyonActive;
+      grid.material.opacity = canyonActive ? 0.04 : 0.12;
+      return canyonActive;
     }
 
     function keyFor(rod, item) { return `${rod.id}::${item.id ?? item.atomId}`; }
@@ -407,22 +500,33 @@ export default function SpatialJourneyWorld() {
         objectLayer: 'atom', populated: atomInstance.value !== null && atomInstance.value !== undefined && atomInstance.value !== '',
         groupKey: groupDefinition.key,
       };
+      const atomManifest = {
+        instanceId: `journey-atom:${gKey}`, semanticId: 'evidence_atom', variantId: 'CRYSTAL_BASIN',
+        source: { type: 'journey-atom', id: gKey, field: atomInstance.elementId || atomInstance.atomId },
+        visualRules: { geometryId: 'atom_crystal', materialId: 'crystalline-metal', colorRule: 'global-path-color', outlineRule: 'validation-state', lightingRule: 'observation-state', opacityRule: 'contribution-state' },
+        scene: { component: 'SpatialJourneyWorld', builder: 'buildAtomMesh', parent: `journey-stage:${rod.id}::${stage.id}` },
+        interaction: { events: ['SELECT', 'FOCUS'], stateTarget: 'selection' },
+      };
+      attachSceneManifestTree(group, atomManifest);
       scene.add(group);
 
       const halo = buildGlowSprite(THREE, atomInstance.conflict ? palette.risk : visual.colorHex, 2 + visual.haloIntensity * 2);
       halo.userData.globalKey = gKey;
       halo.material.opacity = visual.haloIntensity * 0.55;
       halo.position.copy(initial);
+      attachSceneManifest(halo, atomManifest);
       scene.add(halo);
 
       const line = new THREE.Line(
         new THREE.BufferGeometry().setFromPoints([homePos, initial]),
         new THREE.LineBasicMaterial({ color: rodColor, transparent: true, opacity: 0.1 })
       );
+      attachSceneManifest(line, atomManifest);
       scene.add(line);
 
       const pin = buildHomeAnchorPinMesh(THREE, { color: rodColor });
       pin.position.copy(homePos);
+      attachSceneManifestTree(pin, atomManifest);
       scene.add(pin);
 
       let conflictRing = null;
@@ -430,6 +534,7 @@ export default function SpatialJourneyWorld() {
         conflictRing = buildReconciliationRingMesh(THREE, { color: palette.risk, radius: 1.3, tube: 0.035 });
         conflictRing.rotation.x = Math.PI / 2;
         conflictRing.position.copy(initial);
+        attachSceneManifestTree(conflictRing, atomManifest);
         scene.add(conflictRing);
       }
 
@@ -451,6 +556,14 @@ export default function SpatialJourneyWorld() {
       const mesh = buildStageAnchorMesh(THREE, { color, geometryStyle: journeyExperienceRef.current.stage.geometry });
       mesh.position.copy(pos);
       mesh.position.y = -0.95;
+      const stageManifest = {
+        instanceId: `journey-stage:${sKey}`, semanticId: 'journey_rod', variantId: 'TEMPORAL_CANYON',
+        source: { type: 'journey-stage', id: sKey, field: 'maturity' },
+        visualRules: { geometryId: 'journey_rod', materialId: 'machined-metal', colorRule: 'journey-identity', outlineRule: 'none', lightingRule: 'coordinate-activity', opacityRule: 'always-visible' },
+        scene: { component: 'SpatialJourneyWorld', builder: 'buildStageMesh', parent: `journey-rod:${rod.id}` },
+        interaction: { events: ['SELECT', 'FOCUS'], stateTarget: 'selection' },
+      };
+      attachSceneManifestTree(mesh, stageManifest);
       scene.add(mesh);
       world.stageMeshes[sKey] = { mesh, rod, stage };
       registerInteractive(mesh, { kind: 'stage', stage, rod, globalKey: sKey });
@@ -459,12 +572,14 @@ export default function SpatialJourneyWorld() {
       floorGlow.position.copy(pos);
       floorGlow.position.y = -1.15;
       floorGlow.material.opacity = 0.2;
+      attachSceneManifest(floorGlow, { ...stageManifest, instanceId: `${stageManifest.instanceId}:glow` });
       scene.add(floorGlow);
 
       if (stage.gate) {
         const beacon = buildGateBeaconMesh(THREE, { color: palette.champagne, height: 7 });
         beacon.position.copy(pos);
         beacon.position.y = -0.7;
+        attachSceneManifestTree(beacon, { ...stageManifest, instanceId: `${stageManifest.instanceId}:gate:${stage.gate.id}`, source: { type: 'journey-gate', id: stage.gate.id, field: 'status' } });
         scene.add(beacon);
         world.gateBeacons[`${sKey}::${stage.gate.id}`] = { mesh: beacon, rod, stage };
       }
@@ -475,6 +590,12 @@ export default function SpatialJourneyWorld() {
       mid.y += 0.3;
       const curve = new THREE.QuadraticBezierCurve3(posA.clone().setY(0.2), mid, posB.clone().setY(0.2));
       const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 24, 0.07, 8, false), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.4 }));
+      attachSceneManifest(mesh, {
+        instanceId: `journey-connector:${key}`, semanticId: key.includes('branch') ? 'journey_tributary' : 'journey_rod', variantId: 'TEMPORAL_CANYON',
+        source: { type: 'journey-transition', id: key },
+        visualRules: { geometryId: key.includes('branch') ? 'tributary_channel' : 'journey_rod', materialId: 'lineage-metal', colorRule: 'global-path-color' },
+        scene: { component: 'SpatialJourneyWorld', builder: 'buildConnector' }, interaction: { events: [], stateTarget: null },
+      });
       scene.add(mesh);
       world.connectors[key] = mesh;
     }
@@ -492,6 +613,12 @@ export default function SpatialJourneyWorld() {
         const shell = buildMoleculeShellMesh(THREE, { color: pathColorFor(rod), radius: 3.2 });
         shell.position.copy(center);
         shell.userData = { objectLayer: 'molecule', populated };
+        attachSceneManifestTree(shell, {
+          instanceId: `journey-molecule:${rod.id}::${molecule.moleculeId}`, semanticId: 'semantic_composition', variantId: 'MATURITY_LATTICE',
+          source: { type: 'journey-molecule', id: `${rod.id}::${molecule.moleculeId}`, field: 'memberAtomIds' },
+          visualRules: { geometryId: 'molecule_lattice', materialId: 'settlement-material', colorRule: 'global-path-color' },
+          scene: { component: 'SpatialJourneyWorld', builder: 'buildMoleculeShells', parent: `journey-rod:${rod.id}` }, interaction: { events: [], stateTarget: null },
+        });
         scene.add(shell);
         world.moleculeShells[`${rod.id}::${molecule.moleculeId}`] = { mesh: shell, rod, molecule, memberKeys: molecule.memberAtomIds.map((id) => `${rod.id}::${id}`) };
       });
@@ -532,7 +659,8 @@ export default function SpatialJourneyWorld() {
       }
       recomputeMoleculesForRod(rod);
       buildMoleculeShells(rod);
-      evaluateStageGates(rod);
+      evaluateStageGates(rod); // sets stage.maturity — must run before buildCanyonWalls reads it
+      buildCanyonWalls(rod, positions);
     }
 
     function buildBranchVisual(branchPseudoRod) {
@@ -553,6 +681,7 @@ export default function SpatialJourneyWorld() {
       const originPos = world.stagePositions[hostRod.id]?.[originIdx];
       if (originPos) buildConnector(originPos, positions[0], color, `${branchPseudoRod.id}::origin`);
       for (let i = 0; i < positions.length - 1; i += 1) buildConnector(positions[i], positions[i + 1], color, `${branchPseudoRod.id}::${i}`);
+      buildCanyonWalls(branchPseudoRod, positions);
 
       const mergeIdx = hostRod.stages.findIndex((s) => s.id === hostRod.tributary.confluenceStageId);
       const mergePos = world.stagePositions[hostRod.id]?.[mergeIdx];
@@ -563,6 +692,12 @@ export default function SpatialJourneyWorld() {
         ring.position.copy(mergePos);
         ring.position.y = 1.2;
         ring.rotation.x = Math.PI / 2;
+        attachSceneManifestTree(ring, {
+          instanceId: `journey-reconciliation:confluence:${hostRod.tributary.id}`, semanticId: 'journey_tributary', variantId: 'TEMPORAL_CANYON',
+          source: { type: 'tributary-confluence', id: hostRod.tributary.id, field: 'confluenceStageId' },
+          visualRules: { geometryId: 'tributary_channel', materialId: 'lineage-metal', colorRule: 'persistent-tributary-lineage' },
+          scene: { component: 'SpatialJourneyWorld', builder: 'buildBranchVisual' }, interaction: { events: ['SELECT'], stateTarget: 'selection' },
+        });
         scene.add(ring);
         registerInteractive(ring, { kind: 'reconciliation', target: 'tributary', hostRod, globalKey: `confluence::${hostRod.tributary.id}` });
         world.reconciliationZones[`confluence::${hostRod.tributary.id}`] = { ring, hostRod, kind: 'tributary' };
@@ -584,6 +719,12 @@ export default function SpatialJourneyWorld() {
         ring.position.copy(targetPos);
         ring.position.y = 1.4;
         ring.rotation.x = Math.PI / 2;
+        attachSceneManifestTree(ring, {
+          instanceId: `journey-reconciliation:master-data:${rod.sourceMoleculeId}`, semanticId: 'semantic_composition', variantId: 'MATURITY_LATTICE',
+          source: { type: 'master-data-merge', id: rod.sourceMoleculeId, field: 'mergeBackStageId' },
+          visualRules: { geometryId: 'molecule_lattice', materialId: 'settlement-material', colorRule: 'global-path-color' },
+          scene: { component: 'SpatialJourneyWorld', builder: 'buildMasterDataVisual' }, interaction: { events: ['SELECT'], stateTarget: 'selection' },
+        });
         scene.add(ring);
         registerInteractive(ring, { kind: 'reconciliation', target: 'masterData', masterDataRod: rod, sourceRod, globalKey: `masterdata-merge::${rod.sourceMoleculeId}` });
         world.reconciliationZones[`masterdata-merge::${rod.sourceMoleculeId}`] = { ring, masterDataRod: rod, sourceRod, kind: 'masterData' };
@@ -604,6 +745,7 @@ export default function SpatialJourneyWorld() {
         buildBranchVisual(br);
         world.builtRodIds.add(br.id);
       });
+      publishSceneManifest('spatial-journey-world', scene);
     }
 
     // --------------------------- gate + molecule production -----------------
@@ -765,7 +907,14 @@ export default function SpatialJourneyWorld() {
         cameraTargetGoal = sphere.center.clone().setY(2.5);
         sphericalGoal.radius = Math.max(18, Math.min(72, sphere.radius * 3.1));
       }
-      const queryResult = triangulateEntity(world.rods, entityLabel, { queryContextId: QUERY_INTERACTION_REGISTRY.customerOrbit.contextId });
+      // Time Scope + Scenario Scope both flow through the existing triangulateEntity() opts — no
+      // engine change needed, only exposing what was already threaded (rodHash.js's atOffset) and
+      // unifying "the scope you're browsing" with "the scope that converges" (world-variants design,
+      // 2026-08-10). Falls back to the Customer Orbit's own default context when no scope is selected.
+      const queryResult = triangulateEntity(world.rods, entityLabel, {
+        atOffset: world.activeTimeOffset || 0,
+        queryContextId: world.activeScenarioScopeId || QUERY_INTERACTION_REGISTRY.customerOrbit.contextId,
+      });
       const relevanceByKey = new Map(queryResult.perRod.flatMap((rod) => (rod.queryRelevance || []).map((entry) => [`${rod.rodId}::${entry.atomId}`, entry])));
       const allAtomKeys = [];
       const elapsed0 = clockElapsed();
@@ -901,10 +1050,18 @@ export default function SpatialJourneyWorld() {
     world.hashNode.position.copy(world.hashNodePos);
     world.hashNode.scale.setScalar(0.01);
     world.hashNode.userData = { compiling: false, compiled: false };
+    const hashManifest = {
+      instanceId: 'journey-hash:active-query', semanticId: 'semantic_composition', variantId: 'CRYSTAL_BASIN',
+      source: { type: 'query-context', id: 'active-query', field: 'queryConfidence' },
+      visualRules: { geometryId: 'molecule_lattice', materialId: 'settlement-material', colorRule: 'query-confidence' },
+      scene: { component: 'SpatialJourneyWorld', builder: 'buildHashNodeMesh' }, interaction: { events: ['SELECT'], stateTarget: 'selection' },
+    };
+    attachSceneManifestTree(world.hashNode, hashManifest);
     scene.add(world.hashNode);
     world.hashGlow = buildGlowSprite(THREE, palette.gold, 12);
     world.hashGlow.position.copy(world.hashNodePos);
     world.hashGlow.material.opacity = 0;
+    attachSceneManifest(world.hashGlow, { ...hashManifest, instanceId: 'journey-hash:active-query:glow' });
     scene.add(world.hashGlow);
     registerInteractive(world.hashNode, { kind: 'hashnode', globalKey: 'hashnode' });
 
@@ -942,6 +1099,7 @@ export default function SpatialJourneyWorld() {
     let dragId = null; let dragStart = null; let dragMoved = false; let dragTime = 0; let pinchDist = null;
 
     function handleClick(e) {
+      if (world.dashboardActive) return; // split-viewport hit-testing not built yet — see activateDashboard()
       const rect = canvas.getBoundingClientRect();
       pointerNdc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       pointerNdc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -1155,7 +1313,31 @@ export default function SpatialJourneyWorld() {
         if (world.hashGlow) world.hashGlow.position.copy(world.hashNode.position);
       }
 
-      renderer.render(scene, camera);
+      if (world.dashboardActive) {
+        const dashboard = getDashboardDefinition(world.dashboardActive);
+        const lensKeys = dashboard?.variantKeys || [];
+        if (lensKeys.length) {
+          const rect = container.getBoundingClientRect();
+          const w = rect.width; const h = Math.max(1, rect.height);
+          const paneWidth = Math.floor(w / lensKeys.length);
+          camera.aspect = paneWidth / h;
+          camera.updateProjectionMatrix();
+          renderer.setScissorTest(true);
+          lensKeys.forEach((lensVariantKey, i) => {
+            applyVariantVisualState(lensVariantKey);
+            renderer.setViewport(i * paneWidth, 0, paneWidth, h);
+            renderer.setScissor(i * paneWidth, 0, paneWidth, h);
+            renderer.render(scene, camera);
+          });
+          renderer.setScissorTest(false);
+          renderer.setViewport(0, 0, w, h);
+          applyVariantVisualState(world.activeVariantKey); // leave the scene in the interactive variant's own state, not mid-pass
+        } else {
+          renderer.render(scene, camera);
+        }
+      } else {
+        renderer.render(scene, camera);
+      }
 
       statsAcc.frames += 1;
       const now = performance.now();
@@ -1233,6 +1415,41 @@ export default function SpatialJourneyWorld() {
           resetView();
         }
       },
+      // Minimal, real variant toggle — not Phase 7's full Variant Switcher
+      // (no cross-switch semantic-state preservation, no comparison mode,
+      // no Interaction Intent dispatch layer). Swaps default terrain for
+      // canyon-wall terrain and does a partial rodTraversalBehavior: aligns
+      // the camera down the root rod's canyon axis rather than the default
+      // top-down orbit. A full moving traversal path along the axis remains
+      // "not yet built" per TEMPORAL_CANYON_COMPONENT_PROFILE.
+      activateVariant: (nextVariantKey) => {
+        world.activeVariantKey = nextVariantKey;
+        const canyonActive = applyVariantVisualState(nextVariantKey);
+        if (canyonActive) {
+          const rootRod = world.rods.find((r) => !r.parentRodId);
+          const rootPositions = rootRod ? world.stagePositions[rootRod.id] : null;
+          if (rootPositions?.length >= 2) {
+            const start = rootPositions[0];
+            const end = rootPositions[rootPositions.length - 1];
+            cameraTargetGoal = start.clone().lerp(end, 0.5);
+            sphericalGoal.theta = Math.atan2(end.x - start.x, end.z - start.z) + Math.PI / 2;
+            sphericalGoal.phi = 1.25;
+            sphericalGoal.radius = Math.max(24, start.distanceTo(end) * 0.6);
+          }
+        } else {
+          resetView();
+        }
+      },
+      // Dashboard Definition View (2026-08-10 design): several variant lenses shown together over the SAME
+      // converged/scoped result — "one scene, N passes" (see the plan's Non-Goals on why not N canvases),
+      // implemented in animate()'s render call below. Both panes share the same user-controlled camera this
+      // pass; only which mesh layer is visible differs per pane — independent per-lens camera framing is a
+      // real, flagged gap, not silently claimed. Click-to-select is disabled while active (handleClick's
+      // early return) since split-viewport hit-testing isn't built yet.
+      activateDashboard: (dashboardId) => {
+        world.dashboardActive = dashboardId || null;
+        if (!dashboardId) { resize(); applyVariantVisualState(world.activeVariantKey); resetView(); }
+      },
       getGateStatus: (rod, stage) => stage.gate?._result || null,
       getMoleculesForRod: (rodId) => world.moleculesByRod[rodId] || [],
       listAllAtoms: () => world.rods.flatMap((rod) => allAtomsOf(rod).map(({ atomInstance, stage }) => ({
@@ -1254,6 +1471,30 @@ export default function SpatialJourneyWorld() {
       }),
       getRodsByEntity: (entityLabel) => world.rods.filter((r) => r.entityLabel === entityLabel),
       setHighlighted: (keys) => { world.highlightedKeys = keys ? new Set(keys) : null; },
+      // Scenario Scope (DEC-001/DEC-002 design, 2026-08-10): QUERY_CONTEXT_REGISTRY is the real,
+      // already-scoped "scenario a user clicks" concept — reused as-is, not a new registry. Filtering
+      // the non-converged state reuses the existing highlightedKeys mechanism (already driving
+      // activateWorld()'s pricing/career focus and handleOutcomeHighlight) rather than a new opacity
+      // channel — one highlight system, several callers.
+      applyScenarioScope: (contextId) => {
+        world.activeScenarioScopeId = contextId || null;
+        if (!contextId) { world.highlightedKeys = null; return; }
+        const context = QUERY_CONTEXT_REGISTRY[contextId];
+        if (!context) { world.highlightedKeys = null; return; }
+        const relevantTags = new Set([...(context.coreTags || []), ...(context.relatedTags || [])]);
+        const matches = [];
+        world.rods.forEach((rod) => {
+          allAtomsOf(rod).forEach(({ atomInstance }) => {
+            const tags = atomInstance.magneticProperties || [];
+            if (tags.some((tag) => relevantTags.has(tag))) matches.push(keyFor(rod, atomInstance));
+          });
+        });
+        world.highlightedKeys = matches.length ? new Set(matches) : null;
+      },
+      // Time Scope: computeRodHash()/triangulateEntity() already accept atOffset end-to-end (lineage.js's
+      // 0=present/negative=weeks-ago/positive=pending-branch convention) — this just exposes it as a
+      // world-level control read by runCustomerOrbit() below, instead of only AtomPanel's per-atom slider.
+      setTimeOffset: (offset) => { world.activeTimeOffset = Number.isFinite(offset) ? offset : 0; },
       getReconciliationZone: (globalKey) => {
         const zone = world.reconciliationZones[globalKey];
         if (!zone) return null;
@@ -1276,6 +1517,7 @@ export default function SpatialJourneyWorld() {
       clearInterval(convergenceProgressInterval);
       scene.traverse((o) => { o.geometry?.dispose?.(); if (Array.isArray(o.material)) o.material.forEach((m) => m.dispose?.()); else o.material?.dispose?.(); });
       renderer.dispose();
+      removePublishedSceneManifest('spatial-journey-world');
       apiRef.current = null;
     };
   }, [pulseToast, pulseViewingLabel]);
@@ -1314,7 +1556,11 @@ export default function SpatialJourneyWorld() {
     if (inspectorScrollRef.current) inspectorScrollRef.current.scrollTop = 0;
   }, [selectionKey]);
   const permissions = getPermissionProfile(role);
-  const activeWorld = getWorldDefinition(worldId);
+  // Backward-compatible candidate view: worldId is navigation context and
+  // variantKey is the currently active lens. resolveWorldComposition() binds
+  // both to one shared semantic/query-state reference; neither owns a data copy.
+  const activeComposition = resolveWorldComposition(worldId, variantKey);
+  const activeWorld = activeComposition.world;
 
   const handleResolve = (globalKey, source, value) => {
     const found = apiRef.current?.resolveAtomConflict(globalKey, source, value);
@@ -1453,7 +1699,7 @@ export default function SpatialJourneyWorld() {
             </div>
             <div className="sjw-top-controls">
               <label className="sjw-world-picker">
-                <span>World</span>
+                <span>Context</span>
                 <select value={worldId} onChange={(event) => {
                   setWorldId(event.target.value);
                   apiRef.current?.activateWorld?.(event.target.value);
@@ -1462,6 +1708,60 @@ export default function SpatialJourneyWorld() {
                   {Object.values(WORLD_REGISTRY).map((world) => <option key={world.id} value={world.id}>{world.label}</option>)}
                 </select>
               </label>
+              <label className="sjw-world-picker">
+                <span>View Lens (candidate)</span>
+                <select value={variantKey} onChange={(event) => {
+                  const nextKey = event.target.value;
+                  setVariantKey(nextKey);
+                  apiRef.current?.activateVariant?.(nextKey);
+                  apiRef.current?.pulseViewingLabel(getWorldVariantDefinition(nextKey)?.displayName || nextKey);
+                }}>
+                  <option value="CRYSTAL_BASIN">Crystal Basin</option>
+                  <option value="TEMPORAL_CANYON">Temporal Journey Canyon</option>
+                </select>
+              </label>
+              <label className="sjw-world-picker">
+                <span>Scenario Scope</span>
+                <select value={scenarioScopeId} onChange={(event) => {
+                  const nextId = event.target.value || '';
+                  setScenarioScopeId(nextId);
+                  apiRef.current?.applyScenarioScope?.(nextId || null);
+                  apiRef.current?.pulseViewingLabel(nextId ? `Scenario scope — ${QUERY_CONTEXT_REGISTRY[nextId]?.label}` : 'Scenario scope cleared');
+                }}>
+                  <option value="">All (no scope)</option>
+                  {Object.values(QUERY_CONTEXT_REGISTRY).map((context) => (
+                    <option key={context.contextId} value={context.contextId}>{context.label}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="sjw-world-picker sjw-time-scope" title="Illustrative history — a deterministic reconstruction, not a replay of recorded events">
+                <span>Time Scope · illustrative</span>
+                <input
+                  type="range" className="sjw-lineage-slider" min={-10} max={2} step={1} value={timeOffset}
+                  onChange={(event) => {
+                    const next = parseInt(event.target.value, 10);
+                    setTimeOffset(next);
+                    apiRef.current?.setTimeOffset?.(next);
+                  }}
+                />
+                <span className="sjw-time-scope-readout">
+                  {timeOffset === 0 ? 'Present' : timeOffset < 0 ? `${Math.abs(timeOffset)} wks ago` : `Pending branch ${timeOffset}`}
+                </span>
+              </label>
+              <button
+                type="button"
+                className={`sjw-icon-btn${dashboardId ? ' sjw-role-observer' : ''}`}
+                title="Show multiple view lenses together over the same result (view-only — selection is disabled while active)"
+                onClick={() => {
+                  const definitions = listDashboardDefinitions();
+                  const next = dashboardId ? '' : (definitions[0]?.dashboardId || '');
+                  setDashboardId(next);
+                  apiRef.current?.activateDashboard?.(next || null);
+                  apiRef.current?.pulseViewingLabel(next ? `Dashboard view — ${getDashboardDefinition(next)?.label}` : 'Dashboard view exited');
+                }}
+              >
+                {dashboardId ? 'Exit Dashboard View' : 'Dashboard View'}
+              </button>
               <button type="button" className="sjw-icon-btn" onClick={openCustomerOrbitPicker}>Customer Orbit</button>
               <button type="button" className={`sjw-icon-btn${role === 'observer' ? ' sjw-role-observer' : ''}`} onClick={() => setRole((r) => (r === 'reviewer' ? 'observer' : 'reviewer'))}>
                 Role: {permissions.label}

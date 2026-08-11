@@ -1665,9 +1665,11 @@ option {
 }
 
 .sb-login-brand-page {
+  box-sizing: border-box;
+  width: 100%;
   min-height: 100vh;
   display: grid;
-  grid-template-columns: minmax(260px, 0.9fr) minmax(340px, 1.1fr);
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   place-items: center;
   gap: clamp(2rem, 7vw, 7rem);
   padding: clamp(2rem, 7vw, 6rem);
@@ -1678,12 +1680,17 @@ option {
 .sb-login-brand-mark { width: min(420px, 42vw); }
 
 .sb-login-brand-panel {
+  box-sizing: border-box;
+  min-width: 0;
   width: min(100%, 430px);
   padding: clamp(1.5rem, 4vw, 2.75rem);
   background: rgba(255,255,255,0.68);
   border: 1px solid var(--sbh-line);
   box-shadow: 0 24px 60px rgba(23,42,69,0.12);
 }
+
+[data-proposal-component] { transition: outline-color .18s ease, transform .18s ease; outline: 2px solid transparent; outline-offset: 2px; }
+[data-proposal-component]:hover, [data-proposal-component]:focus-within { outline-color: var(--sb-gold, #c4843a); transform: translateY(-1px); cursor: crosshair; }
 
 .sb-lead-crystal-layout {
   width: min(100%, 1100px);

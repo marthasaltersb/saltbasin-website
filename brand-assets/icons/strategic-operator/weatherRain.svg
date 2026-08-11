@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="256" height="256">
+  <title>Weather — Rain (Emotional Weather: Strained)</title>
+  <path d="M12 24 C7 24 4 21 4 17 C4 13 8 10 12 10 C14 6 19 4 24 6 C29 8 31 13 29 17 C34 17 38 20 38 24 C38 27 35 29 31 29 H12 Z" stroke="#C4843A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M14 34 L12 40" stroke="#C4843A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M22 34 L20 40" stroke="#C4843A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M30 34 L28 40" stroke="#C4843A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

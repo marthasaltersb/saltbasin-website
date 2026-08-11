@@ -25,7 +25,7 @@ import { classifyEmailDomain } from '../lib/emailDomain.js';
 import { promoteLeadToOrganizationLead } from '../lib/journeyRods.js';
 import { getOrRefresh, invalidate } from '../lib/contextCache.js';
 import { renderContextCacheKey, resolveAgentContextPolicy } from '../lib/agentContextRegistry.js';
-import { assertAgentLlmBudget, recordAgentLlmUsage } from '../lib/agentLlmUsage.js';
+import { runInteractiveAgentLoop } from '../lib/interactiveAgentLoop.js';
 
 const router = Router();
 
@@ -80,6 +80,8 @@ const TOOLS = [
         budgetRange: { type: 'string', description: 'Budget range or commercial readiness, if volunteered or relevant' },
         decisionRole: { type: 'string', description: 'The visitor\'s role in evaluating or approving next steps' },
         nextStep: { type: 'string', description: 'The requested or agreed next step' },
+        earlyRegistration: { type: 'boolean', description: 'Whether the visitor wants early member registration, regardless of payment' },
+        pledgeInterest: { type: 'boolean', description: 'Whether the visitor confirms interest in pledging a small deposit; payment is always optional' },
         interestArea: {
           type: 'string',
           enum: ['operator_network', 'career_portfolio', 'lead_to_cash', 'other'],
@@ -270,6 +272,10 @@ After submitting, relay the recommendedPortfolio from the tool result — that's
 
 When the visitor hasn't picked a flow yet, offer both plainly. Try to complete every relevant intake field before submission, including business need, desired outcome, urgency, decision role, name, email, company, title, and phone; clearly allow the visitor to skip optional fields. Do not submit immediately after receiving only an email. Once the applicable intake is as complete as the visitor is willing to make it, give a one-or-two-line summary, confirm the email and key details, then call submit_portfolio_request exactly once. If the visitor's message carries a "[cache-layer context already collected...]" block mentioning their top questions for today, pass that phrase through verbatim as the topQuestions field on the tool call — it's saved on the lead so a "welcome back" greeting on a future visit can reference it. After a successful submit, confirm warmly: Betsy has been notified, and the portfolio/follow-up goes to their email.
 
+Before final submission ask exactly: "Are you confirming that you are interested in early member registration and pledging a small deposit amount for the support of this product?" Make clear that early registration does not require payment. Record earlyRegistration and pledgeInterest separately. If no, continue discovery about why they visited and what would be useful.
+
+Email gates: Career Portfolio interest requires at least one verified personal/consumer email. Hiring Salt Basin or B2B product interest requires a work/custom-domain email. Never reject a generic-domain address; accept it, but flag manual work-email validation before member conversion when the intent is B2B. Tell every visitor that a verification email is sent when their lead is created and at least one verified email is required for member conversion.
+
 Returning-lead rules:
 - Never repeat a question already answered in allowed structured context, especially whether they know Betsy.
 - After the visitor answers the welcome-back question, ask for any missing name and contact information before addressing the new request. Ask separately for marketing consent.
@@ -414,13 +420,15 @@ router.post('/', chatLimiter, async (req, res) => {
       loader: async () => {
         const value = leadMemory?.id && leadMemory?.token
           ? await db.prepare(`
-              SELECT l.email, l.phone, l.answers, l.message
+              SELECT l.email, l.phone, l.answers, l.message, l.agent_memory, l.stage_gate_metadata, l.context_metadata,
+                     (SELECT STRING_AGG(lm.role || ': ' || lm.content, E'\n' ORDER BY lm.created_at) FROM lead_messages lm WHERE lm.lead_id=l.id) AS live_transcript
               FROM portfolio_requests pr
               JOIN leads l ON l.id = pr.lead_id
               WHERE pr.id = $1 AND pr.public_token = $2 AND l.merged_into_id IS NULL
             `).get(Number(leadMemory.id), String(leadMemory.token).slice(0, 64))
           : await db.prepare(`
-              SELECT email, phone, answers, message
+              SELECT email, phone, answers, message, agent_memory, stage_gate_metadata, context_metadata,
+                     (SELECT STRING_AGG(lm.role || ': ' || lm.content, E'\n' ORDER BY lm.created_at) FROM lead_messages lm WHERE lm.lead_id=leads.id) AS live_transcript
               FROM leads WHERE actor_key = $1 AND merged_into_id IS NULL
             `).get(req.cookies.sb_actor_context);
         return { value, sourceIds: contextPolicy.sourceIds, securitySlice: actorScope({ user, ownsLead: !!value }) };
@@ -449,7 +457,9 @@ router.post('/', chatLimiter, async (req, res) => {
       'lead.emailKind': classifyEmailDomain(prior?.email),
       'lead.phone': prior?.phone,
       'lead.answers': minimizedAnswers ? String(minimizedAnswers).slice(0, 12000) : null,
-      'lead.transcript': prior?.message ? String(prior.message).slice(-12000) : null,
+      'lead.transcript': prior?.live_transcript ? String(prior.live_transcript).slice(-12000) : (prior?.message ? String(prior.message).slice(-12000) : null),
+      'lead.memory': prior?.agent_memory ? JSON.stringify(prior.agent_memory).slice(-12000) : null,
+      'lead.stageGates': prior?.stage_gate_metadata ? JSON.stringify(prior.stage_gate_metadata).slice(-8000) : null,
     },
   });
   system += `\n\n${agentDataPolicyPrompt(dataContext)}`;
@@ -457,29 +467,16 @@ router.post('/', chatLimiter, async (req, res) => {
   let submitted = null;
   let conversionIntent = null;
   try {
-    for (let i = 0; i < Math.max(1, Number(llmPolicy.maxToolIterations || 5)); i++) {
-      await assertAgentLlmBudget(Number(agentDefinition.id), llmPolicy);
-      const response = await anthropic.messages.create({
-        model: llmPolicy.model,
-        max_tokens: Math.max(256, Math.min(16384, Number(llmPolicy.maxOutputTokensPerResponse || 4096))),
-        system,
-        tools: TOOLS,
-        messages,
-      });
-      await recordAgentLlmUsage(Number(agentDefinition.id), llmPolicy, response.usage || {});
-
-      const toolUses = (response.content || []).filter((b) => b.type === 'tool_use');
-      if (response.stop_reason !== 'tool_use' || toolUses.length === 0) {
-        const reply = (response.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('\n').trim();
-        return res.json({ reply: reply || '…', submitted, conversionIntent });
-      }
-
-      messages.push({ role: 'assistant', content: response.content });
-      const toolResults = [];
-      for (const block of toolUses) {
-        const result = await executeTool(
-          block.name,
-          block.input,
+    const loopResult = await runInteractiveAgentLoop({
+      anthropic,
+      agentDefinition,
+      llmPolicy,
+      systemPrompt: system,
+      tools: TOOLS,
+      messages,
+      executeTool: (name, input) => executeTool(
+          name,
+          input,
           typeof sourceOutput === 'string' ? sourceOutput : null,
           attribution && typeof attribution === 'object' ? attribution : null,
           {
@@ -491,7 +488,8 @@ router.post('/', chatLimiter, async (req, res) => {
             agentConfig,
             notificationEmails,
           }
-        );
+        ),
+      onToolResult: async ({ block, result }) => {
         if (block.name === 'submit_portfolio_request' && result.ok) {
           submitted = {
             id: result.id,
@@ -506,9 +504,10 @@ router.post('/', chatLimiter, async (req, res) => {
         if (block.name === 'convert_lead_to_member' && result.ok) {
           conversionIntent = result.conversionIntent;
         }
-        toolResults.push({ type: 'tool_result', tool_use_id: block.id, content: JSON.stringify(result) });
-      }
-      messages.push({ role: 'user', content: toolResults });
+      },
+    });
+    if (!loopResult.exhausted) {
+      return res.json({ reply: loopResult.reply, submitted, conversionIntent });
     }
     // Tool-iteration cap — return what we have so the visitor isn't stranded.
     res.json({ reply: "I hit a snag wrapping that up — mind sending that last message again?", submitted, conversionIntent });

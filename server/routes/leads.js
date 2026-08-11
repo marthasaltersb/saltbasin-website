@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { db } from '../db.js';
 import { requireAdmin, createSession, setAdminCookie } from '../auth.js';
-import { sendLeadConfirmation, sendNewLeadAlert, sendContactFormToMember, dispatchRaw } from '../lib/email.js';
+import { sendLeadConfirmation, sendLeadEmailVerification, sendNewLeadAlert, sendContactFormToMember, dispatchRaw } from '../lib/email.js';
 import { defaultMemberProfile } from '../data/defaultMemberProfile.js';
 import { verifyRecaptcha } from '../lib/recaptcha.js';
 import { ensureLeadRevenueRod, ensureMemberJourneyRods, upsertAccountRecord } from '../lib/journeyRods.js';
@@ -11,6 +11,7 @@ import { provisionDefaultModulesForNewMember } from '../lib/memberProvisioning.j
 import { classifyEmailDomain, emailDomainOf } from '../lib/emailDomain.js';
 import { recordConsent } from '../lib/consentRegistry.js';
 import { ensureCareerFoundationTrial } from '../lib/memberAccess.js';
+import { mergedGateDefinitions, emailGateFor, evaluateLeadConversion } from '../lib/bestyStaffGateDefinitions.js';
 
 const router = Router();
 
@@ -18,6 +19,8 @@ const LEAD_COOKIE = 'sb_lead';
 const ACTOR_COOKIE = 'sb_actor_context';
 const VISIT_COOKIE = 'sb_actor_visit';
 const LEAD_SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 90; // 90 days
+const EMAIL_VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
+const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || 'https://saltbasin.net';
 
 // ── Validation + normalization ──
 
@@ -44,6 +47,38 @@ function isValidSource(s) {
   return typeof s === 'string' && s.length > 0 && s.length <= 64 && /^[A-Za-z0-9_-]+$/.test(s);
 }
 
+const STAGE_GATE_KEYS = new Set(['contactEmail', 'interestArea', 'kind', 'emailDomainKind', 'emailFormatValid', 'primaryEmailVerified', 'captchaPassed', 'workEmailManualValidation', 'isBuyer', 'decisionRole', 'engagementType', 'pledgeInterest', 'earlyRegistration', 'contractOutputReady']);
+
+function memorySignalsFor(role, message, questionKey) {
+  const content = String(message || '').trim().slice(0, 4000);
+  if (!content) return {};
+  const at = Date.now();
+  const result = {};
+  if (role === 'user') {
+    result.quotes = [{ at, text: content, classification: 'private', source: 'bestystaff_chat' }];
+    if (/\?\s*$/.test(content)) result.openQuestions = [{ at, text: content, classification: 'private' }];
+    const signalTypes = [];
+    if (/\b(hire|consult|project|contract|proposal|scope)\b/i.test(content)) signalTypes.push('commercial_interest');
+    if (/\b(portfolio|resume|career|job|role|interview)\b/i.test(content)) signalTypes.push('career_interest');
+    if (/\b(urgent|immediately|this week|this month|deadline)\b/i.test(content)) signalTypes.push('urgency');
+    if (/\b(pledge|deposit|early registration|early member)\b/i.test(content)) signalTypes.push('registration_commitment');
+    if (signalTypes.length) result.customerSignals = signalTypes.map((type) => ({ at, type, evidence: content, classification: 'private' }));
+  }
+  if (questionKey) result.lastFieldCapture = { at, key: questionKey, classification: STAGE_GATE_KEYS.has(questionKey) ? 'stage_gate' : 'context' };
+  return result;
+}
+
+function mergeAgentMemory(current, additions) {
+  const next = current && typeof current === 'object' ? { ...current } : {};
+  for (const key of ['quotes', 'openQuestions', 'customerSignals']) {
+    if (additions[key]) next[key] = [...(Array.isArray(next[key]) ? next[key] : []), ...additions[key]].slice(-100);
+  }
+  if (additions.lastFieldCapture) next.lastFieldCapture = additions.lastFieldCapture;
+  next.updatedAt = Date.now();
+  next.governance = { defaultClassification: 'private', enforcement: 'server_policy' };
+  return next;
+}
+
 // ── ID + password generators ──
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 async function newPublicId() {
@@ -68,6 +103,14 @@ function newAccessPassword() {
 
 function newToken() {
   return crypto.randomBytes(24).toString('hex');
+}
+
+async function issueLeadEmailVerification({ leadId, email, name = null }) {
+  const rawToken = newToken();
+  const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+  await db.prepare(`UPDATE lead_email_verifications SET expires_at=$1 WHERE lead_id=$2 AND LOWER(email)=LOWER($3) AND verified_at IS NULL`).run(Date.now(), leadId, email);
+  await db.prepare(`INSERT INTO lead_email_verifications (lead_id,email,token_hash,expires_at) VALUES ($1,$2,$3,$4)`).run(leadId, email, tokenHash, Date.now() + EMAIL_VERIFY_TTL_MS);
+  await sendLeadEmailVerification({ leadId, toEmail: email, toName: name, verificationUrl: `${PUBLIC_BASE_URL}/api/leads/verify-email?token=${rawToken}` });
 }
 
 // ── Rate limit ──
@@ -203,9 +246,10 @@ router.get('/actor-context', async (req, res) => {
 // Final contact submission upgrades this row through the normal lead flow.
 router.post('/touch', async (req, res) => {
   try {
-    const { source = 'bestystaff', message, questionKey, answerValue, ctaLocation, attribution } = req.body || {};
+    const { source = 'bestystaff', message, questionKey, answerValue, ctaLocation, attribution, metadataClass, role = 'user' } = req.body || {};
     if (!isValidSource(source)) return res.status(400).json({ error: 'invalid source' });
     if (!message || typeof message !== 'string') return res.status(400).json({ error: 'an answered question is required' });
+    if (!['user', 'assistant', 'system'].includes(role)) return res.status(400).json({ error: 'invalid message role' });
 
     let actorKey = req.cookies?.[ACTOR_COOKIE];
     let visitKey = req.cookies?.[VISIT_COOKIE];
@@ -235,6 +279,10 @@ router.post('/touch', async (req, res) => {
       try { answers = current?.answers ? JSON.parse(current.answers) : {}; } catch { answers = {}; }
       answers[String(questionKey).slice(0, 80)] = answerValue;
       await db.prepare(`UPDATE leads SET answers = $1, updated_at = $2 WHERE id = $3`).run(JSON.stringify(answers), Date.now(), Number(lead.id));
+      const resolvedMetadataClass = metadataClass || (STAGE_GATE_KEYS.has(String(questionKey)) ? 'stage_gate' : 'context');
+      const metadataColumn = resolvedMetadataClass === 'stage_gate' ? 'stage_gate_metadata' : 'context_metadata';
+      await db.prepare(`UPDATE leads SET ${metadataColumn}=COALESCE(${metadataColumn},'{}'::jsonb) || $1::jsonb WHERE id=$2`)
+        .run(JSON.stringify({ [String(questionKey).slice(0, 80)]: answerValue }), Number(lead.id));
     }
 
     const visitInsert = await db.prepare(`
@@ -247,12 +295,66 @@ router.post('/touch', async (req, res) => {
 
     await db.prepare(`INSERT INTO lead_activity (lead_id, source, cta_location, message) VALUES ($1,$2,$3,$4)`)
       .run(Number(lead.id), source, String(ctaLocation || '').slice(0, 200) || null, message.slice(0, 2000));
+    await db.prepare(`INSERT INTO lead_messages (lead_id,role,content) VALUES ($1,$2,$3)`).run(Number(lead.id), role, message.slice(0, 8000));
+    const memoryRow = await db.prepare(`SELECT agent_memory FROM leads WHERE id=$1`).get(Number(lead.id));
+    const currentMemory = memoryRow?.agent_memory || {};
+    await db.prepare(`UPDATE leads SET agent_memory=$1::jsonb,updated_at=$2 WHERE id=$3`).run(JSON.stringify(mergeAgentMemory(currentMemory, memorySignalsFor(role, message, questionKey))), Date.now(), Number(lead.id));
     const tracked = await db.prepare(`SELECT visit_count FROM leads WHERE id = $1`).get(Number(lead.id));
     res.json({ ok: true, leadId: Number(lead.id), publicId: lead.public_id, provisional: true, visitCount: Number(tracked?.visit_count || 0) });
   } catch (e) {
     console.error('[leads] actor touch failed:', e.message);
     res.status(500).json({ error: 'failed to track actor context' });
   }
+});
+
+router.patch('/:id/stage-gates', requireAdmin, async (req, res) => {
+  const { confirmedEarlyRegistrant, contractOutputReady, workEmailManualValidation } = req.body || {};
+  const lead = await db.prepare(`SELECT id FROM leads WHERE id=$1 AND merged_into_id IS NULL`).get(Number(req.params.id));
+  if (!lead) return res.status(404).json({ error: 'lead not found' });
+  await db.prepare(`UPDATE leads SET confirmed_early_registrant=COALESCE($1,confirmed_early_registrant),contract_output_ready=COALESCE($2,contract_output_ready),work_email_manual_validation=COALESCE($3,work_email_manual_validation),stage_gate_metadata=COALESCE(stage_gate_metadata,'{}'::jsonb)||$4::jsonb,updated_at=$5 WHERE id=$6`).run(
+    typeof confirmedEarlyRegistrant === 'boolean' ? confirmedEarlyRegistrant : null,
+    typeof contractOutputReady === 'boolean' ? contractOutputReady : null,
+    typeof workEmailManualValidation === 'boolean' ? workEmailManualValidation : null,
+    JSON.stringify({ confirmedEarlyRegistrant: confirmedEarlyRegistrant ?? null, contractOutputReady: contractOutputReady ?? null, workEmailManualValidation: workEmailManualValidation ?? null }),
+    Date.now(), Number(lead.id)
+  );
+  res.json({ ok: true });
+});
+
+// Creates/upgrades the actor's lead immediately after the mandatory email +
+// CAPTCHA checkpoint and starts primary-email verification.
+router.post('/intake-email', async (req, res) => {
+  const { email, recaptchaToken, knowsBetsy, knowsBetsyDetail, sourceOutput } = req.body || {};
+  if (!isValidEmail(email)) return res.status(400).json({ error: 'Enter a valid email address.' });
+  const captcha = await verifyRecaptcha(recaptchaToken, 'bestystaff_lead_intake');
+  if (!captcha.ok) return res.status(400).json({ error: captcha.error || 'CAPTCHA verification failed' });
+  const norm = normalizeEmail(email);
+  let actorKey = req.cookies?.[ACTOR_COOKIE];
+  if (!actorKey) { actorKey = newToken(); res.cookie(ACTOR_COOKIE, actorKey, actorCookieOptions()); }
+  let lead = await db.prepare(`SELECT id, public_id, verified_email FROM leads WHERE actor_key=$1 AND merged_into_id IS NULL`).get(actorKey);
+  if (!lead) {
+    const publicId = await newPublicId();
+    const result = await db.prepare(`INSERT INTO leads (source,email,message,public_id,access_token,actor_key,provisional,answers) VALUES ('bestystaff',$1,$2,$3,$4,$5,true,$6) RETURNING id`).run(norm, 'Email collected; intake in progress', publicId, newToken(), actorKey, JSON.stringify({ knowsBetsy: !!knowsBetsy, knowsBetsyDetail: knowsBetsyDetail || '', sourceOutput: sourceOutput || null }));
+    lead = { id: Number(result.lastInsertRowid), public_id: publicId, verified_email: false };
+    await ensureLeadRevenueRod(Number(lead.id), { source: 'bestystaff', actorKey });
+  } else {
+    await db.prepare(`UPDATE leads SET email=$1, updated_at=$2 WHERE id=$3`).run(norm, Date.now(), Number(lead.id));
+  }
+  await db.prepare(`INSERT INTO lead_email_addresses (lead_id,email,email_type,is_primary,subscribed,verified) VALUES ($1,$2,'unknown',true,true,$3) ON CONFLICT (lead_id,email) DO UPDATE SET is_primary=true`).run(Number(lead.id), norm, !!lead.verified_email);
+  await issueLeadEmailVerification({ leadId: Number(lead.id), email: norm });
+  res.json({ ok: true, leadId: Number(lead.id), publicId: lead.public_id, emailDomainKind: classifyEmailDomain(norm), verificationPending: !lead.verified_email });
+});
+
+router.get('/verify-email', async (req, res) => {
+  const hash = crypto.createHash('sha256').update(String(req.query.token || '')).digest('hex');
+  const row = await db.prepare(`SELECT id,lead_id,email,expires_at,verified_at FROM lead_email_verifications WHERE token_hash=$1`).get(hash);
+  if (!row || row.verified_at || Number(row.expires_at) < Date.now()) return res.status(400).send('This verification link is invalid or expired.');
+  const now = Date.now();
+  await db.prepare(`UPDATE lead_email_verifications SET verified_at=$1 WHERE id=$2`).run(now, Number(row.id));
+  await db.prepare(`UPDATE lead_email_addresses SET verified=true,verified_at=$1 WHERE lead_id=$2 AND LOWER(email)=LOWER($3)`).run(now, Number(row.lead_id), row.email);
+  const lead = await db.prepare(`SELECT email,public_id FROM leads WHERE id=$1`).get(Number(row.lead_id));
+  if (lead && normalizeEmail(lead.email) === normalizeEmail(row.email)) await db.prepare(`UPDATE leads SET verified_email=true,updated_at=$1 WHERE id=$2`).run(now, Number(row.lead_id));
+  res.redirect(`/lead/${lead?.public_id || ''}?emailVerified=1`);
 });
 
 // ── Public: create or merge a lead ──
@@ -289,6 +391,10 @@ router.post('/', async (req, res) => {
     : null;
   const scopedOrgId = scopedAgent?.scope_type === 'organization' ? Number(scopedAgent.scope_id) : null;
   const scopedMemberId = scopedAgent?.scope_type === 'member' ? Number(scopedAgent.scope_id) : null;
+  const intentValue = String(structuredAnswers?.interestArea || structuredAnswers?.kind || '').toLowerCase();
+  const gateDefinitions = mergedGateDefinitions(scopedAgent?.config ? (typeof scopedAgent.config === 'string' ? JSON.parse(scopedAgent.config) : scopedAgent.config) : {});
+  const emailGate = emailGateFor(intentValue, normEmail, gateDefinitions);
+  const workEmailManualValidation = emailGate.manualValidation;
 
   // Find any matching active leads (by email OR phone).
   const actorKey = req.cookies?.[ACTOR_COOKIE] || null;
@@ -365,11 +471,15 @@ router.post('/', async (req, res) => {
       updates.push(`answers = $${p++}`);
       params.push(JSON.stringify({ ...priorAnswers, ...structuredAnswers }));
     }
+    updates.push(`lead_intent = $${p++}`); params.push(intentValue || null);
+    updates.push(`work_email_manual_validation = $${p++}`); params.push(workEmailManualValidation);
+    if (structuredAnswers?.earlyRegistration === true) updates.push('confirmed_early_registrant = true');
     if (scopedAgent) { updates.push(`agent_definition_id = $${p++}`); params.push(Number(scopedAgent.id)); }
     if (scopedOrgId) { updates.push(`org_id = $${p++}`); params.push(scopedOrgId); }
     if (scopedMemberId) { updates.push(`originating_member_user_id = $${p++}`); params.push(scopedMemberId); }
     params.push(leadId);
     await db.prepare(`UPDATE leads SET ${updates.join(', ')} WHERE id = $${p}`).run(...params);
+    await db.prepare(`UPDATE leads SET stage_gate_metadata=COALESCE(stage_gate_metadata,'{}'::jsonb)||$1::jsonb,context_metadata=COALESCE(context_metadata,'{}'::jsonb)||$2::jsonb WHERE id=$3`).run(JSON.stringify({ definitions: gateDefinitions, interestArea: structuredAnswers?.interestArea || null, intentClass: emailGate.intentClass, emailDomainKind: emailGate.domainKind, emailFormatValid: true, workEmailManualValidation, pledgeInterest: structuredAnswers?.pledgeInterest ?? null, earlyRegistration: structuredAnswers?.earlyRegistration ?? null }), JSON.stringify(structuredAnswers || {}), leadId);
 
     // If the submitted email differs from the existing primary email, capture
     // it in lead_email_addresses so it's not lost.
@@ -410,6 +520,7 @@ router.post('/', async (req, res) => {
       .run(source, normEmail, normPhone, trimmedName, trimmedMsg, structuredAnswers ? JSON.stringify(structuredAnswers) : null, publicId, accessToken, passwordHash, actorKey, scopedAgent ? Number(scopedAgent.id) : null, scopedOrgId, scopedMemberId);
     leadId = Number(result.lastInsertRowid);
     isExisting = false;
+    await db.prepare(`UPDATE leads SET lead_intent=$1,work_email_manual_validation=$2,confirmed_early_registrant=$3,stage_gate_metadata=$4::jsonb,context_metadata=$5::jsonb WHERE id=$6`).run(intentValue || null, workEmailManualValidation, structuredAnswers?.earlyRegistration === true, JSON.stringify({ definitions: gateDefinitions, interestArea: structuredAnswers?.interestArea || null, intentClass: emailGate.intentClass, emailDomainKind: emailGate.domainKind, emailFormatValid: true, workEmailManualValidation, pledgeInterest: structuredAnswers?.pledgeInterest ?? null, earlyRegistration: structuredAnswers?.earlyRegistration ?? null }), JSON.stringify(structuredAnswers || {}), leadId);
   }
 
   await ensureLeadRevenueRod(leadId, { source, actorKey, ctaLocation: ctaLoc });
@@ -541,11 +652,12 @@ router.post('/public/:publicId/logout', async (req, res) => {
 router.post('/public/:publicId/pledge', async (req, res) => {
   const lead = await requireLeadAuth(req, res);
   if (!lead) return;
-  if (lead.pledged_at) return res.json({ ok: true, alreadyPledged: true });
+  const squarePaymentUrl = process.env.SQUARE_PLEDGE_PAYMENT_URL || null;
+  if (lead.pledged_at) return res.json({ ok: true, alreadyPledged: true, paymentOptional: true, paymentUrl: squarePaymentUrl });
   const now = Date.now();
   await db.prepare(`UPDATE leads SET pledged_at = $1, updated_at = $2 WHERE id = $3`)
     .run(now, now, lead.id);
-  res.json({ ok: true, pledgedAt: now });
+  res.json({ ok: true, pledgedAt: now, paymentOptional: true, paymentUrl: squarePaymentUrl });
 });
 
 // ── Convert lead → member ──
@@ -577,11 +689,21 @@ router.post('/public/:publicId/convert', async (req, res) => {
   if (!captcha.ok) return res.status(400).json({ error: captcha.error || 'captcha verification failed' });
 
   const lead = await db
-    .prepare(`SELECT id, public_id, email, name, password_hash, converted_user_id, merged_into_id FROM leads WHERE public_id = $1`)
+    .prepare(`SELECT id, public_id, email, name, password_hash, converted_user_id, merged_into_id, verified_email, pledged_at, confirmed_early_registrant, contract_output_ready, lead_intent, work_email_manual_validation FROM leads WHERE public_id = $1`)
     .get(req.params.publicId);
   if (!lead) return res.status(404).json({ error: 'lead not found' });
   if (lead.merged_into_id) return res.status(410).json({ error: 'this lead has been merged into a newer record' });
   if (!lead.email) return res.status(400).json({ error: 'lead has no email — cannot become a member' });
+  const anyVerifiedEmail = lead.verified_email || !!(await db.prepare(`SELECT 1 FROM lead_email_addresses WHERE lead_id=$1 AND verified=true LIMIT 1`).get(Number(lead.id)));
+  if (!anyVerifiedEmail) return res.status(409).json({ error: 'Verify at least one email address before becoming a member.' });
+  const pendingEmailRows = await db.prepare(`SELECT email FROM lead_email_addresses WHERE lead_id=$1 AND verified=false`).all(Number(lead.id));
+  for (const pending of pendingEmailRows) issueLeadEmailVerification({ leadId: Number(lead.id), email: pending.email, name: lead.name || null }).catch((error) => console.error('[leads] pending verification restart failed:', error.message));
+  if (lead.work_email_manual_validation) return res.status(409).json({ error: 'Your work email still needs manual validation before member conversion.' });
+  const storedGateRow = await db.prepare(`SELECT stage_gate_metadata FROM leads WHERE id=$1`).get(Number(lead.id));
+  const storedGateMetadata = storedGateRow?.stage_gate_metadata || {};
+  lead.any_verified_email = anyVerifiedEmail;
+  const conversion = evaluateLeadConversion(lead, storedGateMetadata.definitions || undefined);
+  if (!conversion.eligible) return res.status(409).json({ error: conversion.intentClass === 'b2b' ? 'This B2B lead becomes conversion-eligible when Salt Basin marks a contract or binding output ready and its work email passes validation.' : conversion.intentClass === 'career' ? 'Confirm early registration or a pledge and verify an email before member conversion.' : 'This lead is not yet eligible for member conversion.' });
   if (lead.converted_user_id) {
     return res.status(409).json({ error: 'already converted', userId: Number(lead.converted_user_id) });
   }
@@ -646,7 +768,7 @@ router.post('/public/:publicId/convert', async (req, res) => {
   // Create user with the SAME password_hash (no re-hash — same password). The
   // lead's already-bcrypted hash satisfies users.password_hash directly.
   const userInsert = await db
-    .prepare(`INSERT INTO users (email, password_hash, role) VALUES ($1, $2, 'member') RETURNING id`)
+    .prepare(`INSERT INTO users (email, password_hash, role, must_change_password) VALUES ($1, $2, 'member', true) RETURNING id`)
     .run(lowerEmail, lead.password_hash);
   const newUserId = Number(userInsert.lastInsertRowid);
   await recordConsent(newUserId, 'platform_terms', true, { ip: req.ip, userAgent: req.get('user-agent') });
@@ -682,8 +804,8 @@ router.post('/public/:publicId/convert', async (req, res) => {
   // Register the primary email in user_emails so it's visible in the email
   // manager and so secondary-email lookups in login() find it correctly.
   await db.prepare(
-    `INSERT INTO user_emails (user_id, email, type, verified) VALUES ($1, $2, 'primary', true) ON CONFLICT (email) DO NOTHING`
-  ).run(newUserId, lowerEmail);
+    `INSERT INTO user_emails (user_id, email, type, verified) VALUES ($1, $2, 'primary', $3) ON CONFLICT (email) DO NOTHING`
+  ).run(newUserId, lowerEmail, lowerEmail === normalizeEmail(lead.email) ? !!lead.verified_email : false);
 
   // Auto-login as the new member. Issues a session and sets the same admin
   // cookie used elsewhere (the cookie is role-agnostic; AdminShell decides
@@ -730,7 +852,10 @@ async function getLeadByPublic(req) {
     .prepare(
       `SELECT id, source, email, phone, name, message, public_id, access_token, answers,
               prior_notes, merged_from_ids, merged_into_id, password_hash,
-              created_at, updated_at, converted_user_id, visit_count, last_visit_at
+              created_at, updated_at, converted_user_id, visit_count, last_visit_at,
+              pledged_at, verified_email, lead_intent, work_email_manual_validation,
+              confirmed_early_registrant, contract_output_ready,
+              stage_gate_metadata, context_metadata, agent_memory
        FROM leads WHERE public_id = $1`
     )
     .get(publicId);
@@ -784,10 +909,13 @@ router.get('/public/:publicId', async (req, res) => {
     .all(Number(lead.id));
   const contactEmails = await db
     .prepare(
-      `SELECT id, email, email_type, org_name, is_primary, subscribed, created_at
+      `SELECT id, email, email_type, org_name, is_primary, subscribed, verified, verified_at, created_at
        FROM lead_email_addresses WHERE lead_id = $1 ORDER BY is_primary DESC, id ASC`
     )
     .all(Number(lead.id));
+  const chatMessages = await db.prepare(`SELECT id,role,content,created_at FROM lead_messages WHERE lead_id=$1 ORDER BY created_at ASC,id ASC LIMIT 250`).all(Number(lead.id));
+  const anyVerifiedEmail = !!lead.verified_email || contactEmails.some((email) => email.verified);
+  const conversionEvaluation = evaluateLeadConversion({ ...lead, any_verified_email: anyVerifiedEmail }, lead.stage_gate_metadata?.definitions || undefined);
   res.json({
     publicId: lead.public_id,
     source: lead.source,
@@ -816,8 +944,21 @@ router.get('/public/:publicId', async (req, res) => {
       orgName: e.org_name,
       isPrimary: e.is_primary,
       subscribed: e.subscribed,
+      verified: !!e.verified,
+      verifiedAt: e.verified_at ? Number(e.verified_at) : null,
       createdAt: Number(e.created_at),
     })),
+    chatMessages: chatMessages.map((item) => ({ id: Number(item.id), role: item.role, content: item.content, createdAt: Number(item.created_at) })),
+    primaryEmailVerified: !!lead.verified_email,
+    anyVerifiedEmail,
+    leadIntent: lead.lead_intent,
+    workEmailManualValidation: !!lead.work_email_manual_validation,
+    confirmedEarlyRegistrant: !!lead.confirmed_early_registrant,
+    contractOutputReady: !!lead.contract_output_ready,
+    conversionEligibility: conversionEvaluation,
+    stageGateMetadata: lead.stage_gate_metadata || {},
+    contextMetadata: lead.context_metadata || {},
+    agentMemory: lead.agent_memory || {},
     createdAt: Number(lead.created_at),
     updatedAt: Number(lead.updated_at),
     convertedUserId: lead.converted_user_id ? Number(lead.converted_user_id) : null,
@@ -837,16 +978,27 @@ router.post('/public/:publicId/contact-emails', async (req, res) => {
   if (!isValidEmail(email)) return res.status(400).json({ error: 'valid email required' });
   const norm = normalizeEmail(email);
   try {
-    const row = await db.prepare(`
+  const row = await db.prepare(`
       INSERT INTO lead_email_addresses (lead_id, email, email_type, org_name, is_primary, subscribed)
       VALUES ($1, $2, $3, $4, false, true)
       ON CONFLICT (lead_id, email) DO UPDATE SET email_type = EXCLUDED.email_type, org_name = EXCLUDED.org_name
-      RETURNING id, email, email_type, org_name, is_primary, subscribed, created_at
+      RETURNING id, email, email_type, org_name, is_primary, subscribed, verified, verified_at, created_at
     `).get(Number(lead.id), norm, emailType, orgName || null);
-    res.json({ ok: true, contactEmail: { id: Number(row.id), email: row.email, emailType: row.email_type, orgName: row.org_name, isPrimary: row.is_primary, subscribed: row.subscribed, createdAt: Number(row.created_at) } });
+    await issueLeadEmailVerification({ leadId: Number(lead.id), email: norm, name: lead.name || null });
+    res.json({ ok: true, verificationSent: true, contactEmail: { id: Number(row.id), email: row.email, emailType: row.email_type, orgName: row.org_name, isPrimary: row.is_primary, subscribed: row.subscribed, verified: !!row.verified, verifiedAt: row.verified_at ? Number(row.verified_at) : null, createdAt: Number(row.created_at) } });
   } catch (e) {
     res.status(500).json({ error: 'Server error' });
   }
+});
+
+router.post('/public/:publicId/contact-emails/:id/resend-verification', async (req, res) => {
+  const { lead, error, status } = await getLeadByPublic(req);
+  if (error) return res.status(status).json({ error });
+  const email = await db.prepare(`SELECT email,verified FROM lead_email_addresses WHERE id=$1 AND lead_id=$2`).get(Number(req.params.id), Number(lead.id));
+  if (!email) return res.status(404).json({ error: 'email address not found' });
+  if (email.verified) return res.json({ ok: true, alreadyVerified: true });
+  await issueLeadEmailVerification({ leadId: Number(lead.id), email: email.email, name: lead.name || null });
+  res.json({ ok: true });
 });
 
 // PATCH /api/leads/public/:publicId/contact-emails/:id — update type, primary, subscribed, orgName
@@ -910,7 +1062,10 @@ router.get('/', requireAdmin, async (req, res) => {
     .prepare(
       `SELECT id, source, email, phone, name, message, public_id, answers, prior_notes,
               merged_into_id, merged_from_ids, created_at, updated_at, converted_user_id,
-              lead_type, job_description, job_url, company, hiring_manager, job_status
+              lead_type, job_description, job_url, company, hiring_manager, job_status,
+              verified_email, lead_intent, work_email_manual_validation,
+              confirmed_early_registrant, contract_output_ready, pledged_at,
+              stage_gate_metadata, context_metadata, agent_memory
        FROM leads WHERE merged_into_id IS NULL ORDER BY id DESC LIMIT 500`
     )
     .all();

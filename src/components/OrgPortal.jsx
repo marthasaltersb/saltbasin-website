@@ -3,8 +3,13 @@ import { Navigate, useParams } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import { toast } from '../lib/toast.js';
 import AdminShell from './admin/AdminShell.jsx';
+import CareerConsentGate from './admin/CareerConsentGate.jsx';
 
 export default function OrgPortal() {
+  return <CareerConsentGate><OrgPortalInner /></CareerConsentGate>;
+}
+
+function OrgPortalInner() {
   const { orgId } = useParams();
   const [ctx, setCtx] = useState(undefined); // undefined=loading, null=denied, object=ok
   const [needsConsent, setNeedsConsent] = useState(false);
@@ -27,7 +32,18 @@ export default function OrgPortal() {
   if (needsConsent) return <OrgConsentGate orgId={orgId} onGranted={load} />;
   if (ctx === undefined) return null;
   if (!ctx) return <Navigate to="/member" replace />;
-  return <AdminShell scope={ctx.canEdit ? 'org-admin' : 'org-user'} orgId={orgId} />;
+  return <><OrgSecurityPolicy orgId={orgId} canEdit={ctx.canEdit} /><AdminShell scope={ctx.canEdit ? 'org-admin' : 'org-user'} orgId={orgId} /></>;
+}
+
+function OrgSecurityPolicy({ orgId, canEdit }) {
+  const [policy, setPolicy] = useState(null);
+  const [open, setOpen] = useState(false);
+  useEffect(() => { api.getOrgAuthenticationPolicy(orgId).then(setPolicy).catch(() => {}); }, [orgId]);
+  if (!policy) return null;
+  const routes = policy.allowed_routes || policy.allowedRoutes || ['password','totp'];
+  const toggle = (route) => setPolicy((current) => ({ ...current, allowed_routes: routes.includes(route) ? routes.filter((item) => item !== route) : [...routes, route] }));
+  async function save() { const result = await api.saveOrgAuthenticationPolicy(orgId, { allowedRoutes: policy.allowed_routes, preferredRoute: policy.preferred_route, ssoProviderKey: policy.sso_provider_key, authenticatorLabel: policy.authenticator_label }); setPolicy((current) => ({ ...current, allowed_routes: result.allowedRoutes, preferred_route: result.preferredRoute })); toast.success('Organization authentication policy saved'); }
+  return <div style={{ padding: '.55rem 1rem', background: '#122338', color: 'white', fontSize: '.76rem' }}><button className="sb-btn" onClick={() => setOpen((value) => !value)}>Authentication routes: {routes.join(', ')}</button>{open && <div style={{ padding: '1rem 0', display: 'grid', gap: '.75rem', maxWidth: 720 }}><p style={{ margin: 0 }}>Members may have several routes configured. One successful configured route is required at login.</p>{canEdit && <><div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>{['password','totp','sso','organization_authenticator'].map((route) => <label key={route}><input type="checkbox" checked={routes.includes(route)} onChange={() => toggle(route)} /> {route.replaceAll('_',' ')}</label>)}</div><label>Preferred route <select value={policy.preferred_route || routes[0]} onChange={(e) => setPolicy((current) => ({ ...current, preferred_route: e.target.value }))}>{routes.map((route) => <option key={route}>{route}</option>)}</select></label><label>SSO provider key <input value={policy.sso_provider_key || ''} onChange={(e) => setPolicy((current) => ({ ...current, sso_provider_key: e.target.value }))} /></label><label>Organization authenticator label <input value={policy.authenticator_label || ''} onChange={(e) => setPolicy((current) => ({ ...current, authenticator_label: e.target.value }))} /></label><button className="sb-btn sb-btn-gold" onClick={save} disabled={!routes.length}>Save authentication policy</button></>}</div>}</div>;
 }
 
 // Blocks org data access until the member confirms which of their VERIFIED

@@ -8,11 +8,13 @@
 import { db } from '../db.js';
 import * as codeReviewAgent from './agents/codeReviewAgent.js';
 import * as contentResearchAgent from './agents/contentResearchAgent.js';
+import * as crystalWorldAuditAgent from './agents/crystalWorldAuditAgent.js';
 import { emitEvent } from './notificationEngine.js';
 
 const AGENT_KINDS = {
   code_review: codeReviewAgent,
   content_research: contentResearchAgent,
+  crystal_world_audit: crystalWorldAuditAgent,
 };
 
 export async function runDefinition(definition, { trigger = 'manual', configOverride } = {}) {

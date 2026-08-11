@@ -15,6 +15,8 @@ const DEFAULT_FIELDS = {
   'lead.phone': { classification: 'personal_contact', purposes: ['lead_intake', 'lead_follow_up', 'account_support'] },
   'lead.answers': { classification: 'personal_contact', purposes: ['lead_intake', 'lead_qualification', 'business_definition'] },
   'lead.transcript': { classification: 'sensitive', purposes: ['lead_intake', 'lead_qualification', 'business_definition'] },
+  'lead.memory': { classification: 'sensitive', purposes: ['lead_intake', 'lead_qualification', 'business_definition', 'account_support'] },
+  'lead.stageGates': { classification: 'sensitive', purposes: ['lead_intake', 'lead_qualification', 'account_support'] },
 };
 
 export function actorScope({ user, ownsLead = false } = {}) {

@@ -25,6 +25,7 @@ import { usePublicationPipeline } from '../lib/hooks/usePublicationPipeline.js';
 import AdminShell from './admin/AdminShell.jsx';
 import ConfigPanel from './admin/ConfigPanel.jsx';
 import { toast } from '../lib/toast.js';
+import { attachSceneManifestTree, publishSceneManifest, removePublishedSceneManifest } from '../lib/sceneManifest.js';
 
 const ISLAND_RADIUS = 9;
 const ACCENT_HEX = { gold: 0xc4843a, teal: 0x4a7c8e, pink: 0xd98ca0 };
@@ -165,6 +166,13 @@ export default function WorldShell() {
     const coreGroup = new THREE.Group();
     coreGroup.scale.set(1.35, 1.35, 1.35);
     const coreHandles = CRYSTAL_VARIANTS.signature(coreGroup, THREE);
+    attachSceneManifestTree(coreGroup, {
+      instanceId: 'world-core:salt-basin', semanticId: 'semantic_composition', variantId: 'world-shell',
+      source: { type: 'platform-world', id: 'salt-basin', configEnvelope: 'admin_nav/member navigation' },
+      visualRules: { geometryId: 'molecule_lattice', materialId: 'crystal-variant-signature', colorRule: 'brand-crystal-core' },
+      scene: { component: 'WorldShell', builder: 'CRYSTAL_VARIANTS.signature' },
+      interaction: { events: ['SELECT'], stateTarget: 'focusedKey' },
+    });
     scene.add(coreGroup);
 
     const islandsGroup = new THREE.Group();
@@ -297,6 +305,7 @@ export default function WorldShell() {
         else obj.material?.dispose?.();
       });
       renderer.dispose();
+      removePublishedSceneManifest('world-shell');
       if (renderer.domElement.parentElement === host) host.removeChild(renderer.domElement);
       engineRef.current = null;
     };
@@ -354,6 +363,14 @@ export default function WorldShell() {
       label.position.set(0, 2.1, 0);
       holder.add(label);
 
+      attachSceneManifestTree(holder, {
+        instanceId: `world-island:${isl.key}`, semanticId: 'semantic_composition', variantId: isl.variant,
+        source: { type: 'navigation-item', id: isl.key, field: 'componentId', configEnvelope: user?.role === 'admin' ? 'admin_nav' : 'member navigation' },
+        visualRules: { geometryId: 'molecule_lattice', materialId: `crystal-variant-${isl.variant}`, colorRule: `island-accent-${isl.accent}` },
+        scene: { component: 'WorldShell', builder: `CRYSTAL_VARIANTS.${isl.variant}`, parent: 'world-core:salt-basin' },
+        interaction: { events: ['SELECT', 'FOCUS'], stateTarget: 'focusedKey' },
+      });
+
       islandsGroup.add(holder);
       pickables.push({ obj: crystalGroup, kind: 'island', key: isl.key });
 
@@ -364,9 +381,17 @@ export default function WorldShell() {
         count: 46,
       });
       riversGroup.add(river);
+      attachSceneManifestTree(river, {
+        instanceId: `world-river:${isl.key}`, semanticId: 'journey_tributary', variantId: 'world-shell',
+        source: { type: 'navigation-relationship', id: isl.key, configEnvelope: user?.role === 'admin' ? 'admin_nav' : 'member navigation' },
+        visualRules: { geometryId: 'tributary_channel', materialId: 'river-particles', colorRule: `island-accent-${isl.accent}` },
+        scene: { component: 'WorldShell', builder: 'buildRiverParticles', parent: 'world-core:salt-basin' },
+        interaction: { events: [], stateTarget: null },
+      });
     });
 
     engine.setPickables(pickables);
+    publishSceneManifest('world-shell', engine.scene);
     // `view` is a dep so returning to the World tab (which unmounts/remounts
     // the renderer via the effect above) re-populates the fresh engine's
     // now-empty islands/rivers groups, not just genuine data changes.

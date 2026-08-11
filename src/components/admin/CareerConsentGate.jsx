@@ -39,7 +39,7 @@ export default function CareerConsentGate({ children }) {
   async function submit() {
     setSubmitting(true);
     try {
-      await api.recordCareerConsent('career_portfolio', true);
+      await api.recordCareerConsent('career_portfolio', true, status.acknowledgements.map((ack) => ack.key));
       const refreshed = await api.getCareerConsentStatus('career_portfolio');
       setStatus(refreshed);
       toast.success('Consent recorded');
@@ -52,9 +52,14 @@ export default function CareerConsentGate({ children }) {
 
   return (
     <div style={S.wrap}>
-      <div style={S.title}>Career Portfolio Data Handling</div>
+      <div style={{ color: '#a3631d', textTransform: 'uppercase', letterSpacing: '.13em', fontSize: '.7rem', fontWeight: 700, marginBottom: '.5rem' }}>BestyStaff · required first prompt</div>
+      <div style={S.title}>{status.label || 'Career Portfolio Terms & Data Conditions'}</div>
       <div style={S.sub}>
-        Before you configure your Career Master, upload data, or enter Career Orbit, please review and confirm the following. This applies every time the wording changes — you're seeing version {status.consentVersion}.
+        Before I can help with anything else, you must review and agree. {status.summary} This applies every time the terms change — you’re reviewing version {status.consentVersion}{status.effectiveAt ? `, effective ${new Date(status.effectiveAt).toLocaleString()}` : ''}.
+      </div>
+      {status.stale && status.lastAgreedAt && <div style={{ ...S.sub, padding: '.75rem 1rem', borderRadius: 7, background: '#fff4df', color: '#76520b' }}>You last agreed on {new Date(status.lastAgreedAt).toLocaleString()} under version {status.lastAgreedVersion}. The current terms have changed and require a new agreement.</div>}
+      <div style={{ display: 'grid', gap: '.7rem', marginBottom: '1.4rem' }}>
+        {(status.sections || []).map((section) => <section key={section.key} style={{ padding: '.8rem 1rem', border: '0.5px solid rgba(0,0,0,.12)', borderRadius: 8 }}><strong style={{ display: 'block', color: 'var(--sb-navy, #1b2a3b)', marginBottom: '.25rem' }}>{section.title}</strong><span style={{ fontSize: '.8rem', color: '#555', lineHeight: 1.55 }}>{section.text}</span></section>)}
       </div>
       {status.acknowledgements.map((ack) => (
         <label key={ack.key} style={S.check}>

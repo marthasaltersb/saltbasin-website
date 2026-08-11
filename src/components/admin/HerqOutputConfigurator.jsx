@@ -80,9 +80,17 @@ function FieldPicker({ outputType, onInsert, onClose }) {
 function FieldEditor({ block, onChange, outputType }) {
   const def = BLOCK_DEFS[block.type];
   const [pickerKey, setPickerKey] = useState(null); // field.key for which picker is open
+  const [feedbackDraft, setFeedbackDraft] = useState('');
   if (!def) return null;
 
   function update(path, value) { onChange(setAt(block, path, value)); }
+
+  function addFeedback() {
+    if (!feedbackDraft.trim()) return;
+    const history = Array.isArray(block.feedbackHistory) ? block.feedbackHistory : [];
+    update('feedbackHistory', [...history, { instruction: feedbackDraft.trim(), createdAt: Date.now() }]);
+    setFeedbackDraft('');
+  }
 
   function insertMergeField(fieldKey, token) {
     const current = getAt(block, fieldKey) ?? '';
@@ -254,6 +262,44 @@ function FieldEditor({ block, onChange, outputType }) {
 
         return null;
       })}
+
+      {/* Component-level iteration — "each item receives its own instruction
+          and revision history," "no regeneration should overwrite an
+          approved or preferred version" (Content Entry Journey spec §10).
+          There is no AI regeneration engine wired into outputBlocks.js yet,
+          so this records review intent (approve/lock/leave instructions) on
+          the block itself rather than fabricating a Regenerate button that
+          would call nothing. locked blocks are the actual enforcement point
+          — any future bulk-apply/regenerate pass must skip them. */}
+      <div style={{ marginTop: '0.85rem', paddingTop: '0.75rem', borderTop: '0.5px solid rgba(196,132,58,0.15)' }}>
+        <div style={{ ...S.label, marginBottom: '0.5rem' }}>Component Review</div>
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.72rem', color: 'var(--sb-cream)', cursor: 'pointer' }}>
+            <input type="checkbox" checked={!!block.approved} onChange={e => update('approved', e.target.checked)} />
+            Approved
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.72rem', color: 'var(--sb-cream)', cursor: 'pointer' }}>
+            <input type="checkbox" checked={!!block.locked} onChange={e => update('locked', e.target.checked)} />
+            Locked (preserve — skip in future regeneration)
+          </label>
+        </div>
+        <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.5rem' }}>
+          <input style={{ ...S.input, flex: 1 }} placeholder="Instruction for this component (e.g. 'make this punchier')"
+            value={feedbackDraft} onChange={e => setFeedbackDraft(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') addFeedback(); }} />
+          <button style={S.btnGold} onClick={addFeedback}>Add</button>
+        </div>
+        {Array.isArray(block.feedbackHistory) && block.feedbackHistory.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+            {[...block.feedbackHistory].reverse().map((f, i) => (
+              <div key={i} style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
+                <span>{f.instruction}</span>
+                <span style={{ flexShrink: 0, opacity: 0.7 }}>{new Date(f.createdAt).toLocaleDateString()}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -280,6 +326,11 @@ function BlockRow({ block, index, total, selected, onSelect, onChange, onMove, o
         {/* Label + preview */}
         <span style={{ fontSize: '0.78rem', color: 'var(--sb-cream)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {def?.label || block.type}
+          {block.locked && <span title="Locked — preserved from regeneration" style={{ marginLeft: '0.4rem', fontSize: '0.68rem' }}>🔒</span>}
+          {block.approved && <span title="Approved" style={{ marginLeft: '0.25rem', fontSize: '0.68rem', color: '#7dbb8a' }}>✓</span>}
+          {Array.isArray(block.feedbackHistory) && block.feedbackHistory.length > 0 && (
+            <span title={`${block.feedbackHistory.length} feedback note(s)`} style={{ marginLeft: '0.25rem', fontSize: '0.62rem', color: 'var(--sb-gold)' }}>💬{block.feedbackHistory.length}</span>
+          )}
           {preview && <span style={{ color: 'var(--sb-dusty)', marginLeft: '0.4rem', fontSize: '0.68rem' }}>
             — {String(preview).slice(0, 30)}{String(preview).length > 30 ? '…' : ''}
           </span>}

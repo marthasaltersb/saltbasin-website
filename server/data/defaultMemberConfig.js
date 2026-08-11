@@ -43,6 +43,7 @@ export function defaultMemberConfig({ displayName, email }) {
         { id: 'careerPlacementAgents', label: 'Career Placement Agents', componentId: 'careerPlacementAgents', sortOrder: 0 },
         { id: 'lonetreeMvp', label: 'Fund & Portfolio Demo', componentId: 'lonetreeMvp', sortOrder: 5 },
         { id: 'careerMaster', label: 'Career Master', componentId: 'careerMaster', sortOrder: 10 },
+        { id: 'careerReconciliation', label: 'Career Sources to Review', componentId: 'careerReconciliation', sortOrder: 11 },
         { id: 'outputTemplates', label: 'Output Templates', componentId: 'outputTemplates', sortOrder: 20 },
         { id: 'config', label: 'Site Configuration', componentId: 'config', sortOrder: 15 },
       ],

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://saltbasin.net/schemas/experience-object-1.0.0.json",
+  "title": "Salt Basin Experience Object",
+  "type": "object",
+  "required": ["experienceObjectId", "semanticObjectRef", "objectClass", "state", "governance", "visual", "interaction", "information", "accessibility"],
+  "properties": {
+    "experienceObjectId": { "type": "string", "minLength": 1 },
+    "semanticObjectRef": { "type": "object", "required": ["type", "id", "sourceKind", "sourceRef"], "properties": { "type": { "type": "string" }, "id": { "type": "string" }, "sourceKind": { "type": "string" }, "sourceRef": { "type": "string" } }, "additionalProperties": true },
+    "objectClass": { "type": "string" },
+    "state": { "type": "object" },
+    "governance": { "type": "object", "required": ["semanticMappingId"] },
+    "visual": { "type": "object", "required": ["geometryRef", "materialRef"] },
+    "interaction": { "type": "object", "required": ["actionIds"] },
+    "information": { "type": "object", "required": ["label"] },
+    "accessibility": { "type": "object", "required": ["accessibleName", "nonVisualEquivalentRef", "reducedMotionProfileRef"] }
+  },
+  "additionalProperties": true
+}

@@ -25,6 +25,7 @@ import {
   toolsForMemberStaff,
 } from '../lib/memberStaffTemplates.js';
 import { assertAgentLlmBudget, recordAgentLlmUsage } from '../lib/agentLlmUsage.js';
+import { permittedCustomerMemory } from '../lib/customerMemory.js';
 
 const router = Router();
 router.use(requireUser);
@@ -283,7 +284,7 @@ async function executeTool(name, input, userId, memberDbPools, staffTemplate) {
 
 // ── System prompt ─────────────────────────────────────────────────────────────
 
-function buildSystemPrompt(member, hasMemberDb, staffTemplate, context = 'personal_brand') {
+function buildSystemPrompt(member, hasMemberDb, staffTemplate, context = 'personal_brand', memory = []) {
   const contextGuidance = {
     personal_brand: 'Focus on personal-brand pages, layouts, navigation, header/footer language, calls to action, tags, SEO fields, and mappings from persisted member data into public fields.',
     career_intake: 'Focus on career intake, source-to-master mapping definitions, career metadata, skills/tools/capabilities, proficiency definitions, and which approved data may feed public profile fields. Never claim an intake record changed unless a tool actually persisted it.',
@@ -323,7 +324,11 @@ ${staffTemplate.instructions.map((instruction) => `- ${instruction}`).join('\n')
 - Suggest meaningful section names that will make sense in the sidebar
 - After making changes, summarize exactly what was updated
 - Ask clarifying questions before large structural changes
-- Voice: direct, strategic, no fluff${hasMemberDb ? '\n- You have access to the member\'s external database via query_member_db' : ''}`;
+- Voice: direct, strategic, no fluff
+- Customer memory below is already filtered for this user and module. Never infer access to records not included, and only write through the tools granted for this workspace.${hasMemberDb ? '\n- You have access to the member\'s external database via query_member_db' : ''}
+
+PERMISSION-FILTERED CUSTOMER MEMORY:
+${JSON.stringify(memory).slice(0, 16000)}`;
 }
 
 // ── Main chat endpoint ────────────────────────────────────────────────────────
@@ -375,7 +380,8 @@ router.post('/', agentLimiter, async (req, res) => {
   }
 
   const member = req.user;
-  const systemPrompt = buildSystemPrompt(member, Object.keys(memberDbPools).length > 0, staffTemplate, context);
+  const memory = await permittedCustomerMemory(req.user.id, context);
+  const systemPrompt = buildSystemPrompt(member, Object.keys(memberDbPools).length > 0, staffTemplate, context, memory);
 
   // Build message history for Claude
   const messages = [

@@ -1,0 +1,54 @@
+name: Promote approved deployment to production
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_deployment_id:
+        description: Salt Basin deployment record
+        required: true
+      promotion_gate_id:
+        description: Eligible promotion gate
+        required: true
+      git_sha:
+        description: Verified commit to promote
+        required: true
+      requested_by_user_id:
+        description: Approving Salt Basin admin
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: saltbasin-production-promotion
+  cancel-in-progress: false
+
+jobs:
+  verify-and-promote:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.git_sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          VITE_TEST_BASE_URL: ${{ vars.VITE_TEST_BASE_URL }}
+      - name: Trigger Render production deployment
+        if: ${{ secrets.RENDER_DEPLOY_HOOK_URL != '' }}
+        run: curl --fail --silent --show-error --request POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+      - name: Trigger Netlify production deployment
+        if: ${{ secrets.NETLIFY_BUILD_HOOK_URL != '' }}
+        run: curl --fail --silent --show-error --request POST "${{ secrets.NETLIFY_BUILD_HOOK_URL }}"
+      - name: Record promotion evidence
+        run: |
+          echo "deployment=${{ inputs.source_deployment_id }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "gate=${{ inputs.promotion_gate_id }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "commit=${{ inputs.git_sha }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "approved_by=${{ inputs.requested_by_user_id }}" >> "$GITHUB_STEP_SUMMARY"
+

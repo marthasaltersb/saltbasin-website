@@ -909,6 +909,69 @@ export const DEFAULT_TEMPLATES = {
       { id: 'b11', type: 'body', visible: true, order: 11, props: { text: 'Salt Basin Net Works · Salter Momentum™ · saltbasin.net' }, style: { fontSize: '0.7rem', color: '#8b9bae', fontFamily: 'sans-serif', paddingTop: '0.75rem', textAlign: 'center' } },
     ],
   },
+  // Meme package per the Content Entry Journey spec section 9: hook, visual
+  // premise + primary/secondary text (photo-hero), HERQ.Meme + season marks
+  // (tape-label), caption/accessibility text/recommended dimensions kept as
+  // plain body copy so they're visible in the editor but easy to strip
+  // before export — a meme is a social asset, not a print document.
+  HERQMeme: {
+    name: 'HERQ Meme',
+    outputType: 'HERQMeme',
+    pageMargin: '0.4in',
+    pageBackground: '#F5F0E8',
+    blocks: [
+      { id: 'm1', type: 'tape-label', visible: true, order: 1, props: { text: 'HERQ.Meme', rotate: -1.5 }, style: { background: '#1A1A1A', color: '#FFFDF8', marginBottom: '0.6rem' } },
+      {
+        id: 'm2', type: 'photo-hero', visible: true, order: 2,
+        props: { imageUrl: '', headline: 'The hook goes here', subhead: 'Secondary text / punchline', badges: ['HERQ'] },
+        style: { minHeight: '480px', borderRadius: '4px' },
+      },
+      { id: 'm3', type: 'section-label', visible: true, order: 3, props: { text: 'CAPTION' }, style: {} },
+      { id: 'm4', type: 'body', visible: true, order: 4, props: { text: 'Caption text for the post copy (not baked into the image).' }, style: {} },
+      { id: 'm5', type: 'section-label', visible: true, order: 5, props: { text: 'ACCESSIBILITY TEXT' }, style: {} },
+      { id: 'm6', type: 'body', visible: true, order: 6, props: { text: 'Alt text describing the image for screen readers.' }, style: { fontSize: '0.78rem', color: '#8b9bae' } },
+      { id: 'm7', type: 'hr', visible: true, order: 7, props: {}, style: {} },
+      { id: 'm8', type: 'body', visible: true, order: 8, props: { text: 'Recommended dimensions: 1080×1080 (square) · 1080×1350 (portrait, crop from center). © Salt Basin Net Works.' }, style: { fontSize: '0.68rem', color: '#8b9bae' } },
+    ],
+  },
+
+  // Newsletter — the modular editorial sections from the spec: title, HERQ
+  // classification, season/theme, core question, market conversation,
+  // primary research, evidence, operational gap, framework interpretation,
+  // questions to consider, what comes next, sources, related entries.
+  HERQNewsletter: {
+    name: 'HERQ Newsletter',
+    outputType: 'HERQNewsletter',
+    pageMargin: '0.75in',
+    pageBackground: '#F5F0E8',
+    blocks: [
+      { id: 'n1', type: 'page-header', visible: true, order: 1, props: { eyebrow: 'HERQ · Newsletter', title: 'Newsletter Title', subtitle: '' }, style: { background: '#F5F0E8', color: '#1A1A1A', fontFamily: 'sans-serif', textAlign: 'left' } },
+      { id: 'n1b', type: 'tape-label', visible: true, order: 1.5, props: { text: 'HERQ · Season · Theme', rotate: -1.5 }, style: { background: '#1A1A1A', color: '#FFFDF8', marginBottom: '0.75rem' } },
+      { id: 'n2', type: 'color-band', visible: true, order: 2, props: {}, style: { background: '#E8407A', height: '4px' } },
+      { id: 'n3', type: 'herq-question', visible: true, order: 3, props: { question: 'What is the core question this entry asks?', series: 'HERQ', context: '' }, style: {} },
+      { id: 'n4', type: 'section-label', visible: true, order: 4, props: { text: 'WHY THIS QUESTION EXISTS' }, style: {} },
+      { id: 'n5', type: 'body', visible: true, order: 5, props: { text: 'The context that makes this question worth asking.' }, style: {} },
+      { id: 'n6', type: 'section-label', visible: true, order: 6, props: { text: 'THE MARKET CONVERSATION' }, style: {} },
+      { id: 'n7', type: 'body', visible: true, order: 7, props: { text: 'What people are already saying about this, and where.' }, style: {} },
+      { id: 'n8', type: 'section-label', visible: true, order: 8, props: { text: 'PRIMARY RESEARCH' }, style: {} },
+      { id: 'n9', type: 'body', visible: true, order: 9, props: { text: 'Primary-source findings relevant to this question.' }, style: {} },
+      { id: 'n10', type: 'section-label', visible: true, order: 10, props: { text: 'EVIDENCE' }, style: {} },
+      { id: 'n11', type: 'callout', visible: true, order: 11, props: { text: 'Key accepted evidence supporting the framework below.' }, style: {} },
+      { id: 'n12', type: 'section-label', visible: true, order: 12, props: { text: 'THE OPERATIONAL GAP' }, style: {} },
+      { id: 'n13', type: 'body', visible: true, order: 13, props: { text: 'What breaks in practice because this question goes unanswered.' }, style: {} },
+      { id: 'n14', type: 'section-label', visible: true, order: 14, props: { text: 'FRAMEWORK INTERPRETATION' }, style: {} },
+      { id: 'n15', type: 'body', visible: true, order: 15, props: { text: 'How the Entry Framework resolves the tension above.' }, style: {} },
+      { id: 'n16', type: 'section-label', visible: true, order: 16, props: { text: 'QUESTIONS TO CONSIDER' }, style: {} },
+      { id: 'n17', type: 'bullet-list', visible: true, order: 17, props: { items: ['Reflection question one.', 'Reflection question two.'] }, style: {} },
+      { id: 'n18', type: 'section-label', visible: true, order: 18, props: { text: 'WHAT COMES NEXT' }, style: {} },
+      { id: 'n19', type: 'body', visible: true, order: 19, props: { text: 'The follow-up entry or action this sets up.' }, style: {} },
+      { id: 'n20', type: 'hr', visible: true, order: 20, props: {}, style: {} },
+      { id: 'n21', type: 'two-column', visible: true, order: 21, props: { leftLabel: 'SOURCES', leftText: 'Cited sources go here.', rightLabel: 'RELATED ENTRIES', rightText: 'Links to related HERQ entries.' }, style: {} },
+      { id: 'n22', type: 'color-band', visible: true, order: 22, props: {}, style: { background: '#1A1A1A', height: '2px', marginTop: '1.5rem' } },
+      { id: 'n23', type: 'body', visible: true, order: 23, props: { text: 'Salt Basin Net Works · Salter Momentum™ · saltbasin.net' }, style: { fontSize: '0.7rem', color: '#8b9bae', fontFamily: 'sans-serif', paddingTop: '0.75rem', textAlign: 'center' } },
+    ],
+  },
+
   resume: {
     name: 'Professional Resume',
     outputType: 'resume',

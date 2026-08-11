@@ -25,9 +25,11 @@ import { requireAdmin } from '../auth.js';
 import { backlogSeed } from '../data/backlog/seed.js';
 import { patchNotes } from '../data/patchNotes.js';
 import { CONTRIBUTION_TYPES, REDUCTION_MAP, PER_BURST_SUPERVISION_WEIGHT } from '../data/contributionMethodology.js';
+import { ensureBacklogIntelligenceSchema } from '../lib/backlogIntelligenceSchema.js';
 
 const router = Router();
 router.use(requireAdmin);
+router.use(async (_req, _res, next) => { try { await ensureBacklogIntelligenceSchema(); next(); } catch (error) { next(error); } });
 
 // ── helpers ──
 function rowToItem(r) {
@@ -309,6 +311,24 @@ router.delete('/items/:id', async (req, res) => {
     .prepare(`UPDATE backlog_items SET status = 'archived', updated_at = $1 WHERE id = $2`)
     .run(Date.now(), id);
   res.json({ ok: true });
+});
+
+router.post('/items/:id/clone', async (req, res) => {
+  const source = await db.prepare(`SELECT * FROM backlog_items WHERE id=$1`).get(req.params.id);
+  if (!source) return res.status(404).json({ error: 'not found' });
+  const now = Date.now();
+  const clone = await db.prepare(`INSERT INTO backlog_items (capability_id,parent_id,kind,title,summary,user_story,requirement_detail,business_rules,design_spec,acceptance_criteria,process_steps,status,priority,tech_stack,tags,design_definition,production_state,composition_scores,estimated_agent_hours,estimated_user_hours,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'pending',$12,$13,$14,$15::jsonb,'{}','{}',$16,$17,$18,$18) RETURNING id`)
+    .get(source.capability_id, source.parent_id, source.kind, req.body?.title || `${source.title} · Copy`, source.summary, source.user_story, source.requirement_detail, source.business_rules, source.design_spec, source.acceptance_criteria, source.process_steps, source.priority, source.tech_stack, source.tags, source.design_definition || {}, source.estimated_agent_hours, source.estimated_user_hours, now);
+  const cloneId = Number(clone.id);
+  await db.prepare(`INSERT INTO backlog_components (backlog_item_id,component_type,component_key,folder_path,file_path,build_name,runtime_surface,metadata,created_at,updated_at) SELECT $1,component_type,component_key,folder_path,file_path,build_name,runtime_surface,metadata,$2,$2 FROM backlog_components WHERE backlog_item_id=$3`).run(cloneId, now, source.id);
+  res.status(201).json({ id: cloneId });
+});
+
+router.get('/quality-coverage', async (_req, res) => {
+  const totals = await db.prepare(`SELECT COUNT(*) FILTER (WHERE status IN ('completed','deployed'))::int production_items,COUNT(*) FILTER (WHERE status IN ('completed','deployed') AND EXISTS (SELECT 1 FROM test_scenario_features f WHERE f.backlog_item_id=backlog_items.id))::int with_scenarios,COUNT(*) FILTER (WHERE status IN ('completed','deployed') AND EXISTS (SELECT 1 FROM test_scenario_features f JOIN test_runs r ON r.scenario_id=f.scenario_id WHERE f.backlog_item_id=backlog_items.id))::int with_results FROM backlog_items WHERE kind<>'defect'`).get();
+  const scenarioStats = await db.prepare(`SELECT COUNT(*)::int scenarios,COUNT(*) FILTER (WHERE required_for_promotion)::int required_scenarios,COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM test_runs r WHERE r.scenario_id=test_scenarios.id AND r.overall_result='pass'))::int passed_scenarios FROM test_scenarios`).get();
+  const production = Number(totals.production_items || 0);
+  res.json({ productionItems: production, itemsWithScenarios: Number(totals.with_scenarios || 0), itemsWithResults: Number(totals.with_results || 0), scenarioCoveragePct: production ? Math.round(Number(totals.with_scenarios || 0) / production * 100) : 0, resultCoveragePct: production ? Math.round(Number(totals.with_results || 0) / production * 100) : 0, scenarios: Number(scenarioStats.scenarios || 0), requiredScenarios: Number(scenarioStats.required_scenarios || 0), passedScenarios: Number(scenarioStats.passed_scenarios || 0) });
 });
 
 // ── seed ──

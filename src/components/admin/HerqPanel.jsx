@@ -301,13 +301,25 @@ function PostTracker({ posts, series, onRefresh }) {
   );
 }
 
+// Matches server/lib/approvalGate.js — framework/research/copy/schedule are
+// required before a publication can move into 'scheduled' status; the other
+// four are tracked but format-specific, not hard-gated.
+const APPROVAL_LEVELS = [
+  ['framework', 'Framework', true], ['research', 'Research', true], ['evidence', 'Evidence', false],
+  ['copy', 'Copy', true], ['visual', 'Visual', false], ['channel_adaptation', 'Channel Adaptation', false],
+  ['schedule', 'Schedule', true], ['final_publication', 'Final Publication', false],
+];
+const APPROVAL_OUTCOMES = ['', 'approved', 'approved_with_edits', 'needs_revision', 'needs_more_research', 'on_hold', 'cancelled'];
+
 function PostForm({ initial, series, onSave, onCancel }) {
   const [form, setForm] = useState({
     title: '', topic: '', summary: '', series_ref: '', export_status: 'idea',
     ...initial,
     body: typeof initial.body === 'string' ? JSON.parse(initial.body || '{}') : (initial.body || {}),
+    approvals: typeof initial.approvals === 'string' ? JSON.parse(initial.approvals || '{}') : (initial.approvals || {}),
   });
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
+  const setApproval = (level) => (e) => setForm(f => ({ ...f, approvals: { ...f.approvals, [level]: e.target.value } }));
 
   return (
     <div>
@@ -341,7 +353,22 @@ function PostForm({ initial, series, onSave, onCancel }) {
           <textarea style={{ ...h.input, minHeight: 80, resize: 'vertical' }} value={form.summary} onChange={set('summary')} placeholder="Brief summary of what this post covers" />
         </div>
       </div>
-      <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+
+      <div style={{ marginTop: '0.5rem', paddingTop: '0.75rem', borderTop: '0.5px solid rgba(0,0,0,0.08)' }}>
+        <div style={h.label}>Approvals · framework/research/copy/schedule required before scheduling</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem 1rem', marginTop: '0.35rem' }}>
+          {APPROVAL_LEVELS.map(([level, label, required]) => (
+            <div key={level} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '0.72rem', flex: 1 }}>{label}{required && <span style={{ color: 'var(--herq-accent, #E8407A)' }}> *</span>}</span>
+              <select style={{ ...h.input, width: 'auto', fontSize: '0.7rem', padding: '0.25rem 0.4rem' }} value={form.approvals[level] || ''} onChange={setApproval(level)}>
+                {APPROVAL_OUTCOMES.map(o => <option key={o} value={o}>{o ? o.replace(/_/g, ' ') : '—'}</option>)}
+              </select>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
         <button style={h.btn(true)} onClick={() => onSave(form)}>Save Post</button>
         <button style={h.btn(false)} onClick={onCancel}>Cancel</button>
       </div>
@@ -351,9 +378,26 @@ function PostForm({ initial, series, onSave, onCancel }) {
 
 // ── Research Panel ─────────────────────────────────────────────────────────────
 
+// Evidence lifecycle per the Content Entry Journey spec: Candidate is where
+// every research input starts (herq_research_inputs.evidence_status default);
+// the rest are the human governance decision on whether it may be used to
+// support a claim.
+const EVIDENCE_STATUSES = [
+  'candidate', 'under_review', 'accepted', 'accepted_with_qualification',
+  'contradicted', 'rejected', 'expired', 'superseded',
+];
+const EVIDENCE_STATUS_COLORS = {
+  candidate: '#FFD6A5', under_review: '#BDE4FF', accepted: '#CDEEDC',
+  accepted_with_qualification: '#B7D9C4', contradicted: '#F5A3A3',
+  rejected: '#F5A3A3', expired: '#ddd', superseded: '#ddd',
+};
+const RATING_OPTIONS = ['', 'low', 'medium', 'high'];
+
 function ResearchPanel({ research, onRefresh }) {
   const [showNew, setShowNew] = useState(false);
+  const [editId, setEditId] = useState(null);
   const [form, setForm] = useState({ title: '', source_name: '', stat: '', why_it_matters: '', verification_status: 'needsVerification' });
+  const [evidenceForm, setEvidenceForm] = useState({});
 
   async function save() {
     const res = await fetch('/api/herq/research', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
@@ -361,6 +405,28 @@ function ResearchPanel({ research, onRefresh }) {
     toast.success('Research input added');
     setShowNew(false);
     setForm({ title: '', source_name: '', stat: '', why_it_matters: '', verification_status: 'needsVerification' });
+    onRefresh();
+  }
+
+  function startEvidenceEdit(r) {
+    setEditId(r.id);
+    setEvidenceForm({
+      evidence_status: r.evidence_status || 'candidate',
+      claim_ref: r.claim_ref || '',
+      credibility_rating: r.credibility_rating || '',
+      relevance_rating: r.relevance_rating || '',
+      novelty_rating: r.novelty_rating || '',
+    });
+  }
+
+  async function saveEvidence(r) {
+    const res = await fetch(`/api/herq/research/${r.id}`, {
+      method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...r, ...evidenceForm }),
+    });
+    if (!res.ok) { toast.error('Failed to save evidence status'); return; }
+    toast.success('Evidence updated');
+    setEditId(null);
     onRefresh();
   }
 
@@ -395,13 +461,48 @@ function ResearchPanel({ research, onRefresh }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         {research.map(r => (
           <div key={r.id} style={{ ...h.card }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.35rem' }}>
               <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: '0.2rem' }}>{r.title}</div>
-              <span style={{ padding: '1px 8px', borderRadius: 10, background: VSTATUS_COLORS[r.verification_status] || '#eee', fontSize: '0.6rem', color: '#1A1A1A', fontFamily: 'var(--sb-font-label)', fontWeight: 600 }}>{r.verification_status}</span>
+              <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+                <span style={{ padding: '1px 8px', borderRadius: 10, background: VSTATUS_COLORS[r.verification_status] || '#eee', fontSize: '0.6rem', color: '#1A1A1A', fontFamily: 'var(--sb-font-label)', fontWeight: 600 }}>{r.verification_status}</span>
+                <span style={{ padding: '1px 8px', borderRadius: 10, background: EVIDENCE_STATUS_COLORS[r.evidence_status] || '#eee', fontSize: '0.6rem', color: '#1A1A1A', fontFamily: 'var(--sb-font-label)', fontWeight: 600 }} title="Evidence status">
+                  {(r.evidence_status || 'candidate').replace(/_/g, ' ')}
+                </span>
+                <button style={{ ...h.btn(false), padding: '0.1rem 0.5rem', fontSize: '0.65rem' }} onClick={() => (editId === r.id ? setEditId(null) : startEvidenceEdit(r))}>
+                  {editId === r.id ? 'Close' : 'Evidence'}
+                </button>
+              </div>
             </div>
             {r.source_name && <div style={{ fontSize: '0.72rem', color: 'var(--herq-teal)' }}>{r.source_name}</div>}
             {r.stat && <div style={{ fontSize: '0.82rem', fontStyle: 'italic', color: 'var(--herq-accent)', margin: '0.35rem 0' }}>"{r.stat}"</div>}
             {r.why_it_matters && <div style={{ fontSize: '0.78rem', color: '#555' }}>{r.why_it_matters}</div>}
+
+            {editId === r.id && (
+              <div style={{ marginTop: '0.6rem', padding: '0.6rem', background: 'rgba(0,0,0,0.03)', borderRadius: 3 }}>
+                <div style={{ marginBottom: '0.5rem' }}>
+                  <label style={h.label}>Evidence Status</label>
+                  <select style={h.input} value={evidenceForm.evidence_status} onChange={e => setEvidenceForm(f => ({ ...f, evidence_status: e.target.value }))}>
+                    {EVIDENCE_STATUSES.map(s => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
+                  </select>
+                </div>
+                <div style={{ marginBottom: '0.5rem' }}>
+                  <label style={h.label}>Claim Supported</label>
+                  <input style={h.input} value={evidenceForm.claim_ref} onChange={e => setEvidenceForm(f => ({ ...f, claim_ref: e.target.value }))} placeholder="What claim does this evidence support?" />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  {[['credibility_rating', 'Credibility'], ['relevance_rating', 'Relevance'], ['novelty_rating', 'Novelty']].map(([k, label]) => (
+                    <div key={k}>
+                      <label style={h.label}>{label}</label>
+                      <select style={h.input} value={evidenceForm[k]} onChange={e => setEvidenceForm(f => ({ ...f, [k]: e.target.value }))}>
+                        {RATING_OPTIONS.map(o => <option key={o} value={o}>{o || '—'}</option>)}
+                      </select>
+                    </div>
+                  ))}
+                </div>
+                <button style={h.btn(true)} onClick={() => saveEvidence(r)}>Save Evidence</button>
+              </div>
+            )}
+
             <AttachmentList entityType="herq_research_input" entityId={r.id} compact />
           </div>
         ))}
@@ -503,7 +604,7 @@ function OutputsPanel({ outputs, posts, series, onRefresh }) {
           <div style={{ marginBottom: '0.6rem' }}>
             <label style={h.label}>Template</label>
             <select style={h.input} value={form.template_ref} onChange={e => setForm(f => ({ ...f, template_ref: e.target.value }))}>
-              {['HERQFramework', 'HERQSeriesTracker', 'HERQSeriesPostOnePager'].map(t => <option key={t} value={t}>{t}</option>)}
+              {['HERQFramework', 'HERQSeriesTracker', 'HERQSeriesPostOnePager', 'HERQMeme', 'HERQNewsletter'].map(t => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
           <div style={{ marginBottom: '0.6rem' }}>

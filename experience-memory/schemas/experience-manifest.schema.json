@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://saltbasin.net/schemas/experience-manifest-1.0.0.json",
+  "title": "Salt Basin Experience Manifest",
+  "type": "object",
+  "required": ["schemaVersion", "experienceId", "manifestVersion", "journeyId", "world", "genome", "inputs", "objects", "characters", "agents", "assets", "animations", "precisionSurfaces", "performanceBudget", "accessibilityRules", "outputs", "validation"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "experienceId": { "type": "string", "minLength": 1 },
+    "manifestVersion": { "type": "integer", "minimum": 1 },
+    "journeyId": { "type": "string" },
+    "scenarioId": { "type": ["string", "null"] },
+    "world": { "type": "object", "required": ["worldId", "variantKey", "templateId"], "properties": { "worldId": { "type": "string" }, "variantKey": { "type": "string" }, "templateId": { "type": "string" } }, "additionalProperties": false },
+    "genome": { "type": "object" },
+    "inputs": { "type": "object" },
+    "objects": { "type": "array", "items": { "$ref": "experience-object.schema.json" } },
+    "characters": { "type": "array" },
+    "agents": { "type": "array" },
+    "assets": { "type": "array" },
+    "animations": { "type": "array" },
+    "precisionSurfaces": { "type": "array" },
+    "performanceBudget": { "type": "object" },
+    "accessibilityRules": { "type": "object" },
+    "outputs": { "type": "object" },
+    "validation": { "type": "object" }
+  },
+  "additionalProperties": true
+}

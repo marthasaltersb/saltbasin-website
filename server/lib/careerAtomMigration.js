@@ -10,7 +10,7 @@
 import { db } from '../db.js';
 import { CAREER_ENTRY_SOURCES, isJsonbSourceColumn, sourceForTable } from './careerAtomRegistry.js';
 
-async function ensureCareerMasterRod(userId) {
+export async function ensureCareerMasterRod(userId) {
   const existing = await db.prepare(`SELECT * FROM journey_data_rods WHERE user_id=$1 AND rod_type='career_master'`).get(userId);
   if (existing) return existing;
   const now = Date.now();

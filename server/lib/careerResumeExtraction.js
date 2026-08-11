@@ -37,9 +37,24 @@ export async function extractResumeText(buffer, mimeType, originalName = '') {
   throw new Error('Unsupported resume file type — upload a PDF, DOCX, or plain text file.');
 }
 
+// Every group's items carry two additive fields beyond their domain data:
+// `sourceExcerpt` (the verbatim sentence/phrase from the source text that
+// supports this fact) and `reasoning` (why this value/interpretation was
+// chosen, especially when inferred rather than stated directly — e.g. a
+// title normalized from an abbreviation, or a date range inferred from
+// surrounding context). Both feed the review-queue's "ambiguous mapping"
+// surfacing (careerReconciliation.js) so a member sees exactly what the AI
+// read and why, not just the output. Optional on every item — a clearly
+// stated fact with an obvious 1:1 quote may leave `reasoning` empty.
+const SOURCE_CONTEXT_FIELDS = {
+  sourceExcerpt: { type: 'string', description: 'The exact verbatim sentence or phrase from the source text that supports this fact.' },
+  reasoning: { type: 'string', description: "Brief explanation of why this value or interpretation was chosen, especially if it required inference rather than a direct quote. Leave empty if the fact was stated plainly with no interpretation needed." },
+  reasoningPatternKey: { type: 'string', description: 'When reasoning was required, a short lowercase snake_case rule slug describing the reusable reasoning pattern without member-specific facts.' },
+};
+
 const PROPOSE_TOOL = {
   name: 'propose_career_mappings',
-  description: "Submit every Career Atom-mappable fact found in this resume, grouped by Career Molecule (entry type: jobs, skills, tools, engagements/case studies, certifications). Only include facts actually present in the text — never invent employers, dates, or metrics. Omit fields you can't find rather than guessing.",
+  description: "Submit every Career Atom-mappable fact found in this source document, grouped by Career Molecule (entry type: jobs, skills, tools, engagements/case studies, certifications). Only include facts actually present in the text — never invent employers, dates, or metrics. Omit fields you can't find rather than guessing. For every item, include sourceExcerpt (the exact text you're reading from) and, when the value required any inference or judgment call rather than a direct quote, reasoning explaining that judgment call.",
   input_schema: {
     type: 'object',
     properties: {
@@ -53,6 +68,7 @@ const PROPOSE_TOOL = {
             endDate: { type: 'string' }, duration: { type: 'string' }, jobFunction: { type: 'string' },
             industry: { type: 'string' }, keyMetrics: { type: 'string' },
             confidence: { type: 'number', description: '0-1, confidence this was correctly extracted' },
+            ...SOURCE_CONTEXT_FIELDS,
           },
         },
       },
@@ -64,6 +80,7 @@ const PROPOSE_TOOL = {
             skill: { type: 'string' }, category: { type: 'string' }, tier: { type: 'string' },
             yearsExp: { type: 'number' }, resumeLanguage: { type: 'string' },
             confidence: { type: 'number' },
+            ...SOURCE_CONTEXT_FIELDS,
           },
         },
       },
@@ -74,6 +91,7 @@ const PROPOSE_TOOL = {
           properties: {
             nameUsed: { type: 'string' }, category: { type: 'string' }, tier: { type: 'string' },
             confidence: { type: 'number' },
+            ...SOURCE_CONTEXT_FIELDS,
           },
         },
       },
@@ -87,6 +105,7 @@ const PROPOSE_TOOL = {
             period: { type: 'string' }, context: { type: 'string' }, actions: { type: 'string' },
             outcomes: { type: 'string' },
             confidence: { type: 'number' },
+            ...SOURCE_CONTEXT_FIELDS,
           },
         },
       },
@@ -97,6 +116,7 @@ const PROPOSE_TOOL = {
           properties: {
             name: { type: 'string' }, issuer: { type: 'string' }, firstEarned: { type: 'string' },
             confidence: { type: 'number' },
+            ...SOURCE_CONTEXT_FIELDS,
           },
         },
       },
@@ -107,6 +127,7 @@ const PROPOSE_TOOL = {
           properties: {
             groupType: { type: 'string' }, title: { type: 'string' }, description: { type: 'string' },
             items: { type: 'array', items: { type: 'string' } }, confidence: { type: 'number' },
+            ...SOURCE_CONTEXT_FIELDS,
           },
         },
       },
@@ -119,6 +140,7 @@ const PROPOSE_TOOL = {
             dealRole: { type: 'string' }, investmentType: { type: 'string' }, dealSize: { type: 'string' },
             entryDate: { type: 'string' }, exitDate: { type: 'string' }, outcomeStatus: { type: 'string' },
             notes: { type: 'string' }, confidence: { type: 'number' },
+            ...SOURCE_CONTEXT_FIELDS,
           },
         },
       },
@@ -172,17 +194,20 @@ export function bondProposedMappings(proposal) {
     const entries = items.map((item) => {
       const fieldBonds = {};
       const unresolvedHeaders = [];
+      const sourceLocation = item.sourceExcerpt
+        ? `"${item.sourceExcerpt}"`
+        : `Resume text identified as within this ${entryType.replaceAll('_', ' ')}`;
       for (const [fieldKey, value] of Object.entries(item)) {
-        if (fieldKey === 'confidence' || value === null || value === undefined || value === '') continue;
+        if (fieldKey === 'confidence' || fieldKey === 'sourceExcerpt' || fieldKey === 'reasoning' || fieldKey === 'reasoningPatternKey' || value === null || value === undefined || value === '') continue;
         const candidates = bondLabelsToCareerAtoms([fieldKey], { entryType })[0].candidates;
         const match = candidates[0] || null;
         if (match) {
-          fieldBonds[match.atomKey] = { value, header: fieldKey, matchType: 'ai_extracted', affinity: match.affinity, label: match.label, sourceLocation: `Resume text identified as “${fieldKey}” within this ${entryType.replaceAll('_', ' ')}` };
+          fieldBonds[match.atomKey] = { value, header: fieldKey, matchType: 'ai_extracted', affinity: match.affinity, label: match.label, sourceLocation, sourceExcerpt: item.sourceExcerpt || null, reasoning: item.reasoning || null, reasoningPatternKey: item.reasoningPatternKey || null };
         } else {
-          unresolvedHeaders.push({ header: fieldKey, value });
+          unresolvedHeaders.push({ header: fieldKey, value, sourceLocation, sourceExcerpt: item.sourceExcerpt || null, reasoning: item.reasoning || null, reasoningPatternKey: item.reasoningPatternKey || null });
         }
       }
-      return { entryType, sourceSheet: 'ai_resume_extraction', sourceRow: null, confidence: item.confidence ?? null, fieldBonds, unresolvedHeaders };
+      return { entryType, sourceSheet: 'ai_resume_extraction', sourceRow: null, confidence: item.confidence ?? null, sourceExcerpt: item.sourceExcerpt || null, reasoning: item.reasoning || null, fieldBonds, unresolvedHeaders };
     });
     if (entries.length) result[entryType] = entries;
   }
