@@ -3591,6 +3591,57 @@ async function bootstrap() {
     CREATE INDEX IF NOT EXISTS idx_career_deals_user          ON career_deals (user_id);
   `);
 
+  // Career experience configuration ("Proficiency & Rollups") — periods,
+  // proficiency-level vocabulary, rollup aggregation policies, and display
+  // views a member defines for themselves (career_experience_definitions),
+  // plus the per-entity/per-period proficiency assessments that reference
+  // those definitions (career_proficiency_assertions). Backs
+  // CareerExperienceConfigurator.jsx and server/routes/careerMaster.js's
+  // /experience-definitions, /proficiency-assertions, and /rollup-preview
+  // routes, which already existed and query these tables — the CREATE TABLE
+  // for them was missing entirely (found 2026-09-01 wiring Career Master
+  // into the World Shell: every query against these tables failed with
+  // "relation does not exist", and since neither route handler catches that
+  // rejection, Express never sent a response and the request just hung).
+  // Always user_id-scoped from the start (no retrofit needed, unlike the
+  // career_jobs/skills/tools/... tables above).
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS career_experience_definitions (
+      id               BIGSERIAL PRIMARY KEY,
+      user_id          BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      definition_type  TEXT NOT NULL,
+      definition_key   TEXT NOT NULL,
+      label            TEXT NOT NULL,
+      description      TEXT,
+      definition       JSONB NOT NULL DEFAULT '{}',
+      sort_order       INTEGER NOT NULL DEFAULT 0,
+      is_active        BOOLEAN NOT NULL DEFAULT true,
+      created_at       BIGINT NOT NULL,
+      updated_at       BIGINT NOT NULL,
+      UNIQUE (user_id, definition_type, definition_key)
+    );
+    CREATE INDEX IF NOT EXISTS idx_career_experience_definitions_user ON career_experience_definitions (user_id, definition_type);
+
+    CREATE TABLE IF NOT EXISTS career_proficiency_assertions (
+      id                 BIGSERIAL PRIMARY KEY,
+      user_id            BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      entity_type        TEXT NOT NULL,
+      entity_id          BIGINT NOT NULL,
+      period_key         TEXT NOT NULL,
+      level_key          TEXT NOT NULL,
+      confidence         NUMERIC NOT NULL DEFAULT 1,
+      assessment_source  TEXT NOT NULL DEFAULT 'user_confirmed',
+      evidence_count     INTEGER NOT NULL DEFAULT 0,
+      last_practiced_at  BIGINT,
+      visibility         TEXT NOT NULL DEFAULT 'private',
+      notes              TEXT,
+      created_at         BIGINT NOT NULL,
+      updated_at         BIGINT NOT NULL,
+      UNIQUE (user_id, entity_type, entity_id, period_key)
+    );
+    CREATE INDEX IF NOT EXISTS idx_career_proficiency_assertions_user ON career_proficiency_assertions (user_id, entity_type, entity_id);
+  `);
+
   // One-time idempotent backfill — existing (pre-retrofit) rows had no
   // owner, so they belong to the platform admin. Guarded by `user_id IS
   // NULL` so it never touches rows a member has since created for themselves.

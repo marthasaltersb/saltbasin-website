@@ -12,7 +12,7 @@
 // lost). See /root/.claude/plans/nested-tickling-micali.md for the full
 // design rationale and the explicitly-deferred Phase 2/3 (governed
 // user-customizable world views).
-import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as THREE from 'three';
 import { api } from '../lib/api.js';
@@ -25,6 +25,7 @@ import { usePublicationPipeline } from '../lib/hooks/usePublicationPipeline.js';
 import AdminShell from './admin/AdminShell.jsx';
 import ConfigPanel from './admin/ConfigPanel.jsx';
 import { toast } from '../lib/toast.js';
+const CareerMasterEntryPoint = lazy(() => import('./admin/CareerMasterEntryPoint.jsx'));
 import { attachSceneManifestTree, publishSceneManifest, removePublishedSceneManifest } from '../lib/sceneManifest.js';
 
 const ISLAND_RADIUS = 9;
@@ -430,8 +431,14 @@ export default function WorldShell() {
     );
   }
 
-  if (focused?.kind === 'embed' && focused.componentId === 'config') {
-    return <SiteConfigView scope={user?.role === 'admin' ? 'admin' : 'member'} onClear={clearFocus} />;
+  if (focused?.kind === 'embed') {
+    const embedScope = user?.role === 'admin' ? 'admin' : 'member';
+    if (focused.componentId === 'config') {
+      return <SiteConfigView scope={embedScope} onClear={clearFocus} />;
+    }
+    if (focused.componentId === 'careerMaster') {
+      return <CareerMasterEmbedView scope={embedScope} onClear={clearFocus} />;
+    }
   }
 
   if (user === undefined || !tabsConfig) {
@@ -526,9 +533,11 @@ function JourneysGrid({ islands, career, commercial, herq, onOpen }) {
           ? `${opp.opportunities.length} tracked · ${opp.agents.length} agents`
           : isl.componentId === 'herqPublications'
             ? `${herq.items.length} items · ${herq.agents.length} agents`
-            : isl.kind === 'embed'
-              ? 'Open configuration'
-              : 'Open in Classic Tools';
+            : isl.componentId === 'careerMaster'
+              ? 'Open Career Master journey'
+              : isl.kind === 'embed'
+                ? 'Open configuration'
+                : 'Open in Classic Tools';
         return (
           <div key={isl.key} style={S.journeyCard} onClick={() => onOpen(isl.key)}>
             <div style={{ ...S.journeyAccent, background: '#' + (ACCENT_HEX[isl.accent] || ACCENT_HEX.gold).toString(16).padStart(6, '0') }} />
@@ -1152,6 +1161,31 @@ function SiteConfigView({ scope, onClear }) {
       </div>
       <div style={S.embedBody}>
         {!config ? <div style={S.railEmpty}>Loading…</div> : <ConfigPanel config={config} onChange={setConfig} scope={scope} site={null} />}
+      </div>
+    </div>
+  );
+}
+
+// Career Master's in-world "embed": the camera has already dollied into the
+// Career Master crystal island (the game-like part — CRYSTAL_VARIANTS.founder,
+// same core/island rendering every world object uses). What opens here is
+// the real journey chooser — CareerMasterEntryPoint, unchanged and un-forked
+// — so each journey "variant" (Career Orbit, Upload & Map, Manual Intake,
+// Proficiency & Rollups, BestyStaff Assistant) is guided by the exact same
+// classic AdminShell panels members/admins already use in Classic Tools
+// (CareerMasterPanel, UploadDataScreen, CareerExperienceConfigurator,
+// BoundedCareerAgentPanel), just reached without leaving the world.
+function CareerMasterEmbedView({ scope, onClear }) {
+  return (
+    <div style={S.embedShell}>
+      <div style={S.embedHeader}>
+        <button style={S.backBtn} onClick={onClear}>← Back to World</button>
+        <div style={S.embedTitle}>Career Master — Journey</div>
+      </div>
+      <div style={S.embedBody}>
+        <Suspense fallback={<div style={S.railEmpty}>Loading…</div>}>
+          <CareerMasterEntryPoint scope={scope} />
+        </Suspense>
       </div>
     </div>
   );
