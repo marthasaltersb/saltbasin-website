@@ -200,7 +200,7 @@ function instantiatePageSections(pageTypes, typeId, key, pageName) {
 //   'member' — the logged-in member's own site. Hides Leads + Net Works.
 // Both scopes use the same Sidebar / EditorPane / PreviewPane / ConfigPanel —
 // only the API endpoints and the chrome differ.
-export default function AdminShell({ scope = 'admin', orgId = null }) {
+export default function AdminShell({ scope = 'admin', orgId = null, initialTab = null }) {
   const nav = useNavigate();
   const isOrg = scope === 'org-admin' || scope === 'org-user';
   const readOnly = scope === 'org-user';
@@ -250,7 +250,7 @@ export default function AdminShell({ scope = 'admin', orgId = null }) {
   // 'careerPlacementAgents' still lands correctly; for admin, the adminNav-
   // load effect resolves activeViewId from whichever view owns this tab id,
   // so it self-corrects the same way if admin_nav is ever edited.
-  const [tab, setTab] = useState(scope === 'member' ? 'careerPlacementAgents' : scope === 'admin' ? 'commercial-opportunities' : 'content'); // active tab id (from nav.views[].tabs[].id)
+  const [tab, setTab] = useState(initialTab || (scope === 'member' ? 'careerPlacementAgents' : scope === 'admin' ? 'commercial-opportunities' : 'content')); // active tab id (from nav.views[].tabs[].id) — `initialTab` lets a caller (e.g. WorldShell's "Open in Classic Tools") land directly on a specific tab instead of the default
   const [view, setView] = useState('split'); // 'split' | 'editor' | 'preview' (content editor sub-mode)
 
   // Data-driven nav (admin only). Members keep the hardcoded 2-tab strip.

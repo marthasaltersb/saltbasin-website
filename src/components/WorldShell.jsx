@@ -91,6 +91,16 @@ export default function WorldShell() {
   const [tabsConfig, setTabsConfig] = useState(null);
   const [view, setView] = useState('world'); // 'world' | 'journeys' | 'classic'
   const [focusedKey, setFocusedKey] = useState(null);
+  // Which Classic Tools tab to land on — set when the user dollies into a
+  // 'classic'-kind island (e.g. Career Master) and hits "Open in Classic
+  // Tools", so they land on that exact tab instead of the scope's generic
+  // default. Cleared for the plain "Classic Tools" nav button so that one
+  // keeps opening the default tab.
+  const [classicTargetTab, setClassicTargetTab] = useState(null);
+  const openClassic = useCallback((tabKey = null) => {
+    setClassicTargetTab(tabKey);
+    setView('classic');
+  }, []);
 
   useEffect(() => {
     api.me()
@@ -415,7 +425,7 @@ export default function WorldShell() {
     return (
       <div style={{ position: 'fixed', inset: 0, zIndex: 10 }}>
         <button style={S.classicBack} onClick={() => setView('world')}>← Back to World</button>
-        <AdminShell scope={user?.role === 'admin' ? 'admin' : 'member'} />
+        <AdminShell scope={user?.role === 'admin' ? 'admin' : 'member'} initialTab={classicTargetTab} />
       </div>
     );
   }
@@ -434,6 +444,7 @@ export default function WorldShell() {
         user={user}
         view={view}
         setView={setView}
+        openClassic={openClassic}
         career={career}
         commercial={commercial}
         hasCareerIsland={hasCareerIsland}
@@ -459,7 +470,7 @@ export default function WorldShell() {
         <RightRail
           focused={focused}
           onClear={clearFocus}
-          onOpenClassic={() => setView('classic')}
+          onOpenClassic={() => openClassic(focused?.key)}
           career={career}
           commercial={commercial}
           herq={herq}
@@ -471,7 +482,7 @@ export default function WorldShell() {
   );
 }
 
-function TopBar({ user, view, setView, career, commercial, hasCareerIsland, hasCommercialIsland }) {
+function TopBar({ user, view, setView, openClassic, career, commercial, hasCareerIsland, hasCommercialIsland }) {
   const trackedCount = hasCareerIsland ? career.opportunities.length : hasCommercialIsland ? commercial.opportunities.length : 0;
   const scored = (hasCareerIsland ? career.opportunities : hasCommercialIsland ? commercial.opportunities : []).filter((o) => o.score);
   const avgScore = scored.length ? Math.round(scored.reduce((s, o) => s + o.score.score, 0) / scored.length) : null;
@@ -488,7 +499,7 @@ function TopBar({ user, view, setView, career, commercial, hasCareerIsland, hasC
       <div style={S.navTabs}>
         <button style={S.navTab(view === 'world')} onClick={() => setView('world')}>World</button>
         <button style={S.navTab(view === 'journeys')} onClick={() => setView('journeys')}>Journeys</button>
-        <button style={S.navTab(view === 'classic')} onClick={() => setView('classic')}>Classic Tools</button>
+        <button style={S.navTab(view === 'classic')} onClick={() => openClassic()}>Classic Tools</button>
       </div>
       <div style={S.stats}>
         <div style={S.stat}><span style={S.statVal}>{trackedCount}</span><span style={S.statLabel}>Tracked</span></div>
