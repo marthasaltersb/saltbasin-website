@@ -31,6 +31,7 @@ export default function MemberCrystalOrbit({ user, onOpenWorkspace }) {
   const [activeJourney, setActiveJourney] = useState(null);
   const [activeVariant, setActiveVariant] = useState(null);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [summaryWorld, setSummaryWorld] = useState(null);
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [agentOpen, setAgentOpen] = useState(false);
   const [collapsed, setCollapsed] = useState({});
@@ -56,8 +57,18 @@ export default function MemberCrystalOrbit({ user, onOpenWorkspace }) {
   const worlds = useMemo(() => provisionMemberWorlds({ user, entitlements, organizations }), [user, entitlements, organizations]);
   const activeWorld = worlds.find((world) => world.id === activeWorldId) || null;
 
+  // Clicking a world — whether the orbit planet itself or its matching
+  // bottom-bar tab, both call this same handler — opens a compact data panel
+  // on the right rather than immediately swapping the whole screen into the
+  // full immersive city. The city (WorldCity, below) stays one click away via
+  // that panel's "Enter full world" action for anyone who wants it.
   function enterWorld(world) {
     if (world.id === 'account') { setAccountOpen(true); return; }
+    setSummaryWorld(world);
+  }
+
+  function enterFullWorld(world) {
+    setSummaryWorld(null);
     setActiveJourney(null);
     setActiveVariant(null);
     setActiveWorldId(world.id);
@@ -122,8 +133,18 @@ export default function MemberCrystalOrbit({ user, onOpenWorkspace }) {
     <button type="button" className="mco-besty" onClick={() => setAgentOpen((v) => !v)} aria-expanded={agentOpen}><SaltBasinCrystal size="orbit" variant="engine" /><span>BestyStaff</span></button>
     {agentOpen && <aside className="mco-agent-panel"><button type="button" onClick={() => setAgentOpen(false)}>Close</button><span>CONTEXTUAL GUIDANCE</span><h2>BestyStaff is in this world with you.</h2><p>I can explain the selected capability, trace its definitions and evidence, prepare an agent action, or guide you through the next journey gate.</p><div className="mco-agent-prompts"><button>What needs my review?</button><button>Explain this worldâ€™s health</button><button>Continue my highest-priority journey</button></div></aside>}
     {accountOpen && <AccountDrawer user={user} emails={emails} licenses={licenses} organizations={organizations} newEmail={newEmail} setNewEmail={setNewEmail} emailType={emailType} setEmailType={setEmailType} verification={verification} setVerification={setVerification} addEmail={addEmail} verifyEmail={verifyEmail} emailPreference={emailPreference} updateEmailPreference={updateEmailPreference} onClose={() => setAccountOpen(false)} onCustomize={() => { setAccountOpen(false); setCustomizeOpen(true); }} onLogout={logout} />}
+    {summaryWorld && <WorldSummaryDrawer world={summaryWorld} onClose={() => setSummaryWorld(null)} onLaunchVariant={launchVariant} onEnterFull={() => enterFullWorld(summaryWorld)} />}
     {customizeOpen && <CustomizeDrawer worlds={worlds} preferences={preferences} setPreferences={setPreferences} onClose={() => setCustomizeOpen(false)} />}
   </main>;
+}
+
+function WorldSummaryDrawer({ world, onClose, onLaunchVariant, onEnterFull }) {
+  return <aside className="mco-drawer"><header><div><span>{world.shortLabel?.toUpperCase() || 'WORLD'}</span><h2>{world.label}</h2></div><button type="button" onClick={onClose}>Close</button></header>
+    <section><p className="mco-muted">{world.description}</p><HealthPill /></section>
+    <section><h3>Capability orbits</h3>{world.variants.map((variant) => <button type="button" key={variant.id} className="mco-setting-card" style={{ width: '100%', textAlign: 'left', cursor: 'pointer', background: 'transparent' }} onClick={() => onLaunchVariant(variant)}><strong>{variant.label}</strong></button>)}</section>
+    {!!world.journeys?.length && <section><h3>Flowing journeys</h3>{world.journeys.map((journey) => <div key={journey.id} className="mco-setting-card"><strong>{journey.label}</strong><span>{journey.stages.length} gates</span></div>)}</section>}
+    <button type="button" className="mco-text-action" onClick={onEnterFull}>Enter full {world.shortLabel || world.label} world</button>
+  </aside>;
 }
 
 function EdgeCard({ card, collapsed, onToggle }) {
