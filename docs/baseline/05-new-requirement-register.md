@@ -1,6 +1,6 @@
-# New-Requirement Register — Blocked
+# New-Requirement Register
 
-**Status: blocked.** No new design/product/UX documents have been supplied yet. Per the governing objective, missing documents are never interpreted as permission to invent requirements — so this register stays empty, not filled with assumptions, until you provide them.
+**Status: awaiting read-aloud validation.** A design package was supplied 2026-09-05 (registered as SRC-NEWDOC-01 through SRC-NEWDOC-08 in `01-source-register.md`, preserved at `docs/baseline/intake/2026-09-05-salt-basin-orbital-design/`). Per the governing objective, missing documents are never interpreted as permission to invent requirements — and, symmetrically, *supplied-but-unvalidated* documents aren't treated as approved requirements either. The user has explicitly said this package hasn't been checked yet against their own intent. See `12-design-package-validation-workflow.md` for the read-aloud confirmation process now underway; this register populates as each document clears that process.
 
 ## Required row/record schema (for when documents arrive)
 

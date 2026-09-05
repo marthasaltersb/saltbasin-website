@@ -16,13 +16,14 @@ This is the documentation area for the repository-baseline / design-reconciliati
 | 02 | [`02-coverage-and-limitations.md`](./02-coverage-and-limitations.md) | Populated (Stage 1) | What "complete" means for this pass, explicit exclusions, unavailable access, open questions blocking later stages |
 | 03 | [`03-current-state-specification.md`](./03-current-state-specification.md) | Pending stub | Per-module requirement/definition tables (the ID | Module | Name | Source refs | Behavior | Tech element IDs | Impl state | Evidence | Verification state | Related IDs schema) |
 | 04 | [`04-technical-element-register.md`](./04-technical-element-register.md) | Pending stub | Code/DB object register linked to requirement IDs |
-| 05 | [`05-new-requirement-register.md`](./05-new-requirement-register.md) | Pending — blocked | Atomic requirements extracted from new design documents (not yet supplied) |
-| 06 | [`06-reconciliation-matrix.md`](./06-reconciliation-matrix.md) | Pending — blocked | New-requirement ↔ existing-definition mapping table |
+| 05 | [`05-new-requirement-register.md`](./05-new-requirement-register.md) | Awaiting read-aloud validation | Atomic requirements extracted from new design documents (supplied 2026-09-05; user validation pass in progress — see doc 12) |
+| 06 | [`06-reconciliation-matrix.md`](./06-reconciliation-matrix.md) | Pending — blocked on 05 | New-requirement ↔ existing-definition mapping table |
 | 07 | [`07-decision-log.md`](./07-decision-log.md) | Populated (Stage 1 findings) | Conflicting/ambiguous facts found so far, open product decisions, resolutions as they're made |
 | 08 | [`08-target-specification.md`](./08-target-specification.md) | Pending — blocked | Unified target glossary, schema, rules, UX states |
 | 09 | [`09-backlog.md`](./09-backlog.md) | Pending — blocked | Dependency-ordered implementation backlog |
 | 10 | [`10-test-catalog.md`](./10-test-catalog.md) | Populated (existing tests only) | Inventory of existing automated tests + coverage gap statement; acceptance-scenario catalog is pending new requirements |
 | 11 | [`11-verification-and-release-records.md`](./11-verification-and-release-records.md) | Pending stub | Verification run results and release linkage, going forward |
+| 12 | [`12-design-package-validation-workflow.md`](./12-design-package-validation-workflow.md) | Active | Read-aloud validation process for the 2026-09-05 design package — reading order, capture method, promotion path into doc 05 |
 
 ## How this program proceeds from here
 

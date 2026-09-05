@@ -94,6 +94,23 @@ The repository already contains a very large volume of prior Claude-session-auth
 
 **Material finding surfaced by this row set:** there is no staging/preview environment or branch anywhere in this configuration. `main` is production for both Render and Netlify (`render.yaml` `branch: main`; `DEPLOY.md` "Push to `main` on GitHub. Both Render and Netlify auto-deploy from `main`"). The only gate between a PR and production is build success — never a test run — plus an optional manual label step. This was already communicated to the user in this session prior to this document's creation and is repeated here as a registered, evidenced finding rather than a recalled claim.
 
+## New design documents (supplied 2026-09-05)
+
+A design package was supplied as `bdbab147-SaltBasinDesign.zip` and copied verbatim into `docs/baseline/intake/2026-09-05-salt-basin-orbital-design/` (originals preserved, nothing edited). This is a ChatGPT-voice-derived design conversation about an "Orbital Home" experience model. **Status: registered as evidence, not yet validated by the user** — see `12-design-package-validation-workflow.md` for the read-aloud confirmation process this program requires before any of it becomes a `NEW-` requirement.
+
+| Source ID | Type | Location | Scope inspected | Notes |
+|---|---|---|---|---|
+| SRC-NEWDOC-01 | Design spec (ChatGPT-consolidated) | `docs/baseline/intake/2026-09-05-salt-basin-orbital-design/Current-Specification.md` | Fully read | 12 sections; self-declares a REQUIRED/PROPOSED/EXAMPLE/OPEN status vocabulary and a precedence table over the raw drafts. Unvalidated by user. |
+| SRC-NEWDOC-02 | Design draft (original) | `.../Sources/Design-document-1.md` | Header/structure read (first 25 lines); full content pending validation pass | Experience model: Basin/Journey/Process-step levels |
+| SRC-NEWDOC-03 | Design draft (original) | `.../Sources/Design-document-2.md` | Header/structure read | Celestial object definitions (Sun/Planet/Moon/Satellite/Star/Surface object/Avatar) |
+| SRC-NEWDOC-04 | Design draft (original) | `.../Sources/Design-document-3.md` | Header/structure read | Device support, provisioning/licensing, journey camera/settings; appears to cut off mid-topic |
+| SRC-NEWDOC-05 | Self-audit (ChatGPT-authored) | `.../ChatGPT-Requirement-Register.md` | Fully read | ChatGPT's own 20-pass topic-coverage audit of its own consolidation. Renamed from `Requirement-Register.md` on copy to avoid collision with this program's own `05-new-requirement-register.md` — these are two distinct documents from two distinct authors. |
+| SRC-NEWDOC-06 | Proposed workflow templates | `.../Claude-Workflows.md` | Fully read | 8 reusable prompt templates. Explicitly not live instructions — self-labeled as proposals requiring the repo's real baseline/version before use. Not executed by this session. |
+| SRC-NEWDOC-07 | Raw source transcript | `.../Sources/Conversation.md` | Sampled (first 20 lines) | Full voice-transcript export, verbatim with disfluencies. Reference-only unless a validation pass needs to check exact original wording. |
+| SRC-NEWDOC-08 | Raw source transcript (structured) | `.../Sources/Messages.json` | Not read (structured duplicate of SRC-NEWDOC-07) | Package's own README notes it "is not claimed to be parse-validated" |
+
+**Important distinction preserved per the governing objective:** SRC-NEWDOC-05 and SRC-NEWDOC-06 were authored by ChatGPT, not by the user directly, and not by Claude. They carry no more authority than any other unvalidated source — their existence and internal self-confidence language ("Confirmed direction," "REQUIRED") do not establish correctness. Only the user's own read-aloud confirmation (tracked per `12-design-package-validation-workflow.md`) promotes any of this content into `05-new-requirement-register.md`.
+
 ## External sources referenced but unavailable
 
 | Reference | Where referenced | Availability |
@@ -104,6 +121,6 @@ The repository already contains a very large volume of prior Claude-session-auth
 | GitHub Actions run history / repo variables / secrets | `.github/workflows/*` | Unavailable (only workflow *definitions* were inspected, not their execution history or the live value of `PROMOTION_AGENT_ENABLED`, `production-ready` label usage, etc.) |
 | Base44 MCP connector | Surfaced by the environment as requiring authorization | Unavailable — not authorized this session; not yet determined whether it's relevant to this program |
 | Canva MCP connector | Surfaced by the environment as requiring authorization | Unavailable — not authorized this session; not yet determined whether it's relevant to this program |
-| "New design documents" (the reconciliation input) | Referenced throughout the governing objective | **Not yet supplied.** This is the primary blocker for Stages 3–4 and most of 5–6. |
+| "New design documents" (the reconciliation input) | Referenced throughout the governing objective | **Supplied 2026-09-05** (see the "New design documents" section above) — but **not yet user-validated**. The blocker for Stage 3 is now the read-aloud validation pass (`12-design-package-validation-workflow.md`), not absence of documents. |
 
 Coverage boundaries, exclusions, and what "complete" means for this pass are stated separately in `02-coverage-and-limitations.md`.
