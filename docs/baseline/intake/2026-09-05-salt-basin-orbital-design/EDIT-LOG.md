@@ -33,3 +33,35 @@ Global, sequential edit numbering across the whole intake package, per the proto
 **Now appears in:** `Configuration-Module-Builder-Admin-Specification.md` v0.2-draft §5; registered as `NEW-007` through `NEW-011` in `../../05-new-requirement-register.md`.
 
 **Status:** Awaiting your read-back confirmation/correction — same as Edit #1, not yet settled.
+
+---
+
+### Edit #3 — 2026-09-06
+
+**Target:** `Configuration-Module-Builder-Admin-Specification.md` §1 — new subsections §1.1 (Layer taxonomy) and §1.2 (Client-defined field extensibility).
+
+**Comment from the user (Betsy Salter), source: live dictation, read-back pass on §1:**
+
+> [Read §1 back near-verbatim, confirming it, then:] The first paragraph is explaining the requirement for the principle of user experience definition versus visual element definition versus module definition versus the event from a user perspective and what destination it has, and how the information displayed gets gated and animation, etc. I'd like to add: every aspect needs definition down to which components of the software platform get defined, and are they coded — if coded, how much code is associated with a specific requirement, what supporting elements does the code need to run? Even configurable elements have code in the background that calls those configurable elements to make them work. When I'm building a product I want to define the code layers, the configurable layers, the database layers, the user experience layers, the detailed components of each, how those layers connect to each other, and how those layers change dynamically based on the interacting user and their data, licensing, etc. — what that changes about what they're able to see and do. Also: can a user create a new field? That action is configurable, against an admin. But if a user creates a new field in their client context, that doesn't necessarily create a new field in Salt Basin's overall codebase — each client has to keep track of their own client-defined pieces they create themselves.
+
+**Resulting text:** §1 confirmed as originally drafted; added §1.1 (four-layer taxonomy — code/configurable/database/user-experience — plus how layers connect and change dynamically by user/data/licensing) and §1.2 (client-defined field extensibility without core-codebase changes, backmapped to the existing JSONB `fields` pattern already in this codebase).
+
+**Now appears in:** `Configuration-Module-Builder-Admin-Specification.md` v0.2-draft §1.1–1.2; registered as `NEW-012` through `NEW-014` in `../../05-new-requirement-register.md`.
+
+**Status:** Awaiting your read-back confirmation/correction.
+
+---
+
+### Edit #4 — 2026-09-06
+
+**Target:** `Configuration-Module-Builder-Admin-Specification.md` — new §5 "Module Definition and 3D Variant provisioning," inserted before the validation-process capability, which is renumbered from §5 to §6 (subsections 5.1–5.5 → 6.1–6.5). Nothing was deleted — this edit log entry preserves the renumbering decision.
+
+**Comment from the user (Betsy Salter), source: live dictation:**
+
+> The first step of this design should really be defining the Salt Basin product — I'm still needing to define this configuration definition. I need to define the module, and for each module there's an associated 3D variant that represents that module. If there is not a 3D variant in the system existing that is not allocated to another module already, we need to run the 3D variant engine to produce a new 3D variant object for the module name, and provide the generator with a prompt to leverage the idea or concept visually to produce a more accurate 3D picture of what the module represents. And then for each module you need to define the orbit of that planet — each module should have constellations that represent journeys, and the planet itself should have a planet map view — I click into the planet and it takes me into the planet.
+
+**Resulting text:** new §5 "Module Definition and 3D Variant provisioning — prerequisite capability," with §5.1 (Module Definition: 3D Variant auto-provisioning via a naming/concept-seeded generator, and Orbit/constellation/planet-map structure per module) and §5.2 (relationship to §6 — the validation capability is itself a module and needs this too). Former §5 renumbered to §6, its subsections renumbered 6.1–6.5, and its sequencing note (now §6.5) updated to reference §5 as a prerequisite.
+
+**Now appears in:** `Configuration-Module-Builder-Admin-Specification.md` v0.2-draft §5; registered as `NEW-015` through `NEW-017` in `../../05-new-requirement-register.md`.
+
+**Status:** Awaiting your read-back confirmation/correction. Also open: you said "version zero point two or zero point three now" while reading the header — flagged, not acted on; see the open question in the chat response for this edit.

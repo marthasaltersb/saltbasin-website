@@ -12,6 +12,21 @@ Every one of these detailed definitions must be **backmapped to the existing Cla
 
 **OPEN:** the exact schema for recording "configurable vs. coded + input shape" per element (e.g., does this become a new column in the technical-element register, or a new per-field metadata table) is not yet decided — this is a Stage 4 (target specification) design decision, not resolved here.
 
+### 1.1 Layer taxonomy — the real definition schema (REQUIRED; added Edit #3)
+
+Confirmed and extended on read-back: "configurable vs. coded + input shape" is one axis, not the whole picture. What's actually required is that every aspect of the product be defined across explicit **layers**, not just classified along one axis:
+
+- **Code layer** — the underlying implementation, including the code that makes *configurable* elements work at all. Configurable is not the opposite of coded: every configurable element has code behind it that reads and acts on the configuration. For each requirement, record how much code is associated with it and what supporting elements that code depends on to run.
+- **Configurable layer** — what an authorized user can define or change without a code change, and through which admin/builder surface.
+- **Database layer** — what's actually persisted, where, and in what shape.
+- **User experience layer** — the visual element, the screen/module it belongs to, the event from the user's perspective, its destination, and how the information shown is gated (permissions) and animated.
+
+Beyond defining each layer's components, the specification must record **how the layers connect to each other**, and **how that connection changes dynamically** based on the interacting user — their data, their licensing/entitlements, and what that combination permits them to see and do. A static per-element listing of the four layers without this connective and dynamic-behavior layer is not sufficient.
+
+### 1.2 Client-defined field extensibility (REQUIRED; added Edit #3)
+
+A concrete instance of §1's configurable/coded distinction: creating a new field is itself a configurable action, gated to an admin role. But when a client (org) creates a new field in their own client context, **that must not require creating a corresponding new field in Salt Basin's core codebase.** Each client needs its own tracked set of client-defined extensions, separate from the platform's own global field definitions — this is how a client builds out and interacts with their own configuration of the Salt Basin product without every client's customization becoming a platform-wide schema change. Backmapping candidate (preliminary, not a completed Stage 3 mapping): this is the same shape of problem this codebase already solves with JSONB `fields` objects on `site_state`/`config_state`/`member_sites`/`member_configs` per `CLAUDE.md` — worth checking whether that existing pattern already satisfies this before proposing anything new.
+
 ## 2. Configuration module builds the product itself (REQUIRED)
 
 The end-to-end product experience for Salt Basin itself is to be built **using the configuration module** — i.e., the configuration/definition capability is not a side feature bolted onto a separately-hardcoded product; it is the mechanism that produces the product's actual screens, journeys, and behavior. Once built this way, **the same configured product becomes the reusable engine used to iterate going forward for every future module, industry, business use case, or client context** Salt Basin builds for.
@@ -36,11 +51,30 @@ Decomposed as explicit requirements:
 - **EXAMPLE, not a universal rule:** English-as-the-organization's-configured-language and Spanish-as-a-user-input-language is the example given; the actual requirement is language-pair-agnostic (an org could be configured in any language, with users providing input in any other language).
 - **OPEN:** the actual data model for this is undecided — does a field store one canonical value plus a translation-log/audit trail, or does it need genuine multi-locale value storage (a value per language) versus a single canonical value with retained original-language evidence only? This is a real, nontrivial data-model decision with backward-compatibility implications for every existing `section.fields` object across the codebase (per this repository's own `CLAUDE.md`, sections currently store untyped `fields` objects with no documented localization concept at all) — **flagged as a new Stage 2/3 investigation item**: does any existing localization/i18n mechanism exist in the codebase today? Not yet checked. See `07-decision-log.md` DEC-005.
 
-## 5. The design-package validation process is itself a Configuration Module capability (REQUIRED; drafted Edit #2, not yet read back)
+## 5. Module Definition and 3D Variant provisioning — prerequisite capability (REQUIRED; added Edit #4, not yet read back)
+
+**Sequencing correction on read-back:** the true first step is not "upload a design document" (as originally drafted in what is now §6.1) — it's that Salt Basin's own **Module Definition** capability has to exist first. The validation-process capability in §6 is itself a module, and depends on this.
+
+### 5.1 Module Definition (REQUIRED outcome; mechanism OPEN)
+
+Defining a Module is the foundational Configuration Module action. For every Module defined, the following must also be defined, not left implicit:
+
+1. **An associated 3D Variant** representing that module (its "planet"). If no existing, unallocated 3D Variant is available, the system must run the **3D Variant Engine** to generate a new one for that module — seeding the generator with a prompt derived from the module's name/concept, so the resulting visual is a reasonably accurate representation of what the module actually is, not a generic placeholder.
+2. **An Orbit** for that module: constellations within the planet represent the journeys belonging to that module, and the planet itself has its own "planet map" view — selecting the planet transitions the user from the orbital/constellation view into that internal map.
+
+**Backmapping candidate (preliminary, not a completed Stage 3 mapping):** this codebase already has a 3D "world variant" concept — the `salt-basin-world-variants` skill and `CRYSTAL_VARIANTS`/`crystalGeometry.js` (per `CLAUDE.md`: "Crystal design system, not bespoke geometry... never fork a variant locally"). That existing system renders a small, fixed set of world metaphors (Crystal Basin, Orbital Intelligence, Monetary River, etc.) — it is not currently a per-module, generative, unbounded provisioning pipeline. §5.1's requirement (generate a new, module-specific 3D variant on demand from a naming/concept prompt) likely **extends** that existing system rather than replacing it, but this needs real Stage 2/3 verification against the actual `crystalGeometry.js` implementation before assuming it fits.
+
+This also directly relates to the Orbital Home model already registered in `Current-Specification.md` §2–3 (planets = modules, moons, constellations as journeys) — §5.1's orbit/planet-map behavior is the concrete navigation mechanic for that existing conceptual model, not a separate concept.
+
+### 5.2 Relationship to §6
+
+The validation-process capability (§6) cannot be designed as if it exists in isolation — it is itself one Module, and per §5.1 needs its own Module Definition (including a 3D Variant and Orbit) before or alongside its own capability design. §6 is not rewritten to require this before proceeding — it's flagged so the two aren't designed as disconnected concepts.
+
+## 6. The design-package validation process is itself a Configuration Module capability (REQUIRED; drafted Edit #2, not yet read back)
 
 The read-aloud validation workflow this program has been running manually in chat (`12-design-package-validation-workflow.md`) is **not to stay a manual Claude Code process** — it is itself a product capability to be designed within the Configuration Module, consistent with §2's mandate that Salt Basin be built using its own configuration module. This section defines that capability at design level. No code changes are made here — this is still discovery/design, per the governing reconciliation program's own rule against implementing during discovery.
 
-### 5.1 What the capability must do (REQUIRED outcome)
+### 6.1 What the capability must do (REQUIRED outcome)
 
 Let an authorized user (starting with the platform admin — Betsy) do, through the product itself, exactly what this program has been doing by hand:
 1. Load a source document (an uploaded design artifact, a prior conversation export, or a Salt Basin-generated specification) as a set of addressable sections.
@@ -49,7 +83,7 @@ Let an authorized user (starting with the platform admin — Betsy) do, through 
 4. Once a document (or a defined subset of it) has every section resolved, promote its confirmed content into governed requirement records, distinct from a general note — mirroring this program's own `05-new-requirement-register.md`/`06-reconciliation-matrix.md` distinction between raw comment and accepted requirement.
 5. Show, for any section, its full edit history: who commented, what was said, what changed, and which published version now carries it — an administrator audit view, per the existing "Change Decision" / "Audit-version" concepts already required elsewhere in this package (`Current-Specification.md` §6 "Audit/version" row, §8 "ChangeDecision / DiagnosticRun").
 
-### 5.2 New Builder-module record types this requires (PROPOSED — maps onto existing §8 pattern, does not replace it)
+### 6.2 New Builder-module record types this requires (PROPOSED — maps onto existing §8 pattern, does not replace it)
 
 Extending the persisted-definition table already established in `Current-Specification.md` §8:
 
@@ -63,7 +97,7 @@ Extending the persisted-definition table already established in `Current-Specifi
 
 These are **proposed logical entities**, per §8's own existing caveat — not an instruction to create five new database tables before checking reuse.
 
-### 5.3 Backmapping candidates already visible in the existing codebase (REQUIRED per §1 — recorded now, not deferred)
+### 6.3 Backmapping candidates already visible in the existing codebase (REQUIRED per §1 — recorded now, not deferred)
 
 Per this document's own §1 rule ("every defined element must be backmapped to existing Claude functionality"), two existing mechanisms are strong reuse candidates and should be the starting point of Stage 3 reconciliation for this capability, not a from-scratch build:
 
@@ -72,14 +106,14 @@ Per this document's own §1 rule ("every defined element must be backmapped to e
 
 **This is a preliminary observation, not a completed Stage 3 mapping** — real reconciliation (checking these mechanisms' actual current implementation, not just their documented shape) is still Stage 2/3 work. It's recorded now because leaving it out would violate this same section's own detail-depth requirement.
 
-### 5.4 Relationship to voice/multi-language requirements (§3–§4)
+### 6.4 Relationship to voice/multi-language requirements (§3–§4)
 
 This capability is the natural first real use case for the voice-agent input required in §3: Betsy commenting on a document section by speaking is the same interaction shape as a sales rep updating a record by speaking to an agent. It should reuse the same voice-input mechanism, not a separate one — flagged so §3's design isn't built in isolation from this need. Whether it also needs §4's multi-language handling is **OPEN** (this specific capability is currently single-user, English-only; multi-language only matters here if the platform is used by non-English-speaking admins later).
 
-### 5.5 Sequencing (REQUIRED — per the user's explicit direction this turn)
+### 6.5 Sequencing (REQUIRED — per the user's explicit direction this turn)
 
-This capability's design is to be completed and confirmed **before** resuming the manual read-aloud walkthrough of `Current-Specification.md` and the other five package documents. The manual process already run for Edit #1 stands as evidence of what the capability needs to do — it is not thrown away, it's the reference behavior this design must reproduce as a product feature.
+This capability's design is to be completed and confirmed **before** resuming the manual read-aloud walkthrough of `Current-Specification.md` and the other five package documents — and, per §5, its own Module Definition (3D Variant + Orbit) is a prerequisite of this capability existing as a real module, not just a design document. The manual process already run for Edit #1 stands as evidence of what the capability needs to do — it is not thrown away, it's the reference behavior this design must reproduce as a product feature.
 
 ## Traceability
 
-Registered as `SRC-LIVE-01` in `01-source-register.md`. Extracted as `NEW-001` through `NEW-006` (§1–§4) and `NEW-007` through `NEW-011` (§5) in `05-new-requirement-register.md`. §1–§4 logged as `Edit #1`, §5 logged as `Edit #2`, both in `EDIT-LOG.md`. **Awaiting the user's read-back confirmation pass** before any of this is treated as settled.
+Registered as `SRC-LIVE-01` in `01-source-register.md`. Extracted as `NEW-001` through `NEW-006` (§1–§4), `NEW-007` through `NEW-011` (§6), and `NEW-012` through `NEW-017` (§1.1, §1.2, §5) in `05-new-requirement-register.md`. §1–§4 logged as `Edit #1`, §6 (formerly §5) logged as `Edit #2`, §1.1/§1.2 logged as `Edit #3`, §5 (Module Definition/3D Variant/Orbit) logged as `Edit #4` — all in `EDIT-LOG.md`. **Awaiting the user's read-back confirmation pass** before any of this is treated as settled. Note: §5 was inserted and the former §5 renumbered to §6 during this same correction pass — nothing was silently overwritten; see `EDIT-LOG.md` for the full history.

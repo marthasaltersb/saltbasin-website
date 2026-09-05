@@ -56,7 +56,13 @@ Before starting the formal NEWDOC-01 walkthrough, you flagged content you hadn't
 
 ### Sequencing change (Edit #2) — the validation process itself is now a design item, and comes first
 
-You redirected: this whole read-aloud validation workflow must itself be designed as a Configuration Module capability (not stay a manual Claude Code process), and that design happens **before** we resume NEWDOC-01–06. That design is drafted at `Configuration-Module-Builder-Admin-Specification.md` §5 and registered as `NEW-007` through `NEW-011`, logged as Edit #2. **The document walkthrough below is paused until §5 is confirmed.** Once confirmed, whether the walkthrough then continues manually in this chat (as a stand-in until the real capability is built) or waits for the capability itself is your call — not yet decided.
+You redirected: this whole read-aloud validation workflow must itself be designed as a Configuration Module capability (not stay a manual Claude Code process), and that design happens **before** we resume NEWDOC-01–06. That design is drafted at `Configuration-Module-Builder-Admin-Specification.md` §6 (renumbered from §5, see Edit #4 below) and registered as `NEW-007` through `NEW-011`, logged as Edit #2. **The document walkthrough below is paused until this is confirmed.** Once confirmed, whether the walkthrough then continues manually in this chat (as a stand-in until the real capability is built) or waits for the capability itself is your call — not yet decided.
+
+### Further correction on read-back (Edit #3, Edit #4) — layers, extensibility, and an even earlier prerequisite
+
+Reading §1 back, you confirmed it and added real depth: the actual definition schema is four explicit layers (code, configurable, database, user experience), how they connect, and how they change per interacting user/data/licensing — plus a concrete requirement that clients can create their own fields without that touching Salt Basin's core codebase (Edit #3, `NEW-012`–`NEW-014`).
+
+Then a bigger correction: the true first step isn't uploading a document into the validation capability — it's that Salt Basin's own **Module Definition** capability has to exist first, including auto-provisioning a 3D Variant per module (via the existing world-variant/crystal-geometry system, extended to generate on demand) and an Orbit/constellation/planet-map structure. This is now **§5**, inserted before the validation capability (renumbered §5→§6), logged as Edit #4 (`NEW-015`–`NEW-017`). **Open, unresolved:** you also said "version zero point two or zero point three now" while reading the header — flagged in `05-new-requirement-register.md`, not acted on.
 
 ## A structural note worth flagging before you start reading
 
