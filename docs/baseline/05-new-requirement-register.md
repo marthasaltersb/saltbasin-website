@@ -17,6 +17,20 @@ These six items were extracted from the user's live dictation (not the ZIP packa
 
 **Do not treat NEW-001 through NEW-006 as final** — they await the same read-back-and-correct pass every other item in this register requires. They are recorded now so the read-aloud validation of the six formal package documents doesn't inadvertently overwrite or ignore them.
 
+## Edit #2 entries — the validation process itself, as a Configuration Module capability
+
+The user redirected: the read-aloud validation workflow (doc 12) must be designed as a product capability within the Configuration Module — not remain a manual Claude Code process — and that design comes **before** resuming the document-by-document walkthrough. See `Configuration-Module-Builder-Admin-Specification.md` §5.
+
+| ID | Source | Requirement (condensed) | Status per user's own vocabulary | Existing definition IDs | Relationship (Stage 3, not yet run) |
+|---|---|---|---|---|---|
+| NEW-007 | SRC-LIVE-01 §5.1 | Admin can load a source document as addressable sections and comment against each (voice or text): confirm/correct/reject/still-open/add | REQUIRED outcome; UI/journey OPEN | No existing definition located — candidate NEW | Pending |
+| NEW-008 | SRC-LIVE-01 §5.1 | Every comment produces an updated section version, recorded in an append-only edit/version log — never silent overwrite | REQUIRED | Candidate EXTEND of existing draft/publish + schema-versioning pattern (`site_state`/`config_state`, `member_sites`/`member_configs`) | Pending |
+| NEW-009 | SRC-LIVE-01 §5.1 | Confirmed section content promotes into governed requirement records, distinct from raw comments | REQUIRED | Mirrors this program's own `05`/`06` distinction — candidate NEW (product-side equivalent) | Pending |
+| NEW-010 | SRC-LIVE-01 §5.1 | Full edit history visible per section: author, comment, change, resulting version — an admin audit view | REQUIRED | Relates to `Current-Specification.md` §6 "Audit/version" and §8 "ChangeDecision/DiagnosticRun" — likely EXTEND | Pending |
+| NEW-011 | SRC-LIVE-01 §5.3 | This capability should reuse existing draft/publish versioning and `journey_rod_events`-style event logging rather than new bespoke mechanisms | REQUIRED (restates program-wide reuse-first rule) | `server/db.js` draft/publish tables; `journey_rod_events` | Pending — preliminary observation only, not a completed Stage 3 mapping |
+
+**Sequencing note (per the user, this turn):** NEW-007 through NEW-011 are to be designed and confirmed before the formal read-aloud walkthrough of NEWDOC-01 through NEWDOC-06 resumes.
+
 ## Required row/record schema (for when documents arrive)
 
 For each new document supplied:

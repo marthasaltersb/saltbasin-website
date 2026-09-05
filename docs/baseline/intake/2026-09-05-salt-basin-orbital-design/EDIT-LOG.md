@@ -17,3 +17,19 @@ Global, sequential edit numbering across the whole intake package, per the proto
 **Now appears in:** `Configuration-Module-Builder-Admin-Specification.md` v0.2-draft, §1–§2; registered as `NEW-001` through `NEW-006` in `../../05-new-requirement-register.md`; source registered as `SRC-LIVE-01` in `../../01-source-register.md`.
 
 **Status:** Awaiting your read-back confirmation/correction (this is a first-pass distillation of dictated content, not yet validated by you per the protocol's own rule that nothing is settled until you've heard it read back and called out corrections).
+
+---
+
+### Edit #2 — 2026-09-06
+
+**Target:** `Configuration-Module-Builder-Admin-Specification.md` §5 (new section) — "The design-package validation process is itself a Configuration Module capability."
+
+**Comment from the user (Betsy Salter), source: live dictation in this Claude session:**
+
+> Okay but is the functionality built to then run against my comments to provide updated documentation, and I actually want the package design validation process to be something we design first in the configuration module.
+
+**Resulting text:** added §5, specifying the read-aloud validation workflow itself as a Configuration Module capability (not a manual Claude Code process): what it must do (§5.1), proposed new Builder-module record types — `SourceDocumentDefinition`, `DocumentSectionDefinition`, `ValidationCommentDefinition`, `EditLogEntryDefinition`, `RequirementRecordDefinition` (§5.2), preliminary backmapping candidates against the existing draft/publish pair and `journey_rod_events` (§5.3), its relationship to the §3 voice-input requirement (§5.4), and explicit sequencing: this design is to be confirmed before resuming the document-by-document read-aloud walkthrough (§5.5).
+
+**Now appears in:** `Configuration-Module-Builder-Admin-Specification.md` v0.2-draft §5; registered as `NEW-007` through `NEW-011` in `../../05-new-requirement-register.md`.
+
+**Status:** Awaiting your read-back confirmation/correction — same as Edit #1, not yet settled.
