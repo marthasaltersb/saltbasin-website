@@ -109,6 +109,14 @@ A design package was supplied as `bdbab147-SaltBasinDesign.zip` and copied verba
 | SRC-NEWDOC-07 | Raw source transcript | `.../Sources/Conversation.md` | Sampled (first 20 lines) | Full voice-transcript export, verbatim with disfluencies. Reference-only unless a validation pass needs to check exact original wording. |
 | SRC-NEWDOC-08 | Raw source transcript (structured) | `.../Sources/Messages.json` | Not read (structured duplicate of SRC-NEWDOC-07) | Package's own README notes it "is not claimed to be parse-validated" |
 
+## New source: live user dictation in this Claude session (2026-09-06)
+
+Distinct from the ZIP package above — this is the user speaking directly to this session, unmediated by ChatGPT. Per the governing objective's own rule that authorship doesn't establish correctness, this is not automatically higher-authority than the ZIP content, but it is a different, independently-tracked source.
+
+| Source ID | Type | Location | Scope inspected | Notes |
+|---|---|---|---|---|
+| SRC-LIVE-01 | Live dictation, distilled to draft spec | `docs/baseline/intake/2026-09-05-salt-basin-orbital-design/Configuration-Module-Builder-Admin-Specification.md` (v0.2-draft) + `EDIT-LOG.md` Edit #1 | Full — drafted directly from the user's message this turn | New content not present anywhere in the ZIP package: field/element detail-depth requirement, "build the product with its own configuration module" mandate, voice-agent input for sales reps, multi-language voice input with field-level translation. **Not yet read back to the user for confirmation** — first-pass distillation only. |
+
 **Important distinction preserved per the governing objective:** SRC-NEWDOC-05 and SRC-NEWDOC-06 were authored by ChatGPT, not by the user directly, and not by Claude. They carry no more authority than any other unvalidated source — their existence and internal self-confidence language ("Confirmed direction," "REQUIRED") do not establish correctness. Only the user's own read-aloud confirmation (tracked per `12-design-package-validation-workflow.md`) promotes any of this content into `05-new-requirement-register.md`.
 
 ## External sources referenced but unavailable

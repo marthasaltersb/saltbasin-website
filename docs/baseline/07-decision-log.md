@@ -61,4 +61,18 @@ Status values: `OPEN` (needs your decision or confirmation), `RESOLVED` (decisio
 
 ---
 
+---
+
+### DEC-005 — No known localization/multi-language field architecture exists yet; NEW-006 requires one
+
+**Status:** OPEN (Stage 2 investigation needed before Stage 4 target-spec design)
+
+**Evidence:** `NEW-006` (see `05-new-requirement-register.md`, from live dictation SRC-LIVE-01) requires that every field be able to hold/derive an English-translated value regardless of the language used to provide input, with the original-language input retained as evidence. Per `CLAUDE.md`, section content today lives in untyped `section.fields` objects with no documented localization concept, and no i18n/locale table or mechanism has been found anywhere in this pass's directory listings of `server/db.js`, `server/lib/`, or `src/`. This is not a confirmed absence (Stage 2 hasn't read file contents yet) — but no evidence of one exists so far either.
+
+**Why it matters:** this is a real, potentially wide-reaching data-model decision — single canonical value + translation audit log, vs. genuine per-locale value storage, vs. something else — with backward-compatibility implications across every existing member's `section.fields` data (per this repo's own deployment-safety invariant: schema-versioned JSON, no silent reinterpretation of old data).
+
+**Decision needed:** none from the user yet — queued as a Stage 2 investigation (confirm whether any i18n mechanism exists at all) before this becomes a Stage 4 target-spec design decision.
+
+---
+
 *(This log grows as Stage 2/3 surface more conflicts. Entries are never removed — a resolved entry keeps its evidence and gets a `RESOLVED` status plus the decision, so the trail stays intact per the traceability requirement in Stage 6.)*

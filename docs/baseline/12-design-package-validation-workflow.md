@@ -34,21 +34,25 @@ This directly maps onto the reconciliation program's `05-new-requirement-registe
 | NEWDOC-07 | `Sources/Conversation.md` |
 | NEWDOC-08 | `Sources/Messages.json` (structured duplicate of NEWDOC-07 — validate only if Conversation.md leaves something ambiguous) |
 
-## The read-aloud validation process
+## The read-aloud validation process — your actual protocol (adopted 2026-09-06)
 
-This is how we'll actually do it, turn by turn in this conversation:
+You supplied the two prompts you gave ChatGPT to run this same validation on that side, and asked me to mirror the process rather than my earlier invented CONFIRMED/CORRECTED table. Your protocol, verbatim in intent:
 
-1. **Reading order** (adopting the package's own proposed order, since it's sound — spec first, then supporting drafts, then the two audit/workflow documents): **NEWDOC-01 → NEWDOC-02 → NEWDOC-03 → NEWDOC-04 → NEWDOC-05 → NEWDOC-06**. NEWDOC-07/08 (raw transcript) are reference-only — read them if something upstream is ambiguous and you want to check the exact original wording, not as a required pass of their own.
+1. **Reading order**: **NEWDOC-01 → NEWDOC-02 → NEWDOC-03 → NEWDOC-04 → NEWDOC-05 → NEWDOC-06**, unchanged from the original plan. NEWDOC-07/08 (raw transcript) stay reference-only.
+2. **You read a section's text aloud**, then call out specific notes against it.
+3. **Every callout is logged as a comment attributed to you** ("comment from the user Betsy Salter") — not paraphrased into my own verdict vocabulary.
+4. **I update the finalized markdown text** for that section to reflect the callout.
+5. **Every update is logged under an incrementing edit number** in `docs/baseline/intake/2026-09-05-salt-basin-orbital-design/EDIT-LOG.md` — edit number, target document/section, your comment (verbatim or lightly cleaned up for dictation artifacts, never reworded in meaning), the resulting text, and the version it now appears in. Edit numbering is global across the whole package (not per-document), starting at **Edit #1** (recorded below) and continuing sequentially — matching how you're running it on the ChatGPT side, so the two edit histories stay comparable.
 
-2. **Per document**, you read it aloud (or however you want to review it) and call out, in whatever order they occur to you, things like: *"that's right," "no, change X to Y," "that's not what I meant, I meant Z," "delete that," "that's still open, don't lock it in," "add: ..."*. Say them here as you go — I'm reading each message you send as your callouts for whichever document we're on.
+Status vocabulary carries over from `Current-Specification.md` §1 and from your own new v0.2 framing: **REQUIRED** = your explicit direction, **PROPOSED** = a recommendation (mine or ChatGPT's) needing your confirmation, **EXAMPLE** = illustrative only, **OPEN** = still undecided. Detailed contracts default to PROPOSED unless the text explicitly says it's a user requirement — your own stated convention for the v0.2 material.
 
-3. **After each document**, I'll produce a **validation capture table** for it — one row per section/claim, your verdict (`CONFIRMED` / `CORRECTED` / `REJECTED` / `STILL OPEN` / `ADDED`), and the resulting text — and add it to a running log (`docs/baseline/intake/2026-09-05-salt-basin-orbital-design/VALIDATION-LOG.md`, created on first use). You can review that table before we move to the next document.
+Once a document's every section has passed through this loop, its confirmed (REQUIRED/PROPOSED-accepted) content promotes into `05-new-requirement-register.md` as `NEW-` requirement rows, and once all six documents clear, Stage 3 reconciliation against existing code proceeds in `06-reconciliation-matrix.md` as originally planned — classifying retain/extend/modify/replace/split/merge/retire/new/conflicting/unresolved, and flagging unmapped new requirements and existing features with no counterpart.
 
-4. **Once a document's capture table is confirmed by you**, that's the trigger — no separate command needed. I extract its confirmed items as atomic `NEW-` requirements into `05-new-requirement-register.md` (preserving original section/quote context per that document's schema), tagging each as explicit requirement vs. interpretation vs. open question per your actual verdicts, not the package's own self-assessed status labels (those get recorded too, but your live callout wins whenever the two differ).
+You don't have to do all six documents in one sitting — the edit log tracks exactly where we left off and every edit's version, so picking back up later just means reading the log.
 
-5. **Once all documents in the reading order are validated**, Stage 3 proceeds as originally planned: mapping each confirmed `NEW-` requirement to existing definitions/technical elements in `06-reconciliation-matrix.md`, classifying retain/extend/modify/replace/split/merge/retire/new/conflicting/unresolved, and flagging both unmapped new requirements and existing features with no counterpart.
+### Edit #1 — logged now, from your live dictation (not yet from a document read-aloud pass)
 
-You don't have to do all six documents in one sitting — we can stop after any document and pick back up later; the validation log tracks exactly where we left off.
+Before starting the formal NEWDOC-01 walkthrough, you flagged content you hadn't captured anywhere yet: a **Configuration Module / Builder-Admin Specification, version 0.2 draft** covering (a) field/element-level detail depth and (b) voice-agent multi-language input. This didn't exist in the supplied package or anywhere in this program's documents, so it's now drafted as new source content and logged as Edit #1 — see `EDIT-LOG.md` and the corresponding `NEW-001` through `NEW-006` rows in `05-new-requirement-register.md`. **This draft has not been read back to you yet for confirmation** — it's my first-pass distillation of your dictation, exactly the kind of thing this protocol exists to catch errors in, so treat it as due for your own correction pass, not as settled.
 
 ## A structural note worth flagging before you start reading
 
