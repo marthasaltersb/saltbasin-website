@@ -91,6 +91,7 @@ export default function WorldShell() {
   const [tabsConfig, setTabsConfig] = useState(null);
   const [view, setView] = useState('world'); // 'world' | 'journeys' | 'classic'
   const [focusedKey, setFocusedKey] = useState(null);
+  const [classicTab, setClassicTab] = useState(null);
 
   useEffect(() => {
     api.me()
@@ -129,7 +130,22 @@ export default function WorldShell() {
 
   const focused = islands.find((i) => i.key === focusedKey) || null;
 
-  const selectIsland = useCallback((key) => setFocusedKey(key), []);
+  // 'classic' islands have no in-world docked/embed view built yet. Clicking
+  // one used to dolly in and show a RightRail card whose only job was a
+  // second "Open in Classic Tools" button — exactly the two-D-card-before-
+  // the-module click-through this was built to remove. Go straight to
+  // Classic Tools, deep-linked to that island's own tab id (islands' `key`
+  // is the same memberTabs/admin_nav tab id AdminShell's `tab` state uses),
+  // so the click on the 3D object *is* the navigation, full stop.
+  const selectIsland = useCallback((key) => {
+    const island = islands.find((i) => i.key === key);
+    if (island?.kind === 'classic') {
+      setClassicTab(island.key);
+      setView('classic');
+      return;
+    }
+    setFocusedKey(key);
+  }, [islands]);
   const clearFocus = useCallback(() => setFocusedKey(null), []);
 
   // Gates when the canvas-host div actually exists in the DOM: on first
@@ -414,8 +430,8 @@ export default function WorldShell() {
   if (view === 'classic') {
     return (
       <div style={{ position: 'fixed', inset: 0, zIndex: 10 }}>
-        <button style={S.classicBack} onClick={() => setView('world')}>← Back to World</button>
-        <AdminShell scope={user?.role === 'admin' ? 'admin' : 'member'} />
+        <button style={S.classicBack} onClick={() => { setView('world'); setClassicTab(null); }}>← Back to World</button>
+        <AdminShell scope={user?.role === 'admin' ? 'admin' : 'member'} initialTab={classicTab} />
       </div>
     );
   }
@@ -434,6 +450,7 @@ export default function WorldShell() {
         user={user}
         view={view}
         setView={setView}
+        setClassicTab={setClassicTab}
         career={career}
         commercial={commercial}
         hasCareerIsland={hasCareerIsland}
@@ -459,7 +476,7 @@ export default function WorldShell() {
         <RightRail
           focused={focused}
           onClear={clearFocus}
-          onOpenClassic={() => setView('classic')}
+          onOpenClassic={() => { setClassicTab(focused?.key || null); setView('classic'); }}
           career={career}
           commercial={commercial}
           herq={herq}
@@ -471,7 +488,7 @@ export default function WorldShell() {
   );
 }
 
-function TopBar({ user, view, setView, career, commercial, hasCareerIsland, hasCommercialIsland }) {
+function TopBar({ user, view, setView, setClassicTab, career, commercial, hasCareerIsland, hasCommercialIsland }) {
   const trackedCount = hasCareerIsland ? career.opportunities.length : hasCommercialIsland ? commercial.opportunities.length : 0;
   const scored = (hasCareerIsland ? career.opportunities : hasCommercialIsland ? commercial.opportunities : []).filter((o) => o.score);
   const avgScore = scored.length ? Math.round(scored.reduce((s, o) => s + o.score.score, 0) / scored.length) : null;
@@ -488,7 +505,7 @@ function TopBar({ user, view, setView, career, commercial, hasCareerIsland, hasC
       <div style={S.navTabs}>
         <button style={S.navTab(view === 'world')} onClick={() => setView('world')}>World</button>
         <button style={S.navTab(view === 'journeys')} onClick={() => setView('journeys')}>Journeys</button>
-        <button style={S.navTab(view === 'classic')} onClick={() => setView('classic')}>Classic Tools</button>
+        <button style={S.navTab(view === 'classic')} onClick={() => { setClassicTab(null); setView('classic'); }}>Classic Tools</button>
       </div>
       <div style={S.stats}>
         <div style={S.stat}><span style={S.statVal}>{trackedCount}</span><span style={S.statLabel}>Tracked</span></div>
