@@ -37,6 +37,7 @@ import postgres from 'postgres';
 import { generateCareerAtomDefinitions, generateCareerMoleculeDefinitions } from './lib/careerAtomRegistry.js';
 import { generateSignalMoleculeDefinitions, generateBusinessHypothesisMoleculeDefinitions, generateRecordAtomDefinitions } from './lib/lonetreeDemoRegistry.js';
 import { generateDeltaAtomDefinitions, generateRecordMoleculeAtomDefinitions } from './lib/proposalExperienceRegistry.js';
+import { generateDocumentAtomDefinitions } from './lib/documentAtomRegistry.js';
 import { genesisOverlapSeeds } from './data/genesisOverlapSeeds.js';
 import { L2R_DOMAINS, SUB_CAPABILITY_CLUSTERS, CAPABILITY_ATOMS, QTR_REFERENCE_ATOMS, QTR_SCENARIOS } from './data/l2rCapabilityHierarchySeed.js';
 
@@ -1104,6 +1105,25 @@ async function bootstrap() {
     }
   }
 
+  // Source Document Intelligence Atom vocabulary (2026-09-06) — one
+  // journey_metadata_molecules row per structural unit type (source file
+  // pointer, input classification, title, subtitle, heading, paragraph,
+  // sentence, word). Definitions only, no cluster: a document's hierarchy is
+  // reconstructed from source_reference path prefixes on the evidence rows
+  // themselves (see documentAtomSync.js's reconstructDocumentTree), not from
+  // an Atom Cluster/bonding-engine grouping — ordered positional containment
+  // is a structurally different shape than the tag-affinity clustering
+  // journey_metadata_clusters/eidosBonding.js compute. See
+  // documentAtomRegistry.js's header comment for the full reuse-first audit.
+  const nowDocumentAtomSeed = Date.now();
+  for (const atom of generateDocumentAtomDefinitions()) {
+    await sql.unsafe(
+      `INSERT INTO journey_metadata_molecules (molecule_key,label,data_type,source_paths,validation_config,is_sensitive,is_active,canonical_definition,value_domain,mutability_class,created_at,updated_at)
+       VALUES ($1,$2,$3,'[]'::jsonb,'{}'::jsonb,false,true,$4,$5,'revisable',$6,$6) ON CONFLICT (molecule_key) DO NOTHING`,
+      [atom.atomKey, atom.label, atom.dataType, atom.canonicalDefinition, atom.valueDomain, nowDocumentAtomSeed]
+    );
+  }
+
   // journey_rod_types backfill — insert-only (never overwrite an admin's
   // is_active/label/description edit on a later boot). The 3 shipped types
   // plus 8 aspirational types from docs/salt-basin-hos-journey-methodology.md,
@@ -1130,6 +1150,7 @@ async function bootstrap() {
     ['l2r_diagnostic', 'Lead-to-Revenue Diagnostic', "A client engagement's Current-State Diagnostic against the Lead-to-Revenue capability hierarchy — one rod per purchasing client, observations captured as journey_rod_evidence against the seeded capability Atoms (2026-08-09, Definition Studio Phase 1).", true, 18],
     ['l2r_future_state', 'Future-State Definition', "A client's target-state definition per capability, Tributary-linked to its originating l2r_diagnostic rod — the Definition Studio's future-state half (2026-08-09, Phase 1; real UI deferred to Phase 3).", true, 19],
     ['career_outreach_effort', 'Career Outreach Effort', "A member's hiring-manager-research + direct-outreach process for one applied-to career opportunity — Tributary-linked (hierarchical) to the career_opportunity_target rod it's pursuing outreach for (2026-08-09).", true, 8],
+    ['source_document', 'Source Document', 'An uploaded primary source (Word doc, plain text, Markdown, PDF, image, SVG, or scanned handwriting) run through deterministic structural parsing into title/subtitle/heading/paragraph/sentence/word Atoms, human-validated into an immutable provenance record — one rod per uploaded document (2026-09-06, Source Document Intelligence Phase 1).', true, 9],
   ]) {
     await sql.unsafe(
       `INSERT INTO journey_rod_types (id, label, description, is_active, sort_order, created_at, updated_at)
