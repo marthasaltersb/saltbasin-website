@@ -286,6 +286,17 @@ export const api = {
   createCareerDeal: (item) => request('/api/career/deals', { method: 'POST', body: JSON.stringify(item) }),
   updateCareerDeal: (id, patch) => request(`/api/career/deals/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
   deleteCareerDeal: (id) => request(`/api/career/deals/${id}`, { method: 'DELETE' }),
+  // Career experience configuration (Proficiency & Rollups) — periods,
+  // proficiency levels, rollup/display definitions, and the assertions and
+  // preview calculation that reference them. Server routes already existed
+  // in server/routes/careerMaster.js; these client wrappers were missing.
+  getCareerExperienceDefinitions: () => request('/api/career/experience-definitions'),
+  saveCareerExperienceDefinition: (type, key, item) => request(`/api/career/experience-definitions/${type}/${key}`, { method: 'PUT', body: JSON.stringify(item) }),
+  deleteCareerExperienceDefinition: (type, key) => request(`/api/career/experience-definitions/${type}/${key}`, { method: 'DELETE' }),
+  getCareerProficiencyAssertions: () => request('/api/career/proficiency-assertions'),
+  saveCareerProficiencyAssertion: (entityType, entityId, periodKey, body) => request(`/api/career/proficiency-assertions/${entityType}/${entityId}/${periodKey}`, { method: 'PUT', body: JSON.stringify(body) }),
+  deleteCareerProficiencyAssertion: (entityType, entityId, periodKey) => request(`/api/career/proficiency-assertions/${entityType}/${entityId}/${periodKey}`, { method: 'DELETE' }),
+  getCareerRollupPreview: (key) => request(`/api/career/rollup-preview/${key}`),
   listCareerMetaOptions: () => request('/api/career/meta-options'),
   createCareerMetaOption: (item) => request('/api/career/meta-options', { method: 'POST', body: JSON.stringify(item) }),
   updateCareerMetaOption: (id, patch) => request(`/api/career/meta-options/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),

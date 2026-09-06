@@ -26,7 +26,12 @@ export const ISLAND_REGISTRY = {
   config: { variant: 'table', kind: 'embed', accent: 'teal' },
   herqPublications: { variant: 'publication', kind: 'docked', accent: 'gold' },
   lonetreeMvp: { variant: 'engine', kind: 'classic', accent: 'teal' },
-  careerMaster: { variant: 'founder', kind: 'classic', accent: 'pink' },
+  // 'embed' (not 'classic'): dollying in stays in-world — it opens the real
+  // Career Master journey chooser (Orbit / Upload & Map / Manual Intake /
+  // Proficiency & Rollups / BestyStaff), the same classic AdminShell panels
+  // guiding data entry, just without the full multi-tab shell chrome around
+  // it. See CareerMasterEmbedView in WorldShell.jsx.
+  careerMaster: { variant: 'founder', kind: 'embed', accent: 'pink' },
   outputTemplates: { variant: 'token', kind: 'classic', accent: 'gold' },
   leads: { variant: 'rings', kind: 'classic', accent: 'teal' },
 };
