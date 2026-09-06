@@ -87,14 +87,24 @@ export async function loadRodAtoms(rodId) {
     SELECT id, molecule_key, value, confidence, magnetic_properties
     FROM journey_rod_evidence WHERE rod_id=$1
   `).all(rodId);
-  return rows.map((row) => ({
-    atomId: row.molecule_key,
-    evidenceId: Number(row.id),
-    magneticProperties: typeof row.magnetic_properties === 'string' ? JSON.parse(row.magnetic_properties) : (row.magnetic_properties || []),
-    value: typeof row.value === 'string' ? JSON.parse(row.value) : row.value,
-    maturity: row.confidence != null ? clamp01(Number(row.confidence)) : 1,
-    conflict: false,
-  }));
+  return rows.map((row) => {
+    // The postgres driver already unwraps JSONB into native JS values, so a
+    // genuine string atom value arrives already-unwrapped — re-parsing it as
+    // JSON throws (bare text isn't valid JSON). Only re-parse the rare
+    // double-encoded case, falling back to the raw value otherwise.
+    let value = row.value;
+    if (typeof value === 'string') {
+      try { value = JSON.parse(value); } catch { /* leave as the raw string */ }
+    }
+    return {
+      atomId: row.molecule_key,
+      evidenceId: Number(row.id),
+      magneticProperties: typeof row.magnetic_properties === 'string' ? JSON.parse(row.magnetic_properties) : (row.magnetic_properties || []),
+      value,
+      maturity: row.confidence != null ? clamp01(Number(row.confidence)) : 1,
+      conflict: false,
+    };
+  });
 }
 
 // Loads a molecule definition (attractionTags/minAttractionOverlap) from
