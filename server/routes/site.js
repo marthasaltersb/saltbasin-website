@@ -7,8 +7,15 @@ import {
   loadResumePresets, siteOwnerUserId,
 } from '../lib/resumePresets.js';
 import { invalidatePublicConfigCache } from './config.js';
+import { postJourneyEvidence } from '../lib/journeyEvidenceHelpers.js';
 
 const router = Router();
+
+function pageList(pages) {
+  if (Array.isArray(pages)) return pages;
+  if (pages && typeof pages === 'object') return Object.values(pages);
+  return [];
+}
 
 // In-memory cache for the published site GET, fetched on every public page
 // view. Short TTL, invalidated explicitly on publish — never serves stale
@@ -77,6 +84,13 @@ router.put('/draft', requireAdmin, async (req, res) => {
     sourceType: 'manual',
     authorId: user?.id || null, authorEmail: user?.email || null,
   }).catch(() => {});
+  if (user?.id) {
+    const pages = pageList(incoming.pages);
+    postJourneyEvidence(user.id, 'site_composition_journey', 'Salt Basin Site', [
+      ['site_pages_defined', pages.length > 1],
+      ['site_sections_composed', pages.some((p) => (p.sections || []).length > 0)],
+    ]);
+  }
   res.json({ ok: true, updatedAt: Date.now() });
 });
 
@@ -96,6 +110,7 @@ router.post('/publish', requireAdmin, async (req, res) => {
     sourceType: 'publish',
     authorId: user?.id || null, authorEmail: user?.email || null,
   }).catch(() => {});
+  if (user?.id) postJourneyEvidence(user.id, 'site_composition_journey', 'Salt Basin Site', [['site_published', true]]);
   res.json({ ok: true, publishedAt: Date.now() });
 });
 

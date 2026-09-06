@@ -70,6 +70,16 @@ export const ISLAND_REGISTRY = {
     accent: 'teal',
     dataBinding: { store: 'site', fields: ['pages'] },
     permission: { requiredRole: 'owner', crud: ['read', 'update', 'publish'], enforced: false },
+    // Two of this planet's connected journeys now have real stages
+    // (server/data/scenarioLibrary.js) — PlanetAtmosphereView shows a
+    // toggle between them (Betsy's "different connections to different
+    // journeys depending on which navigation map toggle you'd want").
+    // definition_journey's moons carry `scopes: ['admin']` since that
+    // journey is admin-only per its own scenario metadata
+    // (requiresAdminToCreate) — a member has no rod for it, so showing it
+    // to them would just be a permanently-dim star for something that was
+    // never theirs to start.
+    journeyScenarioKeys: ['definition_journey', 'site_composition_journey'],
     moons: [
       // Site Configuration is its OWN planet definition below (Betsy,
       // 2026-09-06: "Site Configuration as a module is the planet
@@ -80,6 +90,22 @@ export const ISLAND_REGISTRY = {
       // No defined content anywhere in the codebase yet — renders an
       // honest "not yet defined" panel rather than inventing one.
       { key: 'saltTideSettings', label: 'SaltTide Settings' },
+      // Definition Journey stages — admin-only (see above).
+      // "Define Page Types" has a real UI (PageTypeManagerPanel.jsx) but
+      // it's a modal reachable only from inside the 'content' tab's "Add
+      // Page" flow (AdminShell.jsx's setPageTypeManagerOpen), not a
+      // standalone route — this moon gets you into Classic Tools at
+      // 'content', the closest real, honest entry point, not a fabricated
+      // direct link into the modal itself.
+      { key: 'pageTypesDefined', label: 'Define Page Types', journey: 'definition_journey', stageKey: 'page_types_defined', geometry: 'tetrahedron', scopes: ['admin'], panel: 'classicTools', classicTab: 'content' },
+      // No admin UI exists anywhere for editing admin_nav today — only
+      // api.updateAdminNav() exists, uncalled by any component. Renders
+      // the honest "not yet defined" panel rather than a fabricated link.
+      { key: 'navigationStructureDefined', label: 'Define Navigation Structure', journey: 'definition_journey', stageKey: 'navigation_structure_defined', geometry: 'octahedron', scopes: ['admin'] },
+      // Site Composition Journey stages — the real page/section editor.
+      { key: 'pagesDefined', label: 'Define Site Pages', journey: 'site_composition_journey', stageKey: 'pages_defined', geometry: 'dodecahedron', panel: 'classicTools', classicTab: 'content' },
+      { key: 'sectionsComposed', label: 'Compose Sections', journey: 'site_composition_journey', stageKey: 'sections_composed', geometry: 'icosahedron', panel: 'classicTools', classicTab: 'content' },
+      { key: 'sitePublished', label: 'Publish Site', journey: 'site_composition_journey', stageKey: 'site_published', geometry: 'box', panel: 'classicTools', classicTab: 'content' },
     ],
   },
   // Promoted from a flat 'embed' (one long ConfigPanel scroll) to its own

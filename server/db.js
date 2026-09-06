@@ -529,6 +529,22 @@ async function bootstrap() {
     ['public_site_dev_lifecycle','resume_presets','Resume Presets',30],
     ['public_site_dev_lifecycle','integrations','Connect Integrations',40],
     ['public_site_dev_lifecycle','publish_configuration','Publish Configuration',50],
+    // Definition Journey (2026-09-06) — admin-only per Betsy's explicit
+    // requirement (enforced in routes/journeyRods.js POST / via the
+    // scenario's metadata.requiresAdminToCreate, not just documented here).
+    // Stages map to the two real admin-only structural editors that already
+    // exist: page type taxonomy (PUT /api/config/page-types) and the
+    // platform nav structure (PUT /api/config/admin-nav).
+    ['public_site_dev_lifecycle','page_types_defined','Define Page Types',10],
+    ['public_site_dev_lifecycle','navigation_structure_defined','Define Navigation Structure',20],
+    // Site Composition Journey (2026-09-06) — the actual page/section
+    // authoring in the site editor (componentId 'content'). Stages are
+    // observed server-side from the saved site JSON on every draft save
+    // (server/routes/memberSite.js and server/routes/site.js), not from a
+    // second client-side tracking mechanism.
+    ['public_site_dev_lifecycle','pages_defined','Define Site Pages',10],
+    ['public_site_dev_lifecycle','sections_composed','Compose Sections',20],
+    ['public_site_dev_lifecycle','site_published','Publish Site',30],
   ]) {
     await sql.unsafe(`INSERT INTO journey_stage_gates (rod_type, stage_key, label, sort_order, created_at, updated_at)
       VALUES ($1,$2,$3,$4,$5,$5) ON CONFLICT (rod_type, stage_key) DO UPDATE SET label=EXCLUDED.label, sort_order=EXCLUDED.sort_order, updated_at=EXCLUDED.updated_at`,
@@ -1030,6 +1046,26 @@ async function bootstrap() {
       `INSERT INTO journey_metadata_molecules (molecule_key,label,data_type,source_paths,validation_config,is_sensitive,is_active,canonical_definition,value_domain,mutability_class,created_at,updated_at)
        VALUES ($1,$2,'boolean','[]'::jsonb,'{}'::jsonb,false,true,$3,'boolean','revisable',$4,$4) ON CONFLICT (molecule_key) DO NOTHING`,
       [key, label, canonicalDefinition, nowConfigJourneyAtomSeed]
+    );
+  }
+  // Definition Journey Atoms (2026-09-06) — evidence posted server-side
+  // whenever an admin successfully saves through the already admin-only
+  // PUT /api/config/page-types or PUT /api/config/admin-nav routes.
+  // Site Composition Journey Atoms — evidence posted server-side from the
+  // actual saved site JSON (server/routes/memberSite.js + site.js), never
+  // from a second client-side page/section counter.
+  const nowStructureJourneyAtomSeed = Date.now();
+  for (const [key, label, canonicalDefinition] of [
+    ['definition_page_types_reviewed', 'Page Types Reviewed', 'True once an admin has saved the page type taxonomy at least once (PUT /api/config/page-types).'],
+    ['definition_navigation_structure_reviewed', 'Navigation Structure Reviewed', 'True once an admin has saved the platform nav structure at least once (PUT /api/config/admin-nav).'],
+    ['site_pages_defined', 'Site Pages Defined', 'True once the site has more than one page (beyond the default home page).'],
+    ['site_sections_composed', 'Sections Composed', 'True once at least one page has at least one section.'],
+    ['site_published', 'Site Published', 'True once the site has been published at least once.'],
+  ]) {
+    await sql.unsafe(
+      `INSERT INTO journey_metadata_molecules (molecule_key,label,data_type,source_paths,validation_config,is_sensitive,is_active,canonical_definition,value_domain,mutability_class,created_at,updated_at)
+       VALUES ($1,$2,'boolean','[]'::jsonb,'{}'::jsonb,false,true,$3,'boolean','revisable',$4,$4) ON CONFLICT (molecule_key) DO NOTHING`,
+      [key, label, canonicalDefinition, nowStructureJourneyAtomSeed]
     );
   }
   for (const [key, label, description, moleculeKeys] of [

@@ -532,6 +532,7 @@ export default function WorldShell() {
         scope={user?.role === 'admin' ? 'admin' : 'member'}
         onClear={clearAtmosphere}
         onNavigateToIsland={setAtmosphereKey}
+        onOpenClassicTools={(tab) => { setClassicTab(tab); setView('classic'); }}
       />
     );
   }

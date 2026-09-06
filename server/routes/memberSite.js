@@ -24,8 +24,20 @@ import { form, react } from '../lib/molecule.js';
 import { resumeUrlFromPreset, pickPrimaryPreset } from '../lib/resumePresets.js';
 import { hasCareerPortfolioContent } from '../lib/careerAtomRollups.js';
 import { MEMBER_FEATURES, requireMemberFeature } from '../lib/memberAccess.js';
+import { postJourneyEvidence } from '../lib/journeyEvidenceHelpers.js';
 
 const router = Router();
+
+// pages is documented (CLAUDE.md) as a keyed object, but at least one
+// existing check in this file (POST /publish's `draft.pages?.length`)
+// treats it as array-like — normalizing defensively here rather than
+// assuming either shape, since getting this wrong would either never post
+// evidence or crash on a real site's data.
+function pageList(pages) {
+  if (Array.isArray(pages)) return pages;
+  if (pages && typeof pages === 'object') return Object.values(pages);
+  return [];
+}
 
 function primaryResumeUrlFromConfig(config) {
   const presets = Array.isArray(config?.resumePresets) ? config.resumePresets : [];
@@ -95,6 +107,11 @@ router.put('/draft', requireUser, requireMemberFeature(MEMBER_FEATURES.MEMBER_SI
     },
     commit: async () => {
       await writeState(req.user.id, 'draft', incoming);
+      const pages = pageList(incoming.pages);
+      postJourneyEvidence(req.user.id, 'site_composition_journey', 'My Website', [
+        ['site_pages_defined', pages.length > 1],
+        ['site_sections_composed', pages.some((p) => (p.sections || []).length > 0)],
+      ]);
       return { updatedAt: Date.now() };
     },
   });
@@ -138,6 +155,7 @@ router.post('/publish', requireUser, requireMemberFeature(MEMBER_FEATURES.MEMBER
         variables:  async () => {},
         commit:     async () => writeState(req.user.id, 'published', draft),
       });
+      postJourneyEvidence(req.user.id, 'site_composition_journey', 'My Website', [['site_published', true]]);
       return { published: true };
     },
   });

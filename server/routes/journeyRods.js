@@ -49,6 +49,15 @@ router.post('/', requireUser, async (req, res) => {
   if (!scenarioKey || !String(label || '').trim()) {
     return res.status(400).json({ error: 'scenarioKey and label are required' });
   }
+  // "Assigned admin users only can create new journey data rods" for a
+  // scenario that declares it (Definition Journey, 2026-09-06) — a
+  // metadata flag on the scenario, not a hardcoded scenarioKey compare, so
+  // any future admin-only journey is enforced the same way without a code
+  // change here.
+  const scenario = await db.prepare('SELECT metadata FROM journey_scenarios WHERE scenario_key=$1 AND is_active=true').get(scenarioKey);
+  if (scenario?.metadata?.requiresAdminToCreate && req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'This journey can only be started by an admin.' });
+  }
   try {
     res.status(201).json(await createUserJourneyRod(req.user.id, {
       scenarioKey,

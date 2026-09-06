@@ -16,7 +16,7 @@
 // sort_order) are connected by a real line. An island with no
 // journeyScenarioKey renders its moons exactly as before — undimmed,
 // unconnected, no journey to reflect.
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { CRYSTAL_VARIANTS, addCrystalLights } from '../lib/crystalGeometry.js';
 import { hasWebGL } from './SaltBasinCrystal.jsx';
@@ -81,11 +81,17 @@ function labelSprite(text, subtitle, color) {
 function lerp(a, b, t) { return a + (b - a) * t; }
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
-// Stable reference for islands with no moons defined — `island.moons || []`
-// would otherwise allocate a new empty array every render, changing the
-// mount effect's dependency identity on every re-render and re-tearing-down
-// the scene in a loop.
-const EMPTY_MOONS = [];
+// Stable empty-array reference — `x || []` would otherwise allocate a new
+// array every render, changing dependency identity on every re-render and
+// re-tearing-down the scene in a loop. Shared for moons and journey keys.
+const EMPTY_ARRAY = [];
+
+// Cosmetic only — the journey keys themselves (definition_journey, etc.)
+// are the real data; this just formats one for the toggle label instead of
+// fetching the scenario catalog just to read a display label.
+function humanizeJourneyKey(key) {
+  return key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 function moonSubtitle(moon) {
   if (moon.destinationKey) {
@@ -96,25 +102,44 @@ function moonSubtitle(moon) {
   return 'not yet defined';
 }
 
-export default function PlanetAtmosphereView({ island, scope, onClear, onNavigateToIsland }) {
+export default function PlanetAtmosphereView({ island, scope, onClear, onNavigateToIsland, onOpenClassicTools }) {
   const hostRef = useRef(null);
   const [activeMoonKey, setActiveMoonKey] = useState(null);
-  const moons = island.moons || EMPTY_MOONS;
+  const allMoons = island.moons || EMPTY_ARRAY;
+
+  // journeyScenarioKeys (plural) — a toggle between an island's connected
+  // journeys ("different connections to different journeys depending on
+  // which navigation map toggle you'd want," Betsy, 2026-09-06). A plain
+  // singular journeyScenarioKey still works (treated as a one-item list).
+  const journeyKeys = island.journeyScenarioKeys || (island.journeyScenarioKey ? [island.journeyScenarioKey] : EMPTY_ARRAY);
+  const [selectedJourney, setSelectedJourney] = useState(journeyKeys[0] || null);
+  useEffect(() => { setSelectedJourney(journeyKeys[0] || null); }, [island.key]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Moons scoped away from this viewer (definition_journey's admin-only
+  // stages) or belonging to a journey that isn't the selected toggle are
+  // filtered out before the scene is even built — memoized so this doesn't
+  // change reference (and re-tear-down the scene) on unrelated re-renders.
+  const moons = useMemo(
+    () => allMoons.filter((m) => (!m.scopes || m.scopes.includes(scope)) && (!m.journey || m.journey === selectedJourney)),
+    [allMoons, scope, selectedJourney]
+  );
+
   // { [stageKey]: boolean } from the real evaluated journey rod — a ref, not
   // state, since animate() reads it every frame directly against meshes it
   // already owns; no React re-render needed to make brightness update.
   const progressRef = useRef({});
 
-  // Real progress fetch — only for islands that declare a journey. Refetches
-  // when the user returns from a moon's panel (they may have just posted
-  // new evidence via a save), not on a timer or a guess.
+  // Real progress fetch — only when a journey is selected. Refetches when
+  // the toggle changes or the user returns from a moon's panel (they may
+  // have just posted new evidence via a save), not on a timer or a guess.
   useEffect(() => {
-    if (!island.journeyScenarioKey || activeMoonKey) return undefined;
+    progressRef.current = {}; // don't show the previous journey's brightness while this one loads
+    if (!selectedJourney || activeMoonKey) return undefined;
     let cancelled = false;
     api.getMyJourneyRods()
       .then(async ({ rods }) => {
         if (cancelled) return;
-        const rod = rods.find((r) => r.metadata?.scenarioKey === island.journeyScenarioKey);
+        const rod = rods.find((r) => r.metadata?.scenarioKey === selectedJourney);
         if (!rod) return;
         const detail = await api.getJourneyRod(rod.id);
         if (cancelled) return;
@@ -124,7 +149,7 @@ export default function PlanetAtmosphereView({ island, scope, onClear, onNavigat
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [island.journeyScenarioKey, activeMoonKey]);
+  }, [selectedJourney, activeMoonKey]);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -190,7 +215,7 @@ export default function PlanetAtmosphereView({ island, scope, onClear, onNavigat
     // or fewer than two stage-carrying moons.
     const stageHolders = moonHolders.filter((h) => h.userData.stageKey);
     let connectorLine = null;
-    if (island.journeyScenarioKey && stageHolders.length > 1) {
+    if (selectedJourney && stageHolders.length > 1) {
       const connectorGeo = new THREE.BufferGeometry();
       connectorGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(stageHolders.length * 3), 3));
       connectorLine = new THREE.Line(connectorGeo, new THREE.LineBasicMaterial({ color: TEAL, transparent: true, opacity: 0.35 }));
@@ -316,7 +341,7 @@ export default function PlanetAtmosphereView({ island, scope, onClear, onNavigat
       renderer.dispose();
       if (renderer.domElement.parentElement === host) host.removeChild(renderer.domElement);
     };
-  }, [island, moons]);
+  }, [island, moons, selectedJourney]);
 
   const activeMoon = moons.find((m) => m.key === activeMoonKey) || null;
 
@@ -335,8 +360,34 @@ export default function PlanetAtmosphereView({ island, scope, onClear, onNavigat
     }
   }, [activeMoon, onNavigateToIsland]);
 
+  // A moon whose real UI lives inside Classic Tools (the page/section
+  // editor isn't extracted from AdminShell yet — see worldIslands.js's
+  // comment on the 'content' entry) hands off there instead of opening an
+  // overlay of its own. Only fires when the caller actually wired
+  // onOpenClassicTools; otherwise falls through to the honest
+  // "not yet defined" panel below rather than doing nothing silently.
+  useEffect(() => {
+    if (!activeMoon?.panel || activeMoon.panel !== 'classicTools' || !onOpenClassicTools) return;
+    onOpenClassicTools(activeMoon.classicTab || null);
+    setActiveMoonKey(null);
+  }, [activeMoon, onOpenClassicTools]);
+
   if (activeMoon?.panel === 'siteConfigView') {
     return <SiteConfigView scope={scope} onClear={() => setActiveMoonKey(null)} />;
+  }
+  if (activeMoon?.panel === 'classicTools') {
+    if (onOpenClassicTools) return null; // one-frame gap before the effect above navigates away
+    return (
+      <div style={S.embedShell}>
+        <div style={S.embedHeader}>
+          <button style={S.backBtn} onClick={() => setActiveMoonKey(null)}>← Back to {island.label}</button>
+          <div style={S.embedTitle}>{activeMoon.label}</div>
+        </div>
+        <div style={S.embedBody}>
+          <p style={S.placeholderText}>"{activeMoon.label}" opens in Classic Tools, which this view wasn't given a way to reach.</p>
+        </div>
+      </div>
+    );
   }
   if (activeMoon?.destinationKey) {
     const target = ISLAND_REGISTRY[activeMoon.destinationKey];
@@ -386,6 +437,19 @@ export default function PlanetAtmosphereView({ island, scope, onClear, onNavigat
       <div style={S.header}>
         <button style={S.backBtn} onClick={onClear}>← Back to World</button>
         <div style={S.title}>{island.label}</div>
+        {journeyKeys.length > 1 && (
+          <div style={S.journeyToggle}>
+            {journeyKeys.map((key) => (
+              <button
+                key={key}
+                style={key === selectedJourney ? S.journeyToggleBtnActive : S.journeyToggleBtn}
+                onClick={() => setSelectedJourney(key)}
+              >
+                {humanizeJourneyKey(key)}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
       {hasWebGL() ? (
         <>
@@ -404,6 +468,9 @@ const S = {
   header: { display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.8rem 1.5rem', borderBottom: '0.5px solid rgba(255,255,255,0.08)', flexShrink: 0, background: 'rgba(13,20,23,0.7)', backdropFilter: 'blur(8px)' },
   backBtn: { background: 'none', border: '1px solid rgba(245,240,232,0.25)', color: '#f5f0e8', padding: '0.4rem 0.8rem', borderRadius: 6, cursor: 'pointer', fontSize: '0.78rem', fontFamily: 'inherit' },
   title: { fontSize: '1rem', letterSpacing: '0.02em' },
+  journeyToggle: { display: 'flex', gap: '0.4rem', marginLeft: '1rem' },
+  journeyToggleBtn: { background: 'transparent', border: '1px solid rgba(245,240,232,0.2)', color: 'rgba(245,240,232,0.65)', padding: '0.3rem 0.65rem', borderRadius: 20, cursor: 'pointer', fontSize: '0.66rem', letterSpacing: '0.02em', fontFamily: 'inherit' },
+  journeyToggleBtnActive: { background: 'rgba(74,124,142,0.35)', border: '1px solid #4a7c8e', color: '#f5f0e8', padding: '0.3rem 0.65rem', borderRadius: 20, cursor: 'pointer', fontSize: '0.66rem', letterSpacing: '0.02em', fontFamily: 'inherit' },
   canvasHost: { flex: 1, position: 'relative' },
   hint: { position: 'absolute', left: '1.2rem', bottom: '1rem', fontSize: '0.68rem', color: 'rgba(245,240,232,0.6)', letterSpacing: '0.03em', pointerEvents: 'none' },
   fallback: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(245,240,232,0.7)' },

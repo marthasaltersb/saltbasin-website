@@ -92,12 +92,12 @@ export async function applyScenarioLibrary(library, { dryRun = false } = {}) {
 
   for (const scenario of library.scenarios || []) {
     await db.prepare(`
-      INSERT INTO journey_scenarios (scenario_key, rod_type, label, description, selected_cluster_keys, dimensions, actor_roles, is_active, created_at, updated_at)
-      VALUES ($1,$2,$3,$4,$5::jsonb,$6::jsonb,$7::jsonb,true,$8,$8)
+      INSERT INTO journey_scenarios (scenario_key, rod_type, label, description, selected_cluster_keys, dimensions, actor_roles, metadata, is_active, created_at, updated_at)
+      VALUES ($1,$2,$3,$4,$5::jsonb,$6::jsonb,$7::jsonb,$8::jsonb,true,$9,$9)
       ON CONFLICT (scenario_key) DO UPDATE SET
         rod_type=EXCLUDED.rod_type, label=EXCLUDED.label, description=EXCLUDED.description,
         selected_cluster_keys=EXCLUDED.selected_cluster_keys, dimensions=EXCLUDED.dimensions,
-        actor_roles=EXCLUDED.actor_roles, is_active=true, updated_at=EXCLUDED.updated_at
+        actor_roles=EXCLUDED.actor_roles, metadata=EXCLUDED.metadata, is_active=true, updated_at=EXCLUDED.updated_at
     `).run(
       scenario.scenarioKey,
       scenario.rodType,
@@ -106,6 +106,7 @@ export async function applyScenarioLibrary(library, { dryRun = false } = {}) {
       scenario.selectedClusterKeys || [],
       scenario.dimensions || [],
       scenario.actorRoles || [],
+      scenario.metadata || {},
       now,
     );
 
