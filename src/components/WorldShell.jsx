@@ -173,7 +173,13 @@ export default function WorldShell() {
       setView('atmosphere');
       return;
     }
+    // Docked/embed islands render their RightRail/SimpleEmbedView only once
+    // `view` is back to 'world' (RightRail is view-gated; embed islands
+    // don't care, but this is harmless for them either way) — a no-op when
+    // called from the 3D canvas (already 'world'), but load-bearing when
+    // called from the Journeys list view (still 'journeys' otherwise).
     setFocusedKey(key);
+    setView('world');
   }, [islands]);
   const clearFocus = useCallback(() => setFocusedKey(null), []);
   const clearAtmosphere = useCallback(() => { setAtmosphereKey(null); setView('world'); }, []);
@@ -558,7 +564,7 @@ export default function WorldShell() {
         hasCommercialIsland={hasCommercialIsland}
       />
       {view === 'journeys' ? (
-        <JourneysGrid islands={islands} career={career} commercial={commercial} herq={herq} onOpen={(key) => { setFocusedKey(key); setView('world'); }} />
+        <JourneysGrid islands={islands} career={career} commercial={commercial} herq={herq} onOpen={selectIsland} />
       ) : (
         <div style={S.stage}>
           {hasWebGL() ? (

@@ -167,7 +167,8 @@ export const ISLAND_REGISTRY = {
   // Career Master journey chooser (Orbit / Upload & Map / Manual Intake /
   // Proficiency & Rollups / BestyStaff), the same classic AdminShell panels
   // guiding data entry, just without the full multi-tab shell chrome around
-  // it. See CareerMasterEmbedView in WorldShell.jsx.
+  // it. See SimpleEmbedView/SIMPLE_EMBED_COMPONENTS.careerMaster in
+  // WorldShell.jsx.
   careerMaster: {
     variant: 'founder', kind: 'embed', accent: 'pink',
     dataBinding: { store: 'career_jobs/skills/tools/engagements/domains/certifications/deals' },
@@ -182,6 +183,38 @@ export const ISLAND_REGISTRY = {
     variant: 'rings', kind: 'embed', accent: 'teal',
     dataBinding: { store: 'leads' },
     permission: { requiredRole: 'admin', crud: ['read', 'update'], enforced: false },
+  },
+  // Variant Creation Studio (2026-09-06 follow-up) — Betsy's prompt-driven
+  // generator for a new 3D world variant's GenerativeSeedSpec (server/
+  // routes/worldVariantStudio.js). Given its own 'atmosphere' planet so
+  // entering it travels the camera in and shows the map the same way every
+  // other planet does, instead of a flat docked/embed card. Its one moon
+  // opens the real WorldVariantStudioPanel directly in-world (Planet
+  // AtmosphereView's own 'worldVariantStudio' panel case, lazy-loading the
+  // same component AdminShell's Classic Tools tab mounts) rather than
+  // handing off to Classic Tools — one real panel, reached two ways. The
+  // studio itself stays preview-only by explicit design (worldVariantStudio.
+  // js's own header comment: generating a spec never auto-commits it into a
+  // real, selectable variant profile; that stays a reviewed code change a
+  // human makes), so there's no new data to bind yet.
+  // Salt-Basin-platform-admin-only for now: this componentId only ever
+  // appears in admin_nav (never defaultMemberConfig.js's memberTabs), and
+  // WorldShell has no org-scoped path at all yet (AdminShell.jsx's isOrg
+  // comment) — so `enforced: true` here is real, not aspirational, but it's
+  // enforced by omission (nothing surfaces this tab to a member or an org
+  // admin), not by a role check inside this file. Giving each org's own
+  // admin their own instance of this same planet (seeded from Salt Basin's
+  // defaults, letting them generate more for their own org) is real,
+  // wanted follow-on work — it needs org-admin recognition added to
+  // WorldShell for the first time, plus a real per-org saved-variant data
+  // model, neither of which exist yet. Not done here.
+  worldVariantStudio: {
+    variant: 'hourglass', kind: 'atmosphere', accent: 'gold',
+    dataBinding: { store: 'none', fields: [] },
+    permission: { requiredRole: 'platform_admin', crud: ['read', 'update'], enforced: true },
+    moons: [
+      { key: 'openStudio', label: 'Variant Creation Studio', geometry: 'icosahedron', panel: 'worldVariantStudio' },
+    ],
   },
 };
 

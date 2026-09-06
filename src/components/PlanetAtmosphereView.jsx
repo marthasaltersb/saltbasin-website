@@ -16,13 +16,15 @@
 // sort_order) are connected by a real line. An island with no
 // journeyScenarioKey renders its moons exactly as before — undimmed,
 // unconnected, no journey to reflect.
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, Suspense, lazy } from 'react';
 import * as THREE from 'three';
 import { CRYSTAL_VARIANTS, addCrystalLights } from '../lib/crystalGeometry.js';
 import { hasWebGL } from './SaltBasinCrystal.jsx';
 import SiteConfigView from './SiteConfigView.jsx';
 import { ISLAND_REGISTRY } from '../lib/worldIslands.js';
 import { api } from '../lib/api.js';
+
+const WorldVariantStudioPanel = lazy(() => import('./admin/WorldVariantStudioPanel.jsx'));
 
 const GOLD = 0xc4843a;
 const TEAL = 0x4a7c8e;
@@ -374,6 +376,21 @@ export default function PlanetAtmosphereView({ island, scope, onClear, onNavigat
 
   if (activeMoon?.panel === 'siteConfigView') {
     return <SiteConfigView scope={scope} onClear={() => setActiveMoonKey(null)} />;
+  }
+  if (activeMoon?.panel === 'worldVariantStudio') {
+    return (
+      <div style={S.embedShell}>
+        <div style={S.embedHeader}>
+          <button style={S.backBtn} onClick={() => setActiveMoonKey(null)}>← Back to {island.label}</button>
+          <div style={S.embedTitle}>{activeMoon.label}</div>
+        </div>
+        <div style={S.embedBody}>
+          <Suspense fallback={<p style={S.placeholderText}>Loading…</p>}>
+            <WorldVariantStudioPanel />
+          </Suspense>
+        </div>
+      </div>
+    );
   }
   if (activeMoon?.panel === 'classicTools') {
     if (onOpenClassicTools) return null; // one-frame gap before the effect above navigates away
