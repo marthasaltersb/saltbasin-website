@@ -15,7 +15,7 @@ duplicate that content here, just track status and findings.
 | 5 | First 3 fully rendered/interactive variants (Crystal Basin, Orbital Intelligence, Temporal Canyon) | in progress (Crystal Basin + Temporal Canyon slices done) | See below. Orbital Intelligence not started; neither built variant is fully DoD-item-7-complete yet (see remaining gaps per variant). |
 | 6 | Remaining 3 structural variants (Monetary River, Enterprise Highway, Neural Constellation) | not started | Depends on Phases 2–4. `MATURITY_LATTICE` (7th variant, added 2026-07-12) is not yet assigned to Phase 5 or 6 — schedule it when its build is picked up. |
 | 7 | Variant Switcher, Interaction Intent Layer & Comparison Mode | not started | Depends on Phase 5. Its "side-by-side Variant Comparison mode" line item is now partially prototyped outside this skill's own phase sequence — see the "Dashboard Definition View" entry below (2026-08-10, `flickering-petting-brook` plan) — real split-viewport rendering exists (`activateDashboard()`, `dashboardDefinitionRegistry.js`) but with a shared camera (no independent per-lens framing) and selection disabled while active. Full Phase 7 (Interaction Intent layer, per-lens cameras, preserved semantic state across switches) is still not started. |
-| 8 | Presets/Inheritance, Variant Creation Studio, Explanation Mode, Temporal Playback | not started | Depends on Phases 3, 5/6 |
+| 8 | Presets/Inheritance, Variant Creation Studio, Explanation Mode, Temporal Playback | in progress (Variant Creation Studio's generative seed layer landed, 2026-09-06) | Presets/Inheritance (SYSTEM→ORGANIZATION→USER), Explanation Mode's generated legend, and Temporal Playback are still not started. See below. |
 | 9 | Performance, Cross-Variant Customer Orbit Reference, Evaluation Report & Closeout | not started | Depends on Phases 5–8 |
 
 ## Open decisions requiring a Betsy answer (do not default)
@@ -513,9 +513,92 @@ results":
   ('crystal-and-canyon', 'journey')` — 2 lenses resolved, 0 errors, direct `node` ESM import (no test runner
   per `CLAUDE.md`).
 
+## Variant Creation Studio — generative seed layer (Phase 8 slice, 2026-09-06)
+
+Betsy asked, outside the phase sequence, for "a standalone generator that can create new [world] variants
+through a prompt and different geometric specifications, using the same high level quality of visual for
+pixel and color and graphic," then clarified: "like generative art... model the seed randomness dimensions"
+for "the elevated 3d objects." This is Phase 8's "development Variant Creation Studio" line item (§X/§XI),
+picked up ahead of Presets/Inheritance and Explanation Mode/Temporal Playback because it's what was directly
+asked for — same "build what's requested, record the rest honestly as still open" precedent the Dashboard
+Definition View entry above set for Phase 7.
+
+- **New declaration layer, `src/config/visual/worldVariantGenerativeSeed.js`.** `GenerativeSeedSpec` is a
+  small, bounded set of purely aesthetic/geometric dials — `primitiveFamily` (one of atomGeometry.js's real
+  geometry keys), `facetAmount` (0-1, maps to `getBipyramidParts`'s real 5-14 radial-segment range),
+  `twist`/`clusterSpread` (seeded scatter/rotation jitter for the preview cluster only), `accentToken` (one
+  of the real brand `--sb-*` tokens, pink deliberately excluded per the existing brand rule), `clarity`
+  (reuses `buildAtomMaterial`'s existing metalness/roughness/opacity domain), `count`, `seed`. A mulberry32
+  seeded PRNG (`createSeededRandom`) makes `resolveGenerativeCluster(spec)` pure and deterministic — the
+  same seed always reproduces the identical cluster, the actual "generative art" property Betsy asked for
+  (reproducible, shareable-by-seed-number), not just "randomized every render."
+- **The non-semantic boundary is enforced in code, not just documented.** `validateGenerativeSeedSpec()`
+  rejects any field whose camelCase word matches a real `WORLD_VARIANT_SEMANTIC_INVARIANTS` word-stem
+  (derived from that real list, not a hand-typed synonym list — avoiding exactly the "one metric, two
+  names" drift Phase 5's `QUERY_RELEVANCE_BANDS` incident already taught this build to avoid). Caught a
+  real self-inflicted naming collision during this pass's own config-audit self-check: the field was
+  originally named `facetDensity`, which the word-collision guard correctly flagged against
+  `JOURNEY_DENSITY` even though the two concepts are unrelated — renamed to `facetAmount` rather than
+  weakening the guard, and the guard itself was tightened from substring matching to whole-camelCase-word
+  matching so a legitimate name sharing a substring (but not a whole word) with an invariant never
+  false-positives again.
+- **Prompt interpreter, `server/lib/worldVariantSeedAgent.js`.** Same forced-tool-choice Anthropic shape as
+  `outreachDraftAgent.js`/`coverLetterTargeting.js`: `interpretVariantPrompt(userId, promptText, hints)`
+  calls Claude with a tool schema whose properties are exactly `GenerativeSeedSpec`'s fields (enums pinned
+  to the real `GENERATIVE_PRIMITIVE_FAMILY`/`GENERATIVE_ACCENT_TOKEN` values) — a semantic-metric field is
+  not just discouraged in the system prompt, it structurally isn't a property the model can set. Reuses
+  `getAnthropicKey()` (member config → platform env fallback, unchanged) and
+  `agentRunGovernance.js`'s existing config-driven daily-cap system (`agentKey: 'world_variant_studio'`,
+  `runType: 'seed_generate'`) rather than inventing a second rate limit.
+- **Admin-only API, `server/routes/worldVariantStudio.js`** (`requireAdmin`, mounted at
+  `/api/admin/world-variant-studio/*`): `POST /generate` (prompt → model-proposed spec), `POST /validate`
+  (pure re-validation of a hand-tuned spec, no Anthropic call), `GET /default-spec`. Never writes to
+  `WORLD_VARIANT_REGISTRY` or `worldVariantComponentProfiles.js` — both stay reviewed, human-committed
+  source files; the Studio only proposes/previews, matching every other Phase 2-4 file's "config lives in
+  code, not a runtime-mutable registry" convention.
+- **Real, working preview UI, `src/components/admin/WorldVariantStudioPanel.jsx`** (new admin tab
+  `worldVariantStudio`, injected additively into the `system` nav view alongside Methodology Config). Not a
+  mockup: the live Three.js canvas renders the resolved cluster with the *actual*
+  `getBipyramidParts`/`getConfiguredAtomParts`/`buildAtomMaterial` functions Crystal Basin's shipped Atom
+  Profile uses (same lighting shape — ambient + 2 directional + 1 point — as `SpatialJourneyWorld.jsx`'s
+  `readBrandPalette()`-driven setup) so preview quality matches the live 3D world rather than approximating
+  it. Structured sliders show the semantic mapping beside each dial (Phase 8's own DoD language, e.g.
+  "radialSegments = round(5 + facetAmount × 9)"), matching the master prompt's Studio example format.
+  "Copy Seed Spec JSON" is the deliberate hand-off point to a human-reviewed profile change — no
+  "promote to registry" button exists, by design.
+- **Validated.** `node --check` on all three new files; a direct ESM import of
+  `worldVariantGenerativeSeed.js` confirmed `resolveGenerativeCluster()` is byte-for-byte deterministic
+  across repeated calls with the same spec, and that the collision guard both catches real semantic-field
+  smuggling (`confidence`, `myMaturityScore`) and no longer false-positives on `facetAmount`. A full
+  `npm run build` succeeds with the new panel bundled (`WorldVariantStudioPanel-*.js`, 14.8 kB).
+  `salt-basin-config-audit` run against the full new surface: `GENERATIVE_PRIMITIVE_FAMILY` classified
+  INTENTIONAL PLATFORM CONSTANT (mirrors real geometry-builder capability in `atomGeometry.js`, not a
+  business rule), `GENERATIVE_ACCENT_TOKEN` classified FOUNDATION-LOCKED BRAND RULE (mirrors `brand.css`
+  tokens, pink correctly excluded), the `facetDensity`/`JOURNEY_DENSITY` naming collision found and fixed
+  (see above), no calculation weights or per-member/org hardcoding found.
+- **Honest gaps (TEMPORARY PROTOTYPE DEBT, not silently claimed done)**: no live browser verification was
+  possible this session — this sandbox has no `DATABASE_URL`/Postgres and no `ANTHROPIC_API_KEY` configured,
+  so the "Generate from Prompt" path was verified by code review + a clean production build, not exercised
+  against a running server end-to-end. The preview camera is a simple auto-orbit, not
+  `SpatialJourneyWorld.jsx`'s full drag/zoom/raycast interaction layer — deliberate scope reduction for a
+  small preview cluster, not yet enhanced. Presets/Inheritance (SYSTEM→ORGANIZATION→USER), Explanation
+  Mode's per-variant generated legend, and Temporal Playback remain fully not started — this slice is the
+  Studio line item only.
+
 ## Changelog
 
 <!-- Newest entry on top. One entry per /world-variants invocation. -->
+
+- **2026-09-06** — Built the Variant Creation Studio's generative seed layer (Phase 8 slice), prompted
+  directly by Betsy asking for "a standalone generator... like generative art... model the seed randomness
+  dimensions" for the elevated 3D objects. New `worldVariantGenerativeSeed.js` (seeded PRNG,
+  non-semantic `GenerativeSeedSpec`, registry-derived collision guard), `worldVariantSeedAgent.js`
+  (forced-tool-choice prompt interpreter), `worldVariantStudio.js` API, and a real admin panel with a live
+  Three.js preview using the actual `atomGeometry.js` builders — see the section above for full detail.
+  Config-audit self-check caught and fixed a real naming collision (`facetDensity` vs. `JOURNEY_DENSITY`)
+  before it shipped. No live browser verification this session (no DB/Anthropic key in this sandbox) —
+  flagged honestly as prototype debt. Presets/Inheritance, Explanation Mode, and Temporal Playback remain
+  not started; the rest of Phase 8 is still open.
 
 - **2026-08-10** — Built the Dashboard Definition View first slice (plan `flickering-petting-brook`) — see
   the section above for full detail. Time Scope and Scenario Scope exposed as real UI controls over
