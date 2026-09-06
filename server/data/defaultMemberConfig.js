@@ -48,6 +48,15 @@ export function defaultMemberConfig({ displayName, email }) {
         memberTabs: [
           { id: 'agent-hub-config', label: 'My Agent Orbit', componentId: 'agentHubConfig', sortOrder: 1 },
         { id: 'careerPlacementAgents', label: 'Career Placement Agents', componentId: 'careerPlacementAgents', sortOrder: 0 },
+        // Re-enabled 2026-09-06 (was gated off 2026-07-30, "stays disabled
+        // for members for now" — Sidebar/EditorPane/PreviewPane never had a
+        // member-specific gap; PreviewPane already takes isMember/slug and
+        // AdminShell's isMember `apis` object already points getSite/saveSite/
+        // publish at /api/member-site/*). Without this tab members had no
+        // way to reach their own page/section editor at all — only the
+        // Site Configuration (theme/colors) tab existed. Existing members
+        // pick this up via memberConfig.js's additive GET /draft merge.
+        { id: 'content', label: 'My Website', componentId: 'content', sortOrder: 2 },
         { id: 'lonetreeMvp', label: 'Fund & Portfolio Demo', componentId: 'lonetreeMvp', sortOrder: 5 },
         { id: 'careerMaster', label: 'Career Master', componentId: 'careerMaster', sortOrder: 10 },
         { id: 'careerReconciliation', label: 'Career Sources to Review', componentId: 'careerReconciliation', sortOrder: 11 },

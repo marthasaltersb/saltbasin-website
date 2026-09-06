@@ -788,15 +788,15 @@ export default function AdminShell({ scope = 'admin', orgId = null, initialTab =
           }
           // Inline 'content' case: the page/section editor composes the
           // Sidebar + EditorPane + PreviewPane and needs lots of shell state.
-          // Gated to scope !== 'member' (2026-07-30): the public profile site
-          // editor stays disabled for members for now, and this branch has no
-          // TAB_COMPONENTS/isMember guard of its own — anything that ever sets
-          // `tab` to 'content' for a member (a stale event, old URL/
-          // localStorage state, ...) would otherwise render the full editor
-          // regardless of memberTabs. The tab-guard effect above resets `tab`
-          // back to a valid member tab in this situation; re-enable alongside
-          // the 'content' memberTabs entry.
-          if (componentId === 'content' && scope !== 'member') {
+          // Re-enabled for members 2026-09-06 (was gated to scope !== 'member'
+          // 2026-07-30 pending the 'content' memberTabs entry, added now in
+          // defaultMemberConfig.js) — Sidebar/EditorPane have no scope
+          // branching at all, and PreviewPane already takes isMember/slug.
+          // Safe for a stray/stale `tab==='content'` on a member whose
+          // memberTabs doesn't include it: the tab-guard effect above resets
+          // `tab` back to a valid member tab in exactly that case, so this
+          // branch is never reached without a real memberTabs entry backing it.
+          if (componentId === 'content') {
             return (
           <>
             <div className={`sb-admin-sidebar${sidebarOpen ? '' : ' collapsed'}`}>

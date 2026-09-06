@@ -21,6 +21,13 @@
 //                that exact tab. Nothing here is a dead/stubbed link — every
 //                island opens real, working functionality.
 export const ISLAND_REGISTRY = {
+  // The Salt Basin Website / page-and-section editor (componentId 'content')
+  // — admin's own "My Profile" tab (sortOrder 0) and, as of 2026-09-06, a
+  // member's "My Website" tab too — had no registry entry here, so
+  // resolveWorldIslands silently dropped it per this file's own documented
+  // behavior: the platform's most central module had no planet in the world
+  // at all.
+  content: { variant: 'hourglass', kind: 'classic', accent: 'teal' },
   careerPlacementAgents: { variant: 'agentHub', kind: 'docked', accent: 'gold' },
   commercialOpportunities: { variant: 'commercialPipeline', kind: 'docked', accent: 'gold' },
   config: { variant: 'table', kind: 'embed', accent: 'teal' },
