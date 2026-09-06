@@ -52,6 +52,7 @@ const L2rDiagnosticPanel = lazy(() => import('./L2rDiagnosticPanel.jsx'));
 const AgentHubConfigPanel = lazy(() => import('./AgentHubConfigPanel.jsx'));
 const AgentOutputsPanel = lazy(() => import('./AgentOutputsPanel.jsx'));
 const GenesisFoundationPanel = lazy(() => import('./GenesisFoundationPanel.jsx'));
+const WorldVariantStudioPanel = lazy(() => import('./WorldVariantStudioPanel.jsx'));
 
 // Tab component registry: the one piece that can't be data-driven, because
 // React components have to be referenced by import. The nav structure stored
@@ -94,6 +95,7 @@ const TAB_COMPONENTS = {
   agentHubOutputs: () => <AgentOutputsPanel />,
   genesisFoundation: () => <GenesisFoundationPanel />,
   careerReasoningCompiler: () => <CareerReasoningCompilerPanel />,
+  worldVariantStudio: () => <WorldVariantStudioPanel />,
   // config: handled inline below (ConfigPanel needs draft + setters from shell)
   // content: handled inline below (Sidebar/EditorPane/PreviewPane composition)
 };
