@@ -60,6 +60,25 @@ The site state JSON is `{ version, pages: { [pageKey]: { key, name, slug, type, 
 - `src/data/capabilityTags.js` — `SOURCE_TYPES`, `MERGED_FIELD_DEFAULTS`, `TAG_CATEGORIES` for the field metadata system. Every field in a section can carry `section.fieldMeta[fieldKey]` with `{ sourceType, mergedFrom, sources, capabilityTags, description }` — schema exists and is wired into the blocks, but isn't yet populated in any live section.
 - CTA fields have **no standardized naming convention** across blocks — `home-hero` uses `cta1Label`/`cta1Link`, `services` uses `s1Cta`, `assessments` uses `a1Price`, `creative-decor` uses a bare `cta1`. Each block invented its own key names, so nothing outside that block's own render logic can reliably enumerate "the CTAs on this page." Do not assume a `cta{N}Label`/`cta{N}Link` pattern is universal when writing tooling against section fields.
 
+### Internationalization / translation model (design-stage — not yet implemented)
+
+Captured 2026-09-05 per Betsy's spoken design intent, ahead of any build work. Three distinct locale concepts must not be conflated:
+
+- **Org/environment default locale** — the language an org's content is authored in and what an anonymous/first-time visitor sees (e.g. an English-language organization).
+- **User locale preference** — independent of the org default. A member or admin user can set their own UI locale (e.g. Spanish) and see chrome/labels in that language even while working inside an English-default org. This is a pure per-user display switch, not tied to any record's content.
+- **Content source locale** — the language a specific authored value (a text field, a picklist option label, etc.) was actually written in. Required so translation direction is known — you can't translate "EN → ES" without first knowing a given value is EN.
+
+Two distinct translatable surfaces follow from this, each needing its own mechanism — do not build one mechanism and assume it covers both:
+
+1. **Static UI labels/chrome** (nav items, buttons, system copy, field labels) — translated once, shared across every tenant, keyed by string key + locale (a translation catalog, e.g. `src/i18n/<locale>.json` + a `t()`/`useTranslation()` helper + a locale-preference provider). Driven entirely by the user's locale preference, never by org content locale.
+2. **Dynamic/user-authored data elements** (section `fields` values, picklist option labels, career/job free text, etc.) — per-record, per-field translations. This is the "defining column" Betsy asked for: extend the existing `section.fieldMeta[fieldKey]` schema (see Section/block system above — real, documented, currently unpopulated in production) with `locale` (that field's source/authored locale) and `translations: { [localeCode]: { value, source: 'human' | 'machine', translatedBy, translatedAt } }`. Reuse this same `{ locale, translations }` shape for any other translatable data outside `section.fields` (picklist definitions, Career Channel Rod evidence text, etc.) rather than inventing a parallel per-feature mechanism — add it as a new additive JSONB/column per the Deployment-safety invariants above (never populated retroactively on existing rows, never required).
+
+**Web translation interface**: when a viewer's locale preference differs from a field's recorded source locale, the field should render an inline "translate" affordance. It either shows an already-stored translation for that locale, or lets the viewer submit one — bidirectionally, EN→ES or ES→EN — which is written back into that field's `translations` map so later viewers in that locale don't re-translate it. Mark human-submitted translations distinctly from machine-generated ones (`source`) since a member-submitted translation is unverified user content, not authoritative.
+
+**Never fabricate a translation.** A field with no stored translation for the viewer's locale should fall back to the source-locale value (clearly, not silently mislabeled as translated) — never a guessed/machine value presented as if a human confirmed it. This mirrors the existing "honest empty state, never fabricated numbers" convention used elsewhere in this file (Career Channel Rod, `evaluateWeightedScore()`).
+
+Nothing here is implemented yet — no `src/i18n/*` catalog, no locale-preference field on users, no `fieldMeta.translations` consumer in the blocks. This section exists so the first implementation pass reuses this shape instead of designing it ad hoc under time pressure.
+
 ### Admin shell tab routing
 
 `AdminShell` reads the nav structure from `config_state` id=`'admin_nav'` (seeded in `db.js` bootstrap). The `TAB_COMPONENTS` registry in `AdminShell.jsx` maps `componentId` strings to React components. Adding a new admin tab requires: import the component, add it to `TAB_COMPONENTS`, update the nav seed in `db.js` (or the config via the UI).
