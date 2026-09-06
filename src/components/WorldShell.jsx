@@ -12,7 +12,7 @@
 // lost). See /root/.claude/plans/nested-tickling-micali.md for the full
 // design rationale and the explicitly-deferred Phase 2/3 (governed
 // user-customizable world views).
-import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as THREE from 'three';
 import { api } from '../lib/api.js';
@@ -26,6 +26,24 @@ import AdminShell from './admin/AdminShell.jsx';
 import ConfigPanel from './admin/ConfigPanel.jsx';
 import { toast } from '../lib/toast.js';
 import { attachSceneManifestTree, publishSceneManifest, removePublishedSceneManifest } from '../lib/sceneManifest.js';
+
+// Simple, self-contained panels — no AdminShell-local shared state, so they
+// can be lifted straight into a real WorldShell embed (module-by-module
+// Classic Tools replacement, 2026-09-06) with nothing more than the
+// SiteConfigView-style header wrapper. AdminShell keeps its own copies of
+// these render branches for org scope (isOrg has no orbit-world tab yet).
+const LeadsPanel = lazy(() => import('./admin/LeadsPanel.jsx'));
+const CareerMasterPanel = lazy(() => import('./admin/CareerMasterPanel.jsx'));
+const CareerMasterEntryPoint = lazy(() => import('./admin/CareerMasterEntryPoint.jsx'));
+const OutputTemplateConfiguratorHub = lazy(() => import('./admin/OutputTemplateConfigurator.jsx').then((m) => ({ default: m.OutputTemplateConfiguratorHub })));
+const LonetreeMvpPanel = lazy(() => import('./admin/LonetreeMvpPanel.jsx'));
+
+const SIMPLE_EMBED_COMPONENTS = {
+  leads: { title: 'Leads', render: () => <LeadsPanel /> },
+  careerMaster: { title: 'Career Master', render: (scope) => (scope === 'admin' ? <CareerMasterPanel scope="admin" /> : <CareerMasterEntryPoint scope={scope} />) },
+  outputTemplates: { title: 'Output Templates', render: (scope) => <OutputTemplateConfiguratorHub scope={scope} /> },
+  lonetreeMvp: { title: 'Fund & Portfolio Demo', render: (scope) => <LonetreeMvpPanel scope={scope} /> },
+};
 
 const ISLAND_RADIUS = 9;
 const ACCENT_HEX = { gold: 0xc4843a, teal: 0x4a7c8e, pink: 0xd98ca0 };
@@ -438,6 +456,9 @@ export default function WorldShell() {
 
   if (focused?.kind === 'embed' && focused.componentId === 'config') {
     return <SiteConfigView scope={user?.role === 'admin' ? 'admin' : 'member'} onClear={clearFocus} />;
+  }
+  if (focused?.kind === 'embed' && SIMPLE_EMBED_COMPONENTS[focused.componentId]) {
+    return <SimpleEmbedView componentId={focused.componentId} scope={user?.role === 'admin' ? 'admin' : 'member'} onClear={clearFocus} />;
   }
 
   if (user === undefined || !tabsConfig) {
@@ -1159,6 +1180,27 @@ function SiteConfigView({ scope, onClear }) {
       <div style={S.embedBody}>
         {!config ? <div style={S.railEmpty}>Loading…</div> : <ConfigPanel config={config} onChange={setConfig} scope={scope} site={null} />}
       </div>
+    </div>
+  );
+}
+
+// Generic wrapper for any island whose module is a single, already
+// self-contained panel (manages its own data loading/saving) — the panel
+// itself needs no shell orchestration, just the same "Back to World" header
+// SiteConfigView uses. Modules with real cross-component shared state (the
+// site editor's Sidebar+EditorPane+PreviewPane, with its page/section modals
+// and split-view resize) aren't safe to lift this way and stay on Classic
+// Tools until they get a dedicated extraction.
+function SimpleEmbedView({ componentId, scope, onClear }) {
+  const entry = SIMPLE_EMBED_COMPONENTS[componentId];
+  if (!entry) return null;
+  return (
+    <div style={S.embedShell}>
+      <div style={S.embedHeader}>
+        <button style={S.backBtn} onClick={onClear}>← Back to World</button>
+        <div style={S.embedTitle}>{entry.title}</div>
+      </div>
+      <div style={S.embedBody}>{entry.render(scope)}</div>
     </div>
   );
 }

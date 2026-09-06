@@ -27,15 +27,22 @@ export const ISLAND_REGISTRY = {
   // resolveWorldIslands silently dropped it per this file's own documented
   // behavior: the platform's most central module had no planet in the world
   // at all.
+  // Still 'classic': the site editor's Sidebar+EditorPane+PreviewPane share
+  // a large block of AdminShell-local state (page/section modals, the
+  // split-view resize divider, layout mode, page-type loading) — not a
+  // single self-contained panel, so it isn't safe to lift into an embed
+  // without a dedicated extraction. Everything below it already was a
+  // simple, self-contained panel and has been converted to 'embed'
+  // (2026-09-06, first module-by-module Classic Tools replacements).
   content: { variant: 'hourglass', kind: 'classic', accent: 'teal' },
   careerPlacementAgents: { variant: 'agentHub', kind: 'docked', accent: 'gold' },
   commercialOpportunities: { variant: 'commercialPipeline', kind: 'docked', accent: 'gold' },
   config: { variant: 'table', kind: 'embed', accent: 'teal' },
   herqPublications: { variant: 'publication', kind: 'docked', accent: 'gold' },
-  lonetreeMvp: { variant: 'engine', kind: 'classic', accent: 'teal' },
-  careerMaster: { variant: 'founder', kind: 'classic', accent: 'pink' },
-  outputTemplates: { variant: 'token', kind: 'classic', accent: 'gold' },
-  leads: { variant: 'rings', kind: 'classic', accent: 'teal' },
+  lonetreeMvp: { variant: 'engine', kind: 'embed', accent: 'teal' },
+  careerMaster: { variant: 'founder', kind: 'embed', accent: 'pink' },
+  outputTemplates: { variant: 'token', kind: 'embed', accent: 'gold' },
+  leads: { variant: 'rings', kind: 'embed', accent: 'teal' },
 };
 
 // `tabs` — an array of `{ id, label, componentId, sortOrder, enabled }`,
