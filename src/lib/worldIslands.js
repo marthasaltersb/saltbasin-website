@@ -5,16 +5,39 @@
 // schema: islands are permission-driven because they're derived straight
 // from the same config that already gates AdminShell's tab rendering.
 //
-// Three island "kinds":
+// Destination metadata (2026-09-06): every island — and every moon inside an
+// 'atmosphere' island — is now a full destination definition, not just a
+// scene-kind switch. Two new fields, uniform across every entry:
+//
+//  - dataBinding: { store, fields } — which persisted JSON blob this
+//    destination actually reads/writes (`config_state`/`member_configs`
+//    ("config"), `site_state`/`member_sites` ("site")), and which top-level
+//    keys inside it. This is honest, best-effort documentation of what's
+//    real today, not a new runtime data layer — nothing reads dataBinding
+//    to fetch data; the panel components still own their own api.* calls.
+//  - permission: { requiredRole, crud, enforced } — the intended access
+//    rule in the same shape as data_entitlements.scope (capabilities/CRUD-
+//    style), but `enforced: false` everywhere: no route or component checks
+//    this yet. Recording the intent without claiming enforcement that isn't
+//    coded is the same rule this codebase already applies to
+//    agent_boundary_ref (see CLAUDE.md's Career Placement Agents section) —
+//    don't repeat the mistake in a new place.
+//
+// Only 'content' and 'config' have been audited field-by-field (they're
+// what this pass actually touched). The rest carry a best-effort
+// dataBinding from what's already documented elsewhere in this codebase,
+// not a fresh line-by-line audit — treat those as a starting point, not a
+// verified spec.
+//
+// Four island "kinds":
 //  - 'docked'  — the module has a real data hook (useOpportunityPipeline-
 //                based) WorldShell can render inline as a docked inspector
 //                panel after the camera dollies in.
-//  - 'embed'   — the module has a real, existing full-size component (too
-//                big for the ~300px docked rail — e.g. ConfigPanel.jsx is
-//                1600+ lines) that gets mounted full-screen (the same
-//                fixed-overlay pattern Classic Tools already uses) instead
-//                of squeezed into the rail. Still fully in-world — a "Back
-//                to World" control, not a hand-off to a different surface.
+//  - 'embed'   — the module has a real, existing full-size component
+//                mounted full-screen (the same fixed-overlay pattern
+//                Classic Tools already uses) instead of squeezed into the
+//                rail. Still fully in-world — a "Back to World" control,
+//                not a hand-off to a different surface.
 //  - 'classic' — no dedicated in-world view built yet; dollying in hands
 //                off to the Classic Tools view (the existing AdminShell/
 //                MemberDashboard, mounted unchanged inside WorldShell) at
@@ -25,9 +48,14 @@
 //                toward the planet while the crystal core and every other
 //                island converge and shrink away, then hands off to a
 //                dedicated zoomed-in scene (PlanetAtmosphereView.jsx) where
-//                the planet's own `moons` array orbits it. Distinct from
-//                'embed' because it owns its own camera rig and transition,
-//                not a full-screen panel drop-in.
+//                the planet's own `moons` array orbits it. A moon is itself
+//                a small destination definition: either `destinationKey`
+//                (points at another top-level ISLAND_REGISTRY entry — if
+//                that destination is also 'atmosphere', PlanetAtmosphereView
+//                drills straight into ITS moons, one shared definition, not
+//                a duplicated copy) or `panel` (mounts a named, real
+//                component directly) or neither (renders an honest "not yet
+//                defined" panel — never a fabricated one).
 export const ISLAND_REGISTRY = {
   // The Salt Basin Website / page-and-section editor (componentId 'content')
   // — admin's own "My Profile" tab (sortOrder 0) and, as of 2026-09-06, a
@@ -35,27 +63,84 @@ export const ISLAND_REGISTRY = {
   // resolveWorldIslands silently dropped it per this file's own documented
   // behavior: the platform's most central module had no planet in the world
   // at all. Given its own "Salt Tide" planet variant and moons per Betsy's
-  // 2026-09-06 spec. The moons themselves are still a mix: 'siteConfiguration'
-  // reuses the real, existing ConfigPanel (via WorldShell's SiteConfigView);
-  // 'saltTideSettings' has no defined content anywhere in the codebase yet —
-  // it renders an honest "not yet defined" panel rather than inventing one.
+  // 2026-09-06 spec.
   content: {
     variant: 'salttide',
     kind: 'atmosphere',
     accent: 'teal',
+    dataBinding: { store: 'site', fields: ['pages'] },
+    permission: { requiredRole: 'owner', crud: ['read', 'update', 'publish'], enforced: false },
     moons: [
-      { key: 'siteConfiguration', label: 'Site Configuration', target: 'config' },
-      { key: 'saltTideSettings', label: 'SaltTide Settings', target: 'undefined' },
+      // Site Configuration is its OWN planet definition below (Betsy,
+      // 2026-09-06: "Site Configuration as a module is the planet
+      // definition") — this moon just references it by key rather than
+      // duplicating its scene/data/permission definition. Clicking it
+      // drills straight into that destination's own moons.
+      { key: 'siteConfiguration', label: 'Site Configuration', destinationKey: 'config' },
+      // No defined content anywhere in the codebase yet — renders an
+      // honest "not yet defined" panel rather than inventing one.
+      { key: 'saltTideSettings', label: 'SaltTide Settings' },
     ],
   },
-  careerPlacementAgents: { variant: 'agentHub', kind: 'docked', accent: 'gold' },
-  commercialOpportunities: { variant: 'commercialPipeline', kind: 'docked', accent: 'gold' },
-  config: { variant: 'table', kind: 'embed', accent: 'teal' },
-  herqPublications: { variant: 'publication', kind: 'docked', accent: 'gold' },
-  lonetreeMvp: { variant: 'engine', kind: 'embed', accent: 'teal' },
-  careerMaster: { variant: 'founder', kind: 'embed', accent: 'pink' },
-  outputTemplates: { variant: 'token', kind: 'embed', accent: 'gold' },
-  leads: { variant: 'rings', kind: 'embed', accent: 'teal' },
+  // Promoted from a flat 'embed' (one long ConfigPanel scroll) to its own
+  // 'atmosphere' planet (2026-09-06) — real moons matching ConfigPanel.jsx's
+  // actual card sections. ConfigPanel itself hasn't been split into
+  // separately-routable components yet (it's one 1600+ line file with
+  // internally modular cards — ThemeSwatch/ColorField/ResumePresetsCard/
+  // EmailManager/JiraCard/ClaudeConnectionCard/MemberDbsCard/
+  // ConnectedAppsCard — but no top-level router between them), so every
+  // moon below still opens the same SiteConfigView for now. The
+  // dataBinding/permission split is real and ready for whenever ConfigPanel
+  // is actually split into routable panels — that's the next piece, not
+  // done here.
+  config: {
+    variant: 'table',
+    kind: 'atmosphere',
+    accent: 'teal',
+    dataBinding: { store: 'config', fields: ['theme', 'brand', 'site', 'resumePresets', 'integrations'] },
+    permission: { requiredRole: 'owner', crud: ['read', 'update', 'publish'], enforced: false },
+    moons: [
+      { key: 'themeBrand', label: 'Theme & Brand', panel: 'siteConfigView', dataBinding: { store: 'config', fields: ['theme', 'brand'] }, permission: { requiredRole: 'owner', crud: ['read', 'update'], enforced: false } },
+      { key: 'socialContact', label: 'Social & Contact', panel: 'siteConfigView', dataBinding: { store: 'config', fields: ['site'] }, permission: { requiredRole: 'owner', crud: ['read', 'update'], enforced: false } },
+      { key: 'resumePresets', label: 'Resume Presets', panel: 'siteConfigView', dataBinding: { store: 'config', fields: ['resumePresets'] }, permission: { requiredRole: 'owner', crud: ['read', 'update'], enforced: false } },
+      { key: 'integrations', label: 'Integrations', panel: 'siteConfigView', dataBinding: { store: 'config', fields: ['integrations'] }, permission: { requiredRole: 'owner', crud: ['read', 'update'], enforced: false } },
+    ],
+  },
+  careerPlacementAgents: {
+    variant: 'agentHub', kind: 'docked', accent: 'gold',
+    dataBinding: { store: 'journey_data_rods', fields: ['career_opportunity_target rods, journey_rod_evidence'] },
+    permission: { requiredRole: 'owner', crud: ['read', 'update'], enforced: false },
+  },
+  commercialOpportunities: {
+    variant: 'commercialPipeline', kind: 'docked', accent: 'gold',
+    dataBinding: { store: 'journey_data_rods', fields: ['commercial_opportunity_target rods, journey_rod_evidence'] },
+    permission: { requiredRole: 'admin', crud: ['read', 'update'], enforced: false },
+  },
+  herqPublications: {
+    variant: 'publication', kind: 'docked', accent: 'gold',
+    dataBinding: { store: 'publications' },
+    permission: { requiredRole: 'owner', crud: ['read', 'update'], enforced: false },
+  },
+  lonetreeMvp: {
+    variant: 'engine', kind: 'embed', accent: 'teal',
+    dataBinding: { store: 'lonetree_demo' },
+    permission: { requiredRole: 'owner', crud: ['read'], enforced: false },
+  },
+  careerMaster: {
+    variant: 'founder', kind: 'embed', accent: 'pink',
+    dataBinding: { store: 'career_jobs/skills/tools/engagements/domains/certifications/deals' },
+    permission: { requiredRole: 'owner', crud: ['read', 'update'], enforced: false },
+  },
+  outputTemplates: {
+    variant: 'token', kind: 'embed', accent: 'gold',
+    dataBinding: { store: 'output_templates' },
+    permission: { requiredRole: 'owner', crud: ['read', 'update'], enforced: false },
+  },
+  leads: {
+    variant: 'rings', kind: 'embed', accent: 'teal',
+    dataBinding: { store: 'leads' },
+    permission: { requiredRole: 'admin', crud: ['read', 'update'], enforced: false },
+  },
 };
 
 // `tabs` — an array of `{ id, label, componentId, sortOrder, enabled }`,

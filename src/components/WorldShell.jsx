@@ -25,7 +25,6 @@ import { usePublicationPipeline } from '../lib/hooks/usePublicationPipeline.js';
 import AdminShell from './admin/AdminShell.jsx';
 import { attachSceneManifestTree, publishSceneManifest, removePublishedSceneManifest } from '../lib/sceneManifest.js';
 import PlanetAtmosphereView from './PlanetAtmosphereView.jsx';
-import SiteConfigView from './SiteConfigView.jsx';
 
 // Simple, self-contained panels — no AdminShell-local shared state, so they
 // can be lifted straight into a real WorldShell embed (module-by-module
@@ -527,12 +526,16 @@ export default function WorldShell() {
   }
 
   if (view === 'atmosphere' && atmosphereIsland) {
-    return <PlanetAtmosphereView island={atmosphereIsland} scope={user?.role === 'admin' ? 'admin' : 'member'} onClear={clearAtmosphere} />;
+    return (
+      <PlanetAtmosphereView
+        island={atmosphereIsland}
+        scope={user?.role === 'admin' ? 'admin' : 'member'}
+        onClear={clearAtmosphere}
+        onNavigateToIsland={setAtmosphereKey}
+      />
+    );
   }
 
-  if (focused?.kind === 'embed' && focused.componentId === 'config') {
-    return <SiteConfigView scope={user?.role === 'admin' ? 'admin' : 'member'} onClear={clearFocus} />;
-  }
   if (focused?.kind === 'embed' && SIMPLE_EMBED_COMPONENTS[focused.componentId]) {
     return <SimpleEmbedView componentId={focused.componentId} scope={user?.role === 'admin' ? 'admin' : 'member'} onClear={clearFocus} />;
   }
@@ -1200,14 +1203,14 @@ function PublicationDockedPanel({ label, herq, onClear }) {
   );
 }
 
-// Public Site Configuration island's full-screen destination (kind:'embed')
-// — SiteConfigView.jsx, extracted from this file 2026-09-06 so
-// PlanetAtmosphereView.jsx (the site editor's atmosphere scene) can reuse it
-// for its "Site Configuration" moon without a circular import between the
-// two. Wraps the existing ConfigPanel.jsx wholesale — it's 1600+ lines
-// (theme, brand colors, social, SEO, page types...), far too much for the
-// ~300px docked rail, so this island gets real screen space instead of a
-// cut-down duplicate.
+// The panel every 'config' island moon opens (Theme & Brand, Social &
+// Contact, Resume Presets, Integrations — see worldIslands.js) — extracted
+// to SiteConfigView.jsx 2026-09-06 so PlanetAtmosphereView.jsx can reuse it
+// without a circular import between the two files. Wraps the existing
+// ConfigPanel.jsx wholesale for now (it's 1600+ lines and hasn't been split
+// into separately-routable sections yet — see worldIslands.js's comment on
+// the 'config' entry), so every moon currently opens the same full panel;
+// splitting ConfigPanel itself is the next piece, not done here.
 
 // Generic wrapper for any island whose module is a single, already
 // self-contained panel (manages its own data loading/saving) — the panel

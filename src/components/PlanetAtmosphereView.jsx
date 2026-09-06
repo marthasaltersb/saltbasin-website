@@ -19,6 +19,7 @@ import * as THREE from 'three';
 import { CRYSTAL_VARIANTS, addCrystalLights } from '../lib/crystalGeometry.js';
 import { hasWebGL } from './SaltBasinCrystal.jsx';
 import SiteConfigView from './SiteConfigView.jsx';
+import { ISLAND_REGISTRY } from '../lib/worldIslands.js';
 
 const GOLD = 0xc4843a;
 const TEAL = 0x4a7c8e;
@@ -70,7 +71,16 @@ function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 // the scene in a loop.
 const EMPTY_MOONS = [];
 
-export default function PlanetAtmosphereView({ island, scope, onClear }) {
+function moonSubtitle(moon) {
+  if (moon.destinationKey) {
+    const target = ISLAND_REGISTRY[moon.destinationKey];
+    return target?.kind === 'atmosphere' ? 'enter →' : target ? 'open →' : 'not yet defined';
+  }
+  if (moon.panel) return 'open →';
+  return 'not yet defined';
+}
+
+export default function PlanetAtmosphereView({ island, scope, onClear, onNavigateToIsland }) {
   const hostRef = useRef(null);
   const [activeMoonKey, setActiveMoonKey] = useState(null);
   const moons = island.moons || EMPTY_MOONS;
@@ -126,7 +136,7 @@ export default function PlanetAtmosphereView({ island, scope, onClear }) {
         new THREE.MeshStandardMaterial({ color: TEAL, emissive: TEAL, emissiveIntensity: 0.4, roughness: 0.3, metalness: 0.4 })
       );
       holder.add(mesh);
-      const label = labelSprite(moon.label, moon.target === 'undefined' ? 'not yet defined' : null, TEAL);
+      const label = labelSprite(moon.label, moonSubtitle(moon), TEAL);
       label.position.y = 0.7;
       holder.add(label);
       scene.add(holder);
@@ -235,8 +245,49 @@ export default function PlanetAtmosphereView({ island, scope, onClear }) {
 
   const activeMoon = moons.find((m) => m.key === activeMoonKey) || null;
 
-  if (activeMoon?.target === 'config') {
+  // A moon that references another top-level destination (destinationKey)
+  // never renders its own overlay here — if that destination is itself an
+  // 'atmosphere' planet, hand navigation back up to WorldShell so it can
+  // swap which island's atmosphere is mounted (one shared definition, e.g.
+  // 'config', not a duplicated copy living under 'content' too). Runs as an
+  // effect, not during render, since it's a side effect on a prop callback.
+  useEffect(() => {
+    if (!activeMoon?.destinationKey) return;
+    const target = ISLAND_REGISTRY[activeMoon.destinationKey];
+    if (target?.kind === 'atmosphere') {
+      onNavigateToIsland?.(activeMoon.destinationKey);
+      setActiveMoonKey(null);
+    }
+  }, [activeMoon, onNavigateToIsland]);
+
+  if (activeMoon?.panel === 'siteConfigView') {
     return <SiteConfigView scope={scope} onClear={() => setActiveMoonKey(null)} />;
+  }
+  if (activeMoon?.destinationKey) {
+    const target = ISLAND_REGISTRY[activeMoon.destinationKey];
+    if (target?.kind === 'atmosphere') {
+      // One-frame gap between the click and the navigation effect above
+      // actually firing — render nothing rather than a flash of an
+      // incorrect "can't open" message.
+      return null;
+    }
+    // The referenced destination exists but isn't an 'atmosphere' kind (or
+    // doesn't resolve at all) — no current registry entry hits this, but
+    // don't silently show nothing if one ever does.
+    return (
+      <div style={S.embedShell}>
+        <div style={S.embedHeader}>
+          <button style={S.backBtn} onClick={() => setActiveMoonKey(null)}>← Back to {island.label}</button>
+          <div style={S.embedTitle}>{activeMoon.label}</div>
+        </div>
+        <div style={S.embedBody}>
+          <p style={S.placeholderText}>
+            "{activeMoon.label}" points at "{activeMoon.destinationKey}", which isn't a destination
+            PlanetAtmosphereView knows how to open yet.
+          </p>
+        </div>
+      </div>
+    );
   }
   if (activeMoon) {
     return (
