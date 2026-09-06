@@ -99,11 +99,22 @@ export const ISLAND_REGISTRY = {
     accent: 'teal',
     dataBinding: { store: 'config', fields: ['theme', 'brand', 'site', 'resumePresets', 'integrations'] },
     permission: { requiredRole: 'owner', crud: ['read', 'update', 'publish'], enforced: false },
+    // Every moon below is also a real journey stage in the Design & Config
+    // Setup Journey (server/data/scenarioLibrary.js, rod_type
+    // public_site_dev_lifecycle) — `stageKey` matches that scenario's
+    // journey_gate_definitions.stage_key exactly, and `geometry` gives each
+    // one a distinct 3D shape (Betsy, 2026-09-06: stars should be
+    // geometrically distinct, not the same octahedron five times).
+    // PlanetAtmosphereView reads both to render real progress (brightness
+    // from the actual evaluated gate, not decoration) instead of a static
+    // moon ring.
+    journeyScenarioKey: 'design_config_setup_journey',
     moons: [
-      { key: 'themeBrand', label: 'Theme & Brand', panel: 'siteConfigView', dataBinding: { store: 'config', fields: ['theme', 'brand'] }, permission: { requiredRole: 'owner', crud: ['read', 'update'], enforced: false } },
-      { key: 'socialContact', label: 'Social & Contact', panel: 'siteConfigView', dataBinding: { store: 'config', fields: ['site'] }, permission: { requiredRole: 'owner', crud: ['read', 'update'], enforced: false } },
-      { key: 'resumePresets', label: 'Resume Presets', panel: 'siteConfigView', dataBinding: { store: 'config', fields: ['resumePresets'] }, permission: { requiredRole: 'owner', crud: ['read', 'update'], enforced: false } },
-      { key: 'integrations', label: 'Integrations', panel: 'siteConfigView', dataBinding: { store: 'config', fields: ['integrations'] }, permission: { requiredRole: 'owner', crud: ['read', 'update'], enforced: false } },
+      { key: 'themeBrand', label: 'Theme & Brand', panel: 'siteConfigView', stageKey: 'theme_and_brand', geometry: 'tetrahedron', dataBinding: { store: 'config', fields: ['theme', 'brand'] }, permission: { requiredRole: 'owner', crud: ['read', 'update'], enforced: false } },
+      { key: 'socialContact', label: 'Social & Contact', panel: 'siteConfigView', stageKey: 'social_and_contact', geometry: 'octahedron', dataBinding: { store: 'config', fields: ['site'] }, permission: { requiredRole: 'owner', crud: ['read', 'update'], enforced: false } },
+      { key: 'resumePresets', label: 'Resume Presets', panel: 'siteConfigView', stageKey: 'resume_presets', geometry: 'dodecahedron', dataBinding: { store: 'config', fields: ['resumePresets'] }, permission: { requiredRole: 'owner', crud: ['read', 'update'], enforced: false } },
+      { key: 'integrations', label: 'Integrations', panel: 'siteConfigView', stageKey: 'integrations', geometry: 'icosahedron', dataBinding: { store: 'config', fields: ['integrations'] }, permission: { requiredRole: 'owner', crud: ['read', 'update'], enforced: false } },
+      { key: 'publishConfiguration', label: 'Publish Configuration', panel: 'siteConfigView', stageKey: 'publish_configuration', geometry: 'box', dataBinding: { store: 'config', fields: [] }, permission: { requiredRole: 'owner', crud: ['read', 'update', 'publish'], enforced: false } },
     ],
   },
   careerPlacementAgents: {

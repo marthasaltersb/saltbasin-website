@@ -7,23 +7,39 @@
 // can rotate the planet to see every moon in its orbit, and scroll in/out to
 // watch the planet's own material reveal what's inside it.
 //
-// The "journey destinations connected to journey data rods" floating inside
-// the planet, per Betsy's spec, aren't rendered yet — no journey_scenarios
-// row exists for this module's rod_type today (see the Constellation
-// Journey Data Model doc from this same build). Revealing the real inner
-// crystal structure honestly as the glass goes more transmissive at close
-// range is what's built now; wiring real journey-rod data into that reveal
-// is the next, separate piece, once a scenario exists to read.
+// When an island declares `journeyScenarioKey` (see worldIslands.js's
+// 'config' entry, wired 2026-09-06 to design_config_setup_journey), each of
+// its moons that also carries a `stageKey` is a real journey stage star:
+// its brightness reflects that stage's actual evaluated gate (server/lib/
+// journeyRods.js evaluateJourneyRod, called via GET /api/journey-rods/:id),
+// never a fabricated or decorative value, and consecutive stages (in
+// sort_order) are connected by a real line. An island with no
+// journeyScenarioKey renders its moons exactly as before — undimmed,
+// unconnected, no journey to reflect.
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { CRYSTAL_VARIANTS, addCrystalLights } from '../lib/crystalGeometry.js';
 import { hasWebGL } from './SaltBasinCrystal.jsx';
 import SiteConfigView from './SiteConfigView.jsx';
 import { ISLAND_REGISTRY } from '../lib/worldIslands.js';
+import { api } from '../lib/api.js';
 
 const GOLD = 0xc4843a;
 const TEAL = 0x4a7c8e;
 const CREAM = 0xf5f0e8;
+
+// Small, geometrically distinct per-stage star shapes (worldIslands.js's
+// moon.geometry) — never all the same octahedron.
+const STAR_GEOMETRIES = {
+  tetrahedron: (THREE) => new THREE.TetrahedronGeometry(0.34, 0),
+  octahedron: (THREE) => new THREE.OctahedronGeometry(0.32, 0),
+  dodecahedron: (THREE) => new THREE.DodecahedronGeometry(0.3, 0),
+  icosahedron: (THREE) => new THREE.IcosahedronGeometry(0.32, 0),
+  box: (THREE) => new THREE.BoxGeometry(0.44, 0.44, 0.44),
+};
+function starGeometry(THREE, key) {
+  return (STAR_GEOMETRIES[key] || STAR_GEOMETRIES.octahedron)(THREE);
+}
 
 function labelSprite(text, subtitle, color) {
   const scale = 3;
@@ -84,6 +100,31 @@ export default function PlanetAtmosphereView({ island, scope, onClear, onNavigat
   const hostRef = useRef(null);
   const [activeMoonKey, setActiveMoonKey] = useState(null);
   const moons = island.moons || EMPTY_MOONS;
+  // { [stageKey]: boolean } from the real evaluated journey rod — a ref, not
+  // state, since animate() reads it every frame directly against meshes it
+  // already owns; no React re-render needed to make brightness update.
+  const progressRef = useRef({});
+
+  // Real progress fetch — only for islands that declare a journey. Refetches
+  // when the user returns from a moon's panel (they may have just posted
+  // new evidence via a save), not on a timer or a guess.
+  useEffect(() => {
+    if (!island.journeyScenarioKey || activeMoonKey) return undefined;
+    let cancelled = false;
+    api.getMyJourneyRods()
+      .then(async ({ rods }) => {
+        if (cancelled) return;
+        const rod = rods.find((r) => r.metadata?.scenarioKey === island.journeyScenarioKey);
+        if (!rod) return;
+        const detail = await api.getJourneyRod(rod.id);
+        if (cancelled) return;
+        const map = {};
+        for (const gate of detail.gates || []) map[gate.stageKey] = !!gate.passed;
+        progressRef.current = map;
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [island.journeyScenarioKey, activeMoonKey]);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -131,10 +172,9 @@ export default function PlanetAtmosphereView({ island, scope, onClear, onNavigat
       holder.userData.baseAngle = angle;
       holder.userData.radius = radius;
       holder.userData.speed = 0.14 + i * 0.02;
-      const mesh = new THREE.Mesh(
-        new THREE.OctahedronGeometry(0.32, 0),
-        new THREE.MeshStandardMaterial({ color: TEAL, emissive: TEAL, emissiveIntensity: 0.4, roughness: 0.3, metalness: 0.4 })
-      );
+      holder.userData.stageKey = moon.stageKey || null;
+      const material = new THREE.MeshStandardMaterial({ color: TEAL, emissive: TEAL, emissiveIntensity: 0.4, roughness: 0.3, metalness: 0.4 });
+      const mesh = new THREE.Mesh(starGeometry(THREE, moon.geometry), material);
       holder.add(mesh);
       const label = labelSprite(moon.label, moonSubtitle(moon), TEAL);
       label.position.y = 0.7;
@@ -143,6 +183,19 @@ export default function PlanetAtmosphereView({ island, scope, onClear, onNavigat
       moonHolders.push(holder);
       moonPickables.push({ obj: mesh, key: moon.key });
     });
+
+    // Journey connector — a real line between consecutive stage moons (array
+    // order matches journey_gate_definitions.sort_order, per worldIslands.js's
+    // authoring order), not drawn at all for islands with no journeyScenarioKey
+    // or fewer than two stage-carrying moons.
+    const stageHolders = moonHolders.filter((h) => h.userData.stageKey);
+    let connectorLine = null;
+    if (island.journeyScenarioKey && stageHolders.length > 1) {
+      const connectorGeo = new THREE.BufferGeometry();
+      connectorGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(stageHolders.length * 3), 3));
+      connectorLine = new THREE.Line(connectorGeo, new THREE.LineBasicMaterial({ color: TEAL, transparent: true, opacity: 0.35 }));
+      scene.add(connectorLine);
+    }
 
     let azimuth = 0.65, elevation = 0.28, distance = 7, targetDistance = 7;
     const target = new THREE.Vector3(0, 0.2, 0);
@@ -219,7 +272,29 @@ export default function PlanetAtmosphereView({ island, scope, onClear, onNavigat
         holder.userData.baseAngle += dt * holder.userData.speed;
         const a = holder.userData.baseAngle, r = holder.userData.radius;
         holder.position.set(Math.cos(a) * r, Math.sin(a * 1.6) * 0.4, Math.sin(a) * r);
+        // Real brightness: dim (not reached / no rod yet) vs. lit (the
+        // stage's own gate actually passed, per the last-fetched
+        // evaluateJourneyRod result) — never a fabricated in-between value.
+        if (holder.userData.stageKey) {
+          const passed = !!progressRef.current[holder.userData.stageKey];
+          const mesh = holder.children[0];
+          if (mesh?.material) {
+            mesh.material.emissiveIntensity = lerp(mesh.material.emissiveIntensity, passed ? 1.1 : 0.18, 0.06);
+            const targetScale = passed ? 1.15 : 0.85;
+            mesh.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.06);
+          }
+        }
       });
+
+      if (connectorLine) {
+        const positions = connectorLine.geometry.attributes.position.array;
+        stageHolders.forEach((holder, i) => {
+          positions[i * 3] = holder.position.x;
+          positions[i * 3 + 1] = holder.position.y;
+          positions[i * 3 + 2] = holder.position.z;
+        });
+        connectorLine.geometry.attributes.position.needsUpdate = true;
+      }
 
       renderer.render(scene, camera);
     }

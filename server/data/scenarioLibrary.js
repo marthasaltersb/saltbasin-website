@@ -85,6 +85,62 @@ export const SCENARIO_LIBRARY = Object.freeze({
         }),
       ]),
     }),
+    // Design & Config Setup Journey (2026-09-06) — the first of the Public
+    // Site Dev Lifecycle's four connected journeys to get real stages (see
+    // db.js's journey_stage_gates seed for public_site_dev_lifecycle and the
+    // config_* Atoms seeded alongside it). Every gate requires a real
+    // boolean-presence Atom that SiteConfigView.jsx posts as evidence on
+    // save — self-service, so judgmentPolicy is 'never' throughout rather
+    // than default_revenue's human-judgment gates.
+    Object.freeze({
+      scenarioKey: 'design_config_setup_journey',
+      rodType: 'public_site_dev_lifecycle',
+      label: 'Design & Config Setup Journey',
+      description: "A member's (or admin's) walk through configuring their site's theme, brand, contact info, resume presets, and integrations before publishing. Self-service — every gate is evidence-driven from a real ConfigPanel save, never a human-judgment gate.",
+      actorRoles: Object.freeze(['site_owner']),
+      gates: Object.freeze([
+        Object.freeze({
+          stageKey: 'theme_and_brand',
+          label: 'Choose Theme & Brand',
+          sortOrder: 10,
+          requiredMolecules: Object.freeze(['config_theme_and_brand_set']),
+          judgmentPolicy: 'never',
+          humanPrompt: null,
+        }),
+        Object.freeze({
+          stageKey: 'social_and_contact',
+          label: 'Social & Contact',
+          sortOrder: 20,
+          requiredMolecules: Object.freeze(['config_social_and_contact_set']),
+          judgmentPolicy: 'never',
+          humanPrompt: null,
+        }),
+        Object.freeze({
+          stageKey: 'resume_presets',
+          label: 'Resume Presets',
+          sortOrder: 30,
+          requiredMolecules: Object.freeze(['config_resume_presets_set']),
+          judgmentPolicy: 'never',
+          humanPrompt: null,
+        }),
+        Object.freeze({
+          stageKey: 'integrations',
+          label: 'Connect Integrations',
+          sortOrder: 40,
+          requiredMolecules: Object.freeze(['config_integrations_connected']),
+          judgmentPolicy: 'never',
+          humanPrompt: null,
+        }),
+        Object.freeze({
+          stageKey: 'publish_configuration',
+          label: 'Publish Configuration',
+          sortOrder: 50,
+          requiredMolecules: Object.freeze(['config_published']),
+          judgmentPolicy: 'never',
+          humanPrompt: null,
+        }),
+      ]),
+    }),
   ]),
 });
 
