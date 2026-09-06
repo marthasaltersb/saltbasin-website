@@ -123,23 +123,114 @@ function ConnectionActions({ slug }) {
   );
 }
 
+// Rendered instead of the site when the owner's visibility_mode blocks this
+// viewer (memberVisibilityRegistry.js). Three reasons come back from the
+// server: password_required (this profile's own visitor password, separate
+// from any login), friends_only (viewer must be logged in with an accepted
+// member_connections row with the owner), login_required (friends_only with
+// no viewer at all).
+function VisibilityGate({ slug, reason, onUnlocked }) {
+  const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [err, setErr] = useState('');
+
+  async function submit(e) {
+    e.preventDefault();
+    setSubmitting(true);
+    setErr('');
+    try {
+      const r = await fetch(`/api/member-site/by-slug/${encodeURIComponent(slug)}/unlock`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(body.error || 'Incorrect password');
+      onUnlocked();
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const wrapStyle = {
+    minHeight: '70vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    flexDirection: 'column', color: 'var(--sb-cream)', textAlign: 'center', padding: '4rem 2rem',
+  };
+
+  if (reason === 'password_required') {
+    return (
+      <div style={wrapStyle}>
+        <h1 className="sb-display" style={{ fontSize: '2rem', marginBottom: '1rem' }}>This profile is password-protected</h1>
+        <form onSubmit={submit} style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <input
+            type="password"
+            autoFocus
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter password"
+            style={{ padding: '0.6rem 0.9rem', borderRadius: 6, border: '0.5px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: 'var(--sb-cream)', fontSize: '0.9rem', minWidth: 220 }}
+          />
+          <button type="submit" disabled={submitting || !password} className="sb-btn sb-btn-gold">{submitting ? 'Checking…' : 'Unlock'}</button>
+        </form>
+        {err && <p style={{ color: 'var(--sb-risk-critical, #c44a4a)', marginTop: '0.9rem' }}>{err}</p>}
+        <div style={{ marginTop: '2rem' }}><BackLink>← Back to Salt Basin</BackLink></div>
+      </div>
+    );
+  }
+
+  if (reason === 'friends_only') {
+    return (
+      <div style={wrapStyle}>
+        <h1 className="sb-display" style={{ fontSize: '2rem', marginBottom: '1rem' }}>This profile is only visible to connections</h1>
+        <p style={{ color: 'var(--sb-sage)', marginBottom: '2rem', maxWidth: 480 }}>
+          The owner has limited this profile to accepted connections. Send a connection request from the Salt Basin marketplace, or ask them to accept your request, then check back.
+        </p>
+        <BackLink>← Back to Salt Basin</BackLink>
+      </div>
+    );
+  }
+
+  // login_required
+  return (
+    <div style={wrapStyle}>
+      <h1 className="sb-display" style={{ fontSize: '2rem', marginBottom: '1rem' }}>Sign in to view this profile</h1>
+      <p style={{ color: 'var(--sb-sage)', marginBottom: '2rem', maxWidth: 480 }}>
+        The owner only shows this profile to their accepted connections.
+      </p>
+      <Link to={`/login?next=${encodeURIComponent(`/u/${slug}`)}`} className="sb-btn sb-btn-gold">Sign in</Link>
+    </div>
+  );
+}
+
 export default function PublicProfile() {
   const params = useParams();
   const slug = params.slug;
   const subPath = params['*'] || ''; // '' for home, 'about' for /u/:slug/about
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const [gate, setGate] = useState(null); // { reason } while the profile is visibility-gated for this viewer
   const [platformNav, setPlatformNav] = useState(null);
 
-  useEffect(() => {
-    fetch(`/api/member-site/by-slug/${encodeURIComponent(slug)}`)
-      .then((r) => {
+  function loadProfile() {
+    setError(null);
+    setGate(null);
+    // credentials: 'include' matters here — the server's visibility check
+    // reads the viewer's login cookie (for friends_only/owner-preview) and
+    // the per-member unlock cookie set by the password gate below.
+    fetch(`/api/member-site/by-slug/${encodeURIComponent(slug)}`, { credentials: 'include' })
+      .then(async (r) => {
+        const body = await r.json().catch(() => ({}));
+        if (r.status === 403 && body.error) { setGate({ reason: body.error }); return; }
         if (!r.ok) throw new Error('Profile not published yet');
-        return r.json();
+        setData(body);
       })
-      .then(setData)
       .catch((e) => setError(e.message));
-  }, [slug]);
+  }
+
+  useEffect(loadProfile, [slug]);
 
   useEffect(() => {
     Promise.all([
@@ -198,6 +289,9 @@ export default function PublicProfile() {
         <BackLink>← Back to Salt Basin</BackLink>
       </div>
     );
+  }
+  if (gate) {
+    return <VisibilityGate slug={slug} reason={gate.reason} onUnlocked={loadProfile} />;
   }
   if (!data) return null;
 

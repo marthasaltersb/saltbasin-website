@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import { db } from '../db.js';
 import { getUserFromCookie } from '../auth.js';
 import { dispatchRaw as sendRaw } from '../lib/email.js';
+import { VISIBILITY_MODES } from '../lib/memberVisibilityRegistry.js';
 
 const router = Router();
 
@@ -206,6 +207,35 @@ router.put('/reference-requests/:id/status', async (req, res) => {
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: 'Failed to update status' });
+  }
+});
+
+// GET /api/nrm/marketplace/search — PUBLIC. The Salt Basin marketplace
+// directory: only members who explicitly set visibility_mode =
+// 'public_searchable' (server/lib/memberVisibilityRegistry.js) appear here.
+// Deliberately distinct from /opted-in-members below (internal, requires
+// login, driven by the older opted_in_network flag) and from
+// featured.displayOnHome (the Salt Basin home-page banner, member_configs
+// JSON) — three separate opt-ins Betsy defined, not one collapsed into
+// another. Sending a friend/connection request from a search result reuses
+// the existing POST /api/members/me/connections/request — no parallel
+// request mechanism here.
+router.get('/marketplace/search', async (req, res) => {
+  const q = (req.query.q || '').toString().trim().slice(0, 100);
+  try {
+    const rows = await db.prepare(`
+      SELECT u.id, u.display_name, mp.slug, mp.network_bio
+        FROM users u
+        JOIN member_profiles mp ON mp.user_id = u.id
+       WHERE mp.visibility_mode = $1
+         AND ($2 = '' OR u.display_name ILIKE '%' || $2 || '%' OR mp.network_bio ILIKE '%' || $2 || '%')
+       ORDER BY u.display_name ASC
+       LIMIT 100
+    `).all(VISIBILITY_MODES.PUBLIC_SEARCHABLE, q);
+    res.json({ members: rows });
+  } catch (e) {
+    console.error('[nrm] marketplace search error:', e.message);
+    res.status(500).json({ error: 'Search failed' });
   }
 });
 

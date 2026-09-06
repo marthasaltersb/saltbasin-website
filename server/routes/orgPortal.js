@@ -23,8 +23,20 @@ async function hasOrgConsent(userId, orgId) {
   return !!latest && latest.action === 'granted' && latest.consent_version === def.consentVersion;
 }
 
+// The :orgId route param accepts either the numeric organization_profiles.id
+// (back-compat with any existing links/bookmarks) or the org's slug — so a
+// client-scoped organization can be reached at a human-readable
+// /org/<slug> URL, matching the same convention /u/:slug already uses for
+// members. Slugs are non-numeric by construction (see server/db.js's slug
+// generation), so a plain numeric string is never ambiguous with a slug.
+async function resolveOrgId(param) {
+  if (/^\d+$/.test(param)) return Number(param);
+  const row = await db.prepare(`SELECT id FROM organization_profiles WHERE slug = $1`).get(param);
+  return row ? Number(row.id) : null;
+}
+
 async function access(req, res) {
-  const orgId = Number(req.params.orgId);
+  const orgId = await resolveOrgId(req.params.orgId);
   const row = Number.isInteger(orgId) && await db.prepare(`SELECT om.role, op.name, op.slug FROM org_memberships om JOIN organization_profiles op ON op.id=om.org_id WHERE om.user_id=$1 AND om.org_id=$2`).get(req.user.id, orgId);
   if (!row) { res.status(403).json({ error: 'organization access denied' }); return null; }
   if (!(await hasOrgConsent(req.user.id, orgId))) {
@@ -39,8 +51,8 @@ async function access(req, res) {
 // access) status + acknowledgement wording, mirroring the career-consent
 // gate pattern (career/consent-status) so the client never hardcodes copy.
 router.get('/:orgId/consent-status', async (req, res) => {
-  const orgId = Number(req.params.orgId);
-  if (!Number.isInteger(orgId)) return res.status(400).json({ error: 'invalid orgId' });
+  const orgId = await resolveOrgId(req.params.orgId);
+  if (!Number.isInteger(orgId)) return res.status(404).json({ error: 'organization not found' });
   const membership = await db.prepare(`SELECT 1 FROM org_memberships WHERE user_id=$1 AND org_id=$2`).get(req.user.id, orgId);
   if (!membership) return res.status(403).json({ error: 'organization access denied' });
   const def = consentDefinition('organization_data_scope');
@@ -54,8 +66,8 @@ router.get('/:orgId/consent-status', async (req, res) => {
 // member (any role) — this doesn't grant membership, only unblocks the
 // data-access gate above once granted.
 router.post('/:orgId/consent', async (req, res) => {
-  const orgId = Number(req.params.orgId);
-  if (!Number.isInteger(orgId)) return res.status(400).json({ error: 'invalid orgId' });
+  const orgId = await resolveOrgId(req.params.orgId);
+  if (!Number.isInteger(orgId)) return res.status(404).json({ error: 'organization not found' });
   const membership = await db.prepare(`SELECT 1 FROM org_memberships WHERE user_id=$1 AND org_id=$2`).get(req.user.id, orgId);
   if (!membership) return res.status(403).json({ error: 'organization access denied' });
 
