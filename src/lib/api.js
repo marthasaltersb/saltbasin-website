@@ -139,6 +139,15 @@ export const api = {
   saveMemberDraftConfig: (config) =>
     request('/api/member-config/draft', { method: 'PUT', body: JSON.stringify(config) }),
   publishMemberConfig: () => request('/api/member-config/publish', { method: 'POST' }),
+
+  // Channel Journey Rods — generic, scenario-driven (server/lib/journeyRods.js).
+  getMyJourneyRods: () => request('/api/journey-rods/me'),
+  getJourneyCatalog: () => request('/api/journey-rods/catalog'),
+  createJourneyRod: (scenarioKey, label) =>
+    request('/api/journey-rods', { method: 'POST', body: JSON.stringify({ scenarioKey, label }) }),
+  getJourneyRod: (rodId) => request(`/api/journey-rods/${rodId}`),
+  postJourneyEvidence: (rodId, moleculeKey, value, extra = {}) =>
+    request(`/api/journey-rods/${rodId}/evidence`, { method: 'POST', body: JSON.stringify({ moleculeKey, value, ...extra }) }),
   getOrgPortalContext: (id) => request(`/api/org-portal/${id}/context`),
   getMyOrganizations: () => request('/api/profiles/me/orgs'),
   getOrgSite: (id) => request(`/api/org-portal/${id}/site`),

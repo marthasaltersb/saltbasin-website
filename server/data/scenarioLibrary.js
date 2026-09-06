@@ -85,6 +85,133 @@ export const SCENARIO_LIBRARY = Object.freeze({
         }),
       ]),
     }),
+    // Design & Config Setup Journey (2026-09-06) — the first of the Public
+    // Site Dev Lifecycle's four connected journeys to get real stages (see
+    // db.js's journey_stage_gates seed for public_site_dev_lifecycle and the
+    // config_* Atoms seeded alongside it). Every gate requires a real
+    // boolean-presence Atom that SiteConfigView.jsx posts as evidence on
+    // save — self-service, so judgmentPolicy is 'never' throughout rather
+    // than default_revenue's human-judgment gates.
+    Object.freeze({
+      scenarioKey: 'design_config_setup_journey',
+      rodType: 'public_site_dev_lifecycle',
+      label: 'Design & Config Setup Journey',
+      description: "A member's (or admin's) walk through configuring their site's theme, brand, contact info, resume presets, and integrations before publishing. Self-service — every gate is evidence-driven from a real ConfigPanel save, never a human-judgment gate.",
+      actorRoles: Object.freeze(['site_owner']),
+      gates: Object.freeze([
+        Object.freeze({
+          stageKey: 'theme_and_brand',
+          label: 'Choose Theme & Brand',
+          sortOrder: 10,
+          requiredMolecules: Object.freeze(['config_theme_and_brand_set']),
+          judgmentPolicy: 'never',
+          humanPrompt: null,
+        }),
+        Object.freeze({
+          stageKey: 'social_and_contact',
+          label: 'Social & Contact',
+          sortOrder: 20,
+          requiredMolecules: Object.freeze(['config_social_and_contact_set']),
+          judgmentPolicy: 'never',
+          humanPrompt: null,
+        }),
+        Object.freeze({
+          stageKey: 'resume_presets',
+          label: 'Resume Presets',
+          sortOrder: 30,
+          requiredMolecules: Object.freeze(['config_resume_presets_set']),
+          judgmentPolicy: 'never',
+          humanPrompt: null,
+        }),
+        Object.freeze({
+          stageKey: 'integrations',
+          label: 'Connect Integrations',
+          sortOrder: 40,
+          requiredMolecules: Object.freeze(['config_integrations_connected']),
+          judgmentPolicy: 'never',
+          humanPrompt: null,
+        }),
+        Object.freeze({
+          stageKey: 'publish_configuration',
+          label: 'Publish Configuration',
+          sortOrder: 50,
+          requiredMolecules: Object.freeze(['config_published']),
+          judgmentPolicy: 'never',
+          humanPrompt: null,
+        }),
+      ]),
+    }),
+    // Definition Journey (2026-09-06) — "assigned admin users only can
+    // create new journey data rods" (Betsy, verbatim). requiresAdminToCreate
+    // is read and enforced in routes/journeyRods.js POST / — a scenario
+    // metadata flag, not a hardcoded scenario-key string compare, so a
+    // future admin-only journey just sets the same flag rather than needing
+    // a code change. Stages are the two real admin-only structural editors
+    // that already exist (page-types, admin-nav) — evidence is posted
+    // server-side from those routes, not by the client.
+    Object.freeze({
+      scenarioKey: 'definition_journey',
+      rodType: 'public_site_dev_lifecycle',
+      label: 'Definition Journey',
+      description: 'An admin defining the platform-wide structural taxonomy new site journeys build on: page types and the navigation structure. Admin-only rod creation — this is platform structure, not a member-scoped setting.',
+      actorRoles: Object.freeze(['admin']),
+      metadata: Object.freeze({ requiresAdminToCreate: true }),
+      gates: Object.freeze([
+        Object.freeze({
+          stageKey: 'page_types_defined',
+          label: 'Define Page Types',
+          sortOrder: 10,
+          requiredMolecules: Object.freeze(['definition_page_types_reviewed']),
+          judgmentPolicy: 'never',
+          humanPrompt: null,
+        }),
+        Object.freeze({
+          stageKey: 'navigation_structure_defined',
+          label: 'Define Navigation Structure',
+          sortOrder: 20,
+          requiredMolecules: Object.freeze(['definition_navigation_structure_reviewed']),
+          judgmentPolicy: 'never',
+          humanPrompt: null,
+        }),
+      ]),
+    }),
+    // Site Composition Journey (2026-09-06) — the actual page/section
+    // authoring in the site editor. Every gate's evidence is posted
+    // server-side (memberSite.js / site.js) from the real saved site JSON,
+    // not tracked a second time in the client.
+    Object.freeze({
+      scenarioKey: 'site_composition_journey',
+      rodType: 'public_site_dev_lifecycle',
+      label: 'Site Composition Journey',
+      description: "A member's (or admin's) walk through building out their site's actual pages and section content, then publishing.",
+      actorRoles: Object.freeze(['site_owner']),
+      gates: Object.freeze([
+        Object.freeze({
+          stageKey: 'pages_defined',
+          label: 'Define Site Pages',
+          sortOrder: 10,
+          requiredMolecules: Object.freeze(['site_pages_defined']),
+          judgmentPolicy: 'never',
+          humanPrompt: null,
+        }),
+        Object.freeze({
+          stageKey: 'sections_composed',
+          label: 'Compose Sections',
+          sortOrder: 20,
+          requiredMolecules: Object.freeze(['site_sections_composed']),
+          judgmentPolicy: 'never',
+          humanPrompt: null,
+        }),
+        Object.freeze({
+          stageKey: 'site_published',
+          label: 'Publish Site',
+          sortOrder: 30,
+          requiredMolecules: Object.freeze(['site_published']),
+          judgmentPolicy: 'never',
+          humanPrompt: null,
+        }),
+      ]),
+    }),
   ]),
 });
 

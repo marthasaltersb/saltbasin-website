@@ -519,6 +519,33 @@ async function bootstrap() {
     ['member','member_active','Member Active',10],
     ['customer','member_profile','Member Profile',0],
     ['customer','organization_connected','Organization Connected',10],
+    // Public Site Dev Lifecycle (2026-09-06) — the umbrella rod_type for the
+    // Salt Basin Website module's four connected journeys (Definition,
+    // Design & Config Setup, Site Composition, Site Workflow — see
+    // scenarioLibrary.js). Only Design & Config Setup Journey's stages are
+    // seeded so far; the other three scenarios/stage sets are a follow-up,
+    // not fabricated placeholders here.
+    ['public_site_dev_lifecycle','theme_and_brand','Choose Theme & Brand',10],
+    ['public_site_dev_lifecycle','social_and_contact','Social & Contact',20],
+    ['public_site_dev_lifecycle','resume_presets','Resume Presets',30],
+    ['public_site_dev_lifecycle','integrations','Connect Integrations',40],
+    ['public_site_dev_lifecycle','publish_configuration','Publish Configuration',50],
+    // Definition Journey (2026-09-06) — admin-only per Betsy's explicit
+    // requirement (enforced in routes/journeyRods.js POST / via the
+    // scenario's metadata.requiresAdminToCreate, not just documented here).
+    // Stages map to the two real admin-only structural editors that already
+    // exist: page type taxonomy (PUT /api/config/page-types) and the
+    // platform nav structure (PUT /api/config/admin-nav).
+    ['public_site_dev_lifecycle','page_types_defined','Define Page Types',10],
+    ['public_site_dev_lifecycle','navigation_structure_defined','Define Navigation Structure',20],
+    // Site Composition Journey (2026-09-06) — the actual page/section
+    // authoring in the site editor (componentId 'content'). Stages are
+    // observed server-side from the saved site JSON on every draft save
+    // (server/routes/memberSite.js and server/routes/site.js), not from a
+    // second client-side tracking mechanism.
+    ['public_site_dev_lifecycle','pages_defined','Define Site Pages',10],
+    ['public_site_dev_lifecycle','sections_composed','Compose Sections',20],
+    ['public_site_dev_lifecycle','site_published','Publish Site',30],
   ]) {
     await sql.unsafe(`INSERT INTO journey_stage_gates (rod_type, stage_key, label, sort_order, created_at, updated_at)
       VALUES ($1,$2,$3,$4,$5,$5) ON CONFLICT (rod_type, stage_key) DO UPDATE SET label=EXCLUDED.label, sort_order=EXCLUDED.sort_order, updated_at=EXCLUDED.updated_at`,
@@ -575,6 +602,14 @@ async function bootstrap() {
     -- specific already).
     ALTER TABLE journey_scenarios ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}';
     ALTER TABLE journey_gate_definitions ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}';
+    -- A gate never had its own human-readable name — journey_stage_gates
+    -- (the coarser, rod_type-only vocabulary list) has a label column, but a
+    -- scenario-specific gate did not, and scenarioLibrary.js's authoring
+    -- format only ever carried stageKey. Needed for real per-stage display
+    -- names (constellation stars, journey UIs) without a join that assumes
+    -- every scenario's stage_keys are also registered in journey_stage_gates
+    -- under the exact same label (2026-09-06).
+    ALTER TABLE journey_gate_definitions ADD COLUMN IF NOT EXISTS label TEXT;
     ALTER TABLE journey_rod_evidence ADD COLUMN IF NOT EXISTS effective_from BIGINT;
     ALTER TABLE journey_rod_evidence ADD COLUMN IF NOT EXISTS effective_to BIGINT;
     ALTER TABLE journey_rod_evidence ADD COLUMN IF NOT EXISTS lineage_parent_id BIGINT REFERENCES journey_rod_evidence(id) ON DELETE SET NULL;
@@ -996,6 +1031,44 @@ async function bootstrap() {
       [key, label, dataType, canonicalDefinition, valueDomain, nowAtomSeed]
     );
   }
+  // Design & Config Setup Journey Atoms (2026-09-06) — one boolean-presence
+  // Atom per real ConfigPanel section, so each gate is evidence-driven
+  // (SiteConfigView.jsx posts evidence on save) rather than a structural
+  // placeholder that would trivially "pass" the moment a rod exists.
+  const nowConfigJourneyAtomSeed = Date.now();
+  for (const [key, label, canonicalDefinition] of [
+    ['config_theme_and_brand_set', 'Theme & Brand Set', 'True once config.theme is chosen and/or config.brand overrides are non-empty.'],
+    ['config_social_and_contact_set', 'Social & Contact Set', 'True once config.site (owner name, domain, social links) has real values.'],
+    ['config_resume_presets_set', 'Resume Presets Set', 'True once at least one resume preset exists in config.resumePresets.'],
+    ['config_integrations_connected', 'Integrations Connected', 'True once at least one connected app/integration exists for this scope.'],
+    ['config_published', 'Configuration Published', 'True once the member/admin has published their config draft at least once.'],
+  ]) {
+    await sql.unsafe(
+      `INSERT INTO journey_metadata_molecules (molecule_key,label,data_type,source_paths,validation_config,is_sensitive,is_active,canonical_definition,value_domain,mutability_class,created_at,updated_at)
+       VALUES ($1,$2,'boolean','[]'::jsonb,'{}'::jsonb,false,true,$3,'boolean','revisable',$4,$4) ON CONFLICT (molecule_key) DO NOTHING`,
+      [key, label, canonicalDefinition, nowConfigJourneyAtomSeed]
+    );
+  }
+  // Definition Journey Atoms (2026-09-06) — evidence posted server-side
+  // whenever an admin successfully saves through the already admin-only
+  // PUT /api/config/page-types or PUT /api/config/admin-nav routes.
+  // Site Composition Journey Atoms — evidence posted server-side from the
+  // actual saved site JSON (server/routes/memberSite.js + site.js), never
+  // from a second client-side page/section counter.
+  const nowStructureJourneyAtomSeed = Date.now();
+  for (const [key, label, canonicalDefinition] of [
+    ['definition_page_types_reviewed', 'Page Types Reviewed', 'True once an admin has saved the page type taxonomy at least once (PUT /api/config/page-types).'],
+    ['definition_navigation_structure_reviewed', 'Navigation Structure Reviewed', 'True once an admin has saved the platform nav structure at least once (PUT /api/config/admin-nav).'],
+    ['site_pages_defined', 'Site Pages Defined', 'True once the site has more than one page (beyond the default home page).'],
+    ['site_sections_composed', 'Sections Composed', 'True once at least one page has at least one section.'],
+    ['site_published', 'Site Published', 'True once the site has been published at least once.'],
+  ]) {
+    await sql.unsafe(
+      `INSERT INTO journey_metadata_molecules (molecule_key,label,data_type,source_paths,validation_config,is_sensitive,is_active,canonical_definition,value_domain,mutability_class,created_at,updated_at)
+       VALUES ($1,$2,'boolean','[]'::jsonb,'{}'::jsonb,false,true,$3,'boolean','revisable',$4,$4) ON CONFLICT (molecule_key) DO NOTHING`,
+      [key, label, canonicalDefinition, nowStructureJourneyAtomSeed]
+    );
+  }
   for (const [key, label, description, moleculeKeys] of [
     ['revenue_recognition_readiness', 'Revenue Recognition Readiness', 'Master prompt §34 worked example: "How does ARR relate to pipeline?" — the commercial-commitment atoms.', ['arr', 'opportunity_amount', 'probability', 'contract_effective_date']],
     ['adoption_signal', 'Adoption Signal', 'Master prompt §34 worked example: "...onboarded customers, and actual user adoption?" — the consumption atoms.', ['onboarding_state', 'provisioned_user_count', 'active_user_count', 'adoption_rate']],
@@ -1151,6 +1224,7 @@ async function bootstrap() {
     ['l2r_future_state', 'Future-State Definition', "A client's target-state definition per capability, Tributary-linked to its originating l2r_diagnostic rod — the Definition Studio's future-state half (2026-08-09, Phase 1; real UI deferred to Phase 3).", true, 19],
     ['career_outreach_effort', 'Career Outreach Effort', "A member's hiring-manager-research + direct-outreach process for one applied-to career opportunity — Tributary-linked (hierarchical) to the career_opportunity_target rod it's pursuing outreach for (2026-08-09).", true, 8],
     ['source_document', 'Source Document', 'An uploaded primary source (Word doc, plain text, Markdown, PDF, image, SVG, or scanned handwriting) run through deterministic structural parsing into title/subtitle/heading/paragraph/sentence/word Atoms, human-validated into an immutable provenance record — one rod per uploaded document (2026-09-06, Source Document Intelligence Phase 1).', true, 9],
+    ['public_site_dev_lifecycle', 'Public Site Dev Lifecycle', "The Salt Basin Website module's connected journeys: Definition, Design & Config Setup, Site Composition, and Site Workflow (2026-09-06). Only Design & Config Setup Journey's scenario/gates are seeded so far — see scenarioLibrary.js.", true, 20],
   ]) {
     await sql.unsafe(
       `INSERT INTO journey_rod_types (id, label, description, is_active, sort_order, created_at, updated_at)

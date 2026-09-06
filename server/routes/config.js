@@ -3,6 +3,7 @@ import { getJSON, setJSON } from '../db.js';
 import { requireAdmin, isLandingUnlocked } from '../auth.js';
 import { dispatchRaw } from '../lib/email.js';
 import { defaultConfig } from '../data/defaultSite.js';
+import { postJourneyEvidence } from '../lib/journeyEvidenceHelpers.js';
 
 const router = Router();
 
@@ -107,6 +108,7 @@ router.put('/admin-nav', requireAdmin, async (req, res) => {
     }
   }
   await setJSON('config_state', 'admin_nav', incoming);
+  postJourneyEvidence(req.user.id, 'definition_journey', 'Platform Definition', [['definition_navigation_structure_reviewed', true]]);
   res.json({ ok: true, updatedAt: Date.now() });
 });
 
@@ -137,6 +139,7 @@ router.put('/page-types', requireAdmin, async (req, res) => {
     }
   }
   await setJSON('config_state', 'page_type_definitions', incoming);
+  postJourneyEvidence(req.user.id, 'definition_journey', 'Platform Definition', [['definition_page_types_reviewed', true]]);
   res.json({ ok: true, updatedAt: Date.now() });
 });
 
