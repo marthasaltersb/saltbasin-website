@@ -23,9 +23,9 @@ import { useCareerPlacementAgents, CAREER_DIMENSION_FIELDS, STAGE_LABELS } from 
 import { useCommercialOpportunities, COMMERCIAL_DIMENSION_FIELDS, EXPANSION_RING_OPTIONS } from '../lib/hooks/useCommercialOpportunities.js';
 import { usePublicationPipeline } from '../lib/hooks/usePublicationPipeline.js';
 import AdminShell from './admin/AdminShell.jsx';
-import ConfigPanel from './admin/ConfigPanel.jsx';
-import { toast } from '../lib/toast.js';
 import { attachSceneManifestTree, publishSceneManifest, removePublishedSceneManifest } from '../lib/sceneManifest.js';
+import PlanetAtmosphereView from './PlanetAtmosphereView.jsx';
+import SiteConfigView from './SiteConfigView.jsx';
 
 // Simple, self-contained panels — no AdminShell-local shared state, so they
 // can be lifted straight into a real WorldShell embed (module-by-module
@@ -107,9 +107,10 @@ export default function WorldShell() {
   const engineRef = useRef(null);
   const [user, setUser] = useState(undefined); // undefined = checking, null = redirecting
   const [tabsConfig, setTabsConfig] = useState(null);
-  const [view, setView] = useState('world'); // 'world' | 'journeys' | 'classic'
+  const [view, setView] = useState('world'); // 'world' | 'journeys' | 'classic' | 'atmosphere'
   const [focusedKey, setFocusedKey] = useState(null);
   const [classicTab, setClassicTab] = useState(null);
+  const [atmosphereKey, setAtmosphereKey] = useState(null);
 
   useEffect(() => {
     api.me()
@@ -147,6 +148,7 @@ export default function WorldShell() {
   const herq = usePublicationPipeline({ enabled: hasHerqIsland });
 
   const focused = islands.find((i) => i.key === focusedKey) || null;
+  const atmosphereIsland = islands.find((i) => i.key === atmosphereKey) || null;
 
   // 'classic' islands have no in-world docked/embed view built yet. Clicking
   // one used to dolly in and show a RightRail card whose only job was a
@@ -162,9 +164,20 @@ export default function WorldShell() {
       setView('classic');
       return;
     }
+    // 'atmosphere' islands: the mount effect below already ran the full
+    // travel-and-collapse cinematic before ever calling onSelect for one of
+    // these (see beginAtmosphereTravel) — by the time this fires, the camera
+    // has already arrived. This just swaps the view to the dedicated zoomed
+    // scene; it never itself triggers the travel.
+    if (island?.kind === 'atmosphere') {
+      setAtmosphereKey(island.key);
+      setView('atmosphere');
+      return;
+    }
     setFocusedKey(key);
   }, [islands]);
   const clearFocus = useCallback(() => setFocusedKey(null), []);
+  const clearAtmosphere = useCallback(() => { setAtmosphereKey(null); setView('world'); }, []);
 
   // Gates when the canvas-host div actually exists in the DOM: on first
   // render (before user/tabsConfig load) the component returns the loading
@@ -219,6 +232,39 @@ export default function WorldShell() {
     const cameraTarget = new THREE.Vector3(0, 0.6, 0);
     let pickables = [];
 
+    // "Enter the planet" cinematic (2026-09-06, 'atmosphere'-kind islands):
+    // the camera travels directly toward the clicked planet — a straight
+    // position lerp along the existing camera->planet line, not an orbit
+    // parameter change, so it reads as travel rather than panning — while
+    // the crystal core and every other island converge on a single point
+    // off in the distance and shrink away, standing in for "collapsing into
+    // the overlaying clickable navigation menu" WorldShell shows once the
+    // cinematic hands off to the dedicated PlanetAtmosphereView.
+    let travel = null;
+    const COLLAPSE_ANCHOR = new THREE.Vector3(17, 12, -15);
+    const COLLAPSE_SCALE = new THREE.Vector3(0.05, 0.05, 0.05);
+    function easeInOutCubic(x) { return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
+    function beginAtmosphereTravel(key, worldPos) {
+      if (travel) return;
+      const approachDir = camera.position.clone().sub(worldPos);
+      if (approachDir.lengthSq() < 0.0001) approachDir.set(0, 0.4, 1);
+      approachDir.normalize();
+      const others = [{ obj: coreGroup, startPos: coreGroup.position.clone(), startScale: coreGroup.scale.clone() }];
+      islandsGroup.children.forEach((isl) => {
+        if (isl.userData.islandKey !== key) others.push({ obj: isl, startPos: isl.position.clone(), startScale: isl.scale.clone() });
+      });
+      travel = {
+        key,
+        startCamPos: camera.position.clone(),
+        approachPos: worldPos.clone().add(approachDir.multiplyScalar(4.2)),
+        startTarget: cameraTarget.clone(),
+        endTarget: worldPos.clone(),
+        others,
+        duration: 1650,
+        elapsed: 0,
+      };
+    }
+
     function render() {
       if (dollyTarget) {
         cameraTarget.lerp(dollyTarget.point, 0.1);
@@ -241,12 +287,13 @@ export default function WorldShell() {
       return new THREE.Vector2(((cx - rect.left) / rect.width) * 2 - 1, -((cy - rect.top) / rect.height) * 2 + 1);
     }
     function onDown(e) {
+      if (travel) return;
       renderer.domElement.setPointerCapture?.(e.pointerId);
       dragStart = { x: e.clientX, y: e.clientY, t: performance.now() };
       didDrag = false;
     }
     function onMove(e) {
-      if (!dragStart || e.buttons === 0) return;
+      if (travel || !dragStart || e.buttons === 0) return;
       const dx = e.clientX - dragStart.x, dy = e.clientY - dragStart.y;
       if (Math.abs(dx) > 5 || Math.abs(dy) > 5) didDrag = true;
       if (didDrag) {
@@ -256,6 +303,7 @@ export default function WorldShell() {
       }
     }
     function onUp(e) {
+      if (travel) { dragStart = null; didDrag = false; return; }
       if (dragStart) {
         const dt = performance.now() - dragStart.t;
         const moved = Math.hypot(e.clientX - dragStart.x, e.clientY - dragStart.y);
@@ -270,6 +318,8 @@ export default function WorldShell() {
               if (found.kind === 'core') {
                 dollyTarget = { point: new THREE.Vector3(0, 0.6, 0), radius: 22 };
                 engineRef.current?.onSelect(null);
+              } else if (found.registryKind === 'atmosphere') {
+                beginAtmosphereTravel(found.key, worldPos);
               } else {
                 dollyTarget = { point: worldPos, radius: 5.2 };
                 engineRef.current?.onSelect(found.key);
@@ -281,6 +331,7 @@ export default function WorldShell() {
       dragStart = null; didDrag = false;
     }
     function onWheel(e) {
+      if (travel) return;
       e.preventDefault();
       orbitRadius = Math.max(4, Math.min(34, orbitRadius + e.deltaY * 0.02));
     }
@@ -296,8 +347,28 @@ export default function WorldShell() {
     const clock = new THREE.Clock();
     function animate() {
       rafId = requestAnimationFrame(animate);
-      const t = clock.getElapsedTime();
       const dt = clock.getDelta();
+      if (travel) {
+        travel.elapsed += dt * 1000;
+        const tt = Math.min(1, travel.elapsed / travel.duration);
+        const e = easeInOutCubic(tt);
+        camera.position.lerpVectors(travel.startCamPos, travel.approachPos, e);
+        cameraTarget.lerpVectors(travel.startTarget, travel.endTarget, e);
+        camera.lookAt(cameraTarget);
+        travel.others.forEach(({ obj, startPos, startScale }) => {
+          obj.position.lerpVectors(startPos, COLLAPSE_ANCHOR, e);
+          obj.scale.lerpVectors(startScale, COLLAPSE_SCALE, e);
+        });
+        if (tt > 0.35) riversGroup.visible = false;
+        renderer.render(scene, camera);
+        if (tt >= 1) {
+          const doneKey = travel.key;
+          travel = null;
+          engineRef.current?.onSelect(doneKey);
+        }
+        return;
+      }
+      const t = clock.getElapsedTime();
       coreGroup.rotation.y = t * 0.08;
       coreHandles.spin.forEach((m, i) => { m.rotation.z += (i % 2 ? -0.008 : 0.01); });
       islandsGroup.children.forEach((isl) => {
@@ -373,6 +444,7 @@ export default function WorldShell() {
       const holder = new THREE.Group();
       holder.position.set(x, 0, z);
       holder.userData.driftSpeed = 0.0015 + (i % 3) * 0.0006;
+      holder.userData.islandKey = isl.key;
 
       const base = buildIslandBase(THREE, ACCENT_HEX[isl.accent] || ACCENT_HEX.gold);
       base.position.y = -0.35;
@@ -406,7 +478,7 @@ export default function WorldShell() {
       });
 
       islandsGroup.add(holder);
-      pickables.push({ obj: crystalGroup, kind: 'island', key: isl.key });
+      pickables.push({ obj: crystalGroup, kind: 'island', key: isl.key, registryKind: isl.kind });
 
       const river = buildRiverParticles(THREE, {
         from: new THREE.Vector3(0, 0.4, 0),
@@ -452,6 +524,10 @@ export default function WorldShell() {
         <AdminShell scope={user?.role === 'admin' ? 'admin' : 'member'} initialTab={classicTab} />
       </div>
     );
+  }
+
+  if (view === 'atmosphere' && atmosphereIsland) {
+    return <PlanetAtmosphereView island={atmosphereIsland} scope={user?.role === 'admin' ? 'admin' : 'member'} onClear={clearAtmosphere} />;
   }
 
   if (focused?.kind === 'embed' && focused.componentId === 'config') {
@@ -1124,65 +1200,14 @@ function PublicationDockedPanel({ label, herq, onClear }) {
   );
 }
 
-// Public Site Configuration island's full-screen destination (kind:'embed').
-// Wraps the existing ConfigPanel.jsx wholesale — it's 1600+ lines (theme,
-// brand colors, social, SEO, page types...), far too much for the ~300px
-// docked rail, so this island gets real screen space instead of a cut-down
-// duplicate. Self-contained data loading/save/publish per role, matching
-// the salt-basin-pre-build skill's Phase 2 (Personal Brand Website & World,
-// member-org-admin-config.md §2/§3) — "Do not require the Member to edit
-// source code," "public / private / draft state." `site` is intentionally
-// not fetched/passed — ConfigPanel already defaults it to null and this
-// island is scoped to identity/theme/social config, not page content.
-function SiteConfigView({ scope, onClear }) {
-  const [config, setConfig] = useState(null);
-  const [saving, setSaving] = useState(false);
-  const [publishing, setPublishing] = useState(false);
-
-  useEffect(() => {
-    const load = scope === 'admin' ? api.getDraftConfig : api.getMemberDraftConfig;
-    load().then(setConfig).catch((e) => toast('Failed to load site configuration: ' + e.message));
-  }, [scope]);
-
-  async function handleSave() {
-    setSaving(true);
-    try {
-      await (scope === 'admin' ? api.saveDraftConfig(config) : api.saveMemberDraftConfig(config));
-      toast('Saved.');
-    } catch (e) {
-      toast('Could not save: ' + e.message);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handlePublish() {
-    setPublishing(true);
-    try {
-      await (scope === 'admin' ? api.saveDraftConfig(config).then(api.publish) : api.saveMemberDraftConfig(config).then(api.publishMemberConfig));
-      toast('Published.');
-    } catch (e) {
-      toast('Could not publish: ' + e.message);
-    } finally {
-      setPublishing(false);
-    }
-  }
-
-  return (
-    <div style={S.embedShell}>
-      <div style={S.embedHeader}>
-        <button style={S.backBtn} onClick={onClear}>← Back to World</button>
-        <div style={S.embedTitle}>Site Configuration</div>
-        <div style={{ flex: 1 }} />
-        <button style={S.ghostSmall} onClick={handleSave} disabled={saving || !config}>{saving ? 'Saving…' : 'Save Draft'}</button>
-        <button style={{ ...S.ghostSmall, marginLeft: '0.5rem', background: '#c4843a', color: '#1c1410', border: 'none' }} onClick={handlePublish} disabled={publishing || !config}>{publishing ? 'Publishing…' : 'Publish'}</button>
-      </div>
-      <div style={S.embedBody}>
-        {!config ? <div style={S.railEmpty}>Loading…</div> : <ConfigPanel config={config} onChange={setConfig} scope={scope} site={null} />}
-      </div>
-    </div>
-  );
-}
+// Public Site Configuration island's full-screen destination (kind:'embed')
+// — SiteConfigView.jsx, extracted from this file 2026-09-06 so
+// PlanetAtmosphereView.jsx (the site editor's atmosphere scene) can reuse it
+// for its "Site Configuration" moon without a circular import between the
+// two. Wraps the existing ConfigPanel.jsx wholesale — it's 1600+ lines
+// (theme, brand colors, social, SEO, page types...), far too much for the
+// ~300px docked rail, so this island gets real screen space instead of a
+// cut-down duplicate.
 
 // Generic wrapper for any island whose module is a single, already
 // self-contained panel (manages its own data loading/saving) — the panel

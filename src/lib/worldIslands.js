@@ -20,21 +20,34 @@
 //                MemberDashboard, mounted unchanged inside WorldShell) at
 //                that exact tab. Nothing here is a dead/stubbed link — every
 //                island opens real, working functionality.
+//  - 'atmosphere' — a full cinematic "enter the planet" mode (2026-09-06,
+//                the site editor's first): the click travels the camera
+//                toward the planet while the crystal core and every other
+//                island converge and shrink away, then hands off to a
+//                dedicated zoomed-in scene (PlanetAtmosphereView.jsx) where
+//                the planet's own `moons` array orbits it. Distinct from
+//                'embed' because it owns its own camera rig and transition,
+//                not a full-screen panel drop-in.
 export const ISLAND_REGISTRY = {
   // The Salt Basin Website / page-and-section editor (componentId 'content')
   // — admin's own "My Profile" tab (sortOrder 0) and, as of 2026-09-06, a
   // member's "My Website" tab too — had no registry entry here, so
   // resolveWorldIslands silently dropped it per this file's own documented
   // behavior: the platform's most central module had no planet in the world
-  // at all.
-  // Still 'classic': the site editor's Sidebar+EditorPane+PreviewPane share
-  // a large block of AdminShell-local state (page/section modals, the
-  // split-view resize divider, layout mode, page-type loading) — not a
-  // single self-contained panel, so it isn't safe to lift into an embed
-  // without a dedicated extraction. Everything below it already was a
-  // simple, self-contained panel and has been converted to 'embed'
-  // (2026-09-06, first module-by-module Classic Tools replacements).
-  content: { variant: 'hourglass', kind: 'classic', accent: 'teal' },
+  // at all. Given its own "Salt Tide" planet variant and moons per Betsy's
+  // 2026-09-06 spec. The moons themselves are still a mix: 'siteConfiguration'
+  // reuses the real, existing ConfigPanel (via WorldShell's SiteConfigView);
+  // 'saltTideSettings' has no defined content anywhere in the codebase yet —
+  // it renders an honest "not yet defined" panel rather than inventing one.
+  content: {
+    variant: 'salttide',
+    kind: 'atmosphere',
+    accent: 'teal',
+    moons: [
+      { key: 'siteConfiguration', label: 'Site Configuration', target: 'config' },
+      { key: 'saltTideSettings', label: 'SaltTide Settings', target: 'undefined' },
+    ],
+  },
   careerPlacementAgents: { variant: 'agentHub', kind: 'docked', accent: 'gold' },
   commercialOpportunities: { variant: 'commercialPipeline', kind: 'docked', accent: 'gold' },
   config: { variant: 'table', kind: 'embed', accent: 'teal' },

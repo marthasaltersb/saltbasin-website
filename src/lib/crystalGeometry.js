@@ -103,6 +103,50 @@ export const CRYSTAL_VARIANTS = {
     return { spin: [star], core: top };
   },
 
+  // Salt Tide — the site editor's planet (2026-09-06): "a little less
+  // triangles than the crystal core" (detail 0 icosahedron vs. signature's
+  // detail 1) and a "luminescent, almost like clear glass" material —
+  // MeshPhysicalMaterial's transmission, not a faked transparency hack, so
+  // it genuinely reveals whatever sits inside the group at close range.
+  salttide(group, THREE) {
+    const glass = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(1.6, 0),
+      new THREE.MeshPhysicalMaterial({
+        color: 0xdcf3f0,
+        transmission: 0.88,
+        thickness: 1.35,
+        roughness: 0.06,
+        ior: 1.45,
+        metalness: 0,
+        clearcoat: 0.5,
+        clearcoatRoughness: 0.18,
+        emissive: 0x4a7c8e,
+        emissiveIntensity: 0.12,
+        transparent: true,
+        opacity: 0.95,
+      })
+    );
+    group.add(glass);
+
+    // What the glass reveals at close range — not fabricated journey data
+    // (none exists for this module's rod_type yet), just a real inner
+    // crystal structure, same honesty rule as the rest of this file: never
+    // claim data that isn't there.
+    const innerGlow = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(0.85, 0),
+      new THREE.MeshBasicMaterial({ color: 0x9fe0d8, transparent: true, opacity: 0.32 })
+    );
+    group.add(innerGlow);
+
+    const wire = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(1.72, 0),
+      new THREE.MeshBasicMaterial({ color: 0x8fd8d0, wireframe: true, transparent: true, opacity: 0.3 })
+    );
+    group.add(wire);
+
+    return { spin: [wire, innerGlow], core: glass, innerGlow };
+  },
+
   engine(group, THREE) {
     const knot = new THREE.Mesh(
       new THREE.TorusKnotGeometry(0.95, 0.3, 110, 16),

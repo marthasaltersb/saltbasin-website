@@ -1,0 +1,72 @@
+// Extracted from WorldShell.jsx (2026-09-06) so PlanetAtmosphereView.jsx can
+// reuse it for the "Site Configuration" moon without a circular import
+// between the two files (WorldShell renders PlanetAtmosphereView; keeping
+// this shared piece here instead of in WorldShell.jsx avoids either file
+// needing to import back from the other). Styles are copied verbatim from
+// WorldShell.jsx's `S.embedShell`/`embedHeader`/`embedTitle`/`embedBody`/
+// `backBtn`/`ghostSmall`/`railEmpty` — same visual output, own copy so this
+// file has no dependency on WorldShell.jsx's much larger style object.
+import React, { useEffect, useState } from 'react';
+import { api } from '../lib/api.js';
+import { toast } from '../lib/toast.js';
+import ConfigPanel from './admin/ConfigPanel.jsx';
+
+export default function SiteConfigView({ scope, onClear }) {
+  const [config, setConfig] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+
+  useEffect(() => {
+    const load = scope === 'admin' ? api.getDraftConfig : api.getMemberDraftConfig;
+    load().then(setConfig).catch((e) => toast('Failed to load site configuration: ' + e.message));
+  }, [scope]);
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      await (scope === 'admin' ? api.saveDraftConfig(config) : api.saveMemberDraftConfig(config));
+      toast('Saved.');
+    } catch (e) {
+      toast('Could not save: ' + e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handlePublish() {
+    setPublishing(true);
+    try {
+      await (scope === 'admin' ? api.saveDraftConfig(config).then(api.publish) : api.saveMemberDraftConfig(config).then(api.publishMemberConfig));
+      toast('Published.');
+    } catch (e) {
+      toast('Could not publish: ' + e.message);
+    } finally {
+      setPublishing(false);
+    }
+  }
+
+  return (
+    <div style={S.embedShell}>
+      <div style={S.embedHeader}>
+        <button style={S.backBtn} onClick={onClear}>← Back to World</button>
+        <div style={S.embedTitle}>Site Configuration</div>
+        <div style={{ flex: 1 }} />
+        <button style={S.ghostSmall} onClick={handleSave} disabled={saving || !config}>{saving ? 'Saving…' : 'Save Draft'}</button>
+        <button style={{ ...S.ghostSmall, marginLeft: '0.5rem', background: '#c4843a', color: '#1c1410', border: 'none' }} onClick={handlePublish} disabled={publishing || !config}>{publishing ? 'Publishing…' : 'Publish'}</button>
+      </div>
+      <div style={S.embedBody}>
+        {!config ? <div style={S.railEmpty}>Loading…</div> : <ConfigPanel config={config} onChange={setConfig} scope={scope} site={null} />}
+      </div>
+    </div>
+  );
+}
+
+const S = {
+  embedShell: { position: 'fixed', inset: 0, background: '#0d1417', color: '#f5f0e8', zIndex: 10, display: 'flex', flexDirection: 'column' },
+  embedHeader: { display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.8rem 1.5rem', borderBottom: '0.5px solid rgba(255,255,255,0.08)', flexShrink: 0 },
+  embedTitle: { fontFamily: 'Fraunces, serif', fontSize: '1rem' },
+  embedBody: { flex: 1, overflowY: 'auto', padding: '1.5rem' },
+  railEmpty: { color: '#8b877c', fontSize: '0.75rem', padding: '0.5rem 0' },
+  backBtn: { background: 'transparent', border: 'none', color: '#8fadb6', fontSize: '0.75rem', cursor: 'pointer', padding: 0, marginBottom: '0.7rem' },
+  ghostSmall: { padding: '0.3rem 0.6rem', borderRadius: 6, border: '0.5px solid rgba(196,132,58,0.4)', background: 'transparent', color: '#c4843a', fontSize: '0.68rem', cursor: 'pointer' },
+};
