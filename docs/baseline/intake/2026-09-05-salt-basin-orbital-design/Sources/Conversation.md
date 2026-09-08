@@ -1,0 +1,740 @@
+# Salt Basin — Conversation Export
+
+## Message 1 — User
+
+<realtime_delegation>
+  <input>And I want you to help me... put together a design... visual document to... uh... design the user interface and user experience based on... the Salt Basin conversations we've already had</input>
+  <transcript_delta>user:  So you can hear me
+assistant:  Yep, I can hear you just fine.
+user:  So you can hear me
+assistant:  What would you like to talk about?
+user:  Oh
+assistant:  Yep, I can hear you just fine. What would you like to talk about?
+user: , this is wild. Okay, so I am going to be testing a website that I'm building
+assistant:  Mm-hm.
+user:  Oh, this is wild. Okay, so I am going to be testing a website that I'm building And
+assistant:  Mm-hm.
+user:  I want you to help me... put together a design... visual document to... uh... design the user interface and user experience based on... the Salt Basin conversations we've already had
+user: And I want you to help me... put together a design... visual document to... uh... design the user interface and user experience based on... the Salt Basin conversations we've already had</transcript_delta>
+</realtime_delegation>
+
+---
+
+## Message 2 — Assistant
+
+[STATUS] The Salt Basin conversations are the starting point for the design document; I’ll check which prior decisions are available here.
+
+
+---
+
+## Message 3 — Assistant
+
+[STATUS] I found “Salt Basin Genesis v3,” “Salt Basin Ontology Update,” and “Interactive Salt Basin World.” They contain the crystalline visual direction, the Revenue, Customer, and Member journeys, and earlier navigation and inspection concepts. Some features were proposed by the assistant, so they shouldn’t all be treated as decisions you approved.
+
+
+---
+
+## Message 4 — Assistant
+
+[COMPLETE] We have enough history to ground a visual design document in Salt Basin’s crystalline world, parchment typography, teal and gold accents, and three connected journeys. It can show key screens, navigation, interactions, and the experience to test. Should it focus on the immersive Salt Basin application or the public-facing website that introduces it?
+
+---
+
+## Message 5 — User
+
+<realtime_delegation>
+  <input>The- the immersive Salt Basin application. I want to create the design document to reflect... the- uh a table or a mapping of essentially... what the navigation menu looks like, um, and... what, you know, I guess, static resources or graphical images or... coded images, you know, are used, um, or objects, the 3D objects are used... for each... um, defined module or journey or settings screen or agent definition... or um, user definition or admin definition. Oh um... And... then I want to... within... each of those screens define... whether the user interface um, collapses the navigation menu upon entrance of the module or orbital planet, etc... um, or if it... takes them into the object itself um, into a new... you know, immersive experience screen for a journey, um, which is a process, which should, you know, ultimately look like the user moving throughout... an actual planet rather than a, you know, 2D overlap. However, in the journey then um, the user when they're... going on this process and interacting and moving to each of the different objects, that would reflect the um... data interaction that the user will have with a particular process step within that journey. And that should then... um, be defined whether or not that's going to be a two-D, two-D screen or some other um, you know, three-D type immersive experience um, but I'm thinking for now um, a two-D interface for the... um, process steps when you click into them, um, and then I also want to... make sure that there is a sort of reporting feature that is this data rendered spatial- um, spatial view of how to show their reports and three-D graphical images based on the existing Salt Basin experience. Um, now, because the spatial existing experience is already defined in certain aspects, essentially I want it to leverage the um, overarching concept of the spatial... spatial journey. But, I want it to solely give... functionality for... querying objects, objects building out... different reporting views, and filters for each user... so that they are able to... essentially configure their own summary dashboards and different views for different clients that they would need, and essentially that would be like the user configuration definition of their... um, their way they want to view their data and set up their tasks, etc. And then they are able to click into those objects and those objects should represent either process or um, the, you know, data element that they're interacting with within the experience. And I want to make sure that we capture that in detail in this design doc. I also want to make sure that we include the requirement for every user to have their own avatar, their three-D geometrical avatar, that the computer or system or, you know, their login is always anchored at when it comes to where are you right now within the product from your last session, so that the user's location of their last task or... whatever is not lost when they log out, um, but is actually based on their last session cache um... location, so that they can pick up where they left off, um, as well as... a uh home screen... configuration view, um, so the user can... define... what they want to see when they first log in in the home screen. Um, and... that can also be, you know, certain tasks or approvals, etc... um... I think that's it for now</input>
+  <transcript_delta>assistant:  Okay. Let me
+user:  And I want you to help me... put together a design... visual document to... uh... design the user interface and user experience based on... the Salt Basin conversations we've already had
+assistant:  Okay. Let me check what we’ve got.
+user:  Salt
+assistant:  I found
+user:  Salt
+assistant:  I found enough history to ground a design doc in the crystalline world, the typography, and the three connected journeys, but I need one quick clarification. Should this focus on the immersive Salt Basin application itself, or the public-facing website that introduces it?
+user:  The- the immersive Salt Basin application. I want to create the design document to reflect... the- uh a table or a mapping of essentially... what the navigation menu looks like, um, and... what, you know, I guess, static resources or graphical images or... coded images, you know, are used, um, or objects, the 3D objects are used... for each... um, defined module or journey or settings screen or agent definition... or um, user definition or admin definition. Oh um... And... then I want to... within... each of those screens define... whether the user interface um, collapses the navigation menu upon entrance of the module or orbital planet, etc... um, or if it... takes them into the object itself um, into a new... you know, immersive experience screen for a journey, um, which is a process, which should, you know, ultimately look like the user moving throughout... an actual planet rather than a, you know, 2D overlap. However, in the journey then um, the user when they're... going on this process and interacting and moving to each of the different objects, that would reflect the um... data interaction that the user will have with a particular process step within that journey. And that should then... um, be defined whether or not that's going to be a two-D, two-D screen or some other um, you know, three-D type immersive experience um, but I'm thinking for now um, a two-D interface for the... um, process steps when you click into them, um, and then I also want to... make sure that there is a sort of reporting feature that is this data rendered spatial- um, spatial view of how to show their reports and three-D graphical images based on the existing Salt Basin experience. Um, now, because the spatial existing experience is already defined in certain aspects, essentially I want it to leverage the um, overarching concept of the spatial... spatial journey. But, I want it to solely give... functionality for... querying objects, objects building out... different reporting views, and filters for each user... so that they are able to... essentially configure their own summary dashboards and different views for different clients that they would need, and essentially that would be like the user configuration definition of their... um, their way they want to view their data and set up their tasks, etc. And then they are able to click into those objects and those objects should represent either process or um, the, you know, data element that they're interacting with within the experience. And I want to make sure that we capture that in detail in this design doc. I also want to make sure that we include the requirement for every user to have their own avatar, their three-D geometrical avatar, that the computer or system or, you know, their login is always anchored at when it comes to where are you right now within the product from your last session, so that the user's location of their last task or... whatever is not lost when they log out, um, but is actually based on their last session cache um... location, so that they can pick up where they left off, um, as well as... a uh home screen... configuration view, um, so the user can... define... what they want to see when they first log in in the home screen. Um, and... that can also be, you know, certain tasks or approvals, etc... um... I think that's it for now</transcript_delta>
+</realtime_delegation>
+
+---
+
+## Message 6 — Assistant
+
+[STATUS] The core interaction is now clear: journeys are places the user moves through in 3D, and selecting a process step opens a 2D work interface. Reporting is a configurable spatial view of real processes and data, with each user’s avatar preserving their place between sessions.
+
+
+---
+
+## Message 7 — Assistant
+
+::codex-realtime-inline{}
+:::writing{variant="document" id="86421"}
+# Salt Basin — Immersive Application Design Specification
+**Working draft · Navigation, spatial interactions, reporting, and user continuity**
+
+This document defines the intended experience for the immersive Salt Basin application. Requirements below capture the current direction. Menu labels, object forms, and screen layouts are proposed design choices for review, not claims about what the application already implements.
+
+## 1. Experience model
+
+Salt Basin presents an enterprise as a navigable crystalline world. A journey is a process embodied as a place: users enter its environment, move between meaningful objects, and open those objects to perform work.
+
+The experience has three connected levels:
+
+| Level | User experience | Main interaction |
+|---|---|---|
+| Basin | Explore available modules, journeys, and saved views | Select a destination or resume work |
+| Journey environment | Travel through an actual 3D landscape representing a process | Move to and select process-step objects |
+| Process-step workspace | Read and change the data associated with a selected step | Use a focused 2D interface, then return to the same place |
+
+Reporting uses the same spatial language to explore information. Every report object represents a process, data element, or clearly identified aggregation that can be inspected.
+
+**Initial design requirement:** process-step work uses 2D interfaces. Further immersive interactions can be specified later without changing the journey structure.
+
+## 2. Proposed navigation menu
+
+The expanded menu combines text labels with simple icons. Entering a spatial destination collapses it to a compact rail; users can reopen it at any time.
+
+| Main menu | Destinations | Purpose |
+|---|---|---|
+| Home | Personalized home; resume last session | Orient the user and surface relevant work |
+| Basin Map | Modules and journey destinations | Navigate the application spatially |
+| Journeys | Revenue; Customer; Member | Enter a process environment |
+| Reports & Views | My views; client views; view builder | Query, filter, and arrange spatial reports |
+| Tasks & Approvals | My tasks; approvals; linked process steps | Find and complete actionable work |
+| Definitions | Objects and processes; agents | Inspect and configure definitions where permitted |
+| Personal Settings | Avatar; home configuration; preferences | Configure the individual experience |
+| Administration | Users; roles and access; application configuration | Manage the application where permitted |
+
+**Salt Basin terminology:** Revenue, Customer, and Member remain the three peer Journey Rods. Data Channels support them. Pricing is a domain. Neither is represented as an additional peer Journey Rod.
+
+## 3. Screen, navigation, and asset mapping
+
+“Procedural geometry” means shapes drawn by the application from underlying data. “Authored 3D” means designed model assets. Both may coexist.
+
+| Screen or destination | Proposed visual representation / assets | Entry and navigation behavior | Work surface |
+|---|---|---|---|
+| Personalized Home | 2D cards; optional small 3D avatar and last-location preview | Expanded menu by default | Configurable tasks, approvals, saved views, and resume action |
+| Basin Map | Procedural orbital arrangement; authored or procedural crystalline module bodies; text labels and icons | Menu collapses; compact destination and home controls remain | Select a module body to enter its environment |
+| Journey entrance | Distinct planetary environment for Revenue, Customer, or Member | Transition into the destination; menu stays collapsed | Journey summary, current position, and available process routes |
+| Journey landscape | 3D terrain, paths, step objects, and relationship indicators | Movement occurs inside the environment; persistent location cue and exit control | Select a step, related process, or data object |
+| Process-step workspace | 2D forms, tables, evidence, status indicators, and actions | Opens over a paused journey; compact navigation remains available | Read or edit the step’s data; save or cancel; return to the same location |
+| Data-object detail | Selected 3D object plus 2D detail panel | Preserve the originating journey or report position | Inspect meaning, values, source evidence, and relationships |
+| Reports & Views | Procedural 3D report objects, labels, legends, and optional 2D charts | Menu collapses when a spatial view opens | Explore a saved report; select represented processes or data |
+| Report / View Builder | Spatial preview plus 2D query, filter, and layout controls | Builder controls remain visible; main menu compact | Select data, filters, grouping, visual encodings, and saved-view settings |
+| Tasks & Approvals | 2D work queue; linked 3D destination markers | Expanded menu in queue; collapsed after entering a journey | Inspect work, act where permitted, or travel to its process step |
+| Object / Process Definitions | 2D definition editor; procedural object preview | Expanded menu; preview does not change user location | Define meaning, process relationships, and visual representation |
+| Agent Definitions | 2D configuration; distinctive geometric agent symbol or preview | Expanded menu | Define agent purpose, allowed actions, scope, and presentation |
+| User / Avatar Settings | Personal 3D geometric avatar preview; 2D controls | Expanded menu | Configure avatar appearance and personal preferences |
+| Home Configuration | 2D layout editor with card previews | Expanded menu | Choose home content, ordering, and initial sign-in behavior |
+| Administration | 2D management screens; consistent icons | Expanded menu; visible only where permitted | Manage users, roles, access, and application settings |
+
+**Asset rule:** imagery may establish atmosphere, but meaningful navigation and report objects need explicit labels, selectable boundaries, and a connection to the represented object. Decorative scenery must be distinguishable from interactive objects.
+
+## 4. Journey and process-step interaction
+
+### Enter a journey
+
+1. Select a journey from the menu or its spatial destination.
+2. Transition into the journey’s 3D environment.
+3. Collapse the main navigation.
+4. Place the avatar at the saved valid location, or the journey entrance on a first visit.
+5. Show the current journey, position, and next relevant work.
+
+The landscape must communicate progression through a process. It must not simply place a flat process diagram over a planet background.
+
+### Move through the process
+
+Each selectable step object corresponds to a defined process step. Paths and connections convey valid relationships or available transitions.
+
+Proposed visible states include available, in progress, waiting, blocked, and complete. State must be communicated with labels or symbols as well as color. Visual changes follow underlying process data.
+
+### Open a step
+
+Selecting a step pauses travel and opens a 2D workspace containing:
+
+- Step name, journey context, and current status.
+- Relevant data fields and related records.
+- Tasks, required inputs, and evidence.
+- Available actions and their consequences.
+- Save, cancel, and return controls.
+
+Opening a workspace does not advance the process. A successful action updates the relevant process state and its spatial representation.
+
+Closing the workspace restores the same avatar position, camera orientation, and selection. Unsaved changes require an explicit save or discard choice before leaving.
+
+### Navigate to a related object
+
+A related item identifies whether it opens data detail, another process step, or another journey. Cross-journey travel preserves a return destination so the user can come back to the originating work.
+
+## 5. Spatial reporting and personalized views
+
+### Purpose
+
+Reporting reuses Salt Basin’s spatial experience for querying objects, filtering information, and composing useful views. Its initial scope is data exploration and report configuration.
+
+### View definition
+
+Each saved view includes:
+
+| Setting | What the user configures |
+|---|---|
+| Name and purpose | A recognizable label and what the view helps them understand |
+| Client context | The client or permitted scope represented |
+| Source objects | Processes, data elements, or related object collections |
+| Query and filters | Conditions that determine included information |
+| Grouping | How objects are organized into meaningful collections |
+| Measures | Values, counts, totals, or other defined calculations |
+| Spatial layout | How results are positioned and grouped |
+| Visual encoding | What size, color, shape, and connections mean |
+| Selection behavior | Whether selection opens a process, data detail, or aggregate breakdown |
+| Task context | Related tasks and how they appear |
+| Personal placement | Whether the view appears on Home or in saved navigation |
+
+Client context remains visible while viewing and editing a report. Saved settings do not grant access to data the user cannot otherwise view.
+
+### Proposed report composition flow
+
+**Choose objects → Set client context → Query and filter → Group and measure → Configure spatial presentation → Preview → Save**
+
+The builder pairs a 2D configuration panel with a live spatial preview.
+
+### Report-object behavior
+
+| Represented object | Selection result |
+|---|---|
+| Process or journey | Show a summary and an explicit action to enter its environment |
+| Process step | Open its 2D workspace with a return link to the report |
+| Data element or record | Open detail with source context and relationships |
+| Aggregated group | Show its definition and constituent records |
+| Task or approval | Open the work item and its linked process context |
+
+Report geometry must be traceable to the displayed data. Legends explain encodings; numerical values remain available in readable detail. A corresponding 2D list or table supports precise comparison and accessibility.
+
+Empty results, unavailable data, loading, and errors have distinct states. Missing values must not appear as zero.
+
+## 6. Avatar and session continuity
+
+**Requirement:** every user has an individual 3D geometric avatar. The avatar anchors the user’s location in the product, including where they left off.
+
+The saved session context should include:
+
+| Context | What resumes |
+|---|---|
+| Active destination | Module, journey, or saved reporting view |
+| Client context | The client currently being viewed |
+| Spatial location | Avatar position within that environment |
+| Viewpoint | Camera orientation and zoom |
+| Active selection | Selected process step or data object |
+| Work context | Relevant task and open workspace |
+| View configuration | Applied filters and selected saved view |
+
+**Proposed persistence rule:** save resumable context to the user’s account, using local cache to support quick recovery. Local cache alone should not be the sole record of the user’s last location.
+
+Save on meaningful navigation changes and during use, not only on logout. Restoring a session must recheck access and object availability.
+
+If the last destination is unavailable, place the user at the nearest valid parent destination or Home and explain what could not be restored.
+
+Location recovery does not imply that unsaved form edits were saved. Draft recovery is a separate behavior that must be visibly identified.
+
+## 7. Home configuration and sign-in behavior
+
+Users configure the content and ordering of their Home screen.
+
+Proposed components:
+
+- Resume last location.
+- My tasks.
+- Pending approvals.
+- Pinned client views.
+- Saved reports.
+- Recent journeys and objects.
+
+Provide two explicit sign-in preferences:
+
+| Preference | Behavior |
+|---|---|
+| Resume where I left off | Restore the most recent valid destination |
+| Open my Home | Show personalized Home with a prominent resume action |
+
+**Proposed default:** resume where the user left off after the first session. Home remains directly accessible from every destination.
+
+This preserves continuity while supporting users who prefer to start with tasks or approvals.
+
+## 8. Visual language and interaction consistency
+
+Retain the prior crystalline direction: dark spatial environments, parchment-toned typography, and teal, gold, and mauve accents.
+
+Proposed conventions:
+
+- Distinct silhouettes identify module and object types.
+- Labels and symbols communicate state alongside color.
+- Motion explains entering, exiting, selecting, and traveling.
+- Reduced-motion settings replace extended travel animations with direct transitions.
+- A persistent location cue answers: “Where am I, and what am I working on?”
+- Every immersive destination provides Home, back, and reopen-navigation controls.
+- Mobile process work uses a full-screen 2D workspace and restores the spatial scene on exit.
+- Keyboard-accessible destination and object lists provide an alternative to spatial movement.
+
+## 9. Validation checklist
+
+The design is ready for implementation review when a walkthrough can demonstrate:
+
+1. Entering each journey produces a navigable 3D environment.
+2. The navigation collapses on spatial entry and can always be reopened.
+3. Selecting a process step opens the correct 2D data interface.
+4. Closing a step returns to the same spatial position.
+5. A report object resolves to its represented process, data, or aggregation.
+6. A user can save separate filtered views for different clients.
+7. Saved views preserve their query, layout, and visual meanings.
+8. Each user has an individual geometric avatar.
+9. Returning after logout restores the last valid context.
+10. Home configuration and resume preferences work together.
+11. Restricted or removed destinations recover gracefully.
+12. Report values remain understandable without relying solely on 3D geometry or color.
+
+## 10. Next visual plates
+
+The next design pass should illustrate these six connected screens:
+
+1. **Basin Map:** expanded navigation and spatial module destinations.
+2. **Journey Interior:** avatar, terrain, step objects, and collapsed navigation.
+3. **Selected Process Step:** 2D workspace within preserved journey context.
+4. **Spatial Reporting:** report objects, legend, filters, and selected-object detail.
+5. **View Builder:** query controls beside the spatial preview.
+6. **Personal Home and Avatar:** home configuration, resume destination, and avatar settings.
+
+These plates should use one consistent sample journey and client context so the complete interaction can be followed across screens.
+:::
+
+
+---
+
+## Message 8 — Assistant
+
+[COMPLETE] The draft now captures the navigation and asset mapping, 3D journey travel, 2D process workspaces, configurable spatial reports, personal avatars, session recovery, and customizable Home. Proposed design choices are distinguished from your requirements so we can refine them without losing your intent.
+
+---
+
+## Message 9 — User
+
+<realtime_delegation>
+  <input>So you um... uh, where did my- I don't even know where my... where's the chat at</input>
+  <transcript_delta>…... the- uh a table or a mapping of essentially... what the navigation menu looks like, um, and... what, you know, I guess, static resources or graphical images or... coded images, you know, are used, um, or objects, the 3D objects are used... for each... um, defined module or journey or settings screen or agent definition... or um, user definition or admin definition. Oh um... And... then I want to... within... each of those screens define... whether the user interface um, collapses the navigation menu upon entrance of the module or orbital planet, etc... um, or if it... takes them into the object itself um, into a new... you know, immersive experience screen for a journey, um, which is a process, which should, you know, ultimately look like the user moving throughout... an actual planet rather than a, you know, 2D overlap. However, in the journey then um, the user when they're... going on this process and interacting and moving to each of the different objects, that would reflect the um... data interaction that the user will have with a particular process step within that journey. And that should then... um, be defined whether or not that's going to be a two-D, two-D screen or some other um, you know, three-D type immersive experience um, but I'm thinking for now um, a two-D interface for the... um, process steps when you click into them, um, and then I also want to... make sure that there is a sort of reporting feature that is this data rendered spatial- um, spatial view of how to show their reports and three-D graphical images based on the existing Salt Basin experience. Um, now, because the spatial existing experience is already defined in certain aspects, essentially I want it to leverage the um, overarching concept of the spatial... spatial journey. But, I want it to solely give... functionality for... querying objects, objects building out... different reporting views, and filters for each user... so that they are able to... essentially configure their own summary dashboards and different views for different clients that they would need, and essentially that would be like the user configuration definition of their... um, their way they want to view their data and set up their tasks, etc. And then they are able to click into those objects and those objects should represent either process or um, the, you know, data element that they're interacting with within the experience. And I want to make sure that we capture that in detail in this design doc. I also want to make sure that we include the requirement for every user to have their own avatar, their three-D geometrical avatar, that the computer or system or, you know, their login is always anchored at when it comes to where are you right now within the product from your last session, so that the user's location of their last task or... whatever is not lost when they log out, um, but is actually based on their last session cache um... location, so that they can pick up where they left off, um, as well as... a uh home screen... configuration view, um, so the user can... define... what they want to see when they first log in in the home screen. Um, and... that can also be, you know, certain tasks or approvals, etc... um... I think that's it for now
+assistant:  The proposed navigation collapses on entry and supports Home, Basin Map, Journeys, Reporting, Tasks and Approvals, Avatars, and Settings, with reporting as a spatial lens for configurable views. Each user’s avatar preserves position between sessions, while Home provides the configurable starting view.
+user:  Hoo- when I- at your- cape- may on your
+assistant:  Yeah.
+user:  mind, Dad, I'm just grateful for
+assistant:  Mm-hm.
+user:  you. Oh sorry, I wasn't talking to
+assistant:  No problem
+user:  you
+assistant: . Just let me know when you
+user:  Hoo- when I- at your- cape- may on your mind, Dad, I'm just grateful for you. Oh sorry, I wasn't talking to you
+assistant:  Mm-hm. No problem. Just let me know when you’re ready.
+user:  So you um... uh, where did my- I don't even know where my... where's the chat at</transcript_delta>
+</realtime_delegation>
+
+---
+
+## Message 10 — Assistant
+
+[STATUS] The design draft is in this voice conversation’s chat. I’ll check which page is visible.
+
+
+---
+
+## Message 11 — Assistant
+
+[COMPLETE] You’re already in the chat called “New voice chat.” The Salt Basin design draft is earlier in this conversation—scroll up to “Salt Basin — Immersive Application Design Specification.”
+
+---
+
+## Message 12 — User
+
+<realtime_delegation>
+  <input>Okay, can you... um... can you take this spec and let's see. Okay, so it looks like... we've got screen navigation and asset mapping, basin map... Yeah, so can we do... we've got that definition, I- we need to do a- like um... module definition. And then... l-uh, map which journeys... and... types of uh screens, right, exist for each... module... and... when I say module, I'm actually ref-referring to the... orbit view, the orbital planets, and so I want there to be able to be essentially... the um... you know, navigation menu can have satellites, um it can have moons... stars, it can have... um... planets... and the planets need to be, you know, different colors. Some planets... um, can have... you know, already said moons. The moons, uh, if the planet has more than one moon, the moons can-need to have different sizes or um... whatever, and those are three-D objects that I'm referring to. Uh, so this is all a three-D immersive experience, so we need to make sure that... um... the proper associated... like, imagery is either static, like a star maybe, I guess, could be less three-D, but I... even that could still be three-D... um, and then I want it to... essentially... so you can have planets, um then the- the crystal core is really a sun... and so what that sun needs to do is you know, a user... logs in and the sun is the center of the screen... and when... they hover over the sun in the center... it essentially should turn the light on. Um you know, the sun's light shining, um, based on... whatever... um... Yeah, so basically like the background's dark, and then... the user hovers over the sun, and the sun is actually um, giving off light... um, and... then... the user... uh, can actually... there's something variable about this, right? So like for example, if I'm a user and... um... maybe I wanna look at just the sales related... modules that I have access to... um...then I could... essentially set up a sun... path or a sun ray direction or a... um, you know, what le-hel- let's call it uh the sun... um... shine... dimensions, and let's say that all of your sales stuff uh, you basically... um... you know, hover over the sun... and... based on whatever your configured or uh selected, you know, sales... application or uh service cloud or... tasks, or something like that, right, it shows um... it- it shines, but it only shines... on... the planets... and associated... objects to that module that- is associated to the uh user selected filters, so that could- that is part of that home screen configuration. Um, and again, when the user is interacting... with the home screen, um... and with these objects, so like the navigation menu... if I- if the user goes... into the object... then there should be a top-right, um, window, almost... or, or they're in a plan, you know, they're inside the planet, so there should be some sort of like... view of the sun and in a sky, almost, which is... you know, essentially... um... the light that shines, whether it's light or dark background, should be associated with some sort of... um, seasonal time maybe or uh period even or like um... the sun could get... brighter... when it's, like a good day of sales or when reports are like really... like, you know, when something's like really... good is happening, the sun is really, really, really shiny, but then like... you know, there could be a day when let's say like service- the service team has like seventy-five tickets, you know, they log in and they go to their service thing and they're actually going to see like clouds... and rain, you know, it's a- it's like ugly, the sun wouldn't be shining on that, so that needs to be sort of in the design... so that there's like a table that we're defining, you know... which module specific... um... which modules are specific to... the screens themselves, what components each screen has, what types of objects relate to what screen, what's three-D, two-D... um, and then... uh, which- ha and then we have to actually have the documentation... to provide... to Claude or Codex, like a table mapping of... …</input>
+  <transcript_delta>…iated... like, imagery is either static, like a star maybe, I guess, could be less three-D, but I... even that could still be three-D... um, and then I want it to... essentially... so you can have planets, um then the- the crystal core is really a sun... and so what that sun needs to do is you know, a user... logs in and the sun is the center of the screen... and when... they hover over the sun in the center... it essentially should turn the light on. Um you know, the sun's light shining, um, based on... whatever... um... Yeah, so basically like the background's dark, and then... the user hovers over the sun, and the sun is actually um, giving off light... um, and... then... the user... uh, can actually... there's something variable about this, right? So like for example, if I'm a user and... um... maybe I wanna look at just the sales related... modules that I have access to... um...then I could... essentially set up a sun... path or a sun ray direction or a... um, you know, what le-hel- let's call it uh the sun... um... shine... dimensions, and let's say that all of your sales stuff uh, you basically... um... you know, hover over the sun... and... based on whatever your configured or uh selected, you know, sales... application or uh service cloud or... tasks, or something like that, right, it shows um... it- it shines, but it only shines... on... the planets... and associated... objects to that module that- is associated to the uh user selected filters, so that could- that is part of that home screen configuration. Um, and again, when the user is interacting... with the home screen, um... and with these objects, so like the navigation menu... if I- if the user goes... into the object... then there should be a top-right, um, window, almost... or, or they're in a plan, you know, they're inside the planet, so there should be some sort of like... view of the sun and in a sky, almost, which is... you know, essentially... um... the light that shines, whether it's light or dark background, should be associated with some sort of... um, seasonal time maybe or uh period even or like um... the sun could get... brighter... when it's, like a good day of sales or when reports are like really... like, you know, when something's like really... good is happening, the sun is really, really, really shiny, but then like... you know, there could be a day when let's say like service- the service team has like seventy-five tickets, you know, they log in and they go to their service thing and they're actually going to see like clouds... and rain, you know, it's a- it's like ugly, the sun wouldn't be shining on that, so that needs to be sort of in the design... so that there's like a table that we're defining, you know... which module specific... um... which modules are specific to... the screens themselves, what components each screen has, what types of objects relate to what screen, what's three-D, two-D... um, and then... uh, which- ha and then we have to actually have the documentation... to provide... to Claude or Codex, like a table mapping of... um, literally like... the... definitions of each module, so like... um... for example, like I said, sales, so... you know, sales would come with... um... you know, a customer lifecycle... journey or, you know, but then I'm not a customer, you know, the- the sales users aren't customers, but that would be like an external user journey view, but it would also just have to have a configured process with it as well, so like you would define, what are my stages for this journey, what data is collected at each stage for each journey, what data is required upon entry or exit of each stage, uh, what... combination of data elements um produces a more accurate or uh qualified picture of a sale, um what different types of sales there are... that are associated to this, and then we need to associate all of that to each of these... different... actual user interface interactions so that we can associate that to... the user's entry point with the system as well. Um, and that needs to all be in this document</transcript_delta>
+</realtime_delegation>
+
+---
+
+## Message 13 — Assistant
+
+[STATUS] This adds a module definition layer: planets represent modules, while journeys and their stages map to experiences inside them. The central sun also has two distinct behaviors to capture—illuminating your selected scope and expressing operational conditions through brightness and weather.
+
+
+---
+
+## Message 14 — Assistant
+
+::codex-realtime-inline{}
+:::writing{variant="document" id="93752"}
+# Salt Basin — Module and Orbital Experience Mapping
+**Addendum to the immersive application specification · Working draft**
+
+This addendum makes the orbital Home screen the organizing model for modules, journeys, screens, and interactions. It captures the requested sun, planetary navigation, configurable illumination, environmental reporting, and process definitions.
+
+**Confirmed direction:** modules are orbital planets; the crystal core is the sun; journeys are immersive environments; process-step data work initially uses 2D interfaces.
+
+**Proposed details:** the specific module inventory, planet colors, moon assignments, sample sales stages, and environmental thresholds below remain design proposals.
+
+## 1. Celestial object definitions
+
+| Object | Product meaning | Rendering | Interaction and relationship |
+|---|---|---|---|
+| Crystal Sun | Central orientation point and activation of the user’s selected “shine dimensions” | 3D crystalline geometry with emitted light and controlled glow | Hover activates illumination of matching, authorized destinations; keyboard focus and touch provide equivalent activation |
+| Planet | A module containing related capabilities and journeys | 3D sphere or authored planetary model; distinct base color and silhouette details | Select to identify; enter to transition into its module environment |
+| Moon | Proposed: a subordinate capability, journey entrance, or saved view belonging to a planet | 3D object; multiple moons have distinguishable sizes, surfaces, or orbit positions | Opens its explicitly assigned destination; parent planet remains identifiable |
+| Satellite | Proposed: a shortcut to a task queue, agent, tool, or pinned object | Distinct 3D geometry | Opens the linked capability or work item |
+| Star | Proposed: distant landmark or background context | 3D point geometry or lightweight rendered star field | Decorative by default; navigable stars require labels and an explicit destination definition |
+| Surface object | A process step, record, or meaningful group within a journey | 3D geometry tied to object type and state | Opens its configured workspace or detail view |
+| Avatar | The individual user’s presence and saved location | Personal 3D geometric model | Anchors navigation and session continuity |
+
+A moon’s size initially distinguishes identity; it must not imply business importance or performance unless that meaning is explicitly configured and explained.
+
+Module identity and operational state use separate visual channels: a planet retains its identifying color while lighting, atmosphere, and labeled indicators communicate conditions.
+
+## 2. Orbital Home and the sun
+
+### Arrival
+
+On opening orbital Home, the sun occupies the center of a dark scene. Authorized planets and associated objects remain discoverable through restrained silhouettes and readable labels.
+
+This refines the earlier Home concept: personalized tasks, approvals, saved views, and resume controls belong within the orbital Home experience, with 2D configuration controls available when needed.
+
+The preference to resume a previous session remains supported. Returning users may enter their saved location directly; users choosing Home arrive at the sun-centered view.
+
+### Shine dimensions
+
+“Shine dimensions” define which objects the sun illuminates. They are saved as part of personal Home configuration.
+
+| Dimension | Example selection | Effect |
+|---|---|---|
+| Business capability | Sales or Service | Highlights matching modules and subordinate destinations |
+| Application / service | A configured sales application or Service Cloud connection | Highlights associated objects |
+| Client | Selected client | Restricts the view to permitted client context |
+| Journey | Customer lifecycle or a configured sales process | Highlights related journey entrances |
+| Work | My tasks or pending approvals | Highlights destinations containing matching work |
+| Saved view | A personal reporting configuration | Applies that view’s configured selection |
+| Period | Today, this week, or selected reporting period | Establishes the period for applicable data and environmental signals |
+
+**Proposed selection rule:** selections within one dimension match any selected value; different dimensions combine to narrow results. The interface displays the resulting scope in plain language.
+
+Only objects the user is authorized to access may appear. Filtering and lighting do not create permissions.
+
+### Sun interaction states
+
+| State | Visual behavior | Interface behavior |
+|---|---|---|
+| Resting | Dark scene; restrained sun glow | Selected shine dimensions remain visible |
+| Activated | Sun emits directional light toward matching planets and associated objects | Show matching destinations and current scope |
+| Scope pinned | Illumination remains active after pointer movement | Allows the user to move from the sun to a destination without losing the highlight |
+| No matches | Neutral sun state | Explain that no accessible objects match; offer filter adjustment |
+| Loading / unavailable | Neutral lighting with explicit status | Do not imply poor business performance |
+
+**Proposed control:** hover previews illumination; selecting the sun pins it. Touch and keyboard activation provide the same pinned state. Leaving the sun must not make the destination disappear while the user tries to reach it.
+
+## 3. Proposed module-to-journey mapping
+
+Modules organize capabilities. Journey Rods describe business meaning and may cross modules. A Sales planet is therefore not an additional Journey Rod.
+
+| Proposed planet / module | Purpose | Associated journeys or processes | Screens inside the module | Associated objects |
+|---|---|---|---|---|
+| Sales | Manage sales work and qualification | Configured sales process; relevant Customer and Revenue journey views | Module overview; journey landscape; stage workspace; sale detail; reports; process configuration | Journey moons, sale objects, stage objects, task satellites |
+| Service | Manage service work and workload | Configured service process; relevant Customer journey and Member context where applicable | Overview; service journey; ticket workspace; queue; workload report; configuration | Queue moons, ticket objects, escalation and task markers |
+| Customer | View and manage customer lifecycle context | Customer Journey Rod and configured lifecycle processes | Customer landscape; lifecycle stage; customer detail; related sales/service views | Customer objects, lifecycle entrances, relationship links |
+| Revenue | View monetary progression and related work | Revenue Journey Rod and configured financial processes | Journey landscape; step workspace; transaction detail; reporting | Financial process objects, evidence objects, task markers |
+| Member | View member or beneficiary progression | Member Journey Rod and configured entitlement processes | Journey landscape; member detail; step workspace; reports | Member objects, entitlement objects, process markers |
+| Reports & Views | Build personal and client-specific spatial reports | References journeys without redefining them | Saved-view space; query builder; spatial report; object detail | Saved-view moons, aggregate objects, source-object links |
+| Agents | Define and inspect agents | Agent configuration and linked work | Agent directory; definition editor; activity detail | Agent geometry, linked-task satellites |
+| Administration | Configure access and shared definitions | User, role, module, and process configuration | User definition; role definition; module editor; process editor | Administrative destinations with clear labels |
+
+**Inventory status:** these are candidate modules, not a claim that all are approved or implemented. Sales and Service illustrate the user’s examples. Tasks, personal settings, and definitions can be shared destinations rather than automatically becoming additional planets.
+
+## 4. Required module definition record
+
+Every module must have a completed record before implementation.
+
+| Definition field | Required content |
+|---|---|
+| Identity | Stable reference, display name, purpose |
+| Audience | User roles allowed to discover, enter, view, and configure it |
+| Orbital representation | Planet geometry, identifying color, material, label, and asset source |
+| Child objects | Each moon or satellite, its meaning, appearance, and destination |
+| Entry points | Home planet, menu item, task, report object, direct link, or resume |
+| Journey associations | Journey Rods and configured processes available inside |
+| Screen inventory | Each screen type and its required components |
+| Navigation behavior | Collapse rules, back destination, sun window, and exit behavior |
+| Data associations | Objects read or edited by each screen |
+| Environmental rules | Metrics, period, thresholds, and resulting lighting/weather |
+| Continuity | Location and workspace context saved for resume |
+| Access and fallback | Restricted, removed, unavailable, empty, and loading states |
+
+A module cannot be defined only by a planet image. Its visual object, screens, processes, data, and entry behavior must be linked.
+
+## 5. Screen and component contracts
+
+| Screen type | Required components | 3D / 2D treatment | Navigation behavior |
+|---|---|---|---|
+| Orbital Home | Sun; planets; child objects; shine controls; avatar; resume; personal work | 3D world with 2D labels and controls | Expanded navigation available |
+| Module interior | Environment; journey entrances; avatar; location label; sun window | 3D environment with compact 2D controls | Main menu collapses on entry |
+| Journey interior | Traversable landscape; stage objects; connections; current work; sun window | 3D movement and objects | Preserve module context and return route |
+| Stage workspace | Fields; evidence; entry/exit conditions; status; actions | 2D panel or full-screen workspace | Pause travel and preserve position |
+| Record detail | Values; meaning; source; relationships; permitted actions | 2D detail attached to a selected 3D object | Return to original selection |
+| Spatial report | Data geometry; legend; period; filters; freshness; selection detail | 3D results plus 2D inspection | Save and restore view context |
+| Process configuration | Stages; fields; rules; sale types; journey associations; preview | 2D editor with optional 3D preview | Editing a definition does not move the avatar |
+| Home configuration | Shine dimensions; pinned objects; work cards; arrival preference | 2D editor with orbital preview | Save personal settings |
+| User / Agent / Admin definition | Relevant identity, scope, permissions, behavior, and visual preview | 2D editor; 3D identity preview where applicable | Standard navigation remains available |
+
+### Sun window inside a planet
+
+Place a compact sun-and-sky view in the top-right of module and journey environments.
+
+It provides:
+
+- A persistent orientation link to orbital Home.
+- The current module’s environmental condition.
+- The selected period.
+- A readable explanation of the metric driving the condition.
+
+Selecting its Home control returns to orbital Home while preserving the user’s place. When a workspace needs the available screen space, the sun window may reduce to a compact control.
+
+## 6. Operational lighting and weather
+
+The sun serves two related but distinct functions:
+
+1. **Scope illumination:** which destinations match the user’s selections.
+2. **Operational atmosphere:** what measured conditions are occurring in the current module.
+
+A module can match a Sales filter and still show an unfavorable condition. Selection must not imply success.
+
+| Context | Example condition | Proposed environmental expression | Required explanation |
+|---|---|---|---|
+| Sales | Performance exceeds a configured target for the selected period | Brighter sun and clearer atmosphere | Actual measure, target, period, and freshness |
+| Sales | Performance is within an expected range | Balanced daylight | Measure and expected range |
+| Service | Workload exceeds configured capacity or a backlog threshold | Clouds and rain | Ticket count, capacity or threshold, and period |
+| Service | Workload is manageable | Clearer conditions | Workload relative to configured capacity |
+| Any module | Missing or stale data | Neutral atmosphere with explicit unavailable/stale indicator | Why the condition cannot be evaluated |
+| Any module | Multiple conflicting indicators | Mixed or neutral atmosphere with detail | The measures that disagree |
+
+**The example of 75 service tickets does not establish a universal “rain” threshold.** Whether that workload is adverse depends on capacity, age, urgency, and the selected rule.
+
+Calendar time or season may provide an ambient theme. Operational weather must remain separately defined so users can tell whether darkness means time of day or a business condition.
+
+Each environmental rule records the metric, source, aggregation, scope, period, threshold, visual result, and explanatory label. Weather does not obscure controls or prevent work.
+
+## 7. Journey and stage definition
+
+A journey configuration must connect business process meaning to the exact interaction shown on screen.
+
+| Definition | Required mapping |
+|---|---|
+| Journey identity | Name, purpose, owning module, related Journey Rods |
+| Actor | Internal user, external customer, administrator, or agent |
+| Subject | The customer, sale, member, or other entity the journey concerns |
+| Process variants | Applicable sale or service types and their differences |
+| Stages | Ordered or branching stages and valid connections |
+| Collected data | Fields or objects presented at each stage |
+| Entry conditions | Data and state required to enter |
+| Exit conditions | Data, evidence, or approvals required to complete or leave |
+| Qualification | Combination of evidence and data that supports the displayed assessment |
+| Spatial representation | Landscape region, step object, state appearance, and connections |
+| Work interface | 2D workspace components and available actions |
+| Entry points | Which task, report, menu, object, or direct link opens the step |
+| Result | Data updated, state transition, and visual feedback |
+| Return behavior | Where the user returns after closing or completing work |
+
+**Actor and subject are separate.** An internal sales user can work on a customer lifecycle without becoming the customer. Any external customer view needs its own screen and access mapping.
+
+## 8. Illustrative Sales process mapping
+
+The following stages and data are examples for defining the structure, not finalized Salt Basin sales policy.
+
+| Example stage | Data collected | Example entry / exit requirements | Spatial object and workspace | Typical entry point |
+|---|---|---|---|---|
+| Identify | Organization, contact, source, sale type | Enter: permission to create; exit: required identity and ownership captured | Entry landmark → 2D identification form | Sales planet or create action |
+| Qualify | Need, fit, stakeholders, timing, supporting evidence | Enter: identified sale; exit: configured qualification conditions satisfied or exception recorded | Qualification structure → evidence and assessment workspace | Journey path or assigned task |
+| Shape solution | Products, scope, quantities, constraints | Enter: applicable qualification state; exit: required solution configuration complete | Configuration structure → 2D solution editor | Stage object |
+| Propose | Proposed terms, price, documents, approvals | Enter: valid solution; exit: proposal and required approvals recorded | Proposal structure → terms and approval workspace | Journey or approval queue |
+| Agree | Accepted terms, agreement evidence, effective dates | Enter: applicable proposal state; exit: configured agreement evidence validated | Agreement structure → agreement workspace | Task or sale detail |
+| Handoff | Delivery owner, commitments, linked downstream work | Enter: agreed state; exit: required handoff information and ownership complete | Confluence / destination link → handoff workspace | Journey completion action |
+
+Sale types—such as new business, renewal, or expansion—can select different requirements and paths. Their actual definitions remain to be specified.
+
+Qualification should show its supporting evidence and missing conditions. Any score must have a defined calculation; no unexplained numerical confidence is assumed.
+
+## 9. Interaction mapping required for implementation
+
+For every interactive object, complete this row:
+
+| Module | Screen | Actor | Entry source | Selected object | Action | Destination | Data read / changed | Conditions | Return / resume | Asset |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Sales | Journey interior | Internal salesperson | Sales planet | Qualification stage | Open | 2D qualification workspace | Sale and qualification evidence | Authorized access; configured stage rules | Same stage and camera | Procedural 3D structure + 2D workspace |
+| Service | Module interior | Service user | Home filtered to Service | Work queue moon | Enter | Queue and linked process objects | Permitted service work | Client and role scope | Service environment | 3D moon + 2D queue |
+| Reports | Spatial report | Authorized user | Saved client view | Sales aggregate | Inspect | Aggregate breakdown | Records behind the measure | Same report permissions and filters | Same report position | Data-driven 3D geometry + 2D detail |
+| Home | Orbital view | Signed-in user | Login | Crystal Sun | Activate | Illuminated matching destinations | Personal shine configuration | Access filtering | Remain on Home | 3D sun, light, and glow |
+
+This mapping is the implementation contract for Claude or Codex: it relates each visual object to its module, screen, data, rules, and resulting user interaction.
+
+## 10. Remaining definition work
+
+The structure is now specified. A complete implementation handoff still needs populated, approved values for:
+
+- Final module inventory and child-object assignments.
+- Exact planet colors, geometries, and asset references.
+- Journey variants and stage definitions per module.
+- Field definitions, entry/exit rules, and qualification logic.
+- Operational metrics and environmental thresholds.
+- Internal and external user permissions and screen differences.
+
+These values should be added to the tables without treating illustrative examples as established business rules.
+:::
+
+
+---
+
+## Message 15 — Assistant
+
+[COMPLETE] I added the module-definition tables, celestial object mapping, sun filters, operational weather, screen components, and stage-level data rules. The sales example connects each process step to its interface and entry point; unconfirmed modules and business rules are clearly marked as proposals.
+
+---
+
+## Message 16 — User
+
+<realtime_delegation>
+  <input>Okay... Let me just read through it... um so then also... just while I'm thinking about it... um, can you... also make sure... that there is... um... obviously a mobile... experience as well as a tablet experience, as well as a laptop experience. And then can you make sure that there’s also... um, consideration for how to map a specific user license... to um... a...user profile and b- using the already existing provisioning application, um, that is built within the existing salt basin website, uh, because each user when they get provisioned a license essentially, that is going to control then which um crystal sun, you know, they have and what... what different orbits and things they have associated with it. Um... and then I also want there to be a call out for um... when a user is in a journey... and they are... you know, within the process, I want it to be like the perspective of like virtual reality, like Pokémon Go where they see like, you know, their avatar maybe directly in front of them, and then they are able to see, you know, the... the-the most immediate next step or maybe the... most immediate next step and the step after that, in a three-D... immersive scene definition that is something... um, you know, maybe... very... simplistic version of an outdoor... um... water system... with, you know external objects as well, like a mountain... um, that we can actually... you know... leverage like the mountain for example, could be... um... you know, that could reference something like... a goal... uh for sales that month and then... you could see, you know... based on... um... the users... and their avatars, you know, how far up the mountain each avatar of each user is... uh based on, you know... a- a sales definition territory or any sort of um, you know, goal actors... definition, let's call it, so that... the users can actually track performance and compare themselves against their peers and how their peers are doing... um then for example, you know, on days where... it... is a really bright and sunny day... um... and maybe then there's, you know... a ton of inflow of service tickets or even lead inquiries... um that should represent like an actual... event that takes place, like an actual scene... scene animation... that takes place... um, so that when a user logs in, they are able to see... like... it's raining or um... it... you know... or the- the water in the basin is evaporating... because... um, conditions of the market... are, you know... eating up cash farther- more than it’s bringing money or something like that, right? Like there’s got to be like a... um... level of maturity even or some sort of way to determine like... like ha- a- type of period of time or distance or reporting metric. So like... um, even when a user's in their journey, right? I want them to be able to see the sun up in the sky, and I think like, it should... um... you know, the time of day... or maybe even like... you know, when you're on a sales journey, like the moon and the phase of the moon could represent... uh, which part of the sales journey or revenue journey, right? Um, or which, you know, moon phase is like, you know, for-um, pr- like going to represent this phase at this time, and... um, you know, so like a whole full moon, right, could be like a... renewed customer. And then maybe like the next renewal cycle, right, it doesn't shift... um, like... you know, now you might have three full moons against an account. If you have three full moons against an account, uh, that might represent... you have three years of... a customer, or something like that, right? Um, and so... you see, like... you- you know, we actually start to make the data into actual three-D objects without... uh, losing the two D data interaction as well. I want there to be then obviously the user... um... can either like voice talk or... type... with an agent... um, that... actually like plays th- the game out for them, or takes their user to a certain object or to a certain... destination, and updates the data or starts to compile the data for the…</input>
+  <transcript_delta>…tions... of the bots that we define in the agent hierarchy. So the large language models... we’re going to build, are going to have a deterministic- d-deterministically defined data sets... scope underneath based on... system's existing data, but the large language models are going to then be run on top of those data sets and that deterministic code... so that... the scope is so defined that it's easier to... narrow down the... um... errors, and for every agent, there needs to be debugging consideration definitions... so like- I- I-I'm probably going to need your input or your recommendation on this more than mine, but like... so like, let's say... you know... if... the... answer returned... when I'm calling an API... from my code... in an agent... um... in an agent build, right? In an actual... like... prompt conversation that the user’s having... how do I... um, debug... as a... like... even just as a tech person, how do I debug... the results... of... the individual steps that are taken within the code that get to a final result, if multiple translations or different rules are being called... and returning values in the process... um, because sometimes, we might be calling a database that's outside the system, and I- we need to be actually caching the value in our system that's received if it exists within a translation rule... within the... um, zero copy interface translation to a database or a connector interface or any like... um, API and-if- integration, etc... so that... essentially... we are able to debug, you know, at what point and what agent step in the process... and- in the... um, time of day, and... with this search scope, and based on this... um... you know, this value that ca-came in, it returned- it went in... um, connected to these other three values and returned this, right? And then this is the value that was used in this next formula... or something like that, right? So that there's a... way to... validate the rules and have... some sort of... like... um, validation audit tracking... of... process... validations, or flags for when... the system finds debugs... against like an- an already... defined... mapping... that the system has built. And so that then brings me to my next design topic around the configuration journeys that we've discussed previously, so one of the modules in this... needs to essentially provide a platform level... um... configuration for... the actual salt basin... builders... to... use the salt basin platform... and... define... all of this stuff... for every... different module and use- and business use case dimension... that... I have in my mind, so that... I can actually then have a data a persisted data model... of... all of the different... um... elements... that are built... and associated to different use cases... um, and... basically use my product to build... the rest of my product. Um, and so that comes to my next point around... there... also has to be a module, and I'm not sure if we put it in here... um... for agents hub, or let's call it, you know, there needs to be some sort of like... associated... orbital... view... or a three-D object... um, relative to an agent, which we've talked about... you know, each user having an avatar, so each agent should have an avatar as well... um... just like, you know, really every data element should have a- uh... an avatar, and... like processes should connect through, you know, a three-D, another three-D element as well that needs to be defined for like, if you're building a journey, is it going to be an... outdoor hike, or is it, you know, is it going to be... um, are you going to... you know... s- uh, let's call it... walk across a salt basin, you know, t- um... some with salt deposits, right? Or are you... going down... the river, you know, is a river... ride when- where you actually are on a river or are you in the spatial journey where you're actually underwater, right? Um, that needs to be defined, and I don't remember where I left off, what did I actually bring up before this because... I want to go back to that</transcript_delta>
+</realtime_delegation>
+
+---
+
+## Message 17 — Assistant
+
+[STATUS] Just before the builder-module idea, you were asking how to debug an agent’s result step by step—tracking incoming values, translations, rules, formulas, and the value passed to the next step.
+
+
+---
+
+## Message 18 — Assistant
+
+::codex-realtime-inline{}
+:::writing{variant="document" id="58319"}
+# Salt Basin — Additional Requirements and Discussion Bookmark
+
+## Where the discussion left off
+
+**The topic immediately before platform configuration was agent debugging and validation.** You wanted to inspect how source values pass through connector calls, translations, rules, and formulas to produce a final result.
+
+That led to the idea of a **Builder module** that stores those definitions and lets you use Salt Basin to build Salt Basin.
+
+Before debugging, you described **voice and text agents** that navigate the experience and help collect or update data.
+
+## Additions to the design specification
+
+| Area | Requirement | Proposed design treatment |
+|---|---|---|
+| Device support | Support mobile, tablet, and laptop | Preserve the same modules, permissions, and data across devices; adapt controls, panel layout, and scene complexity |
+| Mobile | Retain immersive navigation and 2D data interaction | Touch navigation; tap instead of hover; full-screen step workspaces; compact sun control |
+| Tablet | Support spatial exploration alongside work | Touch-first controls; landscape split view where space permits; expandable workspace |
+| Laptop | Support detailed configuration and exploration | Keyboard and pointer navigation; resizable panels; larger spatial view |
+| Provisioning | Associate each provisioned license with a user profile through the existing provisioning application | Map the existing provisioned entitlement to available sun configuration, planets, orbits, and capabilities; verify the current integration before implementation |
+| User preferences | Personalize the licensed experience | Shine dimensions select among authorized destinations; preferences cannot enable unlicensed capabilities |
+| Journey camera | Show the avatar ahead of the viewer with the next one or two steps visible | Third-person, over-the-shoulder camera; immersive depth without requiring a VR headset |
+| Journey setting | Define the environment for each journey | Configurable scene types: outdoor hike, salt-flat crossing, river travel, or underwater exploration |
+| Connecting objects | Represent process connections spatially | Define paths, channels, bridges, or other 3D connectors and their process meaning |
+| Goal mountain | Represent progress toward a defined goal | Position authorized participants’ avatars according to a specified progress measure |
+| Peer comparison | Compare relevant users against a goal | Define participating actors, territory or team, period, target, and comparison permissions |
+| Event animation | Show meaningful changes as scene events | Associate events such as ticket or lead inflows with defined animation rules |
+| Basin water | Represent a selected measure through water behavior | Define the measure, unit, period, and calculation before mapping it to water level or evaporation |
+| Sun and sky | Remain visible within journeys | Preserve the sun in the scene or compact sky window, with an explanation of its current meaning |
+| Moon phases | Represent journey or renewal progression | Configure the mapping between business state and phase; distinguish active-cycle progress from completed history |
+| Completed moons | Preserve completed renewal milestones | Count completed cycles; interpret them as years only when each cycle is explicitly annual |
+| Agent interaction | Accept voice and typed requests | Provide visible navigation, data collection, action status, and results |
+| Agent identity | Give each agent a geometric avatar | Distinguish agents from human users and display their role and scope |
+| Data identity | Give data elements a visual representation | Define a 3D representation for each element type; render instances at an appropriate level of detail |
+| Agent Hub | Provide a place to discover and configure agents | Orbital destination with agent avatars, hierarchy, definitions, activity, and diagnostics |
+| Builder module | Persist the definitions used to construct the product | Configuration journeys for modules, scenes, screens, processes, data, rules, agents, and use cases |
+
+**License integration boundary:** the existing provisioning application is user-reported and has not yet been inspected. This document requires its reuse; it does not assume its current fields or behavior.
+
+## Agent debugging: proposed design contract
+
+An authorized builder needs a visible execution record showing **what ran, what data it used, which rule version applied, what it returned, and what happened next**.
+
+| Diagnostic item | Information to record |
+|---|---|
+| Request context | User, agent, permitted scope, client context, request time |
+| Execution step | Operation, parent step, sequence, start/end time, status |
+| External lookup | Connector, query scope, source timestamp, response status |
+| Input evidence | Values actually used, subject to access and retention rules |
+| Translation | Mapping version, incoming value, translated value, validation result |
+| Rule or formula | Version, named inputs, output, expected conditions |
+| Model operation | Model/configuration reference, supplied context, returned output, validation result |
+| Downstream use | Which subsequent step consumed the output |
+| Data change | Intended change, authorization outcome, committed result |
+| Failure or mismatch | Failed condition, affected value, responsible step, next diagnostic action |
+
+The diagnostic screen should let a builder select a final value and follow its dependencies backward to the source. It should also show where an expected mapping or validation first failed.
+
+This is an execution and data-lineage record; it does not depend on exposing a model’s private internal reasoning.
+
+### External data and replay
+
+Where permitted, preserve the minimum source values needed to explain a transformation, together with their provenance and retention policy. If values cannot be retained, keep references and clearly identify the resulting replay limitation.
+
+Persisting external values is a deliberate cache or evidence snapshot, even when the connector otherwise uses a zero-copy approach. The configuration must make that distinction explicit.
+
+Separate:
+
+- **Recorded inspection:** examine the inputs and outputs of the original run.
+- **Rule replay:** rerun a versioned deterministic transformation against captured inputs.
+- **Fresh execution:** query current sources or call the model again; results may differ.
+
+A tightly scoped dataset and deterministic rules constrain an agent, but do not by themselves make its language-model output deterministic.
+
+## Builder module: persisted definition map
+
+| Definition | Relationships it must preserve |
+|---|---|
+| Module | License entitlements, planet, child objects, screens, journeys |
+| Screen | Components, data bindings, device layouts, navigation behavior |
+| Journey | Actor, subject, stages, scene type, camera, connections |
+| Stage | Fields, entry/exit conditions, evidence, actions, workspace |
+| Visual object | Represented entity, geometry, material, interaction, state encoding |
+| Metric / event | Calculation, scope, period, thresholds, animation or environmental effect |
+| Agent | Avatar, hierarchy, dataset scope, tools, rules, diagnostics |
+| Translation / rule | Inputs, outputs, version, validations, execution evidence |
+| User profile | Provisioned entitlements, avatar, preferences, saved location |
+| Use case | Applicable modules, actors, processes, views, and configuration variants |
+
+**Proposed configuration lifecycle:** draft → validate → preview → publish a version. Existing journeys and execution records retain the definition version needed to explain their behavior.
+:::
+
+
+---
+
+## Message 19 — Assistant
+
+[COMPLETE] You were on agent debugging—tracing each value through lookups, translations, and formulas—just before moving into the Builder module. Before that was voice and text control of agents. I’ve captured the device, licensing, landscape, moon, avatar, and configuration additions in the document.
+
+---
+
+## Message 20 — User
+
+<realtime_delegation>
+  <input>Okay, can you... literally copy... everything that... I have-ha- written in these prompts... and that you have set- given back, including... any... markdown files or any files that you've... um, given me, and can you package that... all up... do not compact the chat, do not delete any of the words, do not... um, miss out on any of the... uh, context of my initials- um, initial... contributions or your outputs. Um, so I can then put this in the web chat- chat GPT and continue the conversation</input>
+  <transcript_delta>…or a... um scene level, or a... you know... um... like... yeah-three-D, I guess a mountain, right? If a mountain is a three-D, and then is it... like... you know, essentially the security mapping model, right? And then that needs to eventually be able to be mapped to... like... um... essentially like... different... users should have different access to what they can see... not only as a license, so like your modules and like which- obviously things come from that, but then like the literal... data that they can see, and then the actions that they can take... based on... the... um... the license they have, and like special features maybe or- you know, we'll have to come up with a pricing model, but I just want a way to define... mapping to users and a... like way that can essentially... cluster together... different... business... applications or capabilities... um, that... rip-represent... the... um... go to market, you know... way that this product would be presented. So for example, like... um... health insurance, you know, platform... end-to-end revenue lifecycle management or something, right
+assistant:  You’re approaching your Codex
+user:  Yes, and so, oh, and we were also talking about how I wanted to... basically make sure in this design document that we're- we're- we're... s-first defining now- now let's map out what the literal user experience definition needs to be for... each visual element that we've now put in this design to reflect... the... module... of salt basin configuration... which is essentially... um, us defining the literal... rest of the product, so essentially... each module... for-s- salt basin configuration would be the module, and then essentially there should be a... few different journeys around... um... like the... you know, business rule definition maybe, or business semantic definition meaning... um... or, you know, the... different three-D elements that need to be defined... for... each... business context, and like, for example, you know, you have to define... all of the fields, you know, and how those fields map to... the agent... rules and the translations, right, and which fields can be persisted to the database versus which fields are... surfaced in the... UI, and are they surfaced... um, at a... label or a three-D object... level, or a... um scene level, or a... you know... um... like... yeah-three-D, I guess a mountain, right? If a mountain is a three-D, and then is it... like... you know, essentially the security mapping model, right? And then that needs to eventually be able to be mapped to... like... um... essentially like... different... users should have different access to what they can see... not only as a license, so like your modules and like which- obviously things come from that, but then like the literal... data that they can see, and then the actions that they can take... based on... the... um... the license they have, and like special features maybe or- you know, we'll have to come up with a pricing model, but I just want a way to define... mapping to users and a... like way that can essentially... cluster together... different... business... applications or capabilities... um, that... rip-represent... the... um... go to market, you know... way that this product would be presented. So for example, like... um... health insurance, you know, platform... end-to-end revenue lifecycle management or something, right
+assistant:  usage
+user: ... um
+assistant:  You’re approaching your Codex usage limit, so this
+user: ... um
+assistant:  limit, so this voice chat may end soon.
+user:  Okay, can you... literally copy... everything that... I have-ha- written in these prompts... and that you have set- given back, including... any... markdown files or any files that you've... um, given me, and can you package that... all up... do not compact the chat, do not delete any of the words, do not... um, miss out on any of the... uh, context of my initials- um, initial... contributions or your outputs. Um, so I can then put this in the web chat- chat GPT and continue the conversation</transcript_delta>
+</realtime_delegation>
+
+---
+
+## Message 21 — Assistant
+
+[STATUS] The package needs the full conversation text, including your spoken contributions and all three design drafts. I’ll retrieve the saved conversation and preserve its wording rather than summarize it.
+
