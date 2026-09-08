@@ -63,6 +63,16 @@ export function defaultMemberConfig({ displayName, email }) {
         { id: 'resume', label: 'My Resume', componentId: 'resume', sortOrder: 12 },
         { id: 'outputTemplates', label: 'Output Templates', componentId: 'outputTemplates', sortOrder: 20 },
         { id: 'config', label: 'Site Configuration', componentId: 'config', sortOrder: 15 },
+        // Re-added 2026-09-06 alongside the visibility_mode/marketplace-search
+        // work (server/lib/memberVisibilityRegistry.js, /api/nrm/marketplace/search)
+        // — a member now needs a reachable place to set their profile's
+        // visibility mode and search/connect with other members. Was
+        // previously left out of the default nav (component/route never
+        // removed, per this file's own header comment); restoring it here is
+        // a read-time-only additive merge for existing members too
+        // (memberConfig.js's GET /draft), same pattern already used for
+        // 'careerPlacementAgents' and 'resume'.
+        { id: 'network', label: 'My Network', componentId: 'memberNrm', sortOrder: 16 },
       ],
     },
     site: {

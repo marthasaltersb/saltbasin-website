@@ -277,6 +277,35 @@ async function bootstrap() {
       updated_at      BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
     );
 
+    -- Moved up from its original ── Organization profiles ── location (search
+    -- for "Organization profiles" further down this file) 2026-09-06: many
+    -- tables between here and there declare an org_id BIGINT REFERENCES
+    -- organization_profiles(id) column, so the table itself must exist
+    -- before those CREATE TABLE statements run. This was invisible against
+    -- the real Supabase instance (which already has the table from
+    -- incremental history) but reproduces reliably — "relation
+    -- organization_profiles does not exist" — against a genuinely fresh
+    -- database (confirmed live against a fresh local Postgres 16 instance).
+    -- The later location keeps its ALTER TABLE / CREATE INDEX statements
+    -- (safe to run against a table created here) and its explanatory
+    -- comments; only the CREATE TABLE itself moved.
+    CREATE TABLE IF NOT EXISTS organization_profiles (
+      id           BIGSERIAL PRIMARY KEY,
+      slug         TEXT NOT NULL UNIQUE,
+      name         TEXT NOT NULL,
+      org_type     TEXT NOT NULL DEFAULT 'llc',
+        -- sole_proprietor | llc | corporation | partnership | nonprofit
+        -- | freelance_platform | client_org
+      description  TEXT,
+      logo_url     TEXT,
+      website      TEXT,
+      industry     TEXT,
+      metadata     JSONB NOT NULL DEFAULT '{}',
+      originating_lead_id BIGINT REFERENCES leads(id) ON DELETE SET NULL,
+      created_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+
     CREATE TABLE IF NOT EXISTS lead_messages (
       id          BIGSERIAL PRIMARY KEY,
       lead_id     BIGINT NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
@@ -1918,28 +1947,17 @@ async function bootstrap() {
     -- ── Organization profiles ────────────────────────────────────────────────
     -- An org can be anything from a solo LLC to a large enterprise.
     -- org_type drives which integration categories are surfaced in the UI.
-    CREATE TABLE IF NOT EXISTS organization_profiles (
-      id           BIGSERIAL PRIMARY KEY,
-      slug         TEXT NOT NULL UNIQUE,
-      name         TEXT NOT NULL,
-      org_type     TEXT NOT NULL DEFAULT 'llc',
-        -- sole_proprietor | llc | corporation | partnership | nonprofit
-        -- | freelance_platform | client_org
-      description  TEXT,
-      logo_url     TEXT,
-      website      TEXT,
-      industry     TEXT,
-      metadata     JSONB NOT NULL DEFAULT '{}',
-      -- Traces this org back to the Member Organization Lead that qualified
-      -- into it (see server/lib/journeyRods.js promoteLeadToOrganizationLead /
-      -- the qualified_opportunity promotion) — null for orgs created directly
-      -- through the member dashboard's self-service flow, which has no lead
-      -- lineage. NOT the same as org creation itself; this only gets set when
-      -- an org is born from a promoted lead.
-      originating_lead_id BIGINT REFERENCES leads(id) ON DELETE SET NULL,
-      created_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
-      updated_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
-    );
+    -- The CREATE TABLE itself now lives up near the leads table (search
+    -- "Moved up from its original" above) since many tables between there
+    -- and here declare an org_id REFERENCES organization_profiles(id)
+    -- column and need the table to already exist — see that comment for
+    -- why. Traces
+    -- this org back to the Member Organization Lead that qualified into it
+    -- (see server/lib/journeyRods.js promoteLeadToOrganizationLead / the
+    -- qualified_opportunity promotion) — null for orgs created directly
+    -- through the member dashboard's self-service flow, which has no lead
+    -- lineage. NOT the same as org creation itself; this only gets set when
+    -- an org is born from a promoted lead.
     ALTER TABLE organization_profiles ADD COLUMN IF NOT EXISTS originating_lead_id BIGINT REFERENCES leads(id) ON DELETE SET NULL;
     -- Lets a verified work email's domain find-or-create its organization —
     -- see ensureCustomerOrgFromWorkEmail() in server/lib/journeyRods.js.
@@ -2793,7 +2811,163 @@ async function bootstrap() {
   await sql.unsafe(`
     ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS opted_in_network BOOLEAN NOT NULL DEFAULT false;
     ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS network_bio TEXT;
+    -- Public-site access mode — see server/lib/memberVisibilityRegistry.js for the
+    -- canonical value list. Default 'unlisted' preserves every existing member's
+    -- current behavior (anyone with the /u/:slug link can already view it today;
+    -- this migration must not regress that) rather than defaulting to a more
+    -- restrictive mode nobody opted into.
+    ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS visibility_mode TEXT NOT NULL DEFAULT 'unlisted';
+    ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS site_password_hash TEXT;
   `).catch(() => {});
+
+  // Short-lived unlock tokens for password-gated member sites (visibility_mode
+  // = 'password'). Mirrors the existing sitewide landing_sessions pattern
+  // (server/auth.js) but scoped per member, since each member's site can carry
+  // its own independent visitor password.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS member_site_unlocks (
+      token       TEXT PRIMARY KEY,
+      user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      expires_at  BIGINT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_msu_user ON member_site_unlocks (user_id);
+  `);
+
+  // server/lib/memberAccess.js (getMemberAccessSummary, requireMemberFeature —
+  // gates POST /api/member-site/publish and /api/member-config/publish among
+  // others) has referenced these five tables since before this pass, but none
+  // of them existed anywhere in this bootstrap — confirmed live: publishing a
+  // member site against a genuinely fresh database throws 'relation
+  // "member_subscriptions" does not exist'. Adding the schema here (found
+  // while verifying the organization_profiles fix above against the same
+  // fresh database) rather than leaving a second fresh-database crash in
+  // place. Shape matches every column memberAccess.js already reads/writes —
+  // nothing here is a new design, just backing the existing code with real
+  // tables. commerce_offerings/offering_features are seeded with exactly one
+  // free trial row below (member_career_foundation, the offering_id
+  // ensureCareerFoundationTrial() already hardcodes) unlocking the member
+  // features that are actually enforced today (MEMBER_SITE, CAREER_BESTYSTAFF)
+  // plus the other three declared-but-not-yet-gated MEMBER_FEATURES — no
+  // pricing tier or paid-offering data invented, since none exists anywhere
+  // else in this codebase to model against.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS commerce_offerings (
+      id                  TEXT PRIMARY KEY,
+      name                TEXT NOT NULL,
+      price_cents         INTEGER NOT NULL DEFAULT 0,
+      currency            TEXT NOT NULL DEFAULT 'usd',
+      billing_interval    TEXT NOT NULL DEFAULT 'trial',
+      trial_days          INTEGER,
+      storage_limit_bytes BIGINT,
+      created_at          BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at          BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+
+    CREATE TABLE IF NOT EXISTS offering_features (
+      offering_id  TEXT NOT NULL REFERENCES commerce_offerings(id) ON DELETE CASCADE,
+      feature_key  TEXT NOT NULL,
+      enabled      BOOLEAN NOT NULL DEFAULT true,
+      PRIMARY KEY (offering_id, feature_key)
+    );
+
+    CREATE TABLE IF NOT EXISTS member_subscriptions (
+      id                        BIGSERIAL PRIMARY KEY,
+      user_id                   BIGINT REFERENCES users(id) ON DELETE CASCADE,
+      sponsor_org_id            BIGINT REFERENCES organization_profiles(id) ON DELETE SET NULL,
+      offering_id               TEXT NOT NULL REFERENCES commerce_offerings(id) ON DELETE RESTRICT,
+      status                    TEXT NOT NULL DEFAULT 'trialing',
+      trial_started_at          BIGINT,
+      trial_ends_at             BIGINT,
+      current_period_starts_at  BIGINT,
+      current_period_ends_at    BIGINT,
+      created_at                BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at                BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    -- Matches memberAccess.js's ensureCareerFoundationTrial() ON CONFLICT
+    -- target exactly: one non-org-sponsored subscription per (user, offering).
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_member_subscriptions_user_offering
+      ON member_subscriptions (user_id, offering_id) WHERE user_id IS NOT NULL AND sponsor_org_id IS NULL;
+    CREATE INDEX IF NOT EXISTS idx_member_subscriptions_user ON member_subscriptions (user_id);
+
+    CREATE TABLE IF NOT EXISTS member_subscription_seats (
+      id               BIGSERIAL PRIMARY KEY,
+      subscription_id  BIGINT NOT NULL REFERENCES member_subscriptions(id) ON DELETE CASCADE,
+      user_id          BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at       BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      UNIQUE (subscription_id, user_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_subscription_seats_user ON member_subscription_seats (user_id);
+
+    CREATE TABLE IF NOT EXISTS member_feature_grants (
+      id           BIGSERIAL PRIMARY KEY,
+      user_id      BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      feature_key  TEXT NOT NULL,
+      is_active    BOOLEAN NOT NULL DEFAULT true,
+      expires_at   BIGINT,
+      created_at   BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint
+    );
+    CREATE INDEX IF NOT EXISTS idx_member_feature_grants_user ON member_feature_grants (user_id);
+
+    INSERT INTO commerce_offerings (id, name, price_cents, currency, billing_interval, trial_days, storage_limit_bytes)
+    VALUES ('member_career_foundation', 'Career Foundation (Trial)', 0, 'usd', 'trial', 90, NULL)
+    ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO offering_features (offering_id, feature_key, enabled)
+    VALUES
+      ('member_career_foundation', 'career_core', true),
+      ('member_career_foundation', 'member_site', true),
+      ('member_career_foundation', 'career_bestystaff', true),
+      ('member_career_foundation', 'career_agents', true),
+      ('member_career_foundation', 'career_pipeline', true)
+    ON CONFLICT (offering_id, feature_key) DO NOTHING;
+  `);
+
+  // Two more tables referenced by server/routes/careerMaster.js (experience
+  // definitions/proficiency assertions — ensureExperienceDefinitions() and the
+  // /experience-definitions, /proficiency-assertions, /rollup-preview routes)
+  // and by memberAccess.js's storage-usage query, found the same way as the
+  // commerce tables above: absent from this bootstrap entirely, reproduces as
+  // 'relation "career_experience_definitions" does not exist' the moment a
+  // member's storage usage is computed (getMemberStorageUsage, called from
+  // every getMemberAccessSummary — i.e. every requireMemberFeature check)
+  // against a genuinely fresh database. Column shapes match the INSERT/SELECT
+  // statements in careerMaster.js exactly.
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS career_experience_definitions (
+      id              BIGSERIAL PRIMARY KEY,
+      user_id         BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      definition_type TEXT NOT NULL,
+      definition_key  TEXT NOT NULL,
+      label           TEXT NOT NULL,
+      description     TEXT,
+      definition      JSONB NOT NULL DEFAULT '{}',
+      sort_order      INTEGER NOT NULL DEFAULT 0,
+      is_active       BOOLEAN NOT NULL DEFAULT true,
+      created_at      BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at      BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      UNIQUE (user_id, definition_type, definition_key)
+    );
+    CREATE INDEX IF NOT EXISTS idx_career_experience_definitions_user ON career_experience_definitions (user_id);
+
+    CREATE TABLE IF NOT EXISTS career_proficiency_assertions (
+      id                 BIGSERIAL PRIMARY KEY,
+      user_id            BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      entity_type        TEXT NOT NULL,
+      entity_id          BIGINT NOT NULL,
+      period_key         TEXT NOT NULL,
+      level_key          TEXT NOT NULL,
+      confidence         NUMERIC NOT NULL DEFAULT 1,
+      assessment_source  TEXT NOT NULL DEFAULT 'user_confirmed',
+      evidence_count     INTEGER NOT NULL DEFAULT 0,
+      last_practiced_at  BIGINT,
+      visibility         TEXT NOT NULL DEFAULT 'private',
+      notes              TEXT,
+      created_at         BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      updated_at         BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint,
+      UNIQUE (user_id, entity_type, entity_id, period_key)
+    );
+    CREATE INDEX IF NOT EXISTS idx_career_proficiency_assertions_user ON career_proficiency_assertions (user_id);
+  `);
 
   // Extend pending_standards with governance workflow columns
   await sql.unsafe(`

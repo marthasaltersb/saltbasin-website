@@ -4,6 +4,15 @@ import { toast } from '../../lib/toast.js';
 const RELATIONSHIP_TYPES = ['contact', 'member', 'prospect', 'reference', 'partner', 'lead'];
 const STATUS_COLORS = { new: '#C4843A', acknowledged: '#4A7C8E', fulfilled: '#A8B89A', declined: '#C44A4A' };
 
+// Mirrors server/lib/memberVisibilityRegistry.js's VISIBILITY_MODES — kept as
+// one list here too rather than re-typing the four strings inline below.
+const VISIBILITY_MODES = [
+  { value: 'unlisted', label: 'Unlisted (default)', help: 'Anyone with your profile link can view it. Not listed anywhere.' },
+  { value: 'password', label: 'Password-protected', help: 'Visitors must enter a password you set below.' },
+  { value: 'friends_only', label: 'Connections only', help: 'Only members you’ve accepted a connection with can view your profile.' },
+  { value: 'public_searchable', label: 'Public & searchable', help: 'Open to anyone, and listed in the Salt Basin marketplace directory search.' },
+];
+
 function SectionHeader({ title }) {
   return (
     <div style={{ fontSize: '0.62rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--sb-gold)', fontFamily: 'var(--sb-font-label)', marginBottom: '0.75rem', paddingBottom: '0.5rem', borderBottom: '0.5px solid rgba(196,132,58,0.18)' }}>{title}</div>
@@ -125,10 +134,12 @@ export default function NrmPanel({ isAdmin = true }) {
         <div style={{ fontSize: '1.4rem', fontFamily: 'var(--sb-font-display)', color: 'var(--sb-cream)', fontWeight: 300 }}>{isAdmin ? 'Network Hub' : 'My Network'}</div>
       </div>
 
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
         {tabBtn('contacts', 'Contacts', contacts.length)}
         {tabBtn('requests', 'Reference Requests', requests.filter(r => r.status === 'new').length || null)}
         {isAdmin && tabBtn('network', 'Opted-in Members')}
+        {tabBtn('marketplace', 'Marketplace')}
+        {tabBtn('settings', 'My Visibility')}
       </div>
 
       {loading && <div style={{ color: 'var(--sb-dusty)', fontSize: '0.85rem' }}>Loading…</div>}
@@ -209,6 +220,175 @@ export default function NrmPanel({ isAdmin = true }) {
       )}
 
       {!loading && tab === 'network' && isAdmin && <OptedInMembers />}
+      {!loading && tab === 'marketplace' && <MarketplaceSearch />}
+      {!loading && tab === 'settings' && <VisibilitySettings />}
+    </div>
+  );
+}
+
+// The Salt Basin marketplace: search public_searchable members and send
+// connection requests (the existing member_connections "friend request"
+// mechanism, POST /api/members/me/connections/request) — no separate
+// request mechanism, just a search surface over it.
+function MarketplaceSearch() {
+  const [q, setQ] = useState('');
+  const [results, setResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [statuses, setStatuses] = useState({}); // slug -> status
+
+  async function runSearch(query) {
+    setSearching(true);
+    try {
+      const r = await fetch(`/api/nrm/marketplace/search?q=${encodeURIComponent(query)}`, { credentials: 'include' });
+      const d = await r.json();
+      setResults(d.members || []);
+    } catch (e) {
+      toast.error('Search failed');
+    }
+    setSearching(false);
+  }
+
+  useEffect(() => { runSearch(''); }, []);
+
+  async function connect(slug) {
+    try {
+      const r = await fetch('/api/members/me/connections/request', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Failed');
+      setStatuses(s => ({ ...s, [slug]: d.status }));
+      toast.success(d.existing ? 'Already connected or requested' : 'Connection request sent');
+    } catch (e) {
+      toast.error(e.message);
+    }
+  }
+
+  return (
+    <div>
+      <SectionHeader title="Salt Basin Marketplace — search & connect with members" />
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.25rem' }}>
+        <input
+          placeholder="Search members by name or bio…"
+          value={q}
+          onChange={e => setQ(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') runSearch(q); }}
+          style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '0.5px solid rgba(139,155,174,0.25)', borderRadius: 2, padding: '0.45rem 0.75rem', color: 'var(--sb-cream)', fontSize: '0.85rem', fontFamily: 'var(--sb-font-body)' }}
+        />
+        <button onClick={() => runSearch(q)} disabled={searching} style={{ padding: '0.45rem 1rem', background: 'var(--sb-gold)', color: 'var(--sb-ivory)', border: 'none', borderRadius: 2, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.08em' }}>
+          {searching ? 'Searching…' : 'Search'}
+        </button>
+      </div>
+      {results.length === 0 ? (
+        <div style={{ color: 'var(--sb-dusty)', fontSize: '0.85rem' }}>No public members found. Members appear here once they opt into "Public & searchable" under My Visibility.</div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+          {results.map(m => (
+            <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.6rem 0.85rem', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.06)', borderRadius: 2 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '0.88rem', color: 'var(--sb-cream)' }}>{m.display_name || 'Member'}</div>
+                {m.network_bio && <div style={{ fontSize: '0.72rem', color: 'var(--sb-dusty)', marginTop: '0.15rem' }}>{m.network_bio}</div>}
+              </div>
+              {m.slug && <a href={`/u/${m.slug}`} target="_blank" rel="noreferrer" style={{ fontSize: '0.72rem', color: 'var(--sb-gold)', textDecoration: 'none' }}>View →</a>}
+              <button onClick={() => connect(m.slug)} disabled={!!statuses[m.slug]} style={{ padding: '0.3rem 0.8rem', fontSize: '0.72rem', background: statuses[m.slug] ? 'transparent' : 'var(--sb-gold)', border: statuses[m.slug] ? '0.5px solid rgba(139,155,174,0.3)' : 'none', borderRadius: 2, color: statuses[m.slug] ? 'var(--sb-dusty)' : 'var(--sb-ivory)', cursor: statuses[m.slug] ? 'default' : 'pointer', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.06em' }}>
+                {statuses[m.slug] === 'pending' ? 'Requested' : statuses[m.slug] === 'accepted' ? 'Connected' : '+ Connect'}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Member-facing controls for member_profiles.opted_in_network / network_bio /
+// visibility_mode / site_password_hash — see server/lib/memberVisibilityRegistry.js.
+function VisibilitySettings() {
+  const [settings, setSettings] = useState(null);
+  const [bio, setBio] = useState('');
+  const [optedIn, setOptedIn] = useState(false);
+  const [mode, setMode] = useState('unlisted');
+  const [password, setPassword] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/members/me/network-settings', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        setSettings(d.settings);
+        if (d.settings) {
+          setBio(d.settings.network_bio || '');
+          setOptedIn(!!d.settings.opted_in_network);
+          setMode(d.settings.visibility_mode || 'unlisted');
+        }
+      })
+      .catch(() => toast.error('Failed to load visibility settings'));
+  }, []);
+
+  async function save() {
+    setSaving(true);
+    try {
+      const body = { optedInNetwork: optedIn, networkBio: bio, visibilityMode: mode };
+      if (mode === 'password' && password) body.sitePassword = password;
+      const r = await fetch('/api/members/me/network-settings', {
+        method: 'PUT', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Failed');
+      toast.success('Visibility settings saved');
+      setPassword('');
+      setSettings(s => ({ ...s, has_site_password: mode === 'password' ? (password ? true : s?.has_site_password) : s?.has_site_password }));
+    } catch (e) {
+      toast.error(e.message);
+    }
+    setSaving(false);
+  }
+
+  if (settings === null) return <div style={{ color: 'var(--sb-dusty)', fontSize: '0.85rem' }}>Loading…</div>;
+
+  const labelStyle = { fontSize: '0.62rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--sb-dusty)', fontFamily: 'var(--sb-font-label)', display: 'block', marginBottom: '0.3rem' };
+  const inputStyle = { width: '100%', background: 'rgba(255,255,255,0.05)', border: '0.5px solid rgba(139,155,174,0.25)', borderRadius: 2, padding: '0.45rem 0.7rem', color: 'var(--sb-cream)', fontSize: '0.85rem', fontFamily: 'var(--sb-font-body)', boxSizing: 'border-box' };
+
+  return (
+    <div style={{ maxWidth: 560 }}>
+      <SectionHeader title="Who can see your public profile" />
+
+      <div style={{ marginBottom: '1.25rem' }}>
+        {VISIBILITY_MODES.map(vm => (
+          <label key={vm.value} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', padding: '0.5rem 0', cursor: 'pointer' }}>
+            <input type="radio" name="visibility_mode" checked={mode === vm.value} onChange={() => setMode(vm.value)} style={{ marginTop: '0.2rem' }} />
+            <span>
+              <span style={{ fontSize: '0.85rem', color: 'var(--sb-cream)', display: 'block' }}>{vm.label}</span>
+              <span style={{ fontSize: '0.72rem', color: 'var(--sb-dusty)' }}>{vm.help}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+
+      {mode === 'password' && (
+        <div style={{ marginBottom: '1.25rem' }}>
+          <label style={labelStyle}>{settings.has_site_password ? 'Change site password' : 'Set site password'}</label>
+          <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder={settings.has_site_password ? 'Leave blank to keep current password' : 'Choose a password'} style={inputStyle} />
+        </div>
+      )}
+
+      <div style={{ marginBottom: '1.25rem', paddingTop: '0.75rem', borderTop: '0.5px solid rgba(255,255,255,0.08)' }}>
+        <SectionHeader title="Internal Salt Basin network directory" />
+        <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem', cursor: 'pointer' }}>
+          <input type="checkbox" checked={optedIn} onChange={e => setOptedIn(e.target.checked)} />
+          <span style={{ fontSize: '0.85rem', color: 'var(--sb-cream)' }}>List me in the internal opted-in members directory (visible to other logged-in members)</span>
+        </label>
+        <label style={labelStyle}>Network Bio</label>
+        <textarea value={bio} onChange={e => setBio(e.target.value)} rows={2} placeholder="A short line shown next to your name in searches and directories" style={{ ...inputStyle, resize: 'vertical' }} />
+      </div>
+
+      <button onClick={save} disabled={saving} style={{ padding: '0.5rem 1.25rem', background: 'var(--sb-gold)', color: 'var(--sb-ivory)', border: 'none', borderRadius: 2, fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.08em' }}>
+        {saving ? 'Saving…' : 'Save'}
+      </button>
     </div>
   );
 }

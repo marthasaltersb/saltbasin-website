@@ -16,8 +16,10 @@
 // have something to edit.
 
 import { Router } from 'express';
+import bcrypt from 'bcryptjs';
+import crypto from 'node:crypto';
 import { db } from '../db.js';
-import { requireUser } from '../auth.js';
+import { requireUser, getUserFromCookie } from '../auth.js';
 import { defaultMemberSite } from '../data/defaultMemberSite.js';
 import { audit } from '../lib/audit.js';
 import { form, react } from '../lib/molecule.js';
@@ -25,8 +27,50 @@ import { resumeUrlFromPreset, pickPrimaryPreset } from '../lib/resumePresets.js'
 import { hasCareerPortfolioContent } from '../lib/careerAtomRollups.js';
 import { MEMBER_FEATURES, requireMemberFeature } from '../lib/memberAccess.js';
 import { postJourneyEvidence } from '../lib/journeyEvidenceHelpers.js';
+import { VISIBILITY_MODES, siteUnlockCookieName } from '../lib/memberVisibilityRegistry.js';
 
 const router = Router();
+const SITE_UNLOCK_TTL_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
+
+function siteUnlockCookieOptions() {
+  return { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: SITE_UNLOCK_TTL_MS, path: '/' };
+}
+
+// Decides whether the requesting visitor (who may be anonymous) may view a
+// published member site, per the owner's visibility_mode. The owner can
+// always preview their own gated site while logged in.
+async function checkSiteAccess(req, profile) {
+  const mode = profile.visibility_mode || VISIBILITY_MODES.UNLISTED;
+  if (mode === VISIBILITY_MODES.UNLISTED || mode === VISIBILITY_MODES.PUBLIC_SEARCHABLE) {
+    return { allowed: true };
+  }
+  const viewer = await getUserFromCookie(req);
+  if (viewer && Number(viewer.id) === Number(profile.user_id)) return { allowed: true };
+
+  if (mode === VISIBILITY_MODES.FRIENDS_ONLY) {
+    if (!viewer) return { allowed: false, reason: 'login_required' };
+    const conn = await db.prepare(
+      `SELECT 1 FROM member_connections
+        WHERE status = 'accepted'
+          AND ((requester_id = $1 AND recipient_id = $2) OR (requester_id = $2 AND recipient_id = $1))`
+    ).get(viewer.id, profile.user_id);
+    return conn ? { allowed: true } : { allowed: false, reason: 'friends_only' };
+  }
+
+  if (mode === VISIBILITY_MODES.PASSWORD) {
+    // No password set yet — fail open rather than lock the member out of
+    // their own unfinished setup before they've chosen one.
+    if (!profile.site_password_hash) return { allowed: true };
+    const token = req.cookies?.[siteUnlockCookieName(profile.user_id)];
+    if (!token) return { allowed: false, reason: 'password_required' };
+    const row = await db.prepare(
+      `SELECT 1 FROM member_site_unlocks WHERE token = $1 AND user_id = $2 AND expires_at > $3`
+    ).get(token, profile.user_id, Date.now());
+    return row ? { allowed: true } : { allowed: false, reason: 'password_required' };
+  }
+
+  return { allowed: true };
+}
 
 // pages is documented (CLAUDE.md) as a keyed object, but at least one
 // existing check in this file (POST /publish's `draft.pages?.length`)
@@ -130,7 +174,13 @@ router.post('/publish', requireUser, requireMemberFeature(MEMBER_FEATURES.MEMBER
     inputs: { draft, actor: req.user },
     conditions: async () => {
       if (!draft) throw new Error('no draft to publish');
-      if (!draft.pages?.length) throw new Error('draft has no pages — cannot publish');
+      // draft.pages is a keyed object ({ home: {...}, about: {...} }), not an
+      // array — see CLAUDE.md's "Section / block system" note. `.length` on
+      // that object is always undefined, so this guard rejected every
+      // brand-new member's default-seeded site (defaultMemberSite.js has
+      // always produced the keyed shape) with "draft has no pages" —
+      // confirmed live against a fresh sandbox member account 2026-09-06.
+      if (!Object.keys(draft.pages || {}).length) throw new Error('draft has no pages — cannot publish');
       // Rollout gate: a member's public profile can't go live before their
       // Career Master data exists — see hasCareerPortfolioContent's header.
       if (!(await hasCareerPortfolioContent(req.user.id))) {
@@ -197,8 +247,21 @@ router.get('/featured', async (req, res) => {
   res.json({ members: featured });
 });
 
-// Public — render-ready published site for /u/:slug.
+// Public — render-ready published site for /u/:slug. Gated by the owner's
+// visibility_mode (see memberVisibilityRegistry.js) before any content is
+// returned, so a friends_only/password-gated member's draft/section content
+// never leaks in the 403 response.
 router.get('/by-slug/:slug', async (req, res) => {
+  const profile = await db
+    .prepare(`SELECT user_id, visibility_mode, site_password_hash FROM member_profiles WHERE slug = $1`)
+    .get(req.params.slug);
+  if (!profile) return res.status(404).json({ error: 'profile not published yet' });
+
+  const gate = await checkSiteAccess(req, profile);
+  if (!gate.allowed) {
+    return res.status(403).json({ error: gate.reason, visibilityMode: profile.visibility_mode });
+  }
+
   const row = await db
     .prepare(
       `SELECT ms.data AS site_json, mc.data AS config_json
@@ -212,7 +275,32 @@ router.get('/by-slug/:slug', async (req, res) => {
   res.json({
     site: JSON.parse(row.site_json),
     config: row.config_json ? sanitizeMemberConfig(JSON.parse(row.config_json)) : null,
+    visibilityMode: profile.visibility_mode,
   });
+});
+
+// Public — verify a password-gated site's visitor password and set a
+// per-member unlock cookie (mirrors auth.js's landing-gate pattern, scoped
+// to this one member rather than the whole site).
+router.post('/by-slug/:slug/unlock', async (req, res) => {
+  const profile = await db
+    .prepare(`SELECT user_id, visibility_mode, site_password_hash FROM member_profiles WHERE slug = $1`)
+    .get(req.params.slug);
+  if (!profile) return res.status(404).json({ error: 'profile not found' });
+  if (profile.visibility_mode !== VISIBILITY_MODES.PASSWORD || !profile.site_password_hash) {
+    return res.status(400).json({ error: 'this profile is not password-gated' });
+  }
+  const { password } = req.body || {};
+  if (!password) return res.status(400).json({ error: 'password required' });
+  const ok = await bcrypt.compare(password, profile.site_password_hash);
+  if (!ok) return res.status(401).json({ error: 'incorrect password' });
+
+  const token = crypto.randomBytes(24).toString('hex');
+  await db
+    .prepare(`INSERT INTO member_site_unlocks (token, user_id, expires_at) VALUES ($1, $2, $3)`)
+    .run(token, profile.user_id, Date.now() + SITE_UNLOCK_TTL_MS);
+  res.cookie(siteUnlockCookieName(profile.user_id), token, siteUnlockCookieOptions());
+  res.json({ ok: true });
 });
 
 // Public resolver for profile-facing resume links. Returns only the computed

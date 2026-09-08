@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import crypto from 'node:crypto';
+import bcrypt from 'bcryptjs';
 import { db } from '../db.js';
+import { isValidVisibilityMode } from '../lib/memberVisibilityRegistry.js';
 import {
   login,
   createSession,
@@ -427,6 +429,43 @@ router.put('/me/resume-presets', requireUser, async (req, res) => {
      ON CONFLICT (user_id, key) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at`
   ).run(req.user.id, 'resume_presets', data, now);
   res.json({ ok: true, presets: cleaned });
+});
+
+// ── Network / visibility settings ───────────────────────────────────────────────
+// These are the member-facing controls for the Network Relationship Manager's
+// visitor-facing half (member_profiles.opted_in_network/network_bio/
+// visibility_mode/site_password_hash) — the columns existed already but had
+// no write path anywhere in the app; NrmPanel.jsx's member view now calls this.
+
+router.get('/me/network-settings', requireUser, async (req, res) => {
+  const row = await db.prepare(
+    `SELECT opted_in_network, network_bio, visibility_mode, (site_password_hash IS NOT NULL) AS has_site_password
+       FROM member_profiles WHERE user_id = $1`
+  ).get(req.user.id);
+  res.json({ settings: row || null });
+});
+
+router.put('/me/network-settings', requireUser, async (req, res) => {
+  const { optedInNetwork, networkBio, visibilityMode, sitePassword, clearSitePassword } = req.body || {};
+  if (visibilityMode !== undefined && !isValidVisibilityMode(visibilityMode)) {
+    return res.status(400).json({ error: 'invalid visibility mode' });
+  }
+
+  const sets = [];
+  const params = [];
+  let i = 1;
+  if (optedInNetwork !== undefined) { sets.push(`opted_in_network = $${i++}`); params.push(!!optedInNetwork); }
+  if (networkBio !== undefined) { sets.push(`network_bio = $${i++}`); params.push(networkBio ? String(networkBio).slice(0, 500) : null); }
+  if (visibilityMode !== undefined) { sets.push(`visibility_mode = $${i++}`); params.push(visibilityMode); }
+  if (sitePassword) { sets.push(`site_password_hash = $${i++}`); params.push(await bcrypt.hash(sitePassword, 10)); }
+  else if (clearSitePassword) { sets.push(`site_password_hash = NULL`); }
+  if (!sets.length) return res.status(400).json({ error: 'no fields to update' });
+
+  sets.push(`updated_at = $${i++}`);
+  params.push(Date.now());
+  params.push(req.user.id);
+  await db.prepare(`UPDATE member_profiles SET ${sets.join(', ')} WHERE user_id = $${i}`).run(...params);
+  res.json({ ok: true });
 });
 
 // ── Member connections ─────────────────────────────────────────────────────────

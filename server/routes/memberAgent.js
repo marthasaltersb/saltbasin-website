@@ -5,9 +5,11 @@
 // operations the admin editor uses. It CANNOT touch Salt Basin's platform
 // schema, other members' data, or any admin-only routes.
 //
-// Optional: if the member has configured integrations.memberDb.url in their
-// config, the agent gains a query_member_db tool that runs read-only SELECT
-// queries against their own external Postgres/Supabase database.
+// Optional: if the member has configured integrations.memberDbs[] in their
+// config, the agent gains a query_db_{id} tool per source that runs SELECT
+// (or, if explicitly allowed, write) queries against their own external
+// Postgres/Supabase database. Each source's connection string is encrypted
+// at rest — see server/lib/memberDbConnections.js.
 //
 // Auth: requireUser — any logged-in member (or admin) can use this endpoint.
 
@@ -18,6 +20,7 @@ import { requireUser } from '../auth.js';
 import { audit } from '../lib/audit.js';
 import { makeRateLimiter } from '../lib/rateLimit.js';
 import { decrypt } from '../lib/crypto.js';
+import { redactMemberDbsForClient, decryptMemberDbUrl } from '../lib/memberDbConnections.js';
 import { MEMBER_FEATURES, requireMemberFeature } from '../lib/memberAccess.js';
 import {
   canWriteMemberConfigPath,
@@ -214,7 +217,12 @@ async function executeTool(name, input, userId, memberDbPools, staffTemplate) {
         safe.integrations.anthropicKeyConfigured = true;
         delete safe.integrations.anthropicKeyEnc;
       }
-      if (safe.integrations?.memberDb?.url) safe.integrations.memberDb.url = '[redacted]';
+      // The real field is the plural integrations.memberDbs[] array (each
+      // item carrying its own encrypted urlEnc) — never hand connection
+      // strings to the model, redacted or not.
+      if (Array.isArray(safe.integrations?.memberDbs)) {
+        safe.integrations.memberDbs = redactMemberDbsForClient(safe.integrations.memberDbs);
+      }
       return safe;
     }
 
@@ -248,9 +256,16 @@ async function executeTool(name, input, userId, memberDbPools, staffTemplate) {
       if (!canWriteMemberConfigPath(staffTemplate, path)) {
         return { error: `${staffTemplate.name} is not authorized to write config path "${path}".` };
       }
-      // Guard: block attempts to write to sensitive credential fields (reserved for UI config)
+      // Guard: block attempts to write to sensitive credential fields (reserved
+      // for UI config). The real field is the plural integrations.memberDbs[]
+      // array (deepSet below happily walks array indices as object keys, e.g.
+      // "integrations.memberDbs.0.url"), not a singular "memberDb.url" — the
+      // previous check named a field that doesn't exist and never actually
+      // blocked anything real. `startsWith('integrations.memberDbs')` with no
+      // further dot blocks the whole array (including a bare
+      // "integrations.memberDbs" replace-everything path), not just `.url`.
       if (
-        path.startsWith('integrations.memberDb.url')
+        path.startsWith('integrations.memberDbs')
         || path === 'integrations.anthropicKey'
         || path === 'integrations.anthropicKeyEnc'
       ) {
@@ -309,7 +324,7 @@ What you CANNOT do:
 - Access other members' data
 - Access Salt Basin platform-level admin settings
 - Push changes live (the member must click Publish in the editor)
-- Modify integrations.anthropicKey or integrations.memberDb.url (Config UI only)
+- Modify integrations.anthropicKey or integrations.memberDbs connection strings (Config UI only)
 
 Salt Basin site structure:
 - A site has PAGES (e.g. home, about, contact) each with a list of SECTIONS
@@ -360,10 +375,11 @@ router.post('/', agentLimiter, async (req, res) => {
 
   for (const dbCfg of memberDbs) {
     if (!staffTemplate.allowExternalSources) break;
-    if (!dbCfg.url || !dbCfg.id) continue;
+    const url = decryptMemberDbUrl(dbCfg);
+    if (!url || !dbCfg.id) continue;
     try {
       memberDbPools[dbCfg.id] = {
-        pool: postgres(dbCfg.url, { max: 2, idle_timeout: 10, connect_timeout: 8, prepare: false }),
+        pool: postgres(url, { max: 2, idle_timeout: 10, connect_timeout: 8, prepare: false }),
         allowWrite: !!dbCfg.allowWrite,
         name: dbCfg.name || dbCfg.id,
       };

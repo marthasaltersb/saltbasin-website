@@ -876,6 +876,11 @@ function MemberDbsCard({ config, patch }) {
   const dbs = config?.integrations?.memberDbs || [];
   const [adding, setAdding] = React.useState(false);
   const [draft, setDraft] = React.useState({ name: '', description: '', url: '', allowWrite: false });
+  // Per-item "type a new connection string" state — the loaded config never
+  // carries a real url/urlEnc (see memberDbConnections.js), only
+  // urlConfigured, so editing one is always a fresh value, never a prefill.
+  const [editingUrlId, setEditingUrlId] = React.useState(null);
+  const [draftUrl, setDraftUrl] = React.useState('');
 
   function updateDbs(next) {
     patch('integrations.memberDbs', next);
@@ -898,6 +903,20 @@ function MemberDbsCard({ config, patch }) {
     updateDbs(dbs.map((d) => d.id === id ? { ...d, [field]: value } : d));
   }
 
+  function saveUrl(id) {
+    if (!draftUrl) return;
+    updateDb(id, 'url', draftUrl);
+    setDraftUrl('');
+    setEditingUrlId(null);
+    toast.success('Connection string staged — click Save (below) to store it, encrypted');
+  }
+
+  function disconnectUrl(id) {
+    if (!window.confirm('Disconnect this data source? The agent will lose access until you reconnect it.')) return;
+    updateDb(id, 'clearUrl', true);
+    toast.success('Disconnect staged — click Save (below) to apply');
+  }
+
   const lbl = { fontFamily: 'var(--sb-font-label)', fontSize: '0.6rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--sb-dusty)' };
 
   return (
@@ -906,7 +925,7 @@ function MemberDbsCard({ config, patch }) {
       <div style={{ fontSize: '0.7rem', color: 'var(--sb-dusty)', marginBottom: '0.75rem', lineHeight: 1.55 }}>
         Connect your own Postgres or Supabase databases. Each source is named and independently controlled.
         The profile agent gains a <code style={{ color: 'var(--sb-gold)' }}>query_member_db</code> tool per source — your data stays separate from Salt Basin's schema.
-        Connection strings are stored server-side and never returned to the browser.
+        Connection strings are encrypted server-side and never returned to the browser once saved.
       </div>
 
       {dbs.length === 0 && !adding && (
@@ -932,15 +951,43 @@ function MemberDbsCard({ config, patch }) {
             placeholder="Description (e.g. Salesforce CRM export, analytics DB)"
             style={{ fontSize: '0.78rem', marginBottom: '0.4rem', width: '100%' }}
           />
-          <div style={{ ...lbl, marginBottom: '0.25rem' }}>Connection string</div>
-          <input
-            className="sb-input"
-            type="password"
-            value={db.url || ''}
-            onChange={(e) => updateDb(db.id, 'url', e.target.value)}
-            placeholder="postgres://user:pass@host:5432/dbname"
-            style={{ fontFamily: 'monospace', fontSize: '0.72rem', marginBottom: '0.5rem', width: '100%' }}
-          />
+          <div style={{ ...lbl, marginBottom: '0.35rem' }}>Connection</div>
+          {editingUrlId !== db.id ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.6rem' }}>
+              <span style={{
+                fontSize: '0.66rem', fontFamily: 'var(--sb-font-label)', letterSpacing: '0.08em', textTransform: 'uppercase',
+                padding: '0.2rem 0.55rem', borderRadius: 'var(--sb-radius)',
+                background: db.urlConfigured ? 'rgba(122,168,116,0.15)' : 'rgba(196,132,58,0.1)',
+                color: db.urlConfigured ? 'var(--sb-sage)' : 'var(--sb-dusty)',
+              }}>
+                {db.urlConfigured ? '● Connected' : '○ Not connected'}
+              </span>
+              <button onClick={() => { setEditingUrlId(db.id); setDraftUrl(''); }} className="sb-btn sb-btn-outline" style={{ fontSize: '0.68rem', padding: '0.3rem 0.7rem' }}>
+                {db.urlConfigured ? 'Update connection string' : 'Connect'}
+              </button>
+              {db.urlConfigured && (
+                <button onClick={() => disconnectUrl(db.id)} className="sb-btn sb-btn-outline" style={{ fontSize: '0.68rem', padding: '0.3rem 0.7rem', color: 'var(--sb-risk-critical)' }}>
+                  Disconnect
+                </button>
+              )}
+            </div>
+          ) : (
+            <div style={{ marginBottom: '0.6rem' }}>
+              <input
+                className="sb-input"
+                type="password"
+                autoFocus
+                value={draftUrl}
+                onChange={(e) => setDraftUrl(e.target.value)}
+                placeholder="postgres://user:pass@host:5432/dbname"
+                style={{ fontFamily: 'monospace', fontSize: '0.72rem', marginBottom: '0.5rem', width: '100%' }}
+              />
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button onClick={() => saveUrl(db.id)} disabled={!draftUrl} className="sb-btn sb-btn-gold" style={{ fontSize: '0.68rem', padding: '0.3rem 0.7rem', opacity: !draftUrl ? 0.45 : 1 }}>Save connection string</button>
+                <button onClick={() => { setEditingUrlId(null); setDraftUrl(''); }} className="sb-btn sb-btn-outline" style={{ fontSize: '0.68rem', padding: '0.3rem 0.7rem' }}>Cancel</button>
+              </div>
+            </div>
+          )}
           <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
             <input type="checkbox" checked={!!db.allowWrite} onChange={(e) => updateDb(db.id, 'allowWrite', e.target.checked)} />
             <span style={{ fontSize: '0.75rem', color: 'var(--sb-sage)' }}>Allow agent write access (INSERT / UPDATE / DELETE) — off by default</span>

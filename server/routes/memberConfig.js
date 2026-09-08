@@ -9,6 +9,7 @@ import { db, getJSON } from '../db.js';
 import { requireUser } from '../auth.js';
 import { defaultMemberConfig } from '../data/defaultMemberConfig.js';
 import { encrypt } from '../lib/crypto.js';
+import { redactMemberDbsForClient, mergeMemberDbsForStorage } from '../lib/memberDbConnections.js';
 import { hasCareerPortfolioContent } from '../lib/careerAtomRollups.js';
 import { MEMBER_FEATURES, requireMemberFeature } from '../lib/memberAccess.js';
 
@@ -27,6 +28,12 @@ function redactForClient(cfg) {
     safe.integrations.anthropicKeyConfigured = !!safe.integrations.anthropicKeyEnc;
     delete safe.integrations.anthropicKeyEnc;
     delete safe.integrations.anthropicKey;
+    // Member-supplied external DB connection strings (integrations.memberDbs[])
+    // — same encrypted-at-rest, never-round-tripped treatment as anthropicKey
+    // above. See server/lib/memberDbConnections.js.
+    if (Array.isArray(safe.integrations.memberDbs)) {
+      safe.integrations.memberDbs = redactMemberDbsForClient(safe.integrations.memberDbs);
+    }
   }
   return safe;
 }
@@ -113,6 +120,14 @@ router.put('/draft', requireUser, requireMemberFeature(MEMBER_FEATURES.MEMBER_SI
     else delete mergedIntegrations.anthropicKeyEnc;
   }
   delete mergedIntegrations.anthropicKey; // never persist plaintext
+
+  // Same treatment for member-supplied external DB connection strings —
+  // reconcile against the previously stored (already-encrypted) array so an
+  // untouched item's connection is never wiped just because the client had
+  // no plaintext url to resend (GET never sends one — see redactForClient).
+  if (Array.isArray(incoming.integrations?.memberDbs)) {
+    mergedIntegrations.memberDbs = mergeMemberDbsForStorage(incoming.integrations.memberDbs, existing.integrations?.memberDbs);
+  }
 
   const merged = { ...incoming, integrations: mergedIntegrations };
   await writeState(req.user.id, 'draft', merged);
