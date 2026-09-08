@@ -49,7 +49,17 @@ function reconstructEntries(evidenceRows) {
     }
     const prefix = `${meta.entryType.replace(/_entry$/, '')}_`;
     const column = row.molecule_key.startsWith(prefix) ? row.molecule_key.slice(prefix.length) : row.molecule_key;
-    const value = typeof row.value === 'string' ? JSON.parse(row.value) : row.value;
+    // The postgres driver already unwraps JSONB columns into native JS
+    // values, so a genuine string atom (e.g. a job title) arrives here as
+    // a plain, already-unwrapped string — re-parsing it as JSON throws
+    // (bare text isn't valid JSON). Only re-parse the rare double-encoded
+    // case (a JSON-text string actually stored inside the column), falling
+    // back to the raw string otherwise — same defensive pattern already
+    // used for this exact class of issue in careerAtomMigration.js.
+    let value = row.value;
+    if (typeof value === 'string') {
+      try { value = JSON.parse(value); } catch { /* leave as the raw string */ }
+    }
     byEntry.get(entryKey).fields[column] = value;
   }
   return [...byEntry.values()];
