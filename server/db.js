@@ -4248,6 +4248,32 @@ async function bootstrap() {
     console.warn('[db] methodology-config nav injection skipped:', e.message);
   }
 
+  // One-shot: inject "Variant Creation Studio" tab into the admin_nav system view
+  // (2026-09-06, salt-basin-world-variants Phase 8 slice) — the generative-seed
+  // prompt/geometry studio for the 3D World Variant Engine
+  // (src/components/admin/WorldVariantStudioPanel.jsx), additive alongside
+  // Methodology Config/Data Lineage/Command Center rather than replacing them.
+  try {
+    const navRow5b = await sql.unsafe(`SELECT data FROM config_state WHERE id = 'admin_nav'`);
+    if (navRow5b.length > 0) {
+      const nav = JSON.parse(navRow5b[0].data);
+      const systemView = (nav.views || []).find((v) => v.id === 'system');
+      if (systemView) {
+        systemView.tabs = systemView.tabs || [];
+        const hasWorldVariantStudio = systemView.tabs.some((t) => t.id === 'world-variant-studio');
+        if (!hasWorldVariantStudio) {
+          systemView.tabs.push({ id: 'world-variant-studio', label: 'Variant Creation Studio', componentId: 'worldVariantStudio', sortOrder: 4 });
+          await sql.unsafe(
+            `UPDATE config_state SET data = $1, updated_at = $2 WHERE id = 'admin_nav'`,
+            [JSON.stringify(nav), Date.now()]
+          );
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[db] world-variant-studio nav injection skipped:', e.message);
+  }
+
   // ── Member product onboarding + self-service commerce ──────────────────
   //
   // product_licenses already carries the fields this needs (user/org scope,

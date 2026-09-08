@@ -582,4 +582,8 @@ export const api = {
   getL2rLandscape: (id) => request(`/api/l2r-diagnostics/${id}/landscape`),
   recordL2rObservation: (id, body) => request(`/api/l2r-diagnostics/${id}/observations`, { method: 'POST', body: JSON.stringify(body) }),
   recordL2rFinding: (id, body) => request(`/api/l2r-diagnostics/${id}/findings`, { method: 'POST', body: JSON.stringify(body) }),
+
+  generateVariantSeed: (prompt, hints) => request('/api/admin/world-variant-studio/generate', { method: 'POST', body: JSON.stringify({ prompt, hints }) }),
+  validateVariantSeed: (seedSpec) => request('/api/admin/world-variant-studio/validate', { method: 'POST', body: JSON.stringify({ seedSpec }) }),
+  getDefaultVariantSeed: () => request('/api/admin/world-variant-studio/default-spec'),
 };
