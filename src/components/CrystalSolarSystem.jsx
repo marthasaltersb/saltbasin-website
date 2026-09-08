@@ -158,8 +158,15 @@ export default function CrystalSolarSystem({ worlds, memberLabel, onEnterWorld }
 
     let azimuth = .72;
     let elevation = .38;
-    let distance = 34;
-    let targetDistance = 34;
+    // The outermost planet's orbit radius sets how far out the camera needs to
+    // pull back to fit every world on screen at once — a fixed cap (previously
+    // 62) left later worlds (and admins with several client orgs) clipped
+    // outside the view with no way to see or click them.
+    const outerOrbitRadius = 7.5 + Math.max(worlds.length - 1, 0) * 4.15;
+    const MIN_DISTANCE = 12;
+    const MAX_DISTANCE = Math.max(90, outerOrbitRadius * 3.4);
+    let distance = Math.min(MAX_DISTANCE, Math.max(34, outerOrbitRadius * 2.3));
+    let targetDistance = distance;
     const target = new THREE.Vector3(0, .3, 0);
     let drag = null;
     let dragged = false;
@@ -177,8 +184,31 @@ export default function CrystalSolarSystem({ worlds, memberLabel, onEnterWorld }
     observer.observe(host);
     resize();
 
-    function down(event) { drag = { x: event.clientX, y: event.clientY }; dragged = false; renderer.domElement.setPointerCapture?.(event.pointerId); }
+    // Multi-touch pinch-to-zoom: on touch devices only 'wheel' fired before,
+    // which desktop trackpads/mice send but phones never do — there was
+    // literally no way to zoom out on a phone. Tracks every active pointer so
+    // a second finger going down is read as a pinch gesture instead of a drag.
+    const activePointers = new Map();
+    let pinchDist = null;
+    function pointerDist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+
+    function down(event) {
+      activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      renderer.domElement.setPointerCapture?.(event.pointerId);
+      if (activePointers.size === 1) { drag = { x: event.clientX, y: event.clientY }; dragged = false; }
+      if (activePointers.size === 2) { pinchDist = pointerDist(...activePointers.values()); dragged = true; }
+    }
     function move(event) {
+      if (!activePointers.has(event.pointerId)) return;
+      activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (activePointers.size >= 2) {
+        const [a, b] = activePointers.values();
+        const newDist = pointerDist(a, b);
+        if (pinchDist != null) targetDistance = Math.max(MIN_DISTANCE, Math.min(MAX_DISTANCE, targetDistance - (newDist - pinchDist) * .06));
+        pinchDist = newDist;
+        dragged = true;
+        return;
+      }
       if (!drag || event.buttons === 0) return;
       const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
       if (Math.abs(dx) + Math.abs(dy) > 4) dragged = true;
@@ -187,7 +217,9 @@ export default function CrystalSolarSystem({ worlds, memberLabel, onEnterWorld }
       drag = { x: event.clientX, y: event.clientY };
     }
     function up(event) {
-      if (!dragged) {
+      activePointers.delete(event.pointerId);
+      if (activePointers.size < 2) pinchDist = null;
+      if (activePointers.size === 0 && !dragged) {
         const rect = renderer.domElement.getBoundingClientRect();
         pointer.set(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1);
         raycaster.setFromCamera(pointer, camera);
@@ -204,9 +236,14 @@ export default function CrystalSolarSystem({ worlds, memberLabel, onEnterWorld }
           if (picked) callbackRef.current?.(picked.world);
         }
       }
-      drag = null;
+      if (activePointers.size === 1) {
+        const [remaining] = activePointers.values();
+        drag = { x: remaining.x, y: remaining.y };
+      } else if (activePointers.size === 0) {
+        drag = null;
+      }
     }
-    function wheel(event) { event.preventDefault(); targetDistance = Math.max(15, Math.min(62, targetDistance + event.deltaY * .025)); }
+    function wheel(event) { event.preventDefault(); targetDistance = Math.max(MIN_DISTANCE, Math.min(MAX_DISTANCE, targetDistance + event.deltaY * .025)); }
     renderer.domElement.addEventListener('pointerdown', down);
     renderer.domElement.addEventListener('pointermove', move);
     renderer.domElement.addEventListener('pointerup', up);
