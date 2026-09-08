@@ -12,7 +12,7 @@
 // lost). See /root/.claude/plans/nested-tickling-micali.md for the full
 // design rationale and the explicitly-deferred Phase 2/3 (governed
 // user-customizable world views).
-import React, { useEffect, useMemo, useRef, useState, useCallback, lazy } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as THREE from 'three';
 import { api } from '../lib/api.js';
@@ -23,6 +23,8 @@ import { useCareerPlacementAgents, CAREER_DIMENSION_FIELDS, STAGE_LABELS } from 
 import { useCommercialOpportunities, COMMERCIAL_DIMENSION_FIELDS, EXPANSION_RING_OPTIONS } from '../lib/hooks/useCommercialOpportunities.js';
 import { usePublicationPipeline } from '../lib/hooks/usePublicationPipeline.js';
 import AdminShell from './admin/AdminShell.jsx';
+import ConfigPanel from './admin/ConfigPanel.jsx';
+import { toast } from '../lib/toast.js';
 import { attachSceneManifestTree, publishSceneManifest, removePublishedSceneManifest } from '../lib/sceneManifest.js';
 import PlanetAtmosphereView from './PlanetAtmosphereView.jsx';
 
@@ -108,8 +110,17 @@ export default function WorldShell() {
   const [tabsConfig, setTabsConfig] = useState(null);
   const [view, setView] = useState('world'); // 'world' | 'journeys' | 'classic' | 'atmosphere'
   const [focusedKey, setFocusedKey] = useState(null);
-  const [classicTab, setClassicTab] = useState(null);
   const [atmosphereKey, setAtmosphereKey] = useState(null);
+  // Which Classic Tools tab to land on — set when the user dollies into a
+  // 'classic'-kind island (e.g. Career Master) and hits "Open in Classic
+  // Tools", so they land on that exact tab instead of the scope's generic
+  // default. Cleared for the plain "Classic Tools" nav button so that one
+  // keeps opening the default tab.
+  const [classicTargetTab, setClassicTargetTab] = useState(null);
+  const openClassic = useCallback((tabKey = null) => {
+    setClassicTargetTab(tabKey);
+    setView('classic');
+  }, []);
 
   useEffect(() => {
     api.me()
@@ -159,8 +170,7 @@ export default function WorldShell() {
   const selectIsland = useCallback((key) => {
     const island = islands.find((i) => i.key === key);
     if (island?.kind === 'classic') {
-      setClassicTab(island.key);
-      setView('classic');
+      openClassic(island.key);
       return;
     }
     // 'atmosphere' islands: the mount effect below already ran the full
@@ -519,8 +529,8 @@ export default function WorldShell() {
   if (view === 'classic') {
     return (
       <div style={{ position: 'fixed', inset: 0, zIndex: 10 }}>
-        <button style={S.classicBack} onClick={() => { setView('world'); setClassicTab(null); }}>← Back to World</button>
-        <AdminShell scope={user?.role === 'admin' ? 'admin' : 'member'} initialTab={classicTab} />
+        <button style={S.classicBack} onClick={() => setView('world')}>← Back to World</button>
+        <AdminShell scope={user?.role === 'admin' ? 'admin' : 'member'} initialTab={classicTargetTab} />
       </div>
     );
   }
@@ -532,13 +542,19 @@ export default function WorldShell() {
         scope={user?.role === 'admin' ? 'admin' : 'member'}
         onClear={clearAtmosphere}
         onNavigateToIsland={setAtmosphereKey}
-        onOpenClassicTools={(tab) => { setClassicTab(tab); setView('classic'); }}
+        onOpenClassicTools={(tab) => openClassic(tab)}
       />
     );
   }
 
-  if (focused?.kind === 'embed' && SIMPLE_EMBED_COMPONENTS[focused.componentId]) {
-    return <SimpleEmbedView componentId={focused.componentId} scope={user?.role === 'admin' ? 'admin' : 'member'} onClear={clearFocus} />;
+  if (focused?.kind === 'embed') {
+    const embedScope = user?.role === 'admin' ? 'admin' : 'member';
+    if (SIMPLE_EMBED_COMPONENTS[focused.componentId]) {
+      return <SimpleEmbedView componentId={focused.componentId} scope={embedScope} onClear={clearFocus} />;
+    }
+    if (focused.componentId === 'config') {
+      return <SiteConfigView scope={embedScope} onClear={clearFocus} />;
+    }
   }
 
   if (user === undefined || !tabsConfig) {
@@ -551,7 +567,7 @@ export default function WorldShell() {
         user={user}
         view={view}
         setView={setView}
-        setClassicTab={setClassicTab}
+        openClassic={openClassic}
         career={career}
         commercial={commercial}
         hasCareerIsland={hasCareerIsland}
@@ -577,7 +593,7 @@ export default function WorldShell() {
         <RightRail
           focused={focused}
           onClear={clearFocus}
-          onOpenClassic={() => { setClassicTab(focused?.key || null); setView('classic'); }}
+          onOpenClassic={() => openClassic(focused?.key)}
           career={career}
           commercial={commercial}
           herq={herq}
@@ -589,7 +605,7 @@ export default function WorldShell() {
   );
 }
 
-function TopBar({ user, view, setView, setClassicTab, career, commercial, hasCareerIsland, hasCommercialIsland }) {
+function TopBar({ user, view, setView, openClassic, career, commercial, hasCareerIsland, hasCommercialIsland }) {
   const trackedCount = hasCareerIsland ? career.opportunities.length : hasCommercialIsland ? commercial.opportunities.length : 0;
   const scored = (hasCareerIsland ? career.opportunities : hasCommercialIsland ? commercial.opportunities : []).filter((o) => o.score);
   const avgScore = scored.length ? Math.round(scored.reduce((s, o) => s + o.score.score, 0) / scored.length) : null;
@@ -606,7 +622,7 @@ function TopBar({ user, view, setView, setClassicTab, career, commercial, hasCar
       <div style={S.navTabs}>
         <button style={S.navTab(view === 'world')} onClick={() => setView('world')}>World</button>
         <button style={S.navTab(view === 'journeys')} onClick={() => setView('journeys')}>Journeys</button>
-        <button style={S.navTab(view === 'classic')} onClick={() => { setClassicTab(null); setView('classic'); }}>Classic Tools</button>
+        <button style={S.navTab(view === 'classic')} onClick={() => openClassic()}>Classic Tools</button>
       </div>
       <div style={S.stats}>
         <div style={S.stat}><span style={S.statVal}>{trackedCount}</span><span style={S.statLabel}>Tracked</span></div>
@@ -633,9 +649,11 @@ function JourneysGrid({ islands, career, commercial, herq, onOpen }) {
           ? `${opp.opportunities.length} tracked · ${opp.agents.length} agents`
           : isl.componentId === 'herqPublications'
             ? `${herq.items.length} items · ${herq.agents.length} agents`
-            : isl.kind === 'embed'
-              ? 'Open configuration'
-              : 'Open in Classic Tools';
+            : isl.componentId === 'careerMaster'
+              ? 'Open Career Master journey'
+              : isl.kind === 'embed'
+                ? 'Open configuration'
+                : 'Open in Classic Tools';
         return (
           <div key={isl.key} style={S.journeyCard} onClick={() => onOpen(isl.key)}>
             <div style={{ ...S.journeyAccent, background: '#' + (ACCENT_HEX[isl.accent] || ACCENT_HEX.gold).toString(16).padStart(6, '0') }} />
@@ -1230,6 +1248,31 @@ function SimpleEmbedView({ componentId, scope, onClear }) {
         <div style={S.embedTitle}>{entry.title}</div>
       </div>
       <div style={S.embedBody}>{entry.render(scope)}</div>
+    </div>
+  );
+}
+
+// Career Master's in-world "embed": the camera has already dollied into the
+// Career Master crystal island (the game-like part — CRYSTAL_VARIANTS.founder,
+// same core/island rendering every world object uses). What opens here is
+// the real journey chooser — CareerMasterEntryPoint, unchanged and un-forked
+// — so each journey "variant" (Career Orbit, Upload & Map, Manual Intake,
+// Proficiency & Rollups, BestyStaff Assistant) is guided by the exact same
+// classic AdminShell panels members/admins already use in Classic Tools
+// (CareerMasterPanel, UploadDataScreen, CareerExperienceConfigurator,
+// BoundedCareerAgentPanel), just reached without leaving the world.
+function CareerMasterEmbedView({ scope, onClear }) {
+  return (
+    <div style={S.embedShell}>
+      <div style={S.embedHeader}>
+        <button style={S.backBtn} onClick={onClear}>← Back to World</button>
+        <div style={S.embedTitle}>Career Master — Journey</div>
+      </div>
+      <div style={S.embedBody}>
+        <Suspense fallback={<div style={S.railEmpty}>Loading…</div>}>
+          <CareerMasterEntryPoint scope={scope} />
+        </Suspense>
+      </div>
     </div>
   );
 }
