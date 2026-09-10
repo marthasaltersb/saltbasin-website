@@ -135,4 +135,16 @@ Status values: `OPEN` (needs your decision or confirmation), `RESOLVED` (decisio
 
 ---
 
+### DEC-011 — Major pre-existing overlap found: "Career Foundation Sourcing & Reconciliation, Phase 2" (2026-08-10) already implements much of the newly-supplied Career Master spec
+
+**Status:** OPEN — reconciliation needed before any new schema/UI work on the resume product
+
+**Evidence:** Direct code read, 2026-09-10, while starting Phase 1 of `salt-basin-resume-product`. `server/routes/careerReconciliation.js` + `server/lib/careerReconciliation.js` + `src/components/admin/CareerReconciliationPanel.jsx` implement a real, shipped conflict/ambiguous-mapping review queue (`career_reconciliation_tasks`: `task_type`, `entry_type`, `atom_key`, `evidence_refs`, `reasoning`, `status`, `resolution`) across multiple source imports (resume, LinkedIn export, Indeed export, Fiverr export). `server/db.js`'s `career_intake_documents` table already has a `source_truth_status` column (`CareerIntakePanel.jsx`'s `SOURCE_TRUTH` options: `source_of_truth` / `primary_validated` / `user_attested` / `synthetic_scenario`) — an evidence-provenance vocabulary that overlaps with, but is not identical to, `SRC-RESUME-11`'s proposed user-attested/document-supported/externally-verified/AI-proposed-interpretation/disputed states (no direct `synthetic_scenario` or `disputed` analog either direction). Separately, `server/routes/careerReasoningAdmin.js` + `server/lib/careerReasoningCompiler.js` implement an admin-approved "reasoning pattern candidate" cache (writes to `journey_current_definitions` as `career_reasoning_cache_approval`) — a real, shipped mechanism for reusing a previously-approved transfer-reasoning pattern instead of re-deriving it, which may already be (or be extendable into) the mechanism DEC-009 asks for.
+
+**Why it matters:** this is not a green-field build. Treating `Resume-Product-Specification-v0.2.md` §3's proposed Career Master schema, or §4's scoring model, as net-new would duplicate a real, working system built five weeks earlier under different names. The reuse-first non-negotiable in `.claude/skills/salt-basin-resume-product/SKILL.md` already anticipated this in general terms; this entry records the specific, concrete overlap found.
+
+**Decision needed:** none from Betsy yet — this is a Stage-2-style code-audit finding, queued for a full side-by-side comparison (existing `SOURCE_TRUTH`/`career_reconciliation_tasks`/`careerReasoningCompiler` vocabulary and flow vs. the new spec's evidence-state model and D01-D11 deliverables) before Phase 2 of the resume-product build writes any new table or route. Not resolved — comparison not yet done to completion, only the overlap's existence is confirmed.
+
+---
+
 *(This log grows as Stage 2/3 surface more conflicts. Entries are never removed — a resolved entry keeps its evidence and gets a `RESOLVED` status plus the decision, so the trail stays intact per the traceability requirement in Stage 6.)*

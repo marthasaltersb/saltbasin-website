@@ -6,7 +6,7 @@ Mutable state for the `salt-basin-resume-product` skill. Read first, update last
 
 | # | Phase | Status |
 |---|---|---|
-| 1 | Reconciliation & reuse audit | not started |
+| 1 | Reconciliation & reuse audit | in progress — major overlap found, see DEC-011 |
 | 2 | Career Master Foundation | not started |
 | 3 | Scoring & review-gating engine | not started |
 | 4 | Configurable templates & exports | not started |
@@ -24,6 +24,12 @@ Mutable state for the `salt-basin-resume-product` skill. Read first, update last
 - NEW-018 through NEW-031 (`docs/baseline/05-new-requirement-register.md`) are all still `Pending` — none has been read back to Betsy for confirmation yet.
 
 ## Changelog
+
+### 2026-09-10 (later same day) — Phase 1 started: reuse audit found major pre-existing overlap
+
+Began the reuse-first audit before writing any Career Master schema/UI. Found a real, shipped "Career Foundation Sourcing & Reconciliation, Phase 2" system (2026-08-10) that already implements a conflict/ambiguous-mapping review queue (`career_reconciliation_tasks`, `CareerReconciliationPanel.jsx`), an evidence-provenance vocabulary on uploaded documents (`career_intake_documents.source_truth_status`, `CareerIntakePanel.jsx`'s `SOURCE_TRUTH`), and an admin-approved reasoning-pattern cache (`careerReasoningAdmin.js`/`careerReasoningCompiler.js`) that may already address the "no recurring LLM cost" goal (DEC-009). Logged as `DEC-011`. **This changes Phase 1's remaining work**: a full side-by-side comparison of this existing system against the new spec's evidence-state model and D01–D11 deliverables is required before Phase 2 (Career Master Foundation) writes anything new — not yet done to completion. No schema/route/UI code changed this pass; this was a read-only code audit.
+
+Also diagnosed (separately from this skill, at Betsy's request) why Render deploys have been failing: confirmed via GitHub's own Render Deploy Monitor workflow logs that the latest deploy (`dep-dag1lp7avr4c73clbj60`, commit `3cdcf70`, 2026-09-08) is still `update_failed` as of now, and no new deploy has been attempted since (no push to `main`, no manual retry). Local `npm install && npm run build` reproduces cleanly with no errors — the build step itself is not the problem. `node server/index.js` crashes immediately without `DATABASE_URL`, confirming that's a hard requirement at boot; this session has no live Render/Supabase access to see the actual runtime error Render logged, or to confirm whether the configured `DATABASE_URL`/Supabase project is still valid and unpaused.
 
 ### 2026-09-10 — Package intake, skill/command created, no build work yet
 
