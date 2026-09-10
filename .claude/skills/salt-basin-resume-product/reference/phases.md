@@ -1,0 +1,15 @@
+# Salt Basin Resume Product — phases
+
+Static definition. Live status lives in `docs/salt-basin-resume-product-progress.md`, not here.
+
+| # | Phase | Covers | Depends on / blocked by |
+|---|---|---|---|
+| 1 | Reconciliation & reuse audit | Resolve/track R01–R12 (`Source-Review-and-Career-Foundation.md`); run `salt-basin-channel-journey-architecture` against the proposed Career Master schema (spec §3) vs. existing `journey_data_rods`/`careerAtomRegistry.js`; get Betsy's read-back on NEW-018–NEW-031 and DEC-006's three-scores question | Nothing — do this first |
+| 2 | Career Master Foundation | Build/extend storage for Person, Employment, Achievement, Skill, Education/Award/Credential, Project, Source, Claim records (spec §3); evidence-state field (user-attested/document-supported/verified/AI-interpretation/disputed); upload → extract → confirm flow | Phase 1's reuse-audit outcome (extend existing rod/atom tables vs. new ones — don't assume either) |
+| 3 | Scoring & review-gating engine | Implement the three distinct values from DEC-006 as separate, separately-labeled outputs: opportunity ranking (reuse `careerOpportunityRollups.js` if confirmed same as S03 §7), requirement-level transfer coverage (spec §4's 75/50 rubric), and the review-gating threshold (Betsy's 90%/75% bands, spec §5 negative-scenario rules) | Phase 1 (DEC-006 resolution or at minimum confirmed-separate display), Phase 2 (needs claim/evidence records to score against) |
+| 4 | Configurable templates & exports | ATS / Executive / Graphic-heavy / Standalone-graphic / Cover-letter / Transfer-report template families (spec §6); D03 website implementation; per-export factual-content lock (styling can't change dates/titles/metrics) | Phase 2 (claims to render), Phase 3 (transfer-report needs scoring) |
+| 5 | Contribution ledger & employer preview | Dual provenance/contribution ledger (spec §7); D08 employer-facing "Source-to-Output Preview" (spec §9) with the synthetic (never real-claim) example pattern | Phase 2 |
+| 6 | Disclosure, application & outcome tracking | LinkedIn/reference disclosure controls (NEW-024/025); application-vs-generation distinction (NEW-026); calendar/interview/offer tracking and the personal-vs-shared learning loop (NEW-022/023, NEW-027) | Phase 2; calendar integration is its own external-API dependency, scope it separately if large |
+| 7 | Betsy's actual Osaic materials | Finalize `Osaic-Application-Review-Draft.md` into real DOCX/PDF/TXT exports (D04–D06) once the exact posting is supplied and DEC-010's R01–R12 are answered | DEC-010 (OPEN as of 2026-09-10) and the real Osaic posting — do not finalize without both |
+
+Out of scope for every phase above, tracked separately per `07-decision-log.md` DEC-007/008/009: free-trial gating model, the external-agent API/login spec, the self-hosted in-platform Claude Code access request, and the "zero recurring LLM cost" architecture question. A future sibling skill may cover these once they have their own supplied spec — do not fold them into a resume-product phase.

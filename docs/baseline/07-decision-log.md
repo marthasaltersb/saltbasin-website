@@ -75,4 +75,64 @@ Status values: `OPEN` (needs your decision or confirmation), `RESOLVED` (decisio
 
 ---
 
+### DEC-006 — Three distinct scoring/threshold concepts from the 2026-09-10 resume-product package are not yet reconciled
+
+**Status:** OPEN
+
+**Evidence:** `SRC-RESUME-01` (Betsy's live dictation) sets 90%/75% bands governing *when a recommendation needs review before delivery*. `SRC-RESUME-11` (`Resume-Product-Specification-v0.2.md` §4) separately proposes 75/50 thresholds for *requirement-level demonstrated-transfer coverage* — a different question, already flagged with a cross-reference note inside that document at intake. `SRC-RESUME-06`/`SRC-RESUME-12` (`Source-Review-and-Career-Foundation.md`) further describes an existing 15/15/15/15/15/10/5/10 *career-opportunity ranking* model from S03 §7, which that document itself suggests may already be implemented as `server/lib/careerOpportunityRollups.js` per `CLAUDE.md`'s "Career Placement Agents" section — not yet verified by direct code comparison.
+
+**Why it matters:** the supplied specification explicitly warns against exactly this failure mode — "a final display must explain whether 80 means an opportunity ranking or demonstrated requirement coverage... do not show a single unlabeled 'match' gauge." Building UI before these three are confirmed distinct risks recreating that anti-pattern with Betsy's own real product.
+
+**Decision needed:** confirm all three stay separate, separately-labeled values; confirm whether `careerOpportunityRollups.js` is in fact S03 §7's model (code comparison, not yet done). Not resolved.
+
+---
+
+### DEC-007 — Free-trial gating model for the resume/career product is undecided
+
+**Status:** OPEN
+
+**Evidence:** Betsy, live dictation, 2026-09-10, prior to any file upload: "we need to decide whether or not the free trial is... gated based on time or number of jobs that they wanna research or... is based on... features or functionality or a combination of all of the above. So... that's what we need to determine." No supplied document proposes a specific mechanism.
+
+**Why it matters:** determines pricing-page copy, entitlement-check code (likely `product_licenses`/`data_entitlements` per `CLAUDE.md`'s Profile system), and how the "no repeat LLM cost after initial calls" goal (DEC-009) gets technically enforced during a trial.
+
+**Decision needed:** which axis — time-boxed, usage-count, feature-gated, or a defined combination — from Betsy directly. Not proposed here as a default; not resolved.
+
+---
+
+### DEC-008 — Self-hosted, in-platform build/agent-access request is a separate, large architectural ask, not resume-product scope
+
+**Status:** OPEN
+
+**Evidence:** Betsy's live dictation, 2026-09-10, before any file upload: she wants to "run my product out of my own platform and move out of Claude code," with a mechanism for her, specifically and temporarily, to call the Claude Code/API from inside Salt Basin itself — scoped to what's already built and cached before calling any further API — so she can test and debug the platform's real UX without an external Claude Code session's usage limits interrupting the work. Separately, she wants an API spec so a user's own external Claude/Codex/ChatGPT agent can authenticate to Salt Basin and call its APIs, plus a later roadmap item letting users connect their own model credentials as an opt-in paid feature. This overlaps materially with the existing `docs/salt-basin-agent-api-pricing-architecture-spec.md` (2026-07-09 — metered "Contribution Intelligence API," BYO-model-provider commercial posture) and with the still-unbuilt "Agent Boundary" gap `CLAUDE.md`'s Career Placement Agents section already names.
+
+**Why it matters:** this is a platform-wide capability the resume product would eventually sit on top of, not a resume-product UX requirement itself. Treating it as in-scope for the resume-product intake would blur two very differently sized efforts.
+
+**Decision needed:** none yet — flagged so it is not quietly absorbed into resume-product scope. Reconciling it against the existing agent-API-pricing spec is a prerequisite for any design work, and is itself a separate, later exercise.
+
+---
+
+### DEC-009 — "Self-serve with no recurring LLM cost after initial calls" is a stated goal with no defined mechanism
+
+**Status:** OPEN
+
+**Evidence:** Betsy's live dictation, 2026-09-10: the eventual self-serve product should not require "additional cost on Salt Basin or on the user for calling a language model" once context/memory is established, and the system should be "extremely transparent" about which features need an LLM call versus which run from cached context.
+
+**Why it matters:** this shapes the entire architecture of `SRC-RESUME-11`'s transferable-skill scoring and Career Master reuse model — whether §4's scoring is deterministic code against stored evidence records (no recurring LLM call) or an LLM judgment call made fresh each time. The specification as supplied does not yet say, per-deliverable, which of D01–D11 are deterministic-code output, a one-time cached LLM call, or a recurring LLM call.
+
+**Decision needed:** a deterministic-vs-LLM classification for each D01–D11 deliverable in `Resume-Product-Specification-v0.2.md` §8. Not supplied by any source yet; not resolved.
+
+---
+
+### DEC-010 — R01–R12 personal career-fact conflicts block finalizing Betsy's actual Osaic application materials
+
+**Status:** OPEN
+
+**Evidence:** `docs/baseline/intake/2026-09-10-salt-basin-resume-product/Source-Review-and-Career-Foundation.md` registers twelve specific unresolved conflicts in Betsy's own supplied source documents — among them Streamforce founder-vs-partner title (R01), Accenture start month (R02), the exact Osaic posting/title (R03), unreconciled employer/client/engagement headline counts (R06), and current certification status (R08). Full list and evidence locators are in that document, not duplicated here.
+
+**Why it matters:** `Osaic-Application-Review-Draft.md` in the same package is explicitly a draft, not submittable, until these resolve.
+
+**Decision needed:** Betsy's direct answers to R01–R12, in that document. Not a Claude-side determination; not resolved.
+
+---
+
 *(This log grows as Stage 2/3 surface more conflicts. Entries are never removed — a resolved entry keeps its evidence and gets a `RESOLVED` status plus the decision, so the trail stays intact per the traceability requirement in Stage 6.)*
