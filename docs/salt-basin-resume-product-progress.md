@@ -6,7 +6,7 @@ Mutable state for the `salt-basin-resume-product` skill. Read first, update last
 
 | # | Phase | Status |
 |---|---|---|
-| 1 | Reconciliation & reuse audit | in progress — major overlap found, see DEC-011 |
+| 1 | Reconciliation & reuse audit | in progress — full side-by-side comparison done, see `06-reconciliation-matrix.md`; R01–R12 and NEW-018–031 read-back still outstanding |
 | 2 | Career Master Foundation | not started |
 | 3 | Scoring & review-gating engine | not started |
 | 4 | Configurable templates & exports | not started |
@@ -24,6 +24,14 @@ Mutable state for the `salt-basin-resume-product` skill. Read first, update last
 - NEW-018 through NEW-031 (`docs/baseline/05-new-requirement-register.md`) are all still `Pending` — none has been read back to Betsy for confirmation yet.
 
 ## Changelog
+
+### 2026-09-10 (later still) — Phase 1 reconciliation matrix populated (RECON-001–013)
+
+Completed the side-by-side comparison DEC-011 called for: read `careerAtomRegistry.js`, `careerReconciliation.js`, `careerReasoningCompiler.js`, `careerOpportunityRollups.js`, `careerAtomMigration.js` in full, plus the `career_intake_documents`/`career_intake_runs`/`career_source_mappings`/`career_reconciliation_tasks`/`career_reasoning_approvals`/`career_reasoning_cache_candidates` table schemas. Registered 12 technical elements (`TE-CAREER-01` through `12`) in `04-technical-element-register.md` and 13 reconciliation rows (`RECON-001` through `013`) in `06-reconciliation-matrix.md`.
+
+**Headline finding: `TE-CAREER-10`'s live `career_match_scoring_v1` weights (0.15/0.15/0.15/0.15/0.15/0.10/0.05/0.10) are byte-for-byte identical to `SRC-RESUME-06`/S03 §7's described model — confirms DEC-006/DEC-011's hypothesis directly, not just by inference.** Several NEW- items are already fully built and just need confirming, not building (NEW-020 user-testimony-as-evidence, NEW-026 applied-vs-generated distinction). Two are genuine, real conflicts needing Betsy's decision, not further code reading: RECON-001 (extend vs. replace the existing Atom-shaped Career Master with the spec's proposed record types) and RECON-009 (the existing shared-reasoning cache is admin-curated, not member-opt-in-gated, which doesn't match `SRC-RESUME-03`'s explicit-member-consent requirement). A few rows (RECON-010, calendar integration) are honest gaps or not-yet-checked, not confirmed absences.
+
+No schema, route, or UI code was changed this pass — still read-only investigation, per the reuse-first non-negotiable. Phase 1 is not yet complete: R01–R12 (career-fact conflicts) and the NEW-018–031 read-back with Betsy are still outstanding before Phase 2 (Career Master Foundation build) can start on RECON-001's decision.
 
 ### 2026-09-10 (later same day) — Phase 1 started: reuse audit found major pre-existing overlap
 

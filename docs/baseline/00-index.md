@@ -17,7 +17,7 @@ This is the documentation area for the repository-baseline / design-reconciliati
 | 03 | [`03-current-state-specification.md`](./03-current-state-specification.md) | Pending stub | Per-module requirement/definition tables (the ID | Module | Name | Source refs | Behavior | Tech element IDs | Impl state | Evidence | Verification state | Related IDs schema) |
 | 04 | [`04-technical-element-register.md`](./04-technical-element-register.md) | Pending stub | Code/DB object register linked to requirement IDs |
 | 05 | [`05-new-requirement-register.md`](./05-new-requirement-register.md) | Awaiting read-aloud validation | Atomic requirements extracted from new design documents (supplied 2026-09-05; user validation pass in progress — see doc 12) |
-| 06 | [`06-reconciliation-matrix.md`](./06-reconciliation-matrix.md) | Pending — blocked on 05 | New-requirement ↔ existing-definition mapping table |
+| 06 | [`06-reconciliation-matrix.md`](./06-reconciliation-matrix.md) | Partially populated (2026-09-10, resume-product package only) — orbital-design (05's NEW-001–017) still blocked | New-requirement ↔ existing-definition mapping table |
 | 07 | [`07-decision-log.md`](./07-decision-log.md) | Populated (Stage 1 findings) | Conflicting/ambiguous facts found so far, open product decisions, resolutions as they're made |
 | 08 | [`08-target-specification.md`](./08-target-specification.md) | Pending — blocked | Unified target glossary, schema, rules, UX states |
 | 09 | [`09-backlog.md`](./09-backlog.md) | Pending — blocked | Dependency-ordered implementation backlog |
