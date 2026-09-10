@@ -5895,6 +5895,26 @@ Rod state, per event:
   } catch (error) {
     console.warn('[db] HERQ content-hierarchy column warning:', error.message);
   }
+
+  // Personal scoring-preference tier for journey_current_definitions
+  // (2026-09-10) — every methodology/threshold Current (career opportunity
+  // scoring, and the resume-to-job and source-confidence scoring Currents
+  // still to come) gets the same 3-tier platform-default/org/personal-owner
+  // precedence agent_definitions already uses (resolveAgentRoster()), so a
+  // member can reweight their own scoring without changing anyone else's —
+  // per Betsy's explicit instruction: "it's not a replacement, but a
+  // configuration that the user can change for their own spec." The old
+  // idx_current_def_key_global index (current_key) WHERE org_id IS NULL would
+  // otherwise collide a platform-default row with any personal-override row,
+  // since both have org_id IS NULL — it must be re-scoped, not just added to.
+  try {
+    await sql.unsafe(`ALTER TABLE journey_current_definitions ADD COLUMN IF NOT EXISTS owner_user_id BIGINT REFERENCES users(id) ON DELETE CASCADE`);
+    await sql.unsafe(`DROP INDEX IF EXISTS idx_current_def_key_global`);
+    await sql.unsafe(`CREATE UNIQUE INDEX IF NOT EXISTS idx_current_def_key_global ON journey_current_definitions (current_key) WHERE org_id IS NULL AND owner_user_id IS NULL`);
+    await sql.unsafe(`CREATE UNIQUE INDEX IF NOT EXISTS idx_current_def_key_user ON journey_current_definitions (current_key, owner_user_id) WHERE owner_user_id IS NOT NULL`);
+  } catch (error) {
+    console.warn('[db] journey_current_definitions personal-override column warning:', error.message);
+  }
 }
 
 // Awaited at module import time so routes can use db without worrying about

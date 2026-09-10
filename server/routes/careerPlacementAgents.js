@@ -28,7 +28,7 @@ import { upsertAgentSchedule, GATE_ACTION_KEYS } from '../lib/opportunityPipelin
 import { resolveConfigEnvelope } from '../lib/configEnvelope.js';
 import '../lib/agentCadenceEnvelope.js';
 import { CHECKERS } from '../lib/qualificationGateCheckers.js';
-import { getCurrent } from '../lib/currentRegistry.js';
+import { getCurrent, setPersonalScoringWeights, clearPersonalScoringWeights } from '../lib/currentRegistry.js';
 import { db } from '../db.js';
 
 const router = Router();
@@ -522,11 +522,60 @@ router.post('/schedule', requireUser, async (req, res) => {
   }
 });
 
+// Personal opportunity-scoring preferences (2026-09-10) — the concrete
+// surface for Betsy's "not a replacement, but a configuration the user can
+// change for their own spec" instruction. This is opportunity ranking only
+// (career_match_scoring_v1, S03 §7's 15/15/15/15/15/10/5/10 model) — kept
+// deliberately distinct from resume-to-job requirement scoring and source-
+// evidence-confidence scoring, per DEC-006/RECON-005; those get their own
+// scoring Currents and their own preference surface when built, never a
+// shared "match %" dial.
+router.get('/scoring-preferences', requireUser, async (req, res) => {
+  try {
+    const platformDefault = await getCurrent('career_match_scoring_v1');
+    if (!platformDefault) return res.status(404).json({ error: 'career_match_scoring_v1 Current is not configured.' });
+    const resolved = await getCurrent('career_match_scoring_v1', { ownerUserId: req.user.id });
+    res.json({
+      currentKey: resolved.currentKey,
+      label: resolved.label,
+      isPersonalOverride: resolved.ownerUserId === req.user.id,
+      dimensions: resolved.entryCriteria.dimensions,
+      platformDefaultDimensions: platformDefault.entryCriteria.dimensions,
+    });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.put('/scoring-preferences', requireUser, async (req, res) => {
+  try {
+    const { weights } = req.body || {};
+    if (!weights || typeof weights !== 'object' || Array.isArray(weights)) {
+      return res.status(400).json({ error: 'weights must be an object of { dimensionKey: weight }.' });
+    }
+    const updated = await setPersonalScoringWeights({ userId: req.user.id, currentKey: 'career_match_scoring_v1', weights });
+    res.json({ currentKey: updated.currentKey, label: updated.label, isPersonalOverride: true, dimensions: updated.entryCriteria.dimensions });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.delete('/scoring-preferences', requireUser, async (req, res) => {
+  try {
+    await clearPersonalScoringWeights({ userId: req.user.id, currentKey: 'career_match_scoring_v1' });
+    const reverted = await getCurrent('career_match_scoring_v1', { ownerUserId: req.user.id });
+    res.json({ currentKey: reverted.currentKey, label: reverted.label, isPersonalOverride: false, dimensions: reverted.entryCriteria.dimensions });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
 // Qualification gate chain — read-only view for every member (transparency:
 // "what rule decides whether my pipeline gets auto-archived"), edit is
 // admin-governed (platform default, same tier as every other cross-cutting
-// policy surface in this codebase) since a per-member override tier doesn't
-// exist for journey_current_definitions.
+// policy surface in this codebase) — this one deliberately has no personal-
+// override tier: which gates archive a pipeline is a platform integrity rule,
+// not a personal scoring preference, so it doesn't reuse the seam above.
 router.get('/verification-current', requireUser, async (req, res) => {
   try {
     const current = await getCurrent('career_opportunity_verification_v1');

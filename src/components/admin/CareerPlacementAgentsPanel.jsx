@@ -49,7 +49,19 @@ export default function CareerPlacementAgentsPanel({ scope }) {
     selectAgent, selectOpportunity,
     showAddForm, setShowAddForm, addForm, setAddForm, handleAddOpportunity,
     scoreDraft, setScoreDraft, handleSaveScore, saving,
+    scoringPreferences, loadingScoringPreferences, loadScoringPreferences,
+    scoringDraft, setScoringDraft, scoringDraftSum,
+    savingScoringPreferences, saveScoringPreferences, resetScoringPreferences,
   } = useCareerPlacementAgents();
+
+  const [showScoringPreferences, setShowScoringPreferences] = React.useState(false);
+  const weightsBalanced = Math.abs(scoringDraftSum - 100) < 0.5;
+
+  function toggleScoringPreferences() {
+    const next = !showScoringPreferences;
+    setShowScoringPreferences(next);
+    if (next && !scoringPreferences) loadScoringPreferences();
+  }
 
   if (loading) {
     const { padding: _wrapPadding, ...wrapRest } = S.wrap;
@@ -177,6 +189,54 @@ export default function CareerPlacementAgentsPanel({ scope }) {
                 Click an agent or a tracked opportunity in the scene above for detail. Nothing is ever sent, applied, or
                 contacted automatically — outreach drafting is a later phase.
               </p>
+            </div>
+          )}
+
+          {!selectedAgent && !selectedOpportunity && (
+            <div style={{ ...S.panel, marginTop: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={S.panelTitle}>Opportunity Scoring Weights</div>
+                <button style={S.btn('ghost')} onClick={toggleScoringPreferences}>{showScoringPreferences ? 'Hide' : 'Adjust'}</button>
+              </div>
+              <p style={{ color: '#8b877c', fontSize: '0.72rem', margin: '0.3rem 0 0.6rem', lineHeight: 1.5 }}>
+                How much each dimension counts toward the score on the opportunity list. Salt Basin ships a default; you
+                can reweight your own — it never changes anyone else's scoring.
+              </p>
+              {showScoringPreferences && (
+                loadingScoringPreferences || !scoringPreferences ? (
+                  <div style={{ color: '#8b877c', fontSize: '0.76rem' }}>Loading…</div>
+                ) : (
+                  <>
+                    <span style={S.tag}>{scoringPreferences.isPersonalOverride ? 'Your custom weights' : 'Salt Basin default'}</span>
+                    <div style={{ ...S.dimGrid, marginTop: '0.7rem' }}>
+                      {DIMENSION_FIELDS.map((d) => (
+                        <React.Fragment key={d.key}>
+                          <label style={{ fontSize: '0.74rem', color: '#cfc9bd' }}>{d.label}</label>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <input
+                              type="number" min="0" max="100" step="1" style={{ ...S.input, width: 64, textAlign: 'center' }}
+                              value={scoringDraft[d.key] ?? ''}
+                              onChange={(e) => setScoringDraft(d.key, e.target.value)}
+                            />
+                            <span style={{ fontSize: '0.72rem', color: '#8b877c' }}>%</span>
+                          </div>
+                        </React.Fragment>
+                      ))}
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: weightsBalanced ? '#8fbf98' : '#d98ca0', marginBottom: '0.6rem' }}>
+                      Total: {scoringDraftSum}% {weightsBalanced ? '' : '(must total 100% to save)'}
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button style={S.btn('gold')} onClick={saveScoringPreferences} disabled={savingScoringPreferences || !weightsBalanced}>
+                        {savingScoringPreferences ? 'Saving…' : 'Save My Weights'}
+                      </button>
+                      {scoringPreferences.isPersonalOverride && (
+                        <button style={S.btn('ghost')} onClick={resetScoringPreferences} disabled={savingScoringPreferences}>Reset to Salt Basin Default</button>
+                      )}
+                    </div>
+                  </>
+                )
+              )}
             </div>
           )}
         </div>

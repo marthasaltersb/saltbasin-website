@@ -75,7 +75,23 @@ Status values: `OPEN` (needs your decision or confirmation), `RESOLVED` (decisio
 
 ---
 
-### DEC-006 — Three distinct scoring/threshold concepts from the 2026-09-10 resume-product package are not yet reconciled
+### DEC-006 — Scoring/threshold concepts from the 2026-09-10 resume-product package: now four, not three (v2)
+
+**Status:** OPEN — refined and partially resolved, 2026-09-10 (same day, later)
+
+**v2 update:** Betsy clarified directly that there are **four** distinct scoring concepts, not three — the original framing below missed that "requirement-level transfer coverage" was actually conflating two different questions. The four:
+1. **Opportunity ranking** — is this external job opportunity worth pursuing overall (`career_match_scoring_v1`, confirmed identical to S03 §7 — see original entry below).
+2. **Resume-output-to-job scoring** — does *this specific resume's wording* match *this specific job description's* requirements. Not yet built.
+3. **Source/evidence-confidence scoring** — how solid is the underlying Career Master claim itself (user-attested vs. document-supported vs. verified; `source_tier`/`affinity` already partially exist per `TE-CAREER-05`/`TE-CAREER-09`). Not yet built as its own scored Current.
+4. **Review-gating bands** — Betsy's dictated 90%/75% bands governing when a recommendation needs review before delivery (`NEW-019`). Not yet built.
+
+**Also resolved 2026-09-10:** every one of these — indeed every Salt Basin methodology with a weight, threshold, or formula — must expose a personal configuration seam: Salt Basin ships a default, any individual user can override their own copy, and a user's override never changes any other user's value or the platform default. Built as an additive `owner_user_id` column + 3-tier resolution on `journey_current_definitions` (mirroring `agent_definitions`' existing precedence), wired first to concept 1 (`career_match_scoring_v1`) via `setPersonalScoringWeights()`/`GET,PUT,DELETE /api/career-agents/scoring-preferences` and a real UI control in `CareerPlacementAgentsPanel.jsx`. Concepts 2–4 need their own Currents built on this same seam when they're designed — this resolves the "how does per-user configurability work" question in general, not just for concept 1.
+
+**Decision needed now:** none blocking — the general mechanism is resolved and built. Still open: which of concepts 2–4 to design/build next, and their exact formulas (this doc doesn't invent those without Betsy's input, same as always).
+
+---
+
+### DEC-006 (original entry, 2026-09-10 earlier the same day) — Three distinct scoring/threshold concepts from the 2026-09-10 resume-product package are not yet reconciled
 
 **Status:** OPEN
 
@@ -144,6 +160,20 @@ Status values: `OPEN` (needs your decision or confirmation), `RESOLVED` (decisio
 **Why it matters:** this is not a green-field build. Treating `Resume-Product-Specification-v0.2.md` §3's proposed Career Master schema, or §4's scoring model, as net-new would duplicate a real, working system built five weeks earlier under different names. The reuse-first non-negotiable in `.claude/skills/salt-basin-resume-product/SKILL.md` already anticipated this in general terms; this entry records the specific, concrete overlap found.
 
 **Decision needed:** none from Betsy yet — this is a Stage-2-style code-audit finding, queued for a full side-by-side comparison (existing `SOURCE_TRUTH`/`career_reconciliation_tasks`/`careerReasoningCompiler` vocabulary and flow vs. the new spec's evidence-state model and D01-D11 deliverables) before Phase 2 of the resume-product build writes any new table or route. Not resolved — comparison not yet done to completion, only the overlap's existence is confirmed.
+
+---
+
+### DEC-012 — Graph database on top of Supabase: recommend not provisioning one yet
+
+**Status:** RESOLVED (recommendation given 2026-09-10; Betsy asked directly whether to "download the graph database now")
+
+**Context:** Betsy's RECON-001 decision (extend the existing Career Master) came with a stated eventual intent to run a graph database on top of the Supabase/Postgres backend, and she asked whether to provision one now.
+
+**Recommendation:** not yet. This codebase already implements graph-shaped modeling directly on Postgres — `entities`/`persons`/`relationships` master-data tables, `journey_rod_entity_links`/`journey_rod_person_links` join tables, and `tributaryRegistry.js`'s `createJourneyTributary`/`linkJourneyTributary` (hierarchical, peer, and reference relationship kinds) per `CLAUDE.md`'s Career Placement Agents section — this is a working, if lightweight, graph layer, not absent. Adding a separate graph-database product now would mean: a new infrastructure dependency and ongoing cost (in direct tension with Betsy's own "no recurring cost" goal, DEC-009), a second source of truth to keep in sync with Postgres, and — with no concrete query need identified yet that the existing tables/joins/recursive CTEs can't serve — a speculative build ahead of evidence, the same anti-pattern this whole document set is built to avoid.
+
+**If/when a real need emerges** (e.g., a specific multi-hop traversal or graph-algorithm query that plain joins genuinely can't express efficiently), evaluate **Apache AGE** (a graph extension that runs inside Postgres/Supabase) before reaching for an external graph-database product — it stays inside the existing database, infrastructure, and backup story rather than adding a second system.
+
+**Decision needed:** none — Betsy can revisit if a concrete graph-query need surfaces that the current model can't serve.
 
 ---
 

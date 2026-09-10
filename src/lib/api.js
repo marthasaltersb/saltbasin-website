@@ -543,6 +543,9 @@ export const api = {
   getCareerAgentSchedule: () => request('/api/career-agents/schedule'),
   setCareerAgentSchedule: (body) => request('/api/career-agents/schedule', { method: 'POST', body: JSON.stringify(body) }),
   getCareerVerificationCurrent: () => request('/api/career-agents/verification-current'),
+  getCareerScoringPreferences: () => request('/api/career-agents/scoring-preferences'),
+  setCareerScoringPreferences: (weights) => request('/api/career-agents/scoring-preferences', { method: 'PUT', body: JSON.stringify({ weights }) }),
+  resetCareerScoringPreferences: () => request('/api/career-agents/scoring-preferences', { method: 'DELETE' }),
   importCareerPipelineWorkbook: async (formData) => {
     const res = await fetch('/api/career-agents/import', { method: 'POST', credentials: 'include', body: formData });
     const body = await res.json().catch(() => ({}));

@@ -71,6 +71,69 @@ export function useCareerPlacementAgents({ enabled = true } = {}) {
   const [loadingAutomation, setLoadingAutomation] = useState(false);
   const [importingOutput, setImportingOutput] = useState(false);
 
+  // Personal opportunity-scoring weights (2026-09-10) — "not a replacement,
+  // but a configuration the user can change for their own spec." Draft is
+  // kept in whole percentages (0-100) for a friendlier input than raw
+  // 0-1 fractions; converted to fractions only when saved.
+  const [scoringPreferences, setScoringPreferences] = useState(null); // { currentKey, label, isPersonalOverride, dimensions, platformDefaultDimensions }
+  const [loadingScoringPreferences, setLoadingScoringPreferences] = useState(false);
+  const [scoringDraft, setScoringDraftState] = useState({});
+  const [savingScoringPreferences, setSavingScoringPreferences] = useState(false);
+
+  function draftFromDimensions(dimensions) {
+    return Object.fromEntries(dimensions.map((d) => [d.key, String(Math.round(d.weight * 100))]));
+  }
+
+  async function loadScoringPreferences() {
+    setLoadingScoringPreferences(true);
+    try {
+      const prefs = await api.getCareerScoringPreferences();
+      setScoringPreferences(prefs);
+      setScoringDraftState(draftFromDimensions(prefs.dimensions));
+    } catch (e) {
+      toast('Could not load scoring preferences: ' + e.message);
+    } finally {
+      setLoadingScoringPreferences(false);
+    }
+  }
+
+  function setScoringDraft(key, value) {
+    setScoringDraftState((prev) => ({ ...prev, [key]: value }));
+  }
+
+  const scoringDraftSum = Object.values(scoringDraft).reduce((total, v) => total + (Number(v) || 0), 0);
+
+  async function saveScoringPreferences() {
+    setSavingScoringPreferences(true);
+    try {
+      const weights = Object.fromEntries(Object.entries(scoringDraft).map(([k, v]) => [k, Number(v) / 100]));
+      const updated = await api.setCareerScoringPreferences(weights);
+      setScoringPreferences(updated);
+      setScoringDraftState(draftFromDimensions(updated.dimensions));
+      toast('Saved — this changes only your own opportunity scores, never another member’s.');
+      pipeline.reload();
+    } catch (e) {
+      toast('Could not save weights: ' + e.message);
+    } finally {
+      setSavingScoringPreferences(false);
+    }
+  }
+
+  async function resetScoringPreferences() {
+    setSavingScoringPreferences(true);
+    try {
+      const updated = await api.resetCareerScoringPreferences();
+      setScoringPreferences(updated);
+      setScoringDraftState(draftFromDimensions(updated.dimensions));
+      toast('Reverted to the Salt Basin default weights.');
+      pipeline.reload();
+    } catch (e) {
+      toast('Could not reset: ' + e.message);
+    } finally {
+      setSavingScoringPreferences(false);
+    }
+  }
+
   // Nested outreach Tributary (2026-08-09) — "after applied, a nested
   // tributary process for hiring manager research and direct job outreach
   // that can merge back to the application process."
@@ -393,6 +456,9 @@ export function useCareerPlacementAgents({ enabled = true } = {}) {
     runningAutoQueue, runAutoQueueNow,
     automation, loadingAutomation, loadAutomation, setSchedule,
     importingOutput, importOutputForOpportunity,
+    scoringPreferences, loadingScoringPreferences, loadScoringPreferences,
+    scoringDraft, setScoringDraft, scoringDraftSum,
+    savingScoringPreferences, saveScoringPreferences, resetScoringPreferences,
     outreach, loadingOutreach, loadOutreach, startingOutreach, startOutreach,
     researchingContacts, researchContacts,
     draftingOutreachMessage, outreachDraft, draftMessage, discardOutreachDraft,

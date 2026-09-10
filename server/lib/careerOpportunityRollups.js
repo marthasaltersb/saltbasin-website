@@ -94,7 +94,7 @@ export async function listCareerOpportunities(userId) {
   const rows = await db.prepare(`
     SELECT * FROM journey_data_rods WHERE parent_rod_id=$1 AND rod_type='career_opportunity_target' ORDER BY created_at DESC
   `).all(careerRod.id);
-  const current = await getCurrent('career_match_scoring_v1');
+  const current = await getCurrent('career_match_scoring_v1', { ownerUserId: userId });
   const opportunities = await Promise.all(rows.map((rod) => rollupOneOpportunity(rod, current)));
   return { careerMasterRodId: Number(careerRod.id), opportunities };
 }
@@ -125,7 +125,7 @@ export async function createCareerOpportunity(userId, { jobTitle, companyName = 
     const entity = await findOrCreateEntity({ ownerUserId: userId, canonicalName: companyName, entityType: 'company' });
     await linkRodToEntity({ rod: oppRod, tributaryType: 'opportunity_entity_reference', entityId: entity.id, roleInContext: 'subject' });
   }
-  return rollupOneOpportunity(oppRod, await getCurrent('career_match_scoring_v1'));
+  return rollupOneOpportunity(oppRod, await getCurrent('career_match_scoring_v1', { ownerUserId: userId }));
 }
 
 /**
@@ -156,7 +156,7 @@ export async function recordDimensionScores(userId, rodId, { dimensionScores, so
   await db.prepare(`INSERT INTO journey_rod_events (rod_id,event_type,metadata,created_at) VALUES ($1,'career_opportunity_scored',$2::jsonb,$3)`)
     .run(rodId, { dimensionScores, sourceType, sourceReference }, now);
 
-  return rollupOneOpportunity(await db.prepare(`SELECT * FROM journey_data_rods WHERE id=$1`).get(rodId), await getCurrent('career_match_scoring_v1'));
+  return rollupOneOpportunity(await db.prepare(`SELECT * FROM journey_data_rods WHERE id=$1`).get(rodId), await getCurrent('career_match_scoring_v1', { ownerUserId: userId }));
 }
 
 // The real application-stage machine (2026-08-09) — "apply and track to job
@@ -207,7 +207,7 @@ export async function advanceOpportunityStage(userId, rodId, toStage) {
     VALUES ($1,'career_opportunity_stage_changed',$2,$3,$4)
   `).run(rodId, rod.current_stage, toStage, now);
 
-  return rollupOneOpportunity(await db.prepare(`SELECT * FROM journey_data_rods WHERE id=$1`).get(rodId), await getCurrent('career_match_scoring_v1'));
+  return rollupOneOpportunity(await db.prepare(`SELECT * FROM journey_data_rods WHERE id=$1`).get(rodId), await getCurrent('career_match_scoring_v1', { ownerUserId: userId }));
 }
 
 /** Thin convenience wrapper — kept as its own export since existing routes/hooks already call it by name. */
