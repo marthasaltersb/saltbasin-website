@@ -2929,8 +2929,8 @@ async function bootstrap() {
     );
     CREATE INDEX IF NOT EXISTS idx_member_feature_grants_user ON member_feature_grants (user_id);
 
-    INSERT INTO commerce_offerings (id, name, price_cents, currency, billing_interval, trial_days, storage_limit_bytes)
-    VALUES ('member_career_foundation', 'Career Foundation (Trial)', 0, 'usd', 'trial', 90, NULL)
+    INSERT INTO commerce_offerings (id, name, price_cents, currency, billing_interval, trial_days, storage_limit_bytes, created_at, updated_at)
+    VALUES ('member_career_foundation', 'Career Foundation (Trial)', 0, 'usd', 'trial', 90, NULL, (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint, (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint)
     ON CONFLICT (id) DO NOTHING;
 
     INSERT INTO offering_features (offering_id, feature_key, enabled)
