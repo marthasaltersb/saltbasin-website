@@ -3616,6 +3616,11 @@ option {
 .sjw-tagline{font-family:var(--sb-font-label);font-size:.9rem;color:var(--sb-sage);margin:1rem 0 2.2rem}
 .sjw-enter-btn{background:var(--sb-gold);color:var(--sb-navy-900);border:0;font-family:var(--sb-font-label);font-weight:700;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;padding:.9rem 2.1rem;border-radius:30px;cursor:pointer;transition:transform .2s ease,background .2s ease}
 .sjw-enter-btn:hover{background:var(--sb-gold-warm);transform:translateY(-1px)}
+.sjw-enter-btn:disabled{opacity:.6;cursor:progress;transform:none}
+a.sjw-enter-btn{text-decoration:none;display:inline-block}
+.sjw-enter-btn-secondary{background:transparent;color:var(--sb-cream);box-shadow:inset 0 0 0 1px rgba(245,240,232,.45)}
+.sjw-enter-btn-secondary:hover{background:rgba(245,240,232,.08)}
+.sjw-intro-cta-row{display:flex;flex-wrap:wrap;gap:.75rem;justify-content:center;padding:0 16px}
 .sjw-intro-hint{margin-top:1.4rem;font-family:var(--sbh-font-mono);font-size:.62rem;color:var(--sb-sage);opacity:.7}
 
 .sjw-top-bar{position:absolute;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.1rem;background:linear-gradient(to bottom,rgba(10,13,17,.85),rgba(10,13,17,0))}

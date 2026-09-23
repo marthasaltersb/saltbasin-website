@@ -455,6 +455,8 @@ export const api = {
   saveEidosGateDefinition: (scenarioKey, stageKey, item) =>
     request(`/api/journey-rods/scenarios/${scenarioKey}/gates/${stageKey}`, { method: 'PUT', body: JSON.stringify(item) }),
   getMyJourneyRods: () => request('/api/journey-rods/me'),
+  // Read-only stage/atom projection of the user's journey rods for SpatialJourneyWorld.
+  getMyJourneyWorld: () => request('/api/journey-rods/me/world'),
   getJourneyCatalog: () => request('/api/journey-rods/catalog'),
   createJourneyRod: (item) => request('/api/journey-rods', { method: 'POST', body: JSON.stringify(item) }),
   getJourneyRod: (rodId) => request(`/api/journey-rods/${rodId}`),
