@@ -132,3 +132,38 @@ Distinct from the ZIP package above — this is the user speaking directly to th
 | "New design documents" (the reconciliation input) | Referenced throughout the governing objective | **Supplied 2026-09-05** (see the "New design documents" section above) — but **not yet user-validated**. The blocker for Stage 3 is now the read-aloud validation pass (`12-design-package-validation-workflow.md`), not absence of documents. |
 
 Coverage boundaries, exclusions, and what "complete" means for this pass are stated separately in `02-coverage-and-limitations.md`.
+
+---
+
+## Update — 2026-10-01 pass (revision `e0ea466`)
+
+Revision inspected: `e0ea466c6c109cafccd8afa1afbb064e312cc7bb` (merge of PR #5 into `main`, committed 2026-09-22), checked out on `claude/compassionate-wozniak-7vx4jr`. That is 35 commits / 68 files / +6,287 lines after `e8e25e1`. Rows above describe the 2026-09-05 pass and are kept as history. Where a scope statement above says "directory listing only", the rows below supersede it.
+
+### Superseded scope statements
+
+| Source ID | Previous scope | Scope at 2026-10-01 |
+|---|---|---|
+| SRC-REPO-01 | `e8e25e1` | `e0ea466`. Still the only repository in scope (session GitHub scope: `marthasaltersb/saltbasin-website`) |
+| SRC-CODE-01 | 53 route files, listing only | 65 route files, 64 mounted, 1 unmounted (`memberAccess.js`). All 592 endpoints extracted with file:line (SRC-GEN-01). Contents read in depth for: `auth`, `site`, `config`, `memberSite`, `memberConfig`, `memberFinancial`, `metricIntelligence` (part), `resumeOutputs`, `memberEntitlements` (part), `commerce` (checkout/webhook), `leads` (part), `portfolioRequests` (part), `careerMaster` (part), `members` (part) |
+| SRC-CODE-02 | listing only | All files inventoried. Read: `auth.js`, `lib/rateLimit`, `lib/recaptcha` (part), `lib/email` (gate + senders), `lib/memberAccess`, `lib/seo` (part), `lib/backlogIntelligenceSchema` (part), `data/seed` |
+| SRC-CODE-03 | pattern counts | Executed: bootstrap catalog of 191 tables / 2,128 columns / 1,894 constraints / 488 indexes (SRC-ENV-05). Header and adapter read |
+| SRC-CODE-10..14 | counts/listings | All routes and modules inventoried. Read: `App.jsx`, `MemberDashboard.jsx`, `AdminShell.jsx` (registry + fallback nav), `blocks/index.jsx` (registry, `RenderSection`, `StatusBanner`, `TextBlock`), `TestLoginRedirect.jsx`, `Output.jsx` (data calls), `crystalGeometry.js` (variant keys) |
+| SRC-CFG-03 | not read | Still not read (`vite.config.js`) |
+| SRC-DOC-20 | not read | `netlify.toml` read in full |
+| SRC-DOC-02 | not read | **Still not read** (`AGENTS.md`), flagged |
+| SRC-MIG-01 | relationship unconfirmed | Resolved: unapplied and unreferenced (DEC-004 update) |
+| SRC-TEST-01..02 | headers read | All 17 test files executed 2026-10-01 (4 more found under `src/lib/`) |
+
+### New sources
+
+| Source ID | Type | Location | Revision/date | Scope inspected | Access limitations |
+|---|---|---|---|---|---|
+| SRC-LIVE-02 | Governing objective (user message) | This session, 2026-10-01: "Build an evidence-backed, maintainable specification…" | 2026-10-01 | Full | Restates and extends the program objective (adds the explicit three-dimension assessment and the Stage 6 release loop). Not a product requirement source |
+| SRC-GEN-01 | Generated inventory | `docs/baseline/inventory/**` from `scripts/baseline/generate-inventory.mjs` + `module-map.json` | `e0ea466`, 2026-10-01 | Complete for declared scope (see 02) | Static extraction. Guard detection is pattern-based |
+| SRC-ENV-05 | Local scratch environment (not live) | Session container: throwaway Postgres 16 (`/var/tmp/sb-baseline-pg`), server on :3901 with no external keys, Chromium 1194 / Playwright 1.56.1 (global) | 2026-10-01 | Bootstrap ×2, seed, build, boot, scripted probes ([11](./11-verification-and-release-records.md)) | Ephemeral, and not production. Runtime facts hold for this revision under the stated env only |
+| SRC-CODE-15 | Lazy schema module | `server/lib/backlogIntelligenceSchema.js` | `e0ea466` | Read (DDL list) | — |
+| SRC-CODE-16 | Unmounted route file | `server/routes/memberAccess.js` | `e0ea466` | Existence + not mounted | Purpose unread |
+
+### Connectors checked this pass
+
+`ListConnectors` with keywords supabase/postgres/database returned **none**. No live database, hosting, or DNS access exists. GitHub MCP access is limited to this repository.

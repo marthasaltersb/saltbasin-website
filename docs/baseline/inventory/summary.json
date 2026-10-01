@@ -1,0 +1,23 @@
+{
+  "revision": "e0ea466c6c109cafccd8afa1afbb064e312cc7bb",
+  "branch": "claude/compassionate-wozniak-7vx4jr",
+  "committed": "2026-09-22T10:55:17-04:00",
+  "endpoints": 592,
+  "endpointsNoGuard": 62,
+  "routerMounts": 64,
+  "unmountedRouteFiles": 1,
+  "uiRoutes": 37,
+  "modules": 424,
+  "moduleLines": 146286,
+  "modulesZeroImporters": 39,
+  "blockTypes": 67,
+  "adminTabs": 32,
+  "envVars": 78,
+  "jobs": 9,
+  "unassignedElements": 0,
+  "themes": 6,
+  "testFiles": 17,
+  "npmScripts": 23,
+  "docs": 194,
+  "db": "191 tables from local catalog"
+}
