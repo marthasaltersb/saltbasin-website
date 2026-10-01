@@ -60,6 +60,10 @@ The site state JSON is `{ version, pages: { [pageKey]: { key, name, slug, type, 
 - `src/data/capabilityTags.js` — `SOURCE_TYPES`, `MERGED_FIELD_DEFAULTS`, `TAG_CATEGORIES` for the field metadata system. Every field in a section can carry `section.fieldMeta[fieldKey]` with `{ sourceType, mergedFrom, sources, capabilityTags, description }` — schema exists and is wired into the blocks, but isn't yet populated in any live section.
 - CTA fields have **no standardized naming convention** across blocks — `home-hero` uses `cta1Label`/`cta1Link`, `services` uses `s1Cta`, `assessments` uses `a1Price`, `creative-decor` uses a bare `cta1`. Each block invented its own key names, so nothing outside that block's own render logic can reliably enumerate "the CTAs on this page." Do not assume a `cta{N}Label`/`cta{N}Link` pattern is universal when writing tooling against section fields.
 
+### Portfolio-First Site Agent
+
+Admin tab **Website Intelligence → Portfolio-First Site Agent** (`componentId: portfolioSiteAgent`, nav injected additively in `db.js`) restructures the public homepage into a portfolio-first career profile read from Career Master. It stages `site_state` draft only (`/api/site-agent/stage`); publishing stays on the shell's `publish()`. Staging rewrites the server draft, so `AdminShell` passes this one panel `onDraftStaged={reloadDraftsFromServer}` to refresh the content editor's in-memory copy. Proof claims (`foundationProofLedger` block) are only shown as linked when `server/lib/careerEvidenceMatch.js`'s `findCareerEvidence()` finds the figure's numbers in a real Career Master line — the same function gates the agent's Claude-drafted proofs. See `docs/salt-basin-website-intelligence-progress.md`.
+
 ### Internationalization / translation model (design-stage — not yet implemented)
 
 Captured 2026-09-05 per Betsy's spoken design intent, ahead of any build work. Three distinct locale concepts must not be conflated:

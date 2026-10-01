@@ -117,6 +117,13 @@ export const api = {
   saveDraftSite: (site) =>
     request('/api/site/draft', { method: 'PUT', body: JSON.stringify(site) }),
   publish: () => request('/api/site/publish', { method: 'POST' }),
+  // Portfolio-First Site Agent (server/routes/portfolioSiteAgent.js) — stages
+  // drafts only; publishing stays on api.publish().
+  getSiteAgentState: () => request('/api/site-agent/state'),
+  verifySiteAgentProofs: (proofs) => request('/api/site-agent/verify-proofs', { method: 'POST', body: JSON.stringify({ proofs }) }),
+  draftSiteAgentNarrative: (body) => request('/api/site-agent/narrative-draft', { method: 'POST', body: JSON.stringify(body) }),
+  previewSiteAgent: (body) => request('/api/site-agent/preview', { method: 'POST', body: JSON.stringify(body) }),
+  stageSiteAgent: (body) => request('/api/site-agent/stage', { method: 'POST', body: JSON.stringify(body) }),
 
   // Config
   getPublicConfig: () => request('/api/config/public'),

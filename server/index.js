@@ -71,6 +71,7 @@ import genesisRouter from './routes/genesis.js';
 import contentAttachmentsRouter from './routes/contentAttachments.js';
 import contentPublicationsRouter from './routes/contentPublications.js';
 import experienceRouter from './routes/experience.js';
+import portfolioSiteAgentRouter from './routes/portfolioSiteAgent.js';
 import deploymentIntelligenceRouter from './routes/deploymentIntelligence.js';
 import backlogOutputsRouter from './routes/backlogOutputs.js';
 import { runDueDefinitions } from './lib/agentHubRunner.js';
@@ -193,6 +194,7 @@ app.use('/api/genesis', genesisRouter);
 app.use('/api/content-attachments', contentAttachmentsRouter);
 app.use('/api/content-publications', contentPublicationsRouter);
 app.use('/api/experience', experienceRouter);
+app.use('/api/site-agent', portfolioSiteAgentRouter);
 app.use('/api/deployment-intelligence', deploymentIntelligenceRouter);
 app.use('/api/backlog-outputs', backlogOutputsRouter);
 
