@@ -47,8 +47,8 @@ Test accounts: after your server has booted once against your fresh database, ru
 
 function env(n, role) {
   const port = (A.portBase || 3400) + n * 2
-  const db = `sb_rl_${role}_${n}`
-  return `Your isolated environment: database \`${db}\` (createdb -h /tmp -p 5433 -U postgres ${db}; DATABASE_URL=postgres://postgres@127.0.0.1:5433/${db}), API PORT=${port}, Vite dev port ${port + 1000} proxying /api to ${port} (or build and run \`npm start\` on ${port}).`
+  const db = `sb_rl_${role}_${A.portBase || 3400}_${n}`   // portBase makes it unique across parallel runs
+  return `Your own scratch directory (never write scripts, PID files or logs anywhere shared): /var/tmp/sbpg/agents/${role}-${A.portBase || 3400}-${n}/ (mkdir -p it). Your isolated environment: database \`${db}\` (createdb -h /tmp -p 5433 -U postgres ${db}; DATABASE_URL=postgres://postgres@127.0.0.1:5433/${db}), API PORT=${port}, Vite dev port ${port + 1000} proxying /api to ${port} (or build and run \`npm start\` on ${port}).`
 }
 
 const WORKTREE_SETUP = `
@@ -160,6 +160,7 @@ Write the reconciliation to ABSOLUTE path ${REPO}/docs/triage/${feature.key}-${w
 function integrate(feature, branch, what) {
   return serial(() => agent(`${COMMON}
 You are the INTEGRATION agent. Work in the main checkout ${REPO} on branch \`${BRANCH}\` (verify with git branch --show-current; never switch it).
+Several release-loop runs share this checkout. Before ANY git command here, take the shared lock: \`until mkdir /var/tmp/sbpg/integrate.lockdir 2>/dev/null; do if [ -n "$(find /var/tmp/sbpg/integrate.lockdir -maxdepth 0 -mmin +45 2>/dev/null)" ]; then rmdir /var/tmp/sbpg/integrate.lockdir; fi; sleep 5; done\` and release it with \`rmdir /var/tmp/sbpg/integrate.lockdir\` when you are done (also if you fail). Keep the lock only while merging/building/committing.
 Merge \`${branch}\` (${what} for feature "${feature.title}") into \`${BRANCH}\` with a merge commit (no rebase, no force). Resolve conflicts so neither side loses behaviour — read both sides; if both changed the same logic and you cannot keep both, keep the integration side, and report it as a conflict needing follow-up.
 Then: \`npm run build\` must pass (fix trivial merge breakage yourself and commit it). Also \`git add docs/test-results docs/triage\` and commit any pending logs (message "Release loop logs: ${feature.key}"). Report the new HEAD sha.`,
   { label: `integrate:${feature.key}`, phase: 'Integrate', schema: INTEGRATE_SCHEMA }))
@@ -235,8 +236,8 @@ async function runFeature(feature) {
       log(`${feature.key}: waiting for ${dep} to be integrated`)
       await integrated[dep]
     }
-    if (feature.build) {
-      const b = await build(feature)
+    if (feature.build || feature.prebuilt) {
+      const b = feature.prebuilt ? { initialCheckPassed: false, initialCheckNotes: 'Built by an earlier agent; reconciled here.', ...feature.prebuilt } : await build(feature)
       if (!b) { log_.status = 'build_agent_died'; return log_ }
       log_.build = b
       if (!b.initialCheckPassed) log(`${feature.key}: initial check did not pass — integrating anyway so validation and triage see it (${b.initialCheckNotes})`)
