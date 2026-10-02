@@ -147,7 +147,7 @@ export function trendBarsHtml({ series, title, subtitle, unit = '' }) {
 }
 
 // ── 3. Outcome tiles (headline figures with footnote markers) ──────────────
-export function outcomeTilesHtml({ tiles, title, subtitle }) {
+export function outcomeTilesHtml({ tiles, title, subtitle, showFootnote = true }) {
   const shown = (tiles || []).filter((t) => t && String(t.value || '').trim()).slice(0, 4);
   if (!shown.length) return emptyHtml(title, 'No outcomes yet — add quantified metrics to engagements in Career Master, or type them here.');
   const notes = [];
@@ -167,13 +167,13 @@ export function outcomeTilesHtml({ tiles, title, subtitle }) {
   return `<div style="font-family:${FONT};break-inside:avoid">
     ${titleHtml(title, subtitle)}
     <div style="display:flex;gap:6px">${tileHtml}</div>
-    ${notes.length ? `<div style="font-size:0.58rem;color:${CHART_TOKENS.muted};margin-top:0.35rem;line-height:1.5">${notes.map((n, i) => `${marks[i] || `(${i + 1})`} ${esc(n)}`).join('&nbsp;&nbsp;·&nbsp;&nbsp;')}</div>` : ''}
+    ${notes.length && showFootnote ? `<div style="font-size:0.58rem;color:${CHART_TOKENS.muted};margin-top:0.35rem;line-height:1.5">${notes.map((n, i) => `${marks[i] || `(${i + 1})`} ${esc(n)}`).join('&nbsp;&nbsp;·&nbsp;&nbsp;')}</div>` : ''}
   </div>`;
 }
 
 // ── 4. Duration timeline (one bar per role, coloured by industry) ──────────
-export function durationTimelineHtml({ rows, title, subtitle, currentYear = new Date().getFullYear() }) {
-  const items = (rows || []).filter((r) => r.start);
+export function durationTimelineHtml({ rows, title, subtitle, maxItems = 12, currentYear = new Date().getFullYear() }) {
+  const items = (rows || []).filter((r) => r.start).slice(0, maxItems);
   if (!items.length) return emptyHtml(title, 'No dated roles in Career Master yet.');
   const minY = Math.min(...items.map((r) => r.start));
   const maxY = Math.max(...items.map((r) => r.end || currentYear), currentYear);
@@ -209,6 +209,57 @@ export function durationTimelineHtml({ rows, title, subtitle, currentYear = new 
     ${titleHtml(title, subtitle)}
     <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${esc(title || 'Career timeline')}" style="display:block;max-width:100%;min-width:500px">${axis}${bars}</svg>
     ${legend}
+  </div>`;
+}
+
+// ── 5. Skill years dot strip (one dot per year of use, per skill) ──────────
+export function skillYearsDotsHtml({ rows, title, subtitle, maxItems = 8 }) {
+  const shown = (rows || []).filter((r) => r.years > 0).slice(0, maxItems);
+  if (!shown.length) return emptyHtml(title, 'No skill years yet — add years of experience or a first-used year to skills in Career Master.');
+  const rowH = 22, labelW = 170, dot = 7, step = 11, cap = 25;
+  const H = shown.length * rowH + 4;
+  const W = labelW + cap * step + 50;
+  const body = shown.map((r, i) => {
+    const y = i * rowH + 4;
+    const n = Math.min(Math.round(r.years), cap);
+    const dots = Array.from({ length: n }, (_, k) => `<circle cx="${labelW + k * step + dot / 2}" cy="${y + 6}" r="${dot / 2}" fill="${CATEGORICAL[0]}"/>`).join('');
+    const over = r.years > cap ? '+' : '';
+    return `<g><title>${esc(`${r.label}: ${r.years} years${r.category ? ` · ${r.category}` : ''}`)}</title>
+      <text x="0" y="${y + 10}" font-size="11" fill="${CHART_TOKENS.ink}" font-family="${FONT}">${esc(r.label.length > 26 ? `${r.label.slice(0, 25)}…` : r.label)}</text>
+      ${dots}
+      <text x="${labelW + n * step + 6}" y="${y + 10}" font-size="10.5" fill="${CHART_TOKENS.secondary}" font-family="${FONT}">${esc(r.years)}${over} yrs</text></g>`;
+  }).join('');
+  return `<div style="font-family:${FONT};break-inside:avoid">
+    ${titleHtml(title, subtitle)}
+    <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${esc(title || 'Skill years')}" style="display:block;max-width:100%">${body}</svg>
+    <div style="font-size:0.62rem;color:${CHART_TOKENS.secondary};margin-top:0.3rem">One dot = one year of use.</div>
+  </div>`;
+}
+
+// ── 6. Industry share bars (share of career time by industry) ──────────────
+export function industryShareBarsHtml({ rows, title, subtitle, maxItems = 5 }) {
+  const all = (rows || []).filter((r) => r.value > 0);
+  if (!all.length) return emptyHtml(title, 'No dated roles with an industry in Career Master yet.');
+  const total = all.reduce((s, r) => s + r.value, 0);
+  const sorted = [...all].sort((a, b) => b.value - a.value || a.label.localeCompare(b.label));
+  const top = sorted.slice(0, maxItems);
+  const rest = sorted.slice(maxItems).reduce((s, r) => s + r.value, 0);
+  const shown = rest > 0 ? [...top, { label: 'Other', value: rest, other: true }] : top;
+  const rowH = 24, labelW = 150, trackW = 300;
+  const H = shown.length * rowH + 4;
+  const body = shown.map((r, i) => {
+    const y = i * rowH + 4;
+    const pct = Math.round((r.value / total) * 100);
+    const w = Math.max(2, (r.value / total) * trackW);
+    return `<g><title>${esc(`${r.label}: ${pct}% of dated career time (${Math.round(r.value * 10) / 10} yrs)`)}</title>
+      <text x="0" y="${y + 11}" font-size="11" fill="${CHART_TOKENS.ink}" font-family="${FONT}">${esc(r.label.length > 24 ? `${r.label.slice(0, 23)}…` : r.label)}</text>
+      <rect x="${labelW}" y="${y + 1}" width="${trackW}" height="14" fill="${CHART_TOKENS.track}"/>
+      <path d="${hBarPath(labelW, y + 1, w, 14)}" fill="${r.other ? OTHER : CATEGORICAL[0]}"/>
+      <text x="${labelW + trackW + 8}" y="${y + 12}" font-size="10.5" fill="${CHART_TOKENS.secondary}" font-family="${FONT}">${pct}%</text></g>`;
+  }).join('');
+  return `<div style="font-family:${FONT};break-inside:avoid">
+    ${titleHtml(title, subtitle)}
+    <svg viewBox="0 0 ${labelW + trackW + 50} ${H}" width="100%" role="img" aria-label="${esc(title || 'Industry share')}" style="display:block;max-width:100%">${body}</svg>
   </div>`;
 }
 
@@ -286,7 +337,7 @@ export function outcomeCandidates(master) {
   for (const e of master?.engagements || []) {
     for (const m of e.metrics || []) {
       const text = String(m || '');
-      const match = text.match(/(<?\$?\d[\d,.]*\s?(?:%|[KMB]\b|[KMB]\+|\+|x)?(?:\s?(?:→|->|to)\s?\$?\d[\d,.]*\s?(?:%|[KMB])?\+?)?)/i);
+      const match = text.match(/(<?\$?\d[\d,.]*\s?(?:%|[KMB]\+|[KMB]\b|\+|x)?(?:\s?(?:→|->|to)\s?\$?\d[\d,.]*\s?(?:%|[KMB])?\+?)?)/i);
       if (!match) continue;
       const value = match[1].trim();
       const caption = text.replace(match[1], '').replace(/^[\s:–—-]+/, '').trim();
@@ -353,4 +404,28 @@ export function proficiencyRows(resolution, { entityType = 'all', groupBy = 'ent
 export function footnoteForRows(rows) {
   const n = (rows || []).filter((r) => r.userDefined).length;
   return n ? `Proficiency levels marked † are user-defined by the member (own formula or set directly), not Salt Basin methodology-driven.` : null;
+}
+
+
+/** Rows for skillYearsDotsHtml: recorded years, else elapsed since first used. */
+export function skillYearRows(master, currentYear = new Date().getFullYear()) {
+  return (master?.skills || []).map((sk) => {
+    const recorded = Number(sk.yearsExp);
+    const first = Number(sk.firstUsed);
+    const years = recorded > 0 ? recorded : (first > 1900 ? Math.max(1, currentYear - first) : 0);
+    return { label: sk.skill, years, category: sk.category || null };
+  }).filter((r) => r.label).sort((a, b) => b.years - a.years || a.label.localeCompare(b.label));
+}
+
+/** Rows for industryShareBarsHtml: years per industry across dated roles. */
+export function industryShareRows(master, currentYear = new Date().getFullYear()) {
+  const by = new Map();
+  for (const j of master?.jobs || []) {
+    const s = yearOf(j.startDate);
+    if (!s) continue;
+    const e = /present|current/i.test(String(j.endDate || '')) ? currentYear : (yearOf(j.endDate) || s);
+    const key = j.industry || 'Unspecified';
+    by.set(key, (by.get(key) || 0) + Math.max(1, e - s));
+  }
+  return [...by.entries()].map(([label, value]) => ({ label, value }));
 }

@@ -4,6 +4,7 @@
 import { ICONS, ICON_VIEWBOX } from './brandIconData.js';
 import {
   proficiencyBarsHtml, trendBarsHtml, outcomeTilesHtml, durationTimelineHtml,
+  skillYearsDotsHtml, industryShareBarsHtml, skillYearRows, industryShareRows,
   trendSeries, outcomeCandidates, timelineRows, proficiencyRows, footnoteForRows, TREND_SOURCES,
 } from './careerCharts.js';
 
@@ -370,6 +371,7 @@ export const BLOCK_DEFS = {
       { key: 'props.entityType', label: 'Show', type: 'select', options: ['all', 'skill', 'tool'] },
       { key: 'props.groupBy', label: 'Group by', type: 'select', options: ['entity', 'category', 'proficiencyCategory'] },
       { key: 'props.maxItems', label: 'Max rows', type: 'text' },
+      { key: 'props.showFootnote', label: 'Show footnote', type: 'select', options: ['true', 'false'] },
     ],
   },
   'career-trend-bars': {
@@ -401,7 +403,28 @@ export const BLOCK_DEFS = {
     label: 'Career Timeline', icon: '☰',
     defaultProps: { title: 'Career Timeline' },
     defaultStyle: { margin: '0.75rem 0' },
-    fields: [{ key: 'props.title', label: 'Title', type: 'text' }],
+    fields: [
+      { key: 'props.title', label: 'Title', type: 'text' },
+      { key: 'props.maxItems', label: 'Max roles', type: 'text' },
+    ],
+  },
+  'career-skill-years-dots': {
+    label: 'Skill Years Dots', icon: '⁞',
+    defaultProps: { title: 'Years of Experience by Skill', maxItems: 8 },
+    defaultStyle: { margin: '0.75rem 0' },
+    fields: [
+      { key: 'props.title', label: 'Title', type: 'text' },
+      { key: 'props.maxItems', label: 'Top N skills', type: 'text' },
+    ],
+  },
+  'career-industry-share': {
+    label: 'Industry Share Bars', icon: '▤',
+    defaultProps: { title: 'Career Time by Industry', maxItems: 5 },
+    defaultStyle: { margin: '0.75rem 0' },
+    fields: [
+      { key: 'props.title', label: 'Title', type: 'text' },
+      { key: 'props.maxItems', label: 'Top N industries', type: 'text' },
+    ],
   },
   'cascade-flow': {
     label: 'Cascade Flow', icon: '➡️',
@@ -833,7 +856,7 @@ export function renderBlockToHtml(block, ctx = {}) {
       const rows = proficiencyRows(ctx.proficiency, { entityType: p.entityType || 'all', groupBy: p.groupBy || 'entity' });
       const maxItems = Number(p.maxItems) || 10;
       const shown = rows.filter((r) => r.ordinal > 0).slice(0, maxItems);
-      return `<div style="${styleStr(s)}">${proficiencyBarsHtml({ rows: shown, levels, title: p.title, footnote: footnoteForRows(shown), maxItems })}</div>`;
+      return `<div style="${styleStr(s)}">${proficiencyBarsHtml({ rows: shown, levels, title: p.title, footnote: (p.showFootnote === false || p.showFootnote === 'false') ? null : footnoteForRows(shown), maxItems })}</div>`;
     }
 
     case 'career-trend-bars': {
@@ -845,12 +868,20 @@ export function renderBlockToHtml(block, ctx = {}) {
     case 'career-outcome-tiles': {
       if (ctx.loadErrors?.master && !(Array.isArray(p.tiles) && p.tiles.length)) return loadErrorHtml(p.title || 'Outcomes', ctx.loadErrors.master);
       const tiles = Array.isArray(p.tiles) && p.tiles.length ? p.tiles : outcomeCandidates(ctx.master).slice(0, 4);
-      return `<div style="${styleStr(s)}">${outcomeTilesHtml({ tiles, title: p.title })}</div>`;
+      return `<div style="${styleStr(s)}">${outcomeTilesHtml({ tiles, title: p.title, showFootnote: !(p.showFootnote === false || p.showFootnote === 'false') })}</div>`;
     }
 
     case 'career-duration-timeline':
       if (ctx.loadErrors?.master) return loadErrorHtml(p.title || 'Career Timeline', ctx.loadErrors.master);
-      return `<div style="${styleStr(s)}">${durationTimelineHtml({ rows: timelineRows(ctx.master), title: p.title })}</div>`;
+      return `<div style="${styleStr(s)}">${durationTimelineHtml({ rows: timelineRows(ctx.master), title: p.title, maxItems: Number(p.maxItems) || 12 })}</div>`;
+
+    case 'career-skill-years-dots':
+      if (ctx.loadErrors?.master) return loadErrorHtml(p.title || 'Skill years', ctx.loadErrors.master);
+      return `<div style="${styleStr(s)}">${skillYearsDotsHtml({ rows: skillYearRows(ctx.master), title: p.title, maxItems: Number(p.maxItems) || 8 })}</div>`;
+
+    case 'career-industry-share':
+      if (ctx.loadErrors?.master) return loadErrorHtml(p.title || 'Industry share', ctx.loadErrors.master);
+      return `<div style="${styleStr(s)}">${industryShareBarsHtml({ rows: industryShareRows(ctx.master), title: p.title, maxItems: Number(p.maxItems) || 5 })}</div>`;
 
     default:
       return `<div style="padding:0.5rem;background:#f5f5f5;font-size:0.75rem;color:#999;border:1px dashed #ccc">[Unknown block: ${block.type}]</div>`;

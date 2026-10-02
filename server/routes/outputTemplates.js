@@ -52,6 +52,7 @@ router.get('/', async (req, res) => {
     const rows = await db.prepare(q).all(...params);
     res.json({ templates: rows.map(rowToTemplate) });
   } catch (e) {
+    console.error('[output-templates] load error:', e.message);
     res.status(500).json({ error: 'Failed to load templates' });
   }
 });
@@ -77,6 +78,7 @@ router.get('/primary', async (req, res) => {
     }
     res.json({ template: rowToTemplate(row) });
   } catch (e) {
+    console.error('[output-templates] read error:', e.message);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -106,6 +108,7 @@ router.get('/portfolio', async (req, res) => {
       })),
     });
   } catch (e) {
+    console.error('[output-templates] portfolio error:', e.message);
     res.status(500).json({ error: 'Failed to load portfolio' });
   }
 });
@@ -122,6 +125,7 @@ router.get('/:id/public', async (req, res) => {
     if (!config?.meta?.portfolioVisible) return res.status(404).json({ error: 'Not found' });
     res.json({ template: { id: row.id, name: row.title, config } });
   } catch (e) {
+    console.error('[output-templates] read error:', e.message);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -167,6 +171,7 @@ router.put('/:id', async (req, res) => {
     `).run(name || null, config || null, is_primary ?? row.is_primary, Date.now(), req.params.id);
     res.json({ ok: true });
   } catch (e) {
+    console.error('[output-templates] update error:', e.message);
     res.status(500).json({ error: 'Failed to update template' });
   }
 });
@@ -179,6 +184,7 @@ router.delete('/:id', async (req, res) => {
     await db.prepare(`DELETE FROM unified_outputs WHERE id = $1 AND app_id = $2 AND user_id = $3`).run(req.params.id, APP_ID, user.id);
     res.json({ ok: true });
   } catch (e) {
+    console.error('[output-templates] delete error:', e.message);
     res.status(500).json({ error: 'Failed to delete template' });
   }
 });
