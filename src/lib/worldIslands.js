@@ -168,6 +168,15 @@ export const ISLAND_REGISTRY = {
     dataBinding: { store: 'career_jobs/skills/tools/engagements/domains/certifications/deals' },
     permission: { requiredRole: 'owner', crud: ['read', 'update'], enforced: false },
   },
+  // Career Sources to Review (2026-10-02): the reconciliation queue where a
+  // tailored package's roles/skills/tools that differ from Career Master are
+  // approved (written to Career Master) or rejected (kept as a per-output
+  // override). Append-only: a member whose nav already has this tab gets an island.
+  careerReconciliation: {
+    variant: 'rings', kind: 'embed', accent: 'teal',
+    dataBinding: { store: 'career_reconciliation_tasks' },
+    permission: { requiredRole: 'owner', crud: ['read', 'update'], enforced: false },
+  },
   outputTemplates: {
     variant: 'token', kind: 'embed', accent: 'gold',
     dataBinding: { store: 'output_templates' },

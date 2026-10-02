@@ -22,6 +22,7 @@ export default function SharedOutputPage() {
   const { token } = useParams();
   const [state, setState] = useState({ loading: true, doc: null, error: null });
   const [qrSvg, setQrSvg] = useState(null);
+  const [showPrinted, setShowPrinted] = useState(false);
   useNoIndex();
 
   useEffect(() => {
@@ -87,8 +88,25 @@ export default function SharedOutputPage() {
         </div>
       </div>
       <article className="sb-shared-output-page" style={{ maxWidth: 820, margin: '0 auto', background: 'white', border: '1px solid #E3D8C9', borderTop: '4px solid #C4843A', padding: 'clamp(1.25rem, 4vw, 2.5rem)', boxSizing: 'border-box', boxShadow: '0 24px 70px -52px rgba(43,42,40,0.42)' }}>
+        {doc.documentError && (
+          <div role="alert" style={{ background: '#FBEAEA', border: '1px solid #E3B4B4', color: '#7A2323', padding: '0.6rem 0.8rem', fontSize: '0.8rem', marginBottom: '0.75rem' }}>{doc.documentError}</div>
+        )}
+        {doc.documentState?.changedSinceApproval && (
+          <div role="status" data-testid="text-changed-banner" style={{ background: '#FBEBD0', border: '1px solid #E8C98F', color: '#5C3B08', padding: '0.6rem 0.8rem', fontSize: '0.8rem', marginBottom: '0.75rem', lineHeight: 1.5 }}>
+            <strong>The wording of this document has changed since the printed version was approved.</strong>{' '}
+            {showPrinted ? 'Showing the printed (approved) wording.' : 'Showing the current wording.'}{' '}
+            <button type="button" onClick={() => setShowPrinted((v) => !v)} style={{ background: 'none', border: 'none', padding: 0, color: '#1B2A3B', textDecoration: 'underline', cursor: 'pointer', font: 'inherit' }}>
+              {showPrinted ? 'Show current wording' : 'Show printed wording'}
+            </button>
+          </div>
+        )}
+        {doc.documentState?.careerBound && doc.documentState.printedAvailable === false && (
+          <div role="status" style={{ background: '#F1EEE8', border: '1px solid #E3D8C9', color: '#5F6B78', padding: '0.5rem 0.8rem', fontSize: '0.75rem', marginBottom: '0.75rem' }}>
+            The printed wording was not captured when this was approved, so changes since then cannot be shown.
+          </div>
+        )}
         {isDocumentBlocks(doc.content) ? (
-          <DocumentBlocksView content={doc.content} qrSvg={qrSvg} qrHref={window.location.href.split('?')[0]} />
+          <DocumentBlocksView content={showPrinted && doc.documentState?.printed ? doc.documentState.printed : doc.content} qrSvg={qrSvg} qrHref={window.location.href.split('?')[0]} />
         ) : (
           <div style={{ whiteSpace: 'pre-wrap', fontSize: '0.88rem', lineHeight: 1.6 }}>{doc.content?.rawText || ''}</div>
         )}

@@ -16,6 +16,7 @@ import CareerIntakePanel from './CareerIntakePanel.jsx';
 import { resumeUrlFromPreset } from '../../lib/resumeUrls.js';
 import DocumentBlocksView, { formatMetadataLine, isDocumentBlocks } from '../DocumentBlocksView.jsx';
 import { useToolCategoryGate } from './ToolCategoryGate.jsx';
+import CareerBoundOutputEditor from './CareerBoundOutputEditor.jsx';
 
 // ── Layout templates ──────────────────────────────────────────────────────────
 const LAYOUTS = [
@@ -459,6 +460,10 @@ export default function MyResumePanel({ scope = 'member' }) {
   const [showNameModal, setShowNameModal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [resumeOutputs, setResumeOutputs] = useState([]);
+  // Career-bound outputs (2026-10-02): content is a selection over Career Master + per-output overrides.
+  const [boundEditId, setBoundEditId] = useState(null);
+  const [creatingBound, setCreatingBound] = useState(false);
+  const [boundName, setBoundName] = useState('Career-bound resume');
   // Finalizing (approve / publish / approve for QR) requires every
   // technology to have a proficiency category — the gate prompts and saves
   // to Career Master, then retries (server/lib/finalizationGates.js).
@@ -562,8 +567,23 @@ export default function MyResumePanel({ scope = 'member' }) {
     loadResumeOutputs();
   }, []);
 
+  async function createBoundOutput() {
+    const label = boundName;
+    setCreatingBound(true);
+    try {
+      const r = await api.createCareerBoundOutput({ name: label.trim() || 'Career-bound resume' });
+      toast.success('Created from Career Master');
+      loadResumeOutputs();
+      setBoundEditId(r.id);
+    } catch (e) {
+      toast.error(e.message);
+    } finally {
+      setCreatingBound(false);
+    }
+  }
+
   function loadResumeOutputs() {
-    api.listResumeOutputs().then((d) => setResumeOutputs(d.projections || [])).catch(() => {});
+    api.listResumeOutputs().then((d) => setResumeOutputs(d.projections || [])).catch((e) => toast.error(`Could not load your resume outputs: ${e.message}`));
     refreshFinalizationCheck();
   }
 
@@ -872,6 +892,24 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
         </div>
       )}
 
+      {/* Career-bound resumes: content is a selection over Career Master + per-output overrides. */}
+      <div style={{ marginBottom: '1.25rem', background: 'white', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 8, padding: '0.75rem 1rem' }} data-testid="career-bound-card">
+        <div style={S.label}>Career-bound resumes</div>
+        <div style={{ fontSize: '0.76rem', color: '#666', lineHeight: 1.5, margin: '0.25rem 0 0.5rem' }}>
+          A career-bound resume reads its roles, bullets, skills, tools and certifications from Career Master, so a change there flows into it.
+          Wording you change inside the resume applies to that resume only and is marked as overridden.
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <input aria-label="Name of the new career-bound resume" value={boundName} onChange={(e) => setBoundName(e.target.value)} style={{ padding: '4px 8px', fontSize: '0.78rem', border: '1px solid rgba(0,0,0,0.2)', borderRadius: 6, minWidth: 220 }} />
+          <button style={{ ...S.btn('gold'), padding: '4px 12px', fontSize: '0.74rem' }} disabled={creatingBound} onClick={createBoundOutput}>
+            {creatingBound ? 'Creating...' : 'New career-bound resume from Career Master'}
+          </button>
+          <button style={{ ...S.btn('outline'), padding: '4px 12px', fontSize: '0.74rem' }} onClick={() => window.dispatchEvent(new CustomEvent('sb-admin-switch-tab', { detail: { tab: 'careerReconciliation' } }))}>
+            Career Sources to Review
+          </button>
+        </div>
+      </div>
+
       {/* Resume Output Projection history — master-org-admin-config.md §5.
           Each row is a lineage-tracked snapshot, not a live re-render; a
           stale one is flagged, never silently regenerated. */}
@@ -909,6 +947,9 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
                     {output.presetName || output.presetId}
                     {output.outputType && output.outputType !== 'resume' && (
                       <span style={{ fontWeight: 400, color: '#999', fontSize: '0.72rem' }}> · {output.outputType.replace('_', ' ')}</span>
+                    )}
+                    {output.generatedContent?.format === 'career_bound' && (
+                      <span style={{ fontWeight: 400, color: '#1e565a', fontSize: '0.68rem', textTransform: 'uppercase', marginLeft: '0.4rem' }}>Career-bound</span>
                     )}
                     {output.source === 'imported' && (
                       <span style={{ fontWeight: 400, color: '#8b877c', fontSize: '0.68rem', textTransform: 'uppercase', marginLeft: '0.4rem' }}>Imported</span>
@@ -950,6 +991,9 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  {output.generatedContent?.format === 'career_bound' && output.outputStatus !== 'archived' && (
+                    <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setBoundEditId(output.id)}>Edit sections</button>
+                  )}
                   {output.generatedContent && (
                     <>
                       <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => openOutputView(output.id)}>View</button>
@@ -1031,6 +1075,20 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
         </div>
       )}
 
+      {boundEditId && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} role="dialog" aria-label="Career-bound resume editor">
+          <div style={{ background: 'white', borderRadius: 10, padding: '1rem 1.25rem', width: 'min(1200px, 96vw)', maxHeight: '92vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => { setBoundEditId(null); loadResumeOutputs(); }}>Close</button>
+            </div>
+            <CareerBoundOutputEditor
+              projectionId={boundEditId}
+              onSaved={(r) => { if (r?.id && r.id !== boundEditId) setBoundEditId(r.id); loadResumeOutputs(); }}
+              onOpenReviewQueue={() => { setBoundEditId(null); window.dispatchEvent(new CustomEvent('sb-admin-switch-tab', { detail: { tab: 'careerReconciliation' } })); }}
+            />
+          </div>
+        </div>
+      )}
       {categoryGate.modal}
       {emailModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setEmailModalOpen(false)}>

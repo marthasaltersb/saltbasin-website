@@ -75,7 +75,15 @@ function TableBlock({ rows }) {
   );
 }
 
-export default function DocumentBlocksView({ content, qrSvg = null, qrHref = null, qrCaption = 'Scan or click for current version' }) {
+// Owner-side marker for wording that exists in this output only (career-bound
+// outputs). Never rendered on the public QR page or in the PDF.
+function OutputOnlyBadge() {
+  return (
+    <span title="This wording applies to this output only; Career Master is unchanged" style={{ marginLeft: 6, fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: '#8a5a12', background: '#FBEBD0', border: '1px solid #E8C98F', borderRadius: 999, padding: '0 6px', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>output-only</span>
+  );
+}
+
+export default function DocumentBlocksView({ content, qrSvg = null, qrHref = null, qrCaption = 'Scan or click for current version', showOutputOnly = false }) {
   const header = content?.header || {};
   return (
     <div style={{ fontFamily: 'Helvetica, Arial, sans-serif', color: INK, lineHeight: 1.5 }}>
@@ -105,19 +113,19 @@ export default function DocumentBlocksView({ content, qrSvg = null, qrHref = nul
           );
         }
         if (block.type === 'paragraph') {
-          return <p key={i} style={{ fontSize: '0.84rem', margin: '0 0 0.45rem', ...(EMPHASIS_STYLE[block.emphasis] || {}) }}>{block.text}</p>;
+          return <p key={i} style={{ fontSize: '0.84rem', margin: '0 0 0.45rem', ...(EMPHASIS_STYLE[block.emphasis] || {}) }}>{block.text}{showOutputOnly && block.outputOnly && <OutputOnlyBadge />}</p>;
         }
         if (block.type === 'bullet') {
           return (
             <div key={i} style={{ display: 'flex', gap: '0.5rem', fontSize: '0.84rem', margin: '0 0 0.25rem 0.5rem' }}>
-              <span aria-hidden="true" style={{ color: GOLD }}>•</span><span>{block.text}</span>
+              <span aria-hidden="true" style={{ color: GOLD }}>•</span><span>{block.text}{showOutputOnly && block.outputOnly && <OutputOnlyBadge />}</span>
             </div>
           );
         }
         if (block.type === 'role') {
           return (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap', margin: '0.6rem 0 0.2rem', breakAfter: 'avoid' }}>
-              <span style={{ fontWeight: 700, fontSize: '0.88rem' }}>{block.title}</span>
+              <span style={{ fontWeight: 700, fontSize: '0.88rem' }}>{block.title}{showOutputOnly && block.outputOnly && <OutputOnlyBadge />}</span>
               <span style={{ color: TEAL, fontSize: '0.78rem', whiteSpace: 'nowrap' }}>{block.dates}</span>
             </div>
           );

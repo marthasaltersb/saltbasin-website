@@ -2469,7 +2469,7 @@ async function bootstrap() {
   // To re-seed after manual edits: DELETE the row in config_state where
   // id='admin_nav' and reboot. The structure can also be edited via PUT
   // /api/config/admin-nav (admin-only).
-  const existingNav = await sql.unsafe(`SELECT id, data FROM config_state WHERE id = 'admin_nav'`);
+  let existingNav = await sql.unsafe(`SELECT id, data FROM config_state WHERE id = 'admin_nav'`);
   // The member's primary editing surface is "My Profile" (not "Content" / "My Site").
   // Profile = single source of truth for a member's career + brand data; public site
   // and generated outputs (resume PDF etc.) read from this. See project memory
@@ -2499,7 +2499,11 @@ async function bootstrap() {
       `INSERT INTO config_state (id, data, updated_at) VALUES ($1, $2, $3)`,
       ['admin_nav', JSON.stringify(defaultNav), now]
     );
-  } else {
+    // Re-read so the idempotent injections below (My Resume, Inbox) also apply on the very
+    // first boot of a fresh database - previously they only appeared after a second boot.
+    existingNav = await sql.unsafe(`SELECT id, data FROM config_state WHERE id = 'admin_nav'`);
+  }
+  {
     // One-shot relabel: the previous boot seeded the content view with label
     // "Content" / "My Site". Bump those to "My Profile" without touching any
     // manual edits the admin may have made to OTHER views (PLM/CRM/System).
@@ -3876,6 +3880,8 @@ async function bootstrap() {
   // rows are assigned to the platform admin so nothing regresses.
   await sql.unsafe(`
     ALTER TABLE career_jobs           ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES users(id);
+    -- Per-job library of reusable bullet wordings (2026-10-02, career-bound outputs): [{id,text,source:{kind,ref},createdAt,tags}]. Additive; key_metrics is untouched.
+    ALTER TABLE career_jobs           ADD COLUMN IF NOT EXISTS bullet_variants JSONB NOT NULL DEFAULT '[]'::jsonb;
     ALTER TABLE career_skills         ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES users(id);
     ALTER TABLE career_tools          ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES users(id);
     ALTER TABLE career_engagements    ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES users(id);
@@ -4198,6 +4204,28 @@ async function bootstrap() {
     }
   } catch (e) {
     console.warn('[db] output-templates nav injection skipped:', e.message);
+  }
+
+  // One-shot (2026-10-02, career-bound outputs): inject "Career Sources to Review"
+  // into the admin_nav content view, so the reconciliation queue (a tailored
+  // package's roles/skills/tools vs Career Master) is reachable for admin scope
+  // too - members already have it in memberTabs. Additive: only appends when
+  // absent; the tab id matches the member tab id so one switch-tab event serves both.
+  try {
+    const navRow4a = await sql.unsafe(`SELECT data FROM config_state WHERE id = 'admin_nav'`);
+    if (navRow4a.length > 0) {
+      const nav = JSON.parse(navRow4a[0].data);
+      const contentView = (nav.views || []).find((v) => v.id === 'content');
+      if (contentView) {
+        contentView.tabs = contentView.tabs || [];
+        if (!contentView.tabs.some((t) => t.id === 'careerReconciliation' || t.componentId === 'careerReconciliation')) {
+          contentView.tabs.push({ id: 'careerReconciliation', label: 'Career Sources to Review', componentId: 'careerReconciliation', sortOrder: 2.6 });
+          await sql.unsafe(`UPDATE config_state SET data = $1, updated_at = $2 WHERE id = 'admin_nav'`, [JSON.stringify(nav), Date.now()]);
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[db] career-reconciliation nav injection skipped:', e.message);
   }
 
   // One-shot: inject "Commercial Opportunity Pipeline" tab into the admin_nav

@@ -10,6 +10,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
+import CareerBoundOutputEditor from './CareerBoundOutputEditor.jsx';
 
 const ENTRY_TYPE_LABELS = {
   career_job_entry: 'Job', career_skill_entry: 'Skill', career_tool_entry: 'Tool',
@@ -39,6 +40,12 @@ const S = {
     color: tone === 'gold' || tone === 'navy' ? 'white' : '#333',
   }),
   empty: { padding: '2rem', textAlign: 'center', color: '#888', fontSize: '0.85rem' },
+  beforeAfter: { display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '0.5rem', alignItems: 'stretch', margin: '0.5rem 0' },
+  beforeBox: { background: 'rgba(0,0,0,0.04)', borderRadius: 6, padding: '0.45rem 0.6rem', fontSize: '0.78rem', color: '#444' },
+  afterBox: { background: 'rgba(2,161,166,0.08)', borderRadius: 6, padding: '0.45rem 0.6rem', fontSize: '0.78rem', color: '#134', fontWeight: 600 },
+  boxLabel: { fontSize: '0.6rem', letterSpacing: '0.06em', textTransform: 'uppercase', color: '#888', fontWeight: 700, marginBottom: 2 },
+  packageTag: { display: 'inline-block', fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#1e565a', background: 'rgba(2,161,166,0.12)', borderRadius: 999, padding: '0.15rem 0.55rem', marginBottom: '0.6rem', marginRight: '0.4rem' },
+  warnBox: { background: '#FBEBD0', border: '1px solid #E8C98F', color: '#5C3B08', borderRadius: 8, padding: '0.6rem 0.8rem', fontSize: '0.78rem', marginBottom: '0.75rem', lineHeight: 1.5 },
   checkboxLabel: { display: 'flex', gap: '0.4rem', alignItems: 'center', fontSize: '0.72rem', color: '#666', marginTop: '0.5rem' },
 };
 
@@ -154,9 +161,205 @@ function AmbiguousCard({ task, onResolved }) {
   );
 }
 
+
+const PACKAGE_KIND_LABELS = {
+  package_field_conflict: 'Package differs from Career Master',
+  package_new_bullet: 'New bullet variant',
+  package_add_job: 'Add job',
+  package_new_skill: 'New skill',
+  package_new_tool: 'New tool',
+};
+
+function packageTaskSummary(task) {
+  const r = task.reasoning || {};
+  if (task.taskType === 'package_field_conflict') return { title: `${r.company} - ${r.field === 'dates' ? 'dates' : 'job title'}`, before: r.before || '(empty)', after: r.after };
+  if (task.taskType === 'package_new_bullet') return { title: `${r.company} (${r.jobTitle}) - bullet not in this job's library`, before: '(not in library)', after: r.text };
+  if (task.taskType === 'package_new_skill' || task.taskType === 'package_new_tool') {
+    const kind = task.taskType === 'package_new_skill' ? 'skill' : 'tool';
+    return { title: `${r.name} - ${kind} not in Career Master`, before: '(not in Career Master)', after: `${r.name}${kind === 'tool' ? ' - you will be asked how it was used before any output is finalized' : ''}` };
+  }
+  return { title: `${r.company} - ${r.title}`, before: '(not in Career Master)', after: `${r.title}, ${[r.startDate, r.endDate].filter(Boolean).join(' - ') || 'no dates'}${r.bullets?.length ? ` - ${r.bullets.length} bullet${r.bullets.length === 1 ? '' : 's'} added to its library` : ''}` };
+}
+
+function PackageTaskCard({ task, onDecided }) {
+  const [busy, setBusy] = useState(false);
+  const info = packageTaskSummary(task);
+  const sources = (task.evidenceRefs || []).map((ref) => ref.label || ref.variant).filter(Boolean).join(', ');
+
+  async function decide(method) {
+    setBusy(true);
+    try {
+      const result = await api.resolveCareerReconciliationTask(task.id, { method });
+      if (result.syncFailed) toast.error(`Applied to Career Master, but the Career Atom sync failed: ${result.syncError}. Use "Retry sync" below.`);
+      else toast.success(method === 'approve' ? 'Applied to Career Master' : 'Rejected - Career Master unchanged');
+      onDecided(task.id, result);
+    } catch (e) {
+      toast.error(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div style={S.card} data-testid={`package-task-${task.taskType}`}>
+      <span style={S.packageTag}>{PACKAGE_KIND_LABELS[task.taskType]}</span>
+      <div style={S.fieldName}>{info.title}</div>
+      <div style={S.beforeAfter}>
+        <div style={S.beforeBox}><div style={S.boxLabel}>Career Master now</div>{info.before}</div>
+        <div style={{ alignSelf: 'center', color: '#888' }} aria-hidden="true">{'→'}</div>
+        <div style={S.afterBox}><div style={S.boxLabel}>Package says</div>{info.after}</div>
+      </div>
+      <div style={S.sourceMeta}>From package {task.metadata?.packageKey}{sources ? ` (${sources})` : ''}</div>
+      <div style={S.btnRow}>
+        <button type="button" style={S.btn('gold')} disabled={busy} onClick={() => decide('approve')}>Approve - apply to Career Master</button>
+        <button type="button" style={S.btn('outline')} disabled={busy} onClick={() => decide('reject')}>Reject - leave Career Master as is</button>
+      </div>
+    </div>
+  );
+}
+
+function PackageImportCard({ onImported }) {
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [summary, setSummary] = useState(null);
+  const [error, setError] = useState(null);
+
+  async function readFile(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try { setText(await file.text()); setError(null); } catch (err) { setError(`Could not read the file: ${err.message}`); }
+  }
+
+  async function run() {
+    setBusy(true); setError(null); setSummary(null);
+    try {
+      let pkg;
+      try { pkg = JSON.parse(text); } catch (err) { throw new Error(`That is not valid JSON: ${err.message}`); }
+      const result = await api.importCareerPackageSource(pkg);
+      setSummary(result);
+      toast.success(`Package filed - ${result.created} review task${result.created === 1 ? '' : 's'} raised`);
+      onImported();
+    } catch (err) {
+      setError(err.message);
+      toast.error(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div style={S.card} data-testid="package-import-card">
+      <div style={S.fieldName}>Import a tailored package as a source</div>
+      <div style={S.reasoning}>Differences between the package's resumes and Career Master become review tasks below. Nothing changes in Career Master until you approve a task.</div>
+      <input type="file" accept="application/json,.json" onChange={readFile} aria-label="Package JSON file" />
+      <textarea style={S.dictateBox} rows={3} value={text} onChange={(e) => setText(e.target.value)} placeholder="...or paste package JSON here" aria-label="Package JSON" />
+      <div style={S.btnRow}>
+        <button type="button" style={S.btn('navy')} disabled={busy || !text.trim()} onClick={run}>{busy ? 'Importing...' : 'Import and check against Career Master'}</button>
+      </div>
+      {error && <div role="alert" style={{ ...S.warnBox, marginTop: '0.6rem' }}>{error}</div>}
+      {summary && (
+        <div role="status" style={S.reasoning} data-testid="package-import-summary">
+          Filed {summary.outputs.length} output{summary.outputs.length === 1 ? '' : 's'}; {summary.created} new task{summary.created === 1 ? '' : 's'}
+          {summary.alreadyDecidedOrMerged ? `; ${summary.alreadyDecidedOrMerged} already decided or merged` : ''}.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ConvertSection({ openEditor, refreshKey }) {
+  const [items, setItems] = useState(null);
+  const [error, setError] = useState(null);
+  const [busyId, setBusyId] = useState(null);
+  const [notice, setNotice] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.listCareerBoundConvertible()
+      .then((r) => { if (!cancelled) { setItems(r.items || []); setError(null); } })
+      .catch((e) => { if (!cancelled) setError(e.message); });
+    return () => { cancelled = true; };
+  }, [refreshKey]);
+
+  async function convert(item) {
+    setBusyId(item.id); setNotice(null);
+    try {
+      const result = await api.convertToCareerBound(item.id);
+      setNotice({ id: result.id, warnings: result.warnings || [] });
+      toast.success('Created a career-bound draft');
+    } catch (e) {
+      toast.error(e.message);
+      setNotice({ error: e.message });
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  if (error) return <div role="alert" style={S.warnBox}>Could not load imported resumes: {error}</div>;
+  if (!items || !items.length) return null;
+  return (
+    <>
+      <div style={S.groupTitle}>Imported resumes you can convert to career-bound</div>
+      {items.map((item) => (
+        <div key={item.id} style={S.card} data-testid="convertible-row">
+          <div style={S.fieldName}>{item.name} <span style={S.sourceMeta}>({item.packageKey} / {item.variant})</span></div>
+          {item.openTasks > 0 && <div style={S.reasoning}>{item.openTasks} review task{item.openTasks === 1 ? '' : 's'} for this package still need a decision before it can be converted.</div>}
+          <div style={S.btnRow}>
+            <button type="button" style={S.btn('navy')} disabled={busyId === item.id || item.openTasks > 0} onClick={() => convert(item)}>{busyId === item.id ? 'Converting...' : 'Convert to career-bound output'}</button>
+          </div>
+        </div>
+      ))}
+      {notice?.error && <div role="alert" style={S.warnBox}>{notice.error}</div>}
+      {notice?.id && (
+        <div role="status" style={S.banner} data-testid="convert-notice">
+          Career-bound draft created.
+          {notice.warnings.map((w, i) => <div key={i} style={{ marginTop: 4 }}>Note: {w}</div>)}
+          <div style={S.btnRow}><button type="button" style={S.btn('gold')} onClick={() => openEditor(notice.id)}>Open the editor</button></div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function SyncFailedSection({ refreshKey, onRetried }) {
+  const [items, setItems] = useState(null);
+  const [error, setError] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    api.listCareerReconciliationTasks('sync_failed')
+      .then((r) => { if (!cancelled) { setItems(r.items || []); setError(null); } })
+      .catch((e) => { if (!cancelled) setError(e.message); });
+    return () => { cancelled = true; };
+  }, [refreshKey]);
+
+  async function retry(task) {
+    try {
+      const r = await api.retryCareerTaskSync(task.id);
+      if (r.syncFailed) toast.error(`Sync still failing: ${r.syncError}`); else toast.success('Career Atom sync completed');
+      onRetried();
+    } catch (e) { toast.error(e.message); }
+  }
+
+  if (error) return <div role="alert" style={S.warnBox}>Could not check for failed syncs: {error}</div>;
+  if (!items || !items.length) return null;
+  return (
+    <>
+      <div style={S.groupTitle}>Applied - sync failed ({items.length})</div>
+      {items.map((task) => (
+        <div key={task.id} style={S.warnBox} data-testid="sync-failed-row">
+          <strong>{packageTaskSummary(task).title}</strong> was applied to Career Master, but its Career Atom sync failed: {task.metadata?.syncError?.message}
+          <div style={S.btnRow}><button type="button" style={S.btn('navy')} onClick={() => retry(task)}>Retry sync</button></div>
+        </div>
+      ))}
+    </>
+  );
+}
+
 export default function CareerReconciliationPanel() {
   const [tasks, setTasks] = useState(null);
   const [error, setError] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [editingId, setEditingId] = useState(null);
 
   async function load() {
     try {
@@ -173,11 +376,22 @@ export default function CareerReconciliationPanel() {
     setTasks((current) => (current || []).filter((t) => t.id !== taskId));
   }
 
+  function onPackageDecided(taskId) {
+    onResolved(taskId);
+    setRefreshKey((k) => k + 1);
+  }
+
+  function reloadAll() {
+    load();
+    setRefreshKey((k) => k + 1);
+  }
+
   if (error) return <div style={S.wrap}><div style={S.empty}>Failed to load: {error}</div></div>;
   if (tasks === null) return <div style={S.wrap}><div style={S.empty}>Loading…</div></div>;
 
   const conflicts = tasks.filter((t) => t.taskType === 'source_conflict');
   const ambiguous = tasks.filter((t) => t.taskType === 'ambiguous_mapping');
+  const packageTasks = tasks.filter((t) => String(t.taskType).startsWith('package_'));
 
   return (
     <div style={S.wrap}>
@@ -186,7 +400,24 @@ export default function CareerReconciliationPanel() {
         automatically when sources disagree; review each item below and choose the correct source, or tell
         BestyStaff what the right value is.
       </div>
+      <PackageImportCard onImported={reloadAll} />
       {tasks.length === 0 && <div style={S.empty}>Nothing needs review right now.</div>}
+      {packageTasks.length > 0 && (
+        <>
+          <div style={S.groupTitle}>Tailored package vs Career Master ({packageTasks.length})</div>
+          {packageTasks.map((task) => <PackageTaskCard key={task.id} task={task} onDecided={onPackageDecided} />)}
+        </>
+      )}
+      <SyncFailedSection refreshKey={refreshKey} onRetried={() => setRefreshKey((k) => k + 1)} />
+      <ConvertSection refreshKey={refreshKey} openEditor={setEditingId} />
+      {editingId && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} role="dialog" aria-label="Career-bound output editor">
+          <div style={{ background: 'white', borderRadius: 10, padding: '1rem 1.25rem', width: 'min(1100px, 95vw)', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}><button type="button" style={S.btn('outline')} onClick={() => setEditingId(null)}>Close</button></div>
+            <CareerBoundOutputEditor projectionId={editingId} hideQueueLink onSaved={(r) => { if (r?.id && r.id !== editingId) setEditingId(r.id); }} />
+          </div>
+        </div>
+      )}
       {conflicts.length > 0 && (
         <>
           <div style={S.groupTitle}>Source conflicts ({conflicts.length})</div>

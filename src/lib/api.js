@@ -330,6 +330,24 @@ export const api = {
     request(`/api/career-reconciliation/tasks${status ? `?status=${encodeURIComponent(status)}` : ''}`),
   resolveCareerReconciliationTask: (taskId, resolution) =>
     request(`/api/career-reconciliation/tasks/${taskId}/resolve`, { method: 'POST', body: JSON.stringify(resolution) }),
+  importCareerPackageSource: (pkg) =>
+    request('/api/career-reconciliation/package-sources', { method: 'POST', body: JSON.stringify({ package: pkg }) }),
+  retryCareerTaskSync: (taskId) =>
+    request(`/api/career-reconciliation/tasks/${taskId}/retry-sync`, { method: 'POST', body: '{}' }),
+  listCareerBoundJobs: () => request('/api/career-bound/jobs'),
+  addCareerBullet: (jobId, text) =>
+    request(`/api/career-bound/jobs/${jobId}/bullets`, { method: 'POST', body: JSON.stringify({ text }) }),
+  updateCareerBullet: (jobId, bulletId, body) =>
+    request(`/api/career-bound/jobs/${jobId}/bullets/${encodeURIComponent(bulletId)}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  deleteCareerBullet: (jobId, bulletId) =>
+    request(`/api/career-bound/jobs/${jobId}/bullets/${encodeURIComponent(bulletId)}`, { method: 'DELETE' }),
+  listCareerBoundConvertible: () => request('/api/career-bound/convertible'),
+  previewCareerBoundConversion: (projectionId) => request(`/api/career-bound/convert/${projectionId}/preview`),
+  convertToCareerBound: (projectionId) => request(`/api/career-bound/convert/${projectionId}`, { method: 'POST', body: '{}' }),
+  getCareerBoundReviewCount: () => request('/api/career-bound/review-count'),
+  getCareerBoundOutput: (id) => request(`/api/career-bound/outputs/${id}`),
+  createCareerBoundOutput: (body) => request('/api/career-bound/outputs', { method: 'POST', body: JSON.stringify(body) }),
+  saveCareerBoundOutput: (id, body) => request(`/api/career-bound/outputs/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   askBestyStaffCareer: (taskId, message, history = []) =>
     request('/api/agent/bestystaff-career', { method: 'POST', body: JSON.stringify({ taskId, message, history }) }),
   listCareerReasoningCandidates: () => request('/api/career-reasoning-admin/candidates'),
