@@ -1210,11 +1210,13 @@ function useOutputTemplateConfig(outputType) {
   useEffect(() => {
     let cancelled = false;
     Promise.all([
-      // fetchCareerMaster caches per owner; a refresh must bypass that cache.
-      (dataVersion === 0
-        ? fetchCareerMaster(owner)
-        : fetch(`/api/career/master${owner ? `?owner=${encodeURIComponent(owner)}` : ''}`, { credentials: 'include' }).then((r) => { if (!r.ok) throw new Error(`Career Master request failed (${r.status})`); return r.json(); })
-      ).then((v) => ({ v })).catch((e) => ({ error: e.message || 'Career Master could not be loaded' })),
+      // Not fetchCareerMaster(): that helper turns a failed response into an
+      // empty master, which the charts would then show as "no data". A failure
+      // must reach them as an error (also bypasses its per-owner cache, which
+      // a refresh needs anyway).
+      fetch(`/api/career/master${owner ? `?owner=${encodeURIComponent(owner)}` : ''}`, { credentials: 'include' })
+        .then((r) => { if (!r.ok) throw new Error(`Career Master request failed (${r.status})`); return r.json(); })
+        .then((v) => ({ v })).catch((e) => ({ error: e.message || 'Career Master could not be loaded' })),
       fetch('/api/career/proficiency', { credentials: 'include' })
         .then((r) => { if (!r.ok) throw new Error(`Proficiency request failed (${r.status})`); return r.json(); })
         .then((v) => ({ v })).catch((e) => ({ error: e.message || 'Proficiency could not be loaded' })),
