@@ -204,5 +204,10 @@
       "needs_business_definition"
     ]
   },
-  "tracker": "Every agent start/finish, bug and status change is shown live in the release tracker (Claude Code sessions: the tracker artifact synced from the workflow journal; in the platform: World Shell → Release loop)."
+  "tracker": "Every agent start/finish, bug and status change is shown live in the release tracker (Claude Code sessions: the tracker artifact synced from the workflow journal; in the platform: World Shell → Release loop).",
+  "failureReconciliation": {
+    "rule": "An agent finishing is not the work finishing. Every failure, refusal, partial step, known limitation or deviation an agent reports is reconciled by a separate agent that verifies it on the branch and classifies it (product_defect, requirement_gap, owner_direction_conflict, test_harness, environment, process, informational) as resolved — only with evidence — or unresolved. Unresolved items are carried into the fix loop as bugs; a feature cannot pass while any remain.",
+    "report": "docs/triage/<feature>-<build|fix>[-rN]-reconciliation.md"
+  },
+  "liveLogging": "Validators append each checked expectation and every page error or failed request to /var/tmp/.../<feature>/round-N/steps.jsonl as it happens; the tracker shows them live, so a failure is visible before the round ends."
 }

@@ -31,10 +31,23 @@ function agentActivity(file) {
   const rows = readJsonl(file);
   const usage = { input: 0, cacheWrite: 0, cacheRead: 0, output: 0 };
   let activity = null; let lastAt = null; let firstAt = null;
+  const signals = [];   // page errors / failed app requests the agent's own tools printed
   const perMessage = new Map();   // one message is streamed as several rows; keep its final usage
   for (const r of rows) {
     if (r.timestamp) { lastAt = r.timestamp; firstAt = firstAt || r.timestamp; }
     const m = r.message;
+    if (r.type === 'user' && m && Array.isArray(m.content)) {
+      for (const c of m.content) {
+        if (c?.type !== 'tool_result') continue;
+        const t = typeof c.content === 'string' ? c.content : (Array.isArray(c.content) ? c.content.map((x) => x?.text || '').join('\n') : '');
+        for (const line of t.split('\n')) {
+          const pe = line.match(/PAGEERROR\s+(.*)/);
+          const rf = line.match(/REQFAIL\s+(https?:\/\/(?:localhost|127\.0\.0\.1)[^\s]*)\s*(.*)/);
+          if (pe) signals.push({ type: 'pageerror', detail: clip(pe[1], 200), at: r.timestamp });
+          else if (rf) signals.push({ type: 'requestfailed', detail: clip(`${rf[1]} ${rf[2]}`, 200), at: r.timestamp });
+        }
+      }
+    }
     if (r.type === 'assistant' && m) {
       if (m.usage) perMessage.set(m.id || `row${perMessage.size}`, m.usage);
       for (const c of Array.isArray(m.content) ? m.content : []) {
@@ -55,7 +68,8 @@ function agentActivity(file) {
     usage.cacheRead += u.cache_read_input_tokens || 0;
     usage.output += u.output_tokens || 0;
   }
-  return { activity, usage, firstAt, lastAt };
+  const uniq = [...new Map(signals.map((x) => [`${x.type}|${x.detail}`, x])).values()];
+  return { activity, usage, firstAt, lastAt, signals: uniq.slice(-30) };
 }
 
 const journal = runDirs.flatMap((d) => readJsonl(path.join(d, 'journal.jsonl')).map((e) => ({ ...e, runDir: d })));
@@ -95,7 +109,22 @@ for (const a of agents.values()) {
     else if (role === 'triage') summary = `${r.items?.length ?? 0} triage items`;
     else if (role === 'fix') summary = `${r.fixed?.length ?? 0} fixed · ${r.notFixed?.length ?? 0} not fixed`;
   } else if (typeof a.result === 'string') summary = clip(a.result, 200);
-  agentList.push({
+  let liveSteps = null;
+  if (role === 'validate' && feature && round) {
+    const rows = readJsonl(path.join('/var/tmp/sbpg/release-loop', feature, `round-${round.replace('r', '')}`, 'steps.jsonl'));
+    const steps = rows.filter((x) => x.result);
+    liveSteps = {
+      passed: steps.filter((x) => x.result === 'pass').length,
+      failed: steps.filter((x) => x.result !== 'pass').map((x) => ({ step: `${x.journey || ''} ${x.step || ''}`.trim(), expect: clip(x.expect, 200), seen: clip(x.seen, 200), result: x.result })).slice(-30),
+      errors: rows.filter((x) => x.type === 'pageerror' || x.type === 'requestfailed').map((x) => ({ type: x.type, detail: clip(x.detail || x.url, 200) })).slice(-30),
+      checked: steps.length,
+    };
+  }
+  if (role === 'reconcile' && r) {
+    const un = (r.items || []).filter((x) => x.status !== 'resolved');
+    summary = `${(r.items || []).length} reported items checked · ${un.length} unresolved`;
+  }
+  agentList.push({ liveSteps, signals: act.signals || [],
     id: a.id, label: a.label, role, feature, round: round ? Number(round.replace('r', '')) : null,
     phase: a.phase, status: a.status, activity: act.activity, summary, tokens: act.usage,
     startedAt: act.firstAt || null, lastActivityAt: act.lastAt || null,
@@ -148,6 +177,26 @@ for (const [key, list] of Object.entries(byFeature)) {
     } else if (list.some((a) => a.role === 'fix' && a.round === v.round && a.status === 'running')) {
       for (const b of fb.values()) if (['open', 'recurred'].includes(b.status)) b.status = 'fixing';
     }
+  }
+  // Reconciliation of reported failures: unresolved items are bugs; unreconciled ones are flagged.
+  for (const rc of list.filter((a) => a.role === 'reconcile')) {
+    const rr = agents.get(rc.id)?.result;
+    for (const [i, it] of (rr?.items || []).entries()) {
+      if (it.status === 'resolved') continue;
+      const id = `${key}-${rc.label.includes('fix') ? 'F' : 'B'}${i + 1}`;
+      if (!fb.has(id)) fb.set(id, { id, feature: key, status: 'open', class: it.kind, step: clip(it.step || it.reported, 200), rootCause: clip(it.rootCause || it.evidence, 400), files: it.files || [], history: [{ round: 0, event: 'found', note: `Reported by the agent, unresolved on reconciliation (${it.kind})` }] });
+    }
+  }
+  for (const b of list.filter((a) => (a.role === 'build' || a.role === 'fix') && a.status === 'done')) {
+    const reconciled = list.some((a) => a.role === 'reconcile' && a.status === 'done' && (b.role === 'build' ? a.label.endsWith(':build') : a.label.includes(`fix-r${b.round}`)));
+    if (b.failures.length && !reconciled) { b.status = 'done_unreconciled'; b.summary = `${b.summary || 'Finished'} · ${b.failures.length} reported failures not yet reconciled`; }
+  }
+  // Failures a running validator has already seen (live log or its own tool output), before triage.
+  for (const v of list.filter((a) => a.role === 'validate' && a.status === 'running')) {
+    const live = [...(v.liveSteps?.failed || []).map((f) => ({ step: f.step, note: `Expected: ${f.expect || '—'} · Saw: ${f.seen || '—'}` })),
+      ...(v.liveSteps?.errors || []).map((e) => ({ step: e.type, note: e.detail })),
+      ...(v.signals || []).map((e) => ({ step: e.type, note: e.detail }))];
+    live.forEach((f, i) => fb.set(`${key}-R${v.round}-live${i + 1}`, { id: `${key}-R${v.round}-live${i + 1}`, feature: key, status: 'seen_in_test', step: clip(f.step, 200), rootCause: clip(f.note, 400), history: [{ round: v.round, event: 'seen', note: 'Seen by the test agent; goes to triage when the round ends' }] }));
   }
   bugs.push(...fb.values());
   const last = validations[validations.length - 1];

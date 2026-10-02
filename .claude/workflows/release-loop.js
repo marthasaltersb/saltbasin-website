@@ -120,6 +120,39 @@ const FIX_SCHEMA = {
   required: ['branch', 'commit', 'fixed', 'notFixed', 'failures'],
 }
 
+const RECONCILE_SCHEMA = {
+  type: 'object',
+  properties: {
+    reportPath: { type: 'string' },
+    items: { type: 'array', items: { type: 'object', properties: {
+      reported: { type: 'string', description: 'the failure as the agent reported it' },
+      kind: { type: 'string', enum: ['product_defect', 'requirement_gap', 'owner_direction_conflict', 'test_harness', 'environment', 'process', 'informational'] },
+      status: { type: 'string', enum: ['resolved', 'unresolved'] },
+      evidence: { type: 'string', description: 'how you verified it (file:line, command output, re-run) — "resolved" without evidence is not allowed' },
+      step: { type: 'string' }, rootCause: { type: 'string' }, files: { type: 'array', items: { type: 'string' } }, proposedFix: { type: 'string' },
+    }, required: ['reported', 'kind', 'status', 'evidence'] } },
+  },
+  required: ['reportPath', 'items'],
+}
+
+// Every failure an agent reports is reconciled by a separate agent before the work counts as finished.
+function reconcile(feature, who, result, round) {
+  const n = nextSlot()
+  return agent(`${COMMON}${WORKTREE_SETUP}
+After the reset, check out the branch under review: \`git checkout --detach ${result.branch}\`.
+${env(n, 'rec')}
+You are the RECONCILIATION agent for feature "${feature.title}". The ${who} agent finished and reported these failures/notes:
+${JSON.stringify(result.failures || [], null, 2)}
+${who === 'build' ? `What it was asked to build:\n${feature.build}` : ''}
+For EACH item decide, with evidence you check yourself on branch ${result.branch} (read the code, re-run the command, open the page):
+- kind: product_defect | requirement_gap (something asked for that is missing or partial — compare against the request above and the change spec's "Known limitations") | owner_direction_conflict (e.g. it adds admin-navigation entry points when the owner said everything comes from the World Shell; uses an admin account where a member journey was asked) | test_harness | environment | process | informational
+- status: resolved ONLY if you verified the fix is in the branch and works; otherwise unresolved. Requirement gaps and owner-direction conflicts are unresolved until built/changed.
+For unresolved items give step, rootCause, files, proposedFix so a fix agent can act.
+Also read the change spec's "Known limitations"/gaps section and add any gap it lists that the reported failures missed.
+Write the reconciliation to ABSOLUTE path ${REPO}/docs/triage/${feature.key}-${who}${round ? `-r${round}` : ''}-reconciliation.md (do not commit). Do not change code.`,
+  { label: `reconcile:${feature.key}:${who}${round ? `-r${round}` : ''}`, phase: 'Triage', schema: RECONCILE_SCHEMA, isolation: 'worktree', model: 'sonnet' })
+}
+
 function integrate(feature, branch, what) {
   return serial(() => agent(`${COMMON}
 You are the INTEGRATION agent. Work in the main checkout ${REPO} on branch \`${BRANCH}\` (verify with git branch --show-current; never switch it).
@@ -134,9 +167,10 @@ function validate(feature, round, fixNotes) {
   return agent(`${COMMON}${WORKTREE_SETUP}
 ${env(n, 'val')}
 You are a VALIDATION agent (round ${round}) for feature "${feature.title}". Your job is real testing, not script checks: start the app (seed with \`npm run seed\` against your database if needed), open it in Chromium via Playwright as a real user would (log in through the login form, navigate by clicking — from the World Shell where the spec says so), and follow the training spec \`${feature.trainingSpec}\` LITERALLY, step by step, comparing what you see to each "Expect". Create the spec's preconditions through the UI as written. Take a screenshot at every expectation (save under /var/tmp/sbpg/release-loop/${feature.key}/round-${round}/). Capture page errors, console errors and failed network requests.
+LOG AS YOU GO (the live tracker reads this; nothing may wait until your final report): append one JSON line per checked expectation to /var/tmp/sbpg/release-loop/${feature.key}/round-${round}/steps.jsonl — {"journey":"J1","step":"1.2","expect":"…","result":"pass"|"fail"|"blocked","seen":"…","screenshot":"…","at":"<ISO time>"} — and one line the moment you see any page error or failed app request: {"type":"pageerror"|"requestfailed","detail":"…","url":"…","at":"…"}. External font/CDN requests blocked by the sandbox are type "external_blocked", not failures.
 Also apply the regression-gate ground rule: a blank, clipped, unreadable or contextless screen is a failure even without an error. Check the feature at a phone width (390px) once.
 ${fixNotes ? `This round re-tests after fixes. Fix details handed to you:\n${fixNotes}\nRe-run the WHOLE spec, not only the fixed steps, and say for each fix whether it now passes.` : ''}
-Do NOT change product code or specs. If a step is ambiguous, follow it as literally as possible and record the ambiguity as a failure with what you did.
+Also re-check every requirement gap or carried item named in the fix details, even if no spec step covers it yet. Do NOT change product code or specs. If a step is ambiguous, follow it as literally as possible and record the ambiguity as a failure with what you did.
 Write your report (per definition.json specStandards.testResult) to ABSOLUTE path ${REPO}/${report} (the main checkout — do not commit; the integrator commits it). passed=true only if every step passed.`,
   { label: `validate:${feature.key}:r${round}`, phase: 'Validate', schema: VALIDATE_SCHEMA, isolation: 'worktree', model: 'sonnet' })
 }
@@ -158,7 +192,7 @@ function fix(feature, round, items) {
   const n = nextSlot()
   return agent(`${COMMON}${WORKTREE_SETUP}
 ${env(n, 'fix')}
-You are a FIX agent for feature "${feature.title}", round ${round}. Fix the ROOT cause of each triage item below. Keep each fix minimal. For spec_error, correct the training spec \`${feature.trainingSpec}\` and say why. For environment, fix the harness/seed/docs. Never skip, weaken or delete a journey step to get a pass.
+You are a FIX agent for feature "${feature.title}", round ${round}. Fix the ROOT cause of each triage item below. Keep each fix minimal. For spec_error, correct the training spec \`${feature.trainingSpec}\` and say why. For environment, fix the harness/seed/docs. For a requirement gap or owner-direction conflict, build/change it and ADD journey steps to the training spec that prove it, so the validator tests it. Never skip, weaken or delete a journey step to get a pass.
 Triage items:
 ${JSON.stringify(items, null, 2)}
 After fixing, walk the failed journey steps yourself in the browser and confirm they pass (selfCheck). \`npm run build\` must pass.
@@ -188,6 +222,7 @@ Commit on a new branch \`release-loop/${feature.key}-build\` (git switch -c ...)
 
 async function runFeature(feature) {
   const log_ = { key: feature.key, title: feature.title, rounds: [], escalated: [], status: 'not_started' }
+  const carry = []   // unresolved items from reconciliation; the feature cannot pass while any remain
   try {
     for (const dep of feature.dependsOn || []) {
       log(`${feature.key}: waiting for ${dep} to be integrated`)
@@ -198,6 +233,12 @@ async function runFeature(feature) {
       if (!b) { log_.status = 'build_agent_died'; return log_ }
       log_.build = b
       if (!b.initialCheckPassed) log(`${feature.key}: initial check did not pass — integrating anyway so validation and triage see it (${b.initialCheckNotes})`)
+      const rc = await reconcile(feature, 'build', b, null)
+      log_.buildReconciliation = rc
+      for (const [i, it] of (rc?.items || []).entries()) {
+        if (it.status !== 'resolved') carry.push({ id: `${feature.key}-B${i + 1}`, step: it.step || it.reported, rootCause: it.rootCause || it.reported, class: 'defect', files: it.files || [], proposedFix: it.proposedFix || '', source: `build reconciliation (${it.kind})` })
+      }
+      if (carry.length) log(`${feature.key}: ${carry.length} unresolved item(s) from the build carried into the fix loop`)
       const ig = await integrate(feature, b.branch, 'build')
       log_.integrations = [ig]
       if (!ig || !ig.merged) { log_.status = 'integration_failed'; return log_ }
@@ -213,10 +254,11 @@ async function runFeature(feature) {
       if (!v) { log_.status = 'validator_died'; break }
       log_.rounds.push({ round, validation: v })
       log(`${feature.key} r${round}: ${v.stepsPassed}/${v.stepsTotal} steps passed`)
-      if (v.passed) { log_.status = 'passed'; break }
+      if (v.passed && !carry.length) { log_.status = 'passed'; break }
       if (round > MAX_ROUNDS) { log_.status = 'not_passed_after_max_rounds'; log(`${feature.key}: still failing after ${MAX_ROUNDS} fix rounds — recorded as NOT passed`); break }
-      const t = await triage(feature, round, v, allItems)
+      const t = v.passed ? { reportPath: null, items: [] } : await triage(feature, round, v, allItems)
       if (!t) { log_.status = 'triage_agent_died'; break }
+      for (const c of carry.splice(0)) if (!t.items.some((i) => i.id === c.id)) t.items.push(c)
       allItems.push(...t.items)
       log_.rounds[log_.rounds.length - 1].triage = t
       for (const i of t.items) if (i.recurrenceOf) i.id = i.recurrenceOf   // same bug keeps its id
@@ -236,6 +278,13 @@ async function runFeature(feature) {
       const f = await fix(feature, round, fixable)
       if (!f) { log_.status = 'fix_agent_died'; break }
       log_.rounds[log_.rounds.length - 1].fix = f
+      const frc = (f.failures || []).length || (f.notFixed || []).length
+        ? await reconcile(feature, 'fix', { ...f, failures: [...(f.failures || []), ...(f.notFixed || []).map((x) => `not fixed ${x.id}: ${x.why}`)] }, round)
+        : null
+      log_.rounds[log_.rounds.length - 1].fixReconciliation = frc
+      for (const [i, it] of (frc?.items || []).entries()) {
+        if (it.status !== 'resolved') carry.push({ id: `${feature.key}-F${round}-${i + 1}`, step: it.step || it.reported, rootCause: it.rootCause || it.reported, class: 'defect', files: it.files || [], proposedFix: it.proposedFix || '', source: `fix reconciliation (${it.kind})` })
+      }
       const ig = await integrate(feature, f.branch, `fix round ${round}`)
       log_.integrations = [...(log_.integrations || []), ig]
       if (!ig || !ig.merged) { log_.status = 'fix_integration_failed'; break }
