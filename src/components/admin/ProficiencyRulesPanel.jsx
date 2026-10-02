@@ -355,17 +355,19 @@ export default function ProficiencyRulesPanel({ onChanged }) {
         {rows.length === 0 ? (
           <div style={{ fontSize: '.78rem', color: '#687078' }}>No skills or tools yet — add them in Career Master → Manual Intake.</div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
+          <>
+          <div style={{ fontSize: '.68rem', color: '#687078', marginBottom: '.3rem' }}>Swipe or scroll sideways to see every column, including "How it was used" and "Your override".</div>
+          <div style={{ overflowX: 'scroll', boxShadow: 'inset -14px 0 10px -12px rgba(27,42,59,.25)' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 940 }}>
               <thead>
-                <tr><th style={th}>Skill / tool</th><th style={th}>Level shown</th><th style={th}>How it was used<div style={{ fontWeight: 400 }}>tools only · saved to Career Master</div></th><th style={th}>Decided by</th><th style={th}>Points behind it</th><th style={th}>Methodology alone</th><th style={th}>Your override</th></tr>
+                <tr><th style={{ ...th, position: 'sticky', left: 0, zIndex: 1 }}>Skill / tool</th><th style={th}>Level shown</th><th style={th}>How it was used<div style={{ fontWeight: 400 }}>tools only · saved to Career Master</div></th><th style={th}>Decided by</th><th style={th}>Points behind it</th><th style={th}>Methodology alone</th><th style={th}>Your override</th></tr>
               </thead>
               <tbody>
                 {rows.map((p) => {
                   const overridden = p.basis === 'member_override';
                   return (
                     <tr key={`${p.entityType}:${p.entityId}`}>
-                      <td style={td}><strong>{p.label}</strong><div style={{ fontSize: '.66rem', color: '#7a8086' }}>{p.entityType}{p.category ? ` · ${p.category}` : ''}</div></td>
+                      <td style={{ ...td, position: 'sticky', left: 0, background: '#fff', zIndex: 1 }}><strong>{p.label}</strong><div style={{ fontSize: '.66rem', color: '#7a8086' }}>{p.entityType}{p.category ? ` · ${p.category}` : ''}</div></td>
                       <td style={td}><strong>{p.levelLabel || '—'}</strong>{p.basis !== 'salt_basin_methodology' && <span style={{ color: '#c4843a', fontWeight: 700 }}> †</span>}</td>
                       <td style={td}>
                         {p.entityType === 'tool' ? (
@@ -403,6 +405,7 @@ export default function ProficiencyRulesPanel({ onChanged }) {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </section>
     </div>

@@ -23,7 +23,7 @@ export default function CareerMasterEntryPoint({ scope = 'member' }) {
   return <CareerConsentGate>
     <div className="career-master-entry-layout">
       <div className="career-master-paths">
-        {choices.map(([id, title, desc]) => <button className="career-master-path-card" key={id} onClick={() => setView(id)} style={{ border: view === id ? '2px solid var(--sb-gold, #c4843a)' : '1px solid rgba(0,0,0,.12)', background: view === id ? 'rgba(196,132,58,.08)' : '#fff' }}>
+        {choices.map(([id, title, desc]) => <button className="career-master-path-card" key={id} onClick={() => setView(id)} style={{ border: view === id ? '2px solid var(--sb-gold, #c4843a)' : '1px solid rgba(0,0,0,.12)', background: view === id ? '#fbf3e8' : '#fff' }}>
           <div style={{ fontWeight: 700, color: 'var(--sb-navy, #1b2a3b)' }}>{title}</div>
           <div style={{ fontSize: '.76rem', color: '#6d7278', lineHeight: 1.45, marginTop: '.25rem' }}>{desc}</div>
         </button>)}

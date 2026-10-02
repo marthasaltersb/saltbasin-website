@@ -163,7 +163,7 @@ export default function CareerExperienceConfigurator() {
 
   if (loading) return <div style={{ padding: '1.1rem' }}>Loading configuration…</div>;
 
-  return <div style={{ padding: '1.1rem', maxWidth: 1100, margin: '0 auto', color: '#1b2a3b' }}>
+  return <div style={{ padding: '1.1rem', maxWidth: 1100, margin: '0 auto', color: '#1b2a3b', background: '#f5f2ed', borderRadius: 12 }}>
     <div style={{ marginBottom: '1rem' }}>
       <div style={{ fontSize: '1.25rem', fontWeight: 750 }}>Proficiency &amp; Rollup Configuration</div>
       <p style={{ margin: '.35rem 0 0', color: '#687078', fontSize: '.82rem', lineHeight: 1.55 }}>Configure the definitions first. Assessments, calculations, and public displays reference these stable definitions so terminology and behavior remain connected.</p>
