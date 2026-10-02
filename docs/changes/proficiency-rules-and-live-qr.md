@@ -64,3 +64,15 @@ API: locked methodology refuses edits (403); unknown formula input refused (400)
 - Rules & why: missing categories are marked "Required before any output can be finalized" with a count banner.
 - Charts/QR show a tool's category only when it is recorded in Career Master; an inferred one is never presented as fact.
 - Verified in the browser: API refusal lists the tools; banner shown; dialog appears on Approve for QR; saving writes both categories to Career Master and the approval completes; banner disappears.
+
+## Fix notes — round 1
+
+### T1-1 (heading and selected path card unreadable on the dark World embed)
+- Changed: `CareerExperienceConfigurator.jsx` outer container now sits on its own light surface (`#f5f2ed`, rounded) so the navy heading, intro and tab buttons read on any host. `CareerMasterEntryPoint.jsx` selected path card background is now opaque `#fbf3e8` (was translucent `rgba(196,132,58,.08)`), keeping the gold border.
+- Files: `src/components/admin/CareerExperienceConfigurator.jsx`, `src/components/admin/CareerMasterEntryPoint.jsx`.
+- Checked: `npm run build` passes. Live browser walk NOT performed in this round (not verified visually); the fix is by construction (opaque light backgrounds behind navy text). Other embedded views were not scanned beyond a grep of CareerMasterPanel.jsx, which found no unconditional navy text without a surface.
+
+### T1-2 (phone width, 390px)
+- Changed: (a) Rules table in `ProficiencyRulesPanel.jsx` keeps its 940px width but now has an always-visible scroll area, a right-edge shadow cue, a "swipe or scroll sideways" caption naming the hidden columns, and a sticky first column. A stacked-card layout was not built (kept minimal). (b) Static chart SVGs in `careerCharts.js` get `min-width:500px` and `ChartViews.jsx` wraps the static chart in an `overflow-x:auto` container with a swipe caption, so chart text stays near its designed size.
+- Files: `src/components/admin/ProficiencyRulesPanel.jsx`, `src/lib/careerCharts.js`, `src/components/ChartViews.jsx`.
+- Checked: `npm run build` passes. 390px live check NOT performed in this round.

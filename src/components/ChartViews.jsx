@@ -78,7 +78,7 @@ export default function ChartViews({ chart, changedLabels = null }) {
           ))}
         </div>
       </div>
-      {view === 'chart' && <div dangerouslySetInnerHTML={{ __html: shaped.staticHtml }} />}
+      {view === 'chart' && <><div style={{ overflowX: 'auto' }} dangerouslySetInnerHTML={{ __html: shaped.staticHtml }} /><div className="sb-chart-swipe-hint" style={{ fontSize: '0.62rem', color: '#536173', marginTop: '0.25rem' }}>Swipe sideways on a narrow screen to see the whole chart.</div></>}
       {view === 'particles' && (
         <>
           <SaltParticleChart columns={shaped.columns} unit={shaped.unit} ariaLabel={`${chart.title} — salt particle view`} />
