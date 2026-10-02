@@ -37,7 +37,7 @@ import { calculateCareerProficiencyRollup } from '../lib/careerProficiencyRollup
 import { notifyCareerChanged } from '../lib/careerChangeEvents.js';
 import {
   METHODOLOGY_FORMULA_KEY, METHODOLOGY_FORMULA, resolveProficiencies, assertionsFromResolved,
-  proficiencyFootnote, USER_ASSESSMENT_SOURCES, FORMULA_INPUTS,
+  proficiencyFootnote, USER_ASSESSMENT_SOURCES, FORMULA_INPUTS, TOOL_PROFICIENCY_CATEGORIES,
 } from '../lib/careerProficiencyEngine.js';
 import { getLiveToken } from './oauth.js';
 import { PROVIDERS } from '../lib/oauthProviders.js';
@@ -1435,7 +1435,7 @@ export async function loadProficiencyResolution(userId, periodKey = 'current') {
     db.prepare(`SELECT definition_type, definition_key, label, description, definition, sort_order, is_active FROM career_experience_definitions WHERE user_id=$1`).all(userId),
     db.prepare(`SELECT * FROM career_proficiency_assertions WHERE user_id=$1`).all(userId),
     db.prepare(`SELECT id, skill, category, years_exp, first_used, num_engagements FROM career_skills WHERE user_id=$1`).all(userId),
-    db.prepare(`SELECT id, name_used, current_name, category, first_used, num_roles FROM career_tools WHERE user_id=$1`).all(userId),
+    db.prepare(`SELECT id, name_used, current_name, category, first_used, num_roles, wheel_bucket FROM career_tools WHERE user_id=$1`).all(userId),
     db.prepare(`SELECT id, name, status FROM career_certifications WHERE user_id=$1`).all(userId),
   ]);
   const definitions = definitionRows.map(definitionRowToItem);
@@ -1446,7 +1446,7 @@ export async function loadProficiencyResolution(userId, periodKey = 'current') {
   }));
   const entities = [
     ...skillRows.map((row) => ({ type: 'skill', id: Number(row.id), label: row.skill, category: row.category, yearsExp: row.years_exp, firstUsed: row.first_used, engagementCount: row.num_engagements })),
-    ...toolRows.map((row) => ({ type: 'tool', id: Number(row.id), label: row.current_name || row.name_used, category: row.category, firstUsed: row.first_used, engagementCount: row.num_roles })),
+    ...toolRows.map((row) => ({ type: 'tool', id: Number(row.id), label: row.current_name || row.name_used, category: row.category, firstUsed: row.first_used, engagementCount: row.num_roles, proficiencyCategory: row.wheel_bucket })),
   ];
   const resolution = resolveProficiencies({ definitions, entities, assertions, certifications: certRows, periodKey });
   return { definitions, assertions, entities, resolution };
@@ -1460,7 +1460,7 @@ router.get('/proficiency', requireUser, async (req, res) => {
     const levels = definitions.filter((d) => d.type === 'proficiency_level' && d.isActive)
       .map((d) => ({ key: d.key, label: d.label, ordinal: Number(d.definition?.ordinal) || 0 }))
       .sort((a, b) => a.ordinal - b.ordinal);
-    res.json({ ...resolution, levels, footnote: proficiencyFootnote(resolution.proficiencies), formulaInputs: FORMULA_INPUTS });
+    res.json({ ...resolution, levels, footnote: proficiencyFootnote(resolution.proficiencies), formulaInputs: FORMULA_INPUTS, toolProficiencyCategories: TOOL_PROFICIENCY_CATEGORIES });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

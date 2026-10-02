@@ -349,7 +349,7 @@ export const BLOCK_DEFS = {
     fields: [
       { key: 'props.title', label: 'Title', type: 'text' },
       { key: 'props.entityType', label: 'Show', type: 'select', options: ['all', 'skill', 'tool'] },
-      { key: 'props.groupBy', label: 'Group by', type: 'select', options: ['entity', 'category'] },
+      { key: 'props.groupBy', label: 'Group by', type: 'select', options: ['entity', 'category', 'proficiencyCategory'] },
       { key: 'props.maxItems', label: 'Max rows', type: 'text' },
     ],
   },

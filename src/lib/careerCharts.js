@@ -100,7 +100,7 @@ export function proficiencyBarsHtml({ rows, levels, title, subtitle, footnote, m
   const legend = ordered.map((l, i) => `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:10px"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${TIER_RAMP[Math.min(i, TIER_RAMP.length - 1)]}"></span>${esc(l.label)}</span>`).join('');
   return `<div style="font-family:${FONT};break-inside:avoid">
     ${titleHtml(title, subtitle)}
-    <svg viewBox="0 0 ${labelW + trackW + 90} ${height}" width="100%" role="img" aria-label="${esc(title || 'Proficiency levels')}" style="display:block;max-width:100%">${rowsSvg}</svg>
+    <svg viewBox="0 0 ${labelW + trackW + (shown.some((r) => String(r.levelLabel || '').includes('·')) ? 170 : 90)} ${height}" width="100%" role="img" aria-label="${esc(title || 'Proficiency levels')}" style="display:block;max-width:100%">${rowsSvg}</svg>
     <div style="font-size:0.62rem;color:${CHART_TOKENS.secondary};margin-top:0.35rem">${legend}</div>
     ${footnote ? `<div style="font-size:0.6rem;color:${CHART_TOKENS.secondary};margin-top:0.35rem;font-style:italic"><span style="color:${CHART_TOKENS.accent};font-weight:700">†</span> ${esc(footnote.replace(/^Proficiency levels marked † are /, 'Levels marked † are '))}</div>` : ''}
   </div>`;
@@ -322,7 +322,28 @@ export function proficiencyRows(resolution, { entityType = 'all', groupBy = 'ent
       return { label, ordinal: avg, levelLabel: `${avg.toFixed(1)} avg · ${ps.length}`, userDefined: ps.some((p) => userDefined(p.basis)), points: null };
     }).sort((a, b) => b.ordinal - a.ordinal);
   }
-  const rows = list.map((p) => ({ label: p.label, ordinal: p.ordinal, levelLabel: p.levelLabel, userDefined: userDefined(p.basis), points: p.points }));
+  if (groupBy === 'proficiencyCategory') {
+    // Tools grouped by how they were used (hands-on / integration design /
+    // adjacent), each group's average level.
+    const groups = new Map();
+    for (const p of list.filter((x) => x.proficiencyCategoryLabel)) {
+      if (!groups.has(p.proficiencyCategoryLabel)) groups.set(p.proficiencyCategoryLabel, []);
+      groups.get(p.proficiencyCategoryLabel).push(p);
+    }
+    return [...groups.entries()].map(([label, ps]) => {
+      const avg = ps.reduce((s, p) => s + p.ordinal, 0) / ps.length;
+      return { label, ordinal: avg, levelLabel: `${avg.toFixed(1)} avg · ${ps.length} tools`, userDefined: ps.some((p) => userDefined(p.basis)), points: null };
+    }).sort((a, b) => b.ordinal - a.ordinal);
+  }
+  const rows = list.map((p) => ({
+    label: p.label,
+    ordinal: p.ordinal,
+    // "Advanced · Integration design" — level, then how the tool was used.
+    levelLabel: p.proficiencyCategoryLabel ? `${p.levelLabel} · ${p.proficiencyCategoryLabel}` : p.levelLabel,
+    proficiencyCategory: p.proficiencyCategoryLabel || null,
+    userDefined: userDefined(p.basis),
+    points: p.points,
+  }));
   return sort === 'alpha' ? rows.sort((a, b) => a.label.localeCompare(b.label)) : rows.sort((a, b) => b.ordinal - a.ordinal || a.label.localeCompare(b.label));
 }
 

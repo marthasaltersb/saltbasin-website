@@ -44,6 +44,24 @@ export const FORMULA_INPUTS = Object.freeze({
   recencyYears: 'Years since last used (0 = current)',
 });
 
+// How a technology was used — independent of how well. Stored on the Career
+// Master tool itself (career_tools.wheel_bucket, the same field the site's
+// technology wheel reads), so setting it here reconciles to Career Master.
+export const TOOL_PROFICIENCY_CATEGORIES = Object.freeze({
+  hands_on: 'Hands-on',
+  integration_design: 'Integration design',
+  adjacent: 'Adjacent exposure',
+});
+
+// Fallback when a tool has no category recorded: the long-standing site
+// rule (src/lib/careerMaster.js toolWheelBucket), applied to the resolved
+// level. Reported as derived, never as if the member had chosen it.
+function derivedToolCategory(ordinal) {
+  if (ordinal >= 4) return 'hands_on';
+  if (ordinal === 3) return 'integration_design';
+  return 'adjacent';
+}
+
 export const METHODOLOGY_FORMULA = Object.freeze({
   terms: [
     { input: 'yearsPerformed', weight: 1, cap: 15 },
@@ -93,7 +111,7 @@ export function scoreFormula(formula, inputs) {
     .map((t) => {
       const raw = Number(inputs[t.input]) || 0;
       const capped = t.cap != null && Number.isFinite(Number(t.cap)) ? Math.min(raw, Number(t.cap)) : raw;
-      return { input: t.input, value: raw, weight: Number(t.weight) || 0, points: Number((capped * (Number(t.weight) || 0)).toFixed(3)) };
+      return { input: t.input, value: raw, counted: capped, weight: Number(t.weight) || 0, points: Number((capped * (Number(t.weight) || 0)).toFixed(3)) };
     });
   return { points: Number(breakdown.reduce((sum, b) => sum + b.points, 0).toFixed(3)), breakdown };
 }
@@ -172,6 +190,9 @@ export function resolveProficiencies({ definitions, entities, assertions = [], c
       formulaKey = null;
     }
     const level = levelKey ? levelsByKey.get(levelKey) : null;
+    const ordinal = level ? Number(level.definition?.ordinal) || 0 : 0;
+    const recordedCategory = entity.type === 'tool' && TOOL_PROFICIENCY_CATEGORIES[entity.proficiencyCategory] ? entity.proficiencyCategory : null;
+    const proficiencyCategory = entity.type === 'tool' ? (recordedCategory || derivedToolCategory(ordinal)) : null;
     return {
       entityType: entity.type,
       entityId: Number(entity.id),
@@ -179,7 +200,12 @@ export function resolveProficiencies({ definitions, entities, assertions = [], c
       category: entity.category || null,
       levelKey: levelKey || null,
       levelLabel: level?.label || null,
-      ordinal: level ? Number(level.definition?.ordinal) || 0 : 0,
+      ordinal,
+      // Tools only: how the technology was used (hands-on / integration
+      // design / adjacent), separate from the level.
+      proficiencyCategory,
+      proficiencyCategoryLabel: proficiencyCategory ? TOOL_PROFICIENCY_CATEGORIES[proficiencyCategory] : null,
+      proficiencyCategorySource: entity.type !== 'tool' ? null : recordedCategory ? 'career_master' : 'derived_from_level',
       points: score.points,
       basis,
       formulaKey,

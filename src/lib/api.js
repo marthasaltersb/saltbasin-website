@@ -310,6 +310,7 @@ export const api = {
   saveCareerProficiencyAssertion: (entityType, entityId, periodKey, body) => request(`/api/career/proficiency-assertions/${entityType}/${entityId}/${periodKey}`, { method: 'PUT', body: JSON.stringify(body) }),
   deleteCareerProficiencyAssertion: (entityType, entityId, periodKey) => request(`/api/career/proficiency-assertions/${entityType}/${entityId}/${periodKey}`, { method: 'DELETE' }),
   getCareerRollupPreview: (key) => request(`/api/career/rollup-preview/${key}`),
+  getCareerProficiency: (period = 'current') => request(`/api/career/proficiency?period=${encodeURIComponent(period)}`),
   listCareerMetaOptions: () => request('/api/career/meta-options'),
   createCareerMetaOption: (item) => request('/api/career/meta-options', { method: 'POST', body: JSON.stringify(item) }),
   updateCareerMetaOption: (id, patch) => request(`/api/career/meta-options/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),

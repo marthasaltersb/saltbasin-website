@@ -91,7 +91,7 @@ const SCHEMAS = {
       { key: 'tier', label: 'Proficiency Tier', type: 'select', options: TIERS },
       { key: 'firstUsed', label: 'First Used (Year)', type: 'number' },
       { key: 'numRoles', label: '# Roles', type: 'number' },
-      { key: 'wheelBucket', label: 'Industry Wheel Bucket (blank = derive from tier)', type: 'select', options: ['', ...WHEEL_BUCKETS] },
+      { key: 'wheelBucket', label: 'How it was used — proficiency category (hands_on / integration_design / adjacent; blank = derive from level)', type: 'select', options: ['', ...WHEEL_BUCKETS] },
       { key: 'notes', label: 'Notes', type: 'textarea' },
     ],
   },
