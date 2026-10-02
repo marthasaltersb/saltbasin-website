@@ -1201,6 +1201,31 @@ function useOutputTemplateConfig(outputType) {
   // ever resolves presets explicitly marked portfolioVisible (server-side).
   const presetId = searchParams.get('preset') || '';
   const [state, setState] = useState({ loading: true, config: null, rollupCatalog: null, sitePages: null });
+  // Career Master + resolved proficiency for the career-* chart blocks
+  // (src/lib/careerCharts.js). Refetched when the template editor signals a
+  // proficiency/rollup config change ('sb-output-data-refresh'), so the live
+  // preview reflects it without saving the template.
+  const [careerData, setCareerData] = useState({ master: null, proficiency: null });
+  const [dataVersion, setDataVersion] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      // fetchCareerMaster caches per owner; a refresh must bypass that cache.
+      (dataVersion === 0
+        ? fetchCareerMaster(owner)
+        : fetch(`/api/career/master${owner ? `?owner=${encodeURIComponent(owner)}` : ''}`, { credentials: 'include' }).then((r) => r.json())
+      ).catch(() => null),
+      fetch('/api/career/proficiency', { credentials: 'include' }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+    ]).then(([master, proficiency]) => { if (!cancelled) setCareerData({ master, proficiency }); });
+    return () => { cancelled = true; };
+  }, [owner, dataVersion]);
+  useEffect(() => {
+    function onRefresh(e) {
+      if (e.origin === window.location.origin && e.data?.source === 'sb-output-data-refresh') setDataVersion((v) => v + 1);
+    }
+    window.addEventListener('message', onRefresh);
+    return () => window.removeEventListener('message', onRefresh);
+  }, []);
 
   // ── Live preview mode: the builder (OutputTemplateConfigurator) posts the
   // in-progress, unsaved config via postMessage instead of us fetching the
@@ -1268,7 +1293,7 @@ function useOutputTemplateConfig(outputType) {
     });
   }, [isPreviewDraft, owner]);
 
-  return state;
+  return { ...state, master: careerData.master, proficiency: careerData.proficiency };
 }
 
 // Layer4 job_experience: proficiency qualifiers (tier language from the
@@ -1297,8 +1322,9 @@ function hasOutputLayerContent(config) {
   return l1 || l2 || l3 || l4;
 }
 
-function OutputTemplateBody({ config, ctx, sitePages, master }) {
+function OutputTemplateBody({ config, ctx: baseCtx, sitePages, master }) {
   if (!config) return null;
+  const ctx = { ...baseCtx, master: baseCtx?.master || master };
   const items = [];
   let order = 0;
 
@@ -1509,7 +1535,7 @@ export function ResumeOutput() {
 
   // ── 4-layer template-driven render (schemaVersion 2) ──
   if (templateV2.config && hasOutputLayerContent(templateV2.config)) {
-    const ctx = { about, timeline, jobs, execKpis, capabilityMeters, resumePreset, rollupCatalog: templateV2.rollupCatalog };
+    const ctx = { about, timeline, jobs, execKpis, capabilityMeters, resumePreset, rollupCatalog: templateV2.rollupCatalog, proficiency: templateV2.proficiency, master: templateV2.master };
     const configuredName = templateV2.config.layer1_header?.memberName;
     return (
       <OutputFrame title={configuredName || about.heading || about.name || user?.displayName || 'Resume'} eyebrow="Resume" printDocTitle={printDocTitle} afterFooter={<MemberFooterSlot config={templateV2.config} />} hideTitle={!!configuredName}>
@@ -1757,7 +1783,7 @@ export function CaseStudyOutput() {
     // brand name — shown only on the portfolio-wide render, not per-engagement
     // case study pages.
     const frameSubHeader = isPortfolio ? 'Legal Name: Martha Elizabeth Salter' : undefined;
-    const ctx = { title, subtitle, context, role, actions, impact, metrics, engagement, rollupCatalog: templateV2.rollupCatalog };
+    const ctx = { title, subtitle, context, role, actions, impact, metrics, engagement, rollupCatalog: templateV2.rollupCatalog, proficiency: templateV2.proficiency, master: templateV2.master };
     return (
       <OutputFrame title={frameTitle} eyebrow={frameEyebrow} subHeader={frameSubHeader} afterFooter={<MemberFooterSlot config={templateV2.config} />}>
         <OutputTemplateBody config={templateV2.config} ctx={ctx} sitePages={templateV2.sitePages} master={master} />
@@ -3677,7 +3703,7 @@ export function ProposalOutput() {
 
   // ── 4-layer template-driven render (schemaVersion 2) ──
   if (templateV2.config && hasOutputLayerContent(templateV2.config)) {
-    const ctx = { data, rollupCatalog: templateV2.rollupCatalog };
+    const ctx = { data, rollupCatalog: templateV2.rollupCatalog, proficiency: templateV2.proficiency, master: templateV2.master };
     return (
       <OutputFrame title={data.title} eyebrow={`Proposal · ${data.tag}`} afterFooter={<MemberFooterSlot config={templateV2.config} />}>
         <OutputTemplateBody config={templateV2.config} ctx={ctx} sitePages={templateV2.sitePages} master={null} />
@@ -3749,7 +3775,7 @@ export function OnePagerOutput() {
 
   // ── 4-layer template-driven render (schemaVersion 2) ──
   if (templateV2.config && hasOutputLayerContent(templateV2.config)) {
-    const ctx = { rollupCatalog: templateV2.rollupCatalog };
+    const ctx = { rollupCatalog: templateV2.rollupCatalog, proficiency: templateV2.proficiency, master: templateV2.master };
     return (
       <OutputFrame title="Salt Basin — One-Pager" eyebrow="Capabilities Summary" afterFooter={<MemberFooterSlot config={templateV2.config} />}>
         <OutputTemplateBody config={templateV2.config} ctx={ctx} sitePages={templateV2.sitePages} master={null} />
@@ -3907,7 +3933,7 @@ export function BuildSummaryOutput() {
 
   // ── 4-layer template-driven render (schemaVersion 2) ──
   if (!templateV2.loading && templateV2.config && hasOutputLayerContent(templateV2.config)) {
-    const ctx = { totals, capabilities, workarounds, items, rollupCatalog: templateV2.rollupCatalog };
+    const ctx = { totals, capabilities, workarounds, items, rollupCatalog: templateV2.rollupCatalog, proficiency: templateV2.proficiency, master: templateV2.master };
     return (
       <OutputFrame title="Salt Basin · Build Progress Report" eyebrow="Internal · To-Date Build" afterFooter={<MemberFooterSlot config={templateV2.config} />}>
         <OutputTemplateBody config={templateV2.config} ctx={ctx} sitePages={templateV2.sitePages} master={null} />

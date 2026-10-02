@@ -20,7 +20,7 @@ router.get('/:token', async (req, res) => {
   try {
     const row = await getSharedOutputByToken(req.params.token);
     if (!row) return res.status(404).json({ error: 'Not found' });
-    res.json(publicSharedView(row));
+    res.json(await publicSharedView(row));
   } catch (e) {
     res.status(500).json({ error: 'Server error' });
   }

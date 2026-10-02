@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import DocumentBlocksView, { formatMetadataLine, isDocumentBlocks } from './DocumentBlocksView.jsx';
+import SharedLiveStates from './SharedLiveStates.jsx';
 
 function useNoIndex() {
   useEffect(() => {
@@ -66,7 +67,7 @@ export default function SharedOutputPage() {
       <style>{`
         @media print {
           .sb-shared-output { background: white !important; padding: 0 !important; }
-          .sb-shared-output-toolbar { display: none !important; }
+          .sb-shared-output-toolbar, .sb-chart-views-switch, .sb-state-slider input, .sb-state-slider button { display: none !important; }
           .sb-shared-output-page { box-shadow: none !important; border: none !important; padding: 0 !important; max-width: none !important; }
         }
         @page { size: letter; margin: 0.5in 0.6in; }
@@ -91,6 +92,7 @@ export default function SharedOutputPage() {
         ) : (
           <div style={{ whiteSpace: 'pre-wrap', fontSize: '0.88rem', lineHeight: 1.6 }}>{doc.content?.rawText || ''}</div>
         )}
+        {doc.states && (doc.states.approved || doc.states.live) && <SharedLiveStates states={doc.states} />}
         <footer style={{ marginTop: '1.5rem', paddingTop: '0.5rem', borderTop: '1px solid #E3D8C9', fontSize: '0.66rem', color: '#5F6B78' }}>
           {formatMetadataLine(doc.metadata)}
         </footer>

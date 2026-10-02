@@ -15,6 +15,7 @@
 // SB_PASSWORD). PUBLIC_BASE_URL selects the server (default: local dev API).
 import 'dotenv/config';
 import fs from 'node:fs';
+import { rolesFromDocument, compareRolesWithCareerMaster } from '../server/lib/packageRoleCheck.js';
 
 const [pkgPath, ...flags] = process.argv.slice(2);
 if (!pkgPath) throw new Error('Usage: node scripts/sync-site-with-application-package.mjs <package.json> [--apply] [--publish]');
@@ -142,39 +143,18 @@ function auditSite(site) {
   return findings;
 }
 
-// Package roles (ATS resume: role line + italic title paragraph) vs Career
-// Master jobs — report-only; Career Master is the editing surface for these.
-function packageRoles() {
-  const roles = [];
-  const blocks = atsResume.content.blocks;
-  blocks.forEach((b, i) => {
-    if (b.type !== 'role') return;
-    const next = blocks[i + 1];
-    roles.push({ company: b.title, dates: b.dates, title: next?.type === 'paragraph' && next.emphasis === 'italic' ? next.text : '' });
-  });
-  return roles;
-}
-
-const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-const years = (s) => (String(s || '').match(/(?:19|20)\d{2}|present/gi) || []).map((y) => y.toLowerCase());
-
+// Package roles vs Career Master jobs — report-only; Career Master is the
+// editing surface for these. Same comparison the in-app provenance card uses.
 function auditCareerJobs(jobs) {
-  const findings = [];
-  for (const role of packageRoles()) {
-    const key = norm(role.company).split(' ')[0];
-    const job = jobs.find((j) => norm(j.company).split(' ')[0] === key);
-    if (!job) { findings.push({ fact: 'career-job-missing', where: role.company, note: 'In the package but not in Career Master.', before: '', after: `${role.title} · ${role.dates}` }); continue; }
-    const pkgTitle = role.title.split('|')[0].trim();
-    if (pkgTitle && !norm(job.title).includes(norm(pkgTitle))) {
-      findings.push({ fact: 'career-job-title', where: `career_jobs#${job.id} ${job.company}`, note: 'Title differs from the package.', before: job.title, after: role.title });
-    }
-    const jobYears = years(`${job.startDate} ${job.endDate}`).join('–');
-    const pkgYears = years(role.dates).join('–');
-    if (jobYears !== pkgYears) {
-      findings.push({ fact: 'career-job-dates', where: `career_jobs#${job.id} ${job.company}`, note: 'Dates differ from the package.', before: `${job.startDate} – ${job.endDate}`, after: role.dates });
-    }
-  }
-  return findings;
+  return compareRolesWithCareerMaster(rolesFromDocument(atsResume.content), jobs)
+    .filter((r) => r.status !== 'match')
+    .flatMap((r) => {
+      if (r.status === 'missing') return [{ fact: 'career-job-missing', where: r.company, note: 'In the package but not in Career Master.', before: '', after: `${r.title} · ${r.dates}` }];
+      const out = [];
+      if (!r.titleMatch) out.push({ fact: 'career-job-title', where: `career_jobs#${r.careerMaster.id} ${r.company}`, note: 'Title differs from the package.', before: r.careerMaster.title, after: r.title });
+      if (!r.datesMatch) out.push({ fact: 'career-job-dates', where: `career_jobs#${r.careerMaster.id} ${r.company}`, note: 'Dates differ from the package.', before: r.careerMaster.dates, after: r.dates });
+      return out;
+    });
 }
 
 function print(findings, heading) {

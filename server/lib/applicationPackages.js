@@ -22,6 +22,10 @@
 import crypto from 'node:crypto';
 import { db } from '../db.js';
 import { createResumeOutputProjection, projectionMetadata } from './resumeProjection.js';
+import { loadProficiencyResolution } from '../routes/careerMaster.js';
+import { timelineRows, trendSeries, proficiencyRows, footnoteForRows } from '../../src/lib/careerCharts.js';
+import { snapshotFingerprint } from '../../src/lib/shareSnapshotDiff.js';
+import { careerChangeEvents } from './careerChangeEvents.js';
 
 const OUTPUT_TYPES = new Set(['resume', 'cover_letter', 'application_package']);
 const BLOCK_TYPES = new Set(['heading', 'paragraph', 'bullet', 'role', 'table', 'figure']);
@@ -124,13 +128,85 @@ export async function approveOutputForSharing(projectionId, approver) {
        WHERE id=$1 AND user_id=$2
     `).run(holder.id, approver.id);
   }
+  const snapshot = await buildShareSnapshot(approver.id).catch((e) => {
+    console.warn('[applicationPackages] chart snapshot skipped:', e.message);
+    return null;
+  });
   await db.prepare(`
     UPDATE resume_output_projections
-       SET share_token=$1, output_status='published', approved_by=$2, approved_at=$3
+       SET share_token=$1, output_status='published', approved_by=$2, approved_at=$3, shared_snapshot=$5::jsonb, share_history='[]'::jsonb
      WHERE id=$4 AND user_id=$2
-  `).run(token, approver.id, Date.now(), projectionId);
+  `).run(token, approver.id, Date.now(), projectionId, snapshot);
   return { id: Number(projectionId), token, movedFrom: holder && Number(holder.id) !== Number(projectionId) ? Number(holder.id) : null };
 }
+
+/**
+ * Chart data for the public QR page, computed from the owner's Career
+ * Master at the moment of approval. Each chart is one unit family (years,
+ * levels) so every view of it — chart, salt particles, table — shares one
+ * honest scale. An empty Career Master yields no charts, never placeholders.
+ */
+export async function buildShareSnapshot(userId) {
+  const jobRows = await db.prepare(`SELECT company, title, start_date, end_date, industry FROM career_jobs WHERE user_id=$1`).all(userId);
+  const master = { jobs: jobRows.map((j) => ({ company: j.company, title: j.title, startDate: j.start_date, endDate: j.end_date, industry: j.industry })) };
+  const charts = [];
+  const timeline = timelineRows(master).filter((r) => r.start);
+  if (timeline.length) {
+    charts.push({ key: 'timeline', kind: 'timeline', title: 'Career timeline', subtitle: 'Years in each role, coloured by industry', unit: 'yrs', rows: timeline });
+  }
+  const experience = trendSeries(master, 'experience_years');
+  if (experience.length > 1) {
+    charts.push({ key: 'experience', kind: 'trend', title: 'Cumulative years of experience', subtitle: 'One step per year with an active role', unit: ' yrs', series: experience });
+  }
+  const { resolution, definitions } = await loadProficiencyResolution(userId, 'current');
+  const levels = definitions.filter((d) => d.type === 'proficiency_level' && d.isActive)
+    .map((d) => ({ key: d.key, label: d.label, ordinal: Number(d.definition?.ordinal) || 0 }))
+    .sort((a, b) => a.ordinal - b.ordinal);
+  const profRows = proficiencyRows(resolution).filter((r) => r.ordinal > 0).slice(0, 10);
+  if (profRows.length) {
+    charts.push({ key: 'proficiency', kind: 'proficiency', title: 'Top proficiencies', subtitle: 'Level per skill and tool', unit: 'level', levels, rows: profRows, footnote: footnoteForRows(profRows) });
+  }
+  return { capturedAt: Date.now(), charts };
+}
+
+const HISTORY_LIMIT = 100;
+const parseJson = (v) => (typeof v === 'string' ? JSON.parse(v) : v);
+
+/**
+ * Appends `snapshot` to each of the owner's live-shared documents whose last
+ * recorded state differs from it — so the QR page's timeline holds one entry
+ * per real change, never duplicates.
+ */
+export async function recordShareStateChange(userId, { snapshot = null, reason = 'career_master_change' } = {}) {
+  const rows = await db.prepare(`
+    SELECT id, shared_snapshot, share_history FROM resume_output_projections
+     WHERE user_id=$1 AND share_token IS NOT NULL AND output_status='published'
+  `).all(userId);
+  if (!rows.length) return 0;
+  const current = snapshot || await buildShareSnapshot(userId);
+  const fingerprint = snapshotFingerprint(current);
+  let appended = 0;
+  for (const row of rows) {
+    const history = parseJson(row.share_history) || [];
+    const last = history.length ? history[history.length - 1] : parseJson(row.shared_snapshot);
+    if (last && snapshotFingerprint(last) === fingerprint) continue;
+    const next = [...history, { ...current, reason }].slice(-HISTORY_LIMIT);
+    await db.prepare(`UPDATE resume_output_projections SET share_history=$1::jsonb WHERE id=$2`).run(next, row.id);
+    appended += 1;
+  }
+  return appended;
+}
+
+// Career Master writes arrive in bursts (a bulk edit, an import) — coalesce
+// them per member so one burst records one state.
+const pendingRecords = new Map();
+careerChangeEvents.on('changed', (userId) => {
+  clearTimeout(pendingRecords.get(userId));
+  pendingRecords.set(userId, setTimeout(() => {
+    pendingRecords.delete(userId);
+    recordShareStateChange(userId).catch((e) => console.warn('[applicationPackages] share history skipped:', e.message));
+  }, 2000));
+});
 
 /** Stops the QR from resolving — the slug is discarded, never reissued. */
 export async function revokeOutputSharing(projectionId, userId) {
@@ -169,13 +245,37 @@ export function shareUrlFor(token, req) {
   return `${base}/r/${token}`;
 }
 
-/** What a QR visitor sees — the document and its metadata, nothing internal. */
-export function publicSharedView(row) {
-  const content = typeof row.generated_content === 'string' ? JSON.parse(row.generated_content) : row.generated_content;
+/**
+ * What a QR visitor sees: the approved document text (frozen), and the
+ * chart data as three things — the approved/printed snapshot, every later
+ * recorded state, and live data computed now. The page calls out every
+ * difference between printed and whatever state the viewer selects.
+ */
+export async function publicSharedView(row) {
+  const content = parseJson(row.generated_content);
+  const approved = parseJson(row.shared_snapshot) || null;
+  let live = null;
+  try {
+    live = await buildShareSnapshot(row.user_id);
+    // A change that bypassed the write hooks (an import, a reconciliation
+    // approval) still lands in the timeline the first time it's viewed.
+    await recordShareStateChange(row.user_id, { snapshot: live, reason: 'detected_on_view' });
+  } catch (e) {
+    console.warn('[applicationPackages] live snapshot unavailable:', e.message);
+  }
+  const fresh = await db.prepare(`SELECT share_history FROM resume_output_projections WHERE id=$1`).get(row.id);
   return {
     title: row.preset_name || 'Resume',
     outputType: row.output_type || 'resume',
     content: content || {},
     metadata: projectionMetadata(row),
+    states: {
+      approved,
+      history: parseJson(fresh?.share_history) || [],
+      live: live ? { ...live, capturedAt: Date.now() } : null,
+    },
+    // Only the charts read live data today; the document text is always the
+    // approved version.
+    liveScope: 'charts',
   };
 }

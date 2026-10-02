@@ -2,6 +2,10 @@
 // Blocks are stored as JSON in the DB and rendered to HTML via renderTemplateToHtml().
 // The same system drives HERQ outputs, resume, case study, one-pagers, and future outputs.
 import { ICONS, ICON_VIEWBOX } from './brandIconData.js';
+import {
+  proficiencyBarsHtml, trendBarsHtml, outcomeTilesHtml, durationTimelineHtml,
+  trendSeries, outcomeCandidates, timelineRows, proficiencyRows, footnoteForRows, TREND_SOURCES,
+} from './careerCharts.js';
 
 // Static (non-interactive) inline SVG for the output-doc renderer — same
 // geometry as src/lib/brandIcons.jsx, but a plain string since output docs
@@ -334,6 +338,51 @@ export const BLOCK_DEFS = {
         { key: 'source', label: 'Source', placeholder: 'Citation (optional)' },
       ],
     }],
+  },
+  // ── Career chart family (2026-10-02) — picked from the Output Template
+  // editor's chart gallery; data comes from ctx.master (Career Master) and
+  // ctx.proficiency (GET /api/career/proficiency). See src/lib/careerCharts.js.
+  'career-proficiency-bars': {
+    label: 'Proficiency Tiers', icon: '▦',
+    defaultProps: { title: 'Proficiency', entityType: 'all', groupBy: 'entity', maxItems: 10 },
+    defaultStyle: { margin: '0.75rem 0' },
+    fields: [
+      { key: 'props.title', label: 'Title', type: 'text' },
+      { key: 'props.entityType', label: 'Show', type: 'select', options: ['all', 'skill', 'tool'] },
+      { key: 'props.groupBy', label: 'Group by', type: 'select', options: ['entity', 'category'] },
+      { key: 'props.maxItems', label: 'Max rows', type: 'text' },
+    ],
+  },
+  'career-trend-bars': {
+    label: 'Trend Bars', icon: '▥',
+    defaultProps: { title: '', sourceKey: 'experience_years' },
+    defaultStyle: { margin: '0.75rem 0' },
+    fields: [
+      { key: 'props.title', label: 'Title', type: 'text' },
+      { key: 'props.sourceKey', label: 'Series', type: 'select', options: Object.keys(TREND_SOURCES) },
+    ],
+  },
+  'career-outcome-tiles': {
+    label: 'Outcome Tiles', icon: '▣',
+    defaultProps: { title: 'Portfolio Outcomes', tiles: [] },
+    defaultStyle: { margin: '0.75rem 0' },
+    fields: [
+      { key: 'props.title', label: 'Title', type: 'text' },
+      {
+        key: 'props.tiles', label: 'Tiles', type: 'cardList', itemLabel: 'Tile',
+        itemFields: [
+          { key: 'value', label: 'Figure', placeholder: 'e.g. $500M+' },
+          { key: 'caption', label: 'Caption', placeholder: 'What the figure means', long: true },
+          { key: 'source', label: 'Footnote source', placeholder: 'e.g. Vista Equity Partners' },
+        ],
+      },
+    ],
+  },
+  'career-duration-timeline': {
+    label: 'Career Timeline', icon: '☰',
+    defaultProps: { title: 'Career Timeline' },
+    defaultStyle: { margin: '0.75rem 0' },
+    fields: [{ key: 'props.title', label: 'Title', type: 'text' }],
   },
   'cascade-flow': {
     label: 'Cascade Flow', icon: '➡️',
@@ -741,6 +790,27 @@ export function renderBlockToHtml(block, ctx = {}) {
         </div>`).join('');
       return `<div style="${styleStr(s)};display:flex;flex-direction:column">${stepsHtml}</div>`;
     }
+
+    case 'career-proficiency-bars': {
+      const levels = (ctx.proficiency?.levels || []);
+      const rows = proficiencyRows(ctx.proficiency, { entityType: p.entityType || 'all', groupBy: p.groupBy || 'entity' });
+      const maxItems = Number(p.maxItems) || 10;
+      const shown = rows.filter((r) => r.ordinal > 0).slice(0, maxItems);
+      return `<div style="${styleStr(s)}">${proficiencyBarsHtml({ rows: shown, levels, title: p.title, footnote: footnoteForRows(shown), maxItems })}</div>`;
+    }
+
+    case 'career-trend-bars': {
+      const src = TREND_SOURCES[p.sourceKey] || TREND_SOURCES.experience_years;
+      return `<div style="${styleStr(s)}">${trendBarsHtml({ series: trendSeries(ctx.master, p.sourceKey || 'experience_years'), title: p.title || src.label, unit: src.unit })}</div>`;
+    }
+
+    case 'career-outcome-tiles': {
+      const tiles = Array.isArray(p.tiles) && p.tiles.length ? p.tiles : outcomeCandidates(ctx.master).slice(0, 4);
+      return `<div style="${styleStr(s)}">${outcomeTilesHtml({ tiles, title: p.title })}</div>`;
+    }
+
+    case 'career-duration-timeline':
+      return `<div style="${styleStr(s)}">${durationTimelineHtml({ rows: timelineRows(ctx.master), title: p.title })}</div>`;
 
     default:
       return `<div style="padding:0.5rem;background:#f5f5f5;font-size:0.75rem;color:#999;border:1px dashed #ccc">[Unknown block: ${block.type}]</div>`;

@@ -1035,6 +1035,14 @@ async function bootstrap() {
     `ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS updated_at BIGINT`,
     `ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS approved_by BIGINT REFERENCES users(id) ON DELETE SET NULL`,
     `ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS approved_at BIGINT`,
+    // Chart data frozen at approval for the public /r/:token page — that page
+    // can't call the owner's authenticated Career Master APIs, and should
+    // show exactly what was approved, not live data.
+    `ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS shared_snapshot JSONB`,
+    // Append-only list of later Career Master states for a shared document
+    // ({ capturedAt, reason, charts }), recorded only when the data actually
+    // changed — the QR page's "printed → … → live" slider.
+    `ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS share_history JSONB`,
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_resume_output_projections_share_token ON resume_output_projections (share_token) WHERE share_token IS NOT NULL`,
   ]) {
     await sql.unsafe(ddl).catch((e) => console.warn('[db] resume_output_projections sharing columns warning:', e.message));
