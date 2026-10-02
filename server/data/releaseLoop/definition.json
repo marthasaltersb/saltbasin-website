@@ -190,5 +190,19 @@
       "agents spawned and their tokens"
     ],
     "privacy": "Only metrics and the mapping summary are committed; never transcript text or personal data."
-  }
+  },
+  "bugEscalation": {
+    "maxFixAttemptsPerBug": 2,
+    "rule": "A bug is the same bug when triage links it to an earlier item (same root cause or same failing step after a fix). Once a bug has had maxFixAttemptsPerBug fix attempts and validation still fails it, it leaves the automated loop with status needs_human: its full history (each triage, fix and re-test) goes to the owner and no agent touches it until a person decides.",
+    "statuses": [
+      "open",
+      "fixing",
+      "fixed_awaiting_retest",
+      "verified",
+      "recurred",
+      "needs_human",
+      "needs_business_definition"
+    ]
+  },
+  "tracker": "Every agent start/finish, bug and status change is shown live in the release tracker (Claude Code sessions: the tracker artifact synced from the workflow journal; in the platform: World Shell → Release loop)."
 }

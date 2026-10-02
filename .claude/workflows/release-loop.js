@@ -25,6 +25,7 @@ const A = args || {}
 const REPO = A.repo
 const BRANCH = A.integrationBranch
 const MAX_ROUNDS = A.maxFixRounds || 4
+const MAX_ATTEMPTS_PER_BUG = A.maxFixAttemptsPerBug || 2
 const RELEASE = A.release
 let slot = 0
 const nextSlot = () => { slot += 1; return slot }
@@ -98,6 +99,7 @@ const TRIAGE_SCHEMA = {
     reportPath: { type: 'string' },
     items: { type: 'array', items: { type: 'object', properties: {
       id: { type: 'string' }, step: { type: 'string' }, rootCause: { type: 'string' },
+      recurrenceOf: { type: 'string', description: 'id of the earlier triage item this is the same bug as (same root cause, or the same step still failing after its fix); empty if new' },
       class: { type: 'string', enum: ['defect', 'spec_error', 'environment', 'needs_business_definition'] },
       files: { type: 'array', items: { type: 'string' } }, proposedFix: { type: 'string' },
       question: { type: 'string', description: 'for needs_business_definition: the exact question for the owner' },
@@ -204,6 +206,8 @@ async function runFeature(feature) {
 
     let fixNotes = null
     const allItems = []
+    const attempts = {}   // bug id -> fix attempts so far
+    log_.needsHuman = []
     for (let round = 1; round <= MAX_ROUNDS + 1; round++) {
       const v = await validate(feature, round, fixNotes)
       if (!v) { log_.status = 'validator_died'; break }
@@ -215,9 +219,20 @@ async function runFeature(feature) {
       if (!t) { log_.status = 'triage_agent_died'; break }
       allItems.push(...t.items)
       log_.rounds[log_.rounds.length - 1].triage = t
-      const fixable = t.items.filter(i => i.class !== 'needs_business_definition')
+      for (const i of t.items) if (i.recurrenceOf) i.id = i.recurrenceOf   // same bug keeps its id
       log_.escalated.push(...t.items.filter(i => i.class === 'needs_business_definition'))
-      if (!fixable.length) { log_.status = 'blocked_on_business_definition'; break }
+      const candidates = t.items.filter(i => i.class !== 'needs_business_definition')
+      const stuck = candidates.filter(i => (attempts[i.id] || 0) >= MAX_ATTEMPTS_PER_BUG)
+      for (const i of stuck) {
+        log(`${feature.key}: bug ${i.id} still failing after ${attempts[i.id]} fix attempts — needs a person (removed from the loop)`)
+        log_.needsHuman.push({ ...i, attempts: attempts[i.id], history: allItems.filter(x => x.id === i.id) })
+      }
+      const fixable = candidates.filter(i => (attempts[i.id] || 0) < MAX_ATTEMPTS_PER_BUG)
+      if (!fixable.length) {
+        log_.status = stuck.length ? 'blocked_on_human_review' : 'blocked_on_business_definition'
+        break
+      }
+      for (const i of fixable) attempts[i.id] = (attempts[i.id] || 0) + 1
       const f = await fix(feature, round, fixable)
       if (!f) { log_.status = 'fix_agent_died'; break }
       log_.rounds[log_.rounds.length - 1].fix = f
@@ -251,7 +266,7 @@ if (A.sweep) {
 phase('Record')
 const summary = await serial(() => agent(`${COMMON}
 You are the RELEASE RECORDER. Work in the main checkout ${REPO} on \`${BRANCH}\`.
-Write ${REPO}/docs/release-log/${RELEASE}.md: one section per feature with status, every round (steps passed/total, failures, triage items with class and root cause, fixes with files), integration commits, every reported failed/refused command, and a top table of final results. List items escalated for a business definition with their exact questions. Link each test-result and triage file. State plainly which features did NOT pass.
+Write ${REPO}/docs/release-log/${RELEASE}.md: one section per feature with status, every round (steps passed/total, failures, triage items with class and root cause, fixes with files), integration commits, every reported failed/refused command, and a top table of final results. List items escalated for a business definition with their exact questions, and bugs that hit the per-bug fix-attempt limit (needsHuman) with their full triage/fix/re-test history so a person can take over. Link each test-result and triage file. State plainly which features did NOT pass.
 Then commit docs/release-log, docs/test-results and docs/triage ("Release log ${RELEASE}").
 Data:
 ${JSON.stringify({ features: results, sweep }, null, 2)}`,
