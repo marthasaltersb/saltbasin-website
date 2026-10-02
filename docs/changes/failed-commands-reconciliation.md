@@ -35,8 +35,9 @@ Every command, build, test or agent run in this session that failed, was refused
 | Live data fails when the QR page opens | Page quietly showed fewer states | Page shows "Live career data could not be loaded right now" and labels the banner RECORDED DATA |
 | Career Master / proficiency fails to load for a template output | Charts showed "no data yet" | Charts show "data could not be loaded — a loading error, not missing Career Master data" |
 | Suggestions fail in the technology-category dialog | Suggestions silently absent | Dialog says suggestions are unavailable and why |
+| QR page when there is neither a printed snapshot nor live data | The whole live-data panel was hidden (found while verifying the fixes above) | Panel always renders; it states the missing baseline and the failed live load |
 
-Verified by renaming `career_jobs` in the local test database so Career Master queries really failed: the QR API returned `liveError`; editing a skill recorded `share_sync_error` on all three shared outputs and the My Resume list exposed it; approving returned the snapshot warning. After restoring the table, the next save cleared every error and live data returned.
+Verified by renaming `career_jobs` in the local test database so Career Master queries really failed: the QR API returned `liveError`; editing a skill recorded `share_sync_error` on all three shared outputs and the My Resume list exposed it; approving returned the snapshot warning. After restoring the table, the next save cleared every error and live data returned. Browser screenshots confirmed each notice renders: the QR page's live-data and missing-baseline notices, the RECORDED DATA banner label, and the My Resume sync-error line.
 
 ## Known remaining silent paths (pre-existing, not changed here)
 

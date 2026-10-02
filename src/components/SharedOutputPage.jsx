@@ -92,7 +92,9 @@ export default function SharedOutputPage() {
         ) : (
           <div style={{ whiteSpace: 'pre-wrap', fontSize: '0.88rem', lineHeight: 1.6 }}>{doc.content?.rawText || ''}</div>
         )}
-        {doc.states && (doc.states.approved || doc.states.live) && <SharedLiveStates states={doc.states} />}
+        {/* Always rendered when states exist: SharedLiveStates itself states a
+            missing baseline or a failed live load — never hidden. */}
+        {doc.states && <SharedLiveStates states={doc.states} />}
         <footer style={{ marginTop: '1.5rem', paddingTop: '0.5rem', borderTop: '1px solid #E3D8C9', fontSize: '0.66rem', color: '#5F6B78' }}>
           {formatMetadataLine(doc.metadata)}
         </footer>
