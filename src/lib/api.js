@@ -64,6 +64,7 @@ export const api = {
   createResumeOutput: (body) => request('/api/resume-outputs', { method: 'POST', body: JSON.stringify(body) }),
   getResumeOutputStaleness: (id) => request(`/api/resume-outputs/${id}/staleness`),
   updateResumeOutputStatus: (id, status) => request(`/api/resume-outputs/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+  getFinalizationCheck: () => request('/api/resume-outputs/finalization-check'),
   shareResumeOutput: (id) => request(`/api/resume-outputs/${id}/share`, { method: 'POST' }),
   revokeResumeOutputShare: (id) => request(`/api/resume-outputs/${id}/share`, { method: 'DELETE' }),
   resumeOutputQrUrl: (id, format = 'svg') => `/api/resume-outputs/${id}/qr.${format}`,

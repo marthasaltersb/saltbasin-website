@@ -344,6 +344,14 @@ export default function ProficiencyRulesPanel({ onChanged }) {
           </div>
         </div>
         <p style={sub}>Using <strong>{resolution?.activeFormula?.label}</strong>. Pick a level in "Your override" to set it by hand; choose "Use formula" to remove an override.{resolution?.footnote ? ` ${resolution.footnote}` : ''}</p>
+        {(() => {
+          const missing = (resolution?.proficiencies || []).filter((p) => p.entityType === 'tool' && p.proficiencyCategorySource !== 'career_master');
+          return missing.length ? (
+            <div role="status" style={{ background: 'rgba(196,132,58,.1)', border: '1px solid #c4843a', borderRadius: 8, padding: '.55rem .75rem', fontSize: '.78rem', marginBottom: '.75rem' }}>
+              <strong>{missing.length} technolog{missing.length === 1 ? 'y needs' : 'ies need'} a proficiency category</strong> ({missing.map((p) => p.label).join(', ')}). Outputs can’t be approved or shared until each is set below — it saves to Career Master.
+            </div>
+          ) : null;
+        })()}
         {rows.length === 0 ? (
           <div style={{ fontSize: '.78rem', color: '#687078' }}>No skills or tools yet — add them in Career Master → Manual Intake.</div>
         ) : (
@@ -363,10 +371,10 @@ export default function ProficiencyRulesPanel({ onChanged }) {
                         {p.entityType === 'tool' ? (
                           <>
                             <select aria-label={`How ${p.label} was used`} style={input} disabled={busy === `cat:${p.entityId}`} value={p.proficiencyCategorySource === 'career_master' ? p.proficiencyCategory : ''} onChange={(e) => setToolCategory(p, e.target.value)}>
-                              <option value="">{p.proficiencyCategorySource === 'career_master' ? 'Not set — derive from level' : `Not set — derived: ${p.proficiencyCategoryLabel}`}</option>
+                              <option value="" disabled={p.proficiencyCategorySource === 'career_master'}>Choose — required (suggested: {p.proficiencyCategoryLabel})</option>
                               {Object.entries(resolution?.toolProficiencyCategories || {}).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                             </select>
-                            {p.proficiencyCategorySource === 'derived_from_level' && <div style={{ fontSize: '.64rem', color: '#7a8086', marginTop: '.2rem' }}>Not recorded yet — inferred from level</div>}
+                            {p.proficiencyCategorySource === 'derived_from_level' && <div style={{ fontSize: '.66rem', color: '#a5531f', fontWeight: 700, marginTop: '.2rem' }}>Required before any output can be finalized</div>}
                           </>
                         ) : <span style={{ color: '#9aa3ad' }}>—</span>}
                       </td>

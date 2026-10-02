@@ -26,6 +26,7 @@ import { loadProficiencyResolution } from '../routes/careerMaster.js';
 import { timelineRows, trendSeries, proficiencyRows, footnoteForRows } from '../../src/lib/careerCharts.js';
 import { snapshotFingerprint } from '../../src/lib/shareSnapshotDiff.js';
 import { careerChangeEvents } from './careerChangeEvents.js';
+import { assertReadyToFinalize } from './finalizationGates.js';
 
 const OUTPUT_TYPES = new Set(['resume', 'cover_letter', 'application_package']);
 const BLOCK_TYPES = new Set(['heading', 'paragraph', 'bullet', 'role', 'table', 'figure']);
@@ -114,6 +115,7 @@ function newShareToken() {
 export async function approveOutputForSharing(projectionId, approver) {
   const row = await db.prepare(`SELECT * FROM resume_output_projections WHERE id=$1 AND user_id=$2`).get(projectionId, approver.id);
   if (!row) return null;
+  await assertReadyToFinalize(approver.id);
   const lineageRoot = Number(row.lineage_root_id || row.id);
   const holder = row.share_token ? row : await db.prepare(`
     SELECT id, share_token FROM resume_output_projections

@@ -10,6 +10,7 @@
 import crypto from 'node:crypto';
 import { db } from '../db.js';
 import { computeResumeTargeting } from './resumeTargeting.js';
+import { assertReadyToFinalize } from './finalizationGates.js';
 
 async function getCareerMasterRod(userId) {
   return db.prepare(`SELECT * FROM journey_data_rods WHERE user_id=$1 AND rod_type='career_master'`).get(userId);
@@ -154,6 +155,7 @@ const ALLOWED_STATUSES = ['draft', 'approved', 'published', 'archived'];
 
 export async function updateProjectionStatus(projectionId, userId, status) {
   if (!ALLOWED_STATUSES.includes(status)) throw new Error(`Invalid output status: ${status}`);
+  if (status === 'approved' || status === 'published') await assertReadyToFinalize(userId);
   if (status === 'published') {
     // Publishing is an approval — record who approved it, same as
     // applicationPackages.js's approveOutputForSharing (a QR slug only ever

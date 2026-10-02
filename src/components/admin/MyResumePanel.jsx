@@ -15,6 +15,7 @@ import { fetchCareerMaster } from '../../lib/careerMaster.js';
 import CareerIntakePanel from './CareerIntakePanel.jsx';
 import { resumeUrlFromPreset } from '../../lib/resumeUrls.js';
 import DocumentBlocksView, { formatMetadataLine, isDocumentBlocks } from '../DocumentBlocksView.jsx';
+import { useToolCategoryGate } from './ToolCategoryGate.jsx';
 
 // ── Layout templates ──────────────────────────────────────────────────────────
 const LAYOUTS = [
@@ -458,6 +459,11 @@ export default function MyResumePanel({ scope = 'member' }) {
   const [showNameModal, setShowNameModal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [resumeOutputs, setResumeOutputs] = useState([]);
+  // Finalizing (approve / publish / approve for QR) requires every
+  // technology to have a proficiency category — the gate prompts and saves
+  // to Career Master, then retries (server/lib/finalizationGates.js).
+  const categoryGate = useToolCategoryGate();
+  const [finalizationCheck, setFinalizationCheck] = useState(null);
   const [generatingOutput, setGeneratingOutput] = useState(false);
   const [targetJobDescription, setTargetJobDescription] = useState('');
 
@@ -558,6 +564,7 @@ export default function MyResumePanel({ scope = 'member' }) {
 
   function loadResumeOutputs() {
     api.listResumeOutputs().then((d) => setResumeOutputs(d.projections || [])).catch(() => {});
+    refreshFinalizationCheck();
   }
 
   async function generateOutput(preset) {
@@ -590,11 +597,12 @@ export default function MyResumePanel({ scope = 'member' }) {
     const ok = window.confirm(`Approve "${output.presetName || 'this output'}" as the final version for its QR code?\n\nYou'll be recorded as the approver. If an earlier version already has a QR code, that same code now opens this version. Only people with the QR code or link can open it.`);
     if (!ok) return;
     try {
-      const shared = await api.shareResumeOutput(output.id);
+      const shared = await categoryGate.run(() => api.shareResumeOutput(output.id));
       try { await navigator.clipboard.writeText(shared.url); } catch { /* clipboard is best-effort */ }
       toast.success('Approved — private QR link created (copied to clipboard).');
       loadResumeOutputs();
     } catch (e) { toast.error(e.message); }
+    refreshFinalizationCheck();
   }
 
   async function revokeQr(output) {
@@ -612,9 +620,14 @@ export default function MyResumePanel({ scope = 'member' }) {
 
   async function setOutputStatus(id, status) {
     try {
-      await api.updateResumeOutputStatus(id, status);
+      await categoryGate.run(() => api.updateResumeOutputStatus(id, status));
       loadResumeOutputs();
     } catch (e) { toast.error(e.message); }
+    refreshFinalizationCheck();
+  }
+
+  function refreshFinalizationCheck() {
+    api.getFinalizationCheck().then(setFinalizationCheck).catch(() => setFinalizationCheck(null));
   }
 
   function loadPresets() {
@@ -865,6 +878,12 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
         <div style={{ marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
             <div style={S.label}>Resume Output History</div>
+            {finalizationCheck && !finalizationCheck.ready && (
+              <div role="status" style={{ flexBasis: '100%', background: 'rgba(196,132,58,.1)', border: '1px solid #c4843a', borderRadius: 8, padding: '.55rem .75rem', fontSize: '.78rem', color: '#1b2a3b' }}>
+                <strong>{finalizationCheck.toolsMissingCategory.length} technolog{finalizationCheck.toolsMissingCategory.length === 1 ? 'y needs' : 'ies need'} a proficiency category</strong> before any output can be approved or shared
+                ({finalizationCheck.toolsMissingCategory.map((t) => t.label).join(', ')}). You’ll be asked to set {finalizationCheck.toolsMissingCategory.length === 1 ? 'it' : 'them'} when you approve; your choices save to Career Master.
+              </div>
+            )}
             {selectedOutputIds.size > 0 && (
               <div style={{ display: 'flex', gap: '0.4rem' }}>
                 <span style={{ fontSize: '0.72rem', color: '#888', alignSelf: 'center' }}>{selectedOutputIds.size} selected</span>
@@ -1006,6 +1025,7 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
         </div>
       )}
 
+      {categoryGate.modal}
       {emailModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setEmailModalOpen(false)}>
           <div style={{ background: 'white', borderRadius: 10, padding: '1.5rem', maxWidth: 420, width: '90%' }} onClick={(e) => e.stopPropagation()}>

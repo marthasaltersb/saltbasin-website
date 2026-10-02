@@ -326,7 +326,7 @@ export function proficiencyRows(resolution, { entityType = 'all', groupBy = 'ent
     // Tools grouped by how they were used (hands-on / integration design /
     // adjacent), each group's average level.
     const groups = new Map();
-    for (const p of list.filter((x) => x.proficiencyCategoryLabel)) {
+    for (const p of list.filter((x) => x.proficiencyCategoryLabel && x.proficiencyCategorySource === 'career_master')) {
       if (!groups.has(p.proficiencyCategoryLabel)) groups.set(p.proficiencyCategoryLabel, []);
       groups.get(p.proficiencyCategoryLabel).push(p);
     }
@@ -339,8 +339,10 @@ export function proficiencyRows(resolution, { entityType = 'all', groupBy = 'ent
     label: p.label,
     ordinal: p.ordinal,
     // "Advanced · Integration design" — level, then how the tool was used.
-    levelLabel: p.proficiencyCategoryLabel ? `${p.levelLabel} · ${p.proficiencyCategoryLabel}` : p.levelLabel,
-    proficiencyCategory: p.proficiencyCategoryLabel || null,
+    // Only a category recorded in Career Master is shown; an inferred one is
+    // never presented as fact (finalizing requires every tool to have one).
+    levelLabel: p.proficiencyCategorySource === 'career_master' ? `${p.levelLabel} · ${p.proficiencyCategoryLabel}` : p.levelLabel,
+    proficiencyCategory: p.proficiencyCategorySource === 'career_master' ? p.proficiencyCategoryLabel : null,
     userDefined: userDefined(p.basis),
     points: p.points,
   }));

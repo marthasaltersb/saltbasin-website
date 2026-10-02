@@ -15,6 +15,7 @@ import {
   getOwnedOutputWithApprover,
   shareUrlFor,
 } from '../lib/applicationPackages.js';
+import { sendFinalizationError, toolsMissingCategory } from '../lib/finalizationGates.js';
 
 const router = express.Router();
 
@@ -51,7 +52,16 @@ router.patch('/:id/status', async (req, res) => {
   try {
     const projection = await updateProjectionStatus(req.params.id, req.user.id, status);
     res.json({ projection });
-  } catch (e) { res.status(400).json({ error: e.message }); }
+  } catch (e) { sendFinalizationError(res, e); }
+});
+
+// What stands between this member's outputs and "final" — lets a screen
+// prompt before the user clicks Approve, not only after a refusal.
+router.get('/finalization-check', async (req, res) => {
+  try {
+    const tools = await toolsMissingCategory(req.user.id);
+    res.json({ ready: tools.length === 0, toolsMissingCategory: tools });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── Tailored application packages + QR-gated sharing (2026-10-02) ──────────
@@ -69,7 +79,7 @@ router.post('/:id/share', async (req, res) => {
     const shared = await approveOutputForSharing(Number(req.params.id), req.user);
     if (!shared) return res.status(404).json({ error: 'Resume output not found' });
     res.json({ ...shared, url: shareUrlFor(shared.token, req) });
-  } catch (e) { res.status(400).json({ error: e.message }); }
+  } catch (e) { sendFinalizationError(res, e); }
 });
 
 router.delete('/:id/share', async (req, res) => {
