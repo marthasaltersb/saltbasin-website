@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Release tracker preview</title></head>
+<body>
+<p id="status">Loading the tracker preview…</p>
+<script>
+// Local harness: stubs window.claude.use('db') so tracker/index.html (written for the claude.ai artifact host) renders
+// a snapshot file offline. The artifact host normally supplies this API; nothing here ships to the host.
+(async () => {
+  const q = new URLSearchParams(location.search);
+  try {
+    const [page, snap] = await Promise.all([
+      fetch('index.html', { cache: 'no-store' }).then((r) => { if (!r.ok) throw new Error('index.html ' + r.status); return r.text(); }),
+      fetch(q.get('snapshot') || 'snapshot.json', { cache: 'no-store' }).then((r) => { if (!r.ok) throw new Error('snapshot ' + r.status); return r.text(); }),
+    ]);
+    JSON.parse(snap);
+    const theme = q.get('theme');
+    const stub = '<script>window.claude = { use: async (name) => name === "db" ? { doc: () => ({ onSnapshot: (ok) => { ok({ data: () => ({ json: '
+      + JSON.stringify(snap).replace(/</g, '\\u003c') + ' }) }); } }) } : null };<\/script>';
+    // The Google Fonts link is dropped so the preview makes no external request; the CSS falls back to system fonts.
+    const body = page.replace(/<link[^>]*fonts\.(googleapis|gstatic)[^>]*>/g, '');
+    document.open();
+    document.write('<!doctype html><html lang="en"' + (theme ? ' data-theme="' + (theme === 'dark' ? 'dark' : 'light') + '"' : '')
+      + '><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">' + stub + '</head><body>' + body + '</body></html>');
+    document.close();
+  } catch (e) {
+    document.getElementById('status').textContent = 'Preview failed: ' + e.message;
+  }
+})();
+</script>
+</body>
+</html>
