@@ -3048,6 +3048,14 @@ async function bootstrap() {
     ALTER TABLE unified_outputs ADD COLUMN IF NOT EXISTS output_type TEXT;
     ALTER TABLE unified_outputs ADD COLUMN IF NOT EXISTS template_config TEXT;
   `).catch(() => {});
+  // routes/outputTemplates.js scopes member templates by user_id / is_primary on
+  // unified_outputs. The databases that already had these columns got them from
+  // the output_templates consolidation, which was never in this file — so a
+  // fresh database returned 500 on every template save. Additive and idempotent.
+  await sql.unsafe(`
+    ALTER TABLE unified_outputs ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES users(id) ON DELETE SET NULL;
+    ALTER TABLE unified_outputs ADD COLUMN IF NOT EXISTS is_primary BOOLEAN NOT NULL DEFAULT false;
+  `);
 
   // ── Output templates table (standalone named templates, reusable across outputs) ──
   await sql.unsafe(`
