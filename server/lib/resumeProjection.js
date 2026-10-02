@@ -135,6 +135,7 @@ export async function listResumeOutputProjections(userId) {
       source: row.source || 'ai_generated',
       metadata: projectionMetadata(row),
       share: row.share_token ? { token: row.share_token, live: row.output_status === 'published' } : null,
+      shareSyncError: row.share_sync_error ? (typeof row.share_sync_error === 'string' ? JSON.parse(row.share_sync_error) : row.share_sync_error) : null,
     });
   }
   return out;

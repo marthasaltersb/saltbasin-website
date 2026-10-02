@@ -61,9 +61,22 @@ function ChangeList({ changes }) {
   );
 }
 
+function Notice({ children }) {
+  return <div role="alert" style={{ background: '#FFF4E5', border: '1px solid #C98320', borderRadius: 8, padding: '.7rem .9rem', margin: '1.75rem 0 1rem', fontSize: '.8rem', color: '#1B2A3B', lineHeight: 1.55 }}>{children}</div>;
+}
+
 export default function SharedLiveStates({ states: raw }) {
   const states = useMemo(() => buildStates(raw || {}), [raw]);
   const [index, setIndex] = useState(() => Math.max(0, states.length - 1));
+  // Failures are stated, never shown as if the data simply matched.
+  if (raw?.approvedMissing) {
+    return (
+      <>
+        <Notice><strong>The printed version's chart snapshot was not captured when it was approved</strong>, so changes since printing can't be compared. {raw.liveError ? raw.liveError : 'Live career data is shown below.'}</Notice>
+        {(raw.live?.charts || []).map((chart) => <ChartViews key={`live-${chart.key}`} chart={chart} />)}
+      </>
+    );
+  }
   if (!states.length) return null;
   const approved = states[0];
   const selected = states[Math.min(index, states.length - 1)];
@@ -72,6 +85,18 @@ export default function SharedLiveStates({ states: raw }) {
   const selectedChanges = diffSnapshots(approved.snapshot, selected.snapshot);
   const changedLabels = new Set(selectedChanges.map((c) => `${c.chartKey}|${c.label}`));
 
+  if (raw?.liveError) {
+    return (
+      <>
+        <Notice><strong>{raw.liveError}</strong> Showing the recorded states only; the newest one may be behind Career Master.</Notice>
+        <LiveBody states={states} index={index} setIndex={setIndex} approved={approved} selected={selected} selectedChanges={selectedChanges} changedLabels={changedLabels} liveChanges={liveChanges} live={false} />
+      </>
+    );
+  }
+  return <LiveBody states={states} index={index} setIndex={setIndex} approved={approved} selected={selected} selectedChanges={selectedChanges} changedLabels={changedLabels} liveChanges={liveChanges} live />;
+}
+
+function LiveBody({ states, index, setIndex, approved, selected, selectedChanges, changedLabels, liveChanges, live }) {
   return (
     <div style={{ marginTop: '1.75rem' }}>
       {/* ── Bold live-data callout ── */}
@@ -85,7 +110,7 @@ export default function SharedLiveStates({ states: raw }) {
         }}
       >
         <div style={{ fontSize: '0.95rem', fontWeight: 800, letterSpacing: '0.04em' }}>
-          LIVE DATA — {liveChanges.length
+          {live ? 'LIVE DATA' : 'RECORDED DATA'} — {liveChanges.length
             ? `${liveChanges.length} change${liveChanges.length === 1 ? '' : 's'} since the approved printed version`
             : 'matches the approved printed version'}
         </div>

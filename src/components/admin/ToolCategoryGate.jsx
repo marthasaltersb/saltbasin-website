@@ -15,7 +15,7 @@ export function isToolCategoryBlock(e) {
   return e?.status === 409 && e?.body?.code === 'tool_category_required';
 }
 
-function GateModal({ tools, categories, suggestions, onSaved, onCancel }) {
+function GateModal({ tools, categories, suggestions, suggestionsError, onSaved, onCancel }) {
   const [choices, setChoices] = useState(() => Object.fromEntries(tools.map((t) => [t.id, suggestions[t.id] || ''])));
   const [saving, setSaving] = useState(false);
   const complete = tools.every((t) => choices[t.id]);
@@ -42,6 +42,7 @@ function GateModal({ tools, categories, suggestions, onSaved, onCancel }) {
           Your choices are saved to Career Master and apply to every output.
           {Object.keys(suggestions).length > 0 && ' Suggestions come from each tool’s current level — check them before saving.'}
         </p>
+        {suggestionsError && <div role="alert" style={{ fontSize: '.74rem', color: '#a5531f', marginBottom: '.6rem' }}>Suggestions are unavailable ({suggestionsError}) — choose each category yourself.</div>}
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead><tr>
             <th style={{ textAlign: 'left', fontSize: '.7rem', padding: '.4rem', borderBottom: '1px solid #e5ded3' }}>Technology</th>
@@ -79,12 +80,16 @@ export function useToolCategoryGate() {
 
   async function prompt(e, action) {
     let suggestions = {};
+    let suggestionsError = null;
     try {
       const prof = await api.getCareerProficiency();
       for (const p of prof.proficiencies || []) if (p.entityType === 'tool' && p.proficiencyCategory) suggestions[p.entityId] = p.proficiencyCategory;
-    } catch { suggestions = {}; }
+    } catch (err) {
+      suggestions = {};
+      suggestionsError = err.message || 'unknown error';
+    }
     return new Promise((resolve, reject) => {
-      setPending({ tools: e.body.tools || [], categories: e.body.categories || {}, suggestions, retry: action, resolve, reject });
+      setPending({ tools: e.body.tools || [], categories: e.body.categories || {}, suggestions, suggestionsError, retry: action, resolve, reject });
     });
   }
 
@@ -102,6 +107,7 @@ export function useToolCategoryGate() {
       tools={pending.tools}
       categories={pending.categories}
       suggestions={pending.suggestions}
+      suggestionsError={pending.suggestionsError}
       onCancel={() => { const p = pending; setPending(null); p.reject(Object.assign(new Error('Finalization cancelled — technologies still need a proficiency category.'), { cancelled: true })); }}
       onSaved={async () => { const p = pending; setPending(null); try { p.resolve(await p.retry()); } catch (err) { p.reject(err); } }}
     />

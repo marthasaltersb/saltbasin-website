@@ -1205,7 +1205,7 @@ function useOutputTemplateConfig(outputType) {
   // (src/lib/careerCharts.js). Refetched when the template editor signals a
   // proficiency/rollup config change ('sb-output-data-refresh'), so the live
   // preview reflects it without saving the template.
-  const [careerData, setCareerData] = useState({ master: null, proficiency: null });
+  const [careerData, setCareerData] = useState({ master: null, proficiency: null, loadErrors: {} });
   const [dataVersion, setDataVersion] = useState(0);
   useEffect(() => {
     let cancelled = false;
@@ -1213,10 +1213,15 @@ function useOutputTemplateConfig(outputType) {
       // fetchCareerMaster caches per owner; a refresh must bypass that cache.
       (dataVersion === 0
         ? fetchCareerMaster(owner)
-        : fetch(`/api/career/master${owner ? `?owner=${encodeURIComponent(owner)}` : ''}`, { credentials: 'include' }).then((r) => r.json())
-      ).catch(() => null),
-      fetch('/api/career/proficiency', { credentials: 'include' }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
-    ]).then(([master, proficiency]) => { if (!cancelled) setCareerData({ master, proficiency }); });
+        : fetch(`/api/career/master${owner ? `?owner=${encodeURIComponent(owner)}` : ''}`, { credentials: 'include' }).then((r) => { if (!r.ok) throw new Error(`Career Master request failed (${r.status})`); return r.json(); })
+      ).then((v) => ({ v })).catch((e) => ({ error: e.message || 'Career Master could not be loaded' })),
+      fetch('/api/career/proficiency', { credentials: 'include' })
+        .then((r) => { if (!r.ok) throw new Error(`Proficiency request failed (${r.status})`); return r.json(); })
+        .then((v) => ({ v })).catch((e) => ({ error: e.message || 'Proficiency could not be loaded' })),
+    ]).then(([m, p]) => {
+      // A failed load is passed to the charts as an error, never as "no data".
+      if (!cancelled) setCareerData({ master: m.v || null, proficiency: p.v || null, loadErrors: { master: m.error || null, proficiency: p.error || null } });
+    });
     return () => { cancelled = true; };
   }, [owner, dataVersion]);
   useEffect(() => {
@@ -1293,7 +1298,7 @@ function useOutputTemplateConfig(outputType) {
     });
   }, [isPreviewDraft, owner]);
 
-  return { ...state, master: careerData.master, proficiency: careerData.proficiency };
+  return { ...state, master: careerData.master, proficiency: careerData.proficiency, loadErrors: careerData.loadErrors };
 }
 
 // Layer4 job_experience: proficiency qualifiers (tier language from the
@@ -1535,7 +1540,7 @@ export function ResumeOutput() {
 
   // ── 4-layer template-driven render (schemaVersion 2) ──
   if (templateV2.config && hasOutputLayerContent(templateV2.config)) {
-    const ctx = { about, timeline, jobs, execKpis, capabilityMeters, resumePreset, rollupCatalog: templateV2.rollupCatalog, proficiency: templateV2.proficiency, master: templateV2.master };
+    const ctx = { about, timeline, jobs, execKpis, capabilityMeters, resumePreset, rollupCatalog: templateV2.rollupCatalog, proficiency: templateV2.proficiency, master: templateV2.master, loadErrors: templateV2.loadErrors };
     const configuredName = templateV2.config.layer1_header?.memberName;
     return (
       <OutputFrame title={configuredName || about.heading || about.name || user?.displayName || 'Resume'} eyebrow="Resume" printDocTitle={printDocTitle} afterFooter={<MemberFooterSlot config={templateV2.config} />} hideTitle={!!configuredName}>
@@ -1783,7 +1788,7 @@ export function CaseStudyOutput() {
     // brand name — shown only on the portfolio-wide render, not per-engagement
     // case study pages.
     const frameSubHeader = isPortfolio ? 'Legal Name: Martha Elizabeth Salter' : undefined;
-    const ctx = { title, subtitle, context, role, actions, impact, metrics, engagement, rollupCatalog: templateV2.rollupCatalog, proficiency: templateV2.proficiency, master: templateV2.master };
+    const ctx = { title, subtitle, context, role, actions, impact, metrics, engagement, rollupCatalog: templateV2.rollupCatalog, proficiency: templateV2.proficiency, master: templateV2.master, loadErrors: templateV2.loadErrors };
     return (
       <OutputFrame title={frameTitle} eyebrow={frameEyebrow} subHeader={frameSubHeader} afterFooter={<MemberFooterSlot config={templateV2.config} />}>
         <OutputTemplateBody config={templateV2.config} ctx={ctx} sitePages={templateV2.sitePages} master={master} />
@@ -3703,7 +3708,7 @@ export function ProposalOutput() {
 
   // ── 4-layer template-driven render (schemaVersion 2) ──
   if (templateV2.config && hasOutputLayerContent(templateV2.config)) {
-    const ctx = { data, rollupCatalog: templateV2.rollupCatalog, proficiency: templateV2.proficiency, master: templateV2.master };
+    const ctx = { data, rollupCatalog: templateV2.rollupCatalog, proficiency: templateV2.proficiency, master: templateV2.master, loadErrors: templateV2.loadErrors };
     return (
       <OutputFrame title={data.title} eyebrow={`Proposal · ${data.tag}`} afterFooter={<MemberFooterSlot config={templateV2.config} />}>
         <OutputTemplateBody config={templateV2.config} ctx={ctx} sitePages={templateV2.sitePages} master={null} />
@@ -3775,7 +3780,7 @@ export function OnePagerOutput() {
 
   // ── 4-layer template-driven render (schemaVersion 2) ──
   if (templateV2.config && hasOutputLayerContent(templateV2.config)) {
-    const ctx = { rollupCatalog: templateV2.rollupCatalog, proficiency: templateV2.proficiency, master: templateV2.master };
+    const ctx = { rollupCatalog: templateV2.rollupCatalog, proficiency: templateV2.proficiency, master: templateV2.master, loadErrors: templateV2.loadErrors };
     return (
       <OutputFrame title="Salt Basin — One-Pager" eyebrow="Capabilities Summary" afterFooter={<MemberFooterSlot config={templateV2.config} />}>
         <OutputTemplateBody config={templateV2.config} ctx={ctx} sitePages={templateV2.sitePages} master={null} />
@@ -3933,7 +3938,7 @@ export function BuildSummaryOutput() {
 
   // ── 4-layer template-driven render (schemaVersion 2) ──
   if (!templateV2.loading && templateV2.config && hasOutputLayerContent(templateV2.config)) {
-    const ctx = { totals, capabilities, workarounds, items, rollupCatalog: templateV2.rollupCatalog, proficiency: templateV2.proficiency, master: templateV2.master };
+    const ctx = { totals, capabilities, workarounds, items, rollupCatalog: templateV2.rollupCatalog, proficiency: templateV2.proficiency, master: templateV2.master, loadErrors: templateV2.loadErrors };
     return (
       <OutputFrame title="Salt Basin · Build Progress Report" eyebrow="Internal · To-Date Build" afterFooter={<MemberFooterSlot config={templateV2.config} />}>
         <OutputTemplateBody config={templateV2.config} ctx={ctx} sitePages={templateV2.sitePages} master={null} />

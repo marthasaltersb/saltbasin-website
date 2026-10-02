@@ -600,6 +600,7 @@ export default function MyResumePanel({ scope = 'member' }) {
       const shared = await categoryGate.run(() => api.shareResumeOutput(output.id));
       try { await navigator.clipboard.writeText(shared.url); } catch { /* clipboard is best-effort */ }
       toast.success('Approved — private QR link created (copied to clipboard).');
+      for (const w of shared.warnings || []) toast.error(w);
       loadResumeOutputs();
     } catch (e) { toast.error(e.message); }
     refreshFinalizationCheck();
@@ -918,6 +919,11 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
                   </div>
                   {output.metadata && (output.metadata.authors?.length > 0 || output.metadata.approvedBy) && (
                     <div style={{ fontSize: '0.68rem', color: '#8b877c', marginTop: '0.15rem' }}>{formatMetadataLine(output.metadata)}</div>
+                  )}
+                  {output.shareSyncError && (
+                    <div role="alert" style={{ fontSize: '.72rem', color: '#a5531f', marginTop: '.3rem' }}>
+                      QR history could not record a Career Master change ({new Date(output.shareSyncError.at).toLocaleString()}): {output.shareSyncError.message}. It retries on your next Career Master save or when the QR page is opened.
+                    </div>
                   )}
                   {output.share?.live && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginTop: '0.45rem', flexWrap: 'wrap' }}>

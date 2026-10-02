@@ -447,6 +447,13 @@ function interpolate(text, ctx) {
   });
 }
 
+// A chart whose data failed to load says so — distinct from an honest empty
+// state ("nothing recorded yet"), so a failure never reads as missing data.
+function loadErrorHtml(title, message) {
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  return `<div role="alert" style="margin:0.75rem 0;padding:0.7rem 0.85rem;border:1px solid #C98320;background:#FFF4E5;border-radius:6px;font-family:Helvetica,Arial,sans-serif;font-size:0.74rem;color:#1B2A3B"><strong>${esc(title)}: data could not be loaded.</strong> ${esc(message)}. This is a loading error, not missing Career Master data — reload to retry.</div>`;
+}
+
 export function renderBlockToHtml(block, ctx = {}) {
   if (block.visible === false) return '';
   const def = BLOCK_DEFS[block.type];
@@ -792,6 +799,7 @@ export function renderBlockToHtml(block, ctx = {}) {
     }
 
     case 'career-proficiency-bars': {
+      if (ctx.loadErrors?.proficiency) return loadErrorHtml(p.title || 'Proficiency', ctx.loadErrors.proficiency);
       const levels = (ctx.proficiency?.levels || []);
       const rows = proficiencyRows(ctx.proficiency, { entityType: p.entityType || 'all', groupBy: p.groupBy || 'entity' });
       const maxItems = Number(p.maxItems) || 10;
@@ -800,16 +808,19 @@ export function renderBlockToHtml(block, ctx = {}) {
     }
 
     case 'career-trend-bars': {
+      if (ctx.loadErrors?.master) return loadErrorHtml(p.title || 'Trend', ctx.loadErrors.master);
       const src = TREND_SOURCES[p.sourceKey] || TREND_SOURCES.experience_years;
       return `<div style="${styleStr(s)}">${trendBarsHtml({ series: trendSeries(ctx.master, p.sourceKey || 'experience_years'), title: p.title || src.label, unit: src.unit })}</div>`;
     }
 
     case 'career-outcome-tiles': {
+      if (ctx.loadErrors?.master && !(Array.isArray(p.tiles) && p.tiles.length)) return loadErrorHtml(p.title || 'Outcomes', ctx.loadErrors.master);
       const tiles = Array.isArray(p.tiles) && p.tiles.length ? p.tiles : outcomeCandidates(ctx.master).slice(0, 4);
       return `<div style="${styleStr(s)}">${outcomeTilesHtml({ tiles, title: p.title })}</div>`;
     }
 
     case 'career-duration-timeline':
+      if (ctx.loadErrors?.master) return loadErrorHtml(p.title || 'Career Timeline', ctx.loadErrors.master);
       return `<div style="${styleStr(s)}">${durationTimelineHtml({ rows: timelineRows(ctx.master), title: p.title })}</div>`;
 
     default:

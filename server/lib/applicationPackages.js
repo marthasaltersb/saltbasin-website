@@ -130,8 +130,10 @@ export async function approveOutputForSharing(projectionId, approver) {
        WHERE id=$1 AND user_id=$2
     `).run(holder.id, approver.id);
   }
+  const warnings = [];
   const snapshot = await buildShareSnapshot(approver.id).catch((e) => {
-    console.warn('[applicationPackages] chart snapshot skipped:', e.message);
+    console.error('[applicationPackages] chart snapshot failed at approval:', e.message);
+    warnings.push(`The chart snapshot for the printed version could not be captured (${e.message}). The QR page will say so and can't compare live data to print.`);
     return null;
   });
   await db.prepare(`
@@ -139,7 +141,7 @@ export async function approveOutputForSharing(projectionId, approver) {
        SET share_token=$1, output_status='published', approved_by=$2, approved_at=$3, shared_snapshot=$5::jsonb, share_history='[]'::jsonb
      WHERE id=$4 AND user_id=$2
   `).run(token, approver.id, Date.now(), projectionId, snapshot);
-  return { id: Number(projectionId), token, movedFrom: holder && Number(holder.id) !== Number(projectionId) ? Number(holder.id) : null };
+  return { id: Number(projectionId), token, movedFrom: holder && Number(holder.id) !== Number(projectionId) ? Number(holder.id) : null, warnings };
 }
 
 /**
@@ -185,7 +187,15 @@ export async function recordShareStateChange(userId, { snapshot = null, reason =
      WHERE user_id=$1 AND share_token IS NOT NULL AND output_status='published'
   `).all(userId);
   if (!rows.length) return 0;
-  const current = snapshot || await buildShareSnapshot(userId);
+  let current = snapshot;
+  if (!current) {
+    try {
+      current = await buildShareSnapshot(userId);
+    } catch (e) {
+      await markShareSyncError(rows.map((r) => r.id), e);
+      throw e;
+    }
+  }
   const fingerprint = snapshotFingerprint(current);
   let appended = 0;
   for (const row of rows) {
@@ -193,10 +203,20 @@ export async function recordShareStateChange(userId, { snapshot = null, reason =
     const last = history.length ? history[history.length - 1] : parseJson(row.shared_snapshot);
     if (last && snapshotFingerprint(last) === fingerprint) continue;
     const next = [...history, { ...current, reason }].slice(-HISTORY_LIMIT);
-    await db.prepare(`UPDATE resume_output_projections SET share_history=$1::jsonb WHERE id=$2`).run(next, row.id);
+    await db.prepare(`UPDATE resume_output_projections SET share_history=$1::jsonb, share_sync_error=NULL WHERE id=$2`).run(next, row.id);
     appended += 1;
   }
+  // A successful check clears any earlier failure even when nothing changed.
+  await db.prepare(`UPDATE resume_output_projections SET share_sync_error=NULL WHERE user_id=$1 AND share_sync_error IS NOT NULL`).run(userId);
   return appended;
+}
+
+async function markShareSyncError(ids, error) {
+  const value = { at: Date.now(), message: String(error?.message || error).slice(0, 300) };
+  for (const id of ids) {
+    await db.prepare(`UPDATE resume_output_projections SET share_sync_error=$1::jsonb WHERE id=$2`).run(value, id)
+      .catch((e) => console.error('[applicationPackages] could not record share sync error:', e.message));
+  }
 }
 
 // Career Master writes arrive in bursts (a bulk edit, an import) — coalesce
@@ -206,7 +226,7 @@ careerChangeEvents.on('changed', (userId) => {
   clearTimeout(pendingRecords.get(userId));
   pendingRecords.set(userId, setTimeout(() => {
     pendingRecords.delete(userId);
-    recordShareStateChange(userId).catch((e) => console.warn('[applicationPackages] share history skipped:', e.message));
+    recordShareStateChange(userId).catch((e) => console.error('[applicationPackages] share history not recorded (saved on the output for the owner to see):', e.message));
   }, 2000));
 });
 
@@ -257,13 +277,18 @@ export async function publicSharedView(row) {
   const content = parseJson(row.generated_content);
   const approved = parseJson(row.shared_snapshot) || null;
   let live = null;
+  let liveError = null;
   try {
     live = await buildShareSnapshot(row.user_id);
+  } catch (e) {
+    console.error('[applicationPackages] live snapshot unavailable:', e.message);
+    liveError = 'Live career data could not be loaded right now.';
+  }
+  if (live) {
     // A change that bypassed the write hooks (an import, a reconciliation
     // approval) still lands in the timeline the first time it's viewed.
-    await recordShareStateChange(row.user_id, { snapshot: live, reason: 'detected_on_view' });
-  } catch (e) {
-    console.warn('[applicationPackages] live snapshot unavailable:', e.message);
+    await recordShareStateChange(row.user_id, { snapshot: live, reason: 'detected_on_view' })
+      .catch((e) => console.error('[applicationPackages] view-time history record failed (saved on the output):', e.message));
   }
   const fresh = await db.prepare(`SELECT share_history FROM resume_output_projections WHERE id=$1`).get(row.id);
   return {
@@ -275,6 +300,8 @@ export async function publicSharedView(row) {
       approved,
       history: parseJson(fresh?.share_history) || [],
       live: live ? { ...live, capturedAt: Date.now() } : null,
+      liveError,
+      approvedMissing: !approved,
     },
     // Only the charts read live data today; the document text is always the
     // approved version.

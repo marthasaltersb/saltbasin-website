@@ -1043,6 +1043,9 @@ async function bootstrap() {
     // ({ capturedAt, reason, charts }), recorded only when the data actually
     // changed — the QR page's "printed → … → live" slider.
     `ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS share_history JSONB`,
+    // Last failure recording QR history ({ at, message }), cleared on the
+    // next success — so a missed state is visible to the owner, not silent.
+    `ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS share_sync_error JSONB`,
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_resume_output_projections_share_token ON resume_output_projections (share_token) WHERE share_token IS NOT NULL`,
   ]) {
     await sql.unsafe(ddl).catch((e) => console.warn('[db] resume_output_projections sharing columns warning:', e.message));
