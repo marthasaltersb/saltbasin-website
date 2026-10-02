@@ -42,6 +42,9 @@ ${A.commitTrailer || 'Co-Authored-By: Claude <noreply@anthropic.com>'}
 - Kill every process you started (use PID files, never pkill -f) and drop your database when you finish.
 `
 
+const TEST_ACCOUNTS = `
+Test accounts: after your server has booted once against your fresh database, run \`node scripts/create-test-member.mjs --out /tmp/claude-0/creds-$PORT.json\` (with your DATABASE_URL). It creates member@test.local / TestPass!2345 and readies the admin, both with platform and CAREER TERMS ACCEPTED and no forced password change. Test member journeys as that member and admin journeys as the admin. Use --no-terms (or a second --email) only for a journey that tests the terms flow itself. Never create test users any other way.`
+
 function env(n, role) {
   const port = (A.portBase || 3400) + n * 2
   const db = `sb_rl_${role}_${n}`
@@ -141,6 +144,7 @@ function reconcile(feature, who, result, round) {
   return agent(`${COMMON}${WORKTREE_SETUP}
 After the reset, check out the branch under review: \`git checkout --detach ${result.branch}\`.
 ${env(n, 'rec')}
+${TEST_ACCOUNTS}
 You are the RECONCILIATION agent for feature "${feature.title}". The ${who} agent finished and reported these failures/notes:
 ${JSON.stringify(result.failures || [], null, 2)}
 ${who === 'build' ? `What it was asked to build:\n${feature.build}` : ''}
@@ -166,6 +170,7 @@ function validate(feature, round, fixNotes) {
   const report = `docs/test-results/${feature.key}/round-${round}.md`
   return agent(`${COMMON}${WORKTREE_SETUP}
 ${env(n, 'val')}
+${TEST_ACCOUNTS}
 You are a VALIDATION agent (round ${round}) for feature "${feature.title}". Your job is real testing, not script checks: start the app (seed with \`npm run seed\` against your database if needed), open it in Chromium via Playwright as a real user would (log in through the login form, navigate by clicking — from the World Shell where the spec says so), and follow the training spec \`${feature.trainingSpec}\` LITERALLY, step by step, comparing what you see to each "Expect". Create the spec's preconditions through the UI as written. Take a screenshot at every expectation (save under /var/tmp/sbpg/release-loop/${feature.key}/round-${round}/). Capture page errors, console errors and failed network requests.
 LOG AS YOU GO (the live tracker reads this; nothing may wait until your final report): append one JSON line per checked expectation to /var/tmp/sbpg/release-loop/${feature.key}/round-${round}/steps.jsonl — {"journey":"J1","step":"1.2","expect":"…","result":"pass"|"fail"|"blocked","seen":"…","screenshot":"…","at":"<ISO time>"} — and one line the moment you see any page error or failed app request: {"type":"pageerror"|"requestfailed","detail":"…","url":"…","at":"…"}. External font/CDN requests blocked by the sandbox are type "external_blocked", not failures.
 Also apply the regression-gate ground rule: a blank, clipped, unreadable or contextless screen is a failure even without an error. Check the feature at a phone width (390px) once.
@@ -179,6 +184,7 @@ function triage(feature, round, v, priorItems) {
   const n = nextSlot()
   return agent(`${COMMON}${WORKTREE_SETUP}
 ${env(n, 'tri')}
+${TEST_ACCOUNTS}
 You are the TRIAGE agent for feature "${feature.title}", round ${round}. The validator reported these failures (full report at ${REPO}/${v.reportPath}):
 ${JSON.stringify(v.failures, null, 2)}
 Earlier triage items for this feature (dedupe against these; reuse their id if it is the same root cause and say it recurred):
@@ -192,6 +198,7 @@ function fix(feature, round, items) {
   const n = nextSlot()
   return agent(`${COMMON}${WORKTREE_SETUP}
 ${env(n, 'fix')}
+${TEST_ACCOUNTS}
 You are a FIX agent for feature "${feature.title}", round ${round}. Fix the ROOT cause of each triage item below. Keep each fix minimal. For spec_error, correct the training spec \`${feature.trainingSpec}\` and say why. For environment, fix the harness/seed/docs. For a requirement gap or owner-direction conflict, build/change it and ADD journey steps to the training spec that prove it, so the validator tests it. Never skip, weaken or delete a journey step to get a pass.
 Triage items:
 ${JSON.stringify(items, null, 2)}

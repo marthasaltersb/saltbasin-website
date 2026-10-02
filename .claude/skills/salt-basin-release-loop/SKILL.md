@@ -44,7 +44,8 @@ committed — never transcript text.
 ## Environment (cloud sessions)
 
 Local Postgres 16 (`/var/tmp/sbpg/data`, socket `/tmp`, port 5433), env file with test admin credentials,
-Playwright + the preinstalled Chromium. Every agent gets its own database and ports; it kills what it
+Playwright + the preinstalled Chromium. Test accounts come only from `scripts/create-test-member.mjs`
+(member + admin with platform and career terms accepted, no forced password change). Every agent gets its own database and ports; it kills what it
 started (PID files, never `pkill -f`) and drops its database. If the environment is missing, the first
 agent sets it up and records how in `docs/release-process.md`.
 
