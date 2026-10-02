@@ -12,7 +12,8 @@ import path from 'node:path';
 
 const argv = process.argv.slice(2);
 const opt = (k) => { const i = argv.indexOf(k); return i >= 0 ? argv[i + 1] : null; };
-const runDir = opt('--run');
+const runDirs = argv.flatMap((a, i) => (a === '--run' ? [argv[i + 1]] : []));   // one or more workflow runs
+const runDir = runDirs[0] || null;
 const out = opt('--out');
 const extras = argv.flatMap((a, i) => (a === '--extra' ? [argv[i + 1]] : []));
 const definition = JSON.parse(fs.readFileSync(new URL('../server/data/releaseLoop/definition.json', import.meta.url), 'utf8'));
@@ -57,11 +58,11 @@ function agentActivity(file) {
   return { activity, usage, firstAt, lastAt };
 }
 
-const journal = runDir ? readJsonl(path.join(runDir, 'journal.jsonl')) : [];
+const journal = runDirs.flatMap((d) => readJsonl(path.join(d, 'journal.jsonl')).map((e) => ({ ...e, runDir: d })));
 const agents = new Map();
 for (const e of journal) {
   if (!e.agentId) continue;
-  const a = agents.get(e.agentId) || { id: e.agentId, label: e.label, phase: e.phase, status: 'running', result: null };
+  const a = agents.get(e.agentId) || { id: e.agentId, label: e.label, phase: e.phase, status: 'running', result: null, file: path.join(e.runDir, `agent-${e.agentId}.jsonl`), fromRun: true };
   if (e.label) a.label = e.label;
   if (e.phase) a.phase = e.phase;
   if (e.type === 'started') a.status = 'running';
@@ -81,9 +82,9 @@ for (const x of extras) {
 
 const agentList = [];
 for (const a of agents.values()) {
-  const file = a.file || (runDir ? path.join(runDir, `agent-${a.id}.jsonl`) : null);
+  const file = a.file;
   const act = file && fs.existsSync(file) ? agentActivity(file) : { activity: null, usage: null };
-  if (a.file && act.lastAt && Date.now() - Date.parse(act.lastAt) > 15 * 60 * 1000 && a.status === 'running') a.status = 'idle_or_done';
+  if (!a.fromRun && act.lastAt && Date.now() - Date.parse(act.lastAt) > 15 * 60 * 1000 && a.status === 'running') a.status = 'idle_or_done';
   const [role, feature, round] = String(a.label || '').split(':');
   const r = a.result && typeof a.result === 'object' ? a.result : null;
   let summary = null;
@@ -167,7 +168,7 @@ for (const [key, list] of Object.entries(byFeature)) {
 }
 
 const snapshot = {
-  runId: runDir ? path.basename(runDir) : null,
+  runId: runDirs.map((d) => path.basename(d)).join(' + ') || null,
   syncedAt: new Date().toISOString(),
   maxFixAttemptsPerBug: MAX_ATTEMPTS,
   maxFixRounds: definition.maxFixRounds,
