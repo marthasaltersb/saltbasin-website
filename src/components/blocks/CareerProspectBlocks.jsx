@@ -189,7 +189,16 @@ export function CareerRollupShowcaseBlock({ section, memberSlug }) {
   }, [memberSlug, dataSource, displayDefinitionKey]);
 
   const catalogKey = (GROUP_KEYS_BY_SOURCE[dataSource] || {})[groupBy] || 'skills_by_category';
-  const rows = displayDefinitionKey ? (catalog?.configurableRows || []) : (catalog?.[catalogKey] || []);
+  // 'atom:<key>' selects one of the member's own Career Atom groupings (Career
+  // Master -> Proficiency & Rollups -> 5 · Resume rollups); a grouping that was
+  // since removed or hidden shows the honest empty state.
+  const atomGrouping = typeof groupBy === 'string' && groupBy.startsWith('atom:')
+    ? (catalog?.groupings || []).find((g) => g.key === groupBy.slice(5))
+    : null;
+  const rows = displayDefinitionKey ? (catalog?.configurableRows || [])
+    : atomGrouping ? atomGrouping.entries
+    : groupBy.startsWith?.('atom:') ? []
+    : (catalog?.[catalogKey] || []);
   const chartType = resolvedDisplay?.chartType || f.chartType || 'bar';
   const ChartRenderer = CHART_RENDERERS[chartType] || BarChart;
 

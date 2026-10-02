@@ -20,7 +20,7 @@
 //     worse than the provenance grouping already does for that job.
 import { db } from '../db.js';
 import { migrateCareerDataForUser } from './careerAtomMigration.js';
-import { groupCount } from './rollupMetrics.js';
+import { atomDefinitionsFromRows, resolveAtomGroupings, ATOM_LEGACY_KEYS } from './resumeRollups.js';
 import { loadRodAtoms, loadMoleculeDefinition, assembleMolecule } from './eidosBonding.js';
 
 async function getOrBackfillRod(userId) {
@@ -65,10 +65,6 @@ function reconstructEntries(evidenceRows) {
   return [...byEntry.values()];
 }
 
-function toChartEntries(groups, labelPrefix) {
-  return groups.map(({ key, count }) => ({ key, label: `${labelPrefix} · ${key}`, value: count }));
-}
-
 // Real bonding: assembles the Molecule for one entryType (all atoms tagged
 // with that entryType as a magnetic property) and returns its maturity, or
 // null if the member has no atoms of that type yet (the Molecule doesn't
@@ -80,14 +76,34 @@ async function computeEntryTypeMoleculeMaturity(rodAtoms, entryType) {
   return molecule ? molecule.maturity : null;
 }
 
-// { skills_by_category, jobs_by_industry, tools_by_wheel_bucket, atomCount,
+// The member's configured atom_rollup definitions (career_experience_definitions,
+// edited in Career Master -> Proficiency & Rollups -> "5 · Resume rollups").
+// A member with no stored rows gets the in-memory defaults, which reproduce the
+// three groupings this catalog has always returned. Read-only: never seeds.
+async function loadAtomRollupDefinitions(userId) {
+  const rows = await db.prepare(`SELECT definition_type, definition_key, label, definition, sort_order, is_active FROM career_experience_definitions WHERE user_id=$1 AND definition_type='atom_rollup'`).all(userId);
+  return atomDefinitionsFromRows(rows.map((r) => ({
+    type: r.definition_type, key: r.definition_key, label: r.label, definition: r.definition || {},
+    sortOrder: Number(r.sort_order), isActive: r.is_active !== false,
+  })));
+}
+
+/** Configured atom groupings for a member, optionally against draft (unsaved) definitions. */
+export async function resolveCareerAtomGroupings(userId, definitions = null) {
+  const defs = definitions || await loadAtomRollupDefinitions(userId);
+  return resolveAtomGroupings(defs, await getCareerAtomEntries(userId));
+}
+
+// { skills_by_category, jobs_by_industry, tools_by_wheel_bucket, groupings, atomCount,
 //   moleculeMaturity: { skills, jobs, tools } }
-// Each grouping is a chart-ready array of { key, label, value }. Empty arrays
-// (not fabricated placeholder data) when the member has no evidence yet —
-// callers render an honest empty state instead.
+// The three legacy keys are driven by the member's atom_rollup definitions with
+// those keys (hidden or removed -> []), `groupings` lists every configured
+// grouping in the member's order. Each grouping is a chart-ready array of
+// { key, label, value }. Empty arrays (not fabricated placeholder data) when
+// the member has no evidence yet — callers render an honest empty state instead.
 export async function buildCareerAtomRollupCatalog(userId) {
   const rod = await getOrBackfillRod(userId);
-  if (!rod) return { skills_by_category: [], jobs_by_industry: [], tools_by_wheel_bucket: [], atomCount: 0, moleculeMaturity: {} };
+  if (!rod) return { skills_by_category: [], jobs_by_industry: [], tools_by_wheel_bucket: [], groupings: [], atomCount: 0, moleculeMaturity: {} };
 
   const evidenceRows = await db
     .prepare(`SELECT molecule_key, value, metadata FROM journey_rod_evidence WHERE rod_id=$1`)
@@ -97,6 +113,8 @@ export async function buildCareerAtomRollupCatalog(userId) {
   const skills = entries.filter((e) => e.entryType === 'career_skill_entry').map((e) => e.fields);
   const jobs = entries.filter((e) => e.entryType === 'career_job_entry').map((e) => e.fields);
   const tools = entries.filter((e) => e.entryType === 'career_tool_entry').map((e) => e.fields);
+  const groupings = resolveAtomGroupings(await loadAtomRollupDefinitions(userId), { skills, jobs, tools });
+  const legacy = (k) => groupings.find((g) => g.key === k)?.entries || [];
 
   // Real Semantic Affinity Field bonding — see the module header for why
   // this coexists with (rather than replaces) reconstructEntries() above.
@@ -108,9 +126,10 @@ export async function buildCareerAtomRollupCatalog(userId) {
   ]);
 
   return {
-    skills_by_category: toChartEntries(groupCount(skills, (s) => s.category), 'Skills'),
-    jobs_by_industry: toChartEntries(groupCount(jobs, (j) => j.industry), 'Roles'),
-    tools_by_wheel_bucket: toChartEntries(groupCount(tools, (t) => t.wheel_bucket), 'Tools'),
+    skills_by_category: legacy(ATOM_LEGACY_KEYS[0]),
+    jobs_by_industry: legacy(ATOM_LEGACY_KEYS[1]),
+    tools_by_wheel_bucket: legacy(ATOM_LEGACY_KEYS[2]),
+    groupings,
     atomCount: evidenceRows.length,
     moleculeMaturity: { skills: skillsMaturity, jobs: jobsMaturity, tools: toolsMaturity },
   };
