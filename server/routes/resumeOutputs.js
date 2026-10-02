@@ -16,6 +16,7 @@ import {
   shareUrlFor,
 } from '../lib/applicationPackages.js';
 import { ensurePlaceholderOpportunity, linkOutputToOpportunity } from '../lib/opportunityOutputs.js';
+import { getOutputVersionHistory } from '../lib/outputVersionHistory.js';
 import { sendFinalizationError, toolsMissingCategory } from '../lib/finalizationGates.js';
 
 const router = express.Router();
@@ -46,6 +47,16 @@ router.get('/:id/staleness', async (req, res) => {
   const staleness = await checkStaleness(req.params.id, req.user.id);
   if (!staleness) return res.status(404).json({ error: 'Resume output not found' });
   res.json(staleness);
+});
+
+// Version history of one output's lineage: dates, approvals and every
+// version's blocks for the timeline slider / tracked changes (read-only).
+router.get('/:id/versions', async (req, res) => {
+  try {
+    const history = await getOutputVersionHistory(req.user.id, Number(req.params.id));
+    if (!history) return res.status(404).json({ error: 'Resume output not found' });
+    res.json(history);
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 router.patch('/:id/status', async (req, res) => {

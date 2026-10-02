@@ -12,6 +12,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
 import DocumentBlocksView from '../DocumentBlocksView.jsx';
+import OutputVersionHistory from './OutputVersionHistory.jsx';
 
 const INK = '#1b2a3b';
 const S = {
@@ -46,6 +47,7 @@ export default function CareerBoundOutputEditor({ projectionId, onSaved, onOpenR
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [newBullet, setNewBullet] = useState({});
+  const [showHistory, setShowHistory] = useState(false);
 
   const load = useCallback(async (id) => {
     try {
@@ -122,12 +124,16 @@ export default function CareerBoundOutputEditor({ projectionId, onSaved, onOpenR
         <input id="cb-name" style={{ ...S.input, width: 280 }} value={name} onChange={(e) => { setName(e.target.value); setDirty(true); }} />
         <span style={S.sub}>Status: <strong style={{ textTransform: 'capitalize' }}>{state.outputStatus}</strong></span>
         <button type="button" style={S.btn('gold')} disabled={saving || !dirty} onClick={save}>{saving ? 'Saving...' : 'Save changes'}</button>
+        <button type="button" style={S.btn('outline')} onClick={() => setShowHistory((v) => !v)}>{showHistory ? 'Hide version history' : 'Version history'}</button>
         {!hideQueueLink && (
           <button type="button" style={S.btn('outline')} onClick={() => { onOpenReviewQueue ? onOpenReviewQueue() : window.dispatchEvent(new CustomEvent('sb-admin-switch-tab', { detail: { tab: 'careerReconciliation' } })); }}>
             Career Sources to Review ({state.openReviewTasks} open)
           </button>
         )}
       </div>
+      {showHistory && (
+        <div style={{ ...S.card, background: '#FBF8F3' }}><OutputVersionHistory projectionId={projectionId} onClose={() => setShowHistory(false)} /></div>
+      )}
       {state.outputStatus !== 'draft' && (
         <div role="status" style={S.warn}>This version is {state.outputStatus}. Saving will not change it - your edits become a new draft version, and any QR link keeps showing the approved version until you approve the new one.</div>
       )}
