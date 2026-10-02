@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Builds the release tracker snapshot from a release-loop workflow run.
 //
-//   node scripts/release-tracker-sync.mjs --run <workflow transcript dir> [--extra <agent transcript>=<label>] --out snapshot.json
+//   node scripts/release-tracker-sync.mjs --run <workflow transcript dir> [--run <another>] [--steps-root <dir>] [--extra <agent transcript>=<label>] --out snapshot.json
 //
 // Reads the workflow journal (agent started/finished + each agent's structured result) and each agent's
 // own transcript (latest activity + token usage), and derives feature, agent and bug status using the
@@ -15,6 +15,8 @@ const opt = (k) => { const i = argv.indexOf(k); return i >= 0 ? argv[i + 1] : nu
 const runDirs = argv.flatMap((a, i) => (a === '--run' ? [argv[i + 1]] : []));   // one or more workflow runs
 const runDir = runDirs[0] || null;
 const out = opt('--out');
+// Where validators append live step logs (<root>/<feature>/round-N/steps.jsonl). Default is the shared local test root.
+const stepsRoot = opt('--steps-root') || '/var/tmp/sbpg/release-loop';
 const extras = argv.flatMap((a, i) => (a === '--extra' ? [argv[i + 1]] : []));
 const definition = JSON.parse(fs.readFileSync(new URL('../server/data/releaseLoop/definition.json', import.meta.url), 'utf8'));
 const MAX_ATTEMPTS = definition.bugEscalation?.maxFixAttemptsPerBug ?? 2;
@@ -111,7 +113,7 @@ for (const a of agents.values()) {
   } else if (typeof a.result === 'string') summary = clip(a.result, 200);
   let liveSteps = null;
   if (role === 'validate' && feature && round) {
-    const rows = readJsonl(path.join('/var/tmp/sbpg/release-loop', feature, `round-${round.replace('r', '')}`, 'steps.jsonl'));
+    const rows = readJsonl(path.join(stepsRoot, feature, `round-${round.replace('r', '')}`, 'steps.jsonl'));
     const steps = rows.filter((x) => x.result);
     liveSteps = {
       passed: steps.filter((x) => x.result === 'pass').length,
@@ -207,6 +209,7 @@ for (const [key, list] of Object.entries(byFeature)) {
   else if (lastRes?.passed) status = 'passed';
   else if ([...fb.values()].some((b) => b.status === 'needs_human')) status = 'needs_human';
   else if (lastRes) status = 'failing';
+  else if (list.length && list[list.length - 1].status === 'failed') status = 'failed';   // the latest agent died with no result
   else if (list.length) status = 'between_stages';
   features.push({
     key, status, rounds: validations.length,
