@@ -31,6 +31,16 @@ file (version bump + note in `docs/release-process.md`), never by improvising pe
 6. **Push** only when the release log shows every feature passed, or the owner explicitly says otherwise.
    Items classed `needs_business_definition` go to the owner as exact questions; they are never guessed.
 
+## After every session — session mapping
+
+Run `node scripts/analyze-session.mjs` (see `docs/changes/session-mapping.md`) before the session ends. It
+records the session's token usage (input / cache write / cache read / output), estimated spend, time and
+limit events, and proposes where each learned or repeated item belongs — **context** (CLAUDE.md, skill
+references), **prompt** (skills, workflows, agent role prompts), **cache** (stable reusable prefixes),
+**memory** (the agent memory register). Apply the accepted mappings, then the trends screen shows whether
+sessions are getting cheaper and faster before hitting limits. Only metrics and mapping summaries are
+committed — never transcript text.
+
 ## Environment (cloud sessions)
 
 Local Postgres 16 (`/var/tmp/sbpg/data`, socket `/tmp`, port 5433), env file with test admin credentials,
