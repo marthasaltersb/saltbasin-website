@@ -37,11 +37,13 @@ const LeadsPanel = lazy(() => import('./admin/LeadsPanel.jsx'));
 const CareerMasterPanel = lazy(() => import('./admin/CareerMasterPanel.jsx'));
 const CareerMasterEntryPoint = lazy(() => import('./admin/CareerMasterEntryPoint.jsx'));
 const OutputTemplateConfiguratorHub = lazy(() => import('./admin/OutputTemplateConfigurator.jsx').then((m) => ({ default: m.OutputTemplateConfiguratorHub })));
+const CareerReconciliationPanel = lazy(() => import('./admin/CareerReconciliationPanel.jsx'));
 const LonetreeMvpPanel = lazy(() => import('./admin/LonetreeMvpPanel.jsx'));
 
 const SIMPLE_EMBED_COMPONENTS = {
   leads: { title: 'Leads', render: () => <LeadsPanel /> },
   careerMaster: { title: 'Career Master', render: (scope) => (scope === 'admin' ? <CareerMasterPanel scope="admin" /> : <CareerMasterEntryPoint scope={scope} />) },
+  careerReconciliation: { title: 'Career Sources to Review', render: (scope) => <CareerReconciliationPanel scope={scope} /> },
   outputTemplates: { title: 'Output Templates', render: (scope) => <OutputTemplateConfiguratorHub scope={scope} /> },
   lonetreeMvp: { title: 'Fund & Portfolio Demo', render: (scope) => <LonetreeMvpPanel scope={scope} /> },
 };

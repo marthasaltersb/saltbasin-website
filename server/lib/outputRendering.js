@@ -21,6 +21,7 @@ import { fileURLToPath } from 'node:url';
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 import { projectionMetadata } from './resumeProjection.js';
+import { isCareerBound, resolveCareerBound, publicBlocks } from './careerBound.js';
 
 function parseContent(projection) {
   const c = projection.generated_content;
@@ -47,6 +48,18 @@ export function summarizeProjectionForView(projection) {
     content,
     metadata: projectionMetadata(projection),
   };
+}
+
+/**
+ * Same as summarizeProjectionForView, but a career_bound output is resolved
+ * against the owner's current Career Master first (and carries `warnings` for
+ * anything it could not resolve). `outputOnly` markers are kept for the owner.
+ */
+export async function summarizeProjectionForViewResolved(projection) {
+  const view = summarizeProjectionForView(projection);
+  if (!isCareerBound(view.content)) return view;
+  const { content, warnings } = await resolveCareerBound(Number(projection.user_id), view.content);
+  return { ...view, content, careerBound: true, warnings: warnings.map((w) => w.message) };
 }
 
 function writeParagraphs(doc, text) {
@@ -191,7 +204,9 @@ async function renderDocumentBlocks(doc, content, { metadata, shareUrl }) {
  * version is approved for QR sharing) embeds that version's QR code.
  */
 export async function renderProjectionToPdfBuffer(projection, { shareUrl = null } = {}) {
-  const content = parseContent(projection);
+  let content = parseContent(projection);
+  // career_bound -> resolve against Career Master now; the PDF shows plain wording (no editor badges).
+  if (isCareerBound(content)) content = publicBlocks((await resolveCareerBound(Number(projection.user_id), content)).content);
   const metadata = projectionMetadata(projection);
   const qrUrl = projection.output_status === 'published' && projection.share_token ? shareUrl : null;
   if (content.format === 'document_blocks') {

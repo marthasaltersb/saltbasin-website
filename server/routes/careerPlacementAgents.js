@@ -16,7 +16,7 @@ import { generateCoverLetterContent } from '../lib/coverLetterTargeting.js';
 import { runQualificationGatesForUser } from '../lib/careerVerificationAgent.js';
 import { autoQueueOutputsForNewlyApproved } from '../lib/autoQueueAgent.js';
 import { createResumeOutputProjection, listResumeOutputProjectionsForOpportunity, listResumeOutputProjections } from '../lib/resumeProjection.js';
-import { summarizeProjectionForView, renderProjectionToPdfBuffer, filenameFor } from '../lib/outputRendering.js';
+import { summarizeProjectionForViewResolved, renderProjectionToPdfBuffer, filenameFor } from '../lib/outputRendering.js';
 import { getOwnedOutputWithApprover, shareUrlFor } from '../lib/applicationPackages.js';
 import { dispatchRaw } from '../lib/email.js';
 import archiver from 'archiver';
@@ -237,7 +237,7 @@ router.get('/resume-outputs/:id/view', requireUser, async (req, res) => {
   try {
     const projection = await getOwnedOutputWithApprover(Number(req.params.id), req.user.id);
     if (!projection) return res.status(404).json({ error: 'Output not found.' });
-    res.json(summarizeProjectionForView(projection));
+    res.json(await summarizeProjectionForViewResolved(projection));
   } catch (e) {
     res.status(400).json({ error: e.message });
   }

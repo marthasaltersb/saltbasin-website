@@ -27,6 +27,7 @@ import { timelineRows, trendSeries, proficiencyRows, footnoteForRows } from '../
 import { snapshotFingerprint } from '../../src/lib/shareSnapshotDiff.js';
 import { careerChangeEvents } from './careerChangeEvents.js';
 import { assertReadyToFinalize } from './finalizationGates.js';
+import { isCareerBound, resolveCareerBound, publicBlocks } from './careerBound.js';
 
 const OUTPUT_TYPES = new Set(['resume', 'cover_letter', 'application_package']);
 const BLOCK_TYPES = new Set(['heading', 'paragraph', 'bullet', 'role', 'table', 'figure']);
@@ -136,11 +137,24 @@ export async function approveOutputForSharing(projectionId, approver) {
     warnings.push(`The chart snapshot for the printed version could not be captured (${e.message}). The QR page will say so and can't compare live data to print.`);
     return null;
   });
+  // A career_bound document resolves against Career Master on every view, so the
+  // printed wording is frozen here (as plain blocks) for the QR page to compare against.
+  let storedSnapshot = snapshot;
+  const approvedContent = parseJson(row.generated_content);
+  if (isCareerBound(approvedContent)) {
+    try {
+      const { content } = await resolveCareerBound(approver.id, approvedContent);
+      storedSnapshot = { ...(snapshot || { capturedAt: Date.now(), charts: [] }), document: publicBlocks(content).blocks };
+    } catch (e) {
+      console.error('[applicationPackages] printed-text snapshot failed at approval:', e.message);
+      warnings.push(`The printed wording could not be captured (${e.message}). The QR page cannot show whether the text changed after printing.`);
+    }
+  }
   await db.prepare(`
     UPDATE resume_output_projections
        SET share_token=$1, output_status='published', approved_by=$2, approved_at=$3, shared_snapshot=$5::jsonb, share_history='[]'::jsonb
      WHERE id=$4 AND user_id=$2
-  `).run(token, approver.id, Date.now(), projectionId, snapshot);
+  `).run(token, approver.id, Date.now(), projectionId, storedSnapshot);
   return { id: Number(projectionId), token, movedFrom: holder && Number(holder.id) !== Number(projectionId) ? Number(holder.id) : null, warnings };
 }
 
@@ -274,8 +288,27 @@ export function shareUrlFor(token, req) {
  * difference between printed and whatever state the viewer selects.
  */
 export async function publicSharedView(row) {
-  const content = parseJson(row.generated_content);
+  let content = parseJson(row.generated_content);
   const approved = parseJson(row.shared_snapshot) || null;
+  // career_bound: show the wording as it reads against Career Master now, and
+  // tell the viewer if it differs from the printed (approved) wording.
+  let documentState = null;
+  if (isCareerBound(content)) {
+    try {
+      const resolved = publicBlocks((await resolveCareerBound(row.user_id, content)).content);
+      const printed = approved?.document || null;
+      documentState = {
+        careerBound: true,
+        printedAvailable: !!printed,
+        changedSinceApproval: printed ? !sameContent(printed, resolved.blocks) : null, // key-order-insensitive: JSONB reorders object keys
+        printed: printed ? { ...resolved, blocks: printed } : null,
+      };
+      content = resolved;
+    } catch (e) {
+      console.error('[applicationPackages] could not resolve career-bound document:', e.message);
+      return { title: row.preset_name || 'Resume', outputType: row.output_type || 'resume', content: {}, metadata: projectionMetadata(row), states: null, documentError: 'This document could not be loaded right now.', liveScope: 'charts' };
+    }
+  }
   let live = null;
   let liveError = null;
   try {
@@ -295,6 +328,7 @@ export async function publicSharedView(row) {
     title: row.preset_name || 'Resume',
     outputType: row.output_type || 'resume',
     content: content || {},
+    documentState,
     metadata: projectionMetadata(row),
     states: {
       approved,
