@@ -27,6 +27,8 @@ import ConfigPanel from './admin/ConfigPanel.jsx';
 import { toast } from '../lib/toast.js';
 import { attachSceneManifestTree, publishSceneManifest, removePublishedSceneManifest } from '../lib/sceneManifest.js';
 import PlanetAtmosphereView from './PlanetAtmosphereView.jsx';
+import OpportunityOutputsSection from './OpportunityOutputsSection.jsx';
+import CareerConsentGate from './admin/CareerConsentGate.jsx';
 
 // Simple, self-contained panels — no AdminShell-local shared state, so they
 // can be lifted straight into a real WorldShell embed (module-by-module
@@ -102,12 +104,27 @@ function buildIslandBase(THREE, accentHex) {
   return group;
 }
 
-export default function WorldShell() {
+// Phone-width layout (390px): the top bar wraps instead of clipping, the
+// per-island rail spans the screen instead of a fixed 300px strip, and the
+// header stats (also shown on the Journeys cards) step aside.
+const MOBILE_CSS = `
+@media (max-width: 700px) {
+  .sb-world-topbar { gap: 0.5rem !important; padding: 0.5rem 0.75rem !important; flex-wrap: wrap; }
+  .sb-world-topbar .sb-world-brandsub { display: none; }
+  .sb-world-topbar button { white-space: nowrap; }
+  .sb-world-stats .sb-world-stat, .sb-world-profile-text { display: none !important; }
+  .sb-world-stats { margin-left: auto; }
+  .sb-world-rail { left: 0.5rem !important; right: 0.5rem !important; width: auto !important; top: 4.4rem !important; bottom: 0.5rem !important; }
+}
+`;
+
+function WorldShellInner() {
   const nav = useNavigate();
   const hostRef = useRef(null);
   const engineRef = useRef(null);
   const [user, setUser] = useState(undefined); // undefined = checking, null = redirecting
   const [tabsConfig, setTabsConfig] = useState(null);
+  const [tabsError, setTabsError] = useState('');
   const [view, setView] = useState('world'); // 'world' | 'journeys' | 'classic' | 'atmosphere'
   const [focusedKey, setFocusedKey] = useState(null);
   const [atmosphereKey, setAtmosphereKey] = useState(null);
@@ -141,11 +158,11 @@ export default function WorldShell() {
           const tabs = (navData.views || []).flatMap((v) => v.tabs || []);
           setTabsConfig(tabs);
         })
-        .catch(() => setTabsConfig([]));
+        .catch((e) => { setTabsError(e.message); setTabsConfig([]); });
     } else {
       api.getMemberDraftConfig()
         .then((cfg) => setTabsConfig(cfg?.navigation?.memberTabs || []))
-        .catch(() => setTabsConfig([]));
+        .catch((e) => { setTabsError(e.message); setTabsConfig([]); });
     }
   }, [user]);
 
@@ -185,7 +202,19 @@ export default function WorldShell() {
     }
     setFocusedKey(key);
   }, [islands]);
-  const clearFocus = useCallback(() => setFocusedKey(null), []);
+  // Leaving a sub-view that was opened from inside an island (e.g. "Open my
+  // Career Master" from an opportunity's provenance) returns to that island
+  // instead of dropping the member back at the bare world.
+  const returnKeyRef = useRef(null);
+  const clearFocus = useCallback(() => {
+    setFocusedKey(returnKeyRef.current || null);
+    returnKeyRef.current = null;
+  }, []);
+  const openCareerMaster = useCallback(() => {
+    const island = islands.find((i) => i.componentId === 'careerMaster');
+    returnKeyRef.current = focusedKey;
+    if (island) selectIsland(island.key); else { returnKeyRef.current = null; openClassic('careerMaster'); }
+  }, [islands, focusedKey, selectIsland, openClassic]);
   const clearAtmosphere = useCallback(() => { setAtmosphereKey(null); setView('world'); }, []);
 
   // Gates when the canvas-host div actually exists in the DOM: on first
@@ -563,6 +592,7 @@ export default function WorldShell() {
 
   return (
     <div style={S.shell}>
+      <style>{MOBILE_CSS}</style>
       <TopBar
         user={user}
         view={view}
@@ -599,8 +629,34 @@ export default function WorldShell() {
           herq={herq}
           hasCareerIsland={hasCareerIsland}
           hasCommercialIsland={hasCommercialIsland}
+          onOpenCareerMaster={openCareerMaster}
+          loadError={tabsError}
         />
       )}
+    </div>
+  );
+}
+
+// The two required first steps every other member surface already enforces
+// (MemberDashboard.jsx) - without them every member API answers 428 and the
+// world renders as an empty page: (1) replace the provisioning password,
+// (2) agree to the current Career Portfolio terms. Both return the member here.
+export default function WorldShell() {
+  const nav = useNavigate();
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    api.me()
+      .then(({ user: u }) => {
+        if (!u) nav('/login', { replace: true });
+        else if (u.mustChangePassword) nav('/first-login-password?next=/world', { replace: true });
+        else setReady(true);
+      })
+      .catch(() => nav('/login', { replace: true }));
+  }, [nav]);
+  if (!ready) return <div style={S.loading}>Entering your world…</div>;
+  return (
+    <div style={{ position: 'fixed', inset: 0, overflowY: 'auto', background: '#05090b' }}>
+      <CareerConsentGate><WorldShellInner /></CareerConsentGate>
     </div>
   );
 }
@@ -611,12 +667,12 @@ function TopBar({ user, view, setView, openClassic, career, commercial, hasCaree
   const avgScore = scored.length ? Math.round(scored.reduce((s, o) => s + o.score.score, 0) / scored.length) : null;
   const agentCount = hasCareerIsland ? career.agents.length : hasCommercialIsland ? commercial.agents.length : 0;
   return (
-    <div style={S.topbar}>
+    <div className="sb-world-topbar" style={S.topbar}>
       <div style={S.brand}>
         <span style={S.brandMark}>◈</span>
         <div>
           <div style={S.brandTitle}>SALT BASIN</div>
-          <div style={S.brandSub}>Your World</div>
+          <div className="sb-world-brandsub" style={S.brandSub}>Your World</div>
         </div>
       </div>
       <div style={S.navTabs}>
@@ -624,13 +680,13 @@ function TopBar({ user, view, setView, openClassic, career, commercial, hasCaree
         <button style={S.navTab(view === 'journeys')} onClick={() => setView('journeys')}>Journeys</button>
         <button style={S.navTab(view === 'classic')} onClick={() => openClassic()}>Classic Tools</button>
       </div>
-      <div style={S.stats}>
-        <div style={S.stat}><span style={S.statVal}>{trackedCount}</span><span style={S.statLabel}>Tracked</span></div>
-        <div style={S.stat}><span style={S.statVal}>{agentCount}</span><span style={S.statLabel}>Agents</span></div>
-        <div style={S.stat}><span style={S.statVal}>{avgScore ?? '—'}</span><span style={S.statLabel}>Avg Score</span></div>
+      <div className="sb-world-stats" style={S.stats}>
+        <div className="sb-world-stat" style={S.stat}><span style={S.statVal}>{trackedCount}</span><span style={S.statLabel}>Tracked</span></div>
+        <div className="sb-world-stat" style={S.stat}><span style={S.statVal}>{agentCount}</span><span style={S.statLabel}>Agents</span></div>
+        <div className="sb-world-stat" style={S.stat}><span style={S.statVal}>{avgScore ?? '—'}</span><span style={S.statLabel}>Avg Score</span></div>
         <div style={S.profileChip}>
           <div style={S.profileAvatar}>{(user.displayName || user.email || '?')[0].toUpperCase()}</div>
-          <div>
+          <div className="sb-world-profile-text">
             <div style={S.profileName}>{user.displayName || user.email}</div>
             <div style={S.profileRole}>{user.role === 'admin' ? 'System Architect' : 'Member'}</div>
           </div>
@@ -666,7 +722,7 @@ function JourneysGrid({ islands, career, commercial, herq, onOpen }) {
   );
 }
 
-function RightRail({ focused, onClear, onOpenClassic, career, commercial, herq, hasCareerIsland, hasCommercialIsland }) {
+function RightRail({ focused, onClear, onOpenClassic, career, commercial, herq, hasCareerIsland, hasCommercialIsland, onOpenCareerMaster, loadError }) {
   if (focused) {
     if (focused.componentId === 'herqPublications') {
       return <PublicationDockedPanel label={focused.label} herq={herq} onClear={onClear} />;
@@ -674,10 +730,10 @@ function RightRail({ focused, onClear, onOpenClassic, career, commercial, herq, 
     if (focused.kind === 'docked') {
       const pipeline = focused.componentId === 'careerPlacementAgents' ? career : commercial;
       const dimensionFields = focused.componentId === 'careerPlacementAgents' ? CAREER_DIMENSION_FIELDS : COMMERCIAL_DIMENSION_FIELDS;
-      return <DockedPipelinePanel label={focused.label} pipeline={pipeline} dimensionFields={dimensionFields} onClear={onClear} isCommercial={focused.componentId === 'commercialOpportunities'} />;
+      return <DockedPipelinePanel label={focused.label} pipeline={pipeline} dimensionFields={dimensionFields} onClear={onClear} isCommercial={focused.componentId === 'commercialOpportunities'} onOpenCareerMaster={onOpenCareerMaster} />;
     }
     return (
-      <div style={S.rail}>
+      <div className="sb-world-rail" style={S.rail}>
         <button style={S.backBtn} onClick={onClear}>← Back to World</button>
         <div style={S.railTitle}>{focused.label}</div>
         <p style={S.railText}>This module doesn't have its own in-world view yet — open it in Classic Tools to work with it directly.</p>
@@ -690,9 +746,11 @@ function RightRail({ focused, onClear, onOpenClassic, career, commercial, herq, 
   const label = hasCareerIsland ? 'Career Placement Agents' : hasCommercialIsland ? 'Commercial Opportunity Pipeline' : null;
   if (!pipeline) {
     return (
-      <div style={S.rail}>
+      <div className="sb-world-rail" style={S.rail}>
         <div style={S.railTitle}>Your World</div>
-        <p style={S.railText}>Click an island to enter it.</p>
+        {loadError
+          ? <div role="alert" style={{ color: '#f0c4d0', border: '0.5px solid rgba(217,140,160,0.7)', borderRadius: 6, padding: '0.5rem', fontSize: '0.74rem' }}>Your islands could not be loaded: {loadError}</div>
+          : <p style={S.railText}>Click an island to enter it.</p>}
       </div>
     );
   }
@@ -705,7 +763,7 @@ function RightRail({ focused, onClear, onOpenClassic, career, commercial, herq, 
     .slice(0, 5);
 
   return (
-    <div style={S.rail}>
+    <div className="sb-world-rail" style={S.rail}>
       <div style={S.railTitle}>{label}</div>
       <div style={S.gaugeWrap}>
         <div style={S.gauge}>{avgScore ?? '—'}</div>
@@ -738,7 +796,7 @@ function scoreColor(score) {
   return '#d98ca0';
 }
 
-function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isCommercial }) {
+function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isCommercial, onOpenCareerMaster }) {
   const {
     loading, opportunities, selectedOpportunityId, selectedOpportunity, selectOpportunity,
     showAddForm, setShowAddForm, addForm, setAddForm, handleAddOpportunity,
@@ -756,7 +814,7 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
     researchingContacts, researchContacts,
     draftingOutreachMessage, outreachDraft, draftMessage, discardOutreachDraft,
     savingOutreachMessage, saveOutreachMessage,
-    mergingOutcome, mergeOutcome,
+    mergingOutcome, mergeOutcome, reload,
   } = pipeline;
   const importInputRef = useRef(null);
   const importOutputInputRef = useRef(null);
@@ -769,7 +827,7 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
   }, [selectedOpportunity?.id, outreachEligible]);
 
   return (
-    <div style={S.rail}>
+    <div className="sb-world-rail" style={S.rail}>
       <button style={S.backBtn} onClick={onClear}>← Back to World</button>
       <div style={S.railTitle}>{label}</div>
 
@@ -826,6 +884,13 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
                   ))}
                 </div>
               )}
+
+              <OpportunityOutputsSection
+                opportunity={selectedOpportunity}
+                onOpenCareerMaster={onOpenCareerMaster}
+                onOpportunityChanged={reload}
+                refreshSignal={[importingOutput, approvingResume, approvingCoverLetter].join('|')}
+              />
 
               <div style={S.railSubtitle}>Resume for This Opportunity</div>
               {resumeReview ? (
@@ -963,6 +1028,7 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
                 <>
                   <input style={S.dimInputWide} placeholder="Job title" value={addForm.jobTitle} onChange={(e) => setAddForm({ ...addForm, jobTitle: e.target.value })} />
                   <input style={S.dimInputWide} placeholder="Company" value={addForm.companyName} onChange={(e) => setAddForm({ ...addForm, companyName: e.target.value })} />
+                  <div style={{ fontSize: '0.68rem', color: '#8b877c', margin: '0.3rem 0' }}>Only a job title and company are needed - add details later.</div>
                 </>
               )}
               <button type="submit" style={S.gold} disabled={saving}>{saving ? 'Saving…' : 'Track'}</button>
@@ -973,6 +1039,7 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
             <div key={o.id} style={S.railRow} onClick={() => selectOpportunity(o.id)} className="sb-world-row">
               <span>
                 {o.metadata?.jobTitle || o.metadata?.companyName}
+                {o.metadata?.placeholder && <span style={{ color: '#8fadb6', fontSize: '0.62rem', marginLeft: '0.4rem', textTransform: 'uppercase' }}>Placeholder</span>}
                 {o.metadata?.proposedByAgent && <span style={{ color: '#c4843a', fontSize: '0.62rem', marginLeft: '0.4rem', textTransform: 'uppercase' }}>Agent-proposed</span>}
                 {o.metadata?.priority && <span style={{ color: '#8fadb6', fontSize: '0.62rem', marginLeft: '0.4rem', textTransform: 'uppercase' }}>{o.metadata.priority}</span>}
                 {o.metadata?.applicationStage && o.metadata.applicationStage !== 'Not Started' && (
@@ -1163,10 +1230,10 @@ function PublicationDockedPanel({ label, herq, onClear }) {
     });
   }
 
-  if (loading) return <div style={S.rail}><div style={S.railEmpty}>Loading…</div></div>;
+  if (loading) return <div className="sb-world-rail" style={S.rail}><div style={S.railEmpty}>Loading…</div></div>;
 
   return (
-    <div style={S.rail}>
+    <div className="sb-world-rail" style={S.rail}>
       <button style={S.backBtn} onClick={onClear}>← Back to World</button>
       <div style={S.railTitle}>{label}</div>
 

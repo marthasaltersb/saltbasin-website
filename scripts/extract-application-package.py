@@ -139,6 +139,7 @@ def main():
     ap.add_argument('package_key')
     ap.add_argument('out')
     ap.add_argument('--company', required=True)
+    ap.add_argument('--role', default=None, help='Role title being applied for (lets the importer create a placeholder opportunity)')
     ap.add_argument('--created', required=True, help='ISO-8601 creation timestamp of the package')
     ap.add_argument('--authors', required=True, help='Semicolon-separated author names')
     ap.add_argument('outputs', nargs='+', help='<variant>=<docx path>')
@@ -148,6 +149,7 @@ def main():
         'packageKey': args.package_key,
         'company': args.company,
         'createdAt': args.created,
+        **({'role': args.role} if args.role else {}),
         'authors': [a.strip() for a in args.authors.split(';') if a.strip()],
         'outputs': [],
     }

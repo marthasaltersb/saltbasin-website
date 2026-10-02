@@ -208,6 +208,16 @@ Added 2026-10-02. Every code change goes build → initial check → integrate �
 - Push only when the release log shows every feature passed (or the owner says otherwise). `needs_business_definition` failures go to the owner as exact questions, never guessed.
 - Specs and logs use fictional data only (public repo).
 
+### World Shell: opportunity outputs, provenance, editor
+
+Added 2026-10-02 (`docs/changes/world-shell-opportunity-outputs.md`, training spec of the same name). The member's job-application journey runs entirely inside `/world` (Journeys → Career Placement Agents → a tracked opportunity → **APPLICATION OUTPUTS**, `src/components/OpportunityOutputsSection.jsx`, server `server/lib/opportunityOutputs.js`).
+
+- **Link** = the existing nullable `resume_output_projections.career_opportunity_rod_id` (no link table); it is applied to a whole lineage (`lineage_root_id`) so new versions stay linked. `parent_version_id` records which version an edited draft came from. A placeholder opportunity is a `career_opportunity_target` rod with `metadata.placeholder: true`.
+- **Provenance is computed, not stored text** (source, dates, authors, version/lineage, Career Master state it was filed against vs now). Package company/role live only in the gitignored package JSON; `import-application-package.mjs --link-opportunity` reads them from there — never hardcode them.
+- **One editor.** Drafts open in `HerqOutputConfigurator.jsx` through its optional `adapter` prop (document mode) with `src/lib/documentBlocksEditor.js` translating `document_blocks` ↔ editor blocks losslessly. Do not build a second block editor. Saving always creates the next draft version; it never edits an approved version.
+- **Finalize path:** Approve for QR = `useToolCategoryGate().run(() => api.shareResumeOutput(id))` → `POST /api/resume-outputs/:id/share` → `assertReadyToFinalize`.
+- **Gotchas found while building:** (1) the World Shell rail uses `backdrop-filter`, which becomes the containing block for `position: fixed` — full-screen layers (editor, gate dialog) must be portalled to `document.body`; (2) a member with `mustChangePassword` or without Career Portfolio consent gets 428 from every member API, so `WorldShell` runs the same first steps as `MemberDashboard` (password page, `CareerConsentGate`) before rendering; (3) auth endpoints rate-limit to 10 attempts / 15 min / IP, so browser tests must reuse a session.
+
 ### React rules of hooks
 
 All hooks (`useState`, `useMemo`, `useEffect`) must be declared **before** any conditional early return. This caused a blank-screen bug in `EditorPane.jsx` — be vigilant when adding hooks to components that have early null-guards.
