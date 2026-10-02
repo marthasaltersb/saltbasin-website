@@ -96,6 +96,17 @@ for (const x of extras) {
   agents.set(`extra:${label}`, { id: `extra:${label}`, label, phase: label.split(':')[0] === 'build' ? 'Build' : 'Other', status: 'running', result: null, file });
 }
 
+// A resumed run re-launches an agent under the same label; only its latest attempt is current.
+// Earlier attempts that died (e.g. at a usage limit) stay visible as a count, not as the live status.
+const latestByLabel = new Map();
+for (const a of agents.values()) latestByLabel.set(a.label, a.id);
+const supersededFailures = {};
+for (const a of [...agents.values()]) {
+  if (a.label && latestByLabel.get(a.label) !== a.id) {
+    supersededFailures[a.label] = (supersededFailures[a.label] || 0) + 1;
+    agents.delete(a.id);
+  }
+}
 const agentList = [];
 for (const a of agents.values()) {
   const file = a.file;
@@ -126,6 +137,7 @@ for (const a of agents.values()) {
     const un = (r.items || []).filter((x) => x.status !== 'resolved');
     summary = `${(r.items || []).length} reported items checked · ${un.length} unresolved`;
   }
+  if (supersededFailures[a.label]) summary = `${summary ? `${summary} · ` : ''}${supersededFailures[a.label]} earlier attempt(s) died and were retried`;
   agentList.push({ liveSteps, signals: act.signals || [],
     id: a.id, label: a.label, role, feature, round: round ? Number(round.replace('r', '')) : null,
     phase: a.phase, status: a.status, activity: act.activity, summary, tokens: act.usage,
