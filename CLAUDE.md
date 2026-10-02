@@ -200,6 +200,14 @@ Added 2026-10-02. A tailored package (role-specific resumes, cover letter, combi
 - **PDFs** for `document_blocks` use the bundled DejaVu Sans in `server/assets/fonts/`. Built-in Helvetica is WinAnsi-only and silently mangles `→`, `⁴`, etc.
 - **Package JSON never goes in git.** This repo is public and packages hold private application material. `server/data/applicationPackages/*` is git-ignored except its README, which documents the extract → import → approve → site-sync workflow (`scripts/extract-application-package.py`, `scripts/import-application-package.mjs`, `scripts/stamp-application-package-docx.py`, `scripts/sync-site-with-application-package.mjs`).
 
+### Release loop (required for every session that changes code)
+
+Added 2026-10-02. Every code change goes build → initial check → integrate → browser validation (a separate agent follows the feature's training spec literally) → triage → fix → re-validate, looping until every journey passes. Process definition (data, also read by in-app agents): `server/data/releaseLoop/definition.json`. How to run it: the `salt-basin-release-loop` skill and the saved workflow `.claude/workflows/release-loop.js`. Human-readable version: `docs/release-process.md`.
+
+- Each feature ships `docs/changes/<feature>.md` (with a *Traces to* section naming the prior spec versions/commits) and `docs/training/<feature>.md` (journeys with exact expected results). Logs: `docs/test-results/<feature>/round-N.md`, `docs/triage/<feature>-round-N.md`, `docs/release-log/<release>.md`.
+- Push only when the release log shows every feature passed (or the owner says otherwise). `needs_business_definition` failures go to the owner as exact questions, never guessed.
+- Specs and logs use fictional data only (public repo).
+
 ### React rules of hooks
 
 All hooks (`useState`, `useMemo`, `useEffect`) must be declared **before** any conditional early return. This caused a blank-screen bug in `EditorPane.jsx` — be vigilant when adding hooks to components that have early null-guards.
