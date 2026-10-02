@@ -17,6 +17,8 @@ import { resumeUrlFromPreset } from '../../lib/resumeUrls.js';
 import DocumentBlocksView, { formatMetadataLine, isDocumentBlocks } from '../DocumentBlocksView.jsx';
 import { useToolCategoryGate } from './ToolCategoryGate.jsx';
 import CareerBoundOutputEditor from './CareerBoundOutputEditor.jsx';
+import CoverLetterPackagesPanel from './CoverLetterPackagesPanel.jsx';
+import CoverLetterWorkbench from './CoverLetterWorkbench.jsx';
 
 // ── Layout templates ──────────────────────────────────────────────────────────
 const LAYOUTS = [
@@ -468,6 +470,9 @@ export default function MyResumePanel({ scope = 'member' }) {
   // technology to have a proficiency category — the gate prompts and saves
   // to Career Master, then retries (server/lib/finalizationGates.js).
   const categoryGate = useToolCategoryGate();
+  // Cover-letter agent workbench (CoverLetterWorkbench.jsx) — id of the cover letter it is open on.
+  const [agentLetterId, setAgentLetterId] = useState(null);
+  const [packagesReload, setPackagesReload] = useState(0);
   const [finalizationCheck, setFinalizationCheck] = useState(null);
   const [generatingOutput, setGeneratingOutput] = useState(false);
   const [targetJobDescription, setTargetJobDescription] = useState('');
@@ -910,6 +915,8 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
         </div>
       </div>
 
+      <CoverLetterPackagesPanel onOpenLetter={setAgentLetterId} onOutputsChanged={loadResumeOutputs} reloadKey={packagesReload} />
+
       {/* Resume Output Projection history — master-org-admin-config.md §5.
           Each row is a lineage-tracked snapshot, not a live re-render; a
           stale one is flagged, never silently regenerated. */}
@@ -999,6 +1006,9 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
                       <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => openOutputView(output.id)}>View</button>
                       <a href={api.downloadResumeOutputUrl(output.id)} style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Download PDF</a>
                     </>
+                  )}
+                  {output.outputType === 'cover_letter' && output.generatedContent && output.outputStatus !== 'archived' && (
+                    <button style={{ ...S.btn('gold'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setAgentLetterId(output.id)}>Edit with cover-letter agent</button>
                   )}
                   {output.outputStatus === 'draft' && (
                     <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setOutputStatus(output.id, 'approved')}>Approve</button>
@@ -1090,6 +1100,7 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
         </div>
       )}
       {categoryGate.modal}
+      {agentLetterId && <CoverLetterWorkbench outputId={agentLetterId} onClose={() => { setAgentLetterId(null); setPackagesReload((n) => n + 1); }} onChanged={() => { loadResumeOutputs(); setPackagesReload((n) => n + 1); }} />}
       {emailModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setEmailModalOpen(false)}>
           <div style={{ background: 'white', borderRadius: 10, padding: '1.5rem', maxWidth: 420, width: '90%' }} onClick={(e) => e.stopPropagation()}>

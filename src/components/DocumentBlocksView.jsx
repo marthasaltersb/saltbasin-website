@@ -131,6 +131,30 @@ export default function DocumentBlocksView({ content, qrSvg = null, qrHref = nul
           );
         }
         if (block.type === 'table') return <TableBlock key={i} rows={block.rows} />;
+        if (block.type === 'toc') {
+          // Application-package contents list: numbered, each entry jumps to its section.
+          const sections = (content?.blocks || []).filter((b) => b.type === 'section_start');
+          return (
+            <nav key={i} aria-label="Table of contents" style={{ margin: '0 0 1rem' }}>
+              <ol style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                {sections.map((sec) => (
+                  <li key={sec.anchor} style={{ display: 'flex', gap: '0.5rem', fontSize: '0.92rem', padding: '0.25rem 0', borderBottom: '1px dotted #BFB4A3' }}>
+                    <span style={{ color: TEAL, fontWeight: 700, minWidth: '1.4rem' }}>{sec.number}.</span>
+                    <a href={`#${sec.anchor}`} onClick={(e) => { e.preventDefault(); document.getElementById(sec.anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} style={{ color: INK, textDecoration: 'none' }}>{sec.title}</a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          );
+        }
+        if (block.type === 'section_start') {
+          return (
+            <h2 key={i} id={block.anchor} style={{ fontSize: '1.15rem', color: INK, margin: '2rem 0 0.6rem', paddingTop: '0.9rem', paddingBottom: '0.3rem', borderTop: `3px solid ${GOLD}`, borderBottom: `1px solid ${GOLD}`, scrollMarginTop: '0.5rem' }}>
+              <span style={{ display: 'block', fontSize: '0.62rem', letterSpacing: '0.12em', color: GOLD }}>SECTION {block.number}</span>
+              {block.title}
+            </h2>
+          );
+        }
         return null; // 'figure' — images aren't carried over; their alt text is a paragraph
       })}
     </div>
