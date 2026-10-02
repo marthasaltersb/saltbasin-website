@@ -18,6 +18,10 @@ import { autoQueueOutputsForNewlyApproved } from '../lib/autoQueueAgent.js';
 import { createResumeOutputProjection, listResumeOutputProjectionsForOpportunity, listResumeOutputProjections } from '../lib/resumeProjection.js';
 import { summarizeProjectionForViewResolved, renderProjectionToPdfBuffer, filenameFor } from '../lib/outputRendering.js';
 import { getOwnedOutputWithApprover, shareUrlFor } from '../lib/applicationPackages.js';
+import {
+  listOpportunityOutputs, listUnlinkedOutputs, linkOutputToOpportunity, unlinkOutputFromOpportunity,
+  getOutputContentForEdit, saveEditedVersion, updateOpportunityDetails,
+} from '../lib/opportunityOutputs.js';
 import { dispatchRaw } from '../lib/email.js';
 import archiver from 'archiver';
 import { parseCareerPipelineWorkbook, rowToOpportunityPayload } from '../lib/careerPipelineImport.js';
@@ -71,8 +75,73 @@ router.get('/opportunities', requireUser, async (req, res) => {
 router.post('/opportunities', requireUser, async (req, res) => {
   try {
     const { jobTitle, companyName, url, location, notes } = req.body || {};
-    const opportunity = await createCareerOpportunity(req.user.id, { jobTitle, companyName, url, location, notes });
+    // A track with only a company + role title is a placeholder: details
+    // (posting URL, location, notes) are filled in later, and the entry says so.
+    const placeholder = !url && !location && !notes;
+    const opportunity = await createCareerOpportunity(req.user.id, { jobTitle, companyName, url, location, notes, extraMetadata: placeholder ? { placeholder: true } : null });
     res.status(201).json(opportunity);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Fill in the details of a tracked opportunity (a placeholder becomes a regular entry).
+router.patch('/opportunities/:id', requireUser, async (req, res) => {
+  try {
+    const { jobTitle, url, location, notes } = req.body || {};
+    res.json(await updateOpportunityDetails(req.user.id, Number(req.params.id), { jobTitle, url, location, notes }));
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// ── Opportunity outputs: linked outputs + provenance, link/unlink, edit-as-new-version ──
+// (server/lib/opportunityOutputs.js). Approve for QR stays on
+// POST /api/resume-outputs/:id/share, which runs assertReadyToFinalize.
+router.get('/opportunities/:id/outputs', requireUser, async (req, res) => {
+  try {
+    res.json(await listOpportunityOutputs(req.user.id, Number(req.params.id)));
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.get('/unlinked-outputs', requireUser, async (req, res) => {
+  try {
+    res.json({ outputs: await listUnlinkedOutputs(req.user.id) });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.post('/opportunities/:id/outputs/:outputId/link', requireUser, async (req, res) => {
+  try {
+    res.json(await linkOutputToOpportunity(req.user.id, Number(req.params.outputId), Number(req.params.id)));
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.delete('/opportunities/:id/outputs/:outputId/link', requireUser, async (req, res) => {
+  try {
+    res.json(await unlinkOutputFromOpportunity(req.user.id, Number(req.params.outputId), Number(req.params.id)));
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.get('/resume-outputs/:id/content', requireUser, async (req, res) => {
+  try {
+    res.json(await getOutputContentForEdit(req.user.id, Number(req.params.id)));
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Saves edited content as a new draft version in the same lineage.
+router.post('/resume-outputs/:id/versions', requireUser, async (req, res) => {
+  try {
+    res.status(201).json(await saveEditedVersion(req.user.id, Number(req.params.id), { content: req.body?.content, name: req.body?.name || null }));
   } catch (e) {
     res.status(400).json({ error: e.message });
   }

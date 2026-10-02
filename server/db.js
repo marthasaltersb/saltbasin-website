@@ -966,6 +966,16 @@ async function bootstrap() {
     console.warn('[db] resume_output_projections agent-generation columns warning:', e.message);
   }
 
+  // parent_version_id (2026-10-02, World Shell opportunity outputs): the
+  // version an edited draft was saved from, so a lineage reads as a chain
+  // (v1 -> v2 -> v3) with provenance, not just a set of rows sharing a root.
+  // Nullable and never backfilled — pre-existing rows simply have no parent.
+  try {
+    await sql.unsafe(`ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS parent_version_id BIGINT`);
+  } catch (e) {
+    console.warn('[db] resume_output_projections parent_version_id warning:', e.message);
+  }
+
   // output_type (2026-08-09, cover letters): distinguishes a resume
   // projection from a cover-letter projection in the SAME table/list/status
   // workflow rather than a parallel one — cover letters are just another

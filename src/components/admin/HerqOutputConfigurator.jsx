@@ -77,7 +77,7 @@ function FieldPicker({ outputType, onInsert, onClose }) {
 
 // ── Per-block field editor ────────────────────────────────────────────────────
 
-function FieldEditor({ block, onChange, outputType }) {
+function FieldEditor({ block, onChange, outputType, documentMode = false }) {
   const def = BLOCK_DEFS[block.type];
   const [pickerKey, setPickerKey] = useState(null); // field.key for which picker is open
   const [feedbackDraft, setFeedbackDraft] = useState('');
@@ -99,6 +99,7 @@ function FieldEditor({ block, onChange, outputType }) {
   }
 
   function MergeBtn({ fieldKey }) {
+    if (documentMode) return null; // merge tokens would be saved as literal text in a document
     return (
       <div style={{ position: 'relative', display: 'inline-block' }}>
         <button
@@ -120,7 +121,7 @@ function FieldEditor({ block, onChange, outputType }) {
   return (
     <div style={{ padding: '0.75rem 1rem', background: 'rgba(196,132,58,0.05)', borderTop: '0.5px solid rgba(196,132,58,0.15)' }}>
       <div style={{ ...S.label, marginBottom: '0.5rem' }}>{def.label} · Properties</div>
-      {(def.fields || []).map(field => {
+      {(def.fields || []).filter(f => !documentMode || f.key.startsWith('props.')).map(field => {
         const val = getAt(block, field.key) ?? '';
 
         if (field.type === 'text') return (
@@ -271,7 +272,7 @@ function FieldEditor({ block, onChange, outputType }) {
           the block itself rather than fabricating a Regenerate button that
           would call nothing. locked blocks are the actual enforcement point
           — any future bulk-apply/regenerate pass must skip them. */}
-      <div style={{ marginTop: '0.85rem', paddingTop: '0.75rem', borderTop: '0.5px solid rgba(196,132,58,0.15)' }}>
+      {!documentMode && <div style={{ marginTop: '0.85rem', paddingTop: '0.75rem', borderTop: '0.5px solid rgba(196,132,58,0.15)' }}>
         <div style={{ ...S.label, marginBottom: '0.5rem' }}>Component Review</div>
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.72rem', color: 'var(--sb-cream)', cursor: 'pointer' }}>
@@ -299,14 +300,14 @@ function FieldEditor({ block, onChange, outputType }) {
             ))}
           </div>
         )}
-      </div>
+      </div>}
     </div>
   );
 }
 
 // ── Block list row ────────────────────────────────────────────────────────────
 
-function BlockRow({ block, index, total, selected, onSelect, onChange, onMove, onDelete, outputType }) {
+function BlockRow({ block, index, total, selected, onSelect, onChange, onMove, onDelete, outputType, documentMode = false }) {
   const def = BLOCK_DEFS[block.type];
   const isSelected = selected === block.id;
   const preview = block.props?.text || block.props?.title || block.props?.question || '';
@@ -346,19 +347,19 @@ function BlockRow({ block, index, total, selected, onSelect, onChange, onMove, o
         <button onClick={e => { e.stopPropagation(); onDelete(block.id); }}
           style={{ ...S.btnGhost, padding: '0.15rem 0.4rem', color: '#c44', fontSize: '0.72rem', flexShrink: 0 }}>×</button>
       </div>
-      {isSelected && <FieldEditor block={block} onChange={onChange} outputType={outputType} />}
+      {isSelected && <FieldEditor block={block} onChange={onChange} outputType={outputType} documentMode={documentMode} />}
     </div>
   );
 }
 
 // ── Add block palette ─────────────────────────────────────────────────────────
 
-function BlockPalette({ onAdd, onClose }) {
+function BlockPalette({ onAdd, onClose, allowedTypes = null }) {
   return (
     <div style={{ padding: '0.75rem 1rem', borderTop: '0.5px solid rgba(196,132,58,0.2)', background: 'rgba(0,0,0,0.3)', flexShrink: 0 }}>
       <div style={{ ...S.label, marginBottom: '0.6rem' }}>Add Block</div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
-        {Object.entries(BLOCK_DEFS).map(([type, def]) => (
+        {Object.entries(BLOCK_DEFS).filter(([type, def]) => !def.hidden && (!allowedTypes || allowedTypes.includes(type))).map(([type, def]) => (
           <button key={type} onClick={() => { onAdd(type); onClose(); }}
             style={{ padding: '0.25rem 0.6rem', background: 'rgba(196,132,58,0.1)', border: '0.5px solid rgba(196,132,58,0.25)', borderRadius: 2, color: 'var(--sb-cream)', fontSize: '0.7rem', cursor: 'pointer' }}>
             {def.icon} {def.label}
@@ -372,8 +373,27 @@ function BlockPalette({ onAdd, onClose }) {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
-export default function HerqOutputConfigurator({ outputs, onRefresh }) {
-  const [selectedId, setSelectedId] = useState(null);
+// `adapter` lets another module reuse this block editor for content that is not
+// a HERQ template (2026-10-02: application-package drafts opened from the
+// World Shell). Shape: { toConfig(output) -> { pageMargin, blocks }, onSave(config, name) -> Promise,
+// onBack(), allowedTypes?: string[], statusText?: string, savedNote?: string }.
+// With an adapter the editor is in "document mode": only content (props.*)
+// fields are editable, no merge tokens, no Publish — Save writes through the
+// adapter and the caller owns approval. Without one, behaviour is unchanged.
+function useIsNarrow(maxWidth = 820) {
+  const [narrow, setNarrow] = useState(() => typeof window !== 'undefined' && window.innerWidth <= maxWidth);
+  useEffect(() => {
+    const onResize = () => setNarrow(window.innerWidth <= maxWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [maxWidth]);
+  return narrow;
+}
+
+export default function HerqOutputConfigurator({ outputs, onRefresh, adapter = null, initialSelectedId = null }) {
+  const narrow = useIsNarrow();
+  const documentMode = !!adapter;
+  const [selectedId, setSelectedId] = useState(initialSelectedId);
   const [config, setConfig] = useState(null); // { name, outputType, pageMargin, blocks }
   const [outputName, setOutputName] = useState('');
   const [selectedBlockId, setSelectedBlockId] = useState(null);
@@ -388,6 +408,11 @@ export default function HerqOutputConfigurator({ outputs, onRefresh }) {
     if (!selectedOutput) { setConfig(null); setOutputName(''); return; }
     setOutputName(selectedOutput.title || '');
     let parsed = null;
+    if (adapter) {
+      setConfig({ ...adapter.toConfig(selectedOutput) });
+      setSelectedBlockId(null);
+      return;
+    }
     try { parsed = selectedOutput.template_config ? JSON.parse(selectedOutput.template_config) : null; } catch {}
     if (!parsed) {
       const t = selectedOutput.output_type || 'HERQFramework';
@@ -434,6 +459,17 @@ export default function HerqOutputConfigurator({ outputs, onRefresh }) {
     if (!selectedOutput || !config) return;
     setSaving(true);
     setSaveMsg('');
+    if (adapter) {
+      try {
+        await adapter.onSave(config, outputName);
+        setSaveMsg(adapter.savedNote || 'Saved ✓');
+      } catch (e) {
+        setSaveMsg(`Error: ${e.message}`);
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
     try {
       const res = await fetch(`/api/herq/outputs/${selectedOutput.id}`, {
         method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' },
@@ -502,18 +538,18 @@ export default function HerqOutputConfigurator({ outputs, onRefresh }) {
 
   // ── Block editor ──
   return (
-    <div style={S.root}>
+    <div style={narrow ? { ...S.root, flexDirection: 'column', overflowY: 'auto', height: '100%' } : S.root}>
       {/* Left panel: block list */}
-      <div style={S.left}>
+      <div style={narrow ? { ...S.left, width: '100%', borderRight: 'none', borderBottom: '0.5px solid rgba(196,132,58,0.2)', overflow: 'visible', flexShrink: 0 } : S.left}>
         <div style={S.leftHead}>
-          <button onClick={() => setSelectedId(null)} style={S.btnGhost}>← Back</button>
+          <button onClick={() => (adapter ? adapter.onBack() : setSelectedId(null))} style={S.btnGhost}>← Back</button>
           <input value={outputName} onChange={e => setOutputName(e.target.value)} placeholder="Output name"
             style={{ ...S.input, flex: 1, minWidth: 0 }} />
           <button onClick={save} disabled={saving} style={S.btnGold}>{saving ? '…' : 'Save'}</button>
         </div>
 
         {saveMsg && (
-          <div style={{ padding: '0.3rem 1rem', fontSize: '0.72rem', color: saveMsg.includes('Error') ? '#f88' : '#8f8', background: 'rgba(0,0,0,0.2)', flexShrink: 0 }}>
+          <div role="status" style={{ padding: '0.3rem 1rem', fontSize: '0.72rem', color: saveMsg.includes('Error') ? '#f88' : '#8f8', background: 'rgba(0,0,0,0.2)', flexShrink: 0 }}>
             {saveMsg}
           </div>
         )}
@@ -527,7 +563,7 @@ export default function HerqOutputConfigurator({ outputs, onRefresh }) {
         </div>
 
         {/* Blocks */}
-        <div style={S.blockList}>
+        <div style={narrow ? { ...S.blockList, flex: 'none', overflow: 'visible' } : S.blockList}>
           {blocks.length === 0 && (
             <div style={{ padding: '2rem 1rem', textAlign: 'center', color: 'var(--sb-dusty)', fontSize: '0.8rem' }}>
               No blocks yet — add one below.
@@ -537,29 +573,29 @@ export default function HerqOutputConfigurator({ outputs, onRefresh }) {
             <BlockRow key={block.id} block={block} index={i} total={blocks.length}
               selected={selectedBlockId} onSelect={setSelectedBlockId}
               onChange={updateBlock} onMove={moveBlock} onDelete={deleteBlock}
-              outputType={selectedOutput?.output_type} />
+              outputType={selectedOutput?.output_type} documentMode={documentMode} />
           ))}
         </div>
 
         {/* Footer: add / publish */}
         {showPalette
-          ? <BlockPalette onAdd={addBlock} onClose={() => setShowPalette(false)} />
+          ? <BlockPalette onAdd={addBlock} onClose={() => setShowPalette(false)} allowedTypes={adapter?.allowedTypes || null} />
           : (
             <div style={{ padding: '0.6rem 1rem', borderTop: '0.5px solid rgba(196,132,58,0.15)', display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
               <button onClick={() => setShowPalette(true)} style={{ ...S.btnGhost, flex: 1, fontSize: '0.72rem' }}>+ Add Block</button>
-              <button onClick={publish} style={{ ...S.btnGhost, fontSize: '0.72rem', color: '#6dcc6d', borderColor: 'rgba(109,204,109,0.3)' }}>↑ Publish</button>
+              {!adapter && <button onClick={publish} style={{ ...S.btnGhost, fontSize: '0.72rem', color: '#6dcc6d', borderColor: 'rgba(109,204,109,0.3)' }}>↑ Publish</button>}
             </div>
           )
         }
       </div>
 
       {/* Right panel: live preview */}
-      <div style={S.right}>
-        <div style={S.previewHead}>
+      <div style={narrow ? { ...S.right, minHeight: 440, flexShrink: 0 } : S.right}>
+        <div style={narrow ? { ...S.previewHead, flexWrap: 'wrap' } : S.previewHead}>
           <span style={{ ...S.label, flex: 1 }}>Live Preview — updates on every edit</span>
           <button onClick={() => iframeRef.current?.contentWindow?.print()} style={S.btnGold}>↓ Print / Save PDF</button>
           <span style={{ fontSize: '0.68rem', color: selectedOutput?.export_status === 'published' ? '#6dcc6d' : 'var(--sb-dusty)' }}>
-            {selectedOutput?.export_status === 'published' ? '✓ Published' : '· Draft'}
+            {adapter ? (adapter.statusText || '') : selectedOutput?.export_status === 'published' ? '✓ Published' : '· Draft'}
           </span>
         </div>
         <div style={S.previewArea}>

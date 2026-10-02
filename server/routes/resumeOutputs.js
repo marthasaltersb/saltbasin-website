@@ -15,6 +15,7 @@ import {
   getOwnedOutputWithApprover,
   shareUrlFor,
 } from '../lib/applicationPackages.js';
+import { ensurePlaceholderOpportunity, linkOutputToOpportunity } from '../lib/opportunityOutputs.js';
 import { sendFinalizationError, toolsMissingCategory } from '../lib/finalizationGates.js';
 
 const router = express.Router();
@@ -69,8 +70,24 @@ router.get('/finalization-check', async (req, res) => {
 // approval is always this explicit, per-version owner action.
 router.post('/import-package', async (req, res) => {
   try {
-    const results = await importApplicationPackage(req.user.id, req.body?.package);
-    res.status(201).json({ results });
+    const pkg = req.body?.package;
+    // linkOpportunity: create (or reuse) a placeholder opportunity from the
+    // package's own company + role, validated BEFORE anything is imported so a
+    // bad package never half-applies.
+    if (req.body?.linkOpportunity && (!String(pkg?.company || '').trim() || !String(pkg?.role || '').trim())) {
+      return res.status(400).json({ error: 'linkOpportunity needs the package JSON to carry both "company" and "role". Nothing was imported.' });
+    }
+    const results = await importApplicationPackage(req.user.id, pkg);
+    let opportunity = null;
+    if (req.body?.linkOpportunity) {
+      try {
+        opportunity = await ensurePlaceholderOpportunity(req.user.id, { company: pkg.company, role: pkg.role });
+        for (const r of results) await linkOutputToOpportunity(req.user.id, r.id, opportunity.id);
+      } catch (e) {
+        return res.status(500).json({ error: `The outputs were imported (${results.length}) but linking them to the opportunity failed: ${e.message}. Re-run the import with --link-opportunity to retry; unchanged outputs are skipped.`, results });
+      }
+    }
+    res.status(201).json({ results, opportunity });
   } catch (e) { res.status(400).json({ error: e.message }); }
 });
 

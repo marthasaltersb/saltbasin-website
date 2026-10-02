@@ -36,7 +36,7 @@ export function presetIdFor(packageKey, variant) {
   return `application_package:${packageKey}:${variant}`;
 }
 
-function assertDocumentBlocks(content) {
+export function assertDocumentBlocks(content) {
   if (content?.format !== 'document_blocks' || Number(content.version) !== 1) {
     throw new Error('Output content must be document_blocks v1.');
   }
@@ -54,7 +54,7 @@ function canonical(value) {
   return value;
 }
 
-function sameContent(a, b) {
+export function sameContent(a, b) {
   const parse = (v) => (typeof v === 'string' ? JSON.parse(v) : v);
   return JSON.stringify(canonical(parse(a))) === JSON.stringify(canonical(parse(b)));
 }

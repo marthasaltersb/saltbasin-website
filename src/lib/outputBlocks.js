@@ -254,6 +254,25 @@ export const BLOCK_DEFS = {
     ],
   },
 
+  // ── Document-package blocks (2026-10-02) — used when the shared block editor
+  // opens an application-package draft (document_blocks content, see
+  // server/lib/applicationPackages.js). Appended, never renamed.
+  'role-line': {
+    label: 'Role Line', icon: '◷',
+    defaultProps: { title: 'Role title', dates: '' },
+    defaultStyle: { margin: '0.6rem 0 0.15rem' },
+    fields: [
+      { key: 'props.title', label: 'Role title', type: 'text' },
+      { key: 'props.dates', label: 'Dates', type: 'text' },
+    ],
+  },
+  'document-preserved': {
+    label: 'Preserved content', icon: '▣', hidden: true,
+    defaultProps: { kind: 'table', summary: '' },
+    defaultStyle: { margin: '0.5rem 0' },
+    fields: [],
+  },
+
   // ── Layer 2 stat/metric cards — resolved by buildBlocksFromLayerConfig()
   // before render (props.cards is a pre-resolved array, not raw catalog
   // lookups, since which cards + labels/order came from the member's config).
@@ -609,6 +628,16 @@ export function renderBlockToHtml(block, ctx = {}) {
       if (!pills.length) return '';
       const pillsHtml = pills.map((pl) => `<span style="display:inline-block;padding:0.2rem 0.75rem;margin:0 0.35rem 0.35rem 0;border-radius:20px;background:${pl.color || '#eee'};font-size:0.68rem;font-weight:700;color:#1A1A1A;font-family:sans-serif">${ip(pl.label)}</span>`).join('');
       return `<div style="${styleStr(s)}">${pillsHtml}</div>`;
+    }
+
+    case 'role-line': {
+      const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      return `<div style="${styleStr(s)};display:flex;justify-content:space-between;align-items:baseline;gap:1rem;border-bottom:0.5px solid #d8dde3"><strong style="font-size:0.92rem;color:#1B2A3B;font-family:Georgia,serif">${esc(p.title)}</strong><span style="font-size:0.74rem;color:#6b7785;font-family:sans-serif;flex-shrink:0">${esc(p.dates)}</span></div>`;
+    }
+
+    case 'document-preserved': {
+      const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      return `<div style="${styleStr(s)};padding:0.6rem 0.8rem;background:#f3f5f7;border:0.5px dashed #9aa6b2;border-radius:4px;font-family:sans-serif"><div style="font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:#6b7785;margin-bottom:0.3rem">${esc(p.kind)} kept exactly as imported</div><div style="font-size:0.78rem;color:#2d3748;white-space:pre-wrap">${esc(p.summary)}</div></div>`;
     }
 
     case 'contact-line': {
