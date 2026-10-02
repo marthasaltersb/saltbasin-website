@@ -253,11 +253,11 @@ async function runFeature(feature) {
     }
     integratedResolvers[feature.key]?.()
 
-    let fixNotes = null
+    let fixNotes = feature.fixNotes || null   // a relaunched feature can continue from a later round
     const allItems = []
     const attempts = {}   // bug id -> fix attempts so far
     log_.needsHuman = []
-    for (let round = 1; round <= MAX_ROUNDS + 1; round++) {
+    for (let round = feature.startRound || 1; round <= MAX_ROUNDS + 1; round++) {
       const v = await validate(feature, round, fixNotes)
       if (!v) { log_.status = 'validator_died'; break }
       log_.rounds.push({ round, validation: v })
