@@ -5926,6 +5926,55 @@ Rod state, per event:
   } catch (error) {
     console.warn('[db] HERQ content-hierarchy column warning:', error.message);
   }
+
+  // Cover-letter agent (2026-10-02). Both tables are additive and member-scoped; nothing
+  // here is ever seeded or rewritten for existing members.
+  //  - cover_letter_settings: one row per member — the deterministic cover-letter template,
+  //    the cheapest-model/provider choice and the tone presets. Its own table (not
+  //    career_experience_definitions) because that table's per-type seeding treats
+  //    "has any row" as "already seeded", so a new row type would suppress other seeds.
+  //  - cover_letter_agent_turns: one row per chat turn — request, package-search evidence,
+  //    proposed edit operations, and whether an LLM was called (model, tokens, latency).
+  try {
+    await sql.unsafe(`
+      CREATE TABLE IF NOT EXISTS cover_letter_settings (
+        user_id    BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        settings   JSONB NOT NULL DEFAULT '{}',
+        updated_at BIGINT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS cover_letter_agent_turns (
+        id                 BIGSERIAL PRIMARY KEY,
+        user_id            BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        session_key        TEXT NOT NULL,
+        projection_id      BIGINT NOT NULL REFERENCES resume_output_projections(id) ON DELETE CASCADE,
+        lineage_root_id    BIGINT,
+        opportunity_rod_id BIGINT,
+        request_text       TEXT NOT NULL,
+        route              TEXT NOT NULL,
+          -- rules | llm | search_only | refused | blocked | failed
+        outcome_message    TEXT,
+        search_hits        JSONB NOT NULL DEFAULT '[]',
+        proposed_ops       JSONB NOT NULL DEFAULT '[]',
+        status             TEXT NOT NULL DEFAULT 'proposed',
+          -- proposed | accepted | rejected | none (nothing to accept)
+        llm_called         BOOLEAN NOT NULL DEFAULT false,
+        model              TEXT,
+        provider           TEXT,
+        input_tokens       INTEGER,
+        output_tokens      INTEGER,
+        tokens_estimated   BOOLEAN NOT NULL DEFAULT false,
+        latency_ms         INTEGER,
+        llm_attempts       INTEGER NOT NULL DEFAULT 0,
+        result_projection_id BIGINT,
+        created_at         BIGINT NOT NULL,
+        decided_at         BIGINT
+      );
+      CREATE INDEX IF NOT EXISTS idx_cover_letter_turns_user ON cover_letter_agent_turns (user_id, created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_cover_letter_turns_proj ON cover_letter_agent_turns (projection_id, created_at);
+    `);
+  } catch (error) {
+    console.warn('[db] cover-letter agent tables warning:', error.message);
+  }
 }
 
 // Awaited at module import time so routes can use db without worrying about

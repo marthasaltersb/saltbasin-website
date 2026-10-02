@@ -128,7 +128,29 @@ function renderTable(doc, rows) {
   doc.fillColor(INK).moveDown(0.4);
 }
 
-async function renderDocumentBlocks(doc, content, { metadata, shareUrl }) {
+// Contents list for application packages (2026-10-02): built from the section_start blocks,
+// numbered, with the PDF page each section starts on and a clickable link to it. `pages` maps
+// anchor -> page number from the previous layout pass (see renderProjectionToPdfBuffer).
+function renderToc(doc, content, pages) {
+  const left = doc.page.margins.left;
+  const width = doc.page.width - left - doc.page.margins.right;
+  const sections = (content.blocks || []).filter((b) => b.type === 'section_start');
+  sections.forEach((sec) => {
+    ensureRoom(doc, 22);
+    const top = doc.y;
+    const label = `${sec.number}.  ${sec.title}`;
+    doc.fillColor(INK).font('SB-Regular').fontSize(11).text(label, left, top, { width: width - 44, goTo: sec.anchor, lineBreak: false });
+    const labelEnd = left + doc.widthOfString(label) + 6;
+    const page = String(pages?.[sec.anchor] ?? '');
+    doc.fillColor(TEAL).font('SB-Bold').fontSize(11).text(page, left + width - 40, top, { width: 40, align: 'right', goTo: sec.anchor, lineBreak: false });
+    doc.save().moveTo(labelEnd, top + 10).lineTo(left + width - 46, top + 10).lineWidth(0.5).dash(1, { space: 2 }).stroke('#BFB4A3').undash().restore();
+    doc.x = left;
+    doc.y = top + 22;
+  });
+  doc.fillColor(INK);
+}
+
+async function renderDocumentBlocks(doc, content, { metadata, shareUrl, pages = null, onAnchor = null }) {
   const left = doc.page.margins.left;
   const width = doc.page.width - left - doc.page.margins.right;
   const header = content.header || {};
@@ -175,6 +197,21 @@ async function renderDocumentBlocks(doc, content, { metadata, shareUrl }) {
       doc.y = Math.max(after, doc.y) + 2;
     } else if (block.type === 'table') {
       renderTable(doc, block.rows || []);
+    } else if (block.type === 'toc') {
+      renderToc(doc, content, pages);
+    } else if (block.type === 'section_start') {
+      // Every section of an application package starts on its own page; the named
+      // destination is what the contents list links to.
+      doc.addPage();
+      doc.x = left;
+      if (block.anchor) {
+        doc.addNamedDestination(block.anchor);
+        onAnchor?.(block.anchor, doc.bufferedPageRange().count);
+      }
+      doc.fillColor(GOLD).font('SB-Bold').fontSize(7.5).text(`SECTION ${block.number ?? ''}`, left, doc.page.margins.top, { characterSpacing: 1.2 });
+      doc.fillColor(INK).font('SB-Bold').fontSize(16).text(block.title || '', left, doc.y + 2, { width });
+      doc.save().moveTo(left, doc.y + 3).lineTo(left + width, doc.y + 3).lineWidth(1.2).stroke(GOLD).restore();
+      doc.moveDown(0.8);
     }
   }
 
@@ -183,6 +220,45 @@ async function renderDocumentBlocks(doc, content, { metadata, shareUrl }) {
   doc.save().moveTo(left, doc.y).lineTo(left + width, doc.y).lineWidth(0.4).stroke('#D8CDBE').restore();
   doc.moveDown(0.3).fillColor(MUTED).font('SB-Regular').fontSize(6.5).text(metadataLine(metadata), left, doc.y, { width });
   if (shareUrl) doc.text(`Verified copy: ${shareUrl}`, { width, link: shareUrl });
+}
+
+async function renderDocumentPdf(projection, content, metadata, { shareUrl, pages, onAnchor, isPackage }) {
+  const doc = new PDFDocument({
+    margin: 42,
+    size: 'LETTER',
+    bufferPages: isPackage,
+    info: {
+      Title: titleFor(projection),
+      Author: metadata.authors.join('; '),
+      Subject: projection.target_job_description || titleFor(projection),
+      Keywords: [projection.output_type, metadata.approvedBy ? `approved-by:${metadata.approvedBy}` : 'unapproved'].filter(Boolean).join(', '),
+      CreationDate: new Date(metadata.createdAt),
+      ModDate: new Date(metadata.modifiedAt),
+      ...(metadata.approvedBy ? { ApprovedBy: metadata.approvedBy } : {}),
+    },
+  });
+  const chunks = [];
+  const done = new Promise((resolve, reject) => {
+    doc.on('data', (chunk) => chunks.push(chunk));
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
+  });
+  registerDocumentFonts(doc);
+  await renderDocumentBlocks(doc, content, { metadata, shareUrl, pages, onAnchor });
+  if (isPackage) {
+    // "Page n of N" on every page, written with the bottom margin lifted so it can't add a page.
+    const { count } = doc.bufferedPageRange();
+    for (let i = 0; i < count; i += 1) {
+      doc.switchToPage(i);
+      const bottom = doc.page.margins.bottom;
+      doc.page.margins.bottom = 0;
+      doc.fillColor(MUTED).font('SB-Regular').fontSize(7)
+        .text(`Page ${i + 1} of ${count}`, doc.page.margins.left, doc.page.height - 28, { width: doc.page.width - doc.page.margins.left - doc.page.margins.right, align: 'center', lineBreak: false });
+      doc.page.margins.bottom = bottom;
+    }
+  }
+  doc.end();
+  return done;
 }
 
 /**
@@ -195,29 +271,16 @@ export async function renderProjectionToPdfBuffer(projection, { shareUrl = null 
   const metadata = projectionMetadata(projection);
   const qrUrl = projection.output_status === 'published' && projection.share_token ? shareUrl : null;
   if (content.format === 'document_blocks') {
-    const doc = new PDFDocument({
-      margin: 42,
-      size: 'LETTER',
-      info: {
-        Title: titleFor(projection),
-        Author: metadata.authors.join('; '),
-        Subject: projection.target_job_description || titleFor(projection),
-        Keywords: [projection.output_type, metadata.approvedBy ? `approved-by:${metadata.approvedBy}` : 'unapproved'].filter(Boolean).join(', '),
-        CreationDate: new Date(metadata.createdAt),
-        ModDate: new Date(metadata.modifiedAt),
-        ...(metadata.approvedBy ? { ApprovedBy: metadata.approvedBy } : {}),
-      },
-    });
-    const chunks = [];
-    const done = new Promise((resolve, reject) => {
-      doc.on('data', (chunk) => chunks.push(chunk));
-      doc.on('end', () => resolve(Buffer.concat(chunks)));
-      doc.on('error', reject);
-    });
-    registerDocumentFonts(doc);
-    await renderDocumentBlocks(doc, content, { metadata, shareUrl: qrUrl });
-    doc.end();
-    return done;
+    const isPackage = content.package?.kind === 'application_package';
+    // Application packages are laid out twice: pass 1 discovers which page each section starts
+    // on, pass 2 prints those page numbers in the contents list (same layout, so they hold).
+    let pages = {};
+    if (isPackage) {
+      const found = {};
+      await renderDocumentPdf(projection, content, metadata, { shareUrl: qrUrl, pages: {}, onAnchor: (a, n) => { found[a] = n; }, isPackage });
+      pages = found;
+    }
+    return renderDocumentPdf(projection, content, metadata, { shareUrl: qrUrl, pages, onAnchor: null, isPackage });
   }
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 54, size: 'LETTER' });

@@ -29,7 +29,8 @@ import { careerChangeEvents } from './careerChangeEvents.js';
 import { assertReadyToFinalize } from './finalizationGates.js';
 
 const OUTPUT_TYPES = new Set(['resume', 'cover_letter', 'application_package']);
-const BLOCK_TYPES = new Set(['heading', 'paragraph', 'bullet', 'role', 'table', 'figure']);
+// 'toc' / 'section_start' (2026-10-02) belong to assembled application packages — see packageAssembly.js.
+const BLOCK_TYPES = new Set(['heading', 'paragraph', 'bullet', 'role', 'table', 'figure', 'toc', 'section_start']);
 
 export function presetIdFor(packageKey, variant) {
   return `application_package:${packageKey}:${variant}`;

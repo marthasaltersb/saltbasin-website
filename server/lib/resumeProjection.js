@@ -33,10 +33,12 @@ export async function computeCareerStateFingerprint(userId) {
 
 export async function createResumeOutputProjection(userId, { presetId, presetName, includedSections = [], regenerateFromId = null, targetJobDescription = null, careerOpportunityRodId = null, generatedContent = null, outputType = 'resume', source = 'ai_generated', authors = null, sourceCreatedAt = null }) {
   const { fingerprint: careerFingerprint, atomCount } = await computeCareerStateFingerprint(userId);
+  // 'generated' (cover-letter agent, 2026-10-02) is a template draft built from whatever Career
+  // Master data exists — an empty Career Master yields a letter without experience paragraphs.
   // An imported document is the member's own finished text, not a
   // projection of Career state — it still records the Career state it was
   // filed against when one exists, but never requires one.
-  if (!careerFingerprint && source !== 'imported') throw new Error('No Career Master Channel Rod or evidence found for this member — nothing to project yet.');
+  if (!careerFingerprint && source !== 'imported' && source !== 'generated') throw new Error('No Career Master Channel Rod or evidence found for this member — nothing to project yet.');
   const fingerprint = careerFingerprint || 'no-career-state';
   const now = Date.now();
 

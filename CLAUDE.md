@@ -208,6 +208,10 @@ Added 2026-10-02. Every code change goes build → initial check → integrate �
 - Push only when the release log shows every feature passed (or the owner says otherwise). `needs_business_definition` failures go to the owner as exact questions, never guessed.
 - Specs and logs use fictional data only (public repo).
 
+### Cover letters, package table of contents, cover-letter agent
+
+Added 2026-10-02 (`docs/changes/cover-letter-agent.md`). Every `career_opportunity_target` rod gets a template-built cover letter (`server/lib/coverLetterAutoDraft.js`, hooked from `createCareerOpportunity` via `opportunityHooks.js`); the combined application package (`server/lib/packageAssembly.js`) is a `document_blocks` document with `toc` / `section_start` blocks that `outputRendering.js` lays out in two passes (page numbers + `GoTo` links). The cover-letter agent (`coverLetterAgent.js`) is confined to ONE letter and to the letter's package (`packageSearch.js` `packageMemberRows()` is the single definition of membership); order per turn is package BM25 search → deterministic rules (`coverLetterRules.js`) → LLM only if needed, returning edit operations (`coverLetterEdits.js`) shown as tracked changes; accepting files a NEW draft version, never edits an approved one. Per-turn LLM usage is in `cover_letter_agent_turns`; template / model / tone presets are in `cover_letter_settings` (UI: My Resume → Cover-letter settings). Approving a letter or package still goes through the existing status / share routes (`assertReadyToFinalize`) and `useToolCategoryGate().run`.
+
 ### React rules of hooks
 
 All hooks (`useState`, `useMemo`, `useEffect`) must be declared **before** any conditional early return. This caused a blank-screen bug in `EditorPane.jsx` — be vigilant when adding hooks to components that have early null-guards.
