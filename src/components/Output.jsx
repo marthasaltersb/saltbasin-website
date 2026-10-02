@@ -17,6 +17,7 @@ import BackLink from './BackLink.jsx';
 import PortfolioRequestPrompt from './PortfolioRequestFlow.jsx';
 import { renderBlockToHtml, buildStatBlocksFromLayerConfig, buildInfographicBlocksFromLayerConfig, renderMemberFooterHtml } from '../lib/outputBlocks.js';
 import { fetchCareerMaster, tierFillPct, toolWheelBucket } from '../lib/careerMaster.js';
+import { useResumeRollups } from '../lib/resumeRollups.js';
 import { RenderSection } from './blocks/index.jsx';
 
 // The Home page's "about" content is split across two sections — the founder
@@ -442,9 +443,9 @@ const BRAND = {
 
 // KPI Tile component (design system §5): "White/mist card, soft border,
 // gold/teal label, generous padding." Max 6 tiles per dashboard per spec.
-function KPITile({ value, label, note, accent }) {
+function KPITile({ value, label, note, accent, title }) {
   return (
-    <div style={{ background: BRAND.mist, border: `0.5px solid rgba(23,42,69,0.08)`, borderRadius: 10, padding: '1rem 0.9rem', textAlign: 'center' }}>
+    <div title={title} style={{ background: BRAND.mist, border: `0.5px solid rgba(23,42,69,0.08)`, borderRadius: 10, padding: '1rem 0.9rem', textAlign: 'center' }}>
       <div style={{ fontSize: '1.7rem', fontWeight: 700, color: BRAND.navy, fontFamily: 'Georgia, serif', lineHeight: 1.15 }}>{value}</div>
       <div style={{ fontSize: '0.6rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: accent || BRAND.gold, fontWeight: 700, marginTop: '0.4rem', fontFamily: 'sans-serif' }}>{label}</div>
       {note && <div style={{ fontSize: '0.66rem', color: BRAND.slate, marginTop: '0.2rem', lineHeight: 1.4 }}>{note}</div>}
@@ -469,58 +470,49 @@ function CapabilityMeter({ name, pct, evidence, color }) {
   );
 }
 
-// Best-effort live extraction from Career Master engagement text, falling
-// back to Betsy's own established brand-level figures (Salt Basin Net Works
-// Visual Design System v1.0, p.1) if nothing matches — so the dashboard
-// never renders empty/broken on a fresh install with sparse data.
-function extractDollarMax(strings) {
-  let best = null, bestVal = -1;
-  (strings || []).forEach((s) => {
-    if (!s) return;
-    const m = s.match(/\$[\d.]+[BM]/i);
-    if (m) {
-      const val = parseFloat(m[0].replace(/[^0-9.]/g, '')) * (/B/i.test(m[0]) ? 1000 : 1);
-      if (val > bestVal) { bestVal = val; best = m[0]; }
-    }
-  });
-  return best;
+// KPI tiles, capability bars and industry durations come from the member's own
+// configuration (kpi_tile / category_group / industry_bucket definitions in
+// career_experience_definitions) resolved by GET /api/career/resume-rollups.
+// There are NO fallback figures: a tile with no data renders '—' and says why,
+// and a user-defined ('manual') tile carries a † that the footnote explains.
+const TILE_ACCENTS = { gold: BRAND.gold, teal: BRAND.teal, green: BRAND.green, plum: BRAND.plum, navy: BRAND.navy };
+
+function buildExecKpis(rollups) {
+  return (rollups?.tiles || []).map((t) => ({
+    value: t.userDefined ? `${t.value}†` : t.value,
+    label: t.label,
+    note: t.note,
+    accent: TILE_ACCENTS[t.accent] || BRAND.gold,
+    title: t.source || undefined,
+  }));
 }
 
-function computeExecutiveKPIs(master) {
-  if (!master) return [];
-  const engagements = master.engagements || [];
-  const exitFigure = extractDollarMax(engagements.map((e) => e.exitDetail)) || '$4.6B';
-  const arrMatch = engagements.flatMap((e) => e.metrics || []).find((m) => /ARR automated/i.test(m));
-  const arrFigure = (arrMatch && arrMatch.match(/\$[\d.]+[BM]\+?/i)?.[0]) || '$500M+';
-  return [
-    { value: exitFigure, label: 'Exit Signal', note: 'Portfolio value creation proof', accent: BRAND.gold },
-    { value: arrFigure, label: 'ARR Automated', note: 'Revenue system credibility', accent: BRAND.teal },
-    { value: String(engagements.length), label: 'Engagements', note: 'Case-study depth', accent: BRAND.green },
-    { value: '12+', label: 'Industries', note: 'Pattern recognition range', accent: BRAND.gold },
-    { value: '13', label: 'Years', note: 'Operator track record', accent: BRAND.teal },
-    { value: 'AI-Native', label: 'Product Studio', note: 'Future-facing edge', accent: BRAND.plum },
-  ];
-}
-
-// Skill-proficiency confidence bars, one per meta-capability bucket — reuses
-// the same META_CATEGORY_MAP / tierFillPct rollup logic as the Portfolio
-// Appendix dashboard so the two stay numerically consistent.
-function computeCapabilityMeters(master) {
-  if (!master?.skills?.length) return [];
+// Capability-confidence bars, one per member-configured category group.
+// Same tierFillPct rollup the Portfolio Appendix uses, computed server-side.
+function buildCapabilityMeters(rollups) {
   const colors = [BRAND.gold, BRAND.teal, BRAND.green, BRAND.plum];
-  return META_CATEGORY_ORDER.map((meta, i) => {
-    const inBucket = master.skills.filter((s) => META_CATEGORY_MAP[s.category] === meta);
-    const avgPct = inBucket.length ? inBucket.reduce((sum, s) => sum + tierFillPct(s.tier), 0) / inBucket.length : 0;
-    const expertCount = inBucket.filter((s) => s.tier === 'Expert').length;
-    return { name: meta, pct: Math.round(avgPct), evidence: `${expertCount} Expert · ${inBucket.length} skills`, color: colors[i % colors.length] };
-  });
+  return (rollups?.capabilityGroups || [])
+    .filter((g) => g.skillCount > 0)
+    .map((g, i) => ({ name: g.name, pct: g.pct, evidence: g.evidence, color: colors[i % colors.length] }));
+}
+
+// A failed rollup load is shown as an error — never as empty '—' tiles, which
+// would read as "this member has no data".
+function RollupErrorNotice({ message }) {
+  if (!message) return null;
+  return (
+    <div role="alert" style={{ margin: '0 0 1rem', padding: '0.7rem 0.85rem', border: '1px solid #C98320', background: '#FFF4E5', borderRadius: 6, fontFamily: 'sans-serif', fontSize: '0.74rem', color: BRAND.navy }}>
+      <strong>Resume rollups could not be loaded.</strong> {message}. This is a loading error, not missing Career Master data — reload to retry.
+    </div>
+  );
 }
 
 // Executive Summary section (design system §8, Page 1 — "sell the thesis"):
 // KPI dashboard (6 tiles max) + capability confidence bars. This is the
 // dashboard-level skill-proficiency summary requested for the resume's
 // Executive Summary section.
-function ExecutiveSummarySection({ execKpis, capabilityMeters }) {
+function ExecutiveSummarySection({ execKpis, capabilityMeters, rollupError, rollupFootnote }) {
+  if (rollupError) return <RollupErrorNotice message={rollupError} />;
   if (!execKpis?.length) return null;
   return (
     <section style={{ marginBottom: '1.75rem' }}>
@@ -528,8 +520,9 @@ function ExecutiveSummarySection({ execKpis, capabilityMeters }) {
         Executive Summary
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.6rem', marginBottom: '1.25rem' }}>
-        {execKpis.map((k) => <KPITile key={k.label} {...k} />)}
+        {execKpis.map((k, i) => <KPITile key={`${k.label}-${i}`} {...k} />)}
       </div>
+      {rollupFootnote && <div style={{ fontSize: '0.64rem', color: BRAND.slate, fontStyle: 'italic', margin: '-0.8rem 0 1rem', fontFamily: 'sans-serif' }}>{rollupFootnote}</div>}
       {capabilityMeters?.length > 0 && (
         <div style={{ background: BRAND.warmShell, borderRadius: 10, padding: '1rem 1.1rem' }}>
           <div style={{ fontSize: '0.6rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: BRAND.slate, marginBottom: '0.6rem', fontFamily: 'sans-serif' }}>Capability Confidence</div>
@@ -544,17 +537,9 @@ function ExecutiveSummarySection({ execKpis, capabilityMeters }) {
 // Live-computed from Career Master, so they update when jobs/tools/engagements
 // are edited in the admin panel — no hardcoded figures beyond the bucket labels.
 
-// Industry-duration buckets: ordered keyword rules matched against job +
-// engagement industry text. Duration = count of distinct calendar years with
-// matching activity, so overlapping engagements never double-count.
-const INDUSTRY_DURATION_BUCKETS = [
-  { label: 'SaaS & Enterprise Software', sub: 'RevOps & monetization', re: /saas|software|enterprise|technology|tech\b/i },
-  { label: 'Private Equity / PortOps', sub: 'Value creation & exit readiness', re: /private equity|pe advisory|portfolio|vista/i },
-  { label: 'Healthcare Technology', sub: 'Systems alignment & relisting readiness', re: /health|telehealth/i },
-  { label: 'Manufacturing & Industrial', sub: 'Q2R & commodity pricing architecture', re: /manufactur|chemical|industrial|consumer goods|cpg/i },
-  { label: 'Education & Publishing', sub: 'Global program delivery', re: /education|publish|edtech/i },
-  { label: 'AI-Native Ventures', sub: 'Agentic products & advisory', re: /\bai\b/i },
-];
+// Industry-duration bars are computed server-side from the member's own
+// industry_bucket definitions (GET /api/career/resume-rollups) — no keyword
+// rules live in this file.
 
 function yearFromDateStr(s) {
   const m = String(s || '').match(/(19|20)\d{2}/);
@@ -595,33 +580,6 @@ function buildResumeJobs(master, timeline) {
     });
   }
   return sortMostRecentRoles(jobs);
-}
-
-function computeIndustryDurations(master) {
-  if (!master) return [];
-  const nowYear = new Date().getFullYear();
-  const items = [];
-  (master.jobs || []).forEach((j) => {
-    const start = yearFromDateStr(j.startDate);
-    if (!start) return;
-    const end = /present|ongoing/i.test(String(j.endDate || '')) ? nowYear : (yearFromDateStr(j.endDate) ?? start);
-    items.push({ text: `${j.industry || ''} ${j.jobFunction || ''}`, start, end: Math.max(start, end) });
-  });
-  (master.engagements || []).forEach((e) => {
-    const yearsInPeriod = String(e.period || '').match(/(19|20)\d{2}/g) || [];
-    if (!yearsInPeriod.length) return;
-    const start = Number(yearsInPeriod[0]);
-    const end = /present|ongoing/i.test(String(e.period)) ? nowYear : Number(yearsInPeriod[yearsInPeriod.length - 1]);
-    items.push({ text: e.industry || '', start, end: Math.max(start, end) });
-  });
-  return INDUSTRY_DURATION_BUCKETS.map((b) => {
-    const years = new Set();
-    items.forEach((it) => {
-      if (!b.re.test(it.text)) return;
-      for (let y = it.start; y <= it.end; y += 1) years.add(y);
-    });
-    return { label: b.label, sub: b.sub, years: years.size };
-  }).filter((r) => r.years > 0).sort((a, b) => b.years - a.years);
 }
 
 // Scaling bars — magnitude encoding, so a single hue (Harbor Teal) with the
@@ -760,7 +718,7 @@ function PrioritizedExperienceSection({ items, summary }) {
   );
 }
 
-function ResumeLayoutModern({ about, timeline, jobs, handsOn, integrationDesign, adjacent, execKpis, capabilityMeters, industryDurations = [], toolBars = [], clientQuotes = [], prioritizedExperience = [], agentSummary = '', memberOwned = false }) {
+function ResumeLayoutModern({ rollupError, rollupFootnote, about, timeline, jobs, handsOn, integrationDesign, adjacent, execKpis, capabilityMeters, industryDurations = [], toolBars = [], clientQuotes = [], prioritizedExperience = [], agentSummary = '', memberOwned = false }) {
   const name = about.name || about.heading || (memberOwned ? 'Your Name' : 'Betsy Salter');
   const tagline = about.title || about.tagline || (memberOwned ? 'Add your professional title' : 'Strategic Operator · Revenue Systems · Private Equity');
   const photoUrl = about.photoUrl || about.photo || null;
@@ -785,7 +743,7 @@ function ResumeLayoutModern({ about, timeline, jobs, handsOn, integrationDesign,
       </header>
 
       <PrioritizedExperienceSection items={prioritizedExperience} summary={agentSummary} />
-      <ExecutiveSummarySection execKpis={execKpis} capabilityMeters={capabilityMeters} />
+      <ExecutiveSummarySection execKpis={execKpis} capabilityMeters={capabilityMeters} rollupError={rollupError} rollupFootnote={rollupFootnote} />
       <ElevatedVisualSections industryDurations={industryDurations} toolBars={toolBars} clientQuotes={clientQuotes} />
 
       {/* ── At a Glance ── */}
@@ -897,7 +855,7 @@ function ResumeLayoutModern({ about, timeline, jobs, handsOn, integrationDesign,
 
 // ── Layout: Corporate SB ──────────────────────────────────────────────────────
 // Bold structured layout — clean columns, strong navy headers, gold rule lines.
-function ResumeLayoutCorporate({ about, timeline, jobs, handsOn, integrationDesign, adjacent, execKpis, capabilityMeters, industryDurations = [], toolBars = [], clientQuotes = [], prioritizedExperience = [], agentSummary = '', memberOwned = false }) {
+function ResumeLayoutCorporate({ rollupError, rollupFootnote, about, timeline, jobs, handsOn, integrationDesign, adjacent, execKpis, capabilityMeters, industryDurations = [], toolBars = [], clientQuotes = [], prioritizedExperience = [], agentSummary = '', memberOwned = false }) {
   const name = about.name || about.heading || (memberOwned ? 'Your Name' : 'Betsy Salter');
   const tagline = about.title || about.tagline || (memberOwned ? 'Add your professional title' : 'Strategic Operator · Revenue Systems · Private Equity');
   const photoUrl = about.photoUrl || about.photo || null;
@@ -922,7 +880,7 @@ function ResumeLayoutCorporate({ about, timeline, jobs, handsOn, integrationDesi
       </header>
 
       <PrioritizedExperienceSection items={prioritizedExperience} summary={agentSummary} />
-      <ExecutiveSummarySection execKpis={execKpis} capabilityMeters={capabilityMeters} />
+      <ExecutiveSummarySection execKpis={execKpis} capabilityMeters={capabilityMeters} rollupError={rollupError} rollupFootnote={rollupFootnote} />
       <ElevatedVisualSections industryDurations={industryDurations} toolBars={toolBars} clientQuotes={clientQuotes} />
 
       {/* ── Two-panel body: main (left 65%) + sidebar (right 35%) ── */}
@@ -1413,6 +1371,7 @@ export function ResumeOutput() {
   const [primaryTemplate, setPrimaryTemplate] = useState(undefined);
   const [resumePreset, setResumePreset] = useState(undefined);
   const [master, setMaster] = useState(null);
+  const rollupState = useResumeRollups(ownerSlug);
   const templateV2 = useOutputTemplateConfig('resume');
   const searchParams = new URLSearchParams(location.search);
   const requestedPresetId = searchParams.get('preset');
@@ -1478,7 +1437,7 @@ export function ResumeOutput() {
     return () => { cancelled = true; };
   }, [authLoading, user, requestedPresetId]);
 
-  const isLoading = authLoading || primaryTemplate === undefined || resumePreset === undefined || !master || (!page && !siteError) || templateV2.loading;
+  const isLoading = authLoading || primaryTemplate === undefined || resumePreset === undefined || !master || rollupState.loading || (!page && !siteError) || templateV2.loading;
 
   if (isLoading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', color: '#1B2A3B', fontFamily: 'Georgia, serif', fontSize: '1rem' }}>
@@ -1520,8 +1479,10 @@ export function ResumeOutput() {
   const timeline = page.sections.find((s) => s.type === 'timeline')?.fields || {};
   const jobs = buildResumeJobs(master, timeline);
 
-  const execKpis = computeExecutiveKPIs(master);
-  const capabilityMeters = computeCapabilityMeters(master);
+  const rollupError = rollupState.error;
+  const rollupFootnote = rollupState.data?.footnote || null;
+  const execKpis = buildExecKpis(rollupState.data);
+  const capabilityMeters = buildCapabilityMeters(rollupState.data);
 
   // Auto filename for print / save-as-PDF (browsers default the filename to
   // document.title): template name + primary-or-not + a section code per
@@ -1542,7 +1503,7 @@ export function ResumeOutput() {
 
   // ── 4-layer template-driven render (schemaVersion 2) ──
   if (templateV2.config && hasOutputLayerContent(templateV2.config)) {
-    const ctx = { about, timeline, jobs, execKpis, capabilityMeters, resumePreset, rollupCatalog: templateV2.rollupCatalog, proficiency: templateV2.proficiency, master: templateV2.master, loadErrors: templateV2.loadErrors };
+    const ctx = { about, timeline, jobs, execKpis, capabilityMeters, rollupError, rollupFootnote, resumePreset, rollupCatalog: templateV2.rollupCatalog, proficiency: templateV2.proficiency, master: templateV2.master, loadErrors: templateV2.loadErrors };
     const configuredName = templateV2.config.layer1_header?.memberName;
     return (
       <OutputFrame title={configuredName || about.heading || about.name || user?.displayName || 'Resume'} eyebrow="Resume" printDocTitle={printDocTitle} afterFooter={<MemberFooterSlot config={templateV2.config} />} hideTitle={!!configuredName}>
@@ -1553,7 +1514,7 @@ export function ResumeOutput() {
 
   // ── Legacy template-driven render (schemaVersion 1, blocks-only) ──
   if (!resumePreset && primaryTemplate?.blocks?.length) {
-    const ctx = { about, timeline, jobs, execKpis, capabilityMeters, resumePreset };
+    const ctx = { about, timeline, jobs, execKpis, capabilityMeters, rollupError, rollupFootnote, resumePreset };
     const sorted = [...primaryTemplate.blocks]
       .filter(b => b.visible !== false)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -1593,7 +1554,9 @@ export function ResumeOutput() {
     prioritizedExperience: resumePreset?.prioritizedExperience || [],
     execKpis: showExecSummary ? execKpis : [],
     capabilityMeters: showCapabilityMeters ? capabilityMeters : [],
-    industryDurations: showIndustryBars ? computeIndustryDurations(master) : [],
+    industryDurations: showIndustryBars ? (rollupState.data?.industryDurations || []) : [],
+    rollupError: (showExecSummary || showCapabilityMeters || showIndustryBars) ? rollupError : null,
+    rollupFootnote: showExecSummary ? rollupFootnote : null,
     toolBars: showToolBars ? computeToolProficiency(master) : [],
     clientQuotes: showClientVoice ? computeClientQuotes(master, 1) : [],
     memberOwned: isMemberOwnedPreview,
@@ -2044,9 +2007,10 @@ export function CareerCaseStudyPortfolioOutput() {
   const [scenarioFilter, setScenarioFilter] = useState('');
   const [quickFilter, setQuickFilter] = useState('');
   const [printMode, setPrintMode] = useState('interactive');
+  const rollupState = useResumeRollups(ownerSlug);
   useEffect(() => { fetchCareerMaster(ownerSlug).then(setMaster); }, [ownerSlug]);
 
-  const isLoading = authLoading || !master;
+  const isLoading = authLoading || !master || rollupState.loading;
   if (isLoading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', color: '#1B2A3B', fontFamily: 'Georgia, serif', fontSize: '1rem' }}>
       Loading case study portfolio…
@@ -3199,28 +3163,6 @@ const TIER_LEGEND = [
 const TIER_ORDER = ['Expert', 'Advanced', 'Proficient', 'Foundational'];
 const TIER_BAR_COLOR = { Expert: '#2d8a3e', Advanced: '#3a6bb8', Proficient: '#c4843a', Foundational: '#999' };
 
-// Maps career_skills.category (15 fine-grained categories, per the
-// Portfolio Appendix skill inventory) onto the 4 meta-buckets the dashboard
-// summarizes at the top.
-const META_CATEGORY_MAP = {
-  'Quote-to-Cash': 'Revenue Operations',
-  'Pricing & Subscription': 'Revenue Operations',
-  'Business Process': 'Process & Architecture',
-  'Integration': 'Process & Architecture',
-  'Solution Architecture': 'Process & Architecture',
-  'Process Improvement': 'Process & Architecture',
-  'Program Mgmt': 'Process & Architecture',
-  'CRM & CPQ': 'Data & Integration',
-  'Data & MDM': 'Data & Integration',
-  'QA & Testing': 'Data & Integration',
-  'Training & Change': 'Data & Integration',
-  'Stakeholder Mgmt': 'Strategy & Advisory',
-  'Business Dev': 'Strategy & Advisory',
-  'Financial Strategy': 'Strategy & Advisory',
-  'AI Operator': 'Strategy & Advisory',
-};
-const META_CATEGORY_ORDER = ['Revenue Operations', 'Process & Architecture', 'Data & Integration', 'Strategy & Advisory'];
-
 // Best-effort year span extraction from free-text period strings like
 // "Aug 2018–2019" or "2024–Present" — used only for the industry table's
 // approximate "experience" column.
@@ -3253,20 +3195,25 @@ function HeroMetricCard({ value, label, note, accent }) {
   );
 }
 
-function computeHeroMetrics(master) {
+// Hero values come from the member's configured KPI tiles (by metric) plus two
+// direct Career Master counts. No fallback figures: anything not derivable
+// renders '—'.
+function computeHeroMetrics(master, rollups) {
   const engagements = master?.engagements || [];
-  const exitFigure = extractDollarMax(engagements.map((e) => e.exitDetail)) || '$4.6B';
-  const arrMatch = engagements.flatMap((e) => e.metrics || []).find((m) => /ARR automated/i.test(m));
-  const arrFigure = (arrMatch && arrMatch.match(/\$[\d.]+[BM]\+?/i)?.[0]) || '$500M+';
+  const tileValue = (metric) => {
+    const t = (rollups?.tiles || []).find((x) => x.metric === metric);
+    if (!t) return '—';
+    return t.userDefined ? `${t.value}†` : t.value;
+  };
   const returnPct = engagements
     .flatMap((e) => [e.exitDetail, e.scale])
     .map((s) => String(s || '').match(/~?(\d{2,3})%\s*return/i)?.[1])
-    .find(Boolean) || '142';
-  const peCount = engagements.filter((e) => e.investmentType).length || 4;
+    .find(Boolean);
+  const peCount = engagements.filter((e) => e.investmentType).length;
   return [
-    { value: exitFigure, label: `Exit · ${returnPct}% Investor Return`, note: 'Led Q2C design for Apptio — Vista acquisition through the IBM exit.', accent: BRAND.gold },
-    { value: arrFigure, label: 'Recurring Revenue Automated', note: 'Proprietary data-migration methodology eliminated manual renewal intervention at scale.', accent: '#7FA8B8' },
-    { value: String(peCount), label: 'PE Portfolio Transformations', note: 'Post-acquisition value creation across Vista Equity Partners software holdings.', accent: '#C98BAD' },
+    { value: tileValue('max_dollar_in_engagement_field'), label: returnPct ? `Exit · ${returnPct}% Investor Return` : 'Exit', note: 'Led Q2C design for Apptio — Vista acquisition through the IBM exit.', accent: BRAND.gold },
+    { value: tileValue('arr_automated'), label: 'Recurring Revenue Automated', note: 'Proprietary data-migration methodology eliminated manual renewal intervention at scale.', accent: '#7FA8B8' },
+    { value: peCount ? String(peCount) : '—', label: 'PE Portfolio Transformations', note: 'Post-acquisition value creation across Vista Equity Partners software holdings.', accent: '#C98BAD' },
     { value: String(engagements.length), label: 'Engagements Documented', note: 'Full case-study depth in the Career Master database.', accent: '#9DBB98' },
   ];
 }
@@ -3275,9 +3222,10 @@ export function StrategicOperatorOutput() {
   const ownerSlug = useOutputOwnerSlug();
   const { loading: authLoading, user } = useAuthState();
   const [master, setMaster] = useState(null);
+  const rollupState = useResumeRollups(ownerSlug);
   useEffect(() => { fetchCareerMaster(ownerSlug).then(setMaster); }, [ownerSlug]);
 
-  const isLoading = authLoading || !master;
+  const isLoading = authLoading || !master || rollupState.loading;
   if (isLoading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', color: '#1B2A3B', fontFamily: 'Georgia, serif', fontSize: '1rem' }}>
       Loading strategic operator profile…
@@ -3287,7 +3235,7 @@ export function StrategicOperatorOutput() {
   // Non-admin visitors get the teaser + portfolio-request funnel: the hero
   // band and live outcome metrics with a fade-out, then the popup.
   if (!isAdminUser(user)) {
-    const teaserMetrics = computeHeroMetrics(master);
+    const teaserMetrics = computeHeroMetrics(master, rollupState.data);
     return (
       <OutputFrame title="The Strategic Operator" eyebrow="Career Infographic" gated hideTitle>
         <TeaserFade note={`Preview — ${master.engagements.length} engagements · ${master.skills.length} skills in the full infographic`}>
@@ -3312,10 +3260,12 @@ export function StrategicOperatorOutput() {
     );
   }
 
-  const heroMetrics = computeHeroMetrics(master);
-  const statStrip = computeExecutiveKPIs(master).slice(3);
-  const capabilityMeters = computeCapabilityMeters(master);
-  const industryDurations = computeIndustryDurations(master);
+  const rollupError = rollupState.error;
+  const heroMetrics = computeHeroMetrics(master, rollupState.data);
+  const statStrip = buildExecKpis(rollupState.data).slice(3);
+  const capabilityMeters = buildCapabilityMeters(rollupState.data);
+  const industryDurations = rollupState.data?.industryDurations || [];
+  const rollupFootnote = rollupState.data?.footnote || null;
   const toolBars = computeToolProficiency(master, 12);
   const clientQuotes = computeClientQuotes(master, 3);
   const ventures = (master.domains || [])
@@ -3356,9 +3306,11 @@ export function StrategicOperatorOutput() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.7rem', marginBottom: '0.7rem' }}>
             {heroMetrics.map((m) => <HeroMetricCard key={m.label} {...m} />)}
           </div>
+          <RollupErrorNotice message={rollupError} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.7rem' }}>
-            {statStrip.map((k) => <KPITile key={k.label} {...k} />)}
+            {statStrip.map((k, i) => <KPITile key={`${k.label}-${i}`} {...k} />)}
           </div>
+          {rollupFootnote && <div style={{ fontSize: '0.64rem', color: BRAND.slate, fontStyle: 'italic', marginTop: '0.4rem', fontFamily: 'sans-serif' }}>{rollupFootnote}</div>}
         </section>
 
         {/* ── Industry duration + capability confidence ── */}
@@ -3449,13 +3401,11 @@ export function PortfolioAppendixOutput() {
   const tierCounts = TIER_ORDER.reduce((acc, t) => ({ ...acc, [t]: skills.filter((s) => s.tier === t).length }), {});
   const totalSkills = skills.length || 1;
 
-  const metaRollups = META_CATEGORY_ORDER.map((meta) => {
-    const inBucket = skills.filter((s) => META_CATEGORY_MAP[s.category] === meta);
-    const expertCount = inBucket.filter((s) => s.tier === 'Expert').length;
-    const avgYears = inBucket.length ? (inBucket.reduce((sum, s) => sum + (Number(s.yearsExp) || 0), 0) / inBucket.length) : 0;
-    const totalEngagements = inBucket.reduce((sum, s) => sum + (Number(s.numEngagements) || 0), 0);
-    return { meta, expertCount, avgYears: avgYears.toFixed(0), totalEngagements };
-  });
+  // Capability groups are the member's own category_group definitions,
+  // resolved server-side (GET /api/career/resume-rollups).
+  const metaRollups = (rollupState.data?.capabilityGroups || []).map((g) => (
+    { meta: g.name, expertCount: g.expertCount, avgYears: String(g.avgYears), totalEngagements: g.totalEngagements }
+  ));
 
   const byCategory = new Map();
   skills.forEach((s) => { byCategory.set(s.category, (byCategory.get(s.category) || 0) + 1); });
@@ -3494,7 +3444,8 @@ export function PortfolioAppendixOutput() {
         {/* ── Skills Dashboard Summary ── */}
         <section style={{ marginBottom: '1.75rem' }}>
           <DomainsHead>Skills Dashboard Summary</DomainsHead>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem' }}>
+          <RollupErrorNotice message={rollupState.error} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(10rem, 1fr))', gap: '0.75rem' }}>
             {metaRollups.map((r) => (
               <div key={r.meta} style={{ background: '#1b2a3b', color: 'white', padding: '0.9rem 1rem', borderRadius: 2 }}>
                 <div style={{ fontSize: '0.62rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#c4843a', marginBottom: '0.4rem' }}>{r.meta}</div>

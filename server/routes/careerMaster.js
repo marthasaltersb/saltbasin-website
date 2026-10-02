@@ -25,8 +25,9 @@ import { db, getJSON, setJSON } from '../db.js';
 import { requireAdmin, requireUser, getUserFromCookie } from '../auth.js';
 import { careerMasterSeed } from '../data/career/seed.js';
 import { buildRollupCatalog } from '../lib/rollupMetrics.js';
+import { ROLLUP_DEFINITION_TYPES, DEFAULT_ROLLUP_DEFINITIONS, validateRollupDefinition, resolveResumeRollups, atomDefinitionsFromRows } from '../lib/resumeRollups.js';
 import { syncSingleEntry, removeEntryEvidence } from '../lib/careerAtomMigration.js';
-import { buildCareerAtomRollupCatalog } from '../lib/careerAtomRollups.js';
+import { buildCareerAtomRollupCatalog, resolveCareerAtomGroupings } from '../lib/careerAtomRollups.js';
 import { CAREER_ENTRY_SOURCES, sourceForTable, atomDefinitionByKey, isJsonbSourceColumn } from '../lib/careerAtomRegistry.js';
 import { consentDefinition, getConsentStatus, recordConsent } from '../lib/consentRegistry.js';
 import { recordInteraction } from '../lib/usageTracking.js';
@@ -55,11 +56,11 @@ const INTAKE_BUCKET = 'career-context';
 // column (server/db.js:3356) — no migration needed for new values.
 const PLATFORM_SOURCE_KINDS = new Set(['linkedin_export', 'indeed_export', 'fiverr_export']);
 
-const EXPERIENCE_DEFINITION_TYPES = new Set(['period', 'proficiency_level', 'rollup', 'display', 'proficiency_formula', 'certification_mapping']);
+const EXPERIENCE_DEFINITION_TYPES = new Set(['period', 'proficiency_level', 'rollup', 'display', 'proficiency_formula', 'certification_mapping', ...ROLLUP_DEFINITION_TYPES]);
 // Types added after members already had definitions — seeded per type (only
 // when the member has none of that type) instead of all-or-nothing, so an
 // existing member gets them without their other definitions being touched.
-const PER_TYPE_SEEDED_DEFINITION_TYPES = new Set(['proficiency_formula']);
+const PER_TYPE_SEEDED_DEFINITION_TYPES = new Set(['proficiency_formula', ...ROLLUP_DEFINITION_TYPES]);
 // Platform-owned definitions a member can read and duplicate but never edit
 // or delete — the reference point "user-defined" footnotes are measured
 // against.
@@ -76,6 +77,8 @@ const DEFAULT_EXPERIENCE_DEFINITIONS = [
   ['rollup', 'current_capability_strength', 'Current Capability Strength', 'Current-period weighted capability view.', { groupBy: 'capability', measure: 'weighted_proficiency', periodKeys: ['current'], weights: { proficiency: 0.5, recency: 0.2, engagementBreadth: 0.15, evidenceConfidence: 0.15 }, minimumEvidenceCount: 1 }, 10],
   ['display', 'capability_bars', 'Capability Bars', 'Public-ready bar view of the current capability rollup.', { rollupKey: 'current_capability_strength', chartType: 'bar', showPeriodSelector: true, showEvidenceCount: true, maxGroups: 8, visibility: 'private' }, 10],
   ['proficiency_formula', METHODOLOGY_FORMULA_KEY, 'Salt Basin methodology', 'Points from years performed, engagements applied in, and mapped certifications; locked. Duplicate it to build your own formula.', { ...METHODOLOGY_FORMULA, locked: true }, 0],
+  // Resume rollups (KPI tiles / industry buckets / category groups) — seeded per type.
+  ...DEFAULT_ROLLUP_DEFINITIONS,
 ];
 
 async function ensureExperienceDefinitions(userId) {
@@ -619,6 +622,62 @@ router.get('/master', async (req, res) => {
     res.json(payload);
   } catch (e) {
     res.status(500).json({ error: 'Failed to load career master data' });
+  }
+});
+
+// Resume KPI tiles, industry-duration bars and capability groups, computed
+// from the owner's Career Master through their own kpi_tile / industry_bucket
+// / category_group definitions (server/lib/resumeRollups.js). Public like
+// /master (same `?owner=` rules); never writes — a type with no stored rows
+// resolves against the in-memory defaults.
+// Proficiency levels (and † basis) come from the existing engine
+// (loadProficiencyResolution) so a tile can never disagree with the
+// proficiency screens. `?include=atom` adds the Career Atom groupings.
+async function computeResumeRollups(ownerUserId, master, { draftRows = null, includeAtom = false } = {}) {
+  const defRows = draftRows || (await db.prepare(`SELECT definition_type, definition_key, label, definition, sort_order, is_active FROM career_experience_definitions WHERE user_id=$1 AND definition_type = ANY($2)`).all(ownerUserId, ROLLUP_DEFINITION_TYPES)).map(definitionRowToItem);
+  const { definitions, resolution } = await loadProficiencyResolution(ownerUserId, 'current', { seed: false });
+  const levels = definitions.filter((d) => d.type === 'proficiency_level' && d.isActive)
+    .map((d) => ({ key: d.key, label: d.label, ordinal: Number(d.definition?.ordinal) || 0 }))
+    .sort((a, b) => a.ordinal - b.ordinal);
+  const out = resolveResumeRollups(master, defRows, { levels, proficiencies: resolution.proficiencies });
+  if (includeAtom) out.atomGroupings = await resolveCareerAtomGroupings(ownerUserId, atomDefinitionsFromRows(defRows));
+  return out;
+}
+
+router.get('/resume-rollups', async (req, res) => {
+  try {
+    const ownerUserId = await resolveOwnerUserId(req.query.owner, req);
+    const master = await loadMasterPayload(req);
+    res.json(await computeResumeRollups(ownerUserId, master, { includeAtom: req.query.include === 'atom' }));
+  } catch (e) {
+    console.error('[career] resume-rollups failed', e);
+    res.status(500).json({ error: 'Failed to compute resume rollups' });
+  }
+});
+
+// Live preview of UNSAVED definitions: body.definitions replaces the member's
+// stored rows of each rollup type for this one computation. Nothing is written.
+// An invalid draft is a 400 with the reason, shown to the member.
+router.post('/resume-rollups/preview', requireUser, async (req, res) => {
+  try {
+    const drafts = Array.isArray(req.body?.definitions) ? req.body.definitions : [];
+    const rows = [];
+    for (const d of drafts) {
+      if (!ROLLUP_DEFINITION_TYPES.includes(d?.type)) return res.status(400).json({ error: `invalid rollup type ${d?.type}` });
+      if (d.isActive === false) { rows.push({ type: d.type, key: String(d.key), label: String(d.label || ''), definition: {}, sortOrder: 0, isActive: false }); continue; }
+      const checked = validateRollupDefinition(d.type, d.definition);
+      if (!checked.ok) return res.status(400).json({ error: `${d.label || d.key}: ${checked.error}` });
+      rows.push({ type: d.type, key: String(d.key), label: String(d.label || '').slice(0, 120), definition: checked.definition, sortOrder: Number(d.sortOrder) || 0, isActive: true });
+    }
+    // Types the client did not send keep the member's stored rows.
+    const sent = new Set(rows.map((r) => r.type));
+    const stored = (await db.prepare(`SELECT definition_type, definition_key, label, definition, sort_order, is_active FROM career_experience_definitions WHERE user_id=$1 AND definition_type = ANY($2)`).all(req.user.id, ROLLUP_DEFINITION_TYPES)).map(definitionRowToItem).filter((r) => !sent.has(r.type));
+    req.query.owner = 'me';
+    const master = await loadMasterPayload(req);
+    res.json(await computeResumeRollups(req.user.id, master, { draftRows: [...stored, ...rows], includeAtom: true }));
+  } catch (e) {
+    console.error('[career] resume-rollups preview failed', e);
+    res.status(500).json({ error: 'Failed to compute the rollup preview' });
   }
 });
 
@@ -1386,6 +1445,11 @@ router.use('/meta-options', requireAdmin, makeResourceRouter('career_meta_option
 // only known inputs and the member's own levels; certification mappings
 // reference only the member's own certifications/skills/tools.
 async function validateDefinitionShape(userId, type, definition) {
+  if (ROLLUP_DEFINITION_TYPES.includes(type)) {
+    const checked = validateRollupDefinition(type, definition);
+    if (!checked.ok) throw new Error(checked.error);
+    return checked.definition;
+  }
   if (type === 'proficiency_formula') {
     const terms = (Array.isArray(definition.terms) ? definition.terms : []).map((t) => ({
       input: String(t?.input || ''),
@@ -1429,8 +1493,8 @@ function definitionRowToItem(row) {
 // Everything resolveProficiencies() needs for one member, in one place, so
 // the /proficiency endpoint, rollup previews and resume outputs can never
 // disagree about a level or its basis.
-export async function loadProficiencyResolution(userId, periodKey = 'current') {
-  await ensureExperienceDefinitions(userId);
+export async function loadProficiencyResolution(userId, periodKey = 'current', { seed = true } = {}) {
+  if (seed) await ensureExperienceDefinitions(userId);
   const [definitionRows, assertionRows, skillRows, toolRows, certRows] = await Promise.all([
     db.prepare(`SELECT definition_type, definition_key, label, description, definition, sort_order, is_active FROM career_experience_definitions WHERE user_id=$1`).all(userId),
     db.prepare(`SELECT * FROM career_proficiency_assertions WHERE user_id=$1`).all(userId),
@@ -1439,6 +1503,19 @@ export async function loadProficiencyResolution(userId, periodKey = 'current') {
     db.prepare(`SELECT id, name, status FROM career_certifications WHERE user_id=$1`).all(userId),
   ]);
   const definitions = definitionRows.map(definitionRowToItem);
+  if (!seed) {
+    // Read-only callers (public output renders) must not write member rows:
+    // for any definition type the member has none of, use the in-memory
+    // defaults — the same rows ensureExperienceDefinitions would seed.
+    const have = new Set(definitions.map((d) => d.type));
+    const hasAny = definitions.length > 0;
+    for (const [type, key, label, description, definition, sortOrder] of DEFAULT_EXPERIENCE_DEFINITIONS) {
+      const wanted = PER_TYPE_SEEDED_DEFINITION_TYPES.has(type) ? !have.has(type) : !hasAny;
+      if (wanted || LOCKED_DEFINITIONS.has(`${type}:${key}`) && !definitions.some((d) => d.type === type && d.key === key)) {
+        definitions.push({ type, key, label, description, definition, sortOrder, isActive: true });
+      }
+    }
+  }
   const assertions = assertionRows.map((row) => ({
     entityType: row.entity_type, entityId: Number(row.entity_id), periodKey: row.period_key, levelKey: row.level_key,
     confidence: Number(row.confidence), evidenceCount: Number(row.evidence_count), assessmentSource: row.assessment_source,

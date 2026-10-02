@@ -390,13 +390,17 @@ export default function EditorPane({ section, page, site, config, onUpdateSectio
   const [addFieldKey, setAddFieldKey] = React.useState('');
   const [showAddField, setShowAddField] = React.useState(false);
   const [careerDisplayDefinitions, setCareerDisplayDefinitions] = React.useState([]);
+  const [careerAtomGroupings, setCareerAtomGroupings] = React.useState([]);
 
   React.useEffect(() => {
     if (section?.type !== 'careerRollupShowcase') return;
     let cancelled = false;
     api.getCareerExperienceDefinitions().then((result) => {
-      if (!cancelled) setCareerDisplayDefinitions((result.definitions || []).filter((x) => x.type === 'display' && x.isActive));
-    }).catch(() => { if (!cancelled) setCareerDisplayDefinitions([]); });
+      if (!cancelled) {
+        setCareerDisplayDefinitions((result.definitions || []).filter((x) => x.type === 'display' && x.isActive));
+        setCareerAtomGroupings((result.definitions || []).filter((x) => x.type === 'atom_rollup' && x.isActive));
+      }
+    }).catch(() => { if (!cancelled) { setCareerDisplayDefinitions([]); setCareerAtomGroupings([]); } });
     return () => { cancelled = true; };
   }, [section?.type]);
 
@@ -893,7 +897,7 @@ export default function EditorPane({ section, page, site, config, onUpdateSectio
               // chart type" much better than free text.
               if (section.type === 'careerRollupShowcase' && (k === 'groupBy' || k === 'chartType')) {
                 const opts = k === 'groupBy'
-                  ? [['skills', 'Skills by category'], ['industry', 'Roles by industry'], ['tools', 'Tools by wheel bucket']]
+                  ? [['skills', 'Skills by category'], ['industry', 'Roles by industry'], ['tools', 'Tools by wheel bucket'], ...careerAtomGroupings.filter((g) => !['skills_by_category', 'jobs_by_industry', 'tools_by_wheel_bucket'].includes(g.key)).map((g) => [`atom:${g.key}`, g.label])]
                   : [['bar', 'Bar chart'], ['list', 'List'], ['meter', 'Meter grid']];
                 return (
                   <div key={k} style={styles.fieldGroup}>

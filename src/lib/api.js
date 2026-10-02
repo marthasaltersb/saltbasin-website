@@ -307,6 +307,7 @@ export const api = {
   getCareerExperienceDefinitions: () => request('/api/career/experience-definitions'),
   saveCareerExperienceDefinition: (type, key, item) => request(`/api/career/experience-definitions/${type}/${key}`, { method: 'PUT', body: JSON.stringify(item) }),
   deleteCareerExperienceDefinition: (type, key) => request(`/api/career/experience-definitions/${type}/${key}`, { method: 'DELETE' }),
+  previewResumeRollups: (definitions) => request('/api/career/resume-rollups/preview', { method: 'POST', body: JSON.stringify({ definitions }) }),
   getCareerProficiencyAssertions: () => request('/api/career/proficiency-assertions'),
   saveCareerProficiencyAssertion: (entityType, entityId, periodKey, body) => request(`/api/career/proficiency-assertions/${entityType}/${entityId}/${periodKey}`, { method: 'PUT', body: JSON.stringify(body) }),
   deleteCareerProficiencyAssertion: (entityType, entityId, periodKey) => request(`/api/career/proficiency-assertions/${entityType}/${entityId}/${periodKey}`, { method: 'DELETE' }),

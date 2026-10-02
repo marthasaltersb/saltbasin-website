@@ -30,7 +30,7 @@ export const BLOCK_DEFS = {
     label: 'Executive Summary (KPI Dashboard)', icon: '◫',
     defaultProps: {},
     defaultStyle: {},
-    // No editable fields — this block pulls its 6 KPI tiles and capability
+    // No editable fields — this block pulls its KPI tiles and capability
     // confidence bars live from Career Master (ctx.execKpis /
     // ctx.capabilityMeters), computed the same way as the live resume
     // layouts. Add/remove/reorder it like any other block; the numbers
@@ -508,12 +508,17 @@ export function renderBlockToHtml(block, ctx = {}) {
     case 'exec-kpi-dashboard': {
       const kpis = Array.isArray(ctx.execKpis) ? ctx.execKpis : [];
       const meters = Array.isArray(ctx.capabilityMeters) ? ctx.capabilityMeters : [];
+      // A failed rollup load is an error, never empty tiles (see
+      // GET /api/career/resume-rollups and useResumeRollups).
+      if (ctx.rollupError) return loadErrorHtml('Executive Summary', ctx.rollupError);
       if (!kpis.length) return '';
+      // Labels/notes are member-entered — escape them (ip() does not).
+      const eh = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
       const tileHtml = kpis.map((k) => `
-        <div style="background:#EEF2F6;border-radius:10px;padding:1rem 0.9rem;text-align:center">
-          <div style="font-size:1.7rem;font-weight:700;color:#172A45;font-family:Georgia,serif;line-height:1.15">${ip(k.value)}</div>
-          <div style="font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:${k.accent || '#C4843A'};font-weight:700;margin-top:0.4rem;font-family:sans-serif">${ip(k.label)}</div>
-          ${k.note ? `<div style="font-size:0.66rem;color:#536173;margin-top:0.2rem;line-height:1.4">${ip(k.note)}</div>` : ''}
+        <div style="background:#EEF2F6;border-radius:10px;padding:1rem 0.9rem;text-align:center"${k.title ? ` title="${eh(k.title)}"` : ''}>
+          <div style="font-size:1.7rem;font-weight:700;color:#172A45;font-family:Georgia,serif;line-height:1.15">${eh(k.value)}</div>
+          <div style="font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:${k.accent || '#C4843A'};font-weight:700;margin-top:0.4rem;font-family:sans-serif">${eh(k.label)}</div>
+          ${k.note ? `<div style="font-size:0.66rem;color:#536173;margin-top:0.2rem;line-height:1.4">${eh(k.note)}</div>` : ''}
         </div>`).join('');
       const meterHtml = meters.map((c) => `
         <div style="margin-bottom:0.8rem">
@@ -528,6 +533,7 @@ export function renderBlockToHtml(block, ctx = {}) {
       return `<div style="${styleStr(s)}">
   <div style="font-size:0.6rem;letter-spacing:0.24em;text-transform:uppercase;color:#172A45;font-family:Georgia,serif;font-weight:700;margin-bottom:0.75rem;padding-bottom:0.25rem;border-bottom:1px solid #C4843A">Executive Summary</div>
   <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:0.6rem;margin-bottom:1.25rem">${tileHtml}</div>
+  ${ctx.rollupFootnote ? `<div style="font-size:0.64rem;color:#536173;font-style:italic;margin:-0.8rem 0 1rem;font-family:sans-serif">${eh(ctx.rollupFootnote)}</div>` : ''}
   ${meters.length ? `<div style="background:#F7F2E8;border-radius:10px;padding:1rem 1.1rem">
     <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:#536173;margin-bottom:0.6rem;font-family:sans-serif">Capability Confidence</div>
     ${meterHtml}
