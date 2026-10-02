@@ -2478,6 +2478,10 @@ async function bootstrap() {
     views: [
       { id: 'content', label: 'My Profile', sortOrder: 0, tabs: [
         { id: 'content', label: 'My Profile', componentId: 'content', sortOrder: 0 },
+        // Seeded here too (not only by the one-shot injection below): that
+        // injection only runs when the row already existed at boot, so a
+        // brand-new database showed no "My Resume" tab until its second boot.
+        { id: 'resume', label: 'My Resume', componentId: 'resume', sortOrder: 1 },
       ]},
       { id: 'plm', label: 'Platform Lifecycle Management', sortOrder: 1, tabs: [
         { id: 'plm-dashboard', label: 'Operating Model', componentId: 'plmDashboard', sortOrder: 0 },
