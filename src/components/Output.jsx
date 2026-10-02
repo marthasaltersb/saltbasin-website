@@ -496,7 +496,7 @@ function computeExecutiveKPIs(master) {
     { value: exitFigure, label: 'Exit Signal', note: 'Portfolio value creation proof', accent: BRAND.gold },
     { value: arrFigure, label: 'ARR Automated', note: 'Revenue system credibility', accent: BRAND.teal },
     { value: String(engagements.length), label: 'Engagements', note: 'Case-study depth', accent: BRAND.green },
-    { value: '12', label: 'Industries', note: 'Pattern recognition range', accent: BRAND.gold },
+    { value: '12+', label: 'Industries', note: 'Pattern recognition range', accent: BRAND.gold },
     { value: '13', label: 'Years', note: 'Operator track record', accent: BRAND.teal },
     { value: 'AI-Native', label: 'Product Studio', note: 'Future-facing edge', accent: BRAND.plum },
   ];
@@ -1464,15 +1464,17 @@ export function ResumeOutput() {
         <GatedPreview
           kind="resume"
           teaser={{
-            label: 'Strategic Operator · Revenue Systems · Private Equity',
+            // Kept in sync with the current approved application package
+            // (server/data/applicationPackages/) — same headline and facts.
+            label: 'Strategic Operator · C-Suite Partner · Private Capital Value Creation · Business Architecture',
             paragraphs: [
-              'Betsy Salter is a fractional CFO and revenue systems architect with a track record across $50M–$3.7B+ engagements in SaaS, PE-backed companies, manufacturing, and professional services.',
+              'Betsy Salter is a Strategic Operator: 13 years, 8 employers, 14 client organizations, 24 engagements, 12+ industries, across Big 4 consulting (Accenture, PwC, Slalom), private equity portfolio operations (Vista, $500M+ ARR automated), and enterprise technology (TIBCO), specializing in Quote-to-Revenue architecture, multi-party contractual relationships, and ARR and retention reporting.',
               'This resume includes her full career timeline, industry breakdown, technology proficiencies, and domain capabilities — available to Salt Basin members.',
             ],
             bullets: [
-              '12+ years · Q2R, RevOps, GTM Systems, Data Architecture',
-              'Vista Equity Partners, PwC, Slalom, multiple NASDAQ-listed orgs',
-              'Hands-on: Salesforce, Zuora, NetSuite, Snowflake, Tableau, HubSpot',
+              '13 years · Quote-to-Revenue architecture, revenue data & metric governance, multi-party contract & pricing design',
+              'Vista Equity Partners, Slalom, PwC, TIBCO, Accenture, Blackbaud',
+              'Salesforce CRM, CPQ & Billing · Apttus/Conga CPQ & CLM · SAP · NetSuite · Oracle ERP',
             ],
           }}
         />
@@ -5374,7 +5376,7 @@ export function MethodologyOutput() {
           { label: 'The Cost Leverage Ratio', body: stats?.costLeverageRatio
               ? `traditional_cost_usd / actual_cost_usd, both computed from the same real active hours at their respective rates — an estimated equivalent traditional effort, not a verified savings figure. Salt Basin platform to date: ${stats.costLeverageRatio}× across ${stats.hoursTotal} real active hours (${stats.hoursClaude}h Claude + ${stats.hoursBetsy}h Betsy). A separate "engineer-equivalent effort" leverage figure — how much longer a traditional team would actually take, not just what the same duration would cost — remains an open, unverified estimate.`
               : 'traditional_cost_usd / actual_cost_usd, both computed from the same real active hours at their respective rates — an estimated equivalent traditional effort, not a verified savings figure. A separate "engineer-equivalent effort" leverage figure remains an open, unverified estimate.' },
-          { label: 'IP Provenance', body: 'Practitioner-derived from 12+ years of enterprise delivery. AI-assisted structuring. Practitioner-signed. Session JSONL files are the creation record.' },
+          { label: 'IP Provenance', body: 'Practitioner-derived from 13 years of enterprise delivery. AI-assisted structuring. Practitioner-signed. Session JSONL files are the creation record.' },
         ].map(({ label, body }) => (
           <div key={label} style={IP_STYLES.card}>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#c9a84c', marginBottom: 5 }}>{label}</div>

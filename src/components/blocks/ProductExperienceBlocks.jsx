@@ -884,7 +884,7 @@ export function MarketingHooksBlock({ section }) {
           <p className="sbh-eyebrow">{active.productLabel}</p>
           <h3>{active.hookLine}</h3>
           <p>{active.teaser}</p>
-          <p className="sbh-px-hooks-source">{f.intelligenceSource || 'Product intelligence informed by 12+ years across 16 client and operating environments.'}</p>
+          <p className="sbh-px-hooks-source">{f.intelligenceSource || 'Product intelligence informed by 13 years across 16 client and operating environments.'}</p>
           {active.ctaLabel && (
             <a className="sbh-btn sbh-btn-secondary sbh-px-hooks-cta" href={active.ctaLink || '#bestystaff'}>{active.ctaLabel}</a>
           )}

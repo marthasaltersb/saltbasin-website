@@ -398,7 +398,7 @@ export default function SaltBasinHome({ config, pages }) {
                 a portfolio output powered by the Career Master database.
               </p>
               <div className="sbh-career-proof-row">
-                <span>12+ years</span>
+                <span>13 years</span>
                 <span>24 engagements</span>
                 <span>12+ industries</span>
               </div>

@@ -2735,7 +2735,7 @@ function AboutIntroBlock({ section, config, memberSlug }) {
           <p className="sbh-founder-role">{f.founderTitle || 'Strategic Operator · Founder, Salt Basin Net Works'}</p>
           <p>{f.founderBlurb || f.introBody}</p>
           <div className="sbh-founder-highlights">
-            <span>12+ years</span><span>24 documented cases</span><span>Enterprise + AI-native systems</span>
+            <span>13 years</span><span>24 documented cases</span><span>Enterprise + AI-native systems</span>
           </div>
           <div className="sbh-founder-links">
             {links.map((link, index) => <a key={link.href} href={profilePortfolioLink(link.href)} className={`sbh-btn ${index === 0 ? 'sbh-btn-primary' : 'sbh-btn-secondary'}`}>{link.label}</a>)}

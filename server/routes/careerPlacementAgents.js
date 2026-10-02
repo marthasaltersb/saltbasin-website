@@ -15,8 +15,9 @@ import { generateResumeContent } from '../lib/resumeTargeting.js';
 import { generateCoverLetterContent } from '../lib/coverLetterTargeting.js';
 import { runQualificationGatesForUser } from '../lib/careerVerificationAgent.js';
 import { autoQueueOutputsForNewlyApproved } from '../lib/autoQueueAgent.js';
-import { createResumeOutputProjection, listResumeOutputProjectionsForOpportunity, listResumeOutputProjections, getResumeOutputProjectionRaw } from '../lib/resumeProjection.js';
+import { createResumeOutputProjection, listResumeOutputProjectionsForOpportunity, listResumeOutputProjections } from '../lib/resumeProjection.js';
 import { summarizeProjectionForView, renderProjectionToPdfBuffer, filenameFor } from '../lib/outputRendering.js';
+import { getOwnedOutputWithApprover, shareUrlFor } from '../lib/applicationPackages.js';
 import { dispatchRaw } from '../lib/email.js';
 import archiver from 'archiver';
 import { parseCareerPipelineWorkbook, rowToOpportunityPayload } from '../lib/careerPipelineImport.js';
@@ -234,7 +235,7 @@ router.get('/opportunities/:id/resume-outputs', requireUser, async (req, res) =>
 // material, not a shareable profile page.
 router.get('/resume-outputs/:id/view', requireUser, async (req, res) => {
   try {
-    const projection = await getResumeOutputProjectionRaw(Number(req.params.id), req.user.id);
+    const projection = await getOwnedOutputWithApprover(Number(req.params.id), req.user.id);
     if (!projection) return res.status(404).json({ error: 'Output not found.' });
     res.json(summarizeProjectionForView(projection));
   } catch (e) {
@@ -244,9 +245,9 @@ router.get('/resume-outputs/:id/view', requireUser, async (req, res) => {
 
 router.get('/resume-outputs/:id/download.pdf', requireUser, async (req, res) => {
   try {
-    const projection = await getResumeOutputProjectionRaw(Number(req.params.id), req.user.id);
+    const projection = await getOwnedOutputWithApprover(Number(req.params.id), req.user.id);
     if (!projection) return res.status(404).json({ error: 'Output not found.' });
-    const buffer = await renderProjectionToPdfBuffer(projection);
+    const buffer = await renderProjectionToPdfBuffer(projection, { shareUrl: projection.share_token ? shareUrlFor(projection.share_token, req) : null });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${filenameFor(projection)}"`);
     res.send(buffer);
@@ -265,7 +266,7 @@ router.post('/resume-outputs/export-zip', requireUser, async (req, res) => {
 
     const projections = [];
     for (const id of projectionIds) {
-      const p = await getResumeOutputProjectionRaw(Number(id), req.user.id);
+      const p = await getOwnedOutputWithApprover(Number(id), req.user.id);
       if (p) projections.push(p);
     }
     if (!projections.length) return res.status(404).json({ error: 'None of the requested outputs were found.' });
@@ -276,7 +277,7 @@ router.post('/resume-outputs/export-zip', requireUser, async (req, res) => {
     archive.on('error', (err) => res.status(500).end(err.message));
     archive.pipe(res);
     for (const projection of projections) {
-      const buffer = await renderProjectionToPdfBuffer(projection);
+      const buffer = await renderProjectionToPdfBuffer(projection, { shareUrl: projection.share_token ? shareUrlFor(projection.share_token, req) : null });
       archive.append(buffer, { name: filenameFor(projection) });
     }
     await archive.finalize();
@@ -297,9 +298,9 @@ router.post('/resume-outputs/email', requireUser, async (req, res) => {
     const attachments = [];
     const titles = [];
     for (const id of projectionIds) {
-      const p = await getResumeOutputProjectionRaw(Number(id), req.user.id);
+      const p = await getOwnedOutputWithApprover(Number(id), req.user.id);
       if (!p) continue;
-      const buffer = await renderProjectionToPdfBuffer(p);
+      const buffer = await renderProjectionToPdfBuffer(p, { shareUrl: p.share_token ? shareUrlFor(p.share_token, req) : null });
       attachments.push({ name: filenameFor(p), content: buffer });
       titles.push(p.preset_name || p.output_type);
     }

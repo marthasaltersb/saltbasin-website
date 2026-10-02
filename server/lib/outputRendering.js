@@ -16,7 +16,11 @@
 // bodyParagraphs/closing), and an imported document (rawText) — the same
 // shape a member-uploaded PDF/DOCX becomes after extraction (see
 // careerPipelineImport.js's file-type branch).
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import PDFDocument from 'pdfkit';
+import QRCode from 'qrcode';
+import { projectionMetadata } from './resumeProjection.js';
 
 function parseContent(projection) {
   const c = projection.generated_content;
@@ -41,6 +45,7 @@ export function summarizeProjectionForView(projection) {
     targetJobDescription: projection.target_job_description || null,
     careerOpportunityRodId: projection.career_opportunity_rod_id != null ? Number(projection.career_opportunity_rod_id) : null,
     content,
+    metadata: projectionMetadata(projection),
   };
 }
 
@@ -50,9 +55,168 @@ function writeParagraphs(doc, text) {
   });
 }
 
-/** Generates a real PDF buffer from a projection's frozen content — never persisted, only ever returned to the caller. */
-export function renderProjectionToPdfBuffer(projection) {
+// ── document_blocks (tailored application packages) ─────────────────────────
+// See server/lib/applicationPackages.js for the shape. Brand palette from
+// src/brand.css (Strategic Operator): navy ink, gold section labels, teal.
+const INK = '#1B2A3B';
+const GOLD = '#C4843A';
+const TEAL = '#4A7C8E';
+const MUTED = '#5F6B78';
+// Bundled DejaVu Sans (server/assets/fonts, Bitstream Vera license) — the
+// built-in PDF Helvetica is WinAnsi-only and drops characters these
+// documents use (→, ⁴), and production hosts can't be assumed to have
+// system fonts.
+const FONT_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'assets', 'fonts');
+function registerDocumentFonts(doc) {
+  doc.registerFont('SB-Regular', path.join(FONT_DIR, 'DejaVuSans.ttf'));
+  doc.registerFont('SB-Bold', path.join(FONT_DIR, 'DejaVuSans-Bold.ttf'));
+  doc.registerFont('SB-Oblique', path.join(FONT_DIR, 'DejaVuSans-Oblique.ttf'));
+  doc.registerFont('SB-BoldOblique', path.join(FONT_DIR, 'DejaVuSans-BoldOblique.ttf'));
+}
+const EMPHASIS_FONT = { bold: 'SB-Bold', italic: 'SB-Oblique', 'bold-italic': 'SB-BoldOblique' };
+
+function formatDate(ms) {
+  return ms ? new Date(Number(ms)).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' }) : '';
+}
+
+/** One-line provenance shown on every rendered document. */
+export function metadataLine(metadata) {
+  return [
+    metadata.authors?.length ? `Authors: ${metadata.authors.join('; ')}` : '',
+    metadata.createdAt ? `Created ${formatDate(metadata.createdAt)}` : '',
+    metadata.modifiedAt ? `Modified ${formatDate(metadata.modifiedAt)}` : '',
+    metadata.approvedBy ? `Approved by ${metadata.approvedBy}${metadata.approvedAt ? ` on ${formatDate(metadata.approvedAt)}` : ''}` : 'Not yet approved',
+  ].filter(Boolean).join('  ·  ');
+}
+
+function ensureRoom(doc, height) {
+  if (doc.y + height > doc.page.height - doc.page.margins.bottom) doc.addPage();
+}
+
+function renderTable(doc, rows) {
+  const left = doc.page.margins.left;
+  const width = doc.page.width - left - doc.page.margins.right;
+  const isGrid = rows.length > 1; // header row + data rows → plain table; one row → metric tiles
+  rows.forEach((cells, rowIndex) => {
+    const colWidth = width / Math.max(cells.length, 1);
+    const pad = 4;
+    const heights = cells.map((lines, i) => {
+      const [first = '', ...rest] = lines;
+      const firstFont = isGrid ? (rowIndex === 0 ? 'SB-Bold' : 'SB-Regular') : 'SB-Bold';
+      const firstSize = isGrid ? 8 : 10.5;
+      let h = doc.font(firstFont).fontSize(firstSize).heightOfString(first, { width: colWidth - pad * 2 });
+      if (rest.length) h += doc.font('SB-Regular').fontSize(7.5).heightOfString(rest.join('\n'), { width: colWidth - pad * 2 }) + 2;
+      return h + pad * 2;
+    });
+    const rowHeight = Math.max(...heights, 0);
+    ensureRoom(doc, rowHeight);
+    const top = doc.y;
+    cells.forEach((lines, i) => {
+      const [first = '', ...rest] = lines;
+      const x = left + i * colWidth + pad;
+      if (!isGrid) doc.save().rect(left + i * colWidth + 2, top, colWidth - 4, rowHeight).fill('#F7F1E8').restore();
+      doc.fillColor(isGrid ? INK : GOLD)
+        .font(isGrid ? (rowIndex === 0 ? 'SB-Bold' : 'SB-Regular') : 'SB-Bold')
+        .fontSize(isGrid ? 8 : 10.5)
+        .text(first, x, top + pad, { width: colWidth - pad * 2 });
+      if (rest.length) doc.fillColor(MUTED).font('SB-Regular').fontSize(7.5).text(rest.join('\n'), x, doc.y + 2, { width: colWidth - pad * 2 });
+    });
+    doc.x = left;
+    doc.y = top + rowHeight + (isGrid ? 0 : 4);
+    if (isGrid) doc.save().moveTo(left, doc.y).lineTo(left + width, doc.y).lineWidth(0.4).stroke('#D8CDBE').restore();
+  });
+  doc.fillColor(INK).moveDown(0.4);
+}
+
+async function renderDocumentBlocks(doc, content, { metadata, shareUrl }) {
+  const left = doc.page.margins.left;
+  const width = doc.page.width - left - doc.page.margins.right;
+  const header = content.header || {};
+  const qrSize = 64;
+  const textWidth = shareUrl ? width - qrSize - 14 : width;
+  const top = doc.y;
+
+  if (shareUrl) {
+    const png = await QRCode.toBuffer(shareUrl, { type: 'png', margin: 1, width: 256, errorCorrectionLevel: 'M' });
+    doc.image(png, left + width - qrSize, top, { width: qrSize, height: qrSize });
+    doc.fillColor(MUTED).font('SB-Regular').fontSize(5.5)
+      .text('Scan for current version', left + width - qrSize - 10, top + qrSize + 2, { width: qrSize + 20, align: 'center' });
+    doc.x = left;
+    doc.y = top;
+  }
+  doc.fillColor(INK).font('SB-Bold').fontSize(19).text(header.name || '', left, top, { width: textWidth });
+  if (header.headline) doc.moveDown(0.15).fillColor(TEAL).font('SB-Bold').fontSize(7).text(header.headline, { width: textWidth, characterSpacing: 0.15 });
+  if (header.contact) doc.moveDown(0.2).fillColor(MUTED).font('SB-Regular').fontSize(8).text(header.contact, { width: textWidth });
+  doc.y = Math.max(doc.y, shareUrl ? top + qrSize + 12 : doc.y) + 4;
+  doc.save().moveTo(left, doc.y).lineTo(left + width, doc.y).lineWidth(1.2).stroke(GOLD).restore();
+  doc.moveDown(0.5);
+
+  for (const block of content.blocks || []) {
+    doc.x = left;
+    if (block.type === 'heading') {
+      ensureRoom(doc, 40);
+      doc.moveDown(0.5).fillColor(GOLD).font('SB-Bold').fontSize(8.5).text(block.text, { characterSpacing: 0.8 });
+      doc.save().moveTo(left, doc.y + 1).lineTo(left + width, doc.y + 1).lineWidth(0.4).stroke('#E3D3BE').restore();
+      doc.moveDown(0.35);
+    } else if (block.type === 'paragraph') {
+      doc.fillColor(INK).font(EMPHASIS_FONT[block.emphasis] || 'SB-Regular').fontSize(8.5).text(block.text, { width, lineGap: 1.2 }).moveDown(0.35);
+    } else if (block.type === 'bullet') {
+      doc.fillColor(INK).font('SB-Regular').fontSize(8.5).text(`•  ${block.text}`, left + 8, doc.y, { width: width - 8, lineGap: 1.2, indent: 0 }).moveDown(0.2);
+    } else if (block.type === 'role') {
+      ensureRoom(doc, 30);
+      doc.moveDown(0.25);
+      const y = doc.y;
+      doc.fillColor(INK).font('SB-Bold').fontSize(9).text(block.title, left, y, { width: width - 120 });
+      const after = doc.y;
+      doc.fillColor(TEAL).font('SB-Regular').fontSize(8.5).text(block.dates || '', left + width - 118, y + 1, { width: 118, align: 'right' });
+      doc.x = left;
+      doc.y = Math.max(after, doc.y) + 2;
+    } else if (block.type === 'table') {
+      renderTable(doc, block.rows || []);
+    }
+  }
+
+  doc.moveDown(1);
+  ensureRoom(doc, 30);
+  doc.save().moveTo(left, doc.y).lineTo(left + width, doc.y).lineWidth(0.4).stroke('#D8CDBE').restore();
+  doc.moveDown(0.3).fillColor(MUTED).font('SB-Regular').fontSize(6.5).text(metadataLine(metadata), left, doc.y, { width });
+  if (shareUrl) doc.text(`Verified copy: ${shareUrl}`, { width });
+}
+
+/**
+ * Generates a real PDF buffer from a projection's frozen content — never
+ * persisted, only ever returned to the caller. `shareUrl` (set when the
+ * version is approved for QR sharing) embeds that version's QR code.
+ */
+export async function renderProjectionToPdfBuffer(projection, { shareUrl = null } = {}) {
   const content = parseContent(projection);
+  const metadata = projectionMetadata(projection);
+  const qrUrl = projection.output_status === 'published' && projection.share_token ? shareUrl : null;
+  if (content.format === 'document_blocks') {
+    const doc = new PDFDocument({
+      margin: 42,
+      size: 'LETTER',
+      info: {
+        Title: titleFor(projection),
+        Author: metadata.authors.join('; '),
+        Subject: projection.target_job_description || titleFor(projection),
+        Keywords: [projection.output_type, metadata.approvedBy ? `approved-by:${metadata.approvedBy}` : 'unapproved'].filter(Boolean).join(', '),
+        CreationDate: new Date(metadata.createdAt),
+        ModDate: new Date(metadata.modifiedAt),
+        ...(metadata.approvedBy ? { ApprovedBy: metadata.approvedBy } : {}),
+      },
+    });
+    const chunks = [];
+    const done = new Promise((resolve, reject) => {
+      doc.on('data', (chunk) => chunks.push(chunk));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+    });
+    registerDocumentFonts(doc);
+    await renderDocumentBlocks(doc, content, { metadata, shareUrl: qrUrl });
+    doc.end();
+    return done;
+  }
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 54, size: 'LETTER' });
     const chunks = [];

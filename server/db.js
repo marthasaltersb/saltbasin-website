@@ -1020,6 +1020,26 @@ async function bootstrap() {
   await sql.unsafe(`ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS targeting_result JSONB`)
     .catch((e) => console.warn('[db] resume_output_projections targeting_result backfill warning:', e.message));
 
+  // QR-gated sharing + document metadata (2026-10-02, tailored application
+  // packages — server/lib/applicationPackages.js). share_token is the
+  // unguessable slug behind /r/:token; it only resolves while
+  // output_status='published', which only an explicit owner approval sets
+  // (approved_by/approved_at record who approved the version the QR serves).
+  // authors/source_created_at carry the document's real authorship and
+  // creation date; updated_at is the last content change (never approval).
+  // All additive and nullable — existing rows are untouched.
+  for (const ddl of [
+    `ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS share_token TEXT`,
+    `ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS authors JSONB`,
+    `ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS source_created_at BIGINT`,
+    `ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS updated_at BIGINT`,
+    `ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS approved_by BIGINT REFERENCES users(id) ON DELETE SET NULL`,
+    `ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS approved_at BIGINT`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_resume_output_projections_share_token ON resume_output_projections (share_token) WHERE share_token IS NOT NULL`,
+  ]) {
+    await sql.unsafe(ddl).catch((e) => console.warn('[db] resume_output_projections sharing columns warning:', e.message));
+  }
+
   // Legacy Maturity Observation backfill — insert-only, one snapshot per rod
   // of its stage_score at the time this migration ran. Never re-runs for a
   // rod that already has one (ON CONFLICT DO NOTHING), so a later stage_score

@@ -61,6 +61,7 @@ import memberFinancialRouter from './routes/memberFinancial.js';
 import presenceRouter from './routes/presence.js';
 import memberEntitlementsRouter from './routes/memberEntitlements.js';
 import resumeOutputsRouter from './routes/resumeOutputs.js';
+import sharedOutputsRouter from './routes/sharedOutputs.js';
 import scenariosRouter from './routes/scenarios.js';
 import configEnvelopesRouter from './routes/configEnvelopes.js';
 import lonetreeMvpRouter from './routes/lonetreeMvp.js';
@@ -186,6 +187,7 @@ app.use('/api/metric-intelligence', metricIntelligenceRouter);
 app.use('/api/member-financial', memberFinancialRouter);
 app.use('/api/member-entitlements', memberEntitlementsRouter);
 app.use('/api/resume-outputs', resumeOutputsRouter);
+app.use('/api/shared-outputs', sharedOutputsRouter);
 app.use('/api/scenarios', scenariosRouter);
 app.use('/api/agent-hub', agentHubRouter);
 app.use('/api/notifications', notificationsRouter);
@@ -227,6 +229,13 @@ if (isProd) {
     // Must run before express.static: rewrites the HTML response's <head>
     // with per-page SEO tags for real routes, and falls through (next()) for
     // static assets and anything it can't resolve.
+    // QR-gated application documents (/r/:token) are unlisted by design —
+    // keep them out of search indexes and referrer headers.
+    app.use('/r/', (req, res, next) => {
+      res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
+      res.setHeader('Referrer-Policy', 'no-referrer');
+      next();
+    });
     app.use(createSeoMiddleware(distDir));
     app.use(express.static(distDir, { maxAge: '1h' }));
     // SPA fallback: any non-API GET that didn't match a static file returns

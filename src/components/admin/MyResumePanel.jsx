@@ -14,6 +14,7 @@ import { toast } from '../../lib/toast.js';
 import { fetchCareerMaster } from '../../lib/careerMaster.js';
 import CareerIntakePanel from './CareerIntakePanel.jsx';
 import { resumeUrlFromPreset } from '../../lib/resumeUrls.js';
+import DocumentBlocksView, { formatMetadataLine, isDocumentBlocks } from '../DocumentBlocksView.jsx';
 
 // ── Layout templates ──────────────────────────────────────────────────────────
 const LAYOUTS = [
@@ -581,6 +582,34 @@ export default function MyResumePanel({ scope = 'member' }) {
     }
   }
 
+  // QR-gated sharing (server/lib/applicationPackages.js): approving makes
+  // this version the one its document's private /r/<slug> QR opens (minting
+  // the slug on first approval) and records you as the approver; revoking
+  // discards the slug so any printed QR stops resolving.
+  async function approveForQr(output) {
+    const ok = window.confirm(`Approve "${output.presetName || 'this output'}" as the final version for its QR code?\n\nYou'll be recorded as the approver. If an earlier version already has a QR code, that same code now opens this version. Only people with the QR code or link can open it.`);
+    if (!ok) return;
+    try {
+      const shared = await api.shareResumeOutput(output.id);
+      try { await navigator.clipboard.writeText(shared.url); } catch { /* clipboard is best-effort */ }
+      toast.success('Approved — private QR link created (copied to clipboard).');
+      loadResumeOutputs();
+    } catch (e) { toast.error(e.message); }
+  }
+
+  async function revokeQr(output) {
+    if (!window.confirm('Revoke this QR link? Anyone scanning an already-printed copy will see "link not available".')) return;
+    try {
+      await api.revokeResumeOutputShare(output.id);
+      toast.success('QR link revoked.');
+      loadResumeOutputs();
+    } catch (e) { toast.error(e.message); }
+  }
+
+  function shareUrl(output) {
+    return `${window.location.origin}/r/${output.share.token}`;
+  }
+
   async function setOutputStatus(id, status) {
     try {
       await api.updateResumeOutputStatus(id, status);
@@ -868,6 +897,22 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
                   <div style={{ fontSize: '0.72rem', color: '#888' }}>
                     Generated {new Date(output.generatedAt).toLocaleString()} · <span style={{ textTransform: 'capitalize' }}>{output.outputStatus}</span>
                   </div>
+                  {output.metadata && (output.metadata.authors?.length > 0 || output.metadata.approvedBy) && (
+                    <div style={{ fontSize: '0.68rem', color: '#8b877c', marginTop: '0.15rem' }}>{formatMetadataLine(output.metadata)}</div>
+                  )}
+                  {output.share?.live && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginTop: '0.45rem', flexWrap: 'wrap' }}>
+                      <img src={api.resumeOutputQrUrl(output.id, 'svg')} alt="QR code for this version's private link" width={64} height={64} style={{ border: '1px solid rgba(0,0,0,0.08)' }} />
+                      <div style={{ fontSize: '0.7rem', lineHeight: 1.6 }}>
+                        <a href={shareUrl(output)} target="_blank" rel="noreferrer" style={{ color: 'var(--sb-teal-deep, #02a1a6)', wordBreak: 'break-all' }}>{shareUrl(output)}</a>
+                        <div style={{ display: 'flex', gap: '0.6rem' }}>
+                          <button type="button" style={{ background: 'none', border: 'none', padding: 0, color: '#555', cursor: 'pointer', fontSize: '0.7rem', textDecoration: 'underline' }} onClick={() => navigator.clipboard?.writeText(shareUrl(output)).then(() => toast.success('Link copied.'))}>Copy link</button>
+                          <a href={api.resumeOutputQrUrl(output.id, 'svg')} download={`qr-${output.id}.svg`} style={{ color: '#555' }}>QR (SVG)</a>
+                          <a href={api.resumeOutputQrUrl(output.id, 'png')} download={`qr-${output.id}.png`} style={{ color: '#555' }}>QR (PNG)</a>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   {output.isStale && (
                     <div style={{ fontSize: '0.75rem', color: 'var(--sb-gold, #c4843a)', marginTop: '0.25rem', fontWeight: 600 }}>
                       Your Career Channel has {Math.abs(output.atomCountDelta)} atom update{Math.abs(output.atomCountDelta) === 1 ? '' : 's'} not reflected in this resume output.
@@ -892,6 +937,12 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
                   {output.outputStatus === 'approved' && (
                     <button style={{ ...S.btn('teal'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setOutputStatus(output.id, 'published')}>Publish</button>
                   )}
+                  {output.generatedContent && output.outputStatus !== 'archived' && !output.share?.live && (
+                    <button style={{ ...S.btn('gold'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => approveForQr(output)}>Approve for QR</button>
+                  )}
+                  {output.share && (
+                    <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => revokeQr(output)}>Revoke QR</button>
+                  )}
                   {output.outputStatus !== 'archived' && (
                     <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setOutputStatus(output.id, 'archived')}>Archive</button>
                   )}
@@ -914,7 +965,7 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
           can be downloaded again if necessary." */}
       {viewingOutput && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setViewingOutput(null)}>
-          <div style={{ background: 'white', borderRadius: 10, padding: '1.5rem', maxWidth: 600, maxHeight: '80vh', overflowY: 'auto', width: '90%' }} onClick={(e) => e.stopPropagation()}>
+          <div style={{ background: 'white', borderRadius: 10, padding: '1.5rem', maxWidth: isDocumentBlocks(viewingOutput.content) ? 860 : 600, maxHeight: '80vh', overflowY: 'auto', width: '90%' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <h3 style={{ margin: 0, color: 'var(--sb-navy, #1b2a3b)' }}>{viewingOutput.title}</h3>
@@ -925,7 +976,12 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
               <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setViewingOutput(null)}>Close</button>
             </div>
             <div style={{ marginTop: '1rem', fontSize: '0.85rem', lineHeight: 1.6, color: '#333' }}>
-              {viewingOutput.content?.rawText ? (
+              {isDocumentBlocks(viewingOutput.content) ? (
+                <>
+                  <DocumentBlocksView content={viewingOutput.content} />
+                  <div style={{ marginTop: '1rem', fontSize: '0.68rem', color: '#8b877c' }}>{formatMetadataLine(viewingOutput.metadata)}</div>
+                </>
+              ) : viewingOutput.content?.rawText ? (
                 <div style={{ whiteSpace: 'pre-wrap' }}>{viewingOutput.content.rawText}</div>
               ) : viewingOutput.outputType === 'cover_letter' ? (
                 <>
