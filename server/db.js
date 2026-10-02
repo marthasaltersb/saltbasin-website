@@ -3049,6 +3049,15 @@ async function bootstrap() {
     ALTER TABLE unified_outputs ADD COLUMN IF NOT EXISTS template_config TEXT;
   `).catch(() => {});
 
+  // Per-member scoping used by server/routes/outputTemplates.js (output templates were consolidated
+  // into unified_outputs on the live database out of band; a fresh database needs the columns too).
+  // Additive only; existing rows keep NULL user_id / is_primary=false.
+  await sql.unsafe(`
+    ALTER TABLE unified_outputs ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES users(id) ON DELETE SET NULL;
+    ALTER TABLE unified_outputs ADD COLUMN IF NOT EXISTS is_primary BOOLEAN NOT NULL DEFAULT false;
+    CREATE INDEX IF NOT EXISTS idx_uo_user_type ON unified_outputs (user_id, output_type);
+  `).catch((e) => console.error('[db] unified_outputs user_id/is_primary migration failed:', e.message));
+
   // ── Output templates table (standalone named templates, reusable across outputs) ──
   await sql.unsafe(`
     CREATE TABLE IF NOT EXISTS output_templates (
