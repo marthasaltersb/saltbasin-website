@@ -55,3 +55,12 @@ API: locked methodology refuses edits (403); unknown formula input refused (400)
 - The Rules & why screen is not yet also mounted inside the Output Template editor (planned once the chart-gallery work merges into that file).
 - Skills have no proficiency category (tools only, as asked).
 - The salt-particle view is a first rendition, pending design feedback.
+
+## Addendum — every technology needs a proficiency category before finalizing (commit `b1ae2d3`)
+
+- `server/lib/finalizationGates.js` (new): `assertReadyToFinalize(userId)` refuses with 409 `tool_category_required` (+ the exact tools and the category vocabulary) while any Career Master tool has no `wheel_bucket`. Called by `updateProjectionStatus` (approved / published) and `approveOutputForSharing` — every path to "final" goes through one of those.
+- `GET /api/resume-outputs/finalization-check` → `{ ready, toolsMissingCategory }`.
+- `src/components/admin/ToolCategoryGate.jsx` (new): `useToolCategoryGate().run(action)` runs a finalize action; on the 409 it shows a dialog (suggestions from each tool's level, marked "(suggested)"), saves choices to the Career Master tool records, then retries once. Used by My Resume (Approve / Publish / Approve for QR) with a warning banner. **Any new finalize button must wrap its call in `categoryGate.run(...)`.**
+- Rules & why: missing categories are marked "Required before any output can be finalized" with a count banner.
+- Charts/QR show a tool's category only when it is recorded in Career Master; an inferred one is never presented as fact.
+- Verified in the browser: API refusal lists the tools; banner shown; dialog appears on Approve for QR; saving writes both categories to Career Master and the approval completes; banner disappears.
