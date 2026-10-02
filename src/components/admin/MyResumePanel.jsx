@@ -902,7 +902,7 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
                   )}
                   {output.share?.live && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginTop: '0.45rem', flexWrap: 'wrap' }}>
-                      <img src={api.resumeOutputQrUrl(output.id, 'svg')} alt="QR code for this version's private link" width={64} height={64} style={{ border: '1px solid rgba(0,0,0,0.08)' }} />
+                      <a href={shareUrl(output)} target="_blank" rel="noreferrer"><img src={api.resumeOutputQrUrl(output.id, 'svg')} alt="QR code for this version's private link" width={64} height={64} style={{ border: '1px solid rgba(0,0,0,0.08)', display: 'block' }} /></a>
                       <div style={{ fontSize: '0.7rem', lineHeight: 1.6 }}>
                         <a href={shareUrl(output)} target="_blank" rel="noreferrer" style={{ color: 'var(--sb-teal-deep, #02a1a6)', wordBreak: 'break-all' }}>{shareUrl(output)}</a>
                         <div style={{ display: 'flex', gap: '0.6rem' }}>

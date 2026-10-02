@@ -139,8 +139,10 @@ async function renderDocumentBlocks(doc, content, { metadata, shareUrl }) {
   if (shareUrl) {
     const png = await QRCode.toBuffer(shareUrl, { type: 'png', margin: 1, width: 256, errorCorrectionLevel: 'M' });
     doc.image(png, left + width - qrSize, top, { width: qrSize, height: qrSize });
+    // Clickable too — most copies are read on screen, not scanned.
+    doc.link(left + width - qrSize, top, qrSize, qrSize, shareUrl);
     doc.fillColor(MUTED).font('SB-Regular').fontSize(5.5)
-      .text('Scan for current version', left + width - qrSize - 10, top + qrSize + 2, { width: qrSize + 20, align: 'center' });
+      .text('Scan or click for current version', left + width - qrSize - 14, top + qrSize + 2, { width: qrSize + 28, align: 'center', link: shareUrl });
     doc.x = left;
     doc.y = top;
   }
@@ -180,7 +182,7 @@ async function renderDocumentBlocks(doc, content, { metadata, shareUrl }) {
   ensureRoom(doc, 30);
   doc.save().moveTo(left, doc.y).lineTo(left + width, doc.y).lineWidth(0.4).stroke('#D8CDBE').restore();
   doc.moveDown(0.3).fillColor(MUTED).font('SB-Regular').fontSize(6.5).text(metadataLine(metadata), left, doc.y, { width });
-  if (shareUrl) doc.text(`Verified copy: ${shareUrl}`, { width });
+  if (shareUrl) doc.text(`Verified copy: ${shareUrl}`, { width, link: shareUrl });
 }
 
 /**

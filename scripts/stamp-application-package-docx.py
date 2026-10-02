@@ -23,7 +23,10 @@ from datetime import datetime, timezone
 
 import docx
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.shared import Inches, Pt
+from docx.opc.constants import RELATIONSHIP_TYPE as RT
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
+from docx.shared import Inches, Pt, RGBColor
 
 
 def parse_ts(value):
@@ -42,11 +45,24 @@ def add_qr_to_header(document, url):
     para = header.paragraphs[0] if header.paragraphs and not header.paragraphs[0].text.strip() else header.add_paragraph()
     para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     buf.seek(0)
-    para.add_run().add_picture(buf, width=Inches(0.7))
+    # Files are mostly read on screen, so the QR and its caption are also
+    # clickable links to the same slug.
+    rel_id = header.part.relate_to(url, RT.HYPERLINK, is_external=True)
+    inline = para.add_run().add_picture(buf, width=Inches(0.7))._inline
+    link = OxmlElement('a:hlinkClick')
+    link.set(qn('r:id'), rel_id)
+    inline.docPr.append(link)
+
     caption = header.add_paragraph()
     caption.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    run = caption.add_run('Scan for current version')
+    hyperlink = OxmlElement('w:hyperlink')
+    hyperlink.set(qn('r:id'), rel_id)
+    run = caption.add_run('Scan or click for current version')
     run.font.size = Pt(6)
+    run.font.color.rgb = RGBColor(0x4A, 0x7C, 0x8E)
+    caption._p.remove(run._r)
+    hyperlink.append(run._r)
+    caption._p.append(hyperlink)
 
 
 def main():

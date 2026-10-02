@@ -75,7 +75,7 @@ function TableBlock({ rows }) {
   );
 }
 
-export default function DocumentBlocksView({ content, qrSvg = null, qrCaption = 'Scan for current version' }) {
+export default function DocumentBlocksView({ content, qrSvg = null, qrHref = null, qrCaption = 'Scan or click for current version' }) {
   const header = content?.header || {};
   return (
     <div style={{ fontFamily: 'Helvetica, Arial, sans-serif', color: INK, lineHeight: 1.5 }}>
@@ -87,7 +87,11 @@ export default function DocumentBlocksView({ content, qrSvg = null, qrCaption = 
         </div>
         {qrSvg && (
           <figure style={{ margin: 0, width: 84, flexShrink: 0, textAlign: 'center' }}>
-            <div style={{ width: 84, height: 84 }} dangerouslySetInnerHTML={{ __html: qrSvg }} />
+            {qrHref ? (
+              <a href={qrHref} aria-label="Open the current version of this document" style={{ display: 'block', width: 84, height: 84 }} dangerouslySetInnerHTML={{ __html: qrSvg }} />
+            ) : (
+              <div style={{ width: 84, height: 84 }} dangerouslySetInnerHTML={{ __html: qrSvg }} />
+            )}
             <figcaption style={{ fontSize: '0.55rem', color: MUTED, lineHeight: 1.2 }}>{qrCaption}</figcaption>
           </figure>
         )}

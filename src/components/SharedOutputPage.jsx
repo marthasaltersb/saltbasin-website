@@ -87,7 +87,7 @@ export default function SharedOutputPage() {
       </div>
       <article className="sb-shared-output-page" style={{ maxWidth: 820, margin: '0 auto', background: 'white', border: '1px solid #E3D8C9', borderTop: '4px solid #C4843A', padding: 'clamp(1.25rem, 4vw, 2.5rem)', boxSizing: 'border-box', boxShadow: '0 24px 70px -52px rgba(43,42,40,0.42)' }}>
         {isDocumentBlocks(doc.content) ? (
-          <DocumentBlocksView content={doc.content} qrSvg={qrSvg} />
+          <DocumentBlocksView content={doc.content} qrSvg={qrSvg} qrHref={window.location.href.split('?')[0]} />
         ) : (
           <div style={{ whiteSpace: 'pre-wrap', fontSize: '0.88rem', lineHeight: 1.6 }}>{doc.content?.rawText || ''}</div>
         )}
