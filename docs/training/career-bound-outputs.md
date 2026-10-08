@@ -1,10 +1,12 @@
 # Training spec — Career-bound outputs, overrides, and the Career Sources to Review queue
 
-Version 2 · 2026-10-08 (fix round 1) · feature `career-bound-outputs` · change spec: `docs/changes/career-bound-outputs.md`
+Version 3 · 2026-10-08 (fix round 2) · feature `career-bound-outputs` · change spec: `docs/changes/career-bound-outputs.md`
 
 Audience: a person using the platform, and a test agent driving a browser. Each step says exactly what to do and what you should see. All data below is fictional. Buttons and labels are written exactly as they appear; some headings display in capitals (CSS), which is fine — match the words, not the capitalisation.
 
-Use a **freshly seeded database** and the **member test account** (`member@test.local`, created by `node scripts/create-test-member.mjs`; it has platform and career terms accepted). Do the preconditions once, then run the journeys **in order** (they build on each other). Everything starts at the World Shell **Journeys** list; Classic Tools is not used. Journey 11 is the one admin check.
+Use a **freshly seeded database** and the **member test account** (`member@test.local`, created by `node scripts/create-test-member.mjs`; it has platform and career terms accepted). Do the preconditions once, then run the journeys **in order** (they build on each other). Everything starts at the World Shell **Journeys** list; Classic Tools is not used. Journey 11 is the one admin check. **Ordering is binding:** Journey 7 (finalize, including 7.4 on the QR page) must run before Journey 8, because Journey 8 changes the wording that 7.4 expects to be unchanged. Do not reorder or run Journey 8 first.
+
+**Legibility check (applies to every journey that opens a dialog or editor).** Text on white or cream cards must be dark. In the browser, for the labels, checklist rows and card headings named in a step, read `getComputedStyle(el).color` against the nearest opaque background and confirm a contrast ratio of at least 4.5:1, at 1280 px and at 390 px. Light cream text (about rgb(245,240,232)) on a white card is a failure.
 
 ## Where things are
 
@@ -99,6 +101,8 @@ In the card **Skills from Career Master**:
 
 ## Journey 7 — Finalizing goes through the gate
 
+Runs before Journey 8 (see Ordering above).
+
 1. **My Resume**. Above the history list expect the amber notice "1 technology needs a proficiency category … (QuoteFlow CPQ)".
 2. On the row `Demo Package Resume (career-bound)` click **Approve**.
    - Expect a dialog "Set how each technology was used" listing `QuoteFlow CPQ` only. Choose **Hands-on** in the select "How QuoteFlow CPQ was used", click **Save to Career Master and continue**.
@@ -127,11 +131,19 @@ Runs after Journey 5 (Career Master has `Harborline Freight Systems` with title 
    - Expect the Harborline role to read `Finance Systems Lead (template)`, and `Finance Systems Director` to appear nowhere on the page. Career Master itself still holds `Finance Systems Director` (check in Career Master → Jobs).
 5. Back in the editor click **Revert to Career Master**. Expect the box to read `Finance Systems Director` and the button and badge on that field to disappear. Click **Save & Set Primary**, reload `/output/resume?owner=me`. Expect `Finance Systems Director`, no "(template)" anywhere.
 
+6. Contrast: on the Sections tab, the heading "Career Master wording for this output only", the field labels (for example "Title for Harborline Freight Systems") and the checklist rows each have a contrast ratio of at least 4.5:1 against their card (see Legibility check).
+7. Skills, tools and certifications. Below the jobs card expect a card "Skills, tools and certifications wording for this output only" with three selects. In the select "Add skill override" choose `Process design`. Expect a box "Skill Process design for this output" holding `Process design`. Replace it with `Process design (template)`. Expect the badge `OVERRIDDEN FOR THIS OUTPUT`, the line `Career Master: Process design` and **Revert to Career Master** beside that box only.
+8. In "Add tool override" choose `Ledgerly ERP`, change its box to `Ledgerly ERP (template)`; in "Add certification override" choose `Ledgerly Certified Consultant`, change its box to `Ledgerly Certified Consultant (template)`. Each shows its own badge, Career Master line and **Revert to Career Master**.
+9. Click **Save & Set Primary**, then leave and reopen **Output Templates** → **Sections** (full page reload is fine). Expect the three boxes still to read `Process design (template)`, `Ledgerly ERP (template)` and `Ledgerly Certified Consultant (template)`, each with its badge and Career Master line. Career Master → Skills / Tools / Certifications still hold `Process design`, `Ledgerly ERP`, `Ledgerly Certified Consultant` (Career Master is never changed by an override). The resume layout built here lists only jobs, so these three values do not print on `/output/resume`; they are applied (`applyMasterOverrides`) wherever a chosen layer shows skill, tool or certification names.
+10. Click **Revert to Career Master** on the skill only. Expect its box to read `Process design` and its badge to disappear while the tool and certification stay overridden. Click **Revert to Career Master** on the other two, **Save & Set Primary**, reload: no badge, no "(template)" in any box.
+11. Scope note (by design, pending owner confirmation): these overrides are saved on the template preset, so they apply to every view of that preset.
+
 ## Journey 10 — Phone width
 
 On a 390 px wide viewport (and, for comparison, 1200 px), signed in as the member:
 
 1. `/world` → **Journeys** → **My Resume** → **Edit sections** on `Finance systems resume`.
+   - Legibility check: at both widths the editor's labels, card headings and checklist rows (for example the heading of the Experience cards and the "Skills from Career Master" rows) have contrast of at least 4.5:1.
    - At 390 px: the editor columns stack. The Title and Dates boxes are each at least 250 px wide, **Preview** is below the Experience cards at full width, and the page does not scroll sideways. At 1200 px: the Experience column and **Preview** sit side by side.
 
 ## Journey 11 — Admin scope (one check)

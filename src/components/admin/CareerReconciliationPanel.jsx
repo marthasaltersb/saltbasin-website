@@ -413,7 +413,7 @@ export default function CareerReconciliationPanel() {
       <ConvertSection refreshKey={refreshKey} openEditor={setEditingId} />
       {editingId && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} role="dialog" aria-label="Career-bound output editor">
-          <div style={{ background: 'white', borderRadius: 10, padding: '1rem 1.25rem', width: 'min(1100px, 95vw)', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div style={{ background: 'white', color: '#1b2a3b', borderRadius: 10, padding: '1rem 1.25rem', width: 'min(1100px, 95vw)', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}><button type="button" style={S.btn('outline')} onClick={() => setEditingId(null)}>Close</button></div>
             <CareerBoundOutputEditor projectionId={editingId} hideQueueLink onSaved={(r) => { if (r?.id && r.id !== editingId) setEditingId(r.id); }} />
           </div>

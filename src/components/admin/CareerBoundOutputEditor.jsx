@@ -17,9 +17,9 @@ import OutputVersionHistory from './OutputVersionHistory.jsx';
 const INK = '#1b2a3b';
 const S = {
   // Two columns on desktop; stacks to one column when the dialog is narrower than ~740px (phones).
-  wrap: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', gap: '1.25rem', alignItems: 'start' },
+  wrap: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', gap: '1.25rem', alignItems: 'start', color: INK },
   col: { minWidth: 0 },
-  card: { background: 'white', border: '1px solid rgba(0,0,0,0.12)', borderRadius: 10, padding: '0.8rem 0.95rem', marginBottom: '0.8rem' },
+  card: { background: 'white', color: INK, border: '1px solid rgba(0,0,0,0.12)', borderRadius: 10, padding: '0.8rem 0.95rem', marginBottom: '0.8rem' },
   h: { fontSize: '0.9rem', fontWeight: 700, color: INK, margin: '0 0 0.4rem' },
   sub: { fontSize: '0.72rem', color: '#6a6a6a', lineHeight: 1.5 },
   input: { width: '100%', boxSizing: 'border-box', padding: '0.4rem 0.5rem', borderRadius: 6, border: '1px solid rgba(0,0,0,0.2)', fontSize: '0.8rem', fontFamily: 'inherit' },
