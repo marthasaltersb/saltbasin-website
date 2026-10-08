@@ -181,9 +181,9 @@ for (const [key, list] of Object.entries(byFeature)) {
     const reported = new Set((tr?.items || []).map((i) => i.recurrenceOf || i.id));
     for (const b of fb.values()) {
       if (!['fixed_awaiting_retest', 'retesting'].includes(b.status)) continue;
-      if (vr.passed) { b.status = 'verified'; b.history.push({ round: v.round, event: 'verified', note: `Retest round ${v.round} passed every step` }); }
+      if (vr.passed) { b.status = 'verified'; b.history.push({ round: v.round, event: 'verified', note: `Retest round ${v.round} passed every step`, commit: vr.commitTested || null }); }
       else if (!tr) b.status = 'retest_failed_pending_triage';
-      else if (!reported.has(b.id)) { b.status = 'verified'; b.history.push({ round: v.round, event: 'verified', note: `Retest round ${v.round}: this bug's step passed (the round had other failures)` }); }
+      else if (!reported.has(b.id)) { b.status = 'verified'; b.history.push({ round: v.round, event: 'verified', note: `Retest round ${v.round}: this bug's step passed (the round had other failures)`, commit: vr.commitTested || null }); }
     }
     if (vr.passed) continue;
     for (const item of tr?.items || []) {
@@ -203,7 +203,7 @@ for (const [key, list] of Object.entries(byFeature)) {
       for (const f of fr.fixed || []) {
         const b = fb.get(f.id); if (!b) continue;
         attempts[f.id] = (attempts[f.id] || 0) + 1; b.attempts = attempts[f.id];
-        b.status = 'fixed_awaiting_retest'; b.history.push({ round: v.round, event: 'fixed', note: clip(f.what, 200), files: f.files });
+        b.status = 'fixed_awaiting_retest'; b.history.push({ round: v.round, event: 'fixed', note: clip(f.what, 200), files: f.files, commit: fr.commit || null });
       }
       for (const f of fr.notFixed || []) {
         const b = fb.get(f.id); if (!b) continue;
@@ -263,6 +263,7 @@ const snapshot = {
   runId: runDirs.map((d) => path.basename(d)).join(' + ') || null,
   syncedAt: new Date().toISOString(),
   maxFixAttemptsPerBug: MAX_ATTEMPTS,
+  repoUrl: opt('--repo-url') || null,
   maxFixRounds: definition.maxFixRounds,
   features, agents: agentList.sort((x, y) => String(y.startedAt || '').localeCompare(String(x.startedAt || ''))), bugs,
   totals: agentList.reduce((t, a) => {

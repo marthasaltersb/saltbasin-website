@@ -34,7 +34,7 @@ if (argv.includes('--export')) {
     bugs: (snap.bugs || []).filter((b) => b.status !== 'seen_in_test').map((b) => ({
       id: b.id, feature: b.feature, status: b.status, class: b.class || null, attempts: b.attempts || 0,
       step: clip(b.step, 200), rootCause: clip(b.rootCause, 400), files: b.files || [],
-      history: (b.history || []).map((h) => ({ round: h.round, event: h.event, note: clip(h.note, 200) })),
+      history: (b.history || []).map((h) => ({ round: h.round, event: h.event, note: clip(h.note, 200), commit: h.commit || null })),
     })),
   };
   fs.writeFileSync(STATE, `${JSON.stringify(state, null, 2)}\n`);
