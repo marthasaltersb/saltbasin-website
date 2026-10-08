@@ -532,7 +532,7 @@ function ImportTab({ reloadAll }) {
         <div style={S.cardTitle}>Import a tracker snapshot</div>
         <div style={S.sub}>The JSON that scripts/release-tracker-sync.mjs writes. Tokens and elapsed minutes are recorded only where the snapshot has them.</div>
         <div style={S.row}>
-          <Field label="Release key for the snapshot"><input aria-label="Snapshot release key" style={{ ...S.input, minWidth: 320 }} value={snap.releaseKey} onChange={(e) => setSnap({ ...snap, releaseKey: e.target.value })} /></Field>
+          <Field label="Release key for the snapshot"><input aria-label="Release key for the snapshot" style={{ ...S.input, minWidth: 320 }} value={snap.releaseKey} onChange={(e) => setSnap({ ...snap, releaseKey: e.target.value })} /></Field>
         </div>
         <Field label="Snapshot JSON"><textarea aria-label="Snapshot JSON" rows={8} style={{ ...S.input, fontFamily: 'monospace', width: '100%', boxSizing: 'border-box' }} value={snap.json} onChange={(e) => setSnap({ ...snap, json: e.target.value })} /></Field>
         <div style={{ marginTop: '.5rem' }}><button type="button" style={S.btn} disabled={!!busy} onClick={() => run('snap', () => api.importReleaseSnapshot(snap.releaseKey, snap.json))}>Import snapshot</button></div>
