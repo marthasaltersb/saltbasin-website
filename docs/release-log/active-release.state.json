@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-08T16:33:43.313Z",
+  "exportedAt": "2026-10-08T16:35:24.750Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -14,7 +14,7 @@
       "lastReport": "docs/test-results/world-shell-navigation/round-1.md"
     },
     "career-bound-outputs": {
-      "status": "reconcile",
+      "status": "validate",
       "lastRound": 2,
       "lastScore": "54/56",
       "lastReport": "docs/test-results/career-bound-outputs/round-2.md"
@@ -905,7 +905,7 @@
     {
       "id": "career-bound-outputs-F1-3",
       "feature": "career-bound-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "requirement_gap",
       "attempts": 1,
       "step": "Journey 9 / change spec Known limitations line 89",
@@ -960,7 +960,7 @@
     {
       "id": "career-bound-outputs-F1-5",
       "feature": "career-bound-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "process",
       "attempts": 1,
       "step": "Journey 7.4",
@@ -1034,6 +1034,171 @@
       ]
     },
     {
+      "id": "career-bound-outputs-F2-3",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "Output Templates > Sections overrides (J9)",
+      "rootCause": "Template outputs have no saved per-document row, so overrides were attached to the preset.",
+      "files": [
+        "src/lib/masterOverrides.js",
+        "src/components/Output.jsx",
+        "src/components/admin/OutputTemplateConfigurator.jsx",
+        "server/lib/outputRendering.js"
+      ],
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F2-4",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "Commit trailer",
+      "rootCause": "The fix agent followed the session attribution reminder over the task text.",
+      "files": [],
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F2-5",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "Round-N test result file",
+      "rootCause": "Fix agents do not write test results.",
+      "files": [
+        "docs/test-results/career-bound-outputs/"
+      ],
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F2-6",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "J1.2 Save changes button",
+      "rootCause": "No disabled styling.",
+      "files": [
+        "src/components/admin/CareerBoundOutputEditor.jsx"
+      ],
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (product_defect)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F2-7",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "J6.10/J11.2 Career Sources to Review dialog",
+      "rootCause": "Header holds only a Close button.",
+      "files": [
+        "src/components/admin/MyResumePanel.jsx"
+      ],
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (product_defect)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F2-8",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "J6.10 Convert to career-bound output",
+      "rootCause": "Convertible list does not report an existing converted output.",
+      "files": [
+        "src/components/admin/CareerReconciliationPanel.jsx",
+        "server/lib/careerBound.js"
+      ],
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (product_defect)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F2-9",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Legibility fix coverage (J1.2a, J9.0)",
+      "rootCause": "World Shell cream text is inherited into light dialogs; WorldShell.jsx was left unchanged.",
+      "files": [
+        "src/components/WorldShell.jsx",
+        "src/components/admin/CareerBoundOutputEditor.jsx",
+        "src/components/admin/OutputTemplateConfigurator.jsx"
+      ],
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F2-10",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "J9 skills/tools/certifications overrides",
+      "rootCause": "Default resume layout does not render skills/tools/certifications.",
+      "files": [
+        "src/components/Output.jsx",
+        "src/components/admin/OutputTemplateConfigurator.jsx"
+      ],
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "cbo-r1-phone-editor",
       "feature": "career-bound-outputs",
       "status": "verified",
@@ -1069,7 +1234,7 @@
     {
       "id": "cbo-r2-inherited-cream-text",
       "feature": "career-bound-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "J1 1.2a (also J2, J3, J10 at 390px) and J9 9.0 / 9.2-9.3",
