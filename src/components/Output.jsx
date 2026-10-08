@@ -18,6 +18,7 @@ import PortfolioRequestPrompt from './PortfolioRequestFlow.jsx';
 import { renderBlockToHtml, buildStatBlocksFromLayerConfig, buildInfographicBlocksFromLayerConfig, renderMemberFooterHtml } from '../lib/outputBlocks.js';
 import { fetchCareerMaster, tierFillPct, toolWheelBucket } from '../lib/careerMaster.js';
 import { useResumeRollups } from '../lib/resumeRollups.js';
+import { applyMasterOverrides } from '../lib/masterOverrides.js';
 import { RenderSection } from './blocks/index.jsx';
 
 // The Home page's "about" content is split across two sections — the founder
@@ -1287,9 +1288,12 @@ function hasOutputLayerContent(config) {
   return l1 || l2 || l3 || l4;
 }
 
-function OutputTemplateBody({ config, ctx: baseCtx, sitePages, master }) {
+function OutputTemplateBody({ config, ctx: baseCtx, sitePages, master: masterProp }) {
   if (!config) return null;
-  const ctx = { ...baseCtx, master: baseCtx?.master || master };
+  // Per-output overrides (config.masterOverrides) sit over the live Career Master;
+  // fields without an override keep following Career Master.
+  const master = applyMasterOverrides(masterProp, config.masterOverrides);
+  const ctx = { ...baseCtx, master: applyMasterOverrides(baseCtx?.master, config.masterOverrides) || master };
   const items = [];
   let order = 0;
 

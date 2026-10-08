@@ -16,7 +16,8 @@ import OutputVersionHistory from './OutputVersionHistory.jsx';
 
 const INK = '#1b2a3b';
 const S = {
-  wrap: { display: 'grid', gridTemplateColumns: 'minmax(0, 1.1fr) minmax(0, 1fr)', gap: '1.25rem', alignItems: 'start' },
+  // Two columns on desktop; stacks to one column when the dialog is narrower than ~740px (phones).
+  wrap: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', gap: '1.25rem', alignItems: 'start' },
   col: { minWidth: 0 },
   card: { background: 'white', border: '1px solid rgba(0,0,0,0.12)', borderRadius: 10, padding: '0.8rem 0.95rem', marginBottom: '0.8rem' },
   h: { fontSize: '0.9rem', fontWeight: 700, color: INK, margin: '0 0 0.4rem' },
@@ -59,6 +60,24 @@ export default function CareerBoundOutputEditor({ projectionId, onSaved, onOpenR
     }
   }, []);
   useEffect(() => { setState(null); load(projectionId); }, [projectionId, load]);
+
+  // Live preview: while there are unsaved edits, resolve the in-progress content against
+  // Career Master (debounced, writes nothing). Saved state shows state.resolved.
+  const [live, setLive] = useState(null);
+  const [liveError, setLiveError] = useState(null);
+  useEffect(() => {
+    if (!dirty || !content) { setLive(null); setLiveError(null); return undefined; }
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      try {
+        const r = await api.previewCareerBoundOutput(projectionId, { content });
+        if (!cancelled) { setLive(r); setLiveError(null); }
+      } catch (e) {
+        if (!cancelled) setLiveError(e.message);
+      }
+    }, 350);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [content, dirty, projectionId]);
 
   const jobsById = useMemo(() => new Map((state?.jobs || []).map((j) => [j.id, j])), [state]);
 
@@ -159,14 +178,14 @@ export default function CareerBoundOutputEditor({ projectionId, onSaved, onOpenR
             return (
               <div key={sec.jobId} style={S.card} data-testid={`cb-job-${job.id}`}>
                 <div style={{ fontWeight: 700, fontSize: '0.85rem', color: INK }}>{job.company}</div>
-                <div style={S.row}>
-                  <div style={{ flex: 1 }}>
+                <div style={{ ...S.row, flexWrap: 'wrap' }}>
+                  <div style={{ flex: '1 1 220px', minWidth: 0 }}>
                     <label style={S.sub}>Title {titleOver && <Overridden />}</label>
                     <input style={S.input} aria-label={`Title for ${job.company}`} value={cfg.titleOverride ?? job.title ?? ''} onChange={(e) => edit((d) => { cfgOf(d, job.id).titleOverride = e.target.value; })} />
                     {titleOver && <button type="button" style={{ ...S.btn(), marginTop: 4 }} onClick={() => edit((d) => { delete cfgOf(d, job.id).titleOverride; })}>Revert to Career Master</button>}
                     {titleOver && <div style={S.sub}>Career Master: {job.title}</div>}
                   </div>
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: '1 1 220px', minWidth: 0 }}>
                     <label style={S.sub}>Dates {datesOver && <Overridden />}</label>
                     <input style={S.input} aria-label={`Dates for ${job.company}`} value={cfg.datesOverride ?? datesMaster} onChange={(e) => edit((d) => { cfgOf(d, job.id).datesOverride = e.target.value; })} />
                     {datesOver && <button type="button" style={{ ...S.btn(), marginTop: 4 }} onClick={() => edit((d) => { delete cfgOf(d, job.id).datesOverride; })}>Revert to Career Master</button>}
@@ -311,9 +330,10 @@ export default function CareerBoundOutputEditor({ projectionId, onSaved, onOpenR
           )}
         </div>
         <div style={S.col}>
-          <div style={S.h}>Preview {dirty ? '(as last saved; save to refresh)' : '(as saved)'}</div>
+          <div style={S.h}>Preview {dirty ? (liveError ? '(could not refresh; showing last saved)' : '(live, not saved yet)') : '(as saved)'}</div>
+          {dirty && liveError && <div role="alert" style={S.err}>Live preview failed: {liveError}</div>}
           <div style={{ ...S.card, padding: '1rem' }} data-testid="cb-preview">
-            <DocumentBlocksView content={state.resolved} showOutputOnly />
+            <DocumentBlocksView content={dirty && live?.resolved ? live.resolved : state.resolved} showOutputOnly />
           </div>
         </div>
       </div>

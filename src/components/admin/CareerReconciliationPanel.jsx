@@ -168,14 +168,15 @@ const PACKAGE_KIND_LABELS = {
   package_add_job: 'Add job',
   package_new_skill: 'New skill',
   package_new_tool: 'New tool',
+  package_new_certification: 'New certification',
 };
 
 function packageTaskSummary(task) {
   const r = task.reasoning || {};
   if (task.taskType === 'package_field_conflict') return { title: `${r.company} - ${r.field === 'dates' ? 'dates' : 'job title'}`, before: r.before || '(empty)', after: r.after };
   if (task.taskType === 'package_new_bullet') return { title: `${r.company} (${r.jobTitle}) - bullet not in this job's library`, before: '(not in library)', after: r.text };
-  if (task.taskType === 'package_new_skill' || task.taskType === 'package_new_tool') {
-    const kind = task.taskType === 'package_new_skill' ? 'skill' : 'tool';
+  if (task.taskType === 'package_new_skill' || task.taskType === 'package_new_tool' || task.taskType === 'package_new_certification') {
+    const kind = task.taskType === 'package_new_skill' ? 'skill' : task.taskType === 'package_new_certification' ? 'certification' : 'tool';
     return { title: `${r.name} - ${kind} not in Career Master`, before: '(not in Career Master)', after: `${r.name}${kind === 'tool' ? ' - you will be asked how it was used before any output is finalized' : ''}` };
   }
   return { title: `${r.company} - ${r.title}`, before: '(not in Career Master)', after: `${r.title}, ${[r.startDate, r.endDate].filter(Boolean).join(' - ') || 'no dates'}${r.bullets?.length ? ` - ${r.bullets.length} bullet${r.bullets.length === 1 ? '' : 's'} added to its library` : ''}` };
