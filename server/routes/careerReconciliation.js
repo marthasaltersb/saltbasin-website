@@ -41,7 +41,7 @@ router.get('/tasks', requireUser, async (req, res) => {
     const rows = await db.prepare(`
       SELECT * FROM career_reconciliation_tasks
       WHERE rod_id = $1 ${status ? 'AND status = $2' : ''} ${syncFailed ? `AND metadata ? 'syncError'` : ''}
-      ORDER BY CASE task_type WHEN 'source_conflict' THEN 0 WHEN 'package_field_conflict' THEN 1 WHEN 'package_add_job' THEN 2 WHEN 'package_new_bullet' THEN 3 WHEN 'package_new_skill' THEN 4 WHEN 'package_new_tool' THEN 5 ELSE 6 END, detected_at DESC
+      ORDER BY CASE task_type WHEN 'source_conflict' THEN 0 WHEN 'package_field_conflict' THEN 1 WHEN 'package_add_job' THEN 2 WHEN 'package_new_bullet' THEN 3 WHEN 'package_new_skill' THEN 4 WHEN 'package_new_tool' THEN 5 WHEN 'package_new_certification' THEN 6 ELSE 7 END, detected_at DESC
     `).all(...(status ? [rod.id, status] : [rod.id]));
     res.json({ items: rows.map(taskRow) });
   } catch (e) {

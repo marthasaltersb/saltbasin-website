@@ -8,7 +8,8 @@
  *     → Accept saves as new preset; Discard discards
  *  4. Inline PDF preview + print
  */
-import React, { useEffect, useRef, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
 import { fetchCareerMaster } from '../../lib/careerMaster.js';
@@ -20,6 +21,11 @@ import CareerBoundOutputEditor from './CareerBoundOutputEditor.jsx';
 import { OutputVersionHistoryModal } from './OutputVersionHistory.jsx';
 import CoverLetterPackagesPanel from './CoverLetterPackagesPanel.jsx';
 import CoverLetterWorkbench from './CoverLetterWorkbench.jsx';
+
+// The review queue opens over this panel (portalled to <body>: the World Shell rail's
+// backdrop-filter would otherwise trap a position:fixed layer), so it is reachable from
+// wherever My Resume is mounted - World Shell or Classic Tools, member or admin.
+const CareerReconciliationPanel = lazy(() => import('./CareerReconciliationPanel.jsx'));
 
 // ── Layout templates ──────────────────────────────────────────────────────────
 const LAYOUTS = [
@@ -465,6 +471,7 @@ export default function MyResumePanel({ scope = 'member' }) {
   const [resumeOutputs, setResumeOutputs] = useState([]);
   // Career-bound outputs (2026-10-02): content is a selection over Career Master + per-output overrides.
   const [boundEditId, setBoundEditId] = useState(null);
+  const [queueOpen, setQueueOpen] = useState(false);
   const [creatingBound, setCreatingBound] = useState(false);
   const [boundName, setBoundName] = useState('Career-bound resume');
   // Finalizing (approve / publish / approve for QR) requires every
@@ -911,7 +918,7 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
           <button style={{ ...S.btn('gold'), padding: '4px 12px', fontSize: '0.74rem' }} disabled={creatingBound} onClick={createBoundOutput}>
             {creatingBound ? 'Creating...' : 'New career-bound resume from Career Master'}
           </button>
-          <button style={{ ...S.btn('outline'), padding: '4px 12px', fontSize: '0.74rem' }} onClick={() => window.dispatchEvent(new CustomEvent('sb-admin-switch-tab', { detail: { tab: 'careerReconciliation' } }))}>
+          <button style={{ ...S.btn('outline'), padding: '4px 12px', fontSize: '0.74rem' }} onClick={() => setQueueOpen(true)}>
             Career Sources to Review
           </button>
         </div>
@@ -1090,17 +1097,28 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
 
       {boundEditId && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} role="dialog" aria-label="Career-bound resume editor">
-          <div style={{ background: 'white', borderRadius: 10, padding: '1rem 1.25rem', width: 'min(1200px, 96vw)', maxHeight: '92vh', overflowY: 'auto' }}>
+          <div style={{ background: 'white', borderRadius: 10, padding: 'clamp(0.5rem, 2.5vw, 1.25rem)', width: 'min(1200px, 98vw)', maxHeight: '94vh', overflowY: 'auto', boxSizing: 'border-box' }}>
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => { setBoundEditId(null); loadResumeOutputs(); }}>Close</button>
             </div>
             <CareerBoundOutputEditor
               projectionId={boundEditId}
               onSaved={(r) => { if (r?.id && r.id !== boundEditId) setBoundEditId(r.id); loadResumeOutputs(); }}
-              onOpenReviewQueue={() => { setBoundEditId(null); window.dispatchEvent(new CustomEvent('sb-admin-switch-tab', { detail: { tab: 'careerReconciliation' } })); }}
+              onOpenReviewQueue={() => { setBoundEditId(null); loadResumeOutputs(); setQueueOpen(true); }}
             />
           </div>
         </div>
+      )}
+      {queueOpen && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} role="dialog" aria-label="Career Sources to Review">
+          <div style={{ background: '#fff', borderRadius: 10, padding: 'clamp(0.5rem, 2.5vw, 1.25rem)', width: 'min(1100px, 98vw)', maxHeight: '94vh', overflowY: 'auto', boxSizing: 'border-box' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.4rem' }}>
+              <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => { setQueueOpen(false); loadResumeOutputs(); }}>Close</button>
+            </div>
+            <Suspense fallback={<div style={{ fontSize: '0.8rem', color: '#666' }}>Loading...</div>}><CareerReconciliationPanel /></Suspense>
+          </div>
+        </div>,
+        document.body,
       )}
       {historyOutputId && <OutputVersionHistoryModal projectionId={historyOutputId} onClose={() => setHistoryOutputId(null)} />}
       {categoryGate.modal}

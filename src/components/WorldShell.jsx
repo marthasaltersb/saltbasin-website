@@ -41,6 +41,7 @@ const CareerMasterEntryPoint = lazy(() => import('./admin/CareerMasterEntryPoint
 import { OutputVersionHistoryModal } from './admin/OutputVersionHistory.jsx';
 const OutputTemplateConfiguratorHub = lazy(() => import('./admin/OutputTemplateConfigurator.jsx').then((m) => ({ default: m.OutputTemplateConfiguratorHub })));
 const CareerReconciliationPanel = lazy(() => import('./admin/CareerReconciliationPanel.jsx'));
+const MyResumePanel = lazy(() => import('./admin/MyResumePanel.jsx'));
 const LonetreeMvpPanel = lazy(() => import('./admin/LonetreeMvpPanel.jsx'));
 const ReleaseIntelligencePanel = lazy(() => import('./admin/ReleaseIntelligencePanel.jsx'));
 
@@ -48,6 +49,8 @@ const SIMPLE_EMBED_COMPONENTS = {
   leads: { title: 'Leads', render: () => <LeadsPanel /> },
   careerMaster: { title: 'Career Master', render: (scope) => (scope === 'admin' ? <CareerMasterPanel scope="admin" /> : <CareerMasterEntryPoint scope={scope} />) },
   careerReconciliation: { title: 'Career Sources to Review', render: (scope) => <CareerReconciliationPanel scope={scope} /> },
+  // WorldShell is already wrapped in CareerConsentGate (see the default export), so no extra gate here.
+  resume: { title: 'My Resume', render: (scope) => <MyResumePanel scope={scope} /> },
   outputTemplates: { title: 'Output Templates', render: (scope) => <OutputTemplateConfiguratorHub scope={scope} /> },
   lonetreeMvp: { title: 'Fund & Portfolio Demo', render: (scope) => <LonetreeMvpPanel scope={scope} /> },
   releaseIntelligence: { title: 'Release Intelligence', render: () => <ReleaseIntelligencePanel /> },

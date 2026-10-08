@@ -16,6 +16,7 @@ import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
 import ChartGallery from './ChartGallery.jsx';
 import ProficiencyRulesPanel from './ProficiencyRulesPanel.jsx';
+import { OVERRIDABLE_JOB_FIELDS, withOverride } from '../../lib/masterOverrides.js';
 
 const TABS = ['Header / Footer', 'Stat Cards', 'Infographics', 'Sections', 'Rules & why'];
 
@@ -505,6 +506,43 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
                     </div>
                   );
                 })}
+
+                {config.layer4_sections.sections.some((s) => s.sourceType === 'job_experience') && (
+                  <div data-testid="master-overrides-card" style={{ marginTop: '0.9rem', padding: '0.7rem 0.8rem', background: '#FBF8F3', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 8 }}>
+                    <div style={S.label}>Career Master wording for this output only</div>
+                    <div style={{ fontSize: '0.74rem', color: '#666', lineHeight: 1.5, marginBottom: '0.5rem' }}>
+                      These fields follow Career Master. Reword one here and it changes in this output only, marked Overridden for this output; Revert to Career Master puts the live value back. Career Master itself is not changed.
+                    </div>
+                    {(master?.jobs || []).filter((job) => config.layer4_sections.sections.some((s) => s.sourceType === 'job_experience' && String(s.jobId) === String(job.id))).map((job) => (
+                      <div key={job.id} style={{ marginBottom: '0.7rem' }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.8rem' }}>{job.company}</div>
+                        {OVERRIDABLE_JOB_FIELDS.map(([field, label]) => {
+                          const stored = config.masterOverrides?.jobs?.[String(job.id)]?.[field];
+                          const masterValue = Array.isArray(job[field]) ? job[field].join('\n') : (job[field] ?? '');
+                          const shown = typeof stored === 'string' ? stored : masterValue;
+                          const over = typeof stored === 'string' && stored !== masterValue;
+                          const setField = (v) => update('masterOverrides', withOverride(config.masterOverrides, 'jobs', job.id, field, v));
+                          const box = { width: '100%', boxSizing: 'border-box', padding: '0.35rem 0.5rem', fontSize: '0.78rem', border: '1px solid rgba(0,0,0,0.2)', borderRadius: 6 };
+                          return (
+                            <div key={field} style={{ marginTop: '0.3rem' }}>
+                              <label style={{ fontSize: '0.7rem', color: '#666' }}>{label} for {job.company}</label>
+                              {over && <span style={{ marginLeft: 6, fontSize: '0.58rem', fontWeight: 700, textTransform: 'uppercase', color: '#8a5a12', background: '#FBEBD0', border: '1px solid #E8C98F', borderRadius: 999, padding: '0 6px' }}>Overridden for this output</span>}
+                              {field === 'keyMetrics'
+                                ? <textarea rows={2} aria-label={`${label} for ${job.company}`} value={shown} onChange={(e) => setField(e.target.value)} style={box} />
+                                : <input aria-label={`${label} for ${job.company}`} value={shown} onChange={(e) => setField(e.target.value)} style={box} />}
+                              {over && (
+                                <div style={{ fontSize: '0.7rem', color: '#666', marginTop: 2 }}>
+                                  Career Master: {masterValue || '(empty)'}{' '}
+                                  <button type="button" style={S.smallBtn} onClick={() => setField(null)}>Revert to Career Master</button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {placeholderSections.length > 0 && (
                   <>
