@@ -1,8 +1,8 @@
 {
-  "exportedAt": "2026-10-08T15:48:51.180Z",
+  "exportedAt": "2026-10-08T15:49:47.994Z",
   "features": {
     "proficiency-live-qr": {
-      "status": "fix",
+      "status": "reconcile",
       "lastRound": 3,
       "lastScore": "28/29",
       "lastReport": "docs/test-results/proficiency-live-qr/round-3.md"
@@ -84,7 +84,7 @@
     {
       "id": "proficiency-live-qr-F2-1",
       "feature": "proficiency-live-qr",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "J7.1, J7.2 and 390px workspace tabs",
@@ -100,15 +100,21 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (process)",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "not_fixed",
+          "note": "This is a process item for the round-3 validator. I changed no code and did not run J7.1, J7.2 or the 390px tabs in a browser. The fix notes say so.",
+          "commit": null
         }
       ]
     },
     {
       "id": "proficiency-live-qr-F2-2",
       "feature": "proficiency-live-qr",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "process",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Change spec fix notes round 2",
       "rootCause": "Notes written before the checks and not corrected.",
       "files": [
@@ -120,15 +126,21 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (process)",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "fixed",
+          "note": "Round-3 notes state the round-2 notes were written from build and code reading and that the browser checks are pending.",
+          "commit": "c464731"
         }
       ]
     },
     {
       "id": "proficiency-live-qr-F2-3",
       "feature": "proficiency-live-qr",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "requirement_gap",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Output Template editor",
       "rootCause": "Deferred pending chart-gallery merge.",
       "files": [
@@ -140,13 +152,19 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "fixed",
+          "note": "ProficiencyRulesPanel is already mounted as the Rules & why tab of OutputTemplateConfigurator, which World Shell shows as the Output Templates island (commit 6dd06e5). Added training Journey 8 so the…",
+          "commit": "c464731"
         }
       ]
     },
     {
       "id": "proficiency-live-qr-F2-4",
       "feature": "proficiency-live-qr",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "QR page chart view Salt particles",
@@ -159,6 +177,12 @@
           "round": 2,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "not_fixed",
+          "note": "Salt particle design is waiting on feedback from the owner, which I cannot make up. The question for the owner is recorded in the fix notes: after seeing the first rendition, what should change (grai…",
           "commit": null
         }
       ]
@@ -298,9 +322,9 @@
     {
       "id": "T2-3",
       "feature": "proficiency-live-qr",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "spec_error",
-      "attempts": 1,
+      "attempts": 2,
       "step": "Phone 390px: Proficiency & Rollup workspace tabs (T2-3, spec line 7)",
       "rootCause": "Spec wording error. docs/training/proficiency-rules-and-live-qr.md line 7 claims the tab row wraps onto two lines at 390px. After the T2-3 fix (flexWrap:'wrap' at CareerExperienceConfigurator.jsx:172) the five padded buttons wrap one per row because the card is about 285px wide. All tabs are reachable; the product is correct.",
       "files": [
@@ -324,6 +348,12 @@
           "event": "recurred",
           "note": "Spec wording error. docs/training/proficiency-rules-and-live-qr.md line 7 claims the tab row wraps onto two lines at 390px. After the T2-3 fix (flexWrap:'wrap' at CareerExperienceConfigurator.jsx:172…",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "fixed",
+          "note": "Training spec line 7 reworded: the tab row wraps about one tab per row at 390px and all five tabs stay reachable.",
+          "commit": "c464731"
         }
       ]
     },
