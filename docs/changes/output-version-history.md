@@ -1,7 +1,7 @@
 # Change spec — Output version history: dates, tracked changes and a timeline slider across versions
 
 Feature key: `output-version-history` · Release: `2026-10-02-career-bound-outputs` · Version 1 · 2026-10-02
-Branch: `release-loop/output-version-history-build` (built on integration head `8430eae`)
+Branch: `release-loop/output-version-history-build` (rebased onto integration head `ef13254`)
 Training spec: `docs/training/output-version-history.md`
 
 ## Traces to
