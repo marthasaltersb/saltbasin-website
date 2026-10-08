@@ -1,8 +1,8 @@
 {
-  "exportedAt": "2026-10-08T16:23:54.345Z",
+  "exportedAt": "2026-10-08T16:27:40.631Z",
   "features": {
     "proficiency-live-qr": {
-      "status": "reconcile",
+      "status": "validate",
       "lastRound": 4,
       "lastScore": "32/33",
       "lastReport": "docs/test-results/proficiency-live-qr/round-4.md"
@@ -250,7 +250,7 @@
     {
       "id": "proficiency-live-qr-F3-5",
       "feature": "proficiency-live-qr",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "process",
       "attempts": 1,
       "step": "J8",
@@ -276,7 +276,7 @@
     {
       "id": "proficiency-live-qr-F3-6",
       "feature": "proficiency-live-qr",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "process",
       "attempts": 1,
       "step": "T1-1, T1-2",
@@ -296,6 +296,90 @@
           "event": "fixed",
           "note": "Fix notes now say that round-1 fixes T1-1 and T1-2 have still never been browser-verified, and that the round-4 validator must check dark embed readability and the 390px rules table and chart scroll.…",
           "commit": "9b01768edc379a7f888f0e4639cab69c2203ef6e"
+        }
+      ]
+    },
+    {
+      "id": "proficiency-live-qr-F4-4",
+      "feature": "proficiency-live-qr",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "J7 step 4 Salt particles design (F3-4)",
+      "rootCause": "Design choices need the owner and cannot be invented.",
+      "files": [
+        "src/components/SaltParticleChart.jsx"
+      ],
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "proficiency-live-qr-F4-5",
+      "feature": "proficiency-live-qr",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "J7.1/J7.2 third wording state (F3-1)",
+      "rootCause": "Validators in rounds 2-4 only used the career-bound creation button; training spec does not name the import path.",
+      "files": [
+        "docs/training/proficiency-rules-and-live-qr.md",
+        "src/components/SharedLiveStates.jsx",
+        "src/components/WorldShell.jsx"
+      ],
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "proficiency-live-qr-F4-7",
+      "feature": "proficiency-live-qr",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "Known-limitations gaps: T1-1/T1-2 explicit verification",
+      "rootCause": "No validator step explicitly asserts T1-1.",
+      "files": [
+        "docs/changes/proficiency-rules-and-live-qr.md"
+      ],
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "proficiency-live-qr-F4-8",
+      "feature": "proficiency-live-qr",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "Known-limitations gaps: spec nits and weak edge coverage",
+      "rootCause": "Spec wording and edge-case payload not tightened.",
+      "files": [
+        "docs/training/proficiency-rules-and-live-qr.md",
+        "docs/changes/proficiency-rules-and-live-qr.md",
+        "src/components/admin/OutputTemplateConfigurator.jsx"
+      ],
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
         }
       ]
     },
@@ -512,7 +596,7 @@
     {
       "id": "R4-1",
       "feature": "proficiency-live-qr",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "J8 step 4: Output Templates editor at 390px, Rules & why tab",
