@@ -1,8 +1,8 @@
 {
-  "exportedAt": "2026-10-08T16:22:39.218Z",
+  "exportedAt": "2026-10-08T16:23:18.738Z",
   "features": {
     "proficiency-live-qr": {
-      "status": "fix",
+      "status": "reconcile",
       "lastRound": 4,
       "lastScore": "32/33",
       "lastReport": "docs/test-results/proficiency-live-qr/round-4.md"
@@ -84,7 +84,7 @@
     {
       "id": "proficiency-live-qr-F2-1",
       "feature": "proficiency-live-qr",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "J7.1, J7.2 and 390px workspace tabs",
@@ -176,7 +176,7 @@
     {
       "id": "proficiency-live-qr-F2-4",
       "feature": "proficiency-live-qr",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "QR page chart view Salt particles",
@@ -202,7 +202,7 @@
     {
       "id": "proficiency-live-qr-F3-1",
       "feature": "proficiency-live-qr",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "J8; J7.2 third state",
@@ -224,7 +224,7 @@
     {
       "id": "proficiency-live-qr-F3-4",
       "feature": "proficiency-live-qr",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "J7.4",
@@ -238,15 +238,21 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
           "commit": null
+        },
+        {
+          "round": 4,
+          "event": "not_fixed",
+          "note": "needs_business_definition, nothing built. Owner question: after seeing the first Salt particles rendition (J7 step 4), what should change (grain size or density, colors, motion, heap shape)? SaltPart…",
+          "commit": null
         }
       ]
     },
     {
       "id": "proficiency-live-qr-F3-5",
       "feature": "proficiency-live-qr",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "process",
-      "attempts": 0,
+      "attempts": 1,
       "step": "J8",
       "rootCause": "Journey added after round 3",
       "files": [
@@ -258,15 +264,21 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (process)",
           "commit": null
+        },
+        {
+          "round": 4,
+          "event": "fixed",
+          "note": "The J8 layout defect is fixed and self-checked at 390px as above. Fix notes for round 4 are appended to the change spec.",
+          "commit": "9b01768edc379a7f888f0e4639cab69c2203ef6e"
         }
       ]
     },
     {
       "id": "proficiency-live-qr-F3-6",
       "feature": "proficiency-live-qr",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "process",
-      "attempts": 0,
+      "attempts": 1,
       "step": "T1-1, T1-2",
       "rootCause": "Notes not updated to cite round-3 evidence; round-1 fixes never browser-checked",
       "files": [
@@ -278,6 +290,12 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (process)",
           "commit": null
+        },
+        {
+          "round": 4,
+          "event": "fixed",
+          "note": "Fix notes now say that round-1 fixes T1-1 and T1-2 have still never been browser-verified, and that the round-4 validator must check dark embed readability and the 390px rules table and chart scroll.…",
+          "commit": "9b01768edc379a7f888f0e4639cab69c2203ef6e"
         }
       ]
     },
@@ -494,9 +512,9 @@
     {
       "id": "R4-1",
       "feature": "proficiency-live-qr",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "J8 step 4: Output Templates editor at 390px, Rules & why tab",
       "rootCause": "OutputTemplateConfigurator.jsx line 65: S.shell is a fixed 3-column grid (220px 1fr 380px) with no media query or width hook, so the editor is ~800px wide and clipped inside a 342px scroller at 390px; the Rules & why panel in the middle column inherits the clipped width. Layout dates from 2026-07-10, surfaced by the new 5th tab and the 390px readability rule. Not a recurrence of T2-3.",
       "files": [
@@ -508,6 +526,12 @@
           "event": "found",
           "note": "OutputTemplateConfigurator.jsx line 65: S.shell is a fixed 3-column grid (220px 1fr 380px) with no media query or width hook, so the editor is ~800px wide and clipped inside a 342px scroller at 390px…",
           "commit": null
+        },
+        {
+          "round": 4,
+          "event": "fixed",
+          "note": "Output Template editor now uses a matchMedia(max-width 900px) hook (declared before the early return). At narrow widths the shell is a single minmax(0,1fr) column, wrap padding shrinks, and the two 1…",
+          "commit": "9b01768edc379a7f888f0e4639cab69c2203ef6e"
         }
       ]
     },
