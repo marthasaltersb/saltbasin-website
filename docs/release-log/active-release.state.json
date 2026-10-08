@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-08T16:18:27.756Z",
+  "exportedAt": "2026-10-08T16:22:39.218Z",
   "features": {
     "proficiency-live-qr": {
       "status": "fix",
@@ -14,10 +14,10 @@
       "lastReport": "docs/test-results/world-shell-navigation/round-1.md"
     },
     "career-bound-outputs": {
-      "status": "validate",
-      "lastRound": 1,
-      "lastScore": "47/48",
-      "lastReport": "docs/test-results/career-bound-outputs/round-1.md (NOT WRITTEN: the write to the main checkout was refused by worktree isolation, and a copy in scratch was refused because subagents may not write report files. The full per-step log with screenshot paths is at /var/tmp/sbpg/release-loop/career-bound-outputs/round-1/steps.jsonl; the integrator should build round-1.md from it and this output.)"
+      "status": "triage",
+      "lastRound": 2,
+      "lastScore": "54/56",
+      "lastReport": "docs/test-results/career-bound-outputs/round-2.md"
     },
     "qr-gated-outputs": {
       "status": "awaiting_retest",
@@ -661,7 +661,7 @@
     {
       "id": "career-bound-outputs-B10",
       "feature": "career-bound-outputs",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "requirement_gap",
       "attempts": 1,
       "step": "spec gaps",
@@ -692,7 +692,7 @@
     {
       "id": "career-bound-outputs-B11",
       "feature": "career-bound-outputs",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "owner_direction_conflict",
       "attempts": 1,
       "step": "nav",
@@ -719,7 +719,7 @@
     {
       "id": "career-bound-outputs-B12",
       "feature": "career-bound-outputs",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "owner_direction_conflict",
       "attempts": 1,
       "step": "World Shell reach",
@@ -747,7 +747,7 @@
     {
       "id": "career-bound-outputs-B13",
       "feature": "career-bound-outputs",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "test_harness",
       "attempts": 1,
       "step": "journeys",
@@ -874,7 +874,7 @@
     {
       "id": "cbo-r1-phone-editor",
       "feature": "career-bound-outputs",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "defect",
       "attempts": 1,
       "step": "Phone width (390px): career-bound output editor dialog",
