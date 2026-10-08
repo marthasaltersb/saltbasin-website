@@ -127,6 +127,14 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
   const [sitePages, setSitePages] = useState(null);
   const [master, setMaster] = useState(null);
   const [tab, setTab] = useState(0);
+  const [narrow, setNarrow] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 900px)');
+    const on = () => setNarrow(mq.matches);
+    on();
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
   const [saving, setSaving] = useState(false);
   const [proficiency, setProficiency] = useState(null);
   // Per-source load state. An error is kept distinct from "no data yet" so a
@@ -310,7 +318,7 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', background: 'var(--sb-ivory, #faf8f4)' }}>
-      <div style={S.wrap}>
+      <div style={narrow ? { ...S.wrap, padding: '0.75rem' } : S.wrap}>
         <div style={S.h1}>Output Template — {outputType}</div>
         <div style={S.sub}>
           Pick which Career Master data feeds this output's header/footer, stat cards, infographics, and content sections.
@@ -318,7 +326,7 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
           Changes preview live on the right; Save makes the preset selectable.
         </div>
 
-        <div style={S.shell}>
+        <div style={narrow ? { ...S.shell, gridTemplateColumns: 'minmax(0, 1fr)' } : S.shell}>
           {/* ── Preset list ── */}
           <div>
             <div style={S.label}>Presets</div>
@@ -339,7 +347,7 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
           <div>
             <div style={S.card}>
               <div style={S.label}>Preset Info</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem', marginBottom: '0.6rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: narrow ? 'minmax(0, 1fr)' : '1fr 1fr', gap: '0.6rem', marginBottom: '0.6rem' }}>
                 <input style={S.input} placeholder="Role (e.g. VP Revenue Ops)" value={config.meta.roleLabel}
                   onChange={(e) => update('meta.roleLabel', e.target.value)} />
                 <input style={S.input} placeholder="Industry (e.g. SaaS, Manufacturing)" value={config.meta.industryLabel}
@@ -360,7 +368,7 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
             {tab === 0 && (
               <div style={S.card}>
                 <div style={S.label}>Document Identity</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem', marginBottom: '0.75rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: narrow ? 'minmax(0, 1fr)' : '1fr 1fr', gap: '0.6rem', marginBottom: '0.75rem' }}>
                   <input style={S.input} value={config.layer1_header.memberName || ''}
                     onChange={(e) => update('layer1_header.memberName', e.target.value)} placeholder="Your name" />
                   <input style={S.input} value={config.layer1_header.headerText || ''}
