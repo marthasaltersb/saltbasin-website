@@ -4,7 +4,7 @@ Audience: a member using the platform, and a test agent driving a browser. Each 
 
 ## Where things are
 
-- **Career Master → Proficiency & Rollups**: World Shell (`/world`) → Career Master island → tab **Proficiency & Rollups**. Workspaces: `1 · Definitions`, `2 · Assess proficiency`, `3 · Rules & why`, `4 · Preview rollups`.
+- **Career Master → Proficiency & Rollups**: World Shell (`/world`) → Career Master island → tab **Proficiency & Rollups**. Workspaces: `1 · Definitions`, `2 · Assess proficiency`, `3 · Rules & why`, `4 · Preview rollups`, `5 · Resume rollups`. At 390px wide the tab row wraps onto two lines; all five stay reachable.
 - **My Resume → Resume Output History**: Classic Tools / AdminShell → **My Resume** tab, section **Resume Output History**.
 - **QR page**: the link `/r/<slug>` shown under an approved output (also what its QR code opens).
 
@@ -82,13 +82,13 @@ Methodology reminder (shown on screen): points = years × 1 (max 15) + engagemen
 ## Journey 7 — The live QR page
 
 1. Open the output's link `/r/<slug>` (or scan its QR code) in a private window.
-   - Expect the approved document, then a dark banner "**LIVE DATA — matches the approved printed version**" (or "…N changes since the approved printed version") stating the approval date and that the document text stays as approved.
+   - Expect the approved document, then a dark banner "**LIVE DATA — matches the approved printed version**" (or "…N changes since the approved printed version") stating the approval date. The banner is dark (white text) in both the zero-change and changes states; only its left stripe differs (green with zero changes, gold with changes). The last sentence depends on the wording state: if the wording is unchanged and the output is not career-bound, "The document text above always stays exactly as approved."; if career-bound and unchanged, "The document wording currently matches the printed version."; if the wording changed since approval, "The document wording has changed since approval; use the notice at the top of the page to switch between the printed and current wording."
 2. Back in Career Master, change a job title (Manual Intake → Jobs) and save. Wait ~3 seconds. Reload the QR page.
    - Expect "LIVE DATA — 1 change since the approved printed version" and a line "Changed: <company> — printed <old title, years · industry> → now <new title, years · industry>".
 3. Use the slider **Data timeline — slide from the printed version to live**: drag to the far left.
    - Expect "Viewing Approved · printed — exactly what the printed copy shows." and charts as printed.
 4. On a chart click **Salt particles**: expect grains falling into columns, settling with a gold line and value on top; hover a column → tooltip with its name and value. Click **Table**: expect rows with a **Since printed** column reading Same / Changed.
-5. Set a tool category or override a level, wait ~3 seconds, reload — expect the change listed (e.g. "Changed: Ledgerly ERP — printed Advanced → now Advanced · Integration design").
+5. Set a tool category or override a level, wait ~3 seconds, reload — expect the change listed (e.g. "Changed: Ledgerly ERP — printed Advanced · Integration design → now Advanced · Hands-on", or a level change such as Forecast modeling printed Expert → now Advanced †; J2 already set Integration design before approval, so it is part of the printed side).
 
 ## Edge cases
 

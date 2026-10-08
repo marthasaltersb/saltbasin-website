@@ -65,7 +65,7 @@ function Notice({ children }) {
   return <div role="alert" style={{ background: '#FFF4E5', border: '1px solid #C98320', borderRadius: 8, padding: '.7rem .9rem', margin: '1.75rem 0 1rem', fontSize: '.8rem', color: '#1B2A3B', lineHeight: 1.55 }}>{children}</div>;
 }
 
-export default function SharedLiveStates({ states: raw }) {
+export default function SharedLiveStates({ states: raw, documentState }) {
   const states = useMemo(() => buildStates(raw || {}), [raw]);
   const [index, setIndex] = useState(() => Math.max(0, states.length - 1));
   // Failures are stated, never shown as if the data simply matched.
@@ -89,22 +89,28 @@ export default function SharedLiveStates({ states: raw }) {
     return (
       <>
         <Notice><strong>{raw.liveError}</strong> Showing the recorded states only; the newest one may be behind Career Master.</Notice>
-        <LiveBody states={states} index={index} setIndex={setIndex} approved={approved} selected={selected} selectedChanges={selectedChanges} changedLabels={changedLabels} liveChanges={liveChanges} live={false} />
+        <LiveBody documentState={documentState} states={states} index={index} setIndex={setIndex} approved={approved} selected={selected} selectedChanges={selectedChanges} changedLabels={changedLabels} liveChanges={liveChanges} live={false} />
       </>
     );
   }
-  return <LiveBody states={states} index={index} setIndex={setIndex} approved={approved} selected={selected} selectedChanges={selectedChanges} changedLabels={changedLabels} liveChanges={liveChanges} live />;
+  return <LiveBody documentState={documentState} states={states} index={index} setIndex={setIndex} approved={approved} selected={selected} selectedChanges={selectedChanges} changedLabels={changedLabels} liveChanges={liveChanges} live />;
 }
 
-function LiveBody({ states, index, setIndex, approved, selected, selectedChanges, changedLabels, liveChanges, live }) {
+function wordingSentence(ds) {
+  if (ds?.changedSinceApproval) return 'The document wording has changed since approval; use the notice at the top of the page to switch between the printed and current wording.';
+  if (ds?.careerBound) return 'The document wording currently matches the printed version.';
+  return 'The document text above always stays exactly as approved.';
+}
+
+function LiveBody({ documentState, states, index, setIndex, approved, selected, selectedChanges, changedLabels, liveChanges, live }) {
   return (
     <div style={{ marginTop: '1.75rem' }}>
       {/* ── Bold live-data callout ── */}
       <div
         role="status"
         style={{
-          background: liveChanges.length ? '#1B2A3B' : '#F3EEE6',
-          color: liveChanges.length ? '#FFFFFF' : '#1B2A3B',
+          background: '#1B2A3B',
+          color: '#FFFFFF',
           borderLeft: `6px solid ${liveChanges.length ? '#C98320' : '#2F9A68'}`,
           borderRadius: 8, padding: '0.9rem 1rem', marginBottom: '1rem',
         }}
@@ -116,7 +122,7 @@ function LiveBody({ states, index, setIndex, approved, selected, selectedChanges
         </div>
         <div style={{ fontSize: '0.78rem', marginTop: '0.3rem', lineHeight: 1.55, opacity: 0.92 }}>
           The career charts on this page update from the Salt Basin Career Master. The printed copy was approved on{' '}
-          <strong>{fmt(approved.at)}</strong>. The document text above always stays exactly as approved.
+          <strong>{fmt(approved.at)}</strong>. {wordingSentence(documentState)}
         </div>
         {liveChanges.length > 0 && (
           <div style={{ marginTop: '0.7rem', background: 'rgba(255,255,255,0.08)', borderRadius: 6, padding: '0.6rem 0.75rem' }}>
