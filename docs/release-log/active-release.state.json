@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-08T15:57:56.329Z",
+  "exportedAt": "2026-10-08T15:59:57.346Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -14,7 +14,7 @@
       "lastReport": "docs/test-results/world-shell-navigation/round-1.md"
     },
     "career-bound-outputs": {
-      "status": "reconcile",
+      "status": "validate",
       "lastRound": 1,
       "lastScore": "47/48",
       "lastReport": "docs/test-results/career-bound-outputs/round-1.md (NOT WRITTEN: the write to the main checkout was refused by worktree isolation, and a copy in scratch was refused because subagents may not write report files. The full per-step log with screenshot paths is at /var/tmp/sbpg/release-loop/career-bound-outputs/round-1/steps.jsonl; the integrator should build round-1.md from it and this output.)"
@@ -623,7 +623,7 @@
     {
       "id": "career-bound-outputs-B10",
       "feature": "career-bound-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "requirement_gap",
       "attempts": 1,
       "step": "spec gaps",
@@ -654,7 +654,7 @@
     {
       "id": "career-bound-outputs-B11",
       "feature": "career-bound-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "owner_direction_conflict",
       "attempts": 1,
       "step": "nav",
@@ -681,7 +681,7 @@
     {
       "id": "career-bound-outputs-B12",
       "feature": "career-bound-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "owner_direction_conflict",
       "attempts": 1,
       "step": "World Shell reach",
@@ -709,7 +709,7 @@
     {
       "id": "career-bound-outputs-B13",
       "feature": "career-bound-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "test_harness",
       "attempts": 1,
       "step": "journeys",
@@ -733,9 +733,110 @@
       ]
     },
     {
+      "id": "career-bound-outputs-F1-3",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Journey 9 / change spec Known limitations line 89",
+      "rootCause": "Editor built for jobs only; applyMasterOverrides supports more than the UI exposes.",
+      "files": [
+        "src/components/admin/OutputTemplateConfigurator.jsx",
+        "src/lib/masterOverrides.js",
+        "docs/training/career-bound-outputs.md"
+      ],
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F1-4",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "change spec Known limitations line 90",
+      "rootCause": "Template outputs have no per-document row, so overrides were stored on the preset.",
+      "files": [
+        "src/components/Output.jsx",
+        "src/components/admin/OutputTemplateConfigurator.jsx"
+      ],
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F1-5",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "Journey 7.4",
+      "rootCause": "Journey ordering: J8 mutates state J7.4 depends on.",
+      "files": [
+        "docs/training/career-bound-outputs.md"
+      ],
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F1-7",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "commit 3472137 trailer (B9)",
+      "rootCause": "Agent followed session attribution reminder over task text.",
+      "files": [],
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F1-8",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "release process",
+      "rootCause": "Fix agent recorded results in the change spec, not round-N.md.",
+      "files": [
+        "docs/test-results/career-bound-outputs/"
+      ],
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "cbo-r1-phone-editor",
       "feature": "career-bound-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Phone width (390px): career-bound output editor dialog",
