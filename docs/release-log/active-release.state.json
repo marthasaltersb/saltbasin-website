@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-08T16:23:18.738Z",
+  "exportedAt": "2026-10-08T16:23:54.345Z",
   "features": {
     "proficiency-live-qr": {
       "status": "reconcile",
@@ -14,7 +14,7 @@
       "lastReport": "docs/test-results/world-shell-navigation/round-1.md"
     },
     "career-bound-outputs": {
-      "status": "triage",
+      "status": "fix",
       "lastRound": 2,
       "lastScore": "54/56",
       "lastReport": "docs/test-results/career-bound-outputs/round-2.md"
@@ -661,7 +661,7 @@
     {
       "id": "career-bound-outputs-B9",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "commit",
@@ -685,7 +685,7 @@
     {
       "id": "career-bound-outputs-B10",
       "feature": "career-bound-outputs",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 1,
       "step": "spec gaps",
@@ -710,13 +710,19 @@
           "event": "fixed",
           "note": "G3: per-output Career Master overrides for template-driven outputs (config.masterOverrides, applyMasterOverrides in OutputTemplateBody, editor card with Overridden badge and per-field Revert). G4: pa…",
           "commit": "3472137"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other failures)",
+          "commit": "cd6caf8"
         }
       ]
     },
     {
       "id": "career-bound-outputs-B11",
       "feature": "career-bound-outputs",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "owner_direction_conflict",
       "attempts": 1,
       "step": "nav",
@@ -737,13 +743,19 @@
           "event": "fixed",
           "note": "Removed the admin_nav injection of the review queue in db.js. The queue is reached from the World Shell Journeys card (member memberTabs) and from a dialog opened by MyResumePanel (portalled to body)…",
           "commit": "3472137"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other failures)",
+          "commit": "cd6caf8"
         }
       ]
     },
     {
       "id": "career-bound-outputs-B12",
       "feature": "career-bound-outputs",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "owner_direction_conflict",
       "attempts": 1,
       "step": "World Shell reach",
@@ -765,13 +777,19 @@
           "event": "fixed",
           "note": "Added a resume island to ISLAND_REGISTRY and mounted MyResumePanel in WorldShell SIMPLE_EMBED_COMPONENTS for member and admin scope. WorldShell is already wrapped in CareerConsentGate.",
           "commit": "3472137"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other failures)",
+          "commit": "cd6caf8"
         }
       ]
     },
     {
       "id": "career-bound-outputs-B13",
       "feature": "career-bound-outputs",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "test_harness",
       "attempts": 1,
       "step": "journeys",
@@ -791,13 +809,19 @@
           "event": "fixed",
           "note": "Rewrote the training spec to v2 for member@test.local (create-test-member.mjs), starting at /world Journeys. Added live-preview steps, the certification task, and Journeys 9, 10 and 11. Appended Fix …",
           "commit": "3472137"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other failures)",
+          "commit": "cd6caf8"
         }
       ]
     },
     {
       "id": "career-bound-outputs-F1-3",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Journey 9 / change spec Known limitations line 89",
@@ -819,7 +843,7 @@
     {
       "id": "career-bound-outputs-F1-4",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "change spec Known limitations line 90",
@@ -840,7 +864,7 @@
     {
       "id": "career-bound-outputs-F1-5",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "Journey 7.4",
@@ -860,7 +884,7 @@
     {
       "id": "career-bound-outputs-F1-7",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "commit 3472137 trailer (B9)",
@@ -878,7 +902,7 @@
     {
       "id": "career-bound-outputs-F1-8",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "release process",
@@ -898,7 +922,7 @@
     {
       "id": "cbo-r1-phone-editor",
       "feature": "career-bound-outputs",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "Phone width (390px): career-bound output editor dialog",
@@ -919,6 +943,36 @@
           "event": "fixed",
           "note": "Editor grid now stacks via repeat(auto-fit, minmax(min(100%,360px),1fr)); the Title/Dates pair wraps; dialog padding and width are fluid.",
           "commit": "3472137"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other failures)",
+          "commit": "cd6caf8"
+        }
+      ]
+    },
+    {
+      "id": "cbo-r2-inherited-cream-text",
+      "feature": "career-bound-outputs",
+      "status": "fixing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "J1 1.2a (also J2, J3, J10 at 390px) and J9 9.0 / 9.2-9.3",
+      "rootCause": "Light-surface components set no text colour and inherit cream rgb(245,240,232) from the World Shell: WorldShell.jsx:1406 S.embedShell color #f5f0e8 (and brand.css:359 body color). CareerBoundOutputEditor S.wrap/S.card (line 18), OutputTemplateConfigurator S.wrap (line 64) and the white dialog wrappers in MyResumePanel.jsx:1103 and CareerReconciliationPanel.jsx:416 draw white/cream cards but never…",
+      "files": [
+        "src/components/admin/CareerBoundOutputEditor.jsx",
+        "src/components/admin/OutputTemplateConfigurator.jsx",
+        "src/components/admin/MyResumePanel.jsx",
+        "src/components/admin/CareerReconciliationPanel.jsx",
+        "src/components/WorldShell.jsx"
+      ],
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Light-surface components set no text colour and inherit cream rgb(245,240,232) from the World Shell: WorldShell.jsx:1406 S.embedShell color #f5f0e8 (and brand.css:359 body color). CareerBoundOutputEd…",
+          "commit": null
         }
       ]
     },
