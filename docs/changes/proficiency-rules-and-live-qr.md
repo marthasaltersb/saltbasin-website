@@ -76,3 +76,10 @@ API: locked methodology refuses edits (403); unknown formula input refused (400)
 - Changed: (a) Rules table in `ProficiencyRulesPanel.jsx` keeps its 940px width but now has an always-visible scroll area, a right-edge shadow cue, a "swipe or scroll sideways" caption naming the hidden columns, and a sticky first column. A stacked-card layout was not built (kept minimal). (b) Static chart SVGs in `careerCharts.js` get `min-width:500px` and `ChartViews.jsx` wraps the static chart in an `overflow-x:auto` container with a swipe caption, so chart text stays near its designed size.
 - Files: `src/components/admin/ProficiencyRulesPanel.jsx`, `src/lib/careerCharts.js`, `src/components/ChartViews.jsx`.
 - Checked: `npm run build` passes. 390px live check NOT performed in this round.
+
+## Fix notes — round 2
+
+- **T2-1** (LIVE DATA banner light in zero-change state): `SharedLiveStates.jsx` banner is now always dark `#1B2A3B` with white text; the stripe is the differentiator (green zero changes, gold with changes). Checked by rendering the QR page with zero changes in the browser.
+- **T2-2** (spec error, J7.5 example): the example assumed Ledgerly ERP's category was unset when printed, but J2 sets it before approval. Training spec J7.5 now uses data the journeys leave behind (Ledgerly ERP printed Advanced · Integration design to now Advanced · Hands-on; Forecast modeling Expert to Advanced). Files: `docs/training/proficiency-rules-and-live-qr.md`.
+- **T2-3** (390px workspace tabs clipped): `CareerExperienceConfigurator.jsx` tab row gets `flexWrap: 'wrap'` so all five tabs are reachable; training spec line 7 lists five workspaces and the wrapping behavior. Checked by build and layout at 390px.
+- **T2-4** (banner says text stays as approved for career-bound output): `SharedOutputPage.jsx` passes `doc.documentState` to `SharedLiveStates.jsx`, which picks the sentence by state (changed, career-bound unchanged, frozen). Training J7.1 documents the three sentences.
