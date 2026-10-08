@@ -1,8 +1,8 @@
 {
-  "exportedAt": "2026-10-08T15:48:27.005Z",
+  "exportedAt": "2026-10-08T15:48:51.180Z",
   "features": {
     "proficiency-live-qr": {
-      "status": "triage",
+      "status": "fix",
       "lastRound": 3,
       "lastScore": "28/29",
       "lastReport": "docs/test-results/proficiency-live-qr/round-3.md"
@@ -84,7 +84,7 @@
     {
       "id": "proficiency-live-qr-F2-1",
       "feature": "proficiency-live-qr",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "J7.1, J7.2 and 390px workspace tabs",
@@ -106,7 +106,7 @@
     {
       "id": "proficiency-live-qr-F2-2",
       "feature": "proficiency-live-qr",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "Change spec fix notes round 2",
@@ -126,7 +126,7 @@
     {
       "id": "proficiency-live-qr-F2-3",
       "feature": "proficiency-live-qr",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Output Template editor",
@@ -146,7 +146,7 @@
     {
       "id": "proficiency-live-qr-F2-4",
       "feature": "proficiency-live-qr",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "QR page chart view Salt particles",
@@ -234,7 +234,7 @@
     {
       "id": "T2-1",
       "feature": "proficiency-live-qr",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "J7.1 zero-change LIVE DATA banner",
@@ -254,13 +254,19 @@
           "event": "fixed",
           "note": "LIVE DATA banner always dark #1B2A3B with white text; stripe green (zero changes) or gold (changes)",
           "commit": "47b1b42c5466fdce1af06eeda3f58653e9478e33"
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3: this bug's step passed (the round had other failures)",
+          "commit": "fe28090"
         }
       ]
     },
     {
       "id": "T2-2",
       "feature": "proficiency-live-qr",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "spec_error",
       "attempts": 1,
       "step": "J7.5 category/level change listed (spec example)",
@@ -280,19 +286,24 @@
           "event": "fixed",
           "note": "Spec error: J7.5 example changed to data the journeys leave behind (Ledgerly ERP printed Advanced · Integration design -> now Advanced · Hands-on; Forecast modeling Expert -> Advanced)",
           "commit": "47b1b42c5466fdce1af06eeda3f58653e9478e33"
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3: this bug's step passed (the round had other failures)",
+          "commit": "fe28090"
         }
       ]
     },
     {
       "id": "T2-3",
       "feature": "proficiency-live-qr",
-      "status": "retest_failed_pending_triage",
-      "class": "defect",
+      "status": "fixing",
+      "class": "spec_error",
       "attempts": 1,
-      "step": "Phone 390px workspace tabs (Proficiency & Rollup Configuration)",
-      "rootCause": "CareerExperienceConfigurator.jsx line 172 tab row is display:flex with no flexWrap or overflowX; five non-shrinking buttons exceed 390px and an overflow-hidden ancestor clips tab 4 and fully hides tab 5 (spec lists only four workspaces, code has five), with no scroll cue.",
+      "step": "Phone 390px: Proficiency & Rollup workspace tabs (T2-3, spec line 7)",
+      "rootCause": "Spec wording error. docs/training/proficiency-rules-and-live-qr.md line 7 claims the tab row wraps onto two lines at 390px. After the T2-3 fix (flexWrap:'wrap' at CareerExperienceConfigurator.jsx:172) the five padded buttons wrap one per row because the card is about 285px wide. All tabs are reachable; the product is correct.",
       "files": [
-        "src/components/admin/CareerExperienceConfigurator.jsx",
         "docs/training/proficiency-rules-and-live-qr.md"
       ],
       "history": [
@@ -307,13 +318,19 @@
           "event": "fixed",
           "note": "Workspace tab row gets flexWrap:wrap so all five tabs are reachable at 390px; spec line 7 now lists five workspaces and the wrapping",
           "commit": "47b1b42c5466fdce1af06eeda3f58653e9478e33"
+        },
+        {
+          "round": 3,
+          "event": "recurred",
+          "note": "Spec wording error. docs/training/proficiency-rules-and-live-qr.md line 7 claims the tab row wraps onto two lines at 390px. After the T2-3 fix (flexWrap:'wrap' at CareerExperienceConfigurator.jsx:172…",
+          "commit": null
         }
       ]
     },
     {
       "id": "T2-4",
       "feature": "proficiency-live-qr",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "J7.2 document wording vs banner",
@@ -335,6 +352,12 @@
           "event": "fixed",
           "note": "SharedOutputPage passes documentState to SharedLiveStates, which picks the wording sentence by state (changed / career-bound unchanged / frozen); J7.1 spec documents the three sentences and the dark …",
           "commit": "47b1b42c5466fdce1af06eeda3f58653e9478e33"
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3: this bug's step passed (the round had other failures)",
+          "commit": "fe28090"
         }
       ]
     },
