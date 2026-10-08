@@ -1,11 +1,11 @@
 {
-  "exportedAt": "2026-10-08T16:35:24.750Z",
+  "exportedAt": "2026-10-08T16:47:27.899Z",
   "features": {
     "proficiency-live-qr": {
-      "status": "validate",
-      "lastRound": 4,
-      "lastScore": "32/33",
-      "lastReport": "docs/test-results/proficiency-live-qr/round-4.md"
+      "status": "failing",
+      "lastRound": 5,
+      "lastScore": "29/30",
+      "lastReport": "docs/test-results/proficiency-live-qr/round-5.md"
     },
     "world-shell-navigation": {
       "status": "awaiting_retest",
@@ -250,7 +250,7 @@
     {
       "id": "proficiency-live-qr-F3-5",
       "feature": "proficiency-live-qr",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "process",
       "attempts": 1,
       "step": "J8",
@@ -276,7 +276,7 @@
     {
       "id": "proficiency-live-qr-F3-6",
       "feature": "proficiency-live-qr",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "process",
       "attempts": 1,
       "step": "T1-1, T1-2",
@@ -596,7 +596,7 @@
     {
       "id": "R4-1",
       "feature": "proficiency-live-qr",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "defect",
       "attempts": 1,
       "step": "J8 step 4: Output Templates editor at 390px, Rules & why tab",
