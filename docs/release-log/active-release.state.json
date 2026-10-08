@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-08T15:30:51.567Z",
+  "exportedAt": "2026-10-08T15:35:47.510Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -8,7 +8,7 @@
       "lastReport": "docs/test-results/proficiency-live-qr/round-2.md"
     },
     "world-shell-navigation": {
-      "status": "fix",
+      "status": "awaiting_retest",
       "lastRound": 1,
       "lastScore": "45/48",
       "lastReport": "docs/test-results/world-shell-navigation/round-1.md"
@@ -26,34 +26,46 @@
       "lastReport": "docs/test-results/qr-gated-outputs/round-1.md"
     },
     "no-silent-failures": {
-      "status": "validate",
+      "status": "failed",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null
     },
     "release-loop-tooling": {
-      "status": "validate",
+      "status": "failed",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null
     },
     "output-version-history": {
-      "status": "validate",
+      "status": "failed",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null
     },
     "resume-rollups": {
-      "status": "validate",
+      "status": "failed",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null
     },
     "chart-gallery": {
-      "status": "fix",
+      "status": "awaiting_retest",
       "lastRound": 1,
       "lastScore": "17/20",
       "lastReport": "docs/test-results/chart-gallery/round-1.md"
+    },
+    "release-intelligence": {
+      "status": "failed",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null
+    },
+    "in-app-release-loop": {
+      "status": "failed",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null
     },
     "session-mapping": {
       "status": "failed",
@@ -61,20 +73,8 @@
       "lastScore": null,
       "lastReport": null
     },
-    "release-intelligence": {
-      "status": "validate",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null
-    },
-    "in-app-release-loop": {
-      "status": "build",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null
-    },
     "cover-letter-agent": {
-      "status": "validate",
+      "status": "failed",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null
@@ -98,7 +98,8 @@
         {
           "round": 2,
           "event": "found",
-          "note": "Reported by the fix agent, unresolved on reconciliation (process)"
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
         }
       ]
     },
@@ -117,7 +118,8 @@
         {
           "round": 2,
           "event": "found",
-          "note": "Reported by the fix agent, unresolved on reconciliation (process)"
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
         }
       ]
     },
@@ -136,7 +138,8 @@
         {
           "round": 2,
           "event": "found",
-          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -155,7 +158,8 @@
         {
           "round": 2,
           "event": "found",
-          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -176,17 +180,20 @@
         {
           "round": 1,
           "event": "found",
-          "note": "Dark navy text on the dark World embed (#0d1417). CareerExperienceConfigurator.jsx:166 sets color #1b2a3b with no background, and the heading at line 168 inherits it. CareerMasterEntryPoint.jsx:27 gi…"
+          "note": "Dark navy text on the dark World embed (#0d1417). CareerExperienceConfigurator.jsx:166 sets color #1b2a3b with no background, and the heading at line 168 inherits it. CareerMasterEntryPoint.jsx:27 gi…",
+          "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "Configurator gets its own light surface (#f5f2ed); selected path card background made opaque (#fbf3e8)."
+          "note": "Configurator gets its own light surface (#f5f2ed); selected path card background made opaque (#fbf3e8).",
+          "commit": "cffa62159a908e927b80fdcad17d2123e59e32a0"
         },
         {
           "round": 2,
           "event": "verified",
-          "note": "Retest round 2: this bug's step passed (the round had other failures)"
+          "note": "Retest round 2: this bug's step passed (the round had other failures)",
+          "commit": "8430eae"
         }
       ]
     },
@@ -207,17 +214,20 @@
         {
           "round": 1,
           "event": "found",
-          "note": "Two causes. (a) ProficiencyRulesPanel.jsx:358-361 renders a 7-column table with minWidth 940 inside an overflowX:auto wrapper. At 390px the table is cut at the wrapper edge, and mobile overlay scroll…"
+          "note": "Two causes. (a) ProficiencyRulesPanel.jsx:358-361 renders a 7-column table with minWidth 940 inside an overflowX:auto wrapper. At 390px the table is cut at the wrapper edge, and mobile overlay scroll…",
+          "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "Rules table: forced visible scroll area, right-edge shadow, swipe caption, sticky first column (no stacked-card layout). Charts: svg min-width 500px inside overflow-x:auto wrapper with swipe caption."
+          "note": "Rules table: forced visible scroll area, right-edge shadow, swipe caption, sticky first column (no stacked-card layout). Charts: svg min-width 500px inside overflow-x:auto wrapper with swipe caption.",
+          "commit": "cffa62159a908e927b80fdcad17d2123e59e32a0"
         },
         {
           "round": 2,
           "event": "verified",
-          "note": "Retest round 2: this bug's step passed (the round had other failures)"
+          "note": "Retest round 2: this bug's step passed (the round had other failures)",
+          "commit": "8430eae"
         }
       ]
     },
@@ -236,12 +246,14 @@
         {
           "round": 2,
           "event": "found",
-          "note": "SharedLiveStates.jsx lines 106-108 switch banner background/text on liveChanges.length: dark #1B2A3B only when changes exist, light #F3EEE6 when none. Spec J7.1 and the file header require a bold dar…"
+          "note": "SharedLiveStates.jsx lines 106-108 switch banner background/text on liveChanges.length: dark #1B2A3B only when changes exist, light #F3EEE6 when none. Spec J7.1 and the file header require a bold dar…",
+          "commit": null
         },
         {
           "round": 2,
           "event": "fixed",
-          "note": "LIVE DATA banner always dark #1B2A3B with white text; stripe green (zero changes) or gold (changes)"
+          "note": "LIVE DATA banner always dark #1B2A3B with white text; stripe green (zero changes) or gold (changes)",
+          "commit": "47b1b42c5466fdce1af06eeda3f58653e9478e33"
         }
       ]
     },
@@ -260,12 +272,14 @@
         {
           "round": 2,
           "event": "found",
-          "note": "Spec example expects 'printed Advanced -> now Advanced · Integration design' for Ledgerly ERP, but J2 already sets that category before approval, so the printed side already has it. Diff behaviour is…"
+          "note": "Spec example expects 'printed Advanced -> now Advanced · Integration design' for Ledgerly ERP, but J2 already sets that category before approval, so the printed side already has it. Diff behaviour is…",
+          "commit": null
         },
         {
           "round": 2,
           "event": "fixed",
-          "note": "Spec error: J7.5 example changed to data the journeys leave behind (Ledgerly ERP printed Advanced · Integration design -> now Advanced · Hands-on; Forecast modeling Expert -> Advanced)"
+          "note": "Spec error: J7.5 example changed to data the journeys leave behind (Ledgerly ERP printed Advanced · Integration design -> now Advanced · Hands-on; Forecast modeling Expert -> Advanced)",
+          "commit": "47b1b42c5466fdce1af06eeda3f58653e9478e33"
         }
       ]
     },
@@ -285,12 +299,14 @@
         {
           "round": 2,
           "event": "found",
-          "note": "CareerExperienceConfigurator.jsx line 172 tab row is display:flex with no flexWrap or overflowX; five non-shrinking buttons exceed 390px and an overflow-hidden ancestor clips tab 4 and fully hides ta…"
+          "note": "CareerExperienceConfigurator.jsx line 172 tab row is display:flex with no flexWrap or overflowX; five non-shrinking buttons exceed 390px and an overflow-hidden ancestor clips tab 4 and fully hides ta…",
+          "commit": null
         },
         {
           "round": 2,
           "event": "fixed",
-          "note": "Workspace tab row gets flexWrap:wrap so all five tabs are reachable at 390px; spec line 7 now lists five workspaces and the wrapping"
+          "note": "Workspace tab row gets flexWrap:wrap so all five tabs are reachable at 390px; spec line 7 now lists five workspaces and the wrapping",
+          "commit": "47b1b42c5466fdce1af06eeda3f58653e9478e33"
         }
       ]
     },
@@ -311,19 +327,21 @@
         {
           "round": 2,
           "event": "found",
-          "note": "SharedLiveStates.jsx lines 118-119 hard-codes 'The document text above always stays exactly as approved', but career-bound outputs re-resolve wording from Career Master on every view, and SharedOutpu…"
+          "note": "SharedLiveStates.jsx lines 118-119 hard-codes 'The document text above always stays exactly as approved', but career-bound outputs re-resolve wording from Career Master on every view, and SharedOutpu…",
+          "commit": null
         },
         {
           "round": 2,
           "event": "fixed",
-          "note": "SharedOutputPage passes documentState to SharedLiveStates, which picks the wording sentence by state (changed / career-bound unchanged / frozen); J7.1 spec documents the three sentences and the dark …"
+          "note": "SharedOutputPage passes documentState to SharedLiveStates, which picks the wording sentence by state (changed / career-bound unchanged / frozen); J7.1 spec documents the three sentences and the dark …",
+          "commit": "47b1b42c5466fdce1af06eeda3f58653e9478e33"
         }
       ]
     },
     {
       "id": "world-shell-navigation-B8",
       "feature": "world-shell-navigation",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "Commit trailer: Sonnet 5.5 used, task required Opus 5.5",
@@ -333,14 +351,15 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (process)"
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
         }
       ]
     },
     {
       "id": "world-shell-navigation-B9",
       "feature": "world-shell-navigation",
-      "status": "fixing",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "Test accounts / member vs admin journeys",
@@ -353,14 +372,15 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (test_harness)"
+          "note": "Reported by the build agent, unresolved on reconciliation (test_harness)",
+          "commit": null
         }
       ]
     },
     {
       "id": "world-shell-navigation-B11",
       "feature": "world-shell-navigation",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Spec gap: 3D island entry never exercised",
@@ -373,14 +393,15 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
     {
       "id": "world-shell-navigation-B12",
       "feature": "world-shell-navigation",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Spec Known limitation: no in-app upload of a package JSON",
@@ -394,14 +415,15 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
     {
       "id": "world-shell-navigation-B14",
       "feature": "world-shell-navigation",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "Change spec header stale",
@@ -413,14 +435,15 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (process)"
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
         }
       ]
     },
     {
       "id": "wsn-r1-auto-cover-letter",
       "feature": "world-shell-navigation",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "J2 2.3, J4 4.1, J9 9.1 (knock-on J9.2, J10.1)",
@@ -433,7 +456,8 @@
         {
           "round": 1,
           "event": "found",
-          "note": "coverLetterAutoDraft.js:103 registers an onOpportunityCreated hook (opportunityHooks.js, run by createCareerOpportunity) that auto-files a linked template cover letter DRAFT for every new tracked opp…"
+          "note": "coverLetterAutoDraft.js:103 registers an onOpportunityCreated hook (opportunityHooks.js, run by createCareerOpportunity) that auto-files a linked template cover letter DRAFT for every new tracked opp…",
+          "commit": null
         }
       ]
     },
@@ -450,7 +474,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (process)"
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
         }
       ]
     },
@@ -474,7 +499,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -494,7 +520,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)"
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
         }
       ]
     },
@@ -515,7 +542,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)"
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
         }
       ]
     },
@@ -534,7 +562,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (test_harness)"
+          "note": "Reported by the build agent, unresolved on reconciliation (test_harness)",
+          "commit": null
         }
       ]
     },
@@ -555,12 +584,14 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)"
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "Spec rewritten to sign in as member@test.local, route to My Resume as the member, and expect 'Approved by Test Member'. Import script header documents SB_EMAIL/SB_PASSWORD for the member."
+          "note": "Spec rewritten to sign in as member@test.local, route to My Resume as the member, and expect 'Approved by Test Member'. Import script header documents SB_EMAIL/SB_PASSWORD for the member.",
+          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
         }
       ]
     },
@@ -582,12 +613,14 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)"
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "Added a World Shell island for the existing 'resume' tab (ISLAND_REGISTRY.resume, kind embed) that mounts MyResumePanel. No new nav entry and no db.js change, because members already have the resume …"
+          "note": "Added a World Shell island for the existing 'resume' tab (ISLAND_REGISTRY.resume, kind embed) that mounts MyResumePanel. No new nav entry and no db.js change, because members already have the resume …",
+          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
         }
       ]
     },
@@ -608,12 +641,14 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "Added an 'Import package' control above Resume Output History, visible even when the history is empty. It posts to the existing /api/resume-outputs/import-package, lists per-output results, and shows…"
+          "note": "Added an 'Import package' control above Resume Output History, visible even when the history is empty. It posts to the existing /api/resume-outputs/import-package, lists per-output results, and shows…",
+          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
         }
       ]
     },
@@ -635,12 +670,14 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "Added a real .docx download. New outputDocx.js builds the file from plain OOXML via JSZip. Routes: GET /api/resume-outputs/:id/download.docx and public GET /api/shared-outputs/:token/download.docx. B…"
+          "note": "Added a real .docx download. New outputDocx.js builds the file from plain OOXML via JSZip. Routes: GET /api/resume-outputs/:id/download.docx and public GET /api/shared-outputs/:token/download.docx. B…",
+          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
         }
       ]
     },
@@ -659,12 +696,14 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (test_harness)"
+          "note": "Reported by the build agent, unresolved on reconciliation (test_harness)",
+          "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "Journey 6 now gives exact commands with the expected three '/URI (<BASE>/r/<SLUG1>)' lines. Browser step is 'click Download PDF, expect HTTP 200 application/pdf'. The response is inline so there is n…"
+          "note": "Journey 6 now gives exact commands with the expected three '/URI (<BASE>/r/<SLUG1>)' lines. Browser step is 'click Download PDF, expect HTTP 200 application/pdf'. The response is inline so there is n…",
+          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
         }
       ]
     },
@@ -684,12 +723,14 @@
         {
           "round": 1,
           "event": "found",
-          "note": "Shipped UI copy at MyResumePanel.jsx:1052 uses an em dash; the training spec (qr-gated-outputs.md:88) was written with a hyphen. No behavior wrong."
+          "note": "Shipped UI copy at MyResumePanel.jsx:1052 uses an em dash; the training spec (qr-gated-outputs.md:88) was written with a hyphen. No behavior wrong.",
+          "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "Spec now expects the em dash in 'Read-only — no edits can be made here.' No code change."
+          "note": "Spec now expects the em dash in 'Read-only — no edits can be made here.' No code change.",
+          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
         }
       ]
     },
@@ -711,12 +752,14 @@
         {
           "round": 1,
           "event": "found",
-          "note": "header.contact has no defined/validated type. Spec seeds an array; DocumentBlocksView.jsx:94 renders it raw so React concatenates without separator, while outputRendering.js:186 passes it to pdfkit w…"
+          "note": "header.contact has no defined/validated type. Spec seeds an array; DocumentBlocksView.jsx:94 renders it raw so React concatenates without separator, while outputRendering.js:186 passes it to pdfkit w…",
+          "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "Added one contactText() normalizer (list to trimmed entries joined with ' · ', string unchanged). Used in the web view, PDF, .docx and editor adapter. Import does not rewrite stored content. Spec exp…"
+          "note": "Added one contactText() normalizer (list to trimmed entries joined with ' · ', string unchanged). Used in the web view, PDF, .docx and editor adapter. Import does not rewrite stored content. Spec exp…",
+          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
         }
       ]
     },
@@ -736,12 +779,14 @@
         {
           "round": 1,
           "event": "found",
-          "note": "Toast at MyResumePanel.jsx:627 uses an em dash, which other specs (no-silent-failures, cover-letter-agent, proficiency-rules-and-live-qr) already expect; qr-gated-outputs.md lines 100/155/169 used a …"
+          "note": "Toast at MyResumePanel.jsx:627 uses an em dash, which other specs (no-silent-failures, cover-letter-agent, proficiency-rules-and-live-qr) already expect; qr-gated-outputs.md lines 100/155/169 used a …",
+          "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "Spec toast text corrected to the em-dash form 'Approved — private QR link created (copied to clipboard).' in Journeys 3, 7 and 8. No code change."
+          "note": "Spec toast text corrected to the em-dash form 'Approved — private QR link created (copied to clipboard).' in Journeys 3, 7 and 8. No code change.",
+          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
         }
       ]
     },
@@ -763,7 +808,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -782,7 +828,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)"
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
         }
       ]
     },
@@ -801,7 +848,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)"
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
         }
       ]
     },
@@ -820,7 +868,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -839,7 +888,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -859,7 +909,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -881,7 +932,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -900,7 +952,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -919,7 +972,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -938,7 +992,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (process)"
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
         }
       ]
     },
@@ -957,7 +1012,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)"
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
         }
       ]
     },
@@ -974,7 +1030,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (process)"
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
         }
       ]
     },
@@ -995,7 +1052,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -1014,7 +1072,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -1034,7 +1093,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -1054,7 +1114,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -1074,7 +1135,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (process)"
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
         }
       ]
     },
@@ -1093,7 +1155,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (test_harness)"
+          "note": "Reported by the build agent, unresolved on reconciliation (test_harness)",
+          "commit": null
         }
       ]
     },
@@ -1113,7 +1176,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (product_defect)"
+          "note": "Reported by the build agent, unresolved on reconciliation (product_defect)",
+          "commit": null
         }
       ]
     },
@@ -1134,7 +1198,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -1153,7 +1218,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)"
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
         }
       ]
     },
@@ -1172,7 +1238,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -1192,7 +1259,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -1211,7 +1279,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (product_defect)"
+          "note": "Reported by the build agent, unresolved on reconciliation (product_defect)",
+          "commit": null
         }
       ]
     },
@@ -1230,7 +1299,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -1249,7 +1319,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -1268,14 +1339,15 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (process)"
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
         }
       ]
     },
     {
       "id": "chart-gallery-B8",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "product_defect",
       "attempts": 0,
       "step": "career master write",
@@ -1288,14 +1360,15 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (product_defect)"
+          "note": "Reported by the build agent, unresolved on reconciliation (product_defect)",
+          "commit": null
         }
       ]
     },
     {
       "id": "chart-gallery-B9",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "journey: pick a chart",
@@ -1308,14 +1381,15 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
     {
       "id": "chart-gallery-B10",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "validation setup",
@@ -1327,14 +1401,15 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (test_harness)"
+          "note": "Reported by the build agent, unresolved on reconciliation (test_harness)",
+          "commit": null
         }
       ]
     },
     {
       "id": "CG-R1-1",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "defect",
       "attempts": 0,
       "step": "Live Preview stays visible beside gallery (sticky)",
@@ -1346,14 +1421,15 @@
         {
           "round": 1,
           "event": "found",
-          "note": "position:sticky on the preview column (OutputTemplateConfigurator.jsx ~L562) binds to the nearest overflow-y:auto ancestor: the configurator root div (~L311) and Hub wrapper (L110). Neither has a bou…"
+          "note": "position:sticky on the preview column (OutputTemplateConfigurator.jsx ~L562) binds to the nearest overflow-y:auto ancestor: the configurator root div (~L311) and Hub wrapper (L110). Neither has a bou…",
+          "commit": null
         }
       ]
     },
     {
       "id": "CG-R1-2",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "defect",
       "attempts": 0,
       "step": "Failed load alert includes HTTP status",
@@ -1366,14 +1442,15 @@
         {
           "round": 1,
           "event": "found",
-          "note": "proficiency loads via api.getCareerProficiency() -> request() in src/lib/api.js L2-19, which uses body.error text instead of the status, and throws a JSON parse error on an empty body. rollups/master…"
+          "note": "proficiency loads via api.getCareerProficiency() -> request() in src/lib/api.js L2-19, which uses body.error text instead of the status, and throws a JSON parse error on an empty body. rollups/master…",
+          "commit": null
         }
       ]
     },
     {
       "id": "CG-R1-3",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "defect",
       "attempts": 0,
       "step": "Phone width 390px usability",
@@ -1386,7 +1463,8 @@
         {
           "round": 1,
           "event": "found",
-          "note": "S.shell (L65) is a fixed grid 220px 1fr 380px with no responsive rule; the 1fr column has min-width:auto so wide content prevents shrinking. Layout overflows to about 945px and the preview iframe is …"
+          "note": "S.shell (L65) is a fixed grid 220px 1fr 380px with no responsive rule; the 1fr column has min-width:auto so wide content prevents shrinking. Layout overflows to about 945px and the preview iframe is …",
+          "commit": null
         }
       ]
     },
@@ -1408,7 +1486,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)"
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
         }
       ]
     },
@@ -1431,7 +1510,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -1451,7 +1531,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (process)"
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
         }
       ]
     },
@@ -1472,7 +1553,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -1489,7 +1571,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (process)"
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
         }
       ]
     },
@@ -1515,7 +1598,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (product_defect)"
+          "note": "Reported by the build agent, unresolved on reconciliation (product_defect)",
+          "commit": null
         }
       ]
     },
@@ -1537,7 +1621,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)"
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
         }
       ]
     },
@@ -1557,7 +1642,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (product_defect)"
+          "note": "Reported by the build agent, unresolved on reconciliation (product_defect)",
+          "commit": null
         }
       ]
     },
@@ -1574,7 +1660,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (informational)"
+          "note": "Reported by the build agent, unresolved on reconciliation (informational)",
+          "commit": null
         }
       ]
     },
@@ -1593,7 +1680,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (process)"
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
         }
       ]
     },
@@ -1615,7 +1703,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -1634,7 +1723,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -1653,7 +1743,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)"
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
         }
       ]
     },
@@ -1670,7 +1761,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (informational)"
+          "note": "Reported by the build agent, unresolved on reconciliation (informational)",
+          "commit": null
         }
       ]
     },
@@ -1689,7 +1781,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)"
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -1706,7 +1799,8 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (environment)"
+          "note": "Reported by the build agent, unresolved on reconciliation (environment)",
+          "commit": null
         }
       ]
     }
