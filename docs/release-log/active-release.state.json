@@ -1,11 +1,11 @@
 {
-  "exportedAt": "2026-10-08T15:35:47.510Z",
+  "exportedAt": "2026-10-08T15:48:27.005Z",
   "features": {
     "proficiency-live-qr": {
-      "status": "validate",
-      "lastRound": 2,
-      "lastScore": "28/31",
-      "lastReport": "docs/test-results/proficiency-live-qr/round-2.md"
+      "status": "triage",
+      "lastRound": 3,
+      "lastScore": "28/29",
+      "lastReport": "docs/test-results/proficiency-live-qr/round-3.md"
     },
     "world-shell-navigation": {
       "status": "awaiting_retest",
@@ -14,10 +14,10 @@
       "lastReport": "docs/test-results/world-shell-navigation/round-1.md"
     },
     "career-bound-outputs": {
-      "status": "validate",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null
+      "status": "fix",
+      "lastRound": 1,
+      "lastScore": "47/48",
+      "lastReport": "docs/test-results/career-bound-outputs/round-1.md (NOT WRITTEN: the write to the main checkout was refused by worktree isolation, and a copy in scratch was refused because subagents may not write report files. The full per-step log with screenshot paths is at /var/tmp/sbpg/release-loop/career-bound-outputs/round-1/steps.jsonl; the integrator should build round-1.md from it and this output.)"
     },
     "qr-gated-outputs": {
       "status": "awaiting_retest",
@@ -234,7 +234,7 @@
     {
       "id": "T2-1",
       "feature": "proficiency-live-qr",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "defect",
       "attempts": 1,
       "step": "J7.1 zero-change LIVE DATA banner",
@@ -260,7 +260,7 @@
     {
       "id": "T2-2",
       "feature": "proficiency-live-qr",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "spec_error",
       "attempts": 1,
       "step": "J7.5 category/level change listed (spec example)",
@@ -286,7 +286,7 @@
     {
       "id": "T2-3",
       "feature": "proficiency-live-qr",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "defect",
       "attempts": 1,
       "step": "Phone 390px workspace tabs (Proficiency & Rollup Configuration)",
@@ -313,7 +313,7 @@
     {
       "id": "T2-4",
       "feature": "proficiency-live-qr",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "defect",
       "attempts": 1,
       "step": "J7.2 document wording vs banner",
@@ -464,7 +464,7 @@
     {
       "id": "career-bound-outputs-B9",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "commit",
@@ -482,7 +482,7 @@
     {
       "id": "career-bound-outputs-B10",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "spec gaps",
@@ -507,7 +507,7 @@
     {
       "id": "career-bound-outputs-B11",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "nav",
@@ -528,7 +528,7 @@
     {
       "id": "career-bound-outputs-B12",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "World Shell reach",
@@ -550,7 +550,7 @@
     {
       "id": "career-bound-outputs-B13",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "test_harness",
       "attempts": 0,
       "step": "journeys",
@@ -563,6 +563,27 @@
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (test_harness)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cbo-r1-phone-editor",
+      "feature": "career-bound-outputs",
+      "status": "fixing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "Phone width (390px): career-bound output editor dialog",
+      "rootCause": "CareerBoundOutputEditor.jsx:19 S.wrap is a fixed two-column inline grid ('minmax(0,1.1fr) minmax(0,1fr)') with no narrow breakpoint. At 390px each column is about 150px, so inputs and textareas are unusable and Preview is clipped. minWidth:0 lets the columns shrink instead of overflow, so no horizontal page scroll appears.",
+      "files": [
+        "src/components/admin/CareerBoundOutputEditor.jsx",
+        "src/components/admin/MyResumePanel.jsx"
+      ],
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "CareerBoundOutputEditor.jsx:19 S.wrap is a fixed two-column inline grid ('minmax(0,1.1fr) minmax(0,1fr)') with no narrow breakpoint. At 390px each column is about 150px, so inputs and textareas are u…",
           "commit": null
         }
       ]
