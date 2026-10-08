@@ -235,9 +235,19 @@ router.post('/opportunities/:id/import-output', requireUser, (req, res) => {
       const rawText = await extractResumeText(req.file.buffer, req.file.mimetype, req.file.originalname);
       if (!rawText.trim()) return res.status(400).json({ error: 'No text could be extracted from this file.' });
 
+      const presetName = `Imported ${outputType === 'cover_letter' ? 'Cover Letter' : 'Resume'} — ${req.file.originalname}`;
+      // Importing a file with the same name again for the same opportunity is
+      // a new VERSION of that output (same lineage), so its version history
+      // and tracked changes show what changed between uploads.
+      const prior = await db.prepare(`
+        SELECT id FROM resume_output_projections
+         WHERE user_id=$1 AND career_opportunity_rod_id=$2 AND output_type=$3 AND source='imported' AND preset_name=$4
+         ORDER BY created_at DESC, id DESC LIMIT 1
+      `).get(req.user.id, Number(req.params.id), outputType, presetName);
       const projection = await createResumeOutputProjection(req.user.id, {
         presetId: 'imported',
-        presetName: `Imported ${outputType === 'cover_letter' ? 'Cover Letter' : 'Resume'} — ${req.file.originalname}`,
+        presetName,
+        regenerateFromId: prior ? Number(prior.id) : null,
         careerOpportunityRodId: Number(req.params.id),
         generatedContent: { rawText },
         outputType,

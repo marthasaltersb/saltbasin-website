@@ -11,6 +11,7 @@ import { createPortal } from 'react-dom';
 import { api } from '../lib/api.js';
 import { toast } from '../lib/toast.js';
 import { useToolCategoryGate } from './admin/ToolCategoryGate.jsx';
+import { OutputVersionHistoryModal } from './admin/OutputVersionHistory.jsx';
 import { documentToEditorConfig, editorConfigToDocument, DOCUMENT_EDITOR_ALLOWED_TYPES } from '../lib/documentBlocksEditor.js';
 
 const HerqOutputConfigurator = lazy(() => import('./admin/HerqOutputConfigurator.jsx'));
@@ -47,6 +48,7 @@ export default function OpportunityOutputsSection({ opportunity, onOpenCareerMas
   const [busy, setBusy] = useState(false);
   const [editor, setEditor] = useState(null); // { id, title, status, content, versionNumber }
   const [details, setDetails] = useState({ url: '', location: '', notes: '' });
+  const [historyOpen, setHistoryOpen] = useState(false); // version history opened from inside the editor
 
   const oppId = opportunity.id;
 
@@ -139,6 +141,7 @@ export default function OpportunityOutputsSection({ opportunity, onOpenCareerMas
         <div style={S.editorBar}>
           <strong>{editor.title}</strong>
           <span style={S.muted}>Version {editor.versionNumber} - shared block editor</span>
+          <button style={S.btn} onClick={() => setHistoryOpen(true)}>Version history</button>
         </div>
         <div style={{ flex: 1, minHeight: 0 }}>
           <Suspense fallback={<div style={{ ...S.muted, padding: '1rem' }}>Loading editor...</div>}>
@@ -150,6 +153,7 @@ export default function OpportunityOutputsSection({ opportunity, onOpenCareerMas
           </Suspense>
         </div>
         {gate.modal}
+        {historyOpen && <OutputVersionHistoryModal projectionId={editor.id} onClose={() => setHistoryOpen(false)} />}
       </div>,
       document.body,
     );

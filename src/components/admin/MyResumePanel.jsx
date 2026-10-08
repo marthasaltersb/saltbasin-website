@@ -17,6 +17,7 @@ import { resumeUrlFromPreset } from '../../lib/resumeUrls.js';
 import DocumentBlocksView, { formatMetadataLine, isDocumentBlocks } from '../DocumentBlocksView.jsx';
 import { useToolCategoryGate } from './ToolCategoryGate.jsx';
 import CareerBoundOutputEditor from './CareerBoundOutputEditor.jsx';
+import { OutputVersionHistoryModal } from './OutputVersionHistory.jsx';
 import CoverLetterPackagesPanel from './CoverLetterPackagesPanel.jsx';
 import CoverLetterWorkbench from './CoverLetterWorkbench.jsx';
 
@@ -482,6 +483,7 @@ export default function MyResumePanel({ scope = 'member' }) {
   // generated, imported, or the general preset-based ones this panel already
   // creates) — see server/lib/outputRendering.js.
   const [selectedOutputIds, setSelectedOutputIds] = useState(new Set());
+  const [historyOutputId, setHistoryOutputId] = useState(null); // output whose version history is open
   const [viewingOutput, setViewingOutput] = useState(null); // fetched digital-view JSON, or null
   const [exportingZip, setExportingZip] = useState(false);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
@@ -998,6 +1000,7 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setHistoryOutputId(output.id)}>Version history</button>
                   {output.generatedContent?.format === 'career_bound' && output.outputStatus !== 'archived' && (
                     <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setBoundEditId(output.id)}>Edit sections</button>
                   )}
@@ -1099,6 +1102,7 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
           </div>
         </div>
       )}
+      {historyOutputId && <OutputVersionHistoryModal projectionId={historyOutputId} onClose={() => setHistoryOutputId(null)} />}
       {categoryGate.modal}
       {agentLetterId && <CoverLetterWorkbench outputId={agentLetterId} onClose={() => { setAgentLetterId(null); setPackagesReload((n) => n + 1); }} onChanged={() => { loadResumeOutputs(); setPackagesReload((n) => n + 1); }} />}
       {emailModalOpen && (

@@ -38,6 +38,7 @@ import CareerConsentGate from './admin/CareerConsentGate.jsx';
 const LeadsPanel = lazy(() => import('./admin/LeadsPanel.jsx'));
 const CareerMasterPanel = lazy(() => import('./admin/CareerMasterPanel.jsx'));
 const CareerMasterEntryPoint = lazy(() => import('./admin/CareerMasterEntryPoint.jsx'));
+import { OutputVersionHistoryModal } from './admin/OutputVersionHistory.jsx';
 const OutputTemplateConfiguratorHub = lazy(() => import('./admin/OutputTemplateConfigurator.jsx').then((m) => ({ default: m.OutputTemplateConfiguratorHub })));
 const CareerReconciliationPanel = lazy(() => import('./admin/CareerReconciliationPanel.jsx'));
 const LonetreeMvpPanel = lazy(() => import('./admin/LonetreeMvpPanel.jsx'));
@@ -955,6 +956,11 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
                 {importingOutput ? 'Importing…' : 'Import Cover Letter'}
               </button>
 
+              <OpportunityOutputVersions
+                opportunityId={selectedOpportunity.id}
+                refreshKey={`${generatingResume}|${approvingResume}|${approvingCoverLetter}|${importingOutput}`}
+              />
+
               {outreachEligible && (
                 <OutreachSection
                   opportunityId={selectedOpportunity.id}
@@ -1073,6 +1079,48 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
 // and real drafting (reusing the M1 output pipeline via output_type
 // 'outreach_message'), never auto-sent — the member marks the real-world
 // outcome, which is what merges back into the parent opportunity's stage.
+// Output version history for the selected opportunity: each output (grouped by
+// lineage - an approved output edited later is a new version of the same
+// output) with a button that opens its dated versions, timeline slider and
+// tracked changes (admin/OutputVersionHistory.jsx).
+function OpportunityOutputVersions({ opportunityId, refreshKey }) {
+  const [outputs, setOutputs] = useState(null);
+  const [error, setError] = useState(null);
+  const [openId, setOpenId] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    setOutputs(null); setError(null);
+    api.listResumeOutputsForOpportunity(opportunityId)
+      .then((r) => { if (!cancelled) setOutputs(r.projections || []); })
+      .catch((e) => { if (!cancelled) setError(e.message); });
+    return () => { cancelled = true; };
+  }, [opportunityId, refreshKey]);
+
+  const lineages = useMemo(() => {
+    const byRoot = new Map();
+    for (const p of outputs || []) {
+      const cur = byRoot.get(p.lineageRootId);
+      if (!cur || p.id > cur.id) byRoot.set(p.lineageRootId, p); // ids only grow: highest id = newest version
+    }
+    return [...byRoot.values()];
+  }, [outputs]);
+
+  return (
+    <div data-testid="opportunity-output-versions">
+      <div style={S.railSubtitle}>Output Version History</div>
+      {error && <div role="alert" style={{ color: '#d98ca0', fontSize: '0.72rem' }}>Could not load this opportunity's outputs: {error}</div>}
+      {!error && outputs && !lineages.length && <div style={S.railEmpty}>No saved outputs for this opportunity yet.</div>}
+      {lineages.map((p) => (
+        <div key={p.lineageRootId} style={S.railRow}>
+          <span>{p.presetName || p.presetId} <span style={{ color: '#8b877c', textTransform: 'capitalize' }}>({p.outputStatus})</span></span>
+          <button style={S.ghostSmall} onClick={() => setOpenId(p.id)}>Version history</button>
+        </div>
+      ))}
+      {openId && <OutputVersionHistoryModal projectionId={openId} startAtLatest onClose={() => setOpenId(null)} />}
+    </div>
+  );
+}
+
 function OutreachSection({
   opportunityId, outreach, loading, startingOutreach, startOutreach,
   researchingContacts, researchContacts, draftingOutreachMessage, outreachDraft, draftMessage, discardOutreachDraft,
