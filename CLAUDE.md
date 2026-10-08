@@ -207,6 +207,7 @@ Added 2026-10-02. Every code change goes build → initial check → integrate �
 - Each feature ships `docs/changes/<feature>.md` (with a *Traces to* section naming the prior spec versions/commits) and `docs/training/<feature>.md` (journeys with exact expected results). Logs: `docs/test-results/<feature>/round-N.md`, `docs/triage/<feature>-round-N.md`, `docs/release-log/<release>.md`.
 - Push only when the release log shows every feature passed (or the owner says otherwise). `needs_business_definition` failures go to the owner as exact questions, never guessed.
 - Specs and logs use fictional data only (public repo).
+- **Resuming:** if `docs/release-log/active-release.state.json` lists unfinished features, continue them with the skill's "Resuming in a new session" steps — the feature definitions, open bugs and tracker link are all in `docs/release-log/`, so no re-instruction is needed.
 
 ### Release intelligence (release reconciliation + contribution trends)
 

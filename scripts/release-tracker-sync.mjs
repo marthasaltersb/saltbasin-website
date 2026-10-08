@@ -225,7 +225,7 @@ for (const [key, list] of Object.entries(byFeature)) {
     live.forEach((f, i) => fb.set(`${key}-R${v.round}-live${i + 1}`, { id: `${key}-R${v.round}-live${i + 1}`, feature: key, status: 'seen_in_test', step: clip(f.step, 200), rootCause: clip(f.note, 400), history: [{ round: v.round, event: 'seen', note: 'Seen by the test agent; goes to triage when the round ends' }] }));
   }
   bugs.push(...fb.values());
-  const last = validations[validations.length - 1];
+  const last = [...validations].reverse().find((v) => agents.get(v.id)?.result) || null;   // last round that finished
   const lastRes = last ? agents.get(last.id)?.result : null;
   const running = list.filter((a) => a.status === 'running');
   let status = 'queued';

@@ -31,6 +31,34 @@ file (version bump + note in `docs/release-process.md`), never by improvising pe
 6. **Push** only when the release log shows every feature passed, or the owner explicitly says otherwise.
    Items classed `needs_business_definition` go to the owner as exact questions; they are never guessed.
 
+## Resuming in a new session (no re-instruction needed)
+
+If `docs/release-log/active-release.state.json` shows unfinished features, a new session continues them:
+
+1. Work on the WIP branch named in `docs/release-log/active-release.features.json` (`wipBranch`): fetch it,
+   check it out, and use it as the integration branch for this session. Set up the local environment
+   (Postgres 16 on port 5433 with socket in /tmp, `/var/tmp/sbpg/env.sh` with test admin credentials) if it
+   is missing, and record how in `docs/release-process.md`.
+2. `node scripts/release-loop-resume.mjs --args` prints one Workflow args object per run. Launch each with
+   `Workflow({ name: 'release-loop', args })`, setting `integrationBranch` to the branch you checked out and
+   `commitTrailer` to this session's attribution lines. All runs in parallel; nothing should sit idle.
+3. Keep the tracker live: write the new runs' transcript dirs to a run_dir file, run
+   `scripts/release-tracker-sync.mjs --run <dir>... --ledger /var/tmp/sbpg/tracker/bug-ledger.json`, and
+   publish the snapshot to the tracker artifact (`trackerArtifact`, collection `tracker`, doc `current`,
+   field `json`). Bugs never leave the tracker; they end as verified fixed.
+4. After each merge, `--export` the snapshot to the state file, commit, and push the WIP branch so the next
+   session can resume again. Push the owner's integration branch only when every feature has passed.
+
+## Owner directions that always apply
+
+- Everything a member does is reachable from the World Shell (`/world`); admin navigation is not a route.
+- Career Master is the source of truth for outputs; per-output overrides are allowed and marked.
+- No API-only configuration; every rule and rollup is editable in a screen.
+- Failures are never silent, never "done" while unreconciled, and a blank or clipped screen is a failure.
+- Test as `member@test.local` from `scripts/create-test-member.mjs` (career terms accepted).
+- Repo is public: fictional data only; never an employer or application-target name.
+- Fix urgent breakage at once; bugs failing 2 fix attempts go to the owner as "needs a person".
+
 ## After every session — session mapping
 
 Run `node scripts/analyze-session.mjs` (see `docs/changes/session-mapping.md`) before the session ends. It

@@ -13,7 +13,7 @@ application material (cover letters, contact details, appendix notes).
    python scripts/extract-application-package.py acme-2026-09 \
      server/data/applicationPackages/acme-2026-09.json \
      --company Acme --created 2026-09-30T13:00:01Z \
-     --authors "Charles Phillipe; Betsy Salter" \
+     --authors "Author One; Author Two" \
      resume_salt_basin=Resume_Salt_Basin.docx resume_ats=Resume_ATS.docx \
      cover_letter=Cover_Letter.docx application_package=Application_Package.docx
    ```

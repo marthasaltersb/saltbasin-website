@@ -6,7 +6,7 @@ Usage:
   pip install python-docx
   python scripts/extract-application-package.py <package-key> <out.json> \
       --company "Acme" --created 2026-09-30T13:00:01Z \
-      --authors "Charles Phillipe; Betsy Salter" \
+      --authors "Author One; Author Two" \
       resume_salt_basin=path/to/Resume_Salt_Basin.docx \
       resume_ats=path/to/Resume_ATS.docx \
       cover_letter=path/to/Cover_Letter.docx \

@@ -9,7 +9,7 @@ the approved version's QR code in the top-right of the page header.
 Usage:
   pip install python-docx "qrcode[pil]"
   python scripts/stamp-application-package-docx.py in.docx out.docx \
-      --authors "Charles Phillipe; Betsy Salter" \
+      --authors "Author One; Author Two" \
       --created 2026-09-30T13:00:01Z \
       [--modified 2026-10-02T03:00:00Z]     # default: now
       [--last-modified-by "Betsy Salter"]   # the approver, once approved
