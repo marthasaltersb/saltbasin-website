@@ -98,7 +98,7 @@ Methodology reminder (shown on screen): points = years × 1 (max 15) + engagemen
    - Expect the card "Rules & why" with its intro line ("Configure how proficiency levels are calculated...") and the same proficiency rules panel as Journey 3-5 (Formula in use, Levels and why).
 3. Override one level by hand (as Journey 3, step 1-2).
    - Expect the Infographics tab thumbnails and the preview on the right to refresh with the new level.
-4. At 390px wide, expect the tab row to wrap and **Rules & why** to stay reachable.
+4. At 390px wide, expect the tab row to wrap and **Rules & why** to stay reachable, and the whole editor (presets, Preset Info, tab content, preview) to stack in a single column that fits the screen: no sideways panning inside the page or its scroller to read the Rules & why panel.
 
 ## Edge cases
 
