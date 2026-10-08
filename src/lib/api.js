@@ -20,6 +20,25 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  // Release intelligence (admin): release records, reconciliation, failed runs, trends, importer.
+  getReleaseIntelConfig: () => request('/api/release-intelligence/config'),
+  saveReleaseIntelConfig: (rules) => request('/api/release-intelligence/config', { method: 'PUT', body: JSON.stringify({ rules }) }),
+  resetReleaseIntelConfig: () => request('/api/release-intelligence/config', { method: 'DELETE' }),
+  listReleaseRecords: () => request('/api/release-intelligence/releases'),
+  getReleaseRecord: (id) => request(`/api/release-intelligence/releases/${id}`),
+  createReleaseRecord: (body) => request('/api/release-intelligence/releases', { method: 'POST', body: JSON.stringify(body) }),
+  addReleaseFeature: (id, body) => request(`/api/release-intelligence/releases/${id}/features`, { method: 'POST', body: JSON.stringify(body) }),
+  approveReleaseRecord: (id, note) => request(`/api/release-intelligence/releases/${id}/approve`, { method: 'POST', body: JSON.stringify({ note }) }),
+  reopenReleaseRecord: (id, note) => request(`/api/release-intelligence/releases/${id}/reopen`, { method: 'POST', body: JSON.stringify({ note }) }),
+  listReleaseFailedRuns: (params = {}) => request(`/api/release-intelligence/failed-runs?${new URLSearchParams(Object.entries(params).filter(([, v]) => v != null && v !== ''))}`),
+  createReleaseFailedRun: (body) => request('/api/release-intelligence/failed-runs', { method: 'POST', body: JSON.stringify(body) }),
+  setReleaseRunDisposition: (id, body) => request(`/api/release-intelligence/failed-runs/${id}/disposition`, { method: 'PUT', body: JSON.stringify(body) }),
+  listReleaseOutputs: () => request('/api/release-intelligence/outputs'),
+  linkReleaseOutput: (id, releaseId) => request(`/api/release-intelligence/outputs/${id}/release`, { method: 'PUT', body: JSON.stringify({ releaseId }) }),
+  getReleaseTrends: () => request('/api/release-intelligence/trends'),
+  importReleaseDocument: (path, content) => request('/api/release-intelligence/import/document', { method: 'POST', body: JSON.stringify({ path, content }) }),
+  importReleaseSnapshot: (releaseKey, snapshot) => request('/api/release-intelligence/import/snapshot', { method: 'POST', body: JSON.stringify({ releaseKey, snapshot }) }),
+  importReleaseRepository: () => request('/api/release-intelligence/import/repository', { method: 'POST', body: '{}' }),
   getGenesisSummary: () => request('/api/genesis/summary'),
   getGenesisLayer: (layer) => request(`/api/genesis/catalog/${encodeURIComponent(layer)}`),
   getGenesisTable: (layer, table, q = '') => request(`/api/genesis/catalog/${encodeURIComponent(layer)}/${encodeURIComponent(table)}?limit=200${q ? `&q=${encodeURIComponent(q)}` : ''}`),

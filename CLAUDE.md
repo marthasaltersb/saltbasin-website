@@ -208,6 +208,10 @@ Added 2026-10-02. Every code change goes build → initial check → integrate �
 - Push only when the release log shows every feature passed (or the owner says otherwise). `needs_business_definition` failures go to the owner as exact questions, never guessed.
 - Specs and logs use fictional data only (public repo).
 
+### Release intelligence (release reconciliation + contribution trends)
+
+Added 2026-10-02 (`docs/changes/release-intelligence.md`, training spec of the same name). Release-loop outputs under `docs/` and the tracker snapshot (`scripts/release-tracker-sync.mjs`) are filed by an idempotent importer (`scripts/import-release-logs.mjs`, `server/lib/releaseLogImporter.js`) into additive `release_*` tables (created lazily by `releaseIntelligenceSchema.js`, never in bootstrap). A release record reconciles each feature to its spec versions, validation rounds, fixes and failed runs (`releaseReconcile.js`). Failed/refused/partial/interrupted commands and failed agent runs, including agents that died at a usage limit, are first-class rows that only a reviewer's disposition-with-note closes; an import never overwrites a reviewer's decision. Screen: World Shell -> Journeys -> Release Intelligence (`ReleaseIntelligencePanel.jsx`); rules (states, dispositions, classes, folders) are editable on its Settings tab (`config_state` row `release_intelligence_rules`). Tokens are OBSERVED, elapsed minutes INFERRED, nothing is costed, and "not recorded" is never drawn as zero. Approving a release goes through `assertReadyToFinalize` / `useToolCategoryGate().run`.
+
 ### World Shell: opportunity outputs, provenance, editor
 
 Added 2026-10-02 (`docs/changes/world-shell-opportunity-outputs.md`, training spec of the same name). The member's job-application journey runs entirely inside `/world` (Journeys → Career Placement Agents → a tracked opportunity → **APPLICATION OUTPUTS**, `src/components/OpportunityOutputsSection.jsx`, server `server/lib/opportunityOutputs.js`).
