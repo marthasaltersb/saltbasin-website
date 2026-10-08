@@ -171,7 +171,13 @@ export async function requireUser(req, res, next) {
   next();
 }
 
+// Both gates below guard API data only. The page and its scripts must always load, or a member who
+// owes a password change or a terms acceptance gets a blank app and never sees the screen that asks
+// for it (production serves dist/ from this same server, after these middlewares).
+const isApiRequest = (req) => req.originalUrl.startsWith('/api/');
+
 export async function enforceCurrentCareerTerms(req, res, next) {
+  if (!isApiRequest(req)) return next();
   const user = await getUserFromCookie(req);
   if (!user) return next();
   if (req.originalUrl.startsWith('/api/auth/') || req.originalUrl.startsWith('/api/career/consent')) return next();
@@ -184,6 +190,7 @@ export async function enforceCurrentCareerTerms(req, res, next) {
 }
 
 export async function enforceRequiredPasswordChange(req, res, next) {
+  if (!isApiRequest(req)) return next();
   const user = await getUserFromCookie(req);
   if (!user || !user.mustChangePassword) return next();
   if (req.originalUrl.startsWith('/api/auth/')) return next();
