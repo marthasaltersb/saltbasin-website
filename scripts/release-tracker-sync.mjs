@@ -74,14 +74,15 @@ function agentActivity(file) {
   return { activity, usage, firstAt, lastAt, signals: uniq.slice(-30) };
 }
 
-const journal = runDirs.flatMap((d) => readJsonl(path.join(d, 'journal.jsonl')).map((e) => ({ ...e, runDir: d })));
+const archiveDirs = argv.flatMap((a, i) => (a === '--archive' ? [argv[i + 1]] : []));   // stopped runs: history only
+const journal = [...archiveDirs, ...runDirs].flatMap((d) => readJsonl(path.join(d, 'journal.jsonl')).map((e) => ({ ...e, runDir: d, archived: archiveDirs.includes(d) })));
 const agents = new Map();
 for (const e of journal) {
   if (!e.agentId) continue;
   const a = agents.get(e.agentId) || { id: e.agentId, label: e.label, phase: e.phase, status: 'running', result: null, file: path.join(e.runDir, `agent-${e.agentId}.jsonl`), fromRun: true };
   if (e.label) a.label = e.label;
   if (e.phase) a.phase = e.phase;
-  if (e.type === 'started') a.status = 'running';
+  if (e.type === 'started') a.status = e.archived ? 'stopped' : 'running';
   else {
     const res = e.result ?? e.value ?? e.output ?? null;
     // A finished agent with no result died or was skipped — shown as failed, never as done.
@@ -158,13 +159,33 @@ for (const [key, list] of Object.entries(byFeature)) {
   const res = (role, round) => agents.get(list.find((a) => a.role === role && (round == null || a.round === round))?.id)?.result;
   const validations = list.filter((a) => a.role === 'validate').sort((x, y) => x.round - y.round);
   const fb = new Map(); const attempts = {};
+  // 1. Failures the build/fix reconciliation left unresolved are bugs from the start (ids match the
+  //    workflow's carried items: <feature>-B<n> for the build, <feature>-F<round>-<n> for a fix round).
+  for (const rc of list.filter((a) => a.role === 'reconcile')) {
+    const rr = agents.get(rc.id)?.result;
+    const fixRound = (rc.label.match(/fix-r(\d+)/) || [])[1];
+    for (const [i, it] of (rr?.items || []).entries()) {
+      if (it.status === 'resolved') continue;
+      const id = fixRound ? `${key}-F${fixRound}-${i + 1}` : `${key}-B${i + 1}`;
+      if (!fb.has(id)) fb.set(id, { id, feature: key, status: 'open', class: it.kind, step: clip(it.step || it.reported, 200), rootCause: clip(it.rootCause || it.evidence, 400), files: it.files || [], firstRound: 0, history: [{ round: fixRound ? Number(fixRound) : 0, event: 'found', note: `Reported by the ${fixRound ? 'fix' : 'build'} agent, unresolved on reconciliation (${it.kind})` }] });
+    }
+  }
+  // 2. Each test round: fixed bugs are re-tested; failures are triaged; fixes are applied.
   for (const v of validations) {
     const vr = agents.get(v.id)?.result;
-    if (!vr) continue;
-    // A validation after a fix round decides the fixed bugs' fate.
-    for (const b of fb.values()) if (b.status === 'fixed_awaiting_retest') b.status = vr.passed ? 'verified' : 'retest_failed';
-    if (vr.passed) continue;
+    if (!vr) {
+      for (const b of fb.values()) if (b.status === 'fixed_awaiting_retest' && v.status === 'running') b.status = 'retesting';
+      continue;
+    }
     const tr = res('triage', v.round);
+    const reported = new Set((tr?.items || []).map((i) => i.recurrenceOf || i.id));
+    for (const b of fb.values()) {
+      if (!['fixed_awaiting_retest', 'retesting'].includes(b.status)) continue;
+      if (vr.passed) { b.status = 'verified'; b.history.push({ round: v.round, event: 'verified', note: `Retest round ${v.round} passed every step` }); }
+      else if (!tr) b.status = 'retest_failed_pending_triage';
+      else if (!reported.has(b.id)) { b.status = 'verified'; b.history.push({ round: v.round, event: 'verified', note: `Retest round ${v.round}: this bug's step passed (the round had other failures)` }); }
+    }
+    if (vr.passed) continue;
     for (const item of tr?.items || []) {
       const id = item.recurrenceOf || item.id;
       const prev = fb.get(id);
@@ -190,15 +211,6 @@ for (const [key, list] of Object.entries(byFeature)) {
       }
     } else if (list.some((a) => a.role === 'fix' && a.round === v.round && a.status === 'running')) {
       for (const b of fb.values()) if (['open', 'recurred'].includes(b.status)) b.status = 'fixing';
-    }
-  }
-  // Reconciliation of reported failures: unresolved items are bugs; unreconciled ones are flagged.
-  for (const rc of list.filter((a) => a.role === 'reconcile')) {
-    const rr = agents.get(rc.id)?.result;
-    for (const [i, it] of (rr?.items || []).entries()) {
-      if (it.status === 'resolved') continue;
-      const id = `${key}-${rc.label.includes('fix') ? 'F' : 'B'}${i + 1}`;
-      if (!fb.has(id)) fb.set(id, { id, feature: key, status: 'open', class: it.kind, step: clip(it.step || it.reported, 200), rootCause: clip(it.rootCause || it.evidence, 400), files: it.files || [], history: [{ round: 0, event: 'found', note: `Reported by the agent, unresolved on reconciliation (${it.kind})` }] });
     }
   }
   for (const b of list.filter((a) => (a.role === 'build' || a.role === 'fix') && a.status === 'done')) {
@@ -231,6 +243,20 @@ for (const [key, list] of Object.entries(byFeature)) {
     openBugs: [...fb.values()].filter((b) => !['verified'].includes(b.status)).length,
     agents: list.length,
   });
+}
+
+// Permanent bug ledger: a bug never disappears from the tracker. If a later sync no longer derives it
+// (a run was replaced or restarted), its last known state is kept and marked as carried over.
+const ledgerPath = opt('--ledger');
+if (ledgerPath) {
+  let ledger = {};
+  try { ledger = JSON.parse(fs.readFileSync(ledgerPath, 'utf8')); } catch { /* first run */ }
+  const now = new Map(bugs.map((b) => [b.id, b]));
+  for (const [id, old] of Object.entries(ledger)) {
+    if (!now.has(id) && old.status !== 'seen_in_test') bugs.push({ ...old, carriedOver: true });
+  }
+  for (const b of bugs) if (b.status !== 'seen_in_test') ledger[b.id] = b;
+  fs.writeFileSync(ledgerPath, JSON.stringify(ledger));
 }
 
 const snapshot = {
