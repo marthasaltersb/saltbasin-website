@@ -15,6 +15,7 @@ const MemberStatsPanel = lazy(() => import('./MemberPanels.jsx').then((module) =
 const MemberAuditPanel = lazy(() => import('./MemberPanels.jsx').then((module) => ({ default: module.MemberAuditPanel })));
 const MemberAgentPanel = lazy(() => import('./MemberPanels.jsx').then((module) => ({ default: module.MemberAgentPanel })));
 const MyResumePanel = lazy(() => import('./MyResumePanel.jsx'));
+const ReleaseIntelligencePanel = lazy(() => import('./ReleaseIntelligencePanel.jsx'));
 const OutputTemplateConfiguratorHub = lazy(() => import('./OutputTemplateConfigurator.jsx').then((module) => ({ default: module.OutputTemplateConfiguratorHub })));
 const CareerMasterPanel = lazy(() => import('./CareerMasterPanel.jsx'));
 const ProfileHub = lazy(() => import('./ProfileHub.jsx'));
@@ -69,6 +70,7 @@ const TAB_COMPONENTS = {
   backlog:        () => <BacklogPanel />,
   feedback:       () => <FeedbackPanel />,
   qa:             () => <QAPanel />,
+  releaseIntelligence: () => <ReleaseIntelligencePanel />,
   plmDashboard:   () => <MemberPlmPanel scope="admin" />,
   resume:         (props) => <MyResumePanel {...props} />,
   outputTemplates: (props) => <OutputTemplateConfiguratorHub {...props} />,
@@ -117,6 +119,7 @@ const FALLBACK_ADMIN_NAV = {
       { id: 'plm-dashboard', label: 'Operating Model Dashboard', componentId: 'plmDashboard', sortOrder: 0 },
       { id: 'backlog', label: 'Backlog', componentId: 'backlog', sortOrder: 1 },
       { id: 'qa', label: 'QA', componentId: 'qa', sortOrder: 2 },
+      { id: 'release-intelligence', label: 'Release Intelligence', componentId: 'releaseIntelligence', sortOrder: 4 },
     ]},
     { id: 'crm', label: 'Customer Relationship Management', sortOrder: 2, tabs: [
       { id: 'leads', label: 'Leads', componentId: 'leads', sortOrder: 0 },

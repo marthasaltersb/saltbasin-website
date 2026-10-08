@@ -182,6 +182,14 @@ export const ISLAND_REGISTRY = {
     dataBinding: { store: 'output_templates' },
     permission: { requiredRole: 'owner', crud: ['read', 'update'], enforced: false },
   },
+  // Release reconciliation + contribution trends (2026-10-02): admin-only
+  // screen, mounted full-screen from the World Shell like the other 'embed'
+  // islands. Reads the release_* tables (see docs/changes/release-intelligence.md).
+  releaseIntelligence: {
+    variant: 'rings', kind: 'embed', accent: 'gold',
+    dataBinding: { store: 'release_records' },
+    permission: { requiredRole: 'admin', crud: ['read', 'update', 'approve'], enforced: true },
+  },
   leads: {
     variant: 'rings', kind: 'embed', accent: 'teal',
     dataBinding: { store: 'leads' },

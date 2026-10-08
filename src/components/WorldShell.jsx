@@ -41,6 +41,7 @@ const CareerMasterEntryPoint = lazy(() => import('./admin/CareerMasterEntryPoint
 const OutputTemplateConfiguratorHub = lazy(() => import('./admin/OutputTemplateConfigurator.jsx').then((m) => ({ default: m.OutputTemplateConfiguratorHub })));
 const CareerReconciliationPanel = lazy(() => import('./admin/CareerReconciliationPanel.jsx'));
 const LonetreeMvpPanel = lazy(() => import('./admin/LonetreeMvpPanel.jsx'));
+const ReleaseIntelligencePanel = lazy(() => import('./admin/ReleaseIntelligencePanel.jsx'));
 
 const SIMPLE_EMBED_COMPONENTS = {
   leads: { title: 'Leads', render: () => <LeadsPanel /> },
@@ -48,6 +49,7 @@ const SIMPLE_EMBED_COMPONENTS = {
   careerReconciliation: { title: 'Career Sources to Review', render: (scope) => <CareerReconciliationPanel scope={scope} /> },
   outputTemplates: { title: 'Output Templates', render: (scope) => <OutputTemplateConfiguratorHub scope={scope} /> },
   lonetreeMvp: { title: 'Fund & Portfolio Demo', render: (scope) => <LonetreeMvpPanel scope={scope} /> },
+  releaseIntelligence: { title: 'Release Intelligence', render: () => <ReleaseIntelligencePanel /> },
 };
 
 const ISLAND_RADIUS = 9;
