@@ -61,7 +61,7 @@ function normalizeConfig(cfg, outputType) {
 }
 
 const S = {
-  wrap: { padding: '1.5rem', fontFamily: 'var(--sb-font-body)' },
+  wrap: { padding: '1.5rem', fontFamily: 'var(--sb-font-body)', color: '#1b2a3b' },
   shell: { display: 'grid', gridTemplateColumns: '220px 1fr 380px', gap: '1.25rem', alignItems: 'start' },
   h1: { fontSize: '1.4rem', fontWeight: 700, color: 'var(--sb-navy, #1b2a3b)', marginBottom: '0.2rem' },
   sub: { fontSize: '0.82rem', color: '#666', marginBottom: '1.5rem', maxWidth: 760 },
@@ -71,8 +71,8 @@ const S = {
     background: on ? 'var(--sb-navy, #1b2a3b)' : 'white', color: on ? 'white' : '#444',
     fontSize: '0.78rem', cursor: 'pointer', fontFamily: 'var(--sb-font-label)',
   }),
-  card: { background: 'white', border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: 10, padding: '1.1rem', marginBottom: '0.9rem' },
-  label: { fontSize: '0.62rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#888', fontFamily: 'var(--sb-font-label)', marginBottom: '0.5rem' },
+  card: { background: 'white', color: '#1b2a3b', border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: 10, padding: '1.1rem', marginBottom: '0.9rem' },
+  label: { fontSize: '0.62rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#5f5f5f', fontFamily: 'var(--sb-font-label)', marginBottom: '0.5rem' },
   input: { padding: '0.5rem 0.75rem', borderRadius: 7, border: '0.5px solid rgba(0,0,0,0.18)', fontSize: '0.85rem', fontFamily: 'inherit', outline: 'none', width: '100%', boxSizing: 'border-box' },
   chip: (on) => ({
     display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.7rem', borderRadius: 16, margin: '0.2rem',
@@ -126,6 +126,7 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
   const [rollupCatalog, setRollupCatalog] = useState(null);
   const [sitePages, setSitePages] = useState(null);
   const [master, setMaster] = useState(null);
+  const [ovPicks, setOvPicks] = useState({ skills: [], tools: [], certifications: [] });
   const [tab, setTab] = useState(0);
   const [saving, setSaving] = useState(false);
   const [proficiency, setProficiency] = useState(null);
@@ -502,7 +503,7 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
                           : [...config.layer4_sections.sections, { id: key, sourceType: 'job_experience', jobId: job.id, order: config.layer4_sections.sections.length, visible: true, density: { minLines: 3, maxLines: 8, expandable: true } }];
                         update('layer4_sections.sections', sections);
                       }} />
-                      <span>{job.title} <span style={{ color: '#aaa', fontSize: '0.7rem' }}>({job.company})</span></span>
+                      <span>{job.title} <span style={{ color: '#6a6a6a', fontSize: '0.7rem' }}>({job.company})</span></span>
                     </div>
                   );
                 })}
@@ -543,6 +544,50 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
                     ))}
                   </div>
                 )}
+
+                <div data-testid="master-overrides-lists-card" style={{ marginTop: '0.9rem', padding: '0.7rem 0.8rem', background: '#FBF8F3', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 8 }}>
+                  <div style={S.label}>Skills, tools and certifications wording for this output only</div>
+                  <div style={{ fontSize: '0.74rem', color: '#666', lineHeight: 1.5, marginBottom: '0.5rem' }}>
+                    Pick an item to reword it here. It changes in this output only, marked Overridden for this output; Revert to Career Master puts the live value back. Career Master itself is not changed.
+                  </div>
+                  {[['skills', 'Skill', 'skill'], ['tools', 'Tool', 'currentName'], ['certifications', 'Certification', 'name']].map(([list, noun, field]) => {
+                    const rows = master?.[list] || [];
+                    const shownIds = [...new Set([...Object.keys(config.masterOverrides?.[list] || {}), ...ovPicks[list]])];
+                    const addable = rows.filter((r) => !shownIds.includes(String(r.id)));
+                    const box = { width: '100%', boxSizing: 'border-box', padding: '0.35rem 0.5rem', fontSize: '0.78rem', border: '1px solid rgba(0,0,0,0.2)', borderRadius: 6 };
+                    return (
+                      <div key={list} style={{ marginBottom: '0.7rem' }}>
+                        <select aria-label={`Add ${noun.toLowerCase()} override`} value="" style={box}
+                          onChange={(e) => { const v = e.target.value; if (v) setOvPicks((p) => ({ ...p, [list]: [...p[list], v] })); }}>
+                          <option value="">{`Reword a ${noun.toLowerCase()} for this output...`}</option>
+                          {addable.map((r) => <option key={r.id} value={String(r.id)}>{r[field]}</option>)}
+                        </select>
+                        {shownIds.map((id) => {
+                          const row = rows.find((r) => String(r.id) === id);
+                          if (!row) return null;
+                          const stored = config.masterOverrides?.[list]?.[id]?.[field];
+                          const masterValue = row[field] ?? '';
+                          const shown = typeof stored === 'string' ? stored : masterValue;
+                          const over = typeof stored === 'string' && stored !== masterValue;
+                          const setField = (v) => update('masterOverrides', withOverride(config.masterOverrides, list, id, field, v));
+                          return (
+                            <div key={id} style={{ marginTop: '0.3rem' }}>
+                              <label style={{ fontSize: '0.7rem', color: '#666' }}>{noun} {masterValue}</label>
+                              {over && <span style={{ marginLeft: 6, fontSize: '0.58rem', fontWeight: 700, textTransform: 'uppercase', color: '#8a5a12', background: '#FBEBD0', border: '1px solid #E8C98F', borderRadius: 999, padding: '0 6px' }}>Overridden for this output</span>}
+                              <input aria-label={`${noun} ${masterValue} for this output`} value={shown} onChange={(e) => setField(e.target.value)} style={box} />
+                              {over && (
+                                <div style={{ fontSize: '0.7rem', color: '#666', marginTop: 2 }}>
+                                  Career Master: {masterValue || '(empty)'}{' '}
+                                  <button type="button" style={S.smallBtn} onClick={() => setField(null)}>Revert to Career Master</button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
 
                 {placeholderSections.length > 0 && (
                   <>

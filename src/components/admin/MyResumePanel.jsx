@@ -1097,7 +1097,7 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
 
       {boundEditId && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} role="dialog" aria-label="Career-bound resume editor">
-          <div style={{ background: 'white', borderRadius: 10, padding: 'clamp(0.5rem, 2.5vw, 1.25rem)', width: 'min(1200px, 98vw)', maxHeight: '94vh', overflowY: 'auto', boxSizing: 'border-box' }}>
+          <div style={{ background: 'white', color: '#1b2a3b', borderRadius: 10, padding: 'clamp(0.5rem, 2.5vw, 1.25rem)', width: 'min(1200px, 98vw)', maxHeight: '94vh', overflowY: 'auto', boxSizing: 'border-box' }}>
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => { setBoundEditId(null); loadResumeOutputs(); }}>Close</button>
             </div>
@@ -1111,7 +1111,7 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
       )}
       {queueOpen && createPortal(
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} role="dialog" aria-label="Career Sources to Review">
-          <div style={{ background: '#fff', borderRadius: 10, padding: 'clamp(0.5rem, 2.5vw, 1.25rem)', width: 'min(1100px, 98vw)', maxHeight: '94vh', overflowY: 'auto', boxSizing: 'border-box' }}>
+          <div style={{ background: '#fff', color: '#1b2a3b', borderRadius: 10, padding: 'clamp(0.5rem, 2.5vw, 1.25rem)', width: 'min(1100px, 98vw)', maxHeight: '94vh', overflowY: 'auto', boxSizing: 'border-box' }}>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.4rem' }}>
               <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => { setQueueOpen(false); loadResumeOutputs(); }}>Close</button>
             </div>
