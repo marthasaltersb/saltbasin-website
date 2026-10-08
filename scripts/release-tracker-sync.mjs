@@ -218,6 +218,8 @@ for (const [key, list] of Object.entries(byFeature)) {
   const running = list.filter((a) => a.status === 'running');
   let status = 'queued';
   if (running.length) status = running.map((a) => a.role).join(', ');
+  // A fix after the last test round means the feature is waiting on a retest, never "passed".
+  else if (lastRes && list.some((a) => a.role === 'fix' && a.round >= last.round)) status = 'awaiting_retest';
   else if (lastRes?.passed) status = 'passed';
   else if ([...fb.values()].some((b) => b.status === 'needs_human')) status = 'needs_human';
   else if (lastRes) status = 'failing';
