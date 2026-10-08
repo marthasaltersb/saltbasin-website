@@ -1,11 +1,11 @@
 {
-  "exportedAt": "2026-10-08T16:14:58.346Z",
+  "exportedAt": "2026-10-08T16:17:52.339Z",
   "features": {
     "proficiency-live-qr": {
-      "status": "validate",
-      "lastRound": 3,
-      "lastScore": "28/29",
-      "lastReport": "docs/test-results/proficiency-live-qr/round-3.md"
+      "status": "triage",
+      "lastRound": 4,
+      "lastScore": "32/33",
+      "lastReport": "docs/test-results/proficiency-live-qr/round-4.md"
     },
     "world-shell-navigation": {
       "status": "awaiting_retest",
@@ -112,7 +112,7 @@
     {
       "id": "proficiency-live-qr-F2-2",
       "feature": "proficiency-live-qr",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "process",
       "attempts": 1,
       "step": "Change spec fix notes round 2",
@@ -138,7 +138,7 @@
     {
       "id": "proficiency-live-qr-F2-3",
       "feature": "proficiency-live-qr",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "requirement_gap",
       "attempts": 1,
       "step": "Output Template editor",
@@ -404,7 +404,7 @@
     {
       "id": "T2-3",
       "feature": "proficiency-live-qr",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "spec_error",
       "attempts": 2,
       "step": "Phone 390px: Proficiency & Rollup workspace tabs (T2-3, spec line 7)",
