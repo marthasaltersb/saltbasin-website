@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-08T15:51:03.911Z",
+  "exportedAt": "2026-10-08T15:57:56.329Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -14,7 +14,7 @@
       "lastReport": "docs/test-results/world-shell-navigation/round-1.md"
     },
     "career-bound-outputs": {
-      "status": "fix",
+      "status": "reconcile",
       "lastRound": 1,
       "lastScore": "47/48",
       "lastReport": "docs/test-results/career-bound-outputs/round-1.md (NOT WRITTEN: the write to the main checkout was refused by worktree isolation, and a copy in scratch was refused because subagents may not write report files. The full per-step log with screenshot paths is at /var/tmp/sbpg/release-loop/career-bound-outputs/round-1/steps.jsonl; the integrator should build round-1.md from it and this output.)"
@@ -599,7 +599,7 @@
     {
       "id": "career-bound-outputs-B9",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "commit",
@@ -611,15 +611,21 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (process)",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "not_fixed",
+          "note": "Trailer conflict. The task text says Co-Authored-By: Claude Opus 5.5, but the session attribution reminder says Claude Sonnet 5.5, and this agent is Sonnet, so the commit carries the Sonnet trailer. …",
+          "commit": null
         }
       ]
     },
     {
       "id": "career-bound-outputs-B10",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "requirement_gap",
-      "attempts": 0,
+      "attempts": 1,
       "step": "spec gaps",
       "rootCause": "scoped out by build agent",
       "files": [
@@ -636,15 +642,21 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "G3: per-output Career Master overrides for template-driven outputs (config.masterOverrides, applyMasterOverrides in OutputTemplateBody, editor card with Overridden badge and per-field Revert). G4: pa…",
+          "commit": "3472137"
         }
       ]
     },
     {
       "id": "career-bound-outputs-B11",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "owner_direction_conflict",
-      "attempts": 0,
+      "attempts": 1,
       "step": "nav",
       "rootCause": "queue wired as admin tab with World Shell island as extra",
       "files": [
@@ -657,15 +669,21 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Removed the admin_nav injection of the review queue in db.js. The queue is reached from the World Shell Journeys card (member memberTabs) and from a dialog opened by MyResumePanel (portalled to body)…",
+          "commit": "3472137"
         }
       ]
     },
     {
       "id": "career-bound-outputs-B12",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "owner_direction_conflict",
-      "attempts": 0,
+      "attempts": 1,
       "step": "World Shell reach",
       "rootCause": "only the review queue got an island",
       "files": [
@@ -679,15 +697,21 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Added a resume island to ISLAND_REGISTRY and mounted MyResumePanel in WorldShell SIMPLE_EMBED_COMPONENTS for member and admin scope. WorldShell is already wrapped in CareerConsentGate.",
+          "commit": "3472137"
         }
       ]
     },
     {
       "id": "career-bound-outputs-B13",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "test_harness",
-      "attempts": 0,
+      "attempts": 1,
       "step": "journeys",
       "rootCause": "spec and walk written for admin",
       "files": [
@@ -699,15 +723,21 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (test_harness)",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Rewrote the training spec to v2 for member@test.local (create-test-member.mjs), starting at /world Journeys. Added live-preview steps, the certification task, and Journeys 9, 10 and 11. Appended Fix …",
+          "commit": "3472137"
         }
       ]
     },
     {
       "id": "cbo-r1-phone-editor",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Phone width (390px): career-bound output editor dialog",
       "rootCause": "CareerBoundOutputEditor.jsx:19 S.wrap is a fixed two-column inline grid ('minmax(0,1.1fr) minmax(0,1fr)') with no narrow breakpoint. At 390px each column is about 150px, so inputs and textareas are unusable and Preview is clipped. minWidth:0 lets the columns shrink instead of overflow, so no horizontal page scroll appears.",
       "files": [
@@ -720,6 +750,12 @@
           "event": "found",
           "note": "CareerBoundOutputEditor.jsx:19 S.wrap is a fixed two-column inline grid ('minmax(0,1.1fr) minmax(0,1fr)') with no narrow breakpoint. At 390px each column is about 150px, so inputs and textareas are u…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Editor grid now stacks via repeat(auto-fit, minmax(min(100%,360px),1fr)); the Title/Dates pair wraps; dialog padding and width are fluid.",
+          "commit": "3472137"
         }
       ]
     },
