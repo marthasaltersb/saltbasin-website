@@ -1,8 +1,8 @@
 {
-  "exportedAt": "2026-10-08T15:49:47.994Z",
+  "exportedAt": "2026-10-08T15:51:03.911Z",
   "features": {
     "proficiency-live-qr": {
-      "status": "reconcile",
+      "status": "validate",
       "lastRound": 3,
       "lastScore": "28/29",
       "lastReport": "docs/test-results/proficiency-live-qr/round-3.md"
@@ -112,7 +112,7 @@
     {
       "id": "proficiency-live-qr-F2-2",
       "feature": "proficiency-live-qr",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "process",
       "attempts": 1,
       "step": "Change spec fix notes round 2",
@@ -138,7 +138,7 @@
     {
       "id": "proficiency-live-qr-F2-3",
       "feature": "proficiency-live-qr",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "requirement_gap",
       "attempts": 1,
       "step": "Output Template editor",
@@ -183,6 +183,88 @@
           "round": 3,
           "event": "not_fixed",
           "note": "Salt particle design is waiting on feedback from the owner, which I cannot make up. The question for the owner is recorded in the fix notes: after seeing the first rendition, what should change (grai…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "proficiency-live-qr-F3-1",
+      "feature": "proficiency-live-qr",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "J8; J7.2 third state",
+      "rootCause": "r3 changed docs only",
+      "files": [
+        "src/components/admin/OutputTemplateConfigurator.jsx",
+        "src/components/SharedLiveStates.jsx",
+        "docs/training/proficiency-rules-and-live-qr.md"
+      ],
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "proficiency-live-qr-F3-4",
+      "feature": "proficiency-live-qr",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "J7.4",
+      "rootCause": "Design decisions need the owner",
+      "files": [
+        "src/components/SaltParticleChart.jsx"
+      ],
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "proficiency-live-qr-F3-5",
+      "feature": "proficiency-live-qr",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "J8",
+      "rootCause": "Journey added after round 3",
+      "files": [
+        "src/components/admin/OutputTemplateConfigurator.jsx"
+      ],
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "proficiency-live-qr-F3-6",
+      "feature": "proficiency-live-qr",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "T1-1, T1-2",
+      "rootCause": "Notes not updated to cite round-3 evidence; round-1 fixes never browser-checked",
+      "files": [
+        "docs/changes/proficiency-rules-and-live-qr.md"
+      ],
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
           "commit": null
         }
       ]
@@ -322,7 +404,7 @@
     {
       "id": "T2-3",
       "feature": "proficiency-live-qr",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "spec_error",
       "attempts": 2,
       "step": "Phone 390px: Proficiency & Rollup workspace tabs (T2-3, spec line 7)",
