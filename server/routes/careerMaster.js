@@ -25,8 +25,9 @@ import { db, getJSON, setJSON } from '../db.js';
 import { requireAdmin, requireUser, getUserFromCookie } from '../auth.js';
 import { careerMasterSeed } from '../data/career/seed.js';
 import { buildRollupCatalog } from '../lib/rollupMetrics.js';
+import { ROLLUP_DEFINITION_TYPES, DEFAULT_ROLLUP_DEFINITIONS, validateRollupDefinition, resolveResumeRollups, atomDefinitionsFromRows } from '../lib/resumeRollups.js';
 import { syncSingleEntry, removeEntryEvidence } from '../lib/careerAtomMigration.js';
-import { buildCareerAtomRollupCatalog } from '../lib/careerAtomRollups.js';
+import { buildCareerAtomRollupCatalog, resolveCareerAtomGroupings } from '../lib/careerAtomRollups.js';
 import { CAREER_ENTRY_SOURCES, sourceForTable, atomDefinitionByKey, isJsonbSourceColumn } from '../lib/careerAtomRegistry.js';
 import { consentDefinition, getConsentStatus, recordConsent } from '../lib/consentRegistry.js';
 import { recordInteraction } from '../lib/usageTracking.js';
@@ -34,6 +35,11 @@ import { buildCareerSemanticTemplateWorkbook } from '../lib/careerSemanticTempla
 import { parseCareerSemanticWorkbook } from '../lib/careerSemanticImport.js';
 import { extractResumeText, proposeCareerMappingsFromText, bondProposedMappings } from '../lib/careerResumeExtraction.js';
 import { calculateCareerProficiencyRollup } from '../lib/careerProficiencyRollups.js';
+import { notifyCareerChanged } from '../lib/careerChangeEvents.js';
+import {
+  METHODOLOGY_FORMULA_KEY, METHODOLOGY_FORMULA, resolveProficiencies, assertionsFromResolved,
+  proficiencyFootnote, USER_ASSESSMENT_SOURCES, FORMULA_INPUTS, TOOL_PROFICIENCY_CATEGORIES,
+} from '../lib/careerProficiencyEngine.js';
 import { getLiveToken } from './oauth.js';
 import { PROVIDERS } from '../lib/oauthProviders.js';
 import { TABLE_BY_ENTRY_TYPE, IDENTITY_COLUMNS_BY_ENTRY_TYPE, detectConflicts, detectAmbiguousMappings } from '../lib/careerReconciliation.js';
@@ -50,7 +56,15 @@ const INTAKE_BUCKET = 'career-context';
 // column (server/db.js:3356) — no migration needed for new values.
 const PLATFORM_SOURCE_KINDS = new Set(['linkedin_export', 'indeed_export', 'fiverr_export']);
 
-const EXPERIENCE_DEFINITION_TYPES = new Set(['period', 'proficiency_level', 'rollup', 'display']);
+const EXPERIENCE_DEFINITION_TYPES = new Set(['period', 'proficiency_level', 'rollup', 'display', 'proficiency_formula', 'certification_mapping', ...ROLLUP_DEFINITION_TYPES]);
+// Types added after members already had definitions — seeded per type (only
+// when the member has none of that type) instead of all-or-nothing, so an
+// existing member gets them without their other definitions being touched.
+const PER_TYPE_SEEDED_DEFINITION_TYPES = new Set(['proficiency_formula', ...ROLLUP_DEFINITION_TYPES]);
+// Platform-owned definitions a member can read and duplicate but never edit
+// or delete — the reference point "user-defined" footnotes are measured
+// against.
+const LOCKED_DEFINITIONS = new Set([`proficiency_formula:${METHODOLOGY_FORMULA_KEY}`]);
 const DEFAULT_EXPERIENCE_DEFINITIONS = [
   ['period', 'foundation', 'Foundation', 'Initial exposure and capability development.', { startYear: null, endYear: null }, 10],
   ['period', 'established', 'Established', 'Repeated application and growing responsibility.', { startYear: null, endYear: null }, 20],
@@ -62,13 +76,20 @@ const DEFAULT_EXPERIENCE_DEFINITIONS = [
   ['proficiency_level', 'expert', 'Expert', 'Repeatedly solves complex problems and guides others.', { ordinal: 5 }, 50],
   ['rollup', 'current_capability_strength', 'Current Capability Strength', 'Current-period weighted capability view.', { groupBy: 'capability', measure: 'weighted_proficiency', periodKeys: ['current'], weights: { proficiency: 0.5, recency: 0.2, engagementBreadth: 0.15, evidenceConfidence: 0.15 }, minimumEvidenceCount: 1 }, 10],
   ['display', 'capability_bars', 'Capability Bars', 'Public-ready bar view of the current capability rollup.', { rollupKey: 'current_capability_strength', chartType: 'bar', showPeriodSelector: true, showEvidenceCount: true, maxGroups: 8, visibility: 'private' }, 10],
+  ['proficiency_formula', METHODOLOGY_FORMULA_KEY, 'Salt Basin methodology', 'Points from years performed, engagements applied in, and mapped certifications; locked. Duplicate it to build your own formula.', { ...METHODOLOGY_FORMULA, locked: true }, 0],
+  // Resume rollups (KPI tiles / industry buckets / category groups) — seeded per type.
+  ...DEFAULT_ROLLUP_DEFINITIONS,
 ];
 
 async function ensureExperienceDefinitions(userId) {
-  const existing = await db.prepare(`SELECT COUNT(*)::int AS count FROM career_experience_definitions WHERE user_id=$1`).get(userId);
-  if (Number(existing?.count) > 0) return;
+  const counts = await db.prepare(`SELECT definition_type, COUNT(*)::int AS count FROM career_experience_definitions WHERE user_id=$1 GROUP BY definition_type`).all(userId);
+  const countByType = new Map(counts.map((r) => [r.definition_type, Number(r.count)]));
+  const hasAny = counts.length > 0;
   const now = Date.now();
   for (const [type, key, label, description, definition, sortOrder] of DEFAULT_EXPERIENCE_DEFINITIONS) {
+    const seedThisType = LOCKED_DEFINITIONS.has(`${type}:${key}`)
+      || (PER_TYPE_SEEDED_DEFINITION_TYPES.has(type) ? !countByType.get(type) : !hasAny);
+    if (!seedThisType) continue;
     await db.prepare(`
       INSERT INTO career_experience_definitions
         (user_id, definition_type, definition_key, label, description, definition, sort_order, created_at, updated_at)
@@ -473,6 +494,7 @@ function makeResourceRouter(table, fieldMap, jsonFields = new Set(), { scoped = 
     if (scoped && sourceForTable(table)) {
       syncSingleEntry(req.user.id, table, newId).catch((e) => console.error('[careerMaster] atom sync failed:', e.message));
     }
+    if (scoped) notifyCareerChanged(req.user.id);
     res.json({ id: newId });
   });
 
@@ -498,6 +520,7 @@ function makeResourceRouter(table, fieldMap, jsonFields = new Set(), { scoped = 
     if (scoped && sourceForTable(table)) {
       syncSingleEntry(req.user.id, table, id).catch((e) => console.error('[careerMaster] atom sync failed:', e.message));
     }
+    if (scoped) notifyCareerChanged(req.user.id);
     res.json({ ok: true });
   });
 
@@ -510,6 +533,7 @@ function makeResourceRouter(table, fieldMap, jsonFields = new Set(), { scoped = 
     if (scoped && sourceForTable(table)) {
       removeEntryEvidence(req.user.id, table, id).catch((e) => console.error('[careerMaster] atom evidence cleanup failed:', e.message));
     }
+    if (scoped) notifyCareerChanged(req.user.id);
     res.json({ ok: true });
   });
 
@@ -598,6 +622,62 @@ router.get('/master', async (req, res) => {
     res.json(payload);
   } catch (e) {
     res.status(500).json({ error: 'Failed to load career master data' });
+  }
+});
+
+// Resume KPI tiles, industry-duration bars and capability groups, computed
+// from the owner's Career Master through their own kpi_tile / industry_bucket
+// / category_group definitions (server/lib/resumeRollups.js). Public like
+// /master (same `?owner=` rules); never writes — a type with no stored rows
+// resolves against the in-memory defaults.
+// Proficiency levels (and † basis) come from the existing engine
+// (loadProficiencyResolution) so a tile can never disagree with the
+// proficiency screens. `?include=atom` adds the Career Atom groupings.
+async function computeResumeRollups(ownerUserId, master, { draftRows = null, includeAtom = false } = {}) {
+  const defRows = draftRows || (await db.prepare(`SELECT definition_type, definition_key, label, definition, sort_order, is_active FROM career_experience_definitions WHERE user_id=$1 AND definition_type = ANY($2)`).all(ownerUserId, ROLLUP_DEFINITION_TYPES)).map(definitionRowToItem);
+  const { definitions, resolution } = await loadProficiencyResolution(ownerUserId, 'current', { seed: false });
+  const levels = definitions.filter((d) => d.type === 'proficiency_level' && d.isActive)
+    .map((d) => ({ key: d.key, label: d.label, ordinal: Number(d.definition?.ordinal) || 0 }))
+    .sort((a, b) => a.ordinal - b.ordinal);
+  const out = resolveResumeRollups(master, defRows, { levels, proficiencies: resolution.proficiencies });
+  if (includeAtom) out.atomGroupings = await resolveCareerAtomGroupings(ownerUserId, atomDefinitionsFromRows(defRows));
+  return out;
+}
+
+router.get('/resume-rollups', async (req, res) => {
+  try {
+    const ownerUserId = await resolveOwnerUserId(req.query.owner, req);
+    const master = await loadMasterPayload(req);
+    res.json(await computeResumeRollups(ownerUserId, master, { includeAtom: req.query.include === 'atom' }));
+  } catch (e) {
+    console.error('[career] resume-rollups failed', e);
+    res.status(500).json({ error: 'Failed to compute resume rollups' });
+  }
+});
+
+// Live preview of UNSAVED definitions: body.definitions replaces the member's
+// stored rows of each rollup type for this one computation. Nothing is written.
+// An invalid draft is a 400 with the reason, shown to the member.
+router.post('/resume-rollups/preview', requireUser, async (req, res) => {
+  try {
+    const drafts = Array.isArray(req.body?.definitions) ? req.body.definitions : [];
+    const rows = [];
+    for (const d of drafts) {
+      if (!ROLLUP_DEFINITION_TYPES.includes(d?.type)) return res.status(400).json({ error: `invalid rollup type ${d?.type}` });
+      if (d.isActive === false) { rows.push({ type: d.type, key: String(d.key), label: String(d.label || ''), definition: {}, sortOrder: 0, isActive: false }); continue; }
+      const checked = validateRollupDefinition(d.type, d.definition);
+      if (!checked.ok) return res.status(400).json({ error: `${d.label || d.key}: ${checked.error}` });
+      rows.push({ type: d.type, key: String(d.key), label: String(d.label || '').slice(0, 120), definition: checked.definition, sortOrder: Number(d.sortOrder) || 0, isActive: true });
+    }
+    // Types the client did not send keep the member's stored rows.
+    const sent = new Set(rows.map((r) => r.type));
+    const stored = (await db.prepare(`SELECT definition_type, definition_key, label, definition, sort_order, is_active FROM career_experience_definitions WHERE user_id=$1 AND definition_type = ANY($2)`).all(req.user.id, ROLLUP_DEFINITION_TYPES)).map(definitionRowToItem).filter((r) => !sent.has(r.type));
+    req.query.owner = 'me';
+    const master = await loadMasterPayload(req);
+    res.json(await computeResumeRollups(req.user.id, master, { draftRows: [...stored, ...rows], includeAtom: true }));
+  } catch (e) {
+    console.error('[career] resume-rollups preview failed', e);
+    res.status(500).json({ error: 'Failed to compute the rollup preview' });
   }
 });
 
@@ -1361,6 +1441,108 @@ router.use('/meta-options', requireAdmin, makeResourceRouter('career_meta_option
 // Configurable vocabulary, aggregation, and display definitions for the
 // member's connected Career Master experience. Definitions are always scoped
 // to the authenticated user; a caller cannot select another owner by id.
+// Shape checks for the rule-bearing definition types — formulas reference
+// only known inputs and the member's own levels; certification mappings
+// reference only the member's own certifications/skills/tools.
+async function validateDefinitionShape(userId, type, definition) {
+  if (ROLLUP_DEFINITION_TYPES.includes(type)) {
+    const checked = validateRollupDefinition(type, definition);
+    if (!checked.ok) throw new Error(checked.error);
+    return checked.definition;
+  }
+  if (type === 'proficiency_formula') {
+    const terms = (Array.isArray(definition.terms) ? definition.terms : []).map((t) => ({
+      input: String(t?.input || ''),
+      weight: Number(t?.weight) || 0,
+      cap: t?.cap === '' || t?.cap == null ? null : Number(t.cap),
+    }));
+    const unknown = terms.find((t) => !Object.prototype.hasOwnProperty.call(FORMULA_INPUTS, t.input));
+    if (unknown) throw new Error(`Unknown formula input: ${unknown.input || '(blank)'}`);
+    const thresholds = (Array.isArray(definition.thresholds) ? definition.thresholds : []).map((t) => ({ levelKey: String(t?.levelKey || ''), minPoints: Number(t?.minPoints) || 0 }));
+    if (!thresholds.length) throw new Error('A formula needs at least one level threshold.');
+    const levelRows = await db.prepare(`SELECT definition_key FROM career_experience_definitions WHERE user_id=$1 AND definition_type='proficiency_level'`).all(userId);
+    const levelKeys = new Set(levelRows.map((r) => r.definition_key));
+    const badLevel = thresholds.find((t) => !levelKeys.has(t.levelKey));
+    if (badLevel) throw new Error(`Unknown proficiency level: ${badLevel.levelKey || '(blank)'}`);
+    return { terms, thresholds, selected: definition.selected === true };
+  }
+  if (type === 'certification_mapping') {
+    const certificationId = Number(definition.certificationId);
+    const cert = Number.isInteger(certificationId) ? await db.prepare(`SELECT id FROM career_certifications WHERE id=$1 AND user_id=$2`).get(certificationId, userId) : null;
+    if (!cert) throw new Error('certificationId must be one of your certifications.');
+    const targets = [];
+    for (const t of Array.isArray(definition.targets) ? definition.targets : []) {
+      const table = t?.entityType === 'skill' ? 'career_skills' : t?.entityType === 'tool' ? 'career_tools' : null;
+      const owned = table ? await db.prepare(`SELECT id FROM ${table} WHERE id=$1 AND user_id=$2`).get(Number(t.entityId), userId) : null;
+      if (!owned) throw new Error('Every mapped target must be one of your skills or tools.');
+      targets.push({ entityType: t.entityType, entityId: Number(t.entityId) });
+    }
+    if (!targets.length) throw new Error('Map the certification to at least one skill or tool.');
+    return { certificationId, targets, bonusPoints: Number(definition.bonusPoints) || 0, countIfLapsed: definition.countIfLapsed !== false };
+  }
+  return definition;
+}
+
+function definitionRowToItem(row) {
+  return {
+    type: row.definition_type, key: row.definition_key, label: row.label, description: row.description,
+    definition: row.definition || {}, sortOrder: Number(row.sort_order), isActive: row.is_active !== false,
+  };
+}
+
+// Everything resolveProficiencies() needs for one member, in one place, so
+// the /proficiency endpoint, rollup previews and resume outputs can never
+// disagree about a level or its basis.
+export async function loadProficiencyResolution(userId, periodKey = 'current', { seed = true } = {}) {
+  if (seed) await ensureExperienceDefinitions(userId);
+  const [definitionRows, assertionRows, skillRows, toolRows, certRows] = await Promise.all([
+    db.prepare(`SELECT definition_type, definition_key, label, description, definition, sort_order, is_active FROM career_experience_definitions WHERE user_id=$1`).all(userId),
+    db.prepare(`SELECT * FROM career_proficiency_assertions WHERE user_id=$1`).all(userId),
+    db.prepare(`SELECT id, skill, category, years_exp, first_used, num_engagements FROM career_skills WHERE user_id=$1`).all(userId),
+    db.prepare(`SELECT id, name_used, current_name, category, first_used, num_roles, wheel_bucket FROM career_tools WHERE user_id=$1`).all(userId),
+    db.prepare(`SELECT id, name, status FROM career_certifications WHERE user_id=$1`).all(userId),
+  ]);
+  const definitions = definitionRows.map(definitionRowToItem);
+  if (!seed) {
+    // Read-only callers (public output renders) must not write member rows:
+    // for any definition type the member has none of, use the in-memory
+    // defaults — the same rows ensureExperienceDefinitions would seed.
+    const have = new Set(definitions.map((d) => d.type));
+    const hasAny = definitions.length > 0;
+    for (const [type, key, label, description, definition, sortOrder] of DEFAULT_EXPERIENCE_DEFINITIONS) {
+      const wanted = PER_TYPE_SEEDED_DEFINITION_TYPES.has(type) ? !have.has(type) : !hasAny;
+      if (wanted || LOCKED_DEFINITIONS.has(`${type}:${key}`) && !definitions.some((d) => d.type === type && d.key === key)) {
+        definitions.push({ type, key, label, description, definition, sortOrder, isActive: true });
+      }
+    }
+  }
+  const assertions = assertionRows.map((row) => ({
+    entityType: row.entity_type, entityId: Number(row.entity_id), periodKey: row.period_key, levelKey: row.level_key,
+    confidence: Number(row.confidence), evidenceCount: Number(row.evidence_count), assessmentSource: row.assessment_source,
+    lastPracticedAt: row.last_practiced_at == null ? null : Number(row.last_practiced_at),
+  }));
+  const entities = [
+    ...skillRows.map((row) => ({ type: 'skill', id: Number(row.id), label: row.skill, category: row.category, yearsExp: row.years_exp, firstUsed: row.first_used, engagementCount: row.num_engagements })),
+    ...toolRows.map((row) => ({ type: 'tool', id: Number(row.id), label: row.current_name || row.name_used, category: row.category, firstUsed: row.first_used, engagementCount: row.num_roles, proficiencyCategory: row.wheel_bucket })),
+  ];
+  const resolution = resolveProficiencies({ definitions, entities, assertions, certifications: certRows, periodKey });
+  return { definitions, assertions, entities, resolution };
+}
+
+// GET /api/career/proficiency — one resolved level per skill/tool, with the
+// inputs, per-term points, mapped certifications, and basis behind it.
+router.get('/proficiency', requireUser, async (req, res) => {
+  try {
+    const { resolution, definitions } = await loadProficiencyResolution(req.user.id, String(req.query.period || 'current'));
+    const levels = definitions.filter((d) => d.type === 'proficiency_level' && d.isActive)
+      .map((d) => ({ key: d.key, label: d.label, ordinal: Number(d.definition?.ordinal) || 0 }))
+      .sort((a, b) => a.ordinal - b.ordinal);
+    res.json({ ...resolution, levels, footnote: proficiencyFootnote(resolution.proficiencies), formulaInputs: FORMULA_INPUTS, toolProficiencyCategories: TOOL_PROFICIENCY_CATEGORIES });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 router.get('/experience-definitions', requireUser, async (req, res) => {
   await ensureExperienceDefinitions(req.user.id);
   const rows = await db.prepare(`
@@ -1387,10 +1569,16 @@ router.put('/experience-definitions/:type/:key', requireUser, async (req, res) =
   const key = String(req.params.key || '');
   if (!EXPERIENCE_DEFINITION_TYPES.has(type)) return res.status(400).json({ error: 'invalid definition type' });
   if (!/^[a-z][a-z0-9_]{1,79}$/.test(key)) return res.status(400).json({ error: 'definition key must be lowercase letters, numbers, and underscores' });
+  if (LOCKED_DEFINITIONS.has(`${type}:${key}`)) return res.status(403).json({ error: 'The Salt Basin methodology is locked. Duplicate it under a new key to make your own formula.' });
   const body = req.body || {};
   const label = String(body.label || '').trim().slice(0, 120);
   if (!label) return res.status(400).json({ error: 'label is required' });
-  const definition = body.definition && typeof body.definition === 'object' && !Array.isArray(body.definition) ? body.definition : {};
+  let definition = body.definition && typeof body.definition === 'object' && !Array.isArray(body.definition) ? body.definition : {};
+  try {
+    definition = await validateDefinitionShape(req.user.id, type, definition);
+  } catch (e) {
+    return res.status(400).json({ error: e.message });
+  }
   const sortOrder = Number.isFinite(Number(body.sortOrder)) ? Math.trunc(Number(body.sortOrder)) : 0;
   const now = Date.now();
   await db.prepare(`
@@ -1402,6 +1590,7 @@ router.put('/experience-definitions/:type/:key', requireUser, async (req, res) =
       sort_order=EXCLUDED.sort_order, is_active=EXCLUDED.is_active, updated_at=EXCLUDED.updated_at
   `).run(req.user.id, type, key, label, body.description ? String(body.description).slice(0, 600) : null,
     definition, sortOrder, body.isActive !== false, now);
+  notifyCareerChanged(req.user.id);
   res.json({ ok: true, updatedAt: now });
 });
 
@@ -1409,8 +1598,10 @@ router.delete('/experience-definitions/:type/:key', requireUser, async (req, res
   const type = String(req.params.type || '');
   const key = String(req.params.key || '');
   if (!EXPERIENCE_DEFINITION_TYPES.has(type)) return res.status(400).json({ error: 'invalid definition type' });
+  if (LOCKED_DEFINITIONS.has(`${type}:${key}`)) return res.status(403).json({ error: 'The Salt Basin methodology is locked and cannot be deleted.' });
   await db.prepare(`DELETE FROM career_experience_definitions WHERE user_id=$1 AND definition_type=$2 AND definition_key=$3`)
     .run(req.user.id, type, key);
+  notifyCareerChanged(req.user.id);
   res.json({ ok: true });
 });
 
@@ -1463,38 +1654,37 @@ router.put('/proficiency-assertions/:entityType/:entityId/:periodKey', async (re
     String(req.body?.assessmentSource || 'user_confirmed').slice(0, 80), evidenceCount,
     Number.isFinite(lastPracticedAt) ? lastPracticedAt : null, visibility,
     req.body?.notes ? String(req.body.notes).slice(0, 1000) : null, now);
+  notifyCareerChanged(req.user.id);
   res.json({ ok: true, updatedAt: now });
 });
 
 router.delete('/proficiency-assertions/:entityType/:entityId/:periodKey', async (req, res) => {
   await db.prepare(`DELETE FROM career_proficiency_assertions WHERE user_id=$1 AND entity_type=$2 AND entity_id=$3 AND period_key=$4`)
     .run(req.user.id, req.params.entityType, Number(req.params.entityId), req.params.periodKey);
+  notifyCareerChanged(req.user.id);
   res.json({ ok: true });
 });
 
 router.get('/rollup-preview/:key', async (req, res) => {
-  await ensureExperienceDefinitions(req.user.id);
-  const [definitionRows, assertionRows, skillRows, toolRows] = await Promise.all([
-    db.prepare(`SELECT definition_type, definition_key, label, description, definition, sort_order, is_active FROM career_experience_definitions WHERE user_id=$1`).all(req.user.id),
-    db.prepare(`SELECT * FROM career_proficiency_assertions WHERE user_id=$1`).all(req.user.id),
-    db.prepare(`SELECT id, skill, category FROM career_skills WHERE user_id=$1`).all(req.user.id),
-    db.prepare(`SELECT id, name_used, current_name, category FROM career_tools WHERE user_id=$1`).all(req.user.id),
-  ]);
-  const definitions = definitionRows.map((row) => ({ type: row.definition_type, key: row.definition_key, label: row.label, description: row.description, definition: row.definition || {}, sortOrder: Number(row.sort_order), isActive: row.is_active !== false }));
+  const { definitions, assertions, entities, resolution } = await loadProficiencyResolution(req.user.id, 'current');
   const rollup = definitions.find((x) => x.type === 'rollup' && x.key === req.params.key && x.isActive);
   if (!rollup) return res.status(404).json({ error: 'active rollup definition not found' });
-  const assertions = assertionRows.map((row) => ({ entityType: row.entity_type, entityId: Number(row.entity_id), periodKey: row.period_key, levelKey: row.level_key, confidence: Number(row.confidence), evidenceCount: Number(row.evidence_count), lastPracticedAt: row.last_practiced_at == null ? null : Number(row.last_practiced_at) }));
-  const entities = [
-    ...skillRows.map((row) => ({ type: 'skill', id: Number(row.id), label: row.skill, category: row.category })),
-    ...toolRows.map((row) => ({ type: 'tool', id: Number(row.id), label: row.current_name || row.name_used, category: row.category })),
+  // Current period comes from the resolver (methodology / member formula /
+  // member override, each tagged with its basis); other periods keep the
+  // member's own hand-entered assertions, which are user-defined by nature.
+  const rollupAssertions = [
+    ...assertionsFromResolved(resolution.proficiencies, 'current'),
+    ...assertions.filter((a) => a.periodKey !== 'current').map((a) => ({ ...a, basis: USER_ASSESSMENT_SOURCES.has(a.assessmentSource) ? 'member_override' : 'salt_basin_methodology' })),
   ];
-  res.json(calculateCareerProficiencyRollup({
-    assertions,
+  const result = calculateCareerProficiencyRollup({
+    assertions: rollupAssertions,
     levels: definitions.filter((x) => x.type === 'proficiency_level'),
     periods: definitions.filter((x) => x.type === 'period'),
     entities,
     rollup,
-  }));
+  });
+  const shownKeys = new Set(result.groups.flatMap((g) => g.entities.map((e) => `${e.type}:${e.id}`)));
+  res.json({ ...result, footnote: proficiencyFootnote(resolution.proficiencies.filter((p) => shownKeys.has(`${p.entityType}:${p.entityId}`))) });
 });
 
 router.post('/seed', async (req, res) => {

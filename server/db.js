@@ -966,6 +966,16 @@ async function bootstrap() {
     console.warn('[db] resume_output_projections agent-generation columns warning:', e.message);
   }
 
+  // parent_version_id (2026-10-02, World Shell opportunity outputs): the
+  // version an edited draft was saved from, so a lineage reads as a chain
+  // (v1 -> v2 -> v3) with provenance, not just a set of rows sharing a root.
+  // Nullable and never backfilled — pre-existing rows simply have no parent.
+  try {
+    await sql.unsafe(`ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS parent_version_id BIGINT`);
+  } catch (e) {
+    console.warn('[db] resume_output_projections parent_version_id warning:', e.message);
+  }
+
   // output_type (2026-08-09, cover letters): distinguishes a resume
   // projection from a cover-letter projection in the SAME table/list/status
   // workflow rather than a parallel one — cover letters are just another
@@ -1019,6 +1029,37 @@ async function bootstrap() {
     .catch((e) => console.warn('[db] resume_output_projections target_job_description backfill warning:', e.message));
   await sql.unsafe(`ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS targeting_result JSONB`)
     .catch((e) => console.warn('[db] resume_output_projections targeting_result backfill warning:', e.message));
+
+  // QR-gated sharing + document metadata (2026-10-02, tailored application
+  // packages — server/lib/applicationPackages.js). share_token is the
+  // unguessable slug behind /r/:token; it only resolves while
+  // output_status='published', which only an explicit owner approval sets
+  // (approved_by/approved_at record who approved the version the QR serves).
+  // authors/source_created_at carry the document's real authorship and
+  // creation date; updated_at is the last content change (never approval).
+  // All additive and nullable — existing rows are untouched.
+  for (const ddl of [
+    `ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS share_token TEXT`,
+    `ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS authors JSONB`,
+    `ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS source_created_at BIGINT`,
+    `ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS updated_at BIGINT`,
+    `ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS approved_by BIGINT REFERENCES users(id) ON DELETE SET NULL`,
+    `ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS approved_at BIGINT`,
+    // Chart data frozen at approval for the public /r/:token page — that page
+    // can't call the owner's authenticated Career Master APIs, and should
+    // show exactly what was approved, not live data.
+    `ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS shared_snapshot JSONB`,
+    // Append-only list of later Career Master states for a shared document
+    // ({ capturedAt, reason, charts }), recorded only when the data actually
+    // changed — the QR page's "printed → … → live" slider.
+    `ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS share_history JSONB`,
+    // Last failure recording QR history ({ at, message }), cleared on the
+    // next success — so a missed state is visible to the owner, not silent.
+    `ALTER TABLE resume_output_projections ADD COLUMN IF NOT EXISTS share_sync_error JSONB`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_resume_output_projections_share_token ON resume_output_projections (share_token) WHERE share_token IS NOT NULL`,
+  ]) {
+    await sql.unsafe(ddl).catch((e) => console.warn('[db] resume_output_projections sharing columns warning:', e.message));
+  }
 
   // Legacy Maturity Observation backfill — insert-only, one snapshot per rod
   // of its stage_score at the time this migration ran. Never re-runs for a
@@ -2438,7 +2479,7 @@ async function bootstrap() {
   // To re-seed after manual edits: DELETE the row in config_state where
   // id='admin_nav' and reboot. The structure can also be edited via PUT
   // /api/config/admin-nav (admin-only).
-  const existingNav = await sql.unsafe(`SELECT id, data FROM config_state WHERE id = 'admin_nav'`);
+  let existingNav = await sql.unsafe(`SELECT id, data FROM config_state WHERE id = 'admin_nav'`);
   // The member's primary editing surface is "My Profile" (not "Content" / "My Site").
   // Profile = single source of truth for a member's career + brand data; public site
   // and generated outputs (resume PDF etc.) read from this. See project memory
@@ -2447,6 +2488,10 @@ async function bootstrap() {
     views: [
       { id: 'content', label: 'My Profile', sortOrder: 0, tabs: [
         { id: 'content', label: 'My Profile', componentId: 'content', sortOrder: 0 },
+        // Seeded here too (not only by the one-shot injection below): that
+        // injection only runs when the row already existed at boot, so a
+        // brand-new database showed no "My Resume" tab until its second boot.
+        { id: 'resume', label: 'My Resume', componentId: 'resume', sortOrder: 1 },
       ]},
       { id: 'plm', label: 'Platform Lifecycle Management', sortOrder: 1, tabs: [
         { id: 'plm-dashboard', label: 'Operating Model', componentId: 'plmDashboard', sortOrder: 0 },
@@ -2468,7 +2513,11 @@ async function bootstrap() {
       `INSERT INTO config_state (id, data, updated_at) VALUES ($1, $2, $3)`,
       ['admin_nav', JSON.stringify(defaultNav), now]
     );
-  } else {
+    // Re-read so the idempotent injections below (My Resume, Inbox) also apply on the very
+    // first boot of a fresh database - previously they only appeared after a second boot.
+    existingNav = await sql.unsafe(`SELECT id, data FROM config_state WHERE id = 'admin_nav'`);
+  }
+  {
     // One-shot relabel: the previous boot seeded the content view with label
     // "Content" / "My Site". Bump those to "My Profile" without touching any
     // manual edits the admin may have made to OTHER views (PLM/CRM/System).
@@ -3017,6 +3066,23 @@ async function bootstrap() {
     ALTER TABLE unified_outputs ADD COLUMN IF NOT EXISTS output_type TEXT;
     ALTER TABLE unified_outputs ADD COLUMN IF NOT EXISTS template_config TEXT;
   `).catch(() => {});
+  // routes/outputTemplates.js scopes member templates by user_id / is_primary on
+  // unified_outputs. The databases that already had these columns got them from
+  // the output_templates consolidation, which was never in this file — so a
+  // fresh database returned 500 on every template save. Additive and idempotent.
+  await sql.unsafe(`
+    ALTER TABLE unified_outputs ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES users(id) ON DELETE SET NULL;
+    ALTER TABLE unified_outputs ADD COLUMN IF NOT EXISTS is_primary BOOLEAN NOT NULL DEFAULT false;
+  `);
+
+  // Per-member scoping used by server/routes/outputTemplates.js (output templates were consolidated
+  // into unified_outputs on the live database out of band; a fresh database needs the columns too).
+  // Additive only; existing rows keep NULL user_id / is_primary=false.
+  await sql.unsafe(`
+    ALTER TABLE unified_outputs ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES users(id) ON DELETE SET NULL;
+    ALTER TABLE unified_outputs ADD COLUMN IF NOT EXISTS is_primary BOOLEAN NOT NULL DEFAULT false;
+    CREATE INDEX IF NOT EXISTS idx_uo_user_type ON unified_outputs (user_id, output_type);
+  `).catch((e) => console.error('[db] unified_outputs user_id/is_primary migration failed:', e.message));
 
   // ── Output templates table (standalone named templates, reusable across outputs) ──
   await sql.unsafe(`
@@ -3256,6 +3322,8 @@ async function bootstrap() {
         { viewId: 'system',   viewLabel: 'System',                        id: 'lineage',         label: 'Data Lineage',    componentId: 'lineage',        sortOrder: 3 },
         { viewId: 'content',  viewLabel: 'My Profile',                    id: 'inbox',           label: 'Inbox',           componentId: 'inbox',          sortOrder: 10 },
         { viewId: 'system',   viewLabel: 'System',                        id: 'command-center',  label: 'Command Center',  componentId: 'commandCenter',  sortOrder: 4 },
+        // Release reconciliation + contribution trends (additive; reachable from the World Shell).
+        { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'release-intelligence', label: 'Release Intelligence', componentId: 'releaseIntelligence', sortOrder: 4 },
       ];
 
       for (const t of newTabs) {
@@ -3845,6 +3913,8 @@ async function bootstrap() {
   // rows are assigned to the platform admin so nothing regresses.
   await sql.unsafe(`
     ALTER TABLE career_jobs           ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES users(id);
+    -- Per-job library of reusable bullet wordings (2026-10-02, career-bound outputs): [{id,text,source:{kind,ref},createdAt,tags}]. Additive; key_metrics is untouched.
+    ALTER TABLE career_jobs           ADD COLUMN IF NOT EXISTS bullet_variants JSONB NOT NULL DEFAULT '[]'::jsonb;
     ALTER TABLE career_skills         ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES users(id);
     ALTER TABLE career_tools          ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES users(id);
     ALTER TABLE career_engagements    ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES users(id);
@@ -4167,6 +4237,28 @@ async function bootstrap() {
     }
   } catch (e) {
     console.warn('[db] output-templates nav injection skipped:', e.message);
+  }
+
+  // One-shot (2026-10-02, career-bound outputs): inject "Career Sources to Review"
+  // into the admin_nav content view, so the reconciliation queue (a tailored
+  // package's roles/skills/tools vs Career Master) is reachable for admin scope
+  // too - members already have it in memberTabs. Additive: only appends when
+  // absent; the tab id matches the member tab id so one switch-tab event serves both.
+  try {
+    const navRow4a = await sql.unsafe(`SELECT data FROM config_state WHERE id = 'admin_nav'`);
+    if (navRow4a.length > 0) {
+      const nav = JSON.parse(navRow4a[0].data);
+      const contentView = (nav.views || []).find((v) => v.id === 'content');
+      if (contentView) {
+        contentView.tabs = contentView.tabs || [];
+        if (!contentView.tabs.some((t) => t.id === 'careerReconciliation' || t.componentId === 'careerReconciliation')) {
+          contentView.tabs.push({ id: 'careerReconciliation', label: 'Career Sources to Review', componentId: 'careerReconciliation', sortOrder: 2.6 });
+          await sql.unsafe(`UPDATE config_state SET data = $1, updated_at = $2 WHERE id = 'admin_nav'`, [JSON.stringify(nav), Date.now()]);
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[db] career-reconciliation nav injection skipped:', e.message);
   }
 
   // One-shot: inject "Commercial Opportunity Pipeline" tab into the admin_nav
@@ -5894,6 +5986,55 @@ Rod state, per event:
     await sql.unsafe(`ALTER TABLE herq_research_inputs ADD COLUMN IF NOT EXISTS claim_ref TEXT`);
   } catch (error) {
     console.warn('[db] HERQ content-hierarchy column warning:', error.message);
+  }
+
+  // Cover-letter agent (2026-10-02). Both tables are additive and member-scoped; nothing
+  // here is ever seeded or rewritten for existing members.
+  //  - cover_letter_settings: one row per member — the deterministic cover-letter template,
+  //    the cheapest-model/provider choice and the tone presets. Its own table (not
+  //    career_experience_definitions) because that table's per-type seeding treats
+  //    "has any row" as "already seeded", so a new row type would suppress other seeds.
+  //  - cover_letter_agent_turns: one row per chat turn — request, package-search evidence,
+  //    proposed edit operations, and whether an LLM was called (model, tokens, latency).
+  try {
+    await sql.unsafe(`
+      CREATE TABLE IF NOT EXISTS cover_letter_settings (
+        user_id    BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        settings   JSONB NOT NULL DEFAULT '{}',
+        updated_at BIGINT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS cover_letter_agent_turns (
+        id                 BIGSERIAL PRIMARY KEY,
+        user_id            BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        session_key        TEXT NOT NULL,
+        projection_id      BIGINT NOT NULL REFERENCES resume_output_projections(id) ON DELETE CASCADE,
+        lineage_root_id    BIGINT,
+        opportunity_rod_id BIGINT,
+        request_text       TEXT NOT NULL,
+        route              TEXT NOT NULL,
+          -- rules | llm | search_only | refused | blocked | failed
+        outcome_message    TEXT,
+        search_hits        JSONB NOT NULL DEFAULT '[]',
+        proposed_ops       JSONB NOT NULL DEFAULT '[]',
+        status             TEXT NOT NULL DEFAULT 'proposed',
+          -- proposed | accepted | rejected | none (nothing to accept)
+        llm_called         BOOLEAN NOT NULL DEFAULT false,
+        model              TEXT,
+        provider           TEXT,
+        input_tokens       INTEGER,
+        output_tokens      INTEGER,
+        tokens_estimated   BOOLEAN NOT NULL DEFAULT false,
+        latency_ms         INTEGER,
+        llm_attempts       INTEGER NOT NULL DEFAULT 0,
+        result_projection_id BIGINT,
+        created_at         BIGINT NOT NULL,
+        decided_at         BIGINT
+      );
+      CREATE INDEX IF NOT EXISTS idx_cover_letter_turns_user ON cover_letter_agent_turns (user_id, created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_cover_letter_turns_proj ON cover_letter_agent_turns (projection_id, created_at);
+    `);
+  } catch (error) {
+    console.warn('[db] cover-letter agent tables warning:', error.message);
   }
 }
 

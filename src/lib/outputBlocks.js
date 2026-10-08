@@ -2,6 +2,11 @@
 // Blocks are stored as JSON in the DB and rendered to HTML via renderTemplateToHtml().
 // The same system drives HERQ outputs, resume, case study, one-pagers, and future outputs.
 import { ICONS, ICON_VIEWBOX } from './brandIconData.js';
+import {
+  proficiencyBarsHtml, trendBarsHtml, outcomeTilesHtml, durationTimelineHtml,
+  skillYearsDotsHtml, industryShareBarsHtml, skillYearRows, industryShareRows,
+  trendSeries, outcomeCandidates, timelineRows, proficiencyRows, footnoteForRows, TREND_SOURCES,
+} from './careerCharts.js';
 
 // Static (non-interactive) inline SVG for the output-doc renderer — same
 // geometry as src/lib/brandIcons.jsx, but a plain string since output docs
@@ -25,7 +30,7 @@ export const BLOCK_DEFS = {
     label: 'Executive Summary (KPI Dashboard)', icon: '◫',
     defaultProps: {},
     defaultStyle: {},
-    // No editable fields — this block pulls its 6 KPI tiles and capability
+    // No editable fields — this block pulls its KPI tiles and capability
     // confidence bars live from Career Master (ctx.execKpis /
     // ctx.capabilityMeters), computed the same way as the live resume
     // layouts. Add/remove/reorder it like any other block; the numbers
@@ -250,6 +255,25 @@ export const BLOCK_DEFS = {
     ],
   },
 
+  // ── Document-package blocks (2026-10-02) — used when the shared block editor
+  // opens an application-package draft (document_blocks content, see
+  // server/lib/applicationPackages.js). Appended, never renamed.
+  'role-line': {
+    label: 'Role Line', icon: '◷',
+    defaultProps: { title: 'Role title', dates: '' },
+    defaultStyle: { margin: '0.6rem 0 0.15rem' },
+    fields: [
+      { key: 'props.title', label: 'Role title', type: 'text' },
+      { key: 'props.dates', label: 'Dates', type: 'text' },
+    ],
+  },
+  'document-preserved': {
+    label: 'Preserved content', icon: '▣', hidden: true,
+    defaultProps: { kind: 'table', summary: '' },
+    defaultStyle: { margin: '0.5rem 0' },
+    fields: [],
+  },
+
   // ── Layer 2 stat/metric cards — resolved by buildBlocksFromLayerConfig()
   // before render (props.cards is a pre-resolved array, not raw catalog
   // lookups, since which cards + labels/order came from the member's config).
@@ -335,6 +359,73 @@ export const BLOCK_DEFS = {
       ],
     }],
   },
+  // ── Career chart family (2026-10-02) — picked from the Output Template
+  // editor's chart gallery; data comes from ctx.master (Career Master) and
+  // ctx.proficiency (GET /api/career/proficiency). See src/lib/careerCharts.js.
+  'career-proficiency-bars': {
+    label: 'Proficiency Tiers', icon: '▦',
+    defaultProps: { title: 'Proficiency', entityType: 'all', groupBy: 'entity', maxItems: 10 },
+    defaultStyle: { margin: '0.75rem 0' },
+    fields: [
+      { key: 'props.title', label: 'Title', type: 'text' },
+      { key: 'props.entityType', label: 'Show', type: 'select', options: ['all', 'skill', 'tool'] },
+      { key: 'props.groupBy', label: 'Group by', type: 'select', options: ['entity', 'category', 'proficiencyCategory'] },
+      { key: 'props.maxItems', label: 'Max rows', type: 'text' },
+      { key: 'props.showFootnote', label: 'Show footnote', type: 'select', options: ['true', 'false'] },
+    ],
+  },
+  'career-trend-bars': {
+    label: 'Trend Bars', icon: '▥',
+    defaultProps: { title: '', sourceKey: 'experience_years' },
+    defaultStyle: { margin: '0.75rem 0' },
+    fields: [
+      { key: 'props.title', label: 'Title', type: 'text' },
+      { key: 'props.sourceKey', label: 'Series', type: 'select', options: Object.keys(TREND_SOURCES) },
+    ],
+  },
+  'career-outcome-tiles': {
+    label: 'Outcome Tiles', icon: '▣',
+    defaultProps: { title: 'Portfolio Outcomes', tiles: [] },
+    defaultStyle: { margin: '0.75rem 0' },
+    fields: [
+      { key: 'props.title', label: 'Title', type: 'text' },
+      {
+        key: 'props.tiles', label: 'Tiles', type: 'cardList', itemLabel: 'Tile',
+        itemFields: [
+          { key: 'value', label: 'Figure', placeholder: 'e.g. $500M+' },
+          { key: 'caption', label: 'Caption', placeholder: 'What the figure means', long: true },
+          { key: 'source', label: 'Footnote source', placeholder: 'e.g. Vista Equity Partners' },
+        ],
+      },
+    ],
+  },
+  'career-duration-timeline': {
+    label: 'Career Timeline', icon: '☰',
+    defaultProps: { title: 'Career Timeline' },
+    defaultStyle: { margin: '0.75rem 0' },
+    fields: [
+      { key: 'props.title', label: 'Title', type: 'text' },
+      { key: 'props.maxItems', label: 'Max roles', type: 'text' },
+    ],
+  },
+  'career-skill-years-dots': {
+    label: 'Skill Years Dots', icon: '⁞',
+    defaultProps: { title: 'Years of Experience by Skill', maxItems: 8 },
+    defaultStyle: { margin: '0.75rem 0' },
+    fields: [
+      { key: 'props.title', label: 'Title', type: 'text' },
+      { key: 'props.maxItems', label: 'Top N skills', type: 'text' },
+    ],
+  },
+  'career-industry-share': {
+    label: 'Industry Share Bars', icon: '▤',
+    defaultProps: { title: 'Career Time by Industry', maxItems: 5 },
+    defaultStyle: { margin: '0.75rem 0' },
+    fields: [
+      { key: 'props.title', label: 'Title', type: 'text' },
+      { key: 'props.maxItems', label: 'Top N industries', type: 'text' },
+    ],
+  },
   'cascade-flow': {
     label: 'Cascade Flow', icon: '➡️',
     defaultProps: {
@@ -398,6 +489,13 @@ function interpolate(text, ctx) {
   });
 }
 
+// A chart whose data failed to load says so — distinct from an honest empty
+// state ("nothing recorded yet"), so a failure never reads as missing data.
+function loadErrorHtml(title, message) {
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  return `<div role="alert" style="margin:0.75rem 0;padding:0.7rem 0.85rem;border:1px solid #C98320;background:#FFF4E5;border-radius:6px;font-family:Helvetica,Arial,sans-serif;font-size:0.74rem;color:#1B2A3B"><strong>${esc(title)}: data could not be loaded.</strong> ${esc(message)}. This is a loading error, not missing Career Master data — reload to retry.</div>`;
+}
+
 export function renderBlockToHtml(block, ctx = {}) {
   if (block.visible === false) return '';
   const def = BLOCK_DEFS[block.type];
@@ -410,12 +508,17 @@ export function renderBlockToHtml(block, ctx = {}) {
     case 'exec-kpi-dashboard': {
       const kpis = Array.isArray(ctx.execKpis) ? ctx.execKpis : [];
       const meters = Array.isArray(ctx.capabilityMeters) ? ctx.capabilityMeters : [];
+      // A failed rollup load is an error, never empty tiles (see
+      // GET /api/career/resume-rollups and useResumeRollups).
+      if (ctx.rollupError) return loadErrorHtml('Executive Summary', ctx.rollupError);
       if (!kpis.length) return '';
+      // Labels/notes are member-entered — escape them (ip() does not).
+      const eh = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
       const tileHtml = kpis.map((k) => `
-        <div style="background:#EEF2F6;border-radius:10px;padding:1rem 0.9rem;text-align:center">
-          <div style="font-size:1.7rem;font-weight:700;color:#172A45;font-family:Georgia,serif;line-height:1.15">${ip(k.value)}</div>
-          <div style="font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:${k.accent || '#C4843A'};font-weight:700;margin-top:0.4rem;font-family:sans-serif">${ip(k.label)}</div>
-          ${k.note ? `<div style="font-size:0.66rem;color:#536173;margin-top:0.2rem;line-height:1.4">${ip(k.note)}</div>` : ''}
+        <div style="background:#EEF2F6;border-radius:10px;padding:1rem 0.9rem;text-align:center"${k.title ? ` title="${eh(k.title)}"` : ''}>
+          <div style="font-size:1.7rem;font-weight:700;color:#172A45;font-family:Georgia,serif;line-height:1.15">${eh(k.value)}</div>
+          <div style="font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:${k.accent || '#C4843A'};font-weight:700;margin-top:0.4rem;font-family:sans-serif">${eh(k.label)}</div>
+          ${k.note ? `<div style="font-size:0.66rem;color:#536173;margin-top:0.2rem;line-height:1.4">${eh(k.note)}</div>` : ''}
         </div>`).join('');
       const meterHtml = meters.map((c) => `
         <div style="margin-bottom:0.8rem">
@@ -430,6 +533,7 @@ export function renderBlockToHtml(block, ctx = {}) {
       return `<div style="${styleStr(s)}">
   <div style="font-size:0.6rem;letter-spacing:0.24em;text-transform:uppercase;color:#172A45;font-family:Georgia,serif;font-weight:700;margin-bottom:0.75rem;padding-bottom:0.25rem;border-bottom:1px solid #C4843A">Executive Summary</div>
   <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:0.6rem;margin-bottom:1.25rem">${tileHtml}</div>
+  ${ctx.rollupFootnote ? `<div style="font-size:0.64rem;color:#536173;font-style:italic;margin:-0.8rem 0 1rem;font-family:sans-serif">${eh(ctx.rollupFootnote)}</div>` : ''}
   ${meters.length ? `<div style="background:#F7F2E8;border-radius:10px;padding:1rem 1.1rem">
     <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:#536173;margin-bottom:0.6rem;font-family:sans-serif">Capability Confidence</div>
     ${meterHtml}
@@ -553,6 +657,16 @@ export function renderBlockToHtml(block, ctx = {}) {
       if (!pills.length) return '';
       const pillsHtml = pills.map((pl) => `<span style="display:inline-block;padding:0.2rem 0.75rem;margin:0 0.35rem 0.35rem 0;border-radius:20px;background:${pl.color || '#eee'};font-size:0.68rem;font-weight:700;color:#1A1A1A;font-family:sans-serif">${ip(pl.label)}</span>`).join('');
       return `<div style="${styleStr(s)}">${pillsHtml}</div>`;
+    }
+
+    case 'role-line': {
+      const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      return `<div style="${styleStr(s)};display:flex;justify-content:space-between;align-items:baseline;gap:1rem;border-bottom:0.5px solid #d8dde3"><strong style="font-size:0.92rem;color:#1B2A3B;font-family:Georgia,serif">${esc(p.title)}</strong><span style="font-size:0.74rem;color:#6b7785;font-family:sans-serif;flex-shrink:0">${esc(p.dates)}</span></div>`;
+    }
+
+    case 'document-preserved': {
+      const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      return `<div style="${styleStr(s)};padding:0.6rem 0.8rem;background:#f3f5f7;border:0.5px dashed #9aa6b2;border-radius:4px;font-family:sans-serif"><div style="font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:#6b7785;margin-bottom:0.3rem">${esc(p.kind)} kept exactly as imported</div><div style="font-size:0.78rem;color:#2d3748;white-space:pre-wrap">${esc(p.summary)}</div></div>`;
     }
 
     case 'contact-line': {
@@ -741,6 +855,39 @@ export function renderBlockToHtml(block, ctx = {}) {
         </div>`).join('');
       return `<div style="${styleStr(s)};display:flex;flex-direction:column">${stepsHtml}</div>`;
     }
+
+    case 'career-proficiency-bars': {
+      if (ctx.loadErrors?.proficiency) return loadErrorHtml(p.title || 'Proficiency', ctx.loadErrors.proficiency);
+      const levels = (ctx.proficiency?.levels || []);
+      const rows = proficiencyRows(ctx.proficiency, { entityType: p.entityType || 'all', groupBy: p.groupBy || 'entity' });
+      const maxItems = Number(p.maxItems) || 10;
+      const shown = rows.filter((r) => r.ordinal > 0).slice(0, maxItems);
+      return `<div style="${styleStr(s)}">${proficiencyBarsHtml({ rows: shown, levels, title: p.title, footnote: (p.showFootnote === false || p.showFootnote === 'false') ? null : footnoteForRows(shown), maxItems })}</div>`;
+    }
+
+    case 'career-trend-bars': {
+      if (ctx.loadErrors?.master) return loadErrorHtml(p.title || 'Trend', ctx.loadErrors.master);
+      const src = TREND_SOURCES[p.sourceKey] || TREND_SOURCES.experience_years;
+      return `<div style="${styleStr(s)}">${trendBarsHtml({ series: trendSeries(ctx.master, p.sourceKey || 'experience_years'), title: p.title || src.label, unit: src.unit })}</div>`;
+    }
+
+    case 'career-outcome-tiles': {
+      if (ctx.loadErrors?.master && !(Array.isArray(p.tiles) && p.tiles.length)) return loadErrorHtml(p.title || 'Outcomes', ctx.loadErrors.master);
+      const tiles = Array.isArray(p.tiles) && p.tiles.length ? p.tiles : outcomeCandidates(ctx.master).slice(0, 4);
+      return `<div style="${styleStr(s)}">${outcomeTilesHtml({ tiles, title: p.title, showFootnote: !(p.showFootnote === false || p.showFootnote === 'false') })}</div>`;
+    }
+
+    case 'career-duration-timeline':
+      if (ctx.loadErrors?.master) return loadErrorHtml(p.title || 'Career Timeline', ctx.loadErrors.master);
+      return `<div style="${styleStr(s)}">${durationTimelineHtml({ rows: timelineRows(ctx.master), title: p.title, maxItems: Number(p.maxItems) || 12 })}</div>`;
+
+    case 'career-skill-years-dots':
+      if (ctx.loadErrors?.master) return loadErrorHtml(p.title || 'Skill years', ctx.loadErrors.master);
+      return `<div style="${styleStr(s)}">${skillYearsDotsHtml({ rows: skillYearRows(ctx.master), title: p.title, maxItems: Number(p.maxItems) || 8 })}</div>`;
+
+    case 'career-industry-share':
+      if (ctx.loadErrors?.master) return loadErrorHtml(p.title || 'Industry share', ctx.loadErrors.master);
+      return `<div style="${styleStr(s)}">${industryShareBarsHtml({ rows: industryShareRows(ctx.master), title: p.title, maxItems: Number(p.maxItems) || 5 })}</div>`;
 
     default:
       return `<div style="padding:0.5rem;background:#f5f5f5;font-size:0.75rem;color:#999;border:1px dashed #ccc">[Unknown block: ${block.type}]</div>`;

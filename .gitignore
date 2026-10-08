@@ -21,3 +21,12 @@ contribution-session-analysis.json
 # Local DB export snapshot — contains real session tokens, password-reset
 # tokens, and password hashes. Never commit this to git history.
 migrations/pre-eidos-snapshot-2026-07-12/
+
+# Tailored application packages hold private application material (cover
+# letters, contact details) and this repository is public — keep them local.
+server/data/applicationPackages/*
+!server/data/applicationPackages/README.md
+
+# Parallel agent worktrees (local only)
+.claude/worktrees/
+.harness/

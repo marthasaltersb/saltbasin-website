@@ -15,8 +15,13 @@ import { generateResumeContent } from '../lib/resumeTargeting.js';
 import { generateCoverLetterContent } from '../lib/coverLetterTargeting.js';
 import { runQualificationGatesForUser } from '../lib/careerVerificationAgent.js';
 import { autoQueueOutputsForNewlyApproved } from '../lib/autoQueueAgent.js';
-import { createResumeOutputProjection, listResumeOutputProjectionsForOpportunity, listResumeOutputProjections, getResumeOutputProjectionRaw } from '../lib/resumeProjection.js';
-import { summarizeProjectionForView, renderProjectionToPdfBuffer, filenameFor } from '../lib/outputRendering.js';
+import { createResumeOutputProjection, listResumeOutputProjectionsForOpportunity, listResumeOutputProjections } from '../lib/resumeProjection.js';
+import { summarizeProjectionForViewResolved, renderProjectionToPdfBuffer, filenameFor } from '../lib/outputRendering.js';
+import { getOwnedOutputWithApprover, shareUrlFor } from '../lib/applicationPackages.js';
+import {
+  listOpportunityOutputs, listUnlinkedOutputs, linkOutputToOpportunity, unlinkOutputFromOpportunity,
+  getOutputContentForEdit, saveEditedVersion, updateOpportunityDetails,
+} from '../lib/opportunityOutputs.js';
 import { dispatchRaw } from '../lib/email.js';
 import archiver from 'archiver';
 import { parseCareerPipelineWorkbook, rowToOpportunityPayload } from '../lib/careerPipelineImport.js';
@@ -70,8 +75,73 @@ router.get('/opportunities', requireUser, async (req, res) => {
 router.post('/opportunities', requireUser, async (req, res) => {
   try {
     const { jobTitle, companyName, url, location, notes } = req.body || {};
-    const opportunity = await createCareerOpportunity(req.user.id, { jobTitle, companyName, url, location, notes });
+    // A track with only a company + role title is a placeholder: details
+    // (posting URL, location, notes) are filled in later, and the entry says so.
+    const placeholder = !url && !location && !notes;
+    const opportunity = await createCareerOpportunity(req.user.id, { jobTitle, companyName, url, location, notes, extraMetadata: placeholder ? { placeholder: true } : null });
     res.status(201).json(opportunity);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Fill in the details of a tracked opportunity (a placeholder becomes a regular entry).
+router.patch('/opportunities/:id', requireUser, async (req, res) => {
+  try {
+    const { jobTitle, url, location, notes } = req.body || {};
+    res.json(await updateOpportunityDetails(req.user.id, Number(req.params.id), { jobTitle, url, location, notes }));
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// ── Opportunity outputs: linked outputs + provenance, link/unlink, edit-as-new-version ──
+// (server/lib/opportunityOutputs.js). Approve for QR stays on
+// POST /api/resume-outputs/:id/share, which runs assertReadyToFinalize.
+router.get('/opportunities/:id/outputs', requireUser, async (req, res) => {
+  try {
+    res.json(await listOpportunityOutputs(req.user.id, Number(req.params.id)));
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.get('/unlinked-outputs', requireUser, async (req, res) => {
+  try {
+    res.json({ outputs: await listUnlinkedOutputs(req.user.id) });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.post('/opportunities/:id/outputs/:outputId/link', requireUser, async (req, res) => {
+  try {
+    res.json(await linkOutputToOpportunity(req.user.id, Number(req.params.outputId), Number(req.params.id)));
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.delete('/opportunities/:id/outputs/:outputId/link', requireUser, async (req, res) => {
+  try {
+    res.json(await unlinkOutputFromOpportunity(req.user.id, Number(req.params.outputId), Number(req.params.id)));
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.get('/resume-outputs/:id/content', requireUser, async (req, res) => {
+  try {
+    res.json(await getOutputContentForEdit(req.user.id, Number(req.params.id)));
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Saves edited content as a new draft version in the same lineage.
+router.post('/resume-outputs/:id/versions', requireUser, async (req, res) => {
+  try {
+    res.status(201).json(await saveEditedVersion(req.user.id, Number(req.params.id), { content: req.body?.content, name: req.body?.name || null }));
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
@@ -165,9 +235,19 @@ router.post('/opportunities/:id/import-output', requireUser, (req, res) => {
       const rawText = await extractResumeText(req.file.buffer, req.file.mimetype, req.file.originalname);
       if (!rawText.trim()) return res.status(400).json({ error: 'No text could be extracted from this file.' });
 
+      const presetName = `Imported ${outputType === 'cover_letter' ? 'Cover Letter' : 'Resume'} — ${req.file.originalname}`;
+      // Importing a file with the same name again for the same opportunity is
+      // a new VERSION of that output (same lineage), so its version history
+      // and tracked changes show what changed between uploads.
+      const prior = await db.prepare(`
+        SELECT id FROM resume_output_projections
+         WHERE user_id=$1 AND career_opportunity_rod_id=$2 AND output_type=$3 AND source='imported' AND preset_name=$4
+         ORDER BY created_at DESC, id DESC LIMIT 1
+      `).get(req.user.id, Number(req.params.id), outputType, presetName);
       const projection = await createResumeOutputProjection(req.user.id, {
         presetId: 'imported',
-        presetName: `Imported ${outputType === 'cover_letter' ? 'Cover Letter' : 'Resume'} — ${req.file.originalname}`,
+        presetName,
+        regenerateFromId: prior ? Number(prior.id) : null,
         careerOpportunityRodId: Number(req.params.id),
         generatedContent: { rawText },
         outputType,
@@ -234,9 +314,9 @@ router.get('/opportunities/:id/resume-outputs', requireUser, async (req, res) =>
 // material, not a shareable profile page.
 router.get('/resume-outputs/:id/view', requireUser, async (req, res) => {
   try {
-    const projection = await getResumeOutputProjectionRaw(Number(req.params.id), req.user.id);
+    const projection = await getOwnedOutputWithApprover(Number(req.params.id), req.user.id);
     if (!projection) return res.status(404).json({ error: 'Output not found.' });
-    res.json(summarizeProjectionForView(projection));
+    res.json(await summarizeProjectionForViewResolved(projection));
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
@@ -244,9 +324,9 @@ router.get('/resume-outputs/:id/view', requireUser, async (req, res) => {
 
 router.get('/resume-outputs/:id/download.pdf', requireUser, async (req, res) => {
   try {
-    const projection = await getResumeOutputProjectionRaw(Number(req.params.id), req.user.id);
+    const projection = await getOwnedOutputWithApprover(Number(req.params.id), req.user.id);
     if (!projection) return res.status(404).json({ error: 'Output not found.' });
-    const buffer = await renderProjectionToPdfBuffer(projection);
+    const buffer = await renderProjectionToPdfBuffer(projection, { shareUrl: projection.share_token ? shareUrlFor(projection.share_token, req) : null });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${filenameFor(projection)}"`);
     res.send(buffer);
@@ -265,7 +345,7 @@ router.post('/resume-outputs/export-zip', requireUser, async (req, res) => {
 
     const projections = [];
     for (const id of projectionIds) {
-      const p = await getResumeOutputProjectionRaw(Number(id), req.user.id);
+      const p = await getOwnedOutputWithApprover(Number(id), req.user.id);
       if (p) projections.push(p);
     }
     if (!projections.length) return res.status(404).json({ error: 'None of the requested outputs were found.' });
@@ -276,7 +356,7 @@ router.post('/resume-outputs/export-zip', requireUser, async (req, res) => {
     archive.on('error', (err) => res.status(500).end(err.message));
     archive.pipe(res);
     for (const projection of projections) {
-      const buffer = await renderProjectionToPdfBuffer(projection);
+      const buffer = await renderProjectionToPdfBuffer(projection, { shareUrl: projection.share_token ? shareUrlFor(projection.share_token, req) : null });
       archive.append(buffer, { name: filenameFor(projection) });
     }
     await archive.finalize();
@@ -297,9 +377,9 @@ router.post('/resume-outputs/email', requireUser, async (req, res) => {
     const attachments = [];
     const titles = [];
     for (const id of projectionIds) {
-      const p = await getResumeOutputProjectionRaw(Number(id), req.user.id);
+      const p = await getOwnedOutputWithApprover(Number(id), req.user.id);
       if (!p) continue;
-      const buffer = await renderProjectionToPdfBuffer(p);
+      const buffer = await renderProjectionToPdfBuffer(p, { shareUrl: p.share_token ? shareUrlFor(p.share_token, req) : null });
       attachments.push({ name: filenameFor(p), content: buffer });
       titles.push(p.preset_name || p.output_type);
     }

@@ -14,6 +14,12 @@ import { toast } from '../../lib/toast.js';
 import { fetchCareerMaster } from '../../lib/careerMaster.js';
 import CareerIntakePanel from './CareerIntakePanel.jsx';
 import { resumeUrlFromPreset } from '../../lib/resumeUrls.js';
+import DocumentBlocksView, { formatMetadataLine, isDocumentBlocks } from '../DocumentBlocksView.jsx';
+import { useToolCategoryGate } from './ToolCategoryGate.jsx';
+import CareerBoundOutputEditor from './CareerBoundOutputEditor.jsx';
+import { OutputVersionHistoryModal } from './OutputVersionHistory.jsx';
+import CoverLetterPackagesPanel from './CoverLetterPackagesPanel.jsx';
+import CoverLetterWorkbench from './CoverLetterWorkbench.jsx';
 
 // ── Layout templates ──────────────────────────────────────────────────────────
 const LAYOUTS = [
@@ -457,6 +463,18 @@ export default function MyResumePanel({ scope = 'member' }) {
   const [showNameModal, setShowNameModal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [resumeOutputs, setResumeOutputs] = useState([]);
+  // Career-bound outputs (2026-10-02): content is a selection over Career Master + per-output overrides.
+  const [boundEditId, setBoundEditId] = useState(null);
+  const [creatingBound, setCreatingBound] = useState(false);
+  const [boundName, setBoundName] = useState('Career-bound resume');
+  // Finalizing (approve / publish / approve for QR) requires every
+  // technology to have a proficiency category — the gate prompts and saves
+  // to Career Master, then retries (server/lib/finalizationGates.js).
+  const categoryGate = useToolCategoryGate();
+  // Cover-letter agent workbench (CoverLetterWorkbench.jsx) — id of the cover letter it is open on.
+  const [agentLetterId, setAgentLetterId] = useState(null);
+  const [packagesReload, setPackagesReload] = useState(0);
+  const [finalizationCheck, setFinalizationCheck] = useState(null);
   const [generatingOutput, setGeneratingOutput] = useState(false);
   const [targetJobDescription, setTargetJobDescription] = useState('');
 
@@ -465,6 +483,7 @@ export default function MyResumePanel({ scope = 'member' }) {
   // generated, imported, or the general preset-based ones this panel already
   // creates) — see server/lib/outputRendering.js.
   const [selectedOutputIds, setSelectedOutputIds] = useState(new Set());
+  const [historyOutputId, setHistoryOutputId] = useState(null); // output whose version history is open
   const [viewingOutput, setViewingOutput] = useState(null); // fetched digital-view JSON, or null
   const [exportingZip, setExportingZip] = useState(false);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
@@ -555,8 +574,24 @@ export default function MyResumePanel({ scope = 'member' }) {
     loadResumeOutputs();
   }, []);
 
+  async function createBoundOutput() {
+    const label = boundName;
+    setCreatingBound(true);
+    try {
+      const r = await api.createCareerBoundOutput({ name: label.trim() || 'Career-bound resume' });
+      toast.success('Created from Career Master');
+      loadResumeOutputs();
+      setBoundEditId(r.id);
+    } catch (e) {
+      toast.error(e.message);
+    } finally {
+      setCreatingBound(false);
+    }
+  }
+
   function loadResumeOutputs() {
-    api.listResumeOutputs().then((d) => setResumeOutputs(d.projections || [])).catch(() => {});
+    api.listResumeOutputs().then((d) => setResumeOutputs(d.projections || [])).catch((e) => toast.error(`Could not load your resume outputs: ${e.message}`));
+    refreshFinalizationCheck();
   }
 
   async function generateOutput(preset) {
@@ -581,11 +616,46 @@ export default function MyResumePanel({ scope = 'member' }) {
     }
   }
 
-  async function setOutputStatus(id, status) {
+  // QR-gated sharing (server/lib/applicationPackages.js): approving makes
+  // this version the one its document's private /r/<slug> QR opens (minting
+  // the slug on first approval) and records you as the approver; revoking
+  // discards the slug so any printed QR stops resolving.
+  async function approveForQr(output) {
+    const ok = window.confirm(`Approve "${output.presetName || 'this output'}" as the final version for its QR code?\n\nYou'll be recorded as the approver. If an earlier version already has a QR code, that same code now opens this version. Only people with the QR code or link can open it.`);
+    if (!ok) return;
     try {
-      await api.updateResumeOutputStatus(id, status);
+      const shared = await categoryGate.run(() => api.shareResumeOutput(output.id));
+      try { await navigator.clipboard.writeText(shared.url); } catch { /* clipboard is best-effort */ }
+      toast.success('Approved — private QR link created (copied to clipboard).');
+      for (const w of shared.warnings || []) toast.error(w);
       loadResumeOutputs();
     } catch (e) { toast.error(e.message); }
+    refreshFinalizationCheck();
+  }
+
+  async function revokeQr(output) {
+    if (!window.confirm('Revoke this QR link? Anyone scanning an already-printed copy will see "link not available".')) return;
+    try {
+      await api.revokeResumeOutputShare(output.id);
+      toast.success('QR link revoked.');
+      loadResumeOutputs();
+    } catch (e) { toast.error(e.message); }
+  }
+
+  function shareUrl(output) {
+    return `${window.location.origin}/r/${output.share.token}`;
+  }
+
+  async function setOutputStatus(id, status) {
+    try {
+      await categoryGate.run(() => api.updateResumeOutputStatus(id, status));
+      loadResumeOutputs();
+    } catch (e) { toast.error(e.message); }
+    refreshFinalizationCheck();
+  }
+
+  function refreshFinalizationCheck() {
+    api.getFinalizationCheck().then(setFinalizationCheck).catch(() => setFinalizationCheck(null));
   }
 
   function loadPresets() {
@@ -829,6 +899,26 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
         </div>
       )}
 
+      {/* Career-bound resumes: content is a selection over Career Master + per-output overrides. */}
+      <div style={{ marginBottom: '1.25rem', background: 'white', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 8, padding: '0.75rem 1rem' }} data-testid="career-bound-card">
+        <div style={S.label}>Career-bound resumes</div>
+        <div style={{ fontSize: '0.76rem', color: '#666', lineHeight: 1.5, margin: '0.25rem 0 0.5rem' }}>
+          A career-bound resume reads its roles, bullets, skills, tools and certifications from Career Master, so a change there flows into it.
+          Wording you change inside the resume applies to that resume only and is marked as overridden.
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <input aria-label="Name of the new career-bound resume" value={boundName} onChange={(e) => setBoundName(e.target.value)} style={{ padding: '4px 8px', fontSize: '0.78rem', border: '1px solid rgba(0,0,0,0.2)', borderRadius: 6, minWidth: 220 }} />
+          <button style={{ ...S.btn('gold'), padding: '4px 12px', fontSize: '0.74rem' }} disabled={creatingBound} onClick={createBoundOutput}>
+            {creatingBound ? 'Creating...' : 'New career-bound resume from Career Master'}
+          </button>
+          <button style={{ ...S.btn('outline'), padding: '4px 12px', fontSize: '0.74rem' }} onClick={() => window.dispatchEvent(new CustomEvent('sb-admin-switch-tab', { detail: { tab: 'careerReconciliation' } }))}>
+            Career Sources to Review
+          </button>
+        </div>
+      </div>
+
+      <CoverLetterPackagesPanel onOpenLetter={setAgentLetterId} onOutputsChanged={loadResumeOutputs} reloadKey={packagesReload} />
+
       {/* Resume Output Projection history — master-org-admin-config.md §5.
           Each row is a lineage-tracked snapshot, not a live re-render; a
           stale one is flagged, never silently regenerated. */}
@@ -836,6 +926,12 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
         <div style={{ marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
             <div style={S.label}>Resume Output History</div>
+            {finalizationCheck && !finalizationCheck.ready && (
+              <div role="status" style={{ flexBasis: '100%', background: 'rgba(196,132,58,.1)', border: '1px solid #c4843a', borderRadius: 8, padding: '.55rem .75rem', fontSize: '.78rem', color: '#1b2a3b' }}>
+                <strong>{finalizationCheck.toolsMissingCategory.length} technolog{finalizationCheck.toolsMissingCategory.length === 1 ? 'y needs' : 'ies need'} a proficiency category</strong> before any output can be approved or shared
+                ({finalizationCheck.toolsMissingCategory.map((t) => t.label).join(', ')}). You’ll be asked to set {finalizationCheck.toolsMissingCategory.length === 1 ? 'it' : 'them'} when you approve; your choices save to Career Master.
+              </div>
+            )}
             {selectedOutputIds.size > 0 && (
               <div style={{ display: 'flex', gap: '0.4rem' }}>
                 <span style={{ fontSize: '0.72rem', color: '#888', alignSelf: 'center' }}>{selectedOutputIds.size} selected</span>
@@ -861,6 +957,9 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
                     {output.outputType && output.outputType !== 'resume' && (
                       <span style={{ fontWeight: 400, color: '#999', fontSize: '0.72rem' }}> · {output.outputType.replace('_', ' ')}</span>
                     )}
+                    {output.generatedContent?.format === 'career_bound' && (
+                      <span style={{ fontWeight: 400, color: '#1e565a', fontSize: '0.68rem', textTransform: 'uppercase', marginLeft: '0.4rem' }}>Career-bound</span>
+                    )}
                     {output.source === 'imported' && (
                       <span style={{ fontWeight: 400, color: '#8b877c', fontSize: '0.68rem', textTransform: 'uppercase', marginLeft: '0.4rem' }}>Imported</span>
                     )}
@@ -868,6 +967,27 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
                   <div style={{ fontSize: '0.72rem', color: '#888' }}>
                     Generated {new Date(output.generatedAt).toLocaleString()} · <span style={{ textTransform: 'capitalize' }}>{output.outputStatus}</span>
                   </div>
+                  {output.metadata && (output.metadata.authors?.length > 0 || output.metadata.approvedBy) && (
+                    <div style={{ fontSize: '0.68rem', color: '#8b877c', marginTop: '0.15rem' }}>{formatMetadataLine(output.metadata)}</div>
+                  )}
+                  {output.shareSyncError && (
+                    <div role="alert" style={{ fontSize: '.72rem', color: '#a5531f', marginTop: '.3rem' }}>
+                      QR history could not record a Career Master change ({new Date(output.shareSyncError.at).toLocaleString()}): {output.shareSyncError.message}. It retries on your next Career Master save or when the QR page is opened.
+                    </div>
+                  )}
+                  {output.share?.live && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginTop: '0.45rem', flexWrap: 'wrap' }}>
+                      <a href={shareUrl(output)} target="_blank" rel="noreferrer"><img src={api.resumeOutputQrUrl(output.id, 'svg')} alt="QR code for this version's private link" width={64} height={64} style={{ border: '1px solid rgba(0,0,0,0.08)', display: 'block' }} /></a>
+                      <div style={{ fontSize: '0.7rem', lineHeight: 1.6 }}>
+                        <a href={shareUrl(output)} target="_blank" rel="noreferrer" style={{ color: 'var(--sb-teal-deep, #02a1a6)', wordBreak: 'break-all' }}>{shareUrl(output)}</a>
+                        <div style={{ display: 'flex', gap: '0.6rem' }}>
+                          <button type="button" style={{ background: 'none', border: 'none', padding: 0, color: '#555', cursor: 'pointer', fontSize: '0.7rem', textDecoration: 'underline' }} onClick={() => navigator.clipboard?.writeText(shareUrl(output)).then(() => toast.success('Link copied.'))}>Copy link</button>
+                          <a href={api.resumeOutputQrUrl(output.id, 'svg')} download={`qr-${output.id}.svg`} style={{ color: '#555' }}>QR (SVG)</a>
+                          <a href={api.resumeOutputQrUrl(output.id, 'png')} download={`qr-${output.id}.png`} style={{ color: '#555' }}>QR (PNG)</a>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   {output.isStale && (
                     <div style={{ fontSize: '0.75rem', color: 'var(--sb-gold, #c4843a)', marginTop: '0.25rem', fontWeight: 600 }}>
                       Your Career Channel has {Math.abs(output.atomCountDelta)} atom update{Math.abs(output.atomCountDelta) === 1 ? '' : 's'} not reflected in this resume output.
@@ -880,17 +1000,30 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setHistoryOutputId(output.id)}>Version history</button>
+                  {output.generatedContent?.format === 'career_bound' && output.outputStatus !== 'archived' && (
+                    <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setBoundEditId(output.id)}>Edit sections</button>
+                  )}
                   {output.generatedContent && (
                     <>
                       <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => openOutputView(output.id)}>View</button>
                       <a href={api.downloadResumeOutputUrl(output.id)} style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Download PDF</a>
                     </>
                   )}
+                  {output.outputType === 'cover_letter' && output.generatedContent && output.outputStatus !== 'archived' && (
+                    <button style={{ ...S.btn('gold'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setAgentLetterId(output.id)}>Edit with cover-letter agent</button>
+                  )}
                   {output.outputStatus === 'draft' && (
                     <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setOutputStatus(output.id, 'approved')}>Approve</button>
                   )}
                   {output.outputStatus === 'approved' && (
                     <button style={{ ...S.btn('teal'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setOutputStatus(output.id, 'published')}>Publish</button>
+                  )}
+                  {output.generatedContent && output.outputStatus !== 'archived' && !output.share?.live && (
+                    <button style={{ ...S.btn('gold'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => approveForQr(output)}>Approve for QR</button>
+                  )}
+                  {output.share && (
+                    <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => revokeQr(output)}>Revoke QR</button>
                   )}
                   {output.outputStatus !== 'archived' && (
                     <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setOutputStatus(output.id, 'archived')}>Archive</button>
@@ -914,7 +1047,7 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
           can be downloaded again if necessary." */}
       {viewingOutput && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setViewingOutput(null)}>
-          <div style={{ background: 'white', borderRadius: 10, padding: '1.5rem', maxWidth: 600, maxHeight: '80vh', overflowY: 'auto', width: '90%' }} onClick={(e) => e.stopPropagation()}>
+          <div style={{ background: 'white', borderRadius: 10, padding: '1.5rem', maxWidth: isDocumentBlocks(viewingOutput.content) ? 860 : 600, maxHeight: '80vh', overflowY: 'auto', width: '90%' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <h3 style={{ margin: 0, color: 'var(--sb-navy, #1b2a3b)' }}>{viewingOutput.title}</h3>
@@ -925,7 +1058,12 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
               <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setViewingOutput(null)}>Close</button>
             </div>
             <div style={{ marginTop: '1rem', fontSize: '0.85rem', lineHeight: 1.6, color: '#333' }}>
-              {viewingOutput.content?.rawText ? (
+              {isDocumentBlocks(viewingOutput.content) ? (
+                <>
+                  <DocumentBlocksView content={viewingOutput.content} />
+                  <div style={{ marginTop: '1rem', fontSize: '0.68rem', color: '#8b877c' }}>{formatMetadataLine(viewingOutput.metadata)}</div>
+                </>
+              ) : viewingOutput.content?.rawText ? (
                 <div style={{ whiteSpace: 'pre-wrap' }}>{viewingOutput.content.rawText}</div>
               ) : viewingOutput.outputType === 'cover_letter' ? (
                 <>
@@ -950,6 +1088,23 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
         </div>
       )}
 
+      {boundEditId && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} role="dialog" aria-label="Career-bound resume editor">
+          <div style={{ background: 'white', borderRadius: 10, padding: '1rem 1.25rem', width: 'min(1200px, 96vw)', maxHeight: '92vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => { setBoundEditId(null); loadResumeOutputs(); }}>Close</button>
+            </div>
+            <CareerBoundOutputEditor
+              projectionId={boundEditId}
+              onSaved={(r) => { if (r?.id && r.id !== boundEditId) setBoundEditId(r.id); loadResumeOutputs(); }}
+              onOpenReviewQueue={() => { setBoundEditId(null); window.dispatchEvent(new CustomEvent('sb-admin-switch-tab', { detail: { tab: 'careerReconciliation' } })); }}
+            />
+          </div>
+        </div>
+      )}
+      {historyOutputId && <OutputVersionHistoryModal projectionId={historyOutputId} onClose={() => setHistoryOutputId(null)} />}
+      {categoryGate.modal}
+      {agentLetterId && <CoverLetterWorkbench outputId={agentLetterId} onClose={() => { setAgentLetterId(null); setPackagesReload((n) => n + 1); }} onChanged={() => { loadResumeOutputs(); setPackagesReload((n) => n + 1); }} />}
       {emailModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setEmailModalOpen(false)}>
           <div style={{ background: 'white', borderRadius: 10, padding: '1.5rem', maxWidth: 420, width: '90%' }} onClick={(e) => e.stopPropagation()}>

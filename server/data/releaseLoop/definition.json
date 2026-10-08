@@ -1,0 +1,213 @@
+{
+  "key": "salt_basin_release_loop",
+  "version": 1,
+  "name": "Salt Basin release loop",
+  "summary": "Every code change moves build → initial check → integrate → browser validation → triage → fix → re-validate, looping until every training journey passes or a failure needs a business definition. Every step leaves a dated log traced to the version before it.",
+  "roles": [
+    {
+      "key": "release_builder",
+      "name": "Build agent",
+      "does": "Builds one feature on its own branch from the current integration head, runs the initial check, and writes the design/change spec and the training spec.",
+      "produces": [
+        "code commits",
+        "docs/changes/<feature>.md",
+        "docs/training/<feature>.md"
+      ]
+    },
+    {
+      "key": "release_integrator",
+      "name": "Integration agent",
+      "does": "Merges a build or fix branch into the integration branch one at a time, resolves conflicts without losing either side's behaviour, re-runs the build, and commits pending logs.",
+      "produces": [
+        "merge commit",
+        "committed test/triage logs"
+      ]
+    },
+    {
+      "key": "release_validator",
+      "name": "Validation agent",
+      "does": "Follows a training spec literally in a real browser against a freshly seeded database and records pass/fail per step with evidence. Never substitutes script checks for the journey.",
+      "produces": [
+        "docs/test-results/<feature>/round-<n>.md"
+      ]
+    },
+    {
+      "key": "release_triage",
+      "name": "Triage agent",
+      "does": "Turns failed steps into triage items: reproduces each, finds the root cause, classifies it (defect, spec error, environment, needs business definition), and dedupes against earlier rounds.",
+      "produces": [
+        "docs/triage/<feature>-round-<n>.md"
+      ]
+    },
+    {
+      "key": "release_fixer",
+      "name": "Fix agent",
+      "does": "Fixes the root cause of fixable triage items on its own branch, re-runs the failed journey steps itself, and writes fix notes the validator receives.",
+      "produces": [
+        "code commits",
+        "fix notes appended to the change spec"
+      ]
+    },
+    {
+      "key": "release_recorder",
+      "name": "Release recorder",
+      "does": "Writes the release log: every feature, round, failure, fix and final result, plus anything escalated for a business definition.",
+      "produces": [
+        "docs/release-log/<date>-<release>.md"
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "key": "build",
+      "role": "release_builder",
+      "next": "integrate"
+    },
+    {
+      "key": "integrate",
+      "role": "release_integrator",
+      "next": "validate"
+    },
+    {
+      "key": "validate",
+      "role": "release_validator",
+      "onPass": "done",
+      "onFail": "triage"
+    },
+    {
+      "key": "triage",
+      "role": "release_triage",
+      "onFixable": "fix",
+      "onBusinessDefinition": "escalate"
+    },
+    {
+      "key": "fix",
+      "role": "release_fixer",
+      "next": "integrate_fix"
+    },
+    {
+      "key": "integrate_fix",
+      "role": "release_integrator",
+      "next": "validate"
+    },
+    {
+      "key": "escalate",
+      "role": "release_recorder",
+      "note": "Listed for the owner to define; never guessed."
+    },
+    {
+      "key": "done",
+      "role": "release_recorder"
+    }
+  ],
+  "gates": {
+    "initialCheck": [
+      "npm run build succeeds",
+      "server boots against a fresh database",
+      "the feature's own journeys pass when the builder walks them once"
+    ],
+    "validation": "Every step of every journey in the feature's training spec passes in a real browser, with no page errors and no failed network requests the spec does not expect.",
+    "noSilentCaps": "When a feature reaches maxFixRounds still failing, it is recorded as not passed with its open triage items — never reported as done.",
+    "push": "The integration branch is pushed only when the release log shows every feature passed, or the owner says otherwise."
+  },
+  "maxFixRounds": 4,
+  "triageClasses": [
+    {
+      "key": "defect",
+      "fixable": true
+    },
+    {
+      "key": "spec_error",
+      "fixable": true,
+      "note": "The training spec, not the product, is wrong; the fix edits the spec and says why."
+    },
+    {
+      "key": "environment",
+      "fixable": true,
+      "note": "Test setup problem; fixed in the harness and noted, never hidden."
+    },
+    {
+      "key": "needs_business_definition",
+      "fixable": false,
+      "note": "Escalated to the owner with the exact question."
+    }
+  ],
+  "specStandards": {
+    "changeSpec": [
+      "Version and date",
+      "Traces to: prior spec versions and commits this builds on or supersedes",
+      "What changed, data model (additive only), server, client",
+      "Behaviour changes to know",
+      "Verified (initial check)",
+      "Known limitations",
+      "Fix notes per round (appended by fix agents)"
+    ],
+    "trainingSpec": [
+      "Where things are (reachable from the UI — no API-only configuration)",
+      "Preconditions with fictional data",
+      "Numbered journeys: action → exact expected result",
+      "Edge cases"
+    ],
+    "testResult": [
+      "Feature, round, commit tested, date",
+      "Per journey step: pass/fail, what was seen, screenshot path",
+      "Console errors and failed requests",
+      "Fix details received (rounds after the first)"
+    ],
+    "triageItem": [
+      "id",
+      "journey step",
+      "observed vs expected",
+      "root cause",
+      "class",
+      "files",
+      "proposed fix",
+      "first seen round"
+    ]
+  },
+  "logLocations": {
+    "changeSpecs": "docs/changes/",
+    "trainingSpecs": "docs/training/",
+    "testResults": "docs/test-results/<feature>/",
+    "triage": "docs/triage/",
+    "releaseLog": "docs/release-log/"
+  },
+  "privacy": "This repository is public: logs and specs use fictional data only and never name an employer or application target.",
+  "sessionMapping": {
+    "when": "End of every session (Claude Code or in-app agent run)",
+    "does": "Analyse the session: what was learned or repeated, and where each piece belongs so the next session doesn't re-derive it",
+    "destinations": {
+      "context": "CLAUDE.md / skill reference docs — stable facts every session needs",
+      "prompt": "skills, saved workflows, agent role prompts — repeatable procedures",
+      "cache": "stable prompt prefixes and reusable reference blocks kept unchanged so they stay cached",
+      "memory": "the agent memory register (docs/active-universal-salt-basin-agent-memory-register.md) — decisions, preferences, open questions"
+    },
+    "metrics": [
+      "input, cache-write, cache-read and output tokens",
+      "estimated spend (price table editable in the UI)",
+      "wall-clock and active time",
+      "compactions / limit events",
+      "agents spawned and their tokens"
+    ],
+    "privacy": "Only metrics and the mapping summary are committed; never transcript text or personal data."
+  },
+  "bugEscalation": {
+    "maxFixAttemptsPerBug": 2,
+    "rule": "A bug is the same bug when triage links it to an earlier item (same root cause or same failing step after a fix). Once a bug has had maxFixAttemptsPerBug fix attempts and validation still fails it, it leaves the automated loop with status needs_human: its full history (each triage, fix and re-test) goes to the owner and no agent touches it until a person decides.",
+    "statuses": [
+      "open",
+      "fixing",
+      "fixed_awaiting_retest",
+      "verified",
+      "recurred",
+      "needs_human",
+      "needs_business_definition"
+    ]
+  },
+  "tracker": "Every agent start/finish, bug and status change is shown live in the release tracker (Claude Code sessions: the tracker artifact synced from the workflow journal; in the platform: World Shell → Release loop).",
+  "failureReconciliation": {
+    "rule": "An agent finishing is not the work finishing. Every failure, refusal, partial step, known limitation or deviation an agent reports is reconciled by a separate agent that verifies it on the branch and classifies it (product_defect, requirement_gap, owner_direction_conflict, test_harness, environment, process, informational) as resolved — only with evidence — or unresolved. Unresolved items are carried into the fix loop as bugs; a feature cannot pass while any remain.",
+    "report": "docs/triage/<feature>-<build|fix>[-rN]-reconciliation.md"
+  },
+  "liveLogging": "Validators append each checked expectation and every page error or failed request to /var/tmp/.../<feature>/round-N/steps.jsonl as it happens; the tracker shows them live, so a failure is visible before the round ends."
+}

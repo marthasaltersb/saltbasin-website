@@ -72,7 +72,10 @@ export function calculateCareerProficiencyRollup({ assertions, levels, periods =
       maxValue: ['evidence_count','experience_duration'].includes(config.measure) ? null : maxOrdinal,
       assertionCount: rows.length,
       evidenceCount: rows.reduce((sum, r) => sum + Number(r.assertion.evidenceCount || 0), 0),
-      entities: rows.map((r) => ({ type: r.entity.type, id: r.entity.id, label: r.entity.label, level: r.level.label, periodKey: r.assertion.periodKey })),
+      entities: rows.map((r) => ({ type: r.entity.type, id: r.entity.id, label: r.entity.label, level: r.level.label, periodKey: r.assertion.periodKey, basis: r.assertion.basis || null })),
+      // How many entities in this group carry a member-defined level (own
+      // formula or direct override) — drives the † marker on charts.
+      userDefinedCount: rows.filter((r) => r.assertion.basis === 'member_override' || r.assertion.basis === 'member_formula').length,
     };
   }).sort((a, b) => b.value - a.value || a.label.localeCompare(b.label));
 

@@ -38,9 +38,11 @@ import resumeAccessRouter from './routes/resumeAccess.js';
 import outputTemplatesRouter from './routes/outputTemplates.js';
 import careerMasterRouter from './routes/careerMaster.js';
 import careerReconciliationRouter from './routes/careerReconciliation.js';
+import careerBoundRouter from './routes/careerBound.js';
 import careerReasoningAdminRouter from './routes/careerReasoningAdmin.js';
 import careerPlacementAgentsRouter from './routes/careerPlacementAgents.js';
 import commercialOpportunitiesRouter from './routes/commercialOpportunities.js';
+import releaseIntelligenceRouter from './routes/releaseIntelligence.js';
 import worldVariantStudioRouter from './routes/worldVariantStudio.js';
 import l2rDiagnosticsRouter from './routes/l2rDiagnostics.js';
 import publicationPipelinesRouter from './routes/publicationPipelines.js';
@@ -61,6 +63,8 @@ import memberFinancialRouter from './routes/memberFinancial.js';
 import presenceRouter from './routes/presence.js';
 import memberEntitlementsRouter from './routes/memberEntitlements.js';
 import resumeOutputsRouter from './routes/resumeOutputs.js';
+import coverLettersRouter from './routes/coverLetters.js';
+import sharedOutputsRouter from './routes/sharedOutputs.js';
 import scenariosRouter from './routes/scenarios.js';
 import configEnvelopesRouter from './routes/configEnvelopes.js';
 import lonetreeMvpRouter from './routes/lonetreeMvp.js';
@@ -172,9 +176,11 @@ app.use('/api/resume', resumeAccessRouter);
 app.use('/api/output-templates', outputTemplatesRouter);
 app.use('/api/career', careerMasterRouter);
 app.use('/api/career-reconciliation', careerReconciliationRouter);
+app.use('/api/career-bound', careerBoundRouter);
 app.use('/api/career-reasoning-admin', careerReasoningAdminRouter);
 app.use('/api/career-agents', careerPlacementAgentsRouter);
 app.use('/api/commercial-opportunities', commercialOpportunitiesRouter);
+app.use('/api/release-intelligence', releaseIntelligenceRouter);
 app.use('/api/admin/world-variant-studio', worldVariantStudioRouter);
 app.use('/api/l2r-diagnostics', l2rDiagnosticsRouter);
 app.use('/api/publication-pipelines', publicationPipelinesRouter);
@@ -186,6 +192,8 @@ app.use('/api/metric-intelligence', metricIntelligenceRouter);
 app.use('/api/member-financial', memberFinancialRouter);
 app.use('/api/member-entitlements', memberEntitlementsRouter);
 app.use('/api/resume-outputs', resumeOutputsRouter);
+app.use('/api/cover-letters', coverLettersRouter);
+app.use('/api/shared-outputs', sharedOutputsRouter);
 app.use('/api/scenarios', scenariosRouter);
 app.use('/api/agent-hub', agentHubRouter);
 app.use('/api/notifications', notificationsRouter);
@@ -227,6 +235,13 @@ if (isProd) {
     // Must run before express.static: rewrites the HTML response's <head>
     // with per-page SEO tags for real routes, and falls through (next()) for
     // static assets and anything it can't resolve.
+    // QR-gated application documents (/r/:token) are unlisted by design —
+    // keep them out of search indexes and referrer headers.
+    app.use('/r/', (req, res, next) => {
+      res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
+      res.setHeader('Referrer-Policy', 'no-referrer');
+      next();
+    });
     app.use(createSeoMiddleware(distDir));
     app.use(express.static(distDir, { maxAge: '1h' }));
     // SPA fallback: any non-API GET that didn't match a static file returns

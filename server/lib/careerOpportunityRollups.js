@@ -14,6 +14,7 @@ import { db } from '../db.js';
 import { createJourneyTributary, getLinkedEntities, getLinkedPersons } from './tributaryRegistry.js';
 import { findOrCreateEntity, linkRodToEntity, resolveAgentRoster, resolveApprovalWorkflow, evaluateWeightedScore } from './opportunityPipelineRegistry.js';
 import { getCurrent } from './currentRegistry.js';
+import { runOpportunityCreatedHooks } from './opportunityHooks.js';
 
 const CAREER_DIMENSION_KEYS = [
   'scope_altitude', 'strategic_ops_transformation', 'revenue_systems_q2r', 'ai_validation_data_intel',
@@ -125,6 +126,8 @@ export async function createCareerOpportunity(userId, { jobTitle, companyName = 
     const entity = await findOrCreateEntity({ ownerUserId: userId, canonicalName: companyName, entityType: 'company' });
     await linkRodToEntity({ rod: oppRod, tributaryType: 'opportunity_entity_reference', entityId: entity.id, roleInContext: 'subject' });
   }
+  // Post-create hooks (cover-letter auto-draft, 2026-10-02). Hooks record their own failures.
+  await runOpportunityCreatedHooks({ userId, rodId: Number(oppRod.id) });
   return rollupOneOpportunity(oppRod, await getCurrent('career_match_scoring_v1'));
 }
 

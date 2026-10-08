@@ -23,6 +23,7 @@ const lazyOutput = (name) => lazy(() =>
   import('./components/Output.jsx').then((module) => ({ default: module[name] }))
 );
 const ResumeOutput = lazyOutput('ResumeOutput');
+const SharedOutputPage = lazy(() => import('./components/SharedOutputPage.jsx'));
 const CaseStudyOutput = lazyOutput('CaseStudyOutput');
 const DomainsOutput = lazyOutput('DomainsOutput');
 const PortfolioAppendixOutput = lazyOutput('PortfolioAppendixOutput');
@@ -103,6 +104,8 @@ export default function App() {
       <Route path="/data-notice" element={<DataNotice />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<TermsOfService />} />
+      {/* QR-gated tailored application documents — unlisted, slug-only. */}
+      <Route path="/r/:token" element={<SharedOutputPage />} />
       <Route path="/output/resume" element={<ResumeOutput />} />
       <Route path="/output/case-study/:slug" element={<CaseStudyOutput />} />
       <Route path="/output/proposal/:type" element={<ProposalOutput />} />

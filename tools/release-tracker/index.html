@@ -1,0 +1,201 @@
+<title>Salt Basin Release Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: control-room board — summary strip, then feature lanes, live agents, bug queue, agent ledger */
+:root {
+  --bg: #f3f6f7; --panel: #ffffff; --ink: #14262e; --muted: #5a6d75; --line: #d9e3e6;
+  --teal: #1b4f66; --teal-soft: #dcecf1; --gold: #b07a1c; --gold-soft: #f6ead2;
+  --good: #23784f; --good-soft: #dff1e7; --warn: #9a6200; --warn-soft: #fbedd0;
+  --bad: #b03a26; --bad-soft: #f8e0da; --human: #6b4bb0; --human-soft: #ebe4f8;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1a1f; --panel: #16242b; --ink: #e3edf0; --muted: #94a8b0; --line: #26383f;
+  --teal: #7cc2dc; --teal-soft: #1b3440; --gold: #e0ad55; --gold-soft: #3a2d14;
+  --good: #6fd0a0; --good-soft: #163327; --warn: #f0b85a; --warn-soft: #372a10;
+  --bad: #f08c78; --bad-soft: #3d1d17; --human: #b9a3f0; --human-soft: #2a2244; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f1a1f; --panel: #16242b; --ink: #e3edf0; --muted: #94a8b0; --line: #26383f;
+  --teal: #7cc2dc; --teal-soft: #1b3440; --gold: #e0ad55; --gold-soft: #3a2d14;
+  --good: #6fd0a0; --good-soft: #163327; --warn: #f0b85a; --warn-soft: #372a10;
+  --bad: #f08c78; --bad-soft: #3d1d17; --human: #b9a3f0; --human-soft: #2a2244; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; display: grid; gap: 22px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 20px; }
+h1 { font: 800 26px/1.15 var(--display); letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+h2 { font: 700 13px/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 10px; }
+.sync { font: 12px var(--mono); color: var(--muted); }
+.sync b { color: var(--ink); font-weight: 600; }
+.live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--good); margin-right: 6px; vertical-align: 1px; }
+.stale .live-dot { background: var(--warn); }
+.strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.stat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+.stat .n { font: 800 28px/1 var(--display); font-variant-numeric: tabular-nums; }
+.stat .l { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.stat.human .n { color: var(--human); } .stat.bad .n { color: var(--bad); } .stat.good .n { color: var(--good); }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.filters button { font: 600 13px var(--body); border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.filters button[aria-pressed="true"] { background: var(--teal); border-color: var(--teal); color: var(--panel); }
+.filters button:focus-visible, summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+section { min-width: 0; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; font: 600 12px var(--body); color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; padding: 9px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mono { font-family: var(--mono); font-size: 12.5px; }
+.muted { color: var(--muted); }
+.pill { display: inline-block; font: 600 12px/1 var(--body); padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
+.s-running { background: var(--teal-soft); color: var(--teal); }
+.s-passed, .s-verified, .s-done { background: var(--good-soft); color: var(--good); }
+.s-failing, .s-open, .s-recurred, .s-retest_failed, .s-failed, .s-done_unreconciled, .s-seen_in_test { background: var(--bad-soft); color: var(--bad); }
+.s-fixing, .s-fixed_awaiting_retest, .s-between_stages { background: var(--gold-soft); color: var(--gold); }
+.s-needs_human, .s-needs_business_definition { background: var(--human-soft); color: var(--human); }
+.s-queued, .s-idle_or_done { background: var(--line); color: var(--muted); }
+.bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; min-width: 80px; }
+.bar i { display: block; height: 100%; background: var(--good); border-radius: 3px; }
+.now { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.agent { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--teal); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.agent .role { font: 700 12px var(--display); text-transform: uppercase; letter-spacing: 0.06em; color: var(--teal); }
+.agent .feat { font-weight: 600; margin: 2px 0 6px; overflow-wrap: anywhere; }
+.agent .act { font: 12.5px/1.45 var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+.agent .meta { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.empty { padding: 18px; color: var(--muted); }
+details summary { cursor: pointer; list-style: none; }
+details summary::-webkit-details-marker { display: none; }
+.hist { margin: 8px 0 2px; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 13px; }
+.hist li { display: grid; grid-template-columns: 44px 120px 1fr; gap: 8px; }
+.callout { background: var(--human-soft); color: var(--ink); border: 1px solid var(--human); border-radius: 8px; padding: 12px 14px; }
+.callout b { color: var(--human); }
+@media (max-width: 640px) { .hist li { grid-template-columns: 36px 1fr; } .hist li span:last-child { grid-column: 1 / -1; } }
+@media (prefers-reduced-motion: no-preference) { .running-anim { animation: pulse 1.6s ease-in-out infinite; } @keyframes pulse { 50% { opacity: .45 } } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Release tracker</h1>
+      <div class="muted">Build → validate in the browser → triage → fix → re-test, until every journey passes</div>
+    </div>
+    <div class="sync" id="sync"><span class="live-dot"></span>Waiting for the first update…</div>
+  </header>
+
+  <div class="strip" id="strip"></div>
+  <div id="humanCallout" hidden></div>
+  <div class="filters" id="filters" role="group" aria-label="Filter by feature"></div>
+
+  <section>
+    <h2>Agents working now</h2>
+    <div class="now" id="now"><div class="panel empty">No agent is running right now.</div></div>
+  </section>
+
+  <section>
+    <h2>Features</h2>
+    <div class="panel"><table>
+      <thead><tr><th>Feature</th><th>Status</th><th>Latest test</th><th class="num">Rounds</th><th class="num">Open bugs</th></tr></thead>
+      <tbody id="features"><tr><td colspan="5" class="empty">Features appear here as the release loop reports them.</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Bugs</h2>
+    <div class="panel"><table>
+      <thead><tr><th>Bug</th><th>Feature</th><th>Status</th><th class="num">Fix attempts</th><th>Root cause and history</th></tr></thead>
+      <tbody id="bugs"><tr><td colspan="5" class="empty">No bugs found yet. Validation failures land here after triage.</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>All agent runs</h2>
+    <div class="panel"><table>
+      <thead><tr><th>Agent</th><th>Status</th><th>Result</th><th class="num">Tokens (out / cache read)</th><th>Last activity</th></tr></thead>
+      <tbody id="agents"><tr><td colspan="5" class="empty">Agent runs appear here.</td></tr></tbody>
+    </table></div>
+  </section>
+</div>
+
+<script>
+const ROLE = { build: 'Build', integrate: 'Integrate', validate: 'Validate', triage: 'Triage', fix: 'Fix', record: 'Record' };
+const STATUS = {
+  running: 'Running', passed: 'Passed', failing: 'Failing', queued: 'Queued', between_stages: 'Between stages',
+  needs_human: 'Needs a person', needs_business_definition: 'Needs a business decision', open: 'Open', recurred: 'Came back',
+  fixing: 'Being fixed', fixed_awaiting_retest: 'Fixed, awaiting re-test', retest_failed: 'Re-test failed', verified: 'Verified fixed',
+  done: 'Done', failed: 'Failed', idle_or_done: 'Idle', done_unreconciled: 'Finished, failures not reconciled',
+  seen_in_test: 'Seen in test, awaiting triage',
+};
+const EVENT = { found: 'Found', recurred: 'Came back', fixed: 'Fix applied', not_fixed: 'Not fixed', seen: 'Seen in test' };
+let snap = null; let filter = 'all';
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const pill = (s) => `<span class="pill s-${esc(s)}">${esc(STATUS[s] || String(s).replace(/_/g, ' '))}</span>`;
+const featStatus = (s) => (STATUS[s] ? pill(s) : `<span class="pill s-running running-anim">${esc(s.split(', ').map((r) => ROLE[r] || r).join(' + '))}</span>`);
+const ago = (iso) => { if (!iso) return '—'; const m = Math.round((Date.now() - Date.parse(iso)) / 60000); return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : `${Math.floor(m / 60)} h ${m % 60} min ago`; };
+const k = (n) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}k` : String(n || 0));
+const match = (f) => filter === 'all' || f === filter;
+
+function render() {
+  if (!snap) return;
+  const age = (Date.now() - Date.parse(snap.syncedAt)) / 60000;
+  $('sync').className = `sync${age > 20 ? ' stale' : ''}`;
+  $('sync').innerHTML = `<span class="live-dot"></span>Updated <b>${esc(ago(snap.syncedAt))}</b> · run ${esc(snap.runId || '—')}`;
+
+  const feats = snap.features || []; const bugs = snap.bugs || []; const agents = snap.agents || [];
+  const running = agents.filter((a) => a.status === 'running');
+  const human = bugs.filter((b) => b.status === 'needs_human' || b.status === 'needs_business_definition');
+  const open = bugs.filter((b) => !['verified'].includes(b.status));
+  const unrec = agents.filter((a) => a.status === 'done_unreconciled');
+  $('strip').innerHTML = [
+    ['good', feats.filter((f) => f.status === 'passed').length + ' / ' + feats.length, 'Features passed'],
+    ['', running.length, 'Agents running'],
+    ['bad', open.length, 'Open bugs'],
+    ['good', bugs.filter((b) => b.status === 'verified').length, 'Bugs verified fixed'],
+    ['human', human.length, 'Need a person'],
+    ['bad', unrec.length, 'Finished with unreconciled failures'],
+    ['', k(snap.totals?.output) + ' / ' + k(snap.totals?.cacheRead), 'Tokens out / cache read'],
+  ].map(([c, n, l]) => `<div class="stat ${c}"><div class="n">${esc(n)}</div><div class="l">${esc(l)}</div></div>`).join('');
+
+  const hc = $('humanCallout');
+  hc.hidden = !human.length;
+  hc.innerHTML = human.length ? `<div class="callout"><b>${human.length} ${human.length === 1 ? 'bug needs' : 'bugs need'} a person.</b> ${esc(snap.maxFixAttemptsPerBug)} fix attempts did not solve ${human.length === 1 ? 'it' : 'them'}, or a business decision is missing. These are out of the automated loop until you decide. See the Bugs table.</div>` : '';
+
+  const keys = ['all', ...feats.map((f) => f.key)];
+  if (!keys.includes(filter)) filter = 'all';
+  $('filters').innerHTML = keys.map((key) => `<button type="button" id="f-${esc(key)}" data-k="${esc(key)}" aria-pressed="${key === filter}">${key === 'all' ? 'All features' : esc(key)}</button>`).join('');
+
+  const now = running.filter((a) => match(a.feature));
+  $('now').innerHTML = now.length ? now.map((a) => `<div class="agent"><div class="role">${esc(ROLE[a.role] || a.role)}${a.round ? ` · round ${a.round}` : ''}</div><div class="feat">${esc(a.feature)}</div><div class="act">${esc(a.activity || 'Starting…')}</div>${a.role === 'validate' ? `<div class="meta">${a.liveSteps ? `${a.liveSteps.checked} checks logged · ${a.liveSteps.passed} passed · <b>${a.liveSteps.failed.length} failed</b>` : 'No step log (started before live logging)'}${(a.signals || []).length || (a.liveSteps?.errors || []).length ? ` · <b>${(a.signals || []).length + (a.liveSteps?.errors || []).length} page errors / failed requests seen</b>` : ''}</div>` : ''}<div class="meta">Started ${esc(ago(a.startedAt))} · last step ${esc(ago(a.lastActivityAt))}</div></div>`).join('')
+    : '<div class="panel empty">No agent is running for this selection.</div>';
+
+  const fr = feats.filter((f) => match(f.key));
+  $('features').innerHTML = fr.length ? fr.map((f) => {
+    const r = f.lastResult; const pct = r && r.stepsTotal ? Math.round((r.stepsPassed / r.stepsTotal) * 100) : 0;
+    return `<tr><td><b>${esc(f.key)}</b></td><td>${featStatus(f.status)}</td><td>${r ? `<div class="num">Round ${r.round}: ${r.stepsPassed}/${r.stepsTotal} steps</div><div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>` : '<span class="muted">Not tested yet</span>'}</td><td class="num">${f.rounds}</td><td class="num">${f.openBugs}</td></tr>`;
+  }).join('') : '<tr><td colspan="5" class="empty">No features for this selection.</td></tr>';
+
+  const order = { needs_human: 0, needs_business_definition: 1, recurred: 2, retest_failed: 3, open: 4, seen_in_test: 5, fixing: 6, fixed_awaiting_retest: 7, verified: 8 };
+  const br = bugs.filter((b) => match(b.feature)).sort((a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9));
+  $('bugs').innerHTML = br.length ? br.map((b) => `<tr><td class="mono">${esc(b.id)}</td><td>${esc(b.feature)}</td><td>${pill(b.status)}</td><td class="num">${b.attempts || 0} / ${esc(snap.maxFixAttemptsPerBug)}</td><td><details><summary><b>${esc(b.step)}</b><div class="muted">${esc(b.rootCause)}</div>${b.question ? `<div><b>Question for you:</b> ${esc(b.question)}</div>` : ''}</summary><ul class="hist">${(b.history || []).map((h) => `<li><span class="muted">R${h.round}</span><span>${esc(EVENT[h.event] || h.event)}</span><span>${esc(h.note)}${h.files?.length ? ` <span class="mono muted">${esc(h.files.join(', '))}</span>` : ''}</span></li>`).join('')}</ul></details></td></tr>`).join('')
+    : '<tr><td colspan="5" class="empty">No bugs for this selection.</td></tr>';
+
+  const ar = agents.filter((a) => match(a.feature));
+  $('agents').innerHTML = ar.length ? ar.map((a) => `<tr><td><b>${esc(ROLE[a.role] || a.role)}</b> · ${esc(a.feature)}${a.round ? ` · R${a.round}` : ''}</td><td>${pill(a.status)}</td><td>${esc(a.summary || '—')}${a.failures?.length ? `<div class="muted">${a.failures.length} command failure${a.failures.length > 1 ? 's' : ''} reported</div>` : ''}</td><td class="num">${k(a.tokens?.output)} / ${k(a.tokens?.cacheRead)}</td><td class="muted">${esc(ago(a.lastActivityAt))}</td></tr>`).join('')
+    : '<tr><td colspan="5" class="empty">No agent runs for this selection.</td></tr>';
+}
+
+$('filters').addEventListener('click', (e) => { const b = e.target.closest('button[data-k]'); if (!b) return; filter = b.dataset.k; try { localStorage.setItem('rt-filter', filter); } catch {} render(); });
+try { filter = localStorage.getItem('rt-filter') || 'all'; } catch {}
+setInterval(render, 30000);
+
+(async () => {
+  const db = await claude.use('db');
+  if (!db) { $('sync').textContent = 'Live updates are unavailable in this view. Open the tracker signed in to claude.ai.'; return; }
+  db.doc('tracker/current').onSnapshot((d) => {
+    const data = d && (d.data ? d.data() : d);
+    if (data && data.json) { try { snap = JSON.parse(data.json); render(); } catch { $('sync').textContent = 'The latest update could not be read.'; } }
+  }, () => { $('sync').textContent = 'Lost the live connection. Reload the page to reconnect.'; });
+})();
+</script>

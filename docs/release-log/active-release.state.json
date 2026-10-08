@@ -1,0 +1,1808 @@
+{
+  "exportedAt": "2026-10-08T15:35:47.510Z",
+  "features": {
+    "proficiency-live-qr": {
+      "status": "validate",
+      "lastRound": 2,
+      "lastScore": "28/31",
+      "lastReport": "docs/test-results/proficiency-live-qr/round-2.md"
+    },
+    "world-shell-navigation": {
+      "status": "awaiting_retest",
+      "lastRound": 1,
+      "lastScore": "45/48",
+      "lastReport": "docs/test-results/world-shell-navigation/round-1.md"
+    },
+    "career-bound-outputs": {
+      "status": "validate",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null
+    },
+    "qr-gated-outputs": {
+      "status": "awaiting_retest",
+      "lastRound": 1,
+      "lastScore": "45/48",
+      "lastReport": "docs/test-results/qr-gated-outputs/round-1.md"
+    },
+    "no-silent-failures": {
+      "status": "failed",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null
+    },
+    "release-loop-tooling": {
+      "status": "failed",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null
+    },
+    "output-version-history": {
+      "status": "failed",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null
+    },
+    "resume-rollups": {
+      "status": "failed",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null
+    },
+    "chart-gallery": {
+      "status": "awaiting_retest",
+      "lastRound": 1,
+      "lastScore": "17/20",
+      "lastReport": "docs/test-results/chart-gallery/round-1.md"
+    },
+    "release-intelligence": {
+      "status": "failed",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null
+    },
+    "in-app-release-loop": {
+      "status": "failed",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null
+    },
+    "session-mapping": {
+      "status": "failed",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null
+    },
+    "cover-letter-agent": {
+      "status": "failed",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null
+    }
+  },
+  "bugs": [
+    {
+      "id": "proficiency-live-qr-F2-1",
+      "feature": "proficiency-live-qr",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "J7.1, J7.2 and 390px workspace tabs",
+      "rootCause": "Sandbox refused the compound boot command and the fix agent did not retry.",
+      "files": [
+        "src/components/SharedLiveStates.jsx",
+        "src/components/SharedOutputPage.jsx",
+        "src/components/admin/CareerExperienceConfigurator.jsx"
+      ],
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "proficiency-live-qr-F2-2",
+      "feature": "proficiency-live-qr",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "Change spec fix notes round 2",
+      "rootCause": "Notes written before the checks and not corrected.",
+      "files": [
+        "docs/changes/proficiency-rules-and-live-qr.md"
+      ],
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "proficiency-live-qr-F2-3",
+      "feature": "proficiency-live-qr",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Output Template editor",
+      "rootCause": "Deferred pending chart-gallery merge.",
+      "files": [
+        "src/components/admin/ProficiencyRulesPanel.jsx"
+      ],
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "proficiency-live-qr-F2-4",
+      "feature": "proficiency-live-qr",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "QR page chart view Salt particles",
+      "rootCause": "Awaiting owner design feedback.",
+      "files": [
+        "src/components/SaltParticleChart.jsx"
+      ],
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T1-1",
+      "feature": "proficiency-live-qr",
+      "status": "verified",
+      "class": "defect",
+      "attempts": 1,
+      "step": "Journey 1 step 1: heading and selected path card unreadable",
+      "rootCause": "Dark navy text on the dark World embed (#0d1417). CareerExperienceConfigurator.jsx:166 sets color #1b2a3b with no background, and the heading at line 168 inherits it. CareerMasterEntryPoint.jsx:27 gives the selected path card a translucent background rgba(196,132,58,.08) while its title is navy, so the title vanishes over the dark host. Both were written for the light admin shell. Found by readin…",
+      "files": [
+        "src/components/admin/CareerExperienceConfigurator.jsx",
+        "src/components/admin/CareerMasterEntryPoint.jsx",
+        "src/components/WorldShell.jsx"
+      ],
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Dark navy text on the dark World embed (#0d1417). CareerExperienceConfigurator.jsx:166 sets color #1b2a3b with no background, and the heading at line 168 inherits it. CareerMasterEntryPoint.jsx:27 gi…",
+          "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Configurator gets its own light surface (#f5f2ed); selected path card background made opaque (#fbf3e8).",
+          "commit": "cffa62159a908e927b80fdcad17d2123e59e32a0"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other failures)",
+          "commit": "8430eae"
+        }
+      ]
+    },
+    {
+      "id": "T1-2",
+      "feature": "proficiency-live-qr",
+      "status": "verified",
+      "class": "defect",
+      "attempts": 1,
+      "step": "Phone width (390px) check of Rules & why and the QR page",
+      "rootCause": "Two causes. (a) ProficiencyRulesPanel.jsx:358-361 renders a 7-column table with minWidth 940 inside an overflowX:auto wrapper. At 390px the table is cut at the wrapper edge, and mobile overlay scrollbars give no cue that it scrolls, so the How it was used and Your override columns look unreachable. (b) careerCharts.js builds SVGs with fixed viewBox widths of 470-560 and width=100% (lines 103, 113…",
+      "files": [
+        "src/components/admin/ProficiencyRulesPanel.jsx",
+        "src/lib/careerCharts.js",
+        "src/components/ChartViews.jsx"
+      ],
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Two causes. (a) ProficiencyRulesPanel.jsx:358-361 renders a 7-column table with minWidth 940 inside an overflowX:auto wrapper. At 390px the table is cut at the wrapper edge, and mobile overlay scroll…",
+          "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Rules table: forced visible scroll area, right-edge shadow, swipe caption, sticky first column (no stacked-card layout). Charts: svg min-width 500px inside overflow-x:auto wrapper with swipe caption.",
+          "commit": "cffa62159a908e927b80fdcad17d2123e59e32a0"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other failures)",
+          "commit": "8430eae"
+        }
+      ]
+    },
+    {
+      "id": "T2-1",
+      "feature": "proficiency-live-qr",
+      "status": "retesting",
+      "class": "defect",
+      "attempts": 1,
+      "step": "J7.1 zero-change LIVE DATA banner",
+      "rootCause": "SharedLiveStates.jsx lines 106-108 switch banner background/text on liveChanges.length: dark #1B2A3B only when changes exist, light #F3EEE6 when none. Spec J7.1 and the file header require a bold dark banner in both states.",
+      "files": [
+        "src/components/SharedLiveStates.jsx"
+      ],
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "SharedLiveStates.jsx lines 106-108 switch banner background/text on liveChanges.length: dark #1B2A3B only when changes exist, light #F3EEE6 when none. Spec J7.1 and the file header require a bold dar…",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "fixed",
+          "note": "LIVE DATA banner always dark #1B2A3B with white text; stripe green (zero changes) or gold (changes)",
+          "commit": "47b1b42c5466fdce1af06eeda3f58653e9478e33"
+        }
+      ]
+    },
+    {
+      "id": "T2-2",
+      "feature": "proficiency-live-qr",
+      "status": "retesting",
+      "class": "spec_error",
+      "attempts": 1,
+      "step": "J7.5 category/level change listed (spec example)",
+      "rootCause": "Spec example expects 'printed Advanced -> now Advanced · Integration design' for Ledgerly ERP, but J2 already sets that category before approval, so the printed side already has it. Diff behaviour is correct (validator saw Advanced · Integration design -> Advanced · Hands-on and Expert -> Advanced user-defined).",
+      "files": [
+        "docs/training/proficiency-rules-and-live-qr.md"
+      ],
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Spec example expects 'printed Advanced -> now Advanced · Integration design' for Ledgerly ERP, but J2 already sets that category before approval, so the printed side already has it. Diff behaviour is…",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "fixed",
+          "note": "Spec error: J7.5 example changed to data the journeys leave behind (Ledgerly ERP printed Advanced · Integration design -> now Advanced · Hands-on; Forecast modeling Expert -> Advanced)",
+          "commit": "47b1b42c5466fdce1af06eeda3f58653e9478e33"
+        }
+      ]
+    },
+    {
+      "id": "T2-3",
+      "feature": "proficiency-live-qr",
+      "status": "retesting",
+      "class": "defect",
+      "attempts": 1,
+      "step": "Phone 390px workspace tabs (Proficiency & Rollup Configuration)",
+      "rootCause": "CareerExperienceConfigurator.jsx line 172 tab row is display:flex with no flexWrap or overflowX; five non-shrinking buttons exceed 390px and an overflow-hidden ancestor clips tab 4 and fully hides tab 5 (spec lists only four workspaces, code has five), with no scroll cue.",
+      "files": [
+        "src/components/admin/CareerExperienceConfigurator.jsx",
+        "docs/training/proficiency-rules-and-live-qr.md"
+      ],
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "CareerExperienceConfigurator.jsx line 172 tab row is display:flex with no flexWrap or overflowX; five non-shrinking buttons exceed 390px and an overflow-hidden ancestor clips tab 4 and fully hides ta…",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "fixed",
+          "note": "Workspace tab row gets flexWrap:wrap so all five tabs are reachable at 390px; spec line 7 now lists five workspaces and the wrapping",
+          "commit": "47b1b42c5466fdce1af06eeda3f58653e9478e33"
+        }
+      ]
+    },
+    {
+      "id": "T2-4",
+      "feature": "proficiency-live-qr",
+      "status": "retesting",
+      "class": "defect",
+      "attempts": 1,
+      "step": "J7.2 document wording vs banner",
+      "rootCause": "SharedLiveStates.jsx lines 118-119 hard-codes 'The document text above always stays exactly as approved', but career-bound outputs re-resolve wording from Career Master on every view, and SharedOutputPage.jsx lines 94-102 shows a 'wording has changed' notice. The banner copy predates the career-bound feature and SharedLiveStates receives no documentState.",
+      "files": [
+        "src/components/SharedLiveStates.jsx",
+        "src/components/SharedOutputPage.jsx",
+        "docs/training/proficiency-rules-and-live-qr.md"
+      ],
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "SharedLiveStates.jsx lines 118-119 hard-codes 'The document text above always stays exactly as approved', but career-bound outputs re-resolve wording from Career Master on every view, and SharedOutpu…",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "fixed",
+          "note": "SharedOutputPage passes documentState to SharedLiveStates, which picks the wording sentence by state (changed / career-bound unchanged / frozen); J7.1 spec documents the three sentences and the dark …",
+          "commit": "47b1b42c5466fdce1af06eeda3f58653e9478e33"
+        }
+      ]
+    },
+    {
+      "id": "world-shell-navigation-B8",
+      "feature": "world-shell-navigation",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "Commit trailer: Sonnet 5.5 used, task required Opus 5.5",
+      "rootCause": "Conflicting trailer instructions between the computed task text and the session attribution reminder.",
+      "files": [],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "world-shell-navigation-B9",
+      "feature": "world-shell-navigation",
+      "status": "open",
+      "class": "test_harness",
+      "attempts": 0,
+      "step": "Test accounts / member vs admin journeys",
+      "rootCause": "Training spec predates the create-test-member.mjs rule.",
+      "files": [
+        "docs/training/world-shell-opportunity-outputs.md",
+        "scripts/create-test-member.mjs"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (test_harness)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "world-shell-navigation-B11",
+      "feature": "world-shell-navigation",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Spec gap: 3D island entry never exercised",
+      "rootCause": "Walk avoided WebGL dependence.",
+      "files": [
+        "docs/training/world-shell-opportunity-outputs.md",
+        "src/components/WorldShell.jsx"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "world-shell-navigation-B12",
+      "feature": "world-shell-navigation",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Spec Known limitation: no in-app upload of a package JSON",
+      "rootCause": "Request asked only for a script option; member cannot file a package from the World Shell alone.",
+      "files": [
+        "scripts/import-application-package.mjs",
+        "server/routes/resumeOutputs.js",
+        "src/components/OpportunityOutputsSection.jsx"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "world-shell-navigation-B14",
+      "feature": "world-shell-navigation",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "Change spec header stale",
+      "rootCause": "Spec written before release naming/integration moved.",
+      "files": [
+        "docs/changes/world-shell-opportunity-outputs.md"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "wsn-r1-auto-cover-letter",
+      "feature": "world-shell-navigation",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "J2 2.3, J4 4.1, J9 9.1 (knock-on J9.2, J10.1)",
+      "rootCause": "coverLetterAutoDraft.js:103 registers an onOpportunityCreated hook (opportunityHooks.js, run by createCareerOpportunity) that auto-files a linked template cover letter DRAFT for every new tracked opportunity unless cover_letter_settings.autoDraft is false (default true, coverLetterTemplate.js:50,77). Shipped in commit 4be0bec (docs/changes/cover-letter-agent.md), after the navigation training spe…",
+      "files": [
+        "docs/training/world-shell-navigation.md",
+        "docs/changes/world-shell-navigation.md"
+      ],
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "coverLetterAutoDraft.js:103 registers an onOpportunityCreated hook (opportunityHooks.js, run by createCareerOpportunity) that auto-files a linked template cover letter DRAFT for every new tracked opp…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-B9",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "commit",
+      "rootCause": "followed system attribution reminder over task text",
+      "files": [],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-B10",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "spec gaps",
+      "rootCause": "scoped out by build agent",
+      "files": [
+        "server/lib/packageReconciliation.js",
+        "server/lib/outputRendering.js",
+        "server/lib/careerBound.js",
+        "src/components/admin/CareerBoundOutputEditor.jsx",
+        "src/components/admin/CareerReconciliationPanel.jsx",
+        "src/components/admin/MyResumePanel.jsx"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-B11",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "nav",
+      "rootCause": "queue wired as admin tab with World Shell island as extra",
+      "files": [
+        "server/db.js",
+        "docs/training/career-bound-outputs.md"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-B12",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "World Shell reach",
+      "rootCause": "only the review queue got an island",
+      "files": [
+        "src/components/WorldShell.jsx",
+        "src/lib/worldIslands.js",
+        "src/components/admin/MyResumePanel.jsx"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-B13",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "test_harness",
+      "attempts": 0,
+      "step": "journeys",
+      "rootCause": "spec and walk written for admin",
+      "files": [
+        "docs/training/career-bound-outputs.md"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (test_harness)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-B7",
+      "feature": "qr-gated-outputs",
+      "status": "fixed_awaiting_retest",
+      "class": "owner_direction_conflict",
+      "attempts": 1,
+      "step": "Preconditions 1, 4; Journey 3 step 4; Journey 8",
+      "rootCause": "Spec written before member@test.local accounts with accepted terms existed.",
+      "files": [
+        "docs/training/qr-gated-outputs.md",
+        "docs/changes/qr-gated-outputs.md",
+        "scripts/import-application-package.mjs"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Spec rewritten to sign in as member@test.local, route to My Resume as the member, and expect 'Approved by Test Member'. Import script header documents SB_EMAIL/SB_PASSWORD for the member.",
+          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-B8",
+      "feature": "qr-gated-outputs",
+      "status": "fixed_awaiting_retest",
+      "class": "owner_direction_conflict",
+      "attempts": 1,
+      "step": "Where things are; all journeys",
+      "rootCause": "Owner said everything comes from World Shell; navigation built on admin Classic Tools tab.",
+      "files": [
+        "server/db.js",
+        "src/lib/worldIslands.js",
+        "src/components/WorldShell.jsx",
+        "docs/training/qr-gated-outputs.md"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Added a World Shell island for the existing 'resume' tab (ISLAND_REGISTRY.resume, kind embed) that mounts MyResumePanel. No new nav entry and no db.js change, because members already have the resume …",
+          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-B9",
+      "feature": "qr-gated-outputs",
+      "status": "fixed_awaiting_retest",
+      "class": "requirement_gap",
+      "attempts": 1,
+      "step": "Preconditions 4; Journey 8",
+      "rootCause": "No import control in MyResumePanel.",
+      "files": [
+        "scripts/import-application-package.mjs",
+        "server/routes/resumeOutputs.js",
+        "src/components/admin/MyResumePanel.jsx"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Added an 'Import package' control above Resume Output History, visible even when the history is empty. It posts to the existing /api/resume-outputs/import-package, lists per-output results, and shows…",
+          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-B10",
+      "feature": "qr-gated-outputs",
+      "status": "fixed_awaiting_retest",
+      "class": "requirement_gap",
+      "attempts": 1,
+      "step": "Journey 6 / request scope",
+      "rootCause": "docx path only via stamp-application-package-docx.py, no UI or journey.",
+      "files": [
+        "scripts/stamp-application-package-docx.py",
+        "scripts/sync-site-with-application-package.mjs",
+        "server/lib/outputRendering.js",
+        "docs/training/qr-gated-outputs.md"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Added a real .docx download. New outputDocx.js builds the file from plain OOXML via JSZip. Routes: GET /api/resume-outputs/:id/download.docx and public GET /api/shared-outputs/:token/download.docx. B…",
+          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-B11",
+      "feature": "qr-gated-outputs",
+      "status": "fixed_awaiting_retest",
+      "class": "test_harness",
+      "attempts": 1,
+      "step": "Journey 6",
+      "rootCause": "Browser cannot show annotations.",
+      "files": [
+        "docs/training/qr-gated-outputs.md"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (test_harness)",
+          "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Journey 6 now gives exact commands with the expected three '/URI (<BASE>/r/<SLUG1>)' lines. Browser step is 'click Download PDF, expect HTTP 200 application/pdf'. The response is inline so there is n…",
+          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
+        }
+      ]
+    },
+    {
+      "id": "T1",
+      "feature": "qr-gated-outputs",
+      "status": "fixed_awaiting_retest",
+      "class": "spec_error",
+      "attempts": 1,
+      "step": "J2.1 View dialog content",
+      "rootCause": "Shipped UI copy at MyResumePanel.jsx:1052 uses an em dash; the training spec (qr-gated-outputs.md:88) was written with a hyphen. No behavior wrong.",
+      "files": [
+        "docs/training/qr-gated-outputs.md",
+        "src/components/admin/MyResumePanel.jsx"
+      ],
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Shipped UI copy at MyResumePanel.jsx:1052 uses an em dash; the training spec (qr-gated-outputs.md:88) was written with a hyphen. No behavior wrong.",
+          "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Spec now expects the em dash in 'Read-only — no edits can be made here.' No code change.",
+          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "feature": "qr-gated-outputs",
+      "status": "fixed_awaiting_retest",
+      "class": "defect",
+      "attempts": 1,
+      "step": "J2.1b Document header contact line readable (web view)",
+      "rootCause": "header.contact has no defined/validated type. Spec seeds an array; DocumentBlocksView.jsx:94 renders it raw so React concatenates without separator, while outputRendering.js:186 passes it to pdfkit which coerces via Array.toString() giving a comma. Editor adapter documentBlocksEditor.js:28 also wraps it assuming a string.",
+      "files": [
+        "src/components/DocumentBlocksView.jsx",
+        "server/lib/outputRendering.js",
+        "src/lib/documentBlocksEditor.js",
+        "server/lib/applicationPackages.js"
+      ],
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "header.contact has no defined/validated type. Spec seeds an array; DocumentBlocksView.jsx:94 renders it raw so React concatenates without separator, while outputRendering.js:186 passes it to pdfkit w…",
+          "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Added one contactText() normalizer (list to trimmed entries joined with ' · ', string unchanged). Used in the web view, PDF, .docx and editor adapter. Import does not rewrite stored content. Spec exp…",
+          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
+        }
+      ]
+    },
+    {
+      "id": "T3",
+      "feature": "qr-gated-outputs",
+      "status": "fixed_awaiting_retest",
+      "class": "spec_error",
+      "attempts": 1,
+      "step": "J3.3 Approve toasts",
+      "rootCause": "Toast at MyResumePanel.jsx:627 uses an em dash, which other specs (no-silent-failures, cover-letter-agent, proficiency-rules-and-live-qr) already expect; qr-gated-outputs.md lines 100/155/169 used a hyphen.",
+      "files": [
+        "docs/training/qr-gated-outputs.md",
+        "src/components/admin/MyResumePanel.jsx"
+      ],
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Toast at MyResumePanel.jsx:627 uses an em dash, which other specs (no-silent-failures, cover-letter-agent, proficiency-rules-and-live-qr) already expect; qr-gated-outputs.md lines 100/155/169 used a …",
+          "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Spec toast text corrected to the em-dash form 'Approved — private QR link created (copied to clipboard).' in Journeys 3, 7 and 8. No code change.",
+          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
+        }
+      ]
+    },
+    {
+      "id": "no-silent-failures-B11",
+      "feature": "no-silent-failures",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "11 other /output/* pages and My Resume use fetchCareerMaster",
+      "rootCause": "fetchCareerMaster swallows non-OK responses, so a failure renders as no data",
+      "files": [
+        "src/lib/careerMaster.js",
+        "src/components/blocks/index.jsx",
+        "src/components/Output.jsx",
+        "src/components/admin/MyResumePanel.jsx"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "no-silent-failures-B12",
+      "feature": "no-silent-failures",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "G1 training spec P1 signs in as admin",
+      "rootCause": "spec written against admin account",
+      "files": [
+        "docs/training/no-silent-failures.md"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "no-silent-failures-B13",
+      "feature": "no-silent-failures",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "G2 entry points and setup not via World Shell/UI",
+      "rootCause": "spec relies on classic workspace URL, CLI and console setup",
+      "files": [
+        "docs/training/no-silent-failures.md"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "no-silent-failures-B14",
+      "feature": "no-silent-failures",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "G4 no UI to add career chart block to a template",
+      "rootCause": "chart gallery control absent",
+      "files": [
+        "src/components/Output.jsx"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "no-silent-failures-B15",
+      "feature": "no-silent-failures",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "G5 QR banner wording under RECORDED DATA",
+      "rootCause": "sentence not adapted when liveError set",
+      "files": [
+        "src/components/SharedLiveStates.jsx"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "no-silent-failures-B16",
+      "feature": "no-silent-failures",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "G6 remaining silent paths and spec run notes",
+      "rootCause": "out of scope in build 1.1",
+      "files": [
+        "server/lib/careerAtomMigration.js",
+        "docs/training/no-silent-failures.md"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-loop-tooling-B1",
+      "feature": "release-loop-tooling",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Docs claim",
+      "rootCause": "Documentation describes a capability that was never implemented",
+      "files": [
+        "docs/release-process.md",
+        "server/data/releaseLoop/definition.json",
+        ".claude/skills/salt-basin-release-loop/SKILL.md",
+        "CLAUDE.md"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-loop-tooling-B2",
+      "feature": "release-loop-tooling",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Sync",
+      "rootCause": "Dead-agent detection limited to extras",
+      "files": [
+        "scripts/release-tracker-sync.mjs"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-loop-tooling-B3",
+      "feature": "release-loop-tooling",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Tracker 390px",
+      "rootCause": "Responsive reflow not implemented",
+      "files": [
+        "tools/release-tracker/index.html"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-loop-tooling-B4",
+      "feature": "release-loop-tooling",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "Host check",
+      "rootCause": "Only the local harness stub was tested",
+      "files": [
+        "tools/release-tracker/index.html"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-loop-tooling-B5",
+      "feature": "release-loop-tooling",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "Owner direction",
+      "rootCause": "Dev tooling surface chosen outside the World Shell",
+      "files": [
+        "tools/release-tracker/index.html"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "output-version-history-B3",
+      "feature": "output-version-history",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "integrate",
+      "rootCause": "integration moved after rebase",
+      "files": [],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "output-version-history-B8",
+      "feature": "output-version-history",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Journey 3 step 1, Journey 5 step 3",
+      "rootCause": "nothing freezes career-bound wording before approval",
+      "files": [
+        "server/lib/outputVersionHistory.js",
+        "server/lib/careerBound.js",
+        "server/routes/resumeOutputs.js"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "output-version-history-B9",
+      "feature": "output-version-history",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "history of legacy approved versions",
+      "rootCause": "no frozen data exists to recover",
+      "files": [
+        "server/lib/outputVersionHistory.js"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "output-version-history-B10",
+      "feature": "output-version-history",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "tracked changes with a chart or table edit",
+      "rootCause": "text-only diff",
+      "files": [
+        "src/lib/outputVersionDiff.js",
+        "server/lib/outputVersionHistory.js"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "output-version-history-B11",
+      "feature": "output-version-history",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "request: reachable from the editor, template content",
+      "rootCause": "template configs not covered by versionBody or UI",
+      "files": [
+        "src/components/admin/OutputTemplateConfigurator.jsx",
+        "server/lib/outputVersionHistory.js"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "output-version-history-B12",
+      "feature": "output-version-history",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "validation",
+      "rootCause": "build agent self-validated",
+      "files": [
+        "docs/changes/output-version-history.md",
+        "docs/training/output-version-history.md"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "resume-rollups-B3",
+      "feature": "resume-rollups",
+      "status": "open",
+      "class": "test_harness",
+      "attempts": 0,
+      "step": "Journey 7 step 3",
+      "rootCause": "Training spec does not say exact match.",
+      "files": [
+        "docs/training/resume-rollups.md"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (test_harness)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "resume-rollups-B4",
+      "feature": "resume-rollups",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "Edge cases",
+      "rootCause": "Per-type seeding re-seeds an empty type.",
+      "files": [
+        "src/components/admin/RollupGroupingsPanel.jsx",
+        "docs/training/resume-rollups.md"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (product_defect)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "resume-rollups-B5",
+      "feature": "resume-rollups",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Journey 9 (Site editor part missing)",
+      "rootCause": "No journey selects the new grouping in the block picker.",
+      "files": [
+        "src/components/blocks/CareerProspectBlocks.jsx",
+        "src/components/admin/EditorPane.jsx",
+        "docs/training/resume-rollups.md"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "resume-rollups-B8",
+      "feature": "resume-rollups",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "Preconditions / all journeys",
+      "rootCause": "Member journey was validated as admin through /member, not as member@test.local in the World Shell.",
+      "files": [
+        "docs/training/resume-rollups.md"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "resume-rollups-B9",
+      "feature": "resume-rollups",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Journey 12",
+      "rootCause": "Only tile numbers were wired; teaser and hero labels untouched.",
+      "files": [
+        "src/components/Output.jsx"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "resume-rollups-B10",
+      "feature": "resume-rollups",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Journey 10/12",
+      "rootCause": "Bars count recorded tier.",
+      "files": [
+        "server/lib/resumeRollups.js",
+        "src/components/Output.jsx"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "resume-rollups-B11",
+      "feature": "resume-rollups",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "Journey 12 (block)",
+      "rootCause": "Column count not updated.",
+      "files": [
+        "src/lib/outputBlocks.js"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (product_defect)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "resume-rollups-B12",
+      "feature": "resume-rollups",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Journeys 7/8",
+      "rootCause": "Undefined business rule.",
+      "files": [
+        "server/lib/resumeRollups.js"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "resume-rollups-B13",
+      "feature": "resume-rollups",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Edge cases",
+      "rootCause": "No journeys.",
+      "files": [
+        "docs/training/resume-rollups.md"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "resume-rollups-B14",
+      "feature": "resume-rollups",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "Integrate",
+      "rootCause": "Branch not rebased.",
+      "files": [
+        "docs/changes/resume-rollups.md"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-B8",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "career master write",
+      "rootCause": "Boolean value bound to a ::jsonb parameter; postgres infers boolean type and cannot cast.",
+      "files": [
+        "server/lib/careerAtomMigration.js",
+        "server/routes/careerMaster.js"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (product_defect)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-B9",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "journey: pick a chart",
+      "rootCause": "Two-step pick then Add flow; selection never touches the configured block list.",
+      "files": [
+        "src/components/admin/ChartGallery.jsx",
+        "src/components/admin/OutputTemplateConfigurator.jsx"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-B10",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "test_harness",
+      "attempts": 0,
+      "step": "validation setup",
+      "rootCause": "Builder shortcut for speed.",
+      "files": [
+        "docs/training/chart-gallery.md"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (test_harness)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "CG-R1-1",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "Live Preview stays visible beside gallery (sticky)",
+      "rootCause": "position:sticky on the preview column (OutputTemplateConfigurator.jsx ~L562) binds to the nearest overflow-y:auto ancestor: the configurator root div (~L311) and Hub wrapper (L110). Neither has a bounded height so they never scroll; sticky never engages while the real scroller is further out.",
+      "files": [
+        "src/components/admin/OutputTemplateConfigurator.jsx"
+      ],
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "position:sticky on the preview column (OutputTemplateConfigurator.jsx ~L562) binds to the nearest overflow-y:auto ancestor: the configurator root div (~L311) and Hub wrapper (L110). Neither has a bou…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "CG-R1-2",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "Failed load alert includes HTTP status",
+      "rootCause": "proficiency loads via api.getCareerProficiency() -> request() in src/lib/api.js L2-19, which uses body.error text instead of the status, and throws a JSON parse error on an empty body. rollups/master use loadJson() which includes the status.",
+      "files": [
+        "src/components/admin/OutputTemplateConfigurator.jsx",
+        "src/lib/api.js"
+      ],
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "proficiency loads via api.getCareerProficiency() -> request() in src/lib/api.js L2-19, which uses body.error text instead of the status, and throws a JSON parse error on an empty body. rollups/master…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "CG-R1-3",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "Phone width 390px usability",
+      "rootCause": "S.shell (L65) is a fixed grid 220px 1fr 380px with no responsive rule; the 1fr column has min-width:auto so wide content prevents shrinking. Layout overflows to about 945px and the preview iframe is unreachable.",
+      "files": [
+        "src/components/admin/OutputTemplateConfigurator.jsx",
+        "src/components/admin/ChartGallery.jsx"
+      ],
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "S.shell (L65) is a fixed grid 220px 1fr 380px with no responsive rule; the 1fr column has min-width:auto so wide content prevents shrinking. Layout overflows to about 945px and the preview iframe is …",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-intelligence-B7",
+      "feature": "release-intelligence",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "Entry points",
+      "rootCause": "Salvaged partial build added a second, admin-nav entry point beside the correct World Shell island.",
+      "files": [
+        "src/components/admin/AdminShell.jsx",
+        "server/db.js",
+        "docs/changes/release-intelligence.md",
+        "docs/training/release-intelligence.md"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-intelligence-B8",
+      "feature": "release-intelligence",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Commit reconciliation",
+      "rootCause": "Commit handling stopped at storing the sha.",
+      "files": [
+        "server/lib/releaseReconcile.js",
+        "server/lib/releaseLogImporter.js",
+        "server/lib/releaseIntelligence.js",
+        "scripts/import-release-logs.mjs",
+        "src/components/admin/ReleaseIntelligencePanel.jsx"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-intelligence-B9",
+      "feature": "release-intelligence",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "Loop records",
+      "rootCause": "Validation round 1 has not yet run.",
+      "files": [
+        "docs/test-results/release-intelligence/",
+        "docs/changes/release-intelligence.md"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-intelligence-B10",
+      "feature": "release-intelligence",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Known limitations",
+      "rootCause": "No automatic ingest from release-tracker-sync output; classification is deliberately not guessed; chart is categorical rather than time-scaled.",
+      "files": [
+        "scripts/release-tracker-sync.mjs",
+        "scripts/import-release-logs.mjs",
+        "src/lib/releaseCharts.js"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-B1",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "Report written to worktree path",
+      "rootCause": "Worktree isolation blocks writes to the shared checkout",
+      "files": [],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-B2",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "Branch base",
+      "rootCause": "The build was done on the old base",
+      "files": [
+        "server/lib/applicationPackages.js",
+        "server/lib/outputRendering.js",
+        "src/components/DocumentBlocksView.jsx",
+        "src/components/admin/MyResumePanel.jsx",
+        "src/lib/api.js",
+        "server/db.js",
+        "server/index.js",
+        "CLAUDE.md"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (product_defect)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-B3",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "World Shell reachability",
+      "rootCause": "The build placed every entry point in Classic Tools / My Resume, but the owner said everything comes from the World Shell",
+      "files": [
+        "src/components/OpportunityOutputsSection.jsx",
+        "src/components/WorldShell.jsx",
+        "src/components/admin/MyResumePanel.jsx",
+        "src/components/admin/CoverLetterPackagesPanel.jsx"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-B4",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "Member terms 428",
+      "rootCause": "No client handling of 428 responses",
+      "files": [
+        "src/lib/api.js",
+        "server/auth.js"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (product_defect)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-B5",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "informational",
+      "attempts": 0,
+      "step": "Island click in the 3D canvas",
+      "rootCause": "unknown",
+      "files": [],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (informational)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-B6",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "Test account rule",
+      "rootCause": "The training spec was written around a hand-built account",
+      "files": [
+        "docs/training/cover-letter-agent.md"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-B7",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Career-bound integration",
+      "rootCause": "The branch predates career-bound overrides and the link mechanism",
+      "files": [
+        "server/lib/coverLetterTemplate.js",
+        "server/lib/packageSearch.js",
+        "server/lib/packageAssembly.js",
+        "server/lib/coverLetterAutoDraft.js"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-B8",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Package contents",
+      "rootCause": "Chart blocks were not included in assembleApplicationPackage",
+      "files": [
+        "server/lib/packageAssembly.js"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-B9",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "Scope additions",
+      "rootCause": "Added inside the Classic Tools panel",
+      "files": [
+        "src/components/admin/CoverLetterPackagesPanel.jsx"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-B10",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "informational",
+      "attempts": 0,
+      "step": "Stub provider and real-model path",
+      "rootCause": "No key in the test environment",
+      "files": [],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (informational)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-B11",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Second cover letter generator",
+      "rootCause": "The new deterministic generator was not wired into the rail",
+      "files": [
+        "src/components/WorldShell.jsx"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-B12",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "environment",
+      "attempts": 0,
+      "step": "Harness and environment notes",
+      "rootCause": "Sandbox limits and a design limit",
+      "files": [],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (environment)",
+          "commit": null
+        }
+      ]
+    }
+  ]
+}

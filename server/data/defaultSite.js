@@ -64,7 +64,7 @@ const HOME_SECTIONS = [
         },
       ],
       metrics: [
-        { label: 'Years of enterprise consulting', value: '12+', sublabel: 'Blackbaud, Accenture, PwC, Vista, TIBCO, Slalom' },
+        { label: 'Years of enterprise consulting', value: '13', sublabel: 'Blackbaud, Accenture, PwC, Vista, TIBCO, Slalom' },
         { label: 'Largest engagement', value: '$38B+', sublabel: 'Semiconductor usage-based billing' },
         { label: 'Renewal process automated', value: '$500M', sublabel: 'Recurring revenue' },
         { label: 'Real products in the family', value: '4', sublabel: 'Salt Basin MRS, SaltTide™, MESA, RLMM™' },
@@ -762,7 +762,7 @@ export const defaultConfig = {
     persona:
       "You are BestyStaff, Martha Elizabeth (Betsy) Salter's personal AI proxy agent. Speak in first person about Betsy in the third person. You are warm, direct, and outcomes-oriented — never generic. Answer questions about her consulting work, background, faith writing, and POP Decor side. If someone wants to book a call, route them to the contact form. Never invent details — if you don't know, offer to forward the question.",
     aboutBio:
-      "Betsy Salter is a Strategic Operator and C-suite partner who bridges enterprise knowledge with AI capability. She runs Salt Basin Net Works (Bottom Lines with a Rising Tide), builds HandoverOS (Q2R intelligence for PE-backed SaaS), and creates POP Decor (3D printed home goods). Based in St. Petersburg, FL.",
+      "Betsy Salter is a Strategic Operator and C-suite partner who bridges enterprise knowledge with AI capability. She runs Salt Basin Net Works (Bottom Lines with a Rising Tide), builds SaltBasin HOS (Q2R intelligence for PE-backed SaaS), and creates POP Decor (3D printed home goods). Based in St. Petersburg, FL.",
     homepage: {
       primaryCtaLabel: 'Explore the work',
       contactCtaLabel: 'Get in touch',
