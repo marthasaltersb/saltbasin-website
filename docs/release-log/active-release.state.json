@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-08T16:49:38.549Z",
+  "exportedAt": "2026-10-09T00:52:59.475Z",
   "features": {
     "proficiency-live-qr": {
       "status": "failing",
@@ -8,61 +8,55 @@
       "lastReport": "docs/test-results/proficiency-live-qr/round-5.md"
     },
     "world-shell-navigation": {
-      "status": "awaiting_retest",
+      "status": "fix",
       "lastRound": 1,
       "lastScore": "45/48",
       "lastReport": "docs/test-results/world-shell-navigation/round-1.md"
     },
     "career-bound-outputs": {
-      "status": "validate",
+      "status": "fix",
       "lastRound": 2,
       "lastScore": "54/56",
       "lastReport": "docs/test-results/career-bound-outputs/round-2.md"
     },
     "qr-gated-outputs": {
-      "status": "awaiting_retest",
+      "status": "fix",
       "lastRound": 1,
       "lastScore": "45/48",
       "lastReport": "docs/test-results/qr-gated-outputs/round-1.md"
     },
     "no-silent-failures": {
-      "status": "failed",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null
     },
     "release-loop-tooling": {
-      "status": "failed",
+      "status": "between_stages",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null
     },
     "output-version-history": {
-      "status": "failed",
+      "status": "integrate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null
     },
     "resume-rollups": {
-      "status": "failed",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null
     },
     "chart-gallery": {
-      "status": "awaiting_retest",
+      "status": "fix",
       "lastRound": 1,
       "lastScore": "17/20",
       "lastReport": "docs/test-results/chart-gallery/round-1.md"
     },
     "release-intelligence": {
-      "status": "failed",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null
-    },
-    "in-app-release-loop": {
-      "status": "failed",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null
@@ -73,8 +67,14 @@
       "lastScore": null,
       "lastReport": null
     },
+    "in-app-release-loop": {
+      "status": "build",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null
+    },
     "cover-letter-agent": {
-      "status": "failed",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null
@@ -622,7 +622,7 @@
     {
       "id": "world-shell-navigation-B8",
       "feature": "world-shell-navigation",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "Commit trailer: Sonnet 5.5 used, task required Opus 5.5",
@@ -640,7 +640,7 @@
     {
       "id": "world-shell-navigation-B9",
       "feature": "world-shell-navigation",
-      "status": "open",
+      "status": "fixing",
       "class": "test_harness",
       "attempts": 0,
       "step": "Test accounts / member vs admin journeys",
@@ -661,7 +661,7 @@
     {
       "id": "world-shell-navigation-B11",
       "feature": "world-shell-navigation",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Spec gap: 3D island entry never exercised",
@@ -682,7 +682,7 @@
     {
       "id": "world-shell-navigation-B12",
       "feature": "world-shell-navigation",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Spec Known limitation: no in-app upload of a package JSON",
@@ -704,7 +704,7 @@
     {
       "id": "world-shell-navigation-B14",
       "feature": "world-shell-navigation",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "Change spec header stale",
@@ -724,7 +724,7 @@
     {
       "id": "wsn-r1-auto-cover-letter",
       "feature": "world-shell-navigation",
-      "status": "open",
+      "status": "fixing",
       "class": "spec_error",
       "attempts": 0,
       "step": "J2 2.3, J4 4.1, J9 9.1 (knock-on J9.2, J10.1)",
@@ -745,7 +745,7 @@
     {
       "id": "career-bound-outputs-B9",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "commit",
@@ -757,21 +757,15 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (process)",
           "commit": null
-        },
-        {
-          "round": 1,
-          "event": "not_fixed",
-          "note": "Trailer conflict. The task text says Co-Authored-By: Claude Opus 5.5, but the session attribution reminder says Claude Sonnet 5.5, and this agent is Sonnet, so the commit carries the Sonnet trailer. …",
-          "commit": null
         }
       ]
     },
     {
       "id": "career-bound-outputs-B10",
       "feature": "career-bound-outputs",
-      "status": "verified",
+      "status": "fixing",
       "class": "requirement_gap",
-      "attempts": 1,
+      "attempts": 0,
       "step": "spec gaps",
       "rootCause": "scoped out by build agent",
       "files": [
@@ -788,27 +782,15 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
           "commit": null
-        },
-        {
-          "round": 1,
-          "event": "fixed",
-          "note": "G3: per-output Career Master overrides for template-driven outputs (config.masterOverrides, applyMasterOverrides in OutputTemplateBody, editor card with Overridden badge and per-field Revert). G4: pa…",
-          "commit": "3472137"
-        },
-        {
-          "round": 2,
-          "event": "verified",
-          "note": "Retest round 2: this bug's step passed (the round had other failures)",
-          "commit": "cd6caf8"
         }
       ]
     },
     {
       "id": "career-bound-outputs-B11",
       "feature": "career-bound-outputs",
-      "status": "verified",
+      "status": "fixing",
       "class": "owner_direction_conflict",
-      "attempts": 1,
+      "attempts": 0,
       "step": "nav",
       "rootCause": "queue wired as admin tab with World Shell island as extra",
       "files": [
@@ -821,27 +803,15 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
           "commit": null
-        },
-        {
-          "round": 1,
-          "event": "fixed",
-          "note": "Removed the admin_nav injection of the review queue in db.js. The queue is reached from the World Shell Journeys card (member memberTabs) and from a dialog opened by MyResumePanel (portalled to body)…",
-          "commit": "3472137"
-        },
-        {
-          "round": 2,
-          "event": "verified",
-          "note": "Retest round 2: this bug's step passed (the round had other failures)",
-          "commit": "cd6caf8"
         }
       ]
     },
     {
       "id": "career-bound-outputs-B12",
       "feature": "career-bound-outputs",
-      "status": "verified",
+      "status": "fixing",
       "class": "owner_direction_conflict",
-      "attempts": 1,
+      "attempts": 0,
       "step": "World Shell reach",
       "rootCause": "only the review queue got an island",
       "files": [
@@ -855,27 +825,15 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
           "commit": null
-        },
-        {
-          "round": 1,
-          "event": "fixed",
-          "note": "Added a resume island to ISLAND_REGISTRY and mounted MyResumePanel in WorldShell SIMPLE_EMBED_COMPONENTS for member and admin scope. WorldShell is already wrapped in CareerConsentGate.",
-          "commit": "3472137"
-        },
-        {
-          "round": 2,
-          "event": "verified",
-          "note": "Retest round 2: this bug's step passed (the round had other failures)",
-          "commit": "cd6caf8"
         }
       ]
     },
     {
       "id": "career-bound-outputs-B13",
       "feature": "career-bound-outputs",
-      "status": "verified",
+      "status": "fixing",
       "class": "test_harness",
-      "attempts": 1,
+      "attempts": 0,
       "step": "journeys",
       "rootCause": "spec and walk written for admin",
       "files": [
@@ -887,25 +845,13 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (test_harness)",
           "commit": null
-        },
-        {
-          "round": 1,
-          "event": "fixed",
-          "note": "Rewrote the training spec to v2 for member@test.local (create-test-member.mjs), starting at /world Journeys. Added live-preview steps, the certification task, and Journeys 9, 10 and 11. Appended Fix …",
-          "commit": "3472137"
-        },
-        {
-          "round": 2,
-          "event": "verified",
-          "note": "Retest round 2: this bug's step passed (the round had other failures)",
-          "commit": "cd6caf8"
         }
       ]
     },
     {
       "id": "career-bound-outputs-F1-3",
       "feature": "career-bound-outputs",
-      "status": "retesting",
+      "status": "fixed_awaiting_retest",
       "class": "requirement_gap",
       "attempts": 1,
       "step": "Journey 9 / change spec Known limitations line 89",
@@ -933,7 +879,7 @@
     {
       "id": "career-bound-outputs-F1-4",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "change spec Known limitations line 90",
@@ -960,7 +906,7 @@
     {
       "id": "career-bound-outputs-F1-5",
       "feature": "career-bound-outputs",
-      "status": "retesting",
+      "status": "fixed_awaiting_retest",
       "class": "process",
       "attempts": 1,
       "step": "Journey 7.4",
@@ -986,7 +932,7 @@
     {
       "id": "career-bound-outputs-F1-7",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "commit 3472137 trailer (B9)",
@@ -1010,7 +956,7 @@
     {
       "id": "career-bound-outputs-F1-8",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "release process",
@@ -1036,7 +982,7 @@
     {
       "id": "career-bound-outputs-F2-3",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Output Templates > Sections overrides (J9)",
@@ -1059,7 +1005,7 @@
     {
       "id": "career-bound-outputs-F2-4",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "Commit trailer",
@@ -1077,7 +1023,7 @@
     {
       "id": "career-bound-outputs-F2-5",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "Round-N test result file",
@@ -1097,7 +1043,7 @@
     {
       "id": "career-bound-outputs-F2-6",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "product_defect",
       "attempts": 0,
       "step": "J1.2 Save changes button",
@@ -1117,7 +1063,7 @@
     {
       "id": "career-bound-outputs-F2-7",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "product_defect",
       "attempts": 0,
       "step": "J6.10/J11.2 Career Sources to Review dialog",
@@ -1137,7 +1083,7 @@
     {
       "id": "career-bound-outputs-F2-8",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "product_defect",
       "attempts": 0,
       "step": "J6.10 Convert to career-bound output",
@@ -1158,7 +1104,7 @@
     {
       "id": "career-bound-outputs-F2-9",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Legibility fix coverage (J1.2a, J9.0)",
@@ -1180,7 +1126,7 @@
     {
       "id": "career-bound-outputs-F2-10",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "J9 skills/tools/certifications overrides",
@@ -1201,40 +1147,27 @@
     {
       "id": "cbo-r1-phone-editor",
       "feature": "career-bound-outputs",
-      "status": "verified",
+      "status": "fixing",
       "class": "defect",
-      "attempts": 1,
+      "attempts": 0,
       "step": "Phone width (390px): career-bound output editor dialog",
-      "rootCause": "CareerBoundOutputEditor.jsx:19 S.wrap is a fixed two-column inline grid ('minmax(0,1.1fr) minmax(0,1fr)') with no narrow breakpoint. At 390px each column is about 150px, so inputs and textareas are unusable and Preview is clipped. minWidth:0 lets the columns shrink instead of overflow, so no horizontal page scroll appears.",
+      "rootCause": "S.wrap in CareerBoundOutputEditor.jsx was a fixed two-column inline grid (minmax(0,1.1fr) minmax(0,1fr)); inline styles cannot use media queries so it never stacked at phone width. Fixed in commit 3472137, made after the round-1 screenshot was taken. Round-2 J10.1 passed at 390px.",
       "files": [
-        "src/components/admin/CareerBoundOutputEditor.jsx",
-        "src/components/admin/MyResumePanel.jsx"
+        "src/components/admin/CareerBoundOutputEditor.jsx"
       ],
       "history": [
         {
           "round": 1,
           "event": "found",
-          "note": "CareerBoundOutputEditor.jsx:19 S.wrap is a fixed two-column inline grid ('minmax(0,1.1fr) minmax(0,1fr)') with no narrow breakpoint. At 390px each column is about 150px, so inputs and textareas are u…",
+          "note": "S.wrap in CareerBoundOutputEditor.jsx was a fixed two-column inline grid (minmax(0,1.1fr) minmax(0,1fr)); inline styles cannot use media queries so it never stacked at phone width. Fixed in commit 34…",
           "commit": null
-        },
-        {
-          "round": 1,
-          "event": "fixed",
-          "note": "Editor grid now stacks via repeat(auto-fit, minmax(min(100%,360px),1fr)); the Title/Dates pair wraps; dialog padding and width are fluid.",
-          "commit": "3472137"
-        },
-        {
-          "round": 2,
-          "event": "verified",
-          "note": "Retest round 2: this bug's step passed (the round had other failures)",
-          "commit": "cd6caf8"
         }
       ]
     },
     {
       "id": "cbo-r2-inherited-cream-text",
       "feature": "career-bound-outputs",
-      "status": "retesting",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
       "attempts": 1,
       "step": "J1 1.2a (also J2, J3, J10 at 390px) and J9 9.0 / 9.2-9.3",
@@ -1264,9 +1197,9 @@
     {
       "id": "qr-gated-outputs-B7",
       "feature": "qr-gated-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "fixing",
       "class": "owner_direction_conflict",
-      "attempts": 1,
+      "attempts": 0,
       "step": "Preconditions 1, 4; Journey 3 step 4; Journey 8",
       "rootCause": "Spec written before member@test.local accounts with accepted terms existed.",
       "files": [
@@ -1280,21 +1213,15 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
           "commit": null
-        },
-        {
-          "round": 1,
-          "event": "fixed",
-          "note": "Spec rewritten to sign in as member@test.local, route to My Resume as the member, and expect 'Approved by Test Member'. Import script header documents SB_EMAIL/SB_PASSWORD for the member.",
-          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
         }
       ]
     },
     {
       "id": "qr-gated-outputs-B8",
       "feature": "qr-gated-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "fixing",
       "class": "owner_direction_conflict",
-      "attempts": 1,
+      "attempts": 0,
       "step": "Where things are; all journeys",
       "rootCause": "Owner said everything comes from World Shell; navigation built on admin Classic Tools tab.",
       "files": [
@@ -1309,21 +1236,15 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
           "commit": null
-        },
-        {
-          "round": 1,
-          "event": "fixed",
-          "note": "Added a World Shell island for the existing 'resume' tab (ISLAND_REGISTRY.resume, kind embed) that mounts MyResumePanel. No new nav entry and no db.js change, because members already have the resume …",
-          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
         }
       ]
     },
     {
       "id": "qr-gated-outputs-B9",
       "feature": "qr-gated-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "fixing",
       "class": "requirement_gap",
-      "attempts": 1,
+      "attempts": 0,
       "step": "Preconditions 4; Journey 8",
       "rootCause": "No import control in MyResumePanel.",
       "files": [
@@ -1337,21 +1258,15 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
           "commit": null
-        },
-        {
-          "round": 1,
-          "event": "fixed",
-          "note": "Added an 'Import package' control above Resume Output History, visible even when the history is empty. It posts to the existing /api/resume-outputs/import-package, lists per-output results, and shows…",
-          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
         }
       ]
     },
     {
       "id": "qr-gated-outputs-B10",
       "feature": "qr-gated-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "fixing",
       "class": "requirement_gap",
-      "attempts": 1,
+      "attempts": 0,
       "step": "Journey 6 / request scope",
       "rootCause": "docx path only via stamp-application-package-docx.py, no UI or journey.",
       "files": [
@@ -1366,21 +1281,15 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
           "commit": null
-        },
-        {
-          "round": 1,
-          "event": "fixed",
-          "note": "Added a real .docx download. New outputDocx.js builds the file from plain OOXML via JSZip. Routes: GET /api/resume-outputs/:id/download.docx and public GET /api/shared-outputs/:token/download.docx. B…",
-          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
         }
       ]
     },
     {
       "id": "qr-gated-outputs-B11",
       "feature": "qr-gated-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "fixing",
       "class": "test_harness",
-      "attempts": 1,
+      "attempts": 0,
       "step": "Journey 6",
       "rootCause": "Browser cannot show annotations.",
       "files": [
@@ -1392,21 +1301,15 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (test_harness)",
           "commit": null
-        },
-        {
-          "round": 1,
-          "event": "fixed",
-          "note": "Journey 6 now gives exact commands with the expected three '/URI (<BASE>/r/<SLUG1>)' lines. Browser step is 'click Download PDF, expect HTTP 200 application/pdf'. The response is inline so there is n…",
-          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
         }
       ]
     },
     {
       "id": "T1",
       "feature": "qr-gated-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "fixing",
       "class": "spec_error",
-      "attempts": 1,
+      "attempts": 0,
       "step": "J2.1 View dialog content",
       "rootCause": "Shipped UI copy at MyResumePanel.jsx:1052 uses an em dash; the training spec (qr-gated-outputs.md:88) was written with a hyphen. No behavior wrong.",
       "files": [
@@ -1419,21 +1322,15 @@
           "event": "found",
           "note": "Shipped UI copy at MyResumePanel.jsx:1052 uses an em dash; the training spec (qr-gated-outputs.md:88) was written with a hyphen. No behavior wrong.",
           "commit": null
-        },
-        {
-          "round": 1,
-          "event": "fixed",
-          "note": "Spec now expects the em dash in 'Read-only — no edits can be made here.' No code change.",
-          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
         }
       ]
     },
     {
       "id": "T2",
       "feature": "qr-gated-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "fixing",
       "class": "defect",
-      "attempts": 1,
+      "attempts": 0,
       "step": "J2.1b Document header contact line readable (web view)",
       "rootCause": "header.contact has no defined/validated type. Spec seeds an array; DocumentBlocksView.jsx:94 renders it raw so React concatenates without separator, while outputRendering.js:186 passes it to pdfkit which coerces via Array.toString() giving a comma. Editor adapter documentBlocksEditor.js:28 also wraps it assuming a string.",
       "files": [
@@ -1448,21 +1345,15 @@
           "event": "found",
           "note": "header.contact has no defined/validated type. Spec seeds an array; DocumentBlocksView.jsx:94 renders it raw so React concatenates without separator, while outputRendering.js:186 passes it to pdfkit w…",
           "commit": null
-        },
-        {
-          "round": 1,
-          "event": "fixed",
-          "note": "Added one contactText() normalizer (list to trimmed entries joined with ' · ', string unchanged). Used in the web view, PDF, .docx and editor adapter. Import does not rewrite stored content. Spec exp…",
-          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
         }
       ]
     },
     {
       "id": "T3",
       "feature": "qr-gated-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "fixing",
       "class": "spec_error",
-      "attempts": 1,
+      "attempts": 0,
       "step": "J3.3 Approve toasts",
       "rootCause": "Toast at MyResumePanel.jsx:627 uses an em dash, which other specs (no-silent-failures, cover-letter-agent, proficiency-rules-and-live-qr) already expect; qr-gated-outputs.md lines 100/155/169 used a hyphen.",
       "files": [
@@ -1475,12 +1366,6 @@
           "event": "found",
           "note": "Toast at MyResumePanel.jsx:627 uses an em dash, which other specs (no-silent-failures, cover-letter-agent, proficiency-rules-and-live-qr) already expect; qr-gated-outputs.md lines 100/155/169 used a …",
           "commit": null
-        },
-        {
-          "round": 1,
-          "event": "fixed",
-          "note": "Spec toast text corrected to the em-dash form 'Approved — private QR link created (copied to clipboard).' in Journeys 3, 7 and 8. No code change.",
-          "commit": "e7cd46a3c147fb82586198ff930f35be25ab9042"
         }
       ]
     },
@@ -1718,7 +1603,7 @@
       "class": "process",
       "attempts": 0,
       "step": "integrate",
-      "rootCause": "integration moved after rebase",
+      "rootCause": "Integration advanced after the rebase, so a diff against its tip shows later release-intelligence files as deletions.",
       "files": [],
       "history": [
         {
@@ -1735,12 +1620,10 @@
       "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
-      "step": "Journey 3 step 1, Journey 5 step 3",
-      "rootCause": "nothing freezes career-bound wording before approval",
+      "step": "build",
+      "rootCause": "versionBody() in server/lib/outputVersionHistory.js resolves unapproved career_bound content live; nothing freezes it, so scrubbing and diffs involving a draft are not reproducible.",
       "files": [
-        "server/lib/outputVersionHistory.js",
-        "server/lib/careerBound.js",
-        "server/routes/resumeOutputs.js"
+        "server/lib/outputVersionHistory.js"
       ],
       "history": [
         {
@@ -1757,8 +1640,8 @@
       "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
-      "step": "history of legacy approved versions",
-      "rootCause": "no frozen data exists to recover",
+      "step": "build",
+      "rootCause": "No stored frozen document exists to recover.",
       "files": [
         "server/lib/outputVersionHistory.js"
       ],
@@ -1777,11 +1660,10 @@
       "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
-      "step": "tracked changes with a chart or table edit",
-      "rootCause": "text-only diff",
+      "step": "build",
+      "rootCause": "toDiffItems in outputVersionDiff.js is text-only; chart-only changes show no change.",
       "files": [
-        "src/lib/outputVersionDiff.js",
-        "server/lib/outputVersionHistory.js"
+        "src/lib/outputVersionDiff.js"
       ],
       "history": [
         {
@@ -1798,8 +1680,8 @@
       "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
-      "step": "request: reachable from the editor, template content",
-      "rootCause": "template configs not covered by versionBody or UI",
+      "step": "build",
+      "rootCause": "Entry points exist only in career-bound editor, World Shell shared block editor, My Resume rows and World Shell opportunity view; the request names document_blocks / template content and 'the output editor'.",
       "files": [
         "src/components/admin/OutputTemplateConfigurator.jsx",
         "server/lib/outputVersionHistory.js"
@@ -1819,17 +1701,36 @@
       "status": "open",
       "class": "process",
       "attempts": 0,
-      "step": "validation",
-      "rootCause": "build agent self-validated",
+      "step": "validate",
+      "rootCause": "Only the build agent walked the journeys; docs/test-results and release-log for this feature are absent and the spec's Fix notes read '(none yet)'.",
       "files": [
-        "docs/changes/output-version-history.md",
-        "docs/training/output-version-history.md"
+        "docs/changes/output-version-history.md"
       ],
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "output-version-history-B14",
+      "feature": "output-version-history",
+      "status": "open",
+      "class": "test_harness",
+      "attempts": 0,
+      "step": "validate",
+      "rootCause": "Preconditions and Journey 0 of the training spec require PUBLIC_MEMBER_SIGNUP_ENABLED and riley.member@example.test credentials, contrary to the harness rule to use scripts/create-test-member.mjs.",
+      "files": [
+        "docs/training/output-version-history.md"
+      ],
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (test_harness)",
           "commit": null
         }
       ]
@@ -2041,7 +1942,7 @@
     {
       "id": "chart-gallery-B8",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "product_defect",
       "attempts": 0,
       "step": "career master write",
@@ -2062,7 +1963,7 @@
     {
       "id": "chart-gallery-B9",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "journey: pick a chart",
@@ -2083,7 +1984,7 @@
     {
       "id": "chart-gallery-B10",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "test_harness",
       "attempts": 0,
       "step": "validation setup",
@@ -2103,7 +2004,7 @@
     {
       "id": "CG-R1-1",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "defect",
       "attempts": 0,
       "step": "Live Preview stays visible beside gallery (sticky)",
@@ -2123,7 +2024,7 @@
     {
       "id": "CG-R1-2",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "defect",
       "attempts": 0,
       "step": "Failed load alert includes HTTP status",
@@ -2144,7 +2045,7 @@
     {
       "id": "CG-R1-3",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "defect",
       "attempts": 0,
       "step": "Phone width 390px usability",
