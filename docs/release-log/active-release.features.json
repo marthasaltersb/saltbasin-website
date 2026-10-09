@@ -1,5 +1,8 @@
 {
   "release": "2026-10-02-application-packages",
+  "version": "0.2.0",
+  "title": "Salt Basin application packages release",
+  "repoUrl": "https://github.com/marthasaltersb/saltbasin-website",
   "integrationBranch": "claude/zealous-meitner-5tuft5",
   "wipBranch": "claude/zealous-meitner-5tuft5-wip",
   "trackerArtifact": "https://claude.ai/artifact/5pmGUtvSVEVEyaTCp3EVma",

@@ -53,6 +53,16 @@ If `docs/release-log/active-release.state.json` shows unfinished features, a new
 4. After each merge, `--export` the snapshot to the state file, commit, and push the WIP branch so the next
    session can resume again. Push the owner's integration branch only when every feature has passed.
 
+## Status updates to the owner
+
+Every status update given to the owner is also recorded as a numbered release update:
+`node scripts/release-update.mjs --snapshot /var/tmp/sbpg/tracker/snapshot.json --headline "..." --note "..."`
+(sync first). It is versioned `<release version>-u<n>` (release version = `version` in
+`docs/release-log/active-release.features.json`, the version the release ships as), pinned to the commit,
+and compared automatically with the previous update; `docs/release-log/updates.md` is the copy to send to
+others, and the tracker shows the latest update and the full history. Write the note for a reader outside
+the project. Number the next release by bumping `version` when this one ships.
+
 ## Owner directions that always apply
 
 - Everything a member does is reachable from the World Shell (`/world`); admin navigation is not a route.

@@ -297,7 +297,15 @@ for (const f of features) {
   if (f.status === 'failing' && f.openBugs === 0 && f.backlog > 0) f.status = 'passed_with_backlog';
 }
 
+// Numbered status updates (scripts/release-update.mjs), shown on the tracker with their comparisons.
+let updates = [];
+try { updates = JSON.parse(fs.readFileSync(new URL('../docs/release-log/updates.json', import.meta.url), 'utf8')); } catch { /* none yet */ }
+let releaseInfo = null;
+try { const d = JSON.parse(fs.readFileSync(new URL('../docs/release-log/active-release.features.json', import.meta.url), 'utf8')); releaseInfo = { version: d.version || null, release: d.release, title: d.title || null }; } catch { /* optional */ }
+
 const snapshot = {
+  release: releaseInfo,
+  updates,
   runId: runDirs.map((d) => path.basename(d)).join(' + ') || null,
   syncedAt: new Date().toISOString(),
   maxFixAttemptsPerBug: MAX_ATTEMPTS,
