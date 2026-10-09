@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T10:53:09.442Z",
+  "exportedAt": "2026-10-09T10:56:17.054Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -122,6 +122,14 @@
       "backlog": 0
     },
     "render-bindings": {
+      "status": "build",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
+    },
+    "platform-mcp": {
       "status": "build",
       "lastRound": 0,
       "lastScore": null,
