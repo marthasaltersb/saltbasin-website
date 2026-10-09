@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/analyze-session.mjs --hook",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

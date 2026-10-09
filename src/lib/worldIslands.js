@@ -198,6 +198,13 @@ export const ISLAND_REGISTRY = {
     dataBinding: { store: 'release_records' },
     permission: { requiredRole: 'admin', crud: ['read', 'update', 'approve'], enforced: true },
   },
+  // After-session mapping + token/spend/time trends (2026-10-09): admin-only
+  // 'Sessions' screen. Reads the session_* tables (docs/changes/session-mapping.md).
+  sessionMapping: {
+    variant: 'rings', kind: 'embed', accent: 'teal',
+    dataBinding: { store: 'session_analyses' },
+    permission: { requiredRole: 'admin', crud: ['read', 'update', 'approve'], enforced: true },
+  },
   leads: {
     variant: 'rings', kind: 'embed', accent: 'teal',
     dataBinding: { store: 'leads' },

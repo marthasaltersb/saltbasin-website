@@ -20,6 +20,22 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  // After-session mapping + token/spend/time trends (admin): Sessions screen.
+  getSessionMappingConfig: () => request('/api/session-mapping/config'),
+  saveSessionMappingConfig: (rules) => request('/api/session-mapping/config', { method: 'PUT', body: JSON.stringify({ rules }) }),
+  resetSessionMappingConfig: () => request('/api/session-mapping/config', { method: 'DELETE' }),
+  listSessionAnalyses: () => request('/api/session-mapping/sessions'),
+  getSessionAnalysis: (id) => request(`/api/session-mapping/sessions/${id}`),
+  remapSessionAnalysis: (id) => request(`/api/session-mapping/sessions/${id}/remap`, { method: 'POST', body: '{}' }),
+  listSessionProposals: (params = {}) => request(`/api/session-mapping/proposals?${new URLSearchParams(Object.entries(params).filter(([, v]) => v != null && v !== ''))}`),
+  rejectSessionProposal: (id, note) => request(`/api/session-mapping/proposals/${id}/reject`, { method: 'POST', body: JSON.stringify({ note }) }),
+  applySessionProposal: (id, body) => request(`/api/session-mapping/proposals/${id}/apply`, { method: 'POST', body: JSON.stringify(body) }),
+  getSessionTrends: () => request('/api/session-mapping/trends'),
+  importSessionTranscript: (body) => request('/api/session-mapping/import/transcript', { method: 'POST', body: JSON.stringify(body) }),
+  importSessionMetrics: (analysis) => request('/api/session-mapping/import/metrics', { method: 'POST', body: JSON.stringify({ analysis }) }),
+  scanSessionTranscripts: () => request('/api/session-mapping/import/scan', { method: 'POST', body: '{}' }),
+  listSessionCaptureFailures: () => request('/api/session-mapping/failures'),
+  setSessionCaptureFailureDisposition: (id, body) => request(`/api/session-mapping/failures/${id}/disposition`, { method: 'PUT', body: JSON.stringify(body) }),
   // Release intelligence (admin): release records, reconciliation, failed runs, trends, importer.
   getReleaseIntelConfig: () => request('/api/release-intelligence/config'),
   saveReleaseIntelConfig: (rules) => request('/api/release-intelligence/config', { method: 'PUT', body: JSON.stringify({ rules }) }),

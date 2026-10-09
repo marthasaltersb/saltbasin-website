@@ -60,7 +60,7 @@ export function foldSeries(rows, max) {
  * series:     [{ key, label, values: [number|null per category] }]
  * selectedIndex: highlights one category; axis label names the unit.
  */
-export function stackedBarsHtml({ title, subtitle, categories, series, unit = '', axisLabel = '', selectedIndex = -1, emptyMessage = 'Nothing recorded yet.', formatValue = compact }) {
+export function stackedBarsHtml({ title, subtitle, categories, series, unit = '', axisLabel = '', selectedIndex = -1, emptyMessage = 'Nothing recorded yet.', formatValue = compact, valueDigits = 2 }) {
   const head = `<div style="margin-bottom:0.55rem;font-family:${FONT}">
     <div style="font-size:0.66rem;letter-spacing:0.12em;text-transform:uppercase;color:${CHART_TOKENS.ink};font-weight:700">${esc(title)}</div>
     ${subtitle ? `<div style="font-size:0.68rem;color:${CHART_TOKENS.secondary};margin-top:0.15rem">${esc(subtitle)}</div>` : ''}</div>`;
@@ -100,7 +100,7 @@ export function stackedBarsHtml({ title, subtitle, categories, series, unit = ''
         const isTop = k === segs.length - 1;
         const gap = k > 0 ? 2 : 0;
         const hh = Math.max(h - gap, 0.5);
-        const tip = `${c.tip || c.label} — ${ser.length > 1 ? `${seg.s.label}: ` : ''}${Number(seg.v).toLocaleString('en-US', { maximumFractionDigits: 2 })}${unit ? ` ${Number(seg.v) === 1 && unit.endsWith('s') ? unit.slice(0, -1) : unit}` : ''}`;
+        const tip = `${c.tip || c.label} — ${ser.length > 1 ? `${seg.s.label}: ` : ''}${Number(seg.v).toLocaleString('en-US', { maximumFractionDigits: valueDigits })}${unit ? ` ${Number(seg.v) === 1 && unit.endsWith('s') ? unit.slice(0, -1) : unit}` : ''}`;
         return isTop
           ? `<path d="${topRounded(x, yBase - gap, barW, hh)}" fill="${fill}"><title>${esc(tip)}</title></path>`
           : `<rect x="${x}" y="${yBase - gap - hh}" width="${barW}" height="${hh}" fill="${fill}"><title>${esc(tip)}</title></rect>`;

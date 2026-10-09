@@ -1,4 +1,13 @@
 import { db } from '../db.js';
+import { recordInAppAgentRun } from './sessionMapping.js';
+
+// Label for the session-mapping record: the agent definition's name, never its prompt.
+async function agentLabel(definitionId) {
+  try {
+    const row = await db.prepare(`SELECT name FROM agent_definitions WHERE id=$1`).get(definitionId);
+    return row?.name || `Agent ${definitionId}`;
+  } catch { return `Agent ${definitionId}`; }
+}
 
 export function usagePeriodKey(period = 'month', now = new Date()) {
   if (period === 'day') return now.toISOString().slice(0, 10);
@@ -23,6 +32,7 @@ export async function assertAgentLlmBudget(definitionId, policy = {}) {
   const reservedOutput = Number(policy.maxOutputTokensPerResponse || 4096);
   if (usage.tokenCap > 0 && usage.totalTokens + reservedOutput > usage.tokenCap) {
     const error = new Error(`Agent LLM token cap reached for ${usage.periodKey}`);
+    await recordInAppAgentRun({ definitionId, label: await agentLabel(definitionId), model: policy.model, limit: 'usage_limit' });
     error.code = 'AGENT_LLM_CAP_REACHED'; error.usage = usage; throw error;
   }
   return usage;
@@ -41,4 +51,7 @@ export async function recordAgentLlmUsage(definitionId, policy = {}, usage = {})
       request_count=agent_llm_usage.request_count + 1,
       updated_at=excluded.updated_at
   `).run(definitionId, provider, model, periodKey, Number(usage.input_tokens || 0), Number(usage.output_tokens || 0), Date.now());
+  // After-session mapping: file this completion as an in-app agent run. Non-blocking:
+  // a failure is written to session_capture_failures and the console, never thrown here.
+  await recordInAppAgentRun({ definitionId, label: await agentLabel(definitionId), model, usage });
 }

@@ -44,6 +44,7 @@ const CareerReconciliationPanel = lazy(() => import('./admin/CareerReconciliatio
 const MyResumePanel = lazy(() => import('./admin/MyResumePanel.jsx'));
 const LonetreeMvpPanel = lazy(() => import('./admin/LonetreeMvpPanel.jsx'));
 const ReleaseIntelligencePanel = lazy(() => import('./admin/ReleaseIntelligencePanel.jsx'));
+const SessionMappingPanel = lazy(() => import('./admin/SessionMappingPanel.jsx'));
 
 const SIMPLE_EMBED_COMPONENTS = {
   leads: { title: 'Leads', render: () => <LeadsPanel /> },
@@ -54,6 +55,7 @@ const SIMPLE_EMBED_COMPONENTS = {
   outputTemplates: { title: 'Output Templates', render: (scope) => <OutputTemplateConfiguratorHub scope={scope} /> },
   lonetreeMvp: { title: 'Fund & Portfolio Demo', render: (scope) => <LonetreeMvpPanel scope={scope} /> },
   releaseIntelligence: { title: 'Release Intelligence', render: () => <ReleaseIntelligencePanel /> },
+  sessionMapping: { title: 'Sessions', render: () => <SessionMappingPanel /> },
 };
 
 const ISLAND_RADIUS = 9;

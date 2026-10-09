@@ -30,3 +30,6 @@ server/data/applicationPackages/*
 # Parallel agent worktrees (local only)
 .claude/worktrees/
 .harness/
+
+# Session-mapping hook failures awaiting filing (scripts/analyze-session.mjs --hook)
+server/data/sessionMapping/
