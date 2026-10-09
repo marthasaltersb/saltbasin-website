@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T05:56:07.073Z",
+  "exportedAt": "2026-10-09T05:57:57.096Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -66,10 +66,10 @@
       "backlog": 3
     },
     "chart-gallery": {
-      "status": "validate",
-      "lastRound": 1,
-      "lastScore": "17/20",
-      "lastReport": "docs/test-results/chart-gallery/round-1.md",
+      "status": "triage",
+      "lastRound": 2,
+      "lastScore": "21/24",
+      "lastReport": "docs/test-results/chart-gallery/round-2.md",
       "openBugs": 4,
       "backlog": 2
     },
