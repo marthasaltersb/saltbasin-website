@@ -19,6 +19,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import PDFDocument from 'pdfkit';
+import { contactText } from '../../src/lib/headerContact.js';
 import QRCode from 'qrcode';
 import { projectionMetadata } from './resumeProjection.js';
 import { isCareerBound, resolveCareerBound, publicBlocks } from './careerBound.js';
@@ -183,7 +184,7 @@ async function renderDocumentBlocks(doc, content, { metadata, shareUrl, pages = 
   }
   doc.fillColor(INK).font('SB-Bold').fontSize(19).text(header.name || '', left, top, { width: textWidth });
   if (header.headline) doc.moveDown(0.15).fillColor(TEAL).font('SB-Bold').fontSize(7).text(header.headline, { width: textWidth, characterSpacing: 0.15 });
-  if (header.contact) doc.moveDown(0.2).fillColor(MUTED).font('SB-Regular').fontSize(8).text(header.contact, { width: textWidth });
+  if (contactText(header.contact)) doc.moveDown(0.2).fillColor(MUTED).font('SB-Regular').fontSize(8).text(contactText(header.contact), { width: textWidth });
   doc.y = Math.max(doc.y, shareUrl ? top + qrSize + 12 : doc.y) + 4;
   doc.save().moveTo(left, doc.y).lineTo(left + width, doc.y).lineWidth(1.2).stroke(GOLD).restore();
   doc.moveDown(0.5);
