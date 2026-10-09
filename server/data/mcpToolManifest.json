@@ -97,6 +97,19 @@
     "career_record_list",
     "career_record_create",
     "career_record_update",
-    "career_record_delete"
+    "career_record_delete",
+    "release_loop_get_definition",
+    "release_loop_save_definition",
+    "release_loop_list_runs",
+    "release_loop_start_run",
+    "release_loop_get_run",
+    "release_loop_transition_run",
+    "release_loop_record_round",
+    "release_loop_log_step",
+    "release_loop_add_bug",
+    "release_loop_bug_action",
+    "release_loop_add_reconciliation",
+    "release_loop_resolve_reconciliation",
+    "release_loop_list_escalations"
   ]
 }
