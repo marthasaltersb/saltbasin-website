@@ -1,8 +1,8 @@
 {
-  "exportedAt": "2026-10-09T10:50:58.743Z",
+  "exportedAt": "2026-10-09T10:52:24.145Z",
   "features": {
     "proficiency-live-qr": {
-      "status": "failing",
+      "status": "validate",
       "lastRound": 5,
       "lastScore": "29/30",
       "lastReport": "docs/test-results/proficiency-live-qr/round-5.md",
@@ -10,7 +10,7 @@
       "backlog": 5
     },
     "world-shell-navigation": {
-      "status": "awaiting_retest",
+      "status": "validate",
       "lastRound": 1,
       "lastScore": "45/48",
       "lastReport": "docs/test-results/world-shell-navigation/round-1.md",
@@ -18,7 +18,7 @@
       "backlog": 4
     },
     "career-bound-outputs": {
-      "status": "awaiting_retest",
+      "status": "validate",
       "lastRound": 2,
       "lastScore": "54/56",
       "lastReport": "docs/test-results/career-bound-outputs/round-2.md",
@@ -26,7 +26,7 @@
       "backlog": 5
     },
     "qr-gated-outputs": {
-      "status": "awaiting_retest",
+      "status": "validate",
       "lastRound": 1,
       "lastScore": "45/48",
       "lastReport": "docs/test-results/qr-gated-outputs/round-1.md",
@@ -34,7 +34,7 @@
       "backlog": 2
     },
     "no-silent-failures": {
-      "status": "failed",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -42,15 +42,31 @@
       "backlog": 3
     },
     "release-loop-tooling": {
-      "status": "awaiting_retest",
+      "status": "validate",
       "lastRound": 2,
       "lastScore": "108/108",
       "lastReport": "docs/test-results/release-loop-tooling/round-2.md",
-      "openBugs": 3,
+      "openBugs": 6,
       "backlog": 3
     },
+    "chart-gallery": {
+      "status": "validate",
+      "lastRound": 1,
+      "lastScore": "17/20",
+      "lastReport": "docs/test-results/chart-gallery/round-1.md",
+      "openBugs": 8,
+      "backlog": 2
+    },
+    "release-intelligence": {
+      "status": "validate",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 3,
+      "backlog": 1
+    },
     "output-version-history": {
-      "status": "failed",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -58,44 +74,12 @@
       "backlog": 3
     },
     "resume-rollups": {
-      "status": "failed",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
       "openBugs": 7,
       "backlog": 3
-    },
-    "chart-gallery": {
-      "status": "awaiting_retest",
-      "lastRound": 2,
-      "lastScore": "21/24",
-      "lastReport": "docs/test-results/chart-gallery/round-2.md",
-      "openBugs": 8,
-      "backlog": 2
-    },
-    "release-intelligence": {
-      "status": "failing",
-      "lastRound": 1,
-      "lastScore": "69/74",
-      "lastReport": "docs/test-results/release-intelligence/round-1.md",
-      "openBugs": 3,
-      "backlog": 1
-    },
-    "cover-letter-agent": {
-      "status": "failed",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
-      "openBugs": 5,
-      "backlog": 7
-    },
-    "in-app-release-loop": {
-      "status": "failed",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
-      "openBugs": 0,
-      "backlog": 0
     },
     "session-mapping": {
       "status": "failed",
@@ -105,8 +89,40 @@
       "openBugs": 0,
       "backlog": 0
     },
+    "cover-letter-agent": {
+      "status": "validate",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 5,
+      "backlog": 7
+    },
+    "in-app-release-loop": {
+      "status": "build",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
+    },
     "world-shell-layers": {
-      "status": "failed",
+      "status": "build",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
+    },
+    "live-release-tracker": {
+      "status": "build",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
+    },
+    "render-bindings": {
+      "status": "build",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -1279,7 +1295,7 @@
     {
       "id": "cbo-r2-inherited-cream-text",
       "feature": "career-bound-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "J1 1.2a (also J2, J3, J10 at 390px) and J9 9.0 / 9.2-9.3",
@@ -1681,190 +1697,6 @@
       ]
     },
     {
-      "id": "release-loop-tooling-B1",
-      "feature": "release-loop-tooling",
-      "status": "verified",
-      "class": "defect",
-      "attempts": 1,
-      "step": "Fix B1: docs claim a capability never built",
-      "rootCause": "docs/release-process.md line 52, .claude/skills/salt-basin-release-loop/SKILL.md line 9 and server/data/releaseLoop/definition.json line 210 (tracker string) still claim a World Shell 'Release loop' view and /api/release-loop/*. Neither exists. The change spec already says it is out of scope.",
-      "files": [
-        "docs/release-process.md",
-        ".claude/skills/salt-basin-release-loop/SKILL.md",
-        "server/data/releaseLoop/definition.json",
-        "CLAUDE.md"
-      ],
-      "scope": {
-        "scope": "this_feature",
-        "owner": null,
-        "evidence": "Reused scope-review.json decision. definition.json line 210, release-process.md line 52 and SKILL.md claim a World Shell Release loop view and /api/release-loop/*; the change spec line 53 says it is out of scope. This feature's docs claim an unbuilt capability."
-      },
-      "history": [
-        {
-          "round": 0,
-          "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
-          "commit": null
-        },
-        {
-          "round": 1,
-          "event": "recurred",
-          "note": "docs/release-process.md line 52, .claude/skills/salt-basin-release-loop/SKILL.md line 9 and server/data/releaseLoop/definition.json line 210 (tracker string) still claim a World Shell 'Release loop' …",
-          "commit": null
-        },
-        {
-          "round": 1,
-          "event": "fixed",
-          "note": "Removed the World Shell 'Release loop' view and /api/release-loop claims. The three places now describe the tracker artifact and say in-app agents read the definition file. CLAUDE.md needed no edit.",
-          "commit": "082eed1"
-        },
-        {
-          "round": 2,
-          "event": "verified",
-          "note": "Retest round 2 passed every step",
-          "commit": "d8ee228"
-        }
-      ]
-    },
-    {
-      "id": "release-loop-tooling-B2",
-      "feature": "release-loop-tooling",
-      "status": "verified",
-      "class": "defect",
-      "attempts": 1,
-      "step": "Fix B2: dead-agent detection limited to extras",
-      "rootCause": "scripts/release-tracker-sync.mjs line 115 guards the 15-minute idle check with !a.fromRun. Journal-built run agents have fromRun true (line 82), so a started agent with no end entry and a stale transcript stays 'running'.",
-      "files": [
-        "scripts/release-tracker-sync.mjs",
-        "docs/training/release-loop-tooling.md"
-      ],
-      "scope": {
-        "scope": "this_feature",
-        "owner": null,
-        "evidence": "Reused scope-review.json decision. scripts/release-tracker-sync.mjs line 115 skips the idle check for fromRun agents (fromRun true at line 82); this feature's own script."
-      },
-      "history": [
-        {
-          "round": 0,
-          "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
-          "commit": null
-        },
-        {
-          "round": 1,
-          "event": "recurred",
-          "note": "scripts/release-tracker-sync.mjs line 115 guards the 15-minute idle check with !a.fromRun. Journal-built run agents have fromRun true (line 82), so a started agent with no end entry and a stale trans…",
-          "commit": null
-        },
-        {
-          "round": 1,
-          "event": "fixed",
-          "note": "Stale check now covers every running agent. It uses the transcript's last line, else the journal start time. Journal agents become 'stalled' and extras stay idle_or_done. Added --stale-minutes (defau…",
-          "commit": "082eed1"
-        },
-        {
-          "round": 2,
-          "event": "verified",
-          "note": "Retest round 2 passed every step",
-          "commit": "d8ee228"
-        }
-      ]
-    },
-    {
-      "id": "release-loop-tooling-B3",
-      "feature": "release-loop-tooling",
-      "status": "verified",
-      "class": "defect",
-      "attempts": 1,
-      "step": "Fix B3: tracker 390px reflow",
-      "rootCause": "tools/release-tracker/index.html tables (featureRows, bugRows and the agent rows, lines 170-182) have no narrow-screen layout. The existing max-width 640px rules only cover .hist and .timeline. The 697px Features table scrolls inside a 340px .panel, which hides the Latest test, Rounds and last columns.",
-      "files": [
-        "tools/release-tracker/index.html",
-        "docs/training/release-loop-tooling.md"
-      ],
-      "scope": {
-        "scope": "this_feature",
-        "owner": null,
-        "evidence": "Reused scope-review.json decision. index.html has narrow-screen rules only for .hist and .timeline (lines 76, 103); this feature's own page has no table reflow."
-      },
-      "history": [
-        {
-          "round": 0,
-          "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
-          "commit": null
-        },
-        {
-          "round": 1,
-          "event": "recurred",
-          "note": "tools/release-tracker/index.html tables (featureRows, bugRows and the agent rows, lines 170-182) have no narrow-screen layout. The existing max-width 640px rules only cover .hist and .timeline. The 6…",
-          "commit": null
-        },
-        {
-          "round": 1,
-          "event": "fixed",
-          "note": "Added a max-width 640px block that turns .panel tables into stacked cards with data-label captions and border-box sizing. The panel's overflow-x stays as a fallback. Reworded J5 step 3.",
-          "commit": "082eed1"
-        },
-        {
-          "round": 2,
-          "event": "verified",
-          "note": "Retest round 2 passed every step",
-          "commit": "d8ee228"
-        }
-      ]
-    },
-    {
-      "id": "release-loop-tooling-B4",
-      "feature": "release-loop-tooling",
-      "status": "process_note",
-      "class": "process",
-      "attempts": 0,
-      "step": "Host check",
-      "rootCause": "Only the local harness stub was tested",
-      "files": [
-        "tools/release-tracker/index.html"
-      ],
-      "scope": {
-        "scope": "process_note",
-        "owner": null,
-        "evidence": "Only the local harness stub of the host check was tested. Validation-environment limitation."
-      },
-      "history": [
-        {
-          "round": 0,
-          "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (process)",
-          "commit": null
-        }
-      ]
-    },
-    {
-      "id": "release-loop-tooling-B5",
-      "feature": "release-loop-tooling",
-      "status": "backlog_pre_existing",
-      "class": "owner_direction_conflict",
-      "attempts": 0,
-      "step": "Owner direction",
-      "rootCause": "Dev tooling surface chosen outside the World Shell",
-      "files": [
-        "tools/release-tracker/index.html"
-      ],
-      "scope": {
-        "scope": "pre_existing",
-        "owner": null,
-        "evidence": "The feature definition lists a static tracker page and scripts with no World Shell requirement. The World Shell surface belongs to the separate in-app-release-loop feature, so this gap is not in this feature's request."
-      },
-      "history": [
-        {
-          "round": 0,
-          "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
-          "commit": null
-        }
-      ]
-    },
-    {
       "id": "release-loop-tooling-F1-2",
       "feature": "release-loop-tooling",
       "status": "open",
@@ -1968,78 +1800,458 @@
       ]
     },
     {
-      "id": "RLT-T1",
+      "id": "release-loop-tooling-B1",
       "feature": "release-loop-tooling",
-      "status": "verified",
-      "class": "spec_error",
-      "attempts": 1,
-      "step": "J1 step 2: bugEscalation.statuses",
-      "rootCause": "The training spec (docs/training/release-loop-tooling.md line 21) lists 7 statuses. server/data/releaseLoop/definition.json lines 197-208 has 10, because the scope-check work (a42b3cc) added backlog_pre_existing, reassigned and process_note. The definition is right and the spec is stale.",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Docs claim",
+      "rootCause": "Documentation describes a capability that was never implemented",
       "files": [
-        "docs/training/release-loop-tooling.md",
-        "docs/changes/release-loop-tooling.md"
+        "docs/release-process.md",
+        "server/data/releaseLoop/definition.json",
+        ".claude/skills/salt-basin-release-loop/SKILL.md",
+        "CLAUDE.md"
       ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Spec line 21 lists 7 statuses; definition.json has 10 after a42b3cc (release-loop scope-check work, part of this tooling). Stale spec of this feature."
+        "evidence": "Reused scope-review.json decision. definition.json line 210, release-process.md line 52 and SKILL.md claim a World Shell Release loop view and /api/release-loop/*; the change spec line 53 says it is out of scope. This feature's docs claim an unbuilt capability."
       },
       "history": [
         {
-          "round": 1,
+          "round": 0,
           "event": "found",
-          "note": "The training spec (docs/training/release-loop-tooling.md line 21) lists 7 statuses. server/data/releaseLoop/definition.json lines 197-208 has 10, because the scope-check work (a42b3cc) added backlog_…",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
           "commit": null
-        },
-        {
-          "round": 1,
-          "event": "fixed",
-          "note": "Training spec J1 step 2 now lists the ten statuses in definition order; added J1 step 3; Traces to gained the scope-check commits.",
-          "commit": "082eed1"
-        },
-        {
-          "round": 2,
-          "event": "verified",
-          "note": "Retest round 2 passed every step",
-          "commit": "d8ee228"
         }
       ]
     },
     {
-      "id": "RLT-T2",
+      "id": "release-loop-tooling-B2",
       "feature": "release-loop-tooling",
-      "status": "verified",
-      "class": "spec_error",
-      "attempts": 1,
-      "step": "J4 steps 1-2 (header, tiles, filters, agent card, Features column, Bugs and runs tables)",
-      "rootCause": "tools/release-tracker/index.html was rebuilt as a layered drill-down (STATS tiles, crumbs, layers, 8 tiles including Backlog, no filter buttons, Features column 'Its own bugs verified', bugs and runs reached through tile layers). Journey 4 and the J5 'same content as J4' lines still describe the old single-page design.",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Sync",
+      "rootCause": "Dead-agent detection limited to extras",
       "files": [
-        "docs/training/release-loop-tooling.md",
+        "scripts/release-tracker-sync.mjs"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Reused scope-review.json decision. scripts/release-tracker-sync.mjs line 115 skips the idle check for fromRun agents (fromRun true at line 82); this feature's own script."
+      },
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-loop-tooling-B3",
+      "feature": "release-loop-tooling",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Tracker 390px",
+      "rootCause": "Responsive reflow not implemented",
+      "files": [
         "tools/release-tracker/index.html"
       ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "tools/release-tracker/index.html was created by this feature (bed12f0) and rebuilt as drill-down layers (21129a0, f56f185); J4/J5 in the spec still describe the old design."
+        "evidence": "Reused scope-review.json decision. index.html has narrow-screen rules only for .hist and .timeline (lines 76, 103); this feature's own page has no table reflow."
+      },
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-loop-tooling-B4",
+      "feature": "release-loop-tooling",
+      "status": "process_note",
+      "class": "process",
+      "attempts": 0,
+      "step": "Host check",
+      "rootCause": "Only the local harness stub was tested",
+      "files": [
+        "tools/release-tracker/index.html"
+      ],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "Only the local harness stub of the host check was tested. Validation-environment limitation."
+      },
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-loop-tooling-B5",
+      "feature": "release-loop-tooling",
+      "status": "backlog_pre_existing",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "Owner direction",
+      "rootCause": "Dev tooling surface chosen outside the World Shell",
+      "files": [
+        "tools/release-tracker/index.html"
+      ],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "The feature definition lists a static tracker page and scripts with no World Shell requirement. The World Shell surface belongs to the separate in-app-release-loop feature, so this gap is not in this feature's request."
+      },
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-F2-2",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "Unmerged r1 hunks remain (careerAtomMigration jsonb cast fix, careerMaster atomSyncError, api.js toast, ChartGallery.jsx)",
+      "rootCause": "Bare boolean bound to ::jsonb makes postgres infer boolean param type.",
+      "files": [
+        "server/lib/careerAtomMigration.js",
+        "server/routes/careerMaster.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (product_defect)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-F2-7",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "test_harness",
+      "attempts": 0,
+      "step": "Round 3 validation setup",
+      "rootCause": "Shortcut in fix verification.",
+      "files": [
+        "docs/training/chart-gallery.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (test_harness)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-F2-8",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "J2 2.1 sticky check",
+      "rootCause": "Only one host exercised.",
+      "files": [
+        "src/components/admin/AdminShell.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-B8",
+      "feature": "chart-gallery",
+      "status": "backlog_pre_existing",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "career master write",
+      "rootCause": "Boolean value bound to a ::jsonb parameter; postgres infers boolean type and cannot cast.",
+      "files": [
+        "server/lib/careerAtomMigration.js",
+        "server/routes/careerMaster.js"
+      ],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "server/lib/careerAtomMigration.js (a boolean bound to $3::jsonb in the evidence INSERT at line 63; is_active_portfolio is a registry column) has no diff against e0ea466, and syncSingleEntry was already called from careerMaster.js in e0ea466 (git grep). It reproduces without chart-gallery by code hi…"
+      },
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (product_defect)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-B9",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "journey: pick a chart",
+      "rootCause": "Two-step pick then Add flow; selection never touches the configured block list.",
+      "files": [
+        "src/components/admin/ChartGallery.jsx",
+        "src/components/admin/OutputTemplateConfigurator.jsx"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The request is \"pick a chart -> it inserts/updates the block -> preview updates\", but ChartGallery.jsx (6dd06e5) uses a two-step pick then Add."
+      },
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-B10",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "test_harness",
+      "attempts": 0,
+      "step": "validation setup",
+      "rootCause": "Builder shortcut for speed.",
+      "files": [
+        "docs/training/chart-gallery.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "docs/training/chart-gallery.md validation setup used a builder shortcut. The feature's own spec must be runnable by a literal validator."
+      },
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (test_harness)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "CG-R1-1",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "Live Preview stays visible beside gallery (sticky)",
+      "rootCause": "position:sticky on the preview column (OutputTemplateConfigurator.jsx ~L562) binds to the nearest overflow-y:auto ancestor: the configurator root div (~L311) and Hub wrapper (L110). Neither has a bounded height so they never scroll; sticky never engages while the real scroller is further out.",
+      "files": [
+        "src/components/admin/OutputTemplateConfigurator.jsx"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Reused scope-review.json decision. Sticky preview column added by 6dd06e5; fix branch dc6b5f0 is not an ancestor of HEAD, so never merged."
       },
       "history": [
         {
           "round": 1,
           "event": "found",
-          "note": "tools/release-tracker/index.html was rebuilt as a layered drill-down (STATS tiles, crumbs, layers, 8 tiles including Backlog, no filter buttons, Features column 'Its own bugs verified', bugs and runs…",
+          "note": "position:sticky on the preview column (OutputTemplateConfigurator.jsx ~L562) binds to the nearest overflow-y:auto ancestor: the configurator root div (~L311) and Hub wrapper (L110). Neither has a bou…",
           "commit": null
-        },
+        }
+      ]
+    },
+    {
+      "id": "CG-R1-2",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "Failed load alert includes HTTP status",
+      "rootCause": "proficiency loads via api.getCareerProficiency() -> request() in src/lib/api.js L2-19, which uses body.error text instead of the status, and throws a JSON parse error on an empty body. rollups/master use loadJson() which includes the status.",
+      "files": [
+        "src/components/admin/OutputTemplateConfigurator.jsx",
+        "src/lib/api.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Reused scope-review.json decision. Spec line 77 requires HTTP status; gallery build wired the proficiency loader via api.js request(), which omits status."
+      },
+      "history": [
         {
           "round": 1,
-          "event": "fixed",
-          "note": "Rewrote J4 and J5 for the drill-down page (8 tiles, layers, crumbs, no filters, Open bugs layer expects B1 and B9). Counts come from the fixture, now 5 features and 19 agents.",
-          "commit": "082eed1"
-        },
+          "event": "found",
+          "note": "proficiency loads via api.getCareerProficiency() -> request() in src/lib/api.js L2-19, which uses body.error text instead of the status, and throws a JSON parse error on an empty body. rollups/master…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "CG-R1-3",
+      "feature": "chart-gallery",
+      "status": "backlog_pre_existing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "Phone width 390px usability",
+      "rootCause": "S.shell (L65) is a fixed grid 220px 1fr 380px with no responsive rule; the 1fr column has min-width:auto so wide content prevents shrinking. Layout overflows to about 945px and the preview iframe is unreachable.",
+      "files": [
+        "src/components/admin/OutputTemplateConfigurator.jsx",
+        "src/components/admin/ChartGallery.jsx"
+      ],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "The fixed 3-column grid in OutputTemplateConfigurator.jsx dates from a875b9b (2026-07-10), and the chart-gallery spec and request do not mention 390px. Same layout defect as R4-1."
+      },
+      "history": [
         {
-          "round": 2,
-          "event": "verified",
-          "note": "Retest round 2 passed every step",
-          "commit": "d8ee228"
+          "round": 1,
+          "event": "found",
+          "note": "S.shell (L65) is a fixed grid 220px 1fr 380px with no responsive rule; the 1fr column has min-width:auto so wide content prevents shrinking. Layout overflows to about 945px and the preview iframe is …",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-intelligence-B7",
+      "feature": "release-intelligence",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "Entry points",
+      "rootCause": "Salvaged partial build added a second, admin-nav entry point beside the correct World Shell island.",
+      "files": [
+        "src/components/admin/AdminShell.jsx",
+        "server/db.js",
+        "docs/changes/release-intelligence.md",
+        "docs/training/release-intelligence.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The admin-nav entry in AdminShell.jsx and server/db.js came from the feature's own salvaged partial build (e4f85ca)."
+      },
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-intelligence-B8",
+      "feature": "release-intelligence",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Commit reconciliation",
+      "rootCause": "Commit handling stopped at storing the sha.",
+      "files": [
+        "server/lib/releaseReconcile.js",
+        "server/lib/releaseLogImporter.js",
+        "server/lib/releaseIntelligence.js",
+        "scripts/import-release-logs.mjs",
+        "src/components/admin/ReleaseIntelligencePanel.jsx"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The request lists commits in reconciliation, but releaseReconcile.js and releaseLogImporter.js (this feature) stop at storing the sha."
+      },
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-intelligence-B9",
+      "feature": "release-intelligence",
+      "status": "process_note",
+      "class": "process",
+      "attempts": 0,
+      "step": "Loop records",
+      "rootCause": "Validation round 1 has not yet run.",
+      "files": [
+        "docs/test-results/release-intelligence/",
+        "docs/changes/release-intelligence.md"
+      ],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "Validation round 1 has not run yet. Loop record gap."
+      },
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-intelligence-B10",
+      "feature": "release-intelligence",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Known limitations",
+      "rootCause": "No automatic ingest from release-tracker-sync output; classification is deliberately not guessed; chart is categorical rather than time-scaled.",
+      "files": [
+        "scripts/release-tracker-sync.mjs",
+        "scripts/import-release-logs.mjs",
+        "src/lib/releaseCharts.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Known limitations of the feature's own code: the chart is categorical although the request names dated trend charts and a timeline slider, and scripts/import-release-logs.mjs has no auto ingest."
+      },
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
         }
       ]
     },
@@ -2467,390 +2679,6 @@
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (process)",
-          "commit": null
-        }
-      ]
-    },
-    {
-      "id": "chart-gallery-B8",
-      "feature": "chart-gallery",
-      "status": "backlog_pre_existing",
-      "class": "product_defect",
-      "attempts": 0,
-      "step": "career master write",
-      "rootCause": "Boolean value bound to a ::jsonb parameter; postgres infers boolean type and cannot cast.",
-      "files": [
-        "server/lib/careerAtomMigration.js",
-        "server/routes/careerMaster.js"
-      ],
-      "scope": {
-        "scope": "pre_existing",
-        "owner": null,
-        "evidence": "server/lib/careerAtomMigration.js (a boolean bound to $3::jsonb in the evidence INSERT at line 63; is_active_portfolio is a registry column) has no diff against e0ea466, and syncSingleEntry was already called from careerMaster.js in e0ea466 (git grep). It reproduces without chart-gallery by code hi…"
-      },
-      "history": [
-        {
-          "round": 0,
-          "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (product_defect)",
-          "commit": null
-        }
-      ]
-    },
-    {
-      "id": "chart-gallery-B9",
-      "feature": "chart-gallery",
-      "status": "open",
-      "class": "requirement_gap",
-      "attempts": 0,
-      "step": "journey: pick a chart",
-      "rootCause": "Two-step pick then Add flow; selection never touches the configured block list.",
-      "files": [
-        "src/components/admin/ChartGallery.jsx",
-        "src/components/admin/OutputTemplateConfigurator.jsx"
-      ],
-      "scope": {
-        "scope": "this_feature",
-        "owner": null,
-        "evidence": "The request is \"pick a chart -> it inserts/updates the block -> preview updates\", but ChartGallery.jsx (6dd06e5) uses a two-step pick then Add."
-      },
-      "history": [
-        {
-          "round": 0,
-          "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
-          "commit": null
-        }
-      ]
-    },
-    {
-      "id": "chart-gallery-B10",
-      "feature": "chart-gallery",
-      "status": "open",
-      "class": "test_harness",
-      "attempts": 0,
-      "step": "validation setup",
-      "rootCause": "Builder shortcut for speed.",
-      "files": [
-        "docs/training/chart-gallery.md"
-      ],
-      "scope": {
-        "scope": "this_feature",
-        "owner": null,
-        "evidence": "docs/training/chart-gallery.md validation setup used a builder shortcut. The feature's own spec must be runnable by a literal validator."
-      },
-      "history": [
-        {
-          "round": 0,
-          "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (test_harness)",
-          "commit": null
-        }
-      ]
-    },
-    {
-      "id": "chart-gallery-F2-2",
-      "feature": "chart-gallery",
-      "status": "open",
-      "class": "product_defect",
-      "attempts": 0,
-      "step": "Unmerged r1 hunks remain (careerAtomMigration jsonb cast fix, careerMaster atomSyncError, api.js toast, ChartGallery.jsx)",
-      "rootCause": "Bare boolean bound to ::jsonb makes postgres infer boolean param type.",
-      "files": [
-        "server/lib/careerAtomMigration.js",
-        "server/routes/careerMaster.js"
-      ],
-      "scope": null,
-      "history": [
-        {
-          "round": 2,
-          "event": "found",
-          "note": "Reported by the fix agent, unresolved on reconciliation (product_defect)",
-          "commit": null
-        }
-      ]
-    },
-    {
-      "id": "chart-gallery-F2-7",
-      "feature": "chart-gallery",
-      "status": "open",
-      "class": "test_harness",
-      "attempts": 0,
-      "step": "Round 3 validation setup",
-      "rootCause": "Shortcut in fix verification.",
-      "files": [
-        "docs/training/chart-gallery.md"
-      ],
-      "scope": null,
-      "history": [
-        {
-          "round": 2,
-          "event": "found",
-          "note": "Reported by the fix agent, unresolved on reconciliation (test_harness)",
-          "commit": null
-        }
-      ]
-    },
-    {
-      "id": "chart-gallery-F2-8",
-      "feature": "chart-gallery",
-      "status": "open",
-      "class": "requirement_gap",
-      "attempts": 0,
-      "step": "J2 2.1 sticky check",
-      "rootCause": "Only one host exercised.",
-      "files": [
-        "src/components/admin/AdminShell.jsx"
-      ],
-      "scope": null,
-      "history": [
-        {
-          "round": 2,
-          "event": "found",
-          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
-          "commit": null
-        }
-      ]
-    },
-    {
-      "id": "CG-R1-1",
-      "feature": "chart-gallery",
-      "status": "fixed_awaiting_retest",
-      "class": "defect",
-      "attempts": 1,
-      "step": "Live Preview stays visible beside gallery (sticky)",
-      "rootCause": "Hub wrapper (line 111) and configurator wrapper (line 321) are both flex:1 + overflowY:auto with no bounded height, nested in the shell scroller. position:sticky (line 653) binds to the nearest overflow ancestor, which never scrolls, so the preview column scrolls away. Recurrence: fix branch release-loop/chart-gallery-fix-r1 (dc6b5f0) was never merged into the tested commit.",
-      "files": [
-        "src/components/admin/OutputTemplateConfigurator.jsx"
-      ],
-      "scope": {
-        "scope": "this_feature",
-        "owner": null,
-        "evidence": "Reused scope-review.json decision. Sticky preview column added by 6dd06e5; fix branch dc6b5f0 is not an ancestor of HEAD, so never merged."
-      },
-      "history": [
-        {
-          "round": 1,
-          "event": "found",
-          "note": "position:sticky on the preview column (OutputTemplateConfigurator.jsx ~L562) binds to the nearest overflow-y:auto ancestor: the configurator root div (~L311) and Hub wrapper (L110). Neither has a bou…",
-          "commit": null
-        },
-        {
-          "round": 2,
-          "event": "recurred",
-          "note": "Hub wrapper (line 111) and configurator wrapper (line 321) are both flex:1 + overflowY:auto with no bounded height, nested in the shell scroller. position:sticky (line 653) binds to the nearest overf…",
-          "commit": null
-        },
-        {
-          "round": 2,
-          "event": "fixed",
-          "note": "Took only the OutputTemplateConfigurator.jsx hunks of fix branch dc6b5f0: removed flex:1/overflowY:auto from both wrappers so sticky binds to the real scroller; preview column sticky only when not na…",
-          "commit": "3b198a83584419755b4799a7a4691f279b6845ed"
-        }
-      ]
-    },
-    {
-      "id": "CG-R1-2",
-      "feature": "chart-gallery",
-      "status": "fixed_awaiting_retest",
-      "class": "defect",
-      "attempts": 1,
-      "step": "Failed load alert includes HTTP status",
-      "rootCause": "Proficiency load goes through api.getCareerProficiency() -> api.js request(), which parses the body first (throws 'Unexpected end of JSON input' on an empty 500) and otherwise throws only body.error, never the status. Rollups and master use loadJson() which includes the status, so only 2 of 3 sources were covered. Fix exists on the unmerged fix branch.",
-      "files": [
-        "src/components/admin/OutputTemplateConfigurator.jsx",
-        "src/lib/api.js"
-      ],
-      "scope": {
-        "scope": "this_feature",
-        "owner": null,
-        "evidence": "Reused scope-review.json decision. Spec line 77 requires HTTP status; gallery build wired the proficiency loader via api.js request(), which omits status."
-      },
-      "history": [
-        {
-          "round": 1,
-          "event": "found",
-          "note": "proficiency loads via api.getCareerProficiency() -> request() in src/lib/api.js L2-19, which uses body.error text instead of the status, and throws a JSON parse error on an empty body. rollups/master…",
-          "commit": null
-        },
-        {
-          "round": 2,
-          "event": "recurred",
-          "note": "Proficiency load goes through api.getCareerProficiency() -> api.js request(), which parses the body first (throws 'Unexpected end of JSON input' on an empty 500) and otherwise throws only body.error,…",
-          "commit": null
-        },
-        {
-          "round": 2,
-          "event": "fixed",
-          "note": "Proficiency loads via loadJson('/api/career/proficiency?period=current'); loadJson appends the JSON error detail and tolerates empty or non-JSON bodies. api.js was not changed.",
-          "commit": "3b198a83584419755b4799a7a4691f279b6845ed"
-        }
-      ]
-    },
-    {
-      "id": "CG-R1-3",
-      "feature": "chart-gallery",
-      "status": "backlog_pre_existing",
-      "class": "defect",
-      "attempts": 0,
-      "step": "Phone width 390px usability",
-      "rootCause": "S.shell (L65) is a fixed grid 220px 1fr 380px with no responsive rule; the 1fr column has min-width:auto so wide content prevents shrinking. Layout overflows to about 945px and the preview iframe is unreachable.",
-      "files": [
-        "src/components/admin/OutputTemplateConfigurator.jsx",
-        "src/components/admin/ChartGallery.jsx"
-      ],
-      "scope": {
-        "scope": "pre_existing",
-        "owner": null,
-        "evidence": "The fixed 3-column grid in OutputTemplateConfigurator.jsx dates from a875b9b (2026-07-10), and the chart-gallery spec and request do not mention 390px. Same layout defect as R4-1."
-      },
-      "history": [
-        {
-          "round": 1,
-          "event": "found",
-          "note": "S.shell (L65) is a fixed grid 220px 1fr 380px with no responsive rule; the 1fr column has min-width:auto so wide content prevents shrinking. Layout overflows to about 945px and the preview iframe is …",
-          "commit": null
-        }
-      ]
-    },
-    {
-      "id": "CG-R2-1",
-      "feature": "chart-gallery",
-      "status": "fixed_awaiting_retest",
-      "class": "defect",
-      "attempts": 1,
-      "step": "J2 2.1 visual: Live Preview chart not clipped",
-      "rootCause": "proficiencyBarsHtml emits the SVG with min-width:500px (src/lib/careerCharts.js line 112), which overrides max-width:100%. The preview column content is about 280px wide, so the SVG overflows the right edge and is clipped, hiding segments and level labels. The text stays in the DOM, so scripted text checks pass.",
-      "files": [
-        "src/lib/careerCharts.js",
-        "docs/training/chart-gallery.md"
-      ],
-      "scope": {
-        "scope": "this_feature",
-        "owner": null,
-        "evidence": "min-width:500px came from cffa621 (proficiency-live-qr) but base a5e7883 has no career-chart block or preview in OutputTemplateConfigurator, so clipping cannot be reproduced there. Chart in the 380px preview is the gallery's deliverable; the gallery must make it fit, and the spec should assert the …"
-      },
-      "history": [
-        {
-          "round": 2,
-          "event": "found",
-          "note": "proficiencyBarsHtml emits the SVG with min-width:500px (src/lib/careerCharts.js line 112), which overrides max-width:100%. The preview column content is about 280px wide, so the SVG overflows the rig…",
-          "commit": null
-        },
-        {
-          "round": 2,
-          "event": "fixed",
-          "note": "Removed min-width:500px from the proficiency, trend and timeline SVG helpers (same pattern in all three) so the viewBox scales to the container. J2 step 2 now requires a screenshot check that all fiv…",
-          "commit": "3b198a83584419755b4799a7a4691f279b6845ed"
-        }
-      ]
-    },
-    {
-      "id": "release-intelligence-B7",
-      "feature": "release-intelligence",
-      "status": "open",
-      "class": "owner_direction_conflict",
-      "attempts": 0,
-      "step": "Entry points",
-      "rootCause": "Salvaged partial build added a second, admin-nav entry point beside the correct World Shell island.",
-      "files": [
-        "src/components/admin/AdminShell.jsx",
-        "server/db.js",
-        "docs/changes/release-intelligence.md",
-        "docs/training/release-intelligence.md"
-      ],
-      "scope": {
-        "scope": "this_feature",
-        "owner": null,
-        "evidence": "The admin-nav entry in AdminShell.jsx and server/db.js came from the feature's own salvaged partial build (e4f85ca)."
-      },
-      "history": [
-        {
-          "round": 0,
-          "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
-          "commit": null
-        }
-      ]
-    },
-    {
-      "id": "release-intelligence-B8",
-      "feature": "release-intelligence",
-      "status": "open",
-      "class": "requirement_gap",
-      "attempts": 0,
-      "step": "Commit reconciliation",
-      "rootCause": "Commit handling stopped at storing the sha.",
-      "files": [
-        "server/lib/releaseReconcile.js",
-        "server/lib/releaseLogImporter.js",
-        "server/lib/releaseIntelligence.js",
-        "scripts/import-release-logs.mjs",
-        "src/components/admin/ReleaseIntelligencePanel.jsx"
-      ],
-      "scope": {
-        "scope": "this_feature",
-        "owner": null,
-        "evidence": "The request lists commits in reconciliation, but releaseReconcile.js and releaseLogImporter.js (this feature) stop at storing the sha."
-      },
-      "history": [
-        {
-          "round": 0,
-          "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
-          "commit": null
-        }
-      ]
-    },
-    {
-      "id": "release-intelligence-B9",
-      "feature": "release-intelligence",
-      "status": "process_note",
-      "class": "process",
-      "attempts": 0,
-      "step": "Loop records",
-      "rootCause": "Validation round 1 has not yet run.",
-      "files": [
-        "docs/test-results/release-intelligence/",
-        "docs/changes/release-intelligence.md"
-      ],
-      "scope": {
-        "scope": "process_note",
-        "owner": null,
-        "evidence": "Validation round 1 has not run yet. Loop record gap."
-      },
-      "history": [
-        {
-          "round": 0,
-          "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (process)",
-          "commit": null
-        }
-      ]
-    },
-    {
-      "id": "release-intelligence-B10",
-      "feature": "release-intelligence",
-      "status": "open",
-      "class": "requirement_gap",
-      "attempts": 0,
-      "step": "Known limitations",
-      "rootCause": "No automatic ingest from release-tracker-sync output; classification is deliberately not guessed; chart is categorical rather than time-scaled.",
-      "files": [
-        "scripts/release-tracker-sync.mjs",
-        "scripts/import-release-logs.mjs",
-        "src/lib/releaseCharts.js"
-      ],
-      "scope": {
-        "scope": "this_feature",
-        "owner": null,
-        "evidence": "Known limitations of the feature's own code: the chart is categorical although the request names dated trend charts and a timeline slider, and scripts/import-release-logs.mjs has no auto ingest."
-      },
-      "history": [
-        {
-          "round": 0,
-          "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
           "commit": null
         }
       ]
@@ -3314,6 +3142,114 @@
           "event": "not_fixed",
           "note": "Process item: the round-2 validation agent must write docs/test-results/career-bound-outputs/round-N.md. Noted in the change spec; no fix-agent change.",
           "commit": null
+        }
+      ]
+    },
+    {
+      "id": "RLT-T1",
+      "feature": "release-loop-tooling",
+      "status": "verified",
+      "class": "spec_error",
+      "attempts": 1,
+      "step": "J1 step 2: bugEscalation.statuses",
+      "rootCause": "The training spec (docs/training/release-loop-tooling.md line 21) lists 7 statuses. server/data/releaseLoop/definition.json lines 197-208 has 10, because the scope-check work (a42b3cc) added backlog_pre_existing, reassigned and process_note. The definition is right and the spec is stale.",
+      "files": [
+        "docs/training/release-loop-tooling.md",
+        "docs/changes/release-loop-tooling.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Spec line 21 lists 7 statuses; definition.json has 10 after a42b3cc (release-loop scope-check work, part of this tooling). Stale spec of this feature."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "The training spec (docs/training/release-loop-tooling.md line 21) lists 7 statuses. server/data/releaseLoop/definition.json lines 197-208 has 10, because the scope-check work (a42b3cc) added backlog_…",
+          "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Training spec J1 step 2 now lists the ten statuses in definition order; added J1 step 3; Traces to gained the scope-check commits.",
+          "commit": "082eed1"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step",
+          "commit": "d8ee228"
+        }
+      ]
+    },
+    {
+      "id": "RLT-T2",
+      "feature": "release-loop-tooling",
+      "status": "verified",
+      "class": "spec_error",
+      "attempts": 1,
+      "step": "J4 steps 1-2 (header, tiles, filters, agent card, Features column, Bugs and runs tables)",
+      "rootCause": "tools/release-tracker/index.html was rebuilt as a layered drill-down (STATS tiles, crumbs, layers, 8 tiles including Backlog, no filter buttons, Features column 'Its own bugs verified', bugs and runs reached through tile layers). Journey 4 and the J5 'same content as J4' lines still describe the old single-page design.",
+      "files": [
+        "docs/training/release-loop-tooling.md",
+        "tools/release-tracker/index.html"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "tools/release-tracker/index.html was created by this feature (bed12f0) and rebuilt as drill-down layers (21129a0, f56f185); J4/J5 in the spec still describe the old design."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "tools/release-tracker/index.html was rebuilt as a layered drill-down (STATS tiles, crumbs, layers, 8 tiles including Backlog, no filter buttons, Features column 'Its own bugs verified', bugs and runs…",
+          "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Rewrote J4 and J5 for the drill-down page (8 tiles, layers, crumbs, no filters, Open bugs layer expects B1 and B9). Counts come from the fixture, now 5 features and 19 agents.",
+          "commit": "082eed1"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step",
+          "commit": "d8ee228"
+        }
+      ]
+    },
+    {
+      "id": "CG-R2-1",
+      "feature": "chart-gallery",
+      "status": "fixed_awaiting_retest",
+      "class": "defect",
+      "attempts": 1,
+      "step": "J2 2.1 visual: Live Preview chart not clipped",
+      "rootCause": "proficiencyBarsHtml emits the SVG with min-width:500px (src/lib/careerCharts.js line 112), which overrides max-width:100%. The preview column content is about 280px wide, so the SVG overflows the right edge and is clipped, hiding segments and level labels. The text stays in the DOM, so scripted text checks pass.",
+      "files": [
+        "src/lib/careerCharts.js",
+        "docs/training/chart-gallery.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "min-width:500px came from cffa621 (proficiency-live-qr) but base a5e7883 has no career-chart block or preview in OutputTemplateConfigurator, so clipping cannot be reproduced there. Chart in the 380px preview is the gallery's deliverable; the gallery must make it fit, and the spec should assert the …"
+      },
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "proficiencyBarsHtml emits the SVG with min-width:500px (src/lib/careerCharts.js line 112), which overrides max-width:100%. The preview column content is about 280px wide, so the SVG overflows the rig…",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "fixed",
+          "note": "Removed min-width:500px from the proficiency, trend and timeline SVG helpers (same pattern in all three) so the viewBox scales to the container. J2 step 2 now requires a screenshot check that all fiv…",
+          "commit": "3b198a83584419755b4799a7a4691f279b6845ed"
         }
       ]
     }
