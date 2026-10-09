@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T06:00:36.713Z",
+  "exportedAt": "2026-10-09T06:01:39.598Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -74,20 +74,12 @@
       "backlog": 2
     },
     "release-intelligence": {
-      "status": "validate",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
+      "status": "failing",
+      "lastRound": 1,
+      "lastScore": "69/74",
+      "lastReport": "docs/test-results/release-intelligence/round-1.md",
       "openBugs": 3,
       "backlog": 1
-    },
-    "session-mapping": {
-      "status": "failed",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
-      "openBugs": 0,
-      "backlog": 0
     },
     "cover-letter-agent": {
       "status": "validate",
@@ -98,6 +90,14 @@
       "backlog": 7
     },
     "in-app-release-loop": {
+      "status": "build",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
+    },
+    "session-mapping": {
       "status": "build",
       "lastRound": 0,
       "lastScore": null,
