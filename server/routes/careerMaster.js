@@ -568,8 +568,11 @@ export async function resolveOwnerUserId(ownerSlug, req) {
 }
 
 // ── public, redacted read (mounted before requireUser below) ──────────────
-async function loadMasterPayload(req) {
-  const ownerUserId = await resolveOwnerUserId(req.query.owner, req);
+// Public, redacted Career Master rows for one owner — the same shape
+// GET /master serves to anonymous visitors. Exported for server-side
+// readers (e.g. the Portfolio-First Site Agent) so they never re-query the
+// career_* tables with their own, possibly less-redacted, projection.
+export async function loadPublicCareerMaster(ownerUserId) {
   const [jobRows, skillRows, toolRows, engagementRows, domainRows, certRows] = await Promise.all([
     db.prepare(`SELECT * FROM career_jobs WHERE user_id = $1 ORDER BY order_index, id`).all(ownerUserId),
     db.prepare(`SELECT * FROM career_skills WHERE user_id = $1 ORDER BY order_index, id`).all(ownerUserId),
@@ -586,7 +589,7 @@ async function loadMasterPayload(req) {
     return item;
   });
 
-  const payload = {
+  return {
     jobs: jobRows.map((row) => rowToCamel(row, JOB_FIELDS)),
     skills: skillRows.map((row) => rowToCamel(row, SKILL_FIELDS)),
     tools: toolRows.map((row) => rowToCamel(row, TOOL_FIELDS)),
@@ -594,6 +597,11 @@ async function loadMasterPayload(req) {
     domains: domainRows.map((row) => rowToCamel(row, DOMAIN_FIELDS, DOMAIN_JSON_FIELDS)),
     certifications: certRows.map((row) => rowToCamel(row, CERTIFICATION_FIELDS)),
   };
+}
+
+async function loadMasterPayload(req) {
+  const ownerUserId = await resolveOwnerUserId(req.query.owner, req);
+  const payload = await loadPublicCareerMaster(ownerUserId);
 
   // Deal transactions carry private financial data (individual return
   // carve-outs, attribution) — only included when the requester IS the data

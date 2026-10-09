@@ -449,6 +449,18 @@ export const TEMPLATE_CATEGORIES = [
         defaultCols: 1,
       },
       {
+        id: 'foundationProofLedger', type: 'foundationProofLedger', label: 'Proof Ledger', icon: '🧾',
+        desc: 'Headline outcome tiles that open to the Career Master records behind them. Unlinked claims say so.',
+        accent: '#C4843A',
+        fields: {
+          eyebrow: 'PORTFOLIO OUTCOMES',
+          heading: 'Proof first, then the story',
+          intro: 'Each figure opens to the Career Master record behind it.',
+          proofs: [{ value: '', label: '', context: '', evidenceEmployer: '', evidenceTerms: [] }],
+        },
+        defaultCols: 1,
+      },
+      {
         id: 'careerRollupShowcase', type: 'careerRollupShowcase', label: 'Career Rollup', icon: '📊',
         desc: 'Auto-populated chart from your Career Master — no typing required, just pick a grouping and chart type.',
         accent: '#345A68',

@@ -4648,6 +4648,29 @@ async function bootstrap() {
     console.warn('[db] website intelligence nav injection skipped:', e.message);
   }
 
+  // Additive: Portfolio-First Site Agent tab inside the Website Intelligence
+  // view (2026-10-01). Navigation config only — the agent itself stages
+  // site_state drafts through its own admin route, never at boot.
+  try {
+    const navRows = await sql.unsafe(`SELECT data FROM config_state WHERE id = 'admin_nav'`);
+    if (navRows.length > 0) {
+      const nav = JSON.parse(navRows[0].data);
+      const view = (nav.views || []).find((v) => v.id === 'website-intelligence');
+      if (view) {
+        view.tabs = view.tabs || [];
+        if (!view.tabs.some((tab) => tab.id === 'portfolio-site-agent')) {
+          view.tabs.push({ id: 'portfolio-site-agent', label: 'Portfolio-First Site Agent', componentId: 'portfolioSiteAgent', sortOrder: 1 });
+          await sql.unsafe(
+            `UPDATE config_state SET data = $1, updated_at = $2 WHERE id = 'admin_nav'`,
+            [JSON.stringify(nav), Date.now()]
+          );
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[db] portfolio site agent nav injection skipped:', e.message);
+  }
+
   // Compatibility for databases that briefly received the commerce draft
   // with BIGINT package/product identifiers before natural string keys were
   // finalized. Convert in place before seeding the canonical dp.* IDs.

@@ -7,6 +7,9 @@
 // server/lib/careerAtomRollups.js), by design: zero manual typing required.
 import React from 'react';
 import SaltBasinCrystal from '../SaltBasinCrystal.jsx';
+import { useViewportWidth } from './blockUtils.jsx';
+import { fetchCareerMaster } from '../../lib/careerMaster.js';
+import { findCareerEvidence } from '../../../server/lib/careerEvidenceMatch.js';
 
 const BG_VAR = { ivory: 'var(--sb-ivory)', navy: 'var(--sb-navy)', linen: 'var(--sb-linen)', teal: 'var(--sb-teal)', cream: 'var(--sb-cream)' };
 
@@ -30,10 +33,15 @@ export function CareerHeroOrbitBlock({ section }) {
   const badges = Array.isArray(f.statBadges) ? f.statBadges : [];
   const [orbitColors, setOrbitColors] = React.useState(null);
   React.useEffect(() => { setOrbitColors(resolveThemeColors()); }, []);
+  // Additive (2026-10-01): stack on phone widths, and optional CTA fields —
+  // both absent on every pre-existing section, which renders unchanged.
+  const narrow = useViewportWidth() < 760;
+  const ctas = [[f.cta1Label, f.cta1Link, 'sb-btn sb-btn-gold'], [f.cta2Label, f.cta2Link, 'sb-btn sb-btn-outline-dark']]
+    .filter(([label, link]) => label && link);
 
   return (
-    <section id={section.id} style={{ background: bg, padding: '5rem 2rem' }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: '3rem', alignItems: 'center' }}>
+    <section id={section.id} style={{ background: bg, padding: narrow ? '3.5rem 1rem' : '5rem 2rem' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: narrow ? '1fr' : '1.15fr 0.85fr', gap: narrow ? '1.5rem' : '3rem', alignItems: 'center' }}>
         <div>
           {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.75rem' }}>{f.eyebrow}</p>}
           {f.heading && <h1 className="sb-display" style={{ fontSize: 'clamp(2.4rem, 5vw, 3.6rem)', letterSpacing: '-0.02em', margin: '0 0 1rem', color: 'var(--sb-navy)' }}>{f.heading}</h1>}
@@ -43,8 +51,13 @@ export function CareerHeroOrbitBlock({ section }) {
               {badges.map((b, i) => <span key={i}>{b.label}</span>)}
             </div>
           )}
+          {ctas.length > 0 && (
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '1.75rem' }}>
+              {ctas.map(([label, link, cls]) => <a key={label} href={link} className={cls}>{label}</a>)}
+            </div>
+          )}
         </div>
-        <div style={{ height: 320, position: 'relative' }}>
+        <div style={{ height: narrow ? 220 : 320, position: 'relative' }}>
           <SaltBasinCrystal size="hero" orbitCount={4} orbitColorOverride={orbitColors} autoRotate />
         </div>
       </div>
@@ -255,6 +268,100 @@ export function CareerJourneyStepperBlock({ section }) {
             </div>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+// Foundation Proof Ledger (2026-10-01) — headline outcome tiles that open to
+// the Career Master records behind them. Each proof in f.proofs carries
+// { value, label, context, evidenceEmployer, evidenceTerms }; evidence is
+// resolved live with findCareerEvidence() (the same matcher the Portfolio-
+// First Site Agent uses to accept a claim), so a figure is shown as
+// "verified" only when a real record carries it. A proof with no matching
+// record says so plainly — never a silent pass.
+export function FoundationProofLedgerBlock({ section, memberSlug }) {
+  const f = section.fields || {};
+  const bg = BG_VAR[section.bg] || 'var(--sb-navy)';
+  const dark = !section.bg || section.bg === 'navy' || section.bg === 'teal';
+  const ink = dark ? 'var(--sb-cream)' : 'var(--sb-navy)';
+  const soft = dark ? 'var(--sb-sage)' : 'var(--sb-teal-deep)';
+  const line = dark ? 'rgba(245,240,232,0.16)' : 'rgba(74,124,142,0.22)';
+  const proofs = Array.isArray(f.proofs) ? f.proofs : [];
+  const narrow = useViewportWidth() < 760;
+  const [master, setMaster] = React.useState(null);
+  const [open, setOpen] = React.useState(0);
+  React.useEffect(() => { fetchCareerMaster(memberSlug).then(setMaster); }, [memberSlug]);
+
+  const resolved = React.useMemo(() => proofs.map((p) => ({
+    ...p,
+    evidence: master ? findCareerEvidence(master, { employer: p.evidenceEmployer, terms: p.evidenceTerms, figure: p.value }) : null,
+  })), [proofs, master]);
+
+  if (!proofs.length) return null;
+  const current = resolved[open] || resolved[0];
+
+  return (
+    <section id={section.id} style={{ background: bg, padding: narrow ? '3.5rem 1rem' : '5rem 2rem', color: ink }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        {f.eyebrow && <p className="sb-eyebrow" style={{ marginBottom: '0.5rem' }}>{f.eyebrow}</p>}
+        {f.heading && <h2 className="sb-display" style={{ fontSize: 'clamp(1.8rem, 4vw, 2.4rem)', color: ink, margin: '0 0 0.75rem' }}>{f.heading}</h2>}
+        {f.intro && <p style={{ color: soft, maxWidth: 680, lineHeight: 1.6, margin: '0 0 2rem' }}>{f.intro}</p>}
+
+        <div role="tablist" aria-label={f.heading || 'Proof'} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 210px), 1fr))', gap: '0.75rem' }}>
+          {resolved.map((p, i) => {
+            const active = i === open;
+            const verified = p.evidence && p.evidence.length > 0;
+            return (
+              <button
+                key={i}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                aria-controls={`${section.id}-panel`}
+                onClick={() => setOpen(i)}
+                style={{
+                  textAlign: 'left', cursor: 'pointer', padding: '1.25rem 1.1rem', minHeight: 44,
+                  background: active ? (dark ? 'rgba(245,240,232,0.08)' : 'var(--sb-ivory)') : 'transparent',
+                  border: `1px solid ${active ? 'var(--sb-gold)' : line}`, borderRadius: 4, color: ink,
+                }}
+              >
+                <div className="sb-display" style={{ fontSize: '2.1rem', lineHeight: 1.05, color: 'var(--sb-gold)', fontVariantNumeric: 'tabular-nums' }}>{p.value}</div>
+                <div style={{ marginTop: '0.5rem', fontSize: '0.86rem', lineHeight: 1.45 }}>{p.label}</div>
+                <div className="sb-label" style={{ marginTop: '0.75rem', fontSize: '0.6rem', color: soft }}>
+                  {p.evidence == null ? 'Checking Career Master…' : verified ? `Career Master · ${p.evidence.length} record${p.evidence.length === 1 ? '' : 's'}` : 'Not yet linked to a record'}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {current && (
+          <div id={`${section.id}-panel`} role="tabpanel" style={{ marginTop: '1rem', padding: narrow ? '1.25rem 1rem' : '1.5rem 1.75rem', border: `1px solid ${line}`, borderRadius: 4 }}>
+            {current.context && <p style={{ margin: '0 0 1rem', lineHeight: 1.6, color: ink }}>{current.context}</p>}
+            {current.evidence == null ? (
+              <p style={{ margin: 0, color: soft, fontSize: '0.85rem' }}>Loading the Career Master records…</p>
+            ) : current.evidence.length === 0 ? (
+              <p style={{ margin: 0, color: soft, fontSize: '0.85rem' }}>
+                No Career Master record carries this figure yet.
+              </p>
+            ) : (
+              <div style={{ display: 'grid', gap: '0.9rem' }}>
+                {current.evidence.map((ev, j) => (
+                  <div key={j} style={{ borderLeft: '2px solid var(--sb-gold)', paddingLeft: '0.9rem' }}>
+                    <div style={{ fontSize: '0.88rem', fontWeight: 600 }}>{ev.title}</div>
+                    <div className="sb-label" style={{ fontSize: '0.6rem', color: soft, margin: '0.2rem 0 0.4rem' }}>
+                      {[ev.kind === 'job' ? 'Role' : 'Engagement', ev.employer, ev.period].filter(Boolean).join(' · ')}
+                    </div>
+                    <ul style={{ margin: 0, paddingLeft: '1.1rem', color: soft, fontSize: '0.84rem', lineHeight: 1.55 }}>
+                      {ev.lines.slice(0, 3).map((l, k) => <li key={k}>{l}</li>)}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </section>
   );
