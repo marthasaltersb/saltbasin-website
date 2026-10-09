@@ -28,7 +28,7 @@ Values below assume the current year is 2026 (Forecast modeling = 13 years). If 
    - Expect the heading "Infographics — pick a chart" and a section "Career charts — previews use your real Career Master data".
    - Expect six cards, in order: **Proficiency Tiers**, **Trend Bars**, **Outcome Tiles**, **Career Timeline**, **Skill Years Dots**, **Industry Share Bars**, each with a drawn thumbnail (not blank, no spinner), the text "Best for: ...", and a **+ Add** button.
    - Expect a "Classic charts" section with Bar Chart (Horizontal), Bar Chart (Vertical), Capacity Gauge, Overlap (Venn), Certification Badges, Tool & Tech Snapshot.
-   - Expect the **Live Preview** column visible on the right at the same time, and no orange alert box.
+   - Expect the **Live Preview** column visible on the right at the same time (at a window 900px wide or narrower, such as the 390px phone, it appears below the gallery and is reached by scrolling), and no orange alert box.
 2. [J1.2] Look at the thumbnails: Skill Years Dots lists "Forecast modeling" with "13 yrs" first; Industry Share Bars shows "Software" 67% and "Logistics" 33%; Outcome Tiles shows "$40M+" and "35%".
 
 ## Journey 2 — Pick a chart, set options in place, insert, see the preview change
@@ -40,6 +40,9 @@ Values below assume the current year is 2026 (Forecast modeling = 13 years). If 
    - Within about 2 seconds the Live Preview shows a heading **SKILL STRENGTH** and rows Process design (Expert), Forecast modeling (Expert), Pricing analytics (Advanced), Stakeholder reporting (Advanced), and a level legend (Exposure, Foundational, Proficient, Advanced, Expert). No dagger (†) and no footnote yet.
    - Visually (take a screenshot of the preview column; text found in the page source is not enough): the Skill strength chart fits inside the Live Preview column with nothing clipped at the right edge. All five tier segments of each row and each row's level label (Expert, Advanced, ...) are fully visible, and the legend is complete. There is no horizontal scrollbar inside the preview.
    - Scroll the page (the real scroller, at a 1400 px and again at a 600 px wide window) with the gallery taller than the window: at 1400 px the Live Preview column stays visible beside the gallery; at 600 px it sits below the gallery without overlapping it.
+
+3. [J2.3] Signed in as the admin, open Admin -> Output Templates (the same editor in the admin shell) -> pill **Resume** -> **Infographics**. With the gallery taller than the window, scroll the page's real scroller down 1500px.
+   - Expect, on the desktop surface (1280px wide), the Live Preview to stay in view beside the gallery (its top edge inside the visible window). Expect, on the mobile surface (390px wide), the Live Preview to sit below the gallery with no overlap.
 
 ## Journey 3 — Edit a configured chart in place; footnote follows the rules
 
@@ -78,5 +81,5 @@ Values below assume the current year is 2026 (Forecast modeling = 13 years). If 
 - [E.1] **Empty member:** a brand-new member sees each career card with a plain sentence (e.g. "No proficiency levels yet — add skills or tools in Career Master...") and no chart; adding it still works and the preview shows the same sentence.
 - [E.2] **Failed load:** if Career Master data cannot be loaded, an orange alert says which data failed (with the HTTP status) and "This is a loading error, not missing Career Master data", with a **Retry** button; affected cards show the same message instead of a chart.
 - [E.3] **Top rows blank:** clearing the number box falls back to the chart's default (not zero rows).
-- [E.4] **Classic charts:** Bar Chart and Capacity Gauge cards need a roll-up source; their **+ Add** is disabled until one is available.
+- [E.4] **Classic charts:** the two Bar Chart cards need grouped roll-up data (for example skills by category); for a member with none, their **+ Add** is disabled. The Capacity Gauge always has a count source (Roles Held and the other totals), so its **+ Add** is enabled, and for an empty member it shows the number 0.
 - [E.5] **Console:** any error other than the sandbox's `ERR_CERT_AUTHORITY_INVALID` for an external resource is a failure.

@@ -1,0 +1,53 @@
+{
+  "id": "A1",
+  "feature": "chart-gallery",
+  "fromBaseline": 1,
+  "proposedBy": "triage:chart-gallery:r2",
+  "round": 2,
+  "triageItems": ["CG-R2b-1", "CG-R2b-4", "CG-R2b-6"],
+  "reason": "Round-2 triage found two spec errors (E.4 gauge expectation, J1.1 preview visibility at phone width) and one coverage gap (sticky preview in the admin shell host).",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "E.4",
+      "before": "[E.4] **Classic charts:** Bar Chart and Capacity Gauge cards need a roll-up source; their **+ Add** is disabled until one is available.",
+      "after": "[E.4] **Classic charts:** the two Bar Chart cards need grouped roll-up data (for example skills by category); for a member with none, their **+ Add** is disabled. The Capacity Gauge always has a count source (Roles Held and the other totals), so its **+ Add** is enabled, and for an empty member it shows the number 0.",
+      "tracesTo": "docs/changes/chart-gallery.md v1 'Options per chart: data source (classic bar charts and gauge)'; server/lib/rollupMetrics.js computeStaticRollups (count rollups such as total_jobs always emitted, even at 0)",
+      "whyNeeded": "Count rollups are always emitted, so the gauge always has a source; the change spec does not require blocking a zero count. The old expectation contradicts the change spec."
+    },
+    {
+      "op": "change",
+      "stepId": "J1.1",
+      "before": "Expect the **Live Preview** column visible on the right at the same time, and no orange alert box.",
+      "after": "Expect the **Live Preview** column visible on the right at the same time (at a window 900px wide or narrower, such as the 390px phone, it appears below the gallery and is reached by scrolling), and no orange alert box.",
+      "tracesTo": "docs/changes/chart-gallery.md v1 (sticky preview on desktop); OutputTemplateConfigurator.jsx stacks to one column at max-width 900px; J2.2 narrow-window clause; definition.json interfaceParity (390px phone walkthrough)",
+      "whyNeeded": "The product deliberately stacks to one column at 900px or narrower, and the phone walkthrough is mandatory, so 'on the right' cannot hold on the mobile surface.",
+      "reviewerNote": "Reviewer replaced the proposed 'narrower than about 900px' with '900px wide or narrower' to match the code breakpoint (max-width: 900px) and remove 'about'."
+    },
+    {
+      "op": "add",
+      "stepId": "J2.3",
+      "before": null,
+      "after": "[J2.3] Signed in as the admin, open Admin -> Output Templates (the same editor in the admin shell) -> pill **Resume** -> **Infographics**. With the gallery taller than the window, scroll the page's real scroller down 1500px. Expect, on the desktop surface (1280px wide), the Live Preview to stay in view beside the gallery (its top edge inside the visible window). Expect, on the mobile surface (390px wide), the Live Preview to sit below the gallery with no overlap.",
+      "tracesTo": "docs/changes/chart-gallery.md v1 'The preview column is sticky'; fix note CG-R1-1 (re-validate in both World Shell and Admin Shell hosts); AdminShell.jsx nav tab 'Output Templates'",
+      "whyNeeded": "The sticky fix was verified only in the member World Shell host; the admin shell has a different scroll container and is untested.",
+      "reviewerNote": "Reviewer replaced the proposed 1400px/600px resizing with the two fixed test-constraint surfaces (1280px desktop, 390px mobile) so the step is deterministic and walkable on both surfaces, and named the Resume pill so the start state is exact."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:chart-gallery:r2",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass (E.4 gauge expectation changed because it contradicts the change spec and rollupMetrics always emits count rollups; verified in ChartGallery.jsx that + Add is disabled only when no source option exists; bar charts stay disabled without grouped data; J1.1 and J2.3 clarify or add checks)",
+      "Retire only duplicates": "pass (no step retired)",
+      "Exact": "pass after reviewer wording fixes to J1.1 and J2.3",
+      "Reachable": "pass (J2.3 uses the admin Output Templates tab, walkable at 1280px and 390px)",
+      "Deterministic": "pass after J2.3 was tied to the fixed surfaces instead of ad hoc window widths",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass (tests visible behaviour: preview position and button enabled state)"
+    },
+    "note": "All three proposals approved as one amendment, with two wording tightenings. Observation for the owner, not a blocker: J2.2's 1400px/600px resize clause predates this amendment and is left unchanged.",
+    "at": "2026-10-09T17:00:00Z"
+  }
+}
