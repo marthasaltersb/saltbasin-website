@@ -4,14 +4,76 @@
   "fromBaseline": 1,
   "proposedBy": "fix:release-loop-tooling:r3 (branch release-loop/release-loop-tooling-fix-r3, fe190e2) and owner direction 2026-10-09 (specGovernance, definition v4)",
   "round": 3,
-  "triageItems": ["round-3 spec_error items in docs/triage/release-loop-tooling-round-3.md"],
-  "reason": "Before spec governance existed, fix round 3 edited this spec directly (fe190e2). Under definition v4 those edits cannot merge as-is; they are filed here for review instead. Definition v4 also adds a role, a stage and a gate, so J1.1's exact expected output changes.",
-  "changes": [
-    { "op": "change", "stepId": "J1.1", "before": "Expect exactly: `6 8 2 context,prompt,cache,memory initialCheck,validation,noSilentCaps,push`.", "after": "Expect exactly: `7 9 2 context,prompt,cache,memory initialCheck,validation,noSilentCaps,push,baseline`.", "tracesTo": "definition.json v4 specGovernance (owner direction 2026-10-09): role release_spec_reviewer, stage amend, gate baseline", "whyNeeded": "The definition changed by owner direction; the old expected output describes v3." },
-    { "op": "change", "stepId": "J4.1", "before": "Expect eight tiles ... `1` Finished with unreconciled failures, `391 / 20k` Tokens out / cache read. / charlie-export Failed", "after": "Expect nine tiles ... `1` Finished with unreconciled failures, a Status updates tile showing the latest update version (or `—` when none is recorded), `391 / 20k` Tokens out / cache read. / charlie-export Agent stopped", "tracesTo": "Owner direction: status updates with version numbers in the tracker; 'Failed' relabelled 'Agent stopped'", "whyNeeded": "The tracker page gained the Status updates tile and the relabel after this spec was written." },
-    { "op": "change", "stepId": "J4.5", "before": "Expect no console errors, no page errors, no failed requests, and scrollWidth equals clientWidth.", "after": "The Board/World switch and the trends panel belong to the live-release-tracker spec and are not tested here. Expect no console errors, no page errors, no failed requests, and `document.documentElement.scrollWidth` equals `clientWidth`.", "tracesTo": "Feature split: live-release-tracker owns World view and trends", "whyNeeded": "States scope so the validator does not test another feature's controls." },
-    { "op": "change", "stepId": "J5.2", "before": "Page background: light `rgb(243, 246, 247)`, dark `rgb(15, 26, 31)`.", "after": "Page background: light `rgb(248, 244, 236)`, dark `rgb(22, 26, 28)`.", "tracesTo": "Owner direction: Salt Basin design tokens (cream #F8F4EC) from the uploaded design system", "whyNeeded": "The page was restyled to the design system; reviewer must confirm the dark value against the page tokens." },
-    { "op": "change", "stepId": "J5.3", "before": "`scrollWidth` equals `clientWidth`. At 390 px no table needs sideways scroll ...", "after": "`scrollWidth` equals `clientWidth`. The echo-audit status pill reads `Stalled (no sign of life)` in red, never the raw word `stalled`. `node tools/release-tracker/sync-setup-guide.mjs` exits 0 (the page embedded in SETUP-FOR-CLAUDE.md matches index.html). At 390 px no table needs sideways scroll ...", "tracesTo": "Round-3 defects: raw 'stalled' label; SETUP-FOR-CLAUDE.md drifting from index.html", "whyNeeded": "Adds checks that prove two round-3 defects stay fixed. Note for the reviewer: the sync-setup-guide check is a cli action inside a browser step; consider making it its own cli step (J5.5) so the step stays single-surface." }
+  "triageItems": [
+    "round-3 spec_error items in docs/triage/release-loop-tooling-round-3.md"
   ],
-  "review": { "status": "proposed" }
+  "reason": "Before spec governance existed, fix round 3 edited this spec directly (fe190e2). Under definition v4 those edits cannot merge as-is; they are filed here for review instead. Definition v4 also adds a role, a stage and a gate, so J1.1's exact expected output changes. Reviewer split the sync-setup-guide check into new cli step J5.5.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "J1.1",
+      "before": "Expect exactly: `6 8 2 context,prompt,cache,memory initialCheck,validation,noSilentCaps,push`.",
+      "after": "Expect exactly: `7 9 2 context,prompt,cache,memory initialCheck,validation,noSilentCaps,push,baseline`.",
+      "tracesTo": "definition.json v4 specGovernance (owner direction 2026-10-09): role release_spec_reviewer, stage amend, gate baseline",
+      "whyNeeded": "The definition changed by owner direction; the old expected output describes v3."
+    },
+    {
+      "op": "change",
+      "stepId": "J4.1",
+      "before": "Expect eight tiles ... `1` Finished with unreconciled failures, `391 / 20k` Tokens out / cache read. / charlie-export Failed",
+      "after": "Expect nine tiles ... `1` Finished with unreconciled failures, a Status updates tile whose value is the `version` of the last entry of `updates` in `$FX/snap.json` (`—` when `updates` is empty), `391 / 20k` Tokens out / cache read. / charlie-export Agent stopped",
+      "tracesTo": "Owner direction: status updates with version numbers in the tracker; 'Failed' relabelled 'Agent stopped'",
+      "whyNeeded": "The tracker page gained the Status updates tile and the relabel after this spec was written.",
+      "reviewerNote": "Reviewer tightened the proposed wording so the tile value is checkable against the snapshot (updates come from docs/release-log/updates.json, which changes between releases, so a fixed literal would not be deterministic)."
+    },
+    {
+      "op": "change",
+      "stepId": "J4.5",
+      "before": "Expect no console errors, no page errors, no failed requests, and scrollWidth equals clientWidth.",
+      "after": "The Board/World switch and the trends panel belong to the live-release-tracker spec and are not tested here. Expect no console errors, no page errors, no failed requests, and `document.documentElement.scrollWidth` equals `clientWidth`.",
+      "tracesTo": "Feature split: live-release-tracker owns World view and trends",
+      "whyNeeded": "States scope so the validator does not test another feature's controls."
+    },
+    {
+      "op": "change",
+      "stepId": "J5.2",
+      "before": "Page background: light `rgb(243, 246, 247)`, dark `rgb(15, 26, 31)`.",
+      "after": "Page background: light `rgb(248, 244, 236)`, dark `rgb(22, 26, 28)`.",
+      "tracesTo": "Owner direction: Salt Basin design tokens (cream #F8F4EC) from the uploaded design system",
+      "whyNeeded": "The page was restyled to the design system; reviewer must confirm the dark value against the page tokens."
+    },
+    {
+      "op": "change",
+      "stepId": "J5.3",
+      "before": "`scrollWidth` equals `clientWidth`. At 390 px no table needs sideways scroll ...",
+      "after": "`scrollWidth` equals `clientWidth`. On the overview the echo-audit status pill reads `Stalled (no sign of life)`, never the raw word `stalled`, and is styled like the `Agent stopped` pill (failure style), not unstyled. At 390 px no table needs sideways scroll ...",
+      "tracesTo": "Round-3 defects: raw 'stalled' label; SETUP-FOR-CLAUDE.md drifting from index.html",
+      "whyNeeded": "Adds checks that prove two round-3 defects stay fixed. Note for the reviewer: the sync-setup-guide check is a cli action inside a browser step; consider making it its own cli step (J5.5) so the step stays single-surface.",
+      "reviewerNote": "Reviewer removed the cli sync-setup-guide check from this browser step and made it J5.5, as the proposer suggested; 'in red' replaced by a checkable reference style."
+    },
+    {
+      "op": "add",
+      "stepId": "J5.5",
+      "before": null,
+      "after": "`node tools/release-tracker/sync-setup-guide.mjs` exits 0 and prints `SETUP-FOR-CLAUDE.md embedded page matches index.html`.",
+      "tracesTo": "Round-3 defect: SETUP-FOR-CLAUDE.md drifting from index.html (docs/triage/release-loop-tooling-round-3.md; change spec F1-2 restored sync-setup-guide.mjs)",
+      "whyNeeded": "A cli step by design (one surface); proves the embedded page copy stays in sync. Split out of J5.3 to keep each step single-surface."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:release-loop-tooling:r3",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass (J1.1 and J5.2 expectations changed to match definition v4 and the design-system tokens, both owner direction; J4.1/J5.3/J4.5 only add checks or state scope; the J4.5 scope note excludes controls owned by live-release-tracker, not a check on this page)",
+      "Retire only duplicates": "pass (no step retired)",
+      "Exact": "pass after reviewer wording fixes to J4.1 and J5.3",
+      "Reachable": "pass",
+      "Deterministic": "pass after J4.1 tile value is tied to snap.json instead of a literal that changes per release",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass (J5.2 colours verified against tools/release-tracker/index.html tokens --bg #F8F4EC light and #161A1C dark; J1.1 verified against definition.json: 7 roles, 9 stages, 2, gates incl. baseline)"
+    },
+    "note": "All five changes approved, with two wording tightenings and one split (new step J5.5). Checked each against the change spec, owner direction and current definition.json / index.html.",
+    "at": "2026-10-09T12:30:00Z"
+  }
 }
