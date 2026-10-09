@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T15:59:52.369Z",
+  "exportedAt": "2026-10-09T16:06:08.815Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -42,12 +42,12 @@
       "backlog": 3
     },
     "release-loop-tooling": {
-      "status": "triage",
+      "status": "validate",
       "lastRound": 4,
       "lastScore": "29/30",
       "lastReport": "docs/test-results/release-loop-tooling/round-4.md",
-      "openBugs": 8,
-      "backlog": 3
+      "openBugs": 6,
+      "backlog": 4
     },
     "chart-gallery": {
       "status": "validate",
@@ -1773,7 +1773,7 @@
     {
       "id": "release-loop-tooling-F1-6",
       "feature": "release-loop-tooling",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "spec_error",
       "attempts": 1,
       "step": "Open bug F1-6 change spec Known limitations",
@@ -1804,6 +1804,12 @@
           "event": "fixed",
           "note": "Rewrote Known limitations in the change spec: journey agents with no end entry show stalled past --…",
           "commit": "fe190e227ede4c88ec9ac2290b1690f164f679b0"
+        },
+        {
+          "round": 4,
+          "event": "verified",
+          "note": "Retest round 4: this bug's step passed (the round had other failures)",
+          "commit": "08468b1"
         }
       ]
     },
@@ -1963,7 +1969,7 @@
     {
       "id": "T3-1",
       "feature": "release-loop-tooling",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "spec_error",
       "attempts": 1,
       "step": "J4/J5 1.2 Eight tiles in order",
@@ -1989,13 +1995,19 @@
           "event": "fixed",
           "note": "Training spec J4 now says nine tiles, with a Status updates tile between 'Finished with unreconcile…",
           "commit": "fe190e227ede4c88ec9ac2290b1690f164f679b0"
+        },
+        {
+          "round": 4,
+          "event": "verified",
+          "note": "Retest round 4: this bug's step passed (the round had other failures)",
+          "commit": "08468b1"
         }
       ]
     },
     {
       "id": "T3-3",
       "feature": "release-loop-tooling",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "spec_error",
       "attempts": 1,
       "step": "J4/J5 page background",
@@ -2020,6 +2032,64 @@
           "event": "fixed",
           "note": "Spec J5 step 2 background is now light rgb(248, 244, 236) and dark rgb(22, 26, 28).",
           "commit": "fe190e227ede4c88ec9ac2290b1690f164f679b0"
+        },
+        {
+          "round": 4,
+          "event": "verified",
+          "note": "Retest round 4: this bug's step passed (the round had other failures)",
+          "commit": "08468b1"
+        }
+      ]
+    },
+    {
+      "id": "T4-1",
+      "feature": "release-loop-tooling",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "In Chromium open /login, sign in as member@test.local; expect /world showing Your World, Journeys and Classic Tools (390x844)",
+      "rootCause": "src/components/WorldShell.jsx line 121 (MOBILE_CSS, max-width 700px) deliberately hides .sb-world-brandsub, the 'Your World' subtitle rendered at line 683. The only other 'Your World' text (rail title, line 758) renders only when the member has no Career/Commercial island; the test member has the Career island so the always-on pipeline rail (line 754, .sb-world-rail at line 123) spans the screen …",
+      "files": [
+        "src/components/WorldShell.jsx",
+        "docs/training/release-loop-tooling.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Step [J3b.3] is in this feature's own spec (bed12f0). WorldShell.jsx line 121 hides .sb-world-brandsub at max-width 700px, so 'Your World' is absent at 390px for a member with the Career island. Login behaviour is correct. The spec over-specifies a desktop-only label, like T3-1 and T3-3. Needs a sp…"
+      },
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "src/components/WorldShell.jsx line 121 (MOBILE_CSS, max-width 700px) deliberately hides .sb-world-b…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T4-2",
+      "feature": "release-loop-tooling",
+      "status": "backlog_pre_existing",
+      "class": "environment",
+      "attempts": 0,
+      "step": "MCP_GAP: platform MCP server not built yet (feature platform-mcp)",
+      "rootCause": "server/lib/mcpToolRegistry.js does not exist because the separate feature platform-mcp (active-release.features.json line 146) is still in build. definition.json interfaceParity.rule says a missing MCP tool is recorded and assigned to platform-mcp until the server exists.",
+      "files": [
+        "server/data/releaseLoop/definition.json",
+        "docs/release-log/active-release.features.json"
+      ],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "Not part of this feature's request. mcpToolRegistry.js belongs to the separate feature platform-mcp (active-release.features.json line 146, still in build). definition.json interfaceParity.rule assigns missing MCP tools to platform-mcp until the server exists. No merged feature caused it."
+      },
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "server/lib/mcpToolRegistry.js does not exist because the separate feature platform-mcp (active-rele…",
+          "commit": null
         }
       ]
     },
