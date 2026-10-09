@@ -1,0 +1,38 @@
+{
+  "id": "A1",
+  "feature": "qr-gated-outputs",
+  "fromBaseline": 1,
+  "proposedBy": "triage:qr-gated-outputs:r2",
+  "round": 2,
+  "triageItems": [
+    "G1"
+  ],
+  "reason": "The spec's only route to My Resume and Career Master uses the Classic Tools tab strip, which is hidden at 390px, so the mobile pass has no documented path.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "",
+      "before": "",
+      "after": "On a phone (390px) open World Shell > Journeys > My Resume (or Career Master); the Classic Tools tab strip is hidden at that width.",
+      "tracesTo": "definition.json interfaceParity v3 (MOBILE_GAP): every capability must work as a 390px phone walkthrough",
+      "whyNeeded": "Navigation note in 'Where things are'; no scored step changes, no expectation changes.",
+      "reviewerNote": "Written as an exact route in the form already used by docs/training/career-bound-outputs.md ('/world', Journeys tab, card My Resume); labels verified in src/components/WorldShell.jsx. Added as a bullet in 'Where things are', not a scored step, so it takes no step id."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:qr-gated-outputs:r2",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "pass",
+      "Reachable": "pass",
+      "Deterministic": "pass",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Approved. Pure navigation addition required by interface parity; nothing removed or weakened.",
+    "at": "2026-10-09T00:00:00.000Z"
+  }
+}
