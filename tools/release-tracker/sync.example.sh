@@ -16,7 +16,7 @@ if mkdir /var/tmp/sbpg/integrate.lockdir 2>/dev/null; then
   if [ ! -f .git/MERGE_HEAD ]; then
     node scripts/release-loop-resume.mjs --export /var/tmp/sbpg/tracker/snapshot.json >/dev/null
     node scripts/release-tracker-markdown.mjs /var/tmp/sbpg/tracker/snapshot.json --out docs/release-log/release-tracker.md
-    git add docs/release-log/active-release.state.json docs/release-log/release-tracker.md docs/release-log/history.json docs/test-results docs/triage 2>/dev/null
+    git add docs/release-log/active-release.state.json docs/release-log/release-tracker.md docs/release-log/history.json docs/release-log/updates.json docs/release-log/updates.md docs/test-results docs/triage 2>/dev/null
     git diff --cached --quiet || git commit -q -m "Release loop state: bugs, fixes and verification as of $(date -u +%Y-%m-%dT%H:%MZ)
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
