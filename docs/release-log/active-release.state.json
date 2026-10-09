@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T16:41:27.218Z",
+  "exportedAt": "2026-10-09T16:43:30.868Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -34,7 +34,7 @@
       "backlog": 4
     },
     "no-silent-failures": {
-      "status": "fix",
+      "status": "reconcile",
       "lastRound": 1,
       "lastScore": "18/28",
       "lastReport": "docs/test-results/no-silent-failures/round-1.md",
@@ -66,10 +66,10 @@
       "backlog": 5
     },
     "resume-rollups": {
-      "status": "validate",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
+      "status": "triage",
+      "lastRound": 1,
+      "lastScore": "28/32",
+      "lastReport": "docs/test-results/resume-rollups/round-1.md",
       "openBugs": 7,
       "backlog": 3
     },
@@ -1930,7 +1930,7 @@
     {
       "id": "no-silent-failures-B12",
       "feature": "no-silent-failures",
-      "status": "fixing",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "G1 training spec P1 signs in as admin",
@@ -1955,7 +1955,7 @@
     {
       "id": "no-silent-failures-B13",
       "feature": "no-silent-failures",
-      "status": "fixing",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "G2 entry points and setup not via World Shell/UI",
@@ -2005,7 +2005,7 @@
     {
       "id": "no-silent-failures-B15",
       "feature": "no-silent-failures",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "G5 QR banner wording under RECORDED DATA",
@@ -2083,9 +2083,9 @@
     {
       "id": "T2",
       "feature": "no-silent-failures",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "J3.4 error toast looks like success toast",
       "rootCause": "src/lib/toast.js:25-26 toast.error is identical to toast.success (same .sb-toast element, brand.css:455 and .sb-admin-shell variant); change spec requires a red error toast. 2.4 s lifetime also hides…",
       "files": [
@@ -2103,13 +2103,19 @@
           "event": "found",
           "note": "src/lib/toast.js:25-26 toast.error is identical to toast.success (same .sb-toas…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "toast.error now renders a red toast (class sb-toast-error, role=alert, default …",
+          "commit": "7be432e50f3e04e06ecb9ae50af7d9ae5bebc465"
         }
       ]
     },
     {
       "id": "T3",
       "feature": "no-silent-failures",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "J2.2 banner wording",
@@ -2134,7 +2140,7 @@
     {
       "id": "T4",
       "feature": "no-silent-failures",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "J3.2 earlier version state",
@@ -2186,7 +2192,7 @@
     {
       "id": "T6",
       "feature": "no-silent-failures",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "J1.2 / J3.1 / J5.1 shell-only fault injection, import, restore",
@@ -2211,7 +2217,7 @@
     {
       "id": "T7",
       "feature": "no-silent-failures",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "E.1 bogus slug",
@@ -2236,7 +2242,7 @@
     {
       "id": "T8",
       "feature": "no-silent-failures",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "E.4 network noise list",
@@ -2261,9 +2267,9 @@
     {
       "id": "T9",
       "feature": "no-silent-failures",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "B15 observation: RECORDED DATA banner sentences",
       "rootCause": "SharedLiveStates.jsx:119-121 prints 'matches the approved printed version' when live is false and line 124 says charts 'update from the Salt Basin Career Master' while live data failed, contradicting…",
       "files": [
@@ -2281,13 +2287,19 @@
           "event": "found",
           "note": "SharedLiveStates.jsx:119-121 prints 'matches the approved printed version' when…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "When live data is unavailable the banner reads 'RECORDED DATA - N recorded chan…",
+          "commit": "7be432e50f3e04e06ecb9ae50af7d9ae5bebc465"
         }
       ]
     },
     {
       "id": "T10",
       "feature": "no-silent-failures",
-      "status": "fixing",
+      "status": "open",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "Coverage: banner sentence and member-owned chart data",
