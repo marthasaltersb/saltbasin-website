@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T05:49:37.267Z",
+  "exportedAt": "2026-10-09T05:54:04.487Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -42,10 +42,10 @@
       "backlog": 3
     },
     "release-loop-tooling": {
-      "status": "validate",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
+      "status": "triage",
+      "lastRound": 1,
+      "lastScore": "24/35",
+      "lastReport": "docs/test-results/release-loop-tooling/round-1.md (NOT WRITTEN: the write tool refused report files for subagents, so the full report is in this structured result; the file at that path is the stale round-1 report from 2026-10-02, not this round. Step log: /var/tmp/sbpg/release-loop/release-loop-tooling/round-1/steps.jsonl, screenshots in the same directory.)",
       "openBugs": 3,
       "backlog": 2
     },
