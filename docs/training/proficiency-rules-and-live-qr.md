@@ -88,7 +88,7 @@ Methodology reminder (shown on screen): points = years × 1 (max 15) + engagemen
 3. [J7.3] Use the slider **Data timeline — slide from the printed version to live**: drag to the far left.
    - Expect "Viewing Approved · printed — exactly what the printed copy shows." and charts as printed.
 4. [J7.4] On a chart click **Salt particles**: expect grains falling into columns, settling with a gold line and value on top; hover a column → tooltip with its name and value. Click **Table**: expect rows with a **Since printed** column reading Same / Changed.
-5. [J7.5] Set a tool category or override a level, wait ~3 seconds, reload — expect the change listed (e.g. "Changed: Ledgerly ERP — printed Advanced · Integration design → now Advanced · Hands-on", or a level change such as Forecast modeling printed Expert → now Advanced †; J2 already set Integration design before approval, so it is part of the printed side).
+5. [J7.5] Set a tool category or override a level, wait ~3 seconds, reload — expect the change listed (e.g. "Changed: Ledgerly ERP — printed Advanced · Integration design → now Advanced · Hands-on", or a level change such as "Changed: Forecast modeling — printed Expert → now Advanced (user-defined)"; J2 already set Integration design before approval, so it is part of the printed side).
 
 ## Journey 8 — Rules & why inside the Output Template editor
 
@@ -96,7 +96,7 @@ Methodology reminder (shown on screen): points = years × 1 (max 15) + engagemen
    - Expect a tab row: Header / Footer, Stat Cards, Infographics, Sections, **Rules & why**.
 2. [J8.2] Click **Rules & why**.
    - Expect the card "Rules & why" with its intro line ("Configure how proficiency levels are calculated...") and the same proficiency rules panel as Journey 3-5 (Formula in use, Levels and why).
-3. [J8.3] Override one level by hand (as Journey 3, step 1-2).
+3. [J8.3] On the Infographics tab make sure the Proficiency chart is in the template (add it if it is not), then override one level by hand (as Journey 3, step 1-2); the preview shows proficiency only when that chart is present.
    - Expect the Infographics tab thumbnails and the preview on the right to refresh with the new level.
 4. [J8.4] At 390px wide, expect the tab row to wrap and **Rules & why** to stay reachable, and the whole editor (presets, Preset Info, tab content, preview) to stack in a single column that fits the screen: no sideways panning inside the page or its scroller to read the Rules & why panel.
 
