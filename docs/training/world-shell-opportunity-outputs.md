@@ -14,15 +14,13 @@ Version 1 · 2026-10-02 · change spec: `docs/changes/world-shell-opportunity-ou
 
 ## Preconditions (set up once, on a fresh database)
 
-Harness-level (not part of the journeys): the API runs with `PUBLIC_MEMBER_SIGNUP_ENABLED=true`, and the member exists:
+Harness-level (not part of the journeys): the member exists, created with the fixed test-account script (the only permitted way to create a test user):
 
 ```
-curl -s -H 'Content-Type: application/json' \
-  -d '{"email":"riley.member@example.test","password":"Member!Pass#2468xx","displayName":"Riley Fenn","agreedToTerms":true}' \
-  http://localhost:<API_PORT>/api/members/signup
+node scripts/create-test-member.mjs --email riley.member@example.test --password 'Member!Pass#2468xx' --name 'Riley Fenn' --provisional --no-terms
 ```
 
-Expected reply: `{"ok":true,"slug":"riley-fenn","user":{"id":2,"email":"riley.member@example.test","role":"member"}}` (id may differ).
+`--provisional` leaves the password marked as provisional (the member must change it at first login); `--no-terms` leaves the career terms unaccepted. The script prints the member's credentials as JSON.
 
 Two files the test creates outside the repository (never inside `server/data/applicationPackages/`):
 
@@ -192,5 +190,6 @@ Open `/world` in a 390px-wide window (reuse the session).
 - [E.4] Approving when a technology has no category → dialog; **Cancel** leaves the draft untouched with the message above.
 - [E.5] An output that is not editable (AI-generated JSON content) shows the reason instead of **Edit draft**; it can still be linked/unlinked.
 - [E.6] Unlinking only removes the link; the output remains in My Resume → Resume Output History and appears under **LINK AN EXISTING OUTPUT**.
-- [E.7] Another member can never see, link, edit or approve these outputs (all routes are scoped to the logged-in member; a foreign id returns an error).
+- [E.7] Signed in as a second member, TRACKED shows (0) and none of Riley's outputs appear under LINK AN EXISTING OUTPUT or in My Resume.
+- [E.9] `curl -s -b <second member's cookie jar> http://localhost:<API_PORT>/api/career-agents/opportunities/<Riley's opportunity id>/outputs` and `curl -s -X POST -b <second member's cookie jar> http://localhost:<API_PORT>/api/resume-outputs/<Riley's output id>/share` each return a 4xx error and change nothing; MCP tools application_outputs_list and application_output_approve_for_qr called with the second member's token return the same error.
 - [E.8] The `--link-opportunity` import is idempotent: re-running neither duplicates the opportunity nor re-links anything.
