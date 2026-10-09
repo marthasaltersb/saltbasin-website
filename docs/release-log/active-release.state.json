@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T17:16:55.069Z",
+  "exportedAt": "2026-10-09T17:20:03.874Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -10,7 +10,7 @@
       "backlog": 6
     },
     "world-shell-navigation": {
-      "status": "amend",
+      "status": "validate",
       "lastRound": 2,
       "lastScore": "36/47",
       "lastReport": "docs/test-results/world-shell-navigation/round-2.md",
@@ -58,10 +58,10 @@
       "backlog": 6
     },
     "output-version-history": {
-      "status": "validate",
-      "lastRound": 2,
+      "status": "triage",
+      "lastRound": 3,
       "lastScore": "30/37",
-      "lastReport": "docs/test-results/output-version-history/round-2.md",
+      "lastReport": "docs/test-results/output-version-history/round-3.md",
       "openBugs": 12,
       "backlog": 4
     },
@@ -82,11 +82,11 @@
       "backlog": 1
     },
     "cover-letter-agent": {
-      "status": "fix",
+      "status": "integrate",
       "lastRound": 1,
       "lastScore": "38/46",
       "lastReport": "docs/test-results/cover-letter-agent/round-1.md",
-      "openBugs": 13,
+      "openBugs": 23,
       "backlog": 8
     },
     "in-app-release-loop": {
@@ -1505,7 +1505,7 @@
     {
       "id": "wsn-r2-mobile-counters",
       "feature": "world-shell-navigation",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "J0.3 phone top bar shows 0 TRACKED, 7 AGENTS",
@@ -1614,7 +1614,7 @@
     {
       "id": "wsn-r2-mcp-gap",
       "feature": "world-shell-navigation",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "MCP tools for the spec's capabilities",
@@ -6027,7 +6027,7 @@
     {
       "id": "cover-letter-agent-B3",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "World Shell reachability",
@@ -6104,7 +6104,7 @@
     {
       "id": "cover-letter-agent-B6",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "Test account rule",
@@ -6129,7 +6129,7 @@
     {
       "id": "cover-letter-agent-B7",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Career-bound integration",
@@ -6182,7 +6182,7 @@
     {
       "id": "cover-letter-agent-B9",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Scope additions",
@@ -6230,7 +6230,7 @@
     {
       "id": "cover-letter-agent-B11",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Second cover letter generator",
@@ -6276,6 +6276,219 @@
       ]
     },
     {
+      "id": "cover-letter-agent-F1-1",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "J1.2, J8.4, E.5",
+      "rootCause": "Fix agent did not drive the UI",
+      "files": [],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-F1-2",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "test_harness",
+      "attempts": 0,
+      "step": "MCP_GAP (T8)",
+      "rootCause": "Only registry and parity checks done",
+      "files": [
+        "server/lib/mcpToolRegistry.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (test_harness)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-F1-5",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "J1.1 mobile",
+      "rootCause": "brand.css hides .sb-admin-topbar-actions at <=900px and the drawer markup is never rendered",
+      "files": [
+        "src/components/admin/AdminShell.jsx",
+        "src/brand.css"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (product_defect)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-F1-6",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "World Shell reachability (proposed J10.1)",
+      "rootCause": "Entry points built in CoverLetterPackagesPanel inside My Resume",
+      "files": [
+        "src/components/OpportunityOutputsSection.jsx",
+        "src/components/WorldShell.jsx",
+        "src/components/admin/CoverLetterPackagesPanel.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-F1-7",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "E.3, E.4, E.6, E.7",
+      "rootCause": "Spec steps name a UI surface for API/MCP-only branches",
+      "files": [],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-F1-8",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Career-bound integration",
+      "rootCause": "Built on old base",
+      "files": [
+        "server/lib/coverLetterTemplate.js",
+        "server/lib/packageSearch.js",
+        "server/lib/packageAssembly.js",
+        "server/lib/coverLetterAutoDraft.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-F1-9",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Package contents",
+      "rootCause": "Chart blocks not assembled",
+      "files": [
+        "server/lib/packageAssembly.js",
+        "server/lib/outputRendering.js",
+        "src/components/DocumentBlocksView.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-F1-10",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "Member terms 428",
+      "rootCause": "No client handling of 428",
+      "files": [
+        "src/lib/api.js",
+        "server/auth.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (product_defect)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-F1-11",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "environment",
+      "attempts": 0,
+      "step": "J4 real provider",
+      "rootCause": "No API key in sandbox",
+      "files": [],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (environment)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-F1-12",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "informational",
+      "attempts": 0,
+      "step": "Observations O2, O3, O4, O5 (wording of Approved row, 170px letter pane at 390px, 1280px top bar overlap, J6.2 ordering)",
+      "rootCause": "Listed in docs/test-results round 1; none addressed by 52025de.",
+      "files": [
+        "src/components/admin/MyResumePanel.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (informational)",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "T1",
       "feature": "cover-letter-agent",
       "status": "backlog_pre_existing",
@@ -6304,9 +6517,9 @@
     {
       "id": "T2",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "J1.2: first-draft letter uses Career Master key metrics",
       "rootCause": "Reproduced. coverLetterTemplate.js:196 picks the metrics template only when values.metrics && terms.length; with no job rec text terms is empty so jobParagraphPlain (no metrics) is used although metrics exist. Independent of bug B7.",
       "files": [
@@ -6325,15 +6538,21 @@
           "event": "found",
           "note": "Reproduced. coverLetterTemplate.js:196 picks the metrics template only when values.metrics && terms…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Added additive template key jobParagraphMetricsOnly, used when metrics exist and no job-rec terms m…",
+          "commit": "52025de0db06af9e47a73ed7feee45b4ee0a630f"
         }
       ]
     },
     {
       "id": "T3",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "J8.4: 'Make it more formal' must be tagged Answered by rules",
       "rootCause": "Reproduced. coverLetterRules.js:110 returns kind 'info' for a tone preset with nothing to change; coverLetterAgent.js:159-160 maps every 'info' to route 'search_only', which CoverLetterWorkbench.jsx:45 labels 'Answered from package search'. 'unsatisfied' maps to route 'rules'.",
       "files": [
@@ -6350,15 +6569,21 @@
           "event": "found",
           "note": "Reproduced. coverLetterRules.js:110 returns kind 'info' for a tone preset with nothing to change; c…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Tone preset with nothing to change now returns kind 'unsatisfied' so the turn routes to 'rules'.",
+          "commit": "52025de0db06af9e47a73ed7feee45b4ee0a630f"
         }
       ]
     },
     {
       "id": "T4",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "E.5: agent scope text with no job rec text",
       "rootCause": "packageSearch.js jobRecText() (133-142) always appends the rod's jobTitle/location/url, so recUnits is never empty and hasJobRec (line 160) is always true, disagreeing with the row panel which uses metadata.notes.",
       "files": [
@@ -6376,13 +6601,19 @@
           "event": "found",
           "note": "packageSearch.js jobRecText() (133-142) always appends the rod's jobTitle/location/url, so recUnits…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "hasJobRec now derives from real job-rec text only (rod metadata.notes for opportunity-linked letter…",
+          "commit": "52025de0db06af9e47a73ed7feee45b4ee0a630f"
         }
       ]
     },
     {
       "id": "T5",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "E.3 / E.4: another member's letter id; a resume id in the agent",
@@ -6407,7 +6638,7 @@
     {
       "id": "T6",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "E.6 second half: package key without any letter is refused",
@@ -6432,7 +6663,7 @@
     {
       "id": "T7",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "E.7: failed automatic draft shown as red alert",
@@ -6457,9 +6688,9 @@
     {
       "id": "T8",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "MCP_GAP: MCP tools for each capability the spec exercises",
       "rootCause": "The validator tested c3a71b4 before platform-mcp landed. At the integration head mcpToolRegistry.js exists with cover_letter_open, cover_letter_agent_turn and application_output_approve_for_qr, but no tools for cover-letter settings, opportunity list with letter/package state, job rec save, generate/regenerate, package build, or turn history (capabilityParity.js:73-77 list these as gaps). Accept/…",
       "files": [
@@ -6479,13 +6710,19 @@
           "event": "found",
           "note": "The validator tested c3a71b4 before platform-mcp landed. At the integration head mcpToolRegistry.js…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Added 7 append-only MCP tools (settings read/save, opportunities list, job rec save, generate, pack…",
+          "commit": "52025de0db06af9e47a73ed7feee45b4ee0a630f"
         }
       ]
     },
     {
       "id": "T9",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "Observation O1: World Shell opportunity view lacks agent, package build and settings entry points",
