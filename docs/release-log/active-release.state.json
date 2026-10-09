@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T06:09:50.887Z",
+  "exportedAt": "2026-10-09T06:10:21.717Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -42,12 +42,12 @@
       "backlog": 3
     },
     "release-loop-tooling": {
-      "status": "scope",
+      "status": "fix",
       "lastRound": 2,
       "lastScore": "108/108",
       "lastReport": "docs/test-results/release-loop-tooling/round-2.md",
-      "openBugs": 4,
-      "backlog": 2
+      "openBugs": 3,
+      "backlog": 3
     },
     "output-version-history": {
       "status": "validate",
@@ -1876,7 +1876,11 @@
         "tools/release-tracker/SETUP-FOR-CLAUDE.md",
         "tools/release-tracker/index.html"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "SETUP-FOR-CLAUDE.md created by a207b21 (this feature), not regenerated after 082eed1. The rootCause's index.html line references did not match this checkout (no stalled/data-label matches), so re-verify the real divergence."
+      },
       "history": [
         {
           "round": 1,
@@ -1899,7 +1903,11 @@
         "docs/training/release-loop-tooling.md",
         "docs/changes/release-loop-tooling.md"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Agent card is in tools/release-tracker/index.html created by bed12f0 and reworked in 21129a0/f56f185. Owner design decision needed, not a guess."
+      },
       "history": [
         {
           "round": 1,
@@ -1920,7 +1928,11 @@
       "files": [
         "docs/changes/release-loop-tooling.md"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Known limitations bullets in docs/changes/release-loop-tooling.md were made false by this feature's own fix 082eed1."
+      },
       "history": [
         {
           "round": 1,
@@ -1933,7 +1945,7 @@
     {
       "id": "release-loop-tooling-F1-7",
       "feature": "release-loop-tooling",
-      "status": "open",
+      "status": "backlog_pre_existing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Release loop inside the platform for in-app agents",
@@ -1941,7 +1953,11 @@
       "files": [
         "server/data/releaseLoop/definition.json"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "Not part of this feature's request. definition.json and the change spec already say the tracker has no platform screen. The in-platform release loop is an open gap for the release loop overall and must be reached from the World Shell."
+      },
       "history": [
         {
           "round": 1,
