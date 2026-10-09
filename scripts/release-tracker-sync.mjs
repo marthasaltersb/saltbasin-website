@@ -17,6 +17,8 @@ const runDir = runDirs[0] || null;
 const out = opt('--out');
 // Where validators append live step logs (<root>/<feature>/round-N/steps.jsonl). Default is the shared local test root.
 const stepsRoot = opt('--steps-root') || '/var/tmp/sbpg/release-loop';
+// Minutes of silence after which a started agent with no end entry is treated as dead (override for fixtures).
+const STALE_MIN = Number(opt('--stale-minutes') ?? 15);
 const extras = argv.flatMap((a, i) => (a === '--extra' ? [argv[i + 1]] : []));
 const definition = JSON.parse(fs.readFileSync(new URL('../server/data/releaseLoop/definition.json', import.meta.url), 'utf8'));
 const MAX_ATTEMPTS = definition.bugEscalation?.maxFixAttemptsPerBug ?? 2;
@@ -82,7 +84,7 @@ for (const e of journal) {
   const a = agents.get(e.agentId) || { id: e.agentId, label: e.label, phase: e.phase, status: 'running', result: null, file: path.join(e.runDir, `agent-${e.agentId}.jsonl`), fromRun: true };
   if (e.label) a.label = e.label;
   if (e.phase) a.phase = e.phase;
-  if (e.type === 'started') a.status = e.archived ? 'stopped' : 'running';
+  if (e.type === 'started') { a.status = e.archived ? 'stopped' : 'running'; a.journalStart = e.at || e.ts || e.timestamp || null; }
   else {
     const res = e.result ?? e.value ?? e.output ?? null;
     // A finished agent with no result died or was skipped — shown as failed, never as done.
@@ -112,7 +114,10 @@ const agentList = [];
 for (const a of agents.values()) {
   const file = a.file;
   const act = file && fs.existsSync(file) ? agentActivity(file) : { activity: null, usage: null };
-  if (!a.fromRun && act.lastAt && Date.now() - Date.parse(act.lastAt) > 15 * 60 * 1000 && a.status === 'running') a.status = 'idle_or_done';
+  // Dead-agent detection for every running agent. Last sign of life = latest transcript line, else the journal start time.
+  // A journal-built agent with no end entry is 'stalled' (it died or was cut off); a hand-added --extra transcript stays 'idle_or_done'.
+  const alive = act.lastAt || a.journalStart;
+  if (a.status === 'running' && alive && Date.now() - Date.parse(alive) > STALE_MIN * 60 * 1000) a.status = a.fromRun ? 'stalled' : 'idle_or_done';
   const [role, feature, round] = String(a.label || '').split(':');
   const r = a.result && typeof a.result === 'object' ? a.result : null;
   let summary = null;
@@ -143,7 +148,7 @@ for (const a of agents.values()) {
   agentList.push({ liveSteps, signals: act.signals || [],
     id: a.id, label: a.label, role, feature, round: round ? Number(round.replace('r', '')) : null,
     phase: a.phase, status: a.status, activity: act.activity, summary, tokens: act.usage,
-    startedAt: act.firstAt || null, lastActivityAt: act.lastAt || null,
+    startedAt: act.firstAt || a.journalStart || null, lastActivityAt: act.lastAt || null,
     failures: r?.failures && Array.isArray(r.failures) ? r.failures.slice(0, 20).map((f) => clip(typeof f === 'string' ? f : JSON.stringify(f), 240)) : [],
   });
 }
@@ -249,7 +254,8 @@ for (const [key, list] of Object.entries(byFeature)) {
   else if (lastRes?.passed) status = 'passed';
   else if ([...fb.values()].some((b) => b.status === 'needs_human')) status = 'needs_human';
   else if (lastRes) status = 'failing';
-  else if (list.length && list[list.length - 1].status === 'failed') status = 'failed';   // the latest agent died with no result
+  else if (list.length && list[list.length - 1].status === 'failed') status = 'failed';
+  else if (list.length && list[list.length - 1].status === 'stalled') status = 'stalled';   // the latest agent died with no result
   else if (list.length) status = 'between_stages';
   features.push({
     key, status, rounds: validations.length,
