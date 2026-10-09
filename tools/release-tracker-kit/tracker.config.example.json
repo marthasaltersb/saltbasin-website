@@ -1,0 +1,18 @@
+{
+  "projectName": "Example Project",
+  "tagline": "Build → validate → triage → fix → re-test, until every journey passes",
+  "repoUrl": null,
+  "maxFixAttemptsPerBug": 2,
+  "maxFixRounds": 4,
+  "idleAfterMinutes": 15,
+  "stepsRoot": ".release-tracker/steps",
+  "roles": {
+    "build": "Build",
+    "integrate": "Integrate",
+    "validate": "Validate",
+    "triage": "Triage",
+    "fix": "Fix",
+    "reconcile": "Reconcile",
+    "record": "Record"
+  }
+}
