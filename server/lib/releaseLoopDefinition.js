@@ -27,6 +27,12 @@ export const REQUIRED_BUG_STATUSES = [
 export const REQUIRED_TRIAGE_CLASSES = ['defect', 'spec_error', 'environment', 'needs_business_definition', 'coverage_gap'];
 export const REQUIRED_STAGES = ['build', 'integrate', 'validate', 'triage', 'fix', 'integrate_fix', 'escalate', 'done'];
 
+// Transitions the gate logic relies on: a stage may be re-pointed but never lose these.
+export const REQUIRED_TRANSITIONS = {
+  build: ['next'], integrate: ['next'], validate: ['onPass', 'onFail'],
+  triage: ['onFixable', 'onBusinessDefinition'], fix: ['next'], integrate_fix: ['next'],
+};
+
 const err = (m, status = 400) => Object.assign(new Error(m), { status });
 
 /** Returns a list of problems; empty when the definition is usable by the gates. */
@@ -52,6 +58,7 @@ export function validateDefinition(def) {
     for (const k of REQUIRED_STAGES) if (!keys.includes(k)) problems.push(`stages must include "${k}"`);
     const roleKeys = new Set((def.roles || []).map((r) => r?.key));
     for (const s of def.stages) {
+      for (const f of REQUIRED_TRANSITIONS[s?.key] || []) if (!s?.[f]) problems.push(`stage "${s.key}" must keep its "${f}" transition`);
       if (s?.role && !roleKeys.has(s.role)) problems.push(`stage "${s.key}" names role "${s.role}" which is not in roles`);
       for (const f of ['next', 'onPass', 'onFail', 'onFixable', 'onBusinessDefinition']) {
         if (s?.[f] && !keys.includes(s[f])) problems.push(`stage "${s.key}" ${f} points at "${s[f]}" which is not a stage`);

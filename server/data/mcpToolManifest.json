@@ -44,6 +44,19 @@
     "cover_letter_turns_list",
     "output_versions_list",
     "output_version_read",
-    "output_versions_compare"
+    "output_versions_compare",
+    "release_loop_get_definition",
+    "release_loop_save_definition",
+    "release_loop_list_runs",
+    "release_loop_start_run",
+    "release_loop_get_run",
+    "release_loop_transition_run",
+    "release_loop_record_round",
+    "release_loop_log_step",
+    "release_loop_add_bug",
+    "release_loop_bug_action",
+    "release_loop_add_reconciliation",
+    "release_loop_resolve_reconciliation",
+    "release_loop_list_escalations"
   ]
 }

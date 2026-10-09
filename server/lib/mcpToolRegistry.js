@@ -20,6 +20,8 @@ export const MCP_SCOPES = Object.freeze({
   'career.write': 'Track opportunities, save new draft versions, and ask the cover-letter agent for edits',
   'outputs.approve': 'Approve an output for its QR link (runs the finalization gate, same as the website)',
   'release.read': 'Read release records and the release tracker (administrators only)',
+  'release.loop.read': 'Read the release loop definition, runs, bugs and escalations (administrators only)',
+  'release.loop.write': 'Change the release loop definition and drive runs, rounds, bugs and reconciliation (administrators only)',
 });
 
 const id = (description) => ({ type: 'integer', minimum: 1, description });
@@ -33,6 +35,13 @@ async function versionHistoryOr404(userId, outputId) {
   if (!h) throw Object.assign(new Error('Resume output not found'), { status: 404, code: 'not_found' });
   return h;
 }
+
+/** Release loop tools: same functions and error statuses as server/routes/releaseLoop.js; the admin check is the registry's permission. */
+const rlActor = (user) => ({ id: user.id, label: user.name || user.email || `user ${user.id}` });
+const rlLoop = () => import('./releaseLoopPlatform.js');
+const rlDef = () => import('./releaseLoopDefinition.js');
+const rlObj = (description) => ({ type: 'object', description, additionalProperties: true });
+const rlTool = (name, title, description, inputSchema, scope, api, handler) => ({ name, title, description: `Administrators only. ${description}`, inputSchema, scope, permission: 'admin', api, handler });
 
 export const MCP_TOOLS = Object.freeze([
   {
@@ -711,6 +720,69 @@ export const MCP_TOOLS = Object.freeze([
       return detail;
     },
   },
+  rlTool('release_loop_get_definition', 'Read the release loop definition', 'Returns the effective definition (roles, stages, gates), its version history and the platform agents.',
+    schema({}), 'release.loop.read', 'GET /api/release-loop/definition',
+    async () => (await rlLoop()).getDefinitionView()),
+  rlTool('release_loop_save_definition', 'Save the release loop definition', 'Saves a complete definition as the next version (the server picks the number). A change note is required; a definition the gates cannot use is refused with the problems listed. With reset true, restores the shipped definition instead.',
+    schema({ definition: rlObj('The complete definition, as returned by release_loop_get_definition.'), note: str('What changed and why.', { minLength: 1, maxLength: 500 }), reset: { type: 'boolean' } }, ['note']),
+    'release.loop.write', 'PUT /api/release-loop/definition',
+    async (args, { user }) => {
+      const def = await rlDef();
+      if (args.reset) await def.resetDefinition(args.note, rlActor(user));
+      else await def.saveDefinition(args.definition, args.note, rlActor(user));
+      return (await rlLoop()).getDefinitionView();
+    }),
+  rlTool('release_loop_list_runs', 'List release loop runs', 'Lists every run with its stage, status, rounds and open bugs.',
+    schema({}), 'release.loop.read', 'GET /api/release-loop/runs',
+    async () => ({ runs: await (await rlLoop()).listRuns() })),
+  rlTool('release_loop_start_run', 'Start a release loop run', 'Starts a run for one feature of one release.',
+    schema({ releaseKey: str('Starts with a date, YYYY-MM-DD.', { maxLength: 120 }), featureKey: str('The feature key.', { maxLength: 120 }), name: str('Display name.', { maxLength: 200 }), date: str('Optional date.', { maxLength: 40 }) }, ['releaseKey', 'featureKey']),
+    'release.loop.write', 'POST /api/release-loop/runs',
+    async (args, { user }) => (await rlLoop()).createRun(args, rlActor(user))),
+  rlTool('release_loop_get_run', 'Read one release loop run', 'Returns a run with its rounds, steps, bugs, reconciliation items, gate state and allowed next stages.',
+    schema({ runId: id('The run id.') }, ['runId']), 'release.loop.read', 'GET /api/release-loop/runs/:id',
+    async (args) => (await rlLoop()).getRunDetail(args.runId)),
+  rlTool('release_loop_transition_run', 'Move a run to another stage', 'Moves a run along an allowed edge. Moving to done runs the finalization gate and is refused with 409 while a gate is open.',
+    schema({ runId: id('The run id.'), to: str('The target stage key.', { maxLength: 60 }), note: str('Why.', { maxLength: 500 }) }, ['runId', 'to']),
+    'release.loop.write', 'POST /api/release-loop/runs/:id/transition',
+    async (args, { user }) => (await rlLoop()).transitionRun(args.runId, args.to, { note: args.note, actor: rlActor(user), userId: user.id })),
+  rlTool('release_loop_record_round', 'Record a validation round', 'Records the outcome of a validation round for a run.',
+    schema({ runId: id('The run id.'), round: rlObj('The round fields the Runs screen sends (same body as POST /api/release-loop/runs/:id/rounds).') }, ['runId', 'round']),
+    'release.loop.write', 'POST /api/release-loop/runs/:id/rounds',
+    async (args, { user }) => (await rlLoop()).recordRound(args.runId, args.round, rlActor(user))),
+  rlTool('release_loop_log_step', 'Log a live validation step', 'Appends one validation step (pass, fail, ambiguous, info, page_error, failed_request) to a run.',
+    schema({ runId: id('The run id.'), step: rlObj('The step fields (same body as POST /api/release-loop/runs/:id/steps).') }, ['runId', 'step']),
+    'release.loop.write', 'POST /api/release-loop/runs/:id/steps',
+    async (args) => (await rlLoop()).addStep(args.runId, args.step)),
+  rlTool('release_loop_add_bug', 'Add a triaged bug', 'Creates a bug on a run from triage. A needs_business_definition item must carry the exact question for the owner.',
+    schema({ runId: id('The run id.'), title: str('Bug title.', { maxLength: 300 }), triageClass: str('A triage class key.', { maxLength: 60 }), stepId: str('Spec step id.', { maxLength: 40 }), observed: str('What was seen.', { maxLength: 2000 }), question: str('Required for needs_business_definition.', { maxLength: 2000 }) }, ['runId', 'title', 'triageClass']),
+    'release.loop.write', 'POST /api/release-loop/runs/:id/bugs',
+    async (args, { user }) => { const { runId, ...body } = args; return (await rlLoop()).createBug(runId, body, rlActor(user)); }),
+  rlTool('release_loop_bug_action', 'Act on a bug', 'One bug lifecycle action: start_fix, fix, retest, scope, answer or decision. Same checks as the Runs screen.',
+    schema({ bugId: id('The bug id.'), action: { type: 'string', enum: ['start_fix', 'fix', 'retest', 'scope', 'answer', 'decision'] }, input: rlObj('The action body (same fields as POST /api/release-loop/bugs/:id/<action>).') }, ['bugId', 'action']),
+    'release.loop.write', 'POST /api/release-loop/bugs/:id/fix',
+    async (args, { user }) => {
+      const l = await rlLoop(); const a = rlActor(user); const body = args.input || {};
+      switch (args.action) {
+        case 'start_fix': return l.startFix(args.bugId, a);
+        case 'fix': return l.recordFix(args.bugId, body, a);
+        case 'retest': return l.retestBug(args.bugId, body, a);
+        case 'scope': return l.scopeBug(args.bugId, body, a);
+        case 'answer': return l.answerBusinessQuestion(args.bugId, body, a);
+        default: return l.decideNeedsHuman(args.bugId, body, a);
+      }
+    }),
+  rlTool('release_loop_add_reconciliation', 'Add a reconciliation item', 'Adds a reconciliation item to a run.',
+    schema({ runId: id('The run id.'), item: rlObj('The item fields (same body as POST /api/release-loop/runs/:id/reconciliation).') }, ['runId', 'item']),
+    'release.loop.write', 'POST /api/release-loop/runs/:id/reconciliation',
+    async (args, { user }) => (await rlLoop()).addReconciliationItem(args.runId, args.item, rlActor(user))),
+  rlTool('release_loop_resolve_reconciliation', 'Resolve a reconciliation item', 'Resolves one reconciliation item.',
+    schema({ runId: id('The run id.'), itemId: id('The item id.'), resolution: rlObj('The resolution fields (same body as PUT /api/release-loop/runs/:id/reconciliation/:itemId).') }, ['runId', 'itemId', 'resolution']),
+    'release.loop.write', 'PUT /api/release-loop/runs/:id/reconciliation/:itemId',
+    async (args, { user }) => (await rlLoop()).resolveReconciliationItem(args.runId, args.itemId, args.resolution, rlActor(user))),
+  rlTool('release_loop_list_escalations', 'List escalations', 'Lists bugs escalated to a person, with the maximum fix attempts per bug.',
+    schema({}), 'release.loop.read', 'GET /api/release-loop/escalations',
+    async () => ({ escalations: await (await rlLoop()).listEscalations(), maxFixAttemptsPerBug: (await (await rlDef()).getEffectiveDefinition()).definition.bugEscalation.maxFixAttemptsPerBug })),
 ]);
 
 export const MCP_TOOL_NAMES = Object.freeze(MCP_TOOLS.map((t) => t.name));

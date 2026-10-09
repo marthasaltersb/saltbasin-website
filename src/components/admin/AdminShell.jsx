@@ -18,7 +18,6 @@ const MyResumePanel = lazy(() => import('./MyResumePanel.jsx'));
 const ReleaseIntelligencePanel = lazy(() => import('./ReleaseIntelligencePanel.jsx'));
 const ConnectedAgentsPanel = lazy(() => import('./ConnectedAgentsPanel.jsx'));
 const CapabilitiesPanel = lazy(() => import('./CapabilitiesPanel.jsx'));
-const ReleaseLoopPanel = lazy(() => import('./ReleaseLoopPanel.jsx'));
 const ReleaseTrackerApp = lazy(() => import('../releaseTracker/ReleaseTrackerApp.jsx'));
 const OutputTemplateConfiguratorHub = lazy(() => import('./OutputTemplateConfigurator.jsx').then((module) => ({ default: module.OutputTemplateConfiguratorHub })));
 const CareerMasterPanel = lazy(() => import('./CareerMasterPanel.jsx'));
@@ -68,6 +67,7 @@ const WorldVariantStudioPanel = lazy(() => import('./WorldVariantStudioPanel.jsx
 // 'content' is a sentinel — it stays as inline JSX in AdminShell below because
 // the content editor is too tangled with the shell's state to be a standalone
 // panel without a real refactor.
+const WORLD_SHELL_ONLY = new Set(['releaseLoop']);
 const TAB_COMPONENTS = {
   leads:          () => <LeadsPanel />,
   networks:       () => <NetWorksPanel />,
@@ -77,7 +77,6 @@ const TAB_COMPONENTS = {
   releaseIntelligence: () => <ReleaseIntelligencePanel />,
   connectedAgents: () => <ConnectedAgentsPanel />,
   capabilities: () => <CapabilitiesPanel />,
-  releaseLoop:    () => <ReleaseLoopPanel />,
   releaseTracker: () => <ReleaseTrackerApp embedded />,
   plmDashboard:   () => <MemberPlmPanel scope="admin" />,
   resume:         (props) => <MyResumePanel {...props} />,
@@ -128,7 +127,6 @@ const FALLBACK_ADMIN_NAV = {
       { id: 'backlog', label: 'Backlog', componentId: 'backlog', sortOrder: 1 },
       { id: 'qa', label: 'QA', componentId: 'qa', sortOrder: 2 },
       { id: 'release-intelligence', label: 'Release Intelligence', componentId: 'releaseIntelligence', sortOrder: 4 },
-      { id: 'release-loop', label: 'Release loop', componentId: 'releaseLoop', sortOrder: 5 },
       { id: 'release-tracker', label: 'Release tracker', componentId: 'releaseTracker', sortOrder: 6 },
     ]},
     { id: 'crm', label: 'Customer Relationship Management', sortOrder: 2, tabs: [
@@ -339,7 +337,10 @@ export default function AdminShell({ scope = 'admin', orgId = null, initialTab =
     api.getAdminNav()
       .then((data) => {
         if (cancelled) return;
-        const useNav = (data?.views || []).length > 0 ? data : FALLBACK_ADMIN_NAV;
+        const rawNav = (data?.views || []).length > 0 ? data : FALLBACK_ADMIN_NAV;
+        // World Shell-only tabs keep their admin_nav row (it is what produces the World Shell island) but are not
+        // listed in Classic Tools (owner direction: the release loop is reached from the World Shell only).
+        const useNav = { ...rawNav, views: rawNav.views.map((v) => ({ ...v, tabs: (v.tabs || []).filter((t) => !WORLD_SHELL_ONLY.has(t.componentId)) })) };
         setAdminNav(useNav);
         // Seed active view: pick the view that owns the current tab, or first.
         const owningView = useNav.views.find((v) => v.tabs.some((t) => t.id === tab));
