@@ -20,6 +20,7 @@ const ConnectedAgentsPanel = lazy(() => import('./ConnectedAgentsPanel.jsx'));
 const CapabilitiesPanel = lazy(() => import('./CapabilitiesPanel.jsx'));
 const ReleaseLoopPanel = lazy(() => import('./ReleaseLoopPanel.jsx'));
 const ReleaseTrackerApp = lazy(() => import('../releaseTracker/ReleaseTrackerApp.jsx'));
+const SessionMappingPanel = lazy(() => import('./SessionMappingPanel.jsx'));
 const OutputTemplateConfiguratorHub = lazy(() => import('./OutputTemplateConfigurator.jsx').then((module) => ({ default: module.OutputTemplateConfiguratorHub })));
 const CareerMasterPanel = lazy(() => import('./CareerMasterPanel.jsx'));
 const ProfileHub = lazy(() => import('./ProfileHub.jsx'));
@@ -79,6 +80,7 @@ const TAB_COMPONENTS = {
   capabilities: () => <CapabilitiesPanel />,
   releaseLoop:    () => <ReleaseLoopPanel />,
   releaseTracker: () => <ReleaseTrackerApp embedded />,
+  sessionMapping: () => <SessionMappingPanel />,
   plmDashboard:   () => <MemberPlmPanel scope="admin" />,
   resume:         (props) => <MyResumePanel {...props} />,
   outputTemplates: (props) => <div className="sb-admin-scroll" style={{ flex: 1, minWidth: 0, minHeight: 0, overflowY: 'auto' }}><OutputTemplateConfiguratorHub {...props} /></div>,
@@ -130,6 +132,7 @@ const FALLBACK_ADMIN_NAV = {
       { id: 'release-intelligence', label: 'Release Intelligence', componentId: 'releaseIntelligence', sortOrder: 4 },
       { id: 'release-loop', label: 'Release loop', componentId: 'releaseLoop', sortOrder: 5 },
       { id: 'release-tracker', label: 'Release tracker', componentId: 'releaseTracker', sortOrder: 6 },
+      { id: 'session-mapping', label: 'Sessions', componentId: 'sessionMapping', sortOrder: 7 },
     ]},
     { id: 'crm', label: 'Customer Relationship Management', sortOrder: 2, tabs: [
       { id: 'leads', label: 'Leads', componentId: 'leads', sortOrder: 0 },

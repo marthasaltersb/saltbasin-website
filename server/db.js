@@ -3331,6 +3331,8 @@ async function bootstrap() {
         { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'release-loop', label: 'Release loop', componentId: 'releaseLoop', sortOrder: 5 },
         // Live release tracker (additive; reachable from the World Shell).
         { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'release-tracker', label: 'Release tracker', componentId: 'releaseTracker', sortOrder: 6 },
+        // After-session mapping + token/spend/time trends (additive; reachable from the World Shell).
+        { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'session-mapping', label: 'Sessions', componentId: 'sessionMapping', sortOrder: 7 },
       ];
 
       for (const t of newTabs) {
