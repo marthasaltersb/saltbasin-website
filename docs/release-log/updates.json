@@ -305,5 +305,120 @@
         "chart-gallery: being fixed → **reviewing failed commands**"
       ]
     }
+  },
+  {
+    "version": "0.2.0-u4",
+    "release": "2026-10-02-application-packages",
+    "at": "2026-10-09T06:19:53.867Z",
+    "commit": "44faefc45fa079235cee6a9df6d42142f7763936",
+    "previous": "0.2.0-u3",
+    "headline": "Runs paused at the usage limit; work saved; tracker now shows trends",
+    "note": "All test runs stopped at the account's usage limit around 06:10 UTC; it resets at 10:40 UTC and the relaunch is scheduled for 10:43. Before stopping: release-loop tooling's scope check confirmed 3 of its 4 remaining items as its own (1 moved to backlog) and a fix round began; chart gallery's 3 fixes passed the review and were merged (not yet re-tested); release intelligence's first test (69/74) was not yet triaged. All unfinished agent work was saved to branches for the relaunch. The tracker overview now charts the release over time — bugs, test scores or features passed, by feature, with a slider to replay any earlier moment.",
+    "metrics": {
+      "featuresTotal": 14,
+      "featuresPassed": 0,
+      "openBugs": 57,
+      "verified": 18,
+      "backlog": 38,
+      "needPerson": 0,
+      "agentsRunning": 0,
+      "features": {
+        "proficiency-live-qr": {
+          "status": "failing",
+          "round": 5,
+          "score": "29/30"
+        },
+        "world-shell-navigation": {
+          "status": "awaiting_retest",
+          "round": 1,
+          "score": "45/48"
+        },
+        "career-bound-outputs": {
+          "status": "awaiting_retest",
+          "round": 2,
+          "score": "54/56"
+        },
+        "qr-gated-outputs": {
+          "status": "awaiting_retest",
+          "round": 1,
+          "score": "45/48"
+        },
+        "no-silent-failures": {
+          "status": "failed",
+          "round": null,
+          "score": null
+        },
+        "release-loop-tooling": {
+          "status": "awaiting_retest",
+          "round": 2,
+          "score": "108/108"
+        },
+        "output-version-history": {
+          "status": "failed",
+          "round": null,
+          "score": null
+        },
+        "resume-rollups": {
+          "status": "failed",
+          "round": null,
+          "score": null
+        },
+        "chart-gallery": {
+          "status": "awaiting_retest",
+          "round": 2,
+          "score": "21/24"
+        },
+        "release-intelligence": {
+          "status": "failing",
+          "round": 1,
+          "score": "69/74"
+        },
+        "cover-letter-agent": {
+          "status": "failed",
+          "round": null,
+          "score": null
+        },
+        "in-app-release-loop": {
+          "status": "failed",
+          "round": null,
+          "score": null
+        },
+        "session-mapping": {
+          "status": "failed",
+          "round": null,
+          "score": null
+        },
+        "world-shell-layers": {
+          "status": "failed",
+          "round": null,
+          "score": null
+        }
+      }
+    },
+    "comparison": {
+      "lines": [
+        "Features passed: 0 (no change) of 14",
+        "Open bugs caused by this work: 55 → **57** (+2) — new failures found in testing",
+        "Bugs verified fixed: 18 (no change)",
+        "Backlog (not this work): 37 → **38** (+1)",
+        "Waiting on a person: 0 (no change)",
+        "Agents running: 13 → 0"
+      ],
+      "featureChanges": [
+        "proficiency-live-qr: in browser testing → **failing**",
+        "world-shell-navigation: in browser testing → **fixed, awaiting re-test**",
+        "career-bound-outputs: in browser testing → **fixed, awaiting re-test**",
+        "qr-gated-outputs: in browser testing → **fixed, awaiting re-test**",
+        "no-silent-failures: in browser testing → **agent stopped**",
+        "release-loop-tooling: scope check → **fixed, awaiting re-test**",
+        "output-version-history: in browser testing → **agent stopped**",
+        "resume-rollups: in browser testing → **agent stopped**",
+        "chart-gallery: reviewing failed commands → **fixed, awaiting re-test**",
+        "cover-letter-agent: in browser testing → **agent stopped**",
+        "in-app-release-loop: being built → **agent stopped**",
+        "session-mapping: being built → **agent stopped**",
+        "world-shell-layers: being built → **agent stopped**"
+      ]
+    }
   }
 ]

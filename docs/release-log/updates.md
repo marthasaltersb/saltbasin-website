@@ -2,6 +2,60 @@
 
 Release **0.2.0** (`2026-10-02-application-packages`), built on branch `claude/zealous-meitner-5tuft5`. Each update is numbered `0.2.0-u<n>`, pinned to the commit it describes, and compared with the update before it. Newest first.
 
+## 0.2.0-u4 — 2026-10-09 06:19 UTC
+
+Commit [`44faefc`](https://github.com/marthasaltersb/saltbasin-website/commit/44faefc45fa079235cee6a9df6d42142f7763936) · compared with 0.2.0-u3
+
+**Runs paused at the usage limit; work saved; tracker now shows trends**
+
+All test runs stopped at the account's usage limit around 06:10 UTC; it resets at 10:40 UTC and the relaunch is scheduled for 10:43. Before stopping: release-loop tooling's scope check confirmed 3 of its 4 remaining items as its own (1 moved to backlog) and a fix round began; chart gallery's 3 fixes passed the review and were merged (not yet re-tested); release intelligence's first test (69/74) was not yet triaged. All unfinished agent work was saved to branches for the relaunch. The tracker overview now charts the release over time — bugs, test scores or features passed, by feature, with a slider to replay any earlier moment.
+
+**Compared with the previous update**
+
+- Features passed: 0 (no change) of 14
+- Open bugs caused by this work: 55 → **57** (+2) — new failures found in testing
+- Bugs verified fixed: 18 (no change)
+- Backlog (not this work): 37 → **38** (+1)
+- Waiting on a person: 0 (no change)
+- Agents running: 13 → 0
+
+**Feature changes**
+
+- proficiency-live-qr: in browser testing → **failing**
+- world-shell-navigation: in browser testing → **fixed, awaiting re-test**
+- career-bound-outputs: in browser testing → **fixed, awaiting re-test**
+- qr-gated-outputs: in browser testing → **fixed, awaiting re-test**
+- no-silent-failures: in browser testing → **agent stopped**
+- release-loop-tooling: scope check → **fixed, awaiting re-test**
+- output-version-history: in browser testing → **agent stopped**
+- resume-rollups: in browser testing → **agent stopped**
+- chart-gallery: reviewing failed commands → **fixed, awaiting re-test**
+- cover-letter-agent: in browser testing → **agent stopped**
+- in-app-release-loop: being built → **agent stopped**
+- session-mapping: being built → **agent stopped**
+- world-shell-layers: being built → **agent stopped**
+
+<details><summary>Every feature at this update</summary>
+
+| Feature | Status | Latest test |
+|---|---|---|
+| proficiency-live-qr | failing | round 5: 29/30 |
+| world-shell-navigation | fixed, awaiting re-test | round 1: 45/48 |
+| career-bound-outputs | fixed, awaiting re-test | round 2: 54/56 |
+| qr-gated-outputs | fixed, awaiting re-test | round 1: 45/48 |
+| no-silent-failures | agent stopped | not tested yet |
+| release-loop-tooling | fixed, awaiting re-test | round 2: 108/108 |
+| output-version-history | agent stopped | not tested yet |
+| resume-rollups | agent stopped | not tested yet |
+| chart-gallery | fixed, awaiting re-test | round 2: 21/24 |
+| release-intelligence | failing | round 1: 69/74 |
+| cover-letter-agent | agent stopped | not tested yet |
+| in-app-release-loop | agent stopped | not tested yet |
+| session-mapping | agent stopped | not tested yet |
+| world-shell-layers | agent stopped | not tested yet |
+
+</details>
+
 ## 0.2.0-u3 — 2026-10-09 06:09 UTC
 
 Commit [`d74be28`](https://github.com/marthasaltersb/saltbasin-website/commit/d74be28cdfbf069dd19088ede91695d4f9e45ff8) · compared with 0.2.0-u2
