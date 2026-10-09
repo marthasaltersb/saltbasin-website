@@ -20,7 +20,12 @@ export const GOVERNED_ROUTE_FILES = Object.freeze({
   'server/routes/coverLetters.js': '/api/cover-letters',
   'server/routes/platformAccess.js': '/api/platform',
   'server/routes/careerMaster.js': '/api/career',
+  'server/routes/sharedOutputs.js': '/api/shared-outputs',
 });
+
+/** For files governed only in part: file -> pattern a route (`METHOD /full/path`) must match to be governed.
+ *  Empty: server/routes/careerMaster.js is governed in full (every route has a row below). */
+export const GOVERNED_ROUTE_FILTERS = Object.freeze({});
 
 const CPA = '/api/career-agents';
 const RO = '/api/resume-outputs';
@@ -28,6 +33,7 @@ const CL = '/api/cover-letters';
 const CM = '/api/career';
 const RR = `World Shell > Journeys > Career Master > Resume rollups`;
 const WS = 'World Shell';
+const PROF = `${WS} > Journeys > Career Master > Proficiency & Rollups > 3 · Rules & why`;
 const OPP = `${WS} > Journeys > Career Placement Agents > (select an opportunity)`;
 const RESUME = `${WS} > Journeys > My Resume`;
 
@@ -84,15 +90,23 @@ export const CAPABILITIES = Object.freeze([
   { key: 'experience-definitions-read', title: 'List experience and rollup definitions', group: 'Resume rollups', ui: `${WS} > Journeys > Career Master > Resume rollups`, api: [`GET ${CM}/experience-definitions`], mcp: ['career_experience_definitions_read'] },
   { key: 'experience-definition-save', title: 'Save or reorder a definition (tile, bucket, group, Career Atom card)', group: 'Resume rollups', ui: `${RR} > Save / up / down`, api: [`PUT ${CM}/experience-definitions/:type/:key`], mcp: ['career_experience_definition_save'] },
   { key: 'experience-definition-delete', title: 'Remove a definition', group: 'Resume rollups', ui: `${RR} > Remove`, api: [`DELETE ${CM}/experience-definitions/:type/:key`], mcp: ['career_experience_definition_delete'] },
-  { key: 'proficiency-override', title: 'Override or clear a proficiency level', group: 'Resume rollups', ui: `${WS} > Journeys > Career Master > Proficiency`, api: [`GET ${CM}/proficiency-assertions`, `PUT ${CM}/proficiency-assertions/:entityType/:entityId/:periodKey`, `DELETE ${CM}/proficiency-assertions/:entityType/:entityId/:periodKey`], mcp: ['career_proficiency_override_save', 'career_proficiency_override_clear'] },
-  { key: 'career-proficiency-read', title: 'Read resolved proficiency and rollup policy previews', group: 'Resume rollups', ui: `${WS} > Journeys > Career Master > Proficiency`, api: [`GET ${CM}/proficiency`, `GET ${CM}/rollup-preview/:key`, `GET ${CM}/rollups`], mcp: null, gap: 'No MCP tool yet; this part of the Career Master is website and API only.' },
+  { key: 'career-proficiency-read', title: 'Read resolved proficiency and rollup policy previews', group: 'Resume rollups', ui: `${WS} > Journeys > Career Master > Proficiency`, api: [`GET ${CM}/rollup-preview/:key`, `GET ${CM}/rollups`], mcp: null, gap: 'No MCP tool yet for rollup policy previews; resolved proficiency (GET /proficiency) is read with proficiency_rules_read.' },
 
   // ── Career Master: other routes (listed so the file can be governed; MCP gaps are recorded, not hidden) ──
   { key: 'career-public-reads', title: 'Public/shared Career Master reads (public rollup, catalogs)', group: 'Career Master', ui: `${WS} > Journeys > Career Master`, api: [`GET ${CM}/public-rollup/:slug/:displayKey`, `GET ${CM}/catalogs`], mcp: null, mcpExclusion: 'Public or shared vocabulary read by the website; an agent reads the member\'s own data with career_master_read.' },
   { key: 'career-consent', title: 'Career Portfolio terms (status and accept)', group: 'Career Master', ui: `${WS} (first sign-in step)`, api: [`GET ${CM}/consent-status`, `POST ${CM}/consent`], mcp: null, mcpExclusion: 'Accepting terms is a personal decision made in the website; MCP calls are refused until it is done.' },
   { key: 'career-intake', title: 'Intake documents and runs (upload, LinkedIn pull, run, semantic import, analysis)', group: 'Career Master', ui: `${WS} > Journeys > Career Master > Manual Intake`, api: [`GET ${CM}/intake-documents`, `POST ${CM}/intake-documents`, `POST ${CM}/intake-documents/linkedin-pull`, `GET ${CM}/intake-runs`, `POST ${CM}/intake-runs`, `POST ${CM}/intake-runs/:id/run`, `GET ${CM}/semantic-template`, `POST ${CM}/semantic-import`, `POST ${CM}/resume-analysis`], mcp: null, gap: 'No MCP tools for intake yet.' },
   { key: 'career-mappings', title: 'Field mappings (classify, lineage, commit) and bounded agent action', group: 'Career Master', ui: `${WS} > Journeys > Career Master`, api: [`POST ${CM}/mappings/classify`, `GET ${CM}/mappings/lineage`, `POST ${CM}/mappings/commit`, `POST ${CM}/bounded-agent/action`], mcp: null, gap: 'No MCP tools for mappings yet.' },
+  { key: 'career-master-records', title: 'Create, edit and delete Career Master records (jobs, skills, tools, engagements, domains, certifications, deals, meta options)', group: 'Career Master', ui: `${WS} > Journeys > Career Master`, api: ['jobs', 'skills', 'tools', 'engagements', 'domains', 'certifications', 'deals', 'meta-options'].flatMap((r) => [`GET ${CM}/${r}`, `POST ${CM}/${r}`, `PATCH ${CM}/${r}/:id`, `DELETE ${CM}/${r}/:id`]), mcp: null, gap: 'No MCP tools for editing Career Master records yet (career_master_read reads them; technology_category_set sets a tool category).' },
   { key: 'career-admin-utilities', title: 'Site metadata sync and definition seeding', group: 'Career Master', ui: `${WS} > Journeys > Career Master`, api: [`POST ${CM}/sync-site-metadata`, `POST ${CM}/seed`], mcp: null, mcpExclusion: 'Maintenance actions run from the website.' },
+  // ── Proficiency rules, technology categories and the live QR page ─────────
+  { key: 'proficiency-rules-read', title: 'Read proficiency rules and resolved levels', group: 'Proficiency rules', ui: PROF, api: [`GET ${CM}/proficiency`, `GET ${CM}/experience-definitions`], mcp: ['proficiency_rules_read'] },
+  { key: 'proficiency-override', title: 'Override or clear one proficiency level', group: 'Proficiency rules', ui: PROF, api: [`GET ${CM}/proficiency-assertions`, `PUT ${CM}/proficiency-assertions/:entityType/:entityId/:periodKey`, `DELETE ${CM}/proficiency-assertions/:entityType/:entityId/:periodKey`], mcp: ['proficiency_override_set', 'proficiency_override_clear', 'career_proficiency_override_save', 'career_proficiency_override_clear'] },
+  { key: 'technology-category', title: 'Set a technology\'s proficiency category', group: 'Proficiency rules', ui: PROF, api: [`PATCH ${CM}/tools/:id`], mcp: ['technology_category_set'] },
+  { key: 'proficiency-formula', title: 'Save, select or delete a proficiency formula and certification bonus', group: 'Proficiency rules', ui: PROF, api: [`PUT ${CM}/experience-definitions/:type/:key`], mcp: ['proficiency_formula_save', 'proficiency_formula_select', 'certification_mapping_save'] },
+  { key: 'proficiency-definition-delete', title: 'Delete a formula or certification bonus', group: 'Proficiency rules', ui: PROF, api: [`DELETE ${CM}/experience-definitions/:type/:key`], mcp: ['career_experience_definition_delete'] },
+  { key: 'shared-output-live', title: 'Open the live QR page (and its PDF)', group: 'Application outputs', ui: `${WS} > Journeys > My Resume (QR link opens /r/:token)`, api: ['GET /api/shared-outputs/:token'], mcp: ['shared_output_live_read'] },
+  { key: 'shared-output-pdf', title: 'Download the PDF from the live QR page', group: 'Application outputs', ui: `${WS} > Journeys > My Resume (QR link opens /r/:token)`, api: ['GET /api/shared-outputs/:token/download.pdf'], mcp: null, mcpExclusion: 'Binary document; shared_output_live_read returns the same content as data.' },
 
   // ── Release tracker ───────────────────────────────────────────────────────
   { key: 'release-tracker-read', title: 'Read release records (admin)', group: 'Release tracker', ui: `${WS} > Journeys > Release Intelligence`, api: ['GET /api/release-intelligence/releases', 'GET /api/release-intelligence/releases/:id'], mcp: ['release_tracker_read'] },

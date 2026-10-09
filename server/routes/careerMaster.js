@@ -457,6 +457,40 @@ function serializeVal(camel, value, jsonFields) {
 // `scoped: false` opts a table out of per-user ownership — used only for
 // career_meta_options, which has no user_id column (shared, admin-curated
 // vocabulary, not per-member data).
+// Shared by every resource router's PATCH and the MCP technology-category tool, so both run the same update,
+// Career Atom sync and change notification.
+async function patchOwnedRow({ table, fieldMap, jsonFields = new Set(), scoped = true }, userId, id, body) {
+  const sets = [];
+  const vals = [];
+  let i = 1;
+  for (const [camel, snake] of Object.entries(fieldMap)) {
+    if (body[camel] === undefined) continue;
+    sets.push(`${snake} = $${i++}`);
+    vals.push(serializeVal(camel, body[camel], jsonFields));
+  }
+  if (!sets.length) return { noop: true };
+  sets.push(`updated_at = $${i++}`);
+  vals.push(Date.now());
+  vals.push(id);
+  const where = scoped ? `WHERE id = $${i} AND user_id = $${i + 1}` : `WHERE id = $${i}`;
+  if (scoped) vals.push(userId);
+  const result = await db.prepare(`UPDATE ${table} SET ${sets.join(', ')} ${where}`).run(...vals);
+  if (!result.changes) return { notFound: true };
+  if (scoped && sourceForTable(table)) {
+    syncSingleEntry(userId, table, id).catch((e) => console.error('[careerMaster] atom sync failed:', e.message));
+  }
+  if (scoped) notifyCareerChanged(userId);
+  return { ok: true };
+}
+
+/** Sets (or clears, with null) how a technology was used. Same write as PATCH /api/career/tools/:id. */
+export async function setToolProficiencyCategory(userId, toolId, category) {
+  if (category != null && !TOOL_PROFICIENCY_CATEGORIES[category]) throw httpError(400, `category must be one of: ${Object.keys(TOOL_PROFICIENCY_CATEGORIES).join(', ')}`);
+  const out = await patchOwnedRow({ table: 'career_tools', fieldMap: TOOL_FIELDS }, userId, Number(toolId), { wheelBucket: category || null });
+  if (out.notFound) throw httpError(404, 'Tool not found', 'not_found');
+  return { ok: true, toolId: Number(toolId), category: category || null };
+}
+
 function makeResourceRouter(table, fieldMap, jsonFields = new Set(), { scoped = true } = {}) {
   const r = Router();
 
@@ -499,29 +533,9 @@ function makeResourceRouter(table, fieldMap, jsonFields = new Set(), { scoped = 
   });
 
   r.patch('/:id', async (req, res) => {
-    const id = Number(req.params.id);
-    const body = req.body || {};
-    const sets = [];
-    const vals = [];
-    let i = 1;
-    for (const [camel, snake] of Object.entries(fieldMap)) {
-      if (body[camel] === undefined) continue;
-      sets.push(`${snake} = $${i++}`);
-      vals.push(serializeVal(camel, body[camel], jsonFields));
-    }
-    if (!sets.length) return res.json({ ok: true, noop: true });
-    sets.push(`updated_at = $${i++}`);
-    vals.push(Date.now());
-    vals.push(id);
-    const where = scoped ? `WHERE id = $${i} AND user_id = $${i + 1}` : `WHERE id = $${i}`;
-    if (scoped) vals.push(req.user.id);
-    const result = await db.prepare(`UPDATE ${table} SET ${sets.join(', ')} ${where}`).run(...vals);
-    if (!result.changes) return res.status(404).json({ error: 'Not found' });
-    if (scoped && sourceForTable(table)) {
-      syncSingleEntry(req.user.id, table, id).catch((e) => console.error('[careerMaster] atom sync failed:', e.message));
-    }
-    if (scoped) notifyCareerChanged(req.user.id);
-    res.json({ ok: true });
+    const out = await patchOwnedRow({ table, fieldMap, jsonFields, scoped }, req.user.id, Number(req.params.id), req.body || {});
+    if (out.notFound) return res.status(404).json({ error: 'Not found' });
+    res.json(out.noop ? { ok: true, noop: true } : { ok: true });
   });
 
   r.delete('/:id', async (req, res) => {
@@ -1543,13 +1557,17 @@ export async function loadProficiencyResolution(userId, periodKey = 'current', {
 
 // GET /api/career/proficiency — one resolved level per skill/tool, with the
 // inputs, per-term points, mapped certifications, and basis behind it.
+export async function buildProficiencyView(userId, periodKey = 'current') {
+  const { resolution, definitions } = await loadProficiencyResolution(userId, periodKey);
+  const levels = definitions.filter((d) => d.type === 'proficiency_level' && d.isActive)
+    .map((d) => ({ key: d.key, label: d.label, ordinal: Number(d.definition?.ordinal) || 0 }))
+    .sort((a, b) => a.ordinal - b.ordinal);
+  return { ...resolution, levels, footnote: proficiencyFootnote(resolution.proficiencies), formulaInputs: FORMULA_INPUTS, toolProficiencyCategories: TOOL_PROFICIENCY_CATEGORIES };
+}
+
 router.get('/proficiency', requireUser, async (req, res) => {
   try {
-    const { resolution, definitions } = await loadProficiencyResolution(req.user.id, String(req.query.period || 'current'));
-    const levels = definitions.filter((d) => d.type === 'proficiency_level' && d.isActive)
-      .map((d) => ({ key: d.key, label: d.label, ordinal: Number(d.definition?.ordinal) || 0 }))
-      .sort((a, b) => a.ordinal - b.ordinal);
-    res.json({ ...resolution, levels, footnote: proficiencyFootnote(resolution.proficiencies), formulaInputs: FORMULA_INPUTS, toolProficiencyCategories: TOOL_PROFICIENCY_CATEGORIES });
+    res.json(await buildProficiencyView(req.user.id, String(req.query.period || 'current')));
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -1628,6 +1646,27 @@ router.get('/experience-definitions', requireUser, async (req, res) => {
 router.put('/experience-definitions/:type/:key', requireUser, async (req, res) => {
   try { res.json(await saveExperienceDefinition(req.user.id, req.params.type, req.params.key, req.body)); } catch (e) { sendHttpError(res, e); }
 });
+
+
+/** Saves one of the member's own formulas, keeping whether it is currently selected (new formulas start unselected). */
+export async function saveProficiencyFormula(userId, key, body = {}) {
+  const existing = await db.prepare(`SELECT definition FROM career_experience_definitions WHERE user_id=$1 AND definition_type='proficiency_formula' AND definition_key=$2`).get(userId, String(key || ''));
+  const selected = existing?.definition?.selected === true;
+  return saveExperienceDefinition(userId, 'proficiency_formula', key, { ...body, definition: { ...(body.definition || {}), selected } });
+}
+
+/** Selects one member formula (or the methodology, which clears all member selections). Same writes as the website's "Use this formula". */
+export async function selectProficiencyFormula(userId, key) {
+  const rows = await db.prepare(`SELECT definition_type, definition_key, label, description, definition, sort_order, is_active FROM career_experience_definitions WHERE user_id=$1 AND definition_type='proficiency_formula'`).all(userId);
+  const items = rows.map(definitionRowToItem);
+  if (key !== METHODOLOGY_FORMULA_KEY && !items.some((f) => f.key === key)) throw httpError(404, 'formula not found', 'not_found');
+  for (const f of items.filter((x) => x.key !== METHODOLOGY_FORMULA_KEY)) {
+    const want = f.key === key;
+    if (Boolean(f.definition?.selected) === want) continue;
+    await saveExperienceDefinition(userId, f.type, f.key, { label: f.label, description: f.description || '', definition: { ...f.definition, selected: want }, sortOrder: f.sortOrder, isActive: f.isActive !== false });
+  }
+  return { ok: true, selected: key };
+}
 
 router.delete('/experience-definitions/:type/:key', requireUser, async (req, res) => {
   try { res.json(await deleteExperienceDefinition(req.user.id, req.params.type, req.params.key)); } catch (e) { sendHttpError(res, e); }

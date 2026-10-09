@@ -19,6 +19,14 @@
     "career_experience_definition_save",
     "career_experience_definition_delete",
     "career_proficiency_override_save",
-    "career_proficiency_override_clear"
+    "career_proficiency_override_clear",
+    "proficiency_rules_read",
+    "proficiency_override_set",
+    "proficiency_override_clear",
+    "technology_category_set",
+    "proficiency_formula_save",
+    "proficiency_formula_select",
+    "certification_mapping_save",
+    "shared_output_live_read"
   ]
 }

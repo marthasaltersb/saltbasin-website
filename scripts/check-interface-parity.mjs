@@ -26,7 +26,7 @@ const asJson = argv.includes('--json');
 const updateManifest = argv.includes('--update-manifest');
 const selfTest = argv.includes('--self-test');
 
-const { CAPABILITIES, GOVERNED_ROUTE_FILES, evaluateCapabilities, summarizeCapabilities } = await import(pathToFileURL(path.join(root, 'server/lib/capabilityParity.js')).href);
+const { CAPABILITIES, GOVERNED_ROUTE_FILES, GOVERNED_ROUTE_FILTERS, evaluateCapabilities, summarizeCapabilities } = await import(pathToFileURL(path.join(root, 'server/lib/capabilityParity.js')).href);
 const { MCP_TOOLS, MCP_SCOPES } = await import(pathToFileURL(path.join(root, 'server/lib/mcpToolRegistry.js')).href);
 
 const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
@@ -43,6 +43,16 @@ for (const m of indexSrc.matchAll(/app\.use\(\s*'([^']+)'\s*,\s*(\w+Router)\s*\)
 const routesOf = (file, mount) => {
   const out = [];
   for (const m of read(file).matchAll(/router\.(get|post|put|patch|delete)\(\s*'([^']+)'/g)) out.push(`${m[1].toUpperCase()} ${mount}${m[2] === '/' ? '' : m[2]}`);
+  // Resource routers built by a factory (careerMaster.js makeResourceRouter) and mounted with
+  // router.use('/tools', makeResourceRouter(...)): expand the factory's r.<verb>('/path') routes under each mount.
+  const src = read(file);
+  const factory = src.match(/function makeResourceRouter\([\s\S]*?\n}\n/);
+  if (factory) {
+    const verbs = [...factory[0].matchAll(/\br\.(get|post|put|patch|delete)\(\s*'([^']+)'/g)];
+    for (const u of src.matchAll(/router\.use\(\s*'([^']+)'\s*,[^\n]*makeResourceRouter\(/g)) {
+      for (const v of verbs) out.push(`${v[1].toUpperCase()} ${mount}${u[1]}${v[2] === '/' ? '' : v[2]}`);
+    }
+  }
   return out;
 };
 const known = new Set();
@@ -61,7 +71,7 @@ function runChecks(inject = {}) {
   const governed = new Set(inject.governedRoutes || []);
   for (const [file, mount] of Object.entries(GOVERNED_ROUTE_FILES)) {
     if (!(mounts.get(file) || []).includes(mount)) problem(`Governed file ${file} is not mounted at ${mount} in server/index.js.`);
-    for (const r of routesOf(file, mount)) governed.add(r);
+    for (const r of routesOf(file, mount)) if (!GOVERNED_ROUTE_FILTERS[file] || GOVERNED_ROUTE_FILTERS[file].test(r)) governed.add(r);
   }
 
   const listed = new Set();
