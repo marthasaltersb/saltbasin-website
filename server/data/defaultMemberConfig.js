@@ -73,6 +73,9 @@ export function defaultMemberConfig({ displayName, email }) {
         // (memberConfig.js's GET /draft), same pattern already used for
         // 'careerPlacementAgents' and 'resume'.
         { id: 'network', label: 'My Network', componentId: 'memberNrm', sortOrder: 16 },
+        // Platform MCP server (2026-10-09): access tokens for AI agents. Existing members pick this up via
+        // memberConfig.js's read-time additive GET /draft merge - never a write to their stored row.
+        { id: 'connected-agents', label: 'Connected Agents', componentId: 'connectedAgents', sortOrder: 30 },
       ],
     },
     site: {

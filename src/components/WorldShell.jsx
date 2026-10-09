@@ -44,6 +44,8 @@ const CareerReconciliationPanel = lazy(() => import('./admin/CareerReconciliatio
 const MyResumePanel = lazy(() => import('./admin/MyResumePanel.jsx'));
 const LonetreeMvpPanel = lazy(() => import('./admin/LonetreeMvpPanel.jsx'));
 const ReleaseIntelligencePanel = lazy(() => import('./admin/ReleaseIntelligencePanel.jsx'));
+const ConnectedAgentsPanel = lazy(() => import('./admin/ConnectedAgentsPanel.jsx'));
+const CapabilitiesPanel = lazy(() => import('./admin/CapabilitiesPanel.jsx'));
 
 const SIMPLE_EMBED_COMPONENTS = {
   leads: { title: 'Leads', render: () => <LeadsPanel /> },
@@ -54,6 +56,8 @@ const SIMPLE_EMBED_COMPONENTS = {
   outputTemplates: { title: 'Output Templates', render: (scope) => <OutputTemplateConfiguratorHub scope={scope} /> },
   lonetreeMvp: { title: 'Fund & Portfolio Demo', render: (scope) => <LonetreeMvpPanel scope={scope} /> },
   releaseIntelligence: { title: 'Release Intelligence', render: () => <ReleaseIntelligencePanel /> },
+  connectedAgents: { title: 'Connected Agents', render: () => <ConnectedAgentsPanel /> },
+  capabilities: { title: 'Capabilities', render: () => <CapabilitiesPanel /> },
 };
 
 const ISLAND_RADIUS = 9;
@@ -715,6 +719,10 @@ function JourneysGrid({ islands, career, commercial, herq, onOpen }) {
             ? `${herq.items.length} items · ${herq.agents.length} agents`
             : isl.componentId === 'careerMaster'
               ? 'Open Career Master journey'
+              : isl.componentId === 'connectedAgents'
+                ? 'Tokens for AI agents (MCP)'
+                : isl.componentId === 'capabilities'
+                  ? 'Website, API and MCP parity'
               : isl.kind === 'embed'
                 ? 'Open configuration'
                 : 'Open in Classic Tools';

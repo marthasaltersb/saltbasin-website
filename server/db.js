@@ -3324,6 +3324,9 @@ async function bootstrap() {
         { viewId: 'system',   viewLabel: 'System',                        id: 'command-center',  label: 'Command Center',  componentId: 'commandCenter',  sortOrder: 4 },
         // Release reconciliation + contribution trends (additive; reachable from the World Shell).
         { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'release-intelligence', label: 'Release Intelligence', componentId: 'releaseIntelligence', sortOrder: 4 },
+        // Platform MCP server (additive): token management + the interface-parity map.
+        { viewId: 'system',   viewLabel: 'System',                        id: 'connected-agents', label: 'Connected Agents', componentId: 'connectedAgents', sortOrder: 5 },
+        { viewId: 'system',   viewLabel: 'System',                        id: 'capabilities',     label: 'Capabilities',     componentId: 'capabilities',    sortOrder: 6 },
       ];
 
       for (const t of newTabs) {
@@ -6019,6 +6022,31 @@ Rod state, per event:
     `);
   } catch (error) {
     console.warn('[db] cover-letter agent tables warning:', error.message);
+  }
+
+  // ── Platform access tokens (2026-10-09, platform MCP server) ─────────────
+  // A personal access token lets an AI agent act through /mcp as the user who
+  // created it. Only the SHA-256 hash is stored (the token is shown once);
+  // scopes narrow what the token may call, never widen what the user may do.
+  // Additive: no existing table or row is touched.
+  try {
+    await sql.unsafe(`
+      CREATE TABLE IF NOT EXISTS platform_access_tokens (
+        id           BIGSERIAL PRIMARY KEY,
+        user_id      BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        name         TEXT NOT NULL,
+        token_hash   TEXT NOT NULL UNIQUE,
+        token_prefix TEXT NOT NULL,
+        scopes       JSONB NOT NULL DEFAULT '[]',
+        created_at   BIGINT NOT NULL,
+        expires_at   BIGINT,
+        last_used_at BIGINT,
+        revoked_at   BIGINT
+      );
+      CREATE INDEX IF NOT EXISTS idx_platform_access_tokens_user ON platform_access_tokens (user_id, created_at DESC);
+    `);
+  } catch (error) {
+    console.warn('[db] platform access tokens table warning:', error.message);
   }
 }
 

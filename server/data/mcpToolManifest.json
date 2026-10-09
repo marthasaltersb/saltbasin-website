@@ -1,0 +1,16 @@
+{
+  "note": "Shipped MCP tool names. Append-only: scripts/check-interface-parity.mjs fails if one disappears.",
+  "tools": [
+    "career_master_read",
+    "career_opportunities_list",
+    "career_opportunity_create",
+    "career_opportunity_open",
+    "application_outputs_list",
+    "application_output_open",
+    "application_output_new_draft_version",
+    "application_output_approve_for_qr",
+    "cover_letter_open",
+    "cover_letter_agent_turn",
+    "release_tracker_read"
+  ]
+}

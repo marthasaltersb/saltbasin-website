@@ -59,3 +59,29 @@ export async function getEntitlementUsageSummary(entitlementRodId) {
     interactions: byType,
   };
 }
+
+// Platform MCP server (2026-10-09): every tool call an agent makes as a user is one tracked interaction
+// ('mcp_tool_call', configured under resume_career in SALT_BASIN_TRACKED_INTERACTIONS). Members who have
+// the module's entitlement rod are recorded through recordInteraction() like any other feature; a user
+// without one (an admin, or a member whose entitlements are not provisioned) is recorded in the same
+// analytics_events table with object_type='platform_access_token', so a call is never uncounted. Both
+// carry { tool, tokenId, ok, errorCode } in metadata. Returns { ok, error } - the caller reports a
+// tracking failure to the agent instead of hiding it.
+export async function recordMcpToolCall({ userId, tokenId, tool, ok, errorCode = null }) {
+  const metadata = { tool, tokenId: String(tokenId), ok: !!ok, errorCode };
+  try {
+    try {
+      await recordInteraction({ userId, moduleKey: 'resume_career', interactionType: 'mcp_tool_call', metadata });
+    } catch (e) {
+      if (!/No member_entitlement rod/.test(e.message)) throw e;
+      await db.prepare(`
+        INSERT INTO analytics_events (event_type, object_type, object_id, member_user_id, metadata, occurred_at)
+        VALUES ('mcp_tool_call','platform_access_token',$1,$2,$3::jsonb,$4)
+      `).run(String(tokenId), userId, metadata, Date.now());
+    }
+    return { ok: true };
+  } catch (e) {
+    console.error('[usageTracking] mcp tool call not recorded:', e.message);
+    return { ok: false, error: e.message };
+  }
+}

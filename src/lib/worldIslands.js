@@ -198,6 +198,18 @@ export const ISLAND_REGISTRY = {
     dataBinding: { store: 'release_records' },
     permission: { requiredRole: 'admin', crud: ['read', 'update', 'approve'], enforced: true },
   },
+  // Connected Agents (2026-10-09): personal access tokens for the platform MCP server. Any signed-in user.
+  connectedAgents: {
+    variant: 'rings', kind: 'embed', accent: 'teal',
+    dataBinding: { store: 'platform_access_tokens' },
+    permission: { requiredRole: 'owner', crud: ['read', 'create', 'revoke'], enforced: true },
+  },
+  // Capabilities (2026-10-09): the interface-parity map. Admin only (the API answers 403 to anyone else).
+  capabilities: {
+    variant: 'rings', kind: 'embed', accent: 'gold',
+    dataBinding: { store: 'server/lib/capabilityParity.js (config registry, no table)' },
+    permission: { requiredRole: 'admin', crud: ['read'], enforced: true },
+  },
   leads: {
     variant: 'rings', kind: 'embed', accent: 'teal',
     dataBinding: { store: 'leads' },
