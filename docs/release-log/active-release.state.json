@@ -1,90 +1,116 @@
 {
-  "exportedAt": "2026-10-09T00:55:21.110Z",
+  "exportedAt": "2026-10-09T01:02:38.970Z",
   "features": {
     "proficiency-live-qr": {
       "status": "failing",
       "lastRound": 5,
       "lastScore": "29/30",
-      "lastReport": "docs/test-results/proficiency-live-qr/round-5.md"
+      "lastReport": "docs/test-results/proficiency-live-qr/round-5.md",
+      "openBugs": 6,
+      "backlog": 5
     },
     "world-shell-navigation": {
       "status": "fix",
       "lastRound": 1,
       "lastScore": "45/48",
-      "lastReport": "docs/test-results/world-shell-navigation/round-1.md"
+      "lastReport": "docs/test-results/world-shell-navigation/round-1.md",
+      "openBugs": 2,
+      "backlog": 4
     },
     "career-bound-outputs": {
       "status": "reconcile",
       "lastRound": 2,
       "lastScore": "54/56",
-      "lastReport": "docs/test-results/career-bound-outputs/round-2.md"
+      "lastReport": "docs/test-results/career-bound-outputs/round-2.md",
+      "openBugs": 10,
+      "backlog": 5
     },
     "qr-gated-outputs": {
       "status": "fix",
       "lastRound": 1,
       "lastScore": "45/48",
-      "lastReport": "docs/test-results/qr-gated-outputs/round-1.md"
+      "lastReport": "docs/test-results/qr-gated-outputs/round-1.md",
+      "openBugs": 6,
+      "backlog": 2
     },
     "no-silent-failures": {
       "status": "validate",
       "lastRound": 0,
       "lastScore": null,
-      "lastReport": null
+      "lastReport": null,
+      "openBugs": 3,
+      "backlog": 3
     },
     "release-loop-tooling": {
       "status": "between_stages",
       "lastRound": 0,
       "lastScore": null,
-      "lastReport": null
+      "lastReport": null,
+      "openBugs": 3,
+      "backlog": 2
     },
     "output-version-history": {
       "status": "validate",
       "lastRound": 0,
       "lastScore": null,
-      "lastReport": null
+      "lastReport": null,
+      "openBugs": 4,
+      "backlog": 3
     },
     "resume-rollups": {
       "status": "validate",
       "lastRound": 0,
       "lastScore": null,
-      "lastReport": null
+      "lastReport": null,
+      "openBugs": 7,
+      "backlog": 3
     },
     "chart-gallery": {
       "status": "fix",
       "lastRound": 1,
       "lastScore": "17/20",
-      "lastReport": "docs/test-results/chart-gallery/round-1.md"
+      "lastReport": "docs/test-results/chart-gallery/round-1.md",
+      "openBugs": 4,
+      "backlog": 2
     },
     "release-intelligence": {
       "status": "validate",
       "lastRound": 0,
       "lastScore": null,
-      "lastReport": null
+      "lastReport": null,
+      "openBugs": 3,
+      "backlog": 1
     },
     "session-mapping": {
       "status": "failed",
       "lastRound": 0,
       "lastScore": null,
-      "lastReport": null
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
     },
     "in-app-release-loop": {
       "status": "build",
       "lastRound": 0,
       "lastScore": null,
-      "lastReport": null
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
     },
     "cover-letter-agent": {
       "status": "validate",
       "lastRound": 0,
       "lastScore": null,
-      "lastReport": null
+      "lastReport": null,
+      "openBugs": 5,
+      "backlog": 7
     }
   },
   "bugs": [
     {
       "id": "proficiency-live-qr-F2-1",
       "feature": "proficiency-live-qr",
-      "status": "open",
+      "status": "process_note",
       "class": "process",
       "attempts": 0,
       "step": "J7.1, J7.2 and 390px workspace tabs",
@@ -94,6 +120,11 @@
         "src/components/SharedOutputPage.jsx",
         "src/components/admin/CareerExperienceConfigurator.jsx"
       ],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "Agent sandbox refused a compound boot command and the fix agent did not retry. Tooling refusal, no product or spec cause."
+      },
       "history": [
         {
           "round": 2,
@@ -120,6 +151,7 @@
       "files": [
         "docs/changes/proficiency-rules-and-live-qr.md"
       ],
+      "scope": null,
       "history": [
         {
           "round": 2,
@@ -152,6 +184,7 @@
       "files": [
         "src/components/admin/ProficiencyRulesPanel.jsx"
       ],
+      "scope": null,
       "history": [
         {
           "round": 2,
@@ -184,6 +217,11 @@
       "files": [
         "src/components/SaltParticleChart.jsx"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "src/components/SaltParticleChart.jsx was created by a0ff84a (proficiency-live-qr chart views). The open item is an owner design decision on this feature's own chart; it needs an owner answer."
+      },
       "history": [
         {
           "round": 2,
@@ -212,6 +250,11 @@
         "src/components/SharedLiveStates.jsx",
         "docs/training/proficiency-rules-and-live-qr.md"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The third wording state of the live-data banner is in src/components/SharedLiveStates.jsx (a0ff84a, 8fc685e, 47b1b42). The J7.1/J7.2 path in docs/training/proficiency-rules-and-live-qr.md does not reach it, so the feature's spec must be corrected."
+      },
       "history": [
         {
           "round": 3,
@@ -232,6 +275,11 @@
       "files": [
         "src/components/SaltParticleChart.jsx"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "src/components/SaltParticleChart.jsx was created by a0ff84a (proficiency-live-qr chart views). The open item is an owner design decision on this feature's own chart; it needs an owner answer."
+      },
       "history": [
         {
           "round": 3,
@@ -250,7 +298,7 @@
     {
       "id": "proficiency-live-qr-F3-5",
       "feature": "proficiency-live-qr",
-      "status": "retest_failed_pending_triage",
+      "status": "process_note",
       "class": "process",
       "attempts": 1,
       "step": "J8",
@@ -258,6 +306,11 @@
       "files": [
         "src/components/admin/OutputTemplateConfigurator.jsx"
       ],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "Loop-process item: journey J8 was added to the training spec after round 3, so earlier rounds never ran it. The layout defect itself is tracked as R4-1."
+      },
       "history": [
         {
           "round": 3,
@@ -276,7 +329,7 @@
     {
       "id": "proficiency-live-qr-F3-6",
       "feature": "proficiency-live-qr",
-      "status": "retest_failed_pending_triage",
+      "status": "process_note",
       "class": "process",
       "attempts": 1,
       "step": "T1-1, T1-2",
@@ -284,6 +337,11 @@
       "files": [
         "docs/changes/proficiency-rules-and-live-qr.md"
       ],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "Fix notes in docs/changes/proficiency-rules-and-live-qr.md were written without citing browser evidence. Release-loop record keeping, not product."
+      },
       "history": [
         {
           "round": 3,
@@ -310,6 +368,11 @@
       "files": [
         "src/components/SaltParticleChart.jsx"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "src/components/SaltParticleChart.jsx was created by a0ff84a (proficiency-live-qr chart views). The open item is an owner design decision on this feature's own chart; it needs an owner answer."
+      },
       "history": [
         {
           "round": 4,
@@ -332,6 +395,11 @@
         "src/components/SharedLiveStates.jsx",
         "src/components/WorldShell.jsx"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Same defect as F3-1: the feature's training spec does not name the import path that produces the third wording state."
+      },
       "history": [
         {
           "round": 4,
@@ -344,7 +412,7 @@
     {
       "id": "proficiency-live-qr-F4-7",
       "feature": "proficiency-live-qr",
-      "status": "open",
+      "status": "process_note",
       "class": "process",
       "attempts": 0,
       "step": "Known-limitations gaps: T1-1/T1-2 explicit verification",
@@ -352,6 +420,11 @@
       "files": [
         "docs/changes/proficiency-rules-and-live-qr.md"
       ],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "No validator step explicitly asserts T1-1 (dark embed readability). Validation-coverage note about the loop, not a product defect."
+      },
       "history": [
         {
           "round": 4,
@@ -374,6 +447,11 @@
         "docs/changes/proficiency-rules-and-live-qr.md",
         "src/components/admin/OutputTemplateConfigurator.jsx"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Spec wording nits and a weak edge payload in docs/training/proficiency-rules-and-live-qr.md and docs/changes/proficiency-rules-and-live-qr.md, the feature's own specs."
+      },
       "history": [
         {
           "round": 4,
@@ -396,6 +474,7 @@
         "src/components/admin/CareerMasterEntryPoint.jsx",
         "src/components/WorldShell.jsx"
       ],
+      "scope": null,
       "history": [
         {
           "round": 1,
@@ -430,6 +509,7 @@
         "src/lib/careerCharts.js",
         "src/components/ChartViews.jsx"
       ],
+      "scope": null,
       "history": [
         {
           "round": 1,
@@ -462,6 +542,7 @@
       "files": [
         "src/components/SharedLiveStates.jsx"
       ],
+      "scope": null,
       "history": [
         {
           "round": 2,
@@ -494,6 +575,7 @@
       "files": [
         "docs/training/proficiency-rules-and-live-qr.md"
       ],
+      "scope": null,
       "history": [
         {
           "round": 2,
@@ -526,6 +608,7 @@
       "files": [
         "docs/training/proficiency-rules-and-live-qr.md"
       ],
+      "scope": null,
       "history": [
         {
           "round": 2,
@@ -572,6 +655,7 @@
         "src/components/SharedOutputPage.jsx",
         "docs/training/proficiency-rules-and-live-qr.md"
       ],
+      "scope": null,
       "history": [
         {
           "round": 2,
@@ -596,7 +680,7 @@
     {
       "id": "R4-1",
       "feature": "proficiency-live-qr",
-      "status": "retest_failed_pending_triage",
+      "status": "backlog_pre_existing",
       "class": "defect",
       "attempts": 1,
       "step": "J8 step 4: Output Templates editor at 390px, Rules & why tab",
@@ -604,6 +688,11 @@
       "files": [
         "src/components/admin/OutputTemplateConfigurator.jsx"
       ],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "OutputTemplateConfigurator.jsx S.shell grid \"220px 1fr 380px\" was introduced by a875b9b (2026-07-10, before the session; git log -S). The clipping reproduces without this feature, which only added a 5th tab inside the existing layout. A responsive fix is already committed in the r4 fix."
+      },
       "history": [
         {
           "round": 4,
@@ -622,12 +711,17 @@
     {
       "id": "world-shell-navigation-B8",
       "feature": "world-shell-navigation",
-      "status": "fixing",
+      "status": "process_note",
       "class": "process",
       "attempts": 0,
       "step": "Commit trailer: Sonnet 5.5 used, task required Opus 5.5",
       "rootCause": "Conflicting trailer instructions between the computed task text and the session attribution reminder.",
       "files": [],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "Commit trailer wording conflict between the task text and the session attribution reminder. Not product or spec."
+      },
       "history": [
         {
           "round": 0,
@@ -649,6 +743,11 @@
         "docs/training/world-shell-opportunity-outputs.md",
         "scripts/create-test-member.mjs"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "docs/training/world-shell-opportunity-outputs.md predates the scripts/create-test-member.mjs rule. The spec is the feature's own and must use member accounts."
+      },
       "history": [
         {
           "round": 0,
@@ -670,6 +769,11 @@
         "docs/training/world-shell-opportunity-outputs.md",
         "src/components/WorldShell.jsx"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Spec gap in docs/training/world-shell-opportunity-outputs.md: the 3D island entry in WorldShell.jsx was never exercised, and reaching the pipeline from a World Shell island is the feature's request."
+      },
       "history": [
         {
           "round": 0,
@@ -682,7 +786,7 @@
     {
       "id": "world-shell-navigation-B12",
       "feature": "world-shell-navigation",
-      "status": "fixing",
+      "status": "backlog_pre_existing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Spec Known limitation: no in-app upload of a package JSON",
@@ -692,6 +796,11 @@
         "server/routes/resumeOutputs.js",
         "src/components/OpportunityOutputsSection.jsx"
       ],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "The feature definition asks only for an import-application-package.mjs option to create/link the placeholder. An in-app package upload is not in its request. Package import has been script-only since d78bcda."
+      },
       "history": [
         {
           "round": 0,
@@ -704,7 +813,7 @@
     {
       "id": "world-shell-navigation-B14",
       "feature": "world-shell-navigation",
-      "status": "fixing",
+      "status": "process_note",
       "class": "process",
       "attempts": 0,
       "step": "Change spec header stale",
@@ -712,6 +821,11 @@
       "files": [
         "docs/changes/world-shell-opportunity-outputs.md"
       ],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "Header of docs/changes/world-shell-opportunity-outputs.md names a stale release/integration branch. Documentation bookkeeping."
+      },
       "history": [
         {
           "round": 0,
@@ -724,7 +838,7 @@
     {
       "id": "wsn-r1-auto-cover-letter",
       "feature": "world-shell-navigation",
-      "status": "fixing",
+      "status": "reassigned",
       "class": "spec_error",
       "attempts": 0,
       "step": "J2 2.3, J4 4.1, J9 9.1 (knock-on J9.2, J10.1)",
@@ -733,6 +847,11 @@
         "docs/training/world-shell-navigation.md",
         "docs/changes/world-shell-navigation.md"
       ],
+      "scope": {
+        "scope": "other_feature",
+        "owner": "cover-letter-agent",
+        "evidence": "coverLetterAutoDraft.js registers the onOpportunityCreated hook and cover_letter_settings.autoDraft defaults to true; both were added in 4be0bec (merged by a5e7883, branch release-loop/cover-letter-agent-build), whose request is \"every job opportunity gets a template cover letter\". The extra draft …"
+      },
       "history": [
         {
           "round": 1,
@@ -745,12 +864,17 @@
     {
       "id": "career-bound-outputs-B9",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "process_note",
       "class": "process",
       "attempts": 0,
       "step": "commit",
       "rootCause": "followed system attribution reminder over task text",
       "files": [],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "Commit trailer: the agent followed the session attribution reminder over the task text. Process wording only."
+      },
       "history": [
         {
           "round": 0,
@@ -782,6 +906,7 @@
         "src/components/admin/CareerReconciliationPanel.jsx",
         "src/components/admin/MyResumePanel.jsx"
       ],
+      "scope": null,
       "history": [
         {
           "round": 0,
@@ -815,6 +940,7 @@
         "server/db.js",
         "docs/training/career-bound-outputs.md"
       ],
+      "scope": null,
       "history": [
         {
           "round": 0,
@@ -849,6 +975,7 @@
         "src/lib/worldIslands.js",
         "src/components/admin/MyResumePanel.jsx"
       ],
+      "scope": null,
       "history": [
         {
           "round": 0,
@@ -881,6 +1008,7 @@
       "files": [
         "docs/training/career-bound-outputs.md"
       ],
+      "scope": null,
       "history": [
         {
           "round": 0,
@@ -916,6 +1044,11 @@
         "src/components/admin/OutputTemplateConfigurator.jsx",
         "server/lib/outputRendering.js"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Overrides were stored on the preset because template outputs have no row. masterOverrides.js and the override UI came from 9df7a85/95c2adf, and the feature's request is overrides \"stored on the output\"."
+      },
       "history": [
         {
           "round": 2,
@@ -928,12 +1061,17 @@
     {
       "id": "career-bound-outputs-F2-4",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "process_note",
       "class": "process",
       "attempts": 0,
       "step": "Commit trailer",
       "rootCause": "The fix agent followed the session attribution reminder over the task text.",
       "files": [],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "Commit trailer: the agent followed the session attribution reminder over the task text. Process wording only."
+      },
       "history": [
         {
           "round": 2,
@@ -946,7 +1084,7 @@
     {
       "id": "career-bound-outputs-F2-5",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "process_note",
       "class": "process",
       "attempts": 0,
       "step": "Round-N test result file",
@@ -954,6 +1092,11 @@
       "files": [
         "docs/test-results/career-bound-outputs/"
       ],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "Fix agents recorded results in the change spec instead of docs/test-results/career-bound-outputs/round-N.md. Report-file location."
+      },
       "history": [
         {
           "round": 2,
@@ -974,6 +1117,11 @@
       "files": [
         "src/components/admin/CareerBoundOutputEditor.jsx"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "CareerBoundOutputEditor.jsx (new in 9df7a85): the Save changes button has no disabled styling. Feature's own component."
+      },
       "history": [
         {
           "round": 2,
@@ -994,6 +1142,11 @@
       "files": [
         "src/components/admin/MyResumePanel.jsx"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The Career Sources to Review dialog is CareerReconciliationPanel.jsx / MyResumePanel.jsx wiring added by 9df7a85 and fix r1/r2 (3472137, 95c2adf). The queue is the feature's deliverable."
+      },
       "history": [
         {
           "round": 2,
@@ -1015,6 +1168,11 @@
         "src/components/admin/CareerReconciliationPanel.jsx",
         "server/lib/careerBound.js"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The Convert to career-bound output flow is server/lib/careerBound.js and CareerReconciliationPanel.jsx, both introduced by 9df7a85."
+      },
       "history": [
         {
           "round": 2,
@@ -1037,6 +1195,11 @@
         "src/components/admin/CareerBoundOutputEditor.jsx",
         "src/components/admin/OutputTemplateConfigurator.jsx"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The cream text comes from WorldShell.jsx embedShell color #f5f0e8 (blame 8fd7f7c, 2026-08-07, pre-existing), but the unreadable surfaces in J1.2a/J9.0 are this feature's own editors, so the fix belongs in its components."
+      },
       "history": [
         {
           "round": 2,
@@ -1058,6 +1221,11 @@
         "src/components/Output.jsx",
         "src/components/admin/OutputTemplateConfigurator.jsx"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The feature requests template-driven outputs that bind skills/tools/certifications to Career Master. The default layout in Output.jsx not rendering them means that request is not met."
+      },
       "history": [
         {
           "round": 2,
@@ -1078,6 +1246,7 @@
       "files": [
         "src/components/admin/CareerBoundOutputEditor.jsx"
       ],
+      "scope": null,
       "history": [
         {
           "round": 1,
@@ -1114,6 +1283,11 @@
         "src/components/admin/CareerReconciliationPanel.jsx",
         "src/components/WorldShell.jsx"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The inherited cream text from WorldShell.jsx:1406 predates the session (8fd7f7c, 2026-08-07), but the failing journeys J1 1.2a and J9 9.0 are this feature's, and CareerBoundOutputEditor.jsx (new, 9df7a85) sets no text colour. The other components named (OutputTemplateConfigurator, MyResumePanel dia…"
+      },
       "history": [
         {
           "round": 2,
@@ -1142,6 +1316,11 @@
         "docs/changes/qr-gated-outputs.md",
         "scripts/import-application-package.mjs"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "docs/training/qr-gated-outputs.md preconditions were written before member test accounts existed. The spec must be right."
+      },
       "history": [
         {
           "round": 0,
@@ -1154,7 +1333,7 @@
     {
       "id": "qr-gated-outputs-B8",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "backlog_pre_existing",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Where things are; all journeys",
@@ -1165,6 +1344,11 @@
         "src/components/WorldShell.jsx",
         "docs/training/qr-gated-outputs.md"
       ],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "The World Shell had no My Resume island before 3472137 (career-bound fix r1), and the qr-gated-outputs request does not include World Shell navigation. The gap predates the feature and is not in its request."
+      },
       "history": [
         {
           "round": 0,
@@ -1177,7 +1361,7 @@
     {
       "id": "qr-gated-outputs-B9",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "backlog_pre_existing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Preconditions 4; Journey 8",
@@ -1187,6 +1371,11 @@
         "server/routes/resumeOutputs.js",
         "src/components/admin/MyResumePanel.jsx"
       ],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "Import is script-only (scripts/import-application-package.mjs). The request says \"fictional package import\" with no in-app control, and MyResumePanel never had one in e0ea466."
+      },
       "history": [
         {
           "round": 0,
@@ -1210,6 +1399,11 @@
         "server/lib/outputRendering.js",
         "docs/training/qr-gated-outputs.md"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The feature title and request include \"clickable QR in PDF/docx\". The docx path (scripts/stamp-application-package-docx.py, d78bcda/76b33ad) has no journey or UI, so the requested capability is untested."
+      },
       "history": [
         {
           "round": 0,
@@ -1230,6 +1424,11 @@
       "files": [
         "docs/training/qr-gated-outputs.md"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Journey 6 of docs/training/qr-gated-outputs.md asks to verify PDF annotations that a browser cannot show. The spec must give a runnable check."
+      },
       "history": [
         {
           "round": 0,
@@ -1251,6 +1450,11 @@
         "docs/training/qr-gated-outputs.md",
         "src/components/admin/MyResumePanel.jsx"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "MyResumePanel.jsx:1052 uses an em dash where docs/training/qr-gated-outputs.md:88 has a hyphen. Feature's own spec."
+      },
       "history": [
         {
           "round": 1,
@@ -1274,6 +1478,11 @@
         "src/lib/documentBlocksEditor.js",
         "server/lib/applicationPackages.js"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "DocumentBlocksView.jsx, the document_blocks path in outputRendering.js and applicationPackages.js were introduced by d78bcda, and header.contact has no defined type there."
+      },
       "history": [
         {
           "round": 1,
@@ -1295,6 +1504,11 @@
         "docs/training/qr-gated-outputs.md",
         "src/components/admin/MyResumePanel.jsx"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Toast wording differs from docs/training/qr-gated-outputs.md lines 100/155/169 (hyphen). Feature's own spec."
+      },
       "history": [
         {
           "round": 1,
@@ -1307,7 +1521,7 @@
     {
       "id": "no-silent-failures-B11",
       "feature": "no-silent-failures",
-      "status": "open",
+      "status": "backlog_pre_existing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "11 other /output/* pages and My Resume use fetchCareerMaster",
@@ -1318,6 +1532,11 @@
         "src/components/Output.jsx",
         "src/components/admin/MyResumePanel.jsx"
       ],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "src/lib/careerMaster.js fetchCareerMaster is unchanged since a875b9b (2026-07-10), and docs/changes/no-silent-failures.md Known limitations explicitly excludes the other /output/* pages (the feature covers six named places)."
+      },
       "history": [
         {
           "round": 0,
@@ -1338,6 +1557,11 @@
       "files": [
         "docs/training/no-silent-failures.md"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "docs/training/no-silent-failures.md P1 signs in as admin. The spec must use a member account."
+      },
       "history": [
         {
           "round": 0,
@@ -1358,6 +1582,11 @@
       "files": [
         "docs/training/no-silent-failures.md"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "docs/training/no-silent-failures.md relies on a classic URL, CLI and console setup. The spec entry points are the feature's own."
+      },
       "history": [
         {
           "round": 0,
@@ -1370,7 +1599,7 @@
     {
       "id": "no-silent-failures-B14",
       "feature": "no-silent-failures",
-      "status": "open",
+      "status": "backlog_pre_existing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "G4 no UI to add career chart block to a template",
@@ -1378,6 +1607,11 @@
       "files": [
         "src/components/Output.jsx"
       ],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "No UI to add a career chart block to a template existed in e0ea466. The gallery that supplies it is chart-gallery (6dd06e5, merged later) and is not in no-silent-failures' request."
+      },
       "history": [
         {
           "round": 0,
@@ -1398,6 +1632,11 @@
       "files": [
         "src/components/SharedLiveStates.jsx"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The RECORDED DATA banner and liveError notices in SharedLiveStates.jsx were introduced by 8fc685e (git log -S). The banner sentence not adapting when liveError is set is this feature's own wording."
+      },
       "history": [
         {
           "round": 0,
@@ -1410,7 +1649,7 @@
     {
       "id": "no-silent-failures-B16",
       "feature": "no-silent-failures",
-      "status": "open",
+      "status": "backlog_pre_existing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "G6 remaining silent paths and spec run notes",
@@ -1419,6 +1658,11 @@
         "server/lib/careerAtomMigration.js",
         "docs/training/no-silent-failures.md"
       ],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "The remaining silent paths (for example server/lib/careerAtomMigration.js, which has no diff against e0ea466) are outside the six places in docs/changes/no-silent-failures.md."
+      },
       "history": [
         {
           "round": 0,
@@ -1442,6 +1686,11 @@
         ".claude/skills/salt-basin-release-loop/SKILL.md",
         "CLAUDE.md"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Docs written by this feature (docs/release-process.md, SKILL.md, definition.json, CLAUDE.md) describe a capability that was never implemented."
+      },
       "history": [
         {
           "round": 0,
@@ -1462,6 +1711,11 @@
       "files": [
         "scripts/release-tracker-sync.mjs"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Dead-agent detection in scripts/release-tracker-sync.mjs is this feature's own script and is limited to extras."
+      },
       "history": [
         {
           "round": 0,
@@ -1482,6 +1736,11 @@
       "files": [
         "tools/release-tracker/index.html"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "tools/release-tracker/index.html was created by this feature (bed12f0). The 390px reflow is its own gap."
+      },
       "history": [
         {
           "round": 0,
@@ -1494,7 +1753,7 @@
     {
       "id": "release-loop-tooling-B4",
       "feature": "release-loop-tooling",
-      "status": "open",
+      "status": "process_note",
       "class": "process",
       "attempts": 0,
       "step": "Host check",
@@ -1502,6 +1761,11 @@
       "files": [
         "tools/release-tracker/index.html"
       ],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "Only the local harness stub of the host check was tested. Validation-environment limitation."
+      },
       "history": [
         {
           "round": 0,
@@ -1514,7 +1778,7 @@
     {
       "id": "release-loop-tooling-B5",
       "feature": "release-loop-tooling",
-      "status": "open",
+      "status": "backlog_pre_existing",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Owner direction",
@@ -1522,6 +1786,11 @@
       "files": [
         "tools/release-tracker/index.html"
       ],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "The feature definition lists a static tracker page and scripts with no World Shell requirement. The World Shell surface belongs to the separate in-app-release-loop feature, so this gap is not in this feature's request."
+      },
       "history": [
         {
           "round": 0,
@@ -1534,12 +1803,17 @@
     {
       "id": "output-version-history-B3",
       "feature": "output-version-history",
-      "status": "open",
+      "status": "process_note",
       "class": "process",
       "attempts": 0,
       "step": "integrate",
       "rootCause": "Integration advanced after the rebase, so a diff against its tip shows later release-intelligence files as deletions.",
       "files": [],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "Integration advanced after the rebase, so a diff against its tip shows later release-intelligence files as deletions. Integration bookkeeping."
+      },
       "history": [
         {
           "round": 0,
@@ -1560,6 +1834,11 @@
       "files": [
         "server/lib/outputVersionHistory.js"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "versionBody() in server/lib/outputVersionHistory.js (e2752fd) resolves draft content live. The feature requests a scrubbing timeline of previous states, which needs a reproducible body."
+      },
       "history": [
         {
           "round": 0,
@@ -1572,7 +1851,7 @@
     {
       "id": "output-version-history-B9",
       "feature": "output-version-history",
-      "status": "open",
+      "status": "reassigned",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "build",
@@ -1580,6 +1859,11 @@
       "files": [
         "server/lib/outputVersionHistory.js"
       ],
+      "scope": {
+        "scope": "other_feature",
+        "owner": "career-bound-outputs",
+        "evidence": "Career-bound drafts are computed from Career Master plus overrides and have no stored document (design from 9df7a85), so there is nothing frozen to recover for a version."
+      },
       "history": [
         {
           "round": 0,
@@ -1600,6 +1884,11 @@
       "files": [
         "src/lib/outputVersionDiff.js"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "toDiffItems in src/lib/outputVersionDiff.js (e2752fd) is text-only, while the feature requests block-level tracked changes between versions."
+      },
       "history": [
         {
           "round": 0,
@@ -1621,6 +1910,11 @@
         "src/components/admin/OutputTemplateConfigurator.jsx",
         "server/lib/outputVersionHistory.js"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The request says reachable from \"the output editor\". The entry points omit OutputTemplateConfigurator, and the history feature is e2752fd."
+      },
       "history": [
         {
           "round": 0,
@@ -1633,7 +1927,7 @@
     {
       "id": "output-version-history-B12",
       "feature": "output-version-history",
-      "status": "open",
+      "status": "process_note",
       "class": "process",
       "attempts": 0,
       "step": "validate",
@@ -1641,6 +1935,11 @@
       "files": [
         "docs/changes/output-version-history.md"
       ],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "Only the build agent walked the journeys and no round results exist yet. Loop record gap."
+      },
       "history": [
         {
           "round": 0,
@@ -1661,6 +1960,11 @@
       "files": [
         "docs/training/output-version-history.md"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "docs/training/output-version-history.md preconditions require a signup flag and riley.member credentials instead of create-test-member.mjs. Feature's own spec."
+      },
       "history": [
         {
           "round": 0,
@@ -1681,6 +1985,11 @@
       "files": [
         "docs/training/resume-rollups.md"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "docs/training/resume-rollups.md Journey 7 step 3 does not state exact match. Feature's own spec."
+      },
       "history": [
         {
           "round": 0,
@@ -1693,7 +2002,7 @@
     {
       "id": "resume-rollups-B4",
       "feature": "resume-rollups",
-      "status": "open",
+      "status": "reassigned",
       "class": "product_defect",
       "attempts": 0,
       "step": "Edge cases",
@@ -1702,6 +2011,11 @@
         "src/components/admin/RollupGroupingsPanel.jsx",
         "docs/training/resume-rollups.md"
       ],
+      "scope": {
+        "scope": "other_feature",
+        "owner": "proficiency-live-qr",
+        "evidence": "PER_TYPE_SEEDED_DEFINITION_TYPES (re-seed when a type has no rows) was introduced by a0ff84a for proficiency_formula. resume-rollups (4f35fd4) only added its types to the set, so the behaviour reproduces for proficiency_formula without this feature."
+      },
       "history": [
         {
           "round": 0,
@@ -1724,6 +2038,11 @@
         "src/components/admin/EditorPane.jsx",
         "docs/training/resume-rollups.md"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "No journey in docs/training/resume-rollups.md selects the new grouping in the block picker. The Career Rollup Group-by option (CareerProspectBlocks.jsx, EditorPane.jsx) is added by 4f35fd4."
+      },
       "history": [
         {
           "round": 0,
@@ -1744,6 +2063,11 @@
       "files": [
         "docs/training/resume-rollups.md"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Journeys were validated as admin through /member. The spec must use member@test.local via the World Shell."
+      },
       "history": [
         {
           "round": 0,
@@ -1756,7 +2080,7 @@
     {
       "id": "resume-rollups-B9",
       "feature": "resume-rollups",
-      "status": "open",
+      "status": "reassigned",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Journey 12",
@@ -1764,6 +2088,11 @@
       "files": [
         "src/components/Output.jsx"
       ],
+      "scope": {
+        "scope": "other_feature",
+        "owner": "qr-gated-outputs",
+        "evidence": "The hero wording \"Betsy Salter is a Strategic Operator: 13 years, 8 employers...\" (Output.jsx:1467,1471) was added by d78bcda (git log -S \"13 years, 8 employers\"), qr-gated-outputs. The teaser tagline at Output.jsx:2032 predates the session (a875b9b). resume-rollups replaced the figures but not the…"
+      },
       "history": [
         {
           "round": 0,
@@ -1785,6 +2114,11 @@
         "server/lib/resumeRollups.js",
         "src/components/Output.jsx"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The capability bars in Output.jsx are now computed by resume-rollups (4f35fd4, replacing computeCapabilityMeters) and count the recorded tier, while the feature request says proficiency comes from careerProficiencyEngine."
+      },
       "history": [
         {
           "round": 0,
@@ -1805,6 +2139,11 @@
       "files": [
         "src/lib/outputBlocks.js"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "src/lib/outputBlocks.js column count was last changed by 4f35fd4; the new default tile set was not reflected by the feature."
+      },
       "history": [
         {
           "round": 0,
@@ -1825,6 +2164,11 @@
       "files": [
         "server/lib/resumeRollups.js"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Equal keyword hits counted across buckets is the feature's own rule in server/lib/resumeRollups.js (4f35fd4), with an undefined business rule."
+      },
       "history": [
         {
           "round": 0,
@@ -1845,6 +2189,11 @@
       "files": [
         "docs/training/resume-rollups.md"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "docs/training/resume-rollups.md has no edge-case journeys. Feature's own spec."
+      },
       "history": [
         {
           "round": 0,
@@ -1857,7 +2206,7 @@
     {
       "id": "resume-rollups-B14",
       "feature": "resume-rollups",
-      "status": "open",
+      "status": "process_note",
       "class": "process",
       "attempts": 0,
       "step": "Integrate",
@@ -1865,6 +2214,11 @@
       "files": [
         "docs/changes/resume-rollups.md"
       ],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "Branch was not rebased before integration. Integration bookkeeping."
+      },
       "history": [
         {
           "round": 0,
@@ -1877,7 +2231,7 @@
     {
       "id": "chart-gallery-B8",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "backlog_pre_existing",
       "class": "product_defect",
       "attempts": 0,
       "step": "career master write",
@@ -1886,6 +2240,11 @@
         "server/lib/careerAtomMigration.js",
         "server/routes/careerMaster.js"
       ],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "server/lib/careerAtomMigration.js (a boolean bound to $3::jsonb in the evidence INSERT at line 63; is_active_portfolio is a registry column) has no diff against e0ea466, and syncSingleEntry was already called from careerMaster.js in e0ea466 (git grep). It reproduces without chart-gallery by code hi…"
+      },
       "history": [
         {
           "round": 0,
@@ -1907,6 +2266,11 @@
         "src/components/admin/ChartGallery.jsx",
         "src/components/admin/OutputTemplateConfigurator.jsx"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The request is \"pick a chart -> it inserts/updates the block -> preview updates\", but ChartGallery.jsx (6dd06e5) uses a two-step pick then Add."
+      },
       "history": [
         {
           "round": 0,
@@ -1927,6 +2291,11 @@
       "files": [
         "docs/training/chart-gallery.md"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "docs/training/chart-gallery.md validation setup used a builder shortcut. The feature's own spec must be runnable by a literal validator."
+      },
       "history": [
         {
           "round": 0,
@@ -1947,6 +2316,11 @@
       "files": [
         "src/components/admin/OutputTemplateConfigurator.jsx"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The position:sticky live-preview column was added by 6dd06e5 (git log -S sticky) and does not engage."
+      },
       "history": [
         {
           "round": 1,
@@ -1968,6 +2342,11 @@
         "src/components/admin/OutputTemplateConfigurator.jsx",
         "src/lib/api.js"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "docs/training/chart-gallery.md:77 requires the failed-load alert to include the HTTP status. The proficiency loader via api.getCareerProficiency in OutputTemplateConfigurator was wired by the gallery build, and src/lib/api.js request() omits the status."
+      },
       "history": [
         {
           "round": 1,
@@ -1980,7 +2359,7 @@
     {
       "id": "CG-R1-3",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "backlog_pre_existing",
       "class": "defect",
       "attempts": 0,
       "step": "Phone width 390px usability",
@@ -1989,6 +2368,11 @@
         "src/components/admin/OutputTemplateConfigurator.jsx",
         "src/components/admin/ChartGallery.jsx"
       ],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "The fixed 3-column grid in OutputTemplateConfigurator.jsx dates from a875b9b (2026-07-10), and the chart-gallery spec and request do not mention 390px. Same layout defect as R4-1."
+      },
       "history": [
         {
           "round": 1,
@@ -2012,6 +2396,11 @@
         "docs/changes/release-intelligence.md",
         "docs/training/release-intelligence.md"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The admin-nav entry in AdminShell.jsx and server/db.js came from the feature's own salvaged partial build (e4f85ca)."
+      },
       "history": [
         {
           "round": 0,
@@ -2036,6 +2425,11 @@
         "scripts/import-release-logs.mjs",
         "src/components/admin/ReleaseIntelligencePanel.jsx"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The request lists commits in reconciliation, but releaseReconcile.js and releaseLogImporter.js (this feature) stop at storing the sha."
+      },
       "history": [
         {
           "round": 0,
@@ -2048,7 +2442,7 @@
     {
       "id": "release-intelligence-B9",
       "feature": "release-intelligence",
-      "status": "open",
+      "status": "process_note",
       "class": "process",
       "attempts": 0,
       "step": "Loop records",
@@ -2057,6 +2451,11 @@
         "docs/test-results/release-intelligence/",
         "docs/changes/release-intelligence.md"
       ],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "Validation round 1 has not run yet. Loop record gap."
+      },
       "history": [
         {
           "round": 0,
@@ -2079,6 +2478,11 @@
         "scripts/import-release-logs.mjs",
         "src/lib/releaseCharts.js"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Known limitations of the feature's own code: the chart is categorical although the request names dated trend charts and a timeline slider, and scripts/import-release-logs.mjs has no auto ingest."
+      },
       "history": [
         {
           "round": 0,
@@ -2091,12 +2495,17 @@
     {
       "id": "cover-letter-agent-B1",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "process_note",
       "class": "process",
       "attempts": 0,
       "step": "Report written to worktree path",
       "rootCause": "Worktree isolation blocks writes to the shared checkout",
       "files": [],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "Worktree isolation blocked writing the report to the shared checkout. Report-file location."
+      },
       "history": [
         {
           "round": 0,
@@ -2109,7 +2518,7 @@
     {
       "id": "cover-letter-agent-B2",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "process_note",
       "class": "product_defect",
       "attempts": 0,
       "step": "Branch base",
@@ -2124,6 +2533,11 @@
         "server/index.js",
         "CLAUDE.md"
       ],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "Build was done on an old base and rebased. Integration bookkeeping (merge a5e7883 resolved it)."
+      },
       "history": [
         {
           "round": 0,
@@ -2147,6 +2561,11 @@
         "src/components/admin/MyResumePanel.jsx",
         "src/components/admin/CoverLetterPackagesPanel.jsx"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The request says the agent is \"reachable from the World Shell opportunity view\", but the build placed entry points in Classic Tools / My Resume."
+      },
       "history": [
         {
           "round": 0,
@@ -2159,7 +2578,7 @@
     {
       "id": "cover-letter-agent-B4",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "backlog_pre_existing",
       "class": "product_defect",
       "attempts": 0,
       "step": "Member terms 428",
@@ -2168,6 +2587,11 @@
         "src/lib/api.js",
         "server/auth.js"
       ],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "The 428 for members owing terms/password has existed since ba89744 (2026-08-10) and src/lib/api.js had no 428 handling before the session. Not part of the cover-letter request."
+      },
       "history": [
         {
           "round": 0,
@@ -2180,12 +2604,17 @@
     {
       "id": "cover-letter-agent-B5",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "process_note",
       "class": "informational",
       "attempts": 0,
       "step": "Island click in the 3D canvas",
       "rootCause": "unknown",
       "files": [],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "Informational note with no stated cause: an island click in the 3D canvas could not be driven by the agent."
+      },
       "history": [
         {
           "round": 0,
@@ -2206,6 +2635,11 @@
       "files": [
         "docs/training/cover-letter-agent.md"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "docs/training/cover-letter-agent.md was written around a hand-built account. The spec must use create-test-member.mjs."
+      },
       "history": [
         {
           "round": 0,
@@ -2229,6 +2663,11 @@
         "server/lib/packageAssembly.js",
         "server/lib/coverLetterAutoDraft.js"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The request puts the letter \"into its linked drafts\", but coverLetterTemplate.js, packageSearch.js and packageAssembly.js (4be0bec) were written without the link mechanism and career-bound overrides they must integrate with."
+      },
       "history": [
         {
           "round": 0,
@@ -2241,7 +2680,7 @@
     {
       "id": "cover-letter-agent-B8",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "backlog_pre_existing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Package contents",
@@ -2249,6 +2688,11 @@
       "files": [
         "server/lib/packageAssembly.js"
       ],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "The request asks for a title block, TOC and the cover letter only; chart blocks are not in it. packageAssembly.js is new in 4be0bec, but the gap is not part of the ask."
+      },
       "history": [
         {
           "round": 0,
@@ -2269,6 +2713,11 @@
       "files": [
         "src/components/admin/CoverLetterPackagesPanel.jsx"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The scope additions are in the Classic Tools CoverLetterPackagesPanel.jsx (new in 4be0bec), while the request says reachable from the World Shell."
+      },
       "history": [
         {
           "round": 0,
@@ -2281,12 +2730,17 @@
     {
       "id": "cover-letter-agent-B10",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "process_note",
       "class": "informational",
       "attempts": 0,
       "step": "Stub provider and real-model path",
       "rootCause": "No key in the test environment",
       "files": [],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "No Anthropic key in the test environment, so only the stub provider ran. Environment limitation."
+      },
       "history": [
         {
           "round": 0,
@@ -2307,6 +2761,11 @@
       "files": [
         "src/components/WorldShell.jsx"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The request includes a \"Generate for this opportunity\" action, but the new deterministic generator (coverLetterAutoDraft.js) was not wired into the WorldShell rail."
+      },
       "history": [
         {
           "round": 0,
@@ -2319,12 +2778,17 @@
     {
       "id": "cover-letter-agent-B12",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "process_note",
       "class": "environment",
       "attempts": 0,
       "step": "Harness and environment notes",
       "rootCause": "Sandbox limits and a design limit",
       "files": [],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "Sandbox limits and harness notes. Environment."
+      },
       "history": [
         {
           "round": 0,
@@ -2347,6 +2811,11 @@
         "src/lib/masterOverrides.js",
         "docs/training/career-bound-outputs.md"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The feature requests binding roles, skills, tools, certifications and KPIs. The override editor (OutputTemplateConfigurator.jsx, masterOverrides.js from 9df7a85) was built for jobs only."
+      },
       "history": [
         {
           "round": 1,
@@ -2374,6 +2843,11 @@
         "src/components/Output.jsx",
         "src/components/admin/OutputTemplateConfigurator.jsx"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Same as F2-3: the change spec Known limitations say overrides live on the preset because template outputs have no per-document row, while the request says stored on the output."
+      },
       "history": [
         {
           "round": 1,
@@ -2400,6 +2874,11 @@
       "files": [
         "docs/training/career-bound-outputs.md"
       ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Journey ordering error in docs/training/career-bound-outputs.md (J8 mutates state that J7.4 needs). Feature's own spec."
+      },
       "history": [
         {
           "round": 1,
@@ -2418,12 +2897,17 @@
     {
       "id": "career-bound-outputs-F1-7",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "process_note",
       "class": "process",
       "attempts": 0,
       "step": "commit 3472137 trailer (B9)",
       "rootCause": "Agent followed session attribution reminder over task text.",
       "files": [],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "Commit trailer: the agent followed the session attribution reminder over the task text. Process wording only."
+      },
       "history": [
         {
           "round": 1,
@@ -2442,7 +2926,7 @@
     {
       "id": "career-bound-outputs-F1-8",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "process_note",
       "class": "process",
       "attempts": 0,
       "step": "release process",
@@ -2450,6 +2934,11 @@
       "files": [
         "docs/test-results/career-bound-outputs/"
       ],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "Fix agents recorded results in the change spec instead of docs/test-results/career-bound-outputs/round-N.md. Report-file location."
+      },
       "history": [
         {
           "round": 1,
