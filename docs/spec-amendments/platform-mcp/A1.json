@@ -30,5 +30,21 @@
       "tracesTo": "docs/changes/platform-mcp.md 'Known limitations' last bullet",
       "reason": "Proves the gate lifts as soon as the person accepts in the website, with the same token."
     }
-  ]
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:platform-mcp:r1",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass (no retirement)",
+      "Exact": "pass",
+      "Reachable": "pass (browser steps plus cli curl/mcp-call, the same mixed pattern as J3-J5)",
+      "Deterministic": "pass",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass: tests that the website 428 gate also binds agent calls, a change-spec requirement, not an implementation choice"
+    },
+    "note": "Adds three steps, removes none. J6.7 sets up a member with withdrawn career terms through the website session and the existing consent API (POST /api/career/consent, consentType career_portfolio, granted false; server/routes/careerMaster.js). J6.8 expects the exact 428 career_terms_required code and message (matches server/lib/mcpServer.js). J6.9 proves the gate lifts when terms are accepted. Fictional address gated@test.local. New steps take J6.7, J6.8, J6.9.",
+    "at": "2026-10-09T17:00:00.000Z"
+  }
 }
