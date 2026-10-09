@@ -138,7 +138,16 @@ const featStatus = (s) => (STATUS[s] ? pill(s) : `<span class="pill s-running ru
 const ago = (iso) => { if (!iso) return '—'; const m = Math.round((Date.now() - Date.parse(iso)) / 60000); return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : `${Math.floor(m / 60)} h ${m % 60} min ago`; };
 const k = (n) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}k` : String(n || 0));
 const enc = encodeURIComponent;
-const href = (...parts) => `#/${parts.map((p) => enc(p)).join('/')}`;
+// The URL is the path the viewer took: one token per layer (#/stat:open-bugs/bug:<id>). A link goes one
+// layer deeper from where the viewer is; if that layer is already on the path, it returns to it.
+let path = [];
+const tok = (...parts) => parts.map((p) => enc(p)).join(':');
+const href = (...parts) => {
+  const t = parts[0] === 'feature' && parts[2] === 'round' ? tok('round', parts[1], parts[3]) : tok(...parts);
+  const i = path.indexOf(t);
+  const next = i >= 0 ? path.slice(0, i + 1) : [...path, t];
+  return `#/${next.join('/')}`;
+};
 const commit = (c) => (c ? ` <a class="mono" href="${esc((snap.repoUrl || '') + '/commit/' + c)}" target="_blank" rel="noopener">${esc(String(c).slice(0, 7))}</a>` : '');
 const sortBugs = (list) => [...list].sort((a, b) => (BUG_ORDER[a.status] ?? 7) - (BUG_ORDER[b.status] ?? 7));
 const ownBugs = (key) => (snap.bugs || []).filter((b) => b.status !== 'seen_in_test' && ((b.feature === key && !BACKLOG.includes(b.status)) || (b.status === 'reassigned' && b.scope?.owner === key)));
@@ -252,14 +261,29 @@ function roundLayer(f, n, agents) {
     ${section(`Bugs found, fixed or verified in this round (${touched.length})`, bugRows(touched, false))}` };
 }
 
+const crumbLabel = (t) => {
+  const [type, a, b] = t.split(':').map(decodeURIComponent);
+  if (type === 'stat') return STATS[a]?.label || a;
+  if (type === 'round') return `${a} · round ${b}`;
+  if (type === 'agent') { const ag = snap.agents.find((x) => x.id === a); return ag ? `${agentName(ag)} · ${ag.feature || ''}` : a; }
+  return a;
+};
 function route() {
   if (!snap) return;
-  const parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean).map(decodeURIComponent);
-  const fn = LAYERS[parts[0] || ''];
-  const layer = (fn && fn(parts.slice(1))) || { crumbs: [['Not found']], html: '<div class="panel empty">That item is no longer in the tracker. <a href="#/">Back to the overview</a>.</div>' };
-  const trail = [['Overview', '#/'], ...layer.crumbs];
+  path = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
+  // Older single-layer links (#/feature/<key>, #/bug/<id>, #/feature/<key>/round/<n>) still open.
+  if (path.length >= 2 && !path[0].includes(':')) {
+    const [t, a, , n] = path.map(decodeURIComponent);
+    path = [t === 'feature' && n ? tok('round', a, n) : tok(t, a)];
+  }
+  const last = path[path.length - 1] || '';
+  const [type, ...args] = last.split(':').map(decodeURIComponent);
+  const fn = type === 'round' ? ([key, n]) => { const f = snap.features.find((x) => x.key === key); return f && roundLayer(f, Number(n), snap.agents.filter((a) => a.feature === key)); } : LAYERS[type || ''];
+  const layer = (fn && fn(args)) || { html: '<div class="panel empty">That item is no longer in the tracker. Use the trail above to go back.</div>' };
+  const trail = [['Overview', '#/'], ...path.map((t, i) => [crumbLabel(t), `#/${path.slice(0, i + 1).join('/')}`])];
   $('crumbs').innerHTML = trail.map(([label, h], i) => (i === trail.length - 1 ? `<span class="here" aria-current="page">${esc(label)}</span>` : `<a href="${h}">${esc(label)}</a><span class="sep" aria-hidden="true">›</span>`)).join('');
   $('view').innerHTML = `<div class="layer">${layer.html}</div>`;
+  document.title = `${trail[trail.length - 1][0]} · Release tracker`;
 }
 function render() {
   if (!snap) return;
@@ -269,7 +293,12 @@ function render() {
   route();
 }
 let lastHash = location.hash;
-window.addEventListener('hashchange', () => { const deeper = location.hash.length > lastHash.length; lastHash = location.hash; route(); if (deeper) window.scrollTo(0, 0); });
+const scrollAt = {};
+window.addEventListener('hashchange', () => {
+  scrollAt[lastHash] = window.scrollY;
+  const deeper = location.hash.length > lastHash.length; lastHash = location.hash; route();
+  window.scrollTo(0, deeper ? 0 : (scrollAt[location.hash] || 0));   // returning to a summary page restores where you were on it
+});
 // A whole table row is a target; the link inside it stays the keyboard/focus target.
 $('view').addEventListener('click', (e) => { if (e.target.closest('a')) return; const row = e.target.closest('tr[data-href]'); if (row) location.hash = row.dataset.href; });
 setInterval(render, 30000);
