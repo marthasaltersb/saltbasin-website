@@ -496,3 +496,148 @@ export function projectToScreen(THREE, vector3, camera, width, height) {
   if (v.z > 1) return null;
   return { x: (v.x * 0.5 + 0.5) * width, y: (-v.y * 0.5 + 0.5) * height };
 }
+
+// ── Environments ────────────────────────────────────────────────────────────
+// The setting a world is drawn in, independent of the data. An environment
+// builder sits alongside addCrystalLights and is swappable by name:
+//
+//   const env = buildEnvironment('underwater', scene, THREE, { palette, keepClear: 31 });
+//   env.update(elapsedSeconds, dtSeconds, camera);   // skipped under reduced motion: the water stands still
+//   env.setPalette({ waterMid, sand });              // light / dark water
+//   env.dispose();
+//
+// Underwater (2026-10-09): depth-gradient water with exponential fog, a
+// sea-tinted sand seabed fading into the blue, moving cellular caustics on the
+// sand, swaying light shafts from the surface, rising bubbles, drifting marine
+// snow, and kelp anchored OUTSIDE the camera's orbit (`keepClear` radius) so it
+// never crosses a crystal. The CSS behind a transparent canvas paints the
+// surface-to-deep gradient; the scene supplies fog, seabed and particles.
+function canvasTexture(THREE, size, draw) {
+  const c = document.createElement('canvas');
+  c.width = size; c.height = size;
+  draw(c.getContext('2d'), size);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = THREE.RepeatWrapping; t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+
+function underwaterEnvironment(scene, THREE, { palette = {}, keepClear = 31, seed = 7 } = {}) {
+  // Deterministic placement (a seeded sequence), so the scene is the same every visit.
+  let s = seed >>> 0;
+  const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+  const parts = [];
+  const add = (o) => { scene.add(o); parts.push(o); return o; };
+  const col = (v, d) => new THREE.Color(v ?? d);
+  scene.fog = new THREE.FogExp2(col(palette.waterMid, 0x8FC4D1), 0.028);
+  const hemi = new THREE.HemisphereLight(0xBFEFFF, 0x2A4A3A, 0.45);
+  scene.add(hemi); parts.push(hemi);
+
+  const bedGeo = new THREE.PlaneGeometry(200, 200, 90, 90);
+  bedGeo.rotateX(-Math.PI / 2);
+  const bp = bedGeo.getAttribute('position');
+  for (let i = 0; i < bp.count; i += 1) {
+    const x = bp.getX(i); const z = bp.getZ(i);
+    bp.setY(i, Math.sin(x * 0.18) * 0.35 + Math.cos(z * 0.22) * 0.3 + Math.sin((x + z) * 0.07) * 0.6);
+  }
+  bedGeo.computeVertexNormals();
+  const bed = add(new THREE.Mesh(bedGeo, new THREE.MeshStandardMaterial({ color: col(palette.sand, 0x8FB3AE), roughness: 0.95, metalness: 0 })));
+  bed.position.y = -9;
+
+  const caus = canvasTexture(THREE, 256, (g, n) => {
+    g.clearRect(0, 0, n, n);
+    g.strokeStyle = 'rgba(255,255,255,0.75)'; g.lineWidth = 3; g.shadowColor = 'rgba(255,255,255,0.9)'; g.shadowBlur = 6;
+    const cells = 7; const step = n / cells;
+    for (let i = 0; i < cells; i += 1) for (let j = 0; j < cells; j += 1) {
+      const cx = (i + 0.5 + (rnd() - 0.5) * 0.5) * step; const cy = (j + 0.5 + (rnd() - 0.5) * 0.5) * step; const r = step * (0.42 + rnd() * 0.12);
+      for (const dx of [-n, 0, n]) for (const dy of [-n, 0, n]) {
+        g.beginPath();
+        for (let a = 0; a <= 6.3; a += 0.35) {
+          const rr = r * (0.85 + 0.15 * Math.sin(a * 3 + i + j));
+          const x = cx + dx + Math.cos(a) * rr; const y = cy + dy + Math.sin(a) * rr;
+          if (a === 0) g.moveTo(x, y); else g.lineTo(x, y);
+        }
+        g.closePath(); g.stroke();
+      }
+    }
+  });
+  const causMats = [0, 1].map((k) => {
+    const m = new THREE.MeshBasicMaterial({ map: caus.clone(), transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false });
+    m.map.needsUpdate = true; m.map.repeat.set(9 + k * 4, 9 + k * 4);
+    const pl = add(new THREE.Mesh(bedGeo, m)); pl.position.y = -8.95 + k * 0.02;
+    return m;
+  });
+
+  const shaftTex = canvasTexture(THREE, 64, (g, n) => {
+    const gr = g.createLinearGradient(0, 0, n, 0);
+    gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.5, 'rgba(255,255,255,1)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, n, n);
+    const v = g.createLinearGradient(0, 0, 0, n);
+    v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,1)');
+    g.globalCompositeOperation = 'destination-out'; g.fillStyle = v; g.fillRect(0, 0, n, n);
+  });
+  const shafts = [];
+  for (let i = 0; i < 9; i += 1) {
+    const m = add(new THREE.Mesh(new THREE.PlaneGeometry(2.2 + rnd() * 2.5, 34), new THREE.MeshBasicMaterial({ map: shaftTex, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, color: 0xE8FBFF })));
+    m.position.set((rnd() - 0.5) * 34, 9, (rnd() - 0.5) * 34); m.rotation.z = 0.18 + (rnd() - 0.5) * 0.12;
+    m.userData.phase = rnd() * 6; shafts.push(m);
+  }
+
+  const mkPoints = (n, spread, size, color, opacity) => {
+    const pos = new Float32Array(n * 3);
+    for (let i = 0; i < n; i += 1) pos.set([(rnd() - 0.5) * spread, -9 + rnd() * 24, (rnd() - 0.5) * spread], i * 3);
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const tex = canvasTexture(THREE, 32, (g, kk) => {
+      const r = g.createRadialGradient(kk / 2, kk / 2, 1, kk / 2, kk / 2, kk / 2);
+      r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(0.55, 'rgba(255,255,255,0.35)'); r.addColorStop(0.7, 'rgba(255,255,255,0.9)'); r.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = r; g.fillRect(0, 0, kk, kk);
+    });
+    return add(new THREE.Points(geo, new THREE.PointsMaterial({ size, map: tex, color, transparent: true, opacity, depthWrite: false, blending: THREE.AdditiveBlending })));
+  };
+  const bubbles = mkPoints(220, 40, 0.28, 0xFFFFFF, 0.55);
+  const snow = mkPoints(600, 60, 0.07, 0xF4FBFF, 0.5);
+
+  const kelp = [];
+  const kelpMat = new THREE.MeshStandardMaterial({ color: 0x4F7A3A, roughness: 0.8, transparent: true, opacity: 0.85 });
+  for (let i = 0; i < 26; i += 1) {
+    const a = (i / 26) * Math.PI * 2 + rnd() * 0.2; const r = keepClear + rnd() * 10; const h = 12 + rnd() * 12;
+    const pts = [];
+    for (let j = 0; j <= 6; j += 1) pts.push(new THREE.Vector3(Math.sin(j * 0.9 + i) * 0.35, (j / 6) * h, Math.cos(j * 0.7 + i) * 0.25));
+    const tube = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 24, 0.16, 5, false), kelpMat);
+    const g = add(new THREE.Group()); g.add(tube); g.position.set(Math.cos(a) * r, -9, Math.sin(a) * r); g.userData.phase = rnd() * 6; kelp.push(g);
+  }
+
+  return {
+    update(t, dt, camera) {
+      causMats[0].map.offset.set(t * 0.012, t * 0.008); causMats[1].map.offset.set(-t * 0.009, t * 0.011);
+      shafts.forEach((m) => { m.lookAt(camera.position.x, m.position.y, camera.position.z); m.rotateZ(0.18); m.material.opacity = 0.08 + 0.06 * (0.5 + 0.5 * Math.sin(t * 0.4 + m.userData.phase)); });
+      const p = bubbles.geometry.getAttribute('position');
+      for (let i = 0; i < p.count; i += 1) {
+        let y = p.getY(i) + dt * (0.9 + (i % 7) * 0.12); if (y > 15) y = -9;
+        p.setY(i, y); p.setX(i, p.getX(i) + Math.sin(t * 2 + i) * dt * 0.15);
+      }
+      p.needsUpdate = true;
+      snow.rotation.y += dt * 0.01; snow.position.y = Math.sin(t * 0.2) * 0.4;
+      kelp.forEach((g) => { g.rotation.z = Math.sin(t * 0.7 + g.userData.phase) * 0.09; g.rotation.x = Math.cos(t * 0.5 + g.userData.phase) * 0.06; });
+    },
+    setPalette(p = {}) {
+      if (p.waterMid != null) scene.fog.color = col(p.waterMid);
+      if (p.sand != null) bed.material.color = col(p.sand);
+    },
+    dispose() {
+      parts.forEach((o) => {
+        scene.remove(o);
+        o.traverse?.((x) => { x.geometry?.dispose?.(); const ms = Array.isArray(x.material) ? x.material : [x.material]; ms.forEach((m) => { m?.map?.dispose?.(); m?.dispose?.(); }); });
+      });
+      scene.fog = null;
+    },
+  };
+}
+
+export const ENVIRONMENTS = { underwater: underwaterEnvironment };
+export const DEFAULT_ENVIRONMENT = 'underwater';
+
+export function buildEnvironment(name, scene, THREE, options = {}) {
+  const build = ENVIRONMENTS[name || DEFAULT_ENVIRONMENT];
+  if (!build) throw new Error(`Unknown world environment "${name}". Known: ${Object.keys(ENVIRONMENTS).join(', ')}`);
+  return build(scene, THREE, options);
+}

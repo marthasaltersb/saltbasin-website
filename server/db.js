@@ -3329,6 +3329,8 @@ async function bootstrap() {
         { viewId: 'system',   viewLabel: 'System',                        id: 'capabilities',     label: 'Capabilities',     componentId: 'capabilities',    sortOrder: 6 },
         // Release loop inside the platform (additive; reachable from the World Shell).
         { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'release-loop', label: 'Release loop', componentId: 'releaseLoop', sortOrder: 5 },
+        // Live release tracker (additive; reachable from the World Shell).
+        { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'release-tracker', label: 'Release tracker', componentId: 'releaseTracker', sortOrder: 6 },
       ];
 
       for (const t of newTabs) {

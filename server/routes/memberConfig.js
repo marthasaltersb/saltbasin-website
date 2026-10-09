@@ -4,6 +4,7 @@
 // BYO Anthropic key for the Config Agent. Never returns the API key to the
 // client unless the requesting user owns the record.
 
+import { canViewTracker } from '../lib/releaseTrackerService.js';
 import { Router } from 'express';
 import { db, getJSON } from '../db.js';
 import { requireUser } from '../auth.js';
@@ -95,7 +96,14 @@ router.get('/draft', requireUser, async (req, res) => {
   const mergedNavigation = missingDefaultTabs.length
     ? { ...navigation, memberTabs: [...(navigation.memberTabs || []), ...missingDefaultTabs] }
     : navigation;
-  res.json(redactForClient({ ...cfg, navigation: mergedNavigation }));
+  // The release tracker tab exists for everyone's config but is shown only to
+  // members an admin has granted by email (read-time filter, never a write).
+  let finalNavigation = mergedNavigation;
+  if ((mergedNavigation.memberTabs || []).some((t) => t.componentId === 'releaseTracker')) {
+    const allowed = await canViewTracker(req.user).catch(() => false);
+    if (!allowed) finalNavigation = { ...mergedNavigation, memberTabs: mergedNavigation.memberTabs.filter((t) => t.componentId !== 'releaseTracker') };
+  }
+  res.json(redactForClient({ ...cfg, navigation: finalNavigation }));
 });
 
 router.put('/draft', requireUser, requireMemberFeature(MEMBER_FEATURES.MEMBER_SITE), async (req, res) => {

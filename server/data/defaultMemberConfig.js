@@ -76,6 +76,9 @@ export function defaultMemberConfig({ displayName, email }) {
         // Platform MCP server (2026-10-09): access tokens for AI agents. Existing members pick this up via
         // memberConfig.js's read-time additive GET /draft merge - never a write to their stored row.
         { id: 'connected-agents', label: 'Connected Agents', componentId: 'connectedAgents', sortOrder: 30 },
+        // Live release tracker: only shown to members an admin lists on its Settings tab
+        // (memberConfig.js GET /draft removes it for everyone else).
+        { id: 'release-tracker', label: 'Release tracker', componentId: 'releaseTracker', sortOrder: 31 },
       ],
     },
     site: {

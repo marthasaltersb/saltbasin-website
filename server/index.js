@@ -44,6 +44,8 @@ import careerPlacementAgentsRouter from './routes/careerPlacementAgents.js';
 import commercialOpportunitiesRouter from './routes/commercialOpportunities.js';
 import releaseIntelligenceRouter from './routes/releaseIntelligence.js';
 import releaseLoopRouter from './routes/releaseLoop.js';
+import releaseTrackerRouter, { githubWebhookHandler as releaseTrackerWebhook } from './routes/releaseTracker.js';
+import { startReleaseTrackerPoller } from './lib/releaseTrackerService.js';
 import worldVariantStudioRouter from './routes/worldVariantStudio.js';
 import l2rDiagnosticsRouter from './routes/l2rDiagnostics.js';
 import publicationPipelinesRouter from './routes/publicationPipelines.js';
@@ -114,7 +116,11 @@ if (isProd) app.set('trust proxy', 1);
 // so the raw stream is never read twice. See server/routes/commerce.js.
 app.post('/api/commerce/webhook', express.raw({ type: 'application/json' }), stripeWebhookHandler);
 
-app.use(express.json({ limit: '2mb' }));
+// Release tracker GitHub webhook: HMAC is computed over the raw bytes, so it is
+// registered as a complete route ahead of the JSON parser (same reason as above).
+app.post('/api/release-tracker/webhook/github', express.raw({ type: '*/*', limit: '2mb' }), releaseTrackerWebhook);
+
+app.use(express.json({ limit: '4mb' }));
 app.use(cookieParser());
 
 // In dev we run Vite on 5173 separately, so CORS must allow it. In prod the
@@ -185,6 +191,7 @@ app.use('/api/career-agents', careerPlacementAgentsRouter);
 app.use('/api/commercial-opportunities', commercialOpportunitiesRouter);
 app.use('/api/release-intelligence', releaseIntelligenceRouter);
 app.use('/api/release-loop', releaseLoopRouter);
+app.use('/api/release-tracker', releaseTrackerRouter);
 app.use('/api/admin/world-variant-studio', worldVariantStudioRouter);
 app.use('/api/l2r-diagnostics', l2rDiagnosticsRouter);
 app.use('/api/publication-pipelines', publicationPipelinesRouter);
@@ -245,7 +252,7 @@ if (isProd) {
     // static assets and anything it can't resolve.
     // QR-gated application documents (/r/:token) are unlisted by design —
     // keep them out of search indexes and referrer headers.
-    app.use('/r/', (req, res, next) => {
+    app.use(['/r/', '/release-tracker/'], (req, res, next) => {
       res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
       res.setHeader('Referrer-Policy', 'no-referrer');
       next();
@@ -265,6 +272,7 @@ if (isProd) {
 const port = Number(process.env.PORT) || 3001;
 app.listen(port, async () => {
   console.log(`[server] Salt Basin ${isProd ? '(prod)' : '(dev)'} listening on port ${port}`);
+  startReleaseTrackerPoller();
 
   // One-shot baseline snapshot on first deploy after the build_progress_snapshots
   // table is introduced. captureBaselineIfEmpty is auth-agnostic (no HTTP cycle,

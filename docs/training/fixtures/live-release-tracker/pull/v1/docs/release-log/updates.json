@@ -1,0 +1,149 @@
+[
+  {
+    "version": "0.1.0-u1",
+    "release": "2030-01-09-demo-reef",
+    "at": "2030-01-09T08:05:00Z",
+    "commit": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+    "previous": null,
+    "headline": "Build started",
+    "note": "Four fictional features were queued for the demo reef release.",
+    "metrics": {
+      "featuresTotal": 4,
+      "featuresPassed": 0,
+      "openBugs": 0,
+      "verified": 0,
+      "backlog": 0,
+      "needPerson": 0,
+      "agentsRunning": null,
+      "features": {
+        "reef-survey": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "tide-ledger": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "kelp-sync": {
+          "status": "build",
+          "round": null,
+          "score": null
+        },
+        "coral-notes": {
+          "status": "queued",
+          "round": null,
+          "score": null
+        }
+      }
+    },
+    "comparison": {
+      "lines": [
+        "First update: nothing to compare with yet."
+      ],
+      "featureChanges": []
+    }
+  },
+  {
+    "version": "0.1.0-u2",
+    "release": "2030-01-09-demo-reef",
+    "at": "2030-01-09T14:05:00Z",
+    "commit": "b2c3d4e5f60718293a4b5c6d7e8f901234567890",
+    "previous": "0.1.0-u1",
+    "headline": "First test round",
+    "note": "reef-survey and tide-ledger were tested for the first time.",
+    "metrics": {
+      "featuresTotal": 4,
+      "featuresPassed": 0,
+      "openBugs": 5,
+      "verified": 0,
+      "backlog": 0,
+      "needPerson": 0,
+      "agentsRunning": null,
+      "features": {
+        "reef-survey": {
+          "status": "failing",
+          "round": 1,
+          "score": "15/20"
+        },
+        "tide-ledger": {
+          "status": "failing",
+          "round": 1,
+          "score": "10/16"
+        },
+        "kelp-sync": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "coral-notes": {
+          "status": "queued",
+          "round": null,
+          "score": null
+        }
+      }
+    },
+    "comparison": {
+      "lines": [
+        "**5** bugs opened, **0** verified fixed.",
+        "Features passed **0 of 4** (no change)."
+      ],
+      "featureChanges": [
+        "reef-survey: first test, **15/20** steps",
+        "tide-ledger: first test, **10/16** steps"
+      ]
+    }
+  },
+  {
+    "version": "0.1.0-u3",
+    "release": "2030-01-09-demo-reef",
+    "at": "2030-01-10T06:05:00Z",
+    "commit": "c3d4e5f60718293a4b5c6d7e8f90123456789012",
+    "previous": "0.1.0-u2",
+    "headline": "reef-survey passes",
+    "note": "reef-survey passed its second round; tide-ledger moved one bug to backlog.",
+    "metrics": {
+      "featuresTotal": 4,
+      "featuresPassed": 1,
+      "openBugs": 3,
+      "verified": 2,
+      "backlog": 1,
+      "needPerson": 0,
+      "agentsRunning": null,
+      "features": {
+        "reef-survey": {
+          "status": "passed",
+          "round": 2,
+          "score": "20/20"
+        },
+        "tide-ledger": {
+          "status": "failing",
+          "round": 1,
+          "score": "12/16"
+        },
+        "kelp-sync": {
+          "status": "awaiting_retest",
+          "round": 1,
+          "score": "9/10"
+        },
+        "coral-notes": {
+          "status": "queued",
+          "round": null,
+          "score": null
+        }
+      }
+    },
+    "comparison": {
+      "lines": [
+        "Features passed **1 of 4** (was 0).",
+        "Open bugs **3** (was 5).",
+        "Verified fixed **2** (was 0)."
+      ],
+      "featureChanges": [
+        "reef-survey: now **passed**, 20/20 steps",
+        "kelp-sync: first test, **9/10** steps, fix waiting for re-test"
+      ]
+    }
+  }
+]

@@ -1,0 +1,209 @@
+{
+  "generatedAt": "2030-01-10T10:00:00.000Z",
+  "points": [
+    {
+      "t": "2030-01-09T08:00:00.000Z",
+      "c": "a1b2c3d",
+      "f": {
+        "reef-survey": [
+          "validate",
+          null,
+          0,
+          null,
+          0,
+          0,
+          0,
+          0
+        ],
+        "tide-ledger": [
+          "validate",
+          null,
+          0,
+          null,
+          0,
+          0,
+          0,
+          0
+        ],
+        "kelp-sync": [
+          "build",
+          null,
+          0,
+          null,
+          0,
+          0,
+          0,
+          0
+        ],
+        "coral-notes": [
+          "queued",
+          null,
+          0,
+          null,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "t": "2030-01-09T14:00:00.000Z",
+      "c": "b2c3d4e",
+      "f": {
+        "reef-survey": [
+          "failing",
+          1,
+          15,
+          20,
+          2,
+          0,
+          0,
+          0
+        ],
+        "tide-ledger": [
+          "failing",
+          1,
+          10,
+          16,
+          3,
+          0,
+          0,
+          0
+        ],
+        "kelp-sync": [
+          "validate",
+          null,
+          0,
+          null,
+          0,
+          0,
+          0,
+          0
+        ],
+        "coral-notes": [
+          "queued",
+          null,
+          0,
+          null,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "t": "2030-01-10T06:00:00.000Z",
+      "c": "c3d4e5f",
+      "f": {
+        "reef-survey": [
+          "passed",
+          2,
+          20,
+          20,
+          0,
+          2,
+          0,
+          0
+        ],
+        "tide-ledger": [
+          "failing",
+          1,
+          12,
+          16,
+          2,
+          0,
+          1,
+          0
+        ],
+        "kelp-sync": [
+          "awaiting_retest",
+          1,
+          9,
+          10,
+          1,
+          0,
+          0,
+          0
+        ],
+        "coral-notes": [
+          "queued",
+          null,
+          0,
+          null,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "t": "2030-01-10T10:00:00.000Z",
+      "c": "d4e5f60",
+      "f": {
+        "reef-survey": [
+          "passed",
+          2,
+          20,
+          20,
+          0,
+          1,
+          0,
+          0
+        ],
+        "tide-ledger": [
+          "failing",
+          1,
+          12,
+          16,
+          2,
+          0,
+          1,
+          0
+        ],
+        "kelp-sync": [
+          "awaiting_retest",
+          1,
+          9,
+          10,
+          1,
+          0,
+          0,
+          0
+        ],
+        "coral-notes": [
+          "queued",
+          null,
+          0,
+          null,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "updates": [
+    {
+      "version": "0.1.0-u1",
+      "at": "2030-01-09T08:05:00Z",
+      "headline": "Build started",
+      "commit": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678"
+    },
+    {
+      "version": "0.1.0-u2",
+      "at": "2030-01-09T14:05:00Z",
+      "headline": "First test round",
+      "commit": "b2c3d4e5f60718293a4b5c6d7e8f901234567890"
+    },
+    {
+      "version": "0.1.0-u3",
+      "at": "2030-01-10T06:05:00Z",
+      "headline": "reef-survey passes",
+      "commit": "c3d4e5f60718293a4b5c6d7e8f90123456789012"
+    }
+  ]
+}
