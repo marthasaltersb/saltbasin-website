@@ -2,7 +2,7 @@
 
 Feature key: `platform-agent-runner` · Release: `2026-10-02-application-packages` (0.2.0) · Version 1 (design) · 2026-10-09
 Training spec: `docs/training/platform-agent-runner.md` (written by the build agent, from the journeys below)
-Status: design, waiting on the owner decisions listed at the end. Nothing here is built yet.
+Status: design. Owner decisions 2026-10-09 recorded at the end; two remain open. Nothing here is built yet.
 
 ## Owner direction
 
@@ -141,10 +141,43 @@ session against a tiny fixture spec and is recorded in the release log with its 
    for a non-admin.
 9. 390px, dark mode, reduced motion; fictional data only.
 
-## Owner decisions needed before the build starts
+## Owner decisions
 
-1. Managed Agents (recommended) or the Agent SDK on the Salt Basin server.
-2. Spend caps: default per session for each role, and per release.
-3. May platform agents push to the integration branch directly (as the workflow does now), or open a pull
-   request per fix for a person to merge?
-4. Which GitHub account owns the fine-grained token the platform uses.
+Decided 2026-10-09:
+
+1. **Where the agents run: on Salt Basin's own server, using the Claude Agent SDK** (not Managed Agents).
+   The section "Choice of Claude surface" above stays as the record of the comparison. What this decision
+   means in practice:
+   - **Not inside the website process.** `render.yaml` deploys saltbasin.net as a Render *free* web service:
+     it sleeps after 15 minutes idle, has an ephemeral disk and a small memory limit, and has no Chromium or
+     Postgres. Builds, browsers and test databases cannot run there, and an agent mid-run would be killed when
+     the service sleeps.
+   - **A separate Salt Basin agent worker** from the same repository: a Render background worker (paid plan,
+     Docker image with Node 22, Postgres 16, Chromium and the test fonts, persistent disk for repository
+     clones). It runs `@anthropic-ai/claude-agent-sdk` `query()` for each stage, one working copy per run,
+     with a concurrency limit. The website stays the orchestrator and record: it queues stage requests in
+     `release_loop_runs`, the worker claims them, streams progress back to the platform API with a worker
+     token, and the website shows them live. If the worker is down, queued runs wait and the screen says so.
+   - The adapter interface and the fixture adapter for tests are unchanged; the live adapter becomes the
+     Agent SDK in the worker instead of Managed Agents sessions.
+   - Spend control moves to Salt Basin: the worker reads each message's usage, stops a run that reaches its
+     cap (`maxBudgetUsd` / turn limits in the SDK options, plus its own check), and records tokens and cost
+     per run.
+2. **Fixes reach the code by pushing to the integration branch**, gated by the tests, as the workflow does
+   today; the owner approves the release at the end.
+
+Open:
+
+3. **Billing.** The owner asked whether the platform's agents can use the owner's Claude subscription
+   instead of API billing. Anthropic's documentation: the Agent SDK overview says "Unless previously
+   approved, Anthropic does not allow third party developers to offer claude.ai login or rate limits for
+   their products, including agents built on the Claude Agent SDK. Use the API key authentication methods
+   described in the Quickstart instead." The legal page says subscription sign-in "is designed to support
+   ordinary use of Claude Code" and that subscription limits "assume ordinary, individual usage". A
+   subscription token (`claude setup-token`) is documented for personal scripts and CI. Running a platform's
+   agent worker on it is not documented as allowed, and that usage would draw down the same limits as the
+   owner's own Claude use. The build therefore assumes an Anthropic API key (`ANTHROPIC_API_KEY`) unless
+   Anthropic confirms otherwise in writing. Spend caps per run and per release are still needed (default
+   per run to be set by the owner).
+4. Which GitHub account owns the fine-grained token the worker pushes with, and the Render plan for the
+   worker.
