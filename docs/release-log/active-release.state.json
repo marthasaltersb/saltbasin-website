@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T16:17:26.500Z",
+  "exportedAt": "2026-10-09T16:19:12.599Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -264,7 +264,7 @@
         {
           "round": 3,
           "event": "not_fixed",
-          "note": "Salt particle design is waiting on feedback from the owner, which I cannot make…",
+          "note": "Salt particle design is waiting on feedback from the owner, which I cannot make up. The question fo…",
           "commit": null
         }
       ]
@@ -322,7 +322,7 @@
         {
           "round": 4,
           "event": "not_fixed",
-          "note": "needs_business_definition, nothing built. Owner question: after seeing the firs…",
+          "note": "needs_business_definition, nothing built. Owner question: after seeing the first Salt particles ren…",
           "commit": null
         }
       ]
@@ -1085,7 +1085,7 @@
         {
           "round": 2,
           "event": "found",
-          "note": "Reported by the fix agent, unresolved on reconciliation (owner_direction_confli…",
+          "note": "Reported by the fix agent, unresolved on reconciliation (owner_direction_conflict)",
           "commit": null
         }
       ]
@@ -1307,7 +1307,7 @@
       "class": "defect",
       "attempts": 1,
       "step": "J1 1.2a (also J2, J3, J10 at 390px) and J9 9.0 / 9.2-9.3",
-      "rootCause": "Light-surface components set no text colour and inherit cream rgb(245,240,232) from the World Shell: WorldShell.jsx:1406 S.embedShell color #f5f0e8 (and brand.css:359 body color). CareerBoundOutputEd…",
+      "rootCause": "Light-surface components set no text colour and inherit cream rgb(245,240,232) from the World Shell: WorldShell.jsx:1406 S.embedShell color #f5f0e8 (and brand.css:359 body color). CareerBoundOutputEditor S.wrap/S.card (line 18), OutputTemplateConfigurator S.wrap (line 64) and the white dialog wrappers in MyResumePanel.jsx:1103 and CareerReconciliationPanel.jsx:416 draw white/cream cards but never…",
       "files": [
         "src/components/admin/CareerBoundOutputEditor.jsx",
         "src/components/admin/OutputTemplateConfigurator.jsx",
@@ -1324,13 +1324,13 @@
         {
           "round": 2,
           "event": "found",
-          "note": "Light-surface components set no text colour and inherit cream rgb(245,240,232) …",
+          "note": "Light-surface components set no text colour and inherit cream rgb(245,240,232) from the World Shell…",
           "commit": null
         },
         {
           "round": 2,
           "event": "fixed",
-          "note": "Set explicit dark text (#1b2a3b) on the light cards and white dialog wrappers t…",
+          "note": "Set explicit dark text (#1b2a3b) on the light cards and white dialog wrappers that inherited cream …",
           "commit": "95c2adf"
         }
       ]
@@ -1357,7 +1357,7 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conf…",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
           "commit": null
         }
       ]
@@ -1491,7 +1491,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "Shipped UI copy at MyResumePanel.jsx:1052 uses an em dash; the training spec (q…",
+          "note": "Shipped UI copy at MyResumePanel.jsx:1052 uses an em dash; the training spec (qr-gated-outputs.md:8…",
           "commit": null
         }
       ]
@@ -1503,7 +1503,7 @@
       "class": "defect",
       "attempts": 0,
       "step": "J2.1b Document header contact line readable (web view)",
-      "rootCause": "header.contact has no defined/validated type. Spec seeds an array; DocumentBlocksView.jsx:94 renders it raw so React concatenates without separator, while outputRendering.js:186 passes it to pdfkit w…",
+      "rootCause": "header.contact has no defined/validated type. Spec seeds an array; DocumentBlocksView.jsx:94 renders it raw so React concatenates without separator, while outputRendering.js:186 passes it to pdfkit which coerces via Array.toString() giving a comma. Editor adapter documentBlocksEditor.js:28 also wraps it assuming a string.",
       "files": [
         "src/components/DocumentBlocksView.jsx",
         "server/lib/outputRendering.js",
@@ -1519,7 +1519,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "header.contact has no defined/validated type. Spec seeds an array; DocumentBloc…",
+          "note": "header.contact has no defined/validated type. Spec seeds an array; DocumentBlocksView.jsx:94 render…",
           "commit": null
         }
       ]
@@ -1531,7 +1531,7 @@
       "class": "spec_error",
       "attempts": 0,
       "step": "J3.3 Approve toasts",
-      "rootCause": "Toast at MyResumePanel.jsx:627 uses an em dash, which other specs (no-silent-failures, cover-letter-agent, proficiency-rules-and-live-qr) already expect; qr-gated-outputs.md lines 100/155/169 used a …",
+      "rootCause": "Toast at MyResumePanel.jsx:627 uses an em dash, which other specs (no-silent-failures, cover-letter-agent, proficiency-rules-and-live-qr) already expect; qr-gated-outputs.md lines 100/155/169 used a hyphen.",
       "files": [
         "docs/training/qr-gated-outputs.md",
         "src/components/admin/MyResumePanel.jsx"
@@ -1545,7 +1545,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "Toast at MyResumePanel.jsx:627 uses an em dash, which other specs (no-silent-fa…",
+          "note": "Toast at MyResumePanel.jsx:627 uses an em dash, which other specs (no-silent-failures, cover-letter…",
           "commit": null
         }
       ]
@@ -1598,7 +1598,7 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conf…",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
           "commit": null
         }
       ]
@@ -1623,7 +1623,7 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conf…",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
           "commit": null
         }
       ]
@@ -1711,7 +1711,7 @@
       "class": "defect",
       "attempts": 0,
       "step": "J5 5.2 at 390px stacked cards, no panel overflow",
-      "rootCause": "Fix-r1's 640px stacked-card CSS and data-label attributes on table cells are absent at HEAD (0 occurrences) because 9084b2c replaced the page; only .panel overflow-x:auto (line 52) remains, so featur…",
+      "rootCause": "Fix-r1's 640px stacked-card CSS and data-label attributes on table cells are absent at HEAD (0 occurrences) because 9084b2c replaced the page; only .panel overflow-x:auto (line 52) remains, so featureRows/bugRows/agentRows (lines 269/277/282) and other tables clip or scroll sideways. SETUP-FOR-CLAUDE.md embedded copy also lacks them.",
       "files": [
         "tools/release-tracker/index.html",
         "tools/release-tracker/SETUP-FOR-CLAUDE.md",
@@ -1732,13 +1732,13 @@
         {
           "round": 3,
           "event": "recurred",
-          "note": "STATUS map (index.html line 221) has no 'stalled' key so pill() prints raw 'sta…",
+          "note": "STATUS map (index.html line 221) has no 'stalled' key so pill() prints raw 'stalled', and .s-stalle…",
           "commit": null
         },
         {
           "round": 3,
           "event": "recurred",
-          "note": "Fix-r1's 640px stacked-card CSS and data-label attributes on table cells are ab…",
+          "note": "Fix-r1's 640px stacked-card CSS and data-label attributes on table cells are absent at HEAD (0 occu…",
           "commit": null
         }
       ]
@@ -2048,7 +2048,7 @@
       "class": "spec_error",
       "attempts": 0,
       "step": "In Chromium open /login, sign in as member@test.local; expect /world showing Your World, Journeys and Classic Tools (390x844)",
-      "rootCause": "src/components/WorldShell.jsx line 121 (MOBILE_CSS, max-width 700px) deliberately hides .sb-world-brandsub, the 'Your World' subtitle rendered at line 683. The only other 'Your World' text (rail titl…",
+      "rootCause": "src/components/WorldShell.jsx line 121 (MOBILE_CSS, max-width 700px) deliberately hides .sb-world-brandsub, the 'Your World' subtitle rendered at line 683. The only other 'Your World' text (rail title, line 758) renders only when the member has no Career/Commercial island; the test member has the Career island so the always-on pipeline rail (line 754, .sb-world-rail at line 123) spans the screen …",
       "files": [
         "src/components/WorldShell.jsx",
         "docs/training/release-loop-tooling.md"
@@ -2062,7 +2062,7 @@
         {
           "round": 4,
           "event": "found",
-          "note": "src/components/WorldShell.jsx line 121 (MOBILE_CSS, max-width 700px) deliberate…",
+          "note": "src/components/WorldShell.jsx line 121 (MOBILE_CSS, max-width 700px) deliberately hides .sb-world-b…",
           "commit": null
         }
       ]
@@ -2241,7 +2241,7 @@
       "class": "defect",
       "attempts": 0,
       "step": "Live Preview stays visible beside gallery (sticky)",
-      "rootCause": "position:sticky on the preview column (OutputTemplateConfigurator.jsx ~L562) binds to the nearest overflow-y:auto ancestor: the configurator root div (~L311) and Hub wrapper (L110). Neither has a bou…",
+      "rootCause": "position:sticky on the preview column (OutputTemplateConfigurator.jsx ~L562) binds to the nearest overflow-y:auto ancestor: the configurator root div (~L311) and Hub wrapper (L110). Neither has a bounded height so they never scroll; sticky never engages while the real scroller is further out.",
       "files": [
         "src/components/admin/OutputTemplateConfigurator.jsx"
       ],
@@ -2254,7 +2254,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "position:sticky on the preview column (OutputTemplateConfigurator.jsx ~L562) bi…",
+          "note": "position:sticky on the preview column (OutputTemplateConfigurator.jsx ~L562) binds to the nearest o…",
           "commit": null
         }
       ]
@@ -2266,7 +2266,7 @@
       "class": "defect",
       "attempts": 0,
       "step": "Failed load alert includes HTTP status",
-      "rootCause": "proficiency loads via api.getCareerProficiency() -> request() in src/lib/api.js L2-19, which uses body.error text instead of the status, and throws a JSON parse error on an empty body. rollups/master…",
+      "rootCause": "proficiency loads via api.getCareerProficiency() -> request() in src/lib/api.js L2-19, which uses body.error text instead of the status, and throws a JSON parse error on an empty body. rollups/master use loadJson() which includes the status.",
       "files": [
         "src/components/admin/OutputTemplateConfigurator.jsx",
         "src/lib/api.js"
@@ -2280,7 +2280,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "proficiency loads via api.getCareerProficiency() -> request() in src/lib/api.js…",
+          "note": "proficiency loads via api.getCareerProficiency() -> request() in src/lib/api.js L2-19, which uses b…",
           "commit": null
         }
       ]
@@ -2334,7 +2334,7 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conf…",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
           "commit": null
         }
       ]
@@ -2526,7 +2526,7 @@
       "class": "requirement_gap",
       "attempts": 0,
       "step": "build",
-      "rootCause": "Entry points exist only in career-bound editor, World Shell shared block editor, My Resume rows and World Shell opportunity view; the request names document_blocks / template content and 'the output …",
+      "rootCause": "Entry points exist only in career-bound editor, World Shell shared block editor, My Resume rows and World Shell opportunity view; the request names document_blocks / template content and 'the output editor'.",
       "files": [
         "src/components/admin/OutputTemplateConfigurator.jsx",
         "server/lib/outputVersionHistory.js"
@@ -2693,7 +2693,7 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conf…",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
           "commit": null
         }
       ]
@@ -2927,7 +2927,7 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conf…",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
           "commit": null
         }
       ]
@@ -3079,7 +3079,7 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conf…",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
           "commit": null
         }
       ]
@@ -3183,7 +3183,7 @@
         {
           "round": 2,
           "event": "fixed",
-          "note": "Added a skills/tools/certifications override card (pick item, box, Overridden b…",
+          "note": "Added a skills/tools/certifications override card (pick item, box, Overridden badge, Career Master …",
           "commit": "95c2adf"
         }
       ]
@@ -3215,7 +3215,7 @@
         {
           "round": 2,
           "event": "not_fixed",
-          "note": "Owner decision needed: is storing template overrides on the preset acceptable, …",
+          "note": "Owner decision needed: is storing template overrides on the preset acceptable, or should they move …",
           "commit": null
         }
       ]
@@ -3394,7 +3394,7 @@
       "class": "defect",
       "attempts": 1,
       "step": "J2 2.1 visual: Live Preview chart not clipped",
-      "rootCause": "proficiencyBarsHtml emits the SVG with min-width:500px (src/lib/careerCharts.js line 112), which overrides max-width:100%. The preview column content is about 280px wide, so the SVG overflows the rig…",
+      "rootCause": "proficiencyBarsHtml emits the SVG with min-width:500px (src/lib/careerCharts.js line 112), which overrides max-width:100%. The preview column content is about 280px wide, so the SVG overflows the right edge and is clipped, hiding segments and level labels. The text stays in the DOM, so scripted text checks pass.",
       "files": [
         "src/lib/careerCharts.js",
         "docs/training/chart-gallery.md"
@@ -3408,13 +3408,13 @@
         {
           "round": 2,
           "event": "found",
-          "note": "proficiencyBarsHtml emits the SVG with min-width:500px (src/lib/careerCharts.js…",
+          "note": "proficiencyBarsHtml emits the SVG with min-width:500px (src/lib/careerCharts.js line 112), which ov…",
           "commit": null
         },
         {
           "round": 2,
           "event": "fixed",
-          "note": "Removed min-width:500px from the proficiency, trend and timeline SVG helpers (s…",
+          "note": "Removed min-width:500px from the proficiency, trend and timeline SVG helpers (same pattern in all t…",
           "commit": "3b198a83584419755b4799a7a4691f279b6845ed"
         }
       ]
