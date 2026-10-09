@@ -665,5 +665,138 @@
         "platform-mcp: new in this update (being built)"
       ]
     }
+  },
+  {
+    "version": "0.2.0-u7",
+    "release": "2026-10-02-application-packages",
+    "at": "2026-10-09T12:09:26.335Z",
+    "commit": "4239e1d45f684fc6be79e430bcdef6023425b7f4",
+    "previous": "0.2.0-u6",
+    "headline": "Release governance: every retry now tests the same frozen steps",
+    "note": "Retries were testing different step sets (one feature's total went 31 → 29 → 33 → 30) because fix agents could edit training specs between rounds. Now each spec is frozen as a versioned baseline with stable step ids; validators score only against it under fixed test constraints; step changes go through a reviewed amendment. Eleven specs frozen at v1. Fix round 3's direct spec edits are filed as amendment A1, and its product changes are merged. No test rounds ran in this update: agents resume after the usage reset.",
+    "metrics": {
+      "featuresTotal": 17,
+      "featuresPassed": 0,
+      "openBugs": 62,
+      "verified": 15,
+      "backlog": 38,
+      "needPerson": 0,
+      "agentsRunning": 0,
+      "features": {
+        "proficiency-live-qr": {
+          "status": "failing",
+          "round": 5,
+          "score": "29/30"
+        },
+        "world-shell-navigation": {
+          "status": "awaiting_retest",
+          "round": 1,
+          "score": "45/48"
+        },
+        "career-bound-outputs": {
+          "status": "awaiting_retest",
+          "round": 2,
+          "score": "54/56"
+        },
+        "qr-gated-outputs": {
+          "status": "awaiting_retest",
+          "round": 1,
+          "score": "45/48"
+        },
+        "no-silent-failures": {
+          "status": "failed",
+          "round": null,
+          "score": null
+        },
+        "release-loop-tooling": {
+          "status": "awaiting_retest",
+          "round": 3,
+          "score": "104/126"
+        },
+        "chart-gallery": {
+          "status": "awaiting_retest",
+          "round": 1,
+          "score": "17/20"
+        },
+        "release-intelligence": {
+          "status": "failed",
+          "round": null,
+          "score": null
+        },
+        "output-version-history": {
+          "status": "failed",
+          "round": null,
+          "score": null
+        },
+        "resume-rollups": {
+          "status": "failed",
+          "round": null,
+          "score": null
+        },
+        "cover-letter-agent": {
+          "status": "failed",
+          "round": null,
+          "score": null
+        },
+        "in-app-release-loop": {
+          "status": "failed",
+          "round": null,
+          "score": null
+        },
+        "session-mapping": {
+          "status": "failed",
+          "round": null,
+          "score": null
+        },
+        "world-shell-layers": {
+          "status": "failed",
+          "round": null,
+          "score": null
+        },
+        "live-release-tracker": {
+          "status": "failed",
+          "round": null,
+          "score": null
+        },
+        "render-bindings": {
+          "status": "failed",
+          "round": null,
+          "score": null
+        },
+        "platform-mcp": {
+          "status": "failed",
+          "round": null,
+          "score": null
+        }
+      }
+    },
+    "comparison": {
+      "lines": [
+        "Features passed: 0 (no change) of 17",
+        "Open bugs caused by this work: 60 → **62** (+2) — new failures found in testing",
+        "Bugs verified fixed: 15 (no change)",
+        "Backlog (not this work): 38 (no change)",
+        "Waiting on a person: 0 (no change)",
+        "Agents running: 16 → 0"
+      ],
+      "featureChanges": [
+        "proficiency-live-qr: in browser testing → **failing**",
+        "world-shell-navigation: in browser testing → **fixed, awaiting re-test**",
+        "career-bound-outputs: in browser testing → **fixed, awaiting re-test**",
+        "qr-gated-outputs: in browser testing → **fixed, awaiting re-test**",
+        "no-silent-failures: in browser testing → **agent stopped**",
+        "release-loop-tooling: test round 2 108/108 → round 3 **104/126**; in browser testing → **fixed, awaiting re-test**",
+        "chart-gallery: in browser testing → **fixed, awaiting re-test**",
+        "release-intelligence: in browser testing → **agent stopped**",
+        "output-version-history: in browser testing → **agent stopped**",
+        "resume-rollups: in browser testing → **agent stopped**",
+        "cover-letter-agent: in browser testing → **agent stopped**",
+        "in-app-release-loop: being built → **agent stopped**",
+        "world-shell-layers: being built → **agent stopped**",
+        "live-release-tracker: being built → **agent stopped**",
+        "render-bindings: being built → **agent stopped**",
+        "platform-mcp: being built → **agent stopped**"
+      ]
+    }
   }
 ]
