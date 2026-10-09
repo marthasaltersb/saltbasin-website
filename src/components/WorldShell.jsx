@@ -44,6 +44,7 @@ const CareerReconciliationPanel = lazy(() => import('./admin/CareerReconciliatio
 const MyResumePanel = lazy(() => import('./admin/MyResumePanel.jsx'));
 const LonetreeMvpPanel = lazy(() => import('./admin/LonetreeMvpPanel.jsx'));
 const ReleaseIntelligencePanel = lazy(() => import('./admin/ReleaseIntelligencePanel.jsx'));
+const ReleaseLoopPanel = lazy(() => import('./admin/ReleaseLoopPanel.jsx'));
 
 const SIMPLE_EMBED_COMPONENTS = {
   leads: { title: 'Leads', render: () => <LeadsPanel /> },
@@ -54,6 +55,7 @@ const SIMPLE_EMBED_COMPONENTS = {
   outputTemplates: { title: 'Output Templates', render: (scope) => <OutputTemplateConfiguratorHub scope={scope} /> },
   lonetreeMvp: { title: 'Fund & Portfolio Demo', render: (scope) => <LonetreeMvpPanel scope={scope} /> },
   releaseIntelligence: { title: 'Release Intelligence', render: () => <ReleaseIntelligencePanel /> },
+  releaseLoop: { title: 'Release loop', render: () => <ReleaseLoopPanel /> },
 };
 
 const ISLAND_RADIUS = 9;
@@ -1366,7 +1368,7 @@ function SimpleEmbedView({ componentId, scope, onClear }) {
   return (
     <div style={S.embedShell}>
       <div style={S.embedHeader}>
-        <button style={S.backBtn} onClick={onClear}>← Back to World</button>
+        <button style={{ ...S.backBtn, minHeight: 44, padding: '0 0.6rem', marginBottom: 0 }} onClick={onClear}>← Back to World</button>
         <div style={S.embedTitle}>{entry.title}</div>
       </div>
       <div style={S.embedBody}>{entry.render(scope)}</div>
