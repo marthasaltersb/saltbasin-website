@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T05:57:57.096Z",
+  "exportedAt": "2026-10-09T05:59:26.004Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -66,11 +66,11 @@
       "backlog": 3
     },
     "chart-gallery": {
-      "status": "triage",
+      "status": "scope",
       "lastRound": 2,
       "lastScore": "21/24",
       "lastReport": "docs/test-results/chart-gallery/round-2.md",
-      "openBugs": 4,
+      "openBugs": 5,
       "backlog": 2
     },
     "release-intelligence": {
@@ -2388,11 +2388,11 @@
     {
       "id": "CG-R1-1",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "recurred",
       "class": "defect",
       "attempts": 0,
       "step": "Live Preview stays visible beside gallery (sticky)",
-      "rootCause": "position:sticky on the preview column (OutputTemplateConfigurator.jsx ~L562) binds to the nearest overflow-y:auto ancestor: the configurator root div (~L311) and Hub wrapper (L110). Neither has a bounded height so they never scroll; sticky never engages while the real scroller is further out.",
+      "rootCause": "Hub wrapper (line 111) and configurator wrapper (line 321) are both flex:1 + overflowY:auto with no bounded height, nested in the shell scroller. position:sticky (line 653) binds to the nearest overflow ancestor, which never scrolls, so the preview column scrolls away. Recurrence: fix branch release-loop/chart-gallery-fix-r1 (dc6b5f0) was never merged into the tested commit.",
       "files": [
         "src/components/admin/OutputTemplateConfigurator.jsx"
       ],
@@ -2407,17 +2407,23 @@
           "event": "found",
           "note": "position:sticky on the preview column (OutputTemplateConfigurator.jsx ~L562) binds to the nearest overflow-y:auto ancestor: the configurator root div (~L311) and Hub wrapper (L110). Neither has a bou…",
           "commit": null
+        },
+        {
+          "round": 2,
+          "event": "recurred",
+          "note": "Hub wrapper (line 111) and configurator wrapper (line 321) are both flex:1 + overflowY:auto with no bounded height, nested in the shell scroller. position:sticky (line 653) binds to the nearest overf…",
+          "commit": null
         }
       ]
     },
     {
       "id": "CG-R1-2",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "recurred",
       "class": "defect",
       "attempts": 0,
       "step": "Failed load alert includes HTTP status",
-      "rootCause": "proficiency loads via api.getCareerProficiency() -> request() in src/lib/api.js L2-19, which uses body.error text instead of the status, and throws a JSON parse error on an empty body. rollups/master use loadJson() which includes the status.",
+      "rootCause": "Proficiency load goes through api.getCareerProficiency() -> api.js request(), which parses the body first (throws 'Unexpected end of JSON input' on an empty 500) and otherwise throws only body.error, never the status. Rollups and master use loadJson() which includes the status, so only 2 of 3 sources were covered. Fix exists on the unmerged fix branch.",
       "files": [
         "src/components/admin/OutputTemplateConfigurator.jsx",
         "src/lib/api.js"
@@ -2432,6 +2438,12 @@
           "round": 1,
           "event": "found",
           "note": "proficiency loads via api.getCareerProficiency() -> request() in src/lib/api.js L2-19, which uses body.error text instead of the status, and throws a JSON parse error on an empty body. rollups/master…",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "recurred",
+          "note": "Proficiency load goes through api.getCareerProficiency() -> api.js request(), which parses the body first (throws 'Unexpected end of JSON input' on an empty 500) and otherwise throws only body.error,…",
           "commit": null
         }
       ]
@@ -2458,6 +2470,28 @@
           "round": 1,
           "event": "found",
           "note": "S.shell (L65) is a fixed grid 220px 1fr 380px with no responsive rule; the 1fr column has min-width:auto so wide content prevents shrinking. Layout overflows to about 945px and the preview iframe is …",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "CG-R2-1",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "J2 2.1 visual: Live Preview chart not clipped",
+      "rootCause": "proficiencyBarsHtml emits the SVG with min-width:500px (src/lib/careerCharts.js line 112), which overrides max-width:100%. The preview column content is about 280px wide, so the SVG overflows the right edge and is clipped, hiding segments and level labels. The text stays in the DOM, so scripted text checks pass.",
+      "files": [
+        "src/lib/careerCharts.js",
+        "docs/training/chart-gallery.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "proficiencyBarsHtml emits the SVG with min-width:500px (src/lib/careerCharts.js line 112), which overrides max-width:100%. The preview column content is about 280px wide, so the SVG overflows the rig…",
           "commit": null
         }
       ]
