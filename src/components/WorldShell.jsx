@@ -18,7 +18,7 @@ import * as THREE from 'three';
 import { api } from '../lib/api.js';
 import { hasWebGL } from './SaltBasinCrystal.jsx';
 import { CRYSTAL_VARIANTS, addCrystalLights, buildRiverParticles, advanceRiverParticles } from '../lib/crystalGeometry.js';
-import { resolveWorldIslands } from '../lib/worldIslands.js';
+import { resolveWorldIslands, withPlatformIslandTabs } from '../lib/worldIslands.js';
 import { useCareerPlacementAgents, CAREER_DIMENSION_FIELDS, STAGE_LABELS } from '../lib/hooks/useCareerPlacementAgents.js';
 import { useCommercialOpportunities, COMMERCIAL_DIMENSION_FIELDS, EXPANSION_RING_OPTIONS } from '../lib/hooks/useCommercialOpportunities.js';
 import { usePublicationPipeline } from '../lib/hooks/usePublicationPipeline.js';
@@ -45,6 +45,7 @@ const MyResumePanel = lazy(() => import('./admin/MyResumePanel.jsx'));
 const LonetreeMvpPanel = lazy(() => import('./admin/LonetreeMvpPanel.jsx'));
 const ReleaseIntelligencePanel = lazy(() => import('./admin/ReleaseIntelligencePanel.jsx'));
 const ConnectedAgentsPanel = lazy(() => import('./admin/ConnectedAgentsPanel.jsx'));
+const QualificationRulesPanel = lazy(() => import('./admin/QualificationRulesPanel.jsx'));
 const CapabilitiesPanel = lazy(() => import('./admin/CapabilitiesPanel.jsx'));
 const ReleaseLoopPanel = lazy(() => import('./admin/ReleaseLoopPanel.jsx'));
 const ReleaseTrackerApp = lazy(() => import('./releaseTracker/ReleaseTrackerApp.jsx'));
@@ -61,6 +62,7 @@ const SIMPLE_EMBED_COMPONENTS = {
   releaseIntelligence: { title: 'Release Intelligence', render: () => <ReleaseIntelligencePanel /> },
   connectedAgents: { title: 'Connected Agents', render: () => <ConnectedAgentsPanel /> },
   capabilities: { title: 'Capabilities', render: () => <CapabilitiesPanel /> },
+  qualificationRules: { title: 'Qualification Rules', render: () => <QualificationRulesPanel /> },
   releaseLoop: { title: 'Release loop', render: () => <ReleaseLoopPanel /> },
   releaseTracker: { title: 'Release tracker', render: () => <ReleaseTrackerApp embedded /> },
   sessionMapping: { title: 'Sessions', render: () => <SessionMappingPanel /> },
@@ -187,7 +189,7 @@ function WorldShellInner() {
     }
   }, [user]);
 
-  const islands = useMemo(() => resolveWorldIslands(tabsConfig || []), [tabsConfig]);
+  const islands = useMemo(() => resolveWorldIslands(tabsConfig ? withPlatformIslandTabs(tabsConfig, user?.role) : []), [tabsConfig, user]);
   const hasCareerIsland = islands.some((i) => i.componentId === 'careerPlacementAgents');
   const hasCommercialIsland = islands.some((i) => i.componentId === 'commercialOpportunities');
   const hasHerqIsland = islands.some((i) => i.componentId === 'herqPublications');
@@ -740,6 +742,8 @@ function JourneysGrid({ islands, career, commercial, herq, onOpen }) {
                 ? 'Tokens for AI agents (MCP)'
                 : isl.componentId === 'capabilities'
                   ? 'Website, API and MCP parity'
+                  : isl.componentId === 'qualificationRules'
+                    ? 'Edit the career qualification gates'
               : isl.kind === 'embed'
                 ? 'Open configuration'
                 : 'Open in Classic Tools';

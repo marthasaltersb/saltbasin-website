@@ -32,3 +32,27 @@ export function makeRateLimiter({ windowMs = 60_000, max = 10, message = 'Too ma
     next();
   };
 }
+
+/**
+ * Keyed sliding-window counter for callers that need to count only SOME requests (for example failed
+ * authentications) or key by something other than the IP (for example an access token id).
+ *   const c = makeHitCounter({ windowMs, max });
+ *   c.blocked(key)  -> seconds to wait when the key is at its limit, else 0
+ *   c.hit(key)      -> records one hit
+ */
+export function makeHitCounter({ windowMs = 60_000, max = 10 } = {}) {
+  const store = new Map();
+  const live = (key) => {
+    const cutoff = Date.now() - windowMs;
+    const hits = (store.get(key) || []).filter((t) => t > cutoff);
+    if (hits.length) store.set(key, hits); else store.delete(key);
+    return hits;
+  };
+  return {
+    blocked(key) {
+      const hits = live(key);
+      return hits.length >= max ? Math.max(1, Math.ceil((hits[0] + windowMs - Date.now()) / 1000)) : 0;
+    },
+    hit(key) { const hits = live(key); hits.push(Date.now()); store.set(key, hits); },
+  };
+}

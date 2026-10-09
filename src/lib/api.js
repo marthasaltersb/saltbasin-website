@@ -132,6 +132,7 @@ export const api = {
   recordCareerConsent: (consentType, granted, acknowledgementKeys = []) => request('/api/career/consent', { method: 'POST', body: JSON.stringify({ consentType, granted, acknowledgementKeys }) }),
   listResumeOutputs: () => request('/api/resume-outputs'),
   createResumeOutput: (body) => request('/api/resume-outputs', { method: 'POST', body: JSON.stringify(body) }),
+  importApplicationPackage: (pkg, linkOpportunity = false) => request('/api/resume-outputs/import-package', { method: 'POST', body: JSON.stringify({ package: pkg, linkOpportunity }) }),
   getResumeOutputStaleness: (id) => request(`/api/resume-outputs/${id}/staleness`),
   updateResumeOutputStatus: (id, status) => request(`/api/resume-outputs/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
   getResumeOutputVersions: (id) => request(`/api/resume-outputs/${id}/versions`),
@@ -660,6 +661,7 @@ export const api = {
   getCareerAgentSchedule: () => request('/api/career-agents/schedule'),
   setCareerAgentSchedule: (body) => request('/api/career-agents/schedule', { method: 'POST', body: JSON.stringify(body) }),
   getCareerVerificationCurrent: () => request('/api/career-agents/verification-current'),
+  saveCareerVerificationCurrent: (gates) => request('/api/career-agents/verification-current', { method: 'PUT', body: JSON.stringify({ gates }) }),
   importCareerPipelineWorkbook: async (formData) => {
     const res = await fetch('/api/career-agents/import', { method: 'POST', credentials: 'include', body: formData });
     const body = await res.json().catch(() => ({}));

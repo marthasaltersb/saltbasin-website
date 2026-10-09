@@ -210,6 +210,12 @@ export const ISLAND_REGISTRY = {
     dataBinding: { store: 'server/lib/capabilityParity.js (config registry, no table)' },
     permission: { requiredRole: 'admin', crud: ['read'], enforced: true },
   },
+  // Qualification Rules (2026-10-09): the career qualification gate definition. Admin only (the API answers 403).
+  qualificationRules: {
+    variant: 'rings', kind: 'embed', accent: 'gold',
+    dataBinding: { store: 'journey_current_definitions (career_opportunity_verification_v1)' },
+    permission: { requiredRole: 'admin', crud: ['read', 'update'], enforced: true },
+  },
   // Release loop (2026-10-09): the platform copy of the release process (definition,
   // runs, rounds, live steps, bugs, reconciliation, escalations). Admin only.
   releaseLoop: {
@@ -245,6 +251,20 @@ export const ISLAND_REGISTRY = {
 // crystal — an entitled tab with no registry entry yet is silently skipped
 // rather than crashing the world, so adding a new module to memberTabs/
 // admin_nav before it has a crystal variant never breaks the shell.
+// Entry points that live only in the World Shell (no admin_nav / memberTabs row, so no config row is ever written
+// or needed): Connected Agents for every signed-in user; Capabilities and Qualification Rules for administrators.
+export const PLATFORM_ISLAND_TABS = Object.freeze([
+  { id: 'connected-agents', label: 'Connected Agents', componentId: 'connectedAgents', sortOrder: 30, adminOnly: false },
+  { id: 'capabilities', label: 'Capabilities', componentId: 'capabilities', sortOrder: 31, adminOnly: true },
+  { id: 'qualification-rules', label: 'Qualification Rules', componentId: 'qualificationRules', sortOrder: 32, adminOnly: true },
+]);
+
+/** `tabs` plus the World Shell-only entry points this user may see (a stored tab with the same componentId wins). */
+export function withPlatformIslandTabs(tabs = [], role = 'member') {
+  const have = new Set(tabs.map((t) => t.componentId));
+  return [...tabs, ...PLATFORM_ISLAND_TABS.filter((t) => !have.has(t.componentId) && (!t.adminOnly || role === 'admin'))];
+}
+
 export function resolveWorldIslands(tabs = []) {
   return [...tabs]
     .filter((t) => t.enabled !== false && ISLAND_REGISTRY[t.componentId])
