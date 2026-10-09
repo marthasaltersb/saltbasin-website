@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T00:52:59.475Z",
+  "exportedAt": "2026-10-09T00:53:16.736Z",
   "features": {
     "proficiency-live-qr": {
       "status": "failing",
@@ -38,7 +38,7 @@
       "lastReport": null
     },
     "output-version-history": {
-      "status": "integrate",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null
