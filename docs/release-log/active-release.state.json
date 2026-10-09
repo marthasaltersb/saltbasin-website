@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T05:55:34.889Z",
+  "exportedAt": "2026-10-09T05:56:07.073Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -42,7 +42,7 @@
       "backlog": 3
     },
     "release-loop-tooling": {
-      "status": "scope",
+      "status": "fix",
       "lastRound": 1,
       "lastScore": "24/35",
       "lastReport": "docs/test-results/release-loop-tooling/round-1.md (NOT WRITTEN: the write tool refused report files for subagents, so the full report is in this structured result; the file at that path is the stale round-1 report from 2026-10-02, not this round. Step log: /var/tmp/sbpg/release-loop/release-loop-tooling/round-1/steps.jsonl, screenshots in the same directory.)",
@@ -1683,7 +1683,7 @@
     {
       "id": "release-loop-tooling-B1",
       "feature": "release-loop-tooling",
-      "status": "recurred",
+      "status": "fixing",
       "class": "defect",
       "attempts": 0,
       "step": "Fix B1: docs claim a capability never built",
@@ -1697,7 +1697,7 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Docs written by this feature (docs/release-process.md, SKILL.md, definition.json, CLAUDE.md) describe a capability that was never implemented."
+        "evidence": "Reused scope-review.json decision. definition.json line 210, release-process.md line 52 and SKILL.md claim a World Shell Release loop view and /api/release-loop/*; the change spec line 53 says it is out of scope. This feature's docs claim an unbuilt capability."
       },
       "history": [
         {
@@ -1717,7 +1717,7 @@
     {
       "id": "release-loop-tooling-B2",
       "feature": "release-loop-tooling",
-      "status": "recurred",
+      "status": "fixing",
       "class": "defect",
       "attempts": 0,
       "step": "Fix B2: dead-agent detection limited to extras",
@@ -1729,7 +1729,7 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Dead-agent detection in scripts/release-tracker-sync.mjs is this feature's own script and is limited to extras."
+        "evidence": "Reused scope-review.json decision. scripts/release-tracker-sync.mjs line 115 skips the idle check for fromRun agents (fromRun true at line 82); this feature's own script."
       },
       "history": [
         {
@@ -1749,7 +1749,7 @@
     {
       "id": "release-loop-tooling-B3",
       "feature": "release-loop-tooling",
-      "status": "recurred",
+      "status": "fixing",
       "class": "defect",
       "attempts": 0,
       "step": "Fix B3: tracker 390px reflow",
@@ -1761,7 +1761,7 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "tools/release-tracker/index.html was created by this feature (bed12f0). The 390px reflow is its own gap."
+        "evidence": "Reused scope-review.json decision. index.html has narrow-screen rules only for .hist and .timeline (lines 76, 103); this feature's own page has no table reflow."
       },
       "history": [
         {
@@ -1831,7 +1831,7 @@
     {
       "id": "RLT-T1",
       "feature": "release-loop-tooling",
-      "status": "open",
+      "status": "fixing",
       "class": "spec_error",
       "attempts": 0,
       "step": "J1 step 2: bugEscalation.statuses",
@@ -1840,7 +1840,11 @@
         "docs/training/release-loop-tooling.md",
         "docs/changes/release-loop-tooling.md"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Spec line 21 lists 7 statuses; definition.json has 10 after a42b3cc (release-loop scope-check work, part of this tooling). Stale spec of this feature."
+      },
       "history": [
         {
           "round": 1,
@@ -1853,7 +1857,7 @@
     {
       "id": "RLT-T2",
       "feature": "release-loop-tooling",
-      "status": "open",
+      "status": "fixing",
       "class": "spec_error",
       "attempts": 0,
       "step": "J4 steps 1-2 (header, tiles, filters, agent card, Features column, Bugs and runs tables)",
@@ -1862,7 +1866,11 @@
         "docs/training/release-loop-tooling.md",
         "tools/release-tracker/index.html"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "tools/release-tracker/index.html was created by this feature (bed12f0) and rebuilt as drill-down layers (21129a0, f56f185); J4/J5 in the spec still describe the old design."
+      },
       "history": [
         {
           "round": 1,
