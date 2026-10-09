@@ -420,5 +420,132 @@
         "world-shell-layers: being built → **agent stopped**"
       ]
     }
+  },
+  {
+    "version": "0.2.0-u5",
+    "release": "2026-10-02-application-packages",
+    "at": "2026-10-09T10:52:27.851Z",
+    "commit": "114c1a591f05b54b0885b4e94a9089b8c738e34b",
+    "previous": "0.2.0-u4",
+    "headline": "Relaunched after the usage limit; render bindings designed",
+    "note": "At 10:49 UTC all 13 feature runs relaunched after the usage limit reset, building on the work saved from stopped agents. Two new platform features joined the release: live-release-tracker (the tracker inside the Salt Basin site, real time) and render-bindings (every rendering is a view mapped to source data — platform tables, connectors, calculations or manual entry — updated live or through approval with impact analysis; design in docs/changes/render-bindings.md, no new tables). The tracker's World view now draws through explicit mappings, shows a Data map per crystal, and renders fixes awaiting re-test as pending ghosts with the list of what changes when they are approved.",
+    "metrics": {
+      "featuresTotal": 16,
+      "featuresPassed": 0,
+      "openBugs": 60,
+      "verified": 15,
+      "backlog": 38,
+      "needPerson": 0,
+      "agentsRunning": 15,
+      "features": {
+        "proficiency-live-qr": {
+          "status": "validate",
+          "round": 5,
+          "score": "29/30"
+        },
+        "world-shell-navigation": {
+          "status": "validate",
+          "round": 1,
+          "score": "45/48"
+        },
+        "career-bound-outputs": {
+          "status": "validate",
+          "round": 2,
+          "score": "54/56"
+        },
+        "qr-gated-outputs": {
+          "status": "validate",
+          "round": 1,
+          "score": "45/48"
+        },
+        "no-silent-failures": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "release-loop-tooling": {
+          "status": "validate",
+          "round": 2,
+          "score": "108/108"
+        },
+        "chart-gallery": {
+          "status": "validate",
+          "round": 1,
+          "score": "17/20"
+        },
+        "release-intelligence": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "output-version-history": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "resume-rollups": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "session-mapping": {
+          "status": "failed",
+          "round": null,
+          "score": null
+        },
+        "cover-letter-agent": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "in-app-release-loop": {
+          "status": "build",
+          "round": null,
+          "score": null
+        },
+        "world-shell-layers": {
+          "status": "build",
+          "round": null,
+          "score": null
+        },
+        "live-release-tracker": {
+          "status": "build",
+          "round": null,
+          "score": null
+        },
+        "render-bindings": {
+          "status": "build",
+          "round": null,
+          "score": null
+        }
+      }
+    },
+    "comparison": {
+      "lines": [
+        "Features passed: 0 (no change) of 16",
+        "Open bugs caused by this work: 57 → **60** (+3) — new failures found in testing",
+        "Bugs verified fixed: 18 → **15** (-3)",
+        "Backlog (not this work): 38 (no change)",
+        "Waiting on a person: 0 (no change)",
+        "Agents running: 0 → 15"
+      ],
+      "featureChanges": [
+        "proficiency-live-qr: failing → **in browser testing**",
+        "world-shell-navigation: fixed, awaiting re-test → **in browser testing**",
+        "career-bound-outputs: fixed, awaiting re-test → **in browser testing**",
+        "qr-gated-outputs: fixed, awaiting re-test → **in browser testing**",
+        "no-silent-failures: agent stopped → **in browser testing**",
+        "release-loop-tooling: fixed, awaiting re-test → **in browser testing**",
+        "chart-gallery: test round 2 21/24 → round 1 **17/20**; fixed, awaiting re-test → **in browser testing**",
+        "release-intelligence: test round 1 69/74 → not run; failing → **in browser testing**",
+        "output-version-history: agent stopped → **in browser testing**",
+        "resume-rollups: agent stopped → **in browser testing**",
+        "cover-letter-agent: agent stopped → **in browser testing**",
+        "in-app-release-loop: agent stopped → **being built**",
+        "world-shell-layers: agent stopped → **being built**",
+        "live-release-tracker: new in this update (being built)",
+        "render-bindings: new in this update (being built)"
+      ]
+    }
   }
 ]
