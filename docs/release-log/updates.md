@@ -2,6 +2,51 @@
 
 Release **0.2.0** (`2026-10-02-application-packages`), built on branch `claude/zealous-meitner-5tuft5`. Each update is numbered `0.2.0-u<n>`, pinned to the commit it describes, and compared with the update before it. Newest first.
 
+## 0.2.0-u6 — 2026-10-09 10:56 UTC
+
+Commit [`46430ed`](https://github.com/marthasaltersb/saltbasin-website/commit/46430edf5bbb81555f53a41793643789a0da635e) · compared with 0.2.0-u5
+
+**Release rule: every capability must work by point-and-click, on a phone, via API and via MCP**
+
+Owner direction: a training guide that can't be walked by point-and-click and on a phone fails. The release process (v3) now requires every capability to work on the website — point-and-click on desktop and as a full 390px phone walkthrough, with no typed URLs, API calls or scripts standing in for a step — through the API, and through an MCP tool calling the same server function with the same permissions. Test agents walk every journey on both surfaces and check the MCP tool; gaps fail as UI_GAP, MOBILE_GAP or MCP_GAP. A new feature, platform-mcp, is building the MCP server (user-created, revocable tokens; same permission checks as the API), the tool registry and a capability parity map with a check. Runs already in progress keep their current rules until their next relaunch.
+
+**Compared with the previous update**
+
+- Features passed: 0 (no change) of 17
+- Open bugs caused by this work: 60 (no change)
+- Bugs verified fixed: 15 (no change)
+- Backlog (not this work): 38 (no change)
+- Waiting on a person: 0 (no change)
+- Agents running: 15 → 16
+
+**Feature changes**
+
+- platform-mcp: new in this update (being built)
+
+<details><summary>Every feature at this update</summary>
+
+| Feature | Status | Latest test |
+|---|---|---|
+| proficiency-live-qr | in browser testing | round 5: 29/30 |
+| world-shell-navigation | in browser testing | round 1: 45/48 |
+| career-bound-outputs | in browser testing | round 2: 54/56 |
+| qr-gated-outputs | in browser testing | round 1: 45/48 |
+| no-silent-failures | in browser testing | not tested yet |
+| release-loop-tooling | in browser testing | round 2: 108/108 |
+| chart-gallery | in browser testing | round 1: 17/20 |
+| release-intelligence | in browser testing | not tested yet |
+| output-version-history | in browser testing | not tested yet |
+| resume-rollups | in browser testing | not tested yet |
+| session-mapping | agent stopped | not tested yet |
+| cover-letter-agent | in browser testing | not tested yet |
+| in-app-release-loop | being built | not tested yet |
+| world-shell-layers | being built | not tested yet |
+| live-release-tracker | being built | not tested yet |
+| render-bindings | being built | not tested yet |
+| platform-mcp | being built | not tested yet |
+
+</details>
+
 ## 0.2.0-u5 — 2026-10-09 10:52 UTC
 
 Commit [`114c1a5`](https://github.com/marthasaltersb/saltbasin-website/commit/114c1a591f05b54b0885b4e94a9089b8c738e34b) · compared with 0.2.0-u4
