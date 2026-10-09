@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T06:01:39.598Z",
+  "exportedAt": "2026-10-09T06:02:25.938Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -42,11 +42,11 @@
       "backlog": 3
     },
     "release-loop-tooling": {
-      "status": "reconcile",
+      "status": "integrate",
       "lastRound": 1,
       "lastScore": "24/35",
       "lastReport": "docs/test-results/release-loop-tooling/round-1.md (NOT WRITTEN: the write tool refused report files for subagents, so the full report is in this structured result; the file at that path is the stale round-1 report from 2026-10-02, not this round. Step log: /var/tmp/sbpg/release-loop/release-loop-tooling/round-1/steps.jsonl, screenshots in the same directory.)",
-      "openBugs": 5,
+      "openBugs": 9,
       "backlog": 2
     },
     "output-version-history": {
@@ -1842,6 +1842,93 @@
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-loop-tooling-F1-2",
+      "feature": "release-loop-tooling",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Tracker setup instructions",
+      "rootCause": "The embedded page copy in tools/release-tracker/SETUP-FOR-CLAUDE.md was not regenerated after B2/B3. It has a 'stale' CSS rule but no 'stalled' label or data-label card CSS; index.html has both (lines 55, 104-111, 138).",
+      "files": [
+        "tools/release-tracker/SETUP-FOR-CLAUDE.md",
+        "tools/release-tracker/index.html"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-loop-tooling-F1-5",
+      "feature": "release-loop-tooling",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "J4/J5 agent card",
+      "rootCause": "Owner/spec-author decision needed on whether the count returns to the agent card; the fix agent could not ask. The spec now describes the current card, so tests pass but the original design differs.",
+      "files": [
+        "tools/release-tracker/index.html",
+        "docs/training/release-loop-tooling.md",
+        "docs/changes/release-loop-tooling.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-loop-tooling-F1-6",
+      "feature": "release-loop-tooling",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "Change spec Known limitations",
+      "rootCause": "The bullet that a started-with-no-end agent stays running forever and that idle checks cover only --extra agents was made false by B2 (sync lines 118-120, 258 mark journal agents stalled). The bullet about tables scrolling at 390 px was made false by B3.",
+      "files": [
+        "docs/changes/release-loop-tooling.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-loop-tooling-F1-7",
+      "feature": "release-loop-tooling",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Release loop inside the platform for in-app agents",
+      "rootCause": "Out of scope for this feature's request, still an open gap for the release loop overall. When built it must be reached from the World Shell, not admin navigation.",
+      "files": [
+        "server/data/releaseLoop/definition.json"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
           "commit": null
         }
       ]
