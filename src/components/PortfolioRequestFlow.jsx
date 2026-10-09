@@ -394,6 +394,14 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
   const [fallbackResult, setFallbackResult] = useState(null);
   const [fallbackKind, setFallbackKind] = useState(null);
   const [actorContext, setActorContext] = useState(null);
+  // request_betsy runs the deterministic step engine server-side
+  // (server/lib/bestyStaffDeterministic.js) — chosenFlow/intakeState round-
+  // trip each turn the same way leadMemory already does, so the stateless
+  // API layer knows which step it's on. build_own still runs the old
+  // tool-calling loop (chosenFlow stays null for it), until it gets the
+  // same conversion.
+  const [chosenFlow, setChosenFlow] = useState(null);
+  const [intakeState, setIntakeState] = useState(null);
   const [loginChallengeOpen, setLoginChallengeOpen] = useState(false);
   const [loginChallenge, setLoginChallenge] = useState({ publicId: '', password: '' });
   const [loginChallengeBusy, setLoginChallengeBusy] = useState(false);
@@ -589,6 +597,7 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
           leadMemory: readLeadMemory(),
           attribution: readBestyAttribution(),
           agentKey,
+          ...(chosenFlow === 'request_betsy' ? { flow: chosenFlow, state: intakeState } : {}),
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -597,6 +606,7 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
         setMessages((m) => [...m, { role: 'notice', text: data.error || 'BestyStaff hit an error — please try again.' }]);
         return;
       }
+      if (chosenFlow === 'request_betsy' && data.state) setIntakeState(data.state);
       if (data.reply) respondAssistant(data.reply);
       // convert_lead_to_member only captures the visitor's choice (personal
       // vs. other, optional alternate login email) — it never handles a
@@ -674,6 +684,34 @@ export default function PortfolioRequestPrompt({ sourceOutput, master, user, aut
   function pickFlow(label) {
     respondUser(label, 'interestArea', label);
     setPhase('chatting');
+    // Flow options are always ordered [request_betsy, build_own] — same
+    // convention FLOW_QUICK_REPLIES already relies on (see
+    // bestyStaffScript.js). Only request_betsy runs the deterministic
+    // engine so far; build_own still goes through the tool-calling API path.
+    const options = intakeConfig?.flowOptions || FLOW_QUICK_REPLIES;
+    const kind = options.indexOf(label) === 0 ? 'request_betsy' : null;
+    setChosenFlow(kind);
+    if (kind === 'request_betsy') {
+      // Fresh engine state — the opening-script answers already collected
+      // (knowsBetsy/knowsBetsyDetail, asked before flow-pick — see the
+      // 'knowsBetsy' phase above) seed step 1 so the visitor isn't re-asked
+      // something they already answered in the cache layer. There's no
+      // real visitor answer yet to interpret this turn, so render the
+      // current step's question locally (no network call) — the same
+      // pattern pickKnowsBetsy/pickConsent already use — rather than
+      // sending the flow-pick button label itself to the API as if it
+      // were an answer.
+      const seeded = { step: 'comparingToRole', answers: {} };
+      if (cacheCtx.knowsBetsy !== null) seeded.answers.knowsBetsy = cacheCtx.knowsBetsy;
+      if (cacheCtx.knowsBetsyDetail) seeded.answers.knowsBetsyDetail = cacheCtx.knowsBetsyDetail;
+      if (cacheCtx.topQuestions) seeded.answers.topQuestions = cacheCtx.topQuestions;
+      const initialState = cacheCtx.knowsBetsy !== null ? seeded : { step: 'knowsBetsy', answers: {} };
+      setIntakeState(initialState);
+      respondAssistant(initialState.step === 'knowsBetsy'
+        ? KNOWS_BETSY_QUESTION
+        : "Are you comparing Betsy to an open role? If so, paste the job description (or a link to it) right into the chat.");
+      return;
+    }
     const context = `[cache-layer context already collected — do not re-ask: consent to capture chat context = ${cacheCtx.consentGiven ? 'yes' : 'no'}; knows Betsy = ${cacheCtx.knowsBetsy ? `yes (${cacheCtx.knowsBetsyDetail || 'connection not specified'})` : 'no'}; visitor's top questions for today: "${cacheCtx.topQuestions}"]`;
     sendToApi(`${label}\n\n${context}`, historySnapshot(), label);
   }

@@ -1,9 +1,10 @@
 import { Router } from 'express';
+import { z } from 'zod';
 import Anthropic from '@anthropic-ai/sdk';
 import { db } from '../db.js';
 import { requireUser } from '../auth.js';
 import { resolveReconciliationTask } from '../lib/careerReconciliation.js';
-import { runInteractiveAgentLoop } from '../lib/interactiveAgentLoop.js';
+import { assertAgentLlmBudget, recordAgentLlmUsage } from '../lib/agentLlmUsage.js';
 
 const router = Router();
 const MAX_HISTORY_TURNS = 16;
@@ -11,26 +12,36 @@ const anthropic = process.env.ANTHROPIC_API_KEY
   ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   : null;
 
-const CAREER_TOOLS = [{
-  name: 'resolve_career_conflict',
-  description: 'Resolve the member-owned open career reconciliation task after the member has clearly stated the corrected value or selected a source. Never infer a correction the member did not state.',
-  input_schema: {
-    type: 'object',
-    properties: {
-      taskId: { type: 'integer' },
-      method: { type: 'string', enum: ['chose_source', 'user_dictated'] },
-      chosenSourceReference: { type: 'string' },
-      dictatedInstruction: { type: 'string' },
-      correctedValue: { description: 'The normalized value to apply. Preserve the member meaning; do not add facts.' },
-    },
-    required: ['taskId', 'method'],
-  },
-}];
+// No Anthropic tool calls here — applying a resolution is a deterministic
+// decision this route makes in code (see the `if (extraction.resolved ...)`
+// check below), never something the model triggers via tool_use. Claude is
+// called once per turn as a plain (tool-less) completion whose only job is
+// the genuinely probabilistic part: understanding the member's free-text
+// reply well enough to (a) extract a structured judgement matching
+// ExtractionSchema and (b) draft the next clarifying line if not yet
+// resolved. The route parses and validates that JSON itself — Claude never
+// decides whether resolveReconciliationTask() actually runs.
+const ExtractionSchema = z.object({
+  resolved: z.boolean(),
+  method: z.enum(['chose_source', 'user_dictated']).nullable(),
+  chosenSourceReference: z.string().nullable(),
+  correctedValue: z.union([z.string(), z.number(), z.boolean()]).nullable(),
+  reply: z.string(),
+});
 
 function parseConfig(value) {
   if (!value) return {};
   if (typeof value === 'object') return value;
   try { return JSON.parse(value); } catch { return {}; }
+}
+
+// Extracts a JSON object from Claude's plain-text response. Claude is asked
+// to emit ONLY the object (no prose, no code fences) but models sometimes
+// wrap it anyway — strip a leading/trailing fence before parsing rather than
+// failing the turn over formatting.
+function extractJson(text) {
+  const stripped = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '');
+  return JSON.parse(stripped);
 }
 
 router.post('/', requireUser, async (req, res) => {
@@ -57,7 +68,7 @@ router.post('/', requireUser, async (req, res) => {
     `).get();
     if (!agentDefinition) return res.status(404).json({ error: 'BestyStaff is not available' });
     const config = parseConfig(agentDefinition.config);
-    const llmPolicy = config.llm || { provider: 'anthropic', model: 'claude-opus-4-8', maxOutputTokensPerResponse: 2048, tokenCap: 500000, capPeriod: 'month', maxToolIterations: 4 };
+    const llmPolicy = config.llm || { provider: 'anthropic', model: 'claude-opus-4-8', maxOutputTokensPerResponse: 2048, tokenCap: 500000, capPeriod: 'month' };
     if (llmPolicy.mode === 'none') return res.json({ offline: true, deterministicOnly: true });
     if (llmPolicy.provider !== 'anthropic') return res.status(503).json({ error: `Configured LLM provider "${llmPolicy.provider}" is not available` });
 
@@ -67,7 +78,7 @@ router.post('/', requireUser, async (req, res) => {
       .slice(-MAX_HISTORY_TURNS)
       .map((item) => ({ role: item.role, content: item.content.slice(0, 8000) }));
     const messages = [...cleanHistory, { role: 'user', content: message }];
-    let resolved = null;
+
     const systemPrompt = `You are BestyStaff helping an authenticated member resolve one Career Foundation reconciliation task.
 Task id: ${Number(task.id)}
 Task type: ${task.task_type}
@@ -75,29 +86,50 @@ Entry type: ${task.entry_type}
 Atom key: ${task.atom_key || 'unmapped'}
 Evidence options: ${JSON.stringify(evidenceRefs).slice(0, 12000)}
 
-The sources have equal standing. Never choose automatically. Ask a concise clarification if the member has not supplied an exact choice or corrected value. Once clear, call resolve_career_conflict exactly once. Do not alter any other task or field. Explain the applied result plainly.`;
+The sources have equal standing. Never choose automatically. Your only job is to read the conversation and report, as JSON, whether the member has clearly supplied an exact choice or corrected value — never infer a correction they did not state. Ask a concise clarification if not.
 
-    const loop = await runInteractiveAgentLoop({
-      anthropic,
-      agentDefinition,
-      llmPolicy,
-      systemPrompt,
-      tools: CAREER_TOOLS,
+Respond with ONLY a JSON object (no prose, no code fence) matching exactly this shape:
+{
+  "resolved": boolean,               // true only if the member has clearly and unambiguously chosen a source or dictated a corrected value
+  "method": "chose_source" | "user_dictated" | null,
+  "chosenSourceReference": string | null,   // required when method is "chose_source"
+  "correctedValue": string | number | boolean | null,  // required when method is "user_dictated" — the normalized value; preserve member meaning, do not add facts
+  "reply": string                    // what to say to the member next: a clarifying question if not resolved, or a plain confirmation of the result if resolved
+}`;
+
+    await assertAgentLlmBudget(Number(agentDefinition.id), llmPolicy);
+    const response = await anthropic.messages.create({
+      model: llmPolicy.model,
+      max_tokens: Math.max(256, Math.min(16384, Number(llmPolicy.maxOutputTokensPerResponse || 2048))),
+      system: systemPrompt,
       messages,
-      executeTool: async (name, input) => {
-        if (name !== 'resolve_career_conflict') return { ok: false, error: 'Unknown tool' };
-        if (Number(input.taskId) !== Number(task.id)) return { ok: false, error: 'Task id is outside this conversation scope' };
-        const resolution = input.method === 'chose_source'
-          ? { method: 'chose_source', chosenSourceReference: input.chosenSourceReference }
-          : { method: 'user_dictated', dictatedInstruction: input.dictatedInstruction || message, appliedValue: input.correctedValue };
-        if (resolution.method === 'user_dictated' && (resolution.appliedValue === undefined || resolution.appliedValue === null || resolution.appliedValue === '')) {
-          return { ok: false, error: 'A corrected value is required' };
-        }
-        resolved = await resolveReconciliationTask(req.user.id, Number(task.id), resolution);
-        return { ok: true, ...resolved };
-      },
     });
-    res.json({ reply: loop.exhausted ? 'I need one more message to finish that correction.' : loop.reply, resolved });
+    await recordAgentLlmUsage(Number(agentDefinition.id), llmPolicy, response.usage || {});
+
+    const replyText = (response.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('\n').trim();
+    let extraction;
+    try {
+      extraction = ExtractionSchema.parse(extractJson(replyText));
+    } catch {
+      return res.json({ reply: "I need one more message to finish that correction.", resolved: null });
+    }
+
+    // Deterministic gate — the route decides whether to actually apply a
+    // resolution, never the model. Mirrors executeTool's old validation.
+    let resolved = null;
+    if (
+      extraction.resolved
+      && extraction.method
+      && ((extraction.method === 'chose_source' && extraction.chosenSourceReference)
+        || (extraction.method === 'user_dictated' && extraction.correctedValue !== null && extraction.correctedValue !== ''))
+    ) {
+      const resolution = extraction.method === 'chose_source'
+        ? { method: 'chose_source', chosenSourceReference: extraction.chosenSourceReference }
+        : { method: 'user_dictated', dictatedInstruction: message, appliedValue: extraction.correctedValue };
+      resolved = await resolveReconciliationTask(req.user.id, Number(task.id), resolution);
+    }
+
+    res.json({ reply: extraction.reply || '…', resolved });
   } catch (error) {
     console.error('[bestystaff-career] failed:', error.message);
     if (error.code === 'AGENT_LLM_CAP_REACHED') return res.status(429).json({ error: 'BestyStaff has reached its configured token cap.', usage: error.usage });
