@@ -62,6 +62,9 @@ Every status update given to the owner is also recorded as a numbered release up
 and compared automatically with the previous update; `docs/release-log/updates.md` is the copy to send to
 others, and the tracker shows the latest update and the full history. Write the note for a reader outside
 the project. Number the next release by bumping `version` when this one ships.
+The tracker overview charts the release's history (`scripts/release-history.mjs` rebuilds
+`docs/release-log/history.json` from every committed state file; publish it to the tracker doc
+`tracker/history`). History is never overwritten — the slider replays any earlier moment.
 
 ## Owner directions that always apply
 

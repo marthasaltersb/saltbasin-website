@@ -1,39 +1,45 @@
 <title>Salt Basin Release Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Jost:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
 /* Layout: control-room board — summary strip, then feature lanes, live agents, bug queue, agent ledger */
+/* Salt Basin design language: cream / parchment surfaces, teal + gold structure, Fraunces + Jost.
+   Chart series (--s1..--s4) are validated for CVD separation, chroma and contrast in each mode. */
 :root {
-  --bg: #f3f6f7; --panel: #ffffff; --ink: #14262e; --muted: #5a6d75; --line: #d9e3e6;
-  --teal: #1b4f66; --teal-soft: #dcecf1; --gold: #b07a1c; --gold-soft: #f6ead2;
-  --good: #23784f; --good-soft: #dff1e7; --warn: #9a6200; --warn-soft: #fbedd0;
-  --bad: #b03a26; --bad-soft: #f8e0da; --human: #6b4bb0; --human-soft: #ebe4f8;
-  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
-  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --bg: #F8F4EC; --panel: #FFFCF6; --panel-2: #F1EBDD; --ink: #2B2A28; --muted: #6B665E; --line: #E4DCCB;
+  --teal: #345A68; --teal-soft: #DCE9EC; --gold: #9A5F1C; --gold-soft: #F3E3CE;
+  --good: #2F6B45; --good-soft: #DCEFE2; --warn: #8A5A12; --warn-soft: #F6E7CC;
+  --bad: #A4432F; --bad-soft: #F6DED7; --human: #6E4B7E; --human-soft: #ECE1F1;
+  --s1: #0B79A8; --s2: #B0661A; --s3: #9C4A8C; --s4: #4A8C2A; --grid: rgba(43,42,40,.08);
+  --display: "Fraunces", Georgia, serif;
+  --body: "Jost", "Segoe UI", system-ui, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #0f1a1f; --panel: #16242b; --ink: #e3edf0; --muted: #94a8b0; --line: #26383f;
-  --teal: #7cc2dc; --teal-soft: #1b3440; --gold: #e0ad55; --gold-soft: #3a2d14;
-  --good: #6fd0a0; --good-soft: #163327; --warn: #f0b85a; --warn-soft: #372a10;
-  --bad: #f08c78; --bad-soft: #3d1d17; --human: #b9a3f0; --human-soft: #2a2244; color-scheme: dark } }
+  --bg: #161A1C; --panel: #1E2325; --panel-2: #252B2E; --ink: #EFE8DC; --muted: #A9A296; --line: #2F3639;
+  --teal: #8CC3D3; --teal-soft: #22343B; --gold: #E0A458; --gold-soft: #3A2C17;
+  --good: #7CC99A; --good-soft: #163327; --warn: #F0B85A; --warn-soft: #372A10;
+  --bad: #EE9580; --bad-soft: #3D1D17; --human: #C7A3D6; --human-soft: #2C2236;
+  --s1: #2794C9; --s2: #C27C28; --s3: #B566A6; --s4: #6BA642; --grid: rgba(239,232,220,.08); color-scheme: dark } }
 :root[data-theme="dark"] {
-  --bg: #0f1a1f; --panel: #16242b; --ink: #e3edf0; --muted: #94a8b0; --line: #26383f;
-  --teal: #7cc2dc; --teal-soft: #1b3440; --gold: #e0ad55; --gold-soft: #3a2d14;
-  --good: #6fd0a0; --good-soft: #163327; --warn: #f0b85a; --warn-soft: #372a10;
-  --bad: #f08c78; --bad-soft: #3d1d17; --human: #b9a3f0; --human-soft: #2a2244; color-scheme: dark }
+  --bg: #161A1C; --panel: #1E2325; --panel-2: #252B2E; --ink: #EFE8DC; --muted: #A9A296; --line: #2F3639;
+  --teal: #8CC3D3; --teal-soft: #22343B; --gold: #E0A458; --gold-soft: #3A2C17;
+  --good: #7CC99A; --good-soft: #163327; --warn: #F0B85A; --warn-soft: #372A10;
+  --bad: #EE9580; --bad-soft: #3D1D17; --human: #C7A3D6; --human-soft: #2C2236;
+  --s1: #2794C9; --s2: #C27C28; --s3: #B566A6; --s4: #6BA642; --grid: rgba(239,232,220,.08); color-scheme: dark }
 body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body); }
 .wrap { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; display: grid; gap: 22px; }
 header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 20px; }
-h1 { font: 800 26px/1.15 var(--display); letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
-h2 { font: 700 13px/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 10px; }
+h1 { font: 600 28px/1.15 var(--display); letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+h2 { font: 500 12px/1.2 var(--body); text-transform: uppercase; letter-spacing: 0.18em; color: var(--muted); margin: 0 0 10px; }
 .sync { font: 12px var(--mono); color: var(--muted); }
 .sync b { color: var(--ink); font-weight: 600; }
 .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--good); margin-right: 6px; vertical-align: 1px; }
 .stale .live-dot { background: var(--warn); }
 .strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
 .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
-.stat .n { font: 800 28px/1 var(--display); font-variant-numeric: tabular-nums; }
+.stat .n { font: 600 28px/1 var(--display); font-variant-numeric: tabular-nums; }
 .stat .l { font-size: 13px; color: var(--muted); margin-top: 4px; }
 .stat.human .n { color: var(--human); } .stat.bad .n { color: var(--bad); } .stat.good .n { color: var(--good); }
 .filters { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -61,7 +67,7 @@ tr:last-child td { border-bottom: 0; }
 .bar i { display: block; height: 100%; background: var(--good); border-radius: 3px; }
 .now { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
 .agent { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--teal); border-radius: 8px; padding: 12px 14px; min-width: 0; }
-.agent .role { font: 700 12px var(--display); text-transform: uppercase; letter-spacing: 0.06em; color: var(--teal); }
+.agent .role { font: 600 12px var(--body); text-transform: uppercase; letter-spacing: 0.06em; color: var(--teal); }
 .agent .feat { font-weight: 600; margin: 2px 0 6px; overflow-wrap: anywhere; }
 .agent .act { font: 12.5px/1.45 var(--mono); color: var(--muted); overflow-wrap: anywhere; }
 .agent .meta { font-size: 12px; color: var(--muted); margin-top: 6px; }
@@ -80,7 +86,7 @@ a { color: var(--teal); }
 .crumbs a:hover { text-decoration: underline; }
 .crumbs .sep { color: var(--muted); }
 .crumbs .here { font-weight: 700; overflow-wrap: anywhere; }
-.layer-title { font: 800 22px/1.2 var(--display); margin: 0; overflow-wrap: anywhere; }
+.layer-title { font: 600 23px/1.2 var(--display); margin: 0; overflow-wrap: anywhere; }
 .layer-sub { color: var(--muted); margin-top: 4px; }
 a.stat { display: block; color: inherit; text-decoration: none; transition: border-color .15s, transform .15s; }
 a.stat:hover, a.stat:focus-visible { border-color: var(--teal); }
@@ -97,11 +103,49 @@ a:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .layer { display: grid; gap: 22px; min-width: 0; }
 .update { display: block; background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--gold); border-radius: 8px; padding: 14px 16px; color: inherit; text-decoration: none; }
 a.update:hover, a.update:focus-visible { border-color: var(--teal); border-left-color: var(--gold); }
-.update .ver { font: 700 12px var(--display); text-transform: uppercase; letter-spacing: .06em; color: var(--gold); }
-.update .head { font: 700 17px/1.3 var(--display); margin: 4px 0 6px; }
+.update .ver { font: 600 12px var(--body); text-transform: uppercase; letter-spacing: .06em; color: var(--gold); }
+.update .head { font: 600 18px/1.3 var(--display); margin: 4px 0 6px; }
 .update ul { margin: 6px 0 0; padding-left: 18px; font-size: 14px; }
 .update .note { font-size: 14px; color: var(--ink); }
 .md b, .md strong { font-weight: 700; }
+/* Trends panel */
+.trends { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.trends-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 16px; }
+.trends-head h3 { font: 600 21px/1.2 var(--display); margin: 0; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 2px; background: var(--panel-2); }
+.seg button { font: 500 13px var(--body); border: 0; background: transparent; color: var(--ink); border-radius: 999px; padding: 5px 12px; cursor: pointer; min-height: 32px; }
+.seg button[aria-pressed="true"] { background: var(--teal); color: var(--panel); }
+.controls select { font: 500 13px var(--body); border: 1px solid var(--line); border-radius: 999px; background: var(--panel-2); color: var(--ink); padding: 6px 12px; min-height: 34px; max-width: 100%; }
+.controls label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; display: inline-flex; gap: 8px; align-items: center; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px; }
+.legend button { font: 500 13px var(--body); display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 999px; padding: 4px 11px; cursor: pointer; min-height: 30px; }
+.legend button[aria-pressed="false"] { color: var(--muted); opacity: .6; }
+.legend .sw { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.legend button[aria-pressed="false"] .sw { opacity: .35; }
+.asof-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.asof-tiles .stat { padding: 10px 12px; }
+.asof-tiles .d { font-size: 12px; color: var(--muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.chartbox { position: relative; height: 290px; min-width: 0; }
+.slider { display: grid; gap: 6px; }
+.slider-row { display: flex; align-items: center; gap: 8px; }
+.slider input[type=range] { flex: 1; min-width: 0; accent-color: var(--teal); height: 28px; }
+.slider .step { font: 600 13px var(--body); border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); border-radius: 999px; min-width: 34px; min-height: 32px; cursor: pointer; }
+.slider .live { padding: 0 12px; }
+.slider .live[aria-pressed="true"] { background: var(--teal); color: var(--panel); }
+.asof { font-size: 13px; color: var(--muted); }
+.asof b { color: var(--ink); font-weight: 600; }
+.ticks { position: relative; height: 16px; margin: 0 42px 0 42px; }
+.ticks span { position: absolute; transform: translateX(-50%); font: 600 11px var(--body); color: var(--gold); white-space: nowrap; }
+.update-note { border-left: 3px solid var(--gold); padding: 6px 12px; background: var(--panel-2); border-radius: 0 8px 8px 0; font-size: 14px; }
+.spark-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+a.spark { display: block; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; color: inherit; text-decoration: none; background: var(--panel); min-width: 0; }
+a.spark:hover, a.spark:focus-visible { border-color: var(--teal); }
+.spark .k { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.spark .v { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.spark svg { display: block; width: 100%; height: 34px; margin-top: 4px; }
+.tableview { overflow-x: auto; }
+@media (max-width: 640px) { .chartbox { height: 240px; } .trends { padding: 12px; } .ticks { margin: 0 34px; } }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { display: inline-block; border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 3px 10px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--ink); }
 .chip:hover { border-color: var(--teal); }
@@ -197,12 +241,211 @@ function agentCards(list) {
 }
 const section = (title, html) => `<section><h2>${esc(title)}</h2>${html}</section>`;
 
+
+// ---- Trends: graphs over the release's recorded history, with toggles, a feature filter and a time slider.
+// History (tracker/history) is every recorded state of the release; nothing is overwritten, so any earlier
+// moment can be replayed. Per point: f[key] = [status, round, stepsPassed, stepsTotal, open, verified, backlog, needsPerson].
+let hist = null; let chart = null;
+const T = { measure: 'bugs', view: 'totals', feature: 'all', at: null, live: true, hidden: {}, table: false };
+try { Object.assign(T, JSON.parse(localStorage.getItem('rt-trends') || '{}'), { at: null, live: true }); } catch {}
+const saveT = () => { try { const { at, live, ...keep } = T; localStorage.setItem('rt-trends', JSON.stringify(keep)); } catch {} };
+const PASSED_S = ['passed', 'passed_with_backlog'];
+const BUG_SERIES = [
+  { key: 'open', label: 'Open (this work)', idx: 4, color: '--s1' },
+  { key: 'verified', label: 'Verified fixed', idx: 5, color: '--s2' },
+  { key: 'backlog', label: 'Backlog (not this work)', idx: 6, color: '--s3' },
+  { key: 'person', label: 'Waiting on a person', idx: 7, color: '--s4' },
+];
+const cssv = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmtT = (iso) => { const d = new Date(iso); return `${d.toLocaleString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })} ${d.toISOString().slice(11, 16)}`; };
+const rows = (pt) => Object.entries(pt.f).filter(([k]) => T.feature === 'all' || k === T.feature);
+function measureAt(pt) {
+  const r = rows(pt);
+  if (T.measure === 'bugs') return Object.fromEntries(BUG_SERIES.map((s) => [s.key, r.reduce((n, [, v]) => n + (v[s.idx] || 0), 0)]));
+  if (T.measure === 'features') return { passed: r.filter(([, v]) => PASSED_S.includes(v[0])).length, tested: r.filter(([, v]) => v[3]).length };
+  const scored = r.filter(([, v]) => v[3]);
+  return { score: scored.length ? Math.round((scored.reduce((n, [, v]) => n + v[2] / v[3], 0) / scored.length) * 1000) / 10 : null };
+}
+function seriesDefs() {
+  if (T.measure === 'bugs') return BUG_SERIES.map((s) => ({ key: s.key, label: s.label, color: s.color }));
+  if (T.measure === 'features') return [{ key: 'passed', label: 'Features passed', color: '--s1' }, { key: 'tested', label: 'Features tested at least once', color: '--s2' }];
+  return [{ key: 'score', label: T.feature === 'all' ? 'Average step pass rate (tested features)' : 'Step pass rate', color: '--s1' }];
+}
+// The update in force at a point: the latest update recorded at or before it.
+// An update belongs to the recorded state nearest its time (they are written seconds apart).
+const pointIndexAt = (iso) => { const t = Date.parse(iso); let best = 0; hist.points.forEach((p, j) => { if (Math.abs(Date.parse(p.t) - t) < Math.abs(Date.parse(hist.points[best].t) - t)) best = j; }); return best; };
+const updateAt = (pt) => { const i = hist.points.indexOf(pt); return [...(hist?.updates || [])].reverse().find((u) => pointIndexAt(u.at) <= i) || null; };
+
+function trendsHtml() {
+  if (!hist || !hist.points?.length) return `<section class="trends"><div class="trends-head"><h3>Release trends</h3></div><div class="empty">Trend history loads with the next sync.</div></section>`;
+  const keys = Object.keys(hist.points[hist.points.length - 1].f);
+  const seg = (name, opts) => `<div class="seg" role="group" aria-label="${esc(name)}">${opts.map(([v, l]) => `<button type="button" data-t="${name}" data-v="${v}" aria-pressed="${T[name] === v}">${esc(l)}</button>`).join('')}</div>`;
+  return `<section class="trends" id="trends">
+    <div class="trends-head"><h3>Release trends${snap.release?.version ? ` · ${esc(snap.release.version)}` : ''}</h3><span class="asof">History since <b>${esc(fmtT(hist.points[0].t))} UTC</b> · ${hist.points.length} recorded states · ${(hist.updates || []).length} updates</span></div>
+    <div class="controls">
+      <label>Show ${seg('measure', [['bugs', 'Bugs'], ['scores', 'Test scores'], ['features', 'Features passed']])}</label>
+      <label>As ${seg('view', [['totals', 'Totals'], ['change', 'Change per update']])}</label>
+      <label>Feature <select id="t-feature"><option value="all">All features</option>${keys.map((k) => `<option value="${esc(k)}" ${T.feature === k ? 'selected' : ''}>${esc(k)}</option>`).join('')}</select></label>
+      <div class="seg" role="group" aria-label="View"><button type="button" id="t-table" aria-pressed="${T.table}">Table view</button></div>
+    </div>
+    <div class="legend" id="t-legend"></div>
+    <div class="asof-tiles" id="t-tiles"></div>
+    <div class="chartbox" id="t-chartbox"><canvas id="t-chart" role="img" aria-label="Release trend chart"></canvas></div>
+    <div class="tableview" id="t-tableview" hidden></div>
+    <div class="slider">
+      <div class="ticks" id="t-ticks" aria-hidden="true"></div>
+      <div class="slider-row">
+        <button type="button" class="step" id="t-prev" title="Previous update" aria-label="Previous update">‹</button>
+        <input type="range" id="t-range" min="0" max="${hist.points.length - 1}" step="1" value="${hist.points.length - 1}" aria-label="Move through the release history">
+        <button type="button" class="step" id="t-next" title="Next update" aria-label="Next update">›</button>
+        <button type="button" class="step live" id="t-live" aria-pressed="true">Live</button>
+      </div>
+      <div class="asof" id="t-asof"></div>
+    </div>
+    <div id="t-note"></div>
+    <div><h2 style="margin-top:6px">Test score by feature</h2><div class="spark-grid" id="t-sparks"></div></div>
+  </section>`;
+}
+
+function renderTiles(i) {
+  const pt = hist.points[i]; const cur = measureAt(pt); const u = updateAt(pt);
+  const prevU = u ? (hist.updates || [])[(hist.updates || []).indexOf(u) - 1] : null;
+  const base = prevU ? measureAt(hist.points[pointIndexAt(prevU.at)]) : null;
+  $('t-tiles').innerHTML = seriesDefs().map((d) => {
+    const v = cur[d.key]; const b = base?.[d.key];
+    const delta = v != null && b != null ? v - b : null;
+    const unit = T.measure === 'scores' ? '%' : '';
+    return `<div class="stat"><div class="n">${v == null ? '—' : esc(v + unit)}</div><div class="l">${esc(d.label)}</div><div class="d">${delta == null ? 'no earlier update to compare' : delta === 0 ? `no change since ${esc(prevU.version)}` : `${delta > 0 ? '+' : ''}${Math.round(delta * 10) / 10}${unit} since ${esc(prevU.version)}`}</div></div>`;
+  }).join('');
+}
+
+function renderAsOf(i) {
+  const pt = hist.points[i]; const u = updateAt(pt); const last = i === hist.points.length - 1;
+  $('t-asof').innerHTML = `${last ? '<b>Live</b> · ' : ''}As of <b>${esc(fmtT(pt.t))} UTC</b> · commit ${commit(pt.c) || esc(pt.c)}${u ? ` · after update <a href="${href('update', u.version)}">${esc(u.version)}</a>` : ' · before the first update'}`;
+  const full = u && (snap.updates || []).find((x) => x.version === u.version);
+  $('t-note').innerHTML = full ? `<div class="update-note"><b>${esc(full.version)}</b>${full.headline ? ` — ${esc(full.headline)}` : ''} · <a href="${href('update', full.version)}">Read the update notes ›</a></div>` : '';
+  const live = $('t-live'); live.setAttribute('aria-pressed', String(last));
+}
+
+function sparkSvg(vals, at) {
+  const W = 200; const H = 34; const n = vals.length;
+  const pts = vals.map((v, j) => (v == null ? null : [n > 1 ? (j / (n - 1)) * (W - 8) + 4 : W / 2, H - 4 - (v / 100) * (H - 8)]));
+  let d = ''; let pen = false;
+  for (const p of pts) { if (!p) { pen = false; continue; } d += `${pen ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`; pen = true; }
+  const m = pts[at];
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><line x1="4" x2="${W - 4}" y1="${H - 4}" y2="${H - 4}" stroke="var(--grid)" stroke-width="1"/>${d ? `<path d="${d}" fill="none" stroke="var(--s1)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>` : ''}${m ? `<circle cx="${m[0]}" cy="${m[1]}" r="4" fill="var(--s1)" stroke="var(--panel)" stroke-width="2"/>` : ''}</svg>`;
+}
+function renderSparks(i) {
+  const keys = Object.keys(hist.points[hist.points.length - 1].f).filter((k) => T.feature === 'all' || k === T.feature);
+  $('t-sparks').innerHTML = keys.map((k) => {
+    const vals = hist.points.map((p) => { const v = p.f[k]; return v && v[3] ? Math.round((v[2] / v[3]) * 1000) / 10 : null; });
+    const v = hist.points[i].f[k];
+    return `<a class="spark" href="${href('feature', k)}" title="${esc(k)}: step pass rate over time"><div class="k">${esc(k)}</div><div class="v">${v && v[3] ? `round ${v[1]}: ${v[2]}/${v[3]} steps (${vals[i]}%)` : 'not tested yet'} · ${esc(STATUS[v?.[0]] || (v?.[0] ? String(v[0]).split(', ').map((r) => ROLE[r] || r).join(' + ') : '—'))}</div>${sparkSvg(vals, i)}</a>`;
+  }).join('');
+}
+
+function renderTable() {
+  const box = $('t-tableview'); box.hidden = !T.table; $('t-chartbox').hidden = T.table;
+  if (!T.table) return;
+  const defs = seriesDefs();
+  box.innerHTML = `<table><thead><tr><th>When (UTC)</th><th>Update</th>${defs.map((d) => `<th class="num">${esc(d.label)}</th>`).join('')}</tr></thead><tbody>${[...hist.points].reverse().map((p) => { const m = measureAt(p); const u = updateAt(p); return `<tr><td class="num">${esc(fmtT(p.t))}</td><td>${u ? esc(u.version) : '—'}</td>${defs.map((d) => `<td class="num">${m[d.key] ?? '—'}</td>`).join('')}</tr>`; }).join('')}</tbody></table>`;
+}
+
+const markersPlugin = {
+  id: 'rtMarkers',
+  afterDatasetsDraw(c) {
+    if (T.view !== 'totals') return;
+    const { ctx, chartArea: a, scales: { x } } = c;
+    ctx.save();
+    for (const u of hist.updates || []) {   // update markers: dashed gold rules
+      const px = x.getPixelForValue(pointIndexAt(u.at));
+      ctx.strokeStyle = cssv('--gold'); ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(px, a.top); ctx.lineTo(px, a.bottom); ctx.stroke();
+    }
+    const px = x.getPixelForValue(T.at);   // slider cursor: solid ink rule
+    ctx.setLineDash([]); ctx.strokeStyle = cssv('--ink'); ctx.globalAlpha = 0.55; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(px, a.top); ctx.lineTo(px, a.bottom); ctx.stroke();
+    ctx.restore();
+  },
+};
+
+function renderChart() {
+  if (!window.Chart) { $('t-chartbox').innerHTML = '<div class="empty">The chart library did not load. Use Table view.</div>'; return; }
+  const defs = seriesDefs(); const ink = cssv('--muted'); const grid = cssv('--grid');
+  const font = { family: cssv('--body') || 'Jost', size: 12 };
+  let labels; let datasets; let type;
+  if (T.view === 'totals') {
+    type = 'line';
+    labels = hist.points.map((p) => fmtT(p.t));
+    datasets = defs.map((d) => ({ label: d.label, key: d.key, data: hist.points.map((p) => measureAt(p)[d.key]), borderColor: cssv(d.color), backgroundColor: cssv(d.color), borderWidth: 2, pointRadius: 0, pointHoverRadius: 5, pointHitRadius: 12, tension: 0, spanGaps: true, hidden: !!T.hidden[d.key] }));
+  } else {
+    // Change per update: each update compared with the one before it, then live vs the last update.
+    type = 'bar';
+    const ups = hist.updates || []; const marks = ups.map((u) => ({ label: u.version, i: pointIndexAt(u.at) }));
+    marks.push({ label: 'Live', i: hist.points.length - 1 });
+    const pairs = marks.slice(1).map((m, j) => ({ label: `${marks[j].label} → ${m.label}`, a: measureAt(hist.points[marks[j].i]), b: measureAt(hist.points[m.i]) }));
+    labels = pairs.map((p) => p.label);
+    datasets = defs.map((d) => ({ label: d.label, key: d.key, data: pairs.map((p) => (p.a[d.key] != null && p.b[d.key] != null ? Math.round((p.b[d.key] - p.a[d.key]) * 10) / 10 : null)), backgroundColor: cssv(d.color), borderRadius: 4, borderSkipped: false, borderColor: cssv('--panel'), borderWidth: 2, maxBarThickness: 26, hidden: !!T.hidden[d.key] }));
+  }
+  if (chart) chart.destroy();
+  chart = new Chart($('t-chart'), {
+    type, data: { labels, datasets }, plugins: [markersPlugin],
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: cssv('--panel'), titleColor: cssv('--ink'), bodyColor: cssv('--ink'), borderColor: cssv('--line'), borderWidth: 1, titleFont: font, bodyFont: font, padding: 10, usePointStyle: true,
+          callbacks: { afterTitle: (it) => { if (T.view !== 'totals') return ''; const u = updateAt(hist.points[it[0].dataIndex]); return u ? `after ${u.version}` : ''; },
+            label: (c) => ` ${c.dataset.label}: ${c.parsed.y == null ? '—' : (T.view === 'change' && c.parsed.y > 0 ? '+' : '') + c.parsed.y + (T.measure === 'scores' ? '%' : '')}` } },
+      },
+      scales: {
+        x: { ticks: { color: ink, font, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 }, grid: { display: false }, border: { color: grid } },
+        y: { beginAtZero: T.view === 'totals', suggestedMax: T.measure === 'scores' && T.view === 'totals' ? 100 : undefined, ticks: { color: ink, font, precision: 0, callback: (v) => v + (T.measure === 'scores' ? '%' : '') }, grid: { color: grid }, border: { display: false } },
+      },
+      onClick: (e, els) => { if (T.view === 'totals' && els.length) setAt(els[0].index); },
+    },
+  });
+}
+
+function renderLegend() {
+  $('t-legend').innerHTML = seriesDefs().map((d) => `<button type="button" data-series="${esc(d.key)}" aria-pressed="${!T.hidden[d.key]}"><span class="sw" style="background:var(${d.color})"></span>${esc(d.label)}</button>`).join('');
+}
+function renderTicks() {
+  const n = hist.points.length - 1;
+  $('t-ticks').innerHTML = (hist.updates || []).map((u) => `<span style="left:${n ? (pointIndexAt(u.at) / n) * 100 : 50}%">${esc(u.version.split('-').pop())}</span>`).join('');
+}
+function setAt(i, fromUser = true) {
+  T.at = Math.max(0, Math.min(hist.points.length - 1, i)); T.live = T.at === hist.points.length - 1;
+  $('t-range').value = T.at; renderTiles(T.at); renderAsOf(T.at); renderSparks(T.at); if (chart) chart.draw();
+}
+function mountTrends() {
+  if (!hist || !$('trends')) return;
+  if (T.live || T.at == null || T.at > hist.points.length - 1) T.at = hist.points.length - 1;
+  renderLegend(); renderTicks(); renderTable(); if (!T.table) renderChart(); setAt(T.at, false);
+  const box = $('trends');
+  box.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.t) { T[b.dataset.t] = b.dataset.v; T.hidden = {}; saveT(); route(); return; }
+    if (b.dataset.series) { T.hidden[b.dataset.series] = !T.hidden[b.dataset.series]; saveT(); renderLegend(); renderChart(); return; }
+    if (b.id === 't-table') { T.table = !T.table; saveT(); route(); return; }
+    if (b.id === 't-live') { setAt(hist.points.length - 1); return; }
+    if (b.id === 't-prev' || b.id === 't-next') {   // step to the previous / next update marker
+      const idx = (hist.updates || []).map((u) => pointIndexAt(u.at));
+      const target = b.id === 't-prev' ? [...idx].reverse().find((x) => x < T.at) : idx.find((x) => x > T.at);
+      setAt(target ?? (b.id === 't-prev' ? 0 : hist.points.length - 1));
+    }
+  });
+  $('t-range').addEventListener('input', (e) => setAt(Number(e.target.value)));
+  $('t-feature').addEventListener('change', (e) => { T.feature = e.target.value; saveT(); route(); });
+}
+
 const LAYERS = {
   '': () => {
     const s = snap; const human = STATS.human.count(s);
     const ups = s.updates || []; const u = ups[ups.length - 1];
     return { crumbs: [], html: `
-      ${u ? `<a class="update" href="${href('update', u.version)}"><div class="ver">Latest update ${esc(updateLabel(u))}${u.previous ? ` · compared with ${esc(u.previous)}` : ''}</div>${u.headline ? `<div class="head">${esc(u.headline)}</div>` : ''}<ul class="md">${(u.comparison?.lines || []).slice(0, 5).map((l) => `<li>${mdb(l)}</li>`).join('')}</ul><div class="go" style="margin-top:6px">Full update and history (${ups.length}) ›</div></a>` : ''}
+      ${trendsHtml()}
       <div class="strip">${Object.entries(STATS).map(([key, st]) => `<a class="stat ${st.tone}" href="${href('stat', key)}"><div class="n">${esc(st.count(s))}</div><div class="l">${esc(st.label)}</div><div class="go">Open ›</div></a>`).join('')}</div>
       ${human ? `<a class="callout" style="display:block;text-decoration:none" href="${href('stat', 'human')}"><b>${human} ${human === 1 ? 'bug needs' : 'bugs need'} a person.</b> Open them ›</a>` : ''}
       ${section('Agents working now', agentCards(s.agents.filter((a) => a.status === 'running')))}
@@ -312,6 +555,7 @@ function route() {
   const trail = [['Overview', '#/'], ...path.map((t, i) => [crumbLabel(t), `#/${path.slice(0, i + 1).join('/')}`])];
   $('crumbs').innerHTML = trail.map(([label, h], i) => (i === trail.length - 1 ? `<span class="here" aria-current="page">${esc(label)}</span>` : `<a href="${h}">${esc(label)}</a><span class="sep" aria-hidden="true">›</span>`)).join('');
   $('view').innerHTML = `<div class="layer">${layer.html}</div>`;
+  if (!path.length) mountTrends();
   document.title = `${trail[trail.length - 1][0]} · Release tracker`;
 }
 function render() {
@@ -331,10 +575,15 @@ window.addEventListener('hashchange', () => {
 // A whole table row is a target; the link inside it stays the keyboard/focus target.
 $('view').addEventListener('click', (e) => { if (e.target.closest('a')) return; const row = e.target.closest('tr[data-href]'); if (row) location.hash = row.dataset.href; });
 setInterval(render, 30000);
+try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => render()); } catch {}
 
 (async () => {
   const db = await claude.use('db');
   if (!db) { $('sync').textContent = 'Live updates are unavailable in this view. Open the tracker signed in to claude.ai.'; return; }
+  db.doc('tracker/history').onSnapshot((d) => {
+    const data = d && (d.data ? d.data() : d);
+    if (data && data.json) { try { hist = JSON.parse(data.json); if (snap) render(); } catch { /* keep the last good history */ } }
+  }, () => {});
   db.doc('tracker/current').onSnapshot((d) => {
     const data = d && (d.data ? d.data() : d);
     if (data && data.json) { try { snap = JSON.parse(data.json); snap.features ||= []; snap.agents ||= []; snap.bugs ||= []; render(); } catch { $('sync').textContent = 'The latest update could not be read.'; } }
