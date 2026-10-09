@@ -1,0 +1,549 @@
+{
+  "feature": "output-version-history",
+  "spec": "docs/training/output-version-history.md",
+  "version": 2,
+  "frozenAt": "2026-10-09T16:30:20.351Z",
+  "commitAtFreeze": "f16b2387ef7da90e97cd7701ebae493ed8ba43b9",
+  "specSha256": "20c124641a9bbd9b94bf0bce8508107a79f8b75a69fc8742cdb052457c9e8b66",
+  "amendment": "A1",
+  "previous": 1,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b39b2b4ed8525919",
+      "summary": "**Journeys → Career Master → Jobs → + Add**. Fill **Company** `Harborline Freight Systems`, **Title** `Finance Systems Lead`, **Start Date** `Jan 2018`, **End D"
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b86a571938492470",
+      "summary": "**Classic Tools → MY RESUME**. In the field with accessible name **Name of the new career-bound resume** type `Version demo resume`, click **New career-bound re"
+    },
+    {
+      "id": "J1.3",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "44bb9b7ec3881a08",
+      "summary": "In **New bullet for Harborline Freight Systems** type `Led the ledger consolidation across four regions.` and click **Add to Career Master and this output**. Cl"
+    },
+    {
+      "id": "J1.4",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3be85e7c87cc7da8",
+      "summary": "In **Resume Output History** click **Version history** on the row **Version demo resume**."
+    },
+    {
+      "id": "J1.5",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "106a7ab3ec4e6988",
+      "summary": "Click **Close**."
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fd136fd272626d7f",
+      "summary": "On the row click **Approve for QR**; in the browser confirmation `Approve \"Version demo resume\" as the final version for its QR code? …` accept. Expect the row "
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3b85e4578d922fd3",
+      "summary": "Click **Edit sections**. Expect the banner **This version is published. Saving will not change it - your edits become a new draft version, …**."
+    },
+    {
+      "id": "J2.3",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "81a3ba4cc300beaf",
+      "summary": "Replace **Bullet 1 for Harborline Freight Systems** with `Led the ledger consolidation across five regions.`; in **New bullet for Harborline Freight Systems** t"
+    },
+    {
+      "id": "J2.4",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d85777390805f951",
+      "summary": "Expect two rows in Resume Output History. Click **Version history** on the **newest** row (the first row in the list)."
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a160bca31ee80134",
+      "summary": "In the open dialog (slider on v2): **V2 AS IT STOOD** shows `…across five regions.` and `Presented results to the board quarterly.` and the note **Wording is re"
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "083b003420cb0419",
+      "summary": "Click the slider, press **Home**. Expect **Viewing v1 of 2 (published)…, approved by Riley Fenn.** The rendered document now shows `…across four regions.` and *"
+    },
+    {
+      "id": "J3.3",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "44dc4d711169724e",
+      "summary": "Press **End**. Expect the v2 text again."
+    },
+    {
+      "id": "J3.4",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "baaeb341f8c78806",
+      "summary": "Click the label `v1` under the slider: same as Home; click `v2`: same as End."
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0dfd10f77104a22b",
+      "summary": "With v2 selected the **Compare from** select reads `v1 (published)` and **to** reads `v2 (draft)`. Expect the summary **v1 to v2: 1 added, 1 changed**."
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7a7765218361f4f7",
+      "summary": "In the list: the line for the sentence has the chip **CHANGED**, the word `four` struck through in red and `five` underlined in green, the rest plain; a green c"
+    },
+    {
+      "id": "J4.3",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "26b38ba343ee4ee6",
+      "summary": "Set **Compare from** to `v2 (draft)` and **to** to `v1 (published)`. Expect **v2 to v1: 1 removed, 1 changed** (the bullet appears with chip **REMOVED**, struck"
+    },
+    {
+      "id": "J4.4",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "aa68c31b755540d5",
+      "summary": "Tick **Hide unchanged text**. Expect no grey lines remain (only CHANGED/REMOVED lines)."
+    },
+    {
+      "id": "J4.5",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2de05bf366f4d35f",
+      "summary": "Set both selects to the same version. Expect **Pick two different versions to see what changed.**"
+    },
+    {
+      "id": "J4.6",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "106a7ab3ec4e6988",
+      "summary": "Click **Close**."
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1c7f722adad338d9",
+      "summary": "**Career Master** (Classic Tools → CAREER MASTER) → **Jobs** → click `Harborline Freight Systems` → change **Title** to `Finance Systems Director` → **Save**. G"
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d2a808f8d461ccf7",
+      "summary": "Open **Version history** on the newest row, press **Home** on the slider. Expect v1 still reads `Finance Systems Lead` (and not `Director`): it was frozen at ap"
+    },
+    {
+      "id": "J5.3",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "45a73b3ea4fe92fd",
+      "summary": "Press **End**. Expect v2 reads `Finance Systems Director` and the note **Wording is resolved from your current Career Master, so it follows Career Master edits."
+    },
+    {
+      "id": "J6.1",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "444a4aea830644cb",
+      "summary": "On the newest row click **Approve for QR** and accept the confirmation. (No proficiency dialog appears: Career Master has no technologies.) Open **Version histo"
+    },
+    {
+      "id": "J6.2",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4dad4abe440eba77",
+      "summary": "Click **Edit sections** on the newest row, replace **Bullet 2 for Harborline Freight Systems** with `Presented results to the board every quarter.`, **Save chan"
+    },
+    {
+      "id": "J6.3",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b82c367a41c29a66",
+      "summary": "Without closing, click **Version history** inside the editor (beside **Save changes**)."
+    },
+    {
+      "id": "J7.1",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "176937c31c14a611",
+      "summary": "**Close** the editor. Back in the World Shell: **Journeys → Career Placement Agents → + Add**, Job title `Regional Finance Lead`, Company `Fictional Works`, **T"
+    },
+    {
+      "id": "J7.2",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0bbeb5e01ef4170a",
+      "summary": "Click **Import Resume (PDF/DOCX/TXT)** and choose `/tmp/ovh-a/ovh-resume.txt`. Expect under **OUTPUT VERSION HISTORY** the row **Imported Resume — ovh-resume.tx"
+    },
+    {
+      "id": "J7.3",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b16a539089c7511a",
+      "summary": "Click that **Version history**. Expect `Version history: Imported Resume — ovh-resume.txt`, `1 version of this output`, the note **Generated text shown as plain"
+    },
+    {
+      "id": "J7.4",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a5934eec653375d1",
+      "summary": "Click **Import Resume (PDF/DOCX/TXT)** again and choose `/tmp/ovh-b/ovh-resume.txt` (same file name, new text). Expect **one** imported-resume row still (not tw"
+    },
+    {
+      "id": "J7.5",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "bc41045403b92ece",
+      "summary": "Click its **Version history**. Expect `2 versions of this output`, **Viewing v2 of 2 (draft)**, summary **v1 to v2: 1 added, 1 changed**, the changed sentence w"
+    },
+    {
+      "id": "J7.6",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "000a63b3a49779ac",
+      "summary": "In **APPLICATION OUTPUTS** click **Edit draft** on the imported resume card. In the full-screen editor click the button **Version history** in the top bar. Expe"
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f7f4d275689e8ac2",
+      "summary": "An output with a single version shows the disabled slider and the explanation; the compare area asks for two different versions."
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1903689680cd0aa9",
+      "summary": "A version whose content cannot be read is still listed with a red message; comparing against it shows **One of the selected versions could not be read, so they "
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "071fa3fea71b7ea8",
+      "summary": "If the history cannot be loaded (network or server error) the dialog shows **Could not load version history: <reason>** with a **Retry** button and an error toa"
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e52db1b69181db08",
+      "summary": "The history is read-only: nothing in it approves, publishes or edits. Approving stays in **Approve for QR** (finalization gate)."
+    },
+    {
+      "id": "E.5",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "adde4d6e9b9b402b",
+      "summary": "`curl -s -w \" %{http_code}\" -b <cookie jar of a second harness member> http://localhost:<API_PORT>/api/resume-outputs/<first member's output id>/versions` print"
+    },
+    {
+      "id": "E.6",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4d74e04d9c1c882d",
+      "summary": "Importing a file with a **different** name for the same opportunity creates a separate output (its own history)."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "8aab4cde799f9a8e"
+    },
+    {
+      "title": "Preconditions (set up once, on a fresh database)",
+      "kind": "precondition",
+      "hash": "8e0cddd9a2d5be76"
+    },
+    {
+      "title": "Journey 0 — First login",
+      "kind": "journey",
+      "hash": "27eecce3385c282a"
+    },
+    {
+      "title": "Journey 1 — A new output has one version",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 2 — Approve, edit, and a second version appears",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 3 — The timeline slider",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 4 — Tracked changes between any two versions",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 5 — Frozen wording vs. current Career Master",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 6 — Approving records who and when; a third version",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 7 — World Shell opportunity view and re-imported documents",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 8 — Phone width (390 × 800)",
+      "kind": "journey",
+      "hash": "395dcbfd2daa83a2"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    }
+  ],
+  "comparedWithPrevious": {
+    "same": [
+      "J1.1",
+      "J1.2",
+      "J1.3",
+      "J1.4",
+      "J1.5",
+      "J2.1",
+      "J2.2",
+      "J2.3",
+      "J2.4",
+      "J3.1",
+      "J3.2",
+      "J3.3",
+      "J3.4",
+      "J4.1",
+      "J4.2",
+      "J4.3",
+      "J4.4",
+      "J4.5",
+      "J4.6",
+      "J5.1",
+      "J5.2",
+      "J5.3",
+      "J6.1",
+      "J6.2",
+      "J6.3",
+      "J7.1",
+      "J7.2",
+      "J7.3",
+      "J7.4",
+      "J7.5",
+      "J7.6",
+      "E.1",
+      "E.2",
+      "E.3",
+      "E.4",
+      "E.6"
+    ],
+    "changed": [
+      "E.5"
+    ],
+    "added": [],
+    "retired": [],
+    "contextChanged": []
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "id": "A1",
+  "feature": "output-version-history",
+  "fromBaseline": 1,
+  "proposedBy": "triage:output-version-history:r1",
+  "round": 1,
+  "triageItems": [
+    "T4"
+  ],
+  "reason": "E.5 is an authorization negative test; the UI never exposes another member's output id, so it cannot be walked point-and-click.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "E.5",
+      "before": "[E.5] Another member's output id returns 404 `Resume output not found`; a member can never see someone else's history.",
+      "after": "[E.5] `curl -s -w \" %{http_code}\" -b <cookie jar of a second harness member> http://localhost:<API_PORT>/api/resume-outputs/<first member's output id>/versions` prints `{\"error\":\"Resume output not found\"}` followed by status 404, and none of the first member's version data. (The second member is created with `scripts/create-test-member.mjs --email second@test.local` and signed in; the output id is read from the first member's Resume Output History. A member can never see someone else's history.)",
+      "tracesTo": "docs/changes/output-version-history.md Server: GET /api/resume-outputs/:id/versions is member-scoped by req.user.id, a foreign id is 404; definition.json interfaceParity (API surface)",
+      "whyNeeded": "No point-and-click performance of this step exists, so desktop+mobile can never pass; the expectation is unchanged and moves to the cli surface.",
+      "reviewerNote": "Reviewer wrote the command in the form the baseline tool recognises as a cli step (leading backticked curl) and fixed the exact response body and status, verified against server/routes/resumeOutputs.js lines 54-58."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:output-version-history:r1",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "pass",
+      "Reachable": "pass",
+      "Deterministic": "pass",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Approved. Same expectation, stated more exactly, moved to the cli surface because it is an authorization negative test.",
+    "at": "2026-10-09T00:00:00.000Z"
+  }
+}

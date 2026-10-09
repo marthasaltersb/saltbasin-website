@@ -1,0 +1,38 @@
+{
+  "id": "A4",
+  "feature": "output-version-history",
+  "fromBaseline": 1,
+  "proposedBy": "triage:output-version-history:r1",
+  "round": 1,
+  "triageItems": [
+    "T7"
+  ],
+  "reason": "Known open item B11: no Version history entry in the Output Template editor.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "E.8",
+      "before": "",
+      "after": "In the Output Template editor, open Version history for the output being edited; the dialog opens on desktop and at 390px.",
+      "tracesTo": "change spec: history reachable from every place an output is edited",
+      "whyNeeded": "Open requirement with no scored step."
+    }
+  ],
+  "review": {
+    "status": "needs_owner",
+    "reviewer": "amend:output-version-history:r1",
+    "checklist": {
+      "Traced": "fail: the change spec names exactly four entry points and contains no 'every place an output is edited' requirement",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "fail: 'the output being edited' and the button location are not identified",
+      "Reachable": "fail: the Output Template editor edits templates, and no output id is stated to open history for",
+      "Deterministic": "pass",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Adding the step creates a new product requirement, which is a business rule.",
+    "at": "2026-10-09T00:00:00.000Z",
+    "question": "Should the Output Template editor (src/components/admin/OutputTemplateConfigurator.jsx) carry a Version history button, and for which output (a template has no output id)? If yes, name the exact label and where it sits, and the step will be resubmitted."
+  }
+}
