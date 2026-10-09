@@ -16,6 +16,19 @@ import { MCP_TOOLS, getMcpTool } from './mcpToolRegistry.js';
 import { authenticateToken, touchToken, AccessError } from './platformAccess.js';
 import { getAccountGateBlock } from '../auth.js';
 import { recordMcpToolCall } from './usageTracking.js';
+import { makeHitCounter } from './rateLimit.js';
+
+// Abuse limits for /mcp, the same in-process pattern as the website's auth limiter (server/routes/auth.js): failed
+// bearer-token attempts per IP (default 10 per 15 minutes, like login) and calls per token (default 300 HTTP requests per
+// minute). Both answer 429 with Retry-After; env overrides exist for tests and tuning.
+const num = (v, d) => (Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : d);
+const failedAuth = makeHitCounter({ windowMs: 15 * 60_000, max: num(process.env.MCP_AUTH_FAIL_MAX, 10) });
+const tokenCalls = makeHitCounter({ windowMs: 60_000, max: num(process.env.MCP_CALL_MAX, 300) });
+
+function tooMany(res, seconds, message) {
+  res.setHeader('Retry-After', String(seconds));
+  return res.status(429).json({ jsonrpc: '2.0', error: { code: -32029, message: `${message} Try again in ${seconds} second${seconds === 1 ? '' : 's'}.`, data: { status: 429, code: 'rate_limited', retryAfter: seconds } }, id: null });
+}
 
 /** Minimal JSON-schema check for the registry's flat object schemas. Returns an error message or null. */
 export function validateArgs(schema, args) {
@@ -35,6 +48,7 @@ export function validateArgs(schema, args) {
       if (p.minLength != null && value.trim().length < p.minLength) return `"${key}" must not be empty.`;
       if (p.maxLength != null && value.length > p.maxLength) return `"${key}" is limited to ${p.maxLength} characters.`;
     }
+    if (p.enum && !p.enum.includes(value)) return `"${key}" must be one of: ${p.enum.join(', ')}.`;
     if (p.type === 'object' && (typeof value !== 'object' || Array.isArray(value))) return `"${key}" must be an object.`;
   }
   return null;
@@ -103,15 +117,22 @@ router.all('/', async (req, res) => {
   const auth = String(req.headers.authorization || '');
   const bearer = /^Bearer\s+(.+)$/i.exec(auth)?.[1];
   let ctx;
+  const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+  const lockedFor = failedAuth.blocked(ip);
+  if (lockedFor) return tooMany(res, lockedFor, 'Too many failed access-token attempts from this address.');
   try {
     const { user, token } = await authenticateToken(bearer);
     ctx = { user, token, req };
     await touchToken(token.id);
   } catch (e) {
     const status = e instanceof AccessError ? e.status : 500;
+    if (status === 401) failedAuth.hit(ip);
     res.setHeader('WWW-Authenticate', 'Bearer realm="salt-basin-platform"');
     return res.status(status).json({ jsonrpc: '2.0', error: { code: -32001, message: e.message }, id: null });
   }
+  const slowDown = tokenCalls.blocked(`token:${ctx.token.id}`);
+  if (slowDown) return tooMany(res, slowDown, 'This access token is making too many requests.');
+  tokenCalls.hit(`token:${ctx.token.id}`);
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ jsonrpc: '2.0', error: { code: -32000, message: 'This MCP server is stateless: send JSON-RPC requests with POST.' }, id: null });

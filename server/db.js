@@ -3324,9 +3324,8 @@ async function bootstrap() {
         { viewId: 'system',   viewLabel: 'System',                        id: 'command-center',  label: 'Command Center',  componentId: 'commandCenter',  sortOrder: 4 },
         // Release reconciliation + contribution trends (additive; reachable from the World Shell).
         { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'release-intelligence', label: 'Release Intelligence', componentId: 'releaseIntelligence', sortOrder: 4 },
-        // Platform MCP server (additive): token management + the interface-parity map.
-        { viewId: 'system',   viewLabel: 'System',                        id: 'connected-agents', label: 'Connected Agents', componentId: 'connectedAgents', sortOrder: 5 },
-        { viewId: 'system',   viewLabel: 'System',                        id: 'capabilities',     label: 'Capabilities',     componentId: 'capabilities',    sortOrder: 6 },
+        // Connected Agents / Capabilities are NOT injected here: they are World Shell entry points only
+        // (src/lib/worldIslands.js PLATFORM_ISLAND_TABS). Rows an earlier boot already stored are left alone.
         // Release loop inside the platform (additive; reachable from the World Shell).
         { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'release-loop', label: 'Release loop', componentId: 'releaseLoop', sortOrder: 5 },
         // Live release tracker (additive; reachable from the World Shell).

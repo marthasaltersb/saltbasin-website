@@ -490,6 +490,26 @@ export default function MyResumePanel({ scope = 'member' }) {
   // generated, imported, or the general preset-based ones this panel already
   // creates) — see server/lib/outputRendering.js.
   const [selectedOutputIds, setSelectedOutputIds] = useState(new Set());
+  const [freshness, setFreshness] = useState({}); // outputId -> staleness result or { error }
+  const [pkgImport, setPkgImport] = useState({ busy: false, linkOpportunity: false, message: null });
+  async function checkFreshness(id) {
+    try {
+      const r = await api.getResumeOutputStaleness(id);
+      setFreshness((f) => ({ ...f, [id]: r }));
+    } catch (e) { setFreshness((f) => ({ ...f, [id]: { error: e.message } })); }
+  }
+  async function importPackageFile(file) {
+    if (!file) return;
+    setPkgImport((s) => ({ ...s, busy: true, message: null }));
+    try {
+      let pkg;
+      try { pkg = JSON.parse(await file.text()); } catch (e) { throw new Error(`That file is not valid JSON: ${e.message}`); }
+      const r = await api.importApplicationPackage(pkg, pkgImport.linkOpportunity);
+      const n = (r.results || []).length;
+      setPkgImport((s) => ({ ...s, busy: false, message: { ok: true, text: `Imported ${n} document${n === 1 ? '' : 's'}${r.opportunity ? ' and linked them to an opportunity' : ''}. Unchanged documents are skipped.` } }));
+      loadResumeOutputs();
+    } catch (e) { setPkgImport((s) => ({ ...s, busy: false, message: { ok: false, text: e.message } })); }
+  }
   const [historyOutputId, setHistoryOutputId] = useState(null); // output whose version history is open
   const [viewingOutput, setViewingOutput] = useState(null); // fetched digital-view JSON, or null
   const [exportingZip, setExportingZip] = useState(false);
@@ -924,6 +944,20 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
         </div>
       </div>
 
+      <div data-testid="package-import" style={{ margin: '1rem 0', padding: '0.9rem', border: '1px solid var(--sb-border, #ddd)', borderRadius: 8 }}>
+        <h3 style={{ margin: '0 0 0.3rem', fontSize: '1rem' }}>Import an application package</h3>
+        <p style={{ margin: '0 0 0.5rem', fontSize: '0.82rem', lineHeight: 1.5 }}>
+          Choose a package file (.json) prepared with the extraction tool. Each document is filed as a draft output; unchanged documents are skipped. Nothing is approved or shared by importing.
+        </p>
+        <label style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', fontSize: '0.82rem', marginBottom: '0.5rem' }}>
+          <input type="checkbox" checked={pkgImport.linkOpportunity} onChange={(e) => setPkgImport((s) => ({ ...s, linkOpportunity: e.target.checked }))} />
+          Link the documents to an opportunity made from the package's company and role
+        </label>
+        <input type="file" accept="application/json,.json" aria-label="Application package file" disabled={pkgImport.busy}
+          onChange={(e) => { importPackageFile(e.target.files?.[0]); e.target.value = ''; }} style={{ maxWidth: '100%', minHeight: 44 }} />
+        {pkgImport.busy && <div role="status" style={{ fontSize: '0.8rem', marginTop: '0.4rem' }}>Importing…</div>}
+        {pkgImport.message && <div role={pkgImport.message.ok ? 'status' : 'alert'} style={{ fontSize: '0.82rem', marginTop: '0.4rem', color: pkgImport.message.ok ? '#2e7d32' : '#b3261e' }}>{pkgImport.message.text}</div>}
+      </div>
       <CoverLetterPackagesPanel onOpenLetter={setAgentLetterId} onOutputsChanged={loadResumeOutputs} reloadKey={packagesReload} />
 
       {/* Resume Output Projection history — master-org-admin-config.md §5.
@@ -1008,6 +1042,16 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
                 </div>
                 <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                   <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setHistoryOutputId(output.id)}>Version history</button>
+                  <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => checkFreshness(output.id)} data-testid={`check-freshness-${output.id}`}>Check freshness</button>
+                  {freshness[output.id] && (
+                    <span role="status" style={{ fontSize: '0.72rem', alignSelf: 'center', color: freshness[output.id].error ? '#b3261e' : freshness[output.id].isStale ? '#b36b00' : '#2e7d32' }}>
+                      {freshness[output.id].error
+                        ? `Could not check: ${freshness[output.id].error}`
+                        : freshness[output.id].isStale
+                          ? `Out of date: your Career Master has ${Math.abs(freshness[output.id].atomCountDelta)} atom change${Math.abs(freshness[output.id].atomCountDelta) === 1 ? '' : 's'} since this was generated (${freshness[output.id].projectionAtomCount} then, ${freshness[output.id].currentAtomCount} now).`
+                          : 'Up to date with your Career Master.'}
+                    </span>
+                  )}
                   {output.generatedContent?.format === 'career_bound' && output.outputStatus !== 'archived' && (
                     <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setBoundEditId(output.id)}>Edit sections</button>
                   )}

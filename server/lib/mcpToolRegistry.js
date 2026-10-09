@@ -26,7 +26,9 @@ const id = (description) => ({ type: 'integer', minimum: 1, description });
 const str = (description, extra = {}) => ({ type: 'string', description, ...extra });
 const schema = (properties, required = []) => ({ type: 'object', properties, required, additionalProperties: false });
 
-export const MCP_TOOLS = Object.freeze([
+import { ROUTE_TOOLS } from './mcpRouteTools.js';
+
+const CORE_TOOLS = [
   {
     name: 'career_master_read',
     title: 'Read my Career Master',
@@ -550,7 +552,11 @@ export const MCP_TOOLS = Object.freeze([
       return detail;
     },
   },
-]);
+];
+
+// Tools that run an existing website route's own handler in-process (see mcpRouteTools.js), appended after the
+// core tools. Append-only like everything above.
+export const MCP_TOOLS = Object.freeze([...CORE_TOOLS, ...ROUTE_TOOLS]);
 
 export const MCP_TOOL_NAMES = Object.freeze(MCP_TOOLS.map((t) => t.name));
 

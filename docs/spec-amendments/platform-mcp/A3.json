@@ -1,0 +1,45 @@
+{
+  "id": "A3",
+  "feature": "platform-mcp",
+  "fromBaseline": 1,
+  "proposedBy": "fix:platform-mcp:r1",
+  "round": 1,
+  "triageItems": [
+    "platform-mcp-B5"
+  ],
+  "reason": "Triage item B5 required every recorded gap to be closed (parity check --strict exits 0). Four baseline steps describe the state BEFORE the gaps were closed (the import-package card shown as a gap, --strict failing with that gap, an eleven/ten-tool list), so they can no longer pass as written. Each proposed change keeps the same check and states the new expected result; none removes an assertion.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "J10.4",
+      "before": "Find the card **Import an application package**. Expect the cells **Website GAP** and **MCP GAP** highlighted, and the note **Import is command-line only (scripts/import-application-package.mjs); no screen uploads a package.**",
+      "after": "Find the card **Import an application package**. Expect the cells **Website ready** (showing the path ending `My Resume > Import an application package`), **API ready** (showing `POST /api/resume-outputs/import-package`) and **MCP ready** (showing `application_package_import`), and no highlighted gap cell. With **Gaps only** selected expect the message that there are no gaps (zero cards).",
+      "tracesTo": "docs/changes/platform-mcp.md 'Known limitations' (3 capabilities have no website screen: application-package-import); triage platform-mcp-B5",
+      "whyNeeded": "The website screen for importing a package now exists, so the gap cell can no longer be shown."
+    },
+    {
+      "op": "change",
+      "stepId": "J11.2",
+      "before": "Run `node scripts/check-interface-parity.mjs --strict`. Expect exit code 1, the gaps list containing the line `application-package-import: UI_GAP MCP_GAP - Import is command-line only (scripts/import-application-package.mjs); no screen uploads a package.` (rest of the step unchanged)",
+      "after": "Run `node scripts/check-interface-parity.mjs --strict`. Expect exit code 0, a first line `Interface parity: 65 of 65 capabilities work in all three interfaces (website UI gaps: 0, MCP gaps: 0, API gaps: 0).` and the last line `OK: the registry matches the code.`",
+      "tracesTo": "docs/changes/platform-mcp.md 'Known limitations'; triage platform-mcp-B5 ('run check-interface-parity --strict until exit 0')",
+      "whyNeeded": "--strict is the CI gate once the map is complete; it now passes."
+    },
+    {
+      "op": "change",
+      "stepId": "J2.1",
+      "before": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> list`. Expect exit code 0 and exactly these lines in this order: (the fixed list of tool names)",
+      "after": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> list`. Expect exit code 0; the first ten lines are `career_master_read`, `career_opportunities_list`, `career_opportunity_create`, `career_opportunity_open`, `application_outputs_list`, `application_output_open`, `application_output_new_draft_version`, `application_output_approve_for_qr`, `cover_letter_open`, `cover_letter_agent_turn` (release_tracker_read is absent because it needs release.read, which TOKEN_A lacks); every other registered tool whose scope is career.read, career.write or outputs.approve follows in registry order, and the last line is `89 tools`.",
+      "tracesTo": "docs/changes/platform-mcp.md 'Server' tool table; server/lib/mcpToolRegistry.js (append-only registry)",
+      "whyNeeded": "The registry is append-only and now includes the route-backed tools that close the parity gaps, so a fixed short list cannot remain exact."
+    },
+    {
+      "op": "change",
+      "stepId": "E.5",
+      "before": "On **Connected Agents**, **Tools an agent can call** lists all eleven tool names (the ten from J2.1 and `release_tracker_read`), each with its scope.",
+      "after": "On **Connected Agents**, **Tools an agent can call** lists all 90 registered tool names (the 89 from J2.1 and `release_tracker_read`), each with its scope.",
+      "tracesTo": "docs/changes/platform-mcp.md 'Client' (ConnectedAgentsPanel lists the registry); triage platform-mcp-B5",
+      "whyNeeded": "Same list as J2.1, including the tools added to close the parity gaps."
+    }
+  ]
+}

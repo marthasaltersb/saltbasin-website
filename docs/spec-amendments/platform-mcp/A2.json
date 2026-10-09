@@ -1,0 +1,20 @@
+{
+  "id": "A2",
+  "feature": "platform-mcp",
+  "fromBaseline": 1,
+  "proposedBy": "fix:platform-mcp:r1",
+  "round": 1,
+  "triageItems": [
+    "platform-mcp-B11"
+  ],
+  "reason": "Bearer-token authentication on /mcp had no abuse limit, unlike the website's login. The product now answers 429 after repeated failed token attempts from one address (same in-process pattern as the auth limiter: 10 failures per 15 minutes) and after too many requests per token (300 per minute). The spec has no step for either.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "E.7",
+      "after": "(Run this step LAST in a pass: it locks the tester's address out of /mcp for 15 minutes.) Run 11 times: `curl -s -o /dev/null -w \"%{http_code} \" -H \"Authorization: Bearer sbpat_not-a-real-token\" -X POST <API_BASE>/mcp`. Expect ten responses of `401` followed by `429`. Then run `curl -s -i -H \"Authorization: Bearer sbpat_not-a-real-token\" -X POST <API_BASE>/mcp`. Expect status 429, a `Retry-After` header of at most 900, and a JSON body whose `error.data.code` is `rate_limited`.",
+      "tracesTo": "docs/changes/platform-mcp.md 'Known limitations' (Rate limiting of /mcp is not added in this version); server/routes/auth.js authLimiter (10 attempts / 15 min / IP)",
+      "reason": "A guessed-token flood must be slowed the same way a password-guessing flood is."
+    }
+  ]
+}
