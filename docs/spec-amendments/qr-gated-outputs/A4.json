@@ -1,0 +1,37 @@
+{
+  "id": "A4",
+  "feature": "qr-gated-outputs",
+  "fromBaseline": 2,
+  "proposedBy": "fix:qr-gated-outputs:r3",
+  "round": 3,
+  "triageItems": [
+    "F2-10"
+  ],
+  "reason": "Three new MCP tools plus the existing approve tool have no step proving MCP parity.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "[P.2]",
+      "before": "",
+      "after": "Via MCP, call application_package_import with the fictional Harbor Demo package. Then call application_output_approve_for_qr and shared_output_resolve on the returned URL's slug, then application_output_revoke_qr and shared_output_resolve again. Expect: created, approved with url, document returned, ok, then not_found.",
+      "tracesTo": "interface parity v3 (MCP_GAP)",
+      "whyNeeded": "Covers the three new MCP tools and the existing approve tool."
+    }
+  ],
+  "review": {
+    "status": "rejected",
+    "reviewer": "amend:qr-gated-outputs:r3",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "fail: [P.2] is already used by the baseline (Add a technology with no category) and ids are never reused; the MCP transport, auth and call syntax are not stated, the package argument is not written, and 'ok' is not an exact result value",
+      "Reachable": "fail: P.n ids are unscored setup steps that block later steps, but this is a scored parity check; as a cli step by design it still needs its exact commands (how the tools are called and as which member)",
+      "Deterministic": "fail: P.4 already imported the identical Harbor Demo package, so import would report unchanged, not created; approve and revoke on those same outputs would change the card state that J3, J8 and J9 depend on, and approve hits the technology gate; ordering and fixtures are not stated",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Rejected as written; the product is fine (tools registered in server/lib/mcpToolRegistry.js, interface-parity check OK). Spec resubmission, not a defect. Resubmit as a cli step with the next unused id in a suitable group (e.g. J11.1 in a new Journey 11 'MCP parity' placed after Journey 10 so it cannot disturb J3-J9). Write a separate fixture (different fictional packageKey, e.g. harbor-demo-mcp-2026-10, with its own outputs so import reports created), the exact way the tools are invoked and the member used, the technology-gate state, and exact results per call: import -> created; approve -> url <BASE>/r/<slug>; resolve -> the document with the written name; revoke -> revoked; resolve -> not_found.",
+    "at": "2026-10-09T00:00:00.000Z"
+  }
+}

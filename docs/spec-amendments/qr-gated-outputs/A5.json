@@ -1,0 +1,37 @@
+{
+  "id": "A5",
+  "feature": "qr-gated-outputs",
+  "fromBaseline": 2,
+  "proposedBy": "fix:qr-gated-outputs:r3",
+  "round": 3,
+  "triageItems": [
+    "F2-12"
+  ],
+  "reason": "J10.3, E.1, E.2 and E.4 need imported outputs; the proposal adds a fixture step.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "[J10.0]",
+      "before": "",
+      "after": "Fixture step: import the fictional Harbor Demo package as the test member, via the Import package API or the MCP tool, before J10.3/E.1/E.2/E.4. Expect status created for each variant.",
+      "tracesTo": "F2-12",
+      "whyNeeded": "Those journeys need imported outputs that the current spec never creates."
+    }
+  ],
+  "review": {
+    "status": "rejected",
+    "reviewer": "amend:qr-gated-outputs:r3",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "fail: no fixture file or command is written; 'the Import package API or the MCP tool' is two options without exact calls; [J10.0] is not a valid id (setup uses P.n and is unscored)",
+      "Reachable": "pass",
+      "Deterministic": "fail: P.4 already imported pkg-v1 and J8.1 pkg-v2, so re-importing 'the Harbor Demo package' reports unchanged or new_version, never 'created for each variant'; it also leaves no Draft card, which is the real gap A2 found; E.3 would also become order dependent (see A2 review)",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Rejected as written. The gap (a Draft card for J10.3, E.1, E.2, E.4) is real, but this proposal does not close it and its expected result is wrong. Spec resubmission, not a defect. Follow the A2 review note: write the fixture (pkg-v3.json via sed from pkg-v1.json with a different fictional summary sentence) and the exact import command with expected output (resume_main #<new id> new_version, cover_letter #<id> unchanged); take the next unused precondition id (P.5) and state it runs after J9.3 and before J10.3; change E.3 so its re-import uses the latest imported file and still expects every output unchanged (or state E.3 runs before P.5); name the Draft card (the new Harbor Demo Resume).",
+    "at": "2026-10-09T00:00:00.000Z"
+  }
+}
