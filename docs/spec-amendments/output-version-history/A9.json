@@ -1,0 +1,62 @@
+{
+  "id": "A9",
+  "feature": "output-version-history",
+  "fromBaseline": 2,
+  "proposedBy": "triage:output-version-history:r3",
+  "round": 3,
+  "triageItems": [
+    "T8"
+  ],
+  "reason": "Spec names a member (Riley Fenn, riley.member@example.test) that the fixed harness cannot provide; the harness account is member@test.local / Test Member.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "J1.4",
+      "before": "V1 AS IT STOOD first line `Riley Fenn`",
+      "after": "V1 AS IT STOOD first line `Test Member`",
+      "tracesTo": "definition.json specGovernance.testConstraints (fixed harness account member@test.local created by scripts/create-test-member.mjs, display name Test Member); docs/changes/output-version-history.md approval metadata (shows the approver's display name)",
+      "whyNeeded": "The literal member Riley Fenn cannot exist under the fixed test constraints; every validator would otherwise fail or invent its own account."
+    },
+    {
+      "op": "change",
+      "stepId": "J2.4",
+      "before": "Approved by `Riley Fenn, <today>, hh:mm UTC`",
+      "after": "Approved by `Test Member, <today>, hh:mm UTC`",
+      "tracesTo": "definition.json specGovernance.testConstraints (fixed harness account member@test.local created by scripts/create-test-member.mjs, display name Test Member); docs/changes/output-version-history.md approval metadata (shows the approver's display name)",
+      "whyNeeded": "The literal member Riley Fenn cannot exist under the fixed test constraints; every validator would otherwise fail or invent its own account."
+    },
+    {
+      "op": "change",
+      "stepId": "J3.2",
+      "before": "approved by Riley Fenn.",
+      "after": "approved by Test Member.",
+      "tracesTo": "definition.json specGovernance.testConstraints (fixed harness account member@test.local created by scripts/create-test-member.mjs, display name Test Member); docs/changes/output-version-history.md approval metadata (shows the approver's display name)",
+      "whyNeeded": "The literal member Riley Fenn cannot exist under the fixed test constraints; every validator would otherwise fail or invent its own account."
+    },
+    {
+      "op": "change",
+      "stepId": "J6.1",
+      "before": "Approved by `Riley Fenn, <today>, hh:mm UTC`",
+      "after": "Approved by `Test Member, <today>, hh:mm UTC`",
+      "tracesTo": "definition.json specGovernance.testConstraints (fixed harness account member@test.local created by scripts/create-test-member.mjs, display name Test Member); docs/changes/output-version-history.md approval metadata (shows the approver's display name)",
+      "whyNeeded": "The literal member Riley Fenn cannot exist under the fixed test constraints; every validator would otherwise fail or invent its own account."
+    }
+  ],
+  "nonStepText": "Same change in unscored prose: header sentence (member Test Member); Preconditions (signup curl replaced by running node scripts/create-test-member.mjs, account member@test.local / TestPass!2345); Journey 0 (open /login, log in with member@test.local / TestPass!2345; expect the World Shell with 'Test Member · Member', no password or consent page).",
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:output-version-history:r3",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "pass",
+      "Reachable": "pass",
+      "Deterministic": "pass",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Verified: definition.json testConstraints fix the account to scripts/create-test-member.mjs (member@test.local, terms accepted, no forced password change) and that script defaults the display name to 'Test Member' and builds the profile from it, so the document heading and approver name are Test Member. Every occurrence of 'Riley Fenn' in the spec (header, J1.4, J2.4, J3.2, J6.1) is covered; no expectation is weakened, only the fixed value changes. Journey 0 shrinks to a login with no password change or consent step; those are setup, unscored, and the account is created terms-accepted by design.",
+    "at": "2026-10-09T17:30:00.000Z"
+  }
+}
