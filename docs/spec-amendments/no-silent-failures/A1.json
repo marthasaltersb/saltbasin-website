@@ -1,0 +1,106 @@
+{
+  "id": "A1",
+  "feature": "no-silent-failures",
+  "fromBaseline": 1,
+  "proposedBy": "triage:no-silent-failures:r1",
+  "round": 1,
+  "triageItems": [
+    "T3",
+    "T4",
+    "T6",
+    "T7",
+    "T8",
+    "T10"
+  ],
+  "reason": "Round 1 triage: steps that contradicted the change spec or shipped behaviour (J2.2, J3.2), steps that are cli by design (J1.2, J3.1, J5.1), an unreachable edge case (E.1), an incomplete expected-noise list (E.4), and a coverage gap for the recorded-data banner sentence (J2.3).",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "J2.2",
+      "before": "a banner starting \"RECORDED DATA \u2014 matches the approved printed version\"",
+      "after": "a banner starting \"RECORDED DATA \u2014\" (words after the dash are not checked here; see J2.3)",
+      "tracesTo": "change spec rule: a failure is never shown as \"matches the printed version\"; J0.5 adds a recorded change after approval",
+      "whyNeeded": "Old text cannot be true after J0.5 and contradicts the rule; the sentence is checked by J2.3."
+    },
+    {
+      "op": "add",
+      "stepId": "J2.3",
+      "before": "",
+      "after": "On RESUME LINK (FAULT A still in place) the banner contains \"(live data unavailable)\" and the sentence under it begins \"Live career data could not be loaded, so these charts show the last recorded state.\" and does not contain \"update from the Salt Basin Career Master\".",
+      "tracesTo": "change spec rule 'a failure is never shown as no data or matches the printed version'; fix note T9",
+      "whyNeeded": "No step proved the banner sentence."
+    },
+    {
+      "op": "change",
+      "stepId": "J3.2",
+      "before": "(the earlier approved version now reads *Approved*, no QR image)",
+      "after": "(the earlier version still reads *Published* with its QR image, link and **Revoke QR**)",
+      "tracesTo": "applicationPackages.js approveOutputForSharing and qr-gated-outputs: approving a newer version moves the slug",
+      "whyNeeded": "The earlier version is retired only at the next approval (J3.4)."
+    },
+    {
+      "op": "change",
+      "stepId": "J3.4",
+      "before": "(no line about the earlier version)",
+      "after": "Expect the earlier version now reads *Approved* with no QR image.",
+      "tracesTo": "same as J3.2",
+      "whyNeeded": "Keeps the check, at the step where it is true."
+    },
+    {
+      "op": "change",
+      "stepId": "J1.2",
+      "before": "In a shell run **FAULT A**.",
+      "after": "[cli] `psql ... RENAME TO career_jobs_held` (**FAULT A**).",
+      "tracesTo": "definition.json reviewChecklist 'or is a cli step by design'; testConstraints.surfaces.cli",
+      "whyNeeded": "A product screen cannot break its own database; the baseline must record the step as cli."
+    },
+    {
+      "op": "change",
+      "stepId": "J3.1",
+      "before": "In a shell run **FAULT B** (FAULT A stays in place). Run the import again ...",
+      "after": "[cli] `psql ... RENAME TO career_proficiency_assertions_held` (**FAULT B**; FAULT A stays in place). Then run the import again ...",
+      "tracesTo": "same as J1.2",
+      "whyNeeded": "Same."
+    },
+    {
+      "op": "change",
+      "stepId": "J5.1",
+      "before": "In a shell run **RESTORE**.",
+      "after": "[cli] `psql ...` using ALTER TABLE IF EXISTS for both renames (**RESTORE**).",
+      "tracesTo": "same as J1.2",
+      "whyNeeded": "Same; IF EXISTS makes RESTORE safe after Fault A only (E.2)."
+    },
+    {
+      "op": "change",
+      "stepId": "E.1",
+      "before": "Opening a QR link with a bogus slug shows \"This link isn't available\" (unchanged by this feature).",
+      "after": "Run last, after J5.6: on My Resume click Revoke QR on Example Corp - Cover Letter (confirm). Open COVER LINK in a private window: the page shows \"This link isn't available\".",
+      "tracesTo": "change spec 'unchanged by this feature'; qr-gated-outputs revoke behaviour; interfaceParity",
+      "whyNeeded": "A bogus slug is only reachable by typing a URL."
+    },
+    {
+      "op": "change",
+      "stepId": "E.4",
+      "before": "HTTP 500 on /api/career/master, /api/career/catalogs, /api/career/proficiency, /api/career/rollups only while a fault is in place",
+      "after": "... plus /api/career/resume-rollups, and one HTTP 404 on /api/shared-outputs/<slug> after the E.1 revoke step",
+      "tracesTo": "change spec 'Verified': only the requests the faults cause",
+      "whyNeeded": "resume-rollups reads career_jobs (careerMaster.js loadMasterPayload) and the revoked slug returns 404 (sharedOutputs.js)."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:no-silent-failures:r1",
+    "checklist": {
+      "Traced: every added or changed step names the change-spec requirement or owner direction it proves (tracesTo).": "pass",
+      "Not weaker: a changed expected result is at least as strict as before, unless the evidence shows the old expectation contradicts the change spec or owner direction (then say which).": "pass: J2.2 old expectation contradicts the change spec rule and Known limitations (fixed in fix round 1, SharedLiveStates.jsx lines 119-127); J2.2 keeps the prefix and alert, the sentence moves to the stricter J2.3. J3.2 old text contradicts applicationPackages.js (retires the old version only inside the next approval). E.4 gains two endpoints that the faults and the E.1 revoke cause; the change spec's own rule ('only the requests the faults cause') is unchanged.",
+      "Retire only duplicates: removing a step is approved only when another step tests the same thing (name it); any other removal is needs_owner.": "pass: no step retired",
+      "Exact: action plus exact expected result (labels, text, values, counts); no 'should look right', no 'roughly'.": "pass",
+      "Reachable: the step is walkable by point-and-click on desktop and at 390px (interfaceParity), or is a cli step by design.": "pass: J1.2, J3.1, J5.1 are written as a command beginning with a backticked psql so scripts/release-spec-baseline.mjs classifies them cli (its CLI pattern ignores free text such as 'In a shell run'); same commands as the Fault injection block.",
+      "Deterministic: same result every run against the fixed constraints (no dependence on wall-clock time, random data, earlier failed steps, or leftovers from another test); timing tolerances are stated.": "pass",
+      "Fictional data only; fixtures written in the spec, never fetched.": "pass",
+      "Independent of the fix: the step tests behaviour, not the implementation the fixer chose.": "pass"
+    },
+    "note": "Reviewer wording change, same substance: the proposal marked J1.2/J3.1/J5.1 '[cli]' but the baseline tool only detects cli when the step starts with a backticked command, so the three steps now start with the psql command itself. The RESTORE block in the Fault injection section uses IF EXISTS as proposed. E.1 swaps the bogus-slug path for the revoked-link path, which renders the same 'This link isn't available' page (sharedOutputs.js returns plain 404 either way); the bogus-slug path has no point-and-click route. Only the J2.3 half of T10 is approved; the J5.2b half is A3 (rejected).",
+    "at": "2026-10-09T17:00:00Z"
+  }
+}
