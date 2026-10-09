@@ -172,6 +172,19 @@ a.spark:hover, a.spark:focus-visible { border-color: var(--teal); }
 .world-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .world-list a { display: flex; justify-content: space-between; gap: 10px; padding: 6px 8px; border-radius: 8px; text-decoration: none; color: var(--ink); font-size: 13px; }
 .world-list a:hover, .world-list a:focus-visible { background: var(--teal-soft); }
+.bindings { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.bindings th, .bindings td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.bindings th { font: 600 11px var(--body); color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.src { font: 12px var(--mono); color: var(--teal); overflow-wrap: anywhere; }
+.bind-list { display: grid; gap: 8px; }
+.bind { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; display: grid; gap: 3px; font-size: 13px; background: var(--panel); }
+.bind-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.bind-val { font-weight: 600; text-align: right; }
+.bind-foot { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; }
+.policy { display: inline-block; font: 600 11px/1 var(--body); padding: 3px 7px; border-radius: 999px; background: var(--teal-soft); color: var(--teal); }
+.policy.approval { background: var(--gold-soft); color: var(--gold); }
+.pending-card { border: 1px dashed var(--gold); border-radius: 10px; padding: 10px 12px; background: var(--gold-soft); font-size: 13px; display: grid; gap: 4px; }
+.pending-card ul { margin: 2px 0 0; padding-left: 18px; }
 .world-hint { position: absolute; top: 12px; left: 12px; color: var(--ink) !important; font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--panel) 80%, transparent); padding: 4px 10px; border-radius: 999px; z-index: 2; }
 @media (max-width: 900px) { .world { grid-template-columns: 1fr; } .world-stage { min-height: 460px; } .world-panel { border-left: 0; border-top: 1px solid var(--line); max-height: none; } .world-bar .asof { display: none; } }
 @media (max-width: 640px) { .chartbox { height: 240px; } .trends { padding: 12px; } .ticks { margin: 0 34px; } }
@@ -473,6 +486,43 @@ function mountTrends() {
 }
 
 
+
+// ---- Render bindings: the world is a view. Every visual channel it draws is declared here and points to the
+// source field it reads (Port → object → field), how the value is transformed, what the legend says, and how
+// changes arrive (live, or requiring approval). The renderer only receives bound values; anything unbound is
+// "not mapped", never invented. Platform version: server/lib/renderBindingRegistry.js (docs/changes/render-bindings.md).
+const SOURCE_PORT = { key: 'release-tracker', label: 'Release tracker snapshot', type: 'platform_table' };
+const BINDINGS = [
+  { id: 'crystal.colour', mark: 'Crystal', channel: 'Colour', object: 'features', field: 'status', transform: 'status → tone', legend: 'Feature status', policy: 'live', read: (f) => statusText(f.status) },
+  { id: 'crystal.size', mark: 'Crystal', channel: 'Size', object: 'features', field: 'lastResult.stepsTotal', transform: '÷ largest suite → 0.35–1', legend: 'Test steps in the suite', policy: 'live', read: (f) => (f.lastResult ? `${f.lastResult.stepsTotal} steps` : 'not tested') },
+  { id: 'crystal.ring', mark: 'Crystal', channel: 'Gold ring', object: 'features', field: 'lastResult.stepsPassed ÷ stepsTotal', transform: 'calculation → arc 0–1', legend: 'Share of steps passing', policy: 'requires_approval', approver: 'a browser test round', read: (f) => (f.lastResult ? `${f.lastResult.stepsPassed}/${f.lastResult.stepsTotal} (${Math.round((f.lastResult.stepsPassed / f.lastResult.stepsTotal) * 100)}%)` : 'not tested') },
+  { id: 'crystal.river', mark: 'Crystal', channel: 'Bubble stream', object: 'agents', field: 'status = running (feature)', transform: 'any → on/off', legend: 'An agent is working on it', policy: 'live', read: (f) => (snap.agents.some((a) => a.feature === f.key && a.status === 'running') ? 'yes' : 'no') },
+  { id: 'satellite.colour', mark: 'Satellite', channel: 'Colour', object: 'bugs', field: 'status', transform: 'status → series', legend: 'Bug state', policy: 'requires_approval', approver: 'the next browser re-test', read: (f) => { const b = (snap.bugs || []).filter((x) => x.feature === f.key && x.status !== 'seen_in_test'); return `${b.length} bugs`; } },
+  { id: 'satellite.ghost', mark: 'Satellite', channel: 'Ghost (translucent)', object: 'bugs', field: 'status ∈ fixed_awaiting_retest, retesting', transform: 'pending → translucent', legend: 'Fix proposed, awaiting re-test', policy: 'requires_approval', approver: 'the next browser re-test', read: (f) => `${pendingFor(f.key).length} pending` },
+];
+const PENDING = ['fixed_awaiting_retest', 'retesting'];
+const pendingFor = (key) => (snap.bugs || []).filter((b) => b.feature === key && PENDING.includes(b.status));
+const policyPill = (b) => (b.policy === 'live' ? '<span class="policy">Live</span>' : `<span class="policy approval">Needs approval</span>`);
+const srcText = (b) => `${SOURCE_PORT.key} › ${b.object} › ${b.field}`;
+function dataMapTable(f) {
+  return `<div class="bind-list">${BINDINGS.map((b) => `<div class="bind"><div class="bind-top"><b>${esc(b.mark)} ${esc(b.channel.toLowerCase())}</b>${f ? `<span class="bind-val">${esc(b.read(f))}</span>` : ''}</div><div class="muted">${esc(b.legend)}</div><div class="src">${esc(srcText(b))}</div><div class="bind-foot">${policyPill(b)}<span class="muted">${esc(b.transform)}${b.approver ? ` · approved by ${esc(b.approver)}` : ''}</span></div></div>`).join('')}</div>`;
+}
+// What changes, everywhere, when a pending change is approved (computed from the bindings, not stored).
+function impactOf(bug) {
+  const f = snap.features.find((x) => x.key === bug.feature);
+  return [
+    `Satellite ${bug.id}: colour ${BUG_SERIES[0].label} → ${BUG_SERIES[1].label}; no longer translucent`,
+    `Tiles and trend lines: Open (this work) −1, Verified fixed +1`,
+    `Crystal ${bug.feature}: gold ring and size update from the re-test result (now ${f?.lastResult ? `${f.lastResult.stepsPassed}/${f.lastResult.stepsTotal}` : 'not tested'})`,
+    `Board: bug layer, feature layer, ${f ? statusText(f.status) : ''} → new status after the round; history keeps both states`,
+  ];
+}
+function pendingSection(key) {
+  const p = pendingFor(key);
+  if (!p.length) return '';
+  return `<section><h2>Pending changes (${p.length}) — awaiting approval</h2><div style="display:grid;gap:8px">${p.map((b) => `<div class="pending-card"><div><b>${esc(b.id)}</b> · fix proposed${(b.history || []).filter((h) => h.event === 'fixed').slice(-1).map((h) => h.commit ? ` in ${commit(h.commit)}` : '').join('')} · approver: the next browser re-test</div><div class="muted">${esc(b.step || '')}</div><div><b>If approved, it changes:</b><ul>${impactOf(b).map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div><div class="muted">If rejected (the re-test still fails), the bug returns to Open and the fix attempt is counted.</div></div>`).join('')}</div></section>`;
+}
+
 // ---- World view: the tracker as a Salt Basin crystal world.
 // Engine contract (reusable for any dataset): adapter(...) -> { root: { label, sub }, nodes: [{ id, label, sub,
 //   status, statusLabel, weight 0..1 (gem size), progress 0..1|null (gold ring), active (river of light),
@@ -501,7 +551,7 @@ function trackerGraph(pointIdx) {
       satellites = [];
       [[4, 1], [5, 2], [6, 3], [7, 4]].forEach(([idx, cat]) => { const n = idx === 4 ? h[4] - h[7] : h[idx]; for (let i = 0; i < Math.min(n, 14); i++) satellites.push({ id: `${f.key}-${cat}-${i}`, label: BUG_SERIES[cat - 1].label, cat, href: href('feature', f.key) }); });
     } else {
-      satellites = (snap.bugs || []).filter((b) => b.feature === f.key && b.status !== 'seen_in_test').map((b) => ({ id: b.id, label: `${b.id}: ${b.step || ''}`, cat: BUG_CAT(b.status), href: href('bug', b.id) }));
+      satellites = (snap.bugs || []).filter((b) => b.feature === f.key && b.status !== 'seen_in_test').map((b) => ({ id: b.id, label: `${b.id}: ${b.step || ''}`, cat: BUG_CAT(b.status), pending: PENDING.includes(b.status), href: href('bug', b.id) }));
     }
     return {
       id: f.key, label: f.key, status, statusLabel: statusText(status),
@@ -637,7 +687,8 @@ const World = !window.THREE ? { ensure() {}, setGraph() {}, focus() {}, refreshC
         const m = new THREE.Mesh(new THREE.OctahedronGeometry(0.085, 0), new THREE.MeshStandardMaterial({ color: sc, emissive: sc, emissiveIntensity: 0.4, flatShading: true, roughness: 0.45, transparent: true }));
         const ang = (j / Math.max(1, sCount)) * Math.PI * 2; const rr = ringR + 0.35 + (j % 3) * 0.16;
         m.position.set(Math.cos(ang) * rr, ((j % 5) - 2) * 0.12, Math.sin(ang) * rr);
-        m.userData = { kind: 'sat', sat, node }; pickables.push(m); sats.add(m);
+        if (sat.pending) { m.material.opacity = 0.35; m.material.depthWrite = false; m.userData.ghost = true; m.add(new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry), new THREE.LineDashedMaterial({ color: 0xC4843A, dashSize: 0.03, gapSize: 0.02, transparent: true }))); m.children[0].computeLineDistances(); }
+        m.userData = { ...m.userData, kind: 'sat', sat, node }; pickables.push(m); sats.add(m);
       });
       group.add(sats);
       scene.add(group);
@@ -652,7 +703,7 @@ const World = !window.THREE ? { ensure() {}, setGraph() {}, focus() {}, refreshC
     const f = focusId && objs[focusId];
     Object.values(objs).forEach((o) => {
       const on = !f || o === f;
-      o.group.traverse((x) => { if (x.material) x.material.opacity = on ? 1 : 0.18; });
+      o.group.traverse((x) => { if (x.material) x.material.opacity = (on ? 1 : 0.18) * (x.userData?.ghost ? 0.35 : 1); });
       o.sats.scale.setScalar(o === f ? 1.6 : 1);
     });
     labelsEl.querySelectorAll('.wl').forEach((el) => el.classList.toggle('dim', !!f && el.dataset.id !== focusId));
@@ -706,7 +757,7 @@ const World = !window.THREE ? { ensure() {}, setGraph() {}, focus() {}, refreshC
     renderer.domElement.classList.toggle('pointing', !!u);
     if (!u || u.kind === 'sun') { tipEl.style.display = 'none'; return; }
     const r = stage.getBoundingClientRect();
-    tipEl.innerHTML = u.kind === 'node' ? `<b>${esc(u.node.label)}</b><br>${esc(u.node.statusLabel)} · ${esc(u.node.sub)}<br><span class="muted">${u.node.satellites.length} bug${u.node.satellites.length === 1 ? '' : 's'} in orbit · click to enter</span>` : `<b>${esc(u.sat.label)}</b><br><span class="muted">${esc(BUG_SERIES[u.sat.cat - 1].label)} · ${esc(u.node.label)}</span>`;
+    tipEl.innerHTML = u.kind === 'node' ? `<b>${esc(u.node.label)}</b><br>${esc(u.node.statusLabel)} · ${esc(u.node.sub)}<br><span class="muted">${u.node.satellites.length} bug${u.node.satellites.length === 1 ? '' : 's'} in orbit · click to enter</span>` : `<b>${esc(u.sat.label)}</b><br><span class="muted">${esc(BUG_SERIES[u.sat.cat - 1].label)}${u.sat.pending ? ' · fix pending approval (re-test)' : ''} · ${esc(u.node.label)}</span>`;
     tipEl.style.display = 'block'; tipEl.style.left = `${Math.min(e.clientX - r.left + 14, r.width - 270)}px`; tipEl.style.top = `${e.clientY - r.top + 14}px`;
   }
   function onUp(e) {
@@ -764,6 +815,7 @@ function worldOverviewPanel(g) {
       <div><b>Crystal size</b> = how many test steps it has · <b>gold ring</b> = share of steps passing · <b>stream of bubbles</b> from the centre = an agent working on it now</div>
       <div><b>Small satellites</b> = its bugs</div><div class="row">${BUG_SERIES.map((sr) => `<span class="k"><span class="gem" style="background:var(${sr.color})"></span>${esc(sr.label)}</span>`).join('')}</div>
     </div>
+    <div><h2>The world is a view — its data map</h2><div class="muted" style="font-size:13px;margin-bottom:6px">Every property the world draws is mapped to a source field. Nothing is drawn without a mapping. Changes marked <b>Needs approval</b> show as translucent ghosts until approved.</div>${dataMapTable(null)}</div>
     <div><h2>Every crystal</h2><ul class="world-list">${g.nodes.map((n) => `<li><a href="${n.href}"><span><b>${esc(n.label)}</b><br><span class="muted">${esc(n.statusLabel)}</span></span><span class="num muted">${esc(n.sub)}</span></a></li>`).join('')}</ul></div>`;
 }
 function measureAtAll(pt) { const o = { open: 0, verified: 0, backlog: 0, person: 0 }; Object.values(pt.f).forEach((v) => { o.open += v[4]; o.verified += v[5]; o.backlog += v[6]; o.person += v[7]; }); return o; }
@@ -788,7 +840,9 @@ function renderWorld(layer) {
   $('w-live').setAttribute('aria-pressed', String(worldAt == null));
   const pt = hist && worldAt != null ? hist.points[worldAt] : null; const u = pt ? updateAt(pt) : null;
   $('w-asof').innerHTML = pt ? `${esc(fmtT(pt.t))} UTC${u ? ` · after ${esc(u.version)}` : ''}` : '<b>Live</b>';
-  $('world-panel').innerHTML = path.length ? `<div class="layer">${layer.html}</div>` : worldOverviewPanel(g);
+  const fk = worldFocusId(); const fobj = fk && snap.features.find((x) => x.key === fk);
+  const mapSec = fobj && worldAt == null ? `<section><h2>Data map — what this crystal draws, and from where</h2>${dataMapTable(fobj)}</section>${pendingSection(fk)}` : '';
+  $('world-panel').innerHTML = path.length ? `${mapSec}<div class="layer">${layer.html}</div>` : worldOverviewPanel(g);
 }
 
 const LAYERS = {
