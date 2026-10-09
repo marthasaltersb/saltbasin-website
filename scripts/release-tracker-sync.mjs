@@ -124,7 +124,7 @@ for (const a of agents.values()) {
   if (r) {
     if (role === 'build') summary = `Initial check ${r.initialCheckPassed ? 'passed' : 'did not pass'} · branch ${r.branch}`;
     else if (role === 'integrate') summary = r.merged ? `Merged → ${String(r.head).slice(0, 7)}${r.conflicts?.length ? ` · ${r.conflicts.length} conflicts resolved` : ''}${r.buildPassed ? '' : ' · BUILD FAILED'}` : 'Merge failed';
-    else if (role === 'validate') summary = `${r.stepsPassed}/${r.stepsTotal} steps passed${r.passed ? ' · PASS' : ' · FAIL'}`;
+    else if (role === 'validate') summary = `${r.stepsPassed}/${r.stepsTotal} steps passed${r.baselineVersion ? ` on baseline v${r.baselineVersion}` : ''}${r.passed ? ' · PASS' : ' · FAIL'}`;
     else if (role === 'triage') summary = `${r.items?.length ?? 0} triage items`;
     else if (role === 'fix') summary = `${r.fixed?.length ?? 0} fixed · ${r.notFixed?.length ?? 0} not fixed`;
     else if (role === 'scope') { const own = (r.items || []).filter((i) => i.scope === 'this_feature').length; summary = `${r.items?.length ?? 0} items · ${own} this feature's · ${(r.items?.length ?? 0) - own} backlog`; }
@@ -259,7 +259,7 @@ for (const [key, list] of Object.entries(byFeature)) {
   else if (list.length) status = 'between_stages';
   features.push({
     key, status, rounds: validations.length,
-    lastResult: lastRes ? { round: last.round, passed: lastRes.passed, stepsPassed: lastRes.stepsPassed, stepsTotal: lastRes.stepsTotal, report: lastRes.reportPath } : null,
+    lastResult: lastRes ? { round: last.round, passed: lastRes.passed, stepsPassed: lastRes.stepsPassed, stepsTotal: lastRes.stepsTotal, baseline: lastRes.baselineVersion ?? null, report: lastRes.reportPath } : null,
     openBugs: [...fb.values()].filter((b) => !['verified'].includes(b.status)).length,
     agents: list.length,
   });

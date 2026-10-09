@@ -73,6 +73,7 @@ The tracker overview charts the release's history (`scripts/release-history.mjs`
 - Career Master is the source of truth for outputs; per-output overrides are allowed and marked.
 - No API-only configuration; every rule and rollup is editable in a screen.
 - Interface parity: every capability works by point-and-click on desktop, as a phone walkthrough at 390px, via the API and via an MCP tool (`definition.json` `interfaceParity`). A training guide that can't be walked that way fails.
+- Fixed test constraints (`definition.json` `specGovernance`): training specs are frozen baselines with stable step ids (`node scripts/release-spec-baseline.mjs freeze | check | diff | score | show`). Only the code varies between rounds. No agent edits a spec mid-release; step changes are amendments in `docs/spec-amendments/<feature>/` decided by the amendment reviewer, never the proposer. Before relaunching, run `check --all`; a new feature's spec is frozen as v1 by the integrator when it first merges. Proposed amendments on disk are reviewed before the feature's next round (`release-loop-resume.mjs` passes them as `pendingAmendments`).
 - Failures are never silent, never "done" while unreconciled, and a blank or clipped screen is a failure.
 - Test as `member@test.local` from `scripts/create-test-member.mjs` (career terms accepted).
 - Repo is public: fictional data only; never an employer or application-target name.

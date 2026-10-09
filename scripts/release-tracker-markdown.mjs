@@ -64,7 +64,7 @@ L.push('# Release tracker', '',
 L.push('## Features', '', '| Feature | Status | Latest test | Rounds | Its own bugs verified | Backlog |', '|---|---|---|---|---|---|',
   ...features.map((f) => {
     const r = f.lastResult; const ob = ownBugs(f.key);
-    return `| ${fLink(f.key)} | ${st(f.status)} | ${r ? `Round ${r.round}: ${r.stepsPassed}/${r.stepsTotal}` : 'Not tested yet'} | ${f.rounds} | ${ob.length ? `${ob.filter((b) => b.status === 'verified').length} of ${ob.length}` : '—'} | ${f.backlog || 0} |`;
+    return `| ${fLink(f.key)} | ${st(f.status)} | ${r ? `Round ${r.round}: ${r.stepsPassed}/${r.stepsTotal}${r.baseline ? ` (baseline v${r.baseline})` : ''}` : 'Not tested yet'} | ${f.rounds} | ${ob.length ? `${ob.filter((b) => b.status === 'verified').length} of ${ob.length}` : '—'} | ${f.backlog || 0} |`;
   }), '');
 
 L.push('## Agents running', '', running.length
