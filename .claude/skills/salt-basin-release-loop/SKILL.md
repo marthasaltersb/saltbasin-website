@@ -36,8 +36,10 @@ file (version bump + note in `docs/release-process.md`), never by improvising pe
 
 If `docs/release-log/active-release.state.json` shows unfinished features, a new session continues them:
 
-1. Work on the WIP branch named in `docs/release-log/active-release.features.json` (`wipBranch`): fetch it,
-   check it out, and use it as the integration branch for this session. Set up the local environment
+1. Work on the integration branch named in `docs/release-log/active-release.features.json`
+   (`integrationBranch`; every merge, baseline, amendment and tracker state is pushed there): fetch it,
+   check it out, and keep pushing to it (the open PR tracks it). Do not start from `wipBranch`, which is an
+   older snapshot. Set up the local environment
    (Postgres 16 on port 5433 with socket in /tmp, `/var/tmp/sbpg/env.sh` with test admin credentials) if it
    is missing, and record how in `docs/release-process.md`.
 2. `node scripts/release-loop-resume.mjs --args --scripts <scratch dir>` writes one self-contained workflow
@@ -47,10 +49,22 @@ If `docs/release-log/active-release.state.json` shows unfinished features, a new
    Before launching, check Postgres is up (a container restart stops it) and salvage any unmerged agent
    work: commit dirty `.claude/worktrees/wf_*` trees to their branches and name the branch in the
    feature's `fixNotes` (or `salvage` for a build).
-3. Keep the tracker live: write the new runs' transcript dirs to a run_dir file, run
-   `scripts/release-tracker-sync.mjs --run <dir>... --ledger /var/tmp/sbpg/tracker/bug-ledger.json`, and
-   publish the snapshot to the tracker artifact (`trackerArtifact`, collection `tracker`, doc `current`,
-   field `json`). Bugs never leave the tracker; they end as verified fixed.
+3. Keep the tracker live WITHOUT losing its history. Everything the tracker knew is in git: the bug ledger
+   (`docs/release-log/bug-ledger.json`, every bug ever found, never deleted), the carry file
+   (`docs/release-log/tracker-carry.json`: every earlier agent with its tokens, and each feature's rounds and
+   last result), the trend history (`docs/release-log/history.json`, rebuilt from the state file's git
+   history) and the numbered updates (`docs/release-log/updates.json`). Once, at session start:
+   `mkdir -p /var/tmp/sbpg/tracker && cp docs/release-log/tracker-carry.json /var/tmp/sbpg/tracker/carry-in.json`
+   (a fixed copy, so nothing is counted twice), write this session's attribution lines to
+   `/var/tmp/sbpg/tracker/trailer.txt`, and after launching the runs put their transcript dirs, one per
+   line, in `/var/tmp/sbpg/tracker/run_dir`. Then run `scripts/release-tracker-session-sync.sh` every
+   3 minutes in the background. Publish to the tracker artifact (`trackerArtifact` in
+   active-release.features.json; collection `tracker`; docs `current`, `bugs`, `history`; field `json`)
+   from `/var/tmp/sbpg/tracker/doc.json`, `bugs-doc.json` and `history-doc.json` with ArtifactData,
+   pinning `if_version` to the version you read first. The artifact keeps its documents between sessions,
+   so the page never goes blank while a new session starts. Never publish a snapshot built without the
+   carry-in: it would drop earlier sessions' agents and rounds. Bugs never leave the tracker; they end as
+   verified fixed.
 4. After each merge, `--export` the snapshot to the state file, commit, and push the WIP branch so the next
    session can resume again. Push the owner's integration branch only when every feature has passed.
 

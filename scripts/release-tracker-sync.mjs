@@ -297,6 +297,30 @@ for (const f of features) {
   if (f.status === 'failing' && f.openBugs === 0 && f.backlog > 0) f.status = 'passed_with_backlog';
 }
 
+// Carry-over from earlier sessions (--carry <file>): a new session's runs start from nothing, so the agents,
+// round counts and last results recorded by earlier sessions come from the carry file (committed as
+// docs/release-log/tracker-carry.json) and are merged in. Read once per session from a fixed copy, so
+// nothing is counted twice; --carry-out writes the merged result for the next session.
+const carryPath = opt('--carry');
+if (carryPath && fs.existsSync(carryPath)) {
+  const carry = JSON.parse(fs.readFileSync(carryPath, 'utf8'));
+  const ids = new Set(agentList.map((a) => a.id));
+  for (const a of carry.agents || []) if (!ids.has(a.id)) agentList.push({ ...a, status: a.status === 'running' ? 'stopped' : a.status, carriedOver: true });
+  const counts = Object.fromEntries(Object.entries(byFeature).map(([k, l]) => [k, l.length]));
+  for (const cf of carry.features || []) {
+    const f = features.find((x) => x.key === cf.key);
+    if (!f) { features.push({ ...cf, carriedOver: true }); continue; }
+    if (!counts[cf.key]) { Object.assign(f, { ...cf, status: /^(build|integrate|validate|triage|scope|fix|reconcile|record|amend)/.test(cf.status) ? 'between_stages' : cf.status, carriedOver: true }); continue; }
+    f.rounds += cf.rounds || 0; f.agents += cf.agents || 0;
+    if (!f.lastResult && cf.lastResult) f.lastResult = cf.lastResult;
+  }
+}
+const carryOut = opt('--carry-out');
+if (carryOut) {
+  const lean = agentList.map(({ liveSteps, signals, ...a }) => ({ ...a, failures: (a.failures || []).slice(0, 5).map((f) => clip(typeof f === 'string' ? f : JSON.stringify(f), 160)), activity: clip(a.activity, 120) }));
+  fs.writeFileSync(carryOut, `${JSON.stringify({ writtenAt: new Date().toISOString(), agents: lean, features }, null, 0)}\n`);
+}
+
 // Numbered status updates (scripts/release-update.mjs), shown on the tracker with their comparisons.
 let updates = [];
 try { updates = JSON.parse(fs.readFileSync(new URL('../docs/release-log/updates.json', import.meta.url), 'utf8')); } catch { /* none yet */ }
