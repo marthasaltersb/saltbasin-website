@@ -216,7 +216,7 @@ router.put('/currents/:key', requireAdmin, async (req, res) => {
   // index inference — can't conditionally target either in one statement.
   const conflictClause = orgId
     ? `ON CONFLICT (current_key, org_id) WHERE org_id IS NOT NULL DO UPDATE SET`
-    : `ON CONFLICT (current_key) WHERE org_id IS NULL DO UPDATE SET`;
+    : `ON CONFLICT (current_key) WHERE org_id IS NULL AND owner_user_id IS NULL DO UPDATE SET`;
   await db.prepare(`
     INSERT INTO journey_current_definitions
       (current_key,org_id,label,rod_type,scope_type,primary_scenario_key,port_stages,entry_criteria,minimum_carry,transition_rules,tributary_trigger_rules,is_active,created_at,updated_at)

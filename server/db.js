@@ -5009,8 +5009,20 @@ Rod state, per event:
         created_at BIGINT NOT NULL,
         updated_at BIGINT NOT NULL
       );
-      CREATE UNIQUE INDEX IF NOT EXISTS idx_current_def_key_global ON journey_current_definitions (current_key) WHERE org_id IS NULL;
+      -- Personal scoring-preference tier (2026-09-10): a member can override a
+      -- platform-default Current for themselves (owner_user_id set, org_id NULL).
+      -- The global index excludes those rows so they don't collide with the
+      -- platform default. Every ON CONFLICT against the global index must use
+      -- the same predicate: WHERE org_id IS NULL AND owner_user_id IS NULL.
+      ALTER TABLE journey_current_definitions ADD COLUMN IF NOT EXISTS owner_user_id BIGINT REFERENCES users(id) ON DELETE CASCADE;
+      DO $$ BEGIN
+        IF EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_current_def_key_global' AND indexdef NOT LIKE '%owner_user_id%') THEN
+          DROP INDEX idx_current_def_key_global;
+        END IF;
+      END $$;
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_current_def_key_global ON journey_current_definitions (current_key) WHERE org_id IS NULL AND owner_user_id IS NULL;
       CREATE UNIQUE INDEX IF NOT EXISTS idx_current_def_key_org ON journey_current_definitions (current_key, org_id) WHERE org_id IS NOT NULL;
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_current_def_key_user ON journey_current_definitions (current_key, owner_user_id) WHERE owner_user_id IS NOT NULL;
     `);
   } catch (e) {
     console.warn('[db] journey_current_definitions schema warning:', e.message);
@@ -5036,7 +5048,7 @@ Rod state, per event:
         (current_key, org_id, label, rod_type, scope_type, primary_scenario_key, port_stages, entry_criteria, minimum_carry, transition_rules, tributary_trigger_rules, created_at, updated_at)
       VALUES
         ('career_master_intake', NULL, 'Career Master Intake Current', 'career_master', 'master_data', NULL, $1::jsonb, $2::jsonb, $3::jsonb, '[]'::jsonb, '[]'::jsonb, $4, $4)
-      ON CONFLICT (current_key) WHERE org_id IS NULL DO NOTHING
+      ON CONFLICT (current_key) WHERE org_id IS NULL AND owner_user_id IS NULL DO NOTHING
     `, [
       JSON.stringify(['requested', 'atoms_captured', 'molecules_bonded']),
       JSON.stringify({ minAtoms: 1 }),
@@ -5048,7 +5060,7 @@ Rod state, per event:
         (current_key, org_id, label, rod_type, scope_type, primary_scenario_key, port_stages, entry_criteria, minimum_carry, transition_rules, tributary_trigger_rules, created_at, updated_at)
       VALUES
         ('revenue_deal_lifecycle', NULL, 'Revenue Channel Current — Deal Lifecycle', 'revenue_lifecycle', 'channel_current', 'default_revenue', $1::jsonb, $2::jsonb, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, $3, $3)
-      ON CONFLICT (current_key) WHERE org_id IS NULL DO NOTHING
+      ON CONFLICT (current_key) WHERE org_id IS NULL AND owner_user_id IS NULL DO NOTHING
     `, [
       JSON.stringify(['qualified_context', 'qualified_opportunity', 'solution_fit', 'scope_defined', 'proposal', 'committed', 'customer']),
       JSON.stringify({ minAtoms: 1 }),
@@ -5454,7 +5466,7 @@ Rod state, per event:
       await sql.unsafe(
         `INSERT INTO journey_current_definitions (current_key, org_id, label, rod_type, scope_type, primary_scenario_key, port_stages, entry_criteria, minimum_carry, transition_rules, tributary_trigger_rules, created_at, updated_at)
          VALUES ($1,NULL,$2,$3,'master_data',NULL,'[]'::jsonb,$4::jsonb,'[]'::jsonb,'[]'::jsonb,'[]'::jsonb,$5,$5)
-         ON CONFLICT (current_key) WHERE org_id IS NULL DO NOTHING`,
+         ON CONFLICT (current_key) WHERE org_id IS NULL AND owner_user_id IS NULL DO NOTHING`,
         [currentKey, label, rodType, { scoringModel: 'weighted_sum_x20', dimensions, tiers }, nowCurrentSeed]
       );
     }
@@ -5482,7 +5494,7 @@ Rod state, per event:
       await sql.unsafe(
         `INSERT INTO journey_current_definitions (current_key, org_id, label, rod_type, scope_type, primary_scenario_key, port_stages, entry_criteria, minimum_carry, transition_rules, tributary_trigger_rules, created_at, updated_at)
          VALUES ($1,NULL,$2,$3,'channel_current',NULL,'[]'::jsonb,$4::jsonb,'[]'::jsonb,'[]'::jsonb,'[]'::jsonb,$5,$5)
-         ON CONFLICT (current_key) WHERE org_id IS NULL DO NOTHING`,
+         ON CONFLICT (current_key) WHERE org_id IS NULL AND owner_user_id IS NULL DO NOTHING`,
         [currentKey, label, rodType, { cadenceModel: 'touch_sequence', touches }, nowCurrentSeed]
       );
     }
@@ -5511,7 +5523,7 @@ Rod state, per event:
       await sql.unsafe(
         `INSERT INTO journey_current_definitions (current_key, org_id, label, rod_type, scope_type, primary_scenario_key, port_stages, entry_criteria, minimum_carry, transition_rules, tributary_trigger_rules, created_at, updated_at)
          VALUES ($1,NULL,$2,$3,'channel_current',NULL,'[]'::jsonb,$4::jsonb,'[]'::jsonb,'[]'::jsonb,'[]'::jsonb,$5,$5)
-         ON CONFLICT (current_key) WHERE org_id IS NULL DO NOTHING`,
+         ON CONFLICT (current_key) WHERE org_id IS NULL AND owner_user_id IS NULL DO NOTHING`,
         [currentKey, label, rodType, { gateModel: 'qualification_gate_chain', gates }, nowCurrentSeed]
       );
     }
@@ -5619,7 +5631,7 @@ Rod state, per event:
     await sql.unsafe(
       `INSERT INTO journey_current_definitions (current_key, org_id, label, rod_type, scope_type, primary_scenario_key, port_stages, entry_criteria, minimum_carry, transition_rules, tributary_trigger_rules, created_at, updated_at)
        VALUES ('l2r_diagnostic_scope',NULL,'Lead-to-Revenue Diagnostic Scope','l2r_diagnostic','master_data',NULL,$1::jsonb,'{"minAtoms":1}'::jsonb,'[]'::jsonb,'[]'::jsonb,'[]'::jsonb,$2,$2)
-       ON CONFLICT (current_key) WHERE org_id IS NULL DO NOTHING`,
+       ON CONFLICT (current_key) WHERE org_id IS NULL AND owner_user_id IS NULL DO NOTHING`,
       [L2R_DOMAINS.map((d) => d.domainKey), nowL2rSeed]
     );
 
@@ -6044,25 +6056,8 @@ Rod state, per event:
     console.warn('[db] cover-letter agent tables warning:', error.message);
   }
 
-  // Personal scoring-preference tier for journey_current_definitions
-  // (2026-09-10) — every methodology/threshold Current (career opportunity
-  // scoring, and the resume-to-job and source-confidence scoring Currents
-  // still to come) gets the same 3-tier platform-default/org/personal-owner
-  // precedence agent_definitions already uses (resolveAgentRoster()), so a
-  // member can reweight their own scoring without changing anyone else's —
-  // per Betsy's explicit instruction: "it's not a replacement, but a
-  // configuration that the user can change for their own spec." The old
-  // idx_current_def_key_global index (current_key) WHERE org_id IS NULL would
-  // otherwise collide a platform-default row with any personal-override row,
-  // since both have org_id IS NULL — it must be re-scoped, not just added to.
-  try {
-    await sql.unsafe(`ALTER TABLE journey_current_definitions ADD COLUMN IF NOT EXISTS owner_user_id BIGINT REFERENCES users(id) ON DELETE CASCADE`);
-    await sql.unsafe(`DROP INDEX IF EXISTS idx_current_def_key_global`);
-    await sql.unsafe(`CREATE UNIQUE INDEX IF NOT EXISTS idx_current_def_key_global ON journey_current_definitions (current_key) WHERE org_id IS NULL AND owner_user_id IS NULL`);
-    await sql.unsafe(`CREATE UNIQUE INDEX IF NOT EXISTS idx_current_def_key_user ON journey_current_definitions (current_key, owner_user_id) WHERE owner_user_id IS NOT NULL`);
-  } catch (error) {
-    console.warn('[db] journey_current_definitions personal-override column warning:', error.message);
-  }
+  // (journey_current_definitions' personal-override column and indexes are
+  // created with the table above, before any seed relies on them.)
 
   // ── GTM Deliverable & Benchmark Research Agent (2026-08-02) ──────────────
   // Native platform build replacing the standalone Python CLI at
