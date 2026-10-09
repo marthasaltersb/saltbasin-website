@@ -1,8 +1,8 @@
 {
-  "exportedAt": "2026-10-09T06:10:41.634Z",
+  "exportedAt": "2026-10-09T06:19:51.945Z",
   "features": {
     "proficiency-live-qr": {
-      "status": "validate",
+      "status": "failing",
       "lastRound": 5,
       "lastScore": "29/30",
       "lastReport": "docs/test-results/proficiency-live-qr/round-5.md",
@@ -10,7 +10,7 @@
       "backlog": 5
     },
     "world-shell-navigation": {
-      "status": "validate",
+      "status": "awaiting_retest",
       "lastRound": 1,
       "lastScore": "45/48",
       "lastReport": "docs/test-results/world-shell-navigation/round-1.md",
@@ -18,7 +18,7 @@
       "backlog": 4
     },
     "career-bound-outputs": {
-      "status": "validate",
+      "status": "awaiting_retest",
       "lastRound": 2,
       "lastScore": "54/56",
       "lastReport": "docs/test-results/career-bound-outputs/round-2.md",
@@ -26,7 +26,7 @@
       "backlog": 5
     },
     "qr-gated-outputs": {
-      "status": "validate",
+      "status": "awaiting_retest",
       "lastRound": 1,
       "lastScore": "45/48",
       "lastReport": "docs/test-results/qr-gated-outputs/round-1.md",
@@ -34,7 +34,7 @@
       "backlog": 2
     },
     "no-silent-failures": {
-      "status": "validate",
+      "status": "failed",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -42,7 +42,7 @@
       "backlog": 3
     },
     "release-loop-tooling": {
-      "status": "fix",
+      "status": "awaiting_retest",
       "lastRound": 2,
       "lastScore": "108/108",
       "lastReport": "docs/test-results/release-loop-tooling/round-2.md",
@@ -50,7 +50,7 @@
       "backlog": 3
     },
     "output-version-history": {
-      "status": "validate",
+      "status": "failed",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -58,7 +58,7 @@
       "backlog": 3
     },
     "resume-rollups": {
-      "status": "validate",
+      "status": "failed",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -66,11 +66,11 @@
       "backlog": 3
     },
     "chart-gallery": {
-      "status": "reconcile",
+      "status": "awaiting_retest",
       "lastRound": 2,
       "lastScore": "21/24",
       "lastReport": "docs/test-results/chart-gallery/round-2.md",
-      "openBugs": 5,
+      "openBugs": 8,
       "backlog": 2
     },
     "release-intelligence": {
@@ -82,7 +82,7 @@
       "backlog": 1
     },
     "cover-letter-agent": {
-      "status": "validate",
+      "status": "failed",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -90,7 +90,7 @@
       "backlog": 7
     },
     "in-app-release-loop": {
-      "status": "build",
+      "status": "failed",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -98,7 +98,7 @@
       "backlog": 0
     },
     "session-mapping": {
-      "status": "build",
+      "status": "failed",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -106,7 +106,7 @@
       "backlog": 0
     },
     "world-shell-layers": {
-      "status": "build",
+      "status": "failed",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -1279,7 +1279,7 @@
     {
       "id": "cbo-r2-inherited-cream-text",
       "feature": "career-bound-outputs",
-      "status": "retesting",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
       "attempts": 1,
       "step": "J1 1.2a (also J2, J3, J10 at 390px) and J9 9.0 / 9.2-9.3",
@@ -2544,6 +2544,70 @@
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (test_harness)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-F2-2",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "Unmerged r1 hunks remain (careerAtomMigration jsonb cast fix, careerMaster atomSyncError, api.js toast, ChartGallery.jsx)",
+      "rootCause": "Bare boolean bound to ::jsonb makes postgres infer boolean param type.",
+      "files": [
+        "server/lib/careerAtomMigration.js",
+        "server/routes/careerMaster.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (product_defect)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-F2-7",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "test_harness",
+      "attempts": 0,
+      "step": "Round 3 validation setup",
+      "rootCause": "Shortcut in fix verification.",
+      "files": [
+        "docs/training/chart-gallery.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (test_harness)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-F2-8",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "J2 2.1 sticky check",
+      "rootCause": "Only one host exercised.",
+      "files": [
+        "src/components/admin/AdminShell.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
           "commit": null
         }
       ]
