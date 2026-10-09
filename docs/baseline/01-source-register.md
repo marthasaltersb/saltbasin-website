@@ -119,6 +119,31 @@ Distinct from the ZIP package above — this is the user speaking directly to th
 
 **Important distinction preserved per the governing objective:** SRC-NEWDOC-05 and SRC-NEWDOC-06 were authored by ChatGPT, not by the user directly, and not by Claude. They carry no more authority than any other unvalidated source — their existence and internal self-confidence language ("Confirmed direction," "REQUIRED") do not establish correctness. Only the user's own read-aloud confirmation (tracked per `12-design-package-validation-workflow.md`) promotes any of this content into `05-new-requirement-register.md`.
 
+## New design documents (supplied 2026-09-10 — resume product)
+
+A second, unrelated design package — the "Salt Basin Resume Product" — was supplied 2026-09-10 across two upload batches plus text pasted directly into chat, and copied/written verbatim into `docs/baseline/intake/2026-09-10-salt-basin-resume-product/` (originals preserved under `Sources/`, nothing edited). This concerns Betsy's own career/resume/job-application product (Career Master Foundation, evidence-graded transferable-skill translation, configurable resume templates, human/AI contribution ledger) and her actual Osaic job application — a distinct subsystem from the 2026-09-05 Orbital Home package above. **Status: registered as evidence, not yet validated by the user** — no read-aloud confirmation pass has run against this package yet.
+
+| Source ID | Type | Location | Scope inspected | Notes |
+|---|---|---|---|---|
+| SRC-RESUME-01 | UX/trust requirements (live dictation, distilled) | `.../Sources/UXT-01-ux-and-trust-requirements-draft-1.md` | Fully read | 90%/75% review-gating thresholds for AI recommendations, search-preference controls, LinkedIn/reference disclosure defaults, responsive footer requirement, application-vs-generation distinction, calendar/interview tracking, outcome learning loop |
+| SRC-RESUME-02 | UX/trust clarification (live dictation, distilled) | `.../Sources/UXT-02-evidence-testimony-and-stretch-roles.md` | Fully read | Supersedes UXT-01's open evidence question below 75%: user testimony is a primary source; user-attested/document-supported/independently-verified provenance must stay distinct; stretch-role application path rules |
+| SRC-RESUME-03 | Personal/shared learning proposal (live dictation, distilled) | `.../Sources/UXT-03-personal-and-shared-learning-rules.md` | Fully read | Proposed default: personal learning always on, shared cross-user learning is separate explicit opt-in; another user's outcome never supplies evidence of this user's skill |
+| SRC-RESUME-04 | Case-study portfolio (original) | `.../Sources/S01-Betsy_Salter_Case_Study_Portfolio_Canva_Source_Final.pdf` | Not independently re-read by this session — inventoried via SRC-RESUME-07's own review pass | 12 pages, 24 numbered case narratives behind Betsy's real career claims (C01–C14 in SRC-RESUME-07) |
+| SRC-RESUME-05 | Career Master database (original) | `.../Sources/S02-Betsy_Salter_Career_Master_Database_Final.pdf` | Not independently re-read by this session | 7-page foundation: skills, job history, technology, engagements, positioning, ventures |
+| SRC-RESUME-06 | Weekly Research & Outreach Master Agent Spec (original) | `.../Sources/S03-Salt_Basin_Weekly_Research_and_Outreach_Master_Agent_Spec.docx` | Not independently re-read by this session | Contains the 15/15/15/15/15/10/5/10 career-opportunity ranking model SRC-RESUME-07 flags as likely already implemented in `server/lib/careerOpportunityRollups.js` (see `CLAUDE.md`'s Career Placement Agents section) — not yet verified by direct comparison |
+| SRC-RESUME-07 | Interface Intelligence Operating Blueprint v2.1 (original) | `.../Sources/S04-Salt_Basin_Interface_Intelligence_Operating_Blueprint_v2_1.pdf` | Not independently re-read by this session | 11-page product blueprint: transaction lineage, contribution events, confidence reconciliation, controlled memory |
+| SRC-RESUME-08 | QTR Operational Intelligence OS workbook (original) | `.../Sources/S05-QTR_Operational_Intelligence_OS_V5_Prepopulated_2.xlsx` | Not independently re-read by this session | 25 sheets of scenario/control/KPI/source/AI-validation vocabulary — explicitly not a record of completed personal engagements |
+| SRC-RESUME-09 | Current Osaic cover letter (original) | `.../Sources/S07-Betsy_Salter_Resume_CVO_cover_letter_2026.docx` | Not independently re-read by this session | Names "Osaic" and a "Value Management Office"; exact posting/requisition not supplied |
+| SRC-RESUME-10 | Current Osaic resume foundation (original) | `.../Sources/S08-Betsy_Salter_Resume_CVO_foundation_2026.docx` | Not independently re-read by this session | Current employment chronology, metrics, formatting concepts; source of several R01–R12 conflicts |
+| SRC-RESUME-11 | Consolidated resume-product specification (ChatGPT-authored, pasted by user) | `.../Resume-Product-Specification-v0.2.md` | Fully read | Version 0.2, 2026-09-10; Career Master schema, evidence states, 75/50 transfer-scoring thresholds, negative-scenario rules, template families, contribution ledger, D01–D11 deliverables |
+| SRC-RESUME-12 | Source review & career foundation (ChatGPT-authored, pasted by user) | `.../Source-Review-and-Career-Foundation.md` | Fully read | S01–S09 inventory (S06/S09 not actually supplied as files — see that document's own intake note), R01–R12 reconciliation register, C01–C14 claim set |
+| SRC-RESUME-13 | Reusable production prompt (ChatGPT-authored, pasted by user) | `.../Reusable-Production-Prompt.md` | Fully read | Driver prompt Betsy asked to have preserved for reuse; registered as evidence of her stated process, not adopted as this program's operating instructions |
+| SRC-RESUME-14 | Osaic application review draft (ChatGPT-authored, pasted by user) | `.../Osaic-Application-Review-Draft.md` | Fully read | Draft resume + cover letter + internal (never-published) source map; explicitly not final |
+
+Not supplied to this session despite being referenced throughout SRC-RESUME-12: `process-flow-template-definitions.xlsx` ("S06") and `salt-basin-transfer-skills-summary.png` ("S09", seen only as an inline chat image). If they matter to implementation they need to be supplied directly.
+
+**Also supplied 2026-09-10, before any file upload:** live spoken requests, not yet distilled into a spec document, covering (a) a free-trial gating model still to be decided (time-boxed / usage-count / feature-gated / some combination), (b) an API spec so a user's own Claude/Codex/ChatGPT agent can authenticate against Salt Basin and call its APIs, with a later roadmap item for the user to connect their own model credentials, (c) a goal of self-serve outputs that need no recurring LLM API cost once context/memory is established, and (d) a request for Betsy herself to be able to call the Claude Code/API from inside her own platform, temporarily and scoped to what's already built and cached, so she can test/debug the platform's actual UX without an external Claude Code session's usage limits interrupting the work. None of these has a source document yet — see `07-decision-log.md` DEC-007 through DEC-009.
+
 ## External sources referenced but unavailable
 
 | Reference | Where referenced | Availability |
@@ -132,3 +157,38 @@ Distinct from the ZIP package above — this is the user speaking directly to th
 | "New design documents" (the reconciliation input) | Referenced throughout the governing objective | **Supplied 2026-09-05** (see the "New design documents" section above) — but **not yet user-validated**. The blocker for Stage 3 is now the read-aloud validation pass (`12-design-package-validation-workflow.md`), not absence of documents. |
 
 Coverage boundaries, exclusions, and what "complete" means for this pass are stated separately in `02-coverage-and-limitations.md`.
+
+---
+
+## Update — 2026-10-01 pass (revision `e0ea466`)
+
+Revision inspected: `e0ea466c6c109cafccd8afa1afbb064e312cc7bb` (merge of PR #5 into `main`, committed 2026-09-22), checked out on `claude/compassionate-wozniak-7vx4jr`. That is 35 commits / 68 files / +6,287 lines after `e8e25e1`. Rows above describe the 2026-09-05 pass and are kept as history. Where a scope statement above says "directory listing only", the rows below supersede it.
+
+### Superseded scope statements
+
+| Source ID | Previous scope | Scope at 2026-10-01 |
+|---|---|---|
+| SRC-REPO-01 | `e8e25e1` | `e0ea466`. Still the only repository in scope (session GitHub scope: `marthasaltersb/saltbasin-website`) |
+| SRC-CODE-01 | 53 route files, listing only | 65 route files, 64 mounted, 1 unmounted (`memberAccess.js`). All 592 endpoints extracted with file:line (SRC-GEN-01). Contents read in depth for: `auth`, `site`, `config`, `memberSite`, `memberConfig`, `memberFinancial`, `metricIntelligence` (part), `resumeOutputs`, `memberEntitlements` (part), `commerce` (checkout/webhook), `leads` (part), `portfolioRequests` (part), `careerMaster` (part), `members` (part) |
+| SRC-CODE-02 | listing only | All files inventoried. Read: `auth.js`, `lib/rateLimit`, `lib/recaptcha` (part), `lib/email` (gate + senders), `lib/memberAccess`, `lib/seo` (part), `lib/backlogIntelligenceSchema` (part), `data/seed` |
+| SRC-CODE-03 | pattern counts | Executed: bootstrap catalog of 191 tables / 2,128 columns / 1,894 constraints / 488 indexes (SRC-ENV-05). Header and adapter read |
+| SRC-CODE-10..14 | counts/listings | All routes and modules inventoried. Read: `App.jsx`, `MemberDashboard.jsx`, `AdminShell.jsx` (registry + fallback nav), `blocks/index.jsx` (registry, `RenderSection`, `StatusBanner`, `TextBlock`), `TestLoginRedirect.jsx`, `Output.jsx` (data calls), `crystalGeometry.js` (variant keys) |
+| SRC-CFG-03 | not read | Still not read (`vite.config.js`) |
+| SRC-DOC-20 | not read | `netlify.toml` read in full |
+| SRC-DOC-02 | not read | **Still not read** (`AGENTS.md`), flagged |
+| SRC-MIG-01 | relationship unconfirmed | Resolved: unapplied and unreferenced (DEC-004 update) |
+| SRC-TEST-01..02 | headers read | All 17 test files executed 2026-10-01 (4 more found under `src/lib/`) |
+
+### New sources
+
+| Source ID | Type | Location | Revision/date | Scope inspected | Access limitations |
+|---|---|---|---|---|---|
+| SRC-LIVE-02 | Governing objective (user message) | This session, 2026-10-01: "Build an evidence-backed, maintainable specification…" | 2026-10-01 | Full | Restates and extends the program objective (adds the explicit three-dimension assessment and the Stage 6 release loop). Not a product requirement source |
+| SRC-GEN-01 | Generated inventory | `docs/baseline/inventory/**` from `scripts/baseline/generate-inventory.mjs` + `module-map.json` | `e0ea466`, 2026-10-01 | Complete for declared scope (see 02) | Static extraction. Guard detection is pattern-based |
+| SRC-ENV-05 | Local scratch environment (not live) | Session container: throwaway Postgres 16 (`/var/tmp/sb-baseline-pg`), server on :3901 with no external keys, Chromium 1194 / Playwright 1.56.1 (global) | 2026-10-01 | Bootstrap ×2, seed, build, boot, scripted probes ([11](./11-verification-and-release-records.md)) | Ephemeral, and not production. Runtime facts hold for this revision under the stated env only |
+| SRC-CODE-15 | Lazy schema module | `server/lib/backlogIntelligenceSchema.js` | `e0ea466` | Read (DDL list) | — |
+| SRC-CODE-16 | Unmounted route file | `server/routes/memberAccess.js` | `e0ea466` | Existence + not mounted | Purpose unread |
+
+### Connectors checked this pass
+
+`ListConnectors` with keywords supabase/postgres/database returned **none**. No live database, hosting, or DNS access exists. GitHub MCP access is limited to this repository.

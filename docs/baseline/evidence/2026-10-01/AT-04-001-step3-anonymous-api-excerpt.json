@@ -1,0 +1,24 @@
+{
+  "request": "GET /api/member-site/by-slug/member-a (anonymous, no cookies)",
+  "visibilityMode": "unlisted",
+  "at04_sections_in_response": [
+    {
+      "id": "at04-live",
+      "type": "text",
+      "name": "live",
+      "status": "live",
+      "fields": {
+        "heading": "PUBLIC-MARKER"
+      }
+    },
+    {
+      "id": "at04-draft",
+      "type": "text",
+      "name": "draft",
+      "status": "draft",
+      "fields": {
+        "heading": "DRAFT-MARKER-7f3a"
+      }
+    }
+  ]
+}

@@ -195,6 +195,42 @@ Write the triage report to ABSOLUTE path ${REPO}/docs/triage/${feature.key}-roun
   { label: `triage:${feature.key}:r${round}`, phase: 'Triage', schema: TRIAGE_SCHEMA, isolation: 'worktree', model: 'sonnet' })
 }
 
+const SCOPE_SCHEMA = {
+  type: 'object',
+  properties: {
+    reportPath: { type: 'string' },
+    items: { type: 'array', items: { type: 'object', properties: {
+      id: { type: 'string' },
+      scope: { type: 'string', enum: ['this_feature', 'pre_existing', 'other_feature', 'process_note'] },
+      owner: { type: 'string', description: 'for other_feature: the feature key whose change caused it' },
+      evidence: { type: 'string', description: 'how you decided: the base commit you reproduced on and what you saw, or the commit/feature that introduced it' },
+    }, required: ['id', 'scope', 'evidence'] } },
+  },
+  required: ['reportPath', 'items'],
+}
+const BACKLOG_SCOPES = new Set(['pre_existing', 'other_feature', 'process_note'])
+
+// Decides which failures this feature actually owns. Only 'this_feature' items block it; the rest go to
+// the platform backlog (pre_existing), to the feature that caused them (other_feature), or to the process
+// log (process_note) — all still tracked, none silent.
+function scopeCheck(feature, round, items) {
+  const n = nextSlot()
+  return agent(`${COMMON}${WORKTREE_SETUP}
+${env(n, 'scp')}
+${TEST_ACCOUNTS}
+You are the SCOPE agent for feature "${feature.title}" (key ${feature.key}), round ${round}. For each triage item below decide who owns it:
+- this_feature: this feature's own code/spec causes it, OR it is something this feature was asked to do (the request below) and does not do.
+- pre_existing: it happens WITHOUT this feature. Prove it: find the integration-branch commit just before this feature first merged (\`git log --merges --oneline --grep="${feature.key}" ${BRANCH}\` → the earliest merge's first parent, or for an older feature the commit before its first commit), check it out in this worktree, build, run on a fresh database, and try to reproduce. Reproduces → pre_existing. Also pre_existing: a gap that is NOT part of this feature's request.
+- other_feature: introduced by a DIFFERENT feature's change (show the commit and which feature it belongs to via git log/blame), owner = that feature key (one of: proficiency-live-qr, qr-gated-outputs, no-silent-failures, release-loop-tooling, world-shell-navigation, career-bound-outputs, output-version-history, resume-rollups, chart-gallery, cover-letter-agent, release-intelligence, in-app-release-loop, session-mapping).
+- process_note: not a product or spec problem at all (e.g. commit attribution wording, agent tooling refusals).
+If docs/triage/scope-review.json already classifies an id, reuse that decision unless you find contrary evidence. When unsure between this_feature and pre_existing, reproduce — never guess; if you cannot reproduce on the base, it is this_feature.
+This feature's request: ${feature.build || feature.title}
+Items:
+${JSON.stringify(items.map((i) => ({ id: i.id, step: i.step, rootCause: i.rootCause, class: i.class, files: i.files })), null, 2)}
+Write ABSOLUTE ${REPO}/docs/triage/${feature.key}-round-${round}-scope.md (do not commit). Do not change code.`,
+  { label: `scope:${feature.key}:r${round}`, phase: 'Triage', schema: SCOPE_SCHEMA, isolation: 'worktree', model: 'sonnet' })
+}
+
 function fix(feature, round, items) {
   const n = nextSlot()
   return agent(`${COMMON}${WORKTREE_SETUP}
@@ -257,19 +293,34 @@ async function runFeature(feature) {
     const allItems = []
     const attempts = {}   // bug id -> fix attempts so far
     log_.needsHuman = []
-    for (let round = feature.startRound || 1; round <= MAX_ROUNDS + 1; round++) {
+    // The round budget counts from where this run starts, so a resumed feature (startRound > 1) still gets
+    // MAX_ROUNDS fix rounds; per-bug attempt limits still send repeat failures to a person.
+    const firstRound = feature.startRound || 1
+    for (let round = firstRound; round <= firstRound + MAX_ROUNDS; round++) {
       const v = await validate(feature, round, fixNotes)
       if (!v) { log_.status = 'validator_died'; break }
       log_.rounds.push({ round, validation: v })
       log(`${feature.key} r${round}: ${v.stepsPassed}/${v.stepsTotal} steps passed`)
       if (v.passed && !carry.length) { log_.status = 'passed'; break }
-      if (round > MAX_ROUNDS) { log_.status = 'not_passed_after_max_rounds'; log(`${feature.key}: still failing after ${MAX_ROUNDS} fix rounds — recorded as NOT passed`); break }
+      if (round >= firstRound + MAX_ROUNDS) { log_.status = 'not_passed_after_max_rounds'; log(`${feature.key}: still failing after ${MAX_ROUNDS} fix rounds — recorded as NOT passed`); break }
       const t = v.passed ? { reportPath: null, items: [] } : await triage(feature, round, v, allItems)
       if (!t) { log_.status = 'triage_agent_died'; break }
       for (const c of carry.splice(0)) if (!t.items.some((i) => i.id === c.id)) t.items.push(c)
       allItems.push(...t.items)
       log_.rounds[log_.rounds.length - 1].triage = t
       for (const i of t.items) if (i.recurrenceOf) i.id = i.recurrenceOf   // same bug keeps its id
+      // Scope check (from the round named in scopeFromRound, so resumed runs keep their cached history):
+      // only failures this feature owns block it; the rest are tracked in the backlog.
+      if (A.scopeCheck && round >= (feature.scopeFromRound || 1) && t.items.length) {
+        const sc = await scopeCheck(feature, round, t.items)
+        log_.rounds[log_.rounds.length - 1].scope = sc
+        const byId = new Map((sc?.items || []).map((x) => [x.id, x]))
+        const moved = t.items.filter((i) => BACKLOG_SCOPES.has(byId.get(i.id)?.scope))
+        log_.backlog = [...(log_.backlog || []), ...moved.map((i) => ({ ...i, ...byId.get(i.id), round }))]
+        t.items = t.items.filter((i) => !BACKLOG_SCOPES.has(byId.get(i.id)?.scope))
+        if (moved.length) log(`${feature.key} r${round}: ${moved.length} item(s) moved out of this feature (pre-existing / other feature / process note)`)
+        if (!t.items.length) { log_.status = v.passed ? 'passed' : 'passed_with_backlog'; break }
+      }
       log_.escalated.push(...t.items.filter(i => i.class === 'needs_business_definition'))
       const candidates = t.items.filter(i => i.class !== 'needs_business_definition')
       const stuck = candidates.filter(i => (attempts[i.id] || 0) >= MAX_ATTEMPTS_PER_BUG)
@@ -323,7 +374,7 @@ if (A.sweep) {
 phase('Record')
 const summary = await serial(() => agent(`${COMMON}
 You are the RELEASE RECORDER. Work in the main checkout ${REPO} on \`${BRANCH}\`.
-Write ${REPO}/docs/release-log/${RELEASE}.md: one section per feature with status, every round (steps passed/total, failures, triage items with class and root cause, fixes with files), integration commits, every reported failed/refused command, and a top table of final results. List items escalated for a business definition with their exact questions, and bugs that hit the per-bug fix-attempt limit (needsHuman) with their full triage/fix/re-test history so a person can take over. Link each test-result and triage file. State plainly which features did NOT pass.
+Write ${REPO}/docs/release-log/${RELEASE}.md: one section per feature with status, every round (steps passed/total, failures, triage items with class and root cause, fixes with files), integration commits, every reported failed/refused command, and a top table of final results. List backlog items (pre_existing / other_feature / process_note) separately as NOT blocking this feature, with their evidence and owner. List items escalated for a business definition with their exact questions, and bugs that hit the per-bug fix-attempt limit (needsHuman) with their full triage/fix/re-test history so a person can take over. Link each test-result and triage file. State plainly which features did NOT pass.
 Then commit docs/release-log, docs/test-results and docs/triage ("Release log ${RELEASE}").
 Data:
 ${JSON.stringify({ features: results, sweep }, null, 2)}`,

@@ -1,0 +1,433 @@
+# Release tracker — setup guide for Claude
+
+Give this file to Claude (Claude Code, or claude.ai with Artifacts) and say:
+
+> Set up the release tracker from this guide for my project.
+
+Everything Claude needs is below: what the tracker is, the rules it enforces, the data it reads, how to publish it and keep it live, and the full page source.
+
+---
+
+## What it is
+
+A live, clickable status board for a **build → test → triage → fix → re-test** loop, usually run by parallel AI agents. It answers:
+
+- What is every agent doing right now?
+- Which features have passed, and which are still failing?
+- Which bugs are open, being fixed, waiting for a re-test, or **verified fixed**?
+- Which bugs belong to this work, and which were already broken or belong to someone else?
+- Which bugs need a person?
+
+The board works in **layers**: click any number, feature, round, bug or agent to go one layer deeper. The **breadcrumb trail is the path you took**, so you can always click back to the summary page you came from, and it restores your scroll position there. Browser Back works, and every layer has its own link you can share.
+
+---
+
+## Instructions for Claude
+
+### 1. Rules the tracker enforces
+
+Treat these as requirements, not suggestions.
+
+1. **Bugs never disappear.** Keep a permanent ledger keyed by bug id. If a later run no longer reports a bug, keep its last state and mark it `carriedOver`.
+2. **Bug lifecycle.** A bug moves `open → fixing → fixed_awaiting_retest → retesting → verified`. It can also go to `recurred`, `retest_failed_pending_triage`, `needs_human` or `needs_business_definition`.
+3. **Verified means re-tested.** A fix is never "verified" on its own. A bug is `verified` only when the next browser test round passes. If that round has other failures, the bug is verified only if triage doesn't report this bug again. Record the commit tested.
+4. **Fix-attempt limit.** After N fix attempts (default 2) on the same bug, set it to `needs_human` and take it out of the automated loop.
+5. **Never "done" with unreconciled failures.** If an agent reports failed commands that nobody has reconciled, its status is `done_unreconciled`, not `done`.
+6. **Awaiting retest is not passed.** If a fix landed after the last test round, the feature's status is `awaiting_retest`.
+7. **Scope check: whose bug is it?** After triage, classify each bug, with evidence:
+
+   | Scope | Meaning | Blocks the feature? | Status |
+   |---|---|---|---|
+   | `this_feature` | The feature's own change or spec caused it | Yes | (normal lifecycle) |
+   | `pre_existing` | Reproduces on the base without this feature's commits | No | `backlog_pre_existing` |
+   | `other_feature` | Another feature's change caused it | No (moves to the owner) | `reassigned`, with `scope.owner` |
+   | `process_note` | Test harness, environment or spec wording, not a product bug | No | `process_note` |
+
+   A feature whose only remaining bugs are out of scope is `passed_with_backlog`. When unsure, reproduce it on the base; if it doesn't reproduce there, it is `this_feature`.
+8. **Live test logs.** Test agents should append one JSON line per checked step (`{step, ok, expect, seen}`) to a log while they run, so failures show up before the round ends (`liveSteps`).
+9. **No transcript text.** The snapshot holds labels, statuses, summaries and counts only.
+
+### 2. Produce a snapshot
+
+Whatever runs the loop (a Claude Code workflow, CI, or agents you launch by hand) writes one JSON snapshot in this shape:
+
+```json
+{
+  "syncedAt": "2026-01-15T10:30:00.000Z",
+  "runId": "run-42",
+  "repoUrl": "https://github.com/OWNER/REPO",
+  "maxFixAttemptsPerBug": 2,
+  "maxFixRounds": 4,
+  "totals": { "input": 1200, "cacheWrite": 50000, "cacheRead": 900000, "output": 30000 },
+  "features": [
+    { "key": "checkout-flow", "status": "failing", "rounds": 2,
+      "lastResult": { "round": 2, "passed": false, "stepsPassed": 18, "stepsTotal": 20 },
+      "openBugs": 2, "backlog": 1, "reassignedIn": 0, "agents": 7 }
+  ],
+  "agents": [
+    { "id": "a1", "label": "validate:checkout-flow:r2", "role": "validate", "feature": "checkout-flow", "round": 2,
+      "status": "running", "activity": "$ node walk-journey-3.mjs", "summary": null,
+      "startedAt": "2026-01-15T10:01:00Z", "lastActivityAt": "2026-01-15T10:29:00Z",
+      "tokens": { "input": 10, "cacheWrite": 4000, "cacheRead": 90000, "output": 2500 },
+      "liveSteps": { "checked": 12, "passed": 11, "failed": [ { "step": "J3.2", "expect": "Total shows $40", "seen": "Total shows $0" } ], "errors": [] },
+      "signals": [], "failures": [] }
+  ],
+  "bugs": [
+    { "id": "checkout-flow-B3", "feature": "checkout-flow", "status": "fixed_awaiting_retest", "class": "rendering",
+      "attempts": 1, "step": "J3.2 order total", "rootCause": "Total computed before discounts load", "files": ["src/cart.js"],
+      "scope": { "scope": "this_feature", "owner": null, "evidence": "Introduced by abc1234", "decidedBy": "scope:checkout-flow:r1" },
+      "history": [
+        { "round": 1, "event": "found", "note": "Total shows $0" },
+        { "round": 1, "event": "fixed", "note": "Wait for discounts", "commit": "def5678" }
+      ] }
+  ]
+}
+```
+
+Notes:
+- Agent `role` is one of `build`, `integrate`, `validate`, `triage`, `scope`, `fix`, `reconcile`, `record`. Label agents `<role>:<feature>:r<round>` so they group by feature and round.
+- Agent `status`: `running`, `done`, `failed`, `done_unreconciled`. Feature `status`: `queued`, a running role name, `failing`, `awaiting_retest`, `passed`, `passed_with_backlog`, `needs_human`, `failed`.
+- History `event`: `found`, `recurred`, `fixed`, `not_fixed`, `verified`, `seen`.
+- Bug ids stay stable across rounds: triage links a re-reported bug to its earlier id (`recurrenceOf`).
+
+### 3. Publish the page (claude.ai Artifacts)
+
+1. Save the page source at the end of this guide as `release-tracker.html`.
+2. Publish it as an Artifact with the **`db` capability**. Use one rule: collection `tracker`, read for anyone who can **view** the artifact, write for the **owner** only. Load the `artifact-capabilities` skill first for the exact capability syntax.
+3. Write the snapshot to the artifact database: collection `tracker`, document `current`, a single field `json` holding the **stringified** snapshot. Use `ArtifactData` `set`, passing the `file_path` of a file containing `{"json": "<snapshot as a string>"}`, and `if_version` once the document exists.
+4. The page subscribes to that document and re-renders on every write. Nothing else is needed.
+
+### 4. Keep it live
+
+- After every stage finishes (an agent starts or ends), rebuild the snapshot and write it again. A simple approach is a watcher on the run's event log that triggers a sync. Also sync on a 15-minute heartbeat so "last activity" times stay honest.
+- Keep the bug ledger (rule 1) in a file the sync reads and updates.
+- Optionally commit an exported state file after each sync, so a new Claude session can resume the loop without re-instruction.
+
+### 5. Without Artifacts
+
+- **Local preview:** put a stub before the page script so it reads a local snapshot:
+  `<script>window.claude={use:async()=>({doc:()=>({onSnapshot:(cb)=>cb({json: JSON.stringify(SNAPSHOT)})})})};</script>`
+- **Markdown report:** render the same snapshot as Markdown with the same layers (overview → features → feature detail → bug detail), joined by anchor links, and commit it next to your release log.
+
+---
+
+## Page source
+
+Single file, no build step. It uses Google Fonts (optional), handles light and dark mode, and works at phone width.
+
+```html
+<title>Release Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: control-room board — summary strip, then feature lanes, live agents, bug queue, agent ledger */
+:root {
+  --bg: #f3f6f7; --panel: #ffffff; --ink: #14262e; --muted: #5a6d75; --line: #d9e3e6;
+  --teal: #1b4f66; --teal-soft: #dcecf1; --gold: #b07a1c; --gold-soft: #f6ead2;
+  --good: #23784f; --good-soft: #dff1e7; --warn: #9a6200; --warn-soft: #fbedd0;
+  --bad: #b03a26; --bad-soft: #f8e0da; --human: #6b4bb0; --human-soft: #ebe4f8;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1a1f; --panel: #16242b; --ink: #e3edf0; --muted: #94a8b0; --line: #26383f;
+  --teal: #7cc2dc; --teal-soft: #1b3440; --gold: #e0ad55; --gold-soft: #3a2d14;
+  --good: #6fd0a0; --good-soft: #163327; --warn: #f0b85a; --warn-soft: #372a10;
+  --bad: #f08c78; --bad-soft: #3d1d17; --human: #b9a3f0; --human-soft: #2a2244; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f1a1f; --panel: #16242b; --ink: #e3edf0; --muted: #94a8b0; --line: #26383f;
+  --teal: #7cc2dc; --teal-soft: #1b3440; --gold: #e0ad55; --gold-soft: #3a2d14;
+  --good: #6fd0a0; --good-soft: #163327; --warn: #f0b85a; --warn-soft: #372a10;
+  --bad: #f08c78; --bad-soft: #3d1d17; --human: #b9a3f0; --human-soft: #2a2244; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; display: grid; gap: 22px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 20px; }
+h1 { font: 800 26px/1.15 var(--display); letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+h2 { font: 700 13px/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 10px; }
+.sync { font: 12px var(--mono); color: var(--muted); }
+.sync b { color: var(--ink); font-weight: 600; }
+.live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--good); margin-right: 6px; vertical-align: 1px; }
+.stale .live-dot { background: var(--warn); }
+.strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.stat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+.stat .n { font: 800 28px/1 var(--display); font-variant-numeric: tabular-nums; }
+.stat .l { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.stat.human .n { color: var(--human); } .stat.bad .n { color: var(--bad); } .stat.good .n { color: var(--good); }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.filters button { font: 600 13px var(--body); border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.filters button[aria-pressed="true"] { background: var(--teal); border-color: var(--teal); color: var(--panel); }
+.filters button:focus-visible, summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+section { min-width: 0; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; font: 600 12px var(--body); color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; padding: 9px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mono { font-family: var(--mono); font-size: 12.5px; }
+.muted { color: var(--muted); }
+.pill { display: inline-block; font: 600 12px/1 var(--body); padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
+.s-running { background: var(--teal-soft); color: var(--teal); }
+.s-passed, .s-verified, .s-done { background: var(--good-soft); color: var(--good); }
+.s-failing, .s-open, .s-recurred, .s-retest_failed, .s-failed, .s-done_unreconciled, .s-seen_in_test { background: var(--bad-soft); color: var(--bad); }
+.s-fixing, .s-fixed_awaiting_retest, .s-between_stages, .s-awaiting_retest, .s-retesting, .s-retest_failed_pending_triage { background: var(--gold-soft); color: var(--gold); }
+.s-needs_human, .s-needs_business_definition { background: var(--human-soft); color: var(--human); }
+.s-passed_with_backlog { background: var(--good-soft); color: var(--good); }
+.s-backlog_pre_existing, .s-reassigned, .s-process_note, .s-queued, .s-idle_or_done, .s-stopped { background: var(--line); color: var(--muted); }
+.bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; min-width: 80px; }
+.bar i { display: block; height: 100%; background: var(--good); border-radius: 3px; }
+.now { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.agent { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--teal); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.agent .role { font: 700 12px var(--display); text-transform: uppercase; letter-spacing: 0.06em; color: var(--teal); }
+.agent .feat { font-weight: 600; margin: 2px 0 6px; overflow-wrap: anywhere; }
+.agent .act { font: 12.5px/1.45 var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+.agent .meta { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.empty { padding: 18px; color: var(--muted); }
+details summary { cursor: pointer; list-style: none; }
+details summary::-webkit-details-marker { display: none; }
+.hist { margin: 8px 0 2px; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 13px; }
+a { color: var(--teal); }
+.hist li { display: grid; grid-template-columns: 44px 120px 1fr; gap: 8px; }
+.callout { background: var(--human-soft); color: var(--ink); border: 1px solid var(--human); border-radius: 8px; padding: 12px 14px; }
+.callout b { color: var(--human); }
+@media (max-width: 640px) { .hist li { grid-template-columns: 36px 1fr; } .hist li span:last-child { grid-column: 1 / -1; } }
+@media (prefers-reduced-motion: no-preference) { .running-anim { animation: pulse 1.6s ease-in-out infinite; } @keyframes pulse { 50% { opacity: .45 } } }
+.crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: 14px; }
+.crumbs a { text-decoration: none; font-weight: 600; }
+.crumbs a:hover { text-decoration: underline; }
+.crumbs .sep { color: var(--muted); }
+.crumbs .here { font-weight: 700; overflow-wrap: anywhere; }
+.layer-title { font: 800 22px/1.2 var(--display); margin: 0; overflow-wrap: anywhere; }
+.layer-sub { color: var(--muted); margin-top: 4px; }
+a.stat { display: block; color: inherit; text-decoration: none; transition: border-color .15s, transform .15s; }
+a.stat:hover, a.stat:focus-visible { border-color: var(--teal); }
+@media (prefers-reduced-motion: no-preference) { a.stat:hover { transform: translateY(-1px); } .layer { animation: enter .22s ease-out; } @keyframes enter { from { opacity: 0; transform: translateY(6px) } } }
+a.stat .go, .rowlink .go { color: var(--teal); font-size: 12px; font-weight: 600; }
+tr.rowlink { cursor: pointer; }
+tr.rowlink:hover td, tr.rowlink:focus-within td { background: var(--teal-soft); }
+tr.rowlink a.cell { color: inherit; text-decoration: none; font-weight: 700; }
+a.agent { display: block; color: inherit; text-decoration: none; }
+a.agent:hover, a.agent:focus-visible { border-color: var(--teal); }
+a:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; padding: 14px; font-size: 14px; }
+.kv dt { color: var(--muted); } .kv dd { margin: 0; overflow-wrap: anywhere; }
+.layer { display: grid; gap: 22px; min-width: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-block; border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 3px 10px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--ink); }
+.chip:hover { border-color: var(--teal); }
+.timeline { list-style: none; margin: 0; padding: 14px; display: grid; gap: 10px; }
+.timeline li { display: grid; grid-template-columns: 60px 130px 1fr; gap: 10px; font-size: 14px; }
+@media (max-width: 640px) { .timeline li { grid-template-columns: 44px 1fr; } .timeline li > :last-child { grid-column: 1 / -1; } .kv { grid-template-columns: 1fr; } .kv dt { margin-top: 6px; } .kv dt:first-child { margin-top: 0; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Release tracker</h1>
+      <div class="muted">Click any number, feature, round, bug or agent to go one layer deeper. The trail at the top takes you back.</div>
+    </div>
+    <div class="sync" id="sync"><span class="live-dot"></span>Waiting for the first update…</div>
+  </header>
+  <nav class="crumbs" id="crumbs" aria-label="Where you are"></nav>
+  <main id="view"><div class="panel empty">Waiting for the first update…</div></main>
+</div>
+
+<script>
+const ROLE = { build: 'Build', integrate: 'Integrate', validate: 'Validate', triage: 'Triage', scope: 'Scope check', fix: 'Fix', record: 'Record', reconcile: 'Reconcile' };
+const BACKLOG = ['backlog_pre_existing', 'reassigned', 'process_note'];
+const STATUS = {
+  running: 'Running', passed: 'Passed', failing: 'Failing', queued: 'Queued', between_stages: 'Between stages',
+  needs_human: 'Needs a person', needs_business_definition: 'Needs a business decision', open: 'Open', recurred: 'Came back',
+  fixing: 'Being fixed', fixed_awaiting_retest: 'Fixed, awaiting re-test', retest_failed: 'Re-test failed', verified: 'Verified fixed',
+  done: 'Done', failed: 'Failed', idle_or_done: 'Idle', done_unreconciled: 'Finished, failures not reconciled',
+  seen_in_test: 'Seen in test, awaiting triage', retesting: 'Fixed, being retested now',
+  retest_failed_pending_triage: 'Retest failed, being triaged', passed_with_backlog: 'Passed (backlog elsewhere)',
+  backlog_pre_existing: 'Backlog: was already broken', reassigned: 'Belongs to another feature', process_note: 'Test or process note', stopped: 'Stopped (run replaced)', awaiting_retest: 'Fixed, awaiting retest',
+};
+const EVENT = { found: 'Found', recurred: 'Came back', fixed: 'Fix applied', not_fixed: 'Not fixed', seen: 'Seen in test', verified: 'Verified fixed' };
+const SCOPE = { this_feature: 'This feature', pre_existing: 'Was already broken before this work', other_feature: 'Another feature', process_note: 'Test or process note, not a product bug' };
+const BUG_ORDER = { needs_human: 0, needs_business_definition: 1, recurred: 2, retest_failed: 3, open: 4, seen_in_test: 5, fixing: 6, fixed_awaiting_retest: 7, reassigned: 8, backlog_pre_existing: 9, process_note: 10, verified: 11 };
+let snap = null;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const pill = (s) => `<span class="pill s-${esc(s)}">${esc(STATUS[s] || String(s).replace(/_/g, ' '))}</span>`;
+const featStatus = (s) => (STATUS[s] ? pill(s) : `<span class="pill s-running running-anim">${esc(String(s).split(', ').map((r) => ROLE[r] || r).join(' + '))}</span>`);
+const ago = (iso) => { if (!iso) return '—'; const m = Math.round((Date.now() - Date.parse(iso)) / 60000); return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : `${Math.floor(m / 60)} h ${m % 60} min ago`; };
+const k = (n) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}k` : String(n || 0));
+const enc = encodeURIComponent;
+// The URL is the path the viewer took: one token per layer (#/stat:open-bugs/bug:<id>). A link goes one
+// layer deeper from where the viewer is; if that layer is already on the path, it returns to it.
+let path = [];
+const tok = (...parts) => parts.map((p) => enc(p)).join(':');
+const href = (...parts) => {
+  const t = parts[0] === 'feature' && parts[2] === 'round' ? tok('round', parts[1], parts[3]) : tok(...parts);
+  const i = path.indexOf(t);
+  const next = i >= 0 ? path.slice(0, i + 1) : [...path, t];
+  return `#/${next.join('/')}`;
+};
+const commit = (c) => (c ? ` <a class="mono" href="${esc((snap.repoUrl || '') + '/commit/' + c)}" target="_blank" rel="noopener">${esc(String(c).slice(0, 7))}</a>` : '');
+const sortBugs = (list) => [...list].sort((a, b) => (BUG_ORDER[a.status] ?? 7) - (BUG_ORDER[b.status] ?? 7));
+const ownBugs = (key) => (snap.bugs || []).filter((b) => b.status !== 'seen_in_test' && ((b.feature === key && !BACKLOG.includes(b.status)) || (b.status === 'reassigned' && b.scope?.owner === key)));
+const agentName = (a) => `${ROLE[a.role] || a.role || 'Agent'}${a.round ? ` · round ${a.round}` : ''}`;
+
+// The layers. Each takes the route parts and returns { crumbs: [[label, href]...], html }.
+const STATS = {
+  'features-passed': { label: 'Features passed', tone: 'good', count: (s) => `${s.features.filter((f) => ['passed', 'passed_with_backlog'].includes(f.status)).length} / ${s.features.length}`, list: 'features', pick: (s) => s.features.filter((f) => ['passed', 'passed_with_backlog'].includes(f.status)), note: 'Features whose latest test round passed every journey step.' },
+  'agents-running': { label: 'Agents running', tone: '', count: (s) => s.agents.filter((a) => a.status === 'running').length, list: 'agents', pick: (s) => s.agents.filter((a) => a.status === 'running'), note: 'Agents working right now, with their latest step.' },
+  'open-bugs': { label: 'Open bugs (this work)', tone: 'bad', count: (s) => s.bugs.filter((b) => !['verified', 'seen_in_test', ...BACKLOG].includes(b.status)).length, list: 'bugs', pick: (s) => s.bugs.filter((b) => !['verified', 'seen_in_test', ...BACKLOG].includes(b.status)), note: 'Bugs caused by this work that are not yet verified fixed. They block their feature.' },
+  backlog: { label: 'Backlog: not this work', tone: '', count: (s) => s.bugs.filter((b) => BACKLOG.includes(b.status)).length, list: 'bugs', pick: (s) => s.bugs.filter((b) => BACKLOG.includes(b.status)), note: 'Bugs the scope check placed elsewhere: already broken before this work, another feature’s, or a test/process note. They stay here until fixed and verified.' },
+  verified: { label: 'Bugs verified fixed', tone: 'good', count: (s) => s.bugs.filter((b) => b.status === 'verified').length, list: 'bugs', pick: (s) => s.bugs.filter((b) => b.status === 'verified'), note: 'Bugs whose step passed in a later browser test after the fix.' },
+  human: { label: 'Need a person', tone: 'human', count: (s) => s.bugs.filter((b) => ['needs_human', 'needs_business_definition'].includes(b.status)).length, list: 'bugs', pick: (s) => s.bugs.filter((b) => ['needs_human', 'needs_business_definition'].includes(b.status)), note: 'Out of the automated loop: fix attempts ran out, or a business decision is missing.' },
+  unreconciled: { label: 'Finished with unreconciled failures', tone: 'bad', count: (s) => s.agents.filter((a) => a.status === 'done_unreconciled').length, list: 'agents', pick: (s) => s.agents.filter((a) => a.status === 'done_unreconciled'), note: 'Agents that finished but reported failures nobody has reconciled yet. They are not done.' },
+  tokens: { label: 'Tokens out / cache read', tone: '', count: (s) => `${k(s.totals?.output)} / ${k(s.totals?.cacheRead)}`, list: 'agents', pick: (s) => [...s.agents].sort((a, b) => (b.tokens?.output || 0) - (a.tokens?.output || 0)), note: 'Every agent run, most output tokens first.' },
+};
+
+function featureRows(list) {
+  if (!list.length) return '<div class="panel empty">Nothing here.</div>';
+  return `<div class="panel"><table><thead><tr><th>Feature</th><th>Status</th><th>Latest test</th><th class="num">Rounds</th><th>Its own bugs verified</th></tr></thead><tbody>${list.map((f) => {
+    const r = f.lastResult; const pct = r && r.stepsTotal ? Math.round((r.stepsPassed / r.stepsTotal) * 100) : 0;
+    const own = ownBugs(f.key); const v = own.filter((b) => b.status === 'verified').length;
+    return `<tr class="rowlink" data-href="${href('feature', f.key)}"><td><a class="cell" href="${href('feature', f.key)}">${esc(f.key)}</a></td><td>${featStatus(f.status)}</td><td>${r ? `<div class="num">Round ${r.round}: ${r.stepsPassed}/${r.stepsTotal} steps</div><div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>` : '<span class="muted">Not tested yet</span>'}</td><td class="num">${f.rounds}</td><td>${own.length ? `<div class="num">${v} of ${own.length}</div><div class="bar" aria-hidden="true"><i style="width:${Math.round((v / own.length) * 100)}%"></i></div>` : '<span class="muted">None of its own</span>'}${f.backlog ? `<div class="muted">+ ${f.backlog} in backlog</div>` : ''}</td></tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+function bugRows(list, showFeature = true) {
+  if (!list.length) return '<div class="panel empty">No bugs here.</div>';
+  return `<div class="panel"><table><thead><tr><th>Bug</th>${showFeature ? '<th>Feature</th>' : ''}<th>Status</th><th class="num">Fix attempts</th><th>What fails</th></tr></thead><tbody>${sortBugs(list).map((b) => `<tr class="rowlink" data-href="${href('bug', b.id)}"><td class="mono"><a class="cell" href="${href('bug', b.id)}">${esc(b.id)}</a>${b.carriedOver ? '<div class="muted">kept from an earlier run</div>' : ''}</td>${showFeature ? `<td>${esc(b.feature)}${b.status === 'reassigned' && b.scope?.owner ? `<div class="muted">→ ${esc(b.scope.owner)}</div>` : ''}</td>` : ''}<td>${pill(b.status)}</td><td class="num">${b.attempts || 0} / ${esc(snap.maxFixAttemptsPerBug)}</td><td>${esc(b.step)}</td></tr>`).join('')}</tbody></table></div>`;
+}
+function agentRows(list) {
+  if (!list.length) return '<div class="panel empty">No agent runs here.</div>';
+  return `<div class="panel"><table><thead><tr><th>Agent</th><th>Status</th><th>Result</th><th class="num">Tokens (out / cache read)</th><th>Last activity</th></tr></thead><tbody>${list.map((a) => `<tr class="rowlink" data-href="${href('agent', a.id)}"><td><a class="cell" href="${href('agent', a.id)}">${esc(agentName(a))}</a><div class="muted">${esc(a.feature || '—')}</div></td><td>${pill(a.status)}</td><td>${esc(a.summary || '—')}${a.failures?.length ? `<div class="muted">${a.failures.length} command failure${a.failures.length > 1 ? 's' : ''} reported</div>` : ''}</td><td class="num">${k(a.tokens?.output)} / ${k(a.tokens?.cacheRead)}</td><td class="muted">${esc(ago(a.lastActivityAt))}</td></tr>`).join('')}</tbody></table></div>`;
+}
+function agentCards(list) {
+  if (!list.length) return '<div class="panel empty">No agent is running here right now.</div>';
+  return `<div class="now">${list.map((a) => `<a class="agent" href="${href('agent', a.id)}"><div class="role">${esc(agentName(a))}</div><div class="feat">${esc(a.feature)}</div><div class="act">${esc(a.activity || 'Starting…')}</div>${a.role === 'validate' && a.liveSteps ? `<div class="meta">${a.liveSteps.checked} checks · ${a.liveSteps.passed} passed · <b>${a.liveSteps.failed.length} failed</b></div>` : ''}<div class="meta">Started ${esc(ago(a.startedAt))} · last step ${esc(ago(a.lastActivityAt))}</div></a>`).join('')}</div>`;
+}
+const section = (title, html) => `<section><h2>${esc(title)}</h2>${html}</section>`;
+
+const LAYERS = {
+  '': () => {
+    const s = snap; const human = STATS.human.count(s);
+    return { crumbs: [], html: `
+      <div class="strip">${Object.entries(STATS).map(([key, st]) => `<a class="stat ${st.tone}" href="${href('stat', key)}"><div class="n">${esc(st.count(s))}</div><div class="l">${esc(st.label)}</div><div class="go">Open ›</div></a>`).join('')}</div>
+      ${human ? `<a class="callout" style="display:block;text-decoration:none" href="${href('stat', 'human')}"><b>${human} ${human === 1 ? 'bug needs' : 'bugs need'} a person.</b> Open them ›</a>` : ''}
+      ${section('Agents working now', agentCards(s.agents.filter((a) => a.status === 'running')))}
+      ${section('Features', featureRows(s.features))}` };
+  },
+  stat: ([key]) => {
+    const st = STATS[key]; if (!st) return null;
+    const items = st.pick(snap);
+    const html = st.list === 'features' ? featureRows(items) : st.list === 'bugs' ? bugRows(items) : agentRows(items);
+    return { crumbs: [[st.label]], html: `<div><h3 class="layer-title">${esc(st.label)}: ${esc(st.count(snap))}</h3><div class="layer-sub">${esc(st.note)}</div></div>${html}` };
+  },
+  feature: ([key, sub, n]) => {
+    const f = snap.features.find((x) => x.key === key); if (!f) return null;
+    const agents = snap.agents.filter((a) => a.feature === key);
+    if (sub === 'round') return roundLayer(f, Number(n), agents);
+    const own = ownBugs(key); const backlog = snap.bugs.filter((b) => b.feature === key && BACKLOG.includes(b.status));
+    const rounds = [...new Set(agents.map((a) => a.round).filter((r) => r != null))].sort((a, b) => a - b);
+    const r = f.lastResult;
+    return { crumbs: [[key]], html: `
+      <div><h3 class="layer-title">${esc(key)}</h3><div class="layer-sub">${featStatus(f.status)} · ${f.rounds} test round${f.rounds === 1 ? '' : 's'}${r ? ` · latest: round ${r.round}, ${r.stepsPassed}/${r.stepsTotal} steps` : ''}</div></div>
+      ${section('Test rounds', rounds.length ? `<div class="chips">${rounds.map((n) => { const v = agents.find((a) => a.role === 'validate' && a.round === n); return `<a class="chip" href="${href('feature', key, 'round', n)}">Round ${n}${v?.summary ? ` · ${esc(v.summary)}` : v ? ` · ${esc(STATUS[v.status] || v.status)}` : ''}</a>`; }).join('')}</div>` : '<div class="panel empty">Not tested yet.</div>')}
+      ${section('Working now', agentCards(agents.filter((a) => a.status === 'running')))}
+      ${section(`Its own bugs (${own.length})`, bugRows(own, false))}
+      ${backlog.length ? section(`Moved to backlog (${backlog.length})`, bugRows(backlog, false)) : ''}
+      ${section(`Agent runs (${agents.length})`, agentRows(agents))}` };
+  },
+  bug: ([id]) => {
+    const b = (snap.bugs || []).find((x) => x.id === id); if (!b) return null;
+    const touched = [...new Set((b.history || []).map((h) => h.round).filter((x) => x))];
+    return { crumbs: [[b.feature, href('feature', b.feature)], [id]], html: `
+      <div><h3 class="layer-title">${esc(b.step || id)}</h3><div class="layer-sub">${pill(b.status)} · <span class="mono">${esc(id)}</span> · fix attempts ${b.attempts || 0} of ${esc(snap.maxFixAttemptsPerBug)}</div></div>
+      ${b.question ? `<div class="callout"><b>Question for you:</b> ${esc(b.question)}</div>` : ''}
+      <section><h2>Details</h2><div class="panel"><dl class="kv">
+        <dt>Root cause</dt><dd>${esc(b.rootCause || '—')}</dd>
+        <dt>Class</dt><dd>${esc(b.class || '—')}</dd>
+        <dt>Files</dt><dd class="mono">${esc((b.files || []).join(', ') || '—')}</dd>
+        <dt>Whose bug</dt><dd>${b.scope ? `${esc(SCOPE[b.scope.scope] || b.scope.scope)}${b.scope.owner ? ` — <a href="${href('feature', b.scope.owner)}">${esc(b.scope.owner)}</a>` : ''}<div class="muted">${esc(b.scope.evidence)} (${esc(b.scope.decidedBy)})</div>` : '<span class="muted">Not scope-checked yet</span>'}</dd>
+        <dt>Reported against</dt><dd><a href="${href('feature', b.feature)}">${esc(b.feature)}</a>${touched.length ? ` · rounds ${touched.map((n) => `<a href="${href('feature', b.feature, 'round', n)}">${n}</a>`).join(', ')}` : ''}</dd>
+      </dl></div></section>
+      ${section('History', `<div class="panel"><ul class="timeline">${(b.history || []).map((h) => `<li><span class="muted">${h.round ? `<a href="${href('feature', b.feature, 'round', h.round)}">R${h.round}</a>` : 'Build'}</span><span><b>${esc(EVENT[h.event] || h.event)}</b></span><span>${esc(h.note)}${h.files?.length ? ` <span class="mono muted">${esc(h.files.join(', '))}</span>` : ''}${commit(h.commit)}</span></li>`).join('') || '<li class="muted">No history recorded.</li>'}</ul></div>`)}` };
+  },
+  agent: ([id]) => {
+    const a = (snap.agents || []).find((x) => x.id === id); if (!a) return null;
+    const ls = a.liveSteps;
+    const crumbs = a.feature ? [[a.feature, href('feature', a.feature)], ...(a.round ? [[`Round ${a.round}`, href('feature', a.feature, 'round', a.round)]] : []), [agentName(a)]] : [[agentName(a)]];
+    return { crumbs, html: `
+      <div><h3 class="layer-title">${esc(agentName(a))}${a.feature ? ` — ${esc(a.feature)}` : ''}</h3><div class="layer-sub">${pill(a.status)} · <span class="mono">${esc(a.label)}</span></div></div>
+      <section><h2>Details</h2><div class="panel"><dl class="kv">
+        <dt>Result</dt><dd>${esc(a.summary || '—')}</dd>
+        <dt>Latest step</dt><dd class="mono">${esc(a.activity || '—')}</dd>
+        <dt>Started</dt><dd>${esc(ago(a.startedAt))}</dd>
+        <dt>Last activity</dt><dd>${esc(ago(a.lastActivityAt))}</dd>
+        <dt>Tokens</dt><dd class="num">${k(a.tokens?.input)} in · ${k(a.tokens?.cacheWrite)} cache write · ${k(a.tokens?.cacheRead)} cache read · ${k(a.tokens?.output)} out</dd>
+      </dl></div></section>
+      ${ls ? section('Live test log', `<div class="panel"><dl class="kv"><dt>Checks logged</dt><dd>${ls.checked} (${ls.passed} passed)</dd></dl>${ls.failed.length ? `<ul class="timeline">${ls.failed.map((f) => `<li><span class="muted">Failed</span><b>${esc(f.step)}</b><span>Expected: ${esc(f.expect || '—')}<br>Saw: ${esc(f.seen || '—')}</span></li>`).join('')}</ul>` : ''}${ls.errors?.length ? `<ul class="timeline">${ls.errors.map((e) => `<li><span class="muted">Error</span><b>${esc(e.type)}</b><span>${esc(e.detail)}</span></li>`).join('')}</ul>` : ''}</div>`) : ''}
+      ${a.signals?.length ? section('Page errors and failed requests seen', `<div class="panel"><ul class="timeline">${a.signals.map((e) => `<li><span class="muted">Seen</span><b>${esc(e.type)}</b><span>${esc(e.detail)}</span></li>`).join('')}</ul></div>`) : ''}
+      ${a.failures?.length ? section(`Command failures it reported (${a.failures.length})`, `<div class="panel"><ul class="timeline">${a.failures.map((f, i) => `<li><span class="muted">#${i + 1}</span><span></span><span>${esc(typeof f === 'string' ? f : JSON.stringify(f))}</span></li>`).join('')}</ul></div>`) : ''}` };
+  },
+};
+function roundLayer(f, n, agents) {
+  const STAGE = ['validate', 'triage', 'scope', 'fix', 'reconcile', 'integrate'];
+  const inRound = agents.filter((a) => a.round === n || String(a.label || '').includes(`-r${n}`)).sort((x, y) => STAGE.indexOf(x.role) - STAGE.indexOf(y.role));
+  const touched = (snap.bugs || []).filter((b) => b.feature === f.key && (b.history || []).some((h) => h.round === n));
+  const v = inRound.find((a) => a.role === 'validate');
+  return { crumbs: [[f.key, href('feature', f.key)], [`Round ${n}`]], html: `
+    <div><h3 class="layer-title">${esc(f.key)} — round ${n}</h3><div class="layer-sub">${v ? `${pill(v.status)} · ${esc(v.summary || 'Test in progress')}` : 'No browser test recorded for this round yet'}</div></div>
+    ${section('Stages in this round', agentRows(inRound))}
+    ${section(`Bugs found, fixed or verified in this round (${touched.length})`, bugRows(touched, false))}` };
+}
+
+const crumbLabel = (t) => {
+  const [type, a, b] = t.split(':').map(decodeURIComponent);
+  if (type === 'stat') return STATS[a]?.label || a;
+  if (type === 'round') return `${a} · round ${b}`;
+  if (type === 'agent') { const ag = snap.agents.find((x) => x.id === a); return ag ? `${agentName(ag)} · ${ag.feature || ''}` : a; }
+  return a;
+};
+function route() {
+  if (!snap) return;
+  path = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
+  // Older single-layer links (#/feature/<key>, #/bug/<id>, #/feature/<key>/round/<n>) still open.
+  if (path.length >= 2 && !path[0].includes(':')) {
+    const [t, a, , n] = path.map(decodeURIComponent);
+    path = [t === 'feature' && n ? tok('round', a, n) : tok(t, a)];
+  }
+  const last = path[path.length - 1] || '';
+  const [type, ...args] = last.split(':').map(decodeURIComponent);
+  const fn = type === 'round' ? ([key, n]) => { const f = snap.features.find((x) => x.key === key); return f && roundLayer(f, Number(n), snap.agents.filter((a) => a.feature === key)); } : LAYERS[type || ''];
+  const layer = (fn && fn(args)) || { html: '<div class="panel empty">That item is no longer in the tracker. Use the trail above to go back.</div>' };
+  const trail = [['Overview', '#/'], ...path.map((t, i) => [crumbLabel(t), `#/${path.slice(0, i + 1).join('/')}`])];
+  $('crumbs').innerHTML = trail.map(([label, h], i) => (i === trail.length - 1 ? `<span class="here" aria-current="page">${esc(label)}</span>` : `<a href="${h}">${esc(label)}</a><span class="sep" aria-hidden="true">›</span>`)).join('');
+  $('view').innerHTML = `<div class="layer">${layer.html}</div>`;
+  document.title = `${trail[trail.length - 1][0]} · Release tracker`;
+}
+function render() {
+  if (!snap) return;
+  const age = (Date.now() - Date.parse(snap.syncedAt)) / 60000;
+  $('sync').className = `sync${age > 20 ? ' stale' : ''}`;
+  $('sync').innerHTML = `<span class="live-dot"></span>Updated <b>${esc(ago(snap.syncedAt))}</b>`;
+  route();
+}
+let lastHash = location.hash;
+const scrollAt = {};
+window.addEventListener('hashchange', () => {
+  scrollAt[lastHash] = window.scrollY;
+  const deeper = location.hash.length > lastHash.length; lastHash = location.hash; route();
+  window.scrollTo(0, deeper ? 0 : (scrollAt[location.hash] || 0));   // returning to a summary page restores where you were on it
+});
+// A whole table row is a target; the link inside it stays the keyboard/focus target.
+$('view').addEventListener('click', (e) => { if (e.target.closest('a')) return; const row = e.target.closest('tr[data-href]'); if (row) location.hash = row.dataset.href; });
+setInterval(render, 30000);
+
+(async () => {
+  const db = await claude.use('db');
+  if (!db) { $('sync').textContent = 'Live updates are unavailable in this view. Open the tracker signed in to claude.ai.'; return; }
+  db.doc('tracker/current').onSnapshot((d) => {
+    const data = d && (d.data ? d.data() : d);
+    if (data && data.json) { try { snap = JSON.parse(data.json); snap.features ||= []; snap.agents ||= []; snap.bugs ||= []; render(); } catch { $('sync').textContent = 'The latest update could not be read.'; } }
+  }, () => { $('sync').textContent = 'Lost the live connection. Reload the page to reconnect.'; });
+})();
+</script>
+```

@@ -39,7 +39,7 @@ router.post('/candidates/:id/decide', requireAdmin, async (req, res) => {
         INSERT INTO journey_current_definitions
           (current_key, org_id, label, rod_type, scope_type, entry_criteria, created_at, updated_at)
         VALUES ($1,NULL,$2,'career_master','reasoning_cache',$3::jsonb,$4,$4)
-        ON CONFLICT (current_key) WHERE org_id IS NULL DO UPDATE SET
+        ON CONFLICT (current_key) WHERE org_id IS NULL AND owner_user_id IS NULL DO UPDATE SET
           label=EXCLUDED.label, entry_criteria=EXCLUDED.entry_criteria, is_active=true, updated_at=EXCLUDED.updated_at
         RETURNING id
       `).get(currentKey, `Career reasoning: ${candidate.pattern_key}`, { reasoningCacheModel: 'pattern_lookup', ...proposedAction, requiresMemberConfirmation: true }, now);

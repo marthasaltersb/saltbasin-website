@@ -142,6 +142,13 @@ export const api = {
   saveDraftSite: (site) =>
     request('/api/site/draft', { method: 'PUT', body: JSON.stringify(site) }),
   publish: () => request('/api/site/publish', { method: 'POST' }),
+  // Portfolio-First Site Agent (server/routes/portfolioSiteAgent.js) — stages
+  // drafts only; publishing stays on api.publish().
+  getSiteAgentState: () => request('/api/site-agent/state'),
+  verifySiteAgentProofs: (proofs) => request('/api/site-agent/verify-proofs', { method: 'POST', body: JSON.stringify({ proofs }) }),
+  draftSiteAgentNarrative: (body) => request('/api/site-agent/narrative-draft', { method: 'POST', body: JSON.stringify(body) }),
+  previewSiteAgent: (body) => request('/api/site-agent/preview', { method: 'POST', body: JSON.stringify(body) }),
+  stageSiteAgent: (body) => request('/api/site-agent/stage', { method: 'POST', body: JSON.stringify(body) }),
 
   // Config
   getPublicConfig: () => request('/api/config/public'),
@@ -368,6 +375,7 @@ export const api = {
   getCareerBoundReviewCount: () => request('/api/career-bound/review-count'),
   getCareerBoundOutput: (id) => request(`/api/career-bound/outputs/${id}`),
   createCareerBoundOutput: (body) => request('/api/career-bound/outputs', { method: 'POST', body: JSON.stringify(body) }),
+  previewCareerBoundOutput: (id, body) => request(`/api/career-bound/outputs/${id}/preview`, { method: 'POST', body: JSON.stringify(body) }),
   saveCareerBoundOutput: (id, body) => request(`/api/career-bound/outputs/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   askBestyStaffCareer: (taskId, message, history = []) =>
     request('/api/agent/bestystaff-career', { method: 'POST', body: JSON.stringify({ taskId, message, history }) }),
@@ -500,6 +508,8 @@ export const api = {
   saveEidosGateDefinition: (scenarioKey, stageKey, item) =>
     request(`/api/journey-rods/scenarios/${scenarioKey}/gates/${stageKey}`, { method: 'PUT', body: JSON.stringify(item) }),
   getMyJourneyRods: () => request('/api/journey-rods/me'),
+  // Read-only stage/atom projection of the user's journey rods for SpatialJourneyWorld.
+  getMyJourneyWorld: () => request('/api/journey-rods/me/world'),
   getJourneyCatalog: () => request('/api/journey-rods/catalog'),
   createJourneyRod: (item) => request('/api/journey-rods', { method: 'POST', body: JSON.stringify(item) }),
   getJourneyRod: (rodId) => request(`/api/journey-rods/${rodId}`),
@@ -607,6 +617,9 @@ export const api = {
   getCareerAgentSchedule: () => request('/api/career-agents/schedule'),
   setCareerAgentSchedule: (body) => request('/api/career-agents/schedule', { method: 'POST', body: JSON.stringify(body) }),
   getCareerVerificationCurrent: () => request('/api/career-agents/verification-current'),
+  getCareerScoringPreferences: () => request('/api/career-agents/scoring-preferences'),
+  setCareerScoringPreferences: (weights) => request('/api/career-agents/scoring-preferences', { method: 'PUT', body: JSON.stringify({ weights }) }),
+  resetCareerScoringPreferences: () => request('/api/career-agents/scoring-preferences', { method: 'DELETE' }),
   importCareerPipelineWorkbook: async (formData) => {
     const res = await fetch('/api/career-agents/import', { method: 'POST', credentials: 'include', body: formData });
     const body = await res.json().catch(() => ({}));
@@ -650,4 +663,33 @@ export const api = {
   generateVariantSeed: (prompt, hints) => request('/api/admin/world-variant-studio/generate', { method: 'POST', body: JSON.stringify({ prompt, hints }) }),
   validateVariantSeed: (seedSpec) => request('/api/admin/world-variant-studio/validate', { method: 'POST', body: JSON.stringify({ seedSpec }) }),
   getDefaultVariantSeed: () => request('/api/admin/world-variant-studio/default-spec'),
+  // GTM Deliverable & Benchmark Research Agent (native platform build,
+  // 2026-08-02 — replaces the standalone agents/gtm-deliverable-agent/ CLI).
+  listGtmScenarios: () => request('/api/gtm-deliverables/scenarios'),
+  createGtmScenario: (body) => request('/api/gtm-deliverables/scenarios', { method: 'POST', body: JSON.stringify(body) }),
+  updateGtmScenario: (id, body) => request(`/api/gtm-deliverables/scenarios/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+
+  listGtmSchedules: () => request('/api/gtm-deliverables/schedules'),
+  createGtmSchedule: (body) => request('/api/gtm-deliverables/schedules', { method: 'POST', body: JSON.stringify(body) }),
+  updateGtmSchedule: (id, body) => request(`/api/gtm-deliverables/schedules/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  runGtmScheduleNow: (id) => request(`/api/gtm-deliverables/schedules/${id}/run-now`, { method: 'POST' }),
+
+  submitGtmEngagement: async (formData) => {
+    const res = await fetch('/api/gtm-deliverables/engagement', { method: 'POST', credentials: 'include', body: formData });
+    const contentType = res.headers.get('content-type') || '';
+    const body = contentType.includes('application/json') ? await res.json() : await res.text();
+    if (!res.ok) {
+      const err = new Error(body?.error || `Request failed: ${res.status}`);
+      err.status = res.status;
+      err.body = body;
+      throw err;
+    }
+    return body;
+  },
+
+  listGtmDeliverables: (filters = {}) => request(`/api/gtm-deliverables?${new URLSearchParams(filters)}`),
+  getGtmDeliverable: (id) => request(`/api/gtm-deliverables/${id}`),
+  updateGtmDeliverableStatus: (id, status) => request(`/api/gtm-deliverables/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+  createGtmAnnotation: (id, body) => request(`/api/gtm-deliverables/${id}/annotations`, { method: 'POST', body: JSON.stringify(body) }),
+  promoteGtmAnnotation: (id, annotationId) => request(`/api/gtm-deliverables/${id}/annotations/${annotationId}/promote`, { method: 'POST' }),
 };

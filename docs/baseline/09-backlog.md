@@ -1,5 +1,7 @@
 # Prioritized Backlog — Blocked
 
+> **2026-10-01 status:** still blocked. Decision-log entries DEC-006…DEC-021 are **not** tasks. Each becomes a `TASK-` row only after you decide it, per the separation of product decisions from executable tasks. Documentation-only corrections (DEC-019) and test-runner repair (DEC-006) are the lowest-risk candidates once approved.
+
 **Status: blocked.** A dependency-ordered backlog derives from the reconciliation matrix (`06`) and target specification (`08`), neither of which exist yet. Populating this now would mean prioritizing work against invented requirements.
 
 ## Required row schema (for when this unblocks)

@@ -41,6 +41,7 @@ const CareerMasterEntryPoint = lazy(() => import('./admin/CareerMasterEntryPoint
 import { OutputVersionHistoryModal } from './admin/OutputVersionHistory.jsx';
 const OutputTemplateConfiguratorHub = lazy(() => import('./admin/OutputTemplateConfigurator.jsx').then((m) => ({ default: m.OutputTemplateConfiguratorHub })));
 const CareerReconciliationPanel = lazy(() => import('./admin/CareerReconciliationPanel.jsx'));
+const MyResumePanel = lazy(() => import('./admin/MyResumePanel.jsx'));
 const LonetreeMvpPanel = lazy(() => import('./admin/LonetreeMvpPanel.jsx'));
 const ReleaseIntelligencePanel = lazy(() => import('./admin/ReleaseIntelligencePanel.jsx'));
 
@@ -48,6 +49,8 @@ const SIMPLE_EMBED_COMPONENTS = {
   leads: { title: 'Leads', render: () => <LeadsPanel /> },
   careerMaster: { title: 'Career Master', render: (scope) => (scope === 'admin' ? <CareerMasterPanel scope="admin" /> : <CareerMasterEntryPoint scope={scope} />) },
   careerReconciliation: { title: 'Career Sources to Review', render: (scope) => <CareerReconciliationPanel scope={scope} /> },
+  // WorldShell is already wrapped in CareerConsentGate (see the default export), so no extra gate here.
+  resume: { title: 'My Resume', render: (scope) => <MyResumePanel scope={scope} /> },
   outputTemplates: { title: 'Output Templates', render: (scope) => <OutputTemplateConfiguratorHub scope={scope} /> },
   lonetreeMvp: { title: 'Fund & Portfolio Demo', render: (scope) => <LonetreeMvpPanel scope={scope} /> },
   releaseIntelligence: { title: 'Release Intelligence', render: () => <ReleaseIntelligencePanel /> },
@@ -205,7 +208,13 @@ function WorldShellInner() {
       setView('atmosphere');
       return;
     }
+    // Docked/embed islands render their RightRail/SimpleEmbedView only once
+    // `view` is back to 'world' (RightRail is view-gated; embed islands
+    // don't care, but this is harmless for them either way) — a no-op when
+    // called from the 3D canvas (already 'world'), but load-bearing when
+    // called from the Journeys list view (still 'journeys' otherwise).
     setFocusedKey(key);
+    setView('world');
   }, [islands]);
   // Leaving a sub-view that was opened from inside an island (e.g. "Open my
   // Career Master" from an opportunity's provenance) returns to that island
@@ -609,7 +618,7 @@ function WorldShellInner() {
         hasCommercialIsland={hasCommercialIsland}
       />
       {view === 'journeys' ? (
-        <JourneysGrid islands={islands} career={career} commercial={commercial} herq={herq} onOpen={(key) => { setFocusedKey(key); setView('world'); }} />
+        <JourneysGrid islands={islands} career={career} commercial={commercial} herq={herq} onOpen={selectIsland} />
       ) : (
         <div style={S.stage}>
           {hasWebGL() ? (
@@ -1366,30 +1375,9 @@ function SimpleEmbedView({ componentId, scope, onClear }) {
         <button style={S.backBtn} onClick={onClear}>← Back to World</button>
         <div style={S.embedTitle}>{entry.title}</div>
       </div>
-      <div style={S.embedBody}>{entry.render(scope)}</div>
-    </div>
-  );
-}
-
-// Career Master's in-world "embed": the camera has already dollied into the
-// Career Master crystal island (the game-like part — CRYSTAL_VARIANTS.founder,
-// same core/island rendering every world object uses). What opens here is
-// the real journey chooser — CareerMasterEntryPoint, unchanged and un-forked
-// — so each journey "variant" (Career Orbit, Upload & Map, Manual Intake,
-// Proficiency & Rollups, BestyStaff Assistant) is guided by the exact same
-// classic AdminShell panels members/admins already use in Classic Tools
-// (CareerMasterPanel, UploadDataScreen, CareerExperienceConfigurator,
-// BoundedCareerAgentPanel), just reached without leaving the world.
-function CareerMasterEmbedView({ scope, onClear }) {
-  return (
-    <div style={S.embedShell}>
-      <div style={S.embedHeader}>
-        <button style={S.backBtn} onClick={onClear}>← Back to World</button>
-        <div style={S.embedTitle}>Career Master — Journey</div>
-      </div>
       <div style={S.embedBody}>
         <Suspense fallback={<div style={S.railEmpty}>Loading…</div>}>
-          <CareerMasterEntryPoint scope={scope} />
+          {entry.render(scope)}
         </Suspense>
       </div>
     </div>

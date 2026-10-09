@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { hasWebGL } from './SaltBasinCrystal.jsx';
 import { assembleMolecules } from '../lib/journeyEngine/bonding.js';
-import { fromLead, fromMoleculeProduction, buildRodFromPlan, buildRodFromJourneyDefinition } from '../lib/journeyEngine/genesis.js';
+import { fromLead, fromMoleculeProduction, buildRodFromPlan, buildRodFromJourneyDefinition, journeyDefinitionFromPersistedRod } from '../lib/journeyEngine/genesis.js';
 import { clamp01, rollupStageMaturity, evaluateGate, computeAtomVisual } from '../lib/journeyEngine/maturity.js';
 import { getAtomLineage, lineageValueAtOffset, bumpVersion } from '../lib/journeyEngine/lineage.js';
 import { resolvePathColor } from '../lib/journeyEngine/pathColor.js';
@@ -108,6 +108,12 @@ export default function SpatialJourneyWorld() {
   const [devStats, setDevStats] = useState({ fps: 0, meshes: 0, atoms: 0 });
   const [ready, setReady] = useState(false);
   const [worldLayer, setWorldLayer] = useState('journey');
+  // The signed-in user's own journey rods (GET /api/journey-rods/me/world).
+  // 'checking' until the first response; 'anonymous' on a 401 — the intro
+  // then invites sign-in instead of entering; 'unavailable' on any other
+  // failure, which still lets a signed-in viewer into the seeded world.
+  const [memberJourneys, setMemberJourneys] = useState([]);
+  const [journeyAccess, setJourneyAccess] = useState('checking');
 
   const toastTimeoutRef = useRef(null);
   const viewingTimeoutRef = useRef(null);
@@ -166,6 +172,21 @@ export default function SpatialJourneyWorld() {
   useEffect(() => {
     apiRef.current?.applyLayerVisibility?.(worldLayer);
   }, [worldLayer]);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.getMyJourneyWorld()
+      .then((res) => {
+        if (cancelled) return;
+        setMemberJourneys(Array.isArray(res?.journeys) ? res.journeys : []);
+        setJourneyAccess('member');
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setJourneyAccess(error?.status === 401 ? 'anonymous' : 'unavailable');
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   // Enterprise Objectives from the SEEDED value-creation initiatives (per
   // Betsy 2026-07-29: "objectives seem to be hardcoded... match the seeded
@@ -1364,6 +1385,9 @@ export default function SpatialJourneyWorld() {
       releaseHash,
       spawnFromLead,
       spawnConfiguredJourney,
+      // journey_data_rods ids already rendered into THIS scene instance —
+      // lives on the api object so a remounted scene starts empty again.
+      persistedRodIds: new Set(),
       focusPoint,
       focusStage: (sKey) => { const e = world.stageMeshes[sKey]; if (e) focusPoint(e.mesh.position, 22); },
       focusAtom: (gKey) => { const group = world.atomGroups[gKey]; if (group) focusPoint(group.position, 12); },
@@ -1542,6 +1566,19 @@ export default function SpatialJourneyWorld() {
     };
   }, [ready]);
 
+  // Render the member's persisted journey rods alongside the seeded world.
+  // Additive: seed rods (and the objectives that target their atoms) stay.
+  useEffect(() => {
+    const world = apiRef.current;
+    if (!ready || !world || !memberJourneys.length) return;
+    memberJourneys.forEach((journey) => {
+      if (world.persistedRodIds.has(journey.rodId)) return;
+      world.persistedRodIds.add(journey.rodId);
+      world.spawnConfiguredJourney(journeyDefinitionFromPersistedRod(journey), journey.label);
+    });
+    world.applyLayerVisibility?.(worldLayer);
+  }, [ready, memberJourneys]);
+
   const handleEnter = () => { apiRef.current?.enterWorld(); setWorldEntered(true); };
   const closePanel = () => setSelection(null);
 
@@ -1613,11 +1650,31 @@ export default function SpatialJourneyWorld() {
   const openCustomerOrbitPicker = () => { setEntityOptions(apiRef.current?.listEntities() || []); setCustomerOrbitOpen(true); };
 
   const handleNewLead = async ({ scenarioKey, scenarioRodType, entityLabel }) => {
-    await api.createJourneyRod({ scenarioKey, label: entityLabel });
-    const definition = DEAL_JOURNEY_EXPERIENCE.scenarioRodTypes.includes(scenarioRodType) ? DEAL_JOURNEY_EXPERIENCE : null;
-    const spawned = definition
-      ? apiRef.current?.spawnConfiguredJourney(definition, entityLabel)
-      : apiRef.current?.spawnFromLead({ origin: 'internal' }, entityLabel);
+    const created = await api.createJourneyRod({ scenarioKey, label: entityLabel });
+    // Render the rod that was actually saved, projected from the same
+    // read-only endpoint the world loads on mount — so what the member sees
+    // now is what they'll see after a reload. Falls back to the prior
+    // template rendering only if that projection isn't available.
+    const createdRodId = Number(created?.rod?.id);
+    let persisted = null;
+    if (createdRodId) {
+      try {
+        const res = await api.getMyJourneyWorld();
+        persisted = (res?.journeys || []).find((journey) => journey.rodId === createdRodId) || null;
+      } catch { /* fall through to the template rendering */ }
+    }
+    let definition;
+    let spawned;
+    if (persisted && apiRef.current) {
+      definition = journeyDefinitionFromPersistedRod(persisted);
+      apiRef.current.persistedRodIds.add(createdRodId);
+      spawned = apiRef.current.spawnConfiguredJourney(definition, entityLabel);
+    } else {
+      definition = DEAL_JOURNEY_EXPERIENCE.scenarioRodTypes.includes(scenarioRodType) ? DEAL_JOURNEY_EXPERIENCE : null;
+      spawned = definition
+        ? apiRef.current?.spawnConfiguredJourney(definition, entityLabel)
+        : apiRef.current?.spawnFromLead({ origin: 'internal' }, entityLabel);
+    }
     apiRef.current?.applyLayerVisibility?.(worldLayer);
     const primaryRod = spawned?.rods?.[0];
     const entryStage = primaryRod?.stages?.[0];
@@ -1685,8 +1742,26 @@ export default function SpatialJourneyWorld() {
           <div className="sjw-intro-mark">Salt Basin Net Works</div>
           <h1>The Spatial Journey World</h1>
           <div className="sjw-tagline">Bottom Lines with a Rising Tide</div>
-          <button type="button" className="sjw-enter-btn" onClick={handleEnter}>Enter the World</button>
-          <div className="sjw-intro-hint">A rendered enterprise — not a dashboard</div>
+          {journeyAccess === 'anonymous' ? (
+            <>
+              <div className="sjw-intro-cta-row">
+                <a className="sjw-enter-btn" href={`/login?next=${encodeURIComponent(`${window.location.pathname}${window.location.search}`)}`}>Sign in to enter your journey</a>
+                <a className="sjw-enter-btn sjw-enter-btn-secondary" href="/signup">Become a member</a>
+              </div>
+              <div className="sjw-intro-hint">Your journeys render from your own saved data — sign in to see them</div>
+            </>
+          ) : (
+            <>
+              <button type="button" className="sjw-enter-btn" onClick={handleEnter} disabled={journeyAccess === 'checking'}>
+                {journeyAccess === 'checking' ? 'Loading your journeys…' : 'Enter the World'}
+              </button>
+              <div className="sjw-intro-hint">
+                {journeyAccess === 'member' && memberJourneys.length
+                  ? `Your ${memberJourneys.length} saved ${memberJourneys.length === 1 ? 'journey renders' : 'journeys render'} alongside the reference world`
+                  : 'A rendered enterprise — not a dashboard'}
+              </div>
+            </>
+          )}
         </div>
       )}
 

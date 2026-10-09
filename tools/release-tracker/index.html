@@ -53,9 +53,10 @@ tr:last-child td { border-bottom: 0; }
 .s-running { background: var(--teal-soft); color: var(--teal); }
 .s-passed, .s-verified, .s-done { background: var(--good-soft); color: var(--good); }
 .s-failing, .s-open, .s-recurred, .s-retest_failed, .s-failed, .s-done_unreconciled, .s-seen_in_test { background: var(--bad-soft); color: var(--bad); }
-.s-fixing, .s-fixed_awaiting_retest, .s-between_stages { background: var(--gold-soft); color: var(--gold); }
+.s-fixing, .s-fixed_awaiting_retest, .s-between_stages, .s-awaiting_retest, .s-retesting, .s-retest_failed_pending_triage { background: var(--gold-soft); color: var(--gold); }
 .s-needs_human, .s-needs_business_definition { background: var(--human-soft); color: var(--human); }
-.s-queued, .s-idle_or_done { background: var(--line); color: var(--muted); }
+.s-passed_with_backlog { background: var(--good-soft); color: var(--good); }
+.s-backlog_pre_existing, .s-reassigned, .s-process_note, .s-queued, .s-idle_or_done, .s-stopped { background: var(--line); color: var(--muted); }
 .bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; min-width: 80px; }
 .bar i { display: block; height: 100%; background: var(--good); border-radius: 3px; }
 .now { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
@@ -68,126 +69,238 @@ tr:last-child td { border-bottom: 0; }
 details summary { cursor: pointer; list-style: none; }
 details summary::-webkit-details-marker { display: none; }
 .hist { margin: 8px 0 2px; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 13px; }
+a { color: var(--teal); }
 .hist li { display: grid; grid-template-columns: 44px 120px 1fr; gap: 8px; }
 .callout { background: var(--human-soft); color: var(--ink); border: 1px solid var(--human); border-radius: 8px; padding: 12px 14px; }
 .callout b { color: var(--human); }
 @media (max-width: 640px) { .hist li { grid-template-columns: 36px 1fr; } .hist li span:last-child { grid-column: 1 / -1; } }
 @media (prefers-reduced-motion: no-preference) { .running-anim { animation: pulse 1.6s ease-in-out infinite; } @keyframes pulse { 50% { opacity: .45 } } }
+.crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: 14px; }
+.crumbs a { text-decoration: none; font-weight: 600; }
+.crumbs a:hover { text-decoration: underline; }
+.crumbs .sep { color: var(--muted); }
+.crumbs .here { font-weight: 700; overflow-wrap: anywhere; }
+.layer-title { font: 800 22px/1.2 var(--display); margin: 0; overflow-wrap: anywhere; }
+.layer-sub { color: var(--muted); margin-top: 4px; }
+a.stat { display: block; color: inherit; text-decoration: none; transition: border-color .15s, transform .15s; }
+a.stat:hover, a.stat:focus-visible { border-color: var(--teal); }
+@media (prefers-reduced-motion: no-preference) { a.stat:hover { transform: translateY(-1px); } .layer { animation: enter .22s ease-out; } @keyframes enter { from { opacity: 0; transform: translateY(6px) } } }
+a.stat .go, .rowlink .go { color: var(--teal); font-size: 12px; font-weight: 600; }
+tr.rowlink { cursor: pointer; }
+tr.rowlink:hover td, tr.rowlink:focus-within td { background: var(--teal-soft); }
+tr.rowlink a.cell { color: inherit; text-decoration: none; font-weight: 700; }
+a.agent { display: block; color: inherit; text-decoration: none; }
+a.agent:hover, a.agent:focus-visible { border-color: var(--teal); }
+a:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; padding: 14px; font-size: 14px; }
+.kv dt { color: var(--muted); } .kv dd { margin: 0; overflow-wrap: anywhere; }
+.layer { display: grid; gap: 22px; min-width: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-block; border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 3px 10px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--ink); }
+.chip:hover { border-color: var(--teal); }
+.timeline { list-style: none; margin: 0; padding: 14px; display: grid; gap: 10px; }
+.timeline li { display: grid; grid-template-columns: 60px 130px 1fr; gap: 10px; font-size: 14px; }
+@media (max-width: 640px) { .timeline li { grid-template-columns: 44px 1fr; } .timeline li > :last-child { grid-column: 1 / -1; } .kv { grid-template-columns: 1fr; } .kv dt { margin-top: 6px; } .kv dt:first-child { margin-top: 0; } }
 </style>
 
 <div class="wrap">
   <header>
     <div>
       <h1>Release tracker</h1>
-      <div class="muted">Build → validate in the browser → triage → fix → re-test, until every journey passes</div>
+      <div class="muted">Click any number, feature, round, bug or agent to go one layer deeper. The trail at the top takes you back.</div>
     </div>
     <div class="sync" id="sync"><span class="live-dot"></span>Waiting for the first update…</div>
   </header>
-
-  <div class="strip" id="strip"></div>
-  <div id="humanCallout" hidden></div>
-  <div class="filters" id="filters" role="group" aria-label="Filter by feature"></div>
-
-  <section>
-    <h2>Agents working now</h2>
-    <div class="now" id="now"><div class="panel empty">No agent is running right now.</div></div>
-  </section>
-
-  <section>
-    <h2>Features</h2>
-    <div class="panel"><table>
-      <thead><tr><th>Feature</th><th>Status</th><th>Latest test</th><th class="num">Rounds</th><th class="num">Open bugs</th></tr></thead>
-      <tbody id="features"><tr><td colspan="5" class="empty">Features appear here as the release loop reports them.</td></tr></tbody>
-    </table></div>
-  </section>
-
-  <section>
-    <h2>Bugs</h2>
-    <div class="panel"><table>
-      <thead><tr><th>Bug</th><th>Feature</th><th>Status</th><th class="num">Fix attempts</th><th>Root cause and history</th></tr></thead>
-      <tbody id="bugs"><tr><td colspan="5" class="empty">No bugs found yet. Validation failures land here after triage.</td></tr></tbody>
-    </table></div>
-  </section>
-
-  <section>
-    <h2>All agent runs</h2>
-    <div class="panel"><table>
-      <thead><tr><th>Agent</th><th>Status</th><th>Result</th><th class="num">Tokens (out / cache read)</th><th>Last activity</th></tr></thead>
-      <tbody id="agents"><tr><td colspan="5" class="empty">Agent runs appear here.</td></tr></tbody>
-    </table></div>
-  </section>
+  <nav class="crumbs" id="crumbs" aria-label="Where you are"></nav>
+  <main id="view"><div class="panel empty">Waiting for the first update…</div></main>
 </div>
 
 <script>
-const ROLE = { build: 'Build', integrate: 'Integrate', validate: 'Validate', triage: 'Triage', fix: 'Fix', record: 'Record' };
+const ROLE = { build: 'Build', integrate: 'Integrate', validate: 'Validate', triage: 'Triage', scope: 'Scope check', fix: 'Fix', record: 'Record', reconcile: 'Reconcile' };
+const BACKLOG = ['backlog_pre_existing', 'reassigned', 'process_note'];
 const STATUS = {
   running: 'Running', passed: 'Passed', failing: 'Failing', queued: 'Queued', between_stages: 'Between stages',
   needs_human: 'Needs a person', needs_business_definition: 'Needs a business decision', open: 'Open', recurred: 'Came back',
   fixing: 'Being fixed', fixed_awaiting_retest: 'Fixed, awaiting re-test', retest_failed: 'Re-test failed', verified: 'Verified fixed',
   done: 'Done', failed: 'Failed', idle_or_done: 'Idle', done_unreconciled: 'Finished, failures not reconciled',
-  seen_in_test: 'Seen in test, awaiting triage',
+  seen_in_test: 'Seen in test, awaiting triage', retesting: 'Fixed, being retested now',
+  retest_failed_pending_triage: 'Retest failed, being triaged', passed_with_backlog: 'Passed (backlog elsewhere)',
+  backlog_pre_existing: 'Backlog: was already broken', reassigned: 'Belongs to another feature', process_note: 'Test or process note', stopped: 'Stopped (run replaced)', awaiting_retest: 'Fixed, awaiting retest',
 };
-const EVENT = { found: 'Found', recurred: 'Came back', fixed: 'Fix applied', not_fixed: 'Not fixed', seen: 'Seen in test' };
-let snap = null; let filter = 'all';
+const EVENT = { found: 'Found', recurred: 'Came back', fixed: 'Fix applied', not_fixed: 'Not fixed', seen: 'Seen in test', verified: 'Verified fixed' };
+const SCOPE = { this_feature: 'This feature', pre_existing: 'Was already broken before this work', other_feature: 'Another feature', process_note: 'Test or process note, not a product bug' };
+const BUG_ORDER = { needs_human: 0, needs_business_definition: 1, recurred: 2, retest_failed: 3, open: 4, seen_in_test: 5, fixing: 6, fixed_awaiting_retest: 7, reassigned: 8, backlog_pre_existing: 9, process_note: 10, verified: 11 };
+let snap = null;
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const pill = (s) => `<span class="pill s-${esc(s)}">${esc(STATUS[s] || String(s).replace(/_/g, ' '))}</span>`;
-const featStatus = (s) => (STATUS[s] ? pill(s) : `<span class="pill s-running running-anim">${esc(s.split(', ').map((r) => ROLE[r] || r).join(' + '))}</span>`);
+const featStatus = (s) => (STATUS[s] ? pill(s) : `<span class="pill s-running running-anim">${esc(String(s).split(', ').map((r) => ROLE[r] || r).join(' + '))}</span>`);
 const ago = (iso) => { if (!iso) return '—'; const m = Math.round((Date.now() - Date.parse(iso)) / 60000); return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : `${Math.floor(m / 60)} h ${m % 60} min ago`; };
 const k = (n) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}k` : String(n || 0));
-const match = (f) => filter === 'all' || f === filter;
+const enc = encodeURIComponent;
+// The URL is the path the viewer took: one token per layer (#/stat:open-bugs/bug:<id>). A link goes one
+// layer deeper from where the viewer is; if that layer is already on the path, it returns to it.
+let path = [];
+const tok = (...parts) => parts.map((p) => enc(p)).join(':');
+const href = (...parts) => {
+  const t = parts[0] === 'feature' && parts[2] === 'round' ? tok('round', parts[1], parts[3]) : tok(...parts);
+  const i = path.indexOf(t);
+  const next = i >= 0 ? path.slice(0, i + 1) : [...path, t];
+  return `#/${next.join('/')}`;
+};
+const commit = (c) => (c ? ` <a class="mono" href="${esc((snap.repoUrl || '') + '/commit/' + c)}" target="_blank" rel="noopener">${esc(String(c).slice(0, 7))}</a>` : '');
+const sortBugs = (list) => [...list].sort((a, b) => (BUG_ORDER[a.status] ?? 7) - (BUG_ORDER[b.status] ?? 7));
+const ownBugs = (key) => (snap.bugs || []).filter((b) => b.status !== 'seen_in_test' && ((b.feature === key && !BACKLOG.includes(b.status)) || (b.status === 'reassigned' && b.scope?.owner === key)));
+const agentName = (a) => `${ROLE[a.role] || a.role || 'Agent'}${a.round ? ` · round ${a.round}` : ''}`;
 
+// The layers. Each takes the route parts and returns { crumbs: [[label, href]...], html }.
+const STATS = {
+  'features-passed': { label: 'Features passed', tone: 'good', count: (s) => `${s.features.filter((f) => ['passed', 'passed_with_backlog'].includes(f.status)).length} / ${s.features.length}`, list: 'features', pick: (s) => s.features.filter((f) => ['passed', 'passed_with_backlog'].includes(f.status)), note: 'Features whose latest test round passed every journey step.' },
+  'agents-running': { label: 'Agents running', tone: '', count: (s) => s.agents.filter((a) => a.status === 'running').length, list: 'agents', pick: (s) => s.agents.filter((a) => a.status === 'running'), note: 'Agents working right now, with their latest step.' },
+  'open-bugs': { label: 'Open bugs (this work)', tone: 'bad', count: (s) => s.bugs.filter((b) => !['verified', 'seen_in_test', ...BACKLOG].includes(b.status)).length, list: 'bugs', pick: (s) => s.bugs.filter((b) => !['verified', 'seen_in_test', ...BACKLOG].includes(b.status)), note: 'Bugs caused by this work that are not yet verified fixed. They block their feature.' },
+  backlog: { label: 'Backlog: not this work', tone: '', count: (s) => s.bugs.filter((b) => BACKLOG.includes(b.status)).length, list: 'bugs', pick: (s) => s.bugs.filter((b) => BACKLOG.includes(b.status)), note: 'Bugs the scope check placed elsewhere: already broken before this work, another feature’s, or a test/process note. They stay here until fixed and verified.' },
+  verified: { label: 'Bugs verified fixed', tone: 'good', count: (s) => s.bugs.filter((b) => b.status === 'verified').length, list: 'bugs', pick: (s) => s.bugs.filter((b) => b.status === 'verified'), note: 'Bugs whose step passed in a later browser test after the fix.' },
+  human: { label: 'Need a person', tone: 'human', count: (s) => s.bugs.filter((b) => ['needs_human', 'needs_business_definition'].includes(b.status)).length, list: 'bugs', pick: (s) => s.bugs.filter((b) => ['needs_human', 'needs_business_definition'].includes(b.status)), note: 'Out of the automated loop: fix attempts ran out, or a business decision is missing.' },
+  unreconciled: { label: 'Finished with unreconciled failures', tone: 'bad', count: (s) => s.agents.filter((a) => a.status === 'done_unreconciled').length, list: 'agents', pick: (s) => s.agents.filter((a) => a.status === 'done_unreconciled'), note: 'Agents that finished but reported failures nobody has reconciled yet. They are not done.' },
+  tokens: { label: 'Tokens out / cache read', tone: '', count: (s) => `${k(s.totals?.output)} / ${k(s.totals?.cacheRead)}`, list: 'agents', pick: (s) => [...s.agents].sort((a, b) => (b.tokens?.output || 0) - (a.tokens?.output || 0)), note: 'Every agent run, most output tokens first.' },
+};
+
+function featureRows(list) {
+  if (!list.length) return '<div class="panel empty">Nothing here.</div>';
+  return `<div class="panel"><table><thead><tr><th>Feature</th><th>Status</th><th>Latest test</th><th class="num">Rounds</th><th>Its own bugs verified</th></tr></thead><tbody>${list.map((f) => {
+    const r = f.lastResult; const pct = r && r.stepsTotal ? Math.round((r.stepsPassed / r.stepsTotal) * 100) : 0;
+    const own = ownBugs(f.key); const v = own.filter((b) => b.status === 'verified').length;
+    return `<tr class="rowlink" data-href="${href('feature', f.key)}"><td><a class="cell" href="${href('feature', f.key)}">${esc(f.key)}</a></td><td>${featStatus(f.status)}</td><td>${r ? `<div class="num">Round ${r.round}: ${r.stepsPassed}/${r.stepsTotal} steps</div><div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>` : '<span class="muted">Not tested yet</span>'}</td><td class="num">${f.rounds}</td><td>${own.length ? `<div class="num">${v} of ${own.length}</div><div class="bar" aria-hidden="true"><i style="width:${Math.round((v / own.length) * 100)}%"></i></div>` : '<span class="muted">None of its own</span>'}${f.backlog ? `<div class="muted">+ ${f.backlog} in backlog</div>` : ''}</td></tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+function bugRows(list, showFeature = true) {
+  if (!list.length) return '<div class="panel empty">No bugs here.</div>';
+  return `<div class="panel"><table><thead><tr><th>Bug</th>${showFeature ? '<th>Feature</th>' : ''}<th>Status</th><th class="num">Fix attempts</th><th>What fails</th></tr></thead><tbody>${sortBugs(list).map((b) => `<tr class="rowlink" data-href="${href('bug', b.id)}"><td class="mono"><a class="cell" href="${href('bug', b.id)}">${esc(b.id)}</a>${b.carriedOver ? '<div class="muted">kept from an earlier run</div>' : ''}</td>${showFeature ? `<td>${esc(b.feature)}${b.status === 'reassigned' && b.scope?.owner ? `<div class="muted">→ ${esc(b.scope.owner)}</div>` : ''}</td>` : ''}<td>${pill(b.status)}</td><td class="num">${b.attempts || 0} / ${esc(snap.maxFixAttemptsPerBug)}</td><td>${esc(b.step)}</td></tr>`).join('')}</tbody></table></div>`;
+}
+function agentRows(list) {
+  if (!list.length) return '<div class="panel empty">No agent runs here.</div>';
+  return `<div class="panel"><table><thead><tr><th>Agent</th><th>Status</th><th>Result</th><th class="num">Tokens (out / cache read)</th><th>Last activity</th></tr></thead><tbody>${list.map((a) => `<tr class="rowlink" data-href="${href('agent', a.id)}"><td><a class="cell" href="${href('agent', a.id)}">${esc(agentName(a))}</a><div class="muted">${esc(a.feature || '—')}</div></td><td>${pill(a.status)}</td><td>${esc(a.summary || '—')}${a.failures?.length ? `<div class="muted">${a.failures.length} command failure${a.failures.length > 1 ? 's' : ''} reported</div>` : ''}</td><td class="num">${k(a.tokens?.output)} / ${k(a.tokens?.cacheRead)}</td><td class="muted">${esc(ago(a.lastActivityAt))}</td></tr>`).join('')}</tbody></table></div>`;
+}
+function agentCards(list) {
+  if (!list.length) return '<div class="panel empty">No agent is running here right now.</div>';
+  return `<div class="now">${list.map((a) => `<a class="agent" href="${href('agent', a.id)}"><div class="role">${esc(agentName(a))}</div><div class="feat">${esc(a.feature)}</div><div class="act">${esc(a.activity || 'Starting…')}</div>${a.role === 'validate' && a.liveSteps ? `<div class="meta">${a.liveSteps.checked} checks · ${a.liveSteps.passed} passed · <b>${a.liveSteps.failed.length} failed</b></div>` : ''}<div class="meta">Started ${esc(ago(a.startedAt))} · last step ${esc(ago(a.lastActivityAt))}</div></a>`).join('')}</div>`;
+}
+const section = (title, html) => `<section><h2>${esc(title)}</h2>${html}</section>`;
+
+const LAYERS = {
+  '': () => {
+    const s = snap; const human = STATS.human.count(s);
+    return { crumbs: [], html: `
+      <div class="strip">${Object.entries(STATS).map(([key, st]) => `<a class="stat ${st.tone}" href="${href('stat', key)}"><div class="n">${esc(st.count(s))}</div><div class="l">${esc(st.label)}</div><div class="go">Open ›</div></a>`).join('')}</div>
+      ${human ? `<a class="callout" style="display:block;text-decoration:none" href="${href('stat', 'human')}"><b>${human} ${human === 1 ? 'bug needs' : 'bugs need'} a person.</b> Open them ›</a>` : ''}
+      ${section('Agents working now', agentCards(s.agents.filter((a) => a.status === 'running')))}
+      ${section('Features', featureRows(s.features))}` };
+  },
+  stat: ([key]) => {
+    const st = STATS[key]; if (!st) return null;
+    const items = st.pick(snap);
+    const html = st.list === 'features' ? featureRows(items) : st.list === 'bugs' ? bugRows(items) : agentRows(items);
+    return { crumbs: [[st.label]], html: `<div><h3 class="layer-title">${esc(st.label)}: ${esc(st.count(snap))}</h3><div class="layer-sub">${esc(st.note)}</div></div>${html}` };
+  },
+  feature: ([key, sub, n]) => {
+    const f = snap.features.find((x) => x.key === key); if (!f) return null;
+    const agents = snap.agents.filter((a) => a.feature === key);
+    if (sub === 'round') return roundLayer(f, Number(n), agents);
+    const own = ownBugs(key); const backlog = snap.bugs.filter((b) => b.feature === key && BACKLOG.includes(b.status));
+    const rounds = [...new Set(agents.map((a) => a.round).filter((r) => r != null))].sort((a, b) => a - b);
+    const r = f.lastResult;
+    return { crumbs: [[key]], html: `
+      <div><h3 class="layer-title">${esc(key)}</h3><div class="layer-sub">${featStatus(f.status)} · ${f.rounds} test round${f.rounds === 1 ? '' : 's'}${r ? ` · latest: round ${r.round}, ${r.stepsPassed}/${r.stepsTotal} steps` : ''}</div></div>
+      ${section('Test rounds', rounds.length ? `<div class="chips">${rounds.map((n) => { const v = agents.find((a) => a.role === 'validate' && a.round === n); return `<a class="chip" href="${href('feature', key, 'round', n)}">Round ${n}${v?.summary ? ` · ${esc(v.summary)}` : v ? ` · ${esc(STATUS[v.status] || v.status)}` : ''}</a>`; }).join('')}</div>` : '<div class="panel empty">Not tested yet.</div>')}
+      ${section('Working now', agentCards(agents.filter((a) => a.status === 'running')))}
+      ${section(`Its own bugs (${own.length})`, bugRows(own, false))}
+      ${backlog.length ? section(`Moved to backlog (${backlog.length})`, bugRows(backlog, false)) : ''}
+      ${section(`Agent runs (${agents.length})`, agentRows(agents))}` };
+  },
+  bug: ([id]) => {
+    const b = (snap.bugs || []).find((x) => x.id === id); if (!b) return null;
+    const touched = [...new Set((b.history || []).map((h) => h.round).filter((x) => x))];
+    return { crumbs: [[b.feature, href('feature', b.feature)], [id]], html: `
+      <div><h3 class="layer-title">${esc(b.step || id)}</h3><div class="layer-sub">${pill(b.status)} · <span class="mono">${esc(id)}</span> · fix attempts ${b.attempts || 0} of ${esc(snap.maxFixAttemptsPerBug)}</div></div>
+      ${b.question ? `<div class="callout"><b>Question for you:</b> ${esc(b.question)}</div>` : ''}
+      <section><h2>Details</h2><div class="panel"><dl class="kv">
+        <dt>Root cause</dt><dd>${esc(b.rootCause || '—')}</dd>
+        <dt>Class</dt><dd>${esc(b.class || '—')}</dd>
+        <dt>Files</dt><dd class="mono">${esc((b.files || []).join(', ') || '—')}</dd>
+        <dt>Whose bug</dt><dd>${b.scope ? `${esc(SCOPE[b.scope.scope] || b.scope.scope)}${b.scope.owner ? ` — <a href="${href('feature', b.scope.owner)}">${esc(b.scope.owner)}</a>` : ''}<div class="muted">${esc(b.scope.evidence)} (${esc(b.scope.decidedBy)})</div>` : '<span class="muted">Not scope-checked yet</span>'}</dd>
+        <dt>Reported against</dt><dd><a href="${href('feature', b.feature)}">${esc(b.feature)}</a>${touched.length ? ` · rounds ${touched.map((n) => `<a href="${href('feature', b.feature, 'round', n)}">${n}</a>`).join(', ')}` : ''}</dd>
+      </dl></div></section>
+      ${section('History', `<div class="panel"><ul class="timeline">${(b.history || []).map((h) => `<li><span class="muted">${h.round ? `<a href="${href('feature', b.feature, 'round', h.round)}">R${h.round}</a>` : 'Build'}</span><span><b>${esc(EVENT[h.event] || h.event)}</b></span><span>${esc(h.note)}${h.files?.length ? ` <span class="mono muted">${esc(h.files.join(', '))}</span>` : ''}${commit(h.commit)}</span></li>`).join('') || '<li class="muted">No history recorded.</li>'}</ul></div>`)}` };
+  },
+  agent: ([id]) => {
+    const a = (snap.agents || []).find((x) => x.id === id); if (!a) return null;
+    const ls = a.liveSteps;
+    const crumbs = a.feature ? [[a.feature, href('feature', a.feature)], ...(a.round ? [[`Round ${a.round}`, href('feature', a.feature, 'round', a.round)]] : []), [agentName(a)]] : [[agentName(a)]];
+    return { crumbs, html: `
+      <div><h3 class="layer-title">${esc(agentName(a))}${a.feature ? ` — ${esc(a.feature)}` : ''}</h3><div class="layer-sub">${pill(a.status)} · <span class="mono">${esc(a.label)}</span></div></div>
+      <section><h2>Details</h2><div class="panel"><dl class="kv">
+        <dt>Result</dt><dd>${esc(a.summary || '—')}</dd>
+        <dt>Latest step</dt><dd class="mono">${esc(a.activity || '—')}</dd>
+        <dt>Started</dt><dd>${esc(ago(a.startedAt))}</dd>
+        <dt>Last activity</dt><dd>${esc(ago(a.lastActivityAt))}</dd>
+        <dt>Tokens</dt><dd class="num">${k(a.tokens?.input)} in · ${k(a.tokens?.cacheWrite)} cache write · ${k(a.tokens?.cacheRead)} cache read · ${k(a.tokens?.output)} out</dd>
+      </dl></div></section>
+      ${ls ? section('Live test log', `<div class="panel"><dl class="kv"><dt>Checks logged</dt><dd>${ls.checked} (${ls.passed} passed)</dd></dl>${ls.failed.length ? `<ul class="timeline">${ls.failed.map((f) => `<li><span class="muted">Failed</span><b>${esc(f.step)}</b><span>Expected: ${esc(f.expect || '—')}<br>Saw: ${esc(f.seen || '—')}</span></li>`).join('')}</ul>` : ''}${ls.errors?.length ? `<ul class="timeline">${ls.errors.map((e) => `<li><span class="muted">Error</span><b>${esc(e.type)}</b><span>${esc(e.detail)}</span></li>`).join('')}</ul>` : ''}</div>`) : ''}
+      ${a.signals?.length ? section('Page errors and failed requests seen', `<div class="panel"><ul class="timeline">${a.signals.map((e) => `<li><span class="muted">Seen</span><b>${esc(e.type)}</b><span>${esc(e.detail)}</span></li>`).join('')}</ul></div>`) : ''}
+      ${a.failures?.length ? section(`Command failures it reported (${a.failures.length})`, `<div class="panel"><ul class="timeline">${a.failures.map((f, i) => `<li><span class="muted">#${i + 1}</span><span></span><span>${esc(typeof f === 'string' ? f : JSON.stringify(f))}</span></li>`).join('')}</ul></div>`) : ''}` };
+  },
+};
+function roundLayer(f, n, agents) {
+  const STAGE = ['validate', 'triage', 'scope', 'fix', 'reconcile', 'integrate'];
+  const inRound = agents.filter((a) => a.round === n || String(a.label || '').includes(`-r${n}`)).sort((x, y) => STAGE.indexOf(x.role) - STAGE.indexOf(y.role));
+  const touched = (snap.bugs || []).filter((b) => b.feature === f.key && (b.history || []).some((h) => h.round === n));
+  const v = inRound.find((a) => a.role === 'validate');
+  return { crumbs: [[f.key, href('feature', f.key)], [`Round ${n}`]], html: `
+    <div><h3 class="layer-title">${esc(f.key)} — round ${n}</h3><div class="layer-sub">${v ? `${pill(v.status)} · ${esc(v.summary || 'Test in progress')}` : 'No browser test recorded for this round yet'}</div></div>
+    ${section('Stages in this round', agentRows(inRound))}
+    ${section(`Bugs found, fixed or verified in this round (${touched.length})`, bugRows(touched, false))}` };
+}
+
+const crumbLabel = (t) => {
+  const [type, a, b] = t.split(':').map(decodeURIComponent);
+  if (type === 'stat') return STATS[a]?.label || a;
+  if (type === 'round') return `${a} · round ${b}`;
+  if (type === 'agent') { const ag = snap.agents.find((x) => x.id === a); return ag ? `${agentName(ag)} · ${ag.feature || ''}` : a; }
+  return a;
+};
+function route() {
+  if (!snap) return;
+  path = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
+  // Older single-layer links (#/feature/<key>, #/bug/<id>, #/feature/<key>/round/<n>) still open.
+  if (path.length >= 2 && !path[0].includes(':')) {
+    const [t, a, , n] = path.map(decodeURIComponent);
+    path = [t === 'feature' && n ? tok('round', a, n) : tok(t, a)];
+  }
+  const last = path[path.length - 1] || '';
+  const [type, ...args] = last.split(':').map(decodeURIComponent);
+  const fn = type === 'round' ? ([key, n]) => { const f = snap.features.find((x) => x.key === key); return f && roundLayer(f, Number(n), snap.agents.filter((a) => a.feature === key)); } : LAYERS[type || ''];
+  const layer = (fn && fn(args)) || { html: '<div class="panel empty">That item is no longer in the tracker. Use the trail above to go back.</div>' };
+  const trail = [['Overview', '#/'], ...path.map((t, i) => [crumbLabel(t), `#/${path.slice(0, i + 1).join('/')}`])];
+  $('crumbs').innerHTML = trail.map(([label, h], i) => (i === trail.length - 1 ? `<span class="here" aria-current="page">${esc(label)}</span>` : `<a href="${h}">${esc(label)}</a><span class="sep" aria-hidden="true">›</span>`)).join('');
+  $('view').innerHTML = `<div class="layer">${layer.html}</div>`;
+  document.title = `${trail[trail.length - 1][0]} · Release tracker`;
+}
 function render() {
   if (!snap) return;
   const age = (Date.now() - Date.parse(snap.syncedAt)) / 60000;
   $('sync').className = `sync${age > 20 ? ' stale' : ''}`;
-  $('sync').innerHTML = `<span class="live-dot"></span>Updated <b>${esc(ago(snap.syncedAt))}</b> · run ${esc(snap.runId || '—')}`;
-
-  const feats = snap.features || []; const bugs = snap.bugs || []; const agents = snap.agents || [];
-  const running = agents.filter((a) => a.status === 'running');
-  const human = bugs.filter((b) => b.status === 'needs_human' || b.status === 'needs_business_definition');
-  const open = bugs.filter((b) => !['verified'].includes(b.status));
-  const unrec = agents.filter((a) => a.status === 'done_unreconciled');
-  $('strip').innerHTML = [
-    ['good', feats.filter((f) => f.status === 'passed').length + ' / ' + feats.length, 'Features passed'],
-    ['', running.length, 'Agents running'],
-    ['bad', open.length, 'Open bugs'],
-    ['good', bugs.filter((b) => b.status === 'verified').length, 'Bugs verified fixed'],
-    ['human', human.length, 'Need a person'],
-    ['bad', unrec.length, 'Finished with unreconciled failures'],
-    ['', k(snap.totals?.output) + ' / ' + k(snap.totals?.cacheRead), 'Tokens out / cache read'],
-  ].map(([c, n, l]) => `<div class="stat ${c}"><div class="n">${esc(n)}</div><div class="l">${esc(l)}</div></div>`).join('');
-
-  const hc = $('humanCallout');
-  hc.hidden = !human.length;
-  hc.innerHTML = human.length ? `<div class="callout"><b>${human.length} ${human.length === 1 ? 'bug needs' : 'bugs need'} a person.</b> ${esc(snap.maxFixAttemptsPerBug)} fix attempts did not solve ${human.length === 1 ? 'it' : 'them'}, or a business decision is missing. These are out of the automated loop until you decide. See the Bugs table.</div>` : '';
-
-  const keys = ['all', ...feats.map((f) => f.key)];
-  if (!keys.includes(filter)) filter = 'all';
-  $('filters').innerHTML = keys.map((key) => `<button type="button" id="f-${esc(key)}" data-k="${esc(key)}" aria-pressed="${key === filter}">${key === 'all' ? 'All features' : esc(key)}</button>`).join('');
-
-  const now = running.filter((a) => match(a.feature));
-  $('now').innerHTML = now.length ? now.map((a) => `<div class="agent"><div class="role">${esc(ROLE[a.role] || a.role)}${a.round ? ` · round ${a.round}` : ''}</div><div class="feat">${esc(a.feature)}</div><div class="act">${esc(a.activity || 'Starting…')}</div>${a.role === 'validate' ? `<div class="meta">${a.liveSteps ? `${a.liveSteps.checked} checks logged · ${a.liveSteps.passed} passed · <b>${a.liveSteps.failed.length} failed</b>` : 'No step log (started before live logging)'}${(a.signals || []).length || (a.liveSteps?.errors || []).length ? ` · <b>${(a.signals || []).length + (a.liveSteps?.errors || []).length} page errors / failed requests seen</b>` : ''}</div>` : ''}<div class="meta">Started ${esc(ago(a.startedAt))} · last step ${esc(ago(a.lastActivityAt))}</div></div>`).join('')
-    : '<div class="panel empty">No agent is running for this selection.</div>';
-
-  const fr = feats.filter((f) => match(f.key));
-  $('features').innerHTML = fr.length ? fr.map((f) => {
-    const r = f.lastResult; const pct = r && r.stepsTotal ? Math.round((r.stepsPassed / r.stepsTotal) * 100) : 0;
-    return `<tr><td><b>${esc(f.key)}</b></td><td>${featStatus(f.status)}</td><td>${r ? `<div class="num">Round ${r.round}: ${r.stepsPassed}/${r.stepsTotal} steps</div><div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>` : '<span class="muted">Not tested yet</span>'}</td><td class="num">${f.rounds}</td><td class="num">${f.openBugs}</td></tr>`;
-  }).join('') : '<tr><td colspan="5" class="empty">No features for this selection.</td></tr>';
-
-  const order = { needs_human: 0, needs_business_definition: 1, recurred: 2, retest_failed: 3, open: 4, seen_in_test: 5, fixing: 6, fixed_awaiting_retest: 7, verified: 8 };
-  const br = bugs.filter((b) => match(b.feature)).sort((a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9));
-  $('bugs').innerHTML = br.length ? br.map((b) => `<tr><td class="mono">${esc(b.id)}</td><td>${esc(b.feature)}</td><td>${pill(b.status)}</td><td class="num">${b.attempts || 0} / ${esc(snap.maxFixAttemptsPerBug)}</td><td><details><summary><b>${esc(b.step)}</b><div class="muted">${esc(b.rootCause)}</div>${b.question ? `<div><b>Question for you:</b> ${esc(b.question)}</div>` : ''}</summary><ul class="hist">${(b.history || []).map((h) => `<li><span class="muted">R${h.round}</span><span>${esc(EVENT[h.event] || h.event)}</span><span>${esc(h.note)}${h.files?.length ? ` <span class="mono muted">${esc(h.files.join(', '))}</span>` : ''}</span></li>`).join('')}</ul></details></td></tr>`).join('')
-    : '<tr><td colspan="5" class="empty">No bugs for this selection.</td></tr>';
-
-  const ar = agents.filter((a) => match(a.feature));
-  $('agents').innerHTML = ar.length ? ar.map((a) => `<tr><td><b>${esc(ROLE[a.role] || a.role)}</b> · ${esc(a.feature)}${a.round ? ` · R${a.round}` : ''}</td><td>${pill(a.status)}</td><td>${esc(a.summary || '—')}${a.failures?.length ? `<div class="muted">${a.failures.length} command failure${a.failures.length > 1 ? 's' : ''} reported</div>` : ''}</td><td class="num">${k(a.tokens?.output)} / ${k(a.tokens?.cacheRead)}</td><td class="muted">${esc(ago(a.lastActivityAt))}</td></tr>`).join('')
-    : '<tr><td colspan="5" class="empty">No agent runs for this selection.</td></tr>';
+  $('sync').innerHTML = `<span class="live-dot"></span>Updated <b>${esc(ago(snap.syncedAt))}</b>`;
+  route();
 }
-
-$('filters').addEventListener('click', (e) => { const b = e.target.closest('button[data-k]'); if (!b) return; filter = b.dataset.k; try { localStorage.setItem('rt-filter', filter); } catch {} render(); });
-try { filter = localStorage.getItem('rt-filter') || 'all'; } catch {}
+let lastHash = location.hash;
+const scrollAt = {};
+window.addEventListener('hashchange', () => {
+  scrollAt[lastHash] = window.scrollY;
+  const deeper = location.hash.length > lastHash.length; lastHash = location.hash; route();
+  window.scrollTo(0, deeper ? 0 : (scrollAt[location.hash] || 0));   // returning to a summary page restores where you were on it
+});
+// A whole table row is a target; the link inside it stays the keyboard/focus target.
+$('view').addEventListener('click', (e) => { if (e.target.closest('a')) return; const row = e.target.closest('tr[data-href]'); if (row) location.hash = row.dataset.href; });
 setInterval(render, 30000);
 
 (async () => {
@@ -195,7 +308,7 @@ setInterval(render, 30000);
   if (!db) { $('sync').textContent = 'Live updates are unavailable in this view. Open the tracker signed in to claude.ai.'; return; }
   db.doc('tracker/current').onSnapshot((d) => {
     const data = d && (d.data ? d.data() : d);
-    if (data && data.json) { try { snap = JSON.parse(data.json); render(); } catch { $('sync').textContent = 'The latest update could not be read.'; } }
+    if (data && data.json) { try { snap = JSON.parse(data.json); snap.features ||= []; snap.agents ||= []; snap.bugs ||= []; render(); } catch { $('sync').textContent = 'The latest update could not be read.'; } }
   }, () => { $('sync').textContent = 'Lost the live connection. Reload the page to reconnect.'; });
 })();
 </script>
