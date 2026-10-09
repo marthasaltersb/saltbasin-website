@@ -11,6 +11,14 @@
     "application_output_approve_for_qr",
     "cover_letter_open",
     "cover_letter_agent_turn",
-    "release_tracker_read"
+    "release_tracker_read",
+    "resume_rollups_read",
+    "resume_rollup_preview",
+    "career_atom_rollups_read",
+    "career_experience_definitions_read",
+    "career_experience_definition_save",
+    "career_experience_definition_delete",
+    "career_proficiency_override_save",
+    "career_proficiency_override_clear"
   ]
 }

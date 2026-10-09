@@ -64,3 +64,16 @@ Seeding: the existing per-type seeding (`PER_TYPE_SEEDED_DEFINITION_TYPES`) now 
 ## Fix notes per round
 
 (none yet)
+
+## Fix notes — round 1
+
+### RR1-1 (J1.1, mobile 390px: Save clipped on rollup cards)
+- Changed: the shared `Footer` in `RollupGroupingsPanel.jsx` now wraps (`flexWrap: 'wrap'` plus a gap on both flex rows, inner row `justifyContent: flex-end`), so Shown / up / down / Remove / Save no longer overflow the `overflow:hidden` ancestor. One component serves KPI, bucket, group and Career Atom cards.
+- Files: `src/components/admin/RollupGroupingsPanel.jsx`.
+- Checked: browser at 390px as the test member (World Shell > Journeys > Career Master > Proficiency & Rollups > 5 · Resume rollups): all 19 Save buttons have right edge 303px (viewport 390px).
+
+### RR1-5 (MCP_GAP: rollup capabilities had no MCP tools)
+- Changed: route bodies extracted into exported functions in `careerMaster.js` (`computeResumeRollups`, `previewResumeRollups`, `listExperienceDefinitions`, `saveExperienceDefinition`, `deleteExperienceDefinition`, `saveProficiencyAssertion`, `deleteProficiencyAssertion`); the routes and the new tools call the same functions, errors carry the same status. Eight append-only tools: `resume_rollups_read`, `resume_rollup_preview`, `career_atom_rollups_read`, `career_experience_definitions_read` (career.read), `career_experience_definition_save`, `career_experience_definition_delete`, `career_proficiency_override_save`, `career_proficiency_override_clear` (career.write). Reorder is a save of `sortOrder`. `capabilityParity.js` now governs `server/routes/careerMaster.js` (`/api/career`) with rows for every route in it; rollup rows have UI, API and MCP, other Career Master rows record an exclusion or an explicit MCP gap. The experience-definition and proficiency-assertion routes gained try/catch with proper status replies.
+- Files: `server/routes/careerMaster.js`, `server/lib/mcpToolRegistry.js`, `server/data/mcpToolManifest.json`, `server/lib/capabilityParity.js`.
+- Checked: `node scripts/check-interface-parity.mjs` OK and `--self-test` OK; `npm run build` passes; with a token over `/mcp` as the test member, the read tools return data, an invalid preview type returns a 400 error result, and a delete of a missing key returns ok.
+- Not done: no MCP tool yet for `GET /proficiency`, `/rollup-preview/:key`, `/rollups` (recorded as gap row `career-proficiency-read`) or intake/mappings (gap rows).

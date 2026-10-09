@@ -174,6 +174,134 @@ export const MCP_TOOLS = Object.freeze([
     },
   },
   {
+    name: 'resume_rollups_read',
+    title: 'Read my resume rollups',
+    description: 'Returns the caller\'s computed resume rollups: KPI tiles, industry buckets and skill category groups, optionally with the Career Atom groupings. Same data the Resume Rollups screen shows.',
+    inputSchema: schema({ includeAtom: { type: 'boolean', description: 'Also include the Career Atom groupings.' } }),
+    scope: 'career.read',
+    permission: 'user',
+    api: 'GET /api/career/resume-rollups?owner=me[&include=atom]',
+    handler: async (args, { user }) => {
+      const { computeResumeRollups, loadMasterPayloadForOwner } = await import('../routes/careerMaster.js');
+      const master = await loadMasterPayloadForOwner(user.id, user);
+      return computeResumeRollups(user.id, master, { includeAtom: !!args.includeAtom });
+    },
+  },
+  {
+    name: 'resume_rollup_preview',
+    title: 'Preview unsaved rollup definitions',
+    description: 'Computes the rollups as if the given definitions were saved. Nothing is written. An invalid definition is refused with the reason.',
+    inputSchema: schema({ definitions: { type: 'array', description: 'Draft definitions: { type, key, label, definition, sortOrder, isActive }. Types not sent keep the stored rows.', items: { type: 'object' } } }, ['definitions']),
+    scope: 'career.read',
+    permission: 'user',
+    api: 'POST /api/career/resume-rollups/preview',
+    handler: async (args, { user }) => {
+      const { previewResumeRollups } = await import('../routes/careerMaster.js');
+      return previewResumeRollups(user, args.definitions);
+    },
+  },
+  {
+    name: 'career_atom_rollups_read',
+    title: 'Read my Career Atom rollups',
+    description: 'Returns skills by category, jobs by industry and tools by wheel bucket computed from the caller\'s Career Channel Rod. A member with no Career Master rows gets an honest empty result.',
+    inputSchema: schema({}),
+    scope: 'career.read',
+    permission: 'user',
+    api: 'GET /api/career/atom-rollups?owner=me',
+    handler: async (_args, { user }) => {
+      const { buildCareerAtomRollupCatalog } = await import('./careerAtomRollups.js');
+      return buildCareerAtomRollupCatalog(user.id);
+    },
+  },
+  {
+    name: 'career_experience_definitions_read',
+    title: 'Read my experience and rollup definitions',
+    description: 'Lists the caller\'s definitions: periods, proficiency levels and formulas, KPI tiles, industry buckets, category groups and Career Atom rollups.',
+    inputSchema: schema({}),
+    scope: 'career.read',
+    permission: 'user',
+    api: 'GET /api/career/experience-definitions',
+    handler: async (_args, { user }) => {
+      const { listExperienceDefinitions } = await import('../routes/careerMaster.js');
+      return listExperienceDefinitions(user.id);
+    },
+  },
+  {
+    name: 'career_experience_definition_save',
+    title: 'Save an experience or rollup definition',
+    description: 'Creates or replaces one definition. Reordering is a save with a new sortOrder. The locked Salt Basin methodology cannot be changed.',
+    inputSchema: schema({
+      type: str('Definition type, for example kpi_tile, industry_bucket, category_group, atom_rollup.'),
+      key: str('Lowercase key (letters, numbers, underscores).', { pattern: '^[a-z][a-z0-9_]{1,79}$' }),
+      label: str('Display label.', { minLength: 1, maxLength: 120 }),
+      description: str('Optional description.', { maxLength: 600 }),
+      definition: { type: 'object', description: 'The definition body for this type.' },
+      sortOrder: { type: 'integer', description: 'Position among definitions of the same type.' },
+      isActive: { type: 'boolean', description: 'Whether it is shown.' },
+    }, ['type', 'key', 'label']),
+    scope: 'career.write',
+    permission: 'user',
+    api: 'PUT /api/career/experience-definitions/:type/:key',
+    handler: async (args, { user }) => {
+      const { saveExperienceDefinition } = await import('../routes/careerMaster.js');
+      const { type, key, ...body } = args;
+      return saveExperienceDefinition(user.id, type, key, body);
+    },
+  },
+  {
+    name: 'career_experience_definition_delete',
+    title: 'Delete an experience or rollup definition',
+    description: 'Deletes one of the caller\'s definitions. The locked Salt Basin methodology cannot be deleted.',
+    inputSchema: schema({ type: str('Definition type.'), key: str('Definition key.') }, ['type', 'key']),
+    scope: 'career.write',
+    permission: 'user',
+    api: 'DELETE /api/career/experience-definitions/:type/:key',
+    handler: async (args, { user }) => {
+      const { deleteExperienceDefinition } = await import('../routes/careerMaster.js');
+      return deleteExperienceDefinition(user.id, args.type, args.key);
+    },
+  },
+  {
+    name: 'career_proficiency_override_save',
+    title: 'Override a proficiency level',
+    description: 'Sets the caller\'s own proficiency level for one skill or tool in one period, replacing the methodology result for it.',
+    inputSchema: schema({
+      entityType: { type: 'string', enum: ['skill', 'tool'], description: 'skill or tool.' },
+      entityId: id('The skill or tool id from career_master_read.'),
+      periodKey: str('Period key, for example current.'),
+      levelKey: str('Active proficiency level key.'),
+      confidence: { type: 'number', minimum: 0, maximum: 1 },
+      evidenceCount: { type: 'integer', minimum: 0 },
+      visibility: { type: 'string', enum: ['private', 'resume', 'portfolio', 'public'] },
+      notes: str('Optional note.', { maxLength: 1000 }),
+    }, ['entityType', 'entityId', 'periodKey', 'levelKey']),
+    scope: 'career.write',
+    permission: 'user',
+    api: 'PUT /api/career/proficiency-assertions/:entityType/:entityId/:periodKey',
+    handler: async (args, { user }) => {
+      const { saveProficiencyAssertion } = await import('../routes/careerMaster.js');
+      const { entityType, entityId, periodKey, ...body } = args;
+      return saveProficiencyAssertion(user.id, entityType, entityId, periodKey, body);
+    },
+  },
+  {
+    name: 'career_proficiency_override_clear',
+    title: 'Clear a proficiency override',
+    description: 'Removes the caller\'s own proficiency override so the methodology result applies again.',
+    inputSchema: schema({
+      entityType: { type: 'string', enum: ['skill', 'tool'] },
+      entityId: id('The skill or tool id.'),
+      periodKey: str('Period key.'),
+    }, ['entityType', 'entityId', 'periodKey']),
+    scope: 'career.write',
+    permission: 'user',
+    api: 'DELETE /api/career/proficiency-assertions/:entityType/:entityId/:periodKey',
+    handler: async (args, { user }) => {
+      const { deleteProficiencyAssertion } = await import('../routes/careerMaster.js');
+      return deleteProficiencyAssertion(user.id, args.entityType, args.entityId, args.periodKey);
+    },
+  },
+  {
     name: 'release_tracker_read',
     title: 'Read release records',
     description: 'Administrators only. Without releaseId: lists release records. With releaseId: that release with its features, rounds and failed runs.',

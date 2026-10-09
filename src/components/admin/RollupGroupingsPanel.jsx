@@ -241,9 +241,9 @@ export default function RollupGroupingsPanel({ onChanged }) {
   );
 
   const Footer = ({ item, index, list }) => (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '.75rem' }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.5rem', justifyContent: 'space-between', alignItems: 'center', marginTop: '.75rem' }}>
       <code style={{ fontSize: '.66rem', color: '#7a8086' }}>{item.isNew ? 'not saved yet' : item.key}</code>
-      <div style={{ display: 'flex', gap: '.4rem', alignItems: 'center' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.4rem', alignItems: 'center', justifyContent: 'flex-end' }}>
         <label style={{ fontSize: '.74rem' }}><input type="checkbox" checked={item.isActive} onChange={(e) => patch(item.type, item.key, { isActive: e.target.checked })} /> Shown</label>
         <OrderButtons type={item.type} index={index} last={index === list.length - 1} disabled={!!busy || item.isNew} />
         <button type="button" style={btn('ghost')} onClick={() => remove(item)} disabled={busy === `${item.type}:${item.key}`}>Remove</button>

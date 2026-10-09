@@ -19,11 +19,14 @@ export const GOVERNED_ROUTE_FILES = Object.freeze({
   'server/routes/resumeOutputs.js': '/api/resume-outputs',
   'server/routes/coverLetters.js': '/api/cover-letters',
   'server/routes/platformAccess.js': '/api/platform',
+  'server/routes/careerMaster.js': '/api/career',
 });
 
 const CPA = '/api/career-agents';
 const RO = '/api/resume-outputs';
 const CL = '/api/cover-letters';
+const CM = '/api/career';
+const RR = `World Shell > Journeys > Career Master > Resume rollups`;
 const WS = 'World Shell';
 const OPP = `${WS} > Journeys > Career Placement Agents > (select an opportunity)`;
 const RESUME = `${WS} > Journeys > My Resume`;
@@ -73,6 +76,23 @@ export const CAPABILITIES = Object.freeze([
   { key: 'cover-letter-agent-turn', title: 'Ask the cover-letter agent for an edit', group: 'Cover letters', ui: `${RESUME} > Application packages (Open)`, api: [`POST ${CL}/letters/:id/turns`], mcp: ['cover_letter_agent_turn'] },
   { key: 'cover-letter-turns', title: 'Read the agent conversation and metrics', group: 'Cover letters', ui: `${RESUME} > Application packages (Open)`, api: [`GET ${CL}/letters/:id/turns`, `GET ${CL}/metrics`], mcp: null, gap: 'No MCP tools for the conversation history or metrics yet.' },
   { key: 'cover-letter-turn-decide', title: 'Accept or reject a proposed edit', group: 'Cover letters', ui: `${RESUME} > Application packages (Open) > Accept / Reject`, api: [`POST ${CL}/turns/:id/accept`, `POST ${CL}/turns/:id/reject`], mcp: null, mcpExclusion: 'Applying a proposal is a human decision made in the website, by design.' },
+
+  // ── Career Master: resume rollups and definitions ─────────────────────────
+  { key: 'resume-rollups-read', title: 'Read computed resume rollups (KPI tiles, industry buckets, category groups)', group: 'Resume rollups', ui: `${WS} > Journeys > Career Master > Resume rollups`, api: [`GET ${CM}/resume-rollups`], mcp: ['resume_rollups_read'] },
+  { key: 'resume-rollups-preview', title: 'Live preview of unsaved rollup definitions', group: 'Resume rollups', ui: `${WS} > Journeys > Career Master > Resume rollups`, api: [`POST ${CM}/resume-rollups/preview`], mcp: ['resume_rollup_preview'] },
+  { key: 'career-atom-rollups-read', title: 'Read Career Atom rollups', group: 'Resume rollups', ui: `${WS} > Journeys > Career Master > Resume rollups`, api: [`GET ${CM}/atom-rollups`], mcp: ['career_atom_rollups_read'] },
+  { key: 'experience-definitions-read', title: 'List experience and rollup definitions', group: 'Resume rollups', ui: `${WS} > Journeys > Career Master > Resume rollups`, api: [`GET ${CM}/experience-definitions`], mcp: ['career_experience_definitions_read'] },
+  { key: 'experience-definition-save', title: 'Save or reorder a definition (tile, bucket, group, Career Atom card)', group: 'Resume rollups', ui: `${RR} > Save / up / down`, api: [`PUT ${CM}/experience-definitions/:type/:key`], mcp: ['career_experience_definition_save'] },
+  { key: 'experience-definition-delete', title: 'Remove a definition', group: 'Resume rollups', ui: `${RR} > Remove`, api: [`DELETE ${CM}/experience-definitions/:type/:key`], mcp: ['career_experience_definition_delete'] },
+  { key: 'proficiency-override', title: 'Override or clear a proficiency level', group: 'Resume rollups', ui: `${WS} > Journeys > Career Master > Proficiency`, api: [`GET ${CM}/proficiency-assertions`, `PUT ${CM}/proficiency-assertions/:entityType/:entityId/:periodKey`, `DELETE ${CM}/proficiency-assertions/:entityType/:entityId/:periodKey`], mcp: ['career_proficiency_override_save', 'career_proficiency_override_clear'] },
+  { key: 'career-proficiency-read', title: 'Read resolved proficiency and rollup policy previews', group: 'Resume rollups', ui: `${WS} > Journeys > Career Master > Proficiency`, api: [`GET ${CM}/proficiency`, `GET ${CM}/rollup-preview/:key`, `GET ${CM}/rollups`], mcp: null, gap: 'No MCP tool yet; this part of the Career Master is website and API only.' },
+
+  // ── Career Master: other routes (listed so the file can be governed; MCP gaps are recorded, not hidden) ──
+  { key: 'career-public-reads', title: 'Public/shared Career Master reads (public rollup, catalogs)', group: 'Career Master', ui: `${WS} > Journeys > Career Master`, api: [`GET ${CM}/public-rollup/:slug/:displayKey`, `GET ${CM}/catalogs`], mcp: null, mcpExclusion: 'Public or shared vocabulary read by the website; an agent reads the member\'s own data with career_master_read.' },
+  { key: 'career-consent', title: 'Career Portfolio terms (status and accept)', group: 'Career Master', ui: `${WS} (first sign-in step)`, api: [`GET ${CM}/consent-status`, `POST ${CM}/consent`], mcp: null, mcpExclusion: 'Accepting terms is a personal decision made in the website; MCP calls are refused until it is done.' },
+  { key: 'career-intake', title: 'Intake documents and runs (upload, LinkedIn pull, run, semantic import, analysis)', group: 'Career Master', ui: `${WS} > Journeys > Career Master > Manual Intake`, api: [`GET ${CM}/intake-documents`, `POST ${CM}/intake-documents`, `POST ${CM}/intake-documents/linkedin-pull`, `GET ${CM}/intake-runs`, `POST ${CM}/intake-runs`, `POST ${CM}/intake-runs/:id/run`, `GET ${CM}/semantic-template`, `POST ${CM}/semantic-import`, `POST ${CM}/resume-analysis`], mcp: null, gap: 'No MCP tools for intake yet.' },
+  { key: 'career-mappings', title: 'Field mappings (classify, lineage, commit) and bounded agent action', group: 'Career Master', ui: `${WS} > Journeys > Career Master`, api: [`POST ${CM}/mappings/classify`, `GET ${CM}/mappings/lineage`, `POST ${CM}/mappings/commit`, `POST ${CM}/bounded-agent/action`], mcp: null, gap: 'No MCP tools for mappings yet.' },
+  { key: 'career-admin-utilities', title: 'Site metadata sync and definition seeding', group: 'Career Master', ui: `${WS} > Journeys > Career Master`, api: [`POST ${CM}/sync-site-metadata`, `POST ${CM}/seed`], mcp: null, mcpExclusion: 'Maintenance actions run from the website.' },
 
   // ── Release tracker ───────────────────────────────────────────────────────
   { key: 'release-tracker-read', title: 'Read release records (admin)', group: 'Release tracker', ui: `${WS} > Journeys > Release Intelligence`, api: ['GET /api/release-intelligence/releases', 'GET /api/release-intelligence/releases/:id'], mcp: ['release_tracker_read'] },
