@@ -8,9 +8,10 @@ function ensureHost() {
   return host;
 }
 
-export function toast(message, ms = 2400) {
+export function toast(message, ms = 2400, kind = 'success') {
   const el = document.createElement('div');
-  el.className = 'sb-toast';
+  el.className = kind === 'error' ? 'sb-toast sb-toast-error' : 'sb-toast';
+  el.setAttribute('role', kind === 'error' ? 'alert' : 'status');
   el.textContent = message;
   ensureHost().appendChild(el);
   setTimeout(() => {
@@ -20,9 +21,8 @@ export function toast(message, ms = 2400) {
   }, ms);
 }
 
-// `toast.success(msg)` / `toast.error(msg)` — the documented convention
-// (CLAUDE.md) that most callers across the app already use. Both just show
-// the same toast today (no distinct success/error styling yet); defined as
-// methods on `toast` itself so `import { toast }` keeps working everywhere.
-toast.success = (message, ms) => toast(message, ms);
-toast.error = (message, ms) => toast(message, ms);
+// `toast.success(msg)` / `toast.error(msg)` — the documented convention.
+// Errors are styled red (role=alert) and stay up longer (6 s) so a failure
+// is never mistaken for success or missed.
+toast.success = (message, ms) => toast(message, ms, 'success');
+toast.error = (message, ms = 6000) => toast(message, ms, 'error');
