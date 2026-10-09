@@ -59,3 +59,11 @@ None. The lineage already is the history. No table, column, seed or bootstrap ch
 ## Fix notes per round
 
 (none yet)
+
+## Fix notes — round 3
+
+### T11 — MCP_GAP: no MCP tool for version history
+- What changed: three read-only MCP tools, `output_versions_list` (every version: status, created, modified, approvedBy, qrLive, change summary), `output_version_read` (one version's header and blocks as it stood) and `output_versions_compare` (tracked changes between two versions, same `diffVersions` the dialog uses). All call `getOutputVersionHistory(userId, id)`, the same function and ownership check as `GET /api/resume-outputs/:id/versions`; a foreign id is a 404 `not_found`. Scope `career.read`. `capabilityParity.js` now lists them for `resume-output-versions` (gap removed); names appended to `server/data/mcpToolManifest.json`.
+- Files: `server/lib/mcpToolRegistry.js`, `server/lib/capabilityParity.js`, `server/data/mcpToolManifest.json`.
+- Checked: `node scripts/check-interface-parity.mjs` OK; called the handlers against a fresh database with a two-version lineage (list shows `First version` / `1 changed`, read returns the second version's blocks, compare returns the word-level change, another member's id gives 404); `npm run build`.
+- Proposed amendment: E.9 (see proposedSteps), tool names `output_versions_list`, `output_version_read`, `output_versions_compare`.

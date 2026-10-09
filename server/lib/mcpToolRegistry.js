@@ -26,6 +26,14 @@ const id = (description) => ({ type: 'integer', minimum: 1, description });
 const str = (description, extra = {}) => ({ type: 'string', description, ...extra });
 const schema = (properties, required = []) => ({ type: 'object', properties, required, additionalProperties: false });
 
+/** Same function and ownership check as GET /api/resume-outputs/:id/versions; a foreign id reads as not found. */
+async function versionHistoryOr404(userId, outputId) {
+  const { getOutputVersionHistory } = await import('./outputVersionHistory.js');
+  const h = await getOutputVersionHistory(userId, outputId);
+  if (!h) throw Object.assign(new Error('Resume output not found'), { status: 404, code: 'not_found' });
+  return h;
+}
+
 export const MCP_TOOLS = Object.freeze([
   {
     name: 'career_master_read',
@@ -126,6 +134,53 @@ export const MCP_TOOLS = Object.freeze([
     handler: async (args, { user }) => {
       const { saveEditedVersion } = await import('./opportunityOutputs.js');
       return saveEditedVersion(user.id, args.outputId, { content: args.content, name: args.name || null });
+    },
+  },
+  {
+    name: 'output_versions_list',
+    title: 'List the versions of an output',
+    description: 'Lists every version in an output\'s lineage, oldest first: status, created and modified dates, approvedBy, and the change summary against the previous version. Same data as the Version history dialog. An id that is not yours reads as not found.',
+    inputSchema: schema({ outputId: id('Any version id of the output (from application_outputs_list).') }, ['outputId']),
+    scope: 'career.read',
+    permission: 'user',
+    api: 'GET /api/resume-outputs/:id/versions',
+    handler: async (args, { user }) => {
+      const h = await versionHistoryOr404(user.id, args.outputId);
+      return { lineageRootId: h.lineageRootId, title: h.title, versions: h.versions.map(({ header, blocks, ...meta }) => meta) };
+    },
+  },
+  {
+    name: 'output_version_read',
+    title: 'Read one version of an output as it stood',
+    description: 'Returns one version\'s header and blocks exactly as the Version history dialog shows them, with its dates and approval record.',
+    inputSchema: schema({ outputId: id('Any version id of the output.'), versionId: id('The version id from output_versions_list.') }, ['outputId', 'versionId']),
+    scope: 'career.read',
+    permission: 'user',
+    api: 'GET /api/resume-outputs/:id/versions',
+    handler: async (args, { user }) => {
+      const h = await versionHistoryOr404(user.id, args.outputId);
+      const v = h.versions.find((x) => x.id === args.versionId);
+      if (!v) throw Object.assign(new Error('Version not found in this output'), { status: 404, code: 'not_found' });
+      return v;
+    },
+  },
+  {
+    name: 'output_versions_compare',
+    title: 'Compare two versions of an output',
+    description: 'Returns the tracked changes from one version to another of the same output, using the same comparison as the Version history dialog.',
+    inputSchema: schema({ outputId: id('Any version id of the output.'), fromVersionId: id('The earlier version id.'), toVersionId: id('The later version id.') }, ['outputId', 'fromVersionId', 'toVersionId']),
+    scope: 'career.read',
+    permission: 'user',
+    api: 'GET /api/resume-outputs/:id/versions',
+    handler: async (args, { user }) => {
+      const h = await versionHistoryOr404(user.id, args.outputId);
+      const a = h.versions.find((x) => x.id === args.fromVersionId);
+      const b = h.versions.find((x) => x.id === args.toVersionId);
+      if (!a || !b) throw Object.assign(new Error('Version not found in this output'), { status: 404, code: 'not_found' });
+      if (a.error || b.error) throw Object.assign(new Error('Cannot compare (a version could not be read)'), { status: 422, code: 'unreadable_version' });
+      const { diffVersions, summarizeDiff } = await import('../../src/lib/outputVersionDiff.js');
+      const changes = diffVersions(a, b);
+      return { fromVersionId: a.id, toVersionId: b.id, summary: summarizeDiff(changes), changes };
     },
   },
   {

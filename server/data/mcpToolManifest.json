@@ -41,6 +41,9 @@
     "cover_letter_job_rec_save",
     "cover_letter_generate",
     "cover_letter_package_build",
-    "cover_letter_turns_list"
+    "cover_letter_turns_list",
+    "output_versions_list",
+    "output_version_read",
+    "output_versions_compare"
   ]
 }
