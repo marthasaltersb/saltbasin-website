@@ -4239,27 +4239,11 @@ async function bootstrap() {
     console.warn('[db] output-templates nav injection skipped:', e.message);
   }
 
-  // One-shot (2026-10-02, career-bound outputs): inject "Career Sources to Review"
-  // into the admin_nav content view, so the reconciliation queue (a tailored
-  // package's roles/skills/tools vs Career Master) is reachable for admin scope
-  // too - members already have it in memberTabs. Additive: only appends when
-  // absent; the tab id matches the member tab id so one switch-tab event serves both.
-  try {
-    const navRow4a = await sql.unsafe(`SELECT data FROM config_state WHERE id = 'admin_nav'`);
-    if (navRow4a.length > 0) {
-      const nav = JSON.parse(navRow4a[0].data);
-      const contentView = (nav.views || []).find((v) => v.id === 'content');
-      if (contentView) {
-        contentView.tabs = contentView.tabs || [];
-        if (!contentView.tabs.some((t) => t.id === 'careerReconciliation' || t.componentId === 'careerReconciliation')) {
-          contentView.tabs.push({ id: 'careerReconciliation', label: 'Career Sources to Review', componentId: 'careerReconciliation', sortOrder: 2.6 });
-          await sql.unsafe(`UPDATE config_state SET data = $1, updated_at = $2 WHERE id = 'admin_nav'`, [JSON.stringify(nav), Date.now()]);
-        }
-      }
-    }
-  } catch (e) {
-    console.warn('[db] career-reconciliation nav injection skipped:', e.message);
-  }
+  // (2026-10-02, fix round 1) "Career Sources to Review" is deliberately NOT injected into
+  // admin_nav. It is reached from the World Shell - the Journeys card for members (their
+  // memberTabs carry it) - and, for any user, from My Resume, which opens the queue over
+  // the panel. An earlier build injected an admin tab here; that injection is removed
+  // (a database that already got it keeps a harmless extra tab).
 
   // One-shot: inject "Commercial Opportunity Pipeline" tab into the admin_nav
   // crm view (2026-08-06, Phase 3 — Weekly Research & Outreach commercial

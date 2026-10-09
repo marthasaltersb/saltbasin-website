@@ -168,14 +168,15 @@ const PACKAGE_KIND_LABELS = {
   package_add_job: 'Add job',
   package_new_skill: 'New skill',
   package_new_tool: 'New tool',
+  package_new_certification: 'New certification',
 };
 
 function packageTaskSummary(task) {
   const r = task.reasoning || {};
   if (task.taskType === 'package_field_conflict') return { title: `${r.company} - ${r.field === 'dates' ? 'dates' : 'job title'}`, before: r.before || '(empty)', after: r.after };
   if (task.taskType === 'package_new_bullet') return { title: `${r.company} (${r.jobTitle}) - bullet not in this job's library`, before: '(not in library)', after: r.text };
-  if (task.taskType === 'package_new_skill' || task.taskType === 'package_new_tool') {
-    const kind = task.taskType === 'package_new_skill' ? 'skill' : 'tool';
+  if (task.taskType === 'package_new_skill' || task.taskType === 'package_new_tool' || task.taskType === 'package_new_certification') {
+    const kind = task.taskType === 'package_new_skill' ? 'skill' : task.taskType === 'package_new_certification' ? 'certification' : 'tool';
     return { title: `${r.name} - ${kind} not in Career Master`, before: '(not in Career Master)', after: `${r.name}${kind === 'tool' ? ' - you will be asked how it was used before any output is finalized' : ''}` };
   }
   return { title: `${r.company} - ${r.title}`, before: '(not in Career Master)', after: `${r.title}, ${[r.startDate, r.endDate].filter(Boolean).join(' - ') || 'no dates'}${r.bullets?.length ? ` - ${r.bullets.length} bullet${r.bullets.length === 1 ? '' : 's'} added to its library` : ''}` };
@@ -412,7 +413,7 @@ export default function CareerReconciliationPanel() {
       <ConvertSection refreshKey={refreshKey} openEditor={setEditingId} />
       {editingId && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} role="dialog" aria-label="Career-bound output editor">
-          <div style={{ background: 'white', borderRadius: 10, padding: '1rem 1.25rem', width: 'min(1100px, 95vw)', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div style={{ background: 'white', color: '#1b2a3b', borderRadius: 10, padding: '1rem 1.25rem', width: 'min(1100px, 95vw)', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}><button type="button" style={S.btn('outline')} onClick={() => setEditingId(null)}>Close</button></div>
             <CareerBoundOutputEditor projectionId={editingId} hideQueueLink onSaved={(r) => { if (r?.id && r.id !== editingId) setEditingId(r.id); }} />
           </div>

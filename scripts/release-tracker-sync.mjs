@@ -122,6 +122,7 @@ for (const a of agents.values()) {
     else if (role === 'validate') summary = `${r.stepsPassed}/${r.stepsTotal} steps passed${r.passed ? ' · PASS' : ' · FAIL'}`;
     else if (role === 'triage') summary = `${r.items?.length ?? 0} triage items`;
     else if (role === 'fix') summary = `${r.fixed?.length ?? 0} fixed · ${r.notFixed?.length ?? 0} not fixed`;
+    else if (role === 'scope') { const own = (r.items || []).filter((i) => i.scope === 'this_feature').length; summary = `${r.items?.length ?? 0} items · ${own} this feature's · ${(r.items?.length ?? 0) - own} backlog`; }
   } else if (typeof a.result === 'string') summary = clip(a.result, 200);
   let liveSteps = null;
   if (role === 'validate' && feature && round) {
@@ -155,6 +156,15 @@ for (const a of agentList) {
 }
 for (const k of (opt('--features') || '').split(',').filter(Boolean)) byFeature[k] ||= [];
 const features = []; const bugs = [];
+// Whose bug is it? Decisions from the one-time review (docs/triage/scope-review.json) and from each run's
+// scope agents. Out-of-scope bugs stay on the tracker as non-blocking backlog; the latest decision wins.
+const scopeDecisions = new Map();
+const SCOPE_STATUS = { pre_existing: 'backlog_pre_existing', other_feature: 'reassigned', process_note: 'process_note' };
+try {
+  const raw = JSON.parse(fs.readFileSync(opt('--scope-review') || new URL('../docs/triage/scope-review.json', import.meta.url), 'utf8'));
+  const items = Array.isArray(raw) ? raw : raw.items || raw.bugs || Object.entries(raw.decisions || {}).map(([id, d]) => ({ id, ...d }));
+  for (const it of items) if (it?.id && it.scope) scopeDecisions.set(it.id, { ...it, decidedBy: 'scope review' });
+} catch { /* no review yet */ }
 for (const [key, list] of Object.entries(byFeature)) {
   const res = (role, round) => agents.get(list.find((a) => a.role === role && (round == null || a.round === round))?.id)?.result;
   const validations = list.filter((a) => a.role === 'validate').sort((x, y) => x.round - y.round);
@@ -224,6 +234,10 @@ for (const [key, list] of Object.entries(byFeature)) {
       ...(v.signals || []).map((e) => ({ step: e.type, note: e.detail }))];
     live.forEach((f, i) => fb.set(`${key}-R${v.round}-live${i + 1}`, { id: `${key}-R${v.round}-live${i + 1}`, feature: key, status: 'seen_in_test', step: clip(f.step, 200), rootCause: clip(f.note, 400), history: [{ round: v.round, event: 'seen', note: 'Seen by the test agent; goes to triage when the round ends' }] }));
   }
+  // Scope check results for this feature (scope:<feature>:r<N>): whose bug each triage item is.
+  for (const sc of list.filter((a) => a.role === 'scope')) {
+    for (const it of agents.get(sc.id)?.result?.items || []) scopeDecisions.set(it.id, { ...it, round: sc.round, decidedBy: sc.label });
+  }
   bugs.push(...fb.values());
   const last = [...validations].reverse().find((v) => agents.get(v.id)?.result) || null;   // last round that finished
   const lastRes = last ? agents.get(last.id)?.result : null;
@@ -257,6 +271,24 @@ if (ledgerPath) {
   }
   for (const b of bugs) if (b.status !== 'seen_in_test') ledger[b.id] = b;
   fs.writeFileSync(ledgerPath, JSON.stringify(ledger));
+}
+
+for (const b of bugs) {
+  const d = scopeDecisions.get(b.id);
+  if (!d) continue;
+  b.scope = { scope: d.scope, owner: d.owner || null, evidence: clip(d.evidence, 400), decidedBy: d.decidedBy, round: d.round ?? null };
+  if (SCOPE_STATUS[d.scope] && !['verified', 'seen_in_test'].includes(b.status)) {
+    b.blockedStatus = b.status; b.status = SCOPE_STATUS[d.scope];
+  }
+}
+const NON_BLOCKING = new Set(['verified', 'seen_in_test', ...Object.values(SCOPE_STATUS)]);
+for (const f of features) {
+  const mine = bugs.filter((b) => b.feature === f.key);
+  f.openBugs = mine.filter((b) => !NON_BLOCKING.has(b.status)).length;
+  f.backlog = mine.filter((b) => Object.values(SCOPE_STATUS).includes(b.status)).length;
+  f.reassignedIn = bugs.filter((b) => b.status === 'reassigned' && b.scope?.owner === f.key).length;
+  // Every remaining failure belongs elsewhere: the feature itself passes, with backlog.
+  if (f.status === 'failing' && f.openBugs === 0 && f.backlog > 0) f.status = 'passed_with_backlog';
 }
 
 const snapshot = {

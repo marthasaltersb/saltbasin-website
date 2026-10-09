@@ -368,6 +368,7 @@ export const api = {
   getCareerBoundReviewCount: () => request('/api/career-bound/review-count'),
   getCareerBoundOutput: (id) => request(`/api/career-bound/outputs/${id}`),
   createCareerBoundOutput: (body) => request('/api/career-bound/outputs', { method: 'POST', body: JSON.stringify(body) }),
+  previewCareerBoundOutput: (id, body) => request(`/api/career-bound/outputs/${id}/preview`, { method: 'POST', body: JSON.stringify(body) }),
   saveCareerBoundOutput: (id, body) => request(`/api/career-bound/outputs/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   askBestyStaffCareer: (taskId, message, history = []) =>
     request('/api/agent/bestystaff-career', { method: 'POST', body: JSON.stringify({ taskId, message, history }) }),

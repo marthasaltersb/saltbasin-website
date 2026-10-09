@@ -177,6 +177,14 @@ export const ISLAND_REGISTRY = {
     dataBinding: { store: 'career_reconciliation_tasks' },
     permission: { requiredRole: 'owner', crud: ['read', 'update'], enforced: false },
   },
+  // My Resume (2026-10-02, fix round 1): Resume Output History + career-bound resumes and
+  // their editor; Approve / Publish / Approve for QR live here. Append-only registry key
+  // for the existing 'resume' tab id, so any member/admin whose nav has it gets an island.
+  resume: {
+    variant: 'token', kind: 'embed', accent: 'teal',
+    dataBinding: { store: 'resume_output_projections, career_jobs/skills/tools/certifications' },
+    permission: { requiredRole: 'owner', crud: ['read', 'update'], enforced: false },
+  },
   outputTemplates: {
     variant: 'token', kind: 'embed', accent: 'gold',
     dataBinding: { store: 'output_templates' },

@@ -1,4 +1,122 @@
-<title>Salt Basin Release Tracker</title>
+# Release tracker — setup guide for Claude
+
+Give this file to Claude (Claude Code, or claude.ai with Artifacts) and say:
+
+> Set up the release tracker from this guide for my project.
+
+Everything Claude needs is below: what the tracker is, the rules it enforces, the data it reads, how to publish it and keep it live, and the full page source.
+
+---
+
+## What it is
+
+A live, clickable status board for a **build → test → triage → fix → re-test** loop, usually run by parallel AI agents. It answers:
+
+- What is every agent doing right now?
+- Which features have passed, and which are still failing?
+- Which bugs are open, being fixed, waiting for a re-test, or **verified fixed**?
+- Which bugs belong to this work, and which were already broken or belong to someone else?
+- Which bugs need a person?
+
+The board works in **layers**: click any number, feature, round, bug or agent to go one layer deeper. The **breadcrumb trail is the path you took**, so you can always click back to the summary page you came from, and it restores your scroll position there. Browser Back works, and every layer has its own link you can share.
+
+---
+
+## Instructions for Claude
+
+### 1. Rules the tracker enforces
+
+Treat these as requirements, not suggestions.
+
+1. **Bugs never disappear.** Keep a permanent ledger keyed by bug id. If a later run no longer reports a bug, keep its last state and mark it `carriedOver`.
+2. **Bug lifecycle.** A bug moves `open → fixing → fixed_awaiting_retest → retesting → verified`. It can also go to `recurred`, `retest_failed_pending_triage`, `needs_human` or `needs_business_definition`.
+3. **Verified means re-tested.** A fix is never "verified" on its own. A bug is `verified` only when the next browser test round passes. If that round has other failures, the bug is verified only if triage doesn't report this bug again. Record the commit tested.
+4. **Fix-attempt limit.** After N fix attempts (default 2) on the same bug, set it to `needs_human` and take it out of the automated loop.
+5. **Never "done" with unreconciled failures.** If an agent reports failed commands that nobody has reconciled, its status is `done_unreconciled`, not `done`.
+6. **Awaiting retest is not passed.** If a fix landed after the last test round, the feature's status is `awaiting_retest`.
+7. **Scope check: whose bug is it?** After triage, classify each bug, with evidence:
+
+   | Scope | Meaning | Blocks the feature? | Status |
+   |---|---|---|---|
+   | `this_feature` | The feature's own change or spec caused it | Yes | (normal lifecycle) |
+   | `pre_existing` | Reproduces on the base without this feature's commits | No | `backlog_pre_existing` |
+   | `other_feature` | Another feature's change caused it | No (moves to the owner) | `reassigned`, with `scope.owner` |
+   | `process_note` | Test harness, environment or spec wording, not a product bug | No | `process_note` |
+
+   A feature whose only remaining bugs are out of scope is `passed_with_backlog`. When unsure, reproduce it on the base; if it doesn't reproduce there, it is `this_feature`.
+8. **Live test logs.** Test agents should append one JSON line per checked step (`{step, ok, expect, seen}`) to a log while they run, so failures show up before the round ends (`liveSteps`).
+9. **No transcript text.** The snapshot holds labels, statuses, summaries and counts only.
+
+### 2. Produce a snapshot
+
+Whatever runs the loop (a Claude Code workflow, CI, or agents you launch by hand) writes one JSON snapshot in this shape:
+
+```json
+{
+  "syncedAt": "2026-01-15T10:30:00.000Z",
+  "runId": "run-42",
+  "repoUrl": "https://github.com/OWNER/REPO",
+  "maxFixAttemptsPerBug": 2,
+  "maxFixRounds": 4,
+  "totals": { "input": 1200, "cacheWrite": 50000, "cacheRead": 900000, "output": 30000 },
+  "features": [
+    { "key": "checkout-flow", "status": "failing", "rounds": 2,
+      "lastResult": { "round": 2, "passed": false, "stepsPassed": 18, "stepsTotal": 20 },
+      "openBugs": 2, "backlog": 1, "reassignedIn": 0, "agents": 7 }
+  ],
+  "agents": [
+    { "id": "a1", "label": "validate:checkout-flow:r2", "role": "validate", "feature": "checkout-flow", "round": 2,
+      "status": "running", "activity": "$ node walk-journey-3.mjs", "summary": null,
+      "startedAt": "2026-01-15T10:01:00Z", "lastActivityAt": "2026-01-15T10:29:00Z",
+      "tokens": { "input": 10, "cacheWrite": 4000, "cacheRead": 90000, "output": 2500 },
+      "liveSteps": { "checked": 12, "passed": 11, "failed": [ { "step": "J3.2", "expect": "Total shows $40", "seen": "Total shows $0" } ], "errors": [] },
+      "signals": [], "failures": [] }
+  ],
+  "bugs": [
+    { "id": "checkout-flow-B3", "feature": "checkout-flow", "status": "fixed_awaiting_retest", "class": "rendering",
+      "attempts": 1, "step": "J3.2 order total", "rootCause": "Total computed before discounts load", "files": ["src/cart.js"],
+      "scope": { "scope": "this_feature", "owner": null, "evidence": "Introduced by abc1234", "decidedBy": "scope:checkout-flow:r1" },
+      "history": [
+        { "round": 1, "event": "found", "note": "Total shows $0" },
+        { "round": 1, "event": "fixed", "note": "Wait for discounts", "commit": "def5678" }
+      ] }
+  ]
+}
+```
+
+Notes:
+- Agent `role` is one of `build`, `integrate`, `validate`, `triage`, `scope`, `fix`, `reconcile`, `record`. Label agents `<role>:<feature>:r<round>` so they group by feature and round.
+- Agent `status`: `running`, `done`, `failed`, `done_unreconciled`. Feature `status`: `queued`, a running role name, `failing`, `awaiting_retest`, `passed`, `passed_with_backlog`, `needs_human`, `failed`.
+- History `event`: `found`, `recurred`, `fixed`, `not_fixed`, `verified`, `seen`.
+- Bug ids stay stable across rounds: triage links a re-reported bug to its earlier id (`recurrenceOf`).
+
+### 3. Publish the page (claude.ai Artifacts)
+
+1. Save the page source at the end of this guide as `release-tracker.html`.
+2. Publish it as an Artifact with the **`db` capability**. Use one rule: collection `tracker`, read for anyone who can **view** the artifact, write for the **owner** only. Load the `artifact-capabilities` skill first for the exact capability syntax.
+3. Write the snapshot to the artifact database: collection `tracker`, document `current`, a single field `json` holding the **stringified** snapshot. Use `ArtifactData` `set`, passing the `file_path` of a file containing `{"json": "<snapshot as a string>"}`, and `if_version` once the document exists.
+4. The page subscribes to that document and re-renders on every write. Nothing else is needed.
+
+### 4. Keep it live
+
+- After every stage finishes (an agent starts or ends), rebuild the snapshot and write it again. A simple approach is a watcher on the run's event log that triggers a sync. Also sync on a 15-minute heartbeat so "last activity" times stay honest.
+- Keep the bug ledger (rule 1) in a file the sync reads and updates.
+- Optionally commit an exported state file after each sync, so a new Claude session can resume the loop without re-instruction.
+
+### 5. Without Artifacts
+
+- **Local preview:** put a stub before the page script so it reads a local snapshot:
+  `<script>window.claude={use:async()=>({doc:()=>({onSnapshot:(cb)=>cb({json: JSON.stringify(SNAPSHOT)})})})};</script>`
+- **Markdown report:** render the same snapshot as Markdown with the same layers (overview → features → feature detail → bug detail), joined by anchor links, and commit it next to your release log.
+
+---
+
+## Page source
+
+Single file, no build step. It uses Google Fonts (optional), handles light and dark mode, and works at phone width.
+
+```html
+<title>Release Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
@@ -312,3 +430,4 @@ setInterval(render, 30000);
   }, () => { $('sync').textContent = 'Lost the live connection. Reload the page to reconnect.'; });
 })();
 </script>
+```

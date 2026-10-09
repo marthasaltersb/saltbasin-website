@@ -85,6 +85,15 @@ router.get('/review-count', async (req, res) => {
 router.get('/outputs/:id', async (req, res) => {
   try { res.json(await getCareerBoundEditorState(req.user.id, Number(req.params.id))); } catch (e) { fail(res, e); }
 });
+// Live preview of UNSAVED editor state: resolves the posted content against
+// Career Master and returns it. Writes nothing. The output must be the caller's.
+router.post('/outputs/:id/preview', async (req, res) => {
+  try {
+    await getCareerBoundEditorState(req.user.id, Number(req.params.id)); // ownership / existence (404 otherwise)
+    const { content: resolved, warnings } = await resolveCareerBound(req.user.id, req.body?.content);
+    res.json({ resolved, warnings: warnings.map((w) => ({ kind: w.kind, message: w.message })) });
+  } catch (e) { fail(res, e); }
+});
 router.put('/outputs/:id', async (req, res) => {
   try {
     const result = await updateCareerBoundOutput(req.user.id, Number(req.params.id), { name: req.body?.name, content: req.body?.content });

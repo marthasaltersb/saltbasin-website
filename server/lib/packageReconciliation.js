@@ -11,6 +11,7 @@
 //   package_new_bullet     - a bullet that is not in that job's library
 //   package_add_job        - a role with no matching Career Master job
 //   package_new_skill      - a skill the package lists that Career Master lacks
+//   package_new_certification - a certification the package lists that Career Master lacks
 //   package_new_tool       - a tool/technology the package lists that Career Master lacks
 //                            (an approved tool has no proficiency category yet, so the
 //                            finalization gate asks for one before any output is final)
@@ -37,7 +38,7 @@ import {
 
 // Deciding a task never approves/publishes an output, so the finalization gate
 // (finalizationGates.js) is not involved here; it guards the output approval paths.
-export const PACKAGE_TASK_TYPES = ['package_field_conflict', 'package_new_bullet', 'package_add_job', 'package_new_skill', 'package_new_tool'];
+export const PACKAGE_TASK_TYPES = ['package_field_conflict', 'package_new_bullet', 'package_add_job', 'package_new_skill', 'package_new_tool', 'package_new_certification'];
 const yearsOf = (s) => (String(s || '').match(/(?:19|20)\d{2}|present/gi) || []).map((y) => y.toLowerCase());
 const parseJson = (v) => (typeof v === 'string' ? JSON.parse(v) : v);
 
@@ -130,16 +131,16 @@ export async function detectPackageTasks(userId, projection) {
   }
   // skills / tools the package lists that Career Master does not have
   for (const group of listGroupsFromDocument(content)) {
-    if (group.entity !== 'skills' && group.entity !== 'tools') continue;
+    const isCert = group.entity === 'certifications';
     const isSkill = group.entity === 'skills';
     const known = new Set((await loadMasterList(userId, group.entity)).map((r) => norm(r.label)));
     for (const item of group.items) {
       if (known.has(norm(item))) continue;
       record(await insertTask(rod, {
-        taskType: isSkill ? 'package_new_skill' : 'package_new_tool',
-        entryType: isSkill ? 'career_skill_entry' : 'career_tool_entry',
-        targetTable: isSkill ? 'career_skills' : 'career_tools',
-        atomKey: `pkg:${packageKey}:${isSkill ? 'skill' : 'tool'}:${shortHash(norm(item))}`, targetId: null,
+        taskType: isCert ? 'package_new_certification' : isSkill ? 'package_new_skill' : 'package_new_tool',
+        entryType: isCert ? 'career_certification_entry' : isSkill ? 'career_skill_entry' : 'career_tool_entry',
+        targetTable: isCert ? 'career_certifications' : isSkill ? 'career_skills' : 'career_tools',
+        atomKey: `pkg:${packageKey}:${isCert ? 'cert' : isSkill ? 'skill' : 'tool'}:${shortHash(norm(item))}`, targetId: null,
         evidenceRefs: [{ ...source, value: item }],
         reasoning: { name: item, listTitle: group.title },
         metadata: meta,
@@ -213,6 +214,18 @@ async function applyApproval(userId, task) {
     `).run(userId, reasoning.company, reasoning.title || 'Untitled role', reasoning.startDate || null, reasoning.endDate || null, variants, Number(max?.m || 0) + 1, now);
     const jobId = Number(res.lastInsertRowid);
     return { jobId, syncError: await syncJobAtoms(userId, jobId) };
+  }
+  if (task.task_type === 'package_new_certification') {
+    const name = String(reasoning.name || '').trim();
+    if (!name) throw new CareerBoundError('The task has no name to add.');
+    const rows = await loadMasterList(userId, 'certifications');
+    const dup = rows.find((r) => norm(r.label) === norm(name));
+    if (dup) return { jobId: null, entryId: dup.id, table: 'career_certifications', existed: true, syncError: null };
+    const max = await db.prepare(`SELECT COALESCE(MAX(order_index), 0) AS m FROM career_certifications WHERE user_id=$1`).get(userId);
+    const res = await db.prepare(`INSERT INTO career_certifications (user_id, name, status, order_index, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,$5) RETURNING id`)
+      .run(userId, name, 'Active', Number(max?.m || 0) + 1, now);
+    const entryId = Number(res.lastInsertRowid);
+    return { jobId: null, entryId, table: 'career_certifications', syncError: await syncEntryAtoms(userId, 'career_certifications', entryId) };
   }
   if (task.task_type === 'package_new_skill' || task.task_type === 'package_new_tool') {
     const isSkill = task.task_type === 'package_new_skill';

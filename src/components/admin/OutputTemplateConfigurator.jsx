@@ -16,6 +16,7 @@ import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
 import ChartGallery from './ChartGallery.jsx';
 import ProficiencyRulesPanel from './ProficiencyRulesPanel.jsx';
+import { OVERRIDABLE_JOB_FIELDS, withOverride } from '../../lib/masterOverrides.js';
 
 const TABS = ['Header / Footer', 'Stat Cards', 'Infographics', 'Sections', 'Rules & why'];
 
@@ -60,7 +61,7 @@ function normalizeConfig(cfg, outputType) {
 }
 
 const S = {
-  wrap: { padding: '1.5rem', fontFamily: 'var(--sb-font-body)' },
+  wrap: { padding: '1.5rem', fontFamily: 'var(--sb-font-body)', color: '#1b2a3b' },
   shell: { display: 'grid', gridTemplateColumns: '220px 1fr 380px', gap: '1.25rem', alignItems: 'start' },
   h1: { fontSize: '1.4rem', fontWeight: 700, color: 'var(--sb-navy, #1b2a3b)', marginBottom: '0.2rem' },
   sub: { fontSize: '0.82rem', color: '#666', marginBottom: '1.5rem', maxWidth: 760 },
@@ -70,8 +71,8 @@ const S = {
     background: on ? 'var(--sb-navy, #1b2a3b)' : 'white', color: on ? 'white' : '#444',
     fontSize: '0.78rem', cursor: 'pointer', fontFamily: 'var(--sb-font-label)',
   }),
-  card: { background: 'white', border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: 10, padding: '1.1rem', marginBottom: '0.9rem' },
-  label: { fontSize: '0.62rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#888', fontFamily: 'var(--sb-font-label)', marginBottom: '0.5rem' },
+  card: { background: 'white', color: '#1b2a3b', border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: 10, padding: '1.1rem', marginBottom: '0.9rem' },
+  label: { fontSize: '0.62rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#5f5f5f', fontFamily: 'var(--sb-font-label)', marginBottom: '0.5rem' },
   input: { padding: '0.5rem 0.75rem', borderRadius: 7, border: '0.5px solid rgba(0,0,0,0.18)', fontSize: '0.85rem', fontFamily: 'inherit', outline: 'none', width: '100%', boxSizing: 'border-box' },
   chip: (on) => ({
     display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.7rem', borderRadius: 16, margin: '0.2rem',
@@ -125,7 +126,16 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
   const [rollupCatalog, setRollupCatalog] = useState(null);
   const [sitePages, setSitePages] = useState(null);
   const [master, setMaster] = useState(null);
+  const [ovPicks, setOvPicks] = useState({ skills: [], tools: [], certifications: [] });
   const [tab, setTab] = useState(0);
+  const [narrow, setNarrow] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 900px)');
+    const on = () => setNarrow(mq.matches);
+    on();
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
   const [saving, setSaving] = useState(false);
   const [proficiency, setProficiency] = useState(null);
   // Per-source load state. An error is kept distinct from "no data yet" so a
@@ -309,7 +319,7 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', background: 'var(--sb-ivory, #faf8f4)' }}>
-      <div style={S.wrap}>
+      <div style={narrow ? { ...S.wrap, padding: '0.75rem' } : S.wrap}>
         <div style={S.h1}>Output Template — {outputType}</div>
         <div style={S.sub}>
           Pick which Career Master data feeds this output's header/footer, stat cards, infographics, and content sections.
@@ -317,7 +327,7 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
           Changes preview live on the right; Save makes the preset selectable.
         </div>
 
-        <div style={S.shell}>
+        <div style={narrow ? { ...S.shell, gridTemplateColumns: 'minmax(0, 1fr)' } : S.shell}>
           {/* ── Preset list ── */}
           <div>
             <div style={S.label}>Presets</div>
@@ -338,7 +348,7 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
           <div>
             <div style={S.card}>
               <div style={S.label}>Preset Info</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem', marginBottom: '0.6rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: narrow ? 'minmax(0, 1fr)' : '1fr 1fr', gap: '0.6rem', marginBottom: '0.6rem' }}>
                 <input style={S.input} placeholder="Role (e.g. VP Revenue Ops)" value={config.meta.roleLabel}
                   onChange={(e) => update('meta.roleLabel', e.target.value)} />
                 <input style={S.input} placeholder="Industry (e.g. SaaS, Manufacturing)" value={config.meta.industryLabel}
@@ -359,7 +369,7 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
             {tab === 0 && (
               <div style={S.card}>
                 <div style={S.label}>Document Identity</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem', marginBottom: '0.75rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: narrow ? 'minmax(0, 1fr)' : '1fr 1fr', gap: '0.6rem', marginBottom: '0.75rem' }}>
                   <input style={S.input} value={config.layer1_header.memberName || ''}
                     onChange={(e) => update('layer1_header.memberName', e.target.value)} placeholder="Your name" />
                   <input style={S.input} value={config.layer1_header.headerText || ''}
@@ -501,10 +511,91 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
                           : [...config.layer4_sections.sections, { id: key, sourceType: 'job_experience', jobId: job.id, order: config.layer4_sections.sections.length, visible: true, density: { minLines: 3, maxLines: 8, expandable: true } }];
                         update('layer4_sections.sections', sections);
                       }} />
-                      <span>{job.title} <span style={{ color: '#aaa', fontSize: '0.7rem' }}>({job.company})</span></span>
+                      <span>{job.title} <span style={{ color: '#6a6a6a', fontSize: '0.7rem' }}>({job.company})</span></span>
                     </div>
                   );
                 })}
+
+                {config.layer4_sections.sections.some((s) => s.sourceType === 'job_experience') && (
+                  <div data-testid="master-overrides-card" style={{ marginTop: '0.9rem', padding: '0.7rem 0.8rem', background: '#FBF8F3', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 8 }}>
+                    <div style={S.label}>Career Master wording for this output only</div>
+                    <div style={{ fontSize: '0.74rem', color: '#666', lineHeight: 1.5, marginBottom: '0.5rem' }}>
+                      These fields follow Career Master. Reword one here and it changes in this output only, marked Overridden for this output; Revert to Career Master puts the live value back. Career Master itself is not changed.
+                    </div>
+                    {(master?.jobs || []).filter((job) => config.layer4_sections.sections.some((s) => s.sourceType === 'job_experience' && String(s.jobId) === String(job.id))).map((job) => (
+                      <div key={job.id} style={{ marginBottom: '0.7rem' }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.8rem' }}>{job.company}</div>
+                        {OVERRIDABLE_JOB_FIELDS.map(([field, label]) => {
+                          const stored = config.masterOverrides?.jobs?.[String(job.id)]?.[field];
+                          const masterValue = Array.isArray(job[field]) ? job[field].join('\n') : (job[field] ?? '');
+                          const shown = typeof stored === 'string' ? stored : masterValue;
+                          const over = typeof stored === 'string' && stored !== masterValue;
+                          const setField = (v) => update('masterOverrides', withOverride(config.masterOverrides, 'jobs', job.id, field, v));
+                          const box = { width: '100%', boxSizing: 'border-box', padding: '0.35rem 0.5rem', fontSize: '0.78rem', border: '1px solid rgba(0,0,0,0.2)', borderRadius: 6 };
+                          return (
+                            <div key={field} style={{ marginTop: '0.3rem' }}>
+                              <label style={{ fontSize: '0.7rem', color: '#666' }}>{label} for {job.company}</label>
+                              {over && <span style={{ marginLeft: 6, fontSize: '0.58rem', fontWeight: 700, textTransform: 'uppercase', color: '#8a5a12', background: '#FBEBD0', border: '1px solid #E8C98F', borderRadius: 999, padding: '0 6px' }}>Overridden for this output</span>}
+                              {field === 'keyMetrics'
+                                ? <textarea rows={2} aria-label={`${label} for ${job.company}`} value={shown} onChange={(e) => setField(e.target.value)} style={box} />
+                                : <input aria-label={`${label} for ${job.company}`} value={shown} onChange={(e) => setField(e.target.value)} style={box} />}
+                              {over && (
+                                <div style={{ fontSize: '0.7rem', color: '#666', marginTop: 2 }}>
+                                  Career Master: {masterValue || '(empty)'}{' '}
+                                  <button type="button" style={S.smallBtn} onClick={() => setField(null)}>Revert to Career Master</button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div data-testid="master-overrides-lists-card" style={{ marginTop: '0.9rem', padding: '0.7rem 0.8rem', background: '#FBF8F3', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 8 }}>
+                  <div style={S.label}>Skills, tools and certifications wording for this output only</div>
+                  <div style={{ fontSize: '0.74rem', color: '#666', lineHeight: 1.5, marginBottom: '0.5rem' }}>
+                    Pick an item to reword it here. It changes in this output only, marked Overridden for this output; Revert to Career Master puts the live value back. Career Master itself is not changed.
+                  </div>
+                  {[['skills', 'Skill', 'skill'], ['tools', 'Tool', 'currentName'], ['certifications', 'Certification', 'name']].map(([list, noun, field]) => {
+                    const rows = master?.[list] || [];
+                    const shownIds = [...new Set([...Object.keys(config.masterOverrides?.[list] || {}), ...ovPicks[list]])];
+                    const addable = rows.filter((r) => !shownIds.includes(String(r.id)));
+                    const box = { width: '100%', boxSizing: 'border-box', padding: '0.35rem 0.5rem', fontSize: '0.78rem', border: '1px solid rgba(0,0,0,0.2)', borderRadius: 6 };
+                    return (
+                      <div key={list} style={{ marginBottom: '0.7rem' }}>
+                        <select aria-label={`Add ${noun.toLowerCase()} override`} value="" style={box}
+                          onChange={(e) => { const v = e.target.value; if (v) setOvPicks((p) => ({ ...p, [list]: [...p[list], v] })); }}>
+                          <option value="">{`Reword a ${noun.toLowerCase()} for this output...`}</option>
+                          {addable.map((r) => <option key={r.id} value={String(r.id)}>{r[field]}</option>)}
+                        </select>
+                        {shownIds.map((id) => {
+                          const row = rows.find((r) => String(r.id) === id);
+                          if (!row) return null;
+                          const stored = config.masterOverrides?.[list]?.[id]?.[field];
+                          const masterValue = row[field] ?? '';
+                          const shown = typeof stored === 'string' ? stored : masterValue;
+                          const over = typeof stored === 'string' && stored !== masterValue;
+                          const setField = (v) => update('masterOverrides', withOverride(config.masterOverrides, list, id, field, v));
+                          return (
+                            <div key={id} style={{ marginTop: '0.3rem' }}>
+                              <label style={{ fontSize: '0.7rem', color: '#666' }}>{noun} {masterValue}</label>
+                              {over && <span style={{ marginLeft: 6, fontSize: '0.58rem', fontWeight: 700, textTransform: 'uppercase', color: '#8a5a12', background: '#FBEBD0', border: '1px solid #E8C98F', borderRadius: 999, padding: '0 6px' }}>Overridden for this output</span>}
+                              <input aria-label={`${noun} ${masterValue} for this output`} value={shown} onChange={(e) => setField(e.target.value)} style={box} />
+                              {over && (
+                                <div style={{ fontSize: '0.7rem', color: '#666', marginTop: 2 }}>
+                                  Career Master: {masterValue || '(empty)'}{' '}
+                                  <button type="button" style={S.smallBtn} onClick={() => setField(null)}>Revert to Career Master</button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
 
                 {placeholderSections.length > 0 && (
                   <>

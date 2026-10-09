@@ -4,7 +4,7 @@ Audience: a member using the platform, and a test agent driving a browser. Each 
 
 ## Where things are
 
-- **Career Master → Proficiency & Rollups**: World Shell (`/world`) → Career Master island → tab **Proficiency & Rollups**. Workspaces: `1 · Definitions`, `2 · Assess proficiency`, `3 · Rules & why`, `4 · Preview rollups`, `5 · Resume rollups`. At 390px wide the tab row wraps onto two lines; all five stay reachable.
+- **Career Master → Proficiency & Rollups**: World Shell (`/world`) → Career Master island → tab **Proficiency & Rollups**. Workspaces: `1 · Definitions`, `2 · Assess proficiency`, `3 · Rules & why`, `4 · Preview rollups`, `5 · Resume rollups`. At 390px wide the tab row wraps (about one tab per row, because the card is roughly 285px wide); all five stay reachable and tapping each opens its workspace.
 - **My Resume → Resume Output History**: Classic Tools / AdminShell → **My Resume** tab, section **Resume Output History**.
 - **QR page**: the link `/r/<slug>` shown under an approved output (also what its QR code opens).
 
@@ -89,6 +89,16 @@ Methodology reminder (shown on screen): points = years × 1 (max 15) + engagemen
    - Expect "Viewing Approved · printed — exactly what the printed copy shows." and charts as printed.
 4. On a chart click **Salt particles**: expect grains falling into columns, settling with a gold line and value on top; hover a column → tooltip with its name and value. Click **Table**: expect rows with a **Since printed** column reading Same / Changed.
 5. Set a tool category or override a level, wait ~3 seconds, reload — expect the change listed (e.g. "Changed: Ledgerly ERP — printed Advanced · Integration design → now Advanced · Hands-on", or a level change such as Forecast modeling printed Expert → now Advanced †; J2 already set Integration design before approval, so it is part of the printed side).
+
+## Journey 8 — Rules & why inside the Output Template editor
+
+1. World Shell (`/world`) -> **Output Templates** island (title "Output Templates"). Open or create a template so the editor with the live preview opens.
+   - Expect a tab row: Header / Footer, Stat Cards, Infographics, Sections, **Rules & why**.
+2. Click **Rules & why**.
+   - Expect the card "Rules & why" with its intro line ("Configure how proficiency levels are calculated...") and the same proficiency rules panel as Journey 3-5 (Formula in use, Levels and why).
+3. Override one level by hand (as Journey 3, step 1-2).
+   - Expect the Infographics tab thumbnails and the preview on the right to refresh with the new level.
+4. At 390px wide, expect the tab row to wrap and **Rules & why** to stay reachable, and the whole editor (presets, Preset Info, tab content, preview) to stack in a single column that fits the screen: no sideways panning inside the page or its scroller to read the Rules & why panel.
 
 ## Edge cases
 
