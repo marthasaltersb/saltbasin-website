@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T10:56:26.578Z",
+  "exportedAt": "2026-10-09T11:00:38.240Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -42,10 +42,10 @@
       "backlog": 3
     },
     "release-loop-tooling": {
-      "status": "validate",
-      "lastRound": 2,
-      "lastScore": "108/108",
-      "lastReport": "docs/test-results/release-loop-tooling/round-2.md",
+      "status": "triage",
+      "lastRound": 3,
+      "lastScore": "104/126",
+      "lastReport": "docs/test-results/release-loop-tooling/round-3.md",
       "openBugs": 6,
       "backlog": 3
     },
