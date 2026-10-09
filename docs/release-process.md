@@ -49,8 +49,9 @@ verified. Earlier decisions are kept in `docs/triage/scope-review.json` and reus
 ## Running it
 
 - Claude Code: the `salt-basin-release-loop` skill and the saved workflow `.claude/workflows/release-loop.js`.
-- In the platform: World Shell → Release loop (admin) shows the definition, the agent roles, every run with
-  its rounds, test results, triage items and fixes. In-app agents read the same definition.
+- Tracker: the release tracker artifact (`tools/release-tracker`, fed by `scripts/release-tracker-sync.mjs`)
+  shows every run, round, bug and agent live in the Claude Code session. There is no platform screen for it.
+  In-app agents read the same definition file, `server/data/releaseLoop/definition.json`.
 
 ## Changing the process
 

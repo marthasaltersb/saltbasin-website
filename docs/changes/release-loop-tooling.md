@@ -10,6 +10,7 @@ Version 1 · 2026-10-02 · feature key `release-loop-tooling`
 - Commit `03b359e` Release tracker sync: follow several workflow runs at once (repeatable `--run`).
 - Commit `f400e0f` Release loop: reconcile every reported failure before work counts as finished (adds `failureReconciliation` and `liveLogging` to the definition; workflow reconcile/carry steps; tracker status `done_unreconciled`).
 - Commit `4d8cff3` Test agents use ready member/admin accounts with career terms accepted (adds `scripts/create-test-member.mjs`). Depends on `b586d4f`, which made the password-change and terms gates guard `/api/` only so the app shell loads.
+- Commit `c0b9d58` / `a42b3cc` Release loop v2: scope check after triage; out-of-scope bugs shown as non-blocking backlog (adds `backlog_pre_existing`, `reassigned`, `process_note` to `bugEscalation.statuses`).
 - Commit `4d6a48e` Release loop: safe parallel runs (per-run database and scratch names, merge lock in the workflow).
 - Commit `eb6ceba` Release loop: a relaunched feature can continue from a later round with its fix notes (workflow `startRound`/carry).
 - Earlier specs: none for this feature. Related format precedent: `docs/changes/proficiency-rules-and-live-qr.md`, `docs/training/proficiency-rules-and-live-qr.md`.
@@ -55,3 +56,12 @@ None. Tooling only (no routes, no auth, no finalize/approve/publish path touched
 ## Fix notes per round
 
 (none yet)
+
+
+## Fix notes — round 1
+
+- **RLT-T1 (spec_error).** Training spec J1 step 2 now lists the ten statuses in the definition's order; Traces to gained the scope-check commits. Files: `docs/training/release-loop-tooling.md`, this file. Check: ran the J1 node command and compared the printed list.
+- **RLT-T2 (spec_error).** J4 and J5 rewritten for the drill-down page (8 tiles, click-through layers, crumbs, no filters; Open bugs layer expects B1 and B9). Counts are from the fixture, now 5 features / 19 agents. Files: `docs/training/release-loop-tooling.md`. Check: drove the page in Chromium (1280 light/dark, 390 light/dark) and read every tile layer. Open question for the spec author: the agent card no longer shows the "page errors / failed requests seen" count (page errors appear on the agent layer instead); I did not re-add it.
+- **release-loop-tooling-B1 (defect).** Removed the claim of a World Shell "Release loop" view and `/api/release-loop/*` from `docs/release-process.md`, the skill's SKILL.md and the `tracker` string in `definition.json`; they now describe the tracker artifact and say in-app agents read the definition file. CLAUDE.md needed no edit (no such claim). `grep` finds no code reading `definition.tracker`; JSON still parses. J1 step 3 added.
+- **release-loop-tooling-B2 (defect).** `scripts/release-tracker-sync.mjs`: the idle check now covers every running agent (last sign of life = transcript, else the journal entry's `at`/`ts`/`timestamp`); journal agents become `stalled`, `--extra` ones stay `idle_or_done`; threshold via `--stale-minutes` (default 15); a feature whose latest agent stalled is `stalled`. `stalled` added to the page and markdown status labels. Running-status consumers (live-step bugs, retest, fix-in-progress, running list) correctly skip stalled agents. Fixture gained echo-audit with a stale validator; spec J2/J3 and edge case 4 cover it. Check: sync output matches expected; stalled at default, running with `--stale-minutes 60`.
+- **release-loop-tooling-B3 (defect).** `tools/release-tracker/index.html`: below 640px `.panel` tables become stacked cards with `data-label` captions (header visually hidden, `box-sizing: border-box`, panel overflow-x kept as fallback). Check: at 390 px no panel overflows on overview, feature, round, Tokens and bug layers; link and whole-row clicks still navigate; no console errors. J5 step 3 reworded.

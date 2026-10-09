@@ -6,8 +6,8 @@ description: Required release process for every Salt Basin session that changes 
 # Salt Basin release loop
 
 The process is data: `server/data/releaseLoop/definition.json` (roles, stages, gates, spec standards, log
-locations). The same definition is what in-app agents read (`/api/release-loop/*`, World Shell → Release
-loop), so Claude Code sessions and platform agents follow one process. Change the process by editing that
+locations). In-app agents read the same definition file (there is no API or World Shell view for it), so
+Claude Code sessions and in-app agents follow one process. Change the process by editing that
 file (version bump + note in `docs/release-process.md`), never by improvising per session.
 
 ## Every session that changes code
