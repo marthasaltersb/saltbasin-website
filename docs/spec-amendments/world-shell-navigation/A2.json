@@ -1,0 +1,45 @@
+{
+  "id": "A2",
+  "feature": "world-shell-navigation",
+  "fromBaseline": 2,
+  "proposedBy": "triage:world-shell-navigation:r2",
+  "round": 2,
+  "triageItems": [
+    "wsn-r2-e7-foreign-id"
+  ],
+  "reason": "E.7 bundled a UI-observable half with an API/MCP-only half that point-and-click cannot reach, so it could not be scored on desktop+mobile surfaces.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "E.7",
+      "before": "Another member can never see, link, edit or approve these outputs (all routes are scoped to the logged-in member; a foreign id returns an error).",
+      "after": "[E.7] Signed in as a second member, TRACKED shows (0) and none of Riley's outputs appear under LINK AN EXISTING OUTPUT or in My Resume.",
+      "tracesTo": "definition.json interfaceParity v3 (UI half stays a browser step) and the original E.7 text",
+      "whyNeeded": "Browser-observable half, exact counts and locations."
+    },
+    {
+      "op": "add",
+      "stepId": "E.9",
+      "before": "",
+      "after": "[proposal's E.7b, surface cli] With the second member's session cookie, GET /api/career-agents/opportunities/<Riley's opportunity id>/outputs and POST /api/resume-outputs/<Riley's output id>/share each return a 4xx error and change nothing; MCP tools application_outputs_list and application_output_approve_for_qr with the second member's token return the same error. Written in the spec as a curl-led edge item so the baseline records surface cli; takes the next unused edge id E.9 (the baseline tool does not parse an E.7b sub-id).",
+      "tracesTo": "definition.json interfaceParity v3 (API and MCP); original E.7 foreign-id clause; mcpToolRegistry.js tools exist",
+      "whyNeeded": "Keeps the foreign-id refusal tested on the surfaces that can reach it, without weakening it."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:world-shell-navigation:r2",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "pass: counts, locations, status class and tool names stated",
+      "Reachable": "pass",
+      "Deterministic": "pass: the second member is the fixed test account member@test.local from testConstraints.accounts (created by create-test-member.mjs); ids are read from Riley's data at run time",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Approved. Stricter than before: nothing dropped, the foreign-id half is now explicit per surface. Structural note: the reviewer realised the proposed E.7b as separate edge item E.9 because the baseline tool scores one surface set per item and has no sub-ids; wording is the proposal's.",
+    "at": "2026-10-09T00:00:00.000Z"
+  }
+}
