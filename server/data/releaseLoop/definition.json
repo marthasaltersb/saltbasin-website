@@ -1,6 +1,6 @@
 {
   "key": "salt_basin_release_loop",
-  "version": 1,
+  "version": 2,
   "name": "Salt Basin release loop",
   "summary": "Every code change moves build → initial check → integrate → browser validation → triage → fix → re-validate, looping until every training journey passes or a failure needs a business definition. Every step leaves a dated log traced to the version before it.",
   "roles": [
@@ -201,7 +201,10 @@
       "verified",
       "recurred",
       "needs_human",
-      "needs_business_definition"
+      "needs_business_definition",
+      "backlog_pre_existing",
+      "reassigned",
+      "process_note"
     ]
   },
   "tracker": "Every agent start/finish, bug and status change is shown live in the release tracker (Claude Code sessions: the tracker artifact synced from the workflow journal; in the platform: World Shell → Release loop).",
@@ -209,5 +212,15 @@
     "rule": "An agent finishing is not the work finishing. Every failure, refusal, partial step, known limitation or deviation an agent reports is reconciled by a separate agent that verifies it on the branch and classifies it (product_defect, requirement_gap, owner_direction_conflict, test_harness, environment, process, informational) as resolved — only with evidence — or unresolved. Unresolved items are carried into the fix loop as bugs; a feature cannot pass while any remain.",
     "report": "docs/triage/<feature>-<build|fix>[-rN]-reconciliation.md"
   },
-  "liveLogging": "Validators append each checked expectation and every page error or failed request to /var/tmp/.../<feature>/round-N/steps.jsonl as it happens; the tracker shows them live, so a failure is visible before the round ends."
+  "liveLogging": "Validators append each checked expectation and every page error or failed request to /var/tmp/.../<feature>/round-N/steps.jsonl as it happens; the tracker shows them live, so a failure is visible before the round ends.",
+  "scopeCheck": {
+    "rule": "After triage and before fixing, a scope agent decides whose bug each item is: this_feature (the feature's diff or spec caused it — it blocks the feature), pre_existing (it reproduces on the base before this feature's commits — backlog, non-blocking), other_feature (another feature's change caused it — reassigned to that feature as owner, non-blocking here), or process_note (a test-harness, environment or spec-wording problem, not a product bug — recorded, non-blocking). Each decision carries evidence (a base-branch reproduction, the commit that introduced it, or the file it lives in). A feature whose only remaining items are out of scope ends as passed_with_backlog; the backlog stays on the tracker and is never deleted.",
+    "scopes": [
+      "this_feature",
+      "pre_existing",
+      "other_feature",
+      "process_note"
+    ],
+    "decisionsFile": "docs/triage/scope-review.json"
+  }
 }
