@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T11:02:29.790Z",
+  "exportedAt": "2026-10-09T11:06:49.636Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -42,7 +42,7 @@
       "backlog": 3
     },
     "release-loop-tooling": {
-      "status": "fix",
+      "status": "reconcile",
       "lastRound": 3,
       "lastScore": "104/126",
       "lastReport": "docs/test-results/release-loop-tooling/round-3.md",
@@ -1707,7 +1707,7 @@
     {
       "id": "release-loop-tooling-F1-2",
       "feature": "release-loop-tooling",
-      "status": "fixing",
+      "status": "recurred",
       "class": "defect",
       "attempts": 0,
       "step": "J5 5.2 at 390px stacked cards, no panel overflow",
@@ -1746,7 +1746,7 @@
     {
       "id": "release-loop-tooling-F1-5",
       "feature": "release-loop-tooling",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "J4/J5 agent card",
@@ -1773,9 +1773,9 @@
     {
       "id": "release-loop-tooling-F1-6",
       "feature": "release-loop-tooling",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "spec_error",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Open bug F1-6 change spec Known limitations",
       "rootCause": "docs/changes/release-loop-tooling.md line 51 says started-with-no-end agents stay running forever and idle check applies only to --extra agents, but release-tracker-sync.mjs lines 118-120 mark journal agents stalled; line 53 says 390px tables scroll, contradicting spec step 5.3.",
       "files": [
@@ -1798,6 +1798,12 @@
           "event": "recurred",
           "note": "docs/changes/release-loop-tooling.md line 51 says started-with-no-end agents stay running forever a…",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "fixed",
+          "note": "Rewrote Known limitations in the change spec: journey agents with no end entry show stalled past --…",
+          "commit": "fe190e227ede4c88ec9ac2290b1690f164f679b0"
         }
       ]
     },
@@ -1829,7 +1835,7 @@
     {
       "id": "release-loop-tooling-B1",
       "feature": "release-loop-tooling",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Docs claim",
@@ -1857,7 +1863,7 @@
     {
       "id": "release-loop-tooling-B2",
       "feature": "release-loop-tooling",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Sync",
@@ -1882,7 +1888,7 @@
     {
       "id": "release-loop-tooling-B3",
       "feature": "release-loop-tooling",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Tracker 390px",
@@ -1957,9 +1963,9 @@
     {
       "id": "T3-1",
       "feature": "release-loop-tooling",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "spec_error",
-      "attempts": 0,
+      "attempts": 1,
       "step": "J4/J5 1.2 Eight tiles in order",
       "rootCause": "Page now has nine tiles: 'Status updates' stat (index.html ~line 263, added by 44609c2), plus Board/World switch, trends panel and render bindings from the live-release-tracker work. Training spec line 54 still says eight tiles.",
       "files": [
@@ -1977,15 +1983,21 @@
           "event": "found",
           "note": "Page now has nine tiles: 'Status updates' stat (index.html ~line 263, added by 44609c2), plus Board…",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "fixed",
+          "note": "Training spec J4 now says nine tiles, with a Status updates tile between 'Finished with unreconcile…",
+          "commit": "fe190e227ede4c88ec9ac2290b1690f164f679b0"
         }
       ]
     },
     {
       "id": "T3-3",
       "feature": "release-loop-tooling",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "spec_error",
-      "attempts": 0,
+      "attempts": 1,
       "step": "J4/J5 page background",
       "rootCause": "Spec expects rgb(243,246,247)/rgb(15,26,31) from the original bed12f0 page; the current page uses the Salt Basin cream palette (--bg #F8F4EC light, #161A1C dark, lines 11/22/28) introduced in 9084b2c. Intentional design.",
       "files": [
@@ -2002,6 +2014,12 @@
           "event": "found",
           "note": "Spec expects rgb(243,246,247)/rgb(15,26,31) from the original bed12f0 page; the current page uses t…",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "fixed",
+          "note": "Spec J5 step 2 background is now light rgb(248, 244, 236) and dark rgb(22, 26, 28).",
+          "commit": "fe190e227ede4c88ec9ac2290b1690f164f679b0"
         }
       ]
     },
