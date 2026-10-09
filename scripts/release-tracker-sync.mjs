@@ -317,5 +317,28 @@ const snapshot = {
     return t;
   }, { input: 0, cacheWrite: 0, cacheRead: 0, output: 0 }),
 };
-const json = JSON.stringify(snapshot);
+// The tracker database holds one document of at most 256 KB. Finished agents keep their counts and only
+// their first few failures, shortened; running agents keep full detail. Bug records are never dropped.
+for (const a of snapshot.agents) {
+  a.failures = (a.failures || []).map((f) => clip(typeof f === 'string' ? f : JSON.stringify(f), 240));
+  if (a.status !== 'running' && a.liveSteps) {
+    const trim = (x) => ({ ...x, expect: clip(x.expect, 120), seen: clip(x.seen, 120), detail: clip(x.detail, 160) });
+    a.liveSteps = { ...a.liveSteps, failedTotal: a.liveSteps.failed.length, failed: a.liveSteps.failed.slice(0, 8).map(trim), errors: (a.liveSteps.errors || []).slice(0, 5).map(trim) };
+  }
+}
+let json = JSON.stringify(snapshot);
+// Measured as stored: the tracker keeps the snapshot as one JSON-quoted string field, which adds escaping.
+const LIMIT = 250 * 1024;
+const stored = (j) => Buffer.byteLength(JSON.stringify({ json: j }));
+if (stored(json) > LIMIT) {   // still too big: drop finished agents' step detail, then shorten history notes
+  for (const a of snapshot.agents) if (a.status !== 'running' && a.liveSteps) a.liveSteps = { ...a.liveSteps, failed: [], errors: [] };
+  json = JSON.stringify(snapshot);
+  if (stored(json) > LIMIT) for (const b of snapshot.bugs) for (const h of b.history || []) h.note = clip(h.note, 100);
+  json = JSON.stringify(snapshot);
+  if (stored(json) > LIMIT) {   // last resort: drop finished agents' latest-step text and failure text (counts stay)
+    for (const a of snapshot.agents) if (a.status !== 'running') { a.activity = clip(a.activity, 80); a.failures = a.failures.map((f) => clip(f, 80)); }
+    json = JSON.stringify(snapshot);
+  }
+  if (stored(json) > LIMIT) console.error(`Snapshot is ${stored(json)} bytes stored, over the tracker's ${LIMIT}-byte budget.`);
+}
 if (out) fs.writeFileSync(out, json); else process.stdout.write(json);
