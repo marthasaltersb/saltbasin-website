@@ -1,0 +1,37 @@
+{
+  "id": "A3",
+  "feature": "output-version-history",
+  "fromBaseline": 1,
+  "proposedBy": "triage:output-version-history:r1",
+  "round": 1,
+  "triageItems": [
+    "T6"
+  ],
+  "reason": "Known defect B10: a chart-only change between versions shows no diff; no scored step covers it.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "E.7",
+      "before": "",
+      "after": "Two versions that differ only in a chart block: the compare area lists that chart as CHANGED (or ADDED/REMOVED) and the summary counts it; it never says there are no changes.",
+      "tracesTo": "change spec requirement that every content change between versions is shown",
+      "whyNeeded": "Real defect with no scored step."
+    }
+  ],
+  "review": {
+    "status": "rejected",
+    "reviewer": "amend:output-version-history:r1",
+    "checklist": {
+      "Traced": "fail: the change spec's Known limitations say images and figures are skipped in comparison, and no sentence requires chart blocks to be compared",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "fail: 'CHANGED (or ADDED/REMOVED)' is a choice, not one exact result",
+      "Reachable": "fail: no walkable way to create two versions differing only in a chart is written",
+      "Deterministic": "fail: no fixture is written",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Rejected as written. Not a product defect against the current change spec (figures are an acknowledged limitation), so B10 returns to triage as a possible new requirement for the owner, not to the fix loop. A resubmission must cite the requirement, give exact UI steps and one exact expected label and summary.",
+    "at": "2026-10-09T00:00:00.000Z"
+  }
+}
