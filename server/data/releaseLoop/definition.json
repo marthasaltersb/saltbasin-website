@@ -1,6 +1,6 @@
 {
   "key": "salt_basin_release_loop",
-  "version": 3,
+  "version": 4,
   "name": "Salt Basin release loop",
   "summary": "Every code change moves build → initial check → integrate → browser validation → triage → fix → re-validate, looping until every training journey passes or a failure needs a business definition. Every step leaves a dated log traced to the version before it.",
   "roles": [
@@ -55,6 +55,16 @@
       "produces": [
         "docs/release-log/<date>-<release>.md"
       ]
+    },
+    {
+      "key": "release_spec_reviewer",
+      "name": "Amendment reviewer",
+      "does": "Decides proposed spec amendments against specGovernance.reviewChecklist; for approved ones edits the training spec and freezes the next baseline version on its own branch; sends removals and weakened expectations to the owner. Never the agent that proposed the change.",
+      "produces": [
+        "docs/spec-amendments/<feature>/A<n>.json",
+        "docs/training/<feature>.md (approved changes only)",
+        "docs/training/baselines/<feature>/v<N>.json"
+      ]
     }
   ],
   "stages": [
@@ -79,6 +89,11 @@
       "role": "release_triage",
       "onFixable": "fix",
       "onBusinessDefinition": "escalate"
+    },
+    {
+      "key": "amend",
+      "role": "release_spec_reviewer",
+      "note": "Only when a round produced spec_error / coverage_gap items, AMBIGUOUS steps or fixer-proposed steps. Approved amendments are integrated before the next validation round, which then runs on the new baseline version."
     },
     {
       "key": "fix",
@@ -108,7 +123,8 @@
     ],
     "validation": "Every step of every journey in the feature's training spec passes in a real browser twice — point-and-click on desktop and as a full walkthrough at 390px — with no page errors and no failed network requests the spec does not expect, and every capability is also reachable through the API and an MCP tool (see interfaceParity).",
     "noSilentCaps": "When a feature reaches maxFixRounds still failing, it is recorded as not passed with its open triage items — never reported as done.",
-    "push": "The integration branch is pushed only when the release log shows every feature passed, or the owner says otherwise."
+    "push": "The integration branch is pushed only when the release log shows every feature passed, or the owner says otherwise.",
+    "baseline": "Before validation round 1 a frozen baseline exists for the feature, and release-spec-baseline.mjs check passes on every merge (specGovernance)."
   },
   "maxFixRounds": 4,
   "triageClasses": [
@@ -119,7 +135,7 @@
     {
       "key": "spec_error",
       "fixable": true,
-      "note": "The training spec, not the product, is wrong; the fix edits the spec and says why."
+      "note": "The training spec, not the product, is wrong. Never edited by a fix agent: triage writes the proposed wording as a spec amendment, the amendment reviewer decides it against specGovernance.reviewChecklist, and only an approved amendment changes the spec (new baseline version)."
     },
     {
       "key": "environment",
@@ -130,6 +146,11 @@
       "key": "needs_business_definition",
       "fixable": false,
       "note": "Escalated to the owner with the exact question."
+    },
+    {
+      "key": "coverage_gap",
+      "fixable": true,
+      "note": "Something the change spec requires that no baseline step tests (found by a validator observation or a reconciliation requirement gap). Becomes a proposed added step in a spec amendment; it does not change the current round score."
     }
   ],
   "specStandards": {
@@ -170,7 +191,9 @@
     "trainingSpecs": "docs/training/",
     "testResults": "docs/test-results/<feature>/",
     "triage": "docs/triage/",
-    "releaseLog": "docs/release-log/"
+    "releaseLog": "docs/release-log/",
+    "baselines": "docs/training/baselines/<feature>/",
+    "specAmendments": "docs/spec-amendments/<feature>/"
   },
   "privacy": "This repository is public: logs and specs use fictional data only and never name an employer or application target.",
   "sessionMapping": {
@@ -237,5 +260,77 @@
       "mcp_gap": "MCP_GAP"
     },
     "added": "2026-10-09 (owner: 'if the agent user testing a feature cannot test the training guides with a point and click or mobile walk through then it's going to fail')"
+  },
+  "specGovernance": {
+    "rule": "Each round tests the same frozen set of steps against the code under test. Only the code varies between retries; the steps, fixtures, accounts and environment are fixed constraints. A training spec is frozen as a versioned baseline (docs/training/baselines/<feature>/v<N>.json) before its first validation round. Every step carries a stable id written into the spec ([J3.2], [E.1], [P.1]); an id is never renumbered or reused. Validators, triage and fix agents never edit training specs or baselines. Any added, changed or removed step, precondition or fixture is a spec amendment (docs/spec-amendments/<feature>/A<n>.json) proposed with its reason and decided by a separate amendment reviewer against a fixed checklist; only an approved amendment changes the spec and freezes the next baseline version. The integrator refuses a merge whose spec differs from its latest baseline or whose baseline lacks an approved amendment.",
+    "tool": "scripts/release-spec-baseline.mjs (freeze | check | diff | score | show)",
+    "stepIds": {
+      "journeyStep": "J<journey>.<n>",
+      "edgeCase": "E.<n>",
+      "precondition": "P.<n> (setup: a failed precondition blocks the steps after it; it is not scored)",
+      "newSteps": "get the next unused number in their group, so earlier ids keep their meaning across versions",
+      "retired": "listed in the baseline and never reused"
+    },
+    "scoring": "Score = steps passed / scored steps in the pinned baseline. A step passes only when every required surface (desktop and mobile for browser steps, cli for command steps, fixed in the baseline) passed. A step with no result is not_run and counts as not passed. Results for ids outside the baseline are observations: they go to triage as possible coverage gaps and never change the score.",
+    "comparability": "Scores are compared like for like only within one baseline version. When an approved amendment moves a feature to a new version, the next report and the tracker show the baseline version beside the score and the diff (same / changed / added / retired ids), never a bare change in the step count.",
+    "amendment": {
+      "proposedBy": [
+        "triage (spec_error, coverage_gap)",
+        "fix agent (steps proving a requirement gap it built)",
+        "validator (AMBIGUOUS: steps)",
+        "owner"
+      ],
+      "decidedBy": "amendment reviewer agent, never the proposer; the owner for anything the checklist sends to a person",
+      "fields": [
+        "id",
+        "feature",
+        "fromBaseline",
+        "proposedBy",
+        "round",
+        "triageItems",
+        "reason",
+        "changes[{op: add|change|retire, stepId, before, after, tracesTo, whyNeeded}]",
+        "review{status: proposed|approved|rejected|needs_owner, reviewer, checklist, note, at}"
+      ],
+      "statuses": [
+        "proposed",
+        "approved",
+        "rejected",
+        "needs_owner"
+      ]
+    },
+    "reviewChecklist": [
+      "Traced: every added or changed step names the change-spec requirement or owner direction it proves (tracesTo).",
+      "Not weaker: a changed expected result is at least as strict as before, unless the evidence shows the old expectation contradicts the change spec or owner direction (then say which).",
+      "Retire only duplicates: removing a step is approved only when another step tests the same thing (name it); any other removal is needs_owner.",
+      "Exact: action plus exact expected result (labels, text, values, counts); no 'should look right', no 'roughly'.",
+      "Reachable: the step is walkable by point-and-click on desktop and at 390px (interfaceParity), or is a cli step by design.",
+      "Deterministic: same result every run against the fixed constraints (no dependence on wall-clock time, random data, earlier failed steps, or leftovers from another test); timing tolerances are stated.",
+      "Fictional data only; fixtures written in the spec, never fetched.",
+      "Independent of the fix: the step tests behaviour, not the implementation the fixer chose."
+    ],
+    "testConstraints": {
+      "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+      "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+      "surfaces": {
+        "desktop": {
+          "viewport": "1280x900",
+          "colorScheme": "light"
+        },
+        "mobile": {
+          "viewport": "390x844",
+          "isMobile": true,
+          "hasTouch": true,
+          "colorScheme": "light"
+        },
+        "cli": "bash in the validator worktree"
+      },
+      "browser": "the pinned Chromium named in the release-loop args; no other browser",
+      "locale": "en-US",
+      "timezone": "UTC",
+      "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+      "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+    },
+    "added": "2026-10-09 (owner: 'some of the fails that were re validated have different test steps in the retries; new test steps need to also be thought through, there needs to be more of a confined release governance so that the variables can test against a set of fixed constraints')"
   }
 }

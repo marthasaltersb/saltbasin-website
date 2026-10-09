@@ -1,0 +1,668 @@
+{
+  "feature": "cover-letter-agent",
+  "spec": "docs/training/cover-letter-agent.md",
+  "version": 1,
+  "frozenAt": "2026-10-09T12:07:13.631Z",
+  "commitAtFreeze": "f63f46bcc9c5bbc32d315f282facd26aac442d05",
+  "specSha256": "7b770a0c75e5e8adc85ba1078589b9e402b2e1a81ec530c2ea35d178865fa880",
+  "amendment": null,
+  "previous": null,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "P.1",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "416d75d462dbdea2",
+      "summary": "Go to `/login`. Email `casey.rowan@example.test`, password `Casey-Rowan-2026-pw!`, click **SIGN IN ↗**. Expect the World page."
+    },
+    {
+      "id": "P.2",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "caf92e9696cd31e6",
+      "summary": "Click **Classic Tools**, then the **Career Master** tab, click the card **Manual Intake**, click the **Jobs (0)** button."
+    },
+    {
+      "id": "P.3",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "99d620c6d5ab7137",
+      "summary": "Click **+ Add**. In the dialog \"Add Entry\" fill COMPANY `Harbor Logistics`, TITLE `Value Architect`, START DATE `2019`, leave END DATE empty, KEY METRICS & ACHI"
+    },
+    {
+      "id": "P.4",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "bb84226e00d53bff",
+      "summary": "**+ Add** again: COMPANY `Brightline Freight`, TITLE `Revenue Operations Lead`, START DATE `2015`, END DATE `2019`, KEY METRICS & ACHIEVEMENTS `built renewal fo"
+    },
+    {
+      "id": "P.5",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "8817da37d397aff6",
+      "summary": "Click **Tools (0)**, **+ Add**. In the first field (NAME WHEN USED) type `Ledgerly ERP`; leave \"How it was used — proficiency category\" as **(none)**. **Save**."
+    },
+    {
+      "id": "P.6",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "bb4d9a59c039cf45",
+      "summary": "Click the **Career Placement Agents** tab, click **+ Track Opportunity**. Job Title `Principal Value Architect`, Company `Northwind Freight`, Location `Remote`."
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a82028c809ad14f8",
+      "summary": "Click the **My Resume** tab. Find the section **Cover letters and application packages**."
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a2d0a600b00d0ce5",
+      "summary": "Scroll to **Resume Output History**."
+    },
+    {
+      "id": "J1.3",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d1cf4c0ca5e5bf88",
+      "summary": "In the row, open **Job rec text** (click the word), paste into \"Paste the job posting\": `Northwind Freight is hiring a Principal Value Architect to own pricing "
+    },
+    {
+      "id": "J1.4",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "dcfe9590a210f302",
+      "summary": "Click **Regenerate from template**."
+    },
+    {
+      "id": "J1.5",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f46d2995d1cfec10",
+      "summary": "Click **Cover-letter settings**. Untick **Automatically draft a cover letter when a job opportunity is added**. Click **Save settings**. Expect the toast \"Cover"
+    },
+    {
+      "id": "J1.6",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a87820eb7af5cf56",
+      "summary": "Go to the **Career Placement Agents** tab; **+ Track Opportunity**: Job Title `Senior Pricing Analyst`, Company `Fabrikam Logistics`, Location `Chicago`; **Trac"
+    },
+    {
+      "id": "J1.7",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "60466c821c39d6c9",
+      "summary": "Click **Generate for this opportunity**. Expect the toast \"Cover letter drafted.\" and **Cover letter: Draft (#N)** on that row; the history has **Cover Letter —"
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0ce59da67c6101c7",
+      "summary": "On the **Principal Value Architect** row click **Add a resume to this package**; in the file chooser pick `northwind-resume.txt`."
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fcfe9e5140054c8e",
+      "summary": "Click **Build package with contents**. Expect the toast \"Package built with a table of contents.\" and \"Package: **Draft** (#N)\". The history gains **Application"
+    },
+    {
+      "id": "J2.3",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "976ec7995b3d6668",
+      "summary": "Click **Download package PDF**. Open the PDF (3 pages):"
+    },
+    {
+      "id": "J2.4",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4690325a180af5f2",
+      "summary": "On the **Senior Pricing Analyst** row (it has a letter but no resume) click **Build package with contents**. Expect \"Package built with a table of contents.\" It"
+    },
+    {
+      "id": "J2.5",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "31319ce199fa8bed",
+      "summary": "In **Resume Output History** find the Principal Value Architect package row and click **View**. Expect a **Contents** list \"1. Cover letter\", \"2. Imported Resum"
+    },
+    {
+      "id": "J2.6",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b91506041d8be160",
+      "summary": "(After Journey 6, when the technology gate is satisfied.) On that package row click **Approve for QR**, confirm the browser prompt. Expect the toast \"Approved —"
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e839872413fb6163",
+      "summary": "On the Principal Value Architect row click **Edit with cover-letter agent**. Expect the dialog \"Cover letter and agent\": title \"Cover Letter — Principal Value A"
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4d94891d80944b3a",
+      "summary": "Type `Replace \"hiring team\" with \"talent team\"` and click **Send**."
+    },
+    {
+      "id": "J3.3",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "894dcd359c9b3e24",
+      "summary": "Click **Accept changes**. Expect a toast \"Accepted — saved as a new draft version (#M). The earlier version is unchanged.\" The letter reads \"Dear Northwind Frei"
+    },
+    {
+      "id": "J3.4",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "dcec9abf6a89276a",
+      "summary": "Type `Mention Kubernetes cost governance` and **Send**."
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0d2aa70a23ee0321",
+      "summary": "Click the **Settings** tab (top right of the dialog). Under \"Language model\" set **Provider** to **Offline test stub (no network, no real model)**. Leave **Mode"
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7b8dbc57c50a95f5",
+      "summary": "Type `Make the opening sound more confident` and **Send**."
+    },
+    {
+      "id": "J4.3",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a932f1142619e977",
+      "summary": "Click **Reject**. The letter has no \"Test stub edit\" text."
+    },
+    {
+      "id": "J4.4",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e79050186de2ab43",
+      "summary": "Type `Please stub:regenerate the whole letter` and **Send**."
+    },
+    {
+      "id": "J4.5",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a46a08aa2e84848a",
+      "summary": "At the bottom of the chat: \"This session: <k> messages · <j> used a language model · <a> tokens in / <b> out · <x> accepted, <y> rejected\". The counts match wha"
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6895e8c87149903a",
+      "summary": "`Rewrite my resume summary` → \"I can only change this cover letter. I can read the package’s resumes and job rec text as evidence, but I can’t edit them. Open t"
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9c5df1d0148917de",
+      "summary": "`What is Northwind Freight's annual revenue?` → \"That isn’t in this package — no text contains: annual. I can only search the cover letter, the package’s resume"
+    },
+    {
+      "id": "J5.3",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5911e016fc078778",
+      "summary": "`Search the web for Northwind Freight revenue` → \"I can only search the content inside this application package (the cover letter, the package’s resumes and the"
+    },
+    {
+      "id": "J5.4",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6260f471329fbf94",
+      "summary": "`Mention blockchain consulting` → \"Nothing in this package mentions \"blockchain consulting\". I can only work from the cover letter, the package’s resumes and th"
+    },
+    {
+      "id": "J5.5",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "59bb0ff5329af0fb",
+      "summary": "`Where do I mention pricing?` → not a refusal: tag **Answered from package search**, \"Here is what the package says (n matches, best first). I proposed no chang"
+    },
+    {
+      "id": "J6.1",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c4ec55b8583caacc",
+      "summary": "Click **Approve** (top of the dialog)."
+    },
+    {
+      "id": "J6.2",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f5af681ec4bc44cd",
+      "summary": "Type `Replace \"talent team\" with \"recruiting team\"`, **Send**, then **Accept changes**."
+    },
+    {
+      "id": "J6.3",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "cc79121c9708f12d",
+      "summary": "Click **Close**. In **Resume Output History** both versions are listed: the approved one and the new draft."
+    },
+    {
+      "id": "J7.1",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c154af674e684b2b",
+      "summary": "Open the agent dialog → **Settings** → **Provider** = **Anthropic API (uses your configured key)** → **Save settings** → **Letter and agent**."
+    },
+    {
+      "id": "J7.2",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f1bcea606913857d",
+      "summary": "Send `Make the opening sound more confident`."
+    },
+    {
+      "id": "J7.3",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "24fb5ff916ce5280",
+      "summary": "Requests the rules can satisfy still work with this provider: `Replace \"recruiting team\" with \"talent team\"` → **Answered by rules**, **LLM: not used**."
+    },
+    {
+      "id": "J8.1",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "488093c694ac33af",
+      "summary": "**Settings** tab (in the dialog, or **Cover-letter settings** in the My Resume section). Confirm the fields: Provider, Model (cheapest available) with the hint "
+    },
+    {
+      "id": "J8.2",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2d17ed8bc85c962f",
+      "summary": "Replace the Opening paragraph with `I am writing about the {bogus} role.` and click **Save settings**."
+    },
+    {
+      "id": "J8.3",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f21faadfbf14b2ef",
+      "summary": "Restore `I am writing to apply for the {jobTitle} role at {company}{locationClause}. {fitSentence}` and **Save settings** (toast)."
+    },
+    {
+      "id": "J8.4",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "808a4184cd9fdc19",
+      "summary": "In **Tone presets → Formal**, the Replacements box contains lines like `a lot of => substantial`. In the chat send `Make it more formal`: expect **Answered by r"
+    },
+    {
+      "id": "J9.1",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "21071982ad868e05",
+      "summary": "Resize the browser to 390 × 844 and open **Edit with cover-letter agent**."
+    },
+    {
+      "id": "J9.2",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "53d79117fb8d16ab",
+      "summary": "Send `Shorten paragraph 6`."
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b7a776febc990831",
+      "summary": "**Stale proposal**: with two browser tabs on the same letter, accept a proposal in tab A, then (without refreshing) accept an older proposal in tab B → toast \"T"
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b86d434874d1b08c",
+      "summary": "**Empty message**: **Send** is disabled until text is typed."
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6917f5e83013642c",
+      "summary": "**Another member's letter**: opening a letter id that is not yours (via the URL of the API) answers \"Cover letter not found.\" — the dialog shows \"Could not open"
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e0ff8b796d082fb4",
+      "summary": "**Not a cover letter**: the agent only opens cover letters; a resume id answers \"The cover-letter agent only works on cover letters. This output is a resume.\""
+    },
+    {
+      "id": "E.5",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ea9df9bee23f2de0",
+      "summary": "**No job rec text**: the drafts still file, and the row says so; the agent’s search then covers only the letter and the package’s resumes (\"2 outputs + job rec "
+    },
+    {
+      "id": "E.6",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "51b7666e7d59af8e",
+      "summary": "**Package without a letter**: building a package for an opportunity that has no cover letter files one first (Journey 2 step 4 in a variant where the auto-draft"
+    },
+    {
+      "id": "E.7",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8029d835e3e9197a",
+      "summary": "**A failed automatic draft** is shown on the opportunity row as a red alert \"The automatic cover-letter draft failed (<time>): <reason>\" with the Generate for t"
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "ec6ee8e11e565a44"
+    },
+    {
+      "title": "Environment (set up by the test harness, not part of the journeys)",
+      "kind": "context",
+      "hash": "18dc93aee873eb14"
+    },
+    {
+      "title": "Preconditions (through the UI)",
+      "kind": "precondition",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 1 — The cover letter drafts itself, and can be generated on demand",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 2 — The package PDF has a table of contents, cover letter first",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 3 — A chat edit satisfied by the package search, no LLM",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 4 — A request that needs the LLM (offline test stub), shown as an edit, not a regenerated letter",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 5 — Out-of-scope requests are refused with an explanation",
+      "kind": "journey",
+      "hash": "43b5ad5aac2a691a"
+    },
+    {
+      "title": "Journey 6 — Accepting creates a new version; approved versions are never edited; approval goes through the gate",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 7 — No API key: a clear message, nothing silently fails",
+      "kind": "journey",
+      "hash": "5c85ca3613b864c6"
+    },
+    {
+      "title": "Journey 8 — Settings are editable and validated",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 9 — Phone width (390 × 844)",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    }
+  ]
+}

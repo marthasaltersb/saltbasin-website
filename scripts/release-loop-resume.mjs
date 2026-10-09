@@ -86,13 +86,19 @@ if (argv.includes('--args')) {
       const bugs = owned(f.key);
       const base = { key: f.key, title: f.title, trainingSpec: f.trainingSpec, changeSpec: f.changeSpec, dependsOn: f.dependsOn.filter((d) => group.some((y) => y.key === d)) };
       if (!merged(f)) return { ...base, build: f.build };
+      // Spec amendment proposals filed but not yet decided are reviewed before the first round (specGovernance).
+      const adir = path.join(root, 'docs/spec-amendments', f.key);
+      const pendingAmendments = fs.existsSync(adir) ? fs.readdirSync(adir).filter((x) => x.endsWith('.json'))
+        .map((x) => ({ file: `docs/spec-amendments/${f.key}/${x}`, ...JSON.parse(fs.readFileSync(path.join(adir, x), 'utf8')) }))
+        .filter((a) => !a.review || a.review.status === 'proposed') : [];
       return {
         ...base,
         build: null,
+        pendingAmendments,
         startRound: (st?.lastRound || 0) + 1,
         scopeFromRound: (st?.lastRound || 0) + 1,
         fixNotes: `Continuing from an earlier session (state: docs/release-log/active-release.state.json, last round ${st?.lastRound || 0}: ${st?.lastScore || 'not tested'}). `
-          + `Re-test the whole spec and every open bug below; a bug whose step now passes is verified, otherwise report it so triage links it by id (recurrenceOf). `
+          + `Re-test the whole spec and every open bug below; a bug whose step now passes is verified, otherwise report it (with the baseline step id it maps to) so triage links it by id (recurrenceOf). Bugs found before baselines existed name steps by text; map each to its [J…] id. `
           + `Open bugs: ${JSON.stringify(bugs.map((b) => ({ id: b.id, status: b.status, step: b.step, cause: b.rootCause, files: b.files })))}`,
       };
     }),
