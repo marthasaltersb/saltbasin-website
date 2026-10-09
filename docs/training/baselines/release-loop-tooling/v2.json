@@ -1,0 +1,478 @@
+{
+  "feature": "release-loop-tooling",
+  "spec": "docs/training/release-loop-tooling.md",
+  "version": 2,
+  "frozenAt": "2026-10-09T15:50:55.633Z",
+  "commitAtFreeze": "c3a71b490991e2f7c7616cb326bd9cfe1084b7d0",
+  "specSha256": "c9a9e560b1fa72842ca6014f68e6a293335e186ed5fb02ee1a4f8c8e3ae9cccd",
+  "amendment": "A1",
+  "previous": 1,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "P.1",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "cc7d4ab175763d71",
+      "summary": "`node tools/release-tracker/make-fixture.mjs $FX` prints `fixture written to <dir> (19 agents)`."
+    },
+    {
+      "id": "P.2",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "00c7c75a56b38608",
+      "summary": "`node scripts/release-tracker-sync.mjs --run $FX/runA --run $FX/runB --steps-root $FX/steps --out $FX/snap.json` exits 0 and prints nothing."
+    },
+    {
+      "id": "P.3",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "a0c91dcbf0959733",
+      "summary": "Pick a free port P. Start `node tools/release-tracker/serve.mjs $FX/snap.json P $FX/serve.pid` in the background (it prints `tracker preview on http://127.0.0.1"
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "d622739db939c47e",
+      "summary": "Run `node -e \"const d=JSON.parse(require('fs').readFileSync('server/data/releaseLoop/definition.json','utf8'));console.log(d.roles.length,d.stages.length,d.bugE"
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fda828188441aff9",
+      "summary": "Expect `d.bugEscalation.statuses` to be the ten values, in this order: open, fixing, fixed_awaiting_retest, verified, recurred, needs_human, needs_business_defi"
+    },
+    {
+      "id": "J1.3",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5b85b588d1982a8e",
+      "summary": "Expect `d.tracker` to mention the tracker artifact and to contain neither `World Shell` nor `/api/release-loop`; `grep -n \"World Shell → Release loop\\|api/relea"
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c1a0c0072bcc5bd0",
+      "summary": "Make a wrapped copy: replace the leading `export const meta` with `const meta`, put `async function run(args){` on the line before and `}` after, save under `$F"
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "81b254348926c2de",
+      "summary": "`node --check $FX/wf.js` exits 0 with no output."
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "93a7e59f7b806e4e",
+      "summary": "`node tools/release-tracker/verify-snapshot.mjs $FX/snap.json $FX/expected.json` prints `snapshot matches expected` and exits 0."
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "42b98ada18d70759",
+      "summary": "In `$FX/snap.json` expect: `runId` = `runA + runB` (two runs merged); feature statuses alpha-ledger `passed`, bravo-forms `needs_human`, charlie-export `failed`"
+    },
+    {
+      "id": "J3.3",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a2b3679be81bcf0f",
+      "summary": "`totals` equal `expected.json` totals (output 391, cacheRead 20000, input 40, cacheWrite 2000): each assistant message in the transcripts is streamed twice and "
+    },
+    {
+      "id": "J3.4",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d242980a8441b06b",
+      "summary": "The agent `build:charlie-export` has status `failed`; `validate:delta-board:r1` has status `running`; `validate:echo-audit:r1` (started 40 minutes ago in the jo"
+    },
+    {
+      "id": "J3.5",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "c0d2ddc250b1f760",
+      "summary": "`grep -c ZZ-SENTINEL-DO-NOT-LEAK $FX/snap.json` prints `0` (no transcript text)."
+    },
+    {
+      "id": "J3.6",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e091107461ce5755",
+      "summary": "Run the sync with only `--run $FX/runA`: expect `runId` = `runA` and no `delta-board` feature."
+    },
+    {
+      "id": "J3b.1",
+      "kind": "step",
+      "journey": "3b",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "afe4929e78e5f0ce",
+      "summary": "`node scripts/create-test-member.mjs --out $FX/creds.json` exits 0. `$FX/creds.json` contains `member.email` = `member@test.local`, `member.password` = `TestPas"
+    },
+    {
+      "id": "J3b.2",
+      "kind": "step",
+      "journey": "3b",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "99b4acbf8bb35533",
+      "summary": "Run it again: exits 0 with the same values (idempotent, no second account)."
+    },
+    {
+      "id": "J3b.3",
+      "kind": "step",
+      "journey": "3b",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e79ff0bfdf9605a0",
+      "summary": "In Chromium open `http://localhost:Q/login`, sign in as `member@test.local` / `TestPass!2345`. Expect the URL to become `/world` and the page to show **Your Wor"
+    },
+    {
+      "id": "J3b.4",
+      "kind": "step",
+      "journey": "3b",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "2557b44cd2e6dc5c",
+      "summary": "`DATABASE_URL=postgres://postgres@db.example.supabase.co:5432/postgres node scripts/create-test-member.mjs` exits 2 and prints `Refusing: DATABASE_URL must poin"
+    },
+    {
+      "id": "J3b.5",
+      "kind": "step",
+      "journey": "3b",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e885705d5c60233b",
+      "summary": "Console on step 3: the only errors allowed are failed loads of external hosts (fonts) blocked by the sandbox proxy; no page errors."
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8ae6a5475fb08f41",
+      "summary": "Open `http://127.0.0.1:P/preview.html` in Chromium at 1280 x 900, colour scheme light."
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d2602de517591b2a",
+      "summary": "Click each tile in turn (use the crumb **Overview** to return) and expect:"
+    },
+    {
+      "id": "J4.3",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "182b10b7ab0ac190",
+      "summary": "From the Open bugs layer click the **B1** row (on the row text, not only the id): expect the bug layer, crumbs `Overview › Open bugs (this work) › B1`, \"fix att"
+    },
+    {
+      "id": "J4.4",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6cb4a9721cf9346d",
+      "summary": "Click the **bravo-forms** feature row from the overview: expect rounds chips Round 1, 2, 3, its own bugs B1 and B9, and its agent runs. Click Round 3: expect it"
+    },
+    {
+      "id": "J4.5",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a5365eb724ac07d0",
+      "summary": "The Board/World switch and the trends panel belong to the live-release-tracker spec and are not tested here. Expect no console errors, no page errors, no failed"
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "362816c46bfca305",
+      "summary": "Same content as Journey 4 steps 1 to 4 appears."
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "104e0ea87de323ee",
+      "summary": "Page background: light `rgb(248, 244, 236)`, dark `rgb(22, 26, 28)`."
+    },
+    {
+      "id": "J5.3",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "84f6def04a950599",
+      "summary": "`scrollWidth` equals `clientWidth`. On the overview the echo-audit status pill reads `Stalled (no sign of life)`, never the raw word `stalled`, and is styled li"
+    },
+    {
+      "id": "J5.4",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "aa7c306834b58b8d",
+      "summary": "No console errors, page errors or failed requests."
+    },
+    {
+      "id": "J5.5",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "d1629dfe79a3e30e",
+      "summary": "`node tools/release-tracker/sync-setup-guide.mjs` exits 0 and prints `SETUP-FOR-CLAUDE.md embedded page matches index.html`."
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "544fb98fe8807779",
+      "summary": "`serve.mjs` with a missing snapshot path exits 2 and prints `snapshot not found: <path>`."
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d2045b241f351ba6",
+      "summary": "`preview.html?snapshot=missing.json` shows the text `Preview failed: snapshot 404` and no tracker."
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e0a6ded46b6970ed",
+      "summary": "A run directory with no `journal.jsonl` gives a snapshot with zero agents, not a crash."
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b7d1db408aa054e1",
+      "summary": "Stale agent detection: `node scripts/release-tracker-sync.mjs --run $FX/runA --run $FX/runB --steps-root $FX/steps --stale-minutes 60 --out $FX/snap60.json` the"
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "4545672349ad37ba"
+    },
+    {
+      "title": "Preconditions",
+      "kind": "precondition",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 1 - Definition file",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 2 - Workflow script parses",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 3 - Sync output matches the fixture",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 3b - Test account script",
+      "kind": "journey",
+      "hash": "75130faabc875c09"
+    },
+    {
+      "title": "Journey 4 - Tracker page, desktop light (layered drill-down)",
+      "kind": "journey",
+      "hash": "5cb7f9b99a2ac940"
+    },
+    {
+      "title": "Journey 5 - Tracker page, other sizes and themes",
+      "kind": "journey",
+      "hash": "902a9a7da320b260"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    }
+  ],
+  "comparedWithPrevious": {
+    "same": [
+      "P.1",
+      "P.2",
+      "P.3",
+      "J1.2",
+      "J1.3",
+      "J2.1",
+      "J2.2",
+      "J3.1",
+      "J3.2",
+      "J3.3",
+      "J3.4",
+      "J3.5",
+      "J3.6",
+      "J3b.1",
+      "J3b.2",
+      "J3b.3",
+      "J3b.4",
+      "J3b.5",
+      "J4.2",
+      "J4.3",
+      "J4.4",
+      "J5.1",
+      "J5.4",
+      "E.1",
+      "E.2",
+      "E.3",
+      "E.4"
+    ],
+    "changed": [
+      "J1.1",
+      "J4.1",
+      "J4.5",
+      "J5.2",
+      "J5.3"
+    ],
+    "added": [
+      "J5.5"
+    ],
+    "retired": [],
+    "contextChanged": []
+  }
+}
