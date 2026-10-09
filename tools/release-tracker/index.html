@@ -1003,9 +1003,15 @@ try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () =
     const data = d && (d.data ? d.data() : d);
     if (data && data.json) { try { hist = JSON.parse(data.json); if (snap) render(); } catch { /* keep the last good history */ } }
   }, () => {});
+  // Bugs live in their own document (tracker/bugs) so each document stays under the size cap.
+  let bugs = null;
+  db.doc('tracker/bugs').onSnapshot((d) => {
+    const data = d && (d.data ? d.data() : d);
+    if (data && data.json) { try { bugs = JSON.parse(data.json); if (snap && snap.bugsSeparate) { snap.bugs = bugs; render(); } } catch { /* keep the last good list */ } }
+  }, () => {});
   db.doc('tracker/current').onSnapshot((d) => {
     const data = d && (d.data ? d.data() : d);
-    if (data && data.json) { try { snap = JSON.parse(data.json); snap.features ||= []; snap.agents ||= []; snap.bugs ||= []; render(); } catch { $('sync').textContent = 'The latest update could not be read.'; } }
+    if (data && data.json) { try { snap = JSON.parse(data.json); snap.features ||= []; snap.agents ||= []; if (snap.bugsSeparate) snap.bugs = bugs || []; snap.bugs ||= []; render(); } catch { $('sync').textContent = 'The latest update could not be read.'; } }
   }, () => { $('sync').textContent = 'Lost the live connection. Reload the page to reconnect.'; });
 })();
 </script>

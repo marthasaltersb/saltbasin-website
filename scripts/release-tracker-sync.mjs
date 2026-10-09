@@ -328,8 +328,10 @@ for (const a of snapshot.agents) {
 }
 let json = JSON.stringify(snapshot);
 // Measured as stored: the tracker keeps the snapshot as one JSON-quoted string field, which adds escaping.
+// Bugs are stored in their own document (tracker/bugs), so each of the two documents must fit the cap.
 const LIMIT = 230 * 1024;   // headroom under the 256 KB document cap as the release grows
-const stored = (j) => Buffer.byteLength(JSON.stringify({ json: j }));
+const stored = (j) => { const o = JSON.parse(j); const bugs = o.bugs || []; delete o.bugs;
+  return Math.max(Buffer.byteLength(JSON.stringify({ json: JSON.stringify(o) })), Buffer.byteLength(JSON.stringify({ json: JSON.stringify(bugs) }))); };
 if (stored(json) > LIMIT) {   // over budget: keep running agents, the latest per feature+role, and the last six hours; count the rest
   const dayAgo = Date.now() - 6 * 3600 * 1000; const latest = new Map();
   for (const a of snapshot.agents) { const k = `${a.feature}|${a.role}`; const t = Date.parse(a.lastActivityAt || a.startedAt || 0) || 0; if (!latest.has(k) || t > latest.get(k).t) latest.set(k, { id: a.id, t }); }
@@ -362,6 +364,17 @@ if (stored(json) > LIMIT) {   // still too big: drop finished agents' step detai
       b.rootCause = clip(b.rootCause, 200);
       if ((b.history || []).length > 6) { b.historyTrimmed = b.history.length - 6; b.history = b.history.slice(-6); }
       for (const h of b.history || []) h.note = clip(h.note, 80);
+    }
+    json = JSON.stringify(snapshot);
+  }
+  if (stored(json) > LIMIT) {   // still over: compact every bug to its essentials (full records: bug ledger, triage files, git)
+    for (const b of snapshot.bugs) {
+      b.step = clip(b.step, 160); b.rootCause = clip(b.rootCause, 140);
+      if ((b.files || []).length > 3) { b.filesTrimmed = b.files.length - 3; b.files = b.files.slice(0, 3); }
+      if (b.scope?.evidence) b.scope = { ...b.scope, evidence: clip(b.scope.evidence, 90) };
+      if ((b.history || []).length > 4) { b.historyTrimmed = (b.historyTrimmed || 0) + b.history.length - 4; b.history = b.history.slice(-4); }
+      for (const h of b.history || []) h.note = clip(h.note, 60);
+      if (b.status === 'seen_in_test') { delete b.rootCause; delete b.files; delete b.history; }
     }
     json = JSON.stringify(snapshot);
   }
