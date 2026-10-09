@@ -1,0 +1,740 @@
+{
+  "feature": "session-mapping",
+  "spec": "docs/training/session-mapping.md",
+  "version": 1,
+  "frozenAt": "2026-10-09T17:30:46.401Z",
+  "commitAtFreeze": "21fa683371819ab790f129604038be73a8f080f4",
+  "specSha256": "1adb496f20fe354930c1c9c25e7e426c32f16430778fd73c2132699a8a2bc4db",
+  "amendment": null,
+  "previous": null,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "P.1",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "a98b9fead46cd078",
+      "summary": "Fresh database per the fixed test constraints: boot the server once from the worktree root against a new empty database, run `npm run seed`, then `node scripts/"
+    },
+    {
+      "id": "P.2",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "812f13d355464a51",
+      "summary": "Create the folder `/var/tmp/session-mapping-fixture` and write the files of Appendix A into it, byte for byte (each fenced block is one file; the first line of "
+    },
+    {
+      "id": "P.3",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "df25a3aa2e4108ec",
+      "summary": "Expect two kinds of background noise in every round, neither a defect: the console error `net::ERR_CERT_AUTHORITY_INVALID` / `net::ERR_TUNNEL_CONNECTION_FAILED`"
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d13e230526aae2f5",
+      "summary": "Open `/login`, enter the admin email and password, click **Sign In**. Expect to leave `/login`."
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3f2d5990eae6c1e4",
+      "summary": "Open `/world`. Expect the top bar to show the tab **Journeys**."
+    },
+    {
+      "id": "J1.3",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e6014d44ac33da1b",
+      "summary": "Click **Journeys**. Expect a card labelled **Sessions** with the subtitle **Open configuration**."
+    },
+    {
+      "id": "J1.4",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8682946ec86adf56",
+      "summary": "Click the **Sessions** card. Expect a **← Back to World** button, the title **Sessions**, the heading **Sessions**, the five tabs **Trends**, **Sessions**, **Ma"
+    },
+    {
+      "id": "J1.5",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "825c203eb6ad4114",
+      "summary": "Measure the page (browser dev tools, or select-all and scroll): Expect no horizontal scrolling (the page is no wider than the viewport, 1280 or 390 px) and ever"
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fd0ae65cf2b18a96",
+      "summary": "Click the **Settings** tab. Expect the card **Price table** with **Currency** `USD` and exactly three price rows: row 1 model prefix `claude-opus` with Input `1"
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "210790b864bf4eca",
+      "summary": "Still on **Settings**. Expect **Idle gap that is not work (minutes)** `10`; **Transcripts folder on the server (blank = default)** empty; the thresholds **Cache"
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fc9c290a0120123f",
+      "summary": "Click the **Import** tab. Expect the cards **Scan server transcripts**, **Paste a transcript**, **Paste an analysis (JSON)** and **Capture failures (0 open)** ("
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "86dfb04197b99328",
+      "summary": "In **Paste a transcript**: type `demo-garden-1` in **Session name**; paste the content of `paste/main.jsonl` (Appendix A) in **Main session transcript**; click "
+    },
+    {
+      "id": "J3.3",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "063dffe2374946aa",
+      "summary": "Click the **Sessions** tab. Expect one card **Session demo-gar** with the pill **Claude Code**, **Ended 2030-03-01** and the line **6,700 tokens · cache-hit 77."
+    },
+    {
+      "id": "J3.4",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "125da50a9935c68e",
+      "summary": "Click **Open session details**. Expect the sub-line **Claude Code session · ended 2030-03-01 · 6 messages (usage counted once per message id)**; Input tokens **"
+    },
+    {
+      "id": "J3.5",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a177c60e7edfa3b3",
+      "summary": "Click **← All sessions**. Expect the session list again."
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7fe5b4ac18727adc",
+      "summary": "Click the **Mapping queue** tab. Expect **4 mappings** (Status **Proposed**, Area **All areas**) with these titles, top to bottom: **1 usage or rate-limit event"
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a553ae6e881c79b5",
+      "summary": "Read the card **Cache-hit ratio 77.7% is below 80.0%**. Expect the pills **Cache** and **proposed**; **Edit target: CLAUDE.md · from Session demo-gar**; the evi"
+    },
+    {
+      "id": "J4.3",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fb5e7d7dcdce0a5e",
+      "summary": "Set **Area filter** to **Memory**. Expect **1 mapping**. Set it back to **All areas**."
+    },
+    {
+      "id": "J4.4",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b3c57c9cbaff1d74",
+      "summary": "On the card **Durable facts at risk after compaction** click **Reject**, then **Confirm reject** with the field empty. Expect the red message **Say why this map"
+    },
+    {
+      "id": "J4.5",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ca218be6b1ae0789",
+      "summary": "Set **Status filter** to **Rejected**. Expect **1 mapping**: the **Durable facts at risk after compaction** card with **Rejected: Not needed for the demo**. Set"
+    },
+    {
+      "id": "J4.6",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "bd3766663fc7fb93",
+      "summary": "On the card **Cache-hit ratio 77.7% is below 80.0%** click **Mark applied**. Set **Applied on** to `2030-03-03`, type `demo-commit-1` in **Reference (commit or "
+    },
+    {
+      "id": "J4.7",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8b2c51edc21337dc",
+      "summary": "Set **Status filter** to **Applied**. Expect **1 mapping**: the cache card with **Applied on 2030-03-03 · demo-commit-1**. Set **Status filter** back to **Propo"
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3807a99307e5e76d",
+      "summary": "Click the **Trends** tab. Expect the tiles **1** SESSIONS, **6,700** TOKENS, **USD 0.0276** SPEND, **77.7%** CACHE-HIT RATIO; the note **Not priced (add a price"
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2c0990ded9f03aa8",
+      "summary": "Click **Import**. Paste the content of `paste/analysis2.json` (Appendix A) in **Paste an analysis (JSON)** and click **File analysis**. Expect **Filed as sessio"
+    },
+    {
+      "id": "J5.3",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2d0b683829156a48",
+      "summary": "Click **Trends**. Expect the tiles **2** SESSIONS, **18,700** TOKENS, **USD 0.0626** SPEND, **88.4%** CACHE-HIT RATIO and the line **Showing 2030-03-01 to 2030-"
+    },
+    {
+      "id": "J5.4",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f7b5ec38e615c087",
+      "summary": "Read the tooltip text of the bars (the SVG title element of each bar; desktop hover shows it): expect in TOKENS BY TYPE **2030-03-05 — Output tokens: 2,000 toke"
+    },
+    {
+      "id": "J5.5",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a9b6c7633535f7a0",
+      "summary": "Focus the slider **Timeline through** and press the Home key (phone: drag it fully left). Expect **Showing 2030-03-01 to 2030-03-01 (1 day with sessions)** and "
+    },
+    {
+      "id": "J6.1",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "85686dc12eee231b",
+      "summary": "Click **Settings**, click **Add price row**. In row 4 type model prefix `claude-mystery`, Input `2`, Cache write `1`, Cache read `1`, Output `2`. Click **Save s"
+    },
+    {
+      "id": "J6.2",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6e31a4d33de5a308",
+      "summary": "Click **Sessions**. Expect the card **Session demo-gar** to read **6,700 tokens · cache-hit 77.7% · spend USD 0.0279 · 1 limit event** (no \"not priced\"). Click "
+    },
+    {
+      "id": "J6.3",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "224706eb28649055",
+      "summary": "Click **Settings**, set **Compactions allowed before proposing** to `1`, click **Save settings** (expect **Saved. Mapping re-run for 2 sessions.**). Click **Map"
+    },
+    {
+      "id": "J6.4",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "de49d91c4150381b",
+      "summary": "Click **Settings**, click **Restore defaults**. Expect **Defaults restored. Mapping re-run for 2 sessions.** and the price table back to the three default rows."
+    },
+    {
+      "id": "J7.1",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "ca65726eeb002ad7",
+      "summary": "`node scripts/analyze-session.mjs --hook < /var/tmp/session-mapping-fixture/hook-bad.json; echo \"exit=$?\"` prints, on the error stream, `analyze-session failed "
+    },
+    {
+      "id": "J7.2",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "452b9ed7e27f2f09",
+      "summary": "`cat server/data/sessionMapping/hook-failures.jsonl` prints exactly one line containing `\"ref\":\"/nonexistent/x.jsonl\"` and `\"error\":\"No transcript found for \\\"/"
+    },
+    {
+      "id": "J7.3",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "82511cc7bd02fc35",
+      "summary": "In **Settings** type `/var/tmp/session-mapping-fixture/folder` in **Transcripts folder on the server (blank = default)** and click **Save settings**. Expect **S"
+    },
+    {
+      "id": "J7.4",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5bb65967a100c3a5",
+      "summary": "Click **Import**, click **Scan server transcripts**. Expect **Found 1 transcript: 1 new, 0 updated, 0 unchanged, 0 failed, 1 hook failure filed below.**"
+    },
+    {
+      "id": "J7.5",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a342a4515e03882e",
+      "summary": "In **Capture failures (1 open)** expect one row **open** **session_end_hook · /nonexistent/x.jsonl** with the text **No transcript found for \"/nonexistent/x.jso"
+    },
+    {
+      "id": "J7.6",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b2fe34fbbf2dd139",
+      "summary": "Click **Scan server transcripts** again. Expect **Found 1 transcript: 0 new, 0 updated, 1 unchanged, 0 failed.**"
+    },
+    {
+      "id": "J7.7",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a7547a48c83a3eb1",
+      "summary": "Click **Sessions**. Expect a card **Session scan-dem** with **Claude Code**, **Ended 2030-03-02** and **4,260 tokens · cache-hit 49.4% · spend USD 0.0113 · 0 li"
+    },
+    {
+      "id": "J8.1",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "ce9a2f9e034951c8",
+      "summary": "`node scripts/analyze-session.mjs /var/tmp/session-mapping-fixture/folder/scan-demo-1.jsonl; echo \"exit=$?\"` prints, among its lines: `Session claude_code:scan-"
+    },
+    {
+      "id": "J8.2",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "3aa89281c52bca72",
+      "summary": "`node scripts/analyze-session.mjs /var/tmp/session-mapping-fixture/folder/scan-demo-1.jsonl --json | grep -c '\"text\"'` prints `0` (the metrics contain no transc"
+    },
+    {
+      "id": "J8.3",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "b70f1ee330327d4f",
+      "summary": "`node scripts/analyze-session.mjs /var/tmp/session-mapping-fixture/folder/scan-demo-1.jsonl --import` prints, as its first line, `Filed as session #3 (updated);"
+    },
+    {
+      "id": "J8.4",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "bcc9e4b4630149a1",
+      "summary": "`node scripts/analyze-session.mjs --hook < /var/tmp/session-mapping-fixture/hook-ok.json; echo \"exit=$?\"` prints only `exit=0` (hook mode is silent on success)."
+    },
+    {
+      "id": "J8.5",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "efd096a9d7ab7ba6",
+      "summary": "`grep -c SessionEnd .claude/settings.json` prints `1` (the non-blocking SessionEnd hook is installed and runs `node scripts/analyze-session.mjs --hook`)."
+    },
+    {
+      "id": "J9.1",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "1f5cfd137dd3f7e0",
+      "summary": "`node -e \"import('./server/lib/sessionMapping.js').then(async (m) => { await m.recordInAppAgentRun({ definitionId: 7, label: 'Demo outreach agent', model: 'clau"
+    },
+    {
+      "id": "J9.2",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "43b95a76320eb5da",
+      "summary": "Click **Sessions**. Expect two cards **Demo outreach agent** with the pill **in-app agent**: one reading **100 tokens · cache-hit not recorded · spend USD 0.001"
+    },
+    {
+      "id": "J9.3",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fbf4d3430d41df36",
+      "summary": "Open the details of the card with **100 tokens**. Expect **In-app agent run** in the sub-line, **Cache-write tokens: not recorded** and **Elapsed time: not reco"
+    },
+    {
+      "id": "J10.1",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "5a41b3f59cbe63dc",
+      "summary": "`curl -s -c /tmp/sm-admin.jar -H \"Content-Type: application/json\" -d '{\"email\":\"betsy@test.local\",\"password\":\"TestPass!2345\"}' -o /dev/null -w \"%{http_code}\" ht"
+    },
+    {
+      "id": "J10.2",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "980c5928cef289ed",
+      "summary": "`curl -s -b /tmp/sm-admin.jar -w \" %{http_code}\" \"http://localhost:<API_PORT>/api/session-mapping/proposals?status=applied\"` prints a JSON body containing `\"sta"
+    },
+    {
+      "id": "J10.3",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "7968b3c0c6e24f43",
+      "summary": "`curl -s -b /tmp/sm-admin.jar http://localhost:<API_PORT>/api/session-mapping/trends` prints JSON containing `\"currency\":\"USD\"` and `\"totalSessions\":5`."
+    },
+    {
+      "id": "J10.4",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "09966ff328b1f0fa",
+      "summary": "`curl -s -w \" %{http_code}\" http://localhost:<API_PORT>/api/session-mapping/sessions` (no cookie) prints `{\"error\":\"unauthorized\"} 401`."
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "13a83414344cb217",
+      "summary": "**Import** -> in **Analysis JSON** type `{not json` and click **File analysis**. Expect a red message starting **The analysis is not valid JSON:** (HTTP 400); n"
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "408f8f2e7d9c7567",
+      "summary": "In **Analysis JSON** type `{\"sourceKey\":\"claude_code:x\"}` and click **File analysis**. Expect the red message **The analysis needs a \"tokens\" object with input,"
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "59bec472177848e1",
+      "summary": "In **Paste a transcript** type `bad-lines` in **Session name** and `not json` in **Main session transcript**, click **Analyze and file**. Expect the red message"
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7b204392e1eaee8b",
+      "summary": "Clear **Session name** and click **Analyze and file**. Expect the red message **Give a session id (any short name, for example the transcript file name)** (HTTP"
+    },
+    {
+      "id": "E.5",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "71ed579713d3fcd9",
+      "summary": "Fill **Session name** `demo-garden-1`, **Main session transcript** with `paste/main.jsonl`, add a subagent labelled `Garden checker` with `paste/sub/helper.json"
+    },
+    {
+      "id": "E.6",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e013ac4bcd2e984f",
+      "summary": "**Settings** -> **Add price row**, fill only Input, Cache write, Cache read and Output with `1` (leave the model prefix empty), click **Save settings**. Expect "
+    },
+    {
+      "id": "E.7",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6bce9836a4c156a4",
+      "summary": "**Mapping queue** -> on the card **Context compacted 1 time** click **Mark applied**, clear **Applied on**, click **Confirm applied**. Expect the red message **"
+    },
+    {
+      "id": "E.8",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7128e5de292226b9",
+      "summary": "**Settings** -> set **Transcripts folder on the server (blank = default)** to `/var/tmp/session-mapping-fixture/nope`, **Save settings**; **Import** -> **Scan s"
+    },
+    {
+      "id": "E.9",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "be3dd89d0829193c",
+      "summary": "`curl -s -c /tmp/sm-member.jar -H \"Content-Type: application/json\" -d '{\"email\":\"member@test.local\",\"password\":\"TestPass!2345\"}' -o /dev/null -w \"%{http_code}\" "
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "071e11e1cda5ed9c"
+    },
+    {
+      "title": "Preconditions",
+      "kind": "precondition",
+      "hash": "497379c36ae17687"
+    },
+    {
+      "title": "Journey 1 — Open the Sessions screen",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 2 — Settings: the price table and thresholds start at the defaults",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 3 — File a pasted transcript",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 4 — Mapping queue: reject one, apply one",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 5 — File a second analysis; trends, timeline and before/after",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 6 — Edit the price table and a threshold: everything is re-priced and re-mapped",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 7 — Hook failure, scan the server folder, capture failures",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 8 — The command-line analyzer and the SessionEnd hook",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 9 — In-app agent runs are filed from their completion path",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 10 — The API gives the same answers with the same permissions",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "0de27d454d7a4684"
+    },
+    {
+      "title": "Appendix A — Fixture files (fictional; write each block to the path on its first line, without that line)",
+      "kind": "context",
+      "hash": "db98cc3414d526a7"
+    }
+  ]
+}
