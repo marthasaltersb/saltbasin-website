@@ -12,6 +12,7 @@ in another project, copy the folder there.
 | `log.mjs` | Appends journal and step events from any pipeline (CI, shell scripts, other agent frameworks). |
 | `index.html` | The board. Reads `snapshot.json` next to it, or a claude.ai artifact's shared db when it runs there. |
 | `serve.mjs` | Serves the board and a snapshot locally. |
+| `MAPPING.md` | How to map Jira, Azure DevOps, Linear, GitHub, Scrum, Kanban and other systems onto the tracker. |
 | `make-fixture.mjs`, `verify-snapshot.mjs` | Fictional test runs and a checker for `sync.mjs`. |
 
 ## Quick start
