@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T01:36:32.213Z",
+  "exportedAt": "2026-10-09T01:40:00.485Z",
   "features": {
     "proficiency-live-qr": {
       "status": "failing",
@@ -10,7 +10,7 @@
       "backlog": 5
     },
     "world-shell-navigation": {
-      "status": "fix",
+      "status": "validate",
       "lastRound": 1,
       "lastScore": "45/48",
       "lastReport": "docs/test-results/world-shell-navigation/round-1.md",
@@ -18,7 +18,7 @@
       "backlog": 4
     },
     "career-bound-outputs": {
-      "status": "reconcile",
+      "status": "validate",
       "lastRound": 2,
       "lastScore": "54/56",
       "lastReport": "docs/test-results/career-bound-outputs/round-2.md",
@@ -26,7 +26,7 @@
       "backlog": 5
     },
     "qr-gated-outputs": {
-      "status": "fix",
+      "status": "validate",
       "lastRound": 1,
       "lastScore": "45/48",
       "lastReport": "docs/test-results/qr-gated-outputs/round-1.md",
@@ -42,7 +42,7 @@
       "backlog": 3
     },
     "release-loop-tooling": {
-      "status": "between_stages",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -66,7 +66,7 @@
       "backlog": 3
     },
     "chart-gallery": {
-      "status": "fix",
+      "status": "validate",
       "lastRound": 1,
       "lastScore": "17/20",
       "lastReport": "docs/test-results/chart-gallery/round-1.md",
@@ -89,14 +89,6 @@
       "openBugs": 0,
       "backlog": 0
     },
-    "in-app-release-loop": {
-      "status": "build",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
-      "openBugs": 0,
-      "backlog": 0
-    },
     "cover-letter-agent": {
       "status": "validate",
       "lastRound": 0,
@@ -106,6 +98,14 @@
       "backlog": 7
     },
     "world-shell-layers": {
+      "status": "build",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
+    },
+    "in-app-release-loop": {
       "status": "build",
       "lastRound": 0,
       "lastScore": null,
@@ -742,7 +742,7 @@
     {
       "id": "world-shell-navigation-B9",
       "feature": "world-shell-navigation",
-      "status": "fixing",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "Test accounts / member vs admin journeys",
@@ -768,7 +768,7 @@
     {
       "id": "world-shell-navigation-B11",
       "feature": "world-shell-navigation",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Spec gap: 3D island entry never exercised",
@@ -1279,7 +1279,7 @@
     {
       "id": "cbo-r2-inherited-cream-text",
       "feature": "career-bound-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "J1 1.2a (also J2, J3, J10 at 390px) and J9 9.0 / 9.2-9.3",
@@ -1314,7 +1314,7 @@
     {
       "id": "qr-gated-outputs-B7",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Preconditions 1, 4; Journey 3 step 4; Journey 8",
@@ -1396,7 +1396,7 @@
     {
       "id": "qr-gated-outputs-B10",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Journey 6 / request scope",
@@ -1424,7 +1424,7 @@
     {
       "id": "qr-gated-outputs-B11",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "Journey 6",
@@ -1449,7 +1449,7 @@
     {
       "id": "T1",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "J2.1 View dialog content",
@@ -1475,7 +1475,7 @@
     {
       "id": "T2",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "defect",
       "attempts": 0,
       "step": "J2.1b Document header contact line readable (web view)",
@@ -1503,7 +1503,7 @@
     {
       "id": "T3",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "J3.3 Approve toasts",
@@ -2265,7 +2265,7 @@
     {
       "id": "chart-gallery-B9",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "journey: pick a chart",
@@ -2291,7 +2291,7 @@
     {
       "id": "chart-gallery-B10",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "validation setup",
@@ -2316,7 +2316,7 @@
     {
       "id": "CG-R1-1",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "defect",
       "attempts": 0,
       "step": "Live Preview stays visible beside gallery (sticky)",
@@ -2341,7 +2341,7 @@
     {
       "id": "CG-R1-2",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "defect",
       "attempts": 0,
       "step": "Failed load alert includes HTTP status",
