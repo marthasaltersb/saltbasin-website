@@ -1,8 +1,8 @@
 {
-  "exportedAt": "2026-10-09T16:57:23.040Z",
+  "exportedAt": "2026-10-09T17:00:36.993Z",
   "features": {
     "proficiency-live-qr": {
-      "status": "fix",
+      "status": "reconcile",
       "lastRound": 6,
       "lastScore": "29/32",
       "lastReport": "docs/test-results/proficiency-live-qr/round-6.md",
@@ -10,19 +10,19 @@
       "backlog": 6
     },
     "world-shell-navigation": {
-      "status": "validate",
-      "lastRound": 1,
-      "lastScore": "45/48",
-      "lastReport": "docs/test-results/world-shell-navigation/round-1.md",
+      "status": "triage",
+      "lastRound": 2,
+      "lastScore": "36/47",
+      "lastReport": "docs/test-results/world-shell-navigation/round-2.md",
       "openBugs": 2,
       "backlog": 4
     },
     "career-bound-outputs": {
-      "status": "fix",
+      "status": "integrate",
       "lastRound": 3,
       "lastScore": "48/56",
       "lastReport": "docs/test-results/career-bound-outputs/round-3.md",
-      "openBugs": 14,
+      "openBugs": 23,
       "backlog": 5
     },
     "qr-gated-outputs": {
@@ -58,7 +58,7 @@
       "backlog": 5
     },
     "output-version-history": {
-      "status": "scope",
+      "status": "validate",
       "lastRound": 2,
       "lastScore": "30/37",
       "lastReport": "docs/test-results/output-version-history/round-2.md",
@@ -66,7 +66,7 @@
       "backlog": 5
     },
     "resume-rollups": {
-      "status": "amend",
+      "status": "validate",
       "lastRound": 1,
       "lastScore": "28/32",
       "lastReport": "docs/test-results/resume-rollups/round-1.md",
@@ -241,7 +241,7 @@
     {
       "id": "proficiency-live-qr-F2-4",
       "feature": "proficiency-live-qr",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "QR page chart view Salt particles",
@@ -272,7 +272,7 @@
     {
       "id": "proficiency-live-qr-F3-1",
       "feature": "proficiency-live-qr",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "J8; J7.2 third state",
@@ -299,7 +299,7 @@
     {
       "id": "proficiency-live-qr-F3-4",
       "feature": "proficiency-live-qr",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "J7.4",
@@ -392,7 +392,7 @@
     {
       "id": "proficiency-live-qr-F4-4",
       "feature": "proficiency-live-qr",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "J7 step 4 Salt particles design (F3-4)",
@@ -417,7 +417,7 @@
     {
       "id": "proficiency-live-qr-F4-5",
       "feature": "proficiency-live-qr",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "J7.1/J7.2 third wording state (F3-1)",
@@ -469,7 +469,7 @@
     {
       "id": "proficiency-live-qr-F4-8",
       "feature": "proficiency-live-qr",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "Known-limitations gaps: spec nits and weak edge coverage",
@@ -743,9 +743,9 @@
     {
       "id": "T6-1",
       "feature": "proficiency-live-qr",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "J5.2 MOBILE_GAP rows unidentifiable (blank selects)",
       "rootCause": "Same as T6-1: blank selects at 390px mean Years performed / Expert rows cannot be identified; the save/use flow itself works.",
       "files": [
@@ -768,6 +768,12 @@
           "event": "recurred",
           "note": "Same as T6-1: blank selects at 390px mean Years performed / Expert rows cannot be identified; the save/use flow itself works.",
           "commit": null
+        },
+        {
+          "round": 6,
+          "event": "fixed",
+          "note": "Formula editor at phone width (max-width 900px) now renders input terms and level thresholds as stacked, labelled cards instead of two width:100% tables. Desktop keeps the tables, built from the same…",
+          "commit": "390e1efe50aa8d97c350719c36ffce4ddd55b145"
         }
       ]
     },
@@ -800,9 +806,9 @@
     {
       "id": "T6-4",
       "feature": "proficiency-live-qr",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "MCP_GAP no MCP tools for proficiency rules, category, override, formula, certification bonus, live QR",
       "rootCause": "Report claim that mcpToolRegistry.js does not exist is stale: it exists on head (commit b77049b, 11 tools). But it has no tool for the capabilities this spec exercises except application_output_approve_for_qr (which already runs the finalization gate). Proficiency routes live in server/routes/careerMaster.js (lines 1540, 1632, 1667 and experience-definitions routes) and sharedOutputs.js, which ar…",
       "files": [
@@ -822,6 +828,12 @@
           "event": "found",
           "note": "Report claim that mcpToolRegistry.js does not exist is stale: it exists on head (commit b77049b, 11 tools). But it has no tool for the capabilities this spec exercises except application_output_appro…",
           "commit": null
+        },
+        {
+          "round": 6,
+          "event": "fixed",
+          "note": "Added 8 MCP tools (proficiency_rules_read, proficiency_override_set, proficiency_override_clear, technology_category_set, proficiency_formula_save, proficiency_formula_select, certification_mapping_s…",
+          "commit": "390e1efe50aa8d97c350719c36ffce4ddd55b145"
         }
       ]
     },
@@ -854,7 +866,7 @@
     {
       "id": "T6-6",
       "feature": "proficiency-live-qr",
-      "status": "fixing",
+      "status": "open",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "J7.5 level-change example wording",
@@ -879,7 +891,7 @@
     {
       "id": "T6-7",
       "feature": "proficiency-live-qr",
-      "status": "fixing",
+      "status": "open",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "J8.3 unstated precondition",
@@ -1226,7 +1238,7 @@
     {
       "id": "career-bound-outputs-F2-3",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Output Templates > Sections overrides (J9)",
@@ -1302,9 +1314,9 @@
     {
       "id": "career-bound-outputs-F2-6",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Save changes disabled styling",
       "rootCause": "S.btn() in CareerBoundOutputEditor.jsx (lines 26-31) has no disabled styling; line 145 only sets the disabled attribute. Earlier F2-6 fix never touched the style factory.",
       "files": [
@@ -1328,15 +1340,21 @@
           "event": "recurred",
           "note": "S.btn() in CareerBoundOutputEditor.jsx (lines 26-31) has no disabled styling; line 145 only sets the disabled attribute. Earlier F2-6 fix never touched the style factory.",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "fixed",
+          "note": "S.btn now takes a disabled flag and applies disabled styling (opacity 0.5, not-allowed cursor, grey fill); every disabled call site passes it, including Save changes and the Convert button",
+          "commit": "4a702283eba964d9bac1895e897f1ca07517cfac"
         }
       ]
     },
     {
       "id": "career-bound-outputs-F2-7",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Dialog visible title (admin)",
       "rootCause": "Same code path as J6.10 (MyResumePanel queue dialog has no visible title).",
       "files": [
@@ -1365,13 +1383,19 @@
           "event": "recurred",
           "note": "Same code path as J6.10 (MyResumePanel queue dialog has no visible title).",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "fixed",
+          "note": "The queue dialog has a visible h2 'Career Sources to Review' referenced by aria-labelledby. This covers J6.10 and J11.2.",
+          "commit": "4a702283eba964d9bac1895e897f1ca07517cfac"
         }
       ]
     },
     {
       "id": "career-bound-outputs-F2-8",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "recurred",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "Convert list ignores existing converted output",
@@ -1403,7 +1427,7 @@
     {
       "id": "career-bound-outputs-F2-9",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Legibility fix coverage (J1.2a, J9.0)",
@@ -1430,7 +1454,7 @@
     {
       "id": "career-bound-outputs-F2-10",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "J9 skills/tools/certifications overrides",
@@ -1449,6 +1473,204 @@
           "round": 2,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F3-1",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "J1.2, J6.3, J6.10, J11.2, J9.8, J9.10",
+      "rootCause": "Fix pass was build-only.",
+      "files": [
+        "src/components/admin/CareerBoundOutputEditor.jsx",
+        "src/components/admin/CareerReconciliationPanel.jsx",
+        "src/components/WorldShell.jsx",
+        "src/components/admin/MyResumePanel.jsx",
+        "src/components/admin/OutputTemplateConfigurator.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F3-2",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "E.4",
+      "rootCause": "Frozen spec step needs a server fault no browser user can trigger.",
+      "files": [
+        "docs/training/career-bound-outputs.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F3-3",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "E.5",
+      "rootCause": "Spec wording differs from product-wide warn style.",
+      "files": [
+        "docs/training/career-bound-outputs.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F3-4",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "J6.8 / J6.10 observation",
+      "rootCause": "No record of an existing converted output per package.",
+      "files": [
+        "server/lib/careerBound.js",
+        "src/components/admin/CareerReconciliationPanel.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (product_defect)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F3-5",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Interface parity",
+      "rootCause": "Feature built UI+API only.",
+      "files": [
+        "server/lib/mcpToolRegistry.js",
+        "server/lib/careerBound.js",
+        "server/lib/packageReconciliation.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F3-6",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "J9.9",
+      "rootCause": "Layout prints jobs only.",
+      "files": [
+        "src/components/Output.jsx",
+        "src/components/admin/OutputTemplateConfigurator.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F3-7",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "J9.11",
+      "rootCause": "Template outputs have no per-document row.",
+      "files": [
+        "src/lib/masterOverrides.js",
+        "src/components/Output.jsx",
+        "server/lib/outputRendering.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F3-8",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "J6.3",
+      "rootCause": "Panel colours designed for different backgrounds.",
+      "files": [
+        "src/components/admin/CareerReconciliationPanel.jsx",
+        "src/components/WorldShell.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (product_defect)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F3-9",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "n/a",
+      "rootCause": "Conflicting instructions.",
+      "files": [],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
           "commit": null
         }
       ]
@@ -1489,9 +1711,9 @@
     {
       "id": "cbo-r2-inherited-cream-text",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 1,
+      "attempts": 2,
       "step": "Queue page legibility",
       "rootCause": "WorldShell.jsx embedBody (dark #0d1417) hosts CareerReconciliationPanel whose text colours (navy groupTitle, dark teal banner) are for a light surface: 1.28:1 and 2.24:1.",
       "files": [
@@ -1521,15 +1743,21 @@
           "event": "recurred",
           "note": "WorldShell.jsx embedBody (dark #0d1417) hosts CareerReconciliationPanel whose text colours (navy groupTitle, dark teal banner) are for a light surface: 1.28:1 and 2.24:1.",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "fixed",
+          "note": "Reconciliation embed is flagged light, and SimpleEmbedView hosts it in a white container with colour #1b2a3b. Panel colours are unchanged.",
+          "commit": "4a702283eba964d9bac1895e897f1ca07517cfac"
         }
       ]
     },
     {
       "id": "T3-4",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Tool override selectable by name",
       "rootCause": "OutputTemplateConfigurator.jsx ~565 uses field currentName for tools; tools entered via Name When Used have empty currentName (name_used set), so option text, label and Career Master line are blank. Product elsewhere uses currentName || nameUsed (rollupMetrics.js:168).",
       "files": [
@@ -1547,15 +1775,21 @@
           "event": "found",
           "note": "OutputTemplateConfigurator.jsx ~565 uses field currentName for tools; tools entered via Name When Used have empty currentName (name_used set), so option text, label and Career Master line are blank. …",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "fixed",
+          "note": "Tool override option text, label, aria-label, Career Master line and the override comparison use currentName || nameUsed. Overrides are still stored under currentName. Output.jsx already shows a curr…",
+          "commit": "4a702283eba964d9bac1895e897f1ca07517cfac"
         }
       ]
     },
     {
       "id": "T3-5",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Revert skill keeps box",
       "rootCause": "shownIds = override keys U ovPicks (local state, empty after reload). Revert deletes the override key via withOverride so the row disappears.",
       "files": [
@@ -1573,13 +1807,19 @@
           "event": "found",
           "note": "shownIds = override keys U ovPicks (local state, empty after reload). Revert deletes the override key via withOverride so the row disappears.",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "fixed",
+          "note": "Revert to Career Master also adds the id to ovPicks[list], so the row stays visible with the Career Master value and no badge",
+          "commit": "4a702283eba964d9bac1895e897f1ca07517cfac"
         }
       ]
     },
     {
       "id": "T3-6",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "Sync failure toast and list",
@@ -1605,7 +1845,7 @@
     {
       "id": "T3-7",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "Invalid package error box",
@@ -2056,7 +2296,7 @@
       "scope": {
         "scope": "pre_existing",
         "owner": null,
-        "evidence": "Mobile drawer CSS from eb62057 (2026-08-09) is present at the base commit f3171a8^1 and no JSX renders any sb-admin-mobile-* class there. The feature did not touch AdminShell. Proven by source inspection at base, no browser run. Applies to both T1 items (My Resume and Career Master)."
+        "evidence": "J5.1 mobile. Same root cause as the J1.2 item: no mobile drawer markup at base, so Classic Tools is unreachable at 390px without this feature. Caveat: spec routes through Classic Tools, so it stays blocked until a shell fix or a spec path change."
       },
       "history": [
         {
@@ -2138,7 +2378,7 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Step is in this feature's own training spec and is not performable through the UI. Product matches the spec. Needs an amendment."
+        "evidence": "Product matches E.2 (outputVersionHistory.js sets version.error and Cannot compare). The spec step requires corrupting a stored version, which no interface allows; feature's own spec. Needs an owner answer (A2 needs_owner)."
       },
       "history": [
         {
@@ -2583,7 +2823,7 @@
       "scope": {
         "scope": "pre_existing",
         "owner": null,
-        "evidence": "Mobile drawer CSS from eb62057 (2026-08-09) is present at the base commit f3171a8^1 and no JSX renders any sb-admin-mobile-* class there. The feature did not touch AdminShell. Proven by source inspection at base, no browser run. Applies to both T1 items (My Resume and Career Master)."
+        "evidence": "J5.1 mobile. Same root cause as the J1.2 item: no mobile drawer markup at base, so Classic Tools is unreachable at 390px without this feature. Caveat: spec routes through Classic Tools, so it stays blocked until a shell fix or a spec path change."
       },
       "history": [
         {
@@ -2640,7 +2880,7 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Step is in this feature's own training spec and is not performable through the UI. Product matches the spec. Needs an amendment."
+        "evidence": "Product matches E.2 (outputVersionHistory.js sets version.error and Cannot compare). The spec step requires corrupting a stored version, which no interface allows; feature's own spec. Needs an owner answer (A2 needs_owner)."
       },
       "history": [
         {
@@ -2767,7 +3007,7 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Stale preconditions and labels are in this feature's own spec. Same as B14 in scope-review.json."
+        "evidence": "docs/training/output-version-history.md hardcodes Riley Fenn (lines 3, 20, 54, 65, 76, 83, 105); product correctly shows approver display name Test Member. Feature's own spec; needs a resubmitted step-listed amendment (A5 rejected on form). Consistent with B14."
       },
       "history": [
         {
@@ -2824,7 +3064,7 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Coverage gap in the feature's own training spec (banner sentence under RECORDED DATA, member-owned chart data)."
+        "evidence": "Spec line 90 says HEADER fields; product labels NAME / HEADING / ROLE / PARAGRAPH. Stale wording in the feature's own spec; needs an amendment, product is right."
       },
       "history": [
         {
@@ -3872,7 +4112,7 @@
       "scope": {
         "scope": "pre_existing",
         "owner": null,
-        "evidence": "Mobile drawer CSS from eb62057 (2026-08-09) is present at the base commit f3171a8^1 and no JSX renders any sb-admin-mobile-* class there. The feature did not touch AdminShell. Proven by source inspection at base, no browser run. Applies to both T1 items (My Resume and Career Master)."
+        "evidence": "J5.1 mobile. Same root cause as the J1.2 item: no mobile drawer markup at base, so Classic Tools is unreachable at 390px without this feature. Caveat: spec routes through Classic Tools, so it stays blocked until a shell fix or a spec path change."
       },
       "history": [
         {
@@ -3916,7 +4156,7 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Step is in this feature's own training spec and is not performable through the UI. Product matches the spec. Needs an amendment."
+        "evidence": "Product matches E.2 (outputVersionHistory.js sets version.error and Cannot compare). The spec step requires corrupting a stored version, which no interface allows; feature's own spec. Needs an owner answer (A2 needs_owner)."
       },
       "history": [
         {
@@ -4051,7 +4291,7 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Stale preconditions and labels are in this feature's own spec. Same as B14 in scope-review.json."
+        "evidence": "docs/training/output-version-history.md hardcodes Riley Fenn (lines 3, 20, 54, 65, 76, 83, 105); product correctly shows approver display name Test Member. Feature's own spec; needs a resubmitted step-listed amendment (A5 rejected on form). Consistent with B14."
       },
       "history": [
         {
@@ -4108,7 +4348,7 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Coverage gap in the feature's own training spec (banner sentence under RECORDED DATA, member-owned chart data)."
+        "evidence": "Spec line 90 says HEADER fields; product labels NAME / HEADING / ROLE / PARAGRAPH. Stale wording in the feature's own spec; needs an amendment, product is right."
       },
       "history": [
         {
@@ -4422,7 +4662,7 @@
     {
       "id": "RR1-1",
       "feature": "resume-rollups",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Six KPI cards with computed lines (mobile 390px)",
@@ -4532,7 +4772,7 @@
     {
       "id": "RR1-5",
       "feature": "resume-rollups",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Platform MCP tools for rollup capabilities",
