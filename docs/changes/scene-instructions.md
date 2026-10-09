@@ -1,10 +1,11 @@
 # Foundation and Scenes: build your world from your account, scene by scene
 
-Version 0.2 (proposed design, not built) · 2026-10-09 · Status: **awaiting owner approval**
+Version 0.3 (proposed design, not built) · 2026-10-09 · Status: **awaiting owner approval**
 
 | Version | Date | Change |
 |---|---|---|
 | 0.1 | 2026-10-09 | Scene Instructions: six-step procedure for binding 3D objects to connected data (commit 626ec30). |
+| 0.3 | 2026-10-09 | A person can hold **many** foundations: a personal career foundation, plus organization foundations reached through membership, each with its own database. The ownership, access, write-back and audit-history model lives in `docs/changes/foundation-rods-and-audit-history.md`, which takes precedence over the "one per account" wording below. |
 | 0.2 | 2026-10-09 | Owner direction: the seven mapping questions (`tools/release-tracker-kit/MAPPING.md`) are the **foundation**. You set them up once after logging in, and every scene is built on top of them. |
 
 ## Traces to
