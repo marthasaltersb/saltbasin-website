@@ -1,11 +1,12 @@
 # Foundation Rods and audit history: many foundations per person, no lost history
 
-Version 0.3 (proposed design, not built) · 2026-10-09 · Status: **awaiting owner approval**
+Version 0.4 (proposed design, not built) · 2026-10-09 · Status: **awaiting owner approval**
 
 | Version | Date | Change |
 |---|---|---|
 | 0.1 | 2026-10-09 | Many foundations per person; audit-history model; gaps G1–G6 (commit 3e88ce5). |
 | 0.2 | 2026-10-09 | Owner direction: **seeds** sit below features (section 6). |
+| 0.4 | 2026-10-09 | Owner direction: a feature is created **only from a seed**. Seeds and features link many-to-many, and every piece of work names the seeds it was done for. |
 | 0.3 | 2026-10-09 | Owner direction: a seed is the raw **entry point** for anything new, like a lead. Seeds are planted, reviewed, nurtured, grown, reported and audited. The career foundation teaches it, and agents plant seeds for people to review (section 6, rewritten). |
 
 ## Traces to
@@ -221,13 +222,67 @@ including written back to its database (section 3).
   `seed_grow`).
 - No new tables. Depends on gap G2 (supersede instead of delete).
 
-### Features still need an approval
+### Features: created only from seeds, linked to many seeds, every piece of work traced to a seed
 
-- Planting no longer means approving a feature.
-- In a release foundation, a feature is still **approved** before work starts. Its approval rule (e.g.
-  "grown from at least one idea or user story, with at least one task with acceptance criteria") is part
-  of that foundation's definition.
-- The approval goes through the existing approval gate.
+Owner direction, 2026-10-09:
+- A feature is **only ever created from a seed**.
+- A feature can be linked to several seeds, and one seed can be tagged to several features.
+- A feature must know **which seeds it is solving for**, and be able to show **what work was done, when,
+  for which seed, in which feature**.
+
+```
+seed bank (foundation rod)              features (rods)                    work (events on the feature)
+  S-14  "Admins can't see stuck bugs" ──┬─▶ F-3 Release board      ◀── 9 Oct  build  commit a1b2  (S-14)
+                                        │                           ◀── 10 Oct test r1 8/10       (S-14, S-15)
+  S-15  "Colour gems by status"   ──────┤                           ◀── 11 Oct fix   commit c3d4  (S-15)
+                                        └─▶ F-7 Org digest email   ◀── 12 Oct build  commit e5f6  (S-14)
+```
+
+**1. Only from a seed.**
+- The one way to create a feature is to grow it from a seed, the `feature` entry in
+  `seedGrowthRegistry.js`.
+- The feature write path refuses a feature with no seed and says why.
+- Features imported from an outside system (e.g. a Jira epic) come in as a seed first and are grown from
+  it, so imported features obey the same rule.
+
+**2. Many seeds ↔ many features.**
+- A seed stays in its seed bank.
+- A feature points to each seed it solves with its own link record: an evidence row on the feature rod,
+  Atom key `solves_seed`, value `{ seedId, scope, linkedBy, reason }`, with `lineage_parent_id` pointing to
+  the seed.
+- `scope` says which part of the seed this feature covers, so two features can each solve part of the
+  same seed.
+- Removing a link supersedes that row (gap G2's fix). The link's history stays, along with `seed_linked`
+  / `seed_unlinked` events on both rods.
+- No join table is needed.
+
+**3. Every piece of work names its seeds.**
+- Every work event on a feature carries the `seedIds` it was done for:
+  - build, fix, test round, document, agent run, write-back, approval
+  - with what (commit, release record, agent run, test report), who or what did it, and when, on both
+    clocks
+- A piece of work can only name seeds the feature is linked to.
+- Work recorded without a seed is **not hidden**. It shows as "not linked to a seed" in the feature's
+  report until someone links it.
+- The release loop carries seed IDs through:
+  - change specs list them under *Traces to*
+  - training-spec journeys are tagged with the seed they prove (a task seed's acceptance criteria become
+    its steps)
+  - fix notes and commits name them (`Seed: S-15` trailer)
+  - the tracker journal passes `seedIds` through to the board
+
+**4. What you can see.**
+- **For a feature:** the seeds it solves, each with its scope. For each seed: the work done, in date
+  order, and whether that seed's test steps passed in the latest round.
+- **For a seed:** every feature solving it, and the work each one did for it, by date.
+- **Across a foundation:** a seed × feature table showing which seeds have no feature yet, which features
+  solve which seeds, and where work happened.
+- All of it is read from links and events. Nothing is copied, and missing data shows as "not recorded".
+
+**5. Approval.**
+- A feature is still approved before work starts, through the existing approval gate.
+- The approval record lists the seeds (and their versions) it was approved to solve.
+- The default approval rule is part of the foundation's definition (question 9).
 
 ## Questions for the owner (needs a business decision)
 
@@ -254,3 +309,10 @@ including written back to its database (section 3).
    be able to set its own rule?
 10. **Duplicates.** When Salt Basin spots a likely duplicate seed, should it suggest a merge for the person
     to confirm (proposed), or merge it automatically?
+11. **When is a seed "solved"?** When *any* feature linked to it passes for the seed's scope, or only when
+    *every* linked feature has passed?
+12. **Work with no seed.** Should a feature be blocked from passing while it has work "not linked to a
+    seed", or only show a warning?
+13. **Who can tag a seed to another feature.** Anyone who can add data to the feature, or only someone who
+    can change its definition (an admin by default)?
+
