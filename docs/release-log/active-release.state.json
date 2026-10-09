@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T06:02:25.938Z",
+  "exportedAt": "2026-10-09T06:03:19.843Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -42,7 +42,7 @@
       "backlog": 3
     },
     "release-loop-tooling": {
-      "status": "integrate",
+      "status": "validate",
       "lastRound": 1,
       "lastScore": "24/35",
       "lastReport": "docs/test-results/release-loop-tooling/round-1.md (NOT WRITTEN: the write tool refused report files for subagents, so the full report is in this structured result; the file at that path is the stale round-1 report from 2026-10-02, not this round. Step log: /var/tmp/sbpg/release-loop/release-loop-tooling/round-1/steps.jsonl, screenshots in the same directory.)",
@@ -1683,7 +1683,7 @@
     {
       "id": "release-loop-tooling-B1",
       "feature": "release-loop-tooling",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Fix B1: docs claim a capability never built",
@@ -1723,7 +1723,7 @@
     {
       "id": "release-loop-tooling-B2",
       "feature": "release-loop-tooling",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Fix B2: dead-agent detection limited to extras",
@@ -1761,7 +1761,7 @@
     {
       "id": "release-loop-tooling-B3",
       "feature": "release-loop-tooling",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Fix B3: tracker 390px reflow",
@@ -1936,7 +1936,7 @@
     {
       "id": "RLT-T1",
       "feature": "release-loop-tooling",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "spec_error",
       "attempts": 1,
       "step": "J1 step 2: bugEscalation.statuses",
@@ -1968,7 +1968,7 @@
     {
       "id": "RLT-T2",
       "feature": "release-loop-tooling",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "spec_error",
       "attempts": 1,
       "step": "J4 steps 1-2 (header, tiles, filters, agent card, Features column, Bugs and runs tables)",
