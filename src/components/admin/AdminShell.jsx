@@ -15,7 +15,6 @@ const MemberStatsPanel = lazy(() => import('./MemberPanels.jsx').then((module) =
 const MemberAuditPanel = lazy(() => import('./MemberPanels.jsx').then((module) => ({ default: module.MemberAuditPanel })));
 const MemberAgentPanel = lazy(() => import('./MemberPanels.jsx').then((module) => ({ default: module.MemberAgentPanel })));
 const MyResumePanel = lazy(() => import('./MyResumePanel.jsx'));
-const ReleaseIntelligencePanel = lazy(() => import('./ReleaseIntelligencePanel.jsx'));
 const ConnectedAgentsPanel = lazy(() => import('./ConnectedAgentsPanel.jsx'));
 const CapabilitiesPanel = lazy(() => import('./CapabilitiesPanel.jsx'));
 const ReleaseLoopPanel = lazy(() => import('./ReleaseLoopPanel.jsx'));
@@ -75,7 +74,6 @@ const TAB_COMPONENTS = {
   backlog:        () => <BacklogPanel />,
   feedback:       () => <FeedbackPanel />,
   qa:             () => <QAPanel />,
-  releaseIntelligence: () => <ReleaseIntelligencePanel />,
   connectedAgents: () => <ConnectedAgentsPanel />,
   capabilities: () => <CapabilitiesPanel />,
   releaseLoop:    () => <ReleaseLoopPanel />,
@@ -129,7 +127,6 @@ const FALLBACK_ADMIN_NAV = {
       { id: 'plm-dashboard', label: 'Operating Model Dashboard', componentId: 'plmDashboard', sortOrder: 0 },
       { id: 'backlog', label: 'Backlog', componentId: 'backlog', sortOrder: 1 },
       { id: 'qa', label: 'QA', componentId: 'qa', sortOrder: 2 },
-      { id: 'release-intelligence', label: 'Release Intelligence', componentId: 'releaseIntelligence', sortOrder: 4 },
       { id: 'release-loop', label: 'Release loop', componentId: 'releaseLoop', sortOrder: 5 },
       { id: 'release-tracker', label: 'Release tracker', componentId: 'releaseTracker', sortOrder: 6 },
       { id: 'session-mapping', label: 'Sessions', componentId: 'sessionMapping', sortOrder: 7 },
@@ -183,6 +180,15 @@ const FALLBACK_PAGE_TYPES = {
     ]},
   ],
 };
+
+// Release Intelligence is reached only from the World Shell island. A shared
+// admin_nav row written by an earlier build may still list it under Classic
+// Tools; admin_nav is additive-only, so the entry is hidden here at render
+// time instead of being deleted from the row.
+const HIDDEN_NAV_TAB_IDS = new Set(['release-intelligence']);
+function withoutHiddenTabs(nav) {
+  return { ...nav, views: (nav.views || []).map((v) => ({ ...v, tabs: (v.tabs || []).filter((t) => !HIDDEN_NAV_TAB_IDS.has(t.id)) })).filter((v) => v.tabs.length) };
+}
 
 const STATUS_CYCLE = ['live', 'draft', 'soon'];
 
@@ -342,7 +348,7 @@ export default function AdminShell({ scope = 'admin', orgId = null, initialTab =
     api.getAdminNav()
       .then((data) => {
         if (cancelled) return;
-        const useNav = (data?.views || []).length > 0 ? data : FALLBACK_ADMIN_NAV;
+        const useNav = withoutHiddenTabs((data?.views || []).length > 0 ? data : FALLBACK_ADMIN_NAV);
         setAdminNav(useNav);
         // Seed active view: pick the view that owns the current tab, or first.
         const owningView = useNav.views.find((v) => v.tabs.some((t) => t.id === tab));

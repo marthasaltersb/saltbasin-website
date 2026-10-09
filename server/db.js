@@ -3322,7 +3322,8 @@ async function bootstrap() {
         { viewId: 'system',   viewLabel: 'System',                        id: 'lineage',         label: 'Data Lineage',    componentId: 'lineage',        sortOrder: 3 },
         { viewId: 'content',  viewLabel: 'My Profile',                    id: 'inbox',           label: 'Inbox',           componentId: 'inbox',          sortOrder: 10 },
         { viewId: 'system',   viewLabel: 'System',                        id: 'command-center',  label: 'Command Center',  componentId: 'commandCenter',  sortOrder: 4 },
-        // Release reconciliation + contribution trends (additive; reachable from the World Shell).
+        // Release reconciliation + contribution trends. This row is the World Shell island's source
+        // (islands resolve from admin_nav); AdminShell hides it from Classic Tools (HIDDEN_NAV_TAB_IDS).
         { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'release-intelligence', label: 'Release Intelligence', componentId: 'releaseIntelligence', sortOrder: 4 },
         // Platform MCP server (additive): token management + the interface-parity map.
         { viewId: 'system',   viewLabel: 'System',                        id: 'connected-agents', label: 'Connected Agents', componentId: 'connectedAgents', sortOrder: 5 },
