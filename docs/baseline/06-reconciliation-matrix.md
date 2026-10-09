@@ -1,5 +1,7 @@
 # Reconciliation Matrix — Blocked
 
+> **2026-10-01 status:** still blocked on validated entries in 05. The existing-definition side is now available: REQ/DEF rows in [`03-modules/`](./03-modules/) and `TE-` IDs in [`inventory/`](./inventory/README.md). Mapping rows must cite those IDs. `scripts/baseline/check-traceability.mjs` validates them.
+
 **Status: blocked**, same reason as `05-new-requirement-register.md` — there are no new requirements yet to map against existing definitions.
 
 ## Required row schema (for when reconciliation begins)

@@ -75,4 +75,172 @@ Status values: `OPEN` (needs your decision or confirmation), `RESOLVED` (decisio
 
 ---
 
+## Status updates from the 2026-10-01 Stage 2 pass (revision `e0ea466`)
+
+These updates add evidence without removing the original entries above.
+
+- **DEC-001 → superseded in part by DEC-006.** The two-framework finding stands, and it is now known that `npm test` **fails** at this revision (see DEC-006).
+- **DEC-002 → still OPEN, widened.** The generated [env-vars inventory](./inventory/env-vars.md) lists 78 names (`.env.example` declares 5). Additionally: `SESSION_SECRET` is described in CLAUDE.md as the cookie-signing secret but is only read by `server/routes/analytics.js:20`, since session cookies are unsigned random tokens. Base URLs are split between `APP_BASE_URL` and `PUBLIC_BASE_URL`, each with hard-coded `https://saltbasin.net` fallbacks (`server/routes/auth.js:32,203`).
+- **DEC-003 → still OPEN, new evidence.** A local verification environment is **feasible**. The repo's own bootstrap ran against a throwaway Postgres 16, the production build served locally, and a real Chromium login through `/login` succeeded (see [11](./11-verification-and-release-records.md) VR-2026-10-01-01). Separately, `src/components/admin/TestLoginRedirect.jsx` (`/test/login`) expects a `VITE_TEST_BASE_URL` "replica deployment", which is not declared anywhere, so someone intended a hosted test environment.
+- **DEC-004 → RESOLVED as a finding (2026-10-01, by direct inspection; no user decision needed for the fact itself).** `migrations/20260809_member_crystal_worlds.sql` is **not** applied by any code path and its 8 tables are referenced by **no** code. It is neither the boot mechanism nor a wired second mechanism. A **third** mechanism was also found: lazy runtime DDL (`server/lib/backlogIntelligenceSchema.js`, 12 tables). See MOD-01 REQ-01-002. Whether the orphan SQL file is an abandoned design or future work is a product question, now tracked in DEC-019.
+- **DEC-005 → still OPEN.** Confirmed: no i18n catalog, locale preference, or `fieldMeta.translations` consumer exists in code. CLAUDE.md's "Internationalization / translation model (design-stage — not yet implemented)" section (added 2026-09-05) records the intended shape, and it is design intent, not implementation.
+
+---
+
+### DEC-006 — `npm test` fails at this revision; tests run nowhere in CI
+
+**Status:** OPEN
+
+**Evidence (executed 2026-10-01):** `npm test` (Jest, `testMatch: server/**/*.test.js`) → 3 suites pass (22 tests), **2 suites fail** with "Your test suite must contain at least one test": `server/lib/agentStudioGovernance.test.js` and `server/lib/agents/crystalWorldAuditAgent.test.js` are written for `node:test`, but Jest's pattern picks them up. Run with `node --test`, they pass (3 + 4). Four further `node:test` files under `src/lib/*.test.js` are run by **no** npm script (they pass when run directly). No GitHub workflow runs any test (REQ-01-009).
+
+**Decision needed:** choose one runner per location (or exclude `node:test` files from Jest), add a single `npm test` that runs everything, and decide whether a test gate belongs in the promotion workflow. Also: which framework hosts Stage 5 browser tests. Playwright 1.56 is available in this environment globally, but it is not a project dependency.
+
+### DEC-007 — Outbound email authorization gate blocks most transactional email
+
+**Status:** OPEN (material)
+
+**Evidence:** `server/lib/email.js:71-82` (commit `dfc422d`, 2026-08-10, "Require confirmation for outbound email"). Sends without an authorization mode are skipped. Seven senders pass none (MOD-09 REQ-09-002): lead confirmation (which carries the lead's password), lead email verification, new-lead alert to the owner, contact-form-to-member, member entitlement welcome, both daily digests, and the admin test email. **Runtime probe:** creating a lead locally logged `[email] blocked pending recipient confirmation` for both the visitor confirmation and the owner alert.
+
+**Further runtime evidence (2026-10-01):** adding a contact email to a lead returned `verificationSent:true` while the verification email was blocked. Only a hash of the token is stored, so the email can never be verified, and lead → member conversion then failed with 409 "Verify at least one email address before becoming a member." Direct signup is invite-only by default (DEC-011), so **no new member can be created through the product** at this revision (REQ-08-010, REQ-08-003), unless an untraced path such as BestyStaff's `convert_lead_to_member` tool bypasses this.
+
+**Why it matters:** if unintended, no new members can join, the owner is not alerted to new leads, leads cannot recover credentials (REQ-08-004), and the admin test-email diagnostic cannot detect the problem (REQ-03-010). If intended, these senders need a recipient-confirmation flow that does not exist yet.
+
+**Decision needed:** for each sender, should it send automatically (and under which authorization mode), require explicit confirmation, or stay disabled?
+
+### DEC-008 — Platform roles are undefined; `users.role` defaults to `'admin'`
+
+**Status:** OPEN
+
+**Evidence:** Declared catalog: `users.role TEXT DEFAULT 'admin'`, no CHECK constraint. Code compares against `admin` and `member` only. All four current insert sites set `role` explicitly, so no live defect is shown, but a future insert that omits `role` would create an administrator. `org_memberships.role` is a separate, also unenumerated, vocabulary.
+
+**Decision needed:** the authoritative role list (platform and org), and whether the default should change to the least-privileged role with a CHECK constraint. That would be a schema change, with migration implications to be specified in 08.
+
+### DEC-009 — Unthrottled credential and unlock endpoints
+
+**Status:** OPEN
+
+**Evidence:** In-process limiter (10/15 min/IP) covers `/api/auth/login`, `/reset-request`, `/sso/discover` only. No limiter on: `/api/auth/landing-gate/unlock` (plain-text password compare), `/api/auth/email-recover` (comment claims "upstream" limiting, but none is declared), `/api/member-site/by-slug/:slug/unlock`, `/api/leads/public/:publicId/unlock`. reCAPTCHA is skipped entirely when `RECAPTCHA_SECRET_KEY` is unset. `PATCH /api/portfolio-requests/:id/notes` accepts sequential ids without a token for 1 hour. The limiter is per-process and resets on restart.
+
+**Decision needed:** acceptable brute-force posture per endpoint, and whether limits must survive restarts.
+
+### DEC-010 — Bootstrap admin fallback credentials
+
+**Status:** OPEN
+
+**Evidence:** `server/data/seed.js:29-34` creates the first admin with `ADMIN_INITIAL_PASSWORD` or a hard-coded literal (`server/data/seed.js:30`), and **without** `must_change_password` (runtime probe confirmed `mustChangePassword:false`). This only fires when `users` is empty. `render.yaml` prompts for the variable (`sync:false`).
+
+**Decision needed:** fail boot when the variable is unset in production, and/or force a password change for the bootstrap admin.
+
+### DEC-011 — Two signup paths
+
+**Status:** OPEN
+
+**Evidence:** `/signup` redirects to the BestyStaff intake (`src/App.jsx:SignupRoute`), and lead conversion creates members. `POST /api/members/signup` (public) still creates members directly via `createMember`. `SignupPage.jsx` is kept unreferenced on purpose.
+
+**Runtime 2026-10-01:** `POST /api/members/signup` returned 403 "Member creation is currently invite-only." because `PUBLIC_MEMBER_SIGNUP_ENABLED` is unset, so the direct API is already gated by default. The live value of the variable is unknown.
+
+**Decision needed:** confirm lead conversion as the canonical path, and whether `PUBLIC_MEMBER_SIGNUP_ENABLED` should ever be true in production.
+
+### DEC-012 — CMS editing semantics: last-write-wins, coupled config publish, no restore
+
+**Status:** OPEN
+
+**Evidence:** Draft saves replace the whole document with no version check (REQ-03-001, REQ-04-003). Publishing the site also publishes config (REQ-03-003). Config edits are not lineage-captured (REQ-03-002). Lineage endpoints are read-only, so there is no restore or rollback.
+
+**Decision needed:** whether concurrent editing, separate config publish, and version restore are target requirements. They interact with NEW-008 ("append-only edit/version log — never silent overwrite") in the 2026-09-05 intake.
+
+### DEC-013 — Workspace scopes beyond `admin`/`member`
+
+**Status:** OPEN (documentation)
+
+**Evidence:** `MemberDashboard.jsx` selects among three AdminShell scopes: `org-admin` (with `?org=`), `admin` (requires `?scope=admin` and admin role), and `member`. CLAUDE.md documents two. Admin login lands on `/world` (runtime probe), not on the admin CMS.
+
+**Decision needed:** confirm the intended scope set and entry points so navigation acceptance tests can be written.
+
+### DEC-014 — Member site editing ends after the 90-day trial unless paid or sponsored
+
+**Status:** OPEN (material product rule)
+
+**Evidence:** REQ-04-001/002. Site and config save/publish require feature `member_site`. Non-admins auto-receive a 90-day `member_career_foundation` trial including it, and afterwards get HTTP 402. Publishing also requires at least one Career Master entry (REQ-04-004). Only the trial offering is seeded. The live offering catalog is unknown.
+
+**Decision needed:** confirm the intended post-trial behavior, including whether an already-published site stays live and readable. Code leaves published sites readable, but this hasn't been verified at runtime.
+
+### DEC-015 — Member public data exposure rules
+
+**Status:** OPEN (privacy)
+
+**Evidence:**
+- (a) `/api/member-site/by-slug/:slug` returns draft- and placeholder-status pages and sections in JSON, hidden only by the browser (REQ-04-005). The platform site strips them server-side (REQ-03-004).
+- (b) Public member config uses a deny-list, removing only `integrations` (REQ-04-006).
+- (c) `GET /api/members/:slug` serves the legacy published profile with no visibility-mode check (REQ-04-007).
+- (d) The featured banner falls back to the member's **email** as display name (REQ-04-009).
+- (e) The resume-URL resolver ignores visibility mode (REQ-04-010).
+- (f) Password-mode sites fail open when no password is set (REQ-04-005).
+
+**Runtime 2026-10-01:** (a) **reproduced** by AT-04-001 on the local scratch environment.
+
+**Decision needed:** confirm the intended public data contract for member sites: what an anonymous visitor may receive for each visibility mode. (b)–(e) are static evidence only.
+
+### DEC-016 — No approved visual design reference
+
+**Status:** OPEN (blocks visual acceptance criteria)
+
+**Evidence:** Design tokens and 6 themes exist ([design-tokens.md](./inventory/design-tokens.md)), but there is no breakpoint scale (13 ad-hoc widths), no approved screenshots or mockups for any screen, and no layout specs. Repo folders `brand-assets/` (82 SVG files) and `pptx_analysis/` (59 extracted PowerPoint XML parts and 1 JPEG) exist, but neither is yet assessed as an approved design reference. The runtime screenshot of `/world` shows overlapping island labels at 1280×800, recorded as an observation and not a defect, because there's nothing to judge it against.
+
+**Decision needed:** which artifacts are approved visual references, per screen, so Stage 5 visual baselines aren't generated from unreviewed screens.
+
+### DEC-017 — Are `/output/*` documents public?
+
+**Status:** OPEN
+
+**Evidence:** CLAUDE.md says output routes "are not authed — they read from published state or URL params". In code, 5 outputs depend on admin-only `/api/backlog/*`, and the resume output reads the member's **draft** when `owner=me` (REQ-07-001).
+
+**Decision needed:** intended audience per output route.
+
+### DEC-018 — Hosting topology consequences
+
+**Status:** OPEN
+
+**Evidence:**
+- (a) `saltbasin.net` is served by Netlify, which rewrites non-API paths to static `index.html`, so the server-side SEO injection on Render (REQ-06-002) is not in the public request path (depends on live DNS, unverified).
+- (b) All scheduled jobs are in-process on a single free-plan Render service (REQ-01-007).
+- (c) A "keepalive workflow" referenced in `server/index.js:205` does not exist in `.github/workflows`.
+- (d) DEPLOY.md says Netlify proxies `/uploads/*`, but `netlify.toml` does not.
+
+**Decision needed:** whether link-unfurl SEO is a requirement (if so, the topology or the injection point must change), and the reliability expectation for scheduled jobs.
+
+### DEC-019 — CLAUDE.md statements contradicted by code at `e0ea466`
+
+**Status:** OPEN (documentation corrections; none applied, since this pass changed no existing guidance)
+
+**Evidence:**
+1. "No test runner is configured" → two runners exist (DEC-001/006).
+2. "Fresh database fails on `organization_profiles` FK ordering" → did not reproduce: bootstrap succeeded twice on empty Postgres 16.
+3. "`npm run seed` re-seeds admin user + backlog items" → seeds platform site/config rows and the admin only.
+4. "`SESSION_SECRET` — cookie signing secret" → not used for cookies.
+5. "Blocks accept `{section, config, mode, memberSlug}`" → blocks receive `{section, config, memberSlug, liveSlugs}`.
+6. "`AdminShell` `scope` prop `'admin'` or `'member'`" → also `org-admin`.
+7. "`/output/*` routes are not authed — they read from published state or URL params" → partially false (DEC-017).
+8. Schema-mechanism description omits lazy runtime DDL and the unapplied `migrations/` SQL file.
+
+**Decision needed:** approve correcting CLAUDE.md (a documentation-only task), and decide the orphan migration file's fate.
+
+### DEC-020 — Row-level security and Supabase API exposure
+
+**Status:** OPEN (security; requires live inspection)
+
+**Evidence:** The repository declares no RLS policies and enables RLS on no table (declared catalog). All authorization lives in Express. On Supabase, `public`-schema tables without RLS are readable and writable through the project's auto-generated REST/GraphQL APIs by anyone holding the anon key, unless those APIs are disabled or RLS was enabled outside the repo.
+
+**Decision needed:** authorize **read-only** live inspection of `pg_class.relrowsecurity`, `pg_policies`, and API exposure settings (metadata only, no row data). This is the single most valuable live check, and it needs explicit authorization.
+
+### DEC-021 — Stripe stub grants paid access when no key is configured
+
+**Status:** OPEN
+
+**Evidence:** REQ-11-003. With `STRIPE_SECRET_KEY` unset, checkout grants a license immediately and records the payment as `stub`. Nothing restricts this to non-production. `render.yaml` does not declare the key, and its live presence is unknown.
+
+**Decision needed:** whether stub checkout must be disabled when `NODE_ENV=production`.
+
+---
+
 *(This log grows as Stage 2/3 surface more conflicts. Entries are never removed — a resolved entry keeps its evidence and gets a `RESOLVED` status plus the decision, so the trail stays intact per the traceability requirement in Stage 6.)*

@@ -1,5 +1,7 @@
 # New-Requirement Register
 
+> **2026-10-01 status:** unchanged since 2026-09-06. No new documents were supplied in the 2026-10-01 session, and nothing below was promoted or altered. The current-state inventory these requirements will map against is now populated ([03](./03-current-state-specification.md), [04](./04-technical-element-register.md)). [04 § No implementation located](./04-technical-element-register.md#no-implementation-located) lists which of NEW-001…017 have no implementing element today.
+
 **Status: awaiting read-aloud validation.** A design package was supplied 2026-09-05 (registered as SRC-NEWDOC-01 through SRC-NEWDOC-08 in `01-source-register.md`, preserved at `docs/baseline/intake/2026-09-05-salt-basin-orbital-design/`). Per the governing objective, missing documents are never interpreted as permission to invent requirements — and, symmetrically, *supplied-but-unvalidated* documents aren't treated as approved requirements either. The user has explicitly said this package hasn't been checked yet against their own intent. See `12-design-package-validation-workflow.md` for the read-aloud confirmation process now underway; this register populates as each document clears that process.
 
 ## Edit #1 entries — from live dictation (SRC-LIVE-01), pending read-back confirmation
