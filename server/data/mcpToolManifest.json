@@ -30,6 +30,10 @@
     "shared_output_live_read",
     "application_output_revoke_qr",
     "application_package_import",
-    "shared_output_resolve"
+    "shared_output_resolve",
+    "career_opportunity_update_details",
+    "application_outputs_unlinked_list",
+    "application_output_link",
+    "application_output_unlink"
   ]
 }
