@@ -1,24 +1,24 @@
 {
-  "exportedAt": "2026-10-09T17:00:36.993Z",
+  "exportedAt": "2026-10-09T17:10:11.786Z",
   "features": {
     "proficiency-live-qr": {
-      "status": "reconcile",
+      "status": "validate",
       "lastRound": 6,
       "lastScore": "29/32",
       "lastReport": "docs/test-results/proficiency-live-qr/round-6.md",
-      "openBugs": 11,
+      "openBugs": 19,
       "backlog": 6
     },
     "world-shell-navigation": {
-      "status": "triage",
+      "status": "fix",
       "lastRound": 2,
       "lastScore": "36/47",
       "lastReport": "docs/test-results/world-shell-navigation/round-2.md",
-      "openBugs": 2,
-      "backlog": 4
+      "openBugs": 7,
+      "backlog": 6
     },
     "career-bound-outputs": {
-      "status": "integrate",
+      "status": "validate",
       "lastRound": 3,
       "lastScore": "48/56",
       "lastReport": "docs/test-results/career-bound-outputs/round-3.md",
@@ -26,11 +26,11 @@
       "backlog": 5
     },
     "qr-gated-outputs": {
-      "status": "fix",
+      "status": "validate",
       "lastRound": 3,
       "lastScore": "36/38",
       "lastReport": "docs/test-results/qr-gated-outputs/round-3.md",
-      "openBugs": 10,
+      "openBugs": 18,
       "backlog": 10
     },
     "no-silent-failures": {
@@ -50,12 +50,12 @@
       "backlog": 4
     },
     "chart-gallery": {
-      "status": "scope",
+      "status": "fix",
       "lastRound": 3,
       "lastScore": "17/20",
       "lastReport": "docs/test-results/chart-gallery/round-3.md",
-      "openBugs": 11,
-      "backlog": 5
+      "openBugs": 10,
+      "backlog": 6
     },
     "output-version-history": {
       "status": "validate",
@@ -82,10 +82,10 @@
       "backlog": 1
     },
     "cover-letter-agent": {
-      "status": "validate",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
+      "status": "triage",
+      "lastRound": 1,
+      "lastScore": "38/46",
+      "lastReport": "docs/test-results/cover-letter-agent/round-1.md",
       "openBugs": 5,
       "backlog": 7
     },
@@ -494,6 +494,181 @@
       ]
     },
     {
+      "id": "proficiency-live-qr-F6-5",
+      "feature": "proficiency-live-qr",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "T6-4 / J4.3",
+      "rootCause": "Only save/select/mapping tools were built; the delete handler body is inline in the route and has no shared function or tool.",
+      "files": [
+        "server/lib/mcpToolRegistry.js",
+        "server/routes/careerMaster.js",
+        "server/lib/capabilityParity.js",
+        "server/data/mcpToolManifest.json"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 6,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "proficiency-live-qr-F6-7",
+      "feature": "proficiency-live-qr",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "J8.4 (T6-3)",
+      "rootCause": "Spec says no sideways panning inside the scroller, product keeps the captioned scroller; needs_business_definition.",
+      "files": [
+        "src/components/admin/ProficiencyRulesPanel.jsx",
+        "docs/triage/proficiency-live-qr-round-6.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 6,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "proficiency-live-qr-F6-8",
+      "feature": "proficiency-live-qr",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "T6-5 / J7.2 third state",
+      "rootCause": "Unknown: either the history list does not refresh after create or the POST de-duplicates onto an existing row.",
+      "files": [
+        "src/components/admin/MyResumePanel.jsx",
+        "server/routes/resumeOutputs.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 6,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (product_defect)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "proficiency-live-qr-F6-9",
+      "feature": "proficiency-live-qr",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "J7.5 and J8.3 (T6-6, T6-7)",
+      "rootCause": "Spec text is loose; amendments need a reviewer other than the proposer.",
+      "files": [
+        "docs/spec-amendments/proficiency-live-qr/"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 6,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "proficiency-live-qr-F6-10",
+      "feature": "proficiency-live-qr",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "J7.4 Known limitation",
+      "rootCause": "Owner design input not given.",
+      "files": [
+        "src/components/SaltParticleChart.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 6,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "proficiency-live-qr-F6-12",
+      "feature": "proficiency-live-qr",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Non-career-bound output creation",
+      "rootCause": "Business definition missing.",
+      "files": [
+        "src/components/admin/MyResumePanel.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 6,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "proficiency-live-qr-F6-13",
+      "feature": "proficiency-live-qr",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "J5.2 Save and use; T1-1/T1-2",
+      "rootCause": "Validation coverage gap.",
+      "files": [
+        "src/components/admin/ProficiencyRulesPanel.jsx",
+        "src/components/admin/CareerExperienceConfigurator.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 6,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "proficiency-live-qr-F6-14",
+      "feature": "proficiency-live-qr",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "J6.2 / My Resume entry",
+      "rootCause": "Spec and navigation not aligned with World Shell direction.",
+      "files": [
+        "src/components/admin/MyResumePanel.jsx",
+        "docs/training/proficiency-rules-and-live-qr.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 6,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "T1-1",
       "feature": "proficiency-live-qr",
       "status": "verified",
@@ -743,7 +918,7 @@
     {
       "id": "T6-1",
       "feature": "proficiency-live-qr",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "J5.2 MOBILE_GAP rows unidentifiable (blank selects)",
@@ -806,7 +981,7 @@
     {
       "id": "T6-4",
       "feature": "proficiency-live-qr",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "MCP_GAP no MCP tools for proficiency rules, category, override, formula, certification bonus, live QR",
@@ -939,7 +1114,7 @@
     {
       "id": "world-shell-navigation-B9",
       "feature": "world-shell-navigation",
-      "status": "open",
+      "status": "fixing",
       "class": "test_harness",
       "attempts": 0,
       "step": "Test accounts / member vs admin journeys",
@@ -965,7 +1140,7 @@
     {
       "id": "world-shell-navigation-B11",
       "feature": "world-shell-navigation",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Spec gap: 3D island entry never exercised",
@@ -1046,22 +1221,244 @@
       "status": "reassigned",
       "class": "spec_error",
       "attempts": 0,
-      "step": "J2 2.3, J4 4.1, J9 9.1 (knock-on J9.2, J10.1)",
-      "rootCause": "coverLetterAutoDraft.js:103 registers an onOpportunityCreated hook (opportunityHooks.js, run by createCareerOpportunity) that auto-files a linked template cover letter DRAFT for every new tracked opportunity unless cover_letter_settings.autoDraft is false (default true, coverLetterTemplate.js:50,77). Shipped in commit 4be0bec (docs/changes/cover-letter-agent.md), after the navigation training spe…",
+      "step": "J10.1 Import note.txt",
+      "rootCause": "Same root cause: imported document is the fourth card.",
       "files": [
-        "docs/training/world-shell-navigation.md",
-        "docs/changes/world-shell-navigation.md"
+        "docs/training/world-shell-opportunity-outputs.md"
       ],
       "scope": {
         "scope": "other_feature",
         "owner": "cover-letter-agent",
-        "evidence": "coverLetterAutoDraft.js registers the onOpportunityCreated hook and cover_letter_settings.autoDraft defaults to true; both were added in 4be0bec (merged by a5e7883, branch release-loop/cover-letter-agent-build), whose request is \"every job opportunity gets a template cover letter\". The extra draft …"
+        "evidence": "Reused scope-review.json decision: auto-draft hook and autoDraft default true added by 4be0bec (merged a5e7883, cover-letter-agent); changes spec counts in J2.3, J4.1, J9.1, J9.2, J10.1."
       },
       "history": [
         {
           "round": 1,
           "event": "found",
           "note": "coverLetterAutoDraft.js:103 registers an onOpportunityCreated hook (opportunityHooks.js, run by createCareerOpportunity) that auto-files a linked template cover letter DRAFT for every new tracked opp…",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "recurred",
+          "note": "RECURRED from round 1. coverLetterAutoDraft.js:103 hooks onOpportunityCreated (opportunityHooks.js); with cover_letter_settings.autoDraft default true (coverLetterTemplate.js:50,77) every tracked opp…",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "recurred",
+          "note": "Same root cause: auto-drafted cover letter is a third linked card alongside the two package cards.",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "recurred",
+          "note": "Same root cause: after unlinking the package letter the auto letter and resume remain (two cards).",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "recurred",
+          "note": "Same root cause: count after relink is three.",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "recurred",
+          "note": "Same root cause: imported document is the fourth card.",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "wsn-B9",
+      "feature": "world-shell-navigation",
+      "status": "fixing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "E.1 Provisional-password login never shows an empty world",
+      "rootCause": "Same as B9: no provisional-password member can be produced under the fixed test accounts. The product behavior exists (WorldShell redirects mustChangePassword members to /first-login-password?next=/world).",
+      "files": [
+        "docs/training/world-shell-opportunity-outputs.md",
+        "scripts/create-test-member.mjs"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Reused world-shell-navigation-B9: the feature's own spec uses curl signup, forbidden by the fixed test-account rule; mustChangePassword handling in WorldShell is this feature's (7cc95ed)."
+      },
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "RECURRED (B9). Spec precondition creates the member via curl signup (provisional password). Fixed test rule forbids that; scripts/create-test-member.mjs:51 sets must_change_password=false uncondition…",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "recurred",
+          "note": "Blocked by J0.1: no provisional password exists, so no password page. Same root cause as B9.",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "recurred",
+          "note": "Same as B9: no provisional-password member can be produced under the fixed test accounts. The product behavior exists (WorldShell redirects mustChangePassword members to /first-login-password?next=/w…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "wsn-r2-mobile-counters",
+      "feature": "world-shell-navigation",
+      "status": "fixing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "J0.3 phone top bar shows 0 TRACKED, 7 AGENTS",
+      "rootCause": "src/components/WorldShell.jsx:127-133 MOBILE_CSS (max-width 700px) sets .sb-world-stats .sb-world-stat {display:none !important}; TopBar (~line 707) renders them so desktop passes. Spec expects them on the 390px walkthrough; interface parity v3 requires phone parity and hiding was a space tradeoff, not owner direction.",
+      "files": [
+        "src/components/WorldShell.jsx"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "MOBILE_CSS hiding .sb-world-stat introduced by 7cc95ed in WorldShell.jsx; spec requires counters on the phone walkthrough."
+      },
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "src/components/WorldShell.jsx:127-133 MOBILE_CSS (max-width 700px) sets .sb-world-stats .sb-world-stat {display:none !important}; TopBar (~line 707) renders them so desktop passes. Spec expects them …",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "wsn-r2-e5-ai-output",
+      "feature": "world-shell-navigation",
+      "status": "process_note",
+      "class": "environment",
+      "attempts": 0,
+      "step": "E.5 Non-editable AI-generated output shows the reason",
+      "rootCause": "generate-resume (server/routes/careerPlacementAgents.js:275) -> generateResumeContent (server/lib/resumeTargeting.js:102-103) throws 'No Anthropic key configured' and returns 400; the validation environment has no ANTHROPIC_API_KEY so no AI-generated JSON output can be made. The behavior exists: opportunityOutputs.js:127-129 sets editable=false/notEditableReason and OpportunityOutputsSection.jsx:…",
+      "files": [
+        "server/lib/resumeTargeting.js",
+        "server/lib/opportunityOutputs.js",
+        "src/components/OpportunityOutputsSection.jsx"
+      ],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "No ANTHROPIC_API_KEY in the validation environment so no AI-generated output can be created; the not-editable-reason behavior exists."
+      },
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "generate-resume (server/routes/careerPlacementAgents.js:275) -> generateResumeContent (server/lib/resumeTargeting.js:102-103) throws 'No Anthropic key configured' and returns 400; the validation envi…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "wsn-r2-failure-toast",
+      "feature": "world-shell-navigation",
+      "status": "backlog_pre_existing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "E.5 observation: generate-resume 400 with no persistent message",
+      "rootCause": "src/lib/hooks/useCareerPlacementAgents.js:355 (also 117,130,177,241,276,290,305,324,342) reports failures via toast('... failed: '+msg), default kind success and 2400 ms (src/lib/toast.js:11), instead of toast.error (red, role=alert, 6 s, toast.js:35-39). Failures read as success and vanish.",
+      "files": [
+        "src/lib/hooks/useCareerPlacementAgents.js",
+        "src/lib/toast.js"
+      ],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "At 7cc95ed^ useCareerPlacementAgents.js already had 28 toast() calls with success default and 2400 ms; verified from source at base commit (not built and run); not in this feature's request."
+      },
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "src/lib/hooks/useCareerPlacementAgents.js:355 (also 117,130,177,241,276,290,305,324,342) reports failures via toast('... failed: '+msg), default kind success and 2400 ms (src/lib/toast.js:11), instea…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "wsn-r2-e7-foreign-id",
+      "feature": "world-shell-navigation",
+      "status": "fixing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "E.7 Another member can never see, link, edit or approve these outputs",
+      "rootCause": "Server scoping is correct (opportunityOutputs.js:49,54,66,78,101 filter by user_id; requireOwnedOpportunity rejects foreign ids). The step bundles a UI-observable half with an API-only half unreachable by point-and-click.",
+      "files": [
+        "docs/training/world-shell-opportunity-outputs.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Server scoping correct; step in the feature's own spec bundles UI and API-only halves."
+      },
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Server scoping is correct (opportunityOutputs.js:49,54,66,78,101 filter by user_id; requireOwnedOpportunity rejects foreign ids). The step bundles a UI-observable half with an API-only half unreachab…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "wsn-r2-mcp-gap",
+      "feature": "world-shell-navigation",
+      "status": "fixing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "MCP tools for the spec's capabilities",
+      "rootCause": "Round-2 report says mcpToolRegistry.js is absent; on the integration head it exists (b77049b, ee3dc2b) with list/create/open opportunity, list/open outputs, new draft version and approve-for-QR tools (tested commit apparently predates it). True remaining gaps, recorded mcp:null in server/lib/capabilityParity.js lines 41 and 54: update opportunity details (PATCH /opportunities/:id) and list-unlink…",
+      "files": [
+        "server/lib/mcpToolRegistry.js",
+        "server/lib/capabilityParity.js",
+        "server/routes/careerPlacementAgents.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "PATCH details and link/unlink/unlinked-outputs routes were added by 7cc95ed; capabilityParity.js records mcp:null for them; interface parity v3 requires MCP."
+      },
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Round-2 report says mcpToolRegistry.js is absent; on the integration head it exists (b77049b, ee3dc2b) with list/create/open opportunity, list/open outputs, new draft version and approve-for-QR tools…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "wsn-r2-b11-island-entry",
+      "feature": "world-shell-navigation",
+      "status": "fixing",
+      "class": "coverage_gap",
+      "attempts": 0,
+      "step": "3D island entry (B11)",
+      "rootCause": "No baseline step enters an island from the 3D world; Journeys cards cover the same panels but the island path is unvalidated.",
+      "files": [
+        "docs/training/world-shell-opportunity-outputs.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Reuses world-shell-navigation-B11: spec has no step for the 3D island entry the feature covers."
+      },
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "No baseline step enters an island from the 3D world; Journeys cards cover the same panels but the island path is unvalidated.",
           "commit": null
         }
       ]
@@ -1314,7 +1711,7 @@
     {
       "id": "career-bound-outputs-F2-6",
       "feature": "career-bound-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Save changes disabled styling",
@@ -1352,7 +1749,7 @@
     {
       "id": "career-bound-outputs-F2-7",
       "feature": "career-bound-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Dialog visible title (admin)",
@@ -1711,7 +2108,7 @@
     {
       "id": "cbo-r2-inherited-cream-text",
       "feature": "career-bound-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 2,
       "step": "Queue page legibility",
@@ -1755,7 +2152,7 @@
     {
       "id": "T3-4",
       "feature": "career-bound-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Tool override selectable by name",
@@ -1787,7 +2184,7 @@
     {
       "id": "T3-5",
       "feature": "career-bound-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Revert skill keeps box",
@@ -1871,7 +2268,7 @@
     {
       "id": "qr-gated-outputs-B7",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Preconditions 1, 4; Journey 3 step 4; Journey 8",
@@ -1953,7 +2350,7 @@
     {
       "id": "qr-gated-outputs-B10",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Journey 6 / request scope",
@@ -1981,7 +2378,7 @@
     {
       "id": "qr-gated-outputs-B11",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "Journey 6",
@@ -2104,9 +2501,9 @@
     {
       "id": "qr-gated-outputs-F2-6",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "retesting",
       "class": "test_harness",
-      "attempts": 0,
+      "attempts": 1,
       "step": "J2.1b contact separator (T2)",
       "rootCause": "No browser verification.",
       "files": [
@@ -2124,6 +2521,12 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (test_harness)",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "fixed",
+          "note": "No code change. contactText() already joins an array contact with ' · ' and is used by DocumentBlocksView, the PDF path and the new .docx path.",
+          "commit": "27e4fdaae993263426846907633af94807f1f603"
         }
       ]
     },
@@ -2157,9 +2560,9 @@
     {
       "id": "qr-gated-outputs-F2-8",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "retesting",
       "class": "requirement_gap",
-      "attempts": 0,
+      "attempts": 1,
       "step": "docx QR / site sync (B10)",
       "rootCause": "Script-only, unverified.",
       "files": [
@@ -2178,6 +2581,12 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "fixed",
+          "note": "Added a stamped .docx download for document_blocks outputs. It has real created/modified dates, authors and approver in core properties. Once approved it carries the slug QR in the header as an image…",
+          "commit": "27e4fdaae993263426846907633af94807f1f603"
         }
       ]
     },
@@ -2210,9 +2619,9 @@
     {
       "id": "qr-gated-outputs-F2-10",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "retesting",
       "class": "requirement_gap",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Interface parity (MCP_GAP)",
       "rootCause": "platform-mcp feature not built.",
       "files": [
@@ -2229,13 +2638,19 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "fixed",
+          "note": "Registered MCP tools application_output_revoke_qr, application_package_import and shared_output_resolve (approve already existed). Each calls the same server function as its route. Parity rows and ma…",
+          "commit": "27e4fdaae993263426846907633af94807f1f603"
         }
       ]
     },
     {
       "id": "qr-gated-outputs-F2-11",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Preconditions / Where things are",
@@ -2254,13 +2669,19 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (owner_direction_conflict)",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "not_fixed",
+          "note": "Needs a reviewer-approved amendment to the frozen spec. The spec and baselines were left unchanged. Also not done: the re-walk as a member from the World Shell and at 390px.",
+          "commit": null
         }
       ]
     },
     {
       "id": "qr-gated-outputs-F2-12",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "J10.3/E.1/E.2/E.4 fixture",
@@ -2278,6 +2699,179 @@
           "round": 2,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (test_harness)",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "not_fixed",
+          "note": "Needs a reviewer-approved amendment to the frozen spec, adding a v3 import step. The spec and baselines were left unchanged.",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F3-3",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "fix-agent report 3",
+      "rootCause": "Fix agent did not browser-verify.",
+      "files": [],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F3-5",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "qr-gated-outputs-F2-11",
+      "rootCause": "Spec routes through Classic Tools as admin; owner wants everything from World Shell as a member.",
+      "files": [
+        "docs/training/qr-gated-outputs.md",
+        "docs/spec-amendments/qr-gated-outputs/"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F3-6",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "test_harness",
+      "attempts": 0,
+      "step": "qr-gated-outputs-F2-12",
+      "rootCause": "No Draft card left for J10.3, E.1, E.2, E.4.",
+      "files": [
+        "docs/training/qr-gated-outputs.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (test_harness)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F3-7",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "J2.1",
+      "rootCause": "Triage T1 never applied since round 2.",
+      "files": [
+        "src/components/admin/MyResumePanel.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (product_defect)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F3-8",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "E.5",
+      "rootCause": "Triage T5 never applied.",
+      "files": [
+        "server/routes/auth.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (product_defect)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F3-9",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Known limitations: in-app import",
+      "rootCause": "Import UI never built.",
+      "files": [
+        "src/components/admin/MyResumePanel.jsx",
+        "server/routes/resumeOutputs.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F3-10",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Known limitations: docx/site sync",
+      "rootCause": "Partial: docx done, sync and journey missing.",
+      "files": [
+        "scripts/sync-site-with-application-package.mjs",
+        "server/lib/outputDocx.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F3-11",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "MOBILE",
+      "rootCause": "Unverified.",
+      "files": [],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (product_defect)",
           "commit": null
         }
       ]
@@ -2453,7 +3047,7 @@
     {
       "id": "G1",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "Where things are: phone route to My Resume",
@@ -2478,7 +3072,7 @@
     {
       "id": "G2",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "Draft card fixture for J10.3, E.1, E.2, E.4",
@@ -3467,7 +4061,7 @@
     {
       "id": "chart-gallery-F2-2",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "product_defect",
       "attempts": 0,
       "step": "Unmerged r1 hunks remain (careerAtomMigration jsonb cast fix, careerMaster atomSyncError, api.js toast, ChartGallery.jsx)",
@@ -3489,7 +4083,7 @@
     {
       "id": "chart-gallery-F2-7",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "test_harness",
       "attempts": 0,
       "step": "Round 3 validation setup",
@@ -3510,7 +4104,7 @@
     {
       "id": "chart-gallery-F2-8",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "J2 2.1 sticky check",
@@ -3557,7 +4151,7 @@
     {
       "id": "chart-gallery-B9",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "journey: pick a chart",
@@ -3583,7 +4177,7 @@
     {
       "id": "chart-gallery-B10",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "test_harness",
       "attempts": 0,
       "step": "validation setup",
@@ -3709,7 +4303,7 @@
     {
       "id": "CG-R2b-1",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "spec_error",
       "attempts": 0,
       "step": "Classic charts: Bar Chart and Capacity Gauge + Add disabled for a member with no roll-up source",
@@ -3747,7 +4341,7 @@
       "scope": {
         "scope": "pre_existing",
         "owner": null,
-        "evidence": "On a5e7883 outputBlocks.js line 462 has the same empty-string guard and lines 663-676 the same capacity-gauge ip(rollup.value) render; 6dd06e5 has no gauge hunk. Zero renders blank without the feature. Not run on a base build."
+        "evidence": "Reproduced on base source: renderBlockToHtml from a5e7883 with a capacity-gauge value of 0 renders an empty value. interpolate() and the gauge case are unchanged since a875b9b and untouched by the gallery commits."
       },
       "history": [
         {
@@ -3778,7 +4372,7 @@
       "scope": {
         "scope": "pre_existing",
         "owner": null,
-        "evidence": "OutputAuthorshipFooter with nowrap chips is on a5e7883 (Output.jsx line 96/107), unchanged since a875b9b; base already had the preview iframe, so the footer overflows narrow containers without the gallery. Chart itself fits. Not run on a base build."
+        "evidence": "Footer nowrap chips date from a875b9b and are unchanged from base to head. Reproduced on the base build (a5e7883) at a 316px viewport on /output/resume: scrollWidth 356 > 316, chips 172/266/215/285px wide. Overflow needs no chart; footer is not part of the gallery request."
       },
       "history": [
         {
@@ -3798,7 +4392,7 @@
     {
       "id": "CG-R2b-4",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "spec_error",
       "attempts": 0,
       "step": "Expect the Live Preview column visible on the right at the same time (phone walkthrough)",
@@ -3834,8 +4428,8 @@
       ],
       "scope": {
         "scope": "pre_existing",
-        "owner": null,
-        "evidence": "mcpToolRegistry.js absent on base and HEAD; interfaceParity assigns it to the separate platform-mcp feature, not in this feature's request nor in the owner list."
+        "owner": "platform-mcp",
+        "evidence": "The capabilities named (proficiency, rollups, Career Master, /api/output-templates list/save) exist without the gallery, which adds only UI over the unchanged template save route. mcpToolRegistry.js now exists (b77049b) with 11 tools but none for proficiency, rollups or output templates. definition…"
       },
       "history": [
         {
@@ -3855,7 +4449,7 @@
     {
       "id": "CG-R2b-6",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "Validator observation F2-8: sticky preview verified only in the World Shell host, not the AdminShell host",
@@ -3881,7 +4475,7 @@
     {
       "id": "CG-R3-1",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "defect",
       "attempts": 0,
       "step": "Admin -> Output Templates -> Resume -> Infographics, scroll 1500px (desktop)",
@@ -3891,7 +4485,11 @@
         "src/components/admin/adminStyles.js",
         "src/components/admin/OutputTemplateConfigurator.jsx"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Gallery fix commit 3b198a8 removed flex:1 and overflowY:auto from the OutputTemplateConfiguratorHub root to make the sticky preview engage. The base (a5e7883) and every commit before 3b198a8 had that scroller, so content scrolled. Without it the overflow:hidden admin workspace clips the 2012px cont…"
+      },
       "history": [
         {
           "round": 3,
@@ -3904,7 +4502,7 @@
     {
       "id": "CG-R3-2",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "backlog_pre_existing",
       "class": "defect",
       "attempts": 0,
       "step": "MOBILE_GAP: Admin -> Output Templates reachable on 390px phone",
@@ -3913,7 +4511,11 @@
         "src/components/admin/AdminShell.jsx",
         "src/brand.css"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "Reproduced on the base build at 390px (World Shell, Classic Tools, AdminShell): .sb-admin-topbar-actions has display none and there is no mobile drawer, current-label or toggle markup. brand.css rules came from eb62057 and the AdminShell markup from a875b9b. AdminShell.jsx and brand.css differ from…"
+      },
       "history": [
         {
           "round": 3,
