@@ -1,39 +1,51 @@
-# Triage — chart gallery, round 2
+# Triage — chart gallery, round 2 (re-validation at c3a71b4)
 
-Tested commit `a207b21`; triaged against integration head `7fb1525`. Validator report: `docs/test-results/chart-gallery/round-2.md`. Analysis from code and the round-2 screenshots; no code changed.
+Validator report: `docs/test-results/chart-gallery/round-2.md` (baseline v1, 16 of 19 pass). This file replaces the earlier triage written against the abandoned `a207b21` run (items CG-R1-1, CG-R1-2, CG-R2-1 there are all verified fixed now). Analysis from code and the round-2 report; no code changed, no spec edited.
 
 ## Summary
 
-| id | step | class | recurrence |
+| id | step | class | note |
 |---|---|---|---|
-| CG-R1-1 | Live Preview stays visible beside gallery | defect | recurs (fix exists, unmerged) |
-| CG-R1-2 | Failed-load alert includes HTTP status | defect | recurs (fix exists, unmerged) |
-| CG-R2-1 | Live Preview proficiency chart clipped | defect | new |
+| CG-R2b-1 | E.4 | spec_error | Gauge always has a source (count rollups); step wording is wrong. Not a regression |
+| CG-R2b-2 | E.4 (visible symptom) | defect | Gauge value 0 renders blank (`interpolate()` drops 0) |
+| CG-R2b-3 | J2.2 (mobile) | defect | Output footer chips are `nowrap`; one chip is wider than the 316px preview |
+| CG-R2b-4 | J1.1 (mobile) | spec_error | "on the right" is false below 900px by design; J2.2 already accepts "below" |
+| CG-R2b-5 | MCP_GAP | environment | Owned by separate feature `platform-mcp` (definition.json interfaceParity) |
+| CG-R2b-6 | (none) | coverage_gap | Sticky preview in the admin-scope host is covered by no step |
 
-## Process finding (root of the two recurrences)
+## CG-R2b-1 — E.4 Capacity Gauge + Add enabled for an empty member (spec_error)
 
-Branch `release-loop/chart-gallery-fix-r1` (commit `dc6b5f0`, "Salvaged partial fix from a stopped agent (untested)") holds fixes for CG-R1-1 and CG-R1-2 but was never merged into the integration branch (`git merge-base --is-ancestor` confirms it is not in HEAD). Round 2 re-tested unchanged code. Merge it and re-validate. The branch also carries unrelated hunks (`careerAtomMigration.js`, `careerMaster.js`, an `atomSyncError` toast in `src/lib/api.js`); confirm they are intended before merging.
+- Code: `src/components/admin/ChartGallery.jsx` line 57 (`capacity-gauge`, `configure: 'key'`), `rollupKeyOptions()` lines 86-90, `canAdd = !needsSource || !!draft.sourceKey` line 286. The 'key' options are every `staticRollups` entry. `server/lib/rollupMetrics.js` `computeStaticRollups()` lines 44-48 ALWAYS emits `total_jobs`, `total_skills`, `total_tools`, `total_case_studies`, `total_certifications` (value 0 for an empty member). So a source key always exists, the gauge defaults to `total_jobs` ("Roles Held") and + Add is enabled. The group charts (`bar-chart-*`, `configure: 'group'`) need a `prefix:` key, which only exists once there is grouped data, so they are disabled.
+- Not a regression: `ChartGallery.jsx` has one commit (`6dd06e5`) and `rollupMetrics.js` has not changed since before this feature. Round 1/2 "pass" rows say "2 disabled flags for empty member", i.e. the two bar charts only; the gauge was never disabled. The change spec ("data source (classic bar charts and gauge)") does not say the gauge is disabled either.
+- Both sides: change spec lists a data source for the gauge but no disabled rule; the step says the gauge is disabled "until a roll-up source is available", and a roll-up source (the count rollups) is always available. Owner direction does not require blocking a zero-valued headline count, so the step is wrong, not the product.
+- Amendment: see item. The visible oddity (blank number) is the separate defect CG-R2b-2.
 
-## CG-R1-1 — Preview scrolls away (recurrence of CG-R1-1)
+## CG-R2b-2 — Gauge shows no number for a value of 0 (defect)
 
-- Class: defect. File: `src/components/admin/OutputTemplateConfigurator.jsx` lines 111 (Hub wrapper) and 321 (configurator wrapper); sticky column at line 653.
-- Root cause: both wrappers are `flex:1; overflowY:'auto'` with no bounded height, nested inside the shell scroller (`WorldShell.jsx` `embedBody`, `overflowY:auto`). `position: sticky` binds to the nearest ancestor with non-visible overflow, which is the inner wrapper. That wrapper never scrolls (it grows to content height), so sticky has nothing to stick against and the column scrolls away with the real scroller. Matches measurements: iframe top 262, -337, -762.
-- Fix (already on fix branch): remove `flex:1; overflowY:'auto'` from both wrappers so sticky binds to the real scroller; sticky only when not `narrow`; iframe height `min(640px, calc(100vh - 3.5rem))`; `minWidth:0` on grid children. Re-validate by scrolling the real scroller and checking the iframe top stays inside the viewport at 600 and 1400 px, in both World Shell and Admin Shell hosts.
+- Code: `src/lib/outputBlocks.js` line 484-486, `interpolate(text, ctx)` begins `if (!text || !ctx) return text || ''`, so numeric `0` becomes `''`. `capacity-gauge` (line 692-706) calls `ip(rollup.value)`, so a legitimately zero count prints an empty value under "ROLES HELD". Zero is data ("none recorded"), not missing; a blank reads like a load failure.
+- Fix: in the gauge case render `rollup.value` directly via an escape helper that keeps 0 (e.g. `ip(String(rollup.value ?? 0))`), or make `interpolate` return `String(text)` for numbers (`if (text == null || text === '' || !ctx) ...`). Check the other `ip(...)` callers (`ip(c.change)`, stat cards) for the same falsy-number drop. Verify: empty member, add Capacity Gauge, preview and thumbnail show "0" and a zero-length arc.
 
-## CG-R1-2 — Failed-load alert has no HTTP status (recurrence of CG-R1-2)
+## CG-R2b-3 — J2.2 mobile: preview document scrolls horizontally (defect, MOBILE_GAP)
 
-- Class: defect. File: `src/components/admin/OutputTemplateConfigurator.jsx` line 199 (`settle('proficiency', api.getCareerProficiency(), ...)`).
-- Root cause: rollups and master go through `loadJson()`, which throws `HTTP <status> ...`, but proficiency goes through `api.getCareerProficiency()` and so `src/lib/api.js` `request()` (lines 12-20). That helper parses the body first (`res.json()` throws "Unexpected end of JSON input" on an empty 500) and otherwise throws only `body.error`, never the status. Hence "proficiency (simulated outage)" or "(Unexpected end of JSON input)". Status handling covered only 2 of 3 sources.
-- Fix (already on fix branch): load proficiency via `loadJson('/api/career/proficiency?period=current')`, and have `loadJson` append the JSON `error` detail when present ("HTTP 500 Internal Server Error - simulated outage"). Confirm the URL matches what `api.getCareerProficiency` sends. Optional hardening: make `api.js request()` tolerate empty/non-JSON error bodies and include the status in the message for all callers.
-- Re-validate with a JSON-body 500 and an empty-body 500; the alert must contain "500".
+- Code: `src/components/Output.jsx` `OutputAuthorshipFooter()` lines 98-118. The chips row is `display:flex; flexWrap:wrap` but each chip has `whiteSpace:'nowrap'` with uppercase text and letter spacing. "CLAUDE (ANTHROPIC) — SECONDARY AUTHOR" and "DESIGN SYSTEM — CO-AUTHORED WITH CHATGPT" are each about 350px wide, wider than the 316px preview column at 390px, so they overflow (scrollWidth 354 > clientWidth 316). The chart itself fits (SVG 218px) — the CG-R2-1 fix holds.
+- Fix: replace `whiteSpace:'nowrap'` with `whiteSpace:'normal'` plus `maxWidth:'100%'` and `overflowWrap:'anywhere'` on the chip. The credit text is frozen (AUTHORSHIP lock) — change only layout style, not strings. Also check the copyright/contact lines wrap (they are plain divs). Verify at 390px: iframe `document.documentElement.scrollWidth <= clientWidth`.
+- Related, not a baseline failure (observation): preview chart text is ~4-5px at 316-378px because the SVGs scale down from a fixed viewBox. Readability is a design improvement, not required by J2.2 ("nothing clipped"); not triaged as a defect.
 
-## CG-R2-1 — Live Preview proficiency bars clipped (new)
+## CG-R2b-4 — J1.1 mobile: "Live Preview ... on the right" (spec_error)
 
-- Class: defect (rendering). File: `src/lib/careerCharts.js` line 112, in `proficiencyBarsHtml`.
-- Root cause: the SVG is emitted with `style="display:block;max-width:100%;min-width:500px"` and a viewBox about 560-640 wide. `min-width:500px` overrides `max-width:100%`, so inside the Live Preview column (about 380px iframe, roughly 280px of content) the SVG stays 500px wide and runs past the right edge, where the page clips it. Only 3-4 of 5 segments show and the level labels are cut off. The gallery thumbnail scales the same HTML in a differently sized box, so it looks fine. The text remains in the DOM, which is why scripted text checks passed; this is a visual failure only. Round 1 screenshots show the same.
-- Fix: remove `min-width:500px` so the viewBox scales to the container (labels get small but stay visible), or wrap the SVG in an `overflow-x:auto` container so it scrolls instead of clipping. Check other chart helpers in `careerCharts.js` for the same fixed-width pattern. Re-validate visually: all 5 segments and level labels visible in the preview column and the Output page print view.
-- Spec change: J2 2.1 in `docs/training/chart-gallery.md` should say all five segments and the level labels are fully visible inside the preview with no clipping at the right edge, so a DOM-text check cannot pass a clipped chart.
+- Code: `OutputTemplateConfigurator.jsx` line 131-133 `narrow = matchMedia('(max-width: 900px)')`; line 334 collapses the grid to one column and line 657 un-sticks the preview when narrow. Change spec: "preview column is sticky so it stays visible while scrolling the gallery" (desktop) and nothing promises a side-by-side phone layout. Training spec J2.2 (same file) already says the preview "sits below the gallery" for narrow windows, and the phone walkthrough is required by the interface-parity rule, so J1.1 must hold at 390px with the preview below. Both J1.1 and J2.2 describe the same product, with J1.1 incomplete.
+- Secondary copy defect (low priority, not a baseline failure): `OutputTemplateConfigurator.jsx` line 331 says "Changes preview live on the right". Change to "Changes preview live beside the gallery (below it on narrow screens)".
 
-## Environment / business definition
+## CG-R2b-5 — MCP_GAP (environment)
 
-None. No `needs_business_definition` items.
+- `server/lib/mcpToolRegistry.js` does not exist. `server/data/releaseLoop/definition.json` interfaceParity (line 251): "A capability with no MCP tool fails as an MCP gap once the platform MCP server exists; before that, it is recorded and assigned to the platform-mcp feature." `platform-mcp` is defined at definition.json line 132 / `active-release.features.json` and is still in build. Not a defect of this feature and not fixable in it. Record against platform-mcp: tools needed for career proficiency (read, set/clear override), career rollups, career master (read, create skills/tools/jobs/engagements), and output templates (list/save). These must call the same server functions as `/api/career/*` and `/api/output-templates` with the same permissions. Re-check this feature once `mcpToolRegistry.js` lands.
+
+## CG-R2b-6 — Sticky preview in the admin-scope host is untested (coverage_gap)
+
+- The configurator is mounted in two hosts (member World Shell and `AdminShell`, each with a different scroller). The CG-R1-1 fix (remove `flex:1; overflowY:auto` wrappers) was only verified in the World Shell. Round-1 finding F2-8 stays uncovered. Propose a new step under Journey 2.
+
+## Fix order
+
+1. CG-R2b-3 (footer chip wrap) and CG-R2b-2 (zero value) as code fixes; copy tweak on line 331 alongside.
+2. Amendments CG-R2b-1, CG-R2b-4, CG-R2b-6 go to the amendment reviewer; do not edit `docs/training/chart-gallery.md` or the baseline directly.
+3. Re-validate: J2.2 and E.4 at 390px and 1280px.

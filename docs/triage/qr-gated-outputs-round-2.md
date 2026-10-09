@@ -36,3 +36,7 @@ No spec_error. The change spec (docs/changes/qr-gated-outputs.md) does not speci
 - Fixture for a Draft card (J10.3, E.1, E.2, E.4): coverage_gap, proposed in the amendment list below.
 - Back to World overlapping the wordmark: pre-existing, nothing for this round.
 - B10 (docx stamp path) has no UI or journey: no step possible, nothing to add.
+
+## Proposed amendments (coverage_gap, to the amendment reviewer)
+- G1: add to "Where things are" the phone route World Shell > Journeys > My Resume (Classic Tools tab strip is hidden at 390px). Traces to interface parity (definition v3, MOBILE_GAP).
+- G2: add a fixture note for a Draft card (a third imported package version) before J10.3, E.1, E.2, E.4. Traces to the steps that need a Draft card after Journey 9.
