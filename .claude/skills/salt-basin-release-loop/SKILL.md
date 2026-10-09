@@ -39,9 +39,13 @@ If `docs/release-log/active-release.state.json` shows unfinished features, a new
    check it out, and use it as the integration branch for this session. Set up the local environment
    (Postgres 16 on port 5433 with socket in /tmp, `/var/tmp/sbpg/env.sh` with test admin credentials) if it
    is missing, and record how in `docs/release-process.md`.
-2. `node scripts/release-loop-resume.mjs --args` prints one Workflow args object per run. Launch each with
-   `Workflow({ name: 'release-loop', args })`, setting `integrationBranch` to the branch you checked out and
-   `commitTrailer` to this session's attribution lines. All runs in parallel; nothing should sit idle.
+2. `node scripts/release-loop-resume.mjs --args --scripts <scratch dir>` writes one self-contained workflow
+   script per run (args built in). Set `integrationBranch` and `commitTrailer` (this session's attribution
+   lines) first, then launch each with `Workflow({ scriptPath })`, all in parallel; nothing should sit idle.
+   A resumed run (`resumeFromRunId`) does not keep its args, so relaunch from these scripts instead.
+   Before launching, check Postgres is up (a container restart stops it) and salvage any unmerged agent
+   work: commit dirty `.claude/worktrees/wf_*` trees to their branches and name the branch in the
+   feature's `fixNotes` (or `salvage` for a build).
 3. Keep the tracker live: write the new runs' transcript dirs to a run_dir file, run
    `scripts/release-tracker-sync.mjs --run <dir>... --ledger /var/tmp/sbpg/tracker/bug-ledger.json`, and
    publish the snapshot to the tracker artifact (`trackerArtifact`, collection `tracker`, doc `current`,
