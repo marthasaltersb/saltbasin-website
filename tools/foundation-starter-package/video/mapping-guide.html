@@ -1,0 +1,134 @@
+<title>Release Tracker Mapping Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@400;500&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+/* Layout: single reading column (Strategic Operator), concept table, numbered questions (a real sequence), method + tool tables, worked example, rules. Single dark theme by brand standard. */
+:root {
+  color-scheme: dark;
+  --bg: #1B2A3B; --deep: #111928; --panel: #223246; --ink: #F5F0E8; --muted: #B5C4C1; --dim: #8B9BAE;
+  --line: rgba(212,184,150,.18); --gold: #C4843A; --gold-hi: #DDAA66; --teal: #8FADB6; --pink: #E8407A;
+  --display: "Cormorant Garamond", Georgia, serif; --label: "Jost", system-ui, sans-serif;
+  --body: "DM Sans", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+body { background: var(--bg); color: var(--ink); font: 16px/1.6 var(--body); }
+.wrap { max-width: 920px; margin: 0 auto; padding-inline: 16px; padding-block: 40px 56px; display: grid; gap: 40px; }
+.eyebrow, h2 { font: 500 12px/1.2 var(--label); text-transform: uppercase; letter-spacing: .16em; color: var(--gold-hi); margin: 0; }
+h2 { padding-bottom: 8px; border-bottom: 1px solid var(--gold); margin-bottom: 16px; }
+h1 { font: 600 clamp(36px, 6vw, 56px)/1.02 var(--display); margin: 8px 0 14px; text-wrap: balance; }
+h3 { font: 600 24px/1.2 var(--display); margin: 0 0 4px; }
+p { margin: 0; max-width: 68ch; }
+.lede { color: var(--muted); font-size: 17px; }
+section { display: grid; gap: 14px; min-width: 0; }
+.scroll { overflow-x: auto; background: var(--panel); border-radius: 2px; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+th { text-align: left; font: 500 11px var(--label); text-transform: uppercase; letter-spacing: .1em; background: var(--deep); padding: 10px 12px; white-space: nowrap; }
+td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 600; white-space: nowrap; }
+code, .mono { font: 13px var(--mono); color: var(--gold-hi); }
+ol.q { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: q; }
+ol.q li { counter-increment: q; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 4px 14px; background: var(--panel); border-top: 2px solid var(--gold); padding: 14px 16px; border-radius: 2px; }
+ol.q li::before { content: counter(q); font: 600 34px/1 var(--display); color: var(--gold); grid-row: span 2; }
+ol.q b { font: 600 20px/1.25 var(--display); }
+ol.q span { color: var(--muted); font-size: 15px; }
+pre { margin: 0; background: var(--deep); padding: 14px 16px; overflow-x: auto; font: 12.5px/1.6 var(--mono); color: var(--ink); border-left: 2px solid var(--teal); border-radius: 2px; }
+.routes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.route { background: var(--panel); padding: 14px 16px; border-top: 2px solid var(--teal); border-radius: 2px; }
+.route p { color: var(--muted); font-size: 15px; }
+ul.rules { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+ul.rules li { padding: 10px 14px 10px 16px; border-left: 2px solid var(--pink); background: var(--deep); border-radius: 2px; }
+.note { color: var(--dim); font-size: 13px; }
+footer { font-size: 12.5px; color: var(--dim); border-top: 1px solid var(--line); padding-top: 12px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Salt Basin · Release tracker</div>
+    <h1>Bring your own project system</h1>
+    <p class="lede">Your team keeps working the way it works today: Jira, Azure DevOps, Linear, GitHub, a spreadsheet, Scrum, Kanban or stage-gate. You answer seven mapping questions once, then send status changes to the tracker in its format. The board then shows every feature, test round and bug the same way for every team.</p>
+  </header>
+
+  <section>
+    <h2>What the tracker counts</h2>
+    <p>Everything in your system lands on one of these five things, or is left out.</p>
+    <div class="scroll"><table>
+      <thead><tr><th>Tracker term</th><th>What it means</th><th>Usually called</th></tr></thead>
+      <tbody>
+        <tr><td>Feature</td><td>One unit of work that ships and is tested as a whole</td><td>Epic, feature, story, work package, deliverable</td></tr>
+        <tr><td>Stage</td><td>What is happening to it now: build, integrate, validate, triage, fix, record</td><td>Workflow status, board column, phase, gate</td></tr>
+        <tr><td>Round</td><td>One full test pass. Round 2 is the re-test after fixes.</td><td>QA pass, test cycle, test run, UAT cycle</td></tr>
+        <tr><td>Bug</td><td>A failed check traced to a cause, tied to one feature</td><td>Defect, bug, issue, finding</td></tr>
+        <tr><td>Agent</td><td>Who or what did the stage</td><td>Assignee, team, CI job, AI agent</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>The seven mapping questions</h2>
+    <p>Answer these in writing before connecting anything. Most mapping problems trace back to a missing answer here.</p>
+    <ol class="q">
+      <li><b>What is a feature in your system?</b><span>Pick one item type and the key that names it, for example a Jira epic key like <code>PAY-120</code>. Stories under it are not separate features unless each is tested on its own.</span></li>
+      <li><b>Which of your statuses mean each stage?</b><span>Map every status to a stage, to “not started” or to “done”. A status that maps to nothing is a gap; decide it now.</span></li>
+      <li><b>What counts as one test round, and where do results come from?</b><span>The tracker needs steps passed and steps total per round, from test cases, acceptance criteria or a checklist. “QA said OK” is not a result.</span></li>
+      <li><b>How is a bug tied to its feature?</b><span>A parent link, an issue link, a label or a field. Every bug resolves to exactly one feature.</span></li>
+      <li><b>How do you tell a returning bug from a new one?</b><span>A reopened bug keeps its ID. A new report of the same cause names the earlier bug. The tracker counts fix attempts per bug, so this matters.</span></li>
+      <li><b>What needs a business decision rather than a fix?</b><span>A “Needs PO decision”, “Needs info” or “Blocked: business” status. These go to the owner with the exact question and are never guessed.</span></li>
+      <li><b>When does a stuck bug go to a person?</b><span>By default, after 2 fix attempts that the re-test still fails. Your team can set its own limit.</span></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>By method</h2>
+    <div class="scroll"><table>
+      <thead><tr><th>Method</th><th>Feature</th><th>Stages</th><th>Round</th><th>Business decision</th></tr></thead>
+      <tbody>
+        <tr><td>Scrum</td><td>Story or epic demoed as a whole</td><td>Board statuses in the sprint</td><td>Each QA pass on the story</td><td>Product Owner</td></tr>
+        <tr><td>Kanban</td><td>Card</td><td>In progress → build · Review → integrate · Testing → validate · Fixing → fix</td><td>Each time a card enters Testing</td><td>“Needs decision” or blocked column</td></tr>
+        <tr><td>Stage-gate</td><td>Work package</td><td>Phases</td><td>SIT 1, SIT 2, UAT</td><td>Gate review or change board</td></tr>
+        <tr><td>SAFe</td><td>Feature in the PI</td><td>Feature Kanban states</td><td>System demo or test pass</td><td>Product Management</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>By tool</h2>
+    <p class="note">Starting points only. Workflows differ, so check your own statuses and fields.</p>
+    <div class="scroll"><table>
+      <thead><tr><th>Tool</th><th>Feature</th><th>Bug → feature</th><th>Round results</th><th>Returning bug</th></tr></thead>
+      <tbody>
+        <tr><td>Jira</td><td>Epic or story key</td><td>Parent epic or issue link</td><td>Test-management app (e.g. Xray, Zephyr) or acceptance checklist</td><td>Same issue reopened</td></tr>
+        <tr><td>Azure DevOps</td><td>Feature or User Story</td><td>Parent/child or Related link</td><td>Test Plans run outcomes</td><td>Same Bug reactivated</td></tr>
+        <tr><td>Linear</td><td>Project or parent issue</td><td>Sub-issue or relation</td><td>Checklist or CI test report</td><td>Same issue reopened</td></tr>
+        <tr><td>GitHub</td><td>Issue or milestone</td><td>Sub-issue, label or linked issue</td><td>CI test report</td><td>Same issue reopened</td></tr>
+        <tr><td>Asana, Monday, spreadsheet</td><td>Task or row</td><td>Subtask or “Feature” column</td><td>Checklist or pass/total column</td><td>Same row plus a reopen count</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Sending the updates</h2>
+    <div class="routes">
+      <div class="route"><h3>From CI or a script</h3><p>Record each stage when it starts and when it finishes, with its result.</p></div>
+      <div class="route"><h3>From a webhook or export</h3><p>A small adapter reads status changes from your tool and translates them using your seven answers.</p></div>
+    </div>
+    <p>Example: Jira epic <code>PAY-120</code> fails 2 of 12 checks on its first test pass, and triage files bug <code>PAY-131</code>.</p>
+    <pre>node log.mjs start  runs/2026-10-pay validate:PAY-120:r1
+node log.mjs result runs/2026-10-pay validate:PAY-120:r1 '{"passed":false,"stepsPassed":10,"stepsTotal":12}'
+node log.mjs start  runs/2026-10-pay triage:PAY-120:r1
+node log.mjs result runs/2026-10-pay triage:PAY-120:r1 '{"items":[{"id":"PAY-131","step":"Refund total","rootCause":"Tax not reversed","class":"defect"}]}'</pre>
+    <p>The board then shows <code>PAY-120</code> as failing at 10/12 in round 1, with one open bug.</p>
+  </section>
+
+  <section>
+    <h2>Rules that don't bend</h2>
+    <ul class="rules">
+      <li>A stage that ends without a result shows as failed, never done.</li>
+      <li>A feature shows passed only when its latest round passed every step.</li>
+      <li>Bug IDs stay the same across rounds. Use your tool's ID.</li>
+      <li>A missing number shows as “not recorded”, never as zero.</li>
+      <li>Only labels, statuses, summaries and counts reach the board. Keep personal or customer data out of titles and summaries.</li>
+    </ul>
+  </section>
+
+  <footer>Source: saltbasin-website · tools/release-tracker-kit/MAPPING.md and README.md (the event format). PAY-120 and PAY-131 are made-up examples.</footer>
+</div>

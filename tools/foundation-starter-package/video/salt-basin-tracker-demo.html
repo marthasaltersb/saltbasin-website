@@ -1,0 +1,342 @@
+<title>Salt Basin Release Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Jost:wght@400;500;600&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+/* Layout: Strategic Operator command board. 3D release crystal hero (features orbit as gems), then summary strip, agents, features, bugs, agent ledger. Single dark theme by brand standard. */
+:root {
+  color-scheme: dark;
+  --bg: #1B2A3B; --deep: #111928; --panel: #223246; --chrome: #2D3A4E;
+  --ink: #F5F0E8; --muted: #B5C4C1; --dim: #8B9BAE; --line: rgba(212,184,150,.16);
+  --gold: #C4843A; --gold-hi: #DDAA66; --gold-soft: rgba(196,132,58,.16);
+  --teal: #8FADB6; --teal-base: #4A7C8E; --teal-soft: rgba(74,124,142,.24);
+  --good: #A8B89A; --good-soft: rgba(168,184,154,.16);
+  --bad: #E08A80; --bad-base: #C44A4A; --bad-soft: rgba(196,74,74,.2);
+  --warn: #DDAA66; --warn-soft: rgba(196,132,58,.16);
+  --human: #B9AED0; --human-soft: rgba(122,110,142,.3); --pink: #E8407A;
+  --display: "Cormorant Garamond", Georgia, serif;
+  --label: "Jost", system-ui, sans-serif;
+  --body: "DM Sans", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); }
+.wrap { max-width: 1200px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 40px; display: grid; gap: 26px; }
+.eyebrow, h2 { font: 500 12px/1.2 var(--label); text-transform: uppercase; letter-spacing: .16em; color: var(--gold-hi); margin: 0; }
+h2 { padding-bottom: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--gold); display: flex; justify-content: space-between; gap: 12px; }
+h2 span { color: var(--dim); letter-spacing: .08em; }
+h1 { font: 600 clamp(34px, 5vw, 52px)/1.02 var(--display); margin: 6px 0 10px; text-wrap: balance; letter-spacing: -.01em; }
+.hero { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px; align-items: stretch; }
+.hero-copy { display: grid; align-content: center; gap: 14px; min-width: 0; }
+.hero-copy p { margin: 0; color: var(--muted); max-width: 46ch; }
+.sync { font: 12px var(--mono); color: var(--dim); }
+.sync b { color: var(--ink); font-weight: 400; }
+.live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--good); margin-right: 6px; vertical-align: 1px; }
+.stage { position: relative; min-height: 380px; border: 1px solid var(--line); background: radial-gradient(120% 90% at 50% 45%, #24384E 0%, var(--deep) 70%); border-radius: 2px; overflow: hidden; }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; }
+.stage .tag { position: absolute; transform: translate(-50%, -100%); pointer-events: none; font: 500 11px var(--label); letter-spacing: .06em; color: var(--ink); background: rgba(17,25,40,.78); border: 1px solid var(--line); padding: 3px 8px; white-space: nowrap; border-radius: 2px; }
+.stage .tag.sel { border-color: var(--gold); color: var(--gold-hi); }
+.legend { position: absolute; left: 12px; bottom: 10px; right: 12px; display: flex; flex-wrap: wrap; gap: 6px 14px; font: 11px var(--label); letter-spacing: .05em; color: var(--muted); pointer-events: none; }
+.legend i { display: inline-block; width: 9px; height: 9px; transform: rotate(45deg); margin-right: 6px; vertical-align: 0; }
+.hint { position: absolute; right: 12px; top: 10px; font: 11px var(--label); color: var(--dim); letter-spacing: .05em; }
+.strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.stat { background: var(--panel); border-top: 2px solid var(--gold); padding: 12px 14px 14px; border-radius: 2px; }
+.stat .n { font: 600 34px/1 var(--display); font-variant-numeric: tabular-nums lining-nums; }
+.stat .l { font: 500 11.5px/1.35 var(--label); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-top: 6px; }
+.stat.human { border-top-color: var(--pink); } .stat.human .n { color: var(--human); }
+.stat.bad { border-top-color: var(--bad-base); } .stat.bad .n { color: var(--bad); }
+.stat.good { border-top-color: var(--good); } .stat.good .n { color: var(--good); }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.filters button { font: 500 12.5px var(--label); letter-spacing: .04em; border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 2px; padding: 5px 12px; cursor: pointer; }
+.filters button:hover { color: var(--ink); border-color: var(--gold); }
+.filters button[aria-pressed="true"] { background: var(--gold); border-color: var(--gold); color: var(--deep); }
+.filters button:focus-visible, summary:focus-visible, .stage canvas:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
+section { min-width: 0; }
+.panel { background: var(--panel); border-radius: 2px; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; font: 500 11px var(--label); color: var(--ink); background: var(--deep); text-transform: uppercase; letter-spacing: .1em; padding: 10px 12px; white-space: nowrap; }
+td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+tbody tr { box-shadow: inset 3px 0 0 transparent; }
+tbody tr:has(.s-passed), tbody tr:has(.s-verified), tbody tr:has(.s-done) { box-shadow: inset 3px 0 0 var(--good); }
+tbody tr:has(.s-failing), tbody tr:has(.s-open), tbody tr:has(.s-failed), tbody tr:has(.s-seen_in_test), tbody tr:has(.s-recurred) { box-shadow: inset 3px 0 0 var(--bad-base); }
+tbody tr:has(.s-needs_human), tbody tr:has(.s-needs_business_definition) { box-shadow: inset 3px 0 0 var(--pink); }
+.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mono { font-family: var(--mono); font-size: 12px; }
+.muted { color: var(--muted); }
+.pill { display: inline-block; font: 500 11.5px/1 var(--label); letter-spacing: .03em; padding: 5px 10px; border-radius: 999px; white-space: nowrap; }
+.s-running { background: var(--teal-soft); color: var(--teal); }
+.s-passed, .s-verified, .s-done { background: var(--good-soft); color: var(--good); }
+.s-failing, .s-open, .s-recurred, .s-retest_failed, .s-failed, .s-done_unreconciled, .s-seen_in_test { background: var(--bad-soft); color: var(--bad); }
+.s-fixing, .s-fixed_awaiting_retest, .s-between_stages, .s-awaiting_retest { background: var(--warn-soft); color: var(--warn); }
+.s-needs_human, .s-needs_business_definition { background: var(--human-soft); color: var(--human); box-shadow: inset 0 0 0 1px var(--pink); }
+.s-queued, .s-idle_or_done { background: var(--chrome); color: var(--muted); }
+.bar { height: 5px; background: var(--chrome); overflow: hidden; min-width: 80px; margin-top: 4px; }
+.bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--teal-base), var(--good)); }
+.now { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.agent { background: var(--panel); border-top: 2px solid var(--teal-base); padding: 12px 14px; min-width: 0; border-radius: 2px; }
+.agent .role { font: 500 11px var(--label); text-transform: uppercase; letter-spacing: .12em; color: var(--teal); }
+.agent .feat { font: 600 20px/1.2 var(--display); margin: 2px 0 6px; overflow-wrap: anywhere; }
+.agent .act { font: 12px/1.45 var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+.agent .meta { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+.agent .meta b { color: var(--bad); font-weight: 600; }
+.empty { padding: 18px; color: var(--muted); }
+details summary { cursor: pointer; list-style: none; }
+details summary::-webkit-details-marker { display: none; }
+.hist { margin: 8px 0 2px; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.hist li { display: grid; grid-template-columns: 44px 120px 1fr; gap: 8px; }
+.callout { position: relative; background: var(--deep); border-left: 2px solid var(--pink); padding: 14px 16px 14px 52px; border-radius: 2px; }
+.callout::before { content: "\201C"; position: absolute; left: 14px; top: -4px; font: 600 54px/1 var(--display); color: var(--gold); }
+.callout b { color: var(--human); font-weight: 600; }
+footer { font-size: 12px; color: var(--dim); border-top: 1px solid var(--line); padding-top: 12px; display: grid; gap: 4px; }
+@media (max-width: 820px) { .hero { grid-template-columns: 1fr; } .stage { min-height: 320px; } }
+@media (max-width: 640px) { .hist li { grid-template-columns: 36px 1fr; } .hist li span:last-child { grid-column: 1 / -1; } }
+@media (prefers-reduced-motion: no-preference) { .running-anim { animation: pulse 1.8s ease-in-out infinite; } @keyframes pulse { 50% { opacity: .5 } } }
+</style>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-copy">
+      <div class="eyebrow">Salt Basin · Release loop</div>
+      <h1 id="title">Salt Basin Release Tracker</h1>
+      <p id="tagline">Build, validate in the browser, triage, fix, re-test, until every journey passes.</p>
+      <div class="sync" id="sync"><span class="live-dot"></span>Loading…</div>
+      <div class="filters" id="filters" role="group" aria-label="Filter by feature"></div>
+    </div>
+    <div class="stage" id="stage" aria-label="Release crystal: each feature is a gem orbiting the release. Select a gem to filter the board.">
+      <canvas id="scene" tabindex="0" aria-hidden="true"></canvas>
+      <div id="tags"></div>
+      <div class="hint">Drag to turn · select a gem to filter</div>
+      <div class="legend"><span><i style="background:#A8B89A"></i>Passed</span><span><i style="background:#4A7C8E"></i>In progress</span><span><i style="background:#C4843A"></i>Awaiting re-test</span><span><i style="background:#C44A4A"></i>Failing</span><span><i style="background:#7A6E8E;outline:1px solid #E8407A"></i>Needs a person</span><span><i style="background:#E08A80;width:6px;height:6px"></i>Open bug</span></div>
+    </div>
+  </div>
+
+  <div class="strip" id="strip"></div>
+  <div id="humanCallout" hidden></div>
+
+  <section>
+    <h2>Agents working now</h2>
+    <div class="now" id="now"><div class="panel empty">No agent is running right now.</div></div>
+  </section>
+
+  <section>
+    <h2>Features <span>Latest browser validation per feature</span></h2>
+    <div class="panel"><table>
+      <thead><tr><th>Feature</th><th>Status</th><th>Latest test</th><th class="num">Rounds</th><th class="num">Open bugs</th></tr></thead>
+      <tbody id="features"></tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Bugs <span>2 fix attempts, then a person decides</span></h2>
+    <div class="panel"><table>
+      <thead><tr><th>Bug</th><th>Feature</th><th>Status</th><th class="num">Fix attempts</th><th>Root cause and history</th></tr></thead>
+      <tbody id="bugs"></tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>All agent runs</h2>
+    <div class="panel"><table>
+      <thead><tr><th>Agent</th><th>Status</th><th>Result</th><th class="num">Tokens (out / cache read)</th><th>Last activity</th></tr></thead>
+      <tbody id="agents"></tbody>
+    </table></div>
+  </section>
+
+  <footer>
+    <div><b>Demo data.</b> Fictional features (alpha-ledger, bravo-forms, charlie-export, delta-board) from the tracker kit's test fixture, run through <span class="mono">tools/release-tracker-kit/sync.mjs</span>. Times are shifted to the moment you opened the page.</div>
+    <div>Source: saltbasin-website · tools/release-tracker-kit · Strategic Operator palette from src/brand.css.</div>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+let ROLE = { build: 'Build', integrate: 'Integrate', validate: 'Validate', triage: 'Triage', fix: 'Fix', record: 'Record' };
+const STATUS = {
+  running: 'Running', passed: 'Passed', failing: 'Failing', queued: 'Queued', between_stages: 'Between stages',
+  needs_human: 'Needs a person', needs_business_definition: 'Needs a business decision', open: 'Open', recurred: 'Came back',
+  fixing: 'Being fixed', fixed_awaiting_retest: 'Fixed, awaiting re-test', retest_failed: 'Re-test failed', verified: 'Verified fixed',
+  done: 'Done', failed: 'Failed', idle_or_done: 'Idle', done_unreconciled: 'Finished, failures not reconciled',
+  seen_in_test: 'Seen in test, awaiting triage',
+};
+const EVENT = { found: 'Found', recurred: 'Came back', fixed: 'Fix applied', not_fixed: 'Not fixed', seen: 'Seen in test' };
+let snap = null; let filter = 'all';
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const pill = (s) => `<span class="pill s-${esc(s)}">${esc(STATUS[s] || String(s).replace(/_/g, ' '))}</span>`;
+const featStatus = (s) => (STATUS[s] ? pill(s) : `<span class="pill s-running running-anim">${esc(s.split(', ').map((r) => ROLE[r] || r).join(' + '))}</span>`);
+const ago = (iso) => { if (!iso) return '—'; const m = Math.round((Date.now() - Date.parse(iso)) / 60000); return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : `${Math.floor(m / 60)} h ${m % 60} min ago`; };
+const k = (n) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}k` : String(n || 0));
+const match = (f) => filter === 'all' || f === filter;
+
+var render = function render() {
+  if (!snap) return;
+  if (snap.roles) ROLE = { ...ROLE, ...snap.roles };
+  $('title').textContent = snap.projectName || 'Release tracker';
+  document.title = snap.projectName ? `${snap.projectName} · Release Tracker` : 'Release Tracker';
+  if (snap.tagline) $('tagline').textContent = snap.tagline;
+  const age = (Date.now() - Date.parse(snap.syncedAt)) / 60000;
+  $('sync').className = `sync${age > 20 ? ' stale' : ''}`;
+  $('sync').innerHTML = `<span class="live-dot"></span>Updated <b>${esc(ago(snap.syncedAt))}</b> · run ${esc(snap.runId || '—')}`;
+
+  const feats = snap.features || []; const bugs = snap.bugs || []; const agents = snap.agents || [];
+  const running = agents.filter((a) => a.status === 'running');
+  const human = bugs.filter((b) => b.status === 'needs_human' || b.status === 'needs_business_definition');
+  const open = bugs.filter((b) => !['verified'].includes(b.status));
+  const unrec = agents.filter((a) => a.status === 'done_unreconciled');
+  $('strip').innerHTML = [
+    ['good', feats.filter((f) => f.status === 'passed').length + ' / ' + feats.length, 'Features passed'],
+    ['', running.length, 'Agents running'],
+    ['bad', open.length, 'Open bugs'],
+    ['good', bugs.filter((b) => b.status === 'verified').length, 'Bugs verified fixed'],
+    ['human', human.length, 'Need a person'],
+    ['bad', unrec.length, 'Finished with unreconciled failures'],
+    ['', k(snap.totals?.output) + ' / ' + k(snap.totals?.cacheRead), 'Tokens out / cache read'],
+  ].map(([c, n, l]) => `<div class="stat ${c}"><div class="n">${esc(n)}</div><div class="l">${esc(l)}</div></div>`).join('');
+
+  const hc = $('humanCallout');
+  hc.hidden = !human.length;
+  hc.innerHTML = human.length ? `<div class="callout"><b>${human.length} ${human.length === 1 ? 'bug needs' : 'bugs need'} a person.</b> ${esc(snap.maxFixAttemptsPerBug)} fix attempts did not solve ${human.length === 1 ? 'it' : 'them'}, or a business decision is missing. These are out of the automated loop until you decide. See the Bugs table.</div>` : '';
+
+  const keys = ['all', ...feats.map((f) => f.key)];
+  if (!keys.includes(filter)) filter = 'all';
+  $('filters').innerHTML = keys.map((key) => `<button type="button" id="f-${esc(key)}" data-k="${esc(key)}" aria-pressed="${key === filter}">${key === 'all' ? 'All features' : esc(key)}</button>`).join('');
+
+  const now = running.filter((a) => match(a.feature));
+  $('now').innerHTML = now.length ? now.map((a) => `<div class="agent"><div class="role">${esc(ROLE[a.role] || a.role)}${a.round ? ` · round ${a.round}` : ''}</div><div class="feat">${esc(a.feature)}</div><div class="act">${esc(a.activity || 'Starting…')}</div>${a.role === 'validate' ? `<div class="meta">${a.liveSteps ? `${a.liveSteps.checked} checks logged · ${a.liveSteps.passed} passed · <b>${a.liveSteps.failed.length} failed</b>` : 'No step log (started before live logging)'}${(a.signals || []).length || (a.liveSteps?.errors || []).length ? ` · <b>${(a.signals || []).length + (a.liveSteps?.errors || []).length} page errors / failed requests seen</b>` : ''}</div>` : ''}<div class="meta">Started ${esc(ago(a.startedAt))} · last step ${esc(ago(a.lastActivityAt))}</div></div>`).join('')
+    : '<div class="panel empty">No agent is running for this selection.</div>';
+
+  const fr = feats.filter((f) => match(f.key));
+  $('features').innerHTML = fr.length ? fr.map((f) => {
+    const r = f.lastResult; const pct = r && r.stepsTotal ? Math.round((r.stepsPassed / r.stepsTotal) * 100) : 0;
+    return `<tr><td><b>${esc(f.key)}</b></td><td>${featStatus(f.status)}</td><td>${r ? `<div class="num">Round ${r.round}: ${r.stepsPassed}/${r.stepsTotal} steps</div><div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>` : '<span class="muted">Not tested yet</span>'}</td><td class="num">${f.rounds}</td><td class="num">${f.openBugs}</td></tr>`;
+  }).join('') : '<tr><td colspan="5" class="empty">No features for this selection.</td></tr>';
+
+  const order = { needs_human: 0, needs_business_definition: 1, recurred: 2, retest_failed: 3, open: 4, seen_in_test: 5, fixing: 6, fixed_awaiting_retest: 7, verified: 8 };
+  const br = bugs.filter((b) => match(b.feature)).sort((a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9));
+  $('bugs').innerHTML = br.length ? br.map((b) => `<tr><td class="mono">${esc(b.id)}</td><td>${esc(b.feature)}</td><td>${pill(b.status)}</td><td class="num">${b.attempts || 0} / ${esc(snap.maxFixAttemptsPerBug)}</td><td><details><summary><b>${esc(b.step)}</b><div class="muted">${esc(b.rootCause)}</div>${b.question ? `<div><b>Question for you:</b> ${esc(b.question)}</div>` : ''}</summary><ul class="hist">${(b.history || []).map((h) => `<li><span class="muted">R${h.round}</span><span>${esc(EVENT[h.event] || h.event)}</span><span>${esc(h.note)}${h.files?.length ? ` <span class="mono muted">${esc(h.files.join(', '))}</span>` : ''}</span></li>`).join('')}</ul></details></td></tr>`).join('')
+    : '<tr><td colspan="5" class="empty">No bugs for this selection.</td></tr>';
+
+  const ar = agents.filter((a) => match(a.feature));
+  $('agents').innerHTML = ar.length ? ar.map((a) => `<tr><td><b>${esc(ROLE[a.role] || a.role)}</b> · ${esc(a.feature)}${a.round ? ` · R${a.round}` : ''}</td><td>${pill(a.status)}</td><td>${esc(a.summary || '—')}${a.failures?.length ? `<div class="muted">${a.failures.length} command failure${a.failures.length > 1 ? 's' : ''} reported</div>` : ''}</td><td class="num">${k(a.tokens?.output)} / ${k(a.tokens?.cacheRead)}</td><td class="muted">${esc(ago(a.lastActivityAt))}</td></tr>`).join('')
+    : '<tr><td colspan="5" class="empty">No agent runs for this selection.</td></tr>';
+}
+
+
+// ── Demo data: the fixture snapshot, shifted so "now" is when the page opened ──
+const RAW = {"projectName":"Salt Basin Release Tracker","tagline":"Build, validate in the browser, triage, fix and re-test until every journey passes","roles":null,"runId":"runA + runB","syncedAt":"2026-10-09T02:46:56.596Z","maxFixAttemptsPerBug":2,"repoUrl":null,"maxFixRounds":4,"features":[{"key":"alpha-ledger","status":"passed","rounds":2,"lastResult":{"round":2,"passed":true,"stepsPassed":10,"stepsTotal":10,"report":"docs/test-results/alpha-ledger/round-2.md"},"openBugs":0,"agents":6},{"key":"bravo-forms","status":"needs_human","rounds":3,"lastResult":{"round":3,"passed":false,"stepsPassed":9,"stepsTotal":12},"openBugs":2,"agents":9},{"key":"charlie-export","status":"failed","rounds":0,"lastResult":null,"openBugs":0,"agents":1},{"key":"delta-board","status":"validate","rounds":1,"lastResult":null,"openBugs":4,"agents":2}],"agents":[{"liveSteps":{"passed":1,"failed":[{"step":"J1 2","expect":"Card count is 3","seen":"Card count is 2","result":"fail"}],"errors":[{"type":"pageerror","detail":"Uncaught ReferenceError: foo"}],"checked":2},"signals":[{"type":"pageerror","detail":"TypeError: x is undefined","at":"2026-10-09T02:41:49.536Z"},{"type":"requestfailed","detail":"http://127.0.0.1:3806/api/boards 500","at":"2026-10-09T02:41:49.536Z"}],"id":"fx018","label":"validate:delta-board:r1","role":"validate","feature":"delta-board","round":1,"phase":"Validate","status":"running","activity":"Click the Save button","summary":null,"tokens":{"input":4,"cacheWrite":200,"cacheRead":2000,"output":26},"startedAt":"2026-10-09T02:41:14.536Z","lastActivityAt":"2026-10-09T02:41:49.536Z","failures":[]},{"liveSteps":null,"signals":[],"id":"fx017","label":"build:delta-board","role":"build","feature":"delta-board","round":null,"phase":"Build","status":"done_unreconciled","activity":null,"summary":"Initial check passed · branch release-loop/delta-board-build · 1 reported failures not yet reconciled","tokens":{"input":2,"cacheWrite":100,"cacheRead":1000,"output":15},"startedAt":"2026-10-09T02:40:53.536Z","lastActivityAt":"2026-10-09T02:41:07.536Z","failures":["npm audit exited 1 (advisory only)"]},{"liveSteps":null,"signals":[],"id":"fx016","label":"build:charlie-export","role":"build","feature":"charlie-export","round":null,"phase":"Build","status":"failed","activity":null,"summary":null,"tokens":{"input":2,"cacheWrite":100,"cacheRead":1000,"output":5},"startedAt":"2026-10-09T02:40:32.536Z","lastActivityAt":"2026-10-09T02:40:46.536Z","failures":[]},{"liveSteps":null,"signals":[],"id":"fx015","label":"triage:bravo-forms:r3","role":"triage","feature":"bravo-forms","round":3,"phase":"Triage","status":"done","activity":null,"summary":"1 triage items","tokens":{"input":2,"cacheWrite":100,"cacheRead":1000,"output":10},"startedAt":"2026-10-09T02:40:11.536Z","lastActivityAt":"2026-10-09T02:40:25.536Z","failures":[]},{"liveSteps":{"passed":0,"failed":[],"errors":[],"checked":0},"signals":[],"id":"fx014","label":"validate:bravo-forms:r3","role":"validate","feature":"bravo-forms","round":3,"phase":"Validate","status":"done","activity":null,"summary":"9/12 steps passed · FAIL","tokens":{"input":2,"cacheWrite":100,"cacheRead":1000,"output":10},"startedAt":"2026-10-09T02:39:50.536Z","lastActivityAt":"2026-10-09T02:40:04.536Z","failures":[]},{"liveSteps":null,"signals":[],"id":"fx013","label":"fix:bravo-forms:r2","role":"fix","feature":"bravo-forms","round":2,"phase":"Fix","status":"done","activity":null,"summary":"1 fixed · 0 not fixed","tokens":{"input":2,"cacheWrite":100,"cacheRead":1000,"output":10},"startedAt":"2026-10-09T02:39:29.536Z","lastActivityAt":"2026-10-09T02:39:43.536Z","failures":[]},{"liveSteps":null,"signals":[],"id":"fx012","label":"triage:bravo-forms:r2","role":"triage","feature":"bravo-forms","round":2,"phase":"Triage","status":"done","activity":null,"summary":"1 triage items","tokens":{"input":2,"cacheWrite":100,"cacheRead":1000,"output":10},"startedAt":"2026-10-09T02:39:08.536Z","lastActivityAt":"2026-10-09T02:39:22.536Z","failures":[]},{"liveSteps":{"passed":0,"failed":[],"errors":[],"checked":0},"signals":[],"id":"fx011","label":"validate:bravo-forms:r2","role":"validate","feature":"bravo-forms","round":2,"phase":"Validate","status":"done","activity":null,"summary":"7/12 steps passed · FAIL","tokens":{"input":2,"cacheWrite":100,"cacheRead":1000,"output":10},"startedAt":"2026-10-09T02:38:47.536Z","lastActivityAt":"2026-10-09T02:39:01.536Z","failures":[]},{"liveSteps":null,"signals":[],"id":"fx010","label":"fix:bravo-forms:r1","role":"fix","feature":"bravo-forms","round":1,"phase":"Fix","status":"done","activity":null,"summary":"1 fixed · 1 not fixed","tokens":{"input":2,"cacheWrite":100,"cacheRead":1000,"output":10},"startedAt":"2026-10-09T02:38:26.536Z","lastActivityAt":"2026-10-09T02:38:40.536Z","failures":[]},{"liveSteps":null,"signals":[],"id":"fx009","label":"triage:bravo-forms:r1","role":"triage","feature":"bravo-forms","round":1,"phase":"Triage","status":"done","activity":null,"summary":"2 triage items","tokens":{"input":2,"cacheWrite":100,"cacheRead":1000,"output":10},"startedAt":"2026-10-09T02:38:05.536Z","lastActivityAt":"2026-10-09T02:38:19.536Z","failures":[]},{"liveSteps":{"passed":0,"failed":[],"errors":[],"checked":0},"signals":[],"id":"fx008","label":"validate:bravo-forms:r1","role":"validate","feature":"bravo-forms","round":1,"phase":"Validate","status":"done","activity":null,"summary":"5/12 steps passed · FAIL","tokens":{"input":2,"cacheWrite":100,"cacheRead":1000,"output":10},"startedAt":"2026-10-09T02:37:44.536Z","lastActivityAt":"2026-10-09T02:37:58.536Z","failures":[]},{"liveSteps":null,"signals":[],"id":"fx007","label":"build:bravo-forms","role":"build","feature":"bravo-forms","round":null,"phase":"Build","status":"done","activity":null,"summary":"Initial check passed · branch release-loop/bravo-forms-build","tokens":{"input":2,"cacheWrite":100,"cacheRead":1000,"output":10},"startedAt":"2026-10-09T02:37:23.536Z","lastActivityAt":"2026-10-09T02:37:37.536Z","failures":[]},{"liveSteps":{"passed":0,"failed":[],"errors":[],"checked":0},"signals":[],"id":"fx006","label":"validate:alpha-ledger:r2","role":"validate","feature":"alpha-ledger","round":2,"phase":"Validate","status":"done","activity":null,"summary":"10/10 steps passed · PASS","tokens":{"input":2,"cacheWrite":100,"cacheRead":1000,"output":30},"startedAt":"2026-10-09T02:37:02.536Z","lastActivityAt":"2026-10-09T02:37:16.536Z","failures":[]},{"liveSteps":null,"signals":[],"id":"fx005","label":"fix:alpha-ledger:r1","role":"fix","feature":"alpha-ledger","round":1,"phase":"Fix","status":"done","activity":null,"summary":"1 fixed · 0 not fixed","tokens":{"input":2,"cacheWrite":100,"cacheRead":1000,"output":40},"startedAt":"2026-10-09T02:36:41.536Z","lastActivityAt":"2026-10-09T02:36:55.536Z","failures":[]},{"liveSteps":null,"signals":[],"id":"fx004","label":"triage:alpha-ledger:r1","role":"triage","feature":"alpha-ledger","round":1,"phase":"Triage","status":"done","activity":null,"summary":"1 triage items","tokens":{"input":2,"cacheWrite":100,"cacheRead":1000,"output":25},"startedAt":"2026-10-09T02:36:20.536Z","lastActivityAt":"2026-10-09T02:36:34.536Z","failures":[]},{"liveSteps":{"passed":0,"failed":[],"errors":[],"checked":0},"signals":[],"id":"fx003","label":"validate:alpha-ledger:r1","role":"validate","feature":"alpha-ledger","round":1,"phase":"Validate","status":"done","activity":null,"summary":"8/10 steps passed · FAIL","tokens":{"input":2,"cacheWrite":100,"cacheRead":1000,"output":30},"startedAt":"2026-10-09T02:35:59.536Z","lastActivityAt":"2026-10-09T02:36:13.536Z","failures":[]},{"liveSteps":null,"signals":[],"id":"fx002","label":"integrate:alpha-ledger","role":"integrate","feature":"alpha-ledger","round":null,"phase":"Integrate","status":"done","activity":null,"summary":"Merged → abc1234","tokens":{"input":2,"cacheWrite":100,"cacheRead":1000,"output":20},"startedAt":"2026-10-09T02:35:38.536Z","lastActivityAt":"2026-10-09T02:35:52.536Z","failures":[]},{"liveSteps":null,"signals":[],"id":"fx001","label":"build:alpha-ledger","role":"build","feature":"alpha-ledger","round":null,"phase":"Build","status":"done","activity":"Run the build","summary":"Initial check passed · branch release-loop/alpha-ledger-build","tokens":{"input":4,"cacheWrite":200,"cacheRead":2000,"output":110},"startedAt":"2026-10-09T02:35:03.536Z","lastActivityAt":"2026-10-09T02:35:31.536Z","failures":[]}],"bugs":[{"id":"A1","feature":"alpha-ledger","firstRound":1,"history":[{"round":1,"event":"found","note":"The total ignores the discount line."},{"round":1,"event":"fixed","note":"Subtract discount before total","files":["src/ledger.js"],"commit":null},{"round":2,"event":"verified","note":"Retest round 2 passed every step","commit":null}],"step":"Journey 1 step 3","rootCause":"The total ignores the discount line.","class":"defect","files":["src/ledger.js"],"question":null,"status":"verified","attempts":1},{"id":"B1","feature":"bravo-forms","firstRound":1,"history":[{"round":1,"event":"found","note":"Save button posts an empty body."},{"round":1,"event":"fixed","note":"Send the form body","files":["src/forms.js"],"commit":null},{"round":2,"event":"recurred","note":"Body is sent but the content type header is missing."},{"round":2,"event":"fixed","note":"Add content type header","files":["src/forms.js"],"commit":null},{"round":3,"event":"recurred","note":"Server rejects the body on a stale session."}],"step":"Journey 2 step 1","rootCause":"Server rejects the body on a stale session.","class":"defect","question":null,"status":"needs_human","attempts":2},{"id":"B9","feature":"bravo-forms","firstRound":1,"history":[{"round":1,"event":"found","note":"Rounding rule is not defined."},{"round":1,"event":"not_fixed","note":"Needs a business decision"}],"step":"Journey 4 step 2","rootCause":"Rounding rule is not defined.","class":"needs_business_definition","question":"Should totals round half up or half even?","status":"needs_business_definition"},{"id":"delta-board-R1-live1","feature":"delta-board","status":"seen_in_test","step":"J1 2","rootCause":"Expected: Card count is 3 · Saw: Card count is 2","history":[{"round":1,"event":"seen","note":"Seen by the test agent; goes to triage when the round ends"}]},{"id":"delta-board-R1-live2","feature":"delta-board","status":"seen_in_test","step":"pageerror","rootCause":"Uncaught ReferenceError: foo","history":[{"round":1,"event":"seen","note":"Seen by the test agent; goes to triage when the round ends"}]},{"id":"delta-board-R1-live3","feature":"delta-board","status":"seen_in_test","step":"pageerror","rootCause":"TypeError: x is undefined","history":[{"round":1,"event":"seen","note":"Seen by the test agent; goes to triage when the round ends"}]},{"id":"delta-board-R1-live4","feature":"delta-board","status":"seen_in_test","step":"requestfailed","rootCause":"http://127.0.0.1:3806/api/boards 500","history":[{"round":1,"event":"seen","note":"Seen by the test agent; goes to triage when the round ends"}]}],"totals":{"input":40,"cacheWrite":2000,"cacheRead":20000,"output":391}};
+(function shift() {
+  const d = Date.now() - Date.parse(RAW.syncedAt);
+  const mv = (iso) => (iso ? new Date(Date.parse(iso) + d).toISOString() : iso);
+  RAW.syncedAt = mv(RAW.syncedAt);
+  for (const a of RAW.agents) { a.startedAt = mv(a.startedAt); a.lastActivityAt = mv(a.lastActivityAt); }
+  RAW.runId = 'demo';
+})();
+snap = RAW;
+
+// ── 3D release crystal (recipe from src/lib/crystalGeometry.js: signature core, gold wire, gem satellites) ──
+const GEM = { passed: 0xA8B89A, failing: 0xC44A4A, failed: 0xC44A4A, needs_human: 0x7A6E8E, awaiting_retest: 0xC4843A, between_stages: 0xC4843A, queued: 0x8B9BAE };
+const gemColor = (s) => GEM[s] ?? 0x4A7C8E;   // any running stage = teal
+const scene3 = (() => {
+  const stage = $('stage'); const canvas = $('scene'); const tagsEl = $('tags');
+  if (!window.THREE) { stage.querySelector('.hint').textContent = '3D view unavailable (three.js did not load)'; return { update() {} }; }
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+  camera.position.set(0, 5.4, 11); camera.lookAt(0, 0, 0);
+  const key = new THREE.DirectionalLight(0xC4843A, 1.4); key.position.set(4, 5, 5); scene.add(key);
+  const fill = new THREE.DirectionalLight(0x4A7C8E, 0.9); fill.position.set(-5, -2, 3); scene.add(fill);
+  scene.add(new THREE.AmbientLight(0xF8F4EC, 0.55));
+
+  const world = new THREE.Group(); scene.add(world);
+  const core = new THREE.Group(); world.add(core);
+  core.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.0, 1), new THREE.MeshStandardMaterial({ color: 0xF1EBDD, metalness: 0.25, roughness: 0.35, flatShading: true })));
+  core.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.12, 1), new THREE.MeshBasicMaterial({ color: 0xC4843A, wireframe: true, transparent: true, opacity: 0.55 })));
+  const ringMat = new THREE.MeshBasicMaterial({ color: 0xC4843A, transparent: true, opacity: 0.28 });
+  const R = 3.9;
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(R, 0.012, 6, 160), ringMat); ring.rotation.x = Math.PI / 2; world.add(ring);
+  const ring2 = new THREE.Mesh(new THREE.TorusGeometry(R + 0.9, 0.006, 6, 160), new THREE.MeshBasicMaterial({ color: 0x4A7C8E, transparent: true, opacity: 0.35 })); ring2.rotation.x = Math.PI / 2; ring2.rotation.y = 0.12; world.add(ring2);
+
+  const gems = []; let built = '';
+  function build() {
+    const feats = snap.features || [];
+    const sig = feats.map((f) => f.key + f.status + f.openBugs).join('|');
+    if (sig === built) return; built = sig;
+    for (const g of gems) world.remove(g.group);
+    gems.length = 0; tagsEl.innerHTML = '';
+    feats.forEach((f, i) => {
+      const group = new THREE.Group();
+      const a = (i / feats.length) * Math.PI * 2;
+      group.position.set(Math.cos(a) * R, Math.sin(a * 2) * 0.35, Math.sin(a) * R);
+      const passed = f.status === 'passed';
+      const geo = passed ? new THREE.DodecahedronGeometry(0.46, 0) : new THREE.OctahedronGeometry(0.48, 0);
+      const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: gemColor(f.status), flatShading: true, roughness: 0.38, metalness: 0.15, emissive: gemColor(f.status), emissiveIntensity: 0.12 }));
+      mesh.userData.key = f.key; group.add(mesh);
+      if (f.status === 'needs_human') {   // hot pink is a line only, never a fill
+        group.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.OctahedronGeometry(0.62, 0)), new THREE.LineBasicMaterial({ color: 0xE8407A })));
+      }
+      const halo = new THREE.Mesh(new THREE.TorusGeometry(0.78, 0.01, 6, 64), new THREE.MeshBasicMaterial({ color: 0xDDAA66, transparent: true, opacity: 0 }));
+      halo.rotation.x = Math.PI / 2; group.add(halo);
+      const shards = [];
+      for (let b = 0; b < f.openBugs; b++) {
+        const s = new THREE.Mesh(new THREE.TetrahedronGeometry(0.11, 0), new THREE.MeshStandardMaterial({ color: 0xE08A80, flatShading: true }));
+        s.userData.phase = (b / f.openBugs) * Math.PI * 2; group.add(s); shards.push(s);
+      }
+      const runningAgents = (snap.agents || []).filter((x) => x.status === 'running' && x.feature === f.key);
+      const sats = runningAgents.map((_, j) => { const s = new THREE.Mesh(new THREE.OctahedronGeometry(0.13, 0), new THREE.MeshStandardMaterial({ color: 0x8FADB6, flatShading: true, emissive: 0x4A7C8E, emissiveIntensity: 0.6 })); s.userData.phase = j; group.add(s); return s; });
+      world.add(group);
+      const tag = document.createElement('div'); tag.className = 'tag'; tag.textContent = f.key; tagsEl.appendChild(tag);
+      gems.push({ key: f.key, group, mesh, halo, shards, sats, tag, spin: 0.4 + (i % 3) * 0.15 });
+    });
+  }
+
+  // drag to turn
+  let drag = null; let yaw = 0; let pitch = 0; let moved = 0;
+  canvas.addEventListener('pointerdown', (e) => { drag = { x: e.clientX, y: e.clientY }; moved = 0; canvas.setPointerCapture(e.pointerId); canvas.style.cursor = 'grabbing'; });
+  canvas.addEventListener('pointermove', (e) => {
+    if (drag) { const dx = e.clientX - drag.x; const dy = e.clientY - drag.y; moved += Math.abs(dx) + Math.abs(dy); yaw += dx * 0.008; pitch = Math.max(-0.5, Math.min(0.6, pitch + dy * 0.005)); drag = { x: e.clientX, y: e.clientY }; }
+    else { const hit = pick(e); canvas.style.cursor = hit ? 'pointer' : 'grab'; }
+  });
+  canvas.addEventListener('pointerup', (e) => { canvas.style.cursor = 'grab'; const wasDrag = moved > 6; drag = null; if (wasDrag) return; const hit = pick(e); filter = hit && filter !== hit ? hit : 'all'; try { localStorage.setItem('rt-filter', filter); } catch {} render(); });
+  const ray = new THREE.Raycaster(); const v2 = new THREE.Vector2();
+  function pick(e) {
+    const r = canvas.getBoundingClientRect(); v2.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(v2, camera);
+    const hit = ray.intersectObjects(gems.map((g) => g.mesh))[0];
+    return hit ? hit.object.userData.key : null;
+  }
+
+  function size() { const w = canvas.clientWidth; const h = canvas.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); camera.aspect = w / h; camera.position.z = w < 520 ? 14 : 11; camera.updateProjectionMatrix(); }
+  new ResizeObserver(size).observe(stage); size();
+
+  const v = new THREE.Vector3(); let t = 0; let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now; if (!still) t += dt;
+    world.rotation.y = yaw + t * 0.12; world.rotation.x = pitch;
+    core.rotation.y = t * 0.25; core.rotation.x = t * 0.1;
+    for (const g of gems) {
+      const sel = filter === g.key;
+      g.mesh.rotation.y = t * g.spin; g.mesh.rotation.x = t * g.spin * 0.6;
+      g.halo.material.opacity = sel ? 0.9 : 0; g.halo.rotation.z = t;
+      const sc = sel ? 1.25 : (filter === 'all' ? 1 : 0.85); g.group.scale.setScalar(g.group.scale.x + (sc - g.group.scale.x) * 0.15);
+      g.shards.forEach((s) => { const p = s.userData.phase + t * 1.1; s.position.set(Math.cos(p) * 0.85, Math.sin(p * 1.7) * 0.25, Math.sin(p) * 0.85); s.rotation.x = t * 2; });
+      g.sats.forEach((s) => { const p = s.userData.phase * 2 + t * 2.6; s.position.set(Math.cos(p) * 0.62, Math.sin(p) * 0.62, 0.2); });
+      g.group.getWorldPosition(v); v.y += 0.85; v.project(camera);
+      const r = canvas.getBoundingClientRect();
+      g.tag.style.left = `${(v.x * 0.5 + 0.5) * r.width}px`; g.tag.style.top = `${(-v.y * 0.5 + 0.5) * r.height}px`;
+      g.tag.className = `tag${sel ? ' sel' : ''}`; g.tag.style.opacity = v.z > 1 ? 0 : 1;
+    }
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  return { update: build };
+})();
+
+const baseRender = render;
+render = function () { baseRender(); scene3.update(); };
+$('filters').addEventListener('click', (e) => { const b = e.target.closest('button[data-k]'); if (!b) return; filter = b.dataset.k; try { localStorage.setItem('rt-filter', filter); } catch {} render(); });
+try { filter = localStorage.getItem('rt-filter') || 'all'; } catch {}
+render();
+setInterval(render, 30000);
+</script>

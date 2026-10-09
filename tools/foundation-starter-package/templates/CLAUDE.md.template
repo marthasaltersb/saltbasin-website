@@ -1,0 +1,49 @@
+# CLAUDE.md
+
+Guidance for Claude Code in [PROJECT NAME]. Owner: [OWNER NAME / ROLE].
+
+## Commands
+
+```bash
+[install command]
+[dev command]
+[build command]
+[test or check command]
+node tools/release-tracker-kit/sync.mjs --run <run dir> --ledger bug-ledger.json --out snapshot.json
+```
+
+## What this project is
+
+[Two or three sentences: what it does, who uses it.]
+
+## Foundation (the seven mapping questions)
+
+Our answers live in `docs/foundation.md`. Read them before touching anything the release tracker shows.
+- Feature = [item type + key pattern]
+- Statuses → stages: [map]
+- Test round = [what], results from [where]
+- Bug → feature link = [how]; returning bug = [rule]
+- Business-decision status = [status]
+- Bug goes to a person after [N] failed fix attempts
+
+## Rules (from the Foundation Starter Package, 3-rules.md)
+
+- Reuse before building: run the `reuse-first-audit` skill before planning anything that adds storage.
+- Configuration, not code: run the `config-audit` skill before and after each feature.
+- History is append-only: retire records, never delete; every change is an event; supersede evidence.
+- Never fabricate: missing values show as "not recorded"; no invented numbers or translations.
+- No silent failures: a job with no result is failed; nothing is "done" while failures are unreconciled.
+- Business questions go to [OWNER] as exact questions, never guessed.
+- Agents propose, people decide (growing seeds, approving features, write-backs).
+- Every code change goes through the `release-loop` skill; push only when the release log shows every
+  feature passed.
+- [Public repo? → fictional data only in specs, logs and fixtures.]
+- Secrets live in [environment / secret store], never in the repo.
+
+## Data stores
+
+[Database, where run journals and the bug ledger live, backups.]
+
+## Open decisions
+
+[Copy the unanswered questions from 4-your-setup-checklist.md and record answers here as they're made.]
