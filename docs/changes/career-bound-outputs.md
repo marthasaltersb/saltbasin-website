@@ -121,3 +121,13 @@ Branch `release-loop/career-bound-outputs-fix-r1`. Environment: fresh local Post
 - **career-bound-outputs-F1-5** — Spec only. v3 states that J7 (including 7.4) runs before J8 and the ordering is binding; J7 also carries a reminder line. No code change.
 - **career-bound-outputs-F1-7** — Not changed. Two conflicting trailers exist (task text says Opus 5.5, the session attribution reminder says Sonnet 5.5); this round's commit follows the session attribution reminder. Owner/orchestrator to decide; nothing was amended or pushed.
 - **career-bound-outputs-F1-8** — Process only: this fix round wrote results here, not in `docs/test-results/career-bound-outputs/round-N.md`; the round-2 validation agent writes that file. Nothing to change in code.
+
+## Fix notes — round 3
+
+Check performed for all items: `npm run build` passes. The in-browser walk of the journey steps was NOT run in this fix pass (see the report to the integrator); the next validation round proves them.
+
+- **career-bound-outputs-F2-6 (J1.2)**: `S.btn(tone, disabled)` in `CareerBoundOutputEditor.jsx` and `CareerReconciliationPanel.jsx` now applies disabled styling (opacity 0.5, not-allowed cursor, grey fill). Every call site that sets `disabled` also passes it to the style factory (Save changes, bullet move, add-bullet buttons, queue action buttons, Convert button). Files: both components.
+- **cbo-r2-inherited-cream-text (J6.3)**: `SIMPLE_EMBED_COMPONENTS.careerReconciliation` is flagged `light: true`; `SimpleEmbedView` in `WorldShell.jsx` then hosts it in a white container with colour `#1b2a3b`. Panel text colours are untouched.
+- **career-bound-outputs-F2-7 (J6.10, J11.2)**: the queue dialog in `MyResumePanel.jsx` has a visible `h2` "Career Sources to Review" in its header, referenced by `aria-labelledby`.
+- **T3-4 (J9.8)**: `OutputTemplateConfigurator.jsx` uses a display function (`currentName`, falling back to `nameUsed` for tools) for option text, label, aria-label, Career Master line and the override comparison. Overrides still store under `currentName`, which `applyMasterOverrides` patches onto the row, and `Output.jsx` shows a `currentName` that differs from `nameUsed`.
+- **T3-5 (J9.10)**: Revert to Career Master now also adds the id to `ovPicks[list]`, so the row stays visible showing the Career Master value with no badge.

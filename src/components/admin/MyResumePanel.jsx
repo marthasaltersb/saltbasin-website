@@ -1110,9 +1110,10 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
         </div>
       )}
       {queueOpen && createPortal(
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} role="dialog" aria-label="Career Sources to Review">
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} role="dialog" aria-modal="true" aria-labelledby="career-sources-dialog-title">
           <div style={{ background: '#fff', color: '#1b2a3b', borderRadius: 10, padding: 'clamp(0.5rem, 2.5vw, 1.25rem)', width: 'min(1100px, 98vw)', maxHeight: '94vh', overflowY: 'auto', boxSizing: 'border-box' }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.4rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+              <h2 id="career-sources-dialog-title" style={{ margin: 0, fontSize: '1.05rem', color: '#1b2a3b' }}>Career Sources to Review</h2>
               <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => { setQueueOpen(false); loadResumeOutputs(); }}>Close</button>
             </div>
             <Suspense fallback={<div style={{ fontSize: '0.8rem', color: '#666' }}>Loading...</div>}><CareerReconciliationPanel /></Suspense>
