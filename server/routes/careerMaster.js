@@ -570,6 +570,14 @@ export async function resolveOwnerUserId(ownerSlug, req) {
 // ── public, redacted read (mounted before requireUser below) ──────────────
 async function loadMasterPayload(req) {
   const ownerUserId = await resolveOwnerUserId(req.query.owner, req);
+  let user = null;
+  try { user = await getUserFromCookie(req); } catch { /* unauthenticated - public payload only */ }
+  return loadMasterPayloadForOwner(ownerUserId, user);
+}
+
+// Shared by GET /master and the platform MCP tool career_master_read: the same redaction rules, applied
+// to whoever is asking (`user` null = public). Private deal data only ever goes to the data owner.
+export async function loadMasterPayloadForOwner(ownerUserId, user) {
   const [jobRows, skillRows, toolRows, engagementRows, domainRows, certRows] = await Promise.all([
     db.prepare(`SELECT * FROM career_jobs WHERE user_id = $1 ORDER BY order_index, id`).all(ownerUserId),
     db.prepare(`SELECT * FROM career_skills WHERE user_id = $1 ORDER BY order_index, id`).all(ownerUserId),
@@ -600,8 +608,6 @@ async function loadMasterPayload(req) {
   // owner (their own private investor profile), not exposed to other
   // viewers even if they're viewing their own site. Meta options are shared,
   // admin-curated vocabulary — safe for any authenticated user to read.
-  let user = null;
-  try { user = await getUserFromCookie(req); } catch { /* unauthenticated — public payload only */ }
   if (user) {
     const [metaRows] = await Promise.all([
       db.prepare(`SELECT * FROM career_meta_options ORDER BY field_key, order_index, id`).all(),

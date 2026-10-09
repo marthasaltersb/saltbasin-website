@@ -20,6 +20,12 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  // Platform MCP server: access tokens (Connected Agents) and the interface-parity map (Capabilities, admin).
+  getPlatformMcpInfo: () => request('/api/platform/mcp'),
+  listPlatformTokens: () => request('/api/platform/tokens'),
+  createPlatformToken: (body) => request('/api/platform/tokens', { method: 'POST', body: JSON.stringify(body) }),
+  revokePlatformToken: (id) => request(`/api/platform/tokens/${id}`, { method: 'DELETE' }),
+  getPlatformCapabilities: () => request('/api/platform/capabilities'),
   // Release intelligence (admin): release records, reconciliation, failed runs, trends, importer.
   getReleaseIntelConfig: () => request('/api/release-intelligence/config'),
   saveReleaseIntelConfig: (rules) => request('/api/release-intelligence/config', { method: 'PUT', body: JSON.stringify({ rules }) }),

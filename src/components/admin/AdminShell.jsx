@@ -16,6 +16,8 @@ const MemberAuditPanel = lazy(() => import('./MemberPanels.jsx').then((module) =
 const MemberAgentPanel = lazy(() => import('./MemberPanels.jsx').then((module) => ({ default: module.MemberAgentPanel })));
 const MyResumePanel = lazy(() => import('./MyResumePanel.jsx'));
 const ReleaseIntelligencePanel = lazy(() => import('./ReleaseIntelligencePanel.jsx'));
+const ConnectedAgentsPanel = lazy(() => import('./ConnectedAgentsPanel.jsx'));
+const CapabilitiesPanel = lazy(() => import('./CapabilitiesPanel.jsx'));
 const OutputTemplateConfiguratorHub = lazy(() => import('./OutputTemplateConfigurator.jsx').then((module) => ({ default: module.OutputTemplateConfiguratorHub })));
 const CareerMasterPanel = lazy(() => import('./CareerMasterPanel.jsx'));
 const ProfileHub = lazy(() => import('./ProfileHub.jsx'));
@@ -71,6 +73,8 @@ const TAB_COMPONENTS = {
   feedback:       () => <FeedbackPanel />,
   qa:             () => <QAPanel />,
   releaseIntelligence: () => <ReleaseIntelligencePanel />,
+  connectedAgents: () => <ConnectedAgentsPanel />,
+  capabilities: () => <CapabilitiesPanel />,
   plmDashboard:   () => <MemberPlmPanel scope="admin" />,
   resume:         (props) => <MyResumePanel {...props} />,
   outputTemplates: (props) => <OutputTemplateConfiguratorHub {...props} />,

@@ -176,17 +176,31 @@ export async function requireUser(req, res, next) {
 // for it (production serves dist/ from this same server, after these middlewares).
 const isApiRequest = (req) => req.originalUrl.startsWith('/api/');
 
+/**
+ * The two "required first step" gates every member API enforces, as one function so a non-browser
+ * caller (the platform MCP server) is held to exactly the same rules: a forced password change, then
+ * current Career Portfolio terms. Returns null when the user may proceed, else { status, body }.
+ */
+export async function getAccountGateBlock(user) {
+  if (!user) return null;
+  if (user.mustChangePassword) return { status: 428, body: { error: 'password_change_required', passwordChangeRequired: true } };
+  const profile = await db.prepare(`SELECT 1 FROM member_profiles WHERE user_id=$1`).get(user.id);
+  if (!profile && user.role !== 'member') return null;
+  const { hasCurrentConsent, getConsentStatus } = await import('./lib/consentRegistry.js');
+  if (await hasCurrentConsent(user.id, 'career_portfolio')) return null;
+  const status = await getConsentStatus(user.id, 'career_portfolio');
+  return { status: 428, body: { error: 'career_terms_required', termsRequired: true, consentType: 'career_portfolio', consentVersion: status.consentVersion, lastAgreedAt: status.lastAgreedAt, stale: status.stale } };
+}
+
 export async function enforceCurrentCareerTerms(req, res, next) {
   if (!isApiRequest(req)) return next();
   const user = await getUserFromCookie(req);
   if (!user) return next();
   if (req.originalUrl.startsWith('/api/auth/') || req.originalUrl.startsWith('/api/career/consent')) return next();
-  const profile = await db.prepare(`SELECT 1 FROM member_profiles WHERE user_id=$1`).get(user.id);
-  if (!profile && user.role !== 'member') return next();
-  const { hasCurrentConsent, getConsentStatus } = await import('./lib/consentRegistry.js');
-  if (await hasCurrentConsent(user.id, 'career_portfolio')) return next();
-  const status = await getConsentStatus(user.id, 'career_portfolio');
-  return res.status(428).json({ error: 'career_terms_required', termsRequired: true, consentType: 'career_portfolio', consentVersion: status.consentVersion, lastAgreedAt: status.lastAgreedAt, stale: status.stale });
+  if (user.mustChangePassword) return next(); // the password gate (enforceRequiredPasswordChange) answers first
+  const block = await getAccountGateBlock(user);
+  if (block) return res.status(block.status).json(block.body);
+  return next();
 }
 
 export async function enforceRequiredPasswordChange(req, res, next) {
