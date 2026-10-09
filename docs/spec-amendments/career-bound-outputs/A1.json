@@ -1,0 +1,38 @@
+{
+  "id": "A1",
+  "feature": "career-bound-outputs",
+  "fromBaseline": 1,
+  "proposedBy": "triage:career-bound-outputs:r3",
+  "round": 3,
+  "triageItems": [
+    "T3-6"
+  ],
+  "reason": "Fault injection cannot be produced through the interface; step E.4 is reported as a false UI_GAP every round.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "E.4",
+      "before": "If a Career Atom sync fails after an approval, a toast says \"Applied to Career Master, but the Career Atom sync failed: ...\" and the task appears under \"Applied - sync failed\" with Retry sync.",
+      "after": "(Fault-injection step; verified by the integrator's server test, not by the browser validator.) When a task is listed under \"Applied - sync failed\", it shows the stored sync error and Retry sync; with none, the list is absent.",
+      "tracesTo": "docs/changes/career-bound-outputs.md line 53; failed-commands-reconciliation v1",
+      "whyNeeded": "Cannot be produced through the interface; leaving it permanently reports a false UI_GAP."
+    }
+  ],
+  "review": {
+    "status": "needs_owner",
+    "reviewer": "amend:career-bound-outputs:r3",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "fail: drops the toast expectation and moves the step out of browser verification; change spec line 53 names only the \"Applied - sync failed\" list and Retry sync, so whether the toast stays is a product decision",
+      "Retire only duplicates": "pass",
+      "Exact": "pass",
+      "Reachable": "fail: the proposed step is conditional (\"with none, the list is absent\"), so a validator passes it vacuously; it is neither walkable by point-and-click nor a cli step by design in the baseline",
+      "Deterministic": "fail: the result depends on whether a fault exists, which the fixed constraints do not provide",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Fault injection is a real gap, but the proposal weakens the step (toast dropped, always passes in the browser) and baseline surfaces are desktop+mobile. Needs an owner decision on how this behaviour is verified.",
+    "question": "E.4 cannot be reached by clicking because a Career Atom sync failure needs an injected fault. Should we (a) retire browser verification of E.4 and verify it by the integrator's server test only, keeping the toast text \"Applied to Career Master, but the Career Atom sync failed: ...\" as a required behaviour in that test, or (b) provide a fixed test fixture or test-only fault hook in the validator environment so the validator can walk it? If (a), confirm the toast text is not a requirement.",
+    "at": "2026-10-09T17:01:37Z"
+  }
+}

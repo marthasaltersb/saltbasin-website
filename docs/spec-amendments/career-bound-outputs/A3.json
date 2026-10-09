@@ -1,0 +1,38 @@
+{
+  "id": "A3",
+  "feature": "career-bound-outputs",
+  "fromBaseline": 1,
+  "proposedBy": "triage:career-bound-outputs:r3",
+  "round": 3,
+  "triageItems": [
+    "career-bound-outputs-F2-8"
+  ],
+  "reason": "No baseline step covers a package that already has a converted career-bound output.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "J6.8b",
+      "before": "",
+      "after": "After converting in J6.8, the queue row for that import shows a note naming the existing career-bound output and Convert to career-bound output is disabled.",
+      "tracesTo": "docs/changes/career-bound-outputs.md line 63 (Imported resumes you can convert)",
+      "whyNeeded": "No baseline step asserts it, so the defect can regress or stay unfixed silently."
+    }
+  ],
+  "review": {
+    "status": "needs_owner",
+    "reviewer": "amend:career-bound-outputs:r3",
+    "checklist": {
+      "Traced": "fail: the cited line only describes the \"Imported resumes you can convert\" list; no change-spec sentence says a converted package is disabled or annotated",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "fail: \"a note naming the existing career-bound output\" gives no exact text",
+      "Reachable": "pass",
+      "Deterministic": "pass",
+      "Fictional data only": "pass",
+      "Independent of the fix": "fail: it prescribes a disabled button and a note, a design choice the change spec does not set"
+    },
+    "note": "The behaviour (block or allow a second conversion, and what to show) is a business rule not in the change spec. Cannot approve until defined.",
+    "question": "When an imported package has already been converted to a career-bound output, should Convert to career-bound output be disabled, or may a second copy be created? If disabled, what exact text should the row show (for example \"Already converted: Demo Package Resume (career-bound)\")?",
+    "at": "2026-10-09T17:01:37Z"
+  }
+}
