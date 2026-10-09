@@ -328,7 +328,7 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
         <div style={S.sub}>
           Pick which Career Master data feeds this output's header/footer, stat cards, infographics, and content sections.
           The Salt Basin copyright footer always renders and can never be changed here — your own footer is added below it.
-          Changes preview live on the right; Save makes the preset selectable.
+          Changes preview live beside the editor (below it on narrow screens); Save makes the preset selectable.
         </div>
 
         <div style={narrow ? { ...S.shell, gridTemplateColumns: 'minmax(0, 1fr)' } : S.shell}>

@@ -81,7 +81,7 @@ const TAB_COMPONENTS = {
   releaseTracker: () => <ReleaseTrackerApp embedded />,
   plmDashboard:   () => <MemberPlmPanel scope="admin" />,
   resume:         (props) => <MyResumePanel {...props} />,
-  outputTemplates: (props) => <OutputTemplateConfiguratorHub {...props} />,
+  outputTemplates: (props) => <div className="sb-admin-scroll" style={{ flex: 1, minWidth: 0, minHeight: 0, overflowY: 'auto' }}><OutputTemplateConfiguratorHub {...props} /></div>,
   careerMaster:   () => <CareerMasterPanel scope="admin" />,
   contentManager: () => <ContentManagerShell />,
   nrm:            () => <NrmPanel isAdmin={true} />,
@@ -892,7 +892,7 @@ export default function AdminShell({ scope = 'admin', orgId = null, initialTab =
             );
           }
           if (componentId === 'resume')          return <CareerConsentGate><MyResumePanel scope={scope} /></CareerConsentGate>;
-          if (componentId === 'outputTemplates') return <OutputTemplateConfiguratorHub scope={scope} />;
+          if (componentId === 'outputTemplates') return <div className="sb-admin-scroll" style={{ flex: 1, minWidth: 0, minHeight: 0, overflowY: 'auto' }}><OutputTemplateConfiguratorHub scope={scope} /></div>;
           if (componentId === 'careerMaster')    return <CareerMasterEntryPoint scope={scope} />;
           if (componentId === 'careerReconciliation') return <CareerReconciliationPanel scope={scope} />;
           if (componentId === 'inbox')           return <InboxPanel />;
