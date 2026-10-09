@@ -330,8 +330,8 @@ let json = JSON.stringify(snapshot);
 // Measured as stored: the tracker keeps the snapshot as one JSON-quoted string field, which adds escaping.
 const LIMIT = 230 * 1024;   // headroom under the 256 KB document cap as the release grows
 const stored = (j) => Buffer.byteLength(JSON.stringify({ json: j }));
-if (stored(json) > LIMIT) {   // over budget: keep running agents, the latest per feature+role, and the last day; count the rest
-  const dayAgo = Date.now() - 24 * 3600 * 1000; const latest = new Map();
+if (stored(json) > LIMIT) {   // over budget: keep running agents, the latest per feature+role, and the last six hours; count the rest
+  const dayAgo = Date.now() - 6 * 3600 * 1000; const latest = new Map();
   for (const a of snapshot.agents) { const k = `${a.feature}|${a.role}`; const t = Date.parse(a.lastActivityAt || a.startedAt || 0) || 0; if (!latest.has(k) || t > latest.get(k).t) latest.set(k, { id: a.id, t }); }
   const keep = (a) => a.status === 'running' || [...latest.values()].some((x) => x.id === a.id) || (Date.parse(a.lastActivityAt || 0) || 0) > dayAgo;
   const before = snapshot.agents.length; snapshot.agents = snapshot.agents.filter(keep);
@@ -345,6 +345,24 @@ if (stored(json) > LIMIT) {   // still too big: drop finished agents' step detai
   json = JSON.stringify(snapshot);
   if (stored(json) > LIMIT) {   // last resort: drop finished agents' latest-step text and failure text (counts stay)
     for (const a of snapshot.agents) if (a.status !== 'running') { a.activity = clip(a.activity, 80); a.failures = a.failures.map((f) => clip(f, 80)); }
+    json = JSON.stringify(snapshot);
+  }
+  if (stored(json) > LIMIT) {   // then shorten bug text (full text stays in the ledger and triage files) and older updates' per-feature detail
+    const done = new Set(['verified', 'backlog_pre_existing', 'reassigned', 'process_note']);
+    for (const b of snapshot.bugs) {
+      b.rootCause = clip(b.rootCause, done.has(b.status) ? 160 : 400);
+      if (b.scope?.evidence) b.scope = { ...b.scope, evidence: clip(b.scope.evidence, 160) };
+      if (done.has(b.status)) for (const h of b.history || []) h.note = clip(h.note, 60);
+    }
+    (snapshot.updates || []).slice(0, -2).forEach((u) => { if (u.metrics) u.metrics = { ...u.metrics, features: undefined }; });
+    json = JSON.stringify(snapshot);
+  }
+  if (stored(json) > LIMIT) {   // finally: every bug keeps its short root cause and its last six history events in full
+    for (const b of snapshot.bugs) {
+      b.rootCause = clip(b.rootCause, 200);
+      if ((b.history || []).length > 6) { b.historyTrimmed = b.history.length - 6; b.history = b.history.slice(-6); }
+      for (const h of b.history || []) h.note = clip(h.note, 80);
+    }
     json = JSON.stringify(snapshot);
   }
   if (stored(json) > LIMIT) console.error(`Snapshot is ${stored(json)} bytes stored, over the tracker's ${LIMIT}-byte budget.`);
