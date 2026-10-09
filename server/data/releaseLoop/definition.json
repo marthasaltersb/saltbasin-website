@@ -119,7 +119,8 @@
     "initialCheck": [
       "npm run build succeeds",
       "server boots against a fresh database",
-      "the feature's own journeys pass when the builder walks them once"
+      "the feature's own journeys pass when the builder walks them once",
+      "when tools/release-tracker/ changed: node tools/release-tracker/sync-setup-guide.mjs exits 0 (embedded page copy matches index.html)"
     ],
     "validation": "Every step of every journey in the feature's training spec passes in a real browser twice — point-and-click on desktop and as a full walkthrough at 390px — with no page errors and no failed network requests the spec does not expect, and every capability is also reachable through the API and an MCP tool (see interfaceParity).",
     "noSilentCaps": "When a feature reaches maxFixRounds still failing, it is recorded as not passed with its open triage items — never reported as done.",
