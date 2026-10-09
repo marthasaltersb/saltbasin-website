@@ -90,7 +90,7 @@ Audience: a member using the platform, and a test agent driving a browser. Each 
    - Expect the computed line "Advanced (1) · Expert (1) · Foundational (1) · Proficient (1)".
 3. [J9.3] Click **Save**. Expect the toast "Skills by proficiency saved".
 4. [J9.4] In the `Tools by wheel bucket` card untick **Shown** and click **Save**. Expect the toast "Tools by wheel bucket saved".
-5. [J9.5] Open `/api/career/atom-rollups?owner=me` in the browser. Expect `"tools_by_wheel_bucket": []` and a `groupings` array containing an entry labelled "Skills by proficiency".
+5. [J9.5] Reload Proficiency & Rollups and open Career Atom rollups. Expect the `Skills by proficiency` card still present with the computed line 'Advanced (1) · Expert (1) · Foundational (1) · Proficient (1)', and the `Tools by wheel bucket` card with Shown unticked. (The API result of GET /api/career/atom-rollups?owner=me is checked from the page session and kept as evidence, not as a tester step.)
 
 ## Journey 10 — A hand-set proficiency level flows into the tiles with †
 

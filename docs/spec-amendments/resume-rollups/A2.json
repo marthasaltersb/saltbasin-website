@@ -1,0 +1,37 @@
+{
+  "id": "A2",
+  "feature": "resume-rollups",
+  "fromBaseline": 1,
+  "proposedBy": "triage:resume-rollups:r1",
+  "round": 1,
+  "triageItems": [
+    "RR1-6"
+  ],
+  "reason": "Behaviour B5 (Career Rollup block picker lists the member's own Career Atom groupings) has no baseline step.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "J9.6",
+      "before": "",
+      "after": "In the site editor add the Career Rollup block and pick the grouping `Skills by proficiency`. Expect the block preview to list the four proficiency groups.",
+      "tracesTo": "docs/changes/resume-rollups.md Client section (Career Rollup block \"Group by\" lists atom:<key> groupings)",
+      "whyNeeded": "A regression in the picker would pass validation unnoticed."
+    }
+  ],
+  "review": {
+    "status": "rejected",
+    "reviewer": "amend:resume-rollups:r1",
+    "checklist": {
+      "Traced": "pass: the Client section of the change spec states the picker behaviour",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "fail: no route to the site editor (workspace, page, scope), no label of the picker or the option, and \"the four proficiency groups\" does not name them or say what the preview shows",
+      "Reachable": "fail: the change spec records this path as never walked in a browser, and the step gives no desktop or 390px route",
+      "Deterministic": "fail: the site, page and starting block state are not fixed, so what the preview shows depends on leftovers",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Rejected as written; the coverage gap is real and the product is not at fault. Re-propose J9.6 as its own amendment with: the exact click path from /world to the site editor (desktop and 390px), the page and block-add action, the exact labels of the \"Group by\" picker and its option \"Skills by proficiency\", and the exact preview text expected (Advanced (1), Expert (1), Foundational (1), Proficient (1) or the actual rendering). The proposer should walk the path in the browser first.",
+    "at": "2026-10-09T18:00:00Z"
+  }
+}

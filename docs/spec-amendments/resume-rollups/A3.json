@@ -1,0 +1,38 @@
+{
+  "id": "A3",
+  "feature": "resume-rollups",
+  "fromBaseline": 1,
+  "proposedBy": "triage:resume-rollups:r1",
+  "round": 1,
+  "triageItems": [
+    "RR1-6"
+  ],
+  "reason": "Behaviour B11 (output block column count) has no baseline step.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "J12.2",
+      "before": "",
+      "after": "On the modern resume output, expect the Capability Confidence block to render in the column count configured for it.",
+      "tracesTo": "proposer cites \"B11\"; neither docs/changes/resume-rollups.md nor docs/training/resume-rollups.md defines a configurable column count",
+      "whyNeeded": "Proposer: B11 shipped without a step."
+    }
+  ],
+  "review": {
+    "status": "needs_owner",
+    "reviewer": "amend:resume-rollups:r1",
+    "checklist": {
+      "Traced": "fail: B11 is a validator observation label (docs/test-results/resume-rollups/round-1.md); the change spec has no requirement or setting for a Capability Confidence column count",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "fail: names no count and no way to configure one",
+      "Reachable": "fail: no UI to set a column count is described",
+      "Deterministic": "fail: \"the column count configured for it\" has no fixed value under the test constraints",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Cannot be decided from the checklist: the requirement itself is undefined.",
+    "question": "Is the number of columns in the resume output's Capability Confidence block meant to be a member-configurable setting? If yes: where does the member set it (screen and control), what values are allowed, what is the default, and how many columns should the modern resume show for the J1.2 fixture (3 capability groups)? If no: should B11 be dropped from the coverage list?",
+    "at": "2026-10-09T18:00:00Z"
+  }
+}
