@@ -1,6 +1,6 @@
 {
   "key": "salt_basin_release_loop",
-  "version": 2,
+  "version": 3,
   "name": "Salt Basin release loop",
   "summary": "Every code change moves build → initial check → integrate → browser validation → triage → fix → re-validate, looping until every training journey passes or a failure needs a business definition. Every step leaves a dated log traced to the version before it.",
   "roles": [
@@ -106,7 +106,7 @@
       "server boots against a fresh database",
       "the feature's own journeys pass when the builder walks them once"
     ],
-    "validation": "Every step of every journey in the feature's training spec passes in a real browser, with no page errors and no failed network requests the spec does not expect.",
+    "validation": "Every step of every journey in the feature's training spec passes in a real browser twice — point-and-click on desktop and as a full walkthrough at 390px — with no page errors and no failed network requests the spec does not expect, and every capability is also reachable through the API and an MCP tool (see interfaceParity).",
     "noSilentCaps": "When a feature reaches maxFixRounds still failing, it is recorded as not passed with its open triage items — never reported as done.",
     "push": "The integration branch is pushed only when the release log shows every feature passed, or the owner says otherwise."
   },
@@ -222,5 +222,20 @@
       "process_note"
     ],
     "decisionsFile": "docs/triage/scope-review.json"
+  },
+  "interfaceParity": {
+    "rule": "Every capability a training spec exercises must be usable through all three interfaces: (1) the website — point-and-click from the World Shell on desktop AND a full walkthrough at 390px phone width, with no typed URLs, API calls, scripts or database edits standing in for any step or precondition (test accounts from scripts/create-test-member.mjs are the only setup exception); (2) the API — the same route the UI uses, with the same permission checks; (3) MCP — a tool in the platform MCP server (server/lib/mcpToolRegistry.js) that calls the same server function, with the same permission checks. A step that can only be done through an API, script or typed URL fails as a UI gap. A capability with no MCP tool fails as an MCP gap once the platform MCP server exists; before that, it is recorded and assigned to the platform-mcp feature.",
+    "surfaces": [
+      "desktop_point_and_click",
+      "mobile_390_walkthrough",
+      "api",
+      "mcp"
+    ],
+    "failureMarkers": {
+      "ui_gap": "UI_GAP",
+      "mobile_gap": "MOBILE_GAP",
+      "mcp_gap": "MCP_GAP"
+    },
+    "added": "2026-10-09 (owner: 'if the agent user testing a feature cannot test the training guides with a point and click or mobile walk through then it's going to fail')"
   }
 }

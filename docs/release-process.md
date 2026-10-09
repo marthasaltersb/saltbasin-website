@@ -1,6 +1,6 @@
 # Release process — the Salt Basin release loop
 
-Version 2 · 2026-10-09 · definition: `server/data/releaseLoop/definition.json` (v2)
+Version 3 · 2026-10-09 · definition: `server/data/releaseLoop/definition.json` (v3)
 
 Every change to the platform goes through one loop, whether a Claude Code session or an in-app agent does
 the work:
@@ -19,6 +19,11 @@ build ─▶ initial check ─▶ integrate ─▶ validate (browser, follows th
 
 It repeats until every journey passes, a failure needs an owner decision, or the round limit is reached
 (then the feature is recorded as **not passed**, with its open items).
+
+**Three interfaces, or it fails.** Every capability a training guide uses must work on the website
+(point-and-click on desktop *and* a full walkthrough at phone width, with no typed URLs, API calls or
+scripts standing in for a step), through the API, and through an MCP tool. Validators walk every journey on
+desktop and on a phone and check the MCP tool; a missing path fails as `UI_GAP`, `MOBILE_GAP` or `MCP_GAP`.
 
 **Whose bug is it?** After triage, a scope agent sorts each item: *this feature* (its diff or spec caused
 it — blocks the feature), *pre-existing* (reproduces on the base without this feature's commits — backlog),
@@ -61,3 +66,4 @@ Edit `definition.json`, bump `version`, and add a line below.
 | --- | --- | --- |
 | 1 | 2026-10-02 | First version, from the application-package / proficiency / live-QR session |
 | 2 | 2026-10-09 | Scope check after triage: pre-existing, other-feature and process-note items become non-blocking backlog with evidence |
+| 3 | 2026-10-09 | Interface parity: every capability usable on desktop and phone by point-and-click, via the API and via an MCP tool; validators walk both and check MCP |

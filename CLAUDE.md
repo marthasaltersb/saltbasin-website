@@ -205,7 +205,8 @@ Added 2026-10-02. A tailored package (role-specific resumes, cover letter, combi
 Added 2026-10-02. Every code change goes build → initial check → integrate → browser validation (a separate agent follows the feature's training spec literally) → triage → fix → re-validate, looping until every journey passes. Process definition (data, also read by in-app agents): `server/data/releaseLoop/definition.json`. How to run it: the `salt-basin-release-loop` skill and the saved workflow `.claude/workflows/release-loop.js`. Human-readable version: `docs/release-process.md`.
 
 - Each feature ships `docs/changes/<feature>.md` (with a *Traces to* section naming the prior spec versions/commits) and `docs/training/<feature>.md` (journeys with exact expected results). Logs: `docs/test-results/<feature>/round-N.md`, `docs/triage/<feature>-round-N.md`, `docs/release-log/<release>.md`.
-- Push only when the release log shows every feature passed (or the owner says otherwise). `needs_business_definition` failures go to the owner as exact questions, never guessed.
+- Push only when the release log shows every feature passed (or the owner says otherwise).
+- **Interface parity (v3, 2026-10-09):** every capability must work three ways — website point-and-click on desktop and as a 390px phone walkthrough, the API, and an MCP tool in `server/lib/mcpToolRegistry.js` calling the same server function with the same permissions. Validators fail `UI_GAP` / `MOBILE_GAP` / `MCP_GAP` otherwise. `needs_business_definition` failures go to the owner as exact questions, never guessed.
 - Specs and logs use fictional data only (public repo).
 - **Resuming:** if `docs/release-log/active-release.state.json` lists unfinished features, continue them with the skill's "Resuming in a new session" steps — the feature definitions, open bugs and tracker link are all in `docs/release-log/`, so no re-instruction is needed.
 

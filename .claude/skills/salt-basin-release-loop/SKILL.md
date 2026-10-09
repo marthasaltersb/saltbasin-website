@@ -71,6 +71,7 @@ The tracker overview charts the release's history (`scripts/release-history.mjs`
 - Everything a member does is reachable from the World Shell (`/world`); admin navigation is not a route.
 - Career Master is the source of truth for outputs; per-output overrides are allowed and marked.
 - No API-only configuration; every rule and rollup is editable in a screen.
+- Interface parity: every capability works by point-and-click on desktop, as a phone walkthrough at 390px, via the API and via an MCP tool (`definition.json` `interfaceParity`). A training guide that can't be walked that way fails.
 - Failures are never silent, never "done" while unreconciled, and a blank or clipped screen is a failure.
 - Test as `member@test.local` from `scripts/create-test-member.mjs` (career terms accepted).
 - Repo is public: fictional data only; never an employer or application-target name.
