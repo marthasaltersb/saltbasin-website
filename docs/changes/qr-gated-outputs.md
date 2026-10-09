@@ -83,3 +83,8 @@ Run 2026-10-02 against a fresh database `sb_rl_bld_1` (Postgres 16, local) with 
 ## Fix notes per round
 
 (none yet; fix agents append here)
+
+### Fix notes — round 2
+
+- **T3 (J3.3, J7.1, J8.3)**: the Approve-for-QR toast in `approveForQr` used an em dash; changed to ` - ` to match the specified text. File: `src/components/admin/MyResumePanel.jsx`. Checked: the string is the only occurrence in the source and now matches the spec text; the vite build passes.
+- **T2 (J2.1)**: `header.contact` may be an array; the view concatenated entries with no separator. Added a shared normaliser `contactText()` in `src/lib/headerContact.js` (array joined with ` · `, string passed through) and used it in `src/components/DocumentBlocksView.jsx` and `server/lib/outputRendering.js`; `src/lib/documentBlocksEditor.js` now spreads an array contact into the editor's items instead of nesting it. Checked: rendered a PDF from an array-contact fixture and extracted "avery@example.test · Example City"; vite build passes. The in-browser walk of the journey steps was not run in this round (only the build and the PDF render were checked).

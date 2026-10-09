@@ -633,7 +633,7 @@ export default function MyResumePanel({ scope = 'member' }) {
     try {
       const shared = await categoryGate.run(() => api.shareResumeOutput(output.id));
       try { await navigator.clipboard.writeText(shared.url); } catch { /* clipboard is best-effort */ }
-      toast.success('Approved — private QR link created (copied to clipboard).');
+      toast.success('Approved - private QR link created (copied to clipboard).');
       for (const w of shared.warnings || []) toast.error(w);
       loadResumeOutputs();
     } catch (e) { toast.error(e.message); }
