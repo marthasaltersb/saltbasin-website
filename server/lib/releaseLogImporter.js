@@ -363,7 +363,12 @@ export async function importRepository(root, { actor = null } = {}) {
   const order = (f) => (f.startsWith(rules.logLocations.releaseLog) ? 0 : 1);
   files.sort((a, b) => order(a) - order(b) || a.localeCompare(b));
   const documents = []; const errors = [];
+  const generated = new Set((rules.generatedFiles || []).map((f) => `${rules.logLocations.releaseLog}${f}`));
   for (const rel of files) {
+    if (generated.has(rel)) {
+      documents.push({ path: rel, kind: null, status: 'skipped', warnings: ['tracker-generated file listed under "Generated files" in Release Intelligence Settings; not a release log'], counts: {} });
+      continue;
+    }
     try {
       documents.push(await importDocument(rel, fs.readFileSync(path.join(root, rel), 'utf8'), { actor }));
     } catch (e) {
