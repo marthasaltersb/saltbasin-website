@@ -1,0 +1,27 @@
+name: Lint workflow files
+
+# GitHub reports an invalid workflow file as a failed run on every push to
+# every branch that carries it (promote-production.yml did this for weeks).
+# Catch that class of error on the pull request, before it reaches main.
+
+on:
+  pull_request:
+    paths: ['.github/workflows/**']
+  push:
+    branches: [main]
+    paths: ['.github/workflows/**']
+
+permissions:
+  contents: read
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install actionlint
+        run: bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.7/scripts/download-actionlint.bash) 1.7.7
+      - name: Check workflow files
+        # -shellcheck= : check workflow structure and expressions only, not
+        # shell style inside run: blocks.
+        run: ./actionlint -color -shellcheck=
