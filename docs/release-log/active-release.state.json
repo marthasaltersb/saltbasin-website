@@ -1,8 +1,8 @@
 {
-  "exportedAt": "2026-10-09T05:46:11.194Z",
+  "exportedAt": "2026-10-09T05:49:37.267Z",
   "features": {
     "proficiency-live-qr": {
-      "status": "failing",
+      "status": "validate",
       "lastRound": 5,
       "lastScore": "29/30",
       "lastReport": "docs/test-results/proficiency-live-qr/round-5.md",
