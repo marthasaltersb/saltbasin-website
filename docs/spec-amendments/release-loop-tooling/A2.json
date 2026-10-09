@@ -1,0 +1,37 @@
+{
+  "id": "A2",
+  "feature": "release-loop-tooling",
+  "fromBaseline": 2,
+  "proposedBy": "triage:release-loop-tooling:r4",
+  "round": 4,
+  "triageItems": [
+    "T4-1"
+  ],
+  "reason": "Round 4 validator found J3b.3 ambiguous at 390px: the Your World subtitle is hidden on phones by design.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "J3b.3",
+      "before": "Expect the URL to become `/world` and the page to show **Your World**, **Journeys** and **Classic Tools**, with no password-change page and no terms page.",
+      "after": "Expect the URL to become `/world` and the page to show **Journeys** and **Classic Tools**, with no password-change page and no terms page. On desktop the page also shows the **Your World** subtitle; at 390px that subtitle is hidden by design and is not checked.",
+      "tracesTo": "Change spec requirement that the test member reaches /world with terms accepted and no forced password change; WorldShell.jsx MOBILE_CSS phone-layout decision (lines 115-121).",
+      "whyNeeded": "Removes the ambiguity the validator raised while keeping the behaviour that matters (landing, no gate pages, tabs visible)."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:release-loop-tooling:r4",
+    "checklist": {
+      "Traced: every added or changed step names the change-spec requirement or owner direction it proves (tracesTo).": "pass",
+      "Not weaker: a changed expected result is at least as strict as before, unless the evidence shows the old expectation contradicts the change spec or owner direction (then say which).": "pass: the desktop check on Your World is kept; the 390px check is dropped because the old expectation contradicts the product's documented phone layout (WorldShell.jsx MOBILE_CSS hides .sb-world-brandsub at max-width 700px) and was never required by this feature's change spec, which only requires landing on /world with no password or terms page. The landing, Journeys and Classic Tools checks stay at both sizes.",
+      "Retire only duplicates: removing a step is approved only when another step tests the same thing (name it); any other removal is needs_owner.": "pass: no step retired",
+      "Exact: action plus exact expected result (labels, text, values, counts); no 'should look right', no 'roughly'.": "pass",
+      "Reachable: the step is walkable by point-and-click on desktop and at 390px (interfaceParity), or is a cli step by design.": "pass",
+      "Deterministic: same result every run against the fixed constraints (no dependence on wall-clock time, random data, earlier failed steps, or leftovers from another test); timing tolerances are stated.": "pass",
+      "Fictional data only; fixtures written in the spec, never fetched.": "pass",
+      "Independent of the fix: the step tests behaviour, not the implementation the fixer chose.": "pass"
+    },
+    "note": "Checked against the change spec (no mention of the Your World text) and WorldShell.jsx: the subtitle is hidden below 700px by design. The Career Placement Agents panel the validator saw covering the phone page is not part of this step's expectation; if it hides Journeys or Classic Tools it fails the step as a product defect.",
+    "at": "2026-10-09T16:01:47Z"
+  }
+}
