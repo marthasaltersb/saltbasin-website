@@ -27,6 +27,12 @@ jobs:
   verify-and-promote:
     runs-on: ubuntu-latest
     environment: production
+    # The secrets context is not allowed in a step's `if:` (GitHub rejects the
+    # whole file and reports a failed run on every push), so expose the hooks
+    # as env vars and test those instead.
+    env:
+      RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+      NETLIFY_BUILD_HOOK_URL: ${{ secrets.NETLIFY_BUILD_HOOK_URL }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -40,11 +46,11 @@ jobs:
         env:
           VITE_TEST_BASE_URL: ${{ vars.VITE_TEST_BASE_URL }}
       - name: Trigger Render production deployment
-        if: ${{ secrets.RENDER_DEPLOY_HOOK_URL != '' }}
-        run: curl --fail --silent --show-error --request POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+        if: ${{ env.RENDER_DEPLOY_HOOK_URL != '' }}
+        run: curl --fail --silent --show-error --request POST "$RENDER_DEPLOY_HOOK_URL"
       - name: Trigger Netlify production deployment
-        if: ${{ secrets.NETLIFY_BUILD_HOOK_URL != '' }}
-        run: curl --fail --silent --show-error --request POST "${{ secrets.NETLIFY_BUILD_HOOK_URL }}"
+        if: ${{ env.NETLIFY_BUILD_HOOK_URL != '' }}
+        run: curl --fail --silent --show-error --request POST "$NETLIFY_BUILD_HOOK_URL"
       - name: Record promotion evidence
         run: |
           echo "deployment=${{ inputs.source_deployment_id }}" >> "$GITHUB_STEP_SUMMARY"
