@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T05:59:26.004Z",
+  "exportedAt": "2026-10-09T06:00:17.768Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -66,7 +66,7 @@
       "backlog": 3
     },
     "chart-gallery": {
-      "status": "scope",
+      "status": "fix",
       "lastRound": 2,
       "lastScore": "21/24",
       "lastReport": "docs/test-results/chart-gallery/round-2.md",
@@ -2337,7 +2337,7 @@
     {
       "id": "chart-gallery-B9",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "journey: pick a chart",
@@ -2363,7 +2363,7 @@
     {
       "id": "chart-gallery-B10",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "test_harness",
       "attempts": 0,
       "step": "validation setup",
@@ -2388,7 +2388,7 @@
     {
       "id": "CG-R1-1",
       "feature": "chart-gallery",
-      "status": "recurred",
+      "status": "fixing",
       "class": "defect",
       "attempts": 0,
       "step": "Live Preview stays visible beside gallery (sticky)",
@@ -2399,7 +2399,7 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "The position:sticky live-preview column was added by 6dd06e5 (git log -S sticky) and does not engage."
+        "evidence": "Reused scope-review.json decision. Sticky preview column added by 6dd06e5; fix branch dc6b5f0 is not an ancestor of HEAD, so never merged."
       },
       "history": [
         {
@@ -2419,7 +2419,7 @@
     {
       "id": "CG-R1-2",
       "feature": "chart-gallery",
-      "status": "recurred",
+      "status": "fixing",
       "class": "defect",
       "attempts": 0,
       "step": "Failed load alert includes HTTP status",
@@ -2431,7 +2431,7 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "docs/training/chart-gallery.md:77 requires the failed-load alert to include the HTTP status. The proficiency loader via api.getCareerProficiency in OutputTemplateConfigurator was wired by the gallery build, and src/lib/api.js request() omits the status."
+        "evidence": "Reused scope-review.json decision. Spec line 77 requires HTTP status; gallery build wired the proficiency loader via api.js request(), which omits status."
       },
       "history": [
         {
@@ -2477,7 +2477,7 @@
     {
       "id": "CG-R2-1",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "defect",
       "attempts": 0,
       "step": "J2 2.1 visual: Live Preview chart not clipped",
@@ -2486,7 +2486,11 @@
         "src/lib/careerCharts.js",
         "docs/training/chart-gallery.md"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "min-width:500px came from cffa621 (proficiency-live-qr) but base a5e7883 has no career-chart block or preview in OutputTemplateConfigurator, so clipping cannot be reproduced there. Chart in the 380px preview is the gallery's deliverable; the gallery must make it fit, and the spec should assert the …"
+      },
       "history": [
         {
           "round": 2,
