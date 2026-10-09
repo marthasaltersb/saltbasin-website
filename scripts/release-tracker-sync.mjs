@@ -330,6 +330,14 @@ let json = JSON.stringify(snapshot);
 // Measured as stored: the tracker keeps the snapshot as one JSON-quoted string field, which adds escaping.
 const LIMIT = 250 * 1024;
 const stored = (j) => Buffer.byteLength(JSON.stringify({ json: j }));
+if (stored(json) > LIMIT) {   // over budget: keep running agents, the latest per feature+role, and the last day; count the rest
+  const dayAgo = Date.now() - 24 * 3600 * 1000; const latest = new Map();
+  for (const a of snapshot.agents) { const k = `${a.feature}|${a.role}`; const t = Date.parse(a.lastActivityAt || a.startedAt || 0) || 0; if (!latest.has(k) || t > latest.get(k).t) latest.set(k, { id: a.id, t }); }
+  const keep = (a) => a.status === 'running' || [...latest.values()].some((x) => x.id === a.id) || (Date.parse(a.lastActivityAt || 0) || 0) > dayAgo;
+  const before = snapshot.agents.length; snapshot.agents = snapshot.agents.filter(keep);
+  snapshot.agentsTrimmed = before - snapshot.agents.length;   // full records stay in the run journals and git history
+  json = JSON.stringify(snapshot);
+}
 if (stored(json) > LIMIT) {   // still too big: drop finished agents' step detail, then shorten history notes
   for (const a of snapshot.agents) if (a.status !== 'running' && a.liveSteps) a.liveSteps = { ...a.liveSteps, failed: [], errors: [] };
   json = JSON.stringify(snapshot);
