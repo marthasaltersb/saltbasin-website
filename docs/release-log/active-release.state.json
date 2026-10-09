@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T00:53:16.736Z",
+  "exportedAt": "2026-10-09T00:55:21.110Z",
   "features": {
     "proficiency-live-qr": {
       "status": "failing",
@@ -14,7 +14,7 @@
       "lastReport": "docs/test-results/world-shell-navigation/round-1.md"
     },
     "career-bound-outputs": {
-      "status": "fix",
+      "status": "reconcile",
       "lastRound": 2,
       "lastScore": "54/56",
       "lastReport": "docs/test-results/career-bound-outputs/round-2.md"
@@ -745,7 +745,7 @@
     {
       "id": "career-bound-outputs-B9",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "commit",
@@ -757,15 +757,21 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (process)",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "not_fixed",
+          "note": "Commit trailer needs an owner decision. The task text asks for Claude Opus 5.5, but the session attribution reminder says Sonnet 5.5 and this agent is Sonnet. I used the Sonnet trailer. If the owner …",
+          "commit": null
         }
       ]
     },
     {
       "id": "career-bound-outputs-B10",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "verified",
       "class": "requirement_gap",
-      "attempts": 0,
+      "attempts": 1,
       "step": "spec gaps",
       "rootCause": "scoped out by build agent",
       "files": [
@@ -782,15 +788,27 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Template overrides, certification review tasks and live preview are already in the branch. Re-verified live preview; no code change.",
+          "commit": "6d95d90"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other failures)",
+          "commit": "cd6caf8"
         }
       ]
     },
     {
       "id": "career-bound-outputs-B11",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "verified",
       "class": "owner_direction_conflict",
-      "attempts": 0,
+      "attempts": 1,
       "step": "nav",
       "rootCause": "queue wired as admin tab with World Shell island as extra",
       "files": [
@@ -803,15 +821,27 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "No admin_nav injection of the queue remains; the Journeys card is primary. No code change.",
+          "commit": "6d95d90"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other failures)",
+          "commit": "cd6caf8"
         }
       ]
     },
     {
       "id": "career-bound-outputs-B12",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "verified",
       "class": "owner_direction_conflict",
-      "attempts": 0,
+      "attempts": 1,
       "step": "World Shell reach",
       "rootCause": "only the review queue got an island",
       "files": [
@@ -825,15 +855,27 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "My Resume island is already reachable in the World Shell for member and admin. No code change.",
+          "commit": "6d95d90"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other failures)",
+          "commit": "cd6caf8"
         }
       ]
     },
     {
       "id": "career-bound-outputs-B13",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "verified",
       "class": "test_harness",
-      "attempts": 0,
+      "attempts": 1,
       "step": "journeys",
       "rootCause": "spec and walk written for admin",
       "files": [
@@ -845,144 +887,25 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (test_harness)",
           "commit": null
-        }
-      ]
-    },
-    {
-      "id": "career-bound-outputs-F1-3",
-      "feature": "career-bound-outputs",
-      "status": "fixed_awaiting_retest",
-      "class": "requirement_gap",
-      "attempts": 1,
-      "step": "Journey 9 / change spec Known limitations line 89",
-      "rootCause": "Editor built for jobs only; applyMasterOverrides supports more than the UI exposes.",
-      "files": [
-        "src/components/admin/OutputTemplateConfigurator.jsx",
-        "src/lib/masterOverrides.js",
-        "docs/training/career-bound-outputs.md"
-      ],
-      "history": [
-        {
-          "round": 1,
-          "event": "found",
-          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
-          "commit": null
         },
         {
-          "round": 2,
+          "round": 1,
           "event": "fixed",
-          "note": "Added a skills/tools/certifications override card (pick item, box, Overridden badge, Career Master line, per-field Revert) storing under config.masterOverrides.<list>; spec J9 steps 6-11 added.",
-          "commit": "95c2adf"
-        }
-      ]
-    },
-    {
-      "id": "career-bound-outputs-F1-4",
-      "feature": "career-bound-outputs",
-      "status": "fixing",
-      "class": "requirement_gap",
-      "attempts": 0,
-      "step": "change spec Known limitations line 90",
-      "rootCause": "Template outputs have no per-document row, so overrides were stored on the preset.",
-      "files": [
-        "src/components/Output.jsx",
-        "src/components/admin/OutputTemplateConfigurator.jsx"
-      ],
-      "history": [
-        {
-          "round": 1,
-          "event": "found",
-          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
-          "commit": null
+          "note": "Training spec v3 is already written for member@test.local starting at Journeys. No spec change this round.",
+          "commit": "6d95d90"
         },
         {
           "round": 2,
-          "event": "not_fixed",
-          "note": "Owner decision needed: is storing template overrides on the preset acceptable, or should they move to a saved per-document row? No code change made; recorded in the change spec fix notes.",
-          "commit": null
-        }
-      ]
-    },
-    {
-      "id": "career-bound-outputs-F1-5",
-      "feature": "career-bound-outputs",
-      "status": "fixed_awaiting_retest",
-      "class": "process",
-      "attempts": 1,
-      "step": "Journey 7.4",
-      "rootCause": "Journey ordering: J8 mutates state J7.4 depends on.",
-      "files": [
-        "docs/training/career-bound-outputs.md"
-      ],
-      "history": [
-        {
-          "round": 1,
-          "event": "found",
-          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
-          "commit": null
-        },
-        {
-          "round": 2,
-          "event": "fixed",
-          "note": "Spec v3 states J7 (incl. 7.4) must run before J8 and the ordering is binding.",
-          "commit": "95c2adf"
-        }
-      ]
-    },
-    {
-      "id": "career-bound-outputs-F1-7",
-      "feature": "career-bound-outputs",
-      "status": "fixing",
-      "class": "process",
-      "attempts": 0,
-      "step": "commit 3472137 trailer (B9)",
-      "rootCause": "Agent followed session attribution reminder over task text.",
-      "files": [],
-      "history": [
-        {
-          "round": 1,
-          "event": "found",
-          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
-          "commit": null
-        },
-        {
-          "round": 2,
-          "event": "not_fixed",
-          "note": "Trailer conflict: the task text says Claude Opus 5.5, the session attribution reminder says Claude Sonnet 5.5. I used the Sonnet 5.5 trailer from the session reminder; orchestrator/owner decides, and…",
-          "commit": null
-        }
-      ]
-    },
-    {
-      "id": "career-bound-outputs-F1-8",
-      "feature": "career-bound-outputs",
-      "status": "fixing",
-      "class": "process",
-      "attempts": 0,
-      "step": "release process",
-      "rootCause": "Fix agent recorded results in the change spec, not round-N.md.",
-      "files": [
-        "docs/test-results/career-bound-outputs/"
-      ],
-      "history": [
-        {
-          "round": 1,
-          "event": "found",
-          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
-          "commit": null
-        },
-        {
-          "round": 2,
-          "event": "not_fixed",
-          "note": "Process item: the round-2 validation agent must write docs/test-results/career-bound-outputs/round-N.md. Noted in the change spec; no fix-agent change.",
-          "commit": null
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other failures)",
+          "commit": "cd6caf8"
         }
       ]
     },
     {
       "id": "career-bound-outputs-F2-3",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Output Templates > Sections overrides (J9)",
@@ -1005,7 +928,7 @@
     {
       "id": "career-bound-outputs-F2-4",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "Commit trailer",
@@ -1023,7 +946,7 @@
     {
       "id": "career-bound-outputs-F2-5",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "Round-N test result file",
@@ -1043,7 +966,7 @@
     {
       "id": "career-bound-outputs-F2-6",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "product_defect",
       "attempts": 0,
       "step": "J1.2 Save changes button",
@@ -1063,7 +986,7 @@
     {
       "id": "career-bound-outputs-F2-7",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "product_defect",
       "attempts": 0,
       "step": "J6.10/J11.2 Career Sources to Review dialog",
@@ -1083,7 +1006,7 @@
     {
       "id": "career-bound-outputs-F2-8",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "product_defect",
       "attempts": 0,
       "step": "J6.10 Convert to career-bound output",
@@ -1104,7 +1027,7 @@
     {
       "id": "career-bound-outputs-F2-9",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Legibility fix coverage (J1.2a, J9.0)",
@@ -1126,7 +1049,7 @@
     {
       "id": "career-bound-outputs-F2-10",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "J9 skills/tools/certifications overrides",
@@ -1147,9 +1070,9 @@
     {
       "id": "cbo-r1-phone-editor",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "verified",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Phone width (390px): career-bound output editor dialog",
       "rootCause": "S.wrap in CareerBoundOutputEditor.jsx was a fixed two-column inline grid (minmax(0,1.1fr) minmax(0,1fr)); inline styles cannot use media queries so it never stacked at phone width. Fixed in commit 3472137, made after the round-1 screenshot was taken. Round-2 J10.1 passed at 390px.",
       "files": [
@@ -1161,6 +1084,18 @@
           "event": "found",
           "note": "S.wrap in CareerBoundOutputEditor.jsx was a fixed two-column inline grid (minmax(0,1.1fr) minmax(0,1fr)); inline styles cannot use media queries so it never stacked at phone width. Fixed in commit 34…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Already fixed on the integration head (editor grid is auto-fit and stacks). Re-verified, no code change.",
+          "commit": "6d95d90"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other failures)",
+          "commit": "cd6caf8"
         }
       ]
     },
@@ -2395,6 +2330,137 @@
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (environment)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F1-3",
+      "feature": "career-bound-outputs",
+      "status": "fixed_awaiting_retest",
+      "class": "requirement_gap",
+      "attempts": 1,
+      "step": "Journey 9 / change spec Known limitations line 89",
+      "rootCause": "Editor built for jobs only; applyMasterOverrides supports more than the UI exposes.",
+      "files": [
+        "src/components/admin/OutputTemplateConfigurator.jsx",
+        "src/lib/masterOverrides.js",
+        "docs/training/career-bound-outputs.md"
+      ],
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "fixed",
+          "note": "Added a skills/tools/certifications override card (pick item, box, Overridden badge, Career Master line, per-field Revert) storing under config.masterOverrides.<list>; spec J9 steps 6-11 added.",
+          "commit": "95c2adf"
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F1-4",
+      "feature": "career-bound-outputs",
+      "status": "fixing",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "change spec Known limitations line 90",
+      "rootCause": "Template outputs have no per-document row, so overrides were stored on the preset.",
+      "files": [
+        "src/components/Output.jsx",
+        "src/components/admin/OutputTemplateConfigurator.jsx"
+      ],
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "not_fixed",
+          "note": "Owner decision needed: is storing template overrides on the preset acceptable, or should they move to a saved per-document row? No code change made; recorded in the change spec fix notes.",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F1-5",
+      "feature": "career-bound-outputs",
+      "status": "fixed_awaiting_retest",
+      "class": "process",
+      "attempts": 1,
+      "step": "Journey 7.4",
+      "rootCause": "Journey ordering: J8 mutates state J7.4 depends on.",
+      "files": [
+        "docs/training/career-bound-outputs.md"
+      ],
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "fixed",
+          "note": "Spec v3 states J7 (incl. 7.4) must run before J8 and the ordering is binding.",
+          "commit": "95c2adf"
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F1-7",
+      "feature": "career-bound-outputs",
+      "status": "fixing",
+      "class": "process",
+      "attempts": 0,
+      "step": "commit 3472137 trailer (B9)",
+      "rootCause": "Agent followed session attribution reminder over task text.",
+      "files": [],
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "not_fixed",
+          "note": "Trailer conflict: the task text says Claude Opus 5.5, the session attribution reminder says Claude Sonnet 5.5. I used the Sonnet 5.5 trailer from the session reminder; orchestrator/owner decides, and…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F1-8",
+      "feature": "career-bound-outputs",
+      "status": "fixing",
+      "class": "process",
+      "attempts": 0,
+      "step": "release process",
+      "rootCause": "Fix agent recorded results in the change spec, not round-N.md.",
+      "files": [
+        "docs/test-results/career-bound-outputs/"
+      ],
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "not_fixed",
+          "note": "Process item: the round-2 validation agent must write docs/test-results/career-bound-outputs/round-N.md. Noted in the change spec; no fix-agent change.",
           "commit": null
         }
       ]
