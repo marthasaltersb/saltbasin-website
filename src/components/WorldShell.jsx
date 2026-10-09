@@ -52,7 +52,7 @@ const ReleaseTrackerApp = lazy(() => import('./releaseTracker/ReleaseTrackerApp.
 const SIMPLE_EMBED_COMPONENTS = {
   leads: { title: 'Leads', render: () => <LeadsPanel /> },
   careerMaster: { title: 'Career Master', render: (scope) => (scope === 'admin' ? <CareerMasterPanel scope="admin" /> : <CareerMasterEntryPoint scope={scope} />) },
-  careerReconciliation: { title: 'Career Sources to Review', render: (scope) => <CareerReconciliationPanel scope={scope} /> },
+  careerReconciliation: { title: 'Career Sources to Review', light: true, render: (scope) => <CareerReconciliationPanel scope={scope} /> },
   // WorldShell is already wrapped in CareerConsentGate (see the default export), so no extra gate here.
   resume: { title: 'My Resume', render: (scope) => <MyResumePanel scope={scope} /> },
   outputTemplates: { title: 'Output Templates', render: (scope) => <OutputTemplateConfiguratorHub scope={scope} /> },
@@ -1389,7 +1389,7 @@ function SimpleEmbedView({ componentId, scope, onClear }) {
         <button style={{ ...S.backBtn, minHeight: 44, padding: '0 0.6rem', marginBottom: 0 }} onClick={onClear}>← Back to World</button>
         <div style={S.embedTitle}>{entry.title}</div>
       </div>
-      <div style={S.embedBody}>{entry.render(scope)}</div>
+      <div style={S.embedBody}>{entry.light ? <div style={{ background: '#fff', color: '#1b2a3b', borderRadius: 10, minHeight: '100%', boxSizing: 'border-box' }}>{entry.render(scope)}</div> : entry.render(scope)}</div>
     </div>
   );
 }
