@@ -24,7 +24,7 @@ psql -h /tmp -p 5433 -U postgres -d <DB> -c "ALTER TABLE career_jobs RENAME TO c
 FAULT B (proficiency cannot be resolved):
 psql -h /tmp -p 5433 -U postgres -d <DB> -c "ALTER TABLE career_proficiency_assertions RENAME TO career_proficiency_assertions_held"
 RESTORE (both):
-psql -h /tmp -p 5433 -U postgres -d <DB> -c "ALTER TABLE career_jobs_held RENAME TO career_jobs" -c "ALTER TABLE career_proficiency_assertions_held RENAME TO career_proficiency_assertions"
+psql -h /tmp -p 5433 -U postgres -d <DB> -c "ALTER TABLE IF EXISTS career_jobs_held RENAME TO career_jobs" -c "ALTER TABLE IF EXISTS career_proficiency_assertions_held RENAME TO career_proficiency_assertions"
 ```
 
 Do **not** restart the server while a fault is in place (boot recreates the missing table empty). Always RESTORE before finishing, even if a step fails.
@@ -78,7 +78,7 @@ Expect `200`. If you cannot create it, mark Journey 7 **BLOCKED** (not failed) a
 ## Journey 1 — A Career Master change that QR history cannot record
 
 1. [J1.1] Career Master → Skills → click the row **Process design** (dialog "Edit Entry"). Leave the dialog open. Change **Years experience** from 11 to **12**.
-2. [J1.2] In a shell run **FAULT A**.
+2. [J1.2] [cli] `psql -h /tmp -p 5433 -U postgres -d <DB> -c "ALTER TABLE career_jobs RENAME TO career_jobs_held"` (**FAULT A**).
 3. [J1.3] Click **Save** in the dialog. Wait 4 seconds.
    - Expect a toast "Saved" and a second toast "Failed to load career master data: Failed to load career catalogs" (the list cannot refresh; that is expected, not silent).
 4. [J1.4] Open **My Resume** (reload the page if you were already on it).
@@ -93,14 +93,15 @@ Expect `200`. If you cannot create it, mark Journey 7 **BLOCKED** (not failed) a
    - Expect an alert box: "**Live career data could not be loaded right now.** Showing the recorded states only; the newest one may be behind Career Master."
    - Expect the dark banner to start "**RECORDED DATA —**" (not "LIVE DATA"). The document text above is unchanged.
 2. [J2.2] Open RESUME LINK in a private window.
-   - Expect the same alert and a banner starting "**RECORDED DATA — matches the approved printed version**".
+   - Expect the same alert and a banner starting "**RECORDED DATA —**" (words after the dash are not checked here; see J2.3).
+3. [J2.3] On RESUME LINK (FAULT A still in place) the banner contains "**(live data unavailable)**" and the sentence under it begins "**Live career data could not be loaded, so these charts show the last recorded state.**" and does not contain "update from the Salt Basin Career Master".
 
 ## Journey 3 — Approving when the chart snapshot cannot be captured, and a failed suggestions lookup
 
-1. [J3.1] In a shell run **FAULT B** (FAULT A stays in place). Run the import again with Appendix B's changed package (`pkg_v2.json`, identical except "eleven" becomes "twelve" in the resume summary):
+1. [J3.1] [cli] `psql -h /tmp -p 5433 -U postgres -d <DB> -c "ALTER TABLE career_proficiency_assertions RENAME TO career_proficiency_assertions_held"` (**FAULT B**; FAULT A stays in place). Then run the import again with Appendix B's changed package (`pkg_v2.json`, identical except "eleven" becomes "twelve" in the resume summary):
    `PUBLIC_BASE_URL=http://127.0.0.1:<PORT> node scripts/import-application-package.mjs pkg_v2.json`.
    - Expect `resume_standard #<n> new_version` and `cover_letter #<n> unchanged`.
-2. [J3.2] Reload **My Resume**. Expect the Resume has a new *Draft* version with **Approve for QR** (the earlier approved version now reads *Approved*, no QR image).
+2. [J3.2] Reload **My Resume**. Expect the Resume has a new *Draft* version with **Approve for QR** (the earlier version still reads *Published* with its QR image, link and **Revoke QR**).
 3. [J3.3] On the new Draft Resume click **Approve for QR**, accept the confirm.
    - Expect a dialog **Set how each technology was used** listing **Pipeline Tracker** only.
    - Expect, inside the dialog, an alert: "**Suggestions are unavailable (**" … `relation "career_proficiency_assertions" does not exist) — choose each category yourself.`
@@ -108,6 +109,7 @@ Expect `200`. If you cannot create it, mark Journey 7 **BLOCKED** (not failed) a
 4. [J3.4] Choose **Hands-on**, click **Save to Career Master and continue**.
    - Expect the dialog to close and a green toast "Approved — private QR link created (copied to clipboard)." followed by a **red** toast: `The chart snapshot for the printed version could not be captured (relation "career_jobs" does not exist). The QR page will say so and can't compare live data to print.`
    - Expect the new version to show a QR code and the **same** link as RESUME LINK (the link follows the lineage).
+   - Expect the earlier version now reads *Approved* with no QR image.
 5. [J3.5] Open RESUME LINK in a private window.
    - Expect an alert box: "**The printed version's chart snapshot was not captured when it was approved**, so changes since printing can't be compared. Live career data could not be loaded right now."
    - Expect **no** dark LIVE/RECORDED banner and no timeline slider (there is nothing to compare). The panel is **not** missing: the alert is the panel's content.
@@ -125,7 +127,7 @@ Expect `200`. If you cannot create it, mark Journey 7 **BLOCKED** (not failed) a
 
 ## Journey 5 — Restore, and the next save clears every error
 
-1. [J5.1] In a shell run **RESTORE**.
+1. [J5.1] [cli] `psql -h /tmp -p 5433 -U postgres -d <DB> -c "ALTER TABLE IF EXISTS career_jobs_held RENAME TO career_jobs" -c "ALTER TABLE IF EXISTS career_proficiency_assertions_held RENAME TO career_proficiency_assertions"` (**RESTORE**).
 2. [J5.2] Reload `/output/resume`.
    - Expect no alert boxes; a **PROFICIENCY** list (Forecast modeling, Process design, QuoteFlow CPQ, Ledgerly ERP, Pipeline Tracker with levels), an **EXPERIENCE TREND** chart and a **CAREER TIMELINE**.
 3. [J5.3] Career Master → Skills → click **Process design**, change **Years experience** from 12 back to **11**, **Save**. Wait 4 seconds.
@@ -139,10 +141,10 @@ Expect `200`. If you cannot create it, mark Journey 7 **BLOCKED** (not failed) a
 
 ## Edge cases
 
-- [E.1] Opening a QR link with a bogus slug shows "This link isn't available" (unchanged by this feature).
+- [E.1] Run last, after J5.6: on My Resume click **Revoke QR** on Example Corp - Cover Letter (confirm). Open COVER LINK in a private window: the page shows "This link isn't available".
 - [E.2] Fault A only (no Fault B) when the gate dialog opens: it shows suggestions normally (Pipeline Tracker preselected "Integration design (suggested)") and no "Suggestions are unavailable" line, because the suggestions lookup does not read `career_jobs`.
 - [E.3] Cancelling the gate dialog in Journey 3 shows the toast "Finalization cancelled — technologies still need a proficiency category." and leaves the output unchanged.
-- [E.4] Expected network noise during the whole walk: HTTP 500 on `/api/career/master`, `/api/career/catalogs`, `/api/career/proficiency`, `/api/career/rollups` only while a fault is in place; one HTTP 409 on `/api/resume-outputs/<id>/share` per first approval that opens the gate dialog; HTTP 404 on `/api/members/me/profile` (a member with no profile row). Anything else is a finding.
+- [E.4] Expected network noise during the whole walk: HTTP 500 on `/api/career/master`, `/api/career/catalogs`, `/api/career/proficiency`, `/api/career/rollups`, `/api/career/resume-rollups` only while a fault is in place; one HTTP 404 on `/api/shared-outputs/<slug>` after the E.1 revoke step; one HTTP 409 on `/api/resume-outputs/<id>/share` per first approval that opens the gate dialog; HTTP 404 on `/api/members/me/profile` (a member with no profile row). Anything else is a finding.
 
 ## Appendix A — fictional package `pkg.json`
 

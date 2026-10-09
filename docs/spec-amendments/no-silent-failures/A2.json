@@ -1,0 +1,37 @@
+{
+  "id": "A2",
+  "feature": "no-silent-failures",
+  "fromBaseline": 1,
+  "proposedBy": "triage:no-silent-failures:r1",
+  "round": 1,
+  "triageItems": [
+    "T5"
+  ],
+  "reason": "J4.1 names fixture-path values while P4 prefers the gallery.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "J4.1",
+      "before": "Expect the header \"Pat Example\" and three alert boxes titled Proficiency / Experience trend / Career timeline",
+      "after": "Expect the header to be the signed-in member's display name (Test Member for the harness account) and three alert boxes titled \"Proficiency Tiers: data could not be loaded.\", \"Trend Bars: data could not be loaded.\", \"Career Timeline: data could not be loaded.\" with the unchanged bodies; P4 uses the gallery only; P1 signs in as member@test.local",
+      "tracesTo": "docs/changes/chart-gallery and change spec client section",
+      "whyNeeded": "Removes two contradictory paths."
+    }
+  ],
+  "review": {
+    "status": "rejected",
+    "reviewer": "amend:no-silent-failures:r1",
+    "checklist": {
+      "Traced: every added or changed step names the change-spec requirement or owner direction it proves (tracesTo).": "pass",
+      "Not weaker: a changed expected result is at least as strict as before, unless the evidence shows the old expectation contradicts the change spec or owner direction (then say which).": "pass",
+      "Retire only duplicates: removing a step is approved only when another step tests the same thing (name it); any other removal is needs_owner.": "pass",
+      "Exact: action plus exact expected result (labels, text, values, counts); no 'should look right', no 'roughly'.": "pass",
+      "Reachable: the step is walkable by point-and-click on desktop and at 390px (interfaceParity), or is a cli step by design.": "fail: the header claim is not supported. The gallery-built template has an empty member name (round-1 evidence, docs/test-results/no-silent-failures/round-1.md line 61; OutputTemplateConfigurator.jsx default memberName ''), so 'header is the signed-in member's display name (Test Member)' would fail.",
+      "Deterministic: same result every run against the fixed constraints (no dependence on wall-clock time, random data, earlier failed steps, or leftovers from another test); timing tolerances are stated.": "pass",
+      "Fictional data only; fixtures written in the spec, never fetched.": "pass",
+      "Independent of the fix: the step tests behaviour, not the implementation the fixer chose.": "fail: retires the P4 console-fixture path without a stated change-spec reason; it is the path that passed in round 1"
+    },
+    "note": "Rejected, not a product defect. The step as written passed in round 1 using the P4 console fixture (header Pat Example, exact titles). Re-propose as separate changes: (1) the P4 gallery path adds a point-and-click action that sets the header name (Header tab, Your name = Pat Example) and J4.1 uses the gallery titles Proficiency Tiers / Trend Bars / Career Timeline with unchanged bodies; (2) any P1 account change only together with the step that needs it. No product change is needed.",
+    "at": "2026-10-09T17:00:00Z"
+  }
+}

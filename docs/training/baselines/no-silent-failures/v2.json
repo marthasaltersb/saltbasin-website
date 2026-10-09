@@ -1,0 +1,454 @@
+{
+  "feature": "no-silent-failures",
+  "spec": "docs/training/no-silent-failures.md",
+  "version": 2,
+  "frozenAt": "2026-10-09T16:49:17.352Z",
+  "commitAtFreeze": "d7340d6170984726d16ea60b16bc7fbb18d25d15",
+  "specSha256": "5dc2135a8eebd1b242aa47feb20d605a74929c6235c87f418cf759e88471e78c",
+  "amendment": "A1",
+  "previous": 1,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "J0.1",
+      "kind": "step",
+      "journey": "0",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "abca22feac692917",
+      "summary": "My Resume → on **Example Corp - Resume** click **Approve for QR**; accept the browser confirm \"Approve \"Example Corp - Resume\" as the final version for its QR c"
+    },
+    {
+      "id": "J0.2",
+      "kind": "step",
+      "journey": "0",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3e61d048789945a1",
+      "summary": "In each dropdown choose **Hands-on (suggested)**, click **Save to Career Master and continue**."
+    },
+    {
+      "id": "J0.3",
+      "kind": "step",
+      "journey": "0",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a95c79155f658371",
+      "summary": "On **Example Corp - Cover Letter** click **Approve for QR**, accept the confirm."
+    },
+    {
+      "id": "J0.4",
+      "kind": "step",
+      "journey": "0",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "79f849715069a806",
+      "summary": "Open RESUME LINK in a private window."
+    },
+    {
+      "id": "J0.5",
+      "kind": "step",
+      "journey": "0",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "807ceeca7f64309a",
+      "summary": "Back in Career Master → Tools → **+ Add**, add **Pipeline Tracker** (category *Sales Operations*, tier *Proficient*, first used 2021, roles 3, \"How it was used\""
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7c299fc3e837aa0a",
+      "summary": "Career Master → Skills → click the row **Process design** (dialog \"Edit Entry\"). Leave the dialog open. Change **Years experience** from 11 to **12**."
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "2339c05b0caf03eb",
+      "summary": "[cli] `psql -h /tmp -p 5433 -U postgres -d <DB> -c \"ALTER TABLE career_jobs RENAME TO career_jobs_held\"` (**FAULT A**)."
+    },
+    {
+      "id": "J1.3",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fa4afac8d48c8795",
+      "summary": "Click **Save** in the dialog. Wait 4 seconds."
+    },
+    {
+      "id": "J1.4",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "bd19b199bb13f35e",
+      "summary": "Open **My Resume** (reload the page if you were already on it)."
+    },
+    {
+      "id": "J1.5",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b74d436485bca8d3",
+      "summary": "The Resume Output History banner still lists Pipeline Tracker (the page itself still loads)."
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c808898a65e3cf38",
+      "summary": "Open COVER LINK in a private window."
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "14f7f03865738c00",
+      "summary": "Open RESUME LINK in a private window."
+    },
+    {
+      "id": "J2.3",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a57100e284d86c79",
+      "summary": "On RESUME LINK (FAULT A still in place) the banner contains \"**(live data unavailable)**\" and the sentence under it begins \"**Live career data could not be load"
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "5971859bb1a2799c",
+      "summary": "[cli] `psql -h /tmp -p 5433 -U postgres -d <DB> -c \"ALTER TABLE career_proficiency_assertions RENAME TO career_proficiency_assertions_held\"` (**FAULT B**; FAULT"
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "97e7aa189db931ef",
+      "summary": "Reload **My Resume**. Expect the Resume has a new *Draft* version with **Approve for QR** (the earlier version still reads *Published* with its QR image, link a"
+    },
+    {
+      "id": "J3.3",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ef0d8ae352802133",
+      "summary": "On the new Draft Resume click **Approve for QR**, accept the confirm."
+    },
+    {
+      "id": "J3.4",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "cd79d1404bd81984",
+      "summary": "Choose **Hands-on**, click **Save to Career Master and continue**."
+    },
+    {
+      "id": "J3.5",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3f28ab6085a32aca",
+      "summary": "Open RESUME LINK in a private window."
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e0675d6492052348",
+      "summary": "Open `/output/resume` while signed in."
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "45db8db371d63fd7",
+      "summary": "[cli] `psql -h /tmp -p 5433 -U postgres -d <DB> -c \"ALTER TABLE IF EXISTS career_jobs_held RENAME TO career_jobs\" -c \"ALTER TABLE IF EXISTS career_proficiency_a"
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d8df465b19d009db",
+      "summary": "Reload `/output/resume`."
+    },
+    {
+      "id": "J5.3",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c248e4d97d26832d",
+      "summary": "Career Master → Skills → click **Process design**, change **Years experience** from 12 back to **11**, **Save**. Wait 4 seconds."
+    },
+    {
+      "id": "J5.4",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f34f9fc79c55035f",
+      "summary": "Open **My Resume** (reload)."
+    },
+    {
+      "id": "J5.5",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "62d85d608032acae",
+      "summary": "Open COVER LINK in a private window."
+    },
+    {
+      "id": "J5.6",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "834703376fb215f9",
+      "summary": "Open RESUME LINK in a private window."
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5999ecd68fed17ec",
+      "summary": "Run last, after J5.6: on My Resume click **Revoke QR** on Example Corp - Cover Letter (confirm). Open COVER LINK in a private window: the page shows \"This link "
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ef5feddb264d1396",
+      "summary": "Fault A only (no Fault B) when the gate dialog opens: it shows suggestions normally (Pipeline Tracker preselected \"Integration design (suggested)\") and no \"Sugg"
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "afa62523fd7ce8f6",
+      "summary": "Cancelling the gate dialog in Journey 3 shows the toast \"Finalization cancelled — technologies still need a proficiency category.\" and leaves the output unchang"
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9548237a90c2c22a",
+      "summary": "Expected network noise during the whole walk: HTTP 500 on `/api/career/master`, `/api/career/catalogs`, `/api/career/proficiency`, `/api/career/rollups`, `/api/"
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "2d4b8d778db6b1e5"
+    },
+    {
+      "title": "Fault injection (the only database commands in this spec)",
+      "kind": "context",
+      "hash": "d875d190941a13da"
+    },
+    {
+      "title": "Preconditions (fictional data)",
+      "kind": "precondition",
+      "hash": "7c61412a1938f2db"
+    },
+    {
+      "title": "Journey 0 — Healthy baseline (no faults)",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 1 — A Career Master change that QR history cannot record",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 2 — The QR page when live data cannot be loaded",
+      "kind": "journey",
+      "hash": "1bdc30677aca4488"
+    },
+    {
+      "title": "Journey 3 — Approving when the chart snapshot cannot be captured, and a failed suggestions lookup",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 4 — Template output charts that cannot load",
+      "kind": "journey",
+      "hash": "96e416860ff313ad"
+    },
+    {
+      "title": "Journey 5 — Restore, and the next save clears every error",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Appendix A — fictional package `pkg.json`",
+      "kind": "context",
+      "hash": "00bd6686fa370d9a"
+    },
+    {
+      "title": "Appendix B — `pkg_v2.json`",
+      "kind": "context",
+      "hash": "6d1ef5b697c8cddb"
+    }
+  ],
+  "comparedWithPrevious": {
+    "same": [
+      "J0.1",
+      "J0.2",
+      "J0.3",
+      "J0.4",
+      "J0.5",
+      "J1.1",
+      "J1.3",
+      "J1.4",
+      "J1.5",
+      "J2.1",
+      "J3.3",
+      "J3.5",
+      "J4.1",
+      "J5.2",
+      "J5.3",
+      "J5.4",
+      "J5.5",
+      "J5.6",
+      "E.2",
+      "E.3"
+    ],
+    "changed": [
+      "J1.2",
+      "J2.2",
+      "J3.1",
+      "J3.2",
+      "J3.4",
+      "J5.1",
+      "E.1",
+      "E.4"
+    ],
+    "added": [
+      "J2.3"
+    ],
+    "retired": [],
+    "contextChanged": [
+      "Fault injection (the only database commands in this spec)"
+    ]
+  }
+}
