@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T01:02:38.970Z",
+  "exportedAt": "2026-10-09T01:13:11.454Z",
   "features": {
     "proficiency-live-qr": {
       "status": "failing",
@@ -104,6 +104,14 @@
       "lastReport": null,
       "openBugs": 5,
       "backlog": 7
+    },
+    "world-shell-layers": {
+      "status": "build",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
     }
   },
   "bugs": [
