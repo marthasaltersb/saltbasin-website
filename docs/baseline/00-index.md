@@ -17,7 +17,7 @@ This area documents the existing application, reconciles it with new product and
 | 03 | [Current-state specification](./03-current-state-specification.md) + [`03-modules/`](./03-modules/) (27 files) | **Populated (first pass)** | Module register, conventions, REQ/DEF rows with evidence and three-dimension assessment |
 | 04 | [Technical-element register](./04-technical-element-register.md) + [`inventory/`](./inventory/README.md) | **Populated (generated)** | Stable `TE-` IDs for endpoints, tables, routes, modules, blocks, tabs, themes, env names, jobs, tests |
 | 05 | [New-requirement register](./05-new-requirement-register.md) | Awaiting user validation | `NEW-001`…`NEW-017` from the 2026-09-05/06 intake, all pending read-back |
-| 06 | [Reconciliation matrix](./06-reconciliation-matrix.md) | Blocked on 05 | New ↔ existing mapping |
+| 06 | [Reconciliation matrix](./06-reconciliation-matrix.md) | Partially populated (2026-09-10 resume-product rows); orbital-design rows blocked on 05 | New ↔ existing mapping |
 | 07 | [Decision log](./07-decision-log.md) | **21 entries** (DEC-001…021) | Conflicts, drift, and material product decisions. Nothing silently resolved |
 | 08 | [Target specification](./08-target-specification.md) | Blocked | Unified target model |
 | 09 | [Backlog](./09-backlog.md) | Blocked | Dependency-ordered tasks |

@@ -241,6 +241,110 @@ These updates add evidence without removing the original entries above.
 
 **Decision needed:** whether stub checkout must be disabled when `NODE_ENV=production`.
 
+## Resume-product decisions (merged from the 2026-09-10 `clever-bohr` branch)
+
+> **ID collision:** these entries were written on a parallel branch and reuse IDs (DEC-006 and up) that the entries above already use for different decisions. Within this section, and in the resume-product rows of `06-reconciliation-matrix.md` and the "Resume Product" section of `CLAUDE.md`, a DEC ID refers to the entry in this section. Renumber them when this log is next reconciled.
+
+### DEC-006 — Scoring/threshold concepts from the 2026-09-10 resume-product package: now four, not three (v2)
+
+**Status:** OPEN — refined and partially resolved, 2026-09-10 (same day, later)
+
+**v2 update:** Betsy clarified directly that there are **four** distinct scoring concepts, not three — the original framing below missed that "requirement-level transfer coverage" was actually conflating two different questions. The four:
+1. **Opportunity ranking** — is this external job opportunity worth pursuing overall (`career_match_scoring_v1`, confirmed identical to S03 §7 — see original entry below).
+2. **Resume-output-to-job scoring** — does *this specific resume's wording* match *this specific job description's* requirements. Not yet built.
+3. **Source/evidence-confidence scoring** — how solid is the underlying Career Master claim itself (user-attested vs. document-supported vs. verified; `source_tier`/`affinity` already partially exist per `TE-CAREER-05`/`TE-CAREER-09`). Not yet built as its own scored Current.
+4. **Review-gating bands** — Betsy's dictated 90%/75% bands governing when a recommendation needs review before delivery (`NEW-019`). Not yet built.
+
+**Also resolved 2026-09-10:** every one of these — indeed every Salt Basin methodology with a weight, threshold, or formula — must expose a personal configuration seam: Salt Basin ships a default, any individual user can override their own copy, and a user's override never changes any other user's value or the platform default. Built as an additive `owner_user_id` column + 3-tier resolution on `journey_current_definitions` (mirroring `agent_definitions`' existing precedence), wired first to concept 1 (`career_match_scoring_v1`) via `setPersonalScoringWeights()`/`GET,PUT,DELETE /api/career-agents/scoring-preferences` and a real UI control in `CareerPlacementAgentsPanel.jsx`. Concepts 2–4 need their own Currents built on this same seam when they're designed — this resolves the "how does per-user configurability work" question in general, not just for concept 1.
+
+**Decision needed now:** none blocking — the general mechanism is resolved and built. Still open: which of concepts 2–4 to design/build next, and their exact formulas (this doc doesn't invent those without Betsy's input, same as always).
+
+---
+
+### DEC-006 (original entry, 2026-09-10 earlier the same day) — Three distinct scoring/threshold concepts from the 2026-09-10 resume-product package are not yet reconciled
+
+**Status:** OPEN
+
+**Evidence:** `SRC-RESUME-01` (Betsy's live dictation) sets 90%/75% bands governing *when a recommendation needs review before delivery*. `SRC-RESUME-11` (`Resume-Product-Specification-v0.2.md` §4) separately proposes 75/50 thresholds for *requirement-level demonstrated-transfer coverage* — a different question, already flagged with a cross-reference note inside that document at intake. `SRC-RESUME-06`/`SRC-RESUME-12` (`Source-Review-and-Career-Foundation.md`) further describes an existing 15/15/15/15/15/10/5/10 *career-opportunity ranking* model from S03 §7, which that document itself suggests may already be implemented as `server/lib/careerOpportunityRollups.js` per `CLAUDE.md`'s "Career Placement Agents" section — not yet verified by direct code comparison.
+
+**Why it matters:** the supplied specification explicitly warns against exactly this failure mode — "a final display must explain whether 80 means an opportunity ranking or demonstrated requirement coverage... do not show a single unlabeled 'match' gauge." Building UI before these three are confirmed distinct risks recreating that anti-pattern with Betsy's own real product.
+
+**Decision needed:** confirm all three stay separate, separately-labeled values; confirm whether `careerOpportunityRollups.js` is in fact S03 §7's model (code comparison, not yet done). Not resolved.
+
+---
+
+### DEC-007 — Free-trial gating model for the resume/career product is undecided
+
+**Status:** OPEN
+
+**Evidence:** Betsy, live dictation, 2026-09-10, prior to any file upload: "we need to decide whether or not the free trial is... gated based on time or number of jobs that they wanna research or... is based on... features or functionality or a combination of all of the above. So... that's what we need to determine." No supplied document proposes a specific mechanism.
+
+**Why it matters:** determines pricing-page copy, entitlement-check code (likely `product_licenses`/`data_entitlements` per `CLAUDE.md`'s Profile system), and how the "no repeat LLM cost after initial calls" goal (DEC-009) gets technically enforced during a trial.
+
+**Decision needed:** which axis — time-boxed, usage-count, feature-gated, or a defined combination — from Betsy directly. Not proposed here as a default; not resolved.
+
+---
+
+### DEC-008 — Self-hosted, in-platform build/agent-access request is a separate, large architectural ask, not resume-product scope
+
+**Status:** OPEN
+
+**Evidence:** Betsy's live dictation, 2026-09-10, before any file upload: she wants to "run my product out of my own platform and move out of Claude code," with a mechanism for her, specifically and temporarily, to call the Claude Code/API from inside Salt Basin itself — scoped to what's already built and cached before calling any further API — so she can test and debug the platform's real UX without an external Claude Code session's usage limits interrupting the work. Separately, she wants an API spec so a user's own external Claude/Codex/ChatGPT agent can authenticate to Salt Basin and call its APIs, plus a later roadmap item letting users connect their own model credentials as an opt-in paid feature. This overlaps materially with the existing `docs/salt-basin-agent-api-pricing-architecture-spec.md` (2026-07-09 — metered "Contribution Intelligence API," BYO-model-provider commercial posture) and with the still-unbuilt "Agent Boundary" gap `CLAUDE.md`'s Career Placement Agents section already names.
+
+**Why it matters:** this is a platform-wide capability the resume product would eventually sit on top of, not a resume-product UX requirement itself. Treating it as in-scope for the resume-product intake would blur two very differently sized efforts.
+
+**Decision needed:** none yet — flagged so it is not quietly absorbed into resume-product scope. Reconciling it against the existing agent-API-pricing spec is a prerequisite for any design work, and is itself a separate, later exercise.
+
+---
+
+### DEC-009 — "Self-serve with no recurring LLM cost after initial calls" is a stated goal with no defined mechanism
+
+**Status:** OPEN
+
+**Evidence:** Betsy's live dictation, 2026-09-10: the eventual self-serve product should not require "additional cost on Salt Basin or on the user for calling a language model" once context/memory is established, and the system should be "extremely transparent" about which features need an LLM call versus which run from cached context.
+
+**Why it matters:** this shapes the entire architecture of `SRC-RESUME-11`'s transferable-skill scoring and Career Master reuse model — whether §4's scoring is deterministic code against stored evidence records (no recurring LLM call) or an LLM judgment call made fresh each time. The specification as supplied does not yet say, per-deliverable, which of D01–D11 are deterministic-code output, a one-time cached LLM call, or a recurring LLM call.
+
+**Decision needed:** a deterministic-vs-LLM classification for each D01–D11 deliverable in `Resume-Product-Specification-v0.2.md` §8. Not supplied by any source yet; not resolved.
+
+---
+
+### DEC-010 — R01–R12 personal career-fact conflicts block finalizing Betsy's actual Osaic application materials
+
+**Status:** OPEN
+
+**Evidence:** `docs/baseline/intake/2026-09-10-salt-basin-resume-product/Source-Review-and-Career-Foundation.md` registers twelve specific unresolved conflicts in Betsy's own supplied source documents — among them Streamforce founder-vs-partner title (R01), Accenture start month (R02), the exact Osaic posting/title (R03), unreconciled employer/client/engagement headline counts (R06), and current certification status (R08). Full list and evidence locators are in that document, not duplicated here.
+
+**Why it matters:** `Osaic-Application-Review-Draft.md` in the same package is explicitly a draft, not submittable, until these resolve.
+
+**Decision needed:** Betsy's direct answers to R01–R12, in that document. Not a Claude-side determination; not resolved.
+
+---
+
+### DEC-011 — Major pre-existing overlap found: "Career Foundation Sourcing & Reconciliation, Phase 2" (2026-08-10) already implements much of the newly-supplied Career Master spec
+
+**Status:** OPEN — reconciliation needed before any new schema/UI work on the resume product
+
+**Evidence:** Direct code read, 2026-09-10, while starting Phase 1 of `salt-basin-resume-product`. `server/routes/careerReconciliation.js` + `server/lib/careerReconciliation.js` + `src/components/admin/CareerReconciliationPanel.jsx` implement a real, shipped conflict/ambiguous-mapping review queue (`career_reconciliation_tasks`: `task_type`, `entry_type`, `atom_key`, `evidence_refs`, `reasoning`, `status`, `resolution`) across multiple source imports (resume, LinkedIn export, Indeed export, Fiverr export). `server/db.js`'s `career_intake_documents` table already has a `source_truth_status` column (`CareerIntakePanel.jsx`'s `SOURCE_TRUTH` options: `source_of_truth` / `primary_validated` / `user_attested` / `synthetic_scenario`) — an evidence-provenance vocabulary that overlaps with, but is not identical to, `SRC-RESUME-11`'s proposed user-attested/document-supported/externally-verified/AI-proposed-interpretation/disputed states (no direct `synthetic_scenario` or `disputed` analog either direction). Separately, `server/routes/careerReasoningAdmin.js` + `server/lib/careerReasoningCompiler.js` implement an admin-approved "reasoning pattern candidate" cache (writes to `journey_current_definitions` as `career_reasoning_cache_approval`) — a real, shipped mechanism for reusing a previously-approved transfer-reasoning pattern instead of re-deriving it, which may already be (or be extendable into) the mechanism DEC-009 asks for.
+
+**Why it matters:** this is not a green-field build. Treating `Resume-Product-Specification-v0.2.md` §3's proposed Career Master schema, or §4's scoring model, as net-new would duplicate a real, working system built five weeks earlier under different names. The reuse-first non-negotiable in `.claude/skills/salt-basin-resume-product/SKILL.md` already anticipated this in general terms; this entry records the specific, concrete overlap found.
+
+**Decision needed:** none from Betsy yet — this is a Stage-2-style code-audit finding, queued for a full side-by-side comparison (existing `SOURCE_TRUTH`/`career_reconciliation_tasks`/`careerReasoningCompiler` vocabulary and flow vs. the new spec's evidence-state model and D01-D11 deliverables) before Phase 2 of the resume-product build writes any new table or route. Not resolved — comparison not yet done to completion, only the overlap's existence is confirmed.
+
+---
+
+### DEC-012 — Graph database on top of Supabase: recommend not provisioning one yet
+
+**Status:** RESOLVED (recommendation given 2026-09-10; Betsy asked directly whether to "download the graph database now")
+
+**Context:** Betsy's RECON-001 decision (extend the existing Career Master) came with a stated eventual intent to run a graph database on top of the Supabase/Postgres backend, and she asked whether to provision one now.
+
+**Recommendation:** not yet. This codebase already implements graph-shaped modeling directly on Postgres — `entities`/`persons`/`relationships` master-data tables, `journey_rod_entity_links`/`journey_rod_person_links` join tables, and `tributaryRegistry.js`'s `createJourneyTributary`/`linkJourneyTributary` (hierarchical, peer, and reference relationship kinds) per `CLAUDE.md`'s Career Placement Agents section — this is a working, if lightweight, graph layer, not absent. Adding a separate graph-database product now would mean: a new infrastructure dependency and ongoing cost (in direct tension with Betsy's own "no recurring cost" goal, DEC-009), a second source of truth to keep in sync with Postgres, and — with no concrete query need identified yet that the existing tables/joins/recursive CTEs can't serve — a speculative build ahead of evidence, the same anti-pattern this whole document set is built to avoid.
+
+**If/when a real need emerges** (e.g., a specific multi-hop traversal or graph-algorithm query that plain joins genuinely can't express efficiently), evaluate **Apache AGE** (a graph extension that runs inside Postgres/Supabase) before reaching for an external graph-database product — it stays inside the existing database, infrastructure, and backup story rather than adding a second system.
+
+**Decision needed:** none — Betsy can revisit if a concrete graph-query need surfaces that the current model can't serve.
+
 ---
 
 *(This log grows as Stage 2/3 surface more conflicts. Entries are never removed — a resolved entry keeps its evidence and gets a `RESOLVED` status plus the decision, so the trail stays intact per the traceability requirement in Stage 6.)*
