@@ -328,7 +328,7 @@ for (const a of snapshot.agents) {
 }
 let json = JSON.stringify(snapshot);
 // Measured as stored: the tracker keeps the snapshot as one JSON-quoted string field, which adds escaping.
-const LIMIT = 250 * 1024;
+const LIMIT = 230 * 1024;   // headroom under the 256 KB document cap as the release grows
 const stored = (j) => Buffer.byteLength(JSON.stringify({ json: j }));
 if (stored(json) > LIMIT) {   // over budget: keep running agents, the latest per feature+role, and the last day; count the rest
   const dayAgo = Date.now() - 24 * 3600 * 1000; const latest = new Map();
