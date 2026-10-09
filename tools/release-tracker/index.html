@@ -53,9 +53,10 @@ tr:last-child td { border-bottom: 0; }
 .s-running { background: var(--teal-soft); color: var(--teal); }
 .s-passed, .s-verified, .s-done { background: var(--good-soft); color: var(--good); }
 .s-failing, .s-open, .s-recurred, .s-retest_failed, .s-failed, .s-done_unreconciled, .s-seen_in_test { background: var(--bad-soft); color: var(--bad); }
-.s-fixing, .s-fixed_awaiting_retest, .s-between_stages { background: var(--gold-soft); color: var(--gold); }
+.s-fixing, .s-fixed_awaiting_retest, .s-between_stages, .s-awaiting_retest, .s-retesting, .s-retest_failed_pending_triage { background: var(--gold-soft); color: var(--gold); }
 .s-needs_human, .s-needs_business_definition { background: var(--human-soft); color: var(--human); }
-.s-queued, .s-idle_or_done { background: var(--line); color: var(--muted); }
+.s-passed_with_backlog { background: var(--good-soft); color: var(--good); }
+.s-backlog_pre_existing, .s-reassigned, .s-process_note, .s-queued, .s-idle_or_done, .s-stopped { background: var(--line); color: var(--muted); }
 .bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; min-width: 80px; }
 .bar i { display: block; height: 100%; background: var(--good); border-radius: 3px; }
 .now { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
@@ -68,6 +69,7 @@ tr:last-child td { border-bottom: 0; }
 details summary { cursor: pointer; list-style: none; }
 details summary::-webkit-details-marker { display: none; }
 .hist { margin: 8px 0 2px; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 13px; }
+a { color: var(--teal); }
 .hist li { display: grid; grid-template-columns: 44px 120px 1fr; gap: 8px; }
 .callout { background: var(--human-soft); color: var(--ink); border: 1px solid var(--human); border-radius: 8px; padding: 12px 14px; }
 .callout b { color: var(--human); }
@@ -96,7 +98,7 @@ details summary::-webkit-details-marker { display: none; }
   <section>
     <h2>Features</h2>
     <div class="panel"><table>
-      <thead><tr><th>Feature</th><th>Status</th><th>Latest test</th><th class="num">Rounds</th><th class="num">Open bugs</th></tr></thead>
+      <thead><tr><th>Feature</th><th>Status</th><th>Latest test</th><th class="num">Rounds</th><th>Bugs verified fixed</th></tr></thead>
       <tbody id="features"><tr><td colspan="5" class="empty">Features appear here as the release loop reports them.</td></tr></tbody>
     </table></div>
   </section>
@@ -119,13 +121,16 @@ details summary::-webkit-details-marker { display: none; }
 </div>
 
 <script>
-const ROLE = { build: 'Build', integrate: 'Integrate', validate: 'Validate', triage: 'Triage', fix: 'Fix', record: 'Record' };
+const ROLE = { build: 'Build', integrate: 'Integrate', validate: 'Validate', triage: 'Triage', scope: 'Scope check', fix: 'Fix', record: 'Record', reconcile: 'Reconcile' };
+const BACKLOG = ['backlog_pre_existing', 'reassigned', 'process_note'];
 const STATUS = {
   running: 'Running', passed: 'Passed', failing: 'Failing', queued: 'Queued', between_stages: 'Between stages',
   needs_human: 'Needs a person', needs_business_definition: 'Needs a business decision', open: 'Open', recurred: 'Came back',
   fixing: 'Being fixed', fixed_awaiting_retest: 'Fixed, awaiting re-test', retest_failed: 'Re-test failed', verified: 'Verified fixed',
   done: 'Done', failed: 'Failed', idle_or_done: 'Idle', done_unreconciled: 'Finished, failures not reconciled',
-  seen_in_test: 'Seen in test, awaiting triage',
+  seen_in_test: 'Seen in test, awaiting triage', retesting: 'Fixed, being retested now',
+  retest_failed_pending_triage: 'Retest failed, being triaged', passed_with_backlog: 'Passed (backlog elsewhere)',
+  backlog_pre_existing: 'Backlog: was already broken', reassigned: 'Belongs to another feature', process_note: 'Test or process note', stopped: 'Stopped (run replaced)', awaiting_retest: 'Fixed, awaiting retest',
 };
 const EVENT = { found: 'Found', recurred: 'Came back', fixed: 'Fix applied', not_fixed: 'Not fixed', seen: 'Seen in test' };
 let snap = null; let filter = 'all';
@@ -146,12 +151,14 @@ function render() {
   const feats = snap.features || []; const bugs = snap.bugs || []; const agents = snap.agents || [];
   const running = agents.filter((a) => a.status === 'running');
   const human = bugs.filter((b) => b.status === 'needs_human' || b.status === 'needs_business_definition');
-  const open = bugs.filter((b) => !['verified'].includes(b.status));
+  const open = bugs.filter((b) => !['verified', 'seen_in_test', ...BACKLOG].includes(b.status));
+  const backlog = bugs.filter((b) => BACKLOG.includes(b.status));
   const unrec = agents.filter((a) => a.status === 'done_unreconciled');
   $('strip').innerHTML = [
-    ['good', feats.filter((f) => f.status === 'passed').length + ' / ' + feats.length, 'Features passed'],
+    ['good', feats.filter((f) => f.status === 'passed' || f.status === 'passed_with_backlog').length + ' / ' + feats.length, 'Features passed'],
     ['', running.length, 'Agents running'],
-    ['bad', open.length, 'Open bugs'],
+    ['bad', open.length, 'Open bugs (this work)'],
+    ['', backlog.length, 'Backlog: not this work'],
     ['good', bugs.filter((b) => b.status === 'verified').length, 'Bugs verified fixed'],
     ['human', human.length, 'Need a person'],
     ['bad', unrec.length, 'Finished with unreconciled failures'],
@@ -173,12 +180,12 @@ function render() {
   const fr = feats.filter((f) => match(f.key));
   $('features').innerHTML = fr.length ? fr.map((f) => {
     const r = f.lastResult; const pct = r && r.stepsTotal ? Math.round((r.stepsPassed / r.stepsTotal) * 100) : 0;
-    return `<tr><td><b>${esc(f.key)}</b></td><td>${featStatus(f.status)}</td><td>${r ? `<div class="num">Round ${r.round}: ${r.stepsPassed}/${r.stepsTotal} steps</div><div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>` : '<span class="muted">Not tested yet</span>'}</td><td class="num">${f.rounds}</td><td class="num">${f.openBugs}</td></tr>`;
+    return `<tr><td><b>${esc(f.key)}</b></td><td>${featStatus(f.status)}</td><td>${r ? `<div class="num">Round ${r.round}: ${r.stepsPassed}/${r.stepsTotal} steps</div><div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>` : '<span class="muted">Not tested yet</span>'}</td><td class="num">${f.rounds}</td><td>${(() => { const fbugs = bugs.filter((b) => b.status !== 'seen_in_test' && ((b.feature === f.key && !BACKLOG.includes(b.status)) || (b.status === 'reassigned' && b.scope?.owner === f.key))); const v = fbugs.filter((b) => b.status === 'verified').length; const bl = bugs.filter((b) => b.feature === f.key && BACKLOG.includes(b.status)).length; const inn = bugs.filter((b) => b.status === 'reassigned' && b.scope?.owner === f.key).length; const extra = `${bl ? `<div class="muted">${bl} moved to backlog (not this feature's)</div>` : ''}${inn ? `<div class="muted">${inn} reassigned here from other features</div>` : ''}`; return fbugs.length ? `<div class="num">${v} of ${fbugs.length} verified</div><div class="bar" aria-hidden="true"><i style="width:${Math.round((v / fbugs.length) * 100)}%"></i></div>${extra}` : `<span class="muted">No bugs of its own</span>${extra}`; })()}</td></tr>`;
   }).join('') : '<tr><td colspan="5" class="empty">No features for this selection.</td></tr>';
 
-  const order = { needs_human: 0, needs_business_definition: 1, recurred: 2, retest_failed: 3, open: 4, seen_in_test: 5, fixing: 6, fixed_awaiting_retest: 7, verified: 8 };
-  const br = bugs.filter((b) => match(b.feature)).sort((a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9));
-  $('bugs').innerHTML = br.length ? br.map((b) => `<tr><td class="mono">${esc(b.id)}</td><td>${esc(b.feature)}</td><td>${pill(b.status)}</td><td class="num">${b.attempts || 0} / ${esc(snap.maxFixAttemptsPerBug)}</td><td><details><summary><b>${esc(b.step)}</b><div class="muted">${esc(b.rootCause)}</div>${b.question ? `<div><b>Question for you:</b> ${esc(b.question)}</div>` : ''}</summary><ul class="hist">${(b.history || []).map((h) => `<li><span class="muted">R${h.round}</span><span>${esc(EVENT[h.event] || h.event)}</span><span>${esc(h.note)}${h.files?.length ? ` <span class="mono muted">${esc(h.files.join(', '))}</span>` : ''}</span></li>`).join('')}</ul></details></td></tr>`).join('')
+  const order = { needs_human: 0, needs_business_definition: 1, recurred: 2, retest_failed: 3, open: 4, seen_in_test: 5, fixing: 6, fixed_awaiting_retest: 7, reassigned: 8, backlog_pre_existing: 9, process_note: 10, verified: 11 };
+  const br = bugs.filter((b) => match(b.feature)).sort((a, b) => (order[a.status] ?? 7) - (order[b.status] ?? 7));
+  $('bugs').innerHTML = br.length ? br.map((b) => `<tr><td class="mono">${esc(b.id)}${b.carriedOver ? '<div class="muted">kept from an earlier run</div>' : ''}</td><td>${esc(b.feature)}</td><td>${pill(b.status)}</td><td class="num">${b.attempts || 0} / ${esc(snap.maxFixAttemptsPerBug)}</td><td><details><summary><b>${esc(b.step)}</b><div class="muted">${esc(b.rootCause)}</div>${b.question ? `<div><b>Question for you:</b> ${esc(b.question)}</div>` : ''}${b.scope ? `<div><b>Whose bug:</b> ${esc({ this_feature: 'this feature', pre_existing: 'was already broken before this work', other_feature: `another feature${b.scope.owner ? ` (${b.scope.owner})` : ''}`, process_note: 'test or process note, not a product bug' }[b.scope.scope] || b.scope.scope)} <span class="muted">— ${esc(b.scope.evidence)} (${esc(b.scope.decidedBy)})</span></div>` : ''}</summary><ul class="hist">${(b.history || []).map((h) => `<li><span class="muted">R${h.round}</span><span>${esc(EVENT[h.event] || h.event)}</span><span>${esc(h.note)}${h.files?.length ? ` <span class="mono muted">${esc(h.files.join(', '))}</span>` : ''}${h.commit ? ` <a class="mono" href="${esc((snap.repoUrl || '') + '/commit/' + h.commit)}" target="_blank" rel="noopener">${esc(String(h.commit).slice(0, 7))}</a>` : ''}</span></li>`).join('')}</ul></details></td></tr>`).join('')
     : '<tr><td colspan="5" class="empty">No bugs for this selection.</td></tr>';
 
   const ar = agents.filter((a) => match(a.feature));

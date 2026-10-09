@@ -9,7 +9,9 @@
 //       Prints the Workflow args (one run per dependency group) that continue every unfinished
 //       feature: merged features restart at their next test round with their open bugs as fix
 //       notes; unbuilt features are built. Pass each printed object to the saved 'release-loop'
-//       workflow. Fictional data only — this state is committed to a public repo.
+//       workflow. Scope-checked backlog (pre-existing / other feature / process note) never blocks the
+//       feature it was reported against; a bug reassigned to a feature is carried by that feature.
+//       Fictional data only — this state is committed to a public repo.
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -20,6 +22,10 @@ const argv = process.argv.slice(2);
 const opt = (k) => { const i = argv.indexOf(k); return i >= 0 ? argv[i + 1] : null; };
 const clip = (s, n) => (typeof s === 'string' && s.length > n ? `${s.slice(0, n - 1)}…` : s ?? null);
 const DONE = new Set(['verified']);
+// Bugs the scope check placed elsewhere (pre-existing, another feature's, process notes): kept and
+// exported, but they never block or re-open the feature they were first reported against.
+const BACKLOG = new Set(['backlog_pre_existing', 'reassigned', 'process_note']);
+const FINISHED = new Set(['passed', 'passed_with_backlog']);
 
 if (argv.includes('--export')) {
   const snap = JSON.parse(fs.readFileSync(opt('--export'), 'utf8'));
@@ -30,16 +36,20 @@ if (argv.includes('--export')) {
       lastRound: f.lastResult?.round ?? 0,
       lastScore: f.lastResult ? `${f.lastResult.stepsPassed}/${f.lastResult.stepsTotal}` : null,
       lastReport: f.lastResult?.report ? path.relative(root, f.lastResult.report) : null,
+      openBugs: f.openBugs ?? null,
+      backlog: f.backlog ?? 0,
     }])),
     bugs: (snap.bugs || []).filter((b) => b.status !== 'seen_in_test').map((b) => ({
       id: b.id, feature: b.feature, status: b.status, class: b.class || null, attempts: b.attempts || 0,
       step: clip(b.step, 200), rootCause: clip(b.rootCause, 400), files: b.files || [],
+      scope: b.scope ? { scope: b.scope.scope, owner: b.scope.owner || null, evidence: clip(b.scope.evidence, 300) } : null,
       history: (b.history || []).map((h) => ({ round: h.round, event: h.event, note: clip(h.note, 200), commit: h.commit || null })),
     })),
   };
   fs.writeFileSync(STATE, `${JSON.stringify(state, null, 2)}\n`);
-  const open = state.bugs.filter((b) => !DONE.has(b.status)).length;
-  console.log(`Wrote ${path.relative(root, STATE)}: ${Object.keys(state.features).length} features, ${state.bugs.length} bugs (${open} not yet verified).`);
+  const open = state.bugs.filter((b) => !DONE.has(b.status) && !BACKLOG.has(b.status)).length;
+  const backlog = state.bugs.filter((b) => BACKLOG.has(b.status)).length;
+  console.log(`Wrote ${path.relative(root, STATE)}: ${Object.keys(state.features).length} features, ${state.bugs.length} bugs (${open} blocking and not yet verified, ${backlog} backlog).`);
   process.exit(0);
 }
 
@@ -48,7 +58,10 @@ if (argv.includes('--args')) {
   const state = fs.existsSync(STATE) ? JSON.parse(fs.readFileSync(STATE, 'utf8')) : { features: {}, bugs: [] };
   const portBase = Number(opt('--port-base') || 5000);
   const merged = (f) => fs.existsSync(path.join(root, f.trainingSpec)) && fs.existsSync(path.join(root, f.changeSpec));
-  const unfinished = defs.features.filter((f) => state.features[f.key]?.status !== 'passed');
+  // A feature is unfinished while it has blocking bugs; bugs reassigned to it by the scope check count as its own.
+  const owned = (key) => state.bugs.filter((b) => !DONE.has(b.status)
+    && ((b.feature === key && !BACKLOG.has(b.status)) || (b.status === 'reassigned' && b.scope?.owner === key)));
+  const unfinished = defs.features.filter((f) => !FINISHED.has(state.features[f.key]?.status) || owned(f.key).length);
   const groups = [];
   for (const f of unfinished) {
     const g = groups.find((x) => f.dependsOn.some((d) => x.some((y) => y.key === d)));
@@ -64,15 +77,17 @@ if (argv.includes('--args')) {
     maxFixAttemptsPerBug: 2,
     portBase: portBase + gi * 100,
     sweep: false,
+    scopeCheck: true,
     features: group.map((f) => {
       const st = state.features[f.key];
-      const bugs = state.bugs.filter((b) => b.feature === f.key && !DONE.has(b.status));
+      const bugs = owned(f.key);
       const base = { key: f.key, title: f.title, trainingSpec: f.trainingSpec, changeSpec: f.changeSpec, dependsOn: f.dependsOn.filter((d) => group.some((y) => y.key === d)) };
       if (!merged(f)) return { ...base, build: f.build };
       return {
         ...base,
         build: null,
         startRound: (st?.lastRound || 0) + 1,
+        scopeFromRound: (st?.lastRound || 0) + 1,
         fixNotes: `Continuing from an earlier session (state: docs/release-log/active-release.state.json, last round ${st?.lastRound || 0}: ${st?.lastScore || 'not tested'}). `
           + `Re-test the whole spec and every open bug below; a bug whose step now passes is verified, otherwise report it so triage links it by id (recurrenceOf). `
           + `Open bugs: ${JSON.stringify(bugs.map((b) => ({ id: b.id, status: b.status, step: b.step, cause: b.rootCause, files: b.files })))}`,
