@@ -2,6 +2,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Jost:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
 /* Layout: control-room board — summary strip, then feature lanes, live agents, bug queue, agent ledger */
 /* Salt Basin design language: cream / parchment surfaces, teal + gold structure, Fraunces + Jost.
@@ -145,6 +146,33 @@ a.spark:hover, a.spark:focus-visible { border-color: var(--teal); }
 .spark .v { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .spark svg { display: block; width: 100%; height: 34px; margin-top: 4px; }
 .tableview { overflow-x: auto; }
+.head-right { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+/* World view: the same data as Salt Basin crystals. */
+.world { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 0; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: radial-gradient(ellipse 70% 60% at 45% 40%, var(--panel) 0%, var(--panel-2) 70%, var(--bg) 100%); min-height: 640px; }
+.world-stage { position: relative; min-height: 640px; overflow: hidden; touch-action: none; }
+.world-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; }
+.world-stage canvas.pointing { cursor: pointer; }
+.world-labels { position: absolute; inset: 0; pointer-events: none; }
+.wl { position: absolute; transform: translate(-50%, 14px); font: 500 12px/1.25 var(--body); color: var(--ink); text-align: center; white-space: nowrap; text-shadow: 0 0 6px var(--panel), 0 0 2px var(--panel); transition: opacity .2s; }
+.wl b { font: 600 13px var(--display); display: block; }
+.wl.dim { opacity: .25; }
+.wl.sun b { font-size: 17px; }
+.world-tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font-size: 13px; box-shadow: 0 8px 22px -12px rgba(0,0,0,.35); max-width: 260px; display: none; z-index: 3; }
+.world-panel { border-left: 1px solid var(--line); background: var(--panel); overflow: auto; max-height: 780px; padding: 16px; display: grid; gap: 16px; align-content: start; }
+.world-panel .layer { gap: 16px; }
+.world-panel table { font-size: 13px; }
+.world-bar { position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; align-items: center; gap: 8px; background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line); border-radius: 999px; padding: 4px 8px; z-index: 2; }
+.world-bar input[type=range] { flex: 1; min-width: 0; accent-color: var(--teal); }
+.world-bar .asof { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45%; }
+.world-key { display: grid; gap: 6px; font-size: 13px; }
+.world-key .row { display: flex; flex-wrap: wrap; gap: 6px 12px; }
+.world-key .k { display: inline-flex; align-items: center; gap: 6px; }
+.world-key .gem { width: 10px; height: 10px; transform: rotate(45deg); display: inline-block; border-radius: 2px; }
+.world-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.world-list a { display: flex; justify-content: space-between; gap: 10px; padding: 6px 8px; border-radius: 8px; text-decoration: none; color: var(--ink); font-size: 13px; }
+.world-list a:hover, .world-list a:focus-visible { background: var(--teal-soft); }
+.world-hint { position: absolute; top: 12px; left: 12px; font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--panel) 80%, transparent); padding: 4px 10px; border-radius: 999px; z-index: 2; }
+@media (max-width: 900px) { .world { grid-template-columns: 1fr; } .world-stage { min-height: 460px; } .world-panel { border-left: 0; border-top: 1px solid var(--line); max-height: none; } .world-bar .asof { display: none; } }
 @media (max-width: 640px) { .chartbox { height: 240px; } .trends { padding: 12px; } .ticks { margin: 0 34px; } }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { display: inline-block; border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 3px 10px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--ink); }
@@ -160,7 +188,10 @@ a.spark:hover, a.spark:focus-visible { border-color: var(--teal); }
       <h1>Release tracker</h1>
       <div class="muted">Click any number, feature, round, bug or agent to go one layer deeper. The trail at the top takes you back.</div>
     </div>
-    <div class="sync" id="sync"><span class="live-dot"></span>Waiting for the first update…</div>
+    <div class="head-right">
+      <div class="seg" role="group" aria-label="View"><button type="button" data-mode="board" aria-pressed="true">Board</button><button type="button" data-mode="world" aria-pressed="false">World</button></div>
+      <div class="sync" id="sync"><span class="live-dot"></span>Waiting for the first update…</div>
+    </div>
   </header>
   <nav class="crumbs" id="crumbs" aria-label="Where you are"></nav>
   <main id="view"><div class="panel empty">Waiting for the first update…</div></main>
@@ -173,7 +204,7 @@ const STATUS = {
   running: 'Running', passed: 'Passed', failing: 'Failing', queued: 'Queued', between_stages: 'Between stages',
   needs_human: 'Needs a person', needs_business_definition: 'Needs a business decision', open: 'Open', recurred: 'Came back',
   fixing: 'Being fixed', fixed_awaiting_retest: 'Fixed, awaiting re-test', retest_failed: 'Re-test failed', verified: 'Verified fixed',
-  done: 'Done', failed: 'Failed', idle_or_done: 'Idle', done_unreconciled: 'Finished, failures not reconciled',
+  done: 'Done', failed: 'Agent stopped', idle_or_done: 'Idle', done_unreconciled: 'Finished, failures not reconciled',
   seen_in_test: 'Seen in test, awaiting triage', retesting: 'Fixed, being retested now',
   retest_failed_pending_triage: 'Retest failed, being triaged', passed_with_backlog: 'Passed (backlog elsewhere)',
   backlog_pre_existing: 'Backlog: was already broken', reassigned: 'Belongs to another feature', process_note: 'Test or process note', stopped: 'Stopped (run replaced)', awaiting_retest: 'Fixed, awaiting retest',
@@ -440,6 +471,251 @@ function mountTrends() {
   $('t-feature').addEventListener('change', (e) => { T.feature = e.target.value; saveT(); route(); });
 }
 
+
+// ---- World view: the tracker as a Salt Basin crystal world.
+// Engine contract (reusable for any dataset): adapter(...) -> { root: { label, sub }, nodes: [{ id, label, sub,
+//   status, statusLabel, weight 0..1 (gem size), progress 0..1|null (gold ring), active (river of light),
+//   href (layer to open), satellites: [{ id, label, cat 1..4, href }] }] }. The renderer knows nothing about
+// releases; a new world (opportunities, Career Master, outputs…) only needs a new adapter.
+// Geometry follows src/lib/crystalGeometry.js (signature core + gold wire, octahedron gems, rivers of light).
+let MODE = 'board'; try { MODE = localStorage.getItem('rt-mode') || 'board'; } catch {}
+const reduceMotion = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } })();
+const STATUS_TONE = (st) => (['passed', 'passed_with_backlog', 'verified'].includes(st) ? '--good' : ['failing', 'done_unreconciled', 'not_passed_after_max_rounds'].includes(st) ? '--bad' : ['needs_human', 'needs_business_definition'].includes(st) ? '--human' : ['queued', 'stopped', 'idle_or_done', 'failed'].includes(st) || !st ? '--muted' : ['awaiting_retest', 'between_stages'].includes(st) ? '--gold' : '--teal');
+const statusText = (st) => STATUS[st] || (st ? String(st).split(', ').map((r) => ROLE[r] || r).join(' + ') : 'Not started');
+const BUG_CAT = (st) => (st === 'verified' ? 2 : BACKLOG.includes(st) ? 3 : ['needs_human', 'needs_business_definition'].includes(st) ? 4 : 1);
+
+// Adapter: release tracker -> world graph. Live uses the snapshot (individual bugs, running agents);
+// an earlier slider point uses the recorded history (counts per category).
+function trackerGraph(pointIdx) {
+  const live = !hist || pointIdx == null || pointIdx >= hist.points.length - 1;
+  const pt = hist && !live ? hist.points[pointIdx] : null;
+  const feats = snap.features.filter((f) => f.key !== 'whole-app-sweep');
+  const maxSteps = Math.max(1, ...feats.map((f) => f.lastResult?.stepsTotal || 0));
+  const nodes = feats.map((f) => {
+    const h = pt?.f[f.key];
+    const status = h ? h[0] : f.status;
+    const total = h ? h[3] : f.lastResult?.stepsTotal; const passed = h ? h[2] : f.lastResult?.stepsPassed;
+    let satellites;
+    if (h) {
+      satellites = [];
+      [[4, 1], [5, 2], [6, 3], [7, 4]].forEach(([idx, cat]) => { const n = idx === 4 ? h[4] - h[7] : h[idx]; for (let i = 0; i < Math.min(n, 14); i++) satellites.push({ id: `${f.key}-${cat}-${i}`, label: BUG_SERIES[cat - 1].label, cat, href: href('feature', f.key) }); });
+    } else {
+      satellites = (snap.bugs || []).filter((b) => b.feature === f.key && b.status !== 'seen_in_test').map((b) => ({ id: b.id, label: `${b.id}: ${b.step || ''}`, cat: BUG_CAT(b.status), href: href('bug', b.id) }));
+    }
+    return {
+      id: f.key, label: f.key, status, statusLabel: statusText(status),
+      sub: total ? `${passed}/${total} steps` : 'not tested yet',
+      weight: total ? 0.35 + 0.65 * (total / maxSteps) : 0.3,
+      progress: total ? passed / total : null,
+      active: !h && snap.agents.some((a) => a.feature === f.key && a.status === 'running'),
+      href: href('feature', f.key), satellites,
+    };
+  });
+  return { root: { label: snap.release?.version ? `Release ${snap.release.version}` : 'Release', sub: pt ? `as of ${fmtT(pt.t)} UTC` : 'live' }, nodes };
+}
+
+const World = !window.THREE ? { ensure() {}, setGraph() {}, focus() {}, refreshColors() {} } : (() => {
+  let renderer, scene, camera, raf, stage, labelsEl, tipEl, graph = null, objs = {}, sun, rivers = [], focusId = null;
+  const pickables = []; const ray = new THREE.Raycaster(); const mouse = new THREE.Vector2();
+  const cam = { theta: 0.6, phi: 0.82, dist: 24, target: new THREE.Vector3(), want: { dist: 17, target: new THREE.Vector3() } };
+  let drag = null; let hover = null; let clock = new THREE.Clock();
+  const col = (v) => new THREE.Color(cssv(v) || '#888');
+  const dispose = (o) => o.traverse((x) => { x.geometry?.dispose?.(); (Array.isArray(x.material) ? x.material : [x.material]).forEach((m) => m?.dispose?.()); });
+
+  function buildSun() {
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.7, 1), new THREE.MeshStandardMaterial({ color: 0xF1EBDD, metalness: 0.25, roughness: 0.35, flatShading: true })));
+    g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.86, 1), new THREE.MeshBasicMaterial({ color: 0xC4843A, wireframe: true, transparent: true, opacity: 0.55 })));
+    g.userData = { kind: 'sun', href: '#/' };
+    g.children.forEach((m) => { m.userData = g.userData; pickables.push(m); });
+    return g;
+  }
+  function river(from, to, color) {   // buildRiverParticles from crystalGeometry.js
+    const mid = from.clone().add(to).multiplyScalar(0.5); mid.y += 0.9;
+    const curve = new THREE.CatmullRomCurve3([from.clone(), mid, to.clone()]);
+    const n = 70; const pos = new Float32Array(n * 3); const off = new Float32Array(n);
+    for (let i = 0; i < n; i++) { off[i] = i / n; const p = curve.getPoint(off[i]); pos.set([p.x, p.y, p.z], i * 3); }
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const pts = new THREE.Points(geo, new THREE.PointsMaterial({ color, size: 0.1, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
+    pts.userData = { curve, off, speed: 0.14 + Math.random() * 0.05 };
+    return pts;
+  }
+  function build(g) {
+    Object.values(objs).forEach((o) => { scene.remove(o.group); dispose(o.group); });
+    rivers.forEach((r) => { scene.remove(r); dispose(r); }); rivers = []; objs = {};
+    pickables.length = 0; sun.children.forEach((m) => pickables.push(m));
+    const n = g.nodes.length; const R = Math.max(6.5, n * 0.62);
+    g.nodes.forEach((node, i) => {
+      const a = (i / n) * Math.PI * 2;
+      const group = new THREE.Group();
+      group.position.set(Math.cos(a) * R, Math.sin(a * 2) * 0.6, Math.sin(a) * R);
+      const size = 0.32 + node.weight * 0.5;
+      const tc = col(STATUS_TONE(node.status));
+      const gem = new THREE.Mesh(new THREE.OctahedronGeometry(size, 0), new THREE.MeshStandardMaterial({ color: tc, emissive: tc, emissiveIntensity: 0.45, metalness: 0.15, roughness: 0.45, flatShading: true, transparent: true }));
+      gem.userData = { kind: 'node', node }; pickables.push(gem); group.add(gem);
+      const ringR = size + 0.32;
+      const track = new THREE.Mesh(new THREE.TorusGeometry(ringR, 0.025, 6, 64), new THREE.MeshBasicMaterial({ color: col('--line'), transparent: true, opacity: 0.9 }));
+      track.rotation.x = Math.PI / 2; group.add(track);
+      if (node.progress != null && node.progress > 0) {
+        const arc = new THREE.Mesh(new THREE.TorusGeometry(ringR, 0.05, 8, 96, Math.PI * 2 * node.progress), new THREE.MeshBasicMaterial({ color: 0xC4843A, transparent: true }));
+        arc.rotation.x = Math.PI / 2; group.add(arc);
+      }
+      const sats = new THREE.Group(); const sCount = node.satellites.length;
+      node.satellites.forEach((sat, j) => {
+        const sc = col(`--s${sat.cat}`);
+        const m = new THREE.Mesh(new THREE.OctahedronGeometry(0.085, 0), new THREE.MeshStandardMaterial({ color: sc, emissive: sc, emissiveIntensity: 0.4, flatShading: true, roughness: 0.45, transparent: true }));
+        const ang = (j / Math.max(1, sCount)) * Math.PI * 2; const rr = ringR + 0.35 + (j % 3) * 0.16;
+        m.position.set(Math.cos(ang) * rr, ((j % 5) - 2) * 0.12, Math.sin(ang) * rr);
+        m.userData = { kind: 'sat', sat, node }; pickables.push(m); sats.add(m);
+      });
+      group.add(sats);
+      scene.add(group);
+      objs[node.id] = { group, gem, sats, node };
+      if (node.active) { const r = river(new THREE.Vector3(0, 0, 0), group.position, 0xC4843A); scene.add(r); rivers.push(r); }
+    });
+    labelsEl.innerHTML = `<div class="wl sun" data-id="__sun"><b>${esc(g.root.label)}</b>${esc(g.root.sub)}</div>` + g.nodes.map((nd) => `<div class="wl" data-id="${esc(nd.id)}"><b>${esc(nd.label)}</b>${nd.progress != null ? `${Math.round(nd.progress * 100)}% passing` : esc(nd.statusLabel)}</div>`).join('');
+    applyFocus();
+  }
+  function applyFocus() {
+    const f = focusId && objs[focusId];
+    Object.values(objs).forEach((o) => {
+      const on = !f || o === f;
+      o.group.traverse((x) => { if (x.material) x.material.opacity = on ? 1 : 0.18; });
+      o.sats.scale.setScalar(o === f ? 1.6 : 1);
+    });
+    labelsEl.querySelectorAll('.wl').forEach((el) => el.classList.toggle('dim', !!f && el.dataset.id !== focusId));
+    if (f) { cam.want.target.copy(f.group.position); cam.want.dist = 5.2; }
+    else {   // fit the whole orbit (radius + labels) inside the narrower screen dimension
+      const R = Math.max(6.5, (graph?.nodes.length || 10) * 0.62) + 1.8;
+      const half = Math.tan((camera.fov * Math.PI) / 360);
+      cam.want.target.set(0, -0.4, 0); cam.want.dist = Math.max(18, (R / half / Math.min(1, camera.aspect || 1)) * 1.12);
+    }
+    if (reduceMotion) { cam.target.copy(cam.want.target); cam.dist = cam.want.dist; }
+  }
+  function placeCamera() {
+    const k = reduceMotion ? 1 : 0.08;
+    cam.target.lerp(cam.want.target, k); cam.dist += (cam.want.dist - cam.dist) * k;
+    camera.position.set(cam.target.x + cam.dist * Math.sin(cam.phi) * Math.cos(cam.theta), cam.target.y + cam.dist * Math.cos(cam.phi), cam.target.z + cam.dist * Math.sin(cam.phi) * Math.sin(cam.theta));
+    camera.lookAt(cam.target);
+  }
+  function frame() {
+    raf = requestAnimationFrame(frame);
+    const dt = Math.min(clock.getDelta(), 0.05); const t = clock.elapsedTime;
+    if (!reduceMotion) {
+      sun.rotation.y += dt * 0.18;
+      Object.values(objs).forEach((o, i) => { o.gem.rotation.y += dt * 0.5; o.sats.rotation.y += dt * (0.25 + (i % 3) * 0.05); });
+      rivers.forEach((r) => { const { curve, off, speed } = r.userData; const pa = r.geometry.getAttribute('position'); for (let i = 0; i < off.length; i++) { off[i] = (off[i] + dt * speed) % 1; const p = curve.getPoint(off[i]); pa.setXYZ(i, p.x, p.y, p.z); } pa.needsUpdate = true; });
+      if (!drag && !focusId) cam.theta += dt * 0.02;
+    }
+    placeCamera();
+    renderer.render(scene, camera);
+    const w = stage.clientWidth; const h = stage.clientHeight; const v = new THREE.Vector3();
+    labelsEl.querySelectorAll('.wl').forEach((el) => {
+      const o = el.dataset.id === '__sun' ? sun : objs[el.dataset.id]?.group; if (!o) return;
+      v.copy(o.position).project(camera);
+      const narrow = w < 640 && el.dataset.id !== '__sun' && el.dataset.id !== focusId;   // phone: names live in the panel list
+      const off = narrow || v.z > 1 || Math.abs(v.x) > 1.1 || Math.abs(v.y) > 1.1;
+      el.style.display = off ? 'none' : '';
+      el.style.left = `${(v.x * 0.5 + 0.5) * w}px`; el.style.top = `${(-v.y * 0.5 + 0.5) * h + (el.dataset.id === '__sun' ? 30 : el.dataset.id === focusId ? 70 : 14)}px`;
+    });
+  }
+  function pick(e) {
+    const r = renderer.domElement.getBoundingClientRect();
+    mouse.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(mouse, camera);
+    const hit = ray.intersectObjects(pickables, false).find((h) => h.object.visible);
+    return hit ? hit.object.userData : null;
+  }
+  function onMove(e) {
+    if (drag) { cam.theta += (e.clientX - drag.x) * 0.006; cam.phi = Math.max(0.35, Math.min(1.45, cam.phi - (e.clientY - drag.y) * 0.004)); drag.moved += Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y); drag.x = e.clientX; drag.y = e.clientY; return; }
+    const u = pick(e); hover = u;
+    renderer.domElement.classList.toggle('pointing', !!u);
+    if (!u || u.kind === 'sun') { tipEl.style.display = 'none'; return; }
+    const r = stage.getBoundingClientRect();
+    tipEl.innerHTML = u.kind === 'node' ? `<b>${esc(u.node.label)}</b><br>${esc(u.node.statusLabel)} · ${esc(u.node.sub)}<br><span class="muted">${u.node.satellites.length} bug${u.node.satellites.length === 1 ? '' : 's'} in orbit · click to enter</span>` : `<b>${esc(u.sat.label)}</b><br><span class="muted">${esc(BUG_SERIES[u.sat.cat - 1].label)} · ${esc(u.node.label)}</span>`;
+    tipEl.style.display = 'block'; tipEl.style.left = `${Math.min(e.clientX - r.left + 14, r.width - 270)}px`; tipEl.style.top = `${e.clientY - r.top + 14}px`;
+  }
+  function onUp(e) {
+    const wasDrag = drag && drag.moved > 6; drag = null; if (wasDrag) return;
+    const u = pick(e); if (!u) return;
+    location.hash = u.kind === 'sun' ? '#/' : u.kind === 'node' ? u.node.href : u.sat.href;
+  }
+  function mount(el) {
+    stage = el.querySelector('.world-stage'); labelsEl = el.querySelector('.world-labels'); tipEl = el.querySelector('.world-tip');
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    stage.prepend(renderer.domElement);
+    scene = new THREE.Scene(); camera = new THREE.PerspectiveCamera(45, 1, 0.1, 400);
+    const key = new THREE.DirectionalLight(0xC4843A, 1.4); key.position.set(4, 5, 5); scene.add(key);   // addCrystalLights
+    const fill = new THREE.DirectionalLight(0x4A7C8E, 0.9); fill.position.set(-5, -2, 3); scene.add(fill);
+    scene.add(new THREE.AmbientLight(0xF8F4EC, 0.55));
+    sun = buildSun(); scene.add(sun);
+    const ro = new ResizeObserver(() => { const w = stage.clientWidth; const h = stage.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / Math.max(1, h); camera.updateProjectionMatrix(); applyFocus(); });
+    ro.observe(stage);
+    const c = renderer.domElement;
+    c.addEventListener('pointerdown', (e) => { drag = { x: e.clientX, y: e.clientY, moved: 0 }; c.setPointerCapture(e.pointerId); });
+    c.addEventListener('pointermove', onMove); c.addEventListener('pointerup', onUp);
+    c.addEventListener('pointerleave', () => { tipEl.style.display = 'none'; });
+    c.addEventListener('wheel', (e) => { e.preventDefault(); cam.want.dist = Math.max(3, Math.min(60, cam.want.dist * (1 + Math.sign(e.deltaY) * 0.1))); }, { passive: false });
+    frame();
+  }
+  return {
+    ensure(el) { if (!renderer) mount(el); else if (!el.contains(renderer.domElement)) { el.querySelector('.world-stage').prepend(renderer.domElement); stage = el.querySelector('.world-stage'); labelsEl = el.querySelector('.world-labels'); tipEl = el.querySelector('.world-tip'); } },
+    setGraph(g) { const sig = JSON.stringify(g); if (sig === this._sig) return; this._sig = sig; graph = g; build(g); },
+    focus(id) { focusId = id && objs[id] ? id : null; applyFocus(); },
+    refreshColors() { this._sig = null; },
+  };
+})();
+
+let worldAt = null;   // history index shown in the world; null = live
+function worldFocusId() {
+  for (const t of [...path].reverse()) {
+    const [type, a] = t.split(':').map(decodeURIComponent);
+    if (type === 'feature' || type === 'round') return a;
+    if (type === 'bug') return (snap.bugs || []).find((b) => b.id === a)?.feature || null;
+    if (type === 'agent') return (snap.agents || []).find((x) => x.id === a)?.feature || null;
+  }
+  return null;
+}
+function worldOverviewPanel(g) {
+  const at = worldAt != null && hist ? hist.points[worldAt] : null;
+  const m = at ? measureAtAll(at) : null;
+  const bugs = snap.bugs || [];
+  const counts = m || { open: bugs.filter((b) => !['verified', 'seen_in_test', ...BACKLOG].includes(b.status)).length, verified: bugs.filter((b) => b.status === 'verified').length, backlog: bugs.filter((b) => BACKLOG.includes(b.status)).length, person: bugs.filter((b) => ['needs_human', 'needs_business_definition'].includes(b.status)).length };
+  const tone = [['--teal', 'In progress'], ['--good', 'Passed'], ['--bad', 'Failing'], ['--gold', 'Awaiting re-test'], ['--human', 'Needs a person'], ['--muted', 'Queued, not started or agent stopped']];
+  return `<div><h3 class="layer-title">${esc(g.root.label)}</h3><div class="layer-sub">${esc(g.root.sub === 'live' ? 'Live' : g.root.sub)} · drag to orbit, scroll to zoom, click a crystal to enter it</div></div>
+    <div class="asof-tiles">${BUG_SERIES.map((sr) => `<a class="stat" href="${href('stat', { open: 'open-bugs', verified: 'verified', backlog: 'backlog', person: 'human' }[sr.key])}"><div class="n">${counts[sr.key]}</div><div class="l">${esc(sr.label)}</div></a>`).join('')}</div>
+    <div class="world-key"><h2>How to read the world</h2>
+      <div><b>Crystal colour</b> = feature status</div><div class="row">${tone.map(([c, l]) => `<span class="k"><span class="gem" style="background:var(${c})"></span>${esc(l)}</span>`).join('')}</div>
+      <div><b>Crystal size</b> = how many test steps it has · <b>gold ring</b> = share of steps passing · <b>light river</b> = an agent working on it now</div>
+      <div><b>Small satellites</b> = its bugs</div><div class="row">${BUG_SERIES.map((sr) => `<span class="k"><span class="gem" style="background:var(${sr.color})"></span>${esc(sr.label)}</span>`).join('')}</div>
+    </div>
+    <div><h2>Every crystal</h2><ul class="world-list">${g.nodes.map((n) => `<li><a href="${n.href}"><span><b>${esc(n.label)}</b><br><span class="muted">${esc(n.statusLabel)}</span></span><span class="num muted">${esc(n.sub)}</span></a></li>`).join('')}</ul></div>`;
+}
+function measureAtAll(pt) { const o = { open: 0, verified: 0, backlog: 0, person: 0 }; Object.values(pt.f).forEach((v) => { o.open += v[4]; o.verified += v[5]; o.backlog += v[6]; o.person += v[7]; }); return o; }
+function renderWorld(layer) {
+  if (!window.THREE) { $('view').innerHTML = '<div class="panel empty">The 3D library did not load. Switch to Board.</div>'; return; }
+  let el = $('world');
+  if (!el) {
+    $('view').innerHTML = `<div class="world" id="world"><div class="world-stage"><div class="world-hint">Drag to orbit · scroll to zoom · click a crystal</div><div class="world-labels" aria-hidden="true"></div><div class="world-tip" role="status"></div>
+      <div class="world-bar"><button type="button" class="step" id="w-prev" aria-label="Previous update">‹</button><input type="range" id="w-range" aria-label="Replay the world at an earlier moment"><button type="button" class="step" id="w-next" aria-label="Next update">›</button><button type="button" class="step live" id="w-live" aria-pressed="true">Live</button><span class="asof" id="w-asof"></span></div></div>
+      <aside class="world-panel" id="world-panel" aria-live="polite"></aside></div>`;
+    el = $('world');
+    const rng = $('w-range');
+    rng.addEventListener('input', () => { worldAt = Number(rng.value) >= hist.points.length - 1 ? null : Number(rng.value); route(); });
+    $('w-live').addEventListener('click', () => { worldAt = null; route(); });
+    const stepTo = (dir) => { const idx = (hist?.updates || []).map((u) => pointIndexAt(u.at)); const cur = worldAt ?? hist.points.length - 1; const tgt = dir < 0 ? [...idx].reverse().find((x) => x < cur) : idx.find((x) => x > cur); worldAt = tgt == null ? (dir < 0 ? 0 : null) : tgt; if (worldAt != null && worldAt >= hist.points.length - 1) worldAt = null; route(); };
+    $('w-prev').addEventListener('click', () => stepTo(-1)); $('w-next').addEventListener('click', () => stepTo(1));
+  }
+  World.ensure(el);
+  const g = trackerGraph(worldAt);
+  World.setGraph(g); World.focus(worldFocusId());
+  if (hist) { const r = $('w-range'); r.min = 0; r.max = hist.points.length - 1; r.value = worldAt ?? hist.points.length - 1; }
+  $('w-live').setAttribute('aria-pressed', String(worldAt == null));
+  const pt = hist && worldAt != null ? hist.points[worldAt] : null; const u = pt ? updateAt(pt) : null;
+  $('w-asof').innerHTML = pt ? `${esc(fmtT(pt.t))} UTC${u ? ` · after ${esc(u.version)}` : ''}` : '<b>Live</b>';
+  $('world-panel').innerHTML = path.length ? `<div class="layer">${layer.html}</div>` : worldOverviewPanel(g);
+}
+
 const LAYERS = {
   '': () => {
     const s = snap; const human = STATS.human.count(s);
@@ -554,8 +830,8 @@ function route() {
   const layer = (fn && fn(args)) || { html: '<div class="panel empty">That item is no longer in the tracker. Use the trail above to go back.</div>' };
   const trail = [['Overview', '#/'], ...path.map((t, i) => [crumbLabel(t), `#/${path.slice(0, i + 1).join('/')}`])];
   $('crumbs').innerHTML = trail.map(([label, h], i) => (i === trail.length - 1 ? `<span class="here" aria-current="page">${esc(label)}</span>` : `<a href="${h}">${esc(label)}</a><span class="sep" aria-hidden="true">›</span>`)).join('');
-  $('view').innerHTML = `<div class="layer">${layer.html}</div>`;
-  if (!path.length) mountTrends();
+  if (MODE === 'world') renderWorld(layer);
+  else { $('view').innerHTML = `<div class="layer">${layer.html}</div>`; if (!path.length) mountTrends(); }
   document.title = `${trail[trail.length - 1][0]} · Release tracker`;
 }
 function render() {
@@ -575,7 +851,10 @@ window.addEventListener('hashchange', () => {
 // A whole table row is a target; the link inside it stays the keyboard/focus target.
 $('view').addEventListener('click', (e) => { if (e.target.closest('a')) return; const row = e.target.closest('tr[data-href]'); if (row) location.hash = row.dataset.href; });
 setInterval(render, 30000);
-try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => render()); } catch {}
+const setModeButtons = () => document.querySelectorAll('[data-mode]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === MODE)));
+setModeButtons();
+document.querySelector('.head-right').addEventListener('click', (e) => { const b = e.target.closest('[data-mode]'); if (!b || b.dataset.mode === MODE) return; MODE = b.dataset.mode; try { localStorage.setItem('rt-mode', MODE); } catch {} setModeButtons(); $('view').innerHTML = ''; World.refreshColors(); route(); });
+try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { World.refreshColors(); render(); }); } catch {}
 
 (async () => {
   const db = await claude.use('db');
