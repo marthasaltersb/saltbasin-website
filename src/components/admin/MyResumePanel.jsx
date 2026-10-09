@@ -1015,6 +1015,9 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
                     <>
                       <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => openOutputView(output.id)}>View</button>
                       <a href={api.downloadResumeOutputUrl(output.id)} style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Download PDF</a>
+                      {output.generatedContent?.format === 'document_blocks' && (
+                        <a href={api.downloadResumeOutputDocxUrl(output.id)} style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Download .docx</a>
+                      )}
                     </>
                   )}
                   {output.outputType === 'cover_letter' && output.generatedContent && output.outputStatus !== 'archived' && (

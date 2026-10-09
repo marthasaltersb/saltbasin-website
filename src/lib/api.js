@@ -611,6 +611,7 @@ export const api = {
   approveResumeForOpportunity: (id, body) => request(`/api/career-agents/opportunities/${id}/resume-outputs`, { method: 'POST', body: JSON.stringify(body) }),
   listResumeOutputsForOpportunity: (id) => request(`/api/career-agents/opportunities/${id}/resume-outputs`),
   getResumeOutputView: (id) => request(`/api/career-agents/resume-outputs/${id}/view`),
+  downloadResumeOutputDocxUrl: (id) => `/api/resume-outputs/${id}/download.docx`,
   downloadResumeOutputUrl: (id) => `/api/career-agents/resume-outputs/${id}/download.pdf`,
   exportResumeOutputsZip: async (projectionIds) => {
     const res = await fetch('/api/career-agents/resume-outputs/export-zip', {

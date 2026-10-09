@@ -27,6 +27,9 @@
     "proficiency_formula_save",
     "proficiency_formula_select",
     "certification_mapping_save",
-    "shared_output_live_read"
+    "shared_output_live_read",
+    "application_output_revoke_qr",
+    "application_package_import",
+    "shared_output_resolve"
   ]
 }

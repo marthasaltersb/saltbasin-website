@@ -144,6 +144,50 @@ export const MCP_TOOLS = Object.freeze([
     },
   },
   {
+    name: 'application_output_revoke_qr',
+    title: 'Revoke an output\'s QR link',
+    description: 'Stops the output\'s private /r/ link from opening. The slug is discarded and never reissued. Only the owner can revoke.',
+    inputSchema: schema({ outputId: id('The output version whose link to revoke.') }, ['outputId']),
+    scope: 'outputs.approve',
+    permission: 'user',
+    api: 'DELETE /api/resume-outputs/:id/share',
+    handler: async (args, { user }) => {
+      const { revokeOutputSharing } = await import('./applicationPackages.js');
+      const ok = await revokeOutputSharing(args.outputId, user.id);
+      if (!ok) { const e = new Error('Resume output not found'); e.status = 404; e.code = 'not_found'; throw e; }
+      return { ok: true };
+    },
+  },
+  {
+    name: 'application_package_import',
+    title: 'Import an application package',
+    description: 'Files every output of a package JSON as draft outputs (re-import skips unchanged ones; changed ones become new draft versions). Never approves anything.',
+    inputSchema: schema({ package: { type: 'object', description: 'The package JSON: packageKey, outputs[{variant, outputType, name, content}], optional authors and createdAt.' } }, ['package']),
+    scope: 'career.write',
+    permission: 'user',
+    api: 'POST /api/resume-outputs/import-package',
+    handler: async (args, { user }) => {
+      const { importApplicationPackage } = await import('./applicationPackages.js');
+      try { return { results: await importApplicationPackage(user.id, args.package) }; }
+      catch (err) { err.status = err.status || 400; err.code = err.code || 'invalid_package'; throw err; }
+    },
+  },
+  {
+    name: 'shared_output_resolve',
+    title: 'Resolve a QR link slug',
+    description: 'Returns what a visitor to /r/<slug> sees (approved document, frozen). Only approved, still-published slugs resolve; anything else is not_found.',
+    inputSchema: schema({ token: str('The slug from the /r/ link.', { maxLength: 64 }) }, ['token']),
+    scope: 'career.read',
+    permission: 'user',
+    api: 'GET /api/shared-outputs/:token',
+    handler: async (args) => {
+      const { getSharedOutputByToken, publicSharedView } = await import('./applicationPackages.js');
+      const row = await getSharedOutputByToken(args.token);
+      if (!row) { const e = new Error('Not found'); e.status = 404; e.code = 'not_found'; throw e; }
+      return publicSharedView(row);
+    },
+  },
+  {
     name: 'cover_letter_open',
     title: 'Open a cover letter',
     description: 'Opens a cover letter (latest version) with its package-search context, as the cover-letter agent sees it.',
