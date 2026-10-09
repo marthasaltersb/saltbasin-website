@@ -187,10 +187,14 @@ export function buildRodFromPlan(plan, { rodTemplates, entityLabel }) {
 export function buildRodFromJourneyDefinition(definition, { entityLabel }) {
   const rod = {
     id: nextRodId('deal'),
-    rodType: 'revenue',
+    rodType: definition.rodType || 'revenue',
     templateName: definition.templateName,
     name: entityLabel,
     entityLabel,
+    // Set when the definition was projected from a real journey_data_rods
+    // row (see journeyDefinitionFromPersistedRod) — lets the scene tell a
+    // member's own saved journey apart from a demo/seed rod.
+    persistedRodId: definition.persistedRodId ?? null,
     createdAt: Date.now(),
     stages: definition.stages.map((stage) => ({
       id: `deal-${stage.key}`,
@@ -224,4 +228,47 @@ export function buildRodFromJourneyDefinition(definition, { entityLabel }) {
     })),
   };
   return { plan: { ruleId: 'configured-deal-journey' }, rods: [rod] };
+}
+
+function humanizeKey(key) {
+  return String(key || '').replace(/[_-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function displayEvidenceValue(value) {
+  if (value == null) return '—';
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (Array.isArray(value)) return value.map(displayEvidenceValue).join(', ');
+  return JSON.stringify(value);
+}
+
+// Adapts one journey from GET /api/journey-rods/me/world into the same
+// stages -> fields definition shape buildRodFromJourneyDefinition() already
+// renders for the configured Deal Journey, so a member's persisted rod
+// becomes a real rod in the world without a second rendering path. A stage
+// is 'live' only once the rod has actually reached it; a molecule with no
+// recorded evidence stays an explicit placeholder — never a guessed value.
+export function journeyDefinitionFromPersistedRod(journey) {
+  return {
+    schemaVersion: 1,
+    templateName: journey.scenarioLabel || 'Journey',
+    defaultElementId: 'FreeTextNote',
+    persistedRodId: journey.rodId,
+    // The scene's own revenue rod is 'revenue' (Customer Orbit looks it up
+    // by that key); every other persisted rod_type keeps its real name.
+    rodType: journey.rodType === 'revenue_lifecycle' ? 'revenue' : journey.rodType,
+    stages: (journey.stages || []).map((stage, index) => ({
+      id: index + 1,
+      key: stage.key,
+      title: stage.title && stage.title !== stage.key ? stage.title : humanizeKey(stage.key),
+      short: stage.current ? 'Current stage' : stage.reached ? 'Reached' : 'Ahead',
+      description: stage.description || '',
+      source: stage.reached ? 'live' : 'template',
+      metrics: [],
+      fields: (stage.atoms || []).map((atom) => ({
+        label: atom.label,
+        value: !atom.present ? '—' : atom.sensitive ? 'Captured (sensitive)' : displayEvidenceValue(atom.value),
+        placeholder: !atom.present,
+      })),
+    })),
+  };
 }

@@ -31,6 +31,97 @@ router.get('/me', requireUser, async (req, res) => {
   res.json({ rods: rods.map(normalizeRod) });
 });
 
+// Read-only projection of the signed-in user's scenario-driven journey rods
+// for SpatialJourneyWorld. Deliberately does NOT call evaluateJourneyRod():
+// that path can record rod events / Current Arcs, and rendering a 3D scene
+// must never write lineage. Stage position comes from the persisted
+// current_stage; atoms are each gate's required molecules (direct + via its
+// clusters) with the latest evidence value — absent evidence stays absent,
+// never a placeholder number. Rods with no resolvable scenario (career
+// master, entitlement, etc.) are skipped — they render in their own worlds.
+router.get('/me/world', requireUser, async (req, res) => {
+  const rods = await db.prepare(`SELECT * FROM journey_data_rods WHERE user_id=$1 ORDER BY created_at`).all(req.user.id);
+  const scenarios = await db.prepare(`SELECT * FROM journey_scenarios WHERE is_active=true`).all();
+  const scenarioByKey = new Map(scenarios.map((s) => [s.scenario_key, s]));
+  const resolveScenario = (rod) => {
+    if (rod.metadata?.scenarioKey) return scenarioByKey.get(rod.metadata.scenarioKey) || null;
+    // Same fallback evaluateJourneyRod() uses, but only when the default
+    // scenario actually governs this rod_type — never reinterpret a
+    // non-revenue rod as a revenue journey.
+    const fallback = scenarioByKey.get('default_revenue');
+    return fallback && fallback.rod_type === rod.rod_type ? fallback : null;
+  };
+  const journeyRods = rods.map((rod) => ({ rod, scenario: resolveScenario(rod) })).filter((item) => item.scenario);
+  if (!journeyRods.length) return res.json({ journeys: [] });
+
+  const scenarioIds = [...new Set(journeyRods.map((item) => Number(item.scenario.id)))];
+  const rodIds = journeyRods.map((item) => Number(item.rod.id));
+  const [gates, clusters, molecules, evidenceRows] = await Promise.all([
+    db.prepare(`SELECT * FROM journey_gate_definitions WHERE scenario_id = ANY($1::bigint[]) AND is_active=true ORDER BY scenario_id, sort_order`).all(scenarioIds),
+    db.prepare(`SELECT cluster_key, molecule_keys FROM journey_metadata_clusters WHERE is_active=true`).all(),
+    db.prepare(`SELECT molecule_key, label, is_sensitive FROM journey_metadata_molecules`).all(),
+    db.prepare(`SELECT rod_id, molecule_key, value, observed_at FROM journey_rod_evidence WHERE rod_id = ANY($1::bigint[]) ORDER BY observed_at DESC`).all(rodIds),
+  ]);
+  const clusterMolecules = new Map(clusters.map((c) => [c.cluster_key, Array.isArray(c.molecule_keys) ? c.molecule_keys : []]));
+  const moleculeByKey = new Map(molecules.map((m) => [m.molecule_key, m]));
+  const latestEvidence = new Map();
+  for (const row of evidenceRows) {
+    const key = `${row.rod_id}::${row.molecule_key}`;
+    if (!latestEvidence.has(key)) latestEvidence.set(key, row);
+  }
+
+  const journeys = journeyRods.map(({ rod, scenario }) => {
+    const rodGates = gates.filter((g) => Number(g.scenario_id) === Number(scenario.id));
+    const currentIndex = rodGates.findIndex((g) => g.stage_key === rod.current_stage);
+    const atomFor = (moleculeKey) => {
+      const molecule = moleculeByKey.get(moleculeKey);
+      const evidence = latestEvidence.get(`${rod.id}::${moleculeKey}`);
+      const present = evidence != null && evidence.value != null && evidence.value !== '';
+      return {
+        key: moleculeKey,
+        label: molecule?.label || moleculeKey,
+        present,
+        sensitive: Boolean(molecule?.is_sensitive),
+        value: present && !molecule?.is_sensitive ? evidence.value : null,
+      };
+    };
+    const mapped = new Set();
+    const stages = rodGates.map((gate, index) => {
+      const keys = [...new Set([
+        ...(gate.required_molecules || []),
+        ...(gate.required_clusters || []).flatMap((clusterKey) => clusterMolecules.get(clusterKey) || []),
+      ])];
+      keys.forEach((k) => mapped.add(k));
+      return {
+        key: gate.stage_key,
+        title: gate.label || gate.stage_key,
+        description: gate.human_prompt || '',
+        reached: currentIndex >= 0 && index <= currentIndex,
+        current: index === currentIndex,
+        atoms: keys.map(atomFor),
+      };
+    });
+    // Evidence captured against molecules no gate asks for still belongs to
+    // this journey — surface it on the current stage rather than hide it.
+    const unmapped = [...new Set(evidenceRows
+      .filter((row) => Number(row.rod_id) === Number(rod.id) && !mapped.has(row.molecule_key))
+      .map((row) => row.molecule_key))];
+    const home = stages[currentIndex >= 0 ? currentIndex : 0];
+    if (home) home.atoms.push(...unmapped.map(atomFor));
+    return {
+      rodId: Number(rod.id),
+      rodType: rod.rod_type,
+      label: rod.metadata?.label || scenario.label,
+      scenarioKey: scenario.scenario_key,
+      scenarioLabel: scenario.label,
+      currentStage: rod.current_stage,
+      stages,
+    };
+  }).filter((journey) => journey.stages.length);
+
+  res.json({ journeys });
+});
+
 // Member-facing configuration contract for the journey builder. The client
 // receives the definitions that already govern evaluation; it does not carry
 // a second hardcoded list of deal fields or stages.
