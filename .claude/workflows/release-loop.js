@@ -293,13 +293,16 @@ async function runFeature(feature) {
     const allItems = []
     const attempts = {}   // bug id -> fix attempts so far
     log_.needsHuman = []
-    for (let round = feature.startRound || 1; round <= MAX_ROUNDS + 1; round++) {
+    // The round budget counts from where this run starts, so a resumed feature (startRound > 1) still gets
+    // MAX_ROUNDS fix rounds; per-bug attempt limits still send repeat failures to a person.
+    const firstRound = feature.startRound || 1
+    for (let round = firstRound; round <= firstRound + MAX_ROUNDS; round++) {
       const v = await validate(feature, round, fixNotes)
       if (!v) { log_.status = 'validator_died'; break }
       log_.rounds.push({ round, validation: v })
       log(`${feature.key} r${round}: ${v.stepsPassed}/${v.stepsTotal} steps passed`)
       if (v.passed && !carry.length) { log_.status = 'passed'; break }
-      if (round > MAX_ROUNDS) { log_.status = 'not_passed_after_max_rounds'; log(`${feature.key}: still failing after ${MAX_ROUNDS} fix rounds — recorded as NOT passed`); break }
+      if (round >= firstRound + MAX_ROUNDS) { log_.status = 'not_passed_after_max_rounds'; log(`${feature.key}: still failing after ${MAX_ROUNDS} fix rounds — recorded as NOT passed`); break }
       const t = v.passed ? { reportPath: null, items: [] } : await triage(feature, round, v, allItems)
       if (!t) { log_.status = 'triage_agent_died'; break }
       for (const c of carry.splice(0)) if (!t.items.some((i) => i.id === c.id)) t.items.push(c)

@@ -1,8 +1,8 @@
 {
-  "exportedAt": "2026-10-09T05:01:35.419Z",
+  "exportedAt": "2026-10-09T05:49:37.267Z",
   "features": {
     "proficiency-live-qr": {
-      "status": "failing",
+      "status": "validate",
       "lastRound": 5,
       "lastScore": "29/30",
       "lastReport": "docs/test-results/proficiency-live-qr/round-5.md",
@@ -10,7 +10,7 @@
       "backlog": 5
     },
     "world-shell-navigation": {
-      "status": "awaiting_retest",
+      "status": "validate",
       "lastRound": 1,
       "lastScore": "45/48",
       "lastReport": "docs/test-results/world-shell-navigation/round-1.md",
@@ -18,7 +18,7 @@
       "backlog": 4
     },
     "career-bound-outputs": {
-      "status": "awaiting_retest",
+      "status": "validate",
       "lastRound": 2,
       "lastScore": "54/56",
       "lastReport": "docs/test-results/career-bound-outputs/round-2.md",
@@ -26,7 +26,7 @@
       "backlog": 5
     },
     "qr-gated-outputs": {
-      "status": "awaiting_retest",
+      "status": "validate",
       "lastRound": 1,
       "lastScore": "45/48",
       "lastReport": "docs/test-results/qr-gated-outputs/round-1.md",
@@ -34,7 +34,7 @@
       "backlog": 2
     },
     "no-silent-failures": {
-      "status": "failed",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -42,7 +42,7 @@
       "backlog": 3
     },
     "release-loop-tooling": {
-      "status": "failed",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -50,7 +50,7 @@
       "backlog": 2
     },
     "output-version-history": {
-      "status": "failed",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -58,7 +58,7 @@
       "backlog": 3
     },
     "resume-rollups": {
-      "status": "failed",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -66,7 +66,7 @@
       "backlog": 3
     },
     "chart-gallery": {
-      "status": "awaiting_retest",
+      "status": "validate",
       "lastRound": 1,
       "lastScore": "17/20",
       "lastReport": "docs/test-results/chart-gallery/round-1.md",
@@ -74,39 +74,39 @@
       "backlog": 2
     },
     "release-intelligence": {
-      "status": "failed",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
       "openBugs": 3,
       "backlog": 1
     },
-    "cover-letter-agent": {
+    "session-mapping": {
       "status": "failed",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
+    },
+    "cover-letter-agent": {
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
       "openBugs": 5,
       "backlog": 7
     },
-    "world-shell-layers": {
-      "status": "failed",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
-      "openBugs": 0,
-      "backlog": 0
-    },
     "in-app-release-loop": {
-      "status": "failed",
+      "status": "build",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
       "openBugs": 0,
       "backlog": 0
     },
-    "session-mapping": {
-      "status": "failed",
+    "world-shell-layers": {
+      "status": "build",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -1279,7 +1279,7 @@
     {
       "id": "cbo-r2-inherited-cream-text",
       "feature": "career-bound-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "J1 1.2a (also J2, J3, J10 at 390px) and J9 9.0 / 9.2-9.3",

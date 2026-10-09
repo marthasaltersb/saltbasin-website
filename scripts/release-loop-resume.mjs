@@ -5,13 +5,16 @@
 //       Writes docs/release-log/active-release.state.json from a release-tracker-sync snapshot:
 //       each feature's status, last round and score, and every bug with its lifecycle.
 //
-//   node scripts/release-loop-resume.mjs --args [--port-base 5000]
+//   node scripts/release-loop-resume.mjs --args [--port-base 5000] [--scripts <dir>]
 //       Prints the Workflow args (one run per dependency group) that continue every unfinished
 //       feature: merged features restart at their next test round with their open bugs as fix
 //       notes; unbuilt features are built. Pass each printed object to the saved 'release-loop'
 //       workflow. Scope-checked backlog (pre-existing / other feature / process note) never blocks the
 //       feature it was reported against; a bug reassigned to a feature is carried by that feature.
 //       Fictional data only — this state is committed to a public repo.
+//       --scripts <dir> also writes one self-contained workflow script per run (the saved workflow with
+//       its args built in), launched with Workflow({ scriptPath }) — this avoids pasting large args and
+//       survives restarts, since a resumed run does not keep its original args.
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -94,6 +97,18 @@ if (argv.includes('--args')) {
       };
     }),
   }));
+  const dir = opt('--scripts');
+  if (dir) {
+    const src = fs.readFileSync(path.join(root, '.claude/workflows/release-loop.js'), 'utf8');
+    if (!src.includes('const A = args || {}')) throw new Error('release-loop.js no longer reads args as `const A = args || {}`');
+    fs.mkdirSync(dir, { recursive: true });
+    for (const run of runs) {
+      const file = path.join(dir, `rl-${run.portBase}-${run.features.map((f) => f.key).join('-').slice(0, 60)}.js`);
+      fs.writeFileSync(file, src.replace('const A = args || {}', `const A = ${JSON.stringify(run)}`));
+      console.log(file);
+    }
+    process.exit(0);
+  }
   console.log(JSON.stringify(runs, null, 2));
   process.exit(0);
 }
