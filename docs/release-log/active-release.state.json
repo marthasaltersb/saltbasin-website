@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T11:00:38.240Z",
+  "exportedAt": "2026-10-09T11:01:57.839Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -42,11 +42,11 @@
       "backlog": 3
     },
     "release-loop-tooling": {
-      "status": "triage",
+      "status": "scope",
       "lastRound": 3,
       "lastScore": "104/126",
       "lastReport": "docs/test-results/release-loop-tooling/round-3.md",
-      "openBugs": 6,
+      "openBugs": 8,
       "backlog": 3
     },
     "chart-gallery": {
@@ -167,7 +167,7 @@
         {
           "round": 3,
           "event": "not_fixed",
-          "note": "This is a process item for the round-3 validator. I changed no code and did not run J7.1, J7.2 or the 390px tabs in a browser. The fix notes say so.",
+          "note": "This is a process item for the round-3 validator. I changed no code and did not run J7.1, J7.2 or t…",
           "commit": null
         }
       ]
@@ -194,7 +194,7 @@
         {
           "round": 3,
           "event": "fixed",
-          "note": "Round-3 notes state the round-2 notes were written from build and code reading and that the browser checks are pending.",
+          "note": "Round-3 notes state the round-2 notes were written from build and code reading and that the browser…",
           "commit": "c464731"
         },
         {
@@ -227,7 +227,7 @@
         {
           "round": 3,
           "event": "fixed",
-          "note": "ProficiencyRulesPanel is already mounted as the Rules & why tab of OutputTemplateConfigurator, which World Shell shows as the Output Templates island (commit 6dd06e5). Added training Journey 8 so the…",
+          "note": "ProficiencyRulesPanel is already mounted as the Rules & why tab of OutputTemplateConfigurator, whic…",
           "commit": "c464731"
         },
         {
@@ -264,7 +264,7 @@
         {
           "round": 3,
           "event": "not_fixed",
-          "note": "Salt particle design is waiting on feedback from the owner, which I cannot make up. The question for the owner is recorded in the fix notes: after seeing the first rendition, what should change (grai…",
+          "note": "Salt particle design is waiting on feedback from the owner, which I cannot make up. The question fo…",
           "commit": null
         }
       ]
@@ -322,7 +322,7 @@
         {
           "round": 4,
           "event": "not_fixed",
-          "note": "needs_business_definition, nothing built. Owner question: after seeing the first Salt particles rendition (J7 step 4), what should change (grain size or density, colors, motion, heap shape)? SaltPart…",
+          "note": "needs_business_definition, nothing built. Owner question: after seeing the first Salt particles ren…",
           "commit": null
         }
       ]
@@ -353,7 +353,7 @@
         {
           "round": 4,
           "event": "fixed",
-          "note": "The J8 layout defect is fixed and self-checked at 390px as above. Fix notes for round 4 are appended to the change spec.",
+          "note": "The J8 layout defect is fixed and self-checked at 390px as above. Fix notes for round 4 are appende…",
           "commit": "9b01768edc379a7f888f0e4639cab69c2203ef6e"
         }
       ]
@@ -384,7 +384,7 @@
         {
           "round": 4,
           "event": "fixed",
-          "note": "Fix notes now say that round-1 fixes T1-1 and T1-2 have still never been browser-verified, and that the round-4 validator must check dark embed readability and the 390px rules table and chart scroll.…",
+          "note": "Fix notes now say that round-1 fixes T1-1 and T1-2 have still never been browser-verified, and that…",
           "commit": "9b01768edc379a7f888f0e4639cab69c2203ef6e"
         }
       ]
@@ -511,13 +511,13 @@
         {
           "round": 1,
           "event": "found",
-          "note": "Dark navy text on the dark World embed (#0d1417). CareerExperienceConfigurator.jsx:166 sets color #1b2a3b with no background, and the heading at line 168 inherits it. CareerMasterEntryPoint.jsx:27 gi…",
+          "note": "Dark navy text on the dark World embed (#0d1417). CareerExperienceConfigurator.jsx:166 sets color #…",
           "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "Configurator gets its own light surface (#f5f2ed); selected path card background made opaque (#fbf3e8).",
+          "note": "Configurator gets its own light surface (#f5f2ed); selected path card background made opaque (#fbf3…",
           "commit": "cffa62159a908e927b80fdcad17d2123e59e32a0"
         },
         {
@@ -546,13 +546,13 @@
         {
           "round": 1,
           "event": "found",
-          "note": "Two causes. (a) ProficiencyRulesPanel.jsx:358-361 renders a 7-column table with minWidth 940 inside an overflowX:auto wrapper. At 390px the table is cut at the wrapper edge, and mobile overlay scroll…",
+          "note": "Two causes. (a) ProficiencyRulesPanel.jsx:358-361 renders a 7-column table with minWidth 940 inside…",
           "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "Rules table: forced visible scroll area, right-edge shadow, swipe caption, sticky first column (no stacked-card layout). Charts: svg min-width 500px inside overflow-x:auto wrapper with swipe caption.",
+          "note": "Rules table: forced visible scroll area, right-edge shadow, swipe caption, sticky first column (no …",
           "commit": "cffa62159a908e927b80fdcad17d2123e59e32a0"
         },
         {
@@ -579,7 +579,7 @@
         {
           "round": 2,
           "event": "found",
-          "note": "SharedLiveStates.jsx lines 106-108 switch banner background/text on liveChanges.length: dark #1B2A3B only when changes exist, light #F3EEE6 when none. Spec J7.1 and the file header require a bold dar…",
+          "note": "SharedLiveStates.jsx lines 106-108 switch banner background/text on liveChanges.length: dark #1B2A3…",
           "commit": null
         },
         {
@@ -612,13 +612,13 @@
         {
           "round": 2,
           "event": "found",
-          "note": "Spec example expects 'printed Advanced -> now Advanced · Integration design' for Ledgerly ERP, but J2 already sets that category before approval, so the printed side already has it. Diff behaviour is…",
+          "note": "Spec example expects 'printed Advanced -> now Advanced · Integration design' for Ledgerly ERP, but …",
           "commit": null
         },
         {
           "round": 2,
           "event": "fixed",
-          "note": "Spec error: J7.5 example changed to data the journeys leave behind (Ledgerly ERP printed Advanced · Integration design -> now Advanced · Hands-on; Forecast modeling Expert -> Advanced)",
+          "note": "Spec error: J7.5 example changed to data the journeys leave behind (Ledgerly ERP printed Advanced ·…",
           "commit": "47b1b42c5466fdce1af06eeda3f58653e9478e33"
         },
         {
@@ -645,25 +645,25 @@
         {
           "round": 2,
           "event": "found",
-          "note": "CareerExperienceConfigurator.jsx line 172 tab row is display:flex with no flexWrap or overflowX; five non-shrinking buttons exceed 390px and an overflow-hidden ancestor clips tab 4 and fully hides ta…",
+          "note": "CareerExperienceConfigurator.jsx line 172 tab row is display:flex with no flexWrap or overflowX; fi…",
           "commit": null
         },
         {
           "round": 2,
           "event": "fixed",
-          "note": "Workspace tab row gets flexWrap:wrap so all five tabs are reachable at 390px; spec line 7 now lists five workspaces and the wrapping",
+          "note": "Workspace tab row gets flexWrap:wrap so all five tabs are reachable at 390px; spec line 7 now lists…",
           "commit": "47b1b42c5466fdce1af06eeda3f58653e9478e33"
         },
         {
           "round": 3,
           "event": "recurred",
-          "note": "Spec wording error. docs/training/proficiency-rules-and-live-qr.md line 7 claims the tab row wraps onto two lines at 390px. After the T2-3 fix (flexWrap:'wrap' at CareerExperienceConfigurator.jsx:172…",
+          "note": "Spec wording error. docs/training/proficiency-rules-and-live-qr.md line 7 claims the tab row wraps …",
           "commit": null
         },
         {
           "round": 3,
           "event": "fixed",
-          "note": "Training spec line 7 reworded: the tab row wraps about one tab per row at 390px and all five tabs stay reachable.",
+          "note": "Training spec line 7 reworded: the tab row wraps about one tab per row at 390px and all five tabs s…",
           "commit": "c464731"
         },
         {
@@ -692,13 +692,13 @@
         {
           "round": 2,
           "event": "found",
-          "note": "SharedLiveStates.jsx lines 118-119 hard-codes 'The document text above always stays exactly as approved', but career-bound outputs re-resolve wording from Career Master on every view, and SharedOutpu…",
+          "note": "SharedLiveStates.jsx lines 118-119 hard-codes 'The document text above always stays exactly as appr…",
           "commit": null
         },
         {
           "round": 2,
           "event": "fixed",
-          "note": "SharedOutputPage passes documentState to SharedLiveStates, which picks the wording sentence by state (changed / career-bound unchanged / frozen); J7.1 spec documents the three sentences and the dark …",
+          "note": "SharedOutputPage passes documentState to SharedLiveStates, which picks the wording sentence by stat…",
           "commit": "47b1b42c5466fdce1af06eeda3f58653e9478e33"
         },
         {
@@ -729,13 +729,13 @@
         {
           "round": 4,
           "event": "found",
-          "note": "OutputTemplateConfigurator.jsx line 65: S.shell is a fixed 3-column grid (220px 1fr 380px) with no media query or width hook, so the editor is ~800px wide and clipped inside a 342px scroller at 390px…",
+          "note": "OutputTemplateConfigurator.jsx line 65: S.shell is a fixed 3-column grid (220px 1fr 380px) with no …",
           "commit": null
         },
         {
           "round": 4,
           "event": "fixed",
-          "note": "Output Template editor now uses a matchMedia(max-width 900px) hook (declared before the early return). At narrow widths the shell is a single minmax(0,1fr) column, wrap padding shrinks, and the two 1…",
+          "note": "Output Template editor now uses a matchMedia(max-width 900px) hook (declared before the early retur…",
           "commit": "9b01768edc379a7f888f0e4639cab69c2203ef6e"
         }
       ]
@@ -888,7 +888,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "coverLetterAutoDraft.js:103 registers an onOpportunityCreated hook (opportunityHooks.js, run by createCareerOpportunity) that auto-files a linked template cover letter DRAFT for every new tracked opp…",
+          "note": "coverLetterAutoDraft.js:103 registers an onOpportunityCreated hook (opportunityHooks.js, run by cre…",
           "commit": null
         }
       ]
@@ -917,7 +917,7 @@
         {
           "round": 1,
           "event": "not_fixed",
-          "note": "Commit trailer needs an owner decision. The task text asks for Claude Opus 5.5, but the session attribution reminder says Sonnet 5.5 and this agent is Sonnet. I used the Sonnet trailer. If the owner …",
+          "note": "Commit trailer needs an owner decision. The task text asks for Claude Opus 5.5, but the session att…",
           "commit": null
         }
       ]
@@ -949,7 +949,7 @@
         {
           "round": 1,
           "event": "fixed",
-          "note": "Template overrides, certification review tasks and live preview are already in the branch. Re-verified live preview; no code change.",
+          "note": "Template overrides, certification review tasks and live preview are already in the branch. Re-verif…",
           "commit": "6d95d90"
         },
         {
@@ -1051,7 +1051,7 @@
         {
           "round": 1,
           "event": "fixed",
-          "note": "Training spec v3 is already written for member@test.local starting at Journeys. No spec change this round.",
+          "note": "Training spec v3 is already written for member@test.local starting at Journeys. No spec change this…",
           "commit": "6d95d90"
         },
         {
@@ -1283,13 +1283,13 @@
         {
           "round": 1,
           "event": "found",
-          "note": "S.wrap in CareerBoundOutputEditor.jsx was a fixed two-column inline grid (minmax(0,1.1fr) minmax(0,1fr)); inline styles cannot use media queries so it never stacked at phone width. Fixed in commit 34…",
+          "note": "S.wrap in CareerBoundOutputEditor.jsx was a fixed two-column inline grid (minmax(0,1.1fr) minmax(0,…",
           "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "Already fixed on the integration head (editor grid is auto-fit and stacks). Re-verified, no code change.",
+          "note": "Already fixed on the integration head (editor grid is auto-fit and stacks). Re-verified, no code ch…",
           "commit": "6d95d90"
         },
         {
@@ -1324,13 +1324,13 @@
         {
           "round": 2,
           "event": "found",
-          "note": "Light-surface components set no text colour and inherit cream rgb(245,240,232) from the World Shell: WorldShell.jsx:1406 S.embedShell color #f5f0e8 (and brand.css:359 body color). CareerBoundOutputEd…",
+          "note": "Light-surface components set no text colour and inherit cream rgb(245,240,232) from the World Shell…",
           "commit": null
         },
         {
           "round": 2,
           "event": "fixed",
-          "note": "Set explicit dark text (#1b2a3b) on the light cards and white dialog wrappers that inherited cream from the World Shell; darkened configurator label (#888 to #5f5f5f) and company hint (#aaa to #6a6a6…",
+          "note": "Set explicit dark text (#1b2a3b) on the light cards and white dialog wrappers that inherited cream …",
           "commit": "95c2adf"
         }
       ]
@@ -1491,7 +1491,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "Shipped UI copy at MyResumePanel.jsx:1052 uses an em dash; the training spec (qr-gated-outputs.md:88) was written with a hyphen. No behavior wrong.",
+          "note": "Shipped UI copy at MyResumePanel.jsx:1052 uses an em dash; the training spec (qr-gated-outputs.md:8…",
           "commit": null
         }
       ]
@@ -1519,7 +1519,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "header.contact has no defined/validated type. Spec seeds an array; DocumentBlocksView.jsx:94 renders it raw so React concatenates without separator, while outputRendering.js:186 passes it to pdfkit w…",
+          "note": "header.contact has no defined/validated type. Spec seeds an array; DocumentBlocksView.jsx:94 render…",
           "commit": null
         }
       ]
@@ -1545,7 +1545,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "Toast at MyResumePanel.jsx:627 uses an em dash, which other specs (no-silent-failures, cover-letter-agent, proficiency-rules-and-live-qr) already expect; qr-gated-outputs.md lines 100/155/169 used a …",
+          "note": "Toast at MyResumePanel.jsx:627 uses an em dash, which other specs (no-silent-failures, cover-letter…",
           "commit": null
         }
       ]
@@ -1707,14 +1707,15 @@
     {
       "id": "release-loop-tooling-F1-2",
       "feature": "release-loop-tooling",
-      "status": "open",
-      "class": "requirement_gap",
+      "status": "recurred",
+      "class": "defect",
       "attempts": 0,
-      "step": "Tracker setup instructions",
-      "rootCause": "The embedded page copy in tools/release-tracker/SETUP-FOR-CLAUDE.md was not regenerated after B2/B3. It has a 'stale' CSS rule but no 'stalled' label or data-label card CSS; index.html has both (lines 55, 104-111, 138).",
+      "step": "J5 5.2 at 390px stacked cards, no panel overflow",
+      "rootCause": "Fix-r1's 640px stacked-card CSS and data-label attributes on table cells are absent at HEAD (0 occurrences) because 9084b2c replaced the page; only .panel overflow-x:auto (line 52) remains, so featureRows/bugRows/agentRows (lines 269/277/282) and other tables clip or scroll sideways. SETUP-FOR-CLAUDE.md embedded copy also lacks them.",
       "files": [
+        "tools/release-tracker/index.html",
         "tools/release-tracker/SETUP-FOR-CLAUDE.md",
-        "tools/release-tracker/index.html"
+        "tools/release-tracker/sync-setup-guide.mjs"
       ],
       "scope": {
         "scope": "this_feature",
@@ -1726,6 +1727,18 @@
           "round": 1,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "recurred",
+          "note": "STATUS map (index.html line 221) has no 'stalled' key so pill() prints raw 'stalled', and .s-stalle…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "recurred",
+          "note": "Fix-r1's 640px stacked-card CSS and data-label attributes on table cells are absent at HEAD (0 occu…",
           "commit": null
         }
       ]
@@ -1760,11 +1773,11 @@
     {
       "id": "release-loop-tooling-F1-6",
       "feature": "release-loop-tooling",
-      "status": "open",
-      "class": "process",
+      "status": "recurred",
+      "class": "spec_error",
       "attempts": 0,
-      "step": "Change spec Known limitations",
-      "rootCause": "The bullet that a started-with-no-end agent stays running forever and that idle checks cover only --extra agents was made false by B2 (sync lines 118-120, 258 mark journal agents stalled). The bullet about tables scrolling at 390 px was made false by B3.",
+      "step": "Open bug F1-6 change spec Known limitations",
+      "rootCause": "docs/changes/release-loop-tooling.md line 51 says started-with-no-end agents stay running forever and idle check applies only to --extra agents, but release-tracker-sync.mjs lines 118-120 mark journal agents stalled; line 53 says 390px tables scroll, contradicting spec step 5.3.",
       "files": [
         "docs/changes/release-loop-tooling.md"
       ],
@@ -1778,6 +1791,12 @@
           "round": 1,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "recurred",
+          "note": "docs/changes/release-loop-tooling.md line 51 says started-with-no-end agents stay running forever a…",
           "commit": null
         }
       ]
@@ -1931,6 +1950,49 @@
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T3-1",
+      "feature": "release-loop-tooling",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "J4/J5 1.2 Eight tiles in order",
+      "rootCause": "Page now has nine tiles: 'Status updates' stat (index.html ~line 263, added by 44609c2), plus Board/World switch, trends panel and render bindings from the live-release-tracker work. Training spec line 54 still says eight tiles.",
+      "files": [
+        "docs/training/release-loop-tooling.md",
+        "tools/release-tracker/index.html"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Page now has nine tiles: 'Status updates' stat (index.html ~line 263, added by 44609c2), plus Board…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T3-3",
+      "feature": "release-loop-tooling",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "J4/J5 page background",
+      "rootCause": "Spec expects rgb(243,246,247)/rgb(15,26,31) from the original bed12f0 page; the current page uses the Salt Basin cream palette (--bg #F8F4EC light, #161A1C dark, lines 11/22/28) introduced in 9084b2c. Intentional design.",
+      "files": [
+        "docs/training/release-loop-tooling.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Spec expects rgb(243,246,247)/rgb(15,26,31) from the original bed12f0 page; the current page uses t…",
           "commit": null
         }
       ]
@@ -2096,7 +2158,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "position:sticky on the preview column (OutputTemplateConfigurator.jsx ~L562) binds to the nearest overflow-y:auto ancestor: the configurator root div (~L311) and Hub wrapper (L110). Neither has a bou…",
+          "note": "position:sticky on the preview column (OutputTemplateConfigurator.jsx ~L562) binds to the nearest o…",
           "commit": null
         }
       ]
@@ -2122,7 +2184,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "proficiency loads via api.getCareerProficiency() -> request() in src/lib/api.js L2-19, which uses body.error text instead of the status, and throws a JSON parse error on an empty body. rollups/master…",
+          "note": "proficiency loads via api.getCareerProficiency() -> request() in src/lib/api.js L2-19, which uses b…",
           "commit": null
         }
       ]
@@ -2148,7 +2210,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "S.shell (L65) is a fixed grid 220px 1fr 380px with no responsive rule; the 1fr column has min-width:auto so wide content prevents shrinking. Layout overflows to about 945px and the preview iframe is …",
+          "note": "S.shell (L65) is a fixed grid 220px 1fr 380px with no responsive rule; the 1fr column has min-width…",
           "commit": null
         }
       ]
@@ -3025,7 +3087,7 @@
         {
           "round": 2,
           "event": "fixed",
-          "note": "Added a skills/tools/certifications override card (pick item, box, Overridden badge, Career Master line, per-field Revert) storing under config.masterOverrides.<list>; spec J9 steps 6-11 added.",
+          "note": "Added a skills/tools/certifications override card (pick item, box, Overridden badge, Career Master …",
           "commit": "95c2adf"
         }
       ]
@@ -3057,7 +3119,7 @@
         {
           "round": 2,
           "event": "not_fixed",
-          "note": "Owner decision needed: is storing template overrides on the preset acceptable, or should they move to a saved per-document row? No code change made; recorded in the change spec fix notes.",
+          "note": "Owner decision needed: is storing template overrides on the preset acceptable, or should they move …",
           "commit": null
         }
       ]
@@ -3117,7 +3179,7 @@
         {
           "round": 2,
           "event": "not_fixed",
-          "note": "Trailer conflict: the task text says Claude Opus 5.5, the session attribution reminder says Claude Sonnet 5.5. I used the Sonnet 5.5 trailer from the session reminder; orchestrator/owner decides, and…",
+          "note": "Trailer conflict: the task text says Claude Opus 5.5, the session attribution reminder says Claude …",
           "commit": null
         }
       ]
@@ -3148,7 +3210,7 @@
         {
           "round": 2,
           "event": "not_fixed",
-          "note": "Process item: the round-2 validation agent must write docs/test-results/career-bound-outputs/round-N.md. Noted in the change spec; no fix-agent change.",
+          "note": "Process item: the round-2 validation agent must write docs/test-results/career-bound-outputs/round-…",
           "commit": null
         }
       ]
@@ -3174,13 +3236,13 @@
         {
           "round": 1,
           "event": "found",
-          "note": "The training spec (docs/training/release-loop-tooling.md line 21) lists 7 statuses. server/data/releaseLoop/definition.json lines 197-208 has 10, because the scope-check work (a42b3cc) added backlog_…",
+          "note": "The training spec (docs/training/release-loop-tooling.md line 21) lists 7 statuses. server/data/rel…",
           "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "Training spec J1 step 2 now lists the ten statuses in definition order; added J1 step 3; Traces to gained the scope-check commits.",
+          "note": "Training spec J1 step 2 now lists the ten statuses in definition order; added J1 step 3; Traces to …",
           "commit": "082eed1"
         },
         {
@@ -3212,13 +3274,13 @@
         {
           "round": 1,
           "event": "found",
-          "note": "tools/release-tracker/index.html was rebuilt as a layered drill-down (STATS tiles, crumbs, layers, 8 tiles including Backlog, no filter buttons, Features column 'Its own bugs verified', bugs and runs…",
+          "note": "tools/release-tracker/index.html was rebuilt as a layered drill-down (STATS tiles, crumbs, layers, …",
           "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "Rewrote J4 and J5 for the drill-down page (8 tiles, layers, crumbs, no filters, Open bugs layer expects B1 and B9). Counts come from the fixture, now 5 features and 19 agents.",
+          "note": "Rewrote J4 and J5 for the drill-down page (8 tiles, layers, crumbs, no filters, Open bugs layer exp…",
           "commit": "082eed1"
         },
         {
@@ -3250,13 +3312,13 @@
         {
           "round": 2,
           "event": "found",
-          "note": "proficiencyBarsHtml emits the SVG with min-width:500px (src/lib/careerCharts.js line 112), which overrides max-width:100%. The preview column content is about 280px wide, so the SVG overflows the rig…",
+          "note": "proficiencyBarsHtml emits the SVG with min-width:500px (src/lib/careerCharts.js line 112), which ov…",
           "commit": null
         },
         {
           "round": 2,
           "event": "fixed",
-          "note": "Removed min-width:500px from the proficiency, trend and timeline SVG helpers (same pattern in all three) so the viewBox scales to the container. J2 step 2 now requires a screenshot check that all fiv…",
+          "note": "Removed min-width:500px from the proficiency, trend and timeline SVG helpers (same pattern in all t…",
           "commit": "3b198a83584419755b4799a7a4691f279b6845ed"
         }
       ]
