@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T17:10:11.786Z",
+  "exportedAt": "2026-10-09T17:13:37.240Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -10,7 +10,7 @@
       "backlog": 6
     },
     "world-shell-navigation": {
-      "status": "fix",
+      "status": "reconcile",
       "lastRound": 2,
       "lastScore": "36/47",
       "lastReport": "docs/test-results/world-shell-navigation/round-2.md",
@@ -30,16 +30,16 @@
       "lastRound": 3,
       "lastScore": "36/38",
       "lastReport": "docs/test-results/qr-gated-outputs/round-3.md",
-      "openBugs": 18,
-      "backlog": 10
+      "openBugs": 19,
+      "backlog": 9
     },
     "no-silent-failures": {
       "status": "validate",
       "lastRound": 1,
       "lastScore": "18/28",
       "lastReport": "docs/test-results/no-silent-failures/round-1.md",
-      "openBugs": 18,
-      "backlog": 5
+      "openBugs": 19,
+      "backlog": 4
     },
     "release-loop-tooling": {
       "status": "passed",
@@ -62,8 +62,8 @@
       "lastRound": 2,
       "lastScore": "30/37",
       "lastReport": "docs/test-results/output-version-history/round-2.md",
-      "openBugs": 11,
-      "backlog": 5
+      "openBugs": 12,
+      "backlog": 4
     },
     "resume-rollups": {
       "status": "validate",
@@ -82,12 +82,12 @@
       "backlog": 1
     },
     "cover-letter-agent": {
-      "status": "triage",
+      "status": "fix",
       "lastRound": 1,
       "lastScore": "38/46",
       "lastReport": "docs/test-results/cover-letter-agent/round-1.md",
-      "openBugs": 5,
-      "backlog": 7
+      "openBugs": 13,
+      "backlog": 8
     },
     "in-app-release-loop": {
       "status": "validate",
@@ -167,7 +167,7 @@
         {
           "round": 3,
           "event": "not_fixed",
-          "note": "This is a process item for the round-3 validator. I changed no code and did not run J7.1, J7.2 or the 390px tabs in a browser. The fix notes say so.",
+          "note": "This is a process item for the round-3 validator. I changed no code and did not run J7.1, J7.2 or t…",
           "commit": null
         }
       ]
@@ -194,7 +194,7 @@
         {
           "round": 3,
           "event": "fixed",
-          "note": "Round-3 notes state the round-2 notes were written from build and code reading and that the browser checks are pending.",
+          "note": "Round-3 notes state the round-2 notes were written from build and code reading and that the browser…",
           "commit": "c464731"
         },
         {
@@ -227,7 +227,7 @@
         {
           "round": 3,
           "event": "fixed",
-          "note": "ProficiencyRulesPanel is already mounted as the Rules & why tab of OutputTemplateConfigurator, which World Shell shows as the Output Templates island (commit 6dd06e5). Added training Journey 8 so the…",
+          "note": "ProficiencyRulesPanel is already mounted as the Rules & why tab of OutputTemplateConfigurator, whic…",
           "commit": "c464731"
         },
         {
@@ -264,7 +264,7 @@
         {
           "round": 3,
           "event": "not_fixed",
-          "note": "Salt particle design is waiting on feedback from the owner, which I cannot make up. The question for the owner is recorded in the fix notes: after seeing the first rendition, what should change (grai…",
+          "note": "Salt particle design is waiting on feedback from the owner, which I cannot make up. The question fo…",
           "commit": null
         }
       ]
@@ -322,7 +322,7 @@
         {
           "round": 4,
           "event": "not_fixed",
-          "note": "needs_business_definition, nothing built. Owner question: after seeing the first Salt particles rendition (J7 step 4), what should change (grain size or density, colors, motion, heap shape)? SaltPart…",
+          "note": "needs_business_definition, nothing built. Owner question: after seeing the first Salt particles ren…",
           "commit": null
         }
       ]
@@ -353,7 +353,7 @@
         {
           "round": 4,
           "event": "fixed",
-          "note": "The J8 layout defect is fixed and self-checked at 390px as above. Fix notes for round 4 are appended to the change spec.",
+          "note": "The J8 layout defect is fixed and self-checked at 390px as above. Fix notes for round 4 are appende…",
           "commit": "9b01768edc379a7f888f0e4639cab69c2203ef6e"
         }
       ]
@@ -384,7 +384,7 @@
         {
           "round": 4,
           "event": "fixed",
-          "note": "Fix notes now say that round-1 fixes T1-1 and T1-2 have still never been browser-verified, and that the round-4 validator must check dark embed readability and the 390px rules table and chart scroll.…",
+          "note": "Fix notes now say that round-1 fixes T1-1 and T1-2 have still never been browser-verified, and that…",
           "commit": "9b01768edc379a7f888f0e4639cab69c2203ef6e"
         }
       ]
@@ -686,13 +686,13 @@
         {
           "round": 1,
           "event": "found",
-          "note": "Dark navy text on the dark World embed (#0d1417). CareerExperienceConfigurator.jsx:166 sets color #1b2a3b with no background, and the heading at line 168 inherits it. CareerMasterEntryPoint.jsx:27 gi…",
+          "note": "Dark navy text on the dark World embed (#0d1417). CareerExperienceConfigurator.jsx:166 sets color #…",
           "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "Configurator gets its own light surface (#f5f2ed); selected path card background made opaque (#fbf3e8).",
+          "note": "Configurator gets its own light surface (#f5f2ed); selected path card background made opaque (#fbf3…",
           "commit": "cffa62159a908e927b80fdcad17d2123e59e32a0"
         },
         {
@@ -721,13 +721,13 @@
         {
           "round": 1,
           "event": "found",
-          "note": "Two causes. (a) ProficiencyRulesPanel.jsx:358-361 renders a 7-column table with minWidth 940 inside an overflowX:auto wrapper. At 390px the table is cut at the wrapper edge, and mobile overlay scroll…",
+          "note": "Two causes. (a) ProficiencyRulesPanel.jsx:358-361 renders a 7-column table with minWidth 940 inside…",
           "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "Rules table: forced visible scroll area, right-edge shadow, swipe caption, sticky first column (no stacked-card layout). Charts: svg min-width 500px inside overflow-x:auto wrapper with swipe caption.",
+          "note": "Rules table: forced visible scroll area, right-edge shadow, swipe caption, sticky first column (no …",
           "commit": "cffa62159a908e927b80fdcad17d2123e59e32a0"
         },
         {
@@ -754,7 +754,7 @@
         {
           "round": 2,
           "event": "found",
-          "note": "SharedLiveStates.jsx lines 106-108 switch banner background/text on liveChanges.length: dark #1B2A3B only when changes exist, light #F3EEE6 when none. Spec J7.1 and the file header require a bold dar…",
+          "note": "SharedLiveStates.jsx lines 106-108 switch banner background/text on liveChanges.length: dark #1B2A3…",
           "commit": null
         },
         {
@@ -787,13 +787,13 @@
         {
           "round": 2,
           "event": "found",
-          "note": "Spec example expects 'printed Advanced -> now Advanced · Integration design' for Ledgerly ERP, but J2 already sets that category before approval, so the printed side already has it. Diff behaviour is…",
+          "note": "Spec example expects 'printed Advanced -> now Advanced · Integration design' for Ledgerly ERP, but …",
           "commit": null
         },
         {
           "round": 2,
           "event": "fixed",
-          "note": "Spec error: J7.5 example changed to data the journeys leave behind (Ledgerly ERP printed Advanced · Integration design -> now Advanced · Hands-on; Forecast modeling Expert -> Advanced)",
+          "note": "Spec error: J7.5 example changed to data the journeys leave behind (Ledgerly ERP printed Advanced ·…",
           "commit": "47b1b42c5466fdce1af06eeda3f58653e9478e33"
         },
         {
@@ -820,25 +820,25 @@
         {
           "round": 2,
           "event": "found",
-          "note": "CareerExperienceConfigurator.jsx line 172 tab row is display:flex with no flexWrap or overflowX; five non-shrinking buttons exceed 390px and an overflow-hidden ancestor clips tab 4 and fully hides ta…",
+          "note": "CareerExperienceConfigurator.jsx line 172 tab row is display:flex with no flexWrap or overflowX; fi…",
           "commit": null
         },
         {
           "round": 2,
           "event": "fixed",
-          "note": "Workspace tab row gets flexWrap:wrap so all five tabs are reachable at 390px; spec line 7 now lists five workspaces and the wrapping",
+          "note": "Workspace tab row gets flexWrap:wrap so all five tabs are reachable at 390px; spec line 7 now lists…",
           "commit": "47b1b42c5466fdce1af06eeda3f58653e9478e33"
         },
         {
           "round": 3,
           "event": "recurred",
-          "note": "Spec wording error. docs/training/proficiency-rules-and-live-qr.md line 7 claims the tab row wraps onto two lines at 390px. After the T2-3 fix (flexWrap:'wrap' at CareerExperienceConfigurator.jsx:172…",
+          "note": "Spec wording error. docs/training/proficiency-rules-and-live-qr.md line 7 claims the tab row wraps …",
           "commit": null
         },
         {
           "round": 3,
           "event": "fixed",
-          "note": "Training spec line 7 reworded: the tab row wraps about one tab per row at 390px and all five tabs stay reachable.",
+          "note": "Training spec line 7 reworded: the tab row wraps about one tab per row at 390px and all five tabs s…",
           "commit": "c464731"
         },
         {
@@ -867,13 +867,13 @@
         {
           "round": 2,
           "event": "found",
-          "note": "SharedLiveStates.jsx lines 118-119 hard-codes 'The document text above always stays exactly as approved', but career-bound outputs re-resolve wording from Career Master on every view, and SharedOutpu…",
+          "note": "SharedLiveStates.jsx lines 118-119 hard-codes 'The document text above always stays exactly as appr…",
           "commit": null
         },
         {
           "round": 2,
           "event": "fixed",
-          "note": "SharedOutputPage passes documentState to SharedLiveStates, which picks the wording sentence by state (changed / career-bound unchanged / frozen); J7.1 spec documents the three sentences and the dark …",
+          "note": "SharedOutputPage passes documentState to SharedLiveStates, which picks the wording sentence by stat…",
           "commit": "47b1b42c5466fdce1af06eeda3f58653e9478e33"
         },
         {
@@ -904,13 +904,13 @@
         {
           "round": 4,
           "event": "found",
-          "note": "OutputTemplateConfigurator.jsx line 65: S.shell is a fixed 3-column grid (220px 1fr 380px) with no media query or width hook, so the editor is ~800px wide and clipped inside a 342px scroller at 390px…",
+          "note": "OutputTemplateConfigurator.jsx line 65: S.shell is a fixed 3-column grid (220px 1fr 380px) with no …",
           "commit": null
         },
         {
           "round": 4,
           "event": "fixed",
-          "note": "Output Template editor now uses a matchMedia(max-width 900px) hook (declared before the early return). At narrow widths the shell is a single minmax(0,1fr) column, wrap padding shrinks, and the two 1…",
+          "note": "Output Template editor now uses a matchMedia(max-width 900px) hook (declared before the early retur…",
           "commit": "9b01768edc379a7f888f0e4639cab69c2203ef6e"
         }
       ]
@@ -935,19 +935,19 @@
         {
           "round": 6,
           "event": "found",
-          "note": "FormulaEditor renders two width:100% tables with width:100% selects (input style line 25) inside a ~239px card; auto table layout collapses select columns to 33/41px and the header overflows the card…",
+          "note": "FormulaEditor renders two width:100% tables with width:100% selects (input style line 25) inside a …",
           "commit": null
         },
         {
           "round": 6,
           "event": "recurred",
-          "note": "Same as T6-1: blank selects at 390px mean Years performed / Expert rows cannot be identified; the save/use flow itself works.",
+          "note": "Same as T6-1: blank selects at 390px mean Years performed / Expert rows cannot be identified; the s…",
           "commit": null
         },
         {
           "round": 6,
           "event": "fixed",
-          "note": "Formula editor at phone width (max-width 900px) now renders input terms and level thresholds as stacked, labelled cards instead of two width:100% tables. Desktop keeps the tables, built from the same…",
+          "note": "Formula editor at phone width (max-width 900px) now renders input terms and level thresholds as sta…",
           "commit": "390e1efe50aa8d97c350719c36ffce4ddd55b145"
         }
       ]
@@ -973,7 +973,7 @@
         {
           "round": 6,
           "event": "found",
-          "note": "ProficiencyRulesPanel.jsx lines 358-361: overflowX:scroll scroller around a table with minWidth:940 plus a swipe caption. Matches round-1 fix T1-2 and Career Master behaviour, but the step says no si…",
+          "note": "ProficiencyRulesPanel.jsx lines 358-361: overflowX:scroll scroller around a table with minWidth:940…",
           "commit": null
         }
       ]
@@ -1001,13 +1001,13 @@
         {
           "round": 6,
           "event": "found",
-          "note": "Report claim that mcpToolRegistry.js does not exist is stale: it exists on head (commit b77049b, 11 tools). But it has no tool for the capabilities this spec exercises except application_output_appro…",
+          "note": "Report claim that mcpToolRegistry.js does not exist is stale: it exists on head (commit b77049b, 11…",
           "commit": null
         },
         {
           "round": 6,
           "event": "fixed",
-          "note": "Added 8 MCP tools (proficiency_rules_read, proficiency_override_set, proficiency_override_clear, technology_category_set, proficiency_formula_save, proficiency_formula_select, certification_mapping_s…",
+          "note": "Added 8 MCP tools (proficiency_rules_read, proficiency_override_set, proficiency_override_clear, te…",
           "commit": "390e1efe50aa8d97c350719c36ffce4ddd55b145"
         }
       ]
@@ -1033,7 +1033,7 @@
         {
           "round": 6,
           "event": "found",
-          "note": "Not reproduced (no server run). Either the history list does not refresh after POST /api/resume-outputs or the create de-duplicates onto an existing row; handler in server/routes/resumeOutputs.js ver…",
+          "note": "Not reproduced (no server run). Either the history list does not refresh after POST /api/resume-out…",
           "commit": null
         }
       ]
@@ -1058,7 +1058,7 @@
         {
           "round": 6,
           "event": "found",
-          "note": "Product prints 'Forecast modeling: printed Expert -> now Advanced (user-defined)' (matches Ledgerly line format); spec example says 'Advanced dagger'. Product is right, step example is loose.",
+          "note": "Product prints 'Forecast modeling: printed Expert -> now Advanced (user-defined)' (matches Ledgerly…",
           "commit": null
         }
       ]
@@ -1083,7 +1083,7 @@
         {
           "round": 6,
           "event": "found",
-          "note": "Preview shows proficiency only when the Proficiency chart is in the template; the step does not say to add it.",
+          "note": "Preview shows proficiency only when the Proficiency chart is in the template; the step does not say…",
           "commit": null
         }
       ]
@@ -1114,7 +1114,7 @@
     {
       "id": "world-shell-navigation-B9",
       "feature": "world-shell-navigation",
-      "status": "fixing",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "Test accounts / member vs admin journeys",
@@ -1140,7 +1140,7 @@
     {
       "id": "world-shell-navigation-B11",
       "feature": "world-shell-navigation",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Spec gap: 3D island entry never exercised",
@@ -1235,13 +1235,13 @@
         {
           "round": 1,
           "event": "found",
-          "note": "coverLetterAutoDraft.js:103 registers an onOpportunityCreated hook (opportunityHooks.js, run by createCareerOpportunity) that auto-files a linked template cover letter DRAFT for every new tracked opp…",
+          "note": "coverLetterAutoDraft.js:103 registers an onOpportunityCreated hook (opportunityHooks.js, run by cre…",
           "commit": null
         },
         {
           "round": 2,
           "event": "recurred",
-          "note": "RECURRED from round 1. coverLetterAutoDraft.js:103 hooks onOpportunityCreated (opportunityHooks.js); with cover_letter_settings.autoDraft default true (coverLetterTemplate.js:50,77) every tracked opp…",
+          "note": "RECURRED from round 1. coverLetterAutoDraft.js:103 hooks onOpportunityCreated (opportunityHooks.js)…",
           "commit": null
         },
         {
@@ -1273,7 +1273,7 @@
     {
       "id": "wsn-B9",
       "feature": "world-shell-navigation",
-      "status": "fixing",
+      "status": "recurred",
       "class": "spec_error",
       "attempts": 0,
       "step": "E.1 Provisional-password login never shows an empty world",
@@ -1291,7 +1291,7 @@
         {
           "round": 2,
           "event": "found",
-          "note": "RECURRED (B9). Spec precondition creates the member via curl signup (provisional password). Fixed test rule forbids that; scripts/create-test-member.mjs:51 sets must_change_password=false uncondition…",
+          "note": "RECURRED (B9). Spec precondition creates the member via curl signup (provisional password). Fixed t…",
           "commit": null
         },
         {
@@ -1303,7 +1303,7 @@
         {
           "round": 2,
           "event": "recurred",
-          "note": "Same as B9: no provisional-password member can be produced under the fixed test accounts. The product behavior exists (WorldShell redirects mustChangePassword members to /first-login-password?next=/w…",
+          "note": "Same as B9: no provisional-password member can be produced under the fixed test accounts. The produ…",
           "commit": null
         }
       ]
@@ -1311,9 +1311,9 @@
     {
       "id": "wsn-r2-mobile-counters",
       "feature": "world-shell-navigation",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "J0.3 phone top bar shows 0 TRACKED, 7 AGENTS",
       "rootCause": "src/components/WorldShell.jsx:127-133 MOBILE_CSS (max-width 700px) sets .sb-world-stats .sb-world-stat {display:none !important}; TopBar (~line 707) renders them so desktop passes. Spec expects them on the 390px walkthrough; interface parity v3 requires phone parity and hiding was a space tradeoff, not owner direction.",
       "files": [
@@ -1328,8 +1328,14 @@
         {
           "round": 2,
           "event": "found",
-          "note": "src/components/WorldShell.jsx:127-133 MOBILE_CSS (max-width 700px) sets .sb-world-stats .sb-world-stat {display:none !important}; TopBar (~line 707) renders them so desktop passes. Spec expects them …",
+          "note": "src/components/WorldShell.jsx:127-133 MOBILE_CSS (max-width 700px) sets .sb-world-stats .sb-world-s…",
           "commit": null
+        },
+        {
+          "round": 2,
+          "event": "fixed",
+          "note": "At 700px and below the top bar keeps Tracked and Agents visible in compact form and hides only Avg …",
+          "commit": "2d001163320c04677ee45c67a74a3947da27cd17"
         }
       ]
     },
@@ -1355,7 +1361,7 @@
         {
           "round": 2,
           "event": "found",
-          "note": "generate-resume (server/routes/careerPlacementAgents.js:275) -> generateResumeContent (server/lib/resumeTargeting.js:102-103) throws 'No Anthropic key configured' and returns 400; the validation envi…",
+          "note": "generate-resume (server/routes/careerPlacementAgents.js:275) -> generateResumeContent (server/lib/r…",
           "commit": null
         }
       ]
@@ -1381,7 +1387,7 @@
         {
           "round": 2,
           "event": "found",
-          "note": "src/lib/hooks/useCareerPlacementAgents.js:355 (also 117,130,177,241,276,290,305,324,342) reports failures via toast('... failed: '+msg), default kind success and 2400 ms (src/lib/toast.js:11), instea…",
+          "note": "src/lib/hooks/useCareerPlacementAgents.js:355 (also 117,130,177,241,276,290,305,324,342) reports fa…",
           "commit": null
         }
       ]
@@ -1389,7 +1395,7 @@
     {
       "id": "wsn-r2-e7-foreign-id",
       "feature": "world-shell-navigation",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "E.7 Another member can never see, link, edit or approve these outputs",
@@ -1406,7 +1412,7 @@
         {
           "round": 2,
           "event": "found",
-          "note": "Server scoping is correct (opportunityOutputs.js:49,54,66,78,101 filter by user_id; requireOwnedOpportunity rejects foreign ids). The step bundles a UI-observable half with an API-only half unreachab…",
+          "note": "Server scoping is correct (opportunityOutputs.js:49,54,66,78,101 filter by user_id; requireOwnedOpp…",
           "commit": null
         }
       ]
@@ -1414,9 +1420,9 @@
     {
       "id": "wsn-r2-mcp-gap",
       "feature": "world-shell-navigation",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "MCP tools for the spec's capabilities",
       "rootCause": "Round-2 report says mcpToolRegistry.js is absent; on the integration head it exists (b77049b, ee3dc2b) with list/create/open opportunity, list/open outputs, new draft version and approve-for-QR tools (tested commit apparently predates it). True remaining gaps, recorded mcp:null in server/lib/capabilityParity.js lines 41 and 54: update opportunity details (PATCH /opportunities/:id) and list-unlink…",
       "files": [
@@ -1433,15 +1439,21 @@
         {
           "round": 2,
           "event": "found",
-          "note": "Round-2 report says mcpToolRegistry.js is absent; on the integration head it exists (b77049b, ee3dc2b) with list/create/open opportunity, list/open outputs, new draft version and approve-for-QR tools…",
+          "note": "Round-2 report says mcpToolRegistry.js is absent; on the integration head it exists (b77049b, ee3dc…",
           "commit": null
+        },
+        {
+          "round": 2,
+          "event": "fixed",
+          "note": "Added four MCP tools: career_opportunity_update_details, application_outputs_unlinked_list, applica…",
+          "commit": "2d001163320c04677ee45c67a74a3947da27cd17"
         }
       ]
     },
     {
       "id": "wsn-r2-b11-island-entry",
       "feature": "world-shell-navigation",
-      "status": "fixing",
+      "status": "open",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "3D island entry (B11)",
@@ -1458,7 +1470,7 @@
         {
           "round": 2,
           "event": "found",
-          "note": "No baseline step enters an island from the 3D world; Journeys cards cover the same panels but the island path is unvalidated.",
+          "note": "No baseline step enters an island from the 3D world; Journeys cards cover the same panels but the i…",
           "commit": null
         }
       ]
@@ -1487,7 +1499,7 @@
         {
           "round": 1,
           "event": "not_fixed",
-          "note": "Commit trailer needs an owner decision. The task text asks for Claude Opus 5.5, but the session attribution reminder says Sonnet 5.5 and this agent is Sonnet. I used the Sonnet trailer. If the owner …",
+          "note": "Commit trailer needs an owner decision. The task text asks for Claude Opus 5.5, but the session att…",
           "commit": null
         }
       ]
@@ -1519,7 +1531,7 @@
         {
           "round": 1,
           "event": "fixed",
-          "note": "Template overrides, certification review tasks and live preview are already in the branch. Re-verified live preview; no code change.",
+          "note": "Template overrides, certification review tasks and live preview are already in the branch. Re-verif…",
           "commit": "6d95d90"
         },
         {
@@ -1621,7 +1633,7 @@
         {
           "round": 1,
           "event": "fixed",
-          "note": "Training spec v3 is already written for member@test.local starting at Journeys. No spec change this round.",
+          "note": "Training spec v3 is already written for member@test.local starting at Journeys. No spec change this…",
           "commit": "6d95d90"
         },
         {
@@ -1735,13 +1747,13 @@
         {
           "round": 3,
           "event": "recurred",
-          "note": "S.btn() in CareerBoundOutputEditor.jsx (lines 26-31) has no disabled styling; line 145 only sets the disabled attribute. Earlier F2-6 fix never touched the style factory.",
+          "note": "S.btn() in CareerBoundOutputEditor.jsx (lines 26-31) has no disabled styling; line 145 only sets th…",
           "commit": null
         },
         {
           "round": 3,
           "event": "fixed",
-          "note": "S.btn now takes a disabled flag and applies disabled styling (opacity 0.5, not-allowed cursor, grey fill); every disabled call site passes it, including Save changes and the Convert button",
+          "note": "S.btn now takes a disabled flag and applies disabled styling (opacity 0.5, not-allowed cursor, grey…",
           "commit": "4a702283eba964d9bac1895e897f1ca07517cfac"
         }
       ]
@@ -1772,7 +1784,7 @@
         {
           "round": 3,
           "event": "recurred",
-          "note": "MyResumePanel.jsx lines 1113-1118: dialog has aria-label only; header contains just Close, panel renders no title.",
+          "note": "MyResumePanel.jsx lines 1113-1118: dialog has aria-label only; header contains just Close, panel re…",
           "commit": null
         },
         {
@@ -1784,7 +1796,7 @@
         {
           "round": 3,
           "event": "fixed",
-          "note": "The queue dialog has a visible h2 'Career Sources to Review' referenced by aria-labelledby. This covers J6.10 and J11.2.",
+          "note": "The queue dialog has a visible h2 'Career Sources to Review' referenced by aria-labelledby. This co…",
           "commit": "4a702283eba964d9bac1895e897f1ca07517cfac"
         }
       ]
@@ -1816,7 +1828,7 @@
         {
           "round": 3,
           "event": "recurred",
-          "note": "Imported-resumes list in CareerReconciliationPanel.jsx (~299-320) and its list route do not exclude or annotate imports already converted (open bug F2-8, not fixed).",
+          "note": "Imported-resumes list in CareerReconciliationPanel.jsx (~299-320) and its list route do not exclude…",
           "commit": null
         }
       ]
@@ -2088,13 +2100,13 @@
         {
           "round": 1,
           "event": "found",
-          "note": "S.wrap in CareerBoundOutputEditor.jsx was a fixed two-column inline grid (minmax(0,1.1fr) minmax(0,1fr)); inline styles cannot use media queries so it never stacked at phone width. Fixed in commit 34…",
+          "note": "S.wrap in CareerBoundOutputEditor.jsx was a fixed two-column inline grid (minmax(0,1.1fr) minmax(0,…",
           "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "Already fixed on the integration head (editor grid is auto-fit and stacks). Re-verified, no code change.",
+          "note": "Already fixed on the integration head (editor grid is auto-fit and stacks). Re-verified, no code ch…",
           "commit": "6d95d90"
         },
         {
@@ -2126,25 +2138,25 @@
         {
           "round": 2,
           "event": "found",
-          "note": "Light-surface components set no text colour and inherit cream rgb(245,240,232) from the World Shell: WorldShell.jsx:1406 S.embedShell color #f5f0e8 (and brand.css:359 body color). CareerBoundOutputEd…",
+          "note": "Light-surface components set no text colour and inherit cream rgb(245,240,232) from the World Shell…",
           "commit": null
         },
         {
           "round": 2,
           "event": "fixed",
-          "note": "Set explicit dark text (#1b2a3b) on the light cards and white dialog wrappers that inherited cream from the World Shell; darkened configurator label (#888 to #5f5f5f) and company hint (#aaa to #6a6a6…",
+          "note": "Set explicit dark text (#1b2a3b) on the light cards and white dialog wrappers that inherited cream …",
           "commit": "95c2adf"
         },
         {
           "round": 3,
           "event": "recurred",
-          "note": "WorldShell.jsx embedBody (dark #0d1417) hosts CareerReconciliationPanel whose text colours (navy groupTitle, dark teal banner) are for a light surface: 1.28:1 and 2.24:1.",
+          "note": "WorldShell.jsx embedBody (dark #0d1417) hosts CareerReconciliationPanel whose text colours (navy gr…",
           "commit": null
         },
         {
           "round": 3,
           "event": "fixed",
-          "note": "Reconciliation embed is flagged light, and SimpleEmbedView hosts it in a white container with colour #1b2a3b. Panel colours are unchanged.",
+          "note": "Reconciliation embed is flagged light, and SimpleEmbedView hosts it in a white container with colou…",
           "commit": "4a702283eba964d9bac1895e897f1ca07517cfac"
         }
       ]
@@ -2170,13 +2182,13 @@
         {
           "round": 3,
           "event": "found",
-          "note": "OutputTemplateConfigurator.jsx ~565 uses field currentName for tools; tools entered via Name When Used have empty currentName (name_used set), so option text, label and Career Master line are blank. …",
+          "note": "OutputTemplateConfigurator.jsx ~565 uses field currentName for tools; tools entered via Name When U…",
           "commit": null
         },
         {
           "round": 3,
           "event": "fixed",
-          "note": "Tool override option text, label, aria-label, Career Master line and the override comparison use currentName || nameUsed. Overrides are still stored under currentName. Output.jsx already shows a curr…",
+          "note": "Tool override option text, label, aria-label, Career Master line and the override comparison use cu…",
           "commit": "4a702283eba964d9bac1895e897f1ca07517cfac"
         }
       ]
@@ -2202,13 +2214,13 @@
         {
           "round": 3,
           "event": "found",
-          "note": "shownIds = override keys U ovPicks (local state, empty after reload). Revert deletes the override key via withOverride so the row disappears.",
+          "note": "shownIds = override keys U ovPicks (local state, empty after reload). Revert deletes the override k…",
           "commit": null
         },
         {
           "round": 3,
           "event": "fixed",
-          "note": "Revert to Career Master also adds the id to ovPicks[list], so the row stays visible with the Career Master value and no badge",
+          "note": "Revert to Career Master also adds the id to ovPicks[list], so the row stays visible with the Career…",
           "commit": "4a702283eba964d9bac1895e897f1ca07517cfac"
         }
       ]
@@ -2234,7 +2246,7 @@
         {
           "round": 3,
           "event": "found",
-          "note": "Product matches change spec (line 53; CareerReconciliationPanel lines 194, 344-351) but a sync failure needs a server-side fault no browser user can produce, so the step can never pass under fixed co…",
+          "note": "Product matches change spec (line 53; CareerReconciliationPanel lines 194, 344-351) but a sync fail…",
           "commit": null
         }
       ]
@@ -2260,7 +2272,7 @@
         {
           "round": 3,
           "event": "found",
-          "note": "Product uses the established amber warnBox (CareerReconciliationPanel.jsx line 48, role alert) for all import/load errors; change spec does not require red. Message, server text and nothing-filed all…",
+          "note": "Product uses the established amber warnBox (CareerReconciliationPanel.jsx line 48, role alert) for …",
           "commit": null
         }
       ]
@@ -2525,7 +2537,7 @@
         {
           "round": 3,
           "event": "fixed",
-          "note": "No code change. contactText() already joins an array contact with ' · ' and is used by DocumentBlocksView, the PDF path and the new .docx path.",
+          "note": "No code change. contactText() already joins an array contact with ' · ' and is used by DocumentBloc…",
           "commit": "27e4fdaae993263426846907633af94807f1f603"
         }
       ]
@@ -2585,7 +2597,7 @@
         {
           "round": 3,
           "event": "fixed",
-          "note": "Added a stamped .docx download for document_blocks outputs. It has real created/modified dates, authors and approver in core properties. Once approved it carries the slug QR in the header as an image…",
+          "note": "Added a stamped .docx download for document_blocks outputs. It has real created/modified dates, aut…",
           "commit": "27e4fdaae993263426846907633af94807f1f603"
         }
       ]
@@ -2642,7 +2654,7 @@
         {
           "round": 3,
           "event": "fixed",
-          "note": "Registered MCP tools application_output_revoke_qr, application_package_import and shared_output_resolve (approve already existed). Each calls the same server function as its route. Parity rows and ma…",
+          "note": "Registered MCP tools application_output_revoke_qr, application_package_import and shared_output_res…",
           "commit": "27e4fdaae993263426846907633af94807f1f603"
         }
       ]
@@ -2673,7 +2685,7 @@
         {
           "round": 3,
           "event": "not_fixed",
-          "note": "Needs a reviewer-approved amendment to the frozen spec. The spec and baselines were left unchanged. Also not done: the re-walk as a member from the World Shell and at 390px.",
+          "note": "Needs a reviewer-approved amendment to the frozen spec. The spec and baselines were left unchanged.…",
           "commit": null
         }
       ]
@@ -2704,7 +2716,7 @@
         {
           "round": 3,
           "event": "not_fixed",
-          "note": "Needs a reviewer-approved amendment to the frozen spec, adding a v3 import step. The spec and baselines were left unchanged.",
+          "note": "Needs a reviewer-approved amendment to the frozen spec, adding a v3 import step. The spec and basel…",
           "commit": null
         }
       ]
@@ -2890,25 +2902,25 @@
       "scope": {
         "scope": "pre_existing",
         "owner": null,
-        "evidence": "J5.1 mobile. Same root cause as the J1.2 item: no mobile drawer markup at base, so Classic Tools is unreachable at 390px without this feature. Caveat: spec routes through Classic Tools, so it stays blocked until a shell fix or a spec path change."
+        "evidence": "At base 312f128 brand.css already hides .sb-admin-topbar-actions at <=900px and the replacement mobile CSS (eb62057, 2026-08-09) is used by no JSX. 4be0bec never touched AdminShell.jsx or those CSS lines. Established from base source; no server was run."
       },
       "history": [
         {
           "round": 1,
           "event": "found",
-          "note": "Shipped UI copy at MyResumePanel.jsx:1052 uses an em dash; the training spec (qr-gated-outputs.md:88) was written with a hyphen. No behavior wrong.",
+          "note": "Shipped UI copy at MyResumePanel.jsx:1052 uses an em dash; the training spec (qr-gated-outputs.md:8…",
           "commit": null
         },
         {
           "round": 2,
           "event": "recurred",
-          "note": "MyResumePanel.jsx:1062 hard-codes an em dash; frozen step and sibling components use a hyphen; change spec and owner give no em-dash direction. Also reported in round 1 and never triaged.",
+          "note": "MyResumePanel.jsx:1062 hard-codes an em dash; frozen step and sibling components use a hyphen; chan…",
           "commit": null
         },
         {
           "round": 3,
           "event": "recurred",
-          "note": "Recurrence of round 2 T1, which was never fixed because it was left out of the round 2 fix list. MyResumePanel.jsx:1062 hard-codes an em dash in the Read-only note. The frozen step uses a hyphen, and…",
+          "note": "Recurrence of round 2 T1, which was never fixed because it was left out of the round 2 fix list. My…",
           "commit": null
         }
       ]
@@ -2929,25 +2941,25 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Identical success/error toast dates from 3b8e975 (no other feature regressed it), but this feature adds error toasts (MyResumePanel) and its spec J3.4 requires a red toast, so it was asked to surface failures distinctly and does not."
+        "evidence": "coverLetterTemplate.js does not exist at base 312f128; added by 4be0bec. Cannot reproduce on base."
       },
       "history": [
         {
           "round": 1,
           "event": "found",
-          "note": "header.contact has no defined/validated type. Spec seeds an array; DocumentBlocksView.jsx:94 renders it raw so React concatenates without separator, while outputRendering.js:186 passes it to pdfkit w…",
+          "note": "header.contact has no defined/validated type. Spec seeds an array; DocumentBlocksView.jsx:94 render…",
           "commit": null
         },
         {
           "round": 2,
           "event": "recurred",
-          "note": "Spec fixture gives header.contact as an array; DocumentBlocksView.jsx:94 renders it raw so React concatenates items. PDF path outputRendering.js:186 only looks right because pdfkit stringifies with c…",
+          "note": "Spec fixture gives header.contact as an array; DocumentBlocksView.jsx:94 renders it raw so React co…",
           "commit": null
         },
         {
           "round": 2,
           "event": "fixed",
-          "note": "Added a shared contactText() normaliser (array joined with ' · ') and used it in the view dialog and the PDF renderer. The editor adapter now spreads an array contact instead of nesting it.",
+          "note": "Added a shared contactText() normaliser (array joined with ' · ') and used it in the view dialog an…",
           "commit": "73505f4de4a6a94df114c2e64c4abb37452983f9"
         },
         {
@@ -2972,19 +2984,19 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Product matches E.2 (outputVersionHistory.js sets version.error and Cannot compare). The spec step requires corrupting a stored version, which no interface allows; feature's own spec. Needs an owner answer (A2 needs_owner)."
+        "evidence": "coverLetterRules.js and coverLetterAgent.js are new in 4be0bec; the info-to-search_only route mapping is the feature's own code."
       },
       "history": [
         {
           "round": 1,
           "event": "found",
-          "note": "Toast at MyResumePanel.jsx:627 uses an em dash, which other specs (no-silent-failures, cover-letter-agent, proficiency-rules-and-live-qr) already expect; qr-gated-outputs.md lines 100/155/169 used a …",
+          "note": "Toast at MyResumePanel.jsx:627 uses an em dash, which other specs (no-silent-failures, cover-letter…",
           "commit": null
         },
         {
           "round": 2,
           "event": "recurred",
-          "note": "approveForQr in MyResumePanel.jsx:636 uses an em dash. The same function serves J3.3, J7.1 and J8.3; OpportunityOutputsSection.jsx:129 already uses a hyphen.",
+          "note": "approveForQr in MyResumePanel.jsx:636 uses an em dash. The same function serves J3.3, J7.1 and J8.3…",
           "commit": null
         },
         {
@@ -3002,7 +3014,7 @@
         {
           "round": 2,
           "event": "fixed",
-          "note": "Approve for QR toast now uses a hyphen ('Approved - private QR link created (copied to clipboard).'), clearing J3.3, J7.1 and J8.3.",
+          "note": "Approve for QR toast now uses a hyphen ('Approved - private QR link created (copied to clipboard).'…",
           "commit": "73505f4de4a6a94df114c2e64c4abb37452983f9"
         },
         {
@@ -3016,7 +3028,7 @@
     {
       "id": "T5",
       "feature": "qr-gated-outputs",
-      "status": "backlog_pre_existing",
+      "status": "recurred",
       "class": "defect",
       "attempts": 0,
       "step": "Sign-in limit: more than 10 attempts returns 'Too many attempts - please try again in 15 minutes'",
@@ -3025,21 +3037,21 @@
         "server/routes/auth.js"
       ],
       "scope": {
-        "scope": "pre_existing",
+        "scope": "this_feature",
         "owner": null,
-        "evidence": "server/lib/mcpToolRegistry.js has no git history and does not exist. The platform MCP server belongs to the separate platform-mcp feature, which is not in the owner list. definition.json says to record the gap and assign it there. Not part of this feature's request."
+        "evidence": "Product matches the change spec; the error is in this feature's own training spec (API-only branch scored on the UI surface). Needs an amendment."
       },
       "history": [
         {
           "round": 2,
           "event": "found",
-          "note": "server/routes/auth.js:28 authLimiter message uses an em dash. The early trip after 3-5 wrong attempts is expected: the limiter is shared by login, sso/discover and reset-request and counts successful…",
+          "note": "server/routes/auth.js:28 authLimiter message uses an em dash. The early trip after 3-5 wrong attemp…",
           "commit": null
         },
         {
           "round": 3,
           "event": "recurred",
-          "note": "Recurrence of round 2 T5, which was never fixed because it was left out of the round 2 fix list. server/routes/auth.js:28 authLimiter message uses an em dash. The early trip after 6 attempts is expec…",
+          "note": "Recurrence of round 2 T5, which was never fixed because it was left out of the round 2 fix list. se…",
           "commit": null
         }
       ]
@@ -3064,7 +3076,7 @@
         {
           "round": 2,
           "event": "found",
-          "note": "At 390px the Classic Tools tab strip is display:none and the mobile menu button has no element, so the spec path is unreachable on a phone; World Shell > Journeys > My Resume works.",
+          "note": "At 390px the Classic Tools tab strip is display:none and the mobile menu button has no element, so …",
           "commit": null
         }
       ]
@@ -3089,7 +3101,7 @@
         {
           "round": 2,
           "event": "found",
-          "note": "The spec gives no fixture for a Draft card needed by steps after Journey 9; the validator imported a third package version ad hoc.",
+          "note": "The spec gives no fixture for a Draft card needed by steps after Journey 9; the validator imported …",
           "commit": null
         }
       ]
@@ -3417,13 +3429,13 @@
       "scope": {
         "scope": "pre_existing",
         "owner": null,
-        "evidence": "J5.1 mobile. Same root cause as the J1.2 item: no mobile drawer markup at base, so Classic Tools is unreachable at 390px without this feature. Caveat: spec routes through Classic Tools, so it stays blocked until a shell fix or a spec path change."
+        "evidence": "At base 312f128 brand.css already hides .sb-admin-topbar-actions at <=900px and the replacement mobile CSS (eb62057, 2026-08-09) is used by no JSX. 4be0bec never touched AdminShell.jsx or those CSS lines. Established from base source; no server was run."
       },
       "history": [
         {
           "round": 1,
           "event": "found",
-          "note": "Output.jsx useOutputTemplateConfig (line ~1176) fetches /api/career/master without owner on /output/resume; resolveOwnerUserId (server/routes/careerMaster.js:559-568) falls back to the default admin,…",
+          "note": "Output.jsx useOutputTemplateConfig (line ~1176) fetches /api/career/master without owner on /output…",
           "commit": null
         }
       ]
@@ -3443,19 +3455,19 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Identical success/error toast dates from 3b8e975 (no other feature regressed it), but this feature adds error toasts (MyResumePanel) and its spec J3.4 requires a red toast, so it was asked to surface failures distinctly and does not."
+        "evidence": "coverLetterTemplate.js does not exist at base 312f128; added by 4be0bec. Cannot reproduce on base."
       },
       "history": [
         {
           "round": 1,
           "event": "found",
-          "note": "src/lib/toast.js:25-26 toast.error is identical to toast.success (same .sb-toast element, brand.css:455 and .sb-admin-shell variant); change spec requires a red error toast. 2.4 s lifetime also hides…",
+          "note": "src/lib/toast.js:25-26 toast.error is identical to toast.success (same .sb-toast element, brand.css…",
           "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "toast.error now renders a red toast (class sb-toast-error, role=alert, default 6000 ms); toast.success has role=status. Styled for base and .sb-admin-shell variants.",
+          "note": "toast.error now renders a red toast (class sb-toast-error, role=alert, default 6000 ms); toast.succ…",
           "commit": "7be432e50f3e04e06ecb9ae50af7d9ae5bebc465"
         }
       ]
@@ -3474,13 +3486,13 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Product matches E.2 (outputVersionHistory.js sets version.error and Cannot compare). The spec step requires corrupting a stored version, which no interface allows; feature's own spec. Needs an owner answer (A2 needs_owner)."
+        "evidence": "coverLetterRules.js and coverLetterAgent.js are new in 4be0bec; the info-to-search_only route mapping is the feature's own code."
       },
       "history": [
         {
           "round": 1,
           "event": "found",
-          "note": "Product matches change spec (banner keeps 'N changes since...'); step ignores the one change (Pipeline Tracker) added in J0.5.",
+          "note": "Product matches change spec (banner keeps 'N changes since...'); step ignores the one change (Pipel…",
           "commit": null
         }
       ]
@@ -3500,13 +3512,13 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "The step is in this feature's own spec and is API-only by nature. Server 404 is correct. Needs an amendment marking it API-only."
+        "evidence": "packageSearch.js jobRecText/hasJobRec is new in 4be0bec; absent on base."
       },
       "history": [
         {
           "round": 1,
           "event": "found",
-          "note": "applicationPackages.js:128-131 retires the previous published version (drops share_token, sets approved) only inside the next approval (J3.4); import just adds a draft.",
+          "note": "applicationPackages.js:128-131 retires the previous published version (drops share_token, sets appr…",
           "commit": null
         }
       ]
@@ -3514,7 +3526,7 @@
     {
       "id": "T5",
       "feature": "no-silent-failures",
-      "status": "backlog_pre_existing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "J4.1 header and alert titles",
@@ -3524,15 +3536,15 @@
         "src/components/admin/ChartGallery.jsx"
       ],
       "scope": {
-        "scope": "pre_existing",
+        "scope": "this_feature",
         "owner": null,
-        "evidence": "server/lib/mcpToolRegistry.js has no git history and does not exist. The platform MCP server belongs to the separate platform-mcp feature, which is not in the owner list. definition.json says to record the gap and assign it there. Not part of this feature's request."
+        "evidence": "Product matches the change spec; the error is in this feature's own training spec (API-only branch scored on the UI surface). Needs an amendment."
       },
       "history": [
         {
           "round": 1,
           "event": "found",
-          "note": "P4 allows gallery or fixture; gallery (ChartGallery.jsx:50-52) yields member-name header and titles Proficiency Tiers / Trend Bars / Career Timeline, fixture yields Pat Example / Proficiency / Experi…",
+          "note": "P4 allows gallery or fixture; gallery (ChartGallery.jsx:50-52) yields member-name header and titles…",
           "commit": null
         }
       ]
@@ -3551,13 +3563,13 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "The request asks for block-level tracked changes. toDiffItems in src/lib/outputVersionDiff.js (e2752fd) has no chart handling. Same basis as B10 in scope-review.json."
+        "evidence": "Spec step E.6 second half is reachable only via the API; the feature's own spec needs an amendment."
       },
       "history": [
         {
           "round": 1,
           "event": "found",
-          "note": "Fault injection, package import and restore are test-harness database/CLI actions by design (spec: 'the only database commands in this spec'); steps are not marked cli so validator scores UI_GAP. Pac…",
+          "note": "Fault injection, package import and restore are test-harness database/CLI actions by design (spec: …",
           "commit": null
         }
       ]
@@ -3576,13 +3588,13 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "The request says reachable from the output editor. Entry points were chosen by this feature (e2752fd) and omit OutputTemplateConfigurator. Same as B11 in scope-review.json."
+        "evidence": "coverLetterAutoDraft.js is new in 4be0bec; the failure alert needs an injected failure, so the feature's spec step E.7 needs an amendment."
       },
       "history": [
         {
           "round": 1,
           "event": "found",
-          "note": "A bogus slug is reachable only by typing a URL, which interfaceParity forbids as a step; a revoked link produces the same 'This link isn't available' page and is reachable by Revoke QR in the UI.",
+          "note": "A bogus slug is reachable only by typing a URL, which interfaceParity forbids as a step; a revoked …",
           "commit": null
         }
       ]
@@ -3601,13 +3613,13 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "docs/training/output-version-history.md hardcodes Riley Fenn (lines 3, 20, 54, 65, 76, 83, 105); product correctly shows approver display name Test Member. Feature's own spec; needs a resubmitted step-listed amendment (A5 rejected on form). Consistent with B14."
+        "evidence": "mcpToolRegistry.js came with platform-mcp (b77049b) after the feature; the cover-letter capabilities from 4be0bec routes are listed as gaps in capabilityParity.js, and interface parity requires an MCP tool for each. Accept/reject is an owner-decided exclusion."
       },
       "history": [
         {
           "round": 1,
           "event": "found",
-          "note": "GET /api/career/resume-rollups reads career_jobs via loadMasterPayload (careerMaster.js:647-654) so returns 500 under FAULT A by design; Output.jsx:1378 calls it. The 404 on /api/shared-outputs/<slug…",
+          "note": "GET /api/career/resume-rollups reads career_jobs via loadMasterPayload (careerMaster.js:647-654) so…",
           "commit": null
         }
       ]
@@ -3627,19 +3639,19 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "versionBody() in server/lib/outputVersionHistory.js resolves drafts live. Same as B8 in scope-review.json. The rule needs an owner decision (needs_business_definition)."
+        "evidence": "The request says the agent is reachable from the World Shell opportunity view; B3 and B11 are already classified this_feature in scope-review.json, and the missing baseline step is this feature's spec coverage gap."
       },
       "history": [
         {
           "round": 1,
           "event": "found",
-          "note": "SharedLiveStates.jsx:119-121 prints 'matches the approved printed version' when live is false and line 124 says charts 'update from the Salt Basin Career Master' while live data failed, contradicting…",
+          "note": "SharedLiveStates.jsx:119-121 prints 'matches the approved printed version' when live is false and l…",
           "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "When live data is unavailable the banner reads 'RECORDED DATA - N recorded change(s) since the approved printed version (live data unavailable)' or 'no recorded changes ... (live data unavailable)', …",
+          "note": "When live data is unavailable the banner reads 'RECORDED DATA - N recorded change(s) since the appr…",
           "commit": "7be432e50f3e04e06ecb9ae50af7d9ae5bebc465"
         }
       ]
@@ -3664,7 +3676,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "No scored step checks the banner sentence under RECORDED DATA (T9) or that a member's /output/resume draws the member's own Career Master (T1).",
+          "note": "No scored step checks the banner sentence under RECORDED DATA (T9) or that a member's /output/resum…",
           "commit": null
         }
       ]
@@ -3697,13 +3709,13 @@
         {
           "round": 3,
           "event": "recurred",
-          "note": "STATUS map (index.html line 221) has no 'stalled' key so pill() prints raw 'stalled', and .s-stalled has no CSS (line 63). Fix-r1's additions were lost when 9084b2c rewrote the page. 'Agent stopped' …",
+          "note": "STATUS map (index.html line 221) has no 'stalled' key so pill() prints raw 'stalled', and .s-stalle…",
           "commit": null
         },
         {
           "round": 3,
           "event": "recurred",
-          "note": "Fix-r1's 640px stacked-card CSS and data-label attributes on table cells are absent at HEAD (0 occurrences) because 9084b2c replaced the page; only .panel overflow-x:auto (line 52) remains, so featur…",
+          "note": "Fix-r1's 640px stacked-card CSS and data-label attributes on table cells are absent at HEAD (0 occu…",
           "commit": null
         }
       ]
@@ -3761,13 +3773,13 @@
         {
           "round": 3,
           "event": "recurred",
-          "note": "docs/changes/release-loop-tooling.md line 51 says started-with-no-end agents stay running forever and idle check applies only to --extra agents, but release-tracker-sync.mjs lines 118-120 mark journa…",
+          "note": "docs/changes/release-loop-tooling.md line 51 says started-with-no-end agents stay running forever a…",
           "commit": null
         },
         {
           "round": 3,
           "event": "fixed",
-          "note": "Rewrote Known limitations in the change spec: journey agents with no end entry show stalled past --stale-minutes, --extra agents show idle_or_done, and 390px tables reflow as stacked cards. Replaced …",
+          "note": "Rewrote Known limitations in the change spec: journey agents with no end entry show stalled past --…",
           "commit": "fe190e227ede4c88ec9ac2290b1690f164f679b0"
         },
         {
@@ -3952,13 +3964,13 @@
         {
           "round": 3,
           "event": "found",
-          "note": "Page now has nine tiles: 'Status updates' stat (index.html ~line 263, added by 44609c2), plus Board/World switch, trends panel and render bindings from the live-release-tracker work. Training spec li…",
+          "note": "Page now has nine tiles: 'Status updates' stat (index.html ~line 263, added by 44609c2), plus Board…",
           "commit": null
         },
         {
           "round": 3,
           "event": "fixed",
-          "note": "Training spec J4 now says nine tiles, with a Status updates tile between 'Finished with unreconciled failures' and 'Tokens out / cache read'. It also notes that the Board/World switch and trends pane…",
+          "note": "Training spec J4 now says nine tiles, with a Status updates tile between 'Finished with unreconcile…",
           "commit": "fe190e227ede4c88ec9ac2290b1690f164f679b0"
         },
         {
@@ -3989,7 +4001,7 @@
         {
           "round": 3,
           "event": "found",
-          "note": "Spec expects rgb(243,246,247)/rgb(15,26,31) from the original bed12f0 page; the current page uses the Salt Basin cream palette (--bg #F8F4EC light, #161A1C dark, lines 11/22/28) introduced in 9084b2c…",
+          "note": "Spec expects rgb(243,246,247)/rgb(15,26,31) from the original bed12f0 page; the current page uses t…",
           "commit": null
         },
         {
@@ -4027,7 +4039,7 @@
         {
           "round": 4,
           "event": "found",
-          "note": "src/components/WorldShell.jsx line 121 (MOBILE_CSS, max-width 700px) deliberately hides .sb-world-brandsub, the 'Your World' subtitle rendered at line 683. The only other 'Your World' text (rail titl…",
+          "note": "src/components/WorldShell.jsx line 121 (MOBILE_CSS, max-width 700px) deliberately hides .sb-world-b…",
           "commit": null
         }
       ]
@@ -4053,7 +4065,7 @@
         {
           "round": 4,
           "event": "found",
-          "note": "server/lib/mcpToolRegistry.js does not exist because the separate feature platform-mcp (active-release.features.json line 146) is still in build. definition.json interfaceParity.rule says a missing M…",
+          "note": "server/lib/mcpToolRegistry.js does not exist because the separate feature platform-mcp (active-rele…",
           "commit": null
         }
       ]
@@ -4219,13 +4231,13 @@
         {
           "round": 1,
           "event": "found",
-          "note": "position:sticky on the preview column (OutputTemplateConfigurator.jsx ~L562) binds to the nearest overflow-y:auto ancestor: the configurator root div (~L311) and Hub wrapper (L110). Neither has a bou…",
+          "note": "position:sticky on the preview column (OutputTemplateConfigurator.jsx ~L562) binds to the nearest o…",
           "commit": null
         },
         {
           "round": 2,
           "event": "fixed",
-          "note": "Took only the OutputTemplateConfigurator.jsx hunks of fix branch dc6b5f0: removed flex:1/overflowY:auto from both wrappers so sticky binds to the real scroller; preview column sticky only when not na…",
+          "note": "Took only the OutputTemplateConfigurator.jsx hunks of fix branch dc6b5f0: removed flex:1/overflowY:…",
           "commit": "3b198a83584419755b4799a7a4691f279b6845ed"
         },
         {
@@ -4257,13 +4269,13 @@
         {
           "round": 1,
           "event": "found",
-          "note": "proficiency loads via api.getCareerProficiency() -> request() in src/lib/api.js L2-19, which uses body.error text instead of the status, and throws a JSON parse error on an empty body. rollups/master…",
+          "note": "proficiency loads via api.getCareerProficiency() -> request() in src/lib/api.js L2-19, which uses b…",
           "commit": null
         },
         {
           "round": 2,
           "event": "fixed",
-          "note": "Proficiency loads via loadJson('/api/career/proficiency?period=current'); loadJson appends the JSON error detail and tolerates empty or non-JSON bodies. api.js was not changed.",
+          "note": "Proficiency loads via loadJson('/api/career/proficiency?period=current'); loadJson appends the JSON…",
           "commit": "3b198a83584419755b4799a7a4691f279b6845ed"
         },
         {
@@ -4295,7 +4307,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "S.shell (L65) is a fixed grid 220px 1fr 380px with no responsive rule; the 1fr column has min-width:auto so wide content prevents shrinking. Layout overflows to about 945px and the preview iframe is …",
+          "note": "S.shell (L65) is a fixed grid 220px 1fr 380px with no responsive rule; the 1fr column has min-width…",
           "commit": null
         }
       ]
@@ -4322,7 +4334,7 @@
         {
           "round": 2,
           "event": "found",
-          "note": "Not a regression. ChartGallery.jsx has one commit and the gauge was never disabled (round 1 'two disabled flags' = the two bar charts). capacity-gauge uses configure:'key' whose options are all stati…",
+          "note": "Not a regression. ChartGallery.jsx has one commit and the gauge was never disabled (round 1 'two di…",
           "commit": null
         }
       ]
@@ -4347,13 +4359,13 @@
         {
           "round": 2,
           "event": "found",
-          "note": "src/lib/outputBlocks.js interpolate() (line 484-486) starts with `if (!text || !ctx) return text || ''`, so numeric 0 becomes an empty string. The capacity-gauge case (line ~692-706) prints ip(rollup…",
+          "note": "src/lib/outputBlocks.js interpolate() (line 484-486) starts with `if (!text || !ctx) return text ||…",
           "commit": null
         },
         {
           "round": 3,
           "event": "recurred",
-          "note": "Recurred from round 2. src/lib/outputBlocks.js interpolate() line 484-486 starts with if (!text || !ctx) return text || '', turning numeric 0 into ''. capacity-gauge (~line 692-706) prints ip(rollup.…",
+          "note": "Recurred from round 2. src/lib/outputBlocks.js interpolate() line 484-486 starts with if (!text || …",
           "commit": null
         }
       ]
@@ -4378,13 +4390,13 @@
         {
           "round": 2,
           "event": "found",
-          "note": "src/components/Output.jsx OutputAuthorshipFooter() (lines ~98-118): author chips have whiteSpace:'nowrap' with uppercase text and letter spacing. 'CLAUDE (ANTHROPIC) - SECONDARY AUTHOR' and 'DESIGN S…",
+          "note": "src/components/Output.jsx OutputAuthorshipFooter() (lines ~98-118): author chips have whiteSpace:'n…",
           "commit": null
         },
         {
           "round": 3,
           "event": "recurred",
-          "note": "Recurred from round 2. src/components/Output.jsx OutputAuthorshipFooter() (~lines 104-113): author chips have whiteSpace:nowrap with uppercase letter-spaced text; two chips are ~350px, wider than the…",
+          "note": "Recurred from round 2. src/components/Output.jsx OutputAuthorshipFooter() (~lines 104-113): author …",
           "commit": null
         }
       ]
@@ -4410,7 +4422,7 @@
         {
           "round": 2,
           "event": "found",
-          "note": "By design OutputTemplateConfigurator.jsx uses narrow = matchMedia('(max-width: 900px)'): one column, preview below the gallery and not sticky (lines 131-133, 334, 657). The change spec only promises …",
+          "note": "By design OutputTemplateConfigurator.jsx uses narrow = matchMedia('(max-width: 900px)'): one column…",
           "commit": null
         }
       ]
@@ -4435,13 +4447,13 @@
         {
           "round": 2,
           "event": "found",
-          "note": "server/lib/mcpToolRegistry.js does not exist. definition.json interfaceParity (line ~251) says a capability with no MCP tool is recorded and assigned to the platform-mcp feature until the platform MC…",
+          "note": "server/lib/mcpToolRegistry.js does not exist. definition.json interfaceParity (line ~251) says a ca…",
           "commit": null
         },
         {
           "round": 3,
           "event": "recurred",
-          "note": "Recurred. server/lib/mcpToolRegistry.js does not exist; definition.json interfaceParity assigns capabilities with no MCP tool to the separate platform-mcp feature until the server exists. Needed tool…",
+          "note": "Recurred. server/lib/mcpToolRegistry.js does not exist; definition.json interfaceParity assigns cap…",
           "commit": null
         }
       ]
@@ -4467,7 +4479,7 @@
         {
           "round": 2,
           "event": "found",
-          "note": "OutputTemplateConfigurator is mounted in two hosts with different scrollers (member World Shell and AdminShell). The CG-R1-1 sticky fix (removing flex:1/overflowY:auto wrappers so sticky binds to the…",
+          "note": "OutputTemplateConfigurator is mounted in two hosts with different scrollers (member World Shell and…",
           "commit": null
         }
       ]
@@ -4494,7 +4506,7 @@
         {
           "round": 3,
           "event": "found",
-          "note": "adminStyles.js workspace (line 21-25) is flex overflow:hidden; AdminShell.jsx line 895 mounts OutputTemplateConfiguratorHub directly into it and the hub root (OutputTemplateConfigurator.jsx line 111)…",
+          "note": "adminStyles.js workspace (line 21-25) is flex overflow:hidden; AdminShell.jsx line 895 mounts Outpu…",
           "commit": null
         }
       ]
@@ -4520,7 +4532,7 @@
         {
           "round": 3,
           "event": "found",
-          "note": "brand.css (lines 617, 630-700) hides .sb-admin-topbar-actions at <=900px and defines .sb-admin-mobile-current and .sb-admin-mobile-drawer rules, but AdminShell.jsx has no markup for menu button, curr…",
+          "note": "brand.css (lines 617, 630-700) hides .sb-admin-topbar-actions at <=900px and defines .sb-admin-mobi…",
           "commit": null
         }
       ]
@@ -4714,25 +4726,25 @@
       "scope": {
         "scope": "pre_existing",
         "owner": null,
-        "evidence": "J5.1 mobile. Same root cause as the J1.2 item: no mobile drawer markup at base, so Classic Tools is unreachable at 390px without this feature. Caveat: spec routes through Classic Tools, so it stays blocked until a shell fix or a spec path change."
+        "evidence": "At base 312f128 brand.css already hides .sb-admin-topbar-actions at <=900px and the replacement mobile CSS (eb62057, 2026-08-09) is used by no JSX. 4be0bec never touched AdminShell.jsx or those CSS lines. Established from base source; no server was run."
       },
       "history": [
         {
           "round": 1,
           "event": "found",
-          "note": "src/brand.css (~605-709, from commit eb62057) hides .sb-admin-topbar-actions (the only place AdminShell.jsx ~line 656 renders the tool tabs) at max-width 900px and styles a mobile menu button, backdr…",
+          "note": "src/brand.css (~605-709, from commit eb62057) hides .sb-admin-topbar-actions (the only place AdminS…",
           "commit": null
         },
         {
           "round": 1,
           "event": "recurred",
-          "note": "Same root cause as T1: the mobile drawer markup was never rendered, so the Classic Tools tool list is unreachable at 390px. Desktop passes and the edit works via Journeys cards.",
+          "note": "Same root cause as T1: the mobile drawer markup was never rendered, so the Classic Tools tool list …",
           "commit": null
         },
         {
           "round": 2,
           "event": "recurred",
-          "note": "brand.css 613-704 hides .sb-admin-topbar-actions at <=900px and styles .sb-admin-mobile-menu-button/backdrop/drawer, but AdminShell.jsx renders only sb-admin-mobile-toggle (~631) and topbar-actions (…",
+          "note": "brand.css 613-704 hides .sb-admin-topbar-actions at <=900px and styles .sb-admin-mobile-menu-button…",
           "commit": null
         },
         {
@@ -4758,19 +4770,19 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Product matches E.2 (outputVersionHistory.js sets version.error and Cannot compare). The spec step requires corrupting a stored version, which no interface allows; feature's own spec. Needs an owner answer (A2 needs_owner)."
+        "evidence": "coverLetterRules.js and coverLetterAgent.js are new in 4be0bec; the info-to-search_only route mapping is the feature's own code."
       },
       "history": [
         {
           "round": 1,
           "event": "found",
-          "note": "The product behaviour exists and matches the spec (server/lib/outputVersionHistory.js:122-124 sets version.error and 'Cannot compare'; src/components/admin/OutputVersionHistory.jsx:213 shows the comp…",
+          "note": "The product behaviour exists and matches the spec (server/lib/outputVersionHistory.js:122-124 sets …",
           "commit": null
         },
         {
           "round": 2,
           "event": "recurred",
-          "note": "Product matches the step (outputVersionHistory.js ~122-124 sets version.error and 'Cannot compare'; OutputVersionHistory.jsx ~213) but no interface can corrupt a stored version and DB edits are forbi…",
+          "note": "Product matches the step (outputVersionHistory.js ~122-124 sets version.error and 'Cannot compare';…",
           "commit": null
         }
       ]
@@ -4790,13 +4802,13 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "The step is in this feature's own spec and is API-only by nature. Server 404 is correct. Needs an amendment marking it API-only."
+        "evidence": "packageSearch.js jobRecText/hasJobRec is new in 4be0bec; absent on base."
       },
       "history": [
         {
           "round": 1,
           "event": "found",
-          "note": "The product is correct: server/routes/resumeOutputs.js:54-60 returns 404 'Resume output not found' for a foreign id, observed by the validator. The UI never exposes another member's id, so this autho…",
+          "note": "The product is correct: server/routes/resumeOutputs.js:54-60 returns 404 'Resume output not found' …",
           "commit": null
         }
       ]
@@ -4804,7 +4816,7 @@
     {
       "id": "T5",
       "feature": "output-version-history",
-      "status": "backlog_pre_existing",
+      "status": "open",
       "class": "environment",
       "attempts": 0,
       "step": "MCP_GAP: platform MCP server not built yet (feature platform-mcp)",
@@ -4814,15 +4826,15 @@
         "server/lib/outputVersionHistory.js"
       ],
       "scope": {
-        "scope": "pre_existing",
+        "scope": "this_feature",
         "owner": null,
-        "evidence": "server/lib/mcpToolRegistry.js has no git history and does not exist. The platform MCP server belongs to the separate platform-mcp feature, which is not in the owner list. definition.json says to record the gap and assign it there. Not part of this feature's request."
+        "evidence": "Product matches the change spec; the error is in this feature's own training spec (API-only branch scored on the UI surface). Needs an amendment."
       },
       "history": [
         {
           "round": 1,
           "event": "found",
-          "note": "server/lib/mcpToolRegistry.js does not exist; the platform MCP server belongs to the separate feature platform-mcp. definition.json interfaceParity says to record the gap and assign it to platform-mc…",
+          "note": "server/lib/mcpToolRegistry.js does not exist; the platform MCP server belongs to the separate featu…",
           "commit": null
         }
       ]
@@ -4842,13 +4854,13 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "The request asks for block-level tracked changes. toDiffItems in src/lib/outputVersionDiff.js (e2752fd) has no chart handling. Same basis as B10 in scope-review.json."
+        "evidence": "Spec step E.6 second half is reachable only via the API; the feature's own spec needs an amendment."
       },
       "history": [
         {
           "round": 1,
           "event": "found",
-          "note": "src/lib/outputVersionDiff.js has no chart handling, so a version that only changes a chart reads as unchanged; no baseline step covers it.",
+          "note": "src/lib/outputVersionDiff.js has no chart handling, so a version that only changes a chart reads as…",
           "commit": null
         }
       ]
@@ -4868,13 +4880,13 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "The request says reachable from the output editor. Entry points were chosen by this feature (e2752fd) and omit OutputTemplateConfigurator. Same as B11 in scope-review.json."
+        "evidence": "coverLetterAutoDraft.js is new in 4be0bec; the failure alert needs an injected failure, so the feature's spec step E.7 needs an amendment."
       },
       "history": [
         {
           "round": 1,
           "event": "found",
-          "note": "OutputTemplateConfigurator.jsx has no Version history control; entry points exist only in CareerBoundOutputEditor, MyResumePanel, OpportunityOutputsSection and WorldShell; no baseline step covers it.",
+          "note": "OutputTemplateConfigurator.jsx has no Version history control; entry points exist only in CareerBou…",
           "commit": null
         }
       ]
@@ -4893,19 +4905,19 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "docs/training/output-version-history.md hardcodes Riley Fenn (lines 3, 20, 54, 65, 76, 83, 105); product correctly shows approver display name Test Member. Feature's own spec; needs a resubmitted step-listed amendment (A5 rejected on form). Consistent with B14."
+        "evidence": "mcpToolRegistry.js came with platform-mcp (b77049b) after the feature; the cover-letter capabilities from 4be0bec routes are listed as gaps in capabilityParity.js, and interface parity requires an MCP tool for each. Accept/reject is an owner-decided exclusion."
       },
       "history": [
         {
           "round": 1,
           "event": "found",
-          "note": "Preconditions and Journey 0 use riley.member@example.test with public signup and the name 'Riley Fenn', contrary to the harness account (member@test.local, display name 'Test Member'). J4.2 says 'HEA…",
+          "note": "Preconditions and Journey 0 use riley.member@example.test with public signup and the name 'Riley Fe…",
           "commit": null
         },
         {
           "round": 2,
           "event": "recurred",
-          "note": "Spec hardcodes the Journey 0 fixture name; product correctly shows the approver's display name, and the fixed harness account is Test Member. Affects J1.4, J2.4, J3.2, J6.1 and Journey 0/Precondition…",
+          "note": "Spec hardcodes the Journey 0 fixture name; product correctly shows the approver's display name, and…",
           "commit": null
         }
       ]
@@ -4925,13 +4937,13 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "versionBody() in server/lib/outputVersionHistory.js resolves drafts live. Same as B8 in scope-review.json. The rule needs an owner decision (needs_business_definition)."
+        "evidence": "The request says the agent is reachable from the World Shell opportunity view; B3 and B11 are already classified this_feature in scope-review.json, and the missing baseline step is this feature's spec coverage gap."
       },
       "history": [
         {
           "round": 1,
           "event": "found",
-          "note": "Drafts resolve wording live from Career Master. Spec J3.1 and J5.3 require exactly that, while open bug B8 asked for drafts to be frozen; the two conflict and the product lacks a decided rule.",
+          "note": "Drafts resolve wording live from Career Master. Spec J3.1 and J5.3 require exactly that, while open…",
           "commit": null
         }
       ]
@@ -4956,7 +4968,7 @@
         {
           "round": 2,
           "event": "found",
-          "note": "Spec says 'HEADER fields'; product labels unchanged lines NAME / HEADING / ROLE / PARAGRAPH. Spec wording stale; product is right.",
+          "note": "Spec says 'HEADER fields'; product labels unchanged lines NAME / HEADING / ROLE / PARAGRAPH. Spec w…",
           "commit": null
         }
       ]
@@ -5281,13 +5293,13 @@
         {
           "round": 1,
           "event": "found",
-          "note": "Footer component in RollupGroupingsPanel.jsx:243-254 uses two nested flex rows without flexWrap; the Shown/up/down/Remove/Save row is about 420px wide and an overflow:hidden ancestor (AdminShell.jsx:…",
+          "note": "Footer component in RollupGroupingsPanel.jsx:243-254 uses two nested flex rows without flexWrap; th…",
           "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "Footer in RollupGroupingsPanel now wraps (flexWrap + gap on both flex rows), so Save is no longer clipped at 390px on any card type.",
+          "note": "Footer in RollupGroupingsPanel now wraps (flexWrap + gap on both flex rows), so Save is no longer c…",
           "commit": "ee3dc2b8e2da5d71193d6e1a0356f4554bd88cd3"
         }
       ]
@@ -5312,7 +5324,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "Product behaviour is correct (careerMaster.js:730 returns tools_by_wheel_bucket [] and the new grouping). The step itself is a typed API URL, which interface parity v3 forbids as a tester step; no us…",
+          "note": "Product behaviour is correct (careerMaster.js:730 returns tools_by_wheel_bucket [] and the new grou…",
           "commit": null
         }
       ]
@@ -5339,7 +5351,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "resumeUrls.js (LAYOUT_URLS/resumeUrlFromPreset) and MyResumePanel.jsx (LAYOUTS urls ~80/106, previewUrl line 557, full-tab link 1153, iframe 1156, presetPreviewUrl line 216) build /output/resume link…",
+          "note": "resumeUrls.js (LAYOUT_URLS/resumeUrlFromPreset) and MyResumePanel.jsx (LAYOUTS urls ~80/106, previe…",
           "commit": null
         }
       ]
@@ -5366,7 +5378,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "MyResumePanel.loadPresets (~line 675) synthesises a preset with id 'preset-default'; its preview URL carries preset=preset-default; Output.jsx:1224 fetches /api/output-templates/preset-default/public…",
+          "note": "MyResumePanel.loadPresets (~line 675) synthesises a preset with id 'preset-default'; its preview UR…",
           "commit": null
         }
       ]
@@ -5394,13 +5406,13 @@
         {
           "round": 1,
           "event": "found",
-          "note": "The validator saw no registry, but server/lib/mcpToolRegistry.js now exists (b77049b, platform-mcp) with 11 tools in server/data/mcpToolManifest.json; none covers resume rollups, Career Atom rollups,…",
+          "note": "The validator saw no registry, but server/lib/mcpToolRegistry.js now exists (b77049b, platform-mcp)…",
           "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "Extracted route bodies into exported functions in careerMaster.js shared by routes and 8 new append-only MCP tools: resume_rollups_read, resume_rollup_preview, career_atom_rollups_read, career_experi…",
+          "note": "Extracted route bodies into exported functions in careerMaster.js shared by routes and 8 new append…",
           "commit": "ee3dc2b8e2da5d71193d6e1a0356f4554bd88cd3"
         }
       ]
@@ -5425,7 +5437,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "The baseline has no step for B5 (adding the Career Rollup block and choosing the new grouping in the site editor) or B11 (output block column count), so both are untested.",
+          "note": "The baseline has no step for B5 (adding the Career Rollup block and choosing the new grouping in th…",
           "commit": null
         }
       ]
@@ -5458,7 +5470,7 @@
         {
           "round": 1,
           "event": "recurred",
-          "note": "Salvaged build added a Classic Tools entry beside the World Shell island, contrary to owner direction: AdminShell.jsx:73 (TAB_COMPONENTS), :122 (fallback nav), server/db.js:3326 (admin_nav insert). O…",
+          "note": "Salvaged build added a Classic Tools entry beside the World Shell island, contrary to owner directi…",
           "commit": null
         }
       ]
@@ -5492,7 +5504,7 @@
         {
           "round": 1,
           "event": "recurred",
-          "note": "releaseReconcile.js and releaseLogImporter.js only store the commit sha; no rule exists for what verifying it means. J3.3/J3.4 as frozen expect plain commit text with no commit check, so any rule cha…",
+          "note": "releaseReconcile.js and releaseLogImporter.js only store the commit sha; no rule exists for what ve…",
           "commit": null
         }
       ]
@@ -5551,7 +5563,7 @@
         {
           "round": 1,
           "event": "recurred",
-          "note": "Deliberate limitations (nothing guessed, hand/--snapshot ingest, equal-spaced date-labelled bars); no frozen step requires otherwise, so the owner must define the wanted rules. Open bug release-intel…",
+          "note": "Deliberate limitations (nothing guessed, hand/--snapshot ingest, equal-spaced date-labelled bars); …",
           "commit": null
         }
       ]
@@ -5579,7 +5591,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "importRepository walks every .md in docs/release-log/; classifyPath (releaseLogParser.js:112) treats release-tracker.md and updates.md (tracker-generated, no Date:) as release logs; releaseLogImporte…",
+          "note": "importRepository walks every .md in docs/release-log/; classifyPath (releaseLogParser.js:112) treat…",
           "commit": null
         }
       ]
@@ -5605,7 +5617,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "Baseline tags the terminal-only E.1 as desktop+mobile although the step says it needs a terminal and definition.json allows cli steps by design.",
+          "note": "Baseline tags the terminal-only E.1 as desktop+mobile although the step says it needs a terminal an…",
           "commit": null
         }
       ]
@@ -5630,7 +5642,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "ReleaseIntelligencePanel.jsx hardcodes minWidth on inputs (lines 90:160, 168:220, 266:320, 417:320, 418:240, 526:380, 535:320) while available content width at 390px is about 278px.",
+          "note": "ReleaseIntelligencePanel.jsx hardcodes minWidth on inputs (lines 90:160, 168:220, 266:320, 417:320,…",
           "commit": null
         }
       ]
@@ -5655,7 +5667,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "S.table (line 24) is width:100% with no scroll wrapper; tables at lines 103,183,277,332,349,477 have 5-8 columns (493-808px) wider than the card.",
+          "note": "S.table (line 24) is width:100% with no scroll wrapper; tables at lines 103,183,277,332,349,477 hav…",
           "commit": null
         }
       ]
@@ -5680,7 +5692,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "auto-fit grids with large minmax at ReleaseIntelligencePanel.jsx lines 178 (420px), 301 (280px), 579 (320px) cannot shrink below the minmax inside a ~278px card; chart SVG itself is width:100% and fi…",
+          "note": "auto-fit grids with large minmax at ReleaseIntelligencePanel.jsx lines 178 (420px), 301 (280px), 57…",
           "commit": null
         }
       ]
@@ -5706,7 +5718,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "Consequence of RI-R1-3/4/5: WorldShell embedBody (WorldShell.jsx:1409, overflowY:auto implies overflow-x auto) scrolls horizontally when children overflow, so the card's left edge reads -23..-71px.",
+          "note": "Consequence of RI-R1-3/4/5: WorldShell embedBody (WorldShell.jsx:1409, overflowY:auto implies overf…",
           "commit": null
         }
       ]
@@ -5732,7 +5744,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "server/lib/mcpToolRegistry.js is not on the integration branch; it exists only on release-loop/platform-mcp-build (not yet integrated). definition.json says to record the gap and assign it to platfor…",
+          "note": "server/lib/mcpToolRegistry.js is not on the integration branch; it exists only on release-loop/plat…",
           "commit": null
         }
       ]
@@ -5758,7 +5770,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "Frozen 'Where things are' context line 8 says 'Also reachable from Classic Tools', contradicting owner direction, and no step checks Classic Tools.",
+          "note": "Frozen 'Where things are' context line 8 says 'Also reachable from Classic Tools', contradicting ow…",
           "commit": null
         }
       ]
@@ -5821,7 +5833,7 @@
     {
       "id": "cover-letter-agent-B3",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "World Shell reachability",
@@ -5898,7 +5910,7 @@
     {
       "id": "cover-letter-agent-B6",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "Test account rule",
@@ -5923,7 +5935,7 @@
     {
       "id": "cover-letter-agent-B7",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Career-bound integration",
@@ -5976,7 +5988,7 @@
     {
       "id": "cover-letter-agent-B9",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Scope additions",
@@ -6024,7 +6036,7 @@
     {
       "id": "cover-letter-agent-B11",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Second cover letter generator",
@@ -6065,6 +6077,240 @@
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (environment)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T1",
+      "feature": "cover-letter-agent",
+      "status": "backlog_pre_existing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "J1.1 (mobile): click My Resume tab at 390px",
+      "rootCause": "src/brand.css:630-631 hides .sb-admin-topbar-actions at <=900px; the replacement mobile drawer CSS (.sb-admin-mobile-current/menu-button/drawer, brand.css 613-717, since eb62057) is never rendered by any JSX, so AdminShell.jsx:665-690 leaves a phone user in Classic Tools with no tab navigation.",
+      "files": [
+        "src/components/admin/AdminShell.jsx",
+        "src/brand.css"
+      ],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "At base 312f128 brand.css already hides .sb-admin-topbar-actions at <=900px and the replacement mobile CSS (eb62057, 2026-08-09) is used by no JSX. 4be0bec never touched AdminShell.jsx or those CSS lines. Established from base source; no server was run."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "src/brand.css:630-631 hides .sb-admin-topbar-actions at <=900px; the replacement mobile drawer CSS …",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "feature": "cover-letter-agent",
+      "status": "fixing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "J1.2: first-draft letter uses Career Master key metrics",
+      "rootCause": "Reproduced. coverLetterTemplate.js:196 picks the metrics template only when values.metrics && terms.length; with no job rec text terms is empty so jobParagraphPlain (no metrics) is used although metrics exist. Independent of bug B7.",
+      "files": [
+        "server/lib/coverLetterTemplate.js",
+        "src/components/admin/CoverLetterSettings.jsx",
+        "tests/cover-letter-agent.test.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "coverLetterTemplate.js does not exist at base 312f128; added by 4be0bec. Cannot reproduce on base."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reproduced. coverLetterTemplate.js:196 picks the metrics template only when values.metrics && terms…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T3",
+      "feature": "cover-letter-agent",
+      "status": "fixing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "J8.4: 'Make it more formal' must be tagged Answered by rules",
+      "rootCause": "Reproduced. coverLetterRules.js:110 returns kind 'info' for a tone preset with nothing to change; coverLetterAgent.js:159-160 maps every 'info' to route 'search_only', which CoverLetterWorkbench.jsx:45 labels 'Answered from package search'. 'unsatisfied' maps to route 'rules'.",
+      "files": [
+        "server/lib/coverLetterRules.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "coverLetterRules.js and coverLetterAgent.js are new in 4be0bec; the info-to-search_only route mapping is the feature's own code."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reproduced. coverLetterRules.js:110 returns kind 'info' for a tone preset with nothing to change; c…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T4",
+      "feature": "cover-letter-agent",
+      "status": "fixing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "E.5: agent scope text with no job rec text",
+      "rootCause": "packageSearch.js jobRecText() (133-142) always appends the rod's jobTitle/location/url, so recUnits is never empty and hasJobRec (line 160) is always true, disagreeing with the row panel which uses metadata.notes.",
+      "files": [
+        "server/lib/packageSearch.js",
+        "server/lib/coverLetterAgent.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "packageSearch.js jobRecText/hasJobRec is new in 4be0bec; absent on base."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "packageSearch.js jobRecText() (133-142) always appends the rod's jobTitle/location/url, so recUnits…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T5",
+      "feature": "cover-letter-agent",
+      "status": "fixing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "E.3 / E.4: another member's letter id; a resume id in the agent",
+      "rootCause": "Product matches the change spec: ownedLetter() (coverLetterAgent.js:36-41) answers 404 'Cover letter not found.' and 400 'only works on cover letters'. The UI offers the agent only on the member's own letters, so the branches are unreachable by clicking; E.3 itself says 'via the URL of the API'. The step is scored on the wrong surface. MCP cover_letter_open (mcpToolRegistry.js:147) now reaches bo…",
+      "files": [
+        "docs/training/cover-letter-agent.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Product matches the change spec; the error is in this feature's own training spec (API-only branch scored on the UI surface). Needs an amendment."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Product matches the change spec: ownedLetter() (coverLetterAgent.js:36-41) answers 404 'Cover lette…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T6",
+      "feature": "cover-letter-agent",
+      "status": "fixing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "E.6 second half: package key without any letter is refused",
+      "rootCause": "packageAssembly.js:88-89 refusal is only reachable via POST /api/cover-letters/packages/assemble {packageKey}; the interface always files a letter first by design. First half passes in the UI.",
+      "files": [
+        "docs/training/cover-letter-agent.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Spec step E.6 second half is reachable only via the API; the feature's own spec needs an amendment."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "packageAssembly.js:88-89 refusal is only reachable via POST /api/cover-letters/packages/assemble {p…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T7",
+      "feature": "cover-letter-agent",
+      "status": "fixing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "E.7: failed automatic draft shown as red alert",
+      "rootCause": "Product matches: coverLetterAutoDraft.js:101-111 records cover_letter_autodraft_failed and CoverLetterPackagesPanel.jsx:119 shows the role=alert. No supported user action makes the draft fail (template validation refuses bad templates at save), so the alert needs an injected failure event.",
+      "files": [
+        "docs/training/cover-letter-agent.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "coverLetterAutoDraft.js is new in 4be0bec; the failure alert needs an injected failure, so the feature's spec step E.7 needs an amendment."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Product matches: coverLetterAutoDraft.js:101-111 records cover_letter_autodraft_failed and CoverLet…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T8",
+      "feature": "cover-letter-agent",
+      "status": "fixing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "MCP_GAP: MCP tools for each capability the spec exercises",
+      "rootCause": "The validator tested c3a71b4 before platform-mcp landed. At the integration head mcpToolRegistry.js exists with cover_letter_open, cover_letter_agent_turn and application_output_approve_for_qr, but no tools for cover-letter settings, opportunity list with letter/package state, job rec save, generate/regenerate, package build, or turn history (capabilityParity.js:73-77 list these as gaps). Accept/…",
+      "files": [
+        "server/lib/mcpToolRegistry.js",
+        "server/data/mcpToolManifest.json",
+        "server/lib/capabilityParity.js",
+        "server/routes/coverLetters.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "mcpToolRegistry.js came with platform-mcp (b77049b) after the feature; the cover-letter capabilities from 4be0bec routes are listed as gaps in capabilityParity.js, and interface parity requires an MCP tool for each. Accept/reject is an owner-decided exclusion."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "The validator tested c3a71b4 before platform-mcp landed. At the integration head mcpToolRegistry.js…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T9",
+      "feature": "cover-letter-agent",
+      "status": "fixing",
+      "class": "coverage_gap",
+      "attempts": 0,
+      "step": "Observation O1: World Shell opportunity view lacks agent, package build and settings entry points",
+      "rootCause": "Open bugs cover-letter-agent-B3 and B11 (entry points only in Classic Tools / My Resume; two generators coexist). No baseline step proves reachability from the World Shell, so a fix could regress unnoticed.",
+      "files": [
+        "src/components/OpportunityOutputsSection.jsx",
+        "src/components/WorldShell.jsx",
+        "docs/training/cover-letter-agent.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The request says the agent is reachable from the World Shell opportunity view; B3 and B11 are already classified this_feature in scope-review.json, and the missing baseline step is this feature's spec coverage gap."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Open bugs cover-letter-agent-B3 and B11 (entry points only in Classic Tools / My Resume; two genera…",
           "commit": null
         }
       ]
@@ -6477,7 +6723,7 @@
         {
           "round": 2,
           "event": "fixed",
-          "note": "Added a skills/tools/certifications override card (pick item, box, Overridden badge, Career Master line, per-field Revert) storing under config.masterOverrides.<list>; spec J9 steps 6-11 added.",
+          "note": "Added a skills/tools/certifications override card (pick item, box, Overridden badge, Career Master …",
           "commit": "95c2adf"
         }
       ]
@@ -6509,7 +6755,7 @@
         {
           "round": 2,
           "event": "not_fixed",
-          "note": "Owner decision needed: is storing template overrides on the preset acceptable, or should they move to a saved per-document row? No code change made; recorded in the change spec fix notes.",
+          "note": "Owner decision needed: is storing template overrides on the preset acceptable, or should they move …",
           "commit": null
         }
       ]
@@ -6569,7 +6815,7 @@
         {
           "round": 2,
           "event": "not_fixed",
-          "note": "Trailer conflict: the task text says Claude Opus 5.5, the session attribution reminder says Claude Sonnet 5.5. I used the Sonnet 5.5 trailer from the session reminder; orchestrator/owner decides, and…",
+          "note": "Trailer conflict: the task text says Claude Opus 5.5, the session attribution reminder says Claude …",
           "commit": null
         }
       ]
@@ -6600,7 +6846,7 @@
         {
           "round": 2,
           "event": "not_fixed",
-          "note": "Process item: the round-2 validation agent must write docs/test-results/career-bound-outputs/round-N.md. Noted in the change spec; no fix-agent change.",
+          "note": "Process item: the round-2 validation agent must write docs/test-results/career-bound-outputs/round-…",
           "commit": null
         }
       ]
@@ -6626,13 +6872,13 @@
         {
           "round": 1,
           "event": "found",
-          "note": "The training spec (docs/training/release-loop-tooling.md line 21) lists 7 statuses. server/data/releaseLoop/definition.json lines 197-208 has 10, because the scope-check work (a42b3cc) added backlog_…",
+          "note": "The training spec (docs/training/release-loop-tooling.md line 21) lists 7 statuses. server/data/rel…",
           "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "Training spec J1 step 2 now lists the ten statuses in definition order; added J1 step 3; Traces to gained the scope-check commits.",
+          "note": "Training spec J1 step 2 now lists the ten statuses in definition order; added J1 step 3; Traces to …",
           "commit": "082eed1"
         },
         {
@@ -6664,13 +6910,13 @@
         {
           "round": 1,
           "event": "found",
-          "note": "tools/release-tracker/index.html was rebuilt as a layered drill-down (STATS tiles, crumbs, layers, 8 tiles including Backlog, no filter buttons, Features column 'Its own bugs verified', bugs and runs…",
+          "note": "tools/release-tracker/index.html was rebuilt as a layered drill-down (STATS tiles, crumbs, layers, …",
           "commit": null
         },
         {
           "round": 1,
           "event": "fixed",
-          "note": "Rewrote J4 and J5 for the drill-down page (8 tiles, layers, crumbs, no filters, Open bugs layer expects B1 and B9). Counts come from the fixture, now 5 features and 19 agents.",
+          "note": "Rewrote J4 and J5 for the drill-down page (8 tiles, layers, crumbs, no filters, Open bugs layer exp…",
           "commit": "082eed1"
         },
         {
@@ -6698,13 +6944,13 @@
         {
           "round": 2,
           "event": "found",
-          "note": "proficiencyBarsHtml emits the SVG with min-width:500px (src/lib/careerCharts.js line 112), which overrides max-width:100%. The preview column content is about 280px wide, so the SVG overflows the rig…",
+          "note": "proficiencyBarsHtml emits the SVG with min-width:500px (src/lib/careerCharts.js line 112), which ov…",
           "commit": null
         },
         {
           "round": 2,
           "event": "fixed",
-          "note": "Removed min-width:500px from the proficiency, trend and timeline SVG helpers (same pattern in all three) so the viewBox scales to the container. J2 step 2 now requires a screenshot check that all fiv…",
+          "note": "Removed min-width:500px from the proficiency, trend and timeline SVG helpers (same pattern in all t…",
           "commit": "3b198a83584419755b4799a7a4691f279b6845ed"
         }
       ]
