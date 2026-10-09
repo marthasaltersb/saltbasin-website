@@ -471,6 +471,14 @@ option {
   to   { transform: translateY(0); opacity: 1; }
 }
 
+.sb-toast.sb-toast-error,
+.sb-admin-shell .sb-toast.sb-toast-error {
+  background: #7A1F1F;
+  border-color: #E5484D;
+  border-left-width: 6px;
+  color: #FFFFFF;
+}
+
 /* Form primitives */
 .sb-input {
   width: 100%;

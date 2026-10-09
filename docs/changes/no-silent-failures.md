@@ -66,7 +66,7 @@ Release-loop build walk, 2026-10-02, local Postgres, fresh database, Chromium, f
 
 ## Known limitations
 
-- The QR banner still says "matches the approved printed version" under the "RECORDED DATA" label; it does not repeat that the comparison is against recorded states only. The amber alert above it does.
+- Resolved in fix round 1: when live data is unavailable the QR banner now reads "RECORDED DATA - ... (live data unavailable)" and never says "matches the approved printed version".
 - Career charts in the Output Template editor's chart gallery are a separate feature. In this build there is no screen that adds a career chart block to a template, so the template-chart journey needs a one-time fixture (training spec precondition P4). The notice itself is exercised on the real `/output/resume` page.
 - Other `/output/*` pages (case study, portfolio, etc.) still read Career Master through `fetchCareerMaster()` in `src/lib/careerMaster.js`, which converts a failed response into an empty master. Those pages are not covered by this feature. Not changed here.
 - Still silent, pre-existing and listed in `failed-commands-reconciliation.md`: Career Atom sync (`syncSingleEntry`/`removeEntryEvidence`) and several fire-and-forget audit-log writes.
@@ -80,3 +80,9 @@ Release-loop build walk, 2026-10-02, local Postgres, fresh database, Chromium, f
 - **F-1 (defect, fixed).** On a fresh database `POST /api/output-templates` returned 500 (`column "user_id" does not exist`) and `GET /api/output-templates/primary` 500: `routes/outputTemplates.js` reads and writes `unified_outputs.user_id` / `is_primary`, which only databases with the (never-committed) output_templates consolidation have. Fix: idempotent `ADD COLUMN IF NOT EXISTS` for both in `server/db.js`. Without it the template-chart journey cannot be set up on a fresh database.
 - **F-2 (defect, fixed).** The template output charts showed "Not enough dated Career Master records to show a trend yet." and "No dated roles in Career Master yet." when `/api/career/master` failed with 500, only the proficiency chart showed the loading-error notice. Cause: the initial load in `useOutputTemplateConfig` (`src/components/Output.jsx`) used `fetchCareerMaster()`, which maps any failed response to an empty master, so `loadErrors.master` was never set (only the refresh path used a strict fetch). Fix: always use the strict fetch (checks `r.ok`). Re-walked: all three charts show the notice.
 - Environment note: database `sb_rl_bld_2` was already held by another agent's server (port 3404); this walk used `sb_rl_bld_2_nsf` on port 3804 instead.
+
+### Fix notes — round 1
+
+**T2** (error toast looked like success). `toast.error` now adds `sb-toast-error` (red background, red thick left border, white text), `role="alert"`, default 6000 ms; `toast.success` has `role="status"`. Styled for both the base `.sb-toast` and `.sb-admin-shell .sb-toast`. Files: `src/lib/toast.js`, `src/brand.css`. Checked by `npm run build` and by inspecting the produced element class/role/lifetime.
+
+**T9** (RECORDED DATA banner contradicted failure). In `SharedLiveStates.jsx`, when live is false the headline is "RECORDED DATA - N recorded change(s) since the approved printed version (live data unavailable)" or "... no recorded changes since the approved printed version (live data unavailable)", and the sentence is "Live career data could not be loaded, so these charts show the last recorded state." Healthy text is unchanged. Known limitations updated. Files: `src/components/SharedLiveStates.jsx`, this document. Checked by `npm run build` and reading the rendered branches.
