@@ -12,6 +12,7 @@ const TEMPLATE_FIELDS = [
   ['opening', 'Opening paragraph', 3],
   ['jobParagraph', 'Experience paragraph (job has metrics and matches the job rec)', 3],
   ['jobParagraphNoMetrics', 'Experience paragraph (matches the job rec, no metrics)', 3],
+  ['jobParagraphMetricsOnly', 'Experience paragraph (job has metrics, no job rec matches)', 2],
   ['jobParagraphPlain', 'Experience paragraph (no matches)', 2],
   ['skillsParagraph', 'Skills paragraph', 2],
   ['closing', 'Closing paragraph', 3],

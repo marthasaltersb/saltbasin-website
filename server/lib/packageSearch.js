@@ -131,14 +131,22 @@ export async function packageMemberRows(userId, row) {
 
 /** Job-rec text attached to the package (the opportunity's rod metadata + the letter's stored target text). */
 export async function jobRecText(row) {
+  return (await jobRecSource(row)).text;
+}
+
+/** `text` is everything searchable; `real` is the genuine job-rec text only (stored target text or rod notes, not title/location/url). */
+export async function jobRecSource(row) {
   const parts = [];
+  let real = !!String(row.target_job_description || '').trim();
   if (row.target_job_description) parts.push(row.target_job_description);
   if (row.career_opportunity_rod_id != null) {
     const rod = await (await loadDb()).prepare(`SELECT metadata FROM journey_data_rods WHERE id=$1`).get(row.career_opportunity_rod_id);
     const md = rod ? parseJson(rod.metadata) || {} : {};
+    // The stored target text of an opportunity letter echoes the title, so the rod's notes are authoritative.
+    real = !!String(md.notes || '').trim();
     for (const k of ['jobTitle', 'location', 'notes', 'url']) if (md[k] && !parts.includes(md[k])) parts.push(String(md[k]));
   }
-  return parts.join('\n\n');
+  return { text: parts.join('\n\n'), real };
 }
 
 /**
@@ -151,12 +159,12 @@ export async function buildPackageLibrary(userId, row) {
   const memberUnits = others.flatMap((r) => unitsFromContent(parseJson(r.generated_content), {
     key: `${r.output_type}:${r.id}`, label: `${r.output_type === 'resume' ? 'Resume' : 'Cover letter (other)'}: ${r.preset_name || r.preset_id}`,
   }));
-  const rec = await jobRecText(row);
+  const { text: rec, real: hasRealRec } = await jobRecSource(row);
   const recUnits = unitsFromContent({ rawText: rec }, { key: 'job_rec', label: 'Job rec text' });
   return {
     letterUnits,
     units: [...letterUnits, ...memberUnits, ...recUnits],
     members: others.map((r) => ({ id: Number(r.id), outputType: r.output_type, name: r.preset_name || r.preset_id })),
-    hasJobRec: recUnits.length > 0,
+    hasJobRec: hasRealRec && recUnits.length > 0,
   };
 }

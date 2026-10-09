@@ -30,6 +30,13 @@
     "shared_output_live_read",
     "application_output_revoke_qr",
     "application_package_import",
-    "shared_output_resolve"
+    "shared_output_resolve",
+    "cover_letter_settings_read",
+    "cover_letter_settings_save",
+    "cover_letter_opportunities_list",
+    "cover_letter_job_rec_save",
+    "cover_letter_generate",
+    "cover_letter_package_build",
+    "cover_letter_turns_list"
   ]
 }
