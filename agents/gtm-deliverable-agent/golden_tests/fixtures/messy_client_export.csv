@@ -1,0 +1,6 @@
+Contract Ref,Client,Annual Contract Value,Billing Cadence,Renewal Window,Escalator?,Weird Legacy Code,Notes Field,Cxl Impact
+C-1001,Northwind Robotics,"$1,200,000",Monthly,12 months,Yes - 3%,LX-9,,"-$40,000"
+C-1002,Northwind Robotics,850000,Quarterly,,No,LX-4,imported from old CRM,
+C-1003,Beacon Analytics,"EUR 640,000",Annual,24 months,Unclear,LX-9,,"-EUR 12,000"
+C-1004,Beacon Analytics,,Monthly,12 months,Yes,LX-2,duplicate of C-1003?,
+C-1005,Sable Logistics,2100000,,6 months,No,,,

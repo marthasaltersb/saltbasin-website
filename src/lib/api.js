@@ -663,4 +663,33 @@ export const api = {
   generateVariantSeed: (prompt, hints) => request('/api/admin/world-variant-studio/generate', { method: 'POST', body: JSON.stringify({ prompt, hints }) }),
   validateVariantSeed: (seedSpec) => request('/api/admin/world-variant-studio/validate', { method: 'POST', body: JSON.stringify({ seedSpec }) }),
   getDefaultVariantSeed: () => request('/api/admin/world-variant-studio/default-spec'),
+  // GTM Deliverable & Benchmark Research Agent (native platform build,
+  // 2026-08-02 — replaces the standalone agents/gtm-deliverable-agent/ CLI).
+  listGtmScenarios: () => request('/api/gtm-deliverables/scenarios'),
+  createGtmScenario: (body) => request('/api/gtm-deliverables/scenarios', { method: 'POST', body: JSON.stringify(body) }),
+  updateGtmScenario: (id, body) => request(`/api/gtm-deliverables/scenarios/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+
+  listGtmSchedules: () => request('/api/gtm-deliverables/schedules'),
+  createGtmSchedule: (body) => request('/api/gtm-deliverables/schedules', { method: 'POST', body: JSON.stringify(body) }),
+  updateGtmSchedule: (id, body) => request(`/api/gtm-deliverables/schedules/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  runGtmScheduleNow: (id) => request(`/api/gtm-deliverables/schedules/${id}/run-now`, { method: 'POST' }),
+
+  submitGtmEngagement: async (formData) => {
+    const res = await fetch('/api/gtm-deliverables/engagement', { method: 'POST', credentials: 'include', body: formData });
+    const contentType = res.headers.get('content-type') || '';
+    const body = contentType.includes('application/json') ? await res.json() : await res.text();
+    if (!res.ok) {
+      const err = new Error(body?.error || `Request failed: ${res.status}`);
+      err.status = res.status;
+      err.body = body;
+      throw err;
+    }
+    return body;
+  },
+
+  listGtmDeliverables: (filters = {}) => request(`/api/gtm-deliverables?${new URLSearchParams(filters)}`),
+  getGtmDeliverable: (id) => request(`/api/gtm-deliverables/${id}`),
+  updateGtmDeliverableStatus: (id, status) => request(`/api/gtm-deliverables/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+  createGtmAnnotation: (id, body) => request(`/api/gtm-deliverables/${id}/annotations`, { method: 'POST', body: JSON.stringify(body) }),
+  promoteGtmAnnotation: (id, annotationId) => request(`/api/gtm-deliverables/${id}/annotations/${annotationId}/promote`, { method: 'POST' }),
 };
