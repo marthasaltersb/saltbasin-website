@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T17:36:13.445Z",
+  "exportedAt": "2026-10-09T17:37:24.374Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -130,7 +130,7 @@
       "backlog": 0
     },
     "platform-mcp": {
-      "status": "fix",
+      "status": "reconcile",
       "lastRound": 1,
       "lastScore": "62/62",
       "lastReport": "docs/test-results/platform-mcp/round-1.md",
