@@ -128,8 +128,11 @@ const MOBILE_CSS = `
   .sb-world-topbar { gap: 0.5rem !important; padding: 0.5rem 0.75rem !important; flex-wrap: wrap; }
   .sb-world-topbar .sb-world-brandsub { display: none; }
   .sb-world-topbar button { white-space: nowrap; }
-  .sb-world-stats .sb-world-stat, .sb-world-profile-text { display: none !important; }
-  .sb-world-stats { margin-left: auto; }
+  .sb-world-stats .sb-world-stat-avg, .sb-world-profile-text { display: none !important; }
+  .sb-world-stats { margin-left: auto; gap: 0.6rem !important; order: 2; }
+  .sb-world-topbar > div:first-child { order: 1; }
+  .sb-world-topbar > div:nth-child(2) { order: 3; flex-basis: 100%; }
+  .sb-world-stats .sb-world-stat { min-width: 0 !important; }
   .sb-world-rail { left: 0.5rem !important; right: 0.5rem !important; width: auto !important; top: 4.4rem !important; bottom: 0.5rem !important; }
 }
 `;
@@ -707,7 +710,7 @@ function TopBar({ user, view, setView, openClassic, career, commercial, hasCaree
       <div className="sb-world-stats" style={S.stats}>
         <div className="sb-world-stat" style={S.stat}><span style={S.statVal}>{trackedCount}</span><span style={S.statLabel}>Tracked</span></div>
         <div className="sb-world-stat" style={S.stat}><span style={S.statVal}>{agentCount}</span><span style={S.statLabel}>Agents</span></div>
-        <div className="sb-world-stat" style={S.stat}><span style={S.statVal}>{avgScore ?? '—'}</span><span style={S.statLabel}>Avg Score</span></div>
+        <div className="sb-world-stat sb-world-stat-avg" style={S.stat}><span style={S.statVal}>{avgScore ?? '—'}</span><span style={S.statLabel}>Avg Score</span></div>
         <div style={S.profileChip}>
           <div style={S.profileAvatar}>{(user.displayName || user.email || '?')[0].toUpperCase()}</div>
           <div className="sb-world-profile-text">

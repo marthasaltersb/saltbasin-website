@@ -144,6 +144,65 @@ export const MCP_TOOLS = Object.freeze([
     },
   },
   {
+    name: 'career_opportunity_update_details',
+    title: 'Fill in opportunity details',
+    description: 'Updates the role title, link, location or notes of a tracked opportunity (a placeholder becomes a regular entry).',
+    inputSchema: schema({
+      opportunityId: id('The opportunity id.'),
+      jobTitle: str('Role title.', { maxLength: 200 }),
+      url: str('Link to the posting.', { maxLength: 1000 }),
+      location: str('Location.', { maxLength: 200 }),
+      notes: str('Notes or the job description text.', { maxLength: 20000 }),
+    }, ['opportunityId']),
+    scope: 'career.write',
+    permission: 'user',
+    api: 'PATCH /api/career-agents/opportunities/:id',
+    handler: async (args, { user }) => {
+      const { updateOpportunityDetails } = await import('./opportunityOutputs.js');
+      const { jobTitle, url, location, notes } = args;
+      return updateOpportunityDetails(user.id, args.opportunityId, { jobTitle, url, location, notes });
+    },
+  },
+  {
+    name: 'application_outputs_unlinked_list',
+    title: 'List outputs not linked to any opportunity',
+    description: 'Lists the member\'s resume outputs that are not yet linked to a tracked opportunity.',
+    inputSchema: schema({}),
+    scope: 'career.read',
+    permission: 'user',
+    api: 'GET /api/career-agents/unlinked-outputs',
+    handler: async (args, { user }) => {
+      const { listUnlinkedOutputs } = await import('./opportunityOutputs.js');
+      return { outputs: await listUnlinkedOutputs(user.id) };
+    },
+  },
+  {
+    name: 'application_output_link',
+    title: 'Link an output to an opportunity',
+    description: 'Links an existing output (its whole version lineage) to a tracked opportunity.',
+    inputSchema: schema({ opportunityId: id('The opportunity id.'), outputId: id('The output id to link.') }, ['opportunityId', 'outputId']),
+    scope: 'career.write',
+    permission: 'user',
+    api: 'POST /api/career-agents/opportunities/:id/outputs/:outputId/link',
+    handler: async (args, { user }) => {
+      const { linkOutputToOpportunity } = await import('./opportunityOutputs.js');
+      return linkOutputToOpportunity(user.id, args.outputId, args.opportunityId);
+    },
+  },
+  {
+    name: 'application_output_unlink',
+    title: 'Unlink an output from an opportunity',
+    description: 'Removes the link between an output (its whole lineage) and a tracked opportunity.',
+    inputSchema: schema({ opportunityId: id('The opportunity id.'), outputId: id('The output id to unlink.') }, ['opportunityId', 'outputId']),
+    scope: 'career.write',
+    permission: 'user',
+    api: 'DELETE /api/career-agents/opportunities/:id/outputs/:outputId/link',
+    handler: async (args, { user }) => {
+      const { unlinkOutputFromOpportunity } = await import('./opportunityOutputs.js');
+      return unlinkOutputFromOpportunity(user.id, args.outputId, args.opportunityId);
+    },
+  },
+  {
     name: 'cover_letter_open',
     title: 'Open a cover letter',
     description: 'Opens a cover letter (latest version) with its package-search context, as the cover-letter agent sees it.',
