@@ -17,7 +17,8 @@ file (version bump + note in `docs/release-process.md`), never by improvising pe
    `docs/training/<feature>.md` (journeys a separate agent can follow literally in a browser). No
    API-only configuration: if it's configurable, a UI screen changes it.
 2. **Initial check** per feature: `npm run build`, server boots on a fresh database, the builder walks its
-   own journeys once.
+   own journeys once. If `tools/release-tracker/` changed, `node tools/release-tracker/sync-setup-guide.mjs`
+   must exit 0 (run with `--write` to regenerate the embedded page copy).
 3. **Run the loop** with the saved workflow:
    `Workflow({ name: 'release-loop', args: { release, repo, integrationBranch, env, chromium, commitTrailer, features: [...], sweep: true } })`.
    Each feature: build (own worktree) → integrate (serial) → validate (browser, literal spec) → triage →

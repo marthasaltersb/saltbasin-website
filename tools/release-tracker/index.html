@@ -60,7 +60,7 @@ tr:last-child td { border-bottom: 0; }
 .pill { display: inline-block; font: 600 12px/1 var(--body); padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
 .s-running { background: var(--teal-soft); color: var(--teal); }
 .s-passed, .s-verified, .s-done { background: var(--good-soft); color: var(--good); }
-.s-failing, .s-open, .s-recurred, .s-retest_failed, .s-failed, .s-done_unreconciled, .s-seen_in_test { background: var(--bad-soft); color: var(--bad); }
+.s-stalled, .s-failing, .s-open, .s-recurred, .s-retest_failed, .s-failed, .s-done_unreconciled, .s-seen_in_test { background: var(--bad-soft); color: var(--bad); }
 .s-fixing, .s-fixed_awaiting_retest, .s-between_stages, .s-awaiting_retest, .s-retesting, .s-retest_failed_pending_triage { background: var(--gold-soft); color: var(--gold); }
 .s-needs_human, .s-needs_business_definition { background: var(--human-soft); color: var(--human); }
 .s-passed_with_backlog { background: var(--good-soft); color: var(--good); }
@@ -194,6 +194,16 @@ a.spark:hover, a.spark:focus-visible { border-color: var(--teal); }
 .timeline { list-style: none; margin: 0; padding: 14px; display: grid; gap: 10px; }
 .timeline li { display: grid; grid-template-columns: 60px 130px 1fr; gap: 10px; font-size: 14px; }
 @media (max-width: 640px) { .timeline li { grid-template-columns: 44px 1fr; } .timeline li > :last-child { grid-column: 1 / -1; } .kv { grid-template-columns: 1fr; } .kv dt { margin-top: 6px; } .kv dt:first-child { margin-top: 0; } }
+@media (max-width: 640px) {
+  /* Tables become stacked cards so nothing needs sideways scrolling; the panel's overflow-x stays as a fallback. */
+  .panel table, .panel tbody, .panel tr, .panel td { display: block; width: 100%; box-sizing: border-box; }
+  .panel thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .panel tr { padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  .panel tr:last-child { border-bottom: 0; }
+  .panel td { border: 0; padding: 3px 0; overflow-wrap: anywhere; }
+  .panel td[data-label]::before { content: attr(data-label); display: block; font: 600 11px var(--body); color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .panel td .bar { max-width: 100%; }
+}
 </style>
 
 <div class="wrap">
@@ -215,7 +225,7 @@ a.spark:hover, a.spark:focus-visible { border-color: var(--teal); }
 const ROLE = { build: 'Build', integrate: 'Integrate', validate: 'Validate', triage: 'Triage', scope: 'Scope check', fix: 'Fix', record: 'Record', reconcile: 'Reconcile' };
 const BACKLOG = ['backlog_pre_existing', 'reassigned', 'process_note'];
 const STATUS = {
-  running: 'Running', passed: 'Passed', failing: 'Failing', queued: 'Queued', between_stages: 'Between stages',
+  stalled: 'Stalled (no sign of life)', running: 'Running', passed: 'Passed', failing: 'Failing', queued: 'Queued', between_stages: 'Between stages',
   needs_human: 'Needs a person', needs_business_definition: 'Needs a business decision', open: 'Open', recurred: 'Came back',
   fixing: 'Being fixed', fixed_awaiting_retest: 'Fixed, awaiting re-test', retest_failed: 'Re-test failed', verified: 'Verified fixed',
   done: 'Done', failed: 'Agent stopped', idle_or_done: 'Idle', done_unreconciled: 'Finished, failures not reconciled',
@@ -269,17 +279,17 @@ function featureRows(list) {
   return `<div class="panel"><table><thead><tr><th>Feature</th><th>Status</th><th>Latest test</th><th class="num">Rounds</th><th>Its own bugs verified</th></tr></thead><tbody>${list.map((f) => {
     const r = f.lastResult; const pct = r && r.stepsTotal ? Math.round((r.stepsPassed / r.stepsTotal) * 100) : 0;
     const own = ownBugs(f.key); const v = own.filter((b) => b.status === 'verified').length;
-    return `<tr class="rowlink" data-href="${href('feature', f.key)}"><td><a class="cell" href="${href('feature', f.key)}">${esc(f.key)}</a></td><td>${featStatus(f.status)}</td><td>${r ? `<div class="num">Round ${r.round}: ${r.stepsPassed}/${r.stepsTotal} steps</div><div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>` : '<span class="muted">Not tested yet</span>'}</td><td class="num">${f.rounds}</td><td>${own.length ? `<div class="num">${v} of ${own.length}</div><div class="bar" aria-hidden="true"><i style="width:${Math.round((v / own.length) * 100)}%"></i></div>` : '<span class="muted">None of its own</span>'}${f.backlog ? `<div class="muted">+ ${f.backlog} in backlog</div>` : ''}</td></tr>`;
+    return `<tr class="rowlink" data-href="${href('feature', f.key)}"><td><a class="cell" href="${href('feature', f.key)}">${esc(f.key)}</a></td><td data-label="Status">${featStatus(f.status)}</td><td data-label="Latest test">${r ? `<div class="num">Round ${r.round}: ${r.stepsPassed}/${r.stepsTotal} steps</div><div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>` : '<span class="muted">Not tested yet</span>'}</td><td data-label="Rounds" class="num">${f.rounds}</td><td data-label="Its own bugs verified">${own.length ? `<div class="num">${v} of ${own.length}</div><div class="bar" aria-hidden="true"><i style="width:${Math.round((v / own.length) * 100)}%"></i></div>` : '<span class="muted">None of its own</span>'}${f.backlog ? `<div class="muted">+ ${f.backlog} in backlog</div>` : ''}</td></tr>`;
   }).join('')}</tbody></table></div>`;
 }
 function bugRows(list, showFeature = true) {
   if (!list.length) return '<div class="panel empty">No bugs here.</div>';
-  return `<div class="panel"><table><thead><tr><th>Bug</th>${showFeature ? '<th>Feature</th>' : ''}<th>Status</th><th class="num">Fix attempts</th><th>What fails</th></tr></thead><tbody>${sortBugs(list).map((b) => `<tr class="rowlink" data-href="${href('bug', b.id)}"><td class="mono"><a class="cell" href="${href('bug', b.id)}">${esc(b.id)}</a>${b.carriedOver ? '<div class="muted">kept from an earlier run</div>' : ''}</td>${showFeature ? `<td>${esc(b.feature)}${b.status === 'reassigned' && b.scope?.owner ? `<div class="muted">→ ${esc(b.scope.owner)}</div>` : ''}</td>` : ''}<td>${pill(b.status)}</td><td class="num">${b.attempts || 0} / ${esc(snap.maxFixAttemptsPerBug)}</td><td>${esc(b.step)}</td></tr>`).join('')}</tbody></table></div>`;
+  return `<div class="panel"><table><thead><tr><th>Bug</th>${showFeature ? '<th>Feature</th>' : ''}<th>Status</th><th class="num">Fix attempts</th><th>What fails</th></tr></thead><tbody>${sortBugs(list).map((b) => `<tr class="rowlink" data-href="${href('bug', b.id)}"><td class="mono"><a class="cell" href="${href('bug', b.id)}">${esc(b.id)}</a>${b.carriedOver ? '<div class="muted">kept from an earlier run</div>' : ''}</td>${showFeature ? `<td data-label="Feature">${esc(b.feature)}${b.status === 'reassigned' && b.scope?.owner ? `<div class="muted">→ ${esc(b.scope.owner)}</div>` : ''}</td>` : ''}<td data-label="Status">${pill(b.status)}</td><td class="num" data-label="Fix attempts">${b.attempts || 0} / ${esc(snap.maxFixAttemptsPerBug)}</td><td data-label="What fails">${esc(b.step)}</td></tr>`).join('')}</tbody></table></div>`;
 }
 function agentRows(list) {
   const trimmed = snap.agentsTrimmed ? `<div class="muted" style="font-size:13px;margin:6px 0">${snap.agentsTrimmed} older finished agent runs are not shown here to keep the live tracker fast; their full records are in the release logs.</div>` : '';
   if (!list.length) return `${trimmed}<div class="panel empty">No agent runs here.</div>`;
-  return `${trimmed}<div class="panel"><table><thead><tr><th>Agent</th><th>Status</th><th>Result</th><th class="num">Tokens (out / cache read)</th><th>Last activity</th></tr></thead><tbody>${list.map((a) => `<tr class="rowlink" data-href="${href('agent', a.id)}"><td><a class="cell" href="${href('agent', a.id)}">${esc(agentName(a))}</a><div class="muted">${esc(a.feature || '—')}</div></td><td>${pill(a.status)}</td><td>${esc(a.summary || '—')}${a.failures?.length ? `<div class="muted">${a.failures.length} command failure${a.failures.length > 1 ? 's' : ''} reported</div>` : ''}</td><td class="num">${k(a.tokens?.output)} / ${k(a.tokens?.cacheRead)}</td><td class="muted">${esc(ago(a.lastActivityAt))}</td></tr>`).join('')}</tbody></table></div>`;
+  return `${trimmed}<div class="panel"><table><thead><tr><th>Agent</th><th>Status</th><th>Result</th><th class="num">Tokens (out / cache read)</th><th>Last activity</th></tr></thead><tbody>${list.map((a) => `<tr class="rowlink" data-href="${href('agent', a.id)}"><td><a class="cell" href="${href('agent', a.id)}">${esc(agentName(a))}</a><div class="muted">${esc(a.feature || '—')}</div></td><td data-label="Status">${pill(a.status)}</td><td data-label="Result">${esc(a.summary || '—')}${a.failures?.length ? `<div class="muted">${a.failures.length} command failure${a.failures.length > 1 ? 's' : ''} reported</div>` : ''}</td><td class="num" data-label="Tokens (out / cache read)">${k(a.tokens?.output)} / ${k(a.tokens?.cacheRead)}</td><td class="muted" data-label="Last activity">${esc(ago(a.lastActivityAt))}</td></tr>`).join('')}</tbody></table></div>`;
 }
 function agentCards(list) {
   if (!list.length) return '<div class="panel empty">No agent is running here right now.</div>';
@@ -394,7 +404,7 @@ function renderTable() {
   const box = $('t-tableview'); box.hidden = !T.table; $('t-chartbox').hidden = T.table;
   if (!T.table) return;
   const defs = seriesDefs();
-  box.innerHTML = `<table><thead><tr><th>When (UTC)</th><th>Update</th>${defs.map((d) => `<th class="num">${esc(d.label)}</th>`).join('')}</tr></thead><tbody>${[...hist.points].reverse().map((p) => { const m = measureAt(p); const u = updateAt(p); return `<tr><td class="num">${esc(fmtT(p.t))}</td><td>${u ? esc(u.version) : '—'}</td>${defs.map((d) => `<td class="num">${m[d.key] ?? '—'}</td>`).join('')}</tr>`; }).join('')}</tbody></table>`;
+  box.innerHTML = `<table><thead><tr><th>When (UTC)</th><th>Update</th>${defs.map((d) => `<th class="num">${esc(d.label)}</th>`).join('')}</tr></thead><tbody>${[...hist.points].reverse().map((p) => { const m = measureAt(p); const u = updateAt(p); return `<tr><td class="num" data-label="When (UTC)">${esc(fmtT(p.t))}</td><td data-label="Update">${u ? esc(u.version) : '—'}</td>${defs.map((d) => `<td class="num" data-label="${esc(d.label)}">${m[d.key] ?? '—'}</td>`).join('')}</tr>`; }).join('')}</tbody></table>`;
 }
 
 const markersPlugin = {
@@ -882,7 +892,7 @@ const LAYERS = {
   updates: () => {
     const ups = [...(snap.updates || [])].reverse();
     return { html: `<div><h3 class="layer-title">Status updates${snap.release?.version ? ` — release ${esc(snap.release.version)}` : ''}</h3><div class="layer-sub">Each update is numbered, pinned to a commit and compared with the one before. Newest first.</div></div>
-      ${ups.length ? `<div class="panel"><table><thead><tr><th>Version</th><th>Headline</th><th>Features passed</th><th class="num">Open bugs</th><th class="num">Verified</th></tr></thead><tbody>${ups.map((u) => `<tr class="rowlink" data-href="${href('update', u.version)}"><td class="num"><a class="cell" href="${href('update', u.version)}">${esc(u.version)}</a><div class="muted">${esc(u.at.replace('T', ' ').slice(0, 16))} UTC</div></td><td>${esc(u.headline || '—')}</td><td class="num">${u.metrics.featuresPassed} / ${u.metrics.featuresTotal}</td><td class="num">${u.metrics.openBugs}</td><td class="num">${u.metrics.verified}</td></tr>`).join('')}</tbody></table></div>` : '<div class="panel empty">No updates recorded yet.</div>'}` };
+      ${ups.length ? `<div class="panel"><table><thead><tr><th>Version</th><th>Headline</th><th>Features passed</th><th class="num">Open bugs</th><th class="num">Verified</th></tr></thead><tbody>${ups.map((u) => `<tr class="rowlink" data-href="${href('update', u.version)}"><td class="num"><a class="cell" href="${href('update', u.version)}">${esc(u.version)}</a><div class="muted">${esc(u.at.replace('T', ' ').slice(0, 16))} UTC</div></td><td data-label="Headline">${esc(u.headline || '—')}</td><td class="num" data-label="Features passed">${u.metrics.featuresPassed} / ${u.metrics.featuresTotal}</td><td class="num" data-label="Open bugs">${u.metrics.openBugs}</td><td class="num" data-label="Verified">${u.metrics.verified}</td></tr>`).join('')}</tbody></table></div>` : '<div class="panel empty">No updates recorded yet.</div>'}` };
   },
   update: ([v]) => {
     const ups = snap.updates || []; const i = ups.findIndex((x) => x.version === v); const u = ups[i]; if (!u) return null;
@@ -891,7 +901,7 @@ const LAYERS = {
       <section><h2>What happened</h2><div class="panel" style="padding:14px 16px">${esc(u.note)}</div></section>
       ${section('Compared with the previous update', `<div class="panel" style="padding:6px 16px"><ul class="md">${(u.comparison?.lines || []).map((l) => `<li>${mdb(l)}</li>`).join('')}</ul></div>`)}
       ${u.comparison?.featureChanges?.length ? section('Feature changes', `<div class="panel" style="padding:6px 16px"><ul class="md">${u.comparison.featureChanges.map((l) => { const k = l.split(':')[0]; return `<li><a href="${href('feature', k)}">${esc(k)}</a>${mdb(l.slice(k.length))}</li>`; }).join('')}</ul></div>`) : ''}
-      ${section('Every feature at this update', `<div class="panel"><table><thead><tr><th>Feature</th><th>Status</th><th>Latest test</th></tr></thead><tbody>${Object.entries(u.metrics.features).map(([k, f]) => `<tr class="rowlink" data-href="${href('feature', k)}"><td><a class="cell" href="${href('feature', k)}">${esc(k)}</a></td><td>${featStatus(f.status)}</td><td class="num">${f.round ? `Round ${f.round}: ${esc(f.score)}` : '<span class="muted">Not tested yet</span>'}</td></tr>`).join('')}</tbody></table></div>`)}` };
+      ${section('Every feature at this update', `<div class="panel"><table><thead><tr><th>Feature</th><th>Status</th><th>Latest test</th></tr></thead><tbody>${Object.entries(u.metrics.features).map(([k, f]) => `<tr class="rowlink" data-href="${href('feature', k)}"><td><a class="cell" href="${href('feature', k)}">${esc(k)}</a></td><td data-label="Status">${featStatus(f.status)}</td><td class="num" data-label="Latest test">${f.round ? `Round ${f.round}: ${esc(f.score)}` : '<span class="muted">Not tested yet</span>'}</td></tr>`).join('')}</tbody></table></div>`)}` };
   },
   bug: ([id]) => {
     const b = (snap.bugs || []).find((x) => x.id === id); if (!b) return null;
