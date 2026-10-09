@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T15:56:46.653Z",
+  "exportedAt": "2026-10-09T15:59:52.369Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -42,10 +42,10 @@
       "backlog": 3
     },
     "release-loop-tooling": {
-      "status": "validate",
-      "lastRound": 3,
-      "lastScore": "104/126",
-      "lastReport": "docs/test-results/release-loop-tooling/round-3.md",
+      "status": "triage",
+      "lastRound": 4,
+      "lastScore": "29/30",
+      "lastReport": "docs/test-results/release-loop-tooling/round-4.md",
       "openBugs": 8,
       "backlog": 3
     },
@@ -1773,7 +1773,7 @@
     {
       "id": "release-loop-tooling-F1-6",
       "feature": "release-loop-tooling",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "spec_error",
       "attempts": 1,
       "step": "Open bug F1-6 change spec Known limitations",
@@ -1963,7 +1963,7 @@
     {
       "id": "T3-1",
       "feature": "release-loop-tooling",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "spec_error",
       "attempts": 1,
       "step": "J4/J5 1.2 Eight tiles in order",
@@ -1995,7 +1995,7 @@
     {
       "id": "T3-3",
       "feature": "release-loop-tooling",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "spec_error",
       "attempts": 1,
       "step": "J4/J5 page background",
