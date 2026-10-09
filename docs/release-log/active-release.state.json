@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T16:28:55.360Z",
+  "exportedAt": "2026-10-09T16:35:11.794Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -26,11 +26,11 @@
       "backlog": 5
     },
     "qr-gated-outputs": {
-      "status": "reconcile",
+      "status": "validate",
       "lastRound": 2,
       "lastScore": "33/38",
       "lastReport": "docs/test-results/qr-gated-outputs/round-2.md",
-      "openBugs": 7,
+      "openBugs": 18,
       "backlog": 4
     },
     "no-silent-failures": {
@@ -58,15 +58,15 @@
       "backlog": 5
     },
     "release-intelligence": {
-      "status": "validate",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
+      "status": "failing",
+      "lastRound": 1,
+      "lastScore": "1/54",
+      "lastReport": "docs/test-results/release-intelligence/round-1.md",
       "openBugs": 3,
       "backlog": 1
     },
     "output-version-history": {
-      "status": "amend",
+      "status": "validate",
       "lastRound": 1,
       "lastScore": "33/37",
       "lastReport": "docs/test-results/output-version-history/round-1.md",
@@ -89,15 +89,15 @@
       "openBugs": 5,
       "backlog": 7
     },
-    "session-mapping": {
-      "status": "failed",
+    "in-app-release-loop": {
+      "status": "reconcile",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
       "openBugs": 0,
       "backlog": 0
     },
-    "in-app-release-loop": {
+    "session-mapping": {
       "status": "build",
       "lastRound": 0,
       "lastScore": null,
@@ -130,7 +130,7 @@
       "backlog": 0
     },
     "platform-mcp": {
-      "status": "build",
+      "status": "reconcile",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -1471,6 +1471,241 @@
       ]
     },
     {
+      "id": "qr-gated-outputs-F2-1",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "R1 (J2.1, J3.3, J7.1, J8.3 not walked)",
+      "rootCause": "Fix agent did not run browser validation; re-validation is needed.",
+      "files": [],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F2-2",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "J2.1 (T1)",
+      "rootCause": "Fix round 2 changed only line 636, not 1062.",
+      "files": [
+        "src/components/admin/MyResumePanel.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (product_defect)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F2-3",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "E.5 (T5)",
+      "rootCause": "Not touched in fix round 2.",
+      "files": [
+        "server/routes/auth.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (product_defect)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F2-5",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "environment",
+      "attempts": 0,
+      "step": "Fresh DB bootstrap",
+      "rootCause": "Unknown; uninvestigated.",
+      "files": [
+        "server/db.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (environment)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F2-6",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "test_harness",
+      "attempts": 0,
+      "step": "J2.1b contact separator (T2)",
+      "rootCause": "No browser verification.",
+      "files": [
+        "src/lib/headerContact.js",
+        "src/components/DocumentBlocksView.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (test_harness)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F2-7",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "P.4/J8 import",
+      "rootCause": "No in-app import UI.",
+      "files": [
+        "scripts/import-application-package.mjs",
+        "server/routes/resumeOutputs.js",
+        "src/components/admin/MyResumePanel.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F2-8",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "docx QR / site sync (B10)",
+      "rootCause": "Script-only, unverified.",
+      "files": [
+        "scripts/stamp-application-package-docx.py",
+        "scripts/sync-site-with-application-package.mjs",
+        "server/lib/outputRendering.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F2-9",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "Phone navigation (MOBILE_GAP)",
+      "rootCause": "Mobile menu button never rendered.",
+      "files": [
+        "src/brand.css",
+        "src/lib/worldIslands.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (product_defect)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F2-10",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Interface parity (MCP_GAP)",
+      "rootCause": "platform-mcp feature not built.",
+      "files": [
+        "server/lib/mcpToolRegistry.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F2-11",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "Preconditions / Where things are",
+      "rootCause": "Spec predates member test accounts and World Shell direction.",
+      "files": [
+        "docs/training/qr-gated-outputs.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (owner_direction_confli…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F2-12",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "test_harness",
+      "attempts": 0,
+      "step": "J10.3/E.1/E.2/E.4 fixture",
+      "rootCause": "Spec coverage gap.",
+      "files": [
+        "docs/training/qr-gated-outputs.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (test_harness)",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "T1",
       "feature": "qr-gated-outputs",
       "status": "backlog_pre_existing",
@@ -1504,7 +1739,7 @@
     {
       "id": "T2",
       "feature": "qr-gated-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "View dialog header contact entries run together ('avery@example.testExample City')",
@@ -1543,7 +1778,7 @@
     {
       "id": "T3",
       "feature": "qr-gated-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Approve for QR on the new card; hyphen toast",
