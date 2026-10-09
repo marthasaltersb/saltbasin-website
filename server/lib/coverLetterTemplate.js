@@ -56,6 +56,7 @@ export const DEFAULT_SETTINGS = {
     opening: 'I am writing to apply for the {jobTitle} role at {company}{locationClause}. {fitSentence}',
     jobParagraph: 'At {employer} as {title} ({dates}), {metrics}. That experience maps directly to what your posting asks for: {matchedTerms}.',
     jobParagraphNoMetrics: 'At {employer} I worked as {title} ({dates}), which maps directly to what your posting asks for: {matchedTerms}.',
+    jobParagraphMetricsOnly: 'At {employer} as {title} ({dates}), {metrics}.',
     jobParagraphPlain: 'At {employer} I worked as {title} ({dates}).',
     skillsParagraph: 'The skills I would bring to {company} include {skills}.',
     closing: 'I would welcome a conversation about how I can contribute to {company}. Thank you for your consideration.',
@@ -67,7 +68,7 @@ export const DEFAULT_SETTINGS = {
   tonePresets: DEFAULT_TONE_PRESETS,
 };
 
-const TEMPLATE_TEXT_KEYS = ['salutation', 'subject', 'opening', 'jobParagraph', 'jobParagraphNoMetrics', 'jobParagraphPlain', 'skillsParagraph', 'closing', 'signOff', 'mentionSentence'];
+const TEMPLATE_TEXT_KEYS = ['salutation', 'subject', 'opening', 'jobParagraph', 'jobParagraphNoMetrics', 'jobParagraphMetricsOnly', 'jobParagraphPlain', 'skillsParagraph', 'closing', 'signOff', 'mentionSentence'];
 const parseJson = (v) => (typeof v === 'string' ? JSON.parse(v) : v);
 
 /** Throws a readable Error for anything a settings save should refuse. */
@@ -192,7 +193,7 @@ export function buildCoverLetterContent({ member, opportunity, career, settings,
       dates: [clean(j.start_date), clean(j.end_date) || 'present'].filter(Boolean).join(' – '),
       metrics: clean(j.key_metrics), matchedTerms: joinList(terms.slice(0, 5)),
     };
-    const template = values.metrics && terms.length ? t.jobParagraph : terms.length ? t.jobParagraphNoMetrics : t.jobParagraphPlain;
+    const template = values.metrics && terms.length ? t.jobParagraph : terms.length ? t.jobParagraphNoMetrics : values.metrics ? t.jobParagraphMetricsOnly : t.jobParagraphPlain;
     add('body', fill(template, values), { sourceRowId: j.sourceRowId });
   }
   if (t.includeSkills && skills.length) add('body', fill(t.skillsParagraph, { ...base, skills: joinList(skills) }));

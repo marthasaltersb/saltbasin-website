@@ -87,4 +87,13 @@ No existing row is rewritten; nothing is seeded for members; the block registry 
 
 ## Fix notes per round
 
-(none yet)
+
+
+### Fix notes — round 1
+
+- **T2 (J1.2)**: `coverLetterTemplate.js` chose the metrics paragraph only when job-rec terms matched. Added additive template key `jobParagraphMetricsOnly` (default and `TEMPLATE_TEXT_KEYS`; saved settings merge over defaults, no row rewritten), chosen when metrics exist and no terms matched; exposed in `CoverLetterSettings.jsx`. Checked: unit test in `tests/cover-letter-agent.test.js`; live opportunity with no notes now drafts "At Harbor Logistics as Value Architect (2019 - present), raised margin by 4 points."
+- **T3 (J8.4)**: `coverLetterRules.js` tone preset with nothing to change now returns `unsatisfied` (route `rules`, "Answered by rules"). Other `info` results untouched. Checked: unit test and a live "Make it more formal" turn returned route `rules`.
+- **T4 (E.5)**: `packageSearch.js` gains `jobRecSource()` (`text` stays searchable incl. title/location/url; `real` is genuine job-rec text: the rod's notes for opportunity-linked rows, else the stored target text). `hasJobRec` uses `real`. The opportunity letter's stored target text echoes the job title, so the rod notes are authoritative. Checked: unit test; live letter for an opportunity without notes reports `hasJobRec: false` (scope text "no job rec text attached").
+- **T8 (MCP_GAP)**: appended tools `cover_letter_settings_read`, `cover_letter_settings_save`, `cover_letter_opportunities_list`, `cover_letter_job_rec_save`, `cover_letter_generate`, `cover_letter_package_build`, `cover_letter_turns_list` calling the same functions as the routes. The opportunities listing moved to the shared `server/lib/coverLetterPackages.js` (route and tool both use it). Parity rows updated, new `cover-letter-add-resume` row records the file-upload exclusion; manifest updated (append-only). Accept/reject stays an owner-decided exclusion. Checked: `node scripts/check-interface-parity.mjs` OK, route output unchanged in the live check, `npm run build` passes.
+
+Self-check was driven through the API against a fresh database as the test member (no browser session); the training spec and baselines were not touched.

@@ -277,6 +277,112 @@ export const MCP_TOOLS = Object.freeze([
     },
   },
   {
+    name: 'cover_letter_settings_read',
+    title: 'Read my cover-letter settings',
+    description: 'Returns the caller\'s cover-letter template, tone presets and model settings (saved values merged over defaults), plus the available providers and placeholders.',
+    inputSchema: schema({}),
+    scope: 'career.read',
+    permission: 'user',
+    api: 'GET /api/cover-letters/settings',
+    handler: async (_args, { user }) => {
+      const { getSettings, PROVIDERS, PLACEHOLDERS, DEFAULT_SETTINGS } = await import('./coverLetterTemplate.js');
+      return { settings: await getSettings(user.id), providers: PROVIDERS, placeholders: PLACEHOLDERS, defaults: DEFAULT_SETTINGS };
+    },
+  },
+  {
+    name: 'cover_letter_settings_save',
+    title: 'Save my cover-letter settings',
+    description: 'Validates and saves the caller\'s cover-letter settings. An invalid setting is refused with the reason and nothing is saved.',
+    inputSchema: schema({ settings: { type: 'object', description: 'The full settings object, as returned by cover_letter_settings_read.' } }, ['settings']),
+    scope: 'career.write',
+    permission: 'user',
+    api: 'PUT /api/cover-letters/settings',
+    handler: async (args, { user }) => {
+      const { saveSettings } = await import('./coverLetterTemplate.js');
+      return { settings: await saveSettings(user.id, args.settings) };
+    },
+  },
+  {
+    name: 'cover_letter_opportunities_list',
+    title: 'List opportunities with letter and package state',
+    description: 'Tracked opportunities with their job rec text, cover letter, resumes and combined package state. Read-only.',
+    inputSchema: schema({}),
+    scope: 'career.read',
+    permission: 'user',
+    api: 'GET /api/cover-letters/opportunities',
+    handler: async (_args, { user }) => {
+      const { listOpportunityPackages } = await import('./coverLetterPackages.js');
+      return { opportunities: await listOpportunityPackages(user.id) };
+    },
+  },
+  {
+    name: 'cover_letter_job_rec_save',
+    title: 'Save job rec text on an opportunity',
+    description: 'Saves (or clears with empty text) the job recommendation text on a tracked opportunity. The letter agent and first-draft template read it.',
+    inputSchema: schema({ opportunityId: id('The tracked opportunity (career_opportunity_target rod) id.'), text: str('The job rec text.', { maxLength: 20000 }) }, ['opportunityId', 'text']),
+    scope: 'career.write',
+    permission: 'user',
+    api: 'PUT /api/cover-letters/opportunities/:id/job-rec',
+    handler: async (args, { user }) => {
+      const { setJobRecText } = await import('./coverLetterAutoDraft.js');
+      return setJobRecText(user.id, args.opportunityId, args.text);
+    },
+  },
+  {
+    name: 'cover_letter_generate',
+    title: 'Generate the cover letter for an opportunity',
+    description: 'Creates the template-built cover letter draft for an opportunity. With force, files a new draft version even if one exists. Never edits an approved version.',
+    inputSchema: schema({ opportunityId: id('The tracked opportunity id.'), force: { type: 'boolean', description: 'Regenerate even if a letter already exists.' } }, ['opportunityId']),
+    scope: 'career.write',
+    permission: 'user',
+    api: 'POST /api/cover-letters/opportunities/:id/cover-letter',
+    handler: async (args, { user }) => {
+      const { ensureCoverLetterForOpportunity, loadOpportunity } = await import('./coverLetterAutoDraft.js');
+      const { rowView } = await import('./coverLetterPackages.js');
+      await loadOpportunity(user.id, args.opportunityId);
+      const result = await ensureCoverLetterForOpportunity(user.id, args.opportunityId, { force: !!args.force });
+      return { created: result.created, letter: rowView(result.row) };
+    },
+  },
+  {
+    name: 'cover_letter_package_build',
+    title: 'Build the combined application package',
+    description: 'Assembles the combined package (table of contents, cover letter and resumes) for a tracked opportunity or an imported packageKey. Give exactly one of opportunityId or packageKey.',
+    inputSchema: schema({ opportunityId: id('The tracked opportunity id.'), packageKey: str('Lowercase slug of an imported package.', { maxLength: 64 }) }),
+    scope: 'career.write',
+    permission: 'user',
+    api: 'POST /api/cover-letters/opportunities/:id/package | POST /api/cover-letters/packages/assemble',
+    handler: async (args, { user }) => {
+      const { assembleApplicationPackage } = await import('./packageAssembly.js');
+      const { rowView } = await import('./coverLetterPackages.js');
+      const bad = (message) => { const e = new Error(message); e.status = 400; e.code = 'invalid_input'; return e; };
+      if ((args.opportunityId == null) === (args.packageKey == null)) throw bad('Give exactly one of opportunityId or packageKey.');
+      let result;
+      if (args.opportunityId != null) {
+        const { loadOpportunity } = await import('./coverLetterAutoDraft.js');
+        await loadOpportunity(user.id, args.opportunityId);
+        result = await assembleApplicationPackage(user.id, { opportunityRodId: args.opportunityId });
+      } else {
+        if (!/^[a-z0-9][a-z0-9-]{1,63}$/.test(args.packageKey)) throw bad('packageKey must be a lowercase slug.');
+        result = await assembleApplicationPackage(user.id, { packageKey: args.packageKey });
+      }
+      return { status: result.status, sections: result.sections, package: rowView(result.row) };
+    },
+  },
+  {
+    name: 'cover_letter_turns_list',
+    title: 'Read the cover-letter agent conversation',
+    description: 'Lists the agent turns (requests, answers, proposals and their decisions) for one cover letter.',
+    inputSchema: schema({ letterId: id('The cover-letter output id.') }, ['letterId']),
+    scope: 'career.read',
+    permission: 'user',
+    api: 'GET /api/cover-letters/letters/:id/turns',
+    handler: async (args, { user }) => {
+      const { listTurns } = await import('./coverLetterAgent.js');
+      return { turns: await listTurns(user.id, args.letterId) };
+    },
+  },
+  {
     name: 'resume_rollups_read',
     title: 'Read my resume rollups',
     description: 'Returns the caller\'s computed resume rollups: KPI tiles, industry buckets and skill category groups, optionally with the Career Atom groupings. Same data the Resume Rollups screen shows.',
