@@ -931,5 +931,131 @@
         "platform-mcp: agent stopped → **being built**"
       ]
     }
+  },
+  {
+    "version": "0.2.0-u9",
+    "release": "2026-10-02-application-packages",
+    "at": "2026-10-09T16:43:38.290Z",
+    "commit": "598089293c274c54d7bb435ed8f2a4de412828fc",
+    "previous": "0.2.0-u8",
+    "headline": "Spec amendments working: 10 reviewed, 2 questions for the owner",
+    "note": "Validators now score every round against a frozen baseline. Reviewers have decided 10 amendments: 6 approved, 3 rejected (the step stands), 2 waiting on the owner (output-version-history A2 and A4). platform-mcp and in-app-release-loop are built, merged and frozen at v1. release-intelligence round 1 scored 1/54: every step passes on desktop, but at phone width the panel is wider than its card, so 52 steps fail the layout rule; a fix is next. qr-gated-outputs 33/38, output-version-history 33/37, chart-gallery 16/19, no-silent-failures 18/28 (fixing).",
+    "metrics": {
+      "featuresTotal": 17,
+      "featuresPassed": 1,
+      "openBugs": 107,
+      "verified": 18,
+      "backlog": 48,
+      "needPerson": 3,
+      "agentsRunning": 15,
+      "features": {
+        "proficiency-live-qr": {
+          "status": "validate",
+          "round": 5,
+          "score": "29/30"
+        },
+        "world-shell-navigation": {
+          "status": "validate",
+          "round": 1,
+          "score": "45/48"
+        },
+        "career-bound-outputs": {
+          "status": "validate",
+          "round": 2,
+          "score": "54/56"
+        },
+        "qr-gated-outputs": {
+          "status": "validate",
+          "round": 2,
+          "score": "33/38"
+        },
+        "no-silent-failures": {
+          "status": "reconcile",
+          "round": 1,
+          "score": "18/28"
+        },
+        "release-loop-tooling": {
+          "status": "passed",
+          "round": 5,
+          "score": "30/30"
+        },
+        "chart-gallery": {
+          "status": "validate",
+          "round": 2,
+          "score": "16/19"
+        },
+        "output-version-history": {
+          "status": "validate",
+          "round": 1,
+          "score": "33/37"
+        },
+        "resume-rollups": {
+          "status": "triage",
+          "round": 1,
+          "score": "28/32"
+        },
+        "release-intelligence": {
+          "status": "failing",
+          "round": 1,
+          "score": "1/54"
+        },
+        "cover-letter-agent": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "in-app-release-loop": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "session-mapping": {
+          "status": "build",
+          "round": null,
+          "score": null
+        },
+        "world-shell-layers": {
+          "status": "build",
+          "round": null,
+          "score": null
+        },
+        "live-release-tracker": {
+          "status": "build",
+          "round": null,
+          "score": null
+        },
+        "render-bindings": {
+          "status": "build",
+          "round": null,
+          "score": null
+        },
+        "platform-mcp": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        }
+      }
+    },
+    "comparison": {
+      "lines": [
+        "Features passed: 1 (no change) of 17",
+        "Open bugs caused by this work: 60 → **107** (+47) — new failures found in testing",
+        "Bugs verified fixed: 18 (no change)",
+        "Backlog (not this work): 39 → **48** (+9)",
+        "Waiting on a person: 0 → **3** (+3)",
+        "Agents running: 15 → 15"
+      ],
+      "featureChanges": [
+        "qr-gated-outputs: test round 1 45/48 → round 2 **33/38**",
+        "no-silent-failures: test not run → round 1 **18/28**; in browser testing → **reviewing failed commands**",
+        "chart-gallery: test round 1 17/20 → round 2 **16/19**",
+        "output-version-history: test not run → round 1 **33/37**",
+        "resume-rollups: test not run → round 1 **28/32**; in browser testing → **failures being triaged**",
+        "release-intelligence: test not run → round 1 **1/54**; in browser testing → **failing**",
+        "in-app-release-loop: being built → **in browser testing**",
+        "session-mapping: agent stopped → **being built**",
+        "platform-mcp: being built → **in browser testing**"
+      ]
+    }
   }
 ]

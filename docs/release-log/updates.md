@@ -2,6 +2,59 @@
 
 Release **0.2.0** (`2026-10-02-application-packages`), built on branch `claude/zealous-meitner-5tuft5`. Each update is numbered `0.2.0-u<n>`, pinned to the commit it describes, and compared with the update before it. Newest first.
 
+## 0.2.0-u9 — 2026-10-09 16:43 UTC
+
+Commit [`5980892`](https://github.com/marthasaltersb/saltbasin-website/commit/598089293c274c54d7bb435ed8f2a4de412828fc) · compared with 0.2.0-u8
+
+**Spec amendments working: 10 reviewed, 2 questions for the owner**
+
+Validators now score every round against a frozen baseline. Reviewers have decided 10 amendments: 6 approved, 3 rejected (the step stands), 2 waiting on the owner (output-version-history A2 and A4). platform-mcp and in-app-release-loop are built, merged and frozen at v1. release-intelligence round 1 scored 1/54: every step passes on desktop, but at phone width the panel is wider than its card, so 52 steps fail the layout rule; a fix is next. qr-gated-outputs 33/38, output-version-history 33/37, chart-gallery 16/19, no-silent-failures 18/28 (fixing).
+
+**Compared with the previous update**
+
+- Features passed: 1 (no change) of 17
+- Open bugs caused by this work: 60 → **107** (+47) — new failures found in testing
+- Bugs verified fixed: 18 (no change)
+- Backlog (not this work): 39 → **48** (+9)
+- Waiting on a person: 0 → **3** (+3)
+- Agents running: 15 → 15
+
+**Feature changes**
+
+- qr-gated-outputs: test round 1 45/48 → round 2 **33/38**
+- no-silent-failures: test not run → round 1 **18/28**; in browser testing → **reviewing failed commands**
+- chart-gallery: test round 1 17/20 → round 2 **16/19**
+- output-version-history: test not run → round 1 **33/37**
+- resume-rollups: test not run → round 1 **28/32**; in browser testing → **failures being triaged**
+- release-intelligence: test not run → round 1 **1/54**; in browser testing → **failing**
+- in-app-release-loop: being built → **in browser testing**
+- session-mapping: agent stopped → **being built**
+- platform-mcp: being built → **in browser testing**
+
+<details><summary>Every feature at this update</summary>
+
+| Feature | Status | Latest test |
+|---|---|---|
+| proficiency-live-qr | in browser testing | round 5: 29/30 |
+| world-shell-navigation | in browser testing | round 1: 45/48 |
+| career-bound-outputs | in browser testing | round 2: 54/56 |
+| qr-gated-outputs | in browser testing | round 2: 33/38 |
+| no-silent-failures | reviewing failed commands | round 1: 18/28 |
+| release-loop-tooling | passed | round 5: 30/30 |
+| chart-gallery | in browser testing | round 2: 16/19 |
+| output-version-history | in browser testing | round 1: 33/37 |
+| resume-rollups | failures being triaged | round 1: 28/32 |
+| release-intelligence | failing | round 1: 1/54 |
+| cover-letter-agent | in browser testing | not tested yet |
+| in-app-release-loop | in browser testing | not tested yet |
+| session-mapping | being built | not tested yet |
+| world-shell-layers | being built | not tested yet |
+| live-release-tracker | being built | not tested yet |
+| render-bindings | being built | not tested yet |
+| platform-mcp | in browser testing | not tested yet |
+
+</details>
+
 ## 0.2.0-u8 — 2026-10-09 16:17 UTC
 
 Commit [`e9f4a01`](https://github.com/marthasaltersb/saltbasin-website/commit/e9f4a0100abcbec155615c1bf83101fa7242303a) · compared with 0.2.0-u7
