@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T16:25:40.040Z",
+  "exportedAt": "2026-10-09T16:28:55.360Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -26,7 +26,7 @@
       "backlog": 5
     },
     "qr-gated-outputs": {
-      "status": "fix",
+      "status": "reconcile",
       "lastRound": 2,
       "lastScore": "33/38",
       "lastReport": "docs/test-results/qr-gated-outputs/round-2.md",
@@ -50,7 +50,7 @@
       "backlog": 4
     },
     "chart-gallery": {
-      "status": "amend",
+      "status": "validate",
       "lastRound": 2,
       "lastScore": "16/19",
       "lastReport": "docs/test-results/chart-gallery/round-2.md",
@@ -66,12 +66,12 @@
       "backlog": 1
     },
     "output-version-history": {
-      "status": "triage",
+      "status": "amend",
       "lastRound": 1,
       "lastScore": "33/37",
       "lastReport": "docs/test-results/output-version-history/round-1.md",
-      "openBugs": 4,
-      "backlog": 3
+      "openBugs": 10,
+      "backlog": 5
     },
     "resume-rollups": {
       "status": "validate",
@@ -1338,7 +1338,7 @@
     {
       "id": "qr-gated-outputs-B7",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Preconditions 1, 4; Journey 3 step 4; Journey 8",
@@ -1420,7 +1420,7 @@
     {
       "id": "qr-gated-outputs-B10",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Journey 6 / request scope",
@@ -1448,7 +1448,7 @@
     {
       "id": "qr-gated-outputs-B11",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "Journey 6",
@@ -1484,7 +1484,7 @@
       "scope": {
         "scope": "pre_existing",
         "owner": null,
-        "evidence": "Em dash note exists at pre-feature base e0ea466 (d78bcda^), MyResumePanel.jsx:922, blame 9b5ad4f0 2026-08-09."
+        "evidence": "Mobile drawer CSS from eb62057 (2026-08-09) is present at the base commit f3171a8^1 and no JSX renders any sb-admin-mobile-* class there. The feature did not t…"
       },
       "history": [
         {
@@ -1504,9 +1504,9 @@
     {
       "id": "T2",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "View dialog header contact entries run together ('avery@example.testExample City')",
       "rootCause": "Spec fixture gives header.contact as an array; DocumentBlocksView.jsx:94 renders it raw so React concatenates items. PDF path outputRendering.js:186 only looks right because pdfkit stringifies with c…",
       "files": [
@@ -1531,15 +1531,21 @@
           "event": "recurred",
           "note": "Spec fixture gives header.contact as an array; DocumentBlocksView.jsx:94 render…",
           "commit": null
+        },
+        {
+          "round": 2,
+          "event": "fixed",
+          "note": "Added a shared contactText() normaliser (array joined with ' · ') and used it i…",
+          "commit": "73505f4de4a6a94df114c2e64c4abb37452983f9"
         }
       ]
     },
     {
       "id": "T3",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Approve for QR on the new card; hyphen toast",
       "rootCause": "Same as T3 (MyResumePanel.jsx:636).",
       "files": [
@@ -1548,7 +1554,7 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Toast absent at e0ea466; introduced by d78bcda in the feature's approveForQr (all three rows)."
+        "evidence": "Step is in this feature's own training spec and is not performable through the UI. Product matches the spec. Needs an amendment."
       },
       "history": [
         {
@@ -1574,6 +1580,12 @@
           "event": "recurred",
           "note": "Same as T3 (MyResumePanel.jsx:636).",
           "commit": null
+        },
+        {
+          "round": 2,
+          "event": "fixed",
+          "note": "Approve for QR toast now uses a hyphen ('Approved - private QR link created (co…",
+          "commit": "73505f4de4a6a94df114c2e64c4abb37452983f9"
         }
       ]
     },
@@ -1591,7 +1603,7 @@
       "scope": {
         "scope": "pre_existing",
         "owner": null,
-        "evidence": "authLimiter em dash message present at e0ea466, auth.js:28, blame a875b9b 2026-07-10; not part of feature request."
+        "evidence": "server/lib/mcpToolRegistry.js has no git history and does not exist. The platform MCP server belongs to the separate platform-mcp feature, which is not in the …"
       },
       "history": [
         {
@@ -1605,7 +1617,7 @@
     {
       "id": "G1",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "Where things are: phone route to My Resume",
@@ -1630,7 +1642,7 @@
     {
       "id": "G2",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "Draft card fixture for J10.3, E.1, E.2, E.4",
@@ -2339,7 +2351,7 @@
     {
       "id": "CG-R1-1",
       "feature": "chart-gallery",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Live Preview stays visible beside gallery (sticky)",
@@ -2370,7 +2382,7 @@
     {
       "id": "CG-R1-2",
       "feature": "chart-gallery",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Failed load alert includes HTTP status",
@@ -2860,6 +2872,220 @@
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (test_harness)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T1",
+      "feature": "output-version-history",
+      "status": "backlog_pre_existing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "MOBILE_GAP: Classic Tools -> CAREER MASTER / MY RESUME at 390px",
+      "rootCause": "Same root cause as T1: the mobile drawer markup was never rendered, so the Classic Tools tool list is unreachable at 390px. Desktop passes and the edit works v…",
+      "files": [
+        "src/components/admin/AdminShell.jsx",
+        "src/brand.css"
+      ],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "Mobile drawer CSS from eb62057 (2026-08-09) is present at the base commit f3171a8^1 and no JSX renders any sb-admin-mobile-* class there. The feature did not t…"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "src/brand.css (~605-709, from commit eb62057) hides .sb-adm…",
+          "commit": null
+        },
+        {
+          "round": 1,
+          "event": "recurred",
+          "note": "Same root cause as T1: the mobile drawer markup was never r…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T3",
+      "feature": "output-version-history",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "UI_GAP: unreadable version cannot be produced through the interface",
+      "rootCause": "The product behaviour exists and matches the spec (server/lib/outputVersionHistory.js:122-124 sets version.error and 'Cannot compare'; src/components/admin/OutputVersionHistory.jsx:213 shows the comp…",
+      "files": [
+        "docs/training/output-version-history.md",
+        "server/lib/outputVersionHistory.js",
+        "src/components/admin/OutputVersionHistory.jsx"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Step is in this feature's own training spec and is not performable through the UI. Product matches the spec. Needs an amendment."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "The product behaviour exists and matches the spec (server/lib/outputVersionHist…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T4",
+      "feature": "output-version-history",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "UI_GAP: another member's output id cannot be reached through the interface",
+      "rootCause": "The product is correct: server/routes/resumeOutputs.js:54-60 returns 404 'Resume output not found' for a foreign id, observed by the validator. The UI never exposes another member's id, so this autho…",
+      "files": [
+        "docs/training/output-version-history.md",
+        "server/routes/resumeOutputs.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The step is in this feature's own spec and is API-only by nature. Server 404 is correct. Needs an amendment marking it API-only."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "The product is correct: server/routes/resumeOutputs.js:54-60 returns 404 'Resum…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T5",
+      "feature": "output-version-history",
+      "status": "backlog_pre_existing",
+      "class": "environment",
+      "attempts": 0,
+      "step": "MCP_GAP: platform MCP server not built yet (feature platform-mcp)",
+      "rootCause": "server/lib/mcpToolRegistry.js does not exist; the platform MCP server belongs to the separate feature platform-mcp. definition.json interfaceParity says to rec…",
+      "files": [
+        "server/lib/mcpToolRegistry.js",
+        "server/lib/outputVersionHistory.js"
+      ],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "server/lib/mcpToolRegistry.js has no git history and does not exist. The platform MCP server belongs to the separate platform-mcp feature, which is not in the …"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "server/lib/mcpToolRegistry.js does not exist; the platform …",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T6",
+      "feature": "output-version-history",
+      "status": "open",
+      "class": "coverage_gap",
+      "attempts": 0,
+      "step": "Validator observation B10: chart-only changes show no diff",
+      "rootCause": "src/lib/outputVersionDiff.js has no chart handling, so a version that only changes a chart reads as unchanged; no baseline step covers it.",
+      "files": [
+        "src/lib/outputVersionDiff.js",
+        "docs/training/output-version-history.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The request asks for block-level tracked changes. toDiffItems in src/lib/outputVersionDiff.js (e2752fd) has no chart handling. Same basis as B10 in scope-revie…"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "src/lib/outputVersionDiff.js has no chart handling, so a version that only chan…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T7",
+      "feature": "output-version-history",
+      "status": "open",
+      "class": "coverage_gap",
+      "attempts": 0,
+      "step": "Validator observation B11: no Version history entry in OutputTemplateConfigurator",
+      "rootCause": "OutputTemplateConfigurator.jsx has no Version history control; entry points exist only in CareerBoundOutputEditor, MyResumePanel, OpportunityOutputsSection and WorldShell; no baseline step covers it.",
+      "files": [
+        "src/components/admin/OutputTemplateConfigurator.jsx",
+        "docs/training/output-version-history.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The request says reachable from the output editor. Entry points were chosen by this feature (e2752fd) and omit OutputTemplateConfigurator. Same as B11 in scope…"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "OutputTemplateConfigurator.jsx has no Version history control; entry points exi…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T8",
+      "feature": "output-version-history",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "Validator observations B14 and 'HEADER fields' label: spec text conflicts with harness and shipped labels",
+      "rootCause": "Preconditions and Journey 0 use riley.member@example.test with public signup and the name 'Riley Fenn', contrary to the harness account (member@test.local, display name 'Test Member'). J4.2 says 'HEA…",
+      "files": [
+        "docs/training/output-version-history.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Stale preconditions and labels are in this feature's own spec. Same as B14 in scope-review.json."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Preconditions and Journey 0 use riley.member@example.test with public signup an…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T9",
+      "feature": "output-version-history",
+      "status": "needs_business_definition",
+      "class": "needs_business_definition",
+      "attempts": 0,
+      "step": "Validator observation B8: draft wording is not frozen",
+      "rootCause": "Drafts resolve wording live from Career Master. Spec J3.1 and J5.3 require exactly that, while open bug B8 asked for drafts to be frozen; the two conflict and the product lacks a decided rule.",
+      "files": [
+        "server/lib/outputVersionHistory.js",
+        "server/lib/careerBound.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "versionBody() in server/lib/outputVersionHistory.js resolves drafts live. Same as B8 in scope-review.json. The rule needs an owner decision (needs_business_def…"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Drafts resolve wording live from Career Master. Spec J3.1 and J5.3 require exac…",
           "commit": null
         }
       ]
