@@ -19,12 +19,21 @@ export const GOVERNED_ROUTE_FILES = Object.freeze({
   'server/routes/resumeOutputs.js': '/api/resume-outputs',
   'server/routes/coverLetters.js': '/api/cover-letters',
   'server/routes/platformAccess.js': '/api/platform',
+  'server/routes/careerMaster.js': '/api/career',
+  'server/routes/sharedOutputs.js': '/api/shared-outputs',
+});
+
+/** For files governed only in part: file -> pattern a route (`METHOD /full/path`) must match to be governed. */
+export const GOVERNED_ROUTE_FILTERS = Object.freeze({
+  'server/routes/careerMaster.js': /^((GET|PUT|DELETE) \/api\/career\/(proficiency|experience-definitions|proficiency-assertions)|PATCH \/api\/career\/tools\/:id$)/,
 });
 
 const CPA = '/api/career-agents';
 const RO = '/api/resume-outputs';
 const CL = '/api/cover-letters';
 const WS = 'World Shell';
+const CM = '/api/career';
+const PROF = `${WS} > Journeys > Career Master > Proficiency & Rollups > 3 · Rules & why`;
 const OPP = `${WS} > Journeys > Career Placement Agents > (select an opportunity)`;
 const RESUME = `${WS} > Journeys > My Resume`;
 
@@ -73,6 +82,15 @@ export const CAPABILITIES = Object.freeze([
   { key: 'cover-letter-agent-turn', title: 'Ask the cover-letter agent for an edit', group: 'Cover letters', ui: `${RESUME} > Application packages (Open)`, api: [`POST ${CL}/letters/:id/turns`], mcp: ['cover_letter_agent_turn'] },
   { key: 'cover-letter-turns', title: 'Read the agent conversation and metrics', group: 'Cover letters', ui: `${RESUME} > Application packages (Open)`, api: [`GET ${CL}/letters/:id/turns`, `GET ${CL}/metrics`], mcp: null, gap: 'No MCP tools for the conversation history or metrics yet.' },
   { key: 'cover-letter-turn-decide', title: 'Accept or reject a proposed edit', group: 'Cover letters', ui: `${RESUME} > Application packages (Open) > Accept / Reject`, api: [`POST ${CL}/turns/:id/accept`, `POST ${CL}/turns/:id/reject`], mcp: null, mcpExclusion: 'Applying a proposal is a human decision made in the website, by design.' },
+
+  // ── Proficiency rules, technology categories and the live QR page ─────────
+  { key: 'proficiency-rules-read', title: 'Read proficiency rules and resolved levels', group: 'Proficiency rules', ui: PROF, api: [`GET ${CM}/proficiency`, `GET ${CM}/experience-definitions`], mcp: ['proficiency_rules_read'] },
+  { key: 'proficiency-override', title: 'Override or clear one proficiency level', group: 'Proficiency rules', ui: PROF, api: [`GET ${CM}/proficiency-assertions`, `PUT ${CM}/proficiency-assertions/:entityType/:entityId/:periodKey`, `DELETE ${CM}/proficiency-assertions/:entityType/:entityId/:periodKey`], mcp: ['proficiency_override_set', 'proficiency_override_clear'] },
+  { key: 'technology-category', title: 'Set a technology\'s proficiency category', group: 'Proficiency rules', ui: PROF, api: [`PATCH ${CM}/tools/:id`], mcp: ['technology_category_set'] },
+  { key: 'proficiency-formula', title: 'Save, select or delete a proficiency formula and certification bonus', group: 'Proficiency rules', ui: PROF, api: [`PUT ${CM}/experience-definitions/:type/:key`], mcp: ['proficiency_formula_save', 'proficiency_formula_select', 'certification_mapping_save'] },
+  { key: 'proficiency-definition-delete', title: 'Delete a formula or certification bonus', group: 'Proficiency rules', ui: PROF, api: [`DELETE ${CM}/experience-definitions/:type/:key`], mcp: null, gap: 'No MCP tool for deleting a formula or certification bonus yet.' },
+  { key: 'shared-output-live', title: 'Open the live QR page (and its PDF)', group: 'Application outputs', ui: `${WS} > Journeys > My Resume (QR link opens /r/:token)`, api: ['GET /api/shared-outputs/:token'], mcp: ['shared_output_live_read'] },
+  { key: 'shared-output-pdf', title: 'Download the PDF from the live QR page', group: 'Application outputs', ui: `${WS} > Journeys > My Resume (QR link opens /r/:token)`, api: ['GET /api/shared-outputs/:token/download.pdf'], mcp: null, mcpExclusion: 'Binary document; shared_output_live_read returns the same content as data.' },
 
   // ── Release tracker ───────────────────────────────────────────────────────
   { key: 'release-tracker-read', title: 'Read release records (admin)', group: 'Release tracker', ui: `${WS} > Journeys > Release Intelligence`, api: ['GET /api/release-intelligence/releases', 'GET /api/release-intelligence/releases/:id'], mcp: ['release_tracker_read'] },

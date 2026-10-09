@@ -174,6 +174,136 @@ export const MCP_TOOLS = Object.freeze([
     },
   },
   {
+    name: 'proficiency_rules_read',
+    title: 'Read my proficiency rules and results',
+    description: 'Returns each skill and technology with its resolved proficiency level, the inputs and points behind it, whether it is derived by the methodology, a member formula or a member override, the active formula, the available levels and technology categories. Same data as Proficiency rules.',
+    inputSchema: schema({ period: str('Period key; defaults to "current".', { maxLength: 80 }) }),
+    scope: 'career.read',
+    permission: 'user',
+    api: 'GET /api/career/proficiency',
+    handler: async (args, { user }) => {
+      const { buildProficiencyView } = await import('../routes/careerMaster.js');
+      return buildProficiencyView(user.id, args.period ? String(args.period) : 'current');
+    },
+  },
+  {
+    name: 'proficiency_override_set',
+    title: 'Override a proficiency level',
+    description: 'Sets your own proficiency level for one skill or technology (shown with the dagger mark). Same write as the website override.',
+    inputSchema: schema({
+      entityType: { type: 'string', enum: ['skill', 'tool'], description: 'Whether the entity is a skill or a technology.' },
+      entityId: id('The skill or technology id from career_master_read.'),
+      levelKey: str('A proficiency level key from proficiency_rules_read.', { minLength: 1, maxLength: 80 }),
+    }, ['entityType', 'entityId', 'levelKey']),
+    scope: 'career.write',
+    permission: 'user',
+    api: 'PUT /api/career/proficiency-assertions/:entityType/:entityId/:periodKey',
+    handler: async (args, { user }) => {
+      const { saveProficiencyAssertion } = await import('../routes/careerMaster.js');
+      return saveProficiencyAssertion(user.id, args.entityType, args.entityId, 'current', { levelKey: args.levelKey, assessmentSource: 'user_confirmed', confidence: 1, visibility: 'resume' });
+    },
+  },
+  {
+    name: 'proficiency_override_clear',
+    title: 'Remove a proficiency override',
+    description: 'Removes your override for one skill or technology so its level is derived again.',
+    inputSchema: schema({
+      entityType: { type: 'string', enum: ['skill', 'tool'], description: 'Whether the entity is a skill or a technology.' },
+      entityId: id('The skill or technology id.'),
+    }, ['entityType', 'entityId']),
+    scope: 'career.write',
+    permission: 'user',
+    api: 'DELETE /api/career/proficiency-assertions/:entityType/:entityId/:periodKey',
+    handler: async (args, { user }) => {
+      const { deleteProficiencyAssertion } = await import('../routes/careerMaster.js');
+      return deleteProficiencyAssertion(user.id, args.entityType, args.entityId, 'current');
+    },
+  },
+  {
+    name: 'technology_category_set',
+    title: 'Set a technology\'s proficiency category',
+    description: 'Records how a technology was used (hands_on, integration_design or adjacent), or clears it with null. Saved to the Career Master tool record, so outputs and the finalization gate pick it up.',
+    inputSchema: schema({
+      toolId: id('The technology id from career_master_read.'),
+      category: { type: ['string', 'null'], enum: ['hands_on', 'integration_design', 'adjacent', null], description: 'The category, or null to clear it.' },
+    }, ['toolId', 'category']),
+    scope: 'career.write',
+    permission: 'user',
+    api: 'PATCH /api/career/tools/:id',
+    handler: async (args, { user }) => {
+      const { setToolProficiencyCategory } = await import('../routes/careerMaster.js');
+      return setToolProficiencyCategory(user.id, args.toolId, args.category);
+    },
+  },
+  {
+    name: 'proficiency_formula_save',
+    title: 'Save a proficiency formula',
+    description: 'Creates or updates one of your own proficiency formulas (terms and level thresholds). Whether it is the active formula is kept as it was (new formulas start unselected); use proficiency_formula_select to switch. The Salt Basin methodology is locked and cannot be overwritten.',
+    inputSchema: schema({
+      key: str('Lowercase letters, numbers and underscores.', { minLength: 2, maxLength: 80 }),
+      label: str('Display name.', { minLength: 1, maxLength: 120 }),
+      description: str('Optional description.', { maxLength: 600 }),
+      definition: { type: 'object', description: '{ terms: [{ input, weight, cap }], thresholds: [{ levelKey, minPoints }] }. Inputs and levels are listed by proficiency_rules_read.' },
+      sortOrder: { type: 'integer' },
+      isActive: { type: 'boolean' },
+    }, ['key', 'label', 'definition']),
+    scope: 'career.write',
+    permission: 'user',
+    api: 'PUT /api/career/experience-definitions/:type/:key',
+    handler: async (args, { user }) => {
+      const { saveProficiencyFormula } = await import('../routes/careerMaster.js');
+      return saveProficiencyFormula(user.id, args.key, { label: args.label, description: args.description, definition: args.definition, sortOrder: args.sortOrder ?? 20, isActive: args.isActive });
+    },
+  },
+  {
+    name: 'proficiency_formula_select',
+    title: 'Choose the active proficiency formula',
+    description: 'Selects which formula resolves your proficiency levels: one of your own formula keys, or "salt_basin_methodology" to return to the methodology. Exactly one is active.',
+    inputSchema: schema({ key: str('A formula key from proficiency_rules_read, or salt_basin_methodology.', { minLength: 2, maxLength: 80 }) }, ['key']),
+    scope: 'career.write',
+    permission: 'user',
+    api: 'PUT /api/career/experience-definitions/:type/:key',
+    handler: async (args, { user }) => {
+      const { selectProficiencyFormula } = await import('../routes/careerMaster.js');
+      return selectProficiencyFormula(user.id, args.key);
+    },
+  },
+  {
+    name: 'certification_mapping_save',
+    title: 'Map a certification to skills or technologies',
+    description: 'Creates or updates a certification bonus: one of your certifications adds bonus points to the skills and technologies it maps to.',
+    inputSchema: schema({
+      key: str('Lowercase letters, numbers and underscores.', { minLength: 2, maxLength: 80 }),
+      label: str('Display name.', { minLength: 1, maxLength: 120 }),
+      certificationId: id('One of your certifications.'),
+      targets: { type: 'array', minItems: 1, items: { type: 'object', properties: { entityType: { type: 'string', enum: ['skill', 'tool'] }, entityId: { type: 'integer', minimum: 1 } }, required: ['entityType', 'entityId'], additionalProperties: false } },
+      bonusPoints: { type: 'number' },
+      countIfLapsed: { type: 'boolean' },
+    }, ['key', 'label', 'certificationId', 'targets']),
+    scope: 'career.write',
+    permission: 'user',
+    api: 'PUT /api/career/experience-definitions/:type/:key',
+    handler: async (args, { user }) => {
+      const { saveExperienceDefinition } = await import('../routes/careerMaster.js');
+      return saveExperienceDefinition(user.id, 'certification_mapping', args.key, { label: args.label, definition: { certificationId: args.certificationId, targets: args.targets, bonusPoints: args.bonusPoints, countIfLapsed: args.countIfLapsed }, sortOrder: 10 });
+    },
+  },
+  {
+    name: 'shared_output_live_read',
+    title: 'Read a live QR page',
+    description: 'Returns what the private /r/ page for an approved output shows right now (live data, version and approval metadata). The token is the secret from the QR link; an unapproved or revoked token reads as not found, exactly as on the website.',
+    inputSchema: schema({ token: str('The slug from the /r/ link.', { minLength: 8, maxLength: 200 }) }, ['token']),
+    scope: 'career.read',
+    permission: 'user',
+    api: 'GET /api/shared-outputs/:token',
+    handler: async (args) => {
+      const { getSharedOutputByToken, publicSharedView } = await import('./applicationPackages.js');
+      const row = await getSharedOutputByToken(args.token);
+      if (!row) { const e = new Error('Not found'); e.status = 404; e.code = 'not_found'; throw e; }
+      return publicSharedView(row);
+    },
+  },
+  {
     name: 'release_tracker_read',
     title: 'Read release records',
     description: 'Administrators only. Without releaseId: lists release records. With releaseId: that release with its features, rounds and failed runs.',

@@ -42,49 +42,98 @@ function Badge({ basis }) {
   return <span style={{ display: 'inline-block', padding: '.1rem .45rem', borderRadius: 999, fontSize: '.66rem', fontWeight: 700, color: b.color, background: b.bg, whiteSpace: 'nowrap' }}>{b.text}</span>;
 }
 
+// True at phone width. Declared before any early return in its callers (rules of hooks).
+function useNarrow(maxWidth = 900) {
+  const query = `(max-width: ${maxWidth}px)`;
+  const get = () => (typeof window !== 'undefined' && window.matchMedia ? window.matchMedia(query).matches : false);
+  const [narrow, setNarrow] = useState(get);
+  useEffect(() => {
+    if (!window.matchMedia) return undefined;
+    const mq = window.matchMedia(query);
+    const on = () => setNarrow(mq.matches);
+    on();
+    mq.addEventListener?.('change', on);
+    return () => mq.removeEventListener?.('change', on);
+  }, [query]);
+  return narrow;
+}
+
+const fieldLabel = { display: 'block', fontSize: '.68rem', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: '#687078', marginBottom: '.2rem' };
+
+// One formula row. Wide screens: a table row. Phone width: a stacked card with a label above each value, so
+// every select and number is full width, readable, and identifiable.
+function RuleRows({ narrow, columns, rows }) {
+  if (narrow) {
+    return (
+      <div>
+        {rows.map((row) => (
+          <div key={row.key} style={{ border: '1px solid rgba(27,42,59,.12)', borderRadius: 8, padding: '.6rem', marginBottom: '.5rem', background: '#fff' }}>
+            {columns.map((c, ci) => (
+              <label key={c} style={{ display: 'block', marginBottom: '.5rem' }}>
+                <span style={fieldLabel}>{c}</span>
+                {row.cells[ci]}
+              </label>
+            ))}
+            {row.action}
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return (
+    <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '.6rem' }}>
+      <thead><tr>{columns.map((c) => <th key={c} style={th}>{c}</th>)}{rows.some((r) => r.action) && <th style={th} />}</tr></thead>
+      <tbody>
+        {rows.map((row) => (
+          <tr key={row.key}>
+            {row.cells.map((cell, ci) => <td key={ci} style={td}>{cell}</td>)}
+            {rows.some((r) => r.action) && <td style={td}>{row.action}</td>}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
 function FormulaEditor({ formula, levels, inputs, readOnly, onChange }) {
+  const narrow = useNarrow();
   const d = formula.definition || {};
   const terms = d.terms || [];
   const thresholds = d.thresholds || [];
   const patch = (next) => onChange({ ...formula, definition: { ...d, ...next } });
+  const sel = { ...input, minWidth: 0 };
+  const termRows = terms.map((t, i) => ({
+    key: i,
+    cells: [
+      readOnly ? inputs[t.input] || t.input : (
+        <select aria-label="Formula input" style={sel} value={t.input} onChange={(e) => patch({ terms: terms.map((x, j) => j === i ? { ...x, input: e.target.value } : x) })}>
+          {Object.entries(inputs).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+        </select>
+      ),
+      readOnly ? t.weight : <input aria-label="Weight" style={sel} type="number" step="0.1" value={t.weight} onChange={(e) => patch({ terms: terms.map((x, j) => j === i ? { ...x, weight: e.target.value === '' ? 0 : Number(e.target.value) } : x) })} />,
+      readOnly ? (t.cap ?? 'none') : <input aria-label="Cap" style={sel} type="number" placeholder="none" value={t.cap ?? ''} onChange={(e) => patch({ terms: terms.map((x, j) => j === i ? { ...x, cap: e.target.value === '' ? null : Number(e.target.value) } : x) })} />,
+    ],
+    action: readOnly ? null : <button type="button" style={btn('ghost')} onClick={() => patch({ terms: terms.filter((_, j) => j !== i) })}>Remove</button>,
+  }));
+  const thresholdRows = thresholds.map((t, i) => ({
+    key: i,
+    cells: [
+      readOnly ? (levels.find((l) => l.key === t.levelKey)?.label || t.levelKey) : (
+        <select aria-label="Threshold level" style={sel} value={t.levelKey} onChange={(e) => patch({ thresholds: thresholds.map((x, j) => j === i ? { ...x, levelKey: e.target.value } : x) })}>
+          {levels.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}
+        </select>
+      ),
+      readOnly ? t.minPoints : <input aria-label="Minimum points" style={sel} type="number" step="0.5" value={t.minPoints} onChange={(e) => patch({ thresholds: thresholds.map((x, j) => j === i ? { ...x, minPoints: e.target.value === '' ? 0 : Number(e.target.value) } : x) })} />,
+    ],
+    action: readOnly ? null : <button type="button" style={btn('ghost')} onClick={() => patch({ thresholds: thresholds.filter((_, j) => j !== i) })}>Remove</button>,
+  }));
   return (
-    <div>
+    <div style={{ minWidth: 0 }}>
       <div style={{ fontSize: '.7rem', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#687078', margin: '.4rem 0' }}>Points = sum of (input, capped) × weight</div>
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '.6rem' }}>
-        <thead><tr><th style={th}>Input</th><th style={th}>Weight (points per unit)</th><th style={th}>Cap (max units counted)</th>{!readOnly && <th style={th} />}</tr></thead>
-        <tbody>
-          {terms.map((t, i) => (
-            <tr key={i}>
-              <td style={td}>{readOnly ? inputs[t.input] || t.input : (
-                <select aria-label="Formula input" style={input} value={t.input} onChange={(e) => patch({ terms: terms.map((x, j) => j === i ? { ...x, input: e.target.value } : x) })}>
-                  {Object.entries(inputs).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                </select>
-              )}</td>
-              <td style={td}>{readOnly ? t.weight : <input aria-label="Weight" style={input} type="number" step="0.1" value={t.weight} onChange={(e) => patch({ terms: terms.map((x, j) => j === i ? { ...x, weight: e.target.value === '' ? 0 : Number(e.target.value) } : x) })} />}</td>
-              <td style={td}>{readOnly ? (t.cap ?? 'none') : <input aria-label="Cap" style={input} type="number" placeholder="none" value={t.cap ?? ''} onChange={(e) => patch({ terms: terms.map((x, j) => j === i ? { ...x, cap: e.target.value === '' ? null : Number(e.target.value) } : x) })} />}</td>
-              {!readOnly && <td style={td}><button type="button" style={btn('ghost')} onClick={() => patch({ terms: terms.filter((_, j) => j !== i) })}>Remove</button></td>}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <RuleRows narrow={narrow} columns={['Input', 'Weight (points per unit)', 'Cap (max units counted)']} rows={termRows} />
       {!readOnly && <button type="button" style={{ ...btn('ghost'), marginBottom: '.8rem' }} onClick={() => patch({ terms: [...terms, { input: Object.keys(inputs)[0], weight: 1, cap: null }] })}>+ Add input</button>}
       <div style={{ fontSize: '.7rem', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#687078', margin: '.4rem 0' }}>Level reached at minimum points</div>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead><tr><th style={th}>Level</th><th style={th}>Minimum points</th>{!readOnly && <th style={th} />}</tr></thead>
-        <tbody>
-          {thresholds.map((t, i) => (
-            <tr key={i}>
-              <td style={td}>{readOnly ? (levels.find((l) => l.key === t.levelKey)?.label || t.levelKey) : (
-                <select aria-label="Threshold level" style={input} value={t.levelKey} onChange={(e) => patch({ thresholds: thresholds.map((x, j) => j === i ? { ...x, levelKey: e.target.value } : x) })}>
-                  {levels.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}
-                </select>
-              )}</td>
-              <td style={td}>{readOnly ? t.minPoints : <input aria-label="Minimum points" style={input} type="number" step="0.5" value={t.minPoints} onChange={(e) => patch({ thresholds: thresholds.map((x, j) => j === i ? { ...x, minPoints: e.target.value === '' ? 0 : Number(e.target.value) } : x) })} />}</td>
-              {!readOnly && <td style={td}><button type="button" style={btn('ghost')} onClick={() => patch({ thresholds: thresholds.filter((_, j) => j !== i) })}>Remove</button></td>}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <RuleRows narrow={narrow} columns={['Level', 'Minimum points']} rows={thresholdRows} />
       {!readOnly && <button type="button" style={{ ...btn('ghost'), marginTop: '.5rem' }} onClick={() => patch({ thresholds: [...thresholds, { levelKey: levels[0]?.key || '', minPoints: 0 }] })}>+ Add level threshold</button>}
     </div>
   );

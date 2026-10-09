@@ -11,6 +11,14 @@
     "application_output_approve_for_qr",
     "cover_letter_open",
     "cover_letter_agent_turn",
-    "release_tracker_read"
+    "release_tracker_read",
+    "proficiency_rules_read",
+    "proficiency_override_set",
+    "proficiency_override_clear",
+    "technology_category_set",
+    "proficiency_formula_save",
+    "proficiency_formula_select",
+    "certification_mapping_save",
+    "shared_output_live_read"
   ]
 }
