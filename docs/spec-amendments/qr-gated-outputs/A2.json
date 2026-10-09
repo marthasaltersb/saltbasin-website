@@ -1,0 +1,37 @@
+{
+  "id": "A2",
+  "feature": "qr-gated-outputs",
+  "fromBaseline": 1,
+  "proposedBy": "triage:qr-gated-outputs:r2",
+  "round": 2,
+  "triageItems": [
+    "G2"
+  ],
+  "reason": "After Journey 9 no card has status Draft, yet J10.3, E.1, E.2 and E.4 need one.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "",
+      "before": "",
+      "after": "Before J10.3, E.1, E.2 and E.4, import a third package version so a Draft card exists.",
+      "tracesTo": "steps J10.3, E.1, E.2, E.4",
+      "whyNeeded": "Steps depend on a Draft card that no earlier step leaves behind."
+    }
+  ],
+  "review": {
+    "status": "rejected",
+    "reviewer": "amend:qr-gated-outputs:r2",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "fail: no fixture file and no import command are written; 'import a third package version' does not say what content or what expected output",
+      "Reachable": "pass",
+      "Deterministic": "fail: E.3 re-runs 'the Journey 8 command' (pkg-v2); once a third version is the latest that import reports new_version, not unchanged (server/lib/applicationPackages.js compares against the latest version), so the proposal makes E.3 order-dependent",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Rejected as written. The gap is real, but this is a spec resubmission, not a product defect: nothing for the fix loop. A resubmission must (1) write the fixture (for example pkg-v3.json made by sed from pkg-v1.json with a different fictional summary sentence) and the exact import command with its expected output (resume_main #<new id> new_version, cover_letter #<id> unchanged); (2) take the next unused precondition id and state exactly where it runs (after J9.3, before J10.3); (3) change E.3 so its re-import uses the latest imported package file and still expects every output unchanged, or state E.3 runs before it; (4) say which card is the Draft the later steps use.",
+    "at": "2026-10-09T00:00:00.000Z"
+  }
+}

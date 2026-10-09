@@ -11,6 +11,7 @@ Labels are written as they appear in the DOM; some screens display them in capit
 - **Sign in**: `<BASE>/login`. After the first sign-in a "Career Portfolio Terms & Data Conditions" screen may appear: tick every checkbox, then click **I Agree — Continue**.
 - **My Resume**: open `<BASE>/world`, click **Classic Tools** (top), click the top tab **Network Relationship Management**, then the sub tab **My Resume**. The section **Resume Output History** is lower on the page (below the Primary Resume card).
 - **Career Master**: same place, sub tab **Career Master**, then the button **Tools (n)**.
+- **On a phone (390px)** the Classic Tools tab strip is hidden. Open `<BASE>/world`, click the top tab **Journeys**, then click the card **My Resume** (or the card **Career Master**, subtitle "Open Career Master journey"). The same Resume Output History and Tools (n) controls appear there.
 - **Private link page**: `<BASE>/r/<slug>`; it is also what the QR code opens.
 - A **private window** means a fresh browser context with no cookies and no sign-in.
 
