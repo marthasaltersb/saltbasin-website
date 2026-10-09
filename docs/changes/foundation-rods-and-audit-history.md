@@ -1,11 +1,12 @@
 # Foundation Rods and audit history: many foundations per person, no lost history
 
-Version 0.2 (proposed design, not built) · 2026-10-09 · Status: **awaiting owner approval**
+Version 0.3 (proposed design, not built) · 2026-10-09 · Status: **awaiting owner approval**
 
 | Version | Date | Change |
 |---|---|---|
 | 0.1 | 2026-10-09 | Many foundations per person; audit-history model; gaps G1–G6 (commit 3e88ce5). |
 | 0.2 | 2026-10-09 | Owner direction: **seeds** sit below features (section 6). |
+| 0.3 | 2026-10-09 | Owner direction: a seed is the raw **entry point** for anything new, like a lead. Seeds are planted, reviewed, nurtured, grown, reported and audited. The career foundation teaches it, and agents plant seeds for people to review (section 6, rewritten). |
 
 ## Traces to
 
@@ -140,63 +141,93 @@ New tables: **none**. Changes are:
 - one index change, one append-only trigger
 - one shared write helper
 
-## 6. Seeds below features
+## 6. Seeds: the entry point for anything new
 
-Owner direction, 2026-10-09:
-- A **feature** is close to a capability.
-- A **seed** is the original idea, a user story, or a tactical, detailed task.
-- A feature can be linked to several seeds.
-- Every feature goes through an approval to be **planted**, and planting needs a minimum set of seeds.
-- Seeds are **evidence on a feature, not rods of their own**. They are still tracked, and a seed can be
-  converted into a feature or linked to another feature.
+Owner direction, 2026-10-09 (replaces v0.2's "seeds below features"):
+- A **seed** is a raw entry of anything new or unassigned, almost like a lead. It is the **entry point
+  event**.
+- "Planting a seed" means putting it into Salt Basin.
+- The website helps the person take a seed and **grow** it, **expand** it, **report** on it and **audit**
+  it.
+- The **career foundation** is where a person first learns this, by planting seeds while building their
+  career foundation.
+- People then **set up agents that plant seeds** for them. The person reviews and nurtures those seeds.
+
+### The life of a seed
 
 ```
-Foundation rod
- ├─ seed bank: seeds not yet linked to any feature (evidence on the foundation rod)
- └─ Feature rod (a capability)     proposed ─▶ planted (approval + minimum seeds) ─▶ build … ─▶ passed
-      ├─ seed: idea                "Members want to see release status in 3D"
-      ├─ seed: user story          "As an org admin, I can see which features need a person"
-      └─ seed: task                "Colour gems by status; acceptance: Passed gems are sage"
+plant ─▶ review ─▶ nurture ─▶ grow into something real ─▶ report / audit
+  │         │                     │
+  │         ├─ merge (duplicate)  ├─ Career Master entry or skill evidence
+  │         └─ set aside          ├─ tracked career opportunity
+  │                               ├─ feature (in a release foundation)
+  └─ by the person, an agent,     ├─ another foundation's data
+     or an import                 └─ two or more new seeds (split)
 ```
 
-**How a seed is stored.**
-- Each seed is one `journey_rod_evidence` row with Atom key `feature_seed`. Its value is
-  `{ seedId, kind, title, detail, acceptance, sourceRef }`.
-- `kind` is one of the foundation's seed kinds (default `idea`, `user_story`, `task`). Screen 1 of the
-  foundation maps them to the outside system, e.g. Jira story and sub-task.
-- `seedId` never changes, wherever the seed moves, so a seed can always be followed.
-- No new table and no rod per seed.
+| Stage | What happens | What is written (nothing is ever deleted) |
+|---|---|---|
+| **Planted** | Anything is entered: typed text, pasted notes, an uploaded document, a link. No type or destination is needed yet. | One `journey_rod_evidence` row, Atom key `seed`, on the foundation where it was planted, plus a `seed_planted` event. Value: `{ seedId, raw, attachments, kind (may be empty), plantedBy: { type: person \| agent \| import, id }, sourceRef }`. Uses the existing `source_tier` and `confidence` columns. |
+| **Reviewed** | The person accepts it, merges it into an earlier seed (a duplicate), or sets it aside. Seeds planted by an agent always start here, waiting for the person. | `seed_reviewed` event with the decision. A merge points to the surviving seed, like `leads.merged_into_id` (same convention, not the same table). |
+| **Nurtured** | The seed gets richer: Salt Basin asks follow-up questions (when, where, outcome, proof), the person answers, and evidence is attached. | Each addition is a new evidence row with `lineage_parent_id` → the seed, plus a `seed_nurtured` event. |
+| **Grown** | The person chooses what the seed becomes. The new thing is created through the path that already exists for it (e.g. `createCareerOpportunity`, the Career Master CRUD that syncs to the Career Channel Rod). | New rows or rods that point back to the seed (`lineage_parent_id` or `metadata.seedId`), plus a `seed_grew` event naming what was created. The seed stays. One seed can grow into several things. |
+| **Reported / audited** | For any seed: everything it grew into, who planted it, and every step since. For any outcome (a résumé line, an opportunity, a feature): the seed it came from. | Read from the events and lineage. Nothing extra is stored. |
 
-**Where a seed lives.**
-- Before it's linked to anything, a seed sits on its **foundation rod** (the seed bank).
-- Every evidence row needs a rod, and the foundation is the natural home for ideas that haven't found a
-  feature yet.
+**What a seed can grow into is a registry, not code.**
+- `server/lib/seedGrowthRegistry.js` lists each target with its label, the existing create function it
+  calls, the fields it needs from the seed, and who may approve it.
+- Adding a new kind of outcome is a new entry, like `TRIBUTARY_TYPES`.
 
-**What happens to a seed.** Every move is an event, and nothing is deleted.
+### The career foundation is where people learn it
 
-| Action | What is written |
-|---|---|
-| Capture | Evidence on the foundation (or directly on a feature) + `seed_captured` event |
-| Link to a feature | New evidence row on the feature with `lineage_parent_id` → the earlier row. The earlier row is marked superseded (gap G2's fix). Event `seed_linked` on both rods. |
-| Move to another feature | Same as linking: new row on the new feature, old row superseded, `seed_moved` events on both features |
-| Convert into a feature | A new feature rod is created; the seed becomes its first seed (same mechanism); event `seed_converted` |
-| Retire | The row is marked superseded with reason; event `seed_retired`. Still visible in history. |
+Every member has a personal career foundation, with or without an organization. Their first experience
+after logging in:
 
-**Planting (the approval).**
-- A feature starts as `proposed`. It moves to `planted` only when:
-  1. its seeds meet the foundation's **planting rule**, and
-  2. someone with the "approve planting" permission approves, through the existing approval gate
-     (`useToolCategoryGate().run` → `assertReadyToFinalize`).
-- The planting rule is part of the foundation's definition: an eighth answer, versioned like the other
-  seven, never hard-coded.
-- The `feature_planted` event records which seeds, at which versions, the approval was based on.
+1. **Plant your first seed.** One box: "Tell us about something you did, want, or are working on." Typing,
+   pasting or uploading (e.g. an old résumé) all count. No form to fill in.
+2. **See it in your seed bank.** The seed appears in the career foundation's scene as a seed in the
+   ground, with its stage shown.
+3. **Nurture it.** Salt Basin asks the two or three questions that would make it usable ("When was this?
+   What changed because of it?"). Rules ask first; the language model is used only when the rules can't,
+   the same order the cover-letter agent already uses.
+4. **Grow it.** Salt Basin suggests what it could become ("This looks like a job entry with two skills").
+   The person confirms, and their Career Master fills in. The foundation's rollups update from real data
+   only, never invented.
+5. **Set up planting agents.** Once the person has grown a few seeds themselves, they can turn on agents
+   that plant seeds for them. Examples:
+   - The Career Researcher plants matching roles weekly.
+   - An evidence agent plants achievements it finds in uploaded documents.
+6. **Review and nurture what agents plant.** Agent seeds arrive in a review queue, labelled with the agent
+   that planted them and why. An agent can plant, but **only the person can grow a seed**.
+7. **Watch the garden.** A report shows:
+   - seeds planted by the person vs by agents
+   - how many were reviewed, grown or set aside
+   - what each one became
 
-**Link to testing (proposal).**
-- A task seed's acceptance criteria can become journey steps in the feature's training spec.
-- A feature's test round then reports which seeds' steps passed. "Passed" still means every step passed.
+   Counts come from events. Anything not recorded shows as "not recorded".
 
-**Depends on** gap G2 (supersede instead of delete). Without it, linking or moving a seed would erase its
-earlier place.
+The same mechanics then carry over to every other foundation. In a release foundation, a seed can grow
+into a feature. In an organization foundation, a seed can grow into that organization's records,
+including written back to its database (section 3).
+
+### Fit with the platform
+
+- **Agents** reuse `agent_definitions` and `agent_schedules` (cadence and trigger mode already exist).
+- **Agent-planted seeds** carry `plantedBy.type = 'agent'` and always need a person's review. This is
+  enforced in the one seed write path; no sandboxing is claimed (Agent Boundary gap, recorded as before).
+- **Human-vs-agent attribution** comes for free from `plantedBy` and the events, and feeds Contribution
+  Intelligence.
+- **Usage tracking:** a new `SALT_BASIN_TRACKED_INTERACTIONS.seeds` entry (`seed_plant`, `seed_review`,
+  `seed_grow`).
+- No new tables. Depends on gap G2 (supersede instead of delete).
+
+### Features still need an approval
+
+- Planting no longer means approving a feature.
+- In a release foundation, a feature is still **approved** before work starts. Its approval rule (e.g.
+  "grown from at least one idea or user story, with at least one task with acceptance criteria") is part
+  of that foundation's definition.
+- The approval goes through the existing approval gate.
 
 ## Questions for the owner (needs a business decision)
 
@@ -212,13 +243,14 @@ earlier place.
    may an organization allow some fields to be written automatically?
 5. **Organizations with several databases.** Should an organization use one foundation per database
    (`delivery-jira`, `revenue-salesforce`), or one foundation that combines several connections?
-6. **Planting minimum.** What is the default planting rule? A proposal to confirm or change: at least one
-   idea **or** user story, plus at least one task with acceptance criteria. Should each foundation be able
-   to set its own rule?
-7. **One seed, several features.** Can one seed support several features at the same time (shared), or
-   only one feature at a time (it moves)?
-8. **Seeds added after planting.** If a seed is added to a feature that is already planted, does the
-   feature need approving again?
-9. **Who approves planting.** By default, foundation admins. Should the person who wrote the seeds be
-   allowed to approve their own feature?
-
+6. **Where a seed lands.** When a person with several foundations plants a seed, should it go to
+   their career foundation by default, or should Salt Basin ask which foundation each time?
+7. **What agents may do.** Agents can plant seeds. Can they also nurture (add follow-up evidence) without
+   asking, or only plant? Should each agent have a weekly limit on how many seeds it plants?
+8. **Set-aside seeds.** Should seeds that were set aside stay visible forever under a "Set aside" filter
+   (proposed, for the audit trail), or be hidden after a while?
+9. **Feature approval rule.** Is the default rule for approving a feature in a release foundation "at
+   least one idea or user story, plus at least one task with acceptance criteria"? Should each foundation
+   be able to set its own rule?
+10. **Duplicates.** When Salt Basin spots a likely duplicate seed, should it suggest a merge for the person
+    to confirm (proposed), or merge it automatically?
