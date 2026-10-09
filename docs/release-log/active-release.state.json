@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T16:35:11.794Z",
+  "exportedAt": "2026-10-09T16:41:27.218Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -34,12 +34,12 @@
       "backlog": 4
     },
     "no-silent-failures": {
-      "status": "validate",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
-      "openBugs": 3,
-      "backlog": 3
+      "status": "fix",
+      "lastRound": 1,
+      "lastScore": "18/28",
+      "lastReport": "docs/test-results/no-silent-failures/round-1.md",
+      "openBugs": 11,
+      "backlog": 5
     },
     "release-loop-tooling": {
       "status": "passed",
@@ -57,14 +57,6 @@
       "openBugs": 11,
       "backlog": 5
     },
-    "release-intelligence": {
-      "status": "failing",
-      "lastRound": 1,
-      "lastScore": "1/54",
-      "lastReport": "docs/test-results/release-intelligence/round-1.md",
-      "openBugs": 3,
-      "backlog": 1
-    },
     "output-version-history": {
       "status": "validate",
       "lastRound": 1,
@@ -81,6 +73,14 @@
       "openBugs": 7,
       "backlog": 3
     },
+    "release-intelligence": {
+      "status": "failing",
+      "lastRound": 1,
+      "lastScore": "1/54",
+      "lastReport": "docs/test-results/release-intelligence/round-1.md",
+      "openBugs": 11,
+      "backlog": 1
+    },
     "cover-letter-agent": {
       "status": "validate",
       "lastRound": 0,
@@ -90,11 +90,11 @@
       "backlog": 7
     },
     "in-app-release-loop": {
-      "status": "reconcile",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
-      "openBugs": 0,
+      "openBugs": 4,
       "backlog": 0
     },
     "session-mapping": {
@@ -130,11 +130,11 @@
       "backlog": 0
     },
     "platform-mcp": {
-      "status": "reconcile",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
-      "openBugs": 0,
+      "openBugs": 6,
       "backlog": 0
     }
   },
@@ -1752,7 +1752,7 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "DocumentBlocksView.jsx and outputRendering.js:186 created by d78bcda; documentBlocksEditor.js:28 (7cc95edc) shares the shape; fix all three."
+        "evidence": "Identical success/error toast dates from 3b8e975 (no other feature regressed it), but this feature adds error toasts (MyResumePanel) and its spec J3.4 requires…"
       },
       "history": [
         {
@@ -1930,7 +1930,7 @@
     {
       "id": "no-silent-failures-B12",
       "feature": "no-silent-failures",
-      "status": "open",
+      "status": "fixing",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "G1 training spec P1 signs in as admin",
@@ -1955,7 +1955,7 @@
     {
       "id": "no-silent-failures-B13",
       "feature": "no-silent-failures",
-      "status": "open",
+      "status": "fixing",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "G2 entry points and setup not via World Shell/UI",
@@ -2005,7 +2005,7 @@
     {
       "id": "no-silent-failures-B15",
       "feature": "no-silent-failures",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "G5 QR banner wording under RECORDED DATA",
@@ -2049,6 +2049,262 @@
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T1",
+      "feature": "no-silent-failures",
+      "status": "backlog_pre_existing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "J5.2 charts empty after restore",
+      "rootCause": "Output.jsx useOutputTemplateConfig (line ~1176) fetches /api/career/master without owner on /output/resume; resolveOwnerUserId (server/routes/careerMaster.js:5…",
+      "files": [
+        "src/components/Output.jsx",
+        "server/routes/outputTemplates.js",
+        "server/routes/careerMaster.js"
+      ],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "Mobile drawer CSS from eb62057 (2026-08-09) is present at the base commit f3171a8^1 and no JSX renders any sb-admin-mobile-* class there. The feature did not t…"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Output.jsx useOutputTemplateConfig (line ~1176) fetches /ap…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "feature": "no-silent-failures",
+      "status": "fixing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "J3.4 error toast looks like success toast",
+      "rootCause": "src/lib/toast.js:25-26 toast.error is identical to toast.success (same .sb-toast element, brand.css:455 and .sb-admin-shell variant); change spec requires a red error toast. 2.4 s lifetime also hides…",
+      "files": [
+        "src/lib/toast.js",
+        "src/brand.css"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Identical success/error toast dates from 3b8e975 (no other feature regressed it), but this feature adds error toasts (MyResumePanel) and its spec J3.4 requires…"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "src/lib/toast.js:25-26 toast.error is identical to toast.success (same .sb-toas…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T3",
+      "feature": "no-silent-failures",
+      "status": "fixing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "J2.2 banner wording",
+      "rootCause": "Product matches change spec (banner keeps 'N changes since...'); step ignores the one change (Pipeline Tracker) added in J0.5.",
+      "files": [
+        "docs/training/no-silent-failures.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Step is in this feature's own training spec and is not performable through the UI. Product matches the spec. Needs an amendment."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Product matches change spec (banner keeps 'N changes since...'); step ignores t…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T4",
+      "feature": "no-silent-failures",
+      "status": "fixing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "J3.2 earlier version state",
+      "rootCause": "applicationPackages.js:128-131 retires the previous published version (drops share_token, sets approved) only inside the next approval (J3.4); import just adds a draft.",
+      "files": [
+        "docs/training/no-silent-failures.md",
+        "server/lib/applicationPackages.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The step is in this feature's own spec and is API-only by nature. Server 404 is correct. Needs an amendment marking it API-only."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "applicationPackages.js:128-131 retires the previous published version (drops sh…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T5",
+      "feature": "no-silent-failures",
+      "status": "backlog_pre_existing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "J4.1 header and alert titles",
+      "rootCause": "P4 allows gallery or fixture; gallery (ChartGallery.jsx:50-52) yields member-name header and titles Proficiency Tiers / Trend Bars / Career Timeline, fixture y…",
+      "files": [
+        "docs/training/no-silent-failures.md",
+        "src/components/admin/ChartGallery.jsx"
+      ],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "server/lib/mcpToolRegistry.js has no git history and does not exist. The platform MCP server belongs to the separate platform-mcp feature, which is not in the …"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "P4 allows gallery or fixture; gallery (ChartGallery.jsx:50-…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T6",
+      "feature": "no-silent-failures",
+      "status": "fixing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "J1.2 / J3.1 / J5.1 shell-only fault injection, import, restore",
+      "rootCause": "Fault injection, package import and restore are test-harness database/CLI actions by design (spec: 'the only database commands in this spec'); steps are not marked cli so validator scores UI_GAP. Pac…",
+      "files": [
+        "docs/training/no-silent-failures.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The request asks for block-level tracked changes. toDiffItems in src/lib/outputVersionDiff.js (e2752fd) has no chart handling. Same basis as B10 in scope-revie…"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Fault injection, package import and restore are test-harness database/CLI actio…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T7",
+      "feature": "no-silent-failures",
+      "status": "fixing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "E.1 bogus slug",
+      "rootCause": "A bogus slug is reachable only by typing a URL, which interfaceParity forbids as a step; a revoked link produces the same 'This link isn't available' page and is reachable by Revoke QR in the UI.",
+      "files": [
+        "docs/training/no-silent-failures.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The request says reachable from the output editor. Entry points were chosen by this feature (e2752fd) and omit OutputTemplateConfigurator. Same as B11 in scope…"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "A bogus slug is reachable only by typing a URL, which interfaceParity forbids a…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T8",
+      "feature": "no-silent-failures",
+      "status": "fixing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "E.4 network noise list",
+      "rootCause": "GET /api/career/resume-rollups reads career_jobs via loadMasterPayload (careerMaster.js:647-654) so returns 500 under FAULT A by design; Output.jsx:1378 calls it. The 404 on /api/shared-outputs/<slug…",
+      "files": [
+        "docs/training/no-silent-failures.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Stale preconditions and labels are in this feature's own spec. Same as B14 in scope-review.json."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "GET /api/career/resume-rollups reads career_jobs via loadMasterPayload (careerM…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T9",
+      "feature": "no-silent-failures",
+      "status": "fixing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "B15 observation: RECORDED DATA banner sentences",
+      "rootCause": "SharedLiveStates.jsx:119-121 prints 'matches the approved printed version' when live is false and line 124 says charts 'update from the Salt Basin Career Master' while live data failed, contradicting…",
+      "files": [
+        "src/components/SharedLiveStates.jsx",
+        "docs/changes/no-silent-failures.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "versionBody() in server/lib/outputVersionHistory.js resolves drafts live. Same as B8 in scope-review.json. The rule needs an owner decision (needs_business_def…"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "SharedLiveStates.jsx:119-121 prints 'matches the approved printed version' when…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T10",
+      "feature": "no-silent-failures",
+      "status": "fixing",
+      "class": "coverage_gap",
+      "attempts": 0,
+      "step": "Coverage: banner sentence and member-owned chart data",
+      "rootCause": "No scored step checks the banner sentence under RECORDED DATA (T9) or that a member's /output/resume draws the member's own Career Master (T1).",
+      "files": [
+        "docs/training/no-silent-failures.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Coverage gap in the feature's own training spec (banner sentence under RECORDED DATA, member-owned chart data)."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "No scored step checks the banner sentence under RECORDED DATA (T9) or that a me…",
           "commit": null
         }
       ]
@@ -2828,116 +3084,6 @@
       ]
     },
     {
-      "id": "release-intelligence-B7",
-      "feature": "release-intelligence",
-      "status": "open",
-      "class": "owner_direction_conflict",
-      "attempts": 0,
-      "step": "Entry points",
-      "rootCause": "Salvaged partial build added a second, admin-nav entry point beside the correct World Shell island.",
-      "files": [
-        "src/components/admin/AdminShell.jsx",
-        "server/db.js",
-        "docs/changes/release-intelligence.md",
-        "docs/training/release-intelligence.md"
-      ],
-      "scope": {
-        "scope": "this_feature",
-        "owner": null,
-        "evidence": "The admin-nav entry in AdminShell.jsx and server/db.js came from the feature's own salvaged partial build (e4f85ca)."
-      },
-      "history": [
-        {
-          "round": 0,
-          "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conf…",
-          "commit": null
-        }
-      ]
-    },
-    {
-      "id": "release-intelligence-B8",
-      "feature": "release-intelligence",
-      "status": "open",
-      "class": "requirement_gap",
-      "attempts": 0,
-      "step": "Commit reconciliation",
-      "rootCause": "Commit handling stopped at storing the sha.",
-      "files": [
-        "server/lib/releaseReconcile.js",
-        "server/lib/releaseLogImporter.js",
-        "server/lib/releaseIntelligence.js",
-        "scripts/import-release-logs.mjs",
-        "src/components/admin/ReleaseIntelligencePanel.jsx"
-      ],
-      "scope": {
-        "scope": "this_feature",
-        "owner": null,
-        "evidence": "The request lists commits in reconciliation, but releaseReconcile.js and releaseLogImporter.js (this feature) stop at storing the sha."
-      },
-      "history": [
-        {
-          "round": 0,
-          "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
-          "commit": null
-        }
-      ]
-    },
-    {
-      "id": "release-intelligence-B9",
-      "feature": "release-intelligence",
-      "status": "process_note",
-      "class": "process",
-      "attempts": 0,
-      "step": "Loop records",
-      "rootCause": "Validation round 1 has not yet run.",
-      "files": [
-        "docs/test-results/release-intelligence/",
-        "docs/changes/release-intelligence.md"
-      ],
-      "scope": {
-        "scope": "process_note",
-        "owner": null,
-        "evidence": "Validation round 1 has not run yet. Loop record gap."
-      },
-      "history": [
-        {
-          "round": 0,
-          "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (…",
-          "commit": null
-        }
-      ]
-    },
-    {
-      "id": "release-intelligence-B10",
-      "feature": "release-intelligence",
-      "status": "open",
-      "class": "requirement_gap",
-      "attempts": 0,
-      "step": "Known limitations",
-      "rootCause": "No automatic ingest from release-tracker-sync output; classification is deliberately not guessed; chart is categorical rather than time-scaled.",
-      "files": [
-        "scripts/release-tracker-sync.mjs",
-        "scripts/import-release-logs.mjs",
-        "src/lib/releaseCharts.js"
-      ],
-      "scope": {
-        "scope": "this_feature",
-        "owner": null,
-        "evidence": "Known limitations of the feature's own code: the chart is categorical although the request names dated trend charts and a timeline slider, and scripts/import-r…"
-      },
-      "history": [
-        {
-          "round": 0,
-          "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
-          "commit": null
-        }
-      ]
-    },
-    {
       "id": "output-version-history-B3",
       "feature": "output-version-history",
       "status": "process_note",
@@ -3580,6 +3726,339 @@
       ]
     },
     {
+      "id": "release-intelligence-B7",
+      "feature": "release-intelligence",
+      "status": "recurred",
+      "class": "defect",
+      "attempts": 0,
+      "step": "B7: second admin-nav entry point for Release Intelligence (nearest J1.1)",
+      "rootCause": "Salvaged build added a Classic Tools entry beside the World Shell island, contrary to owner direction: AdminShell.jsx:73 (TAB_COMPONENTS), :122 (fallback nav), server/db.js:3326 (admin_nav insert). O…",
+      "files": [
+        "src/components/admin/AdminShell.jsx",
+        "server/db.js",
+        "docs/changes/release-intelligence.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Reused from scope-review.json: the nav entries came from the feature's salvaged build e4f85ca."
+      },
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conf…",
+          "commit": null
+        },
+        {
+          "round": 1,
+          "event": "recurred",
+          "note": "Salvaged build added a Classic Tools entry beside the World Shell island, contr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-intelligence-B8",
+      "feature": "release-intelligence",
+      "status": "needs_business_definition",
+      "class": "needs_business_definition",
+      "attempts": 0,
+      "step": "B8: round commits are not reconciled (J3.3, J3.4)",
+      "rootCause": "releaseReconcile.js and releaseLogImporter.js only store the commit sha; no rule exists for what verifying it means. J3.3/J3.4 as frozen expect plain commit text with no commit check, so any rule cha…",
+      "files": [
+        "server/lib/releaseReconcile.js",
+        "server/lib/releaseLogImporter.js",
+        "server/lib/releaseIntelligence.js",
+        "src/components/admin/ReleaseIntelligencePanel.jsx"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Reused from scope-review.json: the feature's reconcile and importer code stops at storing the sha. Owner must define the rule."
+      },
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        },
+        {
+          "round": 1,
+          "event": "recurred",
+          "note": "releaseReconcile.js and releaseLogImporter.js only store the commit sha; no rul…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-intelligence-B9",
+      "feature": "release-intelligence",
+      "status": "process_note",
+      "class": "process",
+      "attempts": 0,
+      "step": "Loop records",
+      "rootCause": "Validation round 1 has not yet run.",
+      "files": [
+        "docs/test-results/release-intelligence/",
+        "docs/changes/release-intelligence.md"
+      ],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": "Validation round 1 has not run yet. Loop record gap."
+      },
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-intelligence-B10",
+      "feature": "release-intelligence",
+      "status": "needs_business_definition",
+      "class": "needs_business_definition",
+      "attempts": 0,
+      "step": "B10: no automatic snapshot ingest, classes not guessed, charts categorical (J8.2, J8.3, E.1)",
+      "rootCause": "Deliberate limitations (nothing guessed, hand/--snapshot ingest, equal-spaced date-labelled bars); no frozen step requires otherwise, so the owner must define the wanted rules. Open bug release-intel…",
+      "files": [
+        "scripts/release-tracker-sync.mjs",
+        "server/lib/releaseLogImporter.js",
+        "src/lib/releaseCharts.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Reused from scope-review.json: known limitations of the feature's own code. Owner must define the wanted rules."
+      },
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        },
+        {
+          "round": 1,
+          "event": "recurred",
+          "note": "Deliberate limitations (nothing guessed, hand/--snapshot ingest, equal-spaced d…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "RI-R1-1",
+      "feature": "release-intelligence",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "Importer script exits 0 on second run (E.1)",
+      "rootCause": "importRepository walks every .md in docs/release-log/; classifyPath (releaseLogParser.js:112) treats release-tracker.md and updates.md (tracker-generated, no Date:) as release logs; releaseLogImporte…",
+      "files": [
+        "server/lib/releaseLogImporter.js",
+        "server/lib/releaseLogParser.js",
+        "server/lib/releaseIntelligenceConfig.js",
+        "scripts/import-release-logs.mjs"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Importer and classifyPath are new in the release-intelligence merge fcc271a; base fcc271a^1 has no importer. Own defect."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "importRepository walks every .md in docs/release-log/; classifyPath (releaseLog…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "RI-R1-2",
+      "feature": "release-intelligence",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "E.1 surface tag",
+      "rootCause": "Baseline tags the terminal-only E.1 as desktop+mobile although the step says it needs a terminal and definition.json allows cli steps by design.",
+      "files": [
+        "docs/training/release-intelligence.md",
+        "docs/training/baselines/release-intelligence/v1.json"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "E.1 tag is in the feature's own frozen spec; needs an approved amendment."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Baseline tags the terminal-only E.1 as desktop+mobile although the step says it…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "RI-R1-3",
+      "feature": "release-intelligence",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "Mobile: fixed min-width inputs overflow card at 390px (J2.1,J2.2,J3.2-J3.4,J4.1-J4.4,J5.1,J5.3,J6.1,J7.1-J7.12,J8.1,J9.1-J9.5,J9.7,J10.3,J10.4,E.2,E.4)",
+      "rootCause": "ReleaseIntelligencePanel.jsx hardcodes minWidth on inputs (lines 90:160, 168:220, 266:320, 417:320, 418:240, 526:380, 535:320) while available content width at 390px is about 278px.",
+      "files": [
+        "src/components/admin/ReleaseIntelligencePanel.jsx"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "ReleaseIntelligencePanel.jsx does not exist on base fcc271a^1; cannot reproduce there."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "ReleaseIntelligencePanel.jsx hardcodes minWidth on inputs (lines 90:160, 168:22…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "RI-R1-4",
+      "feature": "release-intelligence",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "Mobile: wide tables escape the card (J3.1,J4.1-J4.6,J5.2,J6.2,J6.3,J7.5,J7.8,J10.1,J10.2,J10.5,E.3,E.5)",
+      "rootCause": "S.table (line 24) is width:100% with no scroll wrapper; tables at lines 103,183,277,332,349,477 have 5-8 columns (493-808px) wider than the card.",
+      "files": [
+        "src/components/admin/ReleaseIntelligencePanel.jsx"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Same panel file, absent on base."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "S.table (line 24) is width:100% with no scroll wrapper; tables at lines 103,183…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "RI-R1-5",
+      "feature": "release-intelligence",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "Mobile: Trends charts and grids force 420/320/280px columns (J8.2-J8.6,J9.6)",
+      "rootCause": "auto-fit grids with large minmax at ReleaseIntelligencePanel.jsx lines 178 (420px), 301 (280px), 579 (320px) cannot shrink below the minmax inside a ~278px card; chart SVG itself is width:100% and fi…",
+      "files": [
+        "src/components/admin/ReleaseIntelligencePanel.jsx"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Same panel file, absent on base."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "auto-fit grids with large minmax at ReleaseIntelligencePanel.jsx lines 178 (420…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "RI-R1-6",
+      "feature": "release-intelligence",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "Mobile: card shifted left, heading cut (J4.5,J4.6,J6.3,E.3)",
+      "rootCause": "Consequence of RI-R1-3/4/5: WorldShell embedBody (WorldShell.jsx:1409, overflowY:auto implies overflow-x auto) scrolls horizontally when children overflow, so the card's left edge reads -23..-71px.",
+      "files": [
+        "src/components/admin/ReleaseIntelligencePanel.jsx",
+        "src/components/WorldShell.jsx"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Overflow is caused by the panel's own content (RI-R1-3/4/5); there is nothing to overflow on the base."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Consequence of RI-R1-3/4/5: WorldShell embedBody (WorldShell.jsx:1409, overflow…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "RI-R1-7",
+      "feature": "release-intelligence",
+      "status": "open",
+      "class": "environment",
+      "attempts": 0,
+      "step": "MCP_GAP: no MCP tool for this feature's capabilities",
+      "rootCause": "server/lib/mcpToolRegistry.js is not on the integration branch; it exists only on release-loop/platform-mcp-build (not yet integrated). definition.json says to record the gap and assign it to platfor…",
+      "files": [
+        "server/lib/mcpToolRegistry.js",
+        "server/routes/releaseIntelligence.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "mcpToolRegistry.js is now on the integration branch (b77049b); it has only release_tracker_read for this feature, so trends, failed runs, import and settings t…"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "server/lib/mcpToolRegistry.js is not on the integration branch; it exists only …",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "RI-R1-9",
+      "feature": "release-intelligence",
+      "status": "open",
+      "class": "coverage_gap",
+      "attempts": 0,
+      "step": "No step asserts the single entry point (B7)",
+      "rootCause": "Frozen 'Where things are' context line 8 says 'Also reachable from Classic Tools', contradicting owner direction, and no step checks Classic Tools.",
+      "files": [
+        "docs/training/release-intelligence.md",
+        "docs/training/baselines/release-intelligence/v1.json"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Frozen spec line 8 is the feature's own spec; needs an amendment."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Frozen 'Where things are' context line 8 says 'Also reachable from Classic Tool…",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "cover-letter-agent-B1",
       "feature": "cover-letter-agent",
       "status": "process_note",
@@ -3881,6 +4360,228 @@
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "in-app-release-loop-B1",
+      "feature": "in-app-release-loop",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "interface parity",
+      "rootCause": "platform-mcp owns the registry and is not merged here",
+      "files": [
+        "server/lib/mcpToolRegistry.js",
+        "server/lib/releaseLoopPlatform.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "in-app-release-loop-B2",
+      "feature": "in-app-release-loop",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "wiring",
+      "rootCause": "Copied earlier admin-tab pattern",
+      "files": [
+        "server/db.js",
+        "src/components/admin/AdminShell.jsx",
+        "docs/changes/in-app-release-loop.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conf…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "in-app-release-loop-B3",
+      "feature": "in-app-release-loop",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "process definition docs",
+      "rootCause": "Frozen release-loop-tooling spec journey 1 step 3 forbids claiming the view",
+      "files": [
+        "server/data/releaseLoop/definition.json",
+        "docs/release-process.md",
+        ".claude/skills/salt-basin-release-loop/SKILL.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "in-app-release-loop-B4",
+      "feature": "in-app-release-loop",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "editable definition",
+      "rootCause": "Gate logic references stage keys; editing deferred",
+      "files": [
+        "src/components/admin/ReleaseLoopPanel.jsx",
+        "server/lib/releaseLoopDefinition.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-B5",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Interface parity for every capability",
+      "rootCause": "Seed tools covered only the 11 named capabilities; remaining routes recorded as gaps rather than built.",
+      "files": [
+        "server/lib/capabilityParity.js",
+        "server/lib/mcpToolRegistry.js",
+        "server/data/mcpToolManifest.json"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-B6",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Seed tools list in the brief",
+      "rootCause": "Dependency feature absent.",
+      "files": [
+        "server/lib/mcpToolRegistry.js",
+        "server/lib/capabilityParity.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-B10",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "Connected Agents / Capabilities screens reachable from the World Shell",
+      "rootCause": "Followed the older admin_nav tab pattern in addition to World Shell islands.",
+      "files": [
+        "server/db.js",
+        "src/components/admin/AdminShell.jsx",
+        "server/data/defaultMemberConfig.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conf…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-B11",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Bearer-token auth on /mcp",
+      "rootCause": "Out of build scope.",
+      "files": [
+        "server/lib/mcpServer.js",
+        "server/index.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (requirement_gap)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-B12",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "Account gates on tools/call (428)",
+      "rootCause": "Training spec lacks a step.",
+      "files": [
+        "docs/training/platform-mcp.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-B13",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "Validation evidence",
+      "rootCause": "Build walks were not filed as a round log.",
+      "files": [
+        "docs/test-results/platform-mcp/"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (process)",
           "commit": null
         }
       ]
