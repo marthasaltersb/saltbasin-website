@@ -41,7 +41,7 @@ Uses your own fresh local database `$DB` (create with `createdb -h /tmp -p 5433 
 
 1. [J3b.1] `node scripts/create-test-member.mjs --out $FX/creds.json` exits 0. `$FX/creds.json` contains `member.email` = `member@test.local`, `member.password` = `TestPass!2345`, `member.slug` = `member`, `member.careerTerms` true, `member.platformTerms` true, and `admin.careerTerms` and `admin.platformTerms` true.
 2. [J3b.2] Run it again: exits 0 with the same values (idempotent, no second account).
-3. [J3b.3] In Chromium open `http://localhost:Q/login`, sign in as `member@test.local` / `TestPass!2345`. Expect the URL to become `/world` and the page to show **Your World**, **Journeys** and **Classic Tools**, with no password-change page and no terms page.
+3. [J3b.3] In Chromium open `http://localhost:Q/login`, sign in as `member@test.local` / `TestPass!2345`. Expect the URL to become `/world` and the page to show **Journeys** and **Classic Tools**, with no password-change page and no terms page. On desktop the page also shows the **Your World** subtitle; at 390px that subtitle is hidden by design and is not checked.
 4. [J3b.4] `DATABASE_URL=postgres://postgres@db.example.supabase.co:5432/postgres node scripts/create-test-member.mjs` exits 2 and prints `Refusing: DATABASE_URL must point at a local test database (got host "db.example.supabase.co").`
 5. [J3b.5] Console on step 3: the only errors allowed are failed loads of external hosts (fonts) blocked by the sandbox proxy; no page errors.
 
