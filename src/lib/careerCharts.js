@@ -100,7 +100,7 @@ export function proficiencyBarsHtml({ rows, levels, title, subtitle, footnote, m
   const legend = ordered.map((l, i) => `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:10px"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${TIER_RAMP[Math.min(i, TIER_RAMP.length - 1)]}"></span>${esc(l.label)}</span>`).join('');
   return `<div style="font-family:${FONT};break-inside:avoid">
     ${titleHtml(title, subtitle)}
-    <svg viewBox="0 0 ${labelW + trackW + (shown.some((r) => String(r.levelLabel || '').includes('·')) ? 170 : 90)} ${height}" width="100%" role="img" aria-label="${esc(title || 'Proficiency levels')}" style="display:block;max-width:100%;min-width:500px">${rowsSvg}</svg>
+    <svg viewBox="0 0 ${labelW + trackW + (shown.some((r) => String(r.levelLabel || '').includes('·')) ? 170 : 90)} ${height}" width="100%" role="img" aria-label="${esc(title || 'Proficiency levels')}" style="display:block;max-width:100%">${rowsSvg}</svg>
     <div style="font-size:0.62rem;color:${CHART_TOKENS.secondary};margin-top:0.35rem">${legend}</div>
     ${footnote ? `<div style="font-size:0.6rem;color:${CHART_TOKENS.secondary};margin-top:0.35rem;font-style:italic"><span style="color:${CHART_TOKENS.accent};font-weight:700">†</span> ${esc(footnote.replace(/^Proficiency levels marked † are /, 'Levels marked † are '))}</div>` : ''}
   </div>`;
@@ -141,7 +141,7 @@ export function trendBarsHtml({ series, title, subtitle, unit = '' }) {
   const legend = `<span style="display:inline-flex;align-items:center;gap:4px"><svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="${CHART_TOKENS.accent}" stroke-width="2" stroke-dasharray="5 4"/></svg>Trend</span>`;
   return `<div style="font-family:${FONT};break-inside:avoid">
     ${titleHtml(title, subtitle)}
-    <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${esc(title || 'Trend')}" style="display:block;max-width:100%;min-width:500px">${grid}${bars}${trend}${endLabel}${xlabels}</svg>
+    <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${esc(title || 'Trend')}" style="display:block;max-width:100%">${grid}${bars}${trend}${endLabel}${xlabels}</svg>
     <div style="font-size:0.62rem;color:${CHART_TOKENS.secondary};margin-top:0.2rem">${legend}</div>
   </div>`;
 }
@@ -207,7 +207,7 @@ export function durationTimelineHtml({ rows, title, subtitle, maxItems = 12, cur
     : '';
   return `<div style="font-family:${FONT};break-inside:avoid">
     ${titleHtml(title, subtitle)}
-    <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${esc(title || 'Career timeline')}" style="display:block;max-width:100%;min-width:500px">${axis}${bars}</svg>
+    <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${esc(title || 'Career timeline')}" style="display:block;max-width:100%">${axis}${bars}</svg>
     ${legend}
   </div>`;
 }

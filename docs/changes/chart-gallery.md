@@ -61,4 +61,11 @@ Output Template editor (World Shell -> Journeys -> Output Templates, also Classi
 
 ## Fix notes per round
 
-(none yet)
+
+
+### Fix notes — round 2
+
+- **CG-R1-1 (recurrence, preview not sticky)**: took only the `OutputTemplateConfigurator.jsx` hunks of fix branch `release-loop/chart-gallery-fix-r1` (dc6b5f0, the salvaged untested commit); its other files (ChartGallery.jsx, api.js, server) were not merged because they are outside this triage item. Dropped `flex:1`/`overflowY:auto` from the hub and configurator wrappers so `position:sticky` binds to the real shell scroller; the preview column is sticky only when not narrow; the iframe height is `min(640px, calc(100vh - 3.5rem))` (520px when narrow); `minWidth:0` on grid children. Files: `src/components/admin/OutputTemplateConfigurator.jsx`. Spec J2 step 2 now also checks sticky behaviour at 1400 and 600 px.
+- **CG-R1-2 (recurrence, status in failed-load alert)**: proficiency now loads through `loadJson('/api/career/proficiency?period=current')`, and `loadJson` appends the JSON `error` detail when present, tolerating empty/non-JSON bodies (`HTTP 500 Internal Server Error - ...`). `api.js` left untouched.
+- **CG-R2-1 (chart clipped in preview)**: removed `min-width:500px` from the proficiency, trend and timeline SVGs (all three had the same pattern) so the viewBox scales to the container. Files: `src/lib/careerCharts.js`; `docs/training/chart-gallery.md` J2 step 2 now requires visually unclipped segments and labels (screenshot-based).
+- How checked (all three): `npm run build` passes; production server on a fresh database, fictional member with 4 skills, Chromium at 1400 px. The preview column stayed at the same top offset after scrolling the real scroller (sticky holds), at 600 px it stacks below. The proficiency SVG measured 280 px inside a 380 px iframe with no horizontal overflow; screenshot shows all five segments and level labels. Intercepted proficiency 500 (JSON body and empty body) shows "HTTP 500 Internal Server Error - boom" and "HTTP 500 Internal Server Error" in both alerts.

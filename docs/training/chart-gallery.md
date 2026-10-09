@@ -38,6 +38,8 @@ Values below assume the current year is 2026 (Forecast modeling = 13 years). If 
 2. Choose **Skills only** under Show; set **Top rows** to `4`; type `Skill strength` in the title box. Press **+ Add**.
    - Expect the card to collapse. Under "Configured Infographics ..." expect a row "1. Skill strength" with sub-label "Proficiency Tiers" and buttons Edit, up, down, remove.
    - Within about 2 seconds the Live Preview shows a heading **SKILL STRENGTH** and rows Process design (Expert), Forecast modeling (Expert), Pricing analytics (Advanced), Stakeholder reporting (Advanced), and a level legend (Exposure, Foundational, Proficient, Advanced, Expert). No dagger (†) and no footnote yet.
+   - Visually (take a screenshot of the preview column; text found in the page source is not enough): the Skill strength chart fits inside the Live Preview column with nothing clipped at the right edge. All five tier segments of each row and each row's level label (Expert, Advanced, ...) are fully visible, and the legend is complete. There is no horizontal scrollbar inside the preview.
+   - Scroll the page (the real scroller, at a 1400 px and again at a 600 px wide window) with the gallery taller than the window: at 1400 px the Live Preview column stays visible beside the gallery; at 600 px it sits below the gallery without overlapping it.
 
 ## Journey 3 — Edit a configured chart in place; footnote follows the rules
 
