@@ -107,7 +107,7 @@ export function resolveRequest({ request, blocks, search, units, settings, jobRe
       const next = applyTonePreset(b.text, tonePreset);
       if (next !== b.text) ops.push({ op: 'replace', paragraph: i + 1, text: next });
     });
-    if (!ops.length) return { kind: 'info', message: `The "${tonePreset.label}" tone preset found nothing to change${nums.length ? ` in paragraph ${nums.join(', ')}` : ' in the letter'}. Presets and their wording rules are editable under Settings.` };
+    if (!ops.length) return { kind: 'unsatisfied', message: `The "${tonePreset.label}" tone preset found nothing to change${nums.length ? ` in paragraph ${nums.join(', ')}` : ' in the letter'}. Presets and their wording rules are editable under Settings.` };
     return { kind: 'edits', ops, summary: `Applied the "${tonePreset.label}" tone preset (rule-based).` };
   }
 

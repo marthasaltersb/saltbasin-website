@@ -4,11 +4,11 @@
 // run assertReadyToFinalize on the server.
 import express from 'express';
 import { requireUser } from '../auth.js';
-import { listCareerOpportunities } from '../lib/careerOpportunityRollups.js';
-import { ensureCoverLetterForOpportunity, latestAutoDraftError, loadOpportunity, setJobRecText } from '../lib/coverLetterAutoDraft.js';
+import { listOpportunityPackages, rowView } from '../lib/coverLetterPackages.js';
+import { ensureCoverLetterForOpportunity, loadOpportunity, setJobRecText } from '../lib/coverLetterAutoDraft.js';
 import { getSettings, saveSettings, PROVIDERS, PLACEHOLDERS, DEFAULT_SETTINGS } from '../lib/coverLetterTemplate.js';
 import { openLetter, listTurns, runTurn, decideTurn, metricsSummary, AgentRequestError } from '../lib/coverLetterAgent.js';
-import { assembleApplicationPackage, peekOpportunityPackage } from '../lib/packageAssembly.js';
+import { assembleApplicationPackage } from '../lib/packageAssembly.js';
 
 const router = express.Router();
 router.use(requireUser);
@@ -17,8 +17,6 @@ function fail(res, e) {
   const status = e instanceof AgentRequestError ? e.status : e.status && e.status >= 400 && e.status < 600 ? e.status : 400;
   res.status(status).json({ error: e.message });
 }
-
-const rowView = (r) => (r ? { id: Number(r.id), name: r.preset_name, status: r.output_status, outputType: r.output_type, createdAt: Number(r.created_at), approvedAt: r.approved_at != null ? Number(r.approved_at) : null } : null);
 
 router.get('/settings', async (req, res) => {
   try {
@@ -35,18 +33,7 @@ router.put('/settings', async (req, res) => {
 // Tracked opportunities with their cover letter + package state. Read-only.
 router.get('/opportunities', async (req, res) => {
   try {
-    const { opportunities } = await listCareerOpportunities(req.user.id);
-    const out = [];
-    for (const o of opportunities) {
-      const peek = await peekOpportunityPackage(req.user.id, o.id);
-      out.push({
-        id: o.id, stage: o.currentStage, jobTitle: o.metadata?.jobTitle || '', company: o.entities?.[0]?.canonicalName || '',
-        hasJobRecText: !!o.metadata?.notes, jobRecText: o.metadata?.notes || '',
-        letter: rowView(peek.letter), resumes: peek.resumes.map(rowView),
-        combined: rowView(peek.combined), combinedCurrent: peek.combinedCurrent,
-        autoDraftError: peek.letter ? null : await latestAutoDraftError(o.id),
-      });
-    }
+    const out = await listOpportunityPackages(req.user.id);
     res.json({ opportunities: out });
   } catch (e) { fail(res, e); }
 });

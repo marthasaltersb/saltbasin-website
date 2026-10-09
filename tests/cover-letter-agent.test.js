@@ -3,7 +3,8 @@
 // Fictional data only.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { unitsFromContent, searchUnits } from '../server/lib/packageSearch.js';
+import { unitsFromContent, searchUnits, jobRecSource } from '../server/lib/packageSearch.js';
+import { buildCoverLetterContent, DEFAULT_SETTINGS } from '../server/lib/coverLetterTemplate.js';
 import { resolveRequest } from '../server/lib/coverLetterRules.js';
 import { validateOps, resultBlocks, buildDiff, assertTargetedEditSet, EditSetError } from '../server/lib/coverLetterEdits.js';
 
@@ -106,4 +107,26 @@ test('edit-set validation rejects regenerated letters, out-of-context paragraphs
   assert.throws(() => validateOps([{ op: 'replace', paragraph: 3, text: 'y'.repeat(2000) }], 6), EditSetError);
   const diff = buildDiff(blocks, validateOps([{ op: 'delete', paragraph: 4 }, { op: 'insert_after', paragraph: 3, text: 'New line.' }], 6));
   assert.deepEqual(diff.map((r) => r.status), ['same', 'same', 'same', 'inserted', 'deleted', 'same', 'same']);
+});
+
+test('metrics are used when the job rec has no matching text (J1.2)', () => {
+  const content = buildCoverLetterContent({
+    member: { name: 'Pat Example' },
+    opportunity: { jobTitle: '', company: '', location: '', notes: '' },
+    career: { jobs: [{ company: 'Harbor Logistics', title: 'Value Architect', start_date: '2019', end_date: '', key_metrics: 'raised margin by 4 points' }], skills: [] },
+    settings: { template: DEFAULT_SETTINGS.template },
+  });
+  assert.ok(content.blocks.some((b) => /raised margin by 4 points/.test(b.text)));
+});
+
+test('a tone preset with nothing to change is answered by rules (J8.4)', () => {
+  const request = 'Make it more formal';
+  const d = resolveRequest({ request, blocks: [{ type: 'paragraph', role: 'body', text: 'Thank you.' }], search: searchUnits(units, request), units, settings, jobRec });
+  assert.equal(d.kind, 'unsatisfied');
+});
+
+test('title/location alone do not count as job rec text (E.5)', async () => {
+  const src = await jobRecSource({ target_job_description: null, career_opportunity_rod_id: null });
+  assert.equal(src.real, false);
+  assert.equal((await jobRecSource({ target_job_description: 'Own pricing.' })).real, true);
 });
