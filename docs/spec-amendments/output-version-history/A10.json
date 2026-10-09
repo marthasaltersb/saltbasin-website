@@ -1,0 +1,38 @@
+{
+  "id": "A10",
+  "feature": "output-version-history",
+  "fromBaseline": 2,
+  "proposedBy": "triage:output-version-history:r3",
+  "round": 3,
+  "triageItems": [
+    "T3"
+  ],
+  "reason": "E.2 (unreadable version, red message and compare message) cannot be produced by point-and-click; repeat of A2/A7.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "E.2",
+      "before": "A version whose content cannot be read is still listed with a red message; comparing against it shows the unreadable-comparison message (browser, desktop and mobile).",
+      "after": "Pending owner decision on A7: cli-only check against a committed fictional fixture lineage whose second version has unparseable content, read through GET /api/resume-outputs/:id/versions, expecting the red message and 'One of the selected versions could not be read, so they cannot be compared.'",
+      "tracesTo": "docs/changes/output-version-history.md unreadable-version behaviour",
+      "whyNeeded": "Step is unperformable in the browser as written; weaker if cli-only, hence needs the owner."
+    }
+  ],
+  "review": {
+    "status": "needs_owner",
+    "reviewer": "amend:output-version-history:r3",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "fail: drops the desktop and mobile browser check of the red message and the compare-area message",
+      "Retire only duplicates": "fail: no other step tests the compare-area message",
+      "Exact": "fail: no fixture is written in the spec and the API response carries no compare message (that text is rendered by the dialog), so the cli expectation is not exact",
+      "Reachable": "pass",
+      "Deterministic": "fail: 'a committed fictional fixture lineage' does not exist in the spec or repository",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Same question as A2 and A7, still without an owner answer; the proposal adds nothing new. Not a product defect. It cannot be approved until the owner accepts weaker coverage; if accepted, the resubmission must write the fixture (exact unparseable content and how it is created) and the exact strings into the spec.",
+    "question": "Do you accept E.2 becoming a cli-only check against a fictional fixture lineage (second version with unparseable content) read through GET /api/resume-outputs/:id/versions, so the red message and the compare-area message 'One of the selected versions could not be read, so they cannot be compared.' are no longer walked in the browser at 1280px and 390px? If yes, resubmit with the fixture and exact expected strings written into the spec.",
+    "at": "2026-10-09T17:30:00.000Z"
+  }
+}
