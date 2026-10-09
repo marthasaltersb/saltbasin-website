@@ -210,6 +210,13 @@ export const ISLAND_REGISTRY = {
     dataBinding: { store: 'server/lib/capabilityParity.js (config registry, no table)' },
     permission: { requiredRole: 'admin', crud: ['read'], enforced: true },
   },
+  // Release loop (2026-10-09): the platform copy of the release process (definition,
+  // runs, rounds, live steps, bugs, reconciliation, escalations). Admin only.
+  releaseLoop: {
+    variant: 'rings', kind: 'embed', accent: 'teal',
+    dataBinding: { store: 'release_loop_runs' },
+    permission: { requiredRole: 'admin', crud: ['read', 'update', 'approve'], enforced: true },
+  },
   leads: {
     variant: 'rings', kind: 'embed', accent: 'teal',
     dataBinding: { store: 'leads' },

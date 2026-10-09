@@ -3327,6 +3327,8 @@ async function bootstrap() {
         // Platform MCP server (additive): token management + the interface-parity map.
         { viewId: 'system',   viewLabel: 'System',                        id: 'connected-agents', label: 'Connected Agents', componentId: 'connectedAgents', sortOrder: 5 },
         { viewId: 'system',   viewLabel: 'System',                        id: 'capabilities',     label: 'Capabilities',     componentId: 'capabilities',    sortOrder: 6 },
+        // Release loop inside the platform (additive; reachable from the World Shell).
+        { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'release-loop', label: 'Release loop', componentId: 'releaseLoop', sortOrder: 5 },
       ];
 
       for (const t of newTabs) {
@@ -5388,6 +5390,16 @@ Rod state, per event:
     }
   } catch (e) {
     console.warn('[db] agent roster/workflow seed warning:', e.message);
+  }
+
+  // Release loop roles (incl. reconciliation) as platform-default agent
+  // definitions, built from server/data/releaseLoop/definition.json.
+  // Insert-if-missing only; never touches an org's or admin's edited row.
+  try {
+    const { seedReleaseLoopAgents } = await import('./lib/releaseLoopAgents.js');
+    await seedReleaseLoopAgents(sql);
+  } catch (e) {
+    console.warn('[db] release loop agent seed warning:', e.message);
   }
 
   // Scoring + cadence Currents (journey_current_definitions) for the two

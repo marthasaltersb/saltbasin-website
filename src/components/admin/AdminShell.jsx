@@ -18,6 +18,7 @@ const MyResumePanel = lazy(() => import('./MyResumePanel.jsx'));
 const ReleaseIntelligencePanel = lazy(() => import('./ReleaseIntelligencePanel.jsx'));
 const ConnectedAgentsPanel = lazy(() => import('./ConnectedAgentsPanel.jsx'));
 const CapabilitiesPanel = lazy(() => import('./CapabilitiesPanel.jsx'));
+const ReleaseLoopPanel = lazy(() => import('./ReleaseLoopPanel.jsx'));
 const OutputTemplateConfiguratorHub = lazy(() => import('./OutputTemplateConfigurator.jsx').then((module) => ({ default: module.OutputTemplateConfiguratorHub })));
 const CareerMasterPanel = lazy(() => import('./CareerMasterPanel.jsx'));
 const ProfileHub = lazy(() => import('./ProfileHub.jsx'));
@@ -75,6 +76,7 @@ const TAB_COMPONENTS = {
   releaseIntelligence: () => <ReleaseIntelligencePanel />,
   connectedAgents: () => <ConnectedAgentsPanel />,
   capabilities: () => <CapabilitiesPanel />,
+  releaseLoop:    () => <ReleaseLoopPanel />,
   plmDashboard:   () => <MemberPlmPanel scope="admin" />,
   resume:         (props) => <MyResumePanel {...props} />,
   outputTemplates: (props) => <OutputTemplateConfiguratorHub {...props} />,
@@ -124,6 +126,7 @@ const FALLBACK_ADMIN_NAV = {
       { id: 'backlog', label: 'Backlog', componentId: 'backlog', sortOrder: 1 },
       { id: 'qa', label: 'QA', componentId: 'qa', sortOrder: 2 },
       { id: 'release-intelligence', label: 'Release Intelligence', componentId: 'releaseIntelligence', sortOrder: 4 },
+      { id: 'release-loop', label: 'Release loop', componentId: 'releaseLoop', sortOrder: 5 },
     ]},
     { id: 'crm', label: 'Customer Relationship Management', sortOrder: 2, tabs: [
       { id: 'leads', label: 'Leads', componentId: 'leads', sortOrder: 0 },
