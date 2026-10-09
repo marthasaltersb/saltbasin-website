@@ -8,6 +8,7 @@ import {
   updateProjectionStatus,
 } from '../lib/resumeProjection.js';
 import QRCode from 'qrcode';
+import { renderProjectionToDocxBuffer, filenameFor } from '../lib/outputRendering.js';
 import {
   importApplicationPackage,
   approveOutputForSharing,
@@ -114,6 +115,19 @@ router.delete('/:id/share', async (req, res) => {
   const ok = await revokeOutputSharing(Number(req.params.id), req.user.id);
   if (!ok) return res.status(404).json({ error: 'Resume output not found' });
   res.json({ ok: true });
+});
+
+// Stamped .docx twin of the PDF: true created/modified dates, authors, and (once approved) the slug QR as a
+// clickable header image whose hyperlink is the /r/<slug> URL.
+router.get('/:id/download.docx', async (req, res) => {
+  try {
+    const row = await getOwnedOutputWithApprover(Number(req.params.id), req.user.id);
+    if (!row) return res.status(404).json({ error: 'Resume output not found' });
+    const buffer = await renderProjectionToDocxBuffer(row, { shareUrl: row.share_token ? shareUrlFor(row.share_token, req) : null });
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.setHeader('Content-Disposition', `attachment; filename="${filenameFor(row).replace(/\.pdf$/, '.docx')}"`);
+    res.send(buffer);
+  } catch (e) { res.status(400).json({ error: e.message }); }
 });
 
 // QR image for the approved version's slug — .svg for print/Word, .png for

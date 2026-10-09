@@ -330,6 +330,17 @@ export async function renderProjectionToPdfBuffer(projection, { shareUrl = null 
   });
 }
 
+/** .docx twin of the PDF for document_blocks outputs: real dates/authors, slug QR as a clickable header image. */
+export async function renderProjectionToDocxBuffer(projection, { shareUrl = null } = {}) {
+  let content = parseContent(projection);
+  if (content.format !== 'document_blocks') throw new Error('Only tailored application documents can be downloaded as .docx.');
+  if (isCareerBound(content)) content = publicBlocks((await resolveCareerBound(Number(projection.user_id), content)).content);
+  const metadata = projectionMetadata(projection);
+  const qrUrl = projection.output_status === 'published' && projection.share_token ? shareUrl : null;
+  const { renderDocumentBlocksToDocxBuffer } = await import('./outputDocx.js');
+  return renderDocumentBlocksToDocxBuffer({ title: titleFor(projection), content, metadata, shareUrl: qrUrl });
+}
+
 /** Safe filename for a download/ZIP entry — no path separators, stable across re-downloads of the same projection. */
 export function filenameFor(projection) {
   const base = titleFor(projection).replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '') || 'output';

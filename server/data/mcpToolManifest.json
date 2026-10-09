@@ -19,6 +19,9 @@
     "career_experience_definition_save",
     "career_experience_definition_delete",
     "career_proficiency_override_save",
-    "career_proficiency_override_clear"
+    "career_proficiency_override_clear",
+    "application_output_revoke_qr",
+    "application_package_import",
+    "shared_output_resolve"
   ]
 }
