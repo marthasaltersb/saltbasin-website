@@ -201,5 +201,109 @@
         "session-mapping: agent stopped → **being built**"
       ]
     }
+  },
+  {
+    "version": "0.2.0-u3",
+    "release": "2026-10-02-application-packages",
+    "at": "2026-10-09T06:09:45.877Z",
+    "commit": "d74be28cdfbf069dd19088ede91695d4f9e45ff8",
+    "previous": "0.2.0-u2",
+    "headline": "Release-loop tooling passes every browser step; chart-gallery fixes in",
+    "note": "Release-loop tooling: round 2 re-test passed all 108 steps, so the round 1 fixes worked. It is not marked passed yet: 4 commands that failed during its fix round are still unresolved, and the release rules don't allow 'done' with unreconciled failures; the scope check is deciding whose they are. Chart gallery: the fix agent fixed all 3 round 2 bugs; 5 commands it reported as failed are being reviewed before its fixes are merged and re-tested. 13 agents are working.",
+    "metrics": {
+      "featuresTotal": 14,
+      "featuresPassed": 0,
+      "openBugs": 55,
+      "verified": 18,
+      "backlog": 37,
+      "needPerson": 0,
+      "agentsRunning": 13,
+      "features": {
+        "proficiency-live-qr": {
+          "status": "validate",
+          "round": 5,
+          "score": "29/30"
+        },
+        "world-shell-navigation": {
+          "status": "validate",
+          "round": 1,
+          "score": "45/48"
+        },
+        "career-bound-outputs": {
+          "status": "validate",
+          "round": 2,
+          "score": "54/56"
+        },
+        "qr-gated-outputs": {
+          "status": "validate",
+          "round": 1,
+          "score": "45/48"
+        },
+        "no-silent-failures": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "release-loop-tooling": {
+          "status": "scope",
+          "round": 2,
+          "score": "108/108"
+        },
+        "output-version-history": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "resume-rollups": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "chart-gallery": {
+          "status": "reconcile",
+          "round": 2,
+          "score": "21/24"
+        },
+        "release-intelligence": {
+          "status": "failing",
+          "round": 1,
+          "score": "69/74"
+        },
+        "cover-letter-agent": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "in-app-release-loop": {
+          "status": "build",
+          "round": null,
+          "score": null
+        },
+        "session-mapping": {
+          "status": "build",
+          "round": null,
+          "score": null
+        },
+        "world-shell-layers": {
+          "status": "build",
+          "round": null,
+          "score": null
+        }
+      }
+    },
+    "comparison": {
+      "lines": [
+        "Features passed: 0 (no change) of 14",
+        "Open bugs caused by this work: 60 → **55** (-5)",
+        "Bugs verified fixed: 13 → **18** (+5)",
+        "Backlog (not this work): 37 (no change)",
+        "Waiting on a person: 0 (no change)",
+        "Agents running: 13 → 13"
+      ],
+      "featureChanges": [
+        "release-loop-tooling: test round 1 24/35 → round 2 **108/108**; in browser testing → **scope check**",
+        "chart-gallery: being fixed → **reviewing failed commands**"
+      ]
+    }
   }
 ]

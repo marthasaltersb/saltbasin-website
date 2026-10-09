@@ -2,6 +2,49 @@
 
 Release **0.2.0** (`2026-10-02-application-packages`), built on branch `claude/zealous-meitner-5tuft5`. Each update is numbered `0.2.0-u<n>`, pinned to the commit it describes, and compared with the update before it. Newest first.
 
+## 0.2.0-u3 — 2026-10-09 06:09 UTC
+
+Commit [`d74be28`](https://github.com/marthasaltersb/saltbasin-website/commit/d74be28cdfbf069dd19088ede91695d4f9e45ff8) · compared with 0.2.0-u2
+
+**Release-loop tooling passes every browser step; chart-gallery fixes in**
+
+Release-loop tooling: round 2 re-test passed all 108 steps, so the round 1 fixes worked. It is not marked passed yet: 4 commands that failed during its fix round are still unresolved, and the release rules don't allow 'done' with unreconciled failures; the scope check is deciding whose they are. Chart gallery: the fix agent fixed all 3 round 2 bugs; 5 commands it reported as failed are being reviewed before its fixes are merged and re-tested. 13 agents are working.
+
+**Compared with the previous update**
+
+- Features passed: 0 (no change) of 14
+- Open bugs caused by this work: 60 → **55** (-5)
+- Bugs verified fixed: 13 → **18** (+5)
+- Backlog (not this work): 37 (no change)
+- Waiting on a person: 0 (no change)
+- Agents running: 13 → 13
+
+**Feature changes**
+
+- release-loop-tooling: test round 1 24/35 → round 2 **108/108**; in browser testing → **scope check**
+- chart-gallery: being fixed → **reviewing failed commands**
+
+<details><summary>Every feature at this update</summary>
+
+| Feature | Status | Latest test |
+|---|---|---|
+| proficiency-live-qr | in browser testing | round 5: 29/30 |
+| world-shell-navigation | in browser testing | round 1: 45/48 |
+| career-bound-outputs | in browser testing | round 2: 54/56 |
+| qr-gated-outputs | in browser testing | round 1: 45/48 |
+| no-silent-failures | in browser testing | not tested yet |
+| release-loop-tooling | scope check | round 2: 108/108 |
+| output-version-history | in browser testing | not tested yet |
+| resume-rollups | in browser testing | not tested yet |
+| chart-gallery | reviewing failed commands | round 2: 21/24 |
+| release-intelligence | failing | round 1: 69/74 |
+| cover-letter-agent | in browser testing | not tested yet |
+| in-app-release-loop | being built | not tested yet |
+| session-mapping | being built | not tested yet |
+| world-shell-layers | being built | not tested yet |
+
+</details>
+
 ## 0.2.0-u2 — 2026-10-09 06:04 UTC
 
 Commit [`e84a8ed`](https://github.com/marthasaltersb/saltbasin-website/commit/e84a8ed451309409d13c86b26c87162ae647904e) · compared with 0.2.0-u1
