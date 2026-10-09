@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T06:05:58.785Z",
+  "exportedAt": "2026-10-09T06:09:26.896Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -42,11 +42,11 @@
       "backlog": 3
     },
     "release-loop-tooling": {
-      "status": "validate",
-      "lastRound": 1,
-      "lastScore": "24/35",
-      "lastReport": "docs/test-results/release-loop-tooling/round-1.md (NOT WRITTEN: the write tool refused report files for subagents, so the full report is in this structured result; the file at that path is the stale round-1 report from 2026-10-02, not this round. Step log: /var/tmp/sbpg/release-loop/release-loop-tooling/round-1/steps.jsonl, screenshots in the same directory.)",
-      "openBugs": 9,
+      "status": "scope",
+      "lastRound": 2,
+      "lastScore": "108/108",
+      "lastReport": "docs/test-results/release-loop-tooling/round-2.md",
+      "openBugs": 4,
       "backlog": 2
     },
     "output-version-history": {
@@ -1683,7 +1683,7 @@
     {
       "id": "release-loop-tooling-B1",
       "feature": "release-loop-tooling",
-      "status": "retesting",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "Fix B1: docs claim a capability never built",
@@ -1717,13 +1717,19 @@
           "event": "fixed",
           "note": "Removed the World Shell 'Release loop' view and /api/release-loop claims. The three places now describe the tracker artifact and say in-app agents read the definition file. CLAUDE.md needed no edit.",
           "commit": "082eed1"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step",
+          "commit": "d8ee228"
         }
       ]
     },
     {
       "id": "release-loop-tooling-B2",
       "feature": "release-loop-tooling",
-      "status": "retesting",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "Fix B2: dead-agent detection limited to extras",
@@ -1755,13 +1761,19 @@
           "event": "fixed",
           "note": "Stale check now covers every running agent. It uses the transcript's last line, else the journal start time. Journal agents become 'stalled' and extras stay idle_or_done. Added --stale-minutes (defau…",
           "commit": "082eed1"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step",
+          "commit": "d8ee228"
         }
       ]
     },
     {
       "id": "release-loop-tooling-B3",
       "feature": "release-loop-tooling",
-      "status": "retesting",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "Fix B3: tracker 390px reflow",
@@ -1793,6 +1805,12 @@
           "event": "fixed",
           "note": "Added a max-width 640px block that turns .panel tables into stacked cards with data-label captions and border-box sizing. The panel's overflow-x stays as a fallback. Reworded J5 step 3.",
           "commit": "082eed1"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step",
+          "commit": "d8ee228"
         }
       ]
     },
@@ -1936,7 +1954,7 @@
     {
       "id": "RLT-T1",
       "feature": "release-loop-tooling",
-      "status": "retesting",
+      "status": "verified",
       "class": "spec_error",
       "attempts": 1,
       "step": "J1 step 2: bugEscalation.statuses",
@@ -1962,13 +1980,19 @@
           "event": "fixed",
           "note": "Training spec J1 step 2 now lists the ten statuses in definition order; added J1 step 3; Traces to gained the scope-check commits.",
           "commit": "082eed1"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step",
+          "commit": "d8ee228"
         }
       ]
     },
     {
       "id": "RLT-T2",
       "feature": "release-loop-tooling",
-      "status": "retesting",
+      "status": "verified",
       "class": "spec_error",
       "attempts": 1,
       "step": "J4 steps 1-2 (header, tiles, filters, agent card, Features column, Bugs and runs tables)",
@@ -1994,6 +2018,12 @@
           "event": "fixed",
           "note": "Rewrote J4 and J5 for the drill-down page (8 tiles, layers, crumbs, no filters, Open bugs layer expects B1 and B9). Counts come from the fixture, now 5 features and 19 agents.",
           "commit": "082eed1"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step",
+          "commit": "d8ee228"
         }
       ]
     },
