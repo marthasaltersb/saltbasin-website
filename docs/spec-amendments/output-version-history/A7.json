@@ -1,0 +1,38 @@
+{
+  "id": "A7",
+  "feature": "output-version-history",
+  "fromBaseline": 2,
+  "proposedBy": "triage:output-version-history:r2",
+  "round": 2,
+  "triageItems": [
+    "T3"
+  ],
+  "reason": "E.2 needs a stored version with unreadable content; no point-and-click route creates one.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "E.2",
+      "before": "Browser check that an unreadable version shows red message and compare-area message",
+      "after": "cli-only check against a committed fictional fixture lineage whose second version has unparseable content, via GET /api/resume-outputs/:id/versions",
+      "tracesTo": "change spec: unreadable versions are reported, not hidden",
+      "whyNeeded": "Not performable by point-and-click; pending owner acceptance of weaker browser coverage"
+    }
+  ],
+  "review": {
+    "status": "needs_owner",
+    "reviewer": "amend:output-version-history:r2",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "fail: drops the desktop and mobile browser check of the red message and the compare-area message",
+      "Retire only duplicates": "fail: removes the browser expectation and no other step tests the compare-area message",
+      "Exact": "fail: no fixture is written in the spec and no exact expected strings are given for the cli check",
+      "Reachable": "pass",
+      "Deterministic": "fail: 'a committed fictional fixture' does not exist in the spec or repository",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Same question as A2 (needs_owner, round 1), which has no owner answer on file. Product behaviour matches the step (server/lib/outputVersionHistory.js lists the unreadable version with an error; OutputVersionHistory.jsx shows the compare message), so this is not a product defect. It cannot be approved on the checklist until the owner accepts weaker browser coverage; if accepted, the resubmission must write the fixture and exact expected strings into the spec.",
+    "at": "2026-10-09T16:58:56.000Z",
+    "question": "Do you accept E.2 becoming a cli-only check against a fictional fixture lineage (second version with unparseable content) read through GET /api/resume-outputs/:id/versions, so the red message and the compare-area message 'One of the selected versions could not be read, so they cannot be compared.' are no longer walked in the browser at 1280px and 390px? If yes, resubmit with the fixture and exact expected strings written into the spec."
+  }
+}

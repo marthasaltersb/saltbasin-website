@@ -1,0 +1,37 @@
+{
+  "id": "A8",
+  "feature": "output-version-history",
+  "fromBaseline": 2,
+  "proposedBy": "triage:output-version-history:r2",
+  "round": 2,
+  "triageItems": [
+    "T10"
+  ],
+  "reason": "J4.2 names 'HEADER fields', which is not a label the product renders.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "J4.2",
+      "before": "unchanged lines are grey with a small type label (HEADER fields, HEADING, ROLE, ...)",
+      "after": "unchanged lines are grey with a small type label (NAME, HEADING, ROLE, PARAGRAPH, ...)",
+      "tracesTo": "change spec tracked-changes requirement (labels are block types)",
+      "whyNeeded": "Matches the block-type labels the product renders; observed by validator in round 2"
+    }
+  ],
+  "review": {
+    "status": "rejected",
+    "reviewer": "amend:output-version-history:r2",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "fail: PARAGRAPH is not a label in this step's document (header name, heading, role, one bullet); the round-2 validator observed exactly NAME, HEADING, ROLE, and a trailing '...' is not an exact list",
+      "Reachable": "pass",
+      "Deterministic": "fail: expects a PARAGRAPH label that does not appear in the fixed Journey 1-2 document",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Rejected as written; not a product defect (TrackedLine renders the field name for header lines, uppercased, and the block type otherwise). Replacing 'HEADER fields' by NAME is correct; resubmit listing exactly the labels present in this step's document: NAME, HEADING, ROLE (no PARAGRAPH, no ellipsis).",
+    "at": "2026-10-09T16:58:56.000Z"
+  }
+}

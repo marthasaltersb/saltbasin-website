@@ -1,0 +1,37 @@
+{
+  "id": "A6",
+  "feature": "output-version-history",
+  "fromBaseline": 2,
+  "proposedBy": "triage:output-version-history:r2",
+  "round": 2,
+  "triageItems": [
+    "T8"
+  ],
+  "reason": "Literal name Riley Fenn is unreachable under the fixed harness accounts (resubmission of the account part of A5).",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "J3.2",
+      "before": "Expect Viewing v1 of 2 (published)..., approved by Riley Fenn. (same Riley Fenn wording in J1.4, J2.4, J6.1 and Journey 0 account)",
+      "after": "approved by the logged-in member's display name: Riley Fenn for the Journey 0 fixture account, Test Member under the harness account member@test.local; same replacement in J1.4, J2.4, J6.1; Preconditions use the harness account instead of signing up riley.member@example.test",
+      "tracesTo": "docs/changes/output-version-history.md approval metadata requirement; definition.json testConstraints fixed harness accounts",
+      "whyNeeded": "Literal name is unreachable under fixed test constraints."
+    }
+  ],
+  "review": {
+    "status": "rejected",
+    "reviewer": "amend:output-version-history:r2",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "fail: the expected value is a disjunction (Riley Fenn for the Journey 0 fixture account, Test Member under the harness account), not one value; testConstraints allow only the harness account, so the Riley branch can never be walked",
+      "Reachable": "fail: Journey 0 (set a new password, tick consent checkboxes) is not replaced; the harness account has no forced password change and terms already accepted, so those instructions cannot be followed, and no replacement login text (email, password, expected shell text) is given",
+      "Deterministic": "pass",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Rejected as written (A5's rejection acknowledged); not a product defect, no product change required: the shipped history already shows the member's display name (Test Member for the harness account). The need is valid because testConstraints fix the account. Resubmit with one value only: account member@test.local (password TestPass!2345 from scripts/create-test-member.mjs), display name Test Member; every occurrence listed (J1.4 document header line, J2.4, J3.2, J6.1); Journey 0 replaced by an exact login-only instruction with the exact expected World Shell text; the Preconditions signup curl replaced by the create-test-member step.",
+    "at": "2026-10-09T16:58:56.000Z"
+  }
+}
