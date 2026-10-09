@@ -2,6 +2,66 @@
 
 Release **0.2.0** (`2026-10-02-application-packages`), built on branch `claude/zealous-meitner-5tuft5`. Each update is numbered `0.2.0-u<n>`, pinned to the commit it describes, and compared with the update before it. Newest first.
 
+## 0.2.0-u8 — 2026-10-09 16:17 UTC
+
+Commit [`e9f4a01`](https://github.com/marthasaltersb/saltbasin-website/commit/e9f4a0100abcbec155615c1bf83101fa7242303a) · compared with 0.2.0-u7
+
+**release-loop-tooling passed 30/30 on frozen baseline v3**
+
+First feature through the new spec governance. Round 4 tested baseline v2 (amendment A1, decided by the reviewer before the round) and failed one step on the phone: the step asked for a label that is hidden by design at 390px. Triage proposed amendment A2, the reviewer approved it against the checklist, and round 5 passed every step on baseline v3. The step count stayed at 30 across both rounds. The platform MCP gap is recorded against the platform-mcp feature.
+
+**Compared with the previous update**
+
+- Features passed: 0 → **1** (+1) of 17
+- Open bugs caused by this work: 62 → **60** (-2)
+- Bugs verified fixed: 15 → **18** (+3)
+- Backlog (not this work): 38 → **39** (+1)
+- Waiting on a person: 0 (no change)
+- Agents running: 0 → 15
+
+**Feature changes**
+
+- proficiency-live-qr: failing → **in browser testing**
+- world-shell-navigation: fixed, awaiting re-test → **in browser testing**
+- career-bound-outputs: fixed, awaiting re-test → **in browser testing**
+- qr-gated-outputs: fixed, awaiting re-test → **in browser testing**
+- no-silent-failures: agent stopped → **in browser testing**
+- release-loop-tooling: test round 3 104/126 → round 5 **30/30**; fixed, awaiting re-test → **passed**
+- chart-gallery: fixed, awaiting re-test → **in browser testing**
+- release-intelligence: agent stopped → **in browser testing**
+- output-version-history: agent stopped → **in browser testing**
+- resume-rollups: agent stopped → **in browser testing**
+- cover-letter-agent: agent stopped → **in browser testing**
+- in-app-release-loop: agent stopped → **being built**
+- world-shell-layers: agent stopped → **being built**
+- live-release-tracker: agent stopped → **being built**
+- render-bindings: agent stopped → **being built**
+- platform-mcp: agent stopped → **being built**
+
+<details><summary>Every feature at this update</summary>
+
+| Feature | Status | Latest test |
+|---|---|---|
+| proficiency-live-qr | in browser testing | round 5: 29/30 |
+| world-shell-navigation | in browser testing | round 1: 45/48 |
+| career-bound-outputs | in browser testing | round 2: 54/56 |
+| qr-gated-outputs | in browser testing | round 1: 45/48 |
+| no-silent-failures | in browser testing | not tested yet |
+| release-loop-tooling | passed | round 5: 30/30 |
+| chart-gallery | in browser testing | round 1: 17/20 |
+| release-intelligence | in browser testing | not tested yet |
+| output-version-history | in browser testing | not tested yet |
+| resume-rollups | in browser testing | not tested yet |
+| cover-letter-agent | in browser testing | not tested yet |
+| session-mapping | agent stopped | not tested yet |
+| in-app-release-loop | being built | not tested yet |
+| world-shell-layers | being built | not tested yet |
+| live-release-tracker | being built | not tested yet |
+| render-bindings | being built | not tested yet |
+| platform-mcp | being built | not tested yet |
+
+</details>
+
 ## 0.2.0-u7 — 2026-10-09 12:09 UTC
 
 Commit [`4239e1d`](https://github.com/marthasaltersb/saltbasin-website/commit/4239e1d45f684fc6be79e430bcdef6023425b7f4) · compared with 0.2.0-u6

@@ -798,5 +798,138 @@
         "platform-mcp: being built → **agent stopped**"
       ]
     }
+  },
+  {
+    "version": "0.2.0-u8",
+    "release": "2026-10-02-application-packages",
+    "at": "2026-10-09T16:17:05.834Z",
+    "commit": "e9f4a0100abcbec155615c1bf83101fa7242303a",
+    "previous": "0.2.0-u7",
+    "headline": "release-loop-tooling passed 30/30 on frozen baseline v3",
+    "note": "First feature through the new spec governance. Round 4 tested baseline v2 (amendment A1, decided by the reviewer before the round) and failed one step on the phone: the step asked for a label that is hidden by design at 390px. Triage proposed amendment A2, the reviewer approved it against the checklist, and round 5 passed every step on baseline v3. The step count stayed at 30 across both rounds. The platform MCP gap is recorded against the platform-mcp feature.",
+    "metrics": {
+      "featuresTotal": 17,
+      "featuresPassed": 1,
+      "openBugs": 60,
+      "verified": 18,
+      "backlog": 39,
+      "needPerson": 0,
+      "agentsRunning": 15,
+      "features": {
+        "proficiency-live-qr": {
+          "status": "validate",
+          "round": 5,
+          "score": "29/30"
+        },
+        "world-shell-navigation": {
+          "status": "validate",
+          "round": 1,
+          "score": "45/48"
+        },
+        "career-bound-outputs": {
+          "status": "validate",
+          "round": 2,
+          "score": "54/56"
+        },
+        "qr-gated-outputs": {
+          "status": "validate",
+          "round": 1,
+          "score": "45/48"
+        },
+        "no-silent-failures": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "release-loop-tooling": {
+          "status": "passed",
+          "round": 5,
+          "score": "30/30"
+        },
+        "chart-gallery": {
+          "status": "validate",
+          "round": 1,
+          "score": "17/20"
+        },
+        "release-intelligence": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "output-version-history": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "resume-rollups": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "cover-letter-agent": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "session-mapping": {
+          "status": "failed",
+          "round": null,
+          "score": null
+        },
+        "in-app-release-loop": {
+          "status": "build",
+          "round": null,
+          "score": null
+        },
+        "world-shell-layers": {
+          "status": "build",
+          "round": null,
+          "score": null
+        },
+        "live-release-tracker": {
+          "status": "build",
+          "round": null,
+          "score": null
+        },
+        "render-bindings": {
+          "status": "build",
+          "round": null,
+          "score": null
+        },
+        "platform-mcp": {
+          "status": "build",
+          "round": null,
+          "score": null
+        }
+      }
+    },
+    "comparison": {
+      "lines": [
+        "Features passed: 0 → **1** (+1) of 17",
+        "Open bugs caused by this work: 62 → **60** (-2)",
+        "Bugs verified fixed: 15 → **18** (+3)",
+        "Backlog (not this work): 38 → **39** (+1)",
+        "Waiting on a person: 0 (no change)",
+        "Agents running: 0 → 15"
+      ],
+      "featureChanges": [
+        "proficiency-live-qr: failing → **in browser testing**",
+        "world-shell-navigation: fixed, awaiting re-test → **in browser testing**",
+        "career-bound-outputs: fixed, awaiting re-test → **in browser testing**",
+        "qr-gated-outputs: fixed, awaiting re-test → **in browser testing**",
+        "no-silent-failures: agent stopped → **in browser testing**",
+        "release-loop-tooling: test round 3 104/126 → round 5 **30/30**; fixed, awaiting re-test → **passed**",
+        "chart-gallery: fixed, awaiting re-test → **in browser testing**",
+        "release-intelligence: agent stopped → **in browser testing**",
+        "output-version-history: agent stopped → **in browser testing**",
+        "resume-rollups: agent stopped → **in browser testing**",
+        "cover-letter-agent: agent stopped → **in browser testing**",
+        "in-app-release-loop: agent stopped → **being built**",
+        "world-shell-layers: agent stopped → **being built**",
+        "live-release-tracker: agent stopped → **being built**",
+        "render-bindings: agent stopped → **being built**",
+        "platform-mcp: agent stopped → **being built**"
+      ]
+    }
   }
 ]
