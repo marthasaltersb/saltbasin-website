@@ -1,0 +1,198 @@
+{
+  "exportedAt": "2030-01-10T10:00:00.000Z",
+  "features": {
+    "reef-survey": {
+      "status": "passed",
+      "lastRound": 2,
+      "lastScore": "20/20",
+      "lastReport": "docs/test-results/reef-survey/round-2.md",
+      "openBugs": 0,
+      "backlog": 0
+    },
+    "tide-ledger": {
+      "status": "failing",
+      "lastRound": 1,
+      "lastScore": "12/16",
+      "lastReport": "docs/test-results/tide-ledger/round-1.md",
+      "openBugs": 2,
+      "backlog": 1
+    },
+    "kelp-sync": {
+      "status": "awaiting_retest",
+      "lastRound": 1,
+      "lastScore": "9/10",
+      "lastReport": "docs/test-results/kelp-sync/round-1.md",
+      "openBugs": 1,
+      "backlog": 0
+    },
+    "coral-notes": {
+      "status": "queued",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
+    }
+  },
+  "bugs": [
+    {
+      "id": "tide-ledger-F1-1",
+      "feature": "tide-ledger",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "[J2.3] Total row shows 12",
+      "rootCause": "The total ignores rows added after the first refresh.",
+      "files": [
+        "src/demo/ledger.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Introduced by the ledger rewrite commit",
+        "decidedBy": "scope:tide-ledger:r1",
+        "round": 1
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Total row shows 11 instead of 12",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "tide-ledger-F1-2",
+      "feature": "tide-ledger",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "[J2.5] Export button label",
+      "rootCause": "The export label is not translated from the config key.",
+      "files": [
+        "src/demo/export.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Label added in this feature",
+        "decidedBy": "scope:tide-ledger:r1",
+        "round": 1
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Button reads export_label",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "tide-ledger-F1-3",
+      "feature": "tide-ledger",
+      "status": "backlog_pre_existing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "[J3.1] Footer link colour",
+      "rootCause": "Footer link colour fails contrast on the base branch too.",
+      "files": [
+        "src/demo/footer.css"
+      ],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": "Reproduces on the base branch before this feature",
+        "decidedBy": "scope:tide-ledger:r1",
+        "round": 1
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Low contrast footer link",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "kelp-sync-F1-1",
+      "feature": "kelp-sync",
+      "status": "fixed_awaiting_retest",
+      "class": "defect",
+      "attempts": 1,
+      "step": "[J1.4] Sync badge turns green",
+      "rootCause": "The badge listened for the wrong event name.",
+      "files": [
+        "src/demo/sync.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Event name typo in this feature",
+        "decidedBy": "scope:kelp-sync:r1",
+        "round": 1
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Badge stays grey",
+          "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Listen for sync:done",
+          "files": [
+            "src/demo/sync.js"
+          ],
+          "commit": "c0ffee1234567890c0ffee1234567890c0ffee12"
+        }
+      ]
+    },
+    {
+      "id": "reef-survey-F1-1",
+      "feature": "reef-survey",
+      "status": "verified",
+      "class": "defect",
+      "attempts": 1,
+      "step": "[J1.2] Survey count",
+      "rootCause": "Off by one in the survey counter.",
+      "files": [
+        "src/demo/survey.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Counter written in this feature",
+        "decidedBy": "scope:reef-survey:r1",
+        "round": 1
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Counter shows 4 not 5",
+          "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Start the counter at one",
+          "files": [
+            "src/demo/survey.js"
+          ],
+          "commit": "abc1234567890abc1234567890abc1234567890a"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Round 2: this bug step passed",
+          "commit": "abc1234567890abc1234567890abc1234567890a"
+        }
+      ]
+    }
+  ]
+}

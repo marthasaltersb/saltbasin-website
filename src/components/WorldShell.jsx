@@ -44,6 +44,7 @@ const CareerReconciliationPanel = lazy(() => import('./admin/CareerReconciliatio
 const MyResumePanel = lazy(() => import('./admin/MyResumePanel.jsx'));
 const LonetreeMvpPanel = lazy(() => import('./admin/LonetreeMvpPanel.jsx'));
 const ReleaseIntelligencePanel = lazy(() => import('./admin/ReleaseIntelligencePanel.jsx'));
+const ReleaseTrackerApp = lazy(() => import('./releaseTracker/ReleaseTrackerApp.jsx'));
 
 const SIMPLE_EMBED_COMPONENTS = {
   leads: { title: 'Leads', render: () => <LeadsPanel /> },
@@ -54,6 +55,7 @@ const SIMPLE_EMBED_COMPONENTS = {
   outputTemplates: { title: 'Output Templates', render: (scope) => <OutputTemplateConfiguratorHub scope={scope} /> },
   lonetreeMvp: { title: 'Fund & Portfolio Demo', render: (scope) => <LonetreeMvpPanel scope={scope} /> },
   releaseIntelligence: { title: 'Release Intelligence', render: () => <ReleaseIntelligencePanel /> },
+  releaseTracker: { title: 'Release tracker', render: () => <ReleaseTrackerApp embedded /> },
 };
 
 const ISLAND_RADIUS = 9;
@@ -181,6 +183,14 @@ function WorldShellInner() {
   const career = useCareerPlacementAgents({ enabled: hasCareerIsland });
   const commercial = useCommercialOpportunities({ enabled: hasCommercialIsland });
   const herq = usePublicationPipeline({ enabled: hasHerqIsland });
+
+  // A shared release-tracker link (/world#/rt/...) reopens the tracker island so refresh and Back restore the path.
+  const trackerOpened = useRef(false);
+  useEffect(() => {
+    if (trackerOpened.current || !islands.length || !String(window.location.hash).startsWith('#/rt')) return;
+    const island = islands.find((i) => i.componentId === 'releaseTracker');
+    if (island) { trackerOpened.current = true; setFocusedKey(island.key); }
+  }, [islands]);
 
   const focused = islands.find((i) => i.key === focusedKey) || null;
   const atmosphereIsland = islands.find((i) => i.key === atmosphereKey) || null;

@@ -156,6 +156,47 @@ export function ensureReleaseIntelligenceSchema() {
       created_at   BIGINT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_rre_subject ON release_reconciliation_events (subject_kind, subject_ref, id DESC);
+
+    -- Live release tracker (docs/changes/live-release-tracker.md). Append-only:
+    -- every ingested snapshot is kept so the time slider can replay any state.
+    -- Tokens are stored as SHA-256 hashes only; the plaintext is shown once.
+    CREATE TABLE IF NOT EXISTS release_tracker_snapshots (
+      id            BIGSERIAL PRIMARY KEY,
+      release_key   TEXT NOT NULL,
+      source        TEXT NOT NULL,
+      source_ref    TEXT,
+      content_hash  TEXT NOT NULL,
+      snapshot_at   BIGINT NOT NULL,
+      received_at   BIGINT NOT NULL,
+      snapshot      JSONB NOT NULL,
+      extras        JSONB NOT NULL DEFAULT '{}',
+      reconcile_note TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_rts_release ON release_tracker_snapshots (release_key, id DESC);
+
+    CREATE TABLE IF NOT EXISTS release_tracker_tokens (
+      id           BIGSERIAL PRIMARY KEY,
+      kind         TEXT NOT NULL,
+      release_key  TEXT,
+      label        TEXT,
+      token_hash   TEXT NOT NULL UNIQUE,
+      token_hint   TEXT,
+      created_by   BIGINT,
+      created_at   BIGINT NOT NULL,
+      revoked_at   BIGINT,
+      revoked_by   BIGINT,
+      last_used_at BIGINT
+    );
+
+    CREATE TABLE IF NOT EXISTS release_tracker_ingest_log (
+      id          BIGSERIAL PRIMARY KEY,
+      at          BIGINT NOT NULL,
+      source      TEXT NOT NULL,
+      outcome     TEXT NOT NULL,
+      detail      TEXT,
+      snapshot_id BIGINT
+    );
+    CREATE INDEX IF NOT EXISTS idx_rtil_at ON release_tracker_ingest_log (id DESC);
   `).catch((error) => {
     ready = null; // allow a retry on the next request instead of caching a failure
     throw error;

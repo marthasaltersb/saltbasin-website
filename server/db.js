@@ -3324,6 +3324,8 @@ async function bootstrap() {
         { viewId: 'system',   viewLabel: 'System',                        id: 'command-center',  label: 'Command Center',  componentId: 'commandCenter',  sortOrder: 4 },
         // Release reconciliation + contribution trends (additive; reachable from the World Shell).
         { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'release-intelligence', label: 'Release Intelligence', componentId: 'releaseIntelligence', sortOrder: 4 },
+        // Live release tracker (additive; reachable from the World Shell).
+        { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'release-tracker', label: 'Release tracker', componentId: 'releaseTracker', sortOrder: 5 },
       ];
 
       for (const t of newTabs) {

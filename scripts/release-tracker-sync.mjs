@@ -350,3 +350,11 @@ if (stored(json) > LIMIT) {   // still too big: drop finished agents' step detai
   if (stored(json) > LIMIT) console.error(`Snapshot is ${stored(json)} bytes stored, over the tracker's ${LIMIT}-byte budget.`);
 }
 if (out) fs.writeFileSync(out, json); else process.stdout.write(json);
+
+// Optional live push to the platform (PLATFORM_URL + RELEASE_TRACKER_INGEST_TOKEN). A failure is logged and
+// makes this command exit 3 after the snapshot has been written; it is never swallowed.
+if (process.env.PLATFORM_URL && process.env.RELEASE_TRACKER_INGEST_TOKEN) {
+  const { pushToPlatform } = await import('./release-tracker-push.mjs');
+  const r = await pushToPlatform(JSON.parse(json));
+  if (r.ok === false) process.exitCode = 3;
+}

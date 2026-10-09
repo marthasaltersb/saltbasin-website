@@ -73,6 +73,9 @@ export function defaultMemberConfig({ displayName, email }) {
         // (memberConfig.js's GET /draft), same pattern already used for
         // 'careerPlacementAgents' and 'resume'.
         { id: 'network', label: 'My Network', componentId: 'memberNrm', sortOrder: 16 },
+        // Live release tracker: only shown to members an admin lists on its Settings tab
+        // (memberConfig.js GET /draft removes it for everyone else).
+        { id: 'release-tracker', label: 'Release tracker', componentId: 'releaseTracker', sortOrder: 30 },
       ],
     },
     site: {

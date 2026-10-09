@@ -198,6 +198,13 @@ export const ISLAND_REGISTRY = {
     dataBinding: { store: 'release_records' },
     permission: { requiredRole: 'admin', crud: ['read', 'update', 'approve'], enforced: true },
   },
+  // Live release tracker (2026-10-09): admins always, members the admin lists by
+  // email. Read by /api/release-tracker/* (see docs/changes/live-release-tracker.md).
+  releaseTracker: {
+    variant: 'rings', kind: 'embed', accent: 'teal',
+    dataBinding: { store: 'release_tracker_snapshots' },
+    permission: { requiredRole: 'admin', crud: ['read', 'update'], enforced: true },
+  },
   leads: {
     variant: 'rings', kind: 'embed', accent: 'teal',
     dataBinding: { store: 'leads' },
