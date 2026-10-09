@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T06:00:17.768Z",
+  "exportedAt": "2026-10-09T06:00:36.713Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -42,7 +42,7 @@
       "backlog": 3
     },
     "release-loop-tooling": {
-      "status": "fix",
+      "status": "reconcile",
       "lastRound": 1,
       "lastScore": "24/35",
       "lastReport": "docs/test-results/release-loop-tooling/round-1.md (NOT WRITTEN: the write tool refused report files for subagents, so the full report is in this structured result; the file at that path is the stale round-1 report from 2026-10-02, not this round. Step log: /var/tmp/sbpg/release-loop/release-loop-tooling/round-1/steps.jsonl, screenshots in the same directory.)",
@@ -1683,9 +1683,9 @@
     {
       "id": "release-loop-tooling-B1",
       "feature": "release-loop-tooling",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Fix B1: docs claim a capability never built",
       "rootCause": "docs/release-process.md line 52, .claude/skills/salt-basin-release-loop/SKILL.md line 9 and server/data/releaseLoop/definition.json line 210 (tracker string) still claim a World Shell 'Release loop' view and /api/release-loop/*. Neither exists. The change spec already says it is out of scope.",
       "files": [
@@ -1711,15 +1711,21 @@
           "event": "recurred",
           "note": "docs/release-process.md line 52, .claude/skills/salt-basin-release-loop/SKILL.md line 9 and server/data/releaseLoop/definition.json line 210 (tracker string) still claim a World Shell 'Release loop' …",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Removed the World Shell 'Release loop' view and /api/release-loop claims. The three places now describe the tracker artifact and say in-app agents read the definition file. CLAUDE.md needed no edit.",
+          "commit": "082eed1"
         }
       ]
     },
     {
       "id": "release-loop-tooling-B2",
       "feature": "release-loop-tooling",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Fix B2: dead-agent detection limited to extras",
       "rootCause": "scripts/release-tracker-sync.mjs line 115 guards the 15-minute idle check with !a.fromRun. Journal-built run agents have fromRun true (line 82), so a started agent with no end entry and a stale transcript stays 'running'.",
       "files": [
@@ -1743,15 +1749,21 @@
           "event": "recurred",
           "note": "scripts/release-tracker-sync.mjs line 115 guards the 15-minute idle check with !a.fromRun. Journal-built run agents have fromRun true (line 82), so a started agent with no end entry and a stale trans…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Stale check now covers every running agent. It uses the transcript's last line, else the journal start time. Journal agents become 'stalled' and extras stay idle_or_done. Added --stale-minutes (defau…",
+          "commit": "082eed1"
         }
       ]
     },
     {
       "id": "release-loop-tooling-B3",
       "feature": "release-loop-tooling",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Fix B3: tracker 390px reflow",
       "rootCause": "tools/release-tracker/index.html tables (featureRows, bugRows and the agent rows, lines 170-182) have no narrow-screen layout. The existing max-width 640px rules only cover .hist and .timeline. The 697px Features table scrolls inside a 340px .panel, which hides the Latest test, Rounds and last columns.",
       "files": [
@@ -1775,6 +1787,12 @@
           "event": "recurred",
           "note": "tools/release-tracker/index.html tables (featureRows, bugRows and the agent rows, lines 170-182) have no narrow-screen layout. The existing max-width 640px rules only cover .hist and .timeline. The 6…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Added a max-width 640px block that turns .panel tables into stacked cards with data-label captions and border-box sizing. The panel's overflow-x stays as a fallback. Reworded J5 step 3.",
+          "commit": "082eed1"
         }
       ]
     },
@@ -1831,9 +1849,9 @@
     {
       "id": "RLT-T1",
       "feature": "release-loop-tooling",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "spec_error",
-      "attempts": 0,
+      "attempts": 1,
       "step": "J1 step 2: bugEscalation.statuses",
       "rootCause": "The training spec (docs/training/release-loop-tooling.md line 21) lists 7 statuses. server/data/releaseLoop/definition.json lines 197-208 has 10, because the scope-check work (a42b3cc) added backlog_pre_existing, reassigned and process_note. The definition is right and the spec is stale.",
       "files": [
@@ -1851,15 +1869,21 @@
           "event": "found",
           "note": "The training spec (docs/training/release-loop-tooling.md line 21) lists 7 statuses. server/data/releaseLoop/definition.json lines 197-208 has 10, because the scope-check work (a42b3cc) added backlog_…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Training spec J1 step 2 now lists the ten statuses in definition order; added J1 step 3; Traces to gained the scope-check commits.",
+          "commit": "082eed1"
         }
       ]
     },
     {
       "id": "RLT-T2",
       "feature": "release-loop-tooling",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "spec_error",
-      "attempts": 0,
+      "attempts": 1,
       "step": "J4 steps 1-2 (header, tiles, filters, agent card, Features column, Bugs and runs tables)",
       "rootCause": "tools/release-tracker/index.html was rebuilt as a layered drill-down (STATS tiles, crumbs, layers, 8 tiles including Backlog, no filter buttons, Features column 'Its own bugs verified', bugs and runs reached through tile layers). Journey 4 and the J5 'same content as J4' lines still describe the old single-page design.",
       "files": [
@@ -1877,6 +1901,12 @@
           "event": "found",
           "note": "tools/release-tracker/index.html was rebuilt as a layered drill-down (STATS tiles, crumbs, layers, 8 tiles including Backlog, no filter buttons, Features column 'Its own bugs verified', bugs and runs…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Rewrote J4 and J5 for the drill-down page (8 tiles, layers, crumbs, no filters, Open bugs layer expects B1 and B9). Counts come from the fixture, now 5 features and 19 agents.",
+          "commit": "082eed1"
         }
       ]
     },
