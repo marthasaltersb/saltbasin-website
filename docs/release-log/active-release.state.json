@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T15:50:57.780Z",
+  "exportedAt": "2026-10-09T15:53:39.395Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -42,7 +42,7 @@
       "backlog": 3
     },
     "release-loop-tooling": {
-      "status": "amend",
+      "status": "validate",
       "lastRound": 3,
       "lastScore": "104/126",
       "lastReport": "docs/test-results/release-loop-tooling/round-3.md",
@@ -264,7 +264,7 @@
         {
           "round": 3,
           "event": "not_fixed",
-          "note": "Salt particle design is waiting on feedback from the owner, which I cannot make up. The question fo…",
+          "note": "Salt particle design is waiting on feedback from the owner, which I cannot make…",
           "commit": null
         }
       ]
@@ -322,7 +322,7 @@
         {
           "round": 4,
           "event": "not_fixed",
-          "note": "needs_business_definition, nothing built. Owner question: after seeing the first Salt particles ren…",
+          "note": "needs_business_definition, nothing built. Owner question: after seeing the firs…",
           "commit": null
         }
       ]
@@ -1085,7 +1085,7 @@
         {
           "round": 2,
           "event": "found",
-          "note": "Reported by the fix agent, unresolved on reconciliation (owner_direction_conflict)",
+          "note": "Reported by the fix agent, unresolved on reconciliation (owner_direction_confli…",
           "commit": null
         }
       ]
@@ -1307,7 +1307,7 @@
       "class": "defect",
       "attempts": 1,
       "step": "J1 1.2a (also J2, J3, J10 at 390px) and J9 9.0 / 9.2-9.3",
-      "rootCause": "Light-surface components set no text colour and inherit cream rgb(245,240,232) from the World Shell: WorldShell.jsx:1406 S.embedShell color #f5f0e8 (and brand.css:359 body color). CareerBoundOutputEditor S.wrap/S.card (line 18), OutputTemplateConfigurator S.wrap (line 64) and the white dialog wrappers in MyResumePanel.jsx:1103 and CareerReconciliationPanel.jsx:416 draw white/cream cards but never…",
+      "rootCause": "Light-surface components set no text colour and inherit cream rgb(245,240,232) from the World Shell: WorldShell.jsx:1406 S.embedShell color #f5f0e8 (and brand.css:359 body color). CareerBoundOutputEd…",
       "files": [
         "src/components/admin/CareerBoundOutputEditor.jsx",
         "src/components/admin/OutputTemplateConfigurator.jsx",
@@ -1324,13 +1324,13 @@
         {
           "round": 2,
           "event": "found",
-          "note": "Light-surface components set no text colour and inherit cream rgb(245,240,232) from the World Shell…",
+          "note": "Light-surface components set no text colour and inherit cream rgb(245,240,232) …",
           "commit": null
         },
         {
           "round": 2,
           "event": "fixed",
-          "note": "Set explicit dark text (#1b2a3b) on the light cards and white dialog wrappers that inherited cream …",
+          "note": "Set explicit dark text (#1b2a3b) on the light cards and white dialog wrappers t…",
           "commit": "95c2adf"
         }
       ]
@@ -1357,7 +1357,7 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conf…",
           "commit": null
         }
       ]
@@ -1491,7 +1491,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "Shipped UI copy at MyResumePanel.jsx:1052 uses an em dash; the training spec (qr-gated-outputs.md:8…",
+          "note": "Shipped UI copy at MyResumePanel.jsx:1052 uses an em dash; the training spec (q…",
           "commit": null
         }
       ]
@@ -1503,7 +1503,7 @@
       "class": "defect",
       "attempts": 0,
       "step": "J2.1b Document header contact line readable (web view)",
-      "rootCause": "header.contact has no defined/validated type. Spec seeds an array; DocumentBlocksView.jsx:94 renders it raw so React concatenates without separator, while outputRendering.js:186 passes it to pdfkit which coerces via Array.toString() giving a comma. Editor adapter documentBlocksEditor.js:28 also wraps it assuming a string.",
+      "rootCause": "header.contact has no defined/validated type. Spec seeds an array; DocumentBlocksView.jsx:94 renders it raw so React concatenates without separator, while outputRendering.js:186 passes it to pdfkit w…",
       "files": [
         "src/components/DocumentBlocksView.jsx",
         "server/lib/outputRendering.js",
@@ -1519,7 +1519,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "header.contact has no defined/validated type. Spec seeds an array; DocumentBlocksView.jsx:94 render…",
+          "note": "header.contact has no defined/validated type. Spec seeds an array; DocumentBloc…",
           "commit": null
         }
       ]
@@ -1531,7 +1531,7 @@
       "class": "spec_error",
       "attempts": 0,
       "step": "J3.3 Approve toasts",
-      "rootCause": "Toast at MyResumePanel.jsx:627 uses an em dash, which other specs (no-silent-failures, cover-letter-agent, proficiency-rules-and-live-qr) already expect; qr-gated-outputs.md lines 100/155/169 used a hyphen.",
+      "rootCause": "Toast at MyResumePanel.jsx:627 uses an em dash, which other specs (no-silent-failures, cover-letter-agent, proficiency-rules-and-live-qr) already expect; qr-gated-outputs.md lines 100/155/169 used a …",
       "files": [
         "docs/training/qr-gated-outputs.md",
         "src/components/admin/MyResumePanel.jsx"
@@ -1545,7 +1545,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "Toast at MyResumePanel.jsx:627 uses an em dash, which other specs (no-silent-failures, cover-letter…",
+          "note": "Toast at MyResumePanel.jsx:627 uses an em dash, which other specs (no-silent-fa…",
           "commit": null
         }
       ]
@@ -1598,7 +1598,7 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conf…",
           "commit": null
         }
       ]
@@ -1623,7 +1623,7 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conf…",
           "commit": null
         }
       ]
@@ -1711,7 +1711,7 @@
       "class": "defect",
       "attempts": 0,
       "step": "J5 5.2 at 390px stacked cards, no panel overflow",
-      "rootCause": "Fix-r1's 640px stacked-card CSS and data-label attributes on table cells are absent at HEAD (0 occurrences) because 9084b2c replaced the page; only .panel overflow-x:auto (line 52) remains, so featureRows/bugRows/agentRows (lines 269/277/282) and other tables clip or scroll sideways. SETUP-FOR-CLAUDE.md embedded copy also lacks them.",
+      "rootCause": "Fix-r1's 640px stacked-card CSS and data-label attributes on table cells are absent at HEAD (0 occurrences) because 9084b2c replaced the page; only .panel overflow-x:auto (line 52) remains, so featur…",
       "files": [
         "tools/release-tracker/index.html",
         "tools/release-tracker/SETUP-FOR-CLAUDE.md",
@@ -1732,13 +1732,13 @@
         {
           "round": 3,
           "event": "recurred",
-          "note": "STATUS map (index.html line 221) has no 'stalled' key so pill() prints raw 'stalled', and .s-stalle…",
+          "note": "STATUS map (index.html line 221) has no 'stalled' key so pill() prints raw 'sta…",
           "commit": null
         },
         {
           "round": 3,
           "event": "recurred",
-          "note": "Fix-r1's 640px stacked-card CSS and data-label attributes on table cells are absent at HEAD (0 occu…",
+          "note": "Fix-r1's 640px stacked-card CSS and data-label attributes on table cells are ab…",
           "commit": null
         }
       ]
@@ -1773,11 +1773,11 @@
     {
       "id": "release-loop-tooling-F1-6",
       "feature": "release-loop-tooling",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "spec_error",
       "attempts": 1,
       "step": "Open bug F1-6 change spec Known limitations",
-      "rootCause": "docs/changes/release-loop-tooling.md line 51 says started-with-no-end agents stay running forever and idle check applies only to --extra agents, but release-tracker-sync.mjs lines 118-120 mark journal agents stalled; line 53 says 390px tables scroll, contradicting spec step 5.3.",
+      "rootCause": "docs/changes/release-loop-tooling.md line 51 says started-with-no-end agents stay running forever and idle check applies only to --extra agents, but release-tracker-sync.mjs lines 118-120 mark journa…",
       "files": [
         "docs/changes/release-loop-tooling.md"
       ],
@@ -1796,13 +1796,13 @@
         {
           "round": 3,
           "event": "recurred",
-          "note": "docs/changes/release-loop-tooling.md line 51 says started-with-no-end agents stay running forever a…",
+          "note": "docs/changes/release-loop-tooling.md line 51 says started-with-no-end agents st…",
           "commit": null
         },
         {
           "round": 3,
           "event": "fixed",
-          "note": "Rewrote Known limitations in the change spec: journey agents with no end entry show stalled past --…",
+          "note": "Rewrote Known limitations in the change spec: journey agents with no end entry …",
           "commit": "fe190e227ede4c88ec9ac2290b1690f164f679b0"
         }
       ]
@@ -1963,11 +1963,11 @@
     {
       "id": "T3-1",
       "feature": "release-loop-tooling",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "spec_error",
       "attempts": 1,
       "step": "J4/J5 1.2 Eight tiles in order",
-      "rootCause": "Page now has nine tiles: 'Status updates' stat (index.html ~line 263, added by 44609c2), plus Board/World switch, trends panel and render bindings from the live-release-tracker work. Training spec line 54 still says eight tiles.",
+      "rootCause": "Page now has nine tiles: 'Status updates' stat (index.html ~line 263, added by 44609c2), plus Board/World switch, trends panel and render bindings from the live-release-tracker work. Training spec li…",
       "files": [
         "docs/training/release-loop-tooling.md",
         "tools/release-tracker/index.html"
@@ -1981,13 +1981,13 @@
         {
           "round": 3,
           "event": "found",
-          "note": "Page now has nine tiles: 'Status updates' stat (index.html ~line 263, added by 44609c2), plus Board…",
+          "note": "Page now has nine tiles: 'Status updates' stat (index.html ~line 263, added by …",
           "commit": null
         },
         {
           "round": 3,
           "event": "fixed",
-          "note": "Training spec J4 now says nine tiles, with a Status updates tile between 'Finished with unreconcile…",
+          "note": "Training spec J4 now says nine tiles, with a Status updates tile between 'Finis…",
           "commit": "fe190e227ede4c88ec9ac2290b1690f164f679b0"
         }
       ]
@@ -1995,11 +1995,11 @@
     {
       "id": "T3-3",
       "feature": "release-loop-tooling",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "spec_error",
       "attempts": 1,
       "step": "J4/J5 page background",
-      "rootCause": "Spec expects rgb(243,246,247)/rgb(15,26,31) from the original bed12f0 page; the current page uses the Salt Basin cream palette (--bg #F8F4EC light, #161A1C dark, lines 11/22/28) introduced in 9084b2c. Intentional design.",
+      "rootCause": "Spec expects rgb(243,246,247)/rgb(15,26,31) from the original bed12f0 page; the current page uses the Salt Basin cream palette (--bg #F8F4EC light, #161A1C dark, lines 11/22/28) introduced in 9084b2c…",
       "files": [
         "docs/training/release-loop-tooling.md"
       ],
@@ -2012,13 +2012,13 @@
         {
           "round": 3,
           "event": "found",
-          "note": "Spec expects rgb(243,246,247)/rgb(15,26,31) from the original bed12f0 page; the current page uses t…",
+          "note": "Spec expects rgb(243,246,247)/rgb(15,26,31) from the original bed12f0 page; the…",
           "commit": null
         },
         {
           "round": 3,
           "event": "fixed",
-          "note": "Spec J5 step 2 background is now light rgb(248, 244, 236) and dark rgb(22, 26, 28).",
+          "note": "Spec J5 step 2 background is now light rgb(248, 244, 236) and dark rgb(22, 26, …",
           "commit": "fe190e227ede4c88ec9ac2290b1690f164f679b0"
         }
       ]
@@ -2171,7 +2171,7 @@
       "class": "defect",
       "attempts": 0,
       "step": "Live Preview stays visible beside gallery (sticky)",
-      "rootCause": "position:sticky on the preview column (OutputTemplateConfigurator.jsx ~L562) binds to the nearest overflow-y:auto ancestor: the configurator root div (~L311) and Hub wrapper (L110). Neither has a bounded height so they never scroll; sticky never engages while the real scroller is further out.",
+      "rootCause": "position:sticky on the preview column (OutputTemplateConfigurator.jsx ~L562) binds to the nearest overflow-y:auto ancestor: the configurator root div (~L311) and Hub wrapper (L110). Neither has a bou…",
       "files": [
         "src/components/admin/OutputTemplateConfigurator.jsx"
       ],
@@ -2184,7 +2184,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "position:sticky on the preview column (OutputTemplateConfigurator.jsx ~L562) binds to the nearest o…",
+          "note": "position:sticky on the preview column (OutputTemplateConfigurator.jsx ~L562) bi…",
           "commit": null
         }
       ]
@@ -2196,7 +2196,7 @@
       "class": "defect",
       "attempts": 0,
       "step": "Failed load alert includes HTTP status",
-      "rootCause": "proficiency loads via api.getCareerProficiency() -> request() in src/lib/api.js L2-19, which uses body.error text instead of the status, and throws a JSON parse error on an empty body. rollups/master use loadJson() which includes the status.",
+      "rootCause": "proficiency loads via api.getCareerProficiency() -> request() in src/lib/api.js L2-19, which uses body.error text instead of the status, and throws a JSON parse error on an empty body. rollups/master…",
       "files": [
         "src/components/admin/OutputTemplateConfigurator.jsx",
         "src/lib/api.js"
@@ -2210,7 +2210,7 @@
         {
           "round": 1,
           "event": "found",
-          "note": "proficiency loads via api.getCareerProficiency() -> request() in src/lib/api.js L2-19, which uses b…",
+          "note": "proficiency loads via api.getCareerProficiency() -> request() in src/lib/api.js…",
           "commit": null
         }
       ]
@@ -2264,7 +2264,7 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conf…",
           "commit": null
         }
       ]
@@ -2456,7 +2456,7 @@
       "class": "requirement_gap",
       "attempts": 0,
       "step": "build",
-      "rootCause": "Entry points exist only in career-bound editor, World Shell shared block editor, My Resume rows and World Shell opportunity view; the request names document_blocks / template content and 'the output editor'.",
+      "rootCause": "Entry points exist only in career-bound editor, World Shell shared block editor, My Resume rows and World Shell opportunity view; the request names document_blocks / template content and 'the output …",
       "files": [
         "src/components/admin/OutputTemplateConfigurator.jsx",
         "server/lib/outputVersionHistory.js"
@@ -2623,7 +2623,7 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conf…",
           "commit": null
         }
       ]
@@ -2857,7 +2857,7 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conf…",
           "commit": null
         }
       ]
@@ -3009,7 +3009,7 @@
         {
           "round": 0,
           "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conflict)",
+          "note": "Reported by the build agent, unresolved on reconciliation (owner_direction_conf…",
           "commit": null
         }
       ]
@@ -3113,7 +3113,7 @@
         {
           "round": 2,
           "event": "fixed",
-          "note": "Added a skills/tools/certifications override card (pick item, box, Overridden badge, Career Master …",
+          "note": "Added a skills/tools/certifications override card (pick item, box, Overridden b…",
           "commit": "95c2adf"
         }
       ]
@@ -3145,7 +3145,7 @@
         {
           "round": 2,
           "event": "not_fixed",
-          "note": "Owner decision needed: is storing template overrides on the preset acceptable, or should they move …",
+          "note": "Owner decision needed: is storing template overrides on the preset acceptable, …",
           "commit": null
         }
       ]
@@ -3324,7 +3324,7 @@
       "class": "defect",
       "attempts": 1,
       "step": "J2 2.1 visual: Live Preview chart not clipped",
-      "rootCause": "proficiencyBarsHtml emits the SVG with min-width:500px (src/lib/careerCharts.js line 112), which overrides max-width:100%. The preview column content is about 280px wide, so the SVG overflows the right edge and is clipped, hiding segments and level labels. The text stays in the DOM, so scripted text checks pass.",
+      "rootCause": "proficiencyBarsHtml emits the SVG with min-width:500px (src/lib/careerCharts.js line 112), which overrides max-width:100%. The preview column content is about 280px wide, so the SVG overflows the rig…",
       "files": [
         "src/lib/careerCharts.js",
         "docs/training/chart-gallery.md"
@@ -3338,13 +3338,13 @@
         {
           "round": 2,
           "event": "found",
-          "note": "proficiencyBarsHtml emits the SVG with min-width:500px (src/lib/careerCharts.js line 112), which ov…",
+          "note": "proficiencyBarsHtml emits the SVG with min-width:500px (src/lib/careerCharts.js…",
           "commit": null
         },
         {
           "round": 2,
           "event": "fixed",
-          "note": "Removed min-width:500px from the proficiency, trend and timeline SVG helpers (same pattern in all t…",
+          "note": "Removed min-width:500px from the proficiency, trend and timeline SVG helpers (s…",
           "commit": "3b198a83584419755b4799a7a4691f279b6845ed"
         }
       ]
