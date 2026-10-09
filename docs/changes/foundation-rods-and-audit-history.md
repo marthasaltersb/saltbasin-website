@@ -1,6 +1,11 @@
 # Foundation Rods and audit history: many foundations per person, no lost history
 
-Version 0.1 (proposed design, not built) · 2026-10-09 · Status: **awaiting owner approval**
+Version 0.2 (proposed design, not built) · 2026-10-09 · Status: **awaiting owner approval**
+
+| Version | Date | Change |
+|---|---|---|
+| 0.1 | 2026-10-09 | Many foundations per person; audit-history model; gaps G1–G6 (commit 3e88ce5). |
+| 0.2 | 2026-10-09 | Owner direction: **seeds** sit below features (section 6). |
 
 ## Traces to
 
@@ -135,6 +140,64 @@ New tables: **none**. Changes are:
 - one index change, one append-only trigger
 - one shared write helper
 
+## 6. Seeds below features
+
+Owner direction, 2026-10-09:
+- A **feature** is close to a capability.
+- A **seed** is the original idea, a user story, or a tactical, detailed task.
+- A feature can be linked to several seeds.
+- Every feature goes through an approval to be **planted**, and planting needs a minimum set of seeds.
+- Seeds are **evidence on a feature, not rods of their own**. They are still tracked, and a seed can be
+  converted into a feature or linked to another feature.
+
+```
+Foundation rod
+ ├─ seed bank: seeds not yet linked to any feature (evidence on the foundation rod)
+ └─ Feature rod (a capability)     proposed ─▶ planted (approval + minimum seeds) ─▶ build … ─▶ passed
+      ├─ seed: idea                "Members want to see release status in 3D"
+      ├─ seed: user story          "As an org admin, I can see which features need a person"
+      └─ seed: task                "Colour gems by status; acceptance: Passed gems are sage"
+```
+
+**How a seed is stored.**
+- Each seed is one `journey_rod_evidence` row with Atom key `feature_seed`. Its value is
+  `{ seedId, kind, title, detail, acceptance, sourceRef }`.
+- `kind` is one of the foundation's seed kinds (default `idea`, `user_story`, `task`). Screen 1 of the
+  foundation maps them to the outside system, e.g. Jira story and sub-task.
+- `seedId` never changes, wherever the seed moves, so a seed can always be followed.
+- No new table and no rod per seed.
+
+**Where a seed lives.**
+- Before it's linked to anything, a seed sits on its **foundation rod** (the seed bank).
+- Every evidence row needs a rod, and the foundation is the natural home for ideas that haven't found a
+  feature yet.
+
+**What happens to a seed.** Every move is an event, and nothing is deleted.
+
+| Action | What is written |
+|---|---|
+| Capture | Evidence on the foundation (or directly on a feature) + `seed_captured` event |
+| Link to a feature | New evidence row on the feature with `lineage_parent_id` → the earlier row. The earlier row is marked superseded (gap G2's fix). Event `seed_linked` on both rods. |
+| Move to another feature | Same as linking: new row on the new feature, old row superseded, `seed_moved` events on both features |
+| Convert into a feature | A new feature rod is created; the seed becomes its first seed (same mechanism); event `seed_converted` |
+| Retire | The row is marked superseded with reason; event `seed_retired`. Still visible in history. |
+
+**Planting (the approval).**
+- A feature starts as `proposed`. It moves to `planted` only when:
+  1. its seeds meet the foundation's **planting rule**, and
+  2. someone with the "approve planting" permission approves, through the existing approval gate
+     (`useToolCategoryGate().run` → `assertReadyToFinalize`).
+- The planting rule is part of the foundation's definition: an eighth answer, versioned like the other
+  seven, never hard-coded.
+- The `feature_planted` event records which seeds, at which versions, the approval was based on.
+
+**Link to testing (proposal).**
+- A task seed's acceptance criteria can become journey steps in the feature's training spec.
+- A feature's test round then reports which seeds' steps passed. "Passed" still means every step passed.
+
+**Depends on** gap G2 (supersede instead of delete). Without it, linking or moving a seed would erase its
+earlier place.
+
 ## Questions for the owner (needs a business decision)
 
 1. **Account deletion vs audit history.** When someone deletes their account, should Salt Basin keep their
@@ -149,3 +212,13 @@ New tables: **none**. Changes are:
    may an organization allow some fields to be written automatically?
 5. **Organizations with several databases.** Should an organization use one foundation per database
    (`delivery-jira`, `revenue-salesforce`), or one foundation that combines several connections?
+6. **Planting minimum.** What is the default planting rule? A proposal to confirm or change: at least one
+   idea **or** user story, plus at least one task with acceptance criteria. Should each foundation be able
+   to set its own rule?
+7. **One seed, several features.** Can one seed support several features at the same time (shared), or
+   only one feature at a time (it moves)?
+8. **Seeds added after planting.** If a seed is added to a feature that is already planted, does the
+   feature need approving again?
+9. **Who approves planting.** By default, foundation admins. Should the person who wrote the seeds be
+   allowed to approve their own feature?
+
