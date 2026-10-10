@@ -1,0 +1,35 @@
+{
+  "id": "A4",
+  "feature": "world-shell-navigation",
+  "fromBaseline": 3,
+  "proposedBy": "triage:world-shell-navigation:r3",
+  "round": 3,
+  "triageItems": ["wsn-r3-j03-phone-chip"],
+  "reason": "J0.3 is scored on desktop and mobile but its expected result names the profile text, which is intentionally hidden at phone width (only the avatar shows). Spec J12.1 already states the avatar R at 390px.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "J0.3",
+      "before": "Expect the World Shell: top bar with **World / Journeys / Classic Tools**, **Riley Fenn · Member**, toast **Consent recorded**. Counters read **0 TRACKED**, **7 AGENTS**.",
+      "after": "Expect the World Shell: top bar with **World / Journeys / Classic Tools**, **Riley Fenn · Member** (at phone width, 390px, only the avatar **R** is shown in place of the name text), toast **Consent recorded**. Counters read **0 TRACKED**, **7 AGENTS**.",
+      "tracesTo": "Spec J12.1 (avatar R at phone width); WorldShell.jsx MOBILE_CSS (.sb-world-profile-text hidden at max-width 700px, avatar and Tracked/Agents stats stay); docs/changes/world-shell-opportunity-outputs.md (phone layout, line 50, and the 390px counters check, line 83)",
+      "whyNeeded": "The collapse is intended responsive behaviour documented in the change spec; the step was written for desktop only, so the phone surface had no correct expectation."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:world-shell-navigation:r3",
+    "checklist": {
+      "Traced": "pass: names J12.1, the MOBILE_CSS rule and change-spec lines 50 and 83; verified in code that .sb-world-profile-text is display:none at <=700px while the avatar and Tracked/Agents stats remain",
+      "Not weaker": "pass: desktop wording unchanged; phone gains an exact expectation (avatar R replaces the name text); counters and toast unchanged",
+      "Retire only duplicates": "pass: nothing retired",
+      "Exact": "pass: viewport width, avatar letter and unchanged labels stated",
+      "Reachable": "pass: walkable on desktop and at 390px",
+      "Deterministic": "pass: fixed account Riley Fenn, fixed breakpoint",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass: tests the documented responsive behaviour from the change spec, not a fixer choice"
+    },
+    "note": "Approved. Desktop must still show the name and role text; this amendment only states the phone rendering.",
+    "at": "2026-10-10T00:00:00.000Z"
+  }
+}
