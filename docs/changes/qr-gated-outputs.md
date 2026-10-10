@@ -112,3 +112,15 @@ Proposed steps for the reviewer:
 1. Change [P.1]: sign in at `<BASE>/login` as `member@test.local` (password `TestPass!2345`), then open `<BASE>/world`, tap or click Journeys, then My Resume. Expect "My Resume" with Resume Output History, and after approval "Approved by Test Member". Traces to F2-11.
 2. Add [P.5], after J9.3 and before J10.3: write `/var/tmp/qr-demo/pkg-v3.json` from `pkg-v1.json` with `sed 's/Leads fictional process redesign programs\./Leads fictional process redesign programs, second revision./'`, then run the P.4 import command against it. Expect `resume_main #<new id> new_version` and `cover_letter #<id> unchanged`; the new Harbor Demo Resume is the Draft card for J10.3, E.1, E.2, E.4. E.3 must re-import the latest file and expect every output unchanged, or run before P.5. Traces to F2-12.
 3. Add a cli step after J6.3 (resume approved with `<SLUG1>`): click Download .docx on the Harbor Demo Resume card (desktop and 390px), save as `/var/tmp/qr-demo/resume.docx`, then run `python3 -I` reading `docProps/core.xml` and `word/_rels/header1.xml.rels`. Expect creator `Avery Example; Jordan Sample`, created `2026-09-30T13:00:01Z`, and a hyperlink Target equal to `<BASE>/r/<SLUG1>`. Traces to F2-8 and F3-10.
+
+## Fix notes — round 6
+
+### qr-gated-outputs-T1 (rounds 2-5)
+- Changed: the View dialog note in `src/components/admin/MyResumePanel.jsx` now reads "Read-only - no edits can be made here." (hyphen, as step J2.1 expects).
+- Files: `src/components/admin/MyResumePanel.jsx`.
+- Checked: grep finds no "Read-only —" left in `src`; `npm run build` passes.
+
+### qr-gated-outputs-T5 (rounds 2-5)
+- Changed: the `authLimiter` message in `server/routes/auth.js` now reads "Too many attempts - please try again in 15 minutes" (hyphen, as step E.5 expects).
+- Files: `server/routes/auth.js`.
+- Checked: grep finds no em-dash form left in `server`; `npm run build` passes.

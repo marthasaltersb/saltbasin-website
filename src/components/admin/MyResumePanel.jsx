@@ -1106,7 +1106,7 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
               <div>
                 <h3 style={{ margin: 0, color: 'var(--sb-navy, #1b2a3b)' }}>{viewingOutput.title}</h3>
                 <div style={{ fontSize: '0.72rem', color: '#888' }}>
-                  Generated {new Date(viewingOutput.generatedAt).toLocaleString()} · Read-only — no edits can be made here.
+                  Generated {new Date(viewingOutput.generatedAt).toLocaleString()} · Read-only - no edits can be made here.
                 </div>
               </div>
               <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setViewingOutput(null)}>Close</button>
