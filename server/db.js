@@ -3324,6 +3324,8 @@ async function bootstrap() {
         { viewId: 'system',   viewLabel: 'System',                        id: 'command-center',  label: 'Command Center',  componentId: 'commandCenter',  sortOrder: 4 },
         // Release reconciliation + contribution trends (additive; reachable from the World Shell).
         { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'release-intelligence', label: 'Release Intelligence', componentId: 'releaseIntelligence', sortOrder: 4 },
+        // Render bindings: data map + pending changes (additive; reachable from the World Shell).
+        { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'render-bindings', label: 'Render Bindings', componentId: 'renderBindings', sortOrder: 5 },
       ];
 
       for (const t of newTabs) {
@@ -5286,6 +5288,17 @@ Rod state, per event:
     await sql.unsafe(`ALTER TABLE journey_rod_evidence ADD COLUMN IF NOT EXISTS source_tier SMALLINT`);
   } catch (e) {
     console.warn('[db] journey_rod_evidence.source_tier schema warning:', e.message);
+  }
+
+  // Render bindings (2026-10-09, docs/changes/render-bindings.md): approval state of a bound
+  // value. Additive columns only; every pre-existing evidence row reads as 'approved'.
+  try {
+    await sql.unsafe(`ALTER TABLE journey_rod_evidence ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'approved'`);
+    await sql.unsafe(`ALTER TABLE journey_rod_evidence ADD COLUMN IF NOT EXISTS proposed_by BIGINT`);
+    await sql.unsafe(`ALTER TABLE journey_rod_evidence ADD COLUMN IF NOT EXISTS decided_by BIGINT`);
+    await sql.unsafe(`ALTER TABLE journey_rod_evidence ADD COLUMN IF NOT EXISTS decided_at BIGINT`);
+  } catch (e) {
+    console.warn('[db] journey_rod_evidence approval columns warning:', e.message);
   }
 
   // Platform-default (org_id NULL) seed for the 8 spec agent roles and the

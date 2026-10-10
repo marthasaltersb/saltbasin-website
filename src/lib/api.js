@@ -20,6 +20,21 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  // Render bindings: renderings as views over mapped source data (live or approval path), data map, pending queue.
+  rbRenderings: () => request('/api/render-bindings/renderings'),
+  rbRendering: (key) => request(`/api/render-bindings/renderings/${encodeURIComponent(key)}`),
+  rbAddItem: (key, title) => request(`/api/render-bindings/renderings/${encodeURIComponent(key)}/subjects`, { method: 'POST', body: JSON.stringify({ title }) }),
+  rbSubject: (key, subjectKey) => request(`/api/render-bindings/renderings/${encodeURIComponent(key)}/subjects/${encodeURIComponent(subjectKey)}`),
+  rbHistory: (key, subjectKey) => request(`/api/render-bindings/renderings/${encodeURIComponent(key)}/subjects/${encodeURIComponent(subjectKey)}/history`),
+  rbChange: (body) => request('/api/render-bindings/changes', { method: 'POST', body: JSON.stringify(body) }),
+  rbPending: () => request('/api/render-bindings/changes/pending'),
+  rbImpact: (id) => request(`/api/render-bindings/changes/${id}/impact`),
+  rbApprove: (id, note) => request(`/api/render-bindings/changes/${id}/approve`, { method: 'POST', body: JSON.stringify({ note }) }),
+  rbReject: (id, note) => request(`/api/render-bindings/changes/${id}/reject`, { method: 'POST', body: JSON.stringify({ note }) }),
+  rbSettings: () => request('/api/render-bindings/settings'),
+  rbSaveBindings: (overrides) => request('/api/render-bindings/settings/bindings', { method: 'PUT', body: JSON.stringify({ overrides }) }),
+  rbSaveFieldRoles: (portKey, objectKey, fieldKey, editableRoles) => request(`/api/render-bindings/settings/fields/${encodeURIComponent(portKey)}/${encodeURIComponent(objectKey)}/${encodeURIComponent(fieldKey)}`, { method: 'PUT', body: JSON.stringify({ editableRoles }) }),
+  rbSaveStep: (id, body) => request(`/api/render-bindings/settings/steps/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   // Release intelligence (admin): release records, reconciliation, failed runs, trends, importer.
   getReleaseIntelConfig: () => request('/api/release-intelligence/config'),
   saveReleaseIntelConfig: (rules) => request('/api/release-intelligence/config', { method: 'PUT', body: JSON.stringify({ rules }) }),

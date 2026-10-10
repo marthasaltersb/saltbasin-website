@@ -1,8 +1,8 @@
 # Change spec — Render bindings: every rendering is a view over mapped source data
 
-Feature key: `render-bindings` · Release: `2026-10-02-application-packages` (0.2.0) · Version 1 (design) · 2026-10-09
-Training spec: `docs/training/render-bindings.md` (written by the build agent, from the journeys below)
-Status: design. Nothing here is built yet; the prototype in `tools/release-tracker/index.html` demonstrates the shape.
+Feature key: `render-bindings` · Release: `2026-10-02-application-packages` (0.2.0) · Version 2 (built) · 2026-10-09
+Training spec: `docs/training/render-bindings.md` (version 1, written by the build agent)
+Status: built. Version 1 (design, same day) is the owner direction, model, reuse audit and journeys below; the sections from "What changed" on describe what was built.
 
 ## Owner direction
 
@@ -118,3 +118,78 @@ No new tables are proposed.
 6. A connector write-back failure is shown on the mark and in the history, never swallowed.
 7. A rendering asked to draw an unbound channel shows "not mapped", never a made-up value.
 8. 390px, dark mode, reduced motion; fictional data only.
+
+## What changed (version 2, build)
+
+### Data model (additive only, no new tables)
+
+- `journey_rod_evidence` gains `status TEXT NOT NULL DEFAULT 'approved'` (`approved | proposed | rejected | superseded`),
+  `proposed_by BIGINT`, `decided_by BIGINT`, `decided_at BIGINT` (`server/db.js`, idempotent `ADD COLUMN IF NOT EXISTS` in bootstrap).
+  Every existing evidence row reads as `approved`; nothing is backfilled.
+- Subjects (the thing a rendering draws: a release feature, a board item) get a Channel Rod of rod_type `render_binding_subject`
+  (`journey_data_rods`, no owner columns, `metadata.subjectKey` identifies it). Created lazily on the first change, never by seed/bootstrap.
+  A bound value that lives on the rod is an evidence row whose `molecule_key` is `<port_key>.<object_key>.<field_key>`
+  and whose `source_reference` is `change:<uuid>`.
+- Ports are created lazily and insert-only by `ensureSeeded()` (`server/lib/renderBindings.js`): `release-tracker` (platform_table),
+  `release-metrics` (calculation), `member-board` (manual), `board-metrics` (calculation), `sandbox-crm` (connector), each with objects and
+  fields in `data_ports` / `port_source_objects` / `port_source_fields` (platform-wide rows, `org_id` NULL; never touches member rows).
+  Two approval steps are inserted into `agent_approval_workflows` with `pipeline = 'data_change'` (`owner_review`, `final_approval`).
+- Event types used on `journey_rod_events`: `value_changed`, `change_proposed`, `change_approved`, `change_rejected`, `writeback_failed`.
+- Binding overrides: `config_state` row `render_binding_overrides` (TEXT, `JSON.stringify`), validated on read and write. An override may only
+  turn a binding off, change its change policy, or map a channel that has no platform binding.
+- Field edit permission: `port_source_fields.editable_roles` is now enforced (roles: `admin`, `member`). Derived and calculation fields are never editable.
+
+### Server
+
+- `server/lib/renderBindingRegistry.js`: code registry (append-only) of Ports, renderings and their channels, default bindings, and the override seam.
+- `server/lib/renderBindings.js`: resolver (`readField`, `resolveSubject`: the renderer receives only bound values; unbound or disabled = `not mapped`),
+  live path (`submitChange` with a live policy: write the source, record approved evidence, `value_changed`, fan out), approval path
+  (`submitChange` with `requires_approval`: `proposed` evidence + `change_proposed` carrying the impact snapshot; `decideChange` moves through the active
+  steps; only the last step applies the value; reject records `change_rejected`), ghost values (`assume` map: the same channel recomputed with every
+  pending proposal), impact analysis (`computeImpact`: bindings reading the field directly or through a calculation, calculations whose variables include
+  it, Tributary-connected and parent/child rods), history + time-slider replay (`subjectHistory`), role enforcement, and the in-process event bus.
+- Write-back: platform_table fields are written with `UPDATE` on a whitelisted table/column from the registry (never caller-supplied SQL); connector fields go
+  through the connector's own API. No connector adapter is implemented yet, so a connector write-back records `writeback_failed` with the exact reason and the
+  evidence row keeps `metadata.writeback.status = 'failed'`. It is shown on the mark and in history, never swallowed.
+- `server/routes/renderBindings.js`, mounted at `/api/render-bindings` (`requireUser`; admin-only where noted):
+  `GET /stream` (server-sent events), `GET /renderings`, `GET /renderings/:key`, `POST /renderings/member-board/subjects`,
+  `GET /renderings/:key/subjects/:subjectKey` (Data map + editable fields), `GET .../history`, `POST /changes`, `GET /changes/pending`,
+  `GET /changes/:id/impact` (computed fresh; the proposal-time snapshot is returned beside it), `POST /changes/:id/approve` (admin; `assertReadyToFinalize`),
+  `POST /changes/:id/reject` (admin), `GET|PUT|DELETE /settings...` (admin: bindings, field roles, approval steps).
+- No `server/lib/mcpToolRegistry.js` exists in the repository yet, so there is no MCP registration. Recorded as MCP_GAP-pending: when the platform MCP
+  server lands, register one tool per route above calling the same `renderBindings.js` function (`viewRendering`, `viewSubject`, `submitChange`,
+  `listPending`, `impactForChange`, `decideChange`, `subjectHistory`) with the same `user` argument, so permissions are identical. Assigned to the `platform-mcp` feature.
+
+### Client
+
+- `src/components/admin/RenderBindingsPanel.jsx`, tabs **Renderings**, **Pending changes (n)**, **Settings** (administrators only). Reachable from the World Shell
+  Journeys list as the **Render Bindings** card (admin via `admin_nav` tab `render-bindings`; members via `memberTabs` entry `render-bindings`, merged at read time
+  for existing members) and from Classic Tools. Data map per item, change form per editable field (live or "Propose"), ghost rendering (dashed translucent
+  crystal), impact list, approve/reject (approve goes through `useToolCategoryGate().run`), time slider with event log, live updates over `EventSource`.
+- 390px layout: single column, 44px controls, no horizontal scroll, dark-mode and reduced-motion styles.
+
+## Behaviour changes to know
+
+- A change to a field is live or needs approval according to the strictest policy of any enabled binding that reads the field (directly or through a calculation).
+- Only one proposal per field and item may be pending; a second one is refused with 409 until the first is decided.
+- A proposal moves through every active approval step in order; approving a non-final step records `change_approved` with `final: false` and applies nothing.
+- A calculation with a missing input reports "Cannot be calculated: <inputs> not recorded"; it never counts a missing value as zero.
+- A platform_table value that is changed outside this feature (for example by an importer) is shown as read; history reconstructs only changes made through bindings.
+- Separation of duties (a proposer approving their own change) is not enforced because no business rule defines it; recorded in Known limitations.
+
+## Verified (initial check)
+
+See the build agent's report appended below once the walkthrough has run.
+
+## Known limitations
+
+- No MCP tool yet (no platform MCP server in the repository); see Server.
+- Connector write-back has no adapter, so every connector write-back reports `writeback_failed` honestly. A real adapter per provider is future work.
+- Impact analysis covers bindings, calculations and Tributary-linked / parent-child rods of the subject rod; cross-subject effects (one item feeding another) are not modelled.
+- `approver` roles are the free-text `required_role_label` on each step; approval is administrator-only until an approver-role registry exists.
+- Depth from settlement class (`journey_rod_settlement_states`) is not bound by default; the Depth channel is intentionally unmapped so "not mapped" can be shown and mapped from Settings.
+- Business definition needed from the owner: may the person who proposed a change also approve it?
+
+## Fix notes per round
+
+(none yet)

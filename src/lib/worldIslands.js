@@ -198,6 +198,13 @@ export const ISLAND_REGISTRY = {
     dataBinding: { store: 'release_records' },
     permission: { requiredRole: 'admin', crud: ['read', 'update', 'approve'], enforced: true },
   },
+  // Render bindings (2026-10-09): data map + pending changes for any rendering. Both roles may open it; what a
+  // role can see or change is enforced per Port field (editable_roles) and per rendering on the server.
+  renderBindings: {
+    variant: 'rings', kind: 'embed', accent: 'teal',
+    dataBinding: { store: 'data_ports, journey_rod_evidence, journey_rod_events' },
+    permission: { requiredRole: 'member', crud: ['read', 'update', 'approve'], enforced: true },
+  },
   leads: {
     variant: 'rings', kind: 'embed', accent: 'teal',
     dataBinding: { store: 'leads' },
