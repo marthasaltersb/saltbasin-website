@@ -1,7 +1,7 @@
 # Change spec — World Shell layers: the Sun is the root menu and every click goes one layer deeper
 
 Feature key: `world-shell-layers` · Release: `2026-10-02-application-packages-resume` · Version 1 · 2026-10-09
-Branch: `release-loop/world-shell-layers-build-r2` (built on integration head `c3a71b4`; the requested branch name `release-loop/world-shell-layers-build` is already checked out by two stale worktrees at `536aa29`, so it could not be reused)
+Branch: `release-loop/world-shell-layers-build-r3` (built on integration head `0800b1c`, merging the salvaged `release-loop/world-shell-layers-build-r2` work; the requested branch name `release-loop/world-shell-layers-build` is already checked out by two stale worktrees at `536aa29`, so it could not be reused)
 Training spec: `docs/training/world-shell-layers.md`
 
 Owner direction (2026-10-09): "the world shell navigation should leverage the sun crystal menu nav and then every click after is the user moving another layer deep ... the user moving through layers with more detail exposed against each object in the scene at each layer", and "i also need to be able to navigate back to the summary pages so i need breadcrumbs".
@@ -31,7 +31,7 @@ None. No table, column, config row or seed changes; nothing touches member rows.
 | --- | --- |
 | `server/lib/worldLayersResolve.js` (new) | `resolveWorldLayers(user, at)`: parses a serialised stack with the same `parseAt`/`structuralProblem` the browser uses (`src/lib/worldLayers.js`), validates every layer against the user's own islands (`admin_nav` for admins; member navigation plus the read-time additive default tabs, as `GET /api/member-config/draft`), moons, opportunities (`listCareerOpportunities` / `listCommercialOpportunities`) and outputs (`listOpportunityOutputs`, which itself asserts ownership), and returns `{ requested, at, scope, valid, note, trail[], sunMenu[] }`. Layers the user may not open are dropped with a note and never described. |
 | `server/routes/worldLayers.js` (new), mounted at `/api/world-layers` in `server/index.js` | `GET /api/world-layers/resolve?at=` behind `requireUser` (401 `{"error":"unauthorized"}` when signed out). Same permissions as the UI because it reads through the same functions. |
-| MCP | `server/lib/mcpToolRegistry.js` does not exist yet. Per `interfaceParity` this is an **MCP gap assigned to `platform-mcp`**: reserved tool `world_layers_resolve` calling `resolveWorldLayers(user, at)` with the authenticated user, same JSON as the route. Not guessed or stubbed. |
+| MCP | `world_layers_resolve` in `server/lib/mcpToolRegistry.js` (scope `career.read`, permission `user`, appended to `server/data/mcpToolManifest.json`) calls `resolveWorldLayers(user, at)` with the authenticated user: same function and permissions as the route. Capability row `world-layers-resolve` in `server/lib/capabilityParity.js`; `server/routes/worldLayers.js` is a governed route file. |
 
 ## Client
 
@@ -51,7 +51,7 @@ None. No table, column, config row or seed changes; nothing touches member rows.
 - The browser address now changes while navigating the World Shell (`/world?at=...`); `/world` alone is the Sun. Old bookmarks to `/world` keep working.
 - Going back from an item opened out of **Journeys** returns to **Journeys** (one layer), not to the World; **← Back to World** keeps its label but pops one layer.
 - Tracking a new opportunity opens it as the next layer, as before.
-- **Interface parity:** UI (desktop + 390px) and API are covered by the training spec; MCP is the recorded gap above.
+- **Interface parity:** UI (desktop + 390px), API and MCP are covered by the training spec (Journey 10, edge case [E.12]).
 - The 3D scene's own picking is unchanged: clicking an island crystal or planet works as before and pushes the same layer as the Sun menu entry.
 
 ## Verified (initial check)
@@ -64,7 +64,6 @@ Environment: fresh database `sb_rl_bld_6000_1` on the local Postgres, seeded, ac
 
 ## Known limitations
 
-- MCP tool `world_layers_resolve` is not built because the platform MCP server does not exist yet (assigned to `platform-mcp`).
 - Moons inside a planet (the Site editor's atmosphere view) are layers in the model and the URL, but the training spec does not click a 3D moon (picking is a canvas gesture); the planet layer itself, its journey buttons and **← Back to World** are covered.
 - The review/approval dialogs of the finalization gate are not layers: they are modal and own Escape.
 - The training spec's J5 step 4-7 type addresses into the address bar by necessity (a link is the capability under test); the UI route to the same links is **Copy link**.

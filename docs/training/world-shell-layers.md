@@ -15,7 +15,7 @@ Version 1 · 2026-10-09 · change spec: `docs/changes/world-shell-layers.md`
 - **Layers of Career Placement Agents:** the tracked list (summary page) then one opportunity (stage, score, a short **APPLICATION OUTPUTS** summary with the cards and a button **Open application outputs (n) ›**) then **Application outputs** (a list of clickable entries and a status filter) then **one output** (full provenance and a **Versions of this output** list) then **Draft editor** or **Version history** on top of it.
 - **Back buttons** at the top of a panel still read as before (**← Back to World**, **← Back to Career Placement Agents**, **← Tracked list**) and now each pops exactly one layer.
 - **Phone tap targets** are at least 44 px tall: every crumb, **Copy link**, **…**, the Sun menu entries, the Journeys cards and the panel buttons.
-- **API:** `GET /api/world-layers/resolve?at=<stack>` (signed-in user; same permissions as the UI). **MCP:** the platform MCP server does not exist yet, so the tool `world_layers_resolve` (same function `resolveWorldLayers`) is reserved and recorded as an MCP gap assigned to `platform-mcp` (see edge case [E.12]).
+- **API:** `GET /api/world-layers/resolve?at=<stack>` (signed-in user; same permissions as the UI). **MCP:** tool `world_layers_resolve` (input `at`, scope `career.read`) calls the same function `resolveWorldLayers` with the authenticated user. Capability row `world-layers-resolve` in the parity map (World Shell > Capabilities).
 - **Timing:** the test browser renders the 3D scene in software and is slow. Wherever a step says a layer appears, allow up to 60 seconds before calling it failed.
 
 ## Preconditions (set up once, on a fresh database)
@@ -124,6 +124,7 @@ Version 1 · 2026-10-09 · change spec: `docs/changes/world-shell-layers.md`
 3. `curl -s -b /tmp/layers-jar 'http://localhost:<API_PORT>/api/world-layers/resolve?at=island:careerPlacementAgents,opp:999999'` returns `"valid":false`, `"at":"island:careerPlacementAgents"` and the same note text as Journey 5 step 4.
 4. `curl -s 'http://localhost:<API_PORT>/api/world-layers/resolve?at=island:careerPlacementAgents'` (no cookie) returns HTTP 401 with `{"error":"unauthorized"}`.
 5. `curl -s -c /tmp/layers-jar-other -H 'Content-Type: application/json' -d '{"email":"other@test.local","password":"TestPass!2345"}' http://localhost:<API_PORT>/api/auth/login` returns HTTP 200, and then `curl -s -b /tmp/layers-jar-other` with the request of step 2 returns `"valid":false` and `"at":"island:careerPlacementAgents"` (the other member can neither see nor learn about the first member's opportunity).
+6. Run `node scripts/check-interface-parity.mjs` in the repository. Expect the last line `OK: the registry matches the code.` and exit code 0 (the capability `world-layers-resolve` lists the route of step 2 and the MCP tool `world_layers_resolve`, with no gap).
 
 ## Edge cases
 
@@ -138,4 +139,4 @@ Version 1 · 2026-10-09 · change spec: `docs/changes/world-shell-layers.md`
 - [E.9] Approving an output for its QR link from any layer goes through the same finalization gate as before (`useToolCategoryGate().run` on the client, `assertReadyToFinalize` on the server); layers add no second approval path.
 - [E.10] Saving the editor with no change shows the red status `Error: No changes to save.` and stays on the **Draft editor** layer (no layer is popped on failure); the browser reports one HTTP 400 for the save request, which is expected.
 - [E.11] When the opportunity list cannot be loaded the panel shows the load error and the trail still reads `Sun › Career Placement Agents`; the layers never hide an error.
-- [E.12] MCP: when `server/lib/mcpToolRegistry.js` does not exist, the capability is recorded as an MCP gap assigned to `platform-mcp` (reserved tool name `world_layers_resolve`, calling `resolveWorldLayers(user, at)` with the authenticated user). When the file exists, it must register a tool of that name that returns the same JSON as Journey 10 step 2.
+- [E.12] MCP: the tool `world_layers_resolve` is registered in `server/lib/mcpToolRegistry.js` (append-only, listed in `server/data/mcpToolManifest.json`) and returns the same JSON as Journey 10 step 2 for the same signed-in user; a token without the `career.read` scope is refused. `node scripts/check-interface-parity.mjs` exits 0 and lists the capability `world-layers-resolve` with no gap.
