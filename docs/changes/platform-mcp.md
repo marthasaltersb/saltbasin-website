@@ -114,3 +114,10 @@ Branch `release-loop/platform-mcp-fix-r1`. The frozen spec and baselines are unt
 **platform-mcp-B12 - account gates on tools/call (428) lack a spec step.**
 - What changed: no product change (the behaviour exists). Proposed amendment `docs/spec-amendments/platform-mcp/A1.json` adds J6.7-J6.9 (withdraw terms, expect 428 `career_terms_required` from a tool call, accept again, expect success). A2 adds the rate-limit step E.7 for B11. The frozen spec and baseline were not edited (`release-spec-baseline.mjs check --all` passes).
 - Checked: amendment files are valid JSON; baseline check passes.
+
+## Fix notes — round 2
+
+**platform-mcp-r2-T3 - Gaps only showed a blank area when there were no gaps ([J10.4]).**
+- What changed: `CapabilitiesPanel.jsx` now renders a status message ("No gaps: every capability works on the website, in the API and as an MCP tool.") when Gaps only is selected, data has loaded, there is no error and zero rows match. All capabilities is unchanged.
+- Files: `src/components/admin/CapabilitiesPanel.jsx`.
+- Checked: `npm run build` passes. The condition is `gapsOnly && rows.length === 0` on loaded data, so All capabilities (rows non-empty) never shows it. A full browser walk at 1280x900 and 390x844 was not run in this fix round; re-validation should confirm it.
