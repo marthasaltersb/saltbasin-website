@@ -103,6 +103,14 @@ export const api = {
   resolveReleaseLoopReconciliation: (id, itemId, body) => request(`/api/release-loop/runs/${id}/reconciliation/${itemId}`, { method: 'PUT', body: JSON.stringify(body) }),
   releaseLoopBugAction: (bugId, action, body = {}) => request(`/api/release-loop/bugs/${bugId}/${action}`, { method: 'POST', body: JSON.stringify(body) }),
   listReleaseLoopEscalations: () => request('/api/release-loop/escalations'),
+  // Release cut records and session plans (admin)
+  listReleaseCutReleases: () => request('/api/release-cut/releases'),
+  getReleaseCutRelease: (version) => request(`/api/release-cut/releases/${encodeURIComponent(version)}`),
+  listReleaseCutSessions: (release) => request(`/api/release-cut/sessions${release ? `?release=${encodeURIComponent(release)}` : ''}`),
+  releaseCutSessionReport: (release) => request(`/api/release-cut/sessions/report${release ? `?release=${encodeURIComponent(release)}` : ''}`),
+  recordReleaseCutEstimate: (body) => request('/api/release-cut/sessions/estimate', { method: 'POST', body: JSON.stringify(body) }),
+  recordReleaseCutMerge: (session, body = {}) => request(`/api/release-cut/sessions/${encodeURIComponent(session)}/merge`, { method: 'POST', body: JSON.stringify(body) }),
+  closeReleaseCutSession: (session, body = {}) => request(`/api/release-cut/sessions/${encodeURIComponent(session)}/close`, { method: 'POST', body: JSON.stringify(body) }),
   // Platform agent runner (admin). Worker-token routes are not here: only scripts/agent-worker.mjs calls them.
   agentRunnerOverview: () => request('/api/agent-runner/overview'),
   agentRunnerSettings: () => request('/api/agent-runner/settings'),

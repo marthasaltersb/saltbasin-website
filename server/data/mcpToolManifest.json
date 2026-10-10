@@ -191,6 +191,13 @@
     "agent_runner_seeds",
     "career_scoring_preferences_read",
     "career_scoring_preferences_save",
-    "career_scoring_preferences_reset"
+    "career_scoring_preferences_reset",
+    "release_cut_list_releases",
+    "release_cut_get_release",
+    "release_cut_list_sessions",
+    "release_cut_session_report",
+    "release_cut_record_estimate",
+    "release_cut_record_merge",
+    "release_cut_close_session"
   ]
 }
