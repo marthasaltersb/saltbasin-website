@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T01:29:52.901Z",
+  "exportedAt": "2026-10-10T01:33:15.509Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -50,11 +50,11 @@
       "backlog": 4
     },
     "chart-gallery": {
-      "status": "fix",
+      "status": "validate",
       "lastRound": 5,
       "lastScore": "18/20",
       "lastReport": ".claude/worktrees/wf_cbb72b20-566-9/docs/test-results/chart-gallery/round-5.md",
-      "openBugs": 18,
+      "openBugs": 24,
       "backlog": 11
     },
     "output-version-history": {
@@ -4504,7 +4504,7 @@
     {
       "id": "chart-gallery-F2-2",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "product_defect",
       "attempts": 0,
       "step": "Unmerged r1 hunks remain (careerAtomMigration jsonb cast fix, careerMaster atomSyncError, api.js toast, ChartGallery.jsx)",
@@ -4526,7 +4526,7 @@
     {
       "id": "chart-gallery-F2-7",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "Round 3 validation setup",
@@ -4547,7 +4547,7 @@
     {
       "id": "chart-gallery-F2-8",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "J2 2.1 sticky check",
@@ -4591,7 +4591,7 @@
     {
       "id": "chart-gallery-B9",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "journey: pick a chart",
@@ -4617,7 +4617,7 @@
     {
       "id": "chart-gallery-B10",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "validation setup",
@@ -4642,7 +4642,7 @@
     {
       "id": "chart-gallery-F3-3",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "product_defect",
       "attempts": 0,
       "step": "J2.3 mobile",
@@ -4664,7 +4664,7 @@
     {
       "id": "chart-gallery-F3-4",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "product_defect",
       "attempts": 0,
       "step": "J2.2 mobile",
@@ -4685,7 +4685,7 @@
     {
       "id": "chart-gallery-F3-5",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "product_defect",
       "attempts": 0,
       "step": "E.4",
@@ -4706,7 +4706,7 @@
     {
       "id": "chart-gallery-F3-6",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "MCP",
@@ -4727,7 +4727,7 @@
     {
       "id": "chart-gallery-F3-7",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "product_defect",
       "attempts": 0,
       "step": "J2",
@@ -4748,7 +4748,7 @@
     {
       "id": "chart-gallery-F3-8",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "product_defect",
       "attempts": 0,
       "step": "Career Master writes (outside gallery)",
@@ -4769,9 +4769,9 @@
     {
       "id": "chart-gallery-F4-1",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "retesting",
       "class": "process",
-      "attempts": 0,
+      "attempts": 1,
       "step": "J2.2 phone",
       "rootCause": "Fix applied on an unconfirmed root cause",
       "files": [
@@ -4789,6 +4789,12 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
           "commit": null
+        },
+        {
+          "round": 5,
+          "event": "fixed",
+          "note": "Measured the real overflow. At 316px and 390px, /output/res…",
+          "commit": "93ee5daf21378e224a2e67adc6b7604ca3a71ed7"
         }
       ]
     },
@@ -4887,7 +4893,7 @@
     {
       "id": "chart-gallery-F4-7",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "E.5",
@@ -4905,6 +4911,141 @@
           "round": 4,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (te…",
+          "commit": null
+        },
+        {
+          "round": 5,
+          "event": "not_fixed",
+          "note": "No product change was needed. Baseline v3 (amendment A2) al…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-F5-4",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "J2.2 phone",
+      "rootCause": "Remaining grid tracks resolve to minmax(auto,1fr)",
+      "files": [
+        "src/components/Output.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 5,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-F5-5",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "J2.3 phone",
+      "rootCause": "MOBILE_GAP in admin shell",
+      "files": [
+        "src/components/admin/AdminShell.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 5,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-F5-6",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "E.4",
+      "rootCause": "Falsy check on text",
+      "files": [
+        "src/lib/outputBlocks.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 5,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-F5-7",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "MCP parity",
+      "rootCause": "Capability shipped without MCP tool",
+      "files": [
+        "server/lib/mcpToolRegistry.js",
+        "server/data/mcpToolManifest.json",
+        "server/lib/capabilityParity.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 5,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-F5-8",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "Known limitation: atom sync",
+      "rootCause": "Boolean bound to $n::jsonb param",
+      "files": [
+        "server/lib/careerAtomMigration.js",
+        "server/lib/careerAtomRegistry.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 5,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-F5-9",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "J2.3 reachability",
+      "rootCause": "Validation path is admin, not member World Shell",
+      "files": [
+        "src/components/admin/AdminShell.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 5,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
           "commit": null
         }
       ]
@@ -4993,7 +5134,7 @@
     {
       "id": "chart-gallery-CG-R2b-1",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "Classic charts: Bar Chart and Capacity Gauge + Add disabled for a member with no roll-up source",
@@ -5078,7 +5219,7 @@
     {
       "id": "chart-gallery-CG-R2b-4",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "Expect the Live Preview column visible on the right at the same time (phone walkthrough)",
@@ -5133,7 +5274,7 @@
     {
       "id": "chart-gallery-CG-R2b-6",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "Validator observation F2-8: sticky preview verified only in the World Shell host, not the AdminShell host",
@@ -5298,7 +5439,7 @@
     {
       "id": "chart-gallery-CG-R4-4",
       "feature": "chart-gallery",
-      "status": "fixing",
+      "status": "open",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "E.5 Console: only ERR_CERT_AUTHORITY_INVALID is named as the sandbox external-resource error",
