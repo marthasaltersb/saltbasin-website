@@ -1194,5 +1194,133 @@
         "platform-agent-runner: new in this update (being built)"
       ]
     }
+  },
+  {
+    "version": "0.2.0-u11",
+    "release": "2026-10-02-application-packages",
+    "at": "2026-10-10T00:13:55.205Z",
+    "commit": "ed234db9b2e27f6a720fc8dd4ca406aed610b037",
+    "previous": "0.2.0-u10",
+    "headline": "Relaunched after the overnight usage limit; nothing lost",
+    "note": "Every run stopped at the usage limit around 20:00 UTC. Unfinished builds (world-shell-layers, render-bindings, platform-agent-runner) were saved to branches and their builds resume from them; a pending approved spec amendment for release-intelligence was merged; disk was freed; all 15 runs relaunched at 00:10 UTC on the same frozen baselines. platform-mcp passed round 1 at 62/62 and its fix added MCP tools for every remaining capability (re-test pending).",
+    "metrics": {
+      "featuresTotal": 18,
+      "featuresPassed": 0,
+      "openBugs": 214,
+      "verified": 25,
+      "backlog": 61,
+      "needPerson": 4,
+      "agentsRunning": 17,
+      "features": {
+        "proficiency-live-qr": {
+          "status": "validate",
+          "round": 6,
+          "score": "29/32"
+        },
+        "world-shell-navigation": {
+          "status": "validate",
+          "round": 2,
+          "score": "36/47"
+        },
+        "career-bound-outputs": {
+          "status": "validate",
+          "round": 3,
+          "score": "48/56"
+        },
+        "qr-gated-outputs": {
+          "status": "validate",
+          "round": 4,
+          "score": "36/38"
+        },
+        "no-silent-failures": {
+          "status": "validate",
+          "round": 1,
+          "score": "18/28"
+        },
+        "release-loop-tooling": {
+          "status": "validate",
+          "round": 5,
+          "score": "30/30"
+        },
+        "chart-gallery": {
+          "status": "validate",
+          "round": 3,
+          "score": "17/20"
+        },
+        "output-version-history": {
+          "status": "validate",
+          "round": 3,
+          "score": "30/37"
+        },
+        "resume-rollups": {
+          "status": "validate",
+          "round": 1,
+          "score": "28/32"
+        },
+        "release-intelligence": {
+          "status": "validate",
+          "round": 1,
+          "score": "1/54"
+        },
+        "cover-letter-agent": {
+          "status": "validate",
+          "round": 1,
+          "score": "38/46"
+        },
+        "in-app-release-loop": {
+          "status": "validate",
+          "round": 1,
+          "score": "59/60"
+        },
+        "session-mapping": {
+          "status": "failed",
+          "round": null,
+          "score": null
+        },
+        "live-release-tracker": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "platform-mcp": {
+          "status": "validate",
+          "round": 1,
+          "score": "62/62"
+        },
+        "world-shell-layers": {
+          "status": "build",
+          "round": null,
+          "score": null
+        },
+        "render-bindings": {
+          "status": "build",
+          "round": null,
+          "score": null
+        },
+        "platform-agent-runner": {
+          "status": "build",
+          "round": null,
+          "score": null
+        }
+      }
+    },
+    "comparison": {
+      "lines": [
+        "Features passed: 1 → **0** (-1) of 18",
+        "Open bugs caused by this work: 198 → **214** (+16) — new failures found in testing",
+        "Bugs verified fixed: 25 (no change)",
+        "Backlog (not this work): 61 (no change)",
+        "Waiting on a person: 4 (no change)",
+        "Agents running: 16 → 17"
+      ],
+      "featureChanges": [
+        "qr-gated-outputs: being fixed → **in browser testing**",
+        "release-loop-tooling: passed → **in browser testing**",
+        "release-intelligence: fixed, awaiting re-test → **in browser testing**",
+        "in-app-release-loop: being fixed → **in browser testing**",
+        "session-mapping: in browser testing → **agent stopped**",
+        "platform-mcp: reviewing failed commands → **in browser testing**"
+      ]
+    }
   }
 ]
