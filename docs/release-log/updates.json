@@ -1322,5 +1322,138 @@
         "platform-mcp: reviewing failed commands → **in browser testing**"
       ]
     }
+  },
+  {
+    "version": "0.2.0-u12",
+    "release": "2026-10-02-application-packages",
+    "at": "2026-10-10T01:03:18.369Z",
+    "commit": "e1f684e29c838a941b3988b19cc6240998ffdfba",
+    "previous": "0.2.0-u11",
+    "headline": "release-intelligence scores 55/55; session-mapping 56/56",
+    "note": "release-intelligence went from 1/54 (phone layout clipped on every screen) to 55/55 on baseline v3 after its fixes. session-mapping scored 56/56 in its first round; a fix for items outside the steps is awaiting re-test. platform-mcp 60/65 on its new baseline v3 after adding tools for every capability. Process fixes: bug ids now carry their feature, and a failing frozen step can no longer be set aside as backlog (qr-gated-outputs and resume-rollups relaunched under that rule).",
+    "metrics": {
+      "featuresTotal": 18,
+      "featuresPassed": 1,
+      "openBugs": 212,
+      "verified": 49,
+      "backlog": 73,
+      "needPerson": 5,
+      "agentsRunning": 15,
+      "features": {
+        "proficiency-live-qr": {
+          "status": "validate",
+          "round": 6,
+          "score": "29/32"
+        },
+        "world-shell-navigation": {
+          "status": "validate",
+          "round": 2,
+          "score": "36/47"
+        },
+        "career-bound-outputs": {
+          "status": "validate",
+          "round": 3,
+          "score": "48/56"
+        },
+        "qr-gated-outputs": {
+          "status": "validate",
+          "round": 5,
+          "score": "36/38"
+        },
+        "no-silent-failures": {
+          "status": "validate",
+          "round": 2,
+          "score": "24/29"
+        },
+        "release-loop-tooling": {
+          "status": "passed",
+          "round": 6,
+          "score": "30/30"
+        },
+        "chart-gallery": {
+          "status": "validate",
+          "round": 4,
+          "score": "17/20"
+        },
+        "output-version-history": {
+          "status": "failing",
+          "round": 4,
+          "score": "34/37"
+        },
+        "resume-rollups": {
+          "status": "validate",
+          "round": 2,
+          "score": "30/32"
+        },
+        "release-intelligence": {
+          "status": "validate",
+          "round": 2,
+          "score": "55/55"
+        },
+        "cover-letter-agent": {
+          "status": "validate",
+          "round": 1,
+          "score": "38/46"
+        },
+        "in-app-release-loop": {
+          "status": "validate",
+          "round": 2,
+          "score": "59/60"
+        },
+        "session-mapping": {
+          "status": "awaiting_retest",
+          "round": 1,
+          "score": "56/56"
+        },
+        "live-release-tracker": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "platform-mcp": {
+          "status": "validate",
+          "round": 2,
+          "score": "60/65"
+        },
+        "world-shell-layers": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "render-bindings": {
+          "status": "build",
+          "round": null,
+          "score": null
+        },
+        "platform-agent-runner": {
+          "status": "build",
+          "round": null,
+          "score": null
+        }
+      }
+    },
+    "comparison": {
+      "lines": [
+        "Features passed: 0 → **1** (+1) of 18",
+        "Open bugs caused by this work: 214 → **212** (-2)",
+        "Bugs verified fixed: 25 → **49** (+24)",
+        "Backlog (not this work): 61 → **73** (+12)",
+        "Waiting on a person: 4 → **5** (+1)",
+        "Agents running: 17 → 15"
+      ],
+      "featureChanges": [
+        "qr-gated-outputs: test round 4 36/38 → round 5 **36/38**",
+        "no-silent-failures: test round 1 18/28 → round 2 **24/29**",
+        "release-loop-tooling: test round 5 30/30 → round 6 **30/30**; in browser testing → **passed**",
+        "chart-gallery: test round 3 17/20 → round 4 **17/20**",
+        "output-version-history: test round 3 30/37 → round 4 **34/37**; in browser testing → **failing**",
+        "resume-rollups: test round 1 28/32 → round 2 **30/32**",
+        "release-intelligence: test round 1 1/54 → round 2 **55/55**",
+        "in-app-release-loop: test round 1 59/60 → round 2 **59/60**",
+        "session-mapping: test not run → round 1 **56/56**; agent stopped → **fixed, awaiting re-test**",
+        "platform-mcp: test round 1 62/62 → round 2 **60/65**",
+        "world-shell-layers: being built → **in browser testing**"
+      ]
+    }
   }
 ]

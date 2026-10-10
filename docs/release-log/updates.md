@@ -2,6 +2,62 @@
 
 Release **0.2.0** (`2026-10-02-application-packages`), built on branch `claude/zealous-meitner-5tuft5`. Each update is numbered `0.2.0-u<n>`, pinned to the commit it describes, and compared with the update before it. Newest first.
 
+## 0.2.0-u12 — 2026-10-10 01:03 UTC
+
+Commit [`e1f684e`](https://github.com/marthasaltersb/saltbasin-website/commit/e1f684e29c838a941b3988b19cc6240998ffdfba) · compared with 0.2.0-u11
+
+**release-intelligence scores 55/55; session-mapping 56/56**
+
+release-intelligence went from 1/54 (phone layout clipped on every screen) to 55/55 on baseline v3 after its fixes. session-mapping scored 56/56 in its first round; a fix for items outside the steps is awaiting re-test. platform-mcp 60/65 on its new baseline v3 after adding tools for every capability. Process fixes: bug ids now carry their feature, and a failing frozen step can no longer be set aside as backlog (qr-gated-outputs and resume-rollups relaunched under that rule).
+
+**Compared with the previous update**
+
+- Features passed: 0 → **1** (+1) of 18
+- Open bugs caused by this work: 214 → **212** (-2)
+- Bugs verified fixed: 25 → **49** (+24)
+- Backlog (not this work): 61 → **73** (+12)
+- Waiting on a person: 4 → **5** (+1)
+- Agents running: 17 → 15
+
+**Feature changes**
+
+- qr-gated-outputs: test round 4 36/38 → round 5 **36/38**
+- no-silent-failures: test round 1 18/28 → round 2 **24/29**
+- release-loop-tooling: test round 5 30/30 → round 6 **30/30**; in browser testing → **passed**
+- chart-gallery: test round 3 17/20 → round 4 **17/20**
+- output-version-history: test round 3 30/37 → round 4 **34/37**; in browser testing → **failing**
+- resume-rollups: test round 1 28/32 → round 2 **30/32**
+- release-intelligence: test round 1 1/54 → round 2 **55/55**
+- in-app-release-loop: test round 1 59/60 → round 2 **59/60**
+- session-mapping: test not run → round 1 **56/56**; agent stopped → **fixed, awaiting re-test**
+- platform-mcp: test round 1 62/62 → round 2 **60/65**
+- world-shell-layers: being built → **in browser testing**
+
+<details><summary>Every feature at this update</summary>
+
+| Feature | Status | Latest test |
+|---|---|---|
+| proficiency-live-qr | in browser testing | round 6: 29/32 |
+| world-shell-navigation | in browser testing | round 2: 36/47 |
+| career-bound-outputs | in browser testing | round 3: 48/56 |
+| qr-gated-outputs | in browser testing | round 5: 36/38 |
+| no-silent-failures | in browser testing | round 2: 24/29 |
+| release-loop-tooling | passed | round 6: 30/30 |
+| chart-gallery | in browser testing | round 4: 17/20 |
+| output-version-history | failing | round 4: 34/37 |
+| resume-rollups | in browser testing | round 2: 30/32 |
+| release-intelligence | in browser testing | round 2: 55/55 |
+| cover-letter-agent | in browser testing | round 1: 38/46 |
+| in-app-release-loop | in browser testing | round 2: 59/60 |
+| session-mapping | fixed, awaiting re-test | round 1: 56/56 |
+| live-release-tracker | in browser testing | not tested yet |
+| platform-mcp | in browser testing | round 2: 60/65 |
+| world-shell-layers | in browser testing | not tested yet |
+| render-bindings | being built | not tested yet |
+| platform-agent-runner | being built | not tested yet |
+
+</details>
+
 ## 0.2.0-u11 — 2026-10-10 00:13 UTC
 
 Commit [`ed234db`](https://github.com/marthasaltersb/saltbasin-website/commit/ed234db9b2e27f6a720fc8dd4ca406aed610b037) · compared with 0.2.0-u10
