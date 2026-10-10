@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T20:04:47.097Z",
+  "exportedAt": "2026-10-10T20:05:38.961Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -30,7 +30,7 @@
       "lastRound": 8,
       "lastScore": "38/38",
       "lastReport": "docs/test-results/qr-gated-outputs/round-8.md",
-      "openBugs": 0,
+      "openBugs": 25,
       "backlog": 14
     },
     "no-silent-failures": {
@@ -46,7 +46,7 @@
       "lastRound": 6,
       "lastScore": "30/30",
       "lastReport": "docs/test-results/release-loop-tooling/round-6.md",
-      "openBugs": 0,
+      "openBugs": 5,
       "backlog": 4
     },
     "chart-gallery": {
@@ -78,7 +78,7 @@
       "lastRound": 3,
       "lastScore": "55/55",
       "lastReport": "docs/test-results/release-intelligence/round-3.md",
-      "openBugs": 2,
+      "openBugs": 7,
       "backlog": 2
     },
     "cover-letter-agent": {
@@ -94,7 +94,7 @@
       "lastRound": 3,
       "lastScore": "60/60",
       "lastReport": "docs/test-results/in-app-release-loop/round-3.md",
-      "openBugs": 0,
+      "openBugs": 2,
       "backlog": 1
     },
     "session-mapping": {
@@ -102,7 +102,7 @@
       "lastRound": 3,
       "lastScore": "56/56",
       "lastReport": ".claude/worktrees/wf_2027c3f1-e7d-26/docs/test-results/session-mapping/round-3.md",
-      "openBugs": 2,
+      "openBugs": 9,
       "backlog": 1
     },
     "live-release-tracker": {
@@ -118,7 +118,7 @@
       "lastRound": 3,
       "lastScore": "65/65",
       "lastReport": "docs/test-results/platform-mcp/round-3.md",
-      "openBugs": 3,
+      "openBugs": 15,
       "backlog": 3
     },
     "world-shell-layers": {
@@ -2795,28 +2795,26 @@
     {
       "id": "qr-gated-outputs-B7",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Preconditions 1, 4; Journey 3 step 4; Journey 8",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Spec written before member@test.local accounts with accepted terms existed.",
+      "files": [
+        "docs/training/qr-gated-outputs.md",
+        "docs/changes/qr-gated-outputs.md",
+        "scripts/import-application-package.mjs"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "docs/training/qr-gated-outputs.md preconditions were written before member test accounts …"
       },
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
-          "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -2870,28 +2868,26 @@
     {
       "id": "qr-gated-outputs-B10",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Journey 6 / request scope",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "docx path only via stamp-application-package-docx.py, no UI or journey.",
+      "files": [
+        "scripts/stamp-application-package-docx.py",
+        "scripts/sync-site-with-application-package.mjs",
+        "server/lib/outputRendering.js"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "The feature title and request include \"clickable QR in PDF/docx\". The docx path (scripts/…"
       },
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
-          "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -2899,28 +2895,24 @@
     {
       "id": "qr-gated-outputs-B11",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "Journey 6",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Browser cannot show annotations.",
+      "files": [
+        "docs/training/qr-gated-outputs.md"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "Journey 6 of docs/training/qr-gated-outputs.md asks to verify PDF annotations that a brow…"
       },
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
-          "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3153,28 +3145,30 @@
     {
       "id": "qr-gated-outputs-F2-11",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Preconditions / Where things are",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Spec predates member test accounts and World Shell direction.",
+      "files": [
+        "docs/training/qr-gated-outputs.md"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "Feature's own spec preconditions gap (B7); needs amendment."
       },
       "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
+          "commit": null
+        },
         {
           "round": 3,
           "event": "not_fixed",
           "note": "Needs a reviewer-approved amendment to the frozen spec. The…",
-          "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3182,28 +3176,30 @@
     {
       "id": "qr-gated-outputs-F2-12",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "J10.3/E.1/E.2/E.4 fixture",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Spec coverage gap.",
+      "files": [
+        "docs/training/qr-gated-outputs.md"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "Feature's own spec fixture gap for J10.3/E.1/E.2/E.4 (round 2 G2); needs amendment."
       },
       "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (te…",
+          "commit": null
+        },
         {
           "round": 3,
           "event": "not_fixed",
           "note": "Needs a reviewer-approved amendment to the frozen spec, add…",
-          "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3234,28 +3230,31 @@
     {
       "id": "qr-gated-outputs-F3-5",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "qr-gated-outputs-F2-11",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Spec routes through Classic Tools as admin; owner wants everything from World Shell as a member.",
+      "files": [
+        "docs/training/qr-gated-outputs.md",
+        "docs/spec-amendments/qr-gated-outputs/"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "Spec's own preconditions (B7/F2-11); needs amendment."
       },
       "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
+          "commit": null
+        },
         {
           "round": 4,
           "event": "not_fixed",
           "note": "The product already works as the member from the World Shel…",
-          "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3263,28 +3262,30 @@
     {
       "id": "qr-gated-outputs-F3-6",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "qr-gated-outputs-F2-12",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "No Draft card left for J10.3, E.1, E.2, E.4.",
+      "files": [
+        "docs/training/qr-gated-outputs.md"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "Spec fixture gap for J10.3/E.1/E.2/E.4; needs amendment."
       },
       "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (te…",
+          "commit": null
+        },
         {
           "round": 4,
           "event": "not_fixed",
           "note": "Needs a new spec step with a fixture (pkg-v3) and an import…",
-          "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3419,24 +3420,21 @@
     {
       "id": "qr-gated-outputs-F4-3",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "product_defect",
       "attempts": 0,
       "step": "J2.1 / E.5",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Copy mismatch carried since round 2, never in a fix scope.",
+      "files": [
+        "src/components/admin/MyResumePanel.jsx",
+        "server/routes/auth.js"
+      ],
       "scope": null,
       "history": [
         {
           "round": 4,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
-          "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3444,24 +3442,21 @@
     {
       "id": "qr-gated-outputs-F4-4",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "P.1",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Spec requires admin sign-in and Classic Tools path; only a reviewer-approved amendment can change it.",
+      "files": [
+        "docs/training/qr-gated-outputs.md",
+        "docs/spec-amendments/qr-gated-outputs/"
+      ],
       "scope": null,
       "history": [
         {
           "round": 4,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
-          "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3469,24 +3464,21 @@
     {
       "id": "qr-gated-outputs-F4-5",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "P.5 / J10.3, E.1, E.2, E.4",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Spec supplies no Draft card after J9; E.3 ordering must stay deterministic.",
+      "files": [
+        "docs/spec-amendments/qr-gated-outputs/A5.json",
+        "docs/training/qr-gated-outputs.md"
+      ],
       "scope": null,
       "history": [
         {
           "round": 4,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (te…",
-          "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3494,24 +3486,22 @@
     {
       "id": "qr-gated-outputs-F4-6",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Known limitations: import UI",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "UI_GAP: no website path for package import.",
+      "files": [
+        "src/components/admin/MyResumePanel.jsx",
+        "src/lib/api.js",
+        "server/routes/resumeOutputs.js"
+      ],
       "scope": null,
       "history": [
         {
           "round": 4,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
-          "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3519,24 +3509,21 @@
     {
       "id": "qr-gated-outputs-F4-7",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Known limitations: docx and site sync not in spec",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "No scored journey; ownership decision pending.",
+      "files": [
+        "docs/spec-amendments/qr-gated-outputs/A3.json",
+        "scripts/sync-site-with-application-package.mjs"
+      ],
       "scope": null,
       "history": [
         {
           "round": 4,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
-          "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3544,12 +3531,14 @@
     {
       "id": "qr-gated-outputs-F4-8",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "MCP parity",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "No baseline step.",
+      "files": [
+        "docs/spec-amendments/qr-gated-outputs/A4.json"
+      ],
       "scope": null,
       "history": [
         {
@@ -3557,28 +3546,25 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
           "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
-          "commit": null
         }
       ]
     },
     {
       "id": "qr-gated-outputs-F6-1",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "J2.1, E.5",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Fix agent did not run the app; validation is the loop's job.",
+      "files": [
+        "src/components/admin/MyResumePanel.jsx",
+        "server/routes/auth.js"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "J2.1 em dash in MyResumePanel.jsx is this feature's surface (round 6 T1 decision reused).…"
       },
       "history": [
         {
@@ -3586,40 +3572,31 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
           "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
-          "commit": null
         }
       ]
     },
     {
       "id": "qr-gated-outputs-F6-4",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Known limitations: docx and site sync",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Amendments unapproved.",
+      "files": [
+        "docs/spec-amendments/qr-gated-outputs/A3.json",
+        "docs/spec-amendments/qr-gated-outputs/A8.json"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "A3 and A8 are this feature's own docx-download amendments, both status rejected with unre…"
       },
       "history": [
         {
           "round": 6,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
-          "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3627,28 +3604,25 @@
     {
       "id": "qr-gated-outputs-F6-5",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "P.1 and navigation",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Amendment A6 not approved by a non-proposer.",
+      "files": [
+        "docs/training/qr-gated-outputs.md",
+        "docs/spec-amendments/qr-gated-outputs/A6.json"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "A6 amends this feature's own P.1 for the owner direction on member-from-World-Shell; reje…"
       },
       "history": [
         {
           "round": 6,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
-          "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3656,28 +3630,24 @@
     {
       "id": "qr-gated-outputs-F6-6",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "J10.3, E.1, E.2, E.4",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "No Draft card fixture step in spec; A5/A7 unapproved.",
+      "files": [
+        "docs/spec-amendments/qr-gated-outputs/A7.json"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "A7 adds the P.5 Draft-card fixture to this feature's spec; rejected because it reuses the…"
       },
       "history": [
         {
           "round": 6,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (te…",
-          "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3685,16 +3655,19 @@
     {
       "id": "qr-gated-outputs-F6-7",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "MCP parity",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "MCP tools registered but no scored step; A4 unapproved.",
+      "files": [
+        "docs/spec-amendments/qr-gated-outputs/A4.json",
+        "server/lib/mcpToolRegistry.js"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "The MCP tools exist in mcpToolRegistry.js (added by this feature); A4's scored step is re…"
       },
       "history": [
         {
@@ -3702,36 +3675,28 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
           "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
-          "commit": null
         }
       ]
     },
     {
       "id": "qr-gated-outputs-F7-2",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "F6-4 / B10.1 / J6.4",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Amendments not exact, wrong surface labelling, invalid ids; owner has not recorded site-sync decision.",
+      "files": [
+        "docs/spec-amendments/qr-gated-outputs/A3.json",
+        "docs/spec-amendments/qr-gated-outputs/A8.json",
+        "scripts/sync-site-with-application-package.mjs"
+      ],
       "scope": null,
       "history": [
         {
           "round": 7,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
-          "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3739,12 +3704,15 @@
     {
       "id": "qr-gated-outputs-F7-3",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "F6-5 / P.1",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Spec predates the World Shell member-only direction; A6 left admin-run imports.",
+      "files": [
+        "docs/training/qr-gated-outputs.md",
+        "docs/spec-amendments/qr-gated-outputs/A6.json"
+      ],
       "scope": null,
       "history": [
         {
@@ -3752,24 +3720,20 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
           "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
-          "commit": null
         }
       ]
     },
     {
       "id": "qr-gated-outputs-F7-4",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "F6-6 / P.5",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Spec has no step creating the Draft card.",
+      "files": [
+        "docs/spec-amendments/qr-gated-outputs/A7.json"
+      ],
       "scope": null,
       "history": [
         {
@@ -3777,36 +3741,27 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (te…",
           "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
-          "commit": null
         }
       ]
     },
     {
       "id": "qr-gated-outputs-F7-5",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "F6-7 / MCP",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "No scored MCP step in baseline.",
+      "files": [
+        "docs/spec-amendments/qr-gated-outputs/A4.json",
+        "server/lib/mcpToolRegistry.js"
+      ],
       "scope": null,
       "history": [
         {
           "round": 7,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
-          "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3814,24 +3769,21 @@
     {
       "id": "qr-gated-outputs-F7-6",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Known limitations: in-app import card",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Spec only covers CLI import.",
+      "files": [
+        "src/components/admin/MyResumePanel.jsx",
+        "docs/training/qr-gated-outputs.md"
+      ],
       "scope": null,
       "history": [
         {
           "round": 7,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
-          "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3955,16 +3907,18 @@
     {
       "id": "qr-gated-outputs-G1",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "Where things are: phone route to My Resume",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "At 390px the Classic Tools tab strip is display:none and the mobile menu button has no element, so the spec path is unreachable on a phone;…",
+      "files": [
+        "docs/training/qr-gated-outputs.md"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "Spec lacks phone route to My Resume (spec gap for this feature, via amendment); underlyin…"
       },
       "history": [
         {
@@ -3972,40 +3926,30 @@
           "event": "found",
           "note": "At 390px the Classic Tools tab strip is display:none and th…",
           "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
-          "commit": null
         }
       ]
     },
     {
       "id": "qr-gated-outputs-G2",
       "feature": "qr-gated-outputs",
-      "status": "verified",
+      "status": "open",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "Draft card fixture for J10.3, E.1, E.2, E.4",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "The spec gives no fixture for a Draft card needed by steps after Journey 9; the validator imported a third package version ad hoc.",
+      "files": [
+        "docs/training/qr-gated-outputs.md"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "Spec's own Draft-card steps lack a fixture; spec gap, via amendment."
       },
       "history": [
         {
           "round": 2,
           "event": "found",
           "note": "The spec gives no fixture for a Draft card needed by steps …",
-          "commit": null
-        },
-        {
-          "round": 8,
-          "event": "verified",
-          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -4774,45 +4718,20 @@
     {
       "id": "release-loop-tooling-F1-2",
       "feature": "release-loop-tooling",
-      "status": "verified",
+      "status": "recurred",
       "class": "defect",
       "attempts": 0,
       "step": "J5 5.2 at 390px stacked cards, no panel overflow",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Fix-r1's 640px stacked-card CSS and data-label attributes on table cells are absent at HEAD (0 occurrences) because 9084b2c replaced the pa…",
+      "files": [
+        "tools/release-tracker/index.html",
+        "tools/release-tracker/SETUP-FOR-CLAUDE.md",
+        "tools/release-tracker/sync-setup-guide.mjs"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
-      },
-      "history": [
-        {
-          "round": 3,
-          "event": "recurred",
-          "note": "Fix-r1's 640px stacked-card CSS and data-label attributes o…",
-          "commit": null
-        },
-        {
-          "round": 6,
-          "event": "verified",
-          "note": "Retest round 6 passed every step of baseline v3",
-          "commit": null
-        }
-      ]
-    },
-    {
-      "id": "release-loop-tooling-F1-5",
-      "feature": "release-loop-tooling",
-      "status": "verified",
-      "class": "requirement_gap",
-      "attempts": 0,
-      "step": "J4/J5 agent card",
-      "rootCause": null,
-      "files": [],
-      "scope": {
-        "scope": "this_feature",
-        "owner": null,
-        "evidence": null
+        "evidence": "At head, index.html has no 'stalled' STATUS key/CSS and 0 data-label occurrences; fix-r1 …"
       },
       "history": [
         {
@@ -4822,9 +4741,42 @@
           "commit": null
         },
         {
-          "round": 6,
-          "event": "verified",
-          "note": "Retest round 6 passed every step of baseline v3",
+          "round": 3,
+          "event": "recurred",
+          "note": "STATUS map (index.html line 221) has no 'stalled' key so pi…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "recurred",
+          "note": "Fix-r1's 640px stacked-card CSS and data-label attributes o…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-loop-tooling-F1-5",
+      "feature": "release-loop-tooling",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "J4/J5 agent card",
+      "rootCause": "Owner/spec-author decision needed on whether the count returns to the agent card; the fix agent could not ask. The spec now describes the c…",
+      "files": [
+        "tools/release-tracker/index.html",
+        "docs/training/release-loop-tooling.md",
+        "docs/changes/release-loop-tooling.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Agent card is in tools/release-tracker/index.html created by bed12f0 and reworked in 2112…"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
           "commit": null
         }
       ]
@@ -4884,28 +4836,26 @@
     {
       "id": "release-loop-tooling-B1",
       "feature": "release-loop-tooling",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Docs claim",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Documentation describes a capability that was never implemented",
+      "files": [
+        "docs/release-process.md",
+        "server/data/releaseLoop/definition.json",
+        ".claude/skills/salt-basin-release-loop/SKILL.md"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "Reused scope-review.json decision. definition.json line 210, release-process.md line 52 a…"
       },
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
-          "commit": null
-        },
-        {
-          "round": 6,
-          "event": "verified",
-          "note": "Retest round 6 passed every step of baseline v3",
           "commit": null
         }
       ]
@@ -4913,28 +4863,24 @@
     {
       "id": "release-loop-tooling-B2",
       "feature": "release-loop-tooling",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Sync",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Dead-agent detection limited to extras",
+      "files": [
+        "scripts/release-tracker-sync.mjs"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "Reused scope-review.json decision. scripts/release-tracker-sync.mjs line 115 skips the id…"
       },
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
-          "commit": null
-        },
-        {
-          "round": 6,
-          "event": "verified",
-          "note": "Retest round 6 passed every step of baseline v3",
           "commit": null
         }
       ]
@@ -4942,28 +4888,24 @@
     {
       "id": "release-loop-tooling-B3",
       "feature": "release-loop-tooling",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Tracker 390px",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Responsive reflow not implemented",
+      "files": [
+        "tools/release-tracker/index.html"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "Reused scope-review.json decision. index.html has narrow-screen rules only for .hist and …"
       },
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
-          "commit": null
-        },
-        {
-          "round": 6,
-          "event": "verified",
-          "note": "Retest round 6 passed every step of baseline v3",
           "commit": null
         }
       ]
@@ -5096,7 +5038,7 @@
         {
           "round": 6,
           "event": "verified",
-          "note": "Retest round 6 passed every step of baseline v3",
+          "note": "Retest round 6 passed every step of baseline v3, including …",
           "commit": null
         }
       ]
@@ -7235,24 +7177,22 @@
     {
       "id": "release-intelligence-F1-3",
       "feature": "release-intelligence",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "B7 / [J1.1], proposed [J1.2]",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Fix never validated in a browser; RI-R1-9 amendment (add [J1.2], retire line 8) never written.",
+      "files": [
+        "src/components/admin/AdminShell.jsx",
+        "docs/training/release-intelligence.md",
+        "docs/spec-amendments/release-intelligence/"
+      ],
       "scope": null,
       "history": [
         {
           "round": 1,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v3",
           "commit": null
         }
       ]
@@ -7260,24 +7200,21 @@
     {
       "id": "release-intelligence-F1-4",
       "feature": "release-intelligence",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "RI-R1-7 (MCP surface)",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "platform-mcp not integrated.",
+      "files": [
+        "server/lib/mcpToolRegistry.js",
+        "server/routes/releaseIntelligence.js"
+      ],
       "scope": null,
       "history": [
         {
           "round": 1,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v3",
           "commit": null
         }
       ]
@@ -7285,12 +7222,14 @@
     {
       "id": "release-intelligence-F1-5",
       "feature": "release-intelligence",
-      "status": "verified",
+      "status": "open",
       "class": "product_defect",
       "attempts": 0,
       "step": "RI-R1-3/4/5/6 (390px layout)",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Code present in ReleaseIntelligencePanel.jsx but not independently re-validated by me on all six tabs.",
+      "files": [
+        "src/components/admin/ReleaseIntelligencePanel.jsx"
+      ],
       "scope": null,
       "history": [
         {
@@ -7298,36 +7237,27 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
           "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v3",
-          "commit": null
         }
       ]
     },
     {
       "id": "release-intelligence-F1-7",
       "feature": "release-intelligence",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "RI-R1-2 / RI-R1-10 / RI-R1-11 and Known limitations",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Awaiting amendments and owner answers (B8 rule, B10 three questions, second-reviewer approval).",
+      "files": [
+        "docs/changes/release-intelligence.md",
+        "server/lib/releaseReconcile.js"
+      ],
       "scope": null,
       "history": [
         {
           "round": 1,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v3",
           "commit": null
         }
       ]
@@ -7408,7 +7338,7 @@
         {
           "round": 3,
           "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v3",
+          "note": "Retest round 3 passed every step of baseline v3, including …",
           "commit": null
         }
       ]
@@ -7561,28 +7491,25 @@
     {
       "id": "release-intelligence-RI-R1-9",
       "feature": "release-intelligence",
-      "status": "verified",
+      "status": "open",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "No step asserts the single entry point (B7)",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Frozen 'Where things are' context line 8 says 'Also reachable from Classic Tools', contradicting owner direction, and no step checks Classi…",
+      "files": [
+        "docs/training/release-intelligence.md",
+        "docs/training/baselines/release-intelligence/v1.json"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "Frozen spec line 8 is the feature's own spec; needs an amendment."
       },
       "history": [
         {
           "round": 1,
           "event": "found",
           "note": "Frozen 'Where things are' context line 8 says 'Also reachab…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v3",
           "commit": null
         }
       ]
@@ -8546,24 +8473,22 @@
     {
       "id": "in-app-release-loop-F1-6",
       "feature": "in-app-release-loop",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "spec governance / documentation",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Fix agent could not edit frozen specs and did not file the amendment documents or correct the (unfrozen) change spec.",
+      "files": [
+        "docs/spec-amendments/in-app-release-loop/",
+        "docs/spec-amendments/release-loop-tooling/",
+        "docs/changes/in-app-release-loop.md"
+      ],
       "scope": null,
       "history": [
         {
           "round": 1,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -8571,24 +8496,21 @@
     {
       "id": "in-app-release-loop-F1-7",
       "feature": "in-app-release-loop",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "editable definition (stage graph)",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Gate logic references stage keys; deferred.",
+      "files": [
+        "src/components/admin/ReleaseLoopPanel.jsx",
+        "server/lib/releaseLoopDefinition.js"
+      ],
       "scope": null,
       "history": [
         {
           "round": 1,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -8646,7 +8568,7 @@
         {
           "round": 3,
           "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v2",
+          "note": "Retest round 3 passed every step of baseline v2, including …",
           "commit": null
         }
       ]
@@ -8675,7 +8597,7 @@
         {
           "round": 3,
           "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v2",
+          "note": "Retest round 3 passed every step of baseline v2, including …",
           "commit": null
         }
       ]
@@ -8683,24 +8605,22 @@
     {
       "id": "session-mapping-B5",
       "feature": "session-mapping",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "MCP parity",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Build branch cut before platform-mcp merged; the six planned tools were never built",
+      "files": [
+        "server/lib/mcpToolRegistry.js",
+        "server/data/mcpToolManifest.json",
+        "server/lib/sessionMapping.js"
+      ],
       "scope": null,
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v1",
           "commit": null
         }
       ]
@@ -8708,24 +8628,22 @@
     {
       "id": "session-mapping-B7",
       "feature": "session-mapping",
-      "status": "verified",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Admin navigation entry points",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Classic admin-menu entry point added and documented as a supported route although owner direction is World Shell only",
+      "files": [
+        "server/db.js",
+        "src/components/admin/AdminShell.jsx",
+        "src/lib/worldIslands.js"
+      ],
       "scope": null,
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v1",
           "commit": null
         }
       ]
@@ -8733,12 +8651,16 @@
     {
       "id": "session-mapping-B8",
       "feature": "session-mapping",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "SessionEnd hook capture",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Hook files directly to the database, so default dev environment captures nothing automatically",
+      "files": [
+        "scripts/analyze-session.mjs",
+        "server/lib/sessionMapping.js",
+        ".claude/settings.json"
+      ],
       "scope": null,
       "history": [
         {
@@ -8746,28 +8668,24 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v1",
-          "commit": null
         }
       ]
     },
     {
       "id": "session-mapping-F1-2",
       "feature": "session-mapping",
-      "status": "verified",
+      "status": "open",
       "class": "product_defect",
       "attempts": 0,
       "step": "session_mapping_config_save with {nope:1}",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "validateRules does not reject unknown top-level keys, so junk keys persist in config_state session_mapping_rules.",
+      "files": [
+        "server/lib/sessionMappingConfig.js"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "sessionMappingConfig.js and the session_mapping_rules config row were created by the sess…"
       },
       "history": [
         {
@@ -8775,28 +8693,26 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
           "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v1",
-          "commit": null
         }
       ]
     },
     {
       "id": "session-mapping-F2-2",
       "feature": "session-mapping",
-      "status": "verified",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Admin navigation entry points (session-mapping-B7)",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Classic admin-menu entry point added although owner direction is World Shell only.",
+      "files": [
+        "server/db.js",
+        "src/components/admin/AdminShell.jsx",
+        "docs/training/session-mapping.md"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "Base 662a5f5 (first parent of merge 21fa683) has no sessionMapping in AdminShell.jsx and …"
       },
       "history": [
         {
@@ -8804,28 +8720,25 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
           "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v1",
-          "commit": null
         }
       ]
     },
     {
       "id": "session-mapping-F2-3",
       "feature": "session-mapping",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "SessionEnd hook capture (session-mapping-B8)",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Hook files directly to the database, so default dev environment captures nothing automatically.",
+      "files": [
+        "scripts/analyze-session.mjs",
+        ".claude/settings.json"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "On base 662a5f5 .claude/settings.json and scripts/analyze-session.mjs do not exist; both …"
       },
       "history": [
         {
@@ -8833,40 +8746,30 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
           "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v1",
-          "commit": null
         }
       ]
     },
     {
       "id": "session-mapping-F2-5",
       "feature": "session-mapping",
-      "status": "verified",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "CLAUDE.md stale statement about session-mapping MCP tools",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Documentation not updated after round 1 T1.",
+      "files": [
+        "CLAUDE.md"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "CLAUDE.md says session-mapping MCP tools are not built, but mcpToolRegistry.js registers …"
       },
       "history": [
         {
           "round": 2,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v1",
           "commit": null
         }
       ]
@@ -9255,28 +9158,26 @@
     {
       "id": "platform-mcp-B5",
       "feature": "platform-mcp",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Interface parity for every capability",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Seed tools covered only the 11 named capabilities; remaining routes recorded as gaps rather than built.",
+      "files": [
+        "server/lib/capabilityParity.js",
+        "server/lib/mcpToolRegistry.js",
+        "server/data/mcpToolManifest.json"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "Owner direction and the request ask for every capability via UI, API and MCP, plus a pari…"
       },
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v4",
           "commit": null
         }
       ]
@@ -9307,28 +9208,26 @@
     {
       "id": "platform-mcp-B10",
       "feature": "platform-mcp",
-      "status": "verified",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Connected Agents / Capabilities screens reachable from the World Shell",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Followed the older admin_nav tab pattern in addition to World Shell islands.",
+      "files": [
+        "server/db.js",
+        "src/components/admin/AdminShell.jsx",
+        "server/data/defaultMemberConfig.js"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "b77049b injected connected-agents and capabilities into admin_nav (server/db.js ~3328-332…"
       },
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v4",
           "commit": null
         }
       ]
@@ -9336,28 +9235,25 @@
     {
       "id": "platform-mcp-B11",
       "feature": "platform-mcp",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Bearer-token auth on /mcp",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Out of build scope.",
+      "files": [
+        "server/lib/mcpServer.js",
+        "server/index.js"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "/mcp is new in b77049b. mcpServer.js and its server/index.js mount have no rate limiter, …"
       },
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v4",
           "commit": null
         }
       ]
@@ -9365,28 +9261,24 @@
     {
       "id": "platform-mcp-B12",
       "feature": "platform-mcp",
-      "status": "verified",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "Account gates on tools/call (428)",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Training spec lacks a step.",
+      "files": [
+        "docs/training/platform-mcp.md"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "docs/training/platform-mcp.md, added in b77049b, has no step for the 428 account gate on …"
       },
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v4",
           "commit": null
         }
       ]
@@ -9417,24 +9309,21 @@
     {
       "id": "platform-mcp-F1-4",
       "feature": "platform-mcp",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "4 428 on tools/call",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Frozen spec has no step; amendment not yet approved by a non-proposer.",
+      "files": [
+        "docs/spec-amendments/platform-mcp/A1.json",
+        "server/lib/mcpServer.js"
+      ],
       "scope": null,
       "history": [
         {
           "round": 1,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v4",
           "commit": null
         }
       ]
@@ -9442,12 +9331,15 @@
     {
       "id": "platform-mcp-F1-5",
       "feature": "platform-mcp",
-      "status": "verified",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "5 default rate limit",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "No step or unit check at default value.",
+      "files": [
+        "server/lib/rateLimit.js",
+        "docs/spec-amendments/platform-mcp/A2.json"
+      ],
       "scope": null,
       "history": [
         {
@@ -9455,36 +9347,28 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (te…",
           "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v4",
-          "commit": null
         }
       ]
     },
     {
       "id": "platform-mcp-F1-8",
       "feature": "platform-mcp",
-      "status": "verified",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "8 platform-mcp-B12",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Spec governance requires independent amendment approval and a new baseline before validators score the new behaviour.",
+      "files": [
+        "docs/spec-amendments/platform-mcp/A1.json",
+        "docs/spec-amendments/platform-mcp/A2.json",
+        "docs/spec-amendments/platform-mcp/A3.json"
+      ],
       "scope": null,
       "history": [
         {
           "round": 1,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v4",
           "commit": null
         }
       ]
@@ -9492,24 +9376,20 @@
     {
       "id": "platform-mcp-F1-9",
       "feature": "platform-mcp",
-      "status": "verified",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "G1 stale change spec",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Fix notes appended but original sections not updated.",
+      "files": [
+        "docs/changes/platform-mcp.md"
+      ],
       "scope": null,
       "history": [
         {
           "round": 1,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v4",
           "commit": null
         }
       ]
@@ -9517,12 +9397,16 @@
     {
       "id": "platform-mcp-F1-10",
       "feature": "platform-mcp",
-      "status": "verified",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "G2 render-binding tools",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Dependent feature has no server API yet, so MCP parity impossible.",
+      "files": [
+        "src/lib/renderBindings.js",
+        "server/lib/capabilityParity.js",
+        "server/lib/mcpToolRegistry.js"
+      ],
       "scope": null,
       "history": [
         {
@@ -9530,24 +9414,20 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
           "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v4",
-          "commit": null
         }
       ]
     },
     {
       "id": "platform-mcp-F1-11",
       "feature": "platform-mcp",
-      "status": "verified",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "G6 recorded exclusions",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Scope decision made by builder, not owner.",
+      "files": [
+        "server/lib/capabilityParity.js"
+      ],
       "scope": null,
       "history": [
         {
@@ -9555,40 +9435,30 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
           "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v4",
-          "commit": null
         }
       ]
     },
     {
       "id": "platform-mcp-F2-2",
       "feature": "platform-mcp",
-      "status": "verified",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "Known limitations",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Spec text not updated after fix round 1",
+      "files": [
+        "docs/changes/platform-mcp.md"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "Change spec Known limitations still lists 25 MCP gaps and 3 UI gaps, closed by fix r1 (47…"
       },
       "history": [
         {
           "round": 2,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v4",
           "commit": null
         }
       ]
@@ -9619,28 +9489,24 @@
     {
       "id": "platform-mcp-F2-4",
       "feature": "platform-mcp",
-      "status": "verified",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Known limitations",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Scope narrowed by builder",
+      "files": [
+        "server/lib/capabilityParity.js"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "capabilityParity.js has 16 mcpExclusion rows chosen by the builder (b77049b, extended in …"
       },
       "history": [
         {
           "round": 2,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v4",
           "commit": null
         }
       ]
@@ -9735,7 +9601,7 @@
         {
           "round": 3,
           "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v4",
+          "note": "Retest round 3 passed every step of baseline v4, including …",
           "commit": null
         }
       ]
@@ -9764,7 +9630,7 @@
         {
           "round": 3,
           "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v4",
+          "note": "Retest round 3 passed every step of baseline v4, including …",
           "commit": null
         }
       ]
@@ -9822,7 +9688,7 @@
         {
           "round": 3,
           "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v4",
+          "note": "Retest round 3 passed every step of baseline v4, including …",
           "commit": null
         }
       ]
@@ -9851,7 +9717,7 @@
         {
           "round": 3,
           "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v4",
+          "note": "Retest round 3 passed every step of baseline v4, including …",
           "commit": null
         }
       ]
