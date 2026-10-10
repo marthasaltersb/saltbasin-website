@@ -30,6 +30,13 @@ The Claude cloud environment's network policy refuses `saltbasin.net` (CONNECT 4
 - `.github/workflows/production-smoke.yml` (new): triggers on push to `main` (with the Render wait), `workflow_dispatch` (inputs `base_url`, `round`), and push to this feature's branch (so it runs before the file reaches `main`, where `workflow_dispatch` looks for it). Installs `playwright@1.56.1` without saving it (no `package.json` change).
 - `docs/training/production-smoke-regression.md` (new): steps S1.1-S5.8, R1.1-R2.2 and the fixed constraints C.1-C.6.
 
+## In the tracker and the fix loop
+
+- Production rounds are ordinary `docs/test-results/production-smoke-regression/round-N.md` files. A score block with a `target` URL marks a production round. `scripts/production-rounds.mjs` reads them, and `scripts/release-tracker-sync.mjs` shows the feature on the 0.3.0 tracker with its rounds and last score (`validatedOn: production`).
+- Bugs a production round finds are filed in `docs/test-results/production-smoke-regression/bugs.json` with their owning feature (id `<owner>-PR<round>-<n>`, baseline `stepId`, `prodSteps`, URL, expected, actual, evidence). The sync adds each one to its owner's bugs and to the bug ledger. `release-loop-resume.mjs --args` then hands them to that owner's fix agents with the rest of its open bugs, and the owner stays unfinished until they are verified.
+- Verification: a local test round never verifies a production bug (`verifyBy: production`). The next production round verifies it when none of its `prodSteps` failed, was blocked or was not run. Otherwise it records one "still failing in production" note.
+- `release-loop-resume.mjs --args` never launches this feature as a local run. Its next round is the production suite, after the owners' fixes are merged to `main` and deployed.
+
 ## Read-only guarantees
 
 - No sign-in, no form submission, no cookies carried between visits.
@@ -38,7 +45,7 @@ The Claude cloud environment's network policy refuses `saltbasin.net` (CONNECT 4
 
 ## Known limitations
 
-- Production is Netlify (frontend, plus an `/api/*` proxy) in front of Render (server). The workflow waits for the Render deploy only. It cannot see whether Netlify has deployed the same commit, and round 1 found that it had not (bugs production-smoke-regression-P1 to P3).
+- Production is Netlify (frontend, plus an `/api/*` proxy) in front of Render (server). The workflow waits for the Render deploy only. It cannot see whether Netlify has deployed the same commit, and round 1 found that it had not (bugs platform-mcp-PR1-1, qr-gated-outputs-PR1-2, qr-gated-outputs-PR1-3).
 
 - Every step that needs a signed-in account is `not_run` (R2.1, R2.2): no fictional production test account exists, and the suite may not create one or use a real account. Open question for the owner below.
 - The overlap check is a heuristic on text and control boxes; it skips fixed and sticky layers, canvases and SVGs (the 3D scenes), so it does not prove those are clear.

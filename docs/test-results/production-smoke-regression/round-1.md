@@ -35,19 +35,19 @@
 | R2.1 | not_run | 8 frozen smoke steps (platform-agent-runner v1) need an admin sign-in, writes and the fixture worker |
 | R2.2 | not_run | 155 baseline steps need a signed-in account; no fictional production test account exists |
 
-## Bugs filed (docs/release-log/bug-ledger.json)
+## Bugs filed (docs/test-results/production-smoke-regression/bugs.json; the tracker sync adds them to the bug ledger under their owning feature)
 
 | Bug | Feature (reassigned) | Baseline step | URL | Expected | Actual | Evidence |
 | --- | --- | --- | --- | --- | --- | --- |
-| production-smoke-regression-P1 | platform-mcp | v4 E.3 (also J2.2) | `https://saltbasin.net/mcp` | 401 JSON error from the MCP server | 404 HTML from Netlify; never reaches Render | report.json S4.1 |
-| production-smoke-regression-P2 | qr-gated-outputs | v2 J10.1, J10.2 (and J5.1) | `https://saltbasin.net/r/AAAAAAAAAAAAAAAAAAAAAAAA`, `/r/short` | "This link isn't available" | site "Not Found" page | screens/r-AAAAAAAAAAAA-desktop.png, screens/r-short-desktop.png |
-| production-smoke-regression-P3 | qr-gated-outputs | v2 J5.3, J5.4 | `https://saltbasin.net/r/AAAAAAAAAAAAAAAAAAAAAAAA` | `X-Robots-Tag` noindex, `Referrer-Policy: no-referrer`, meta robots | none of the three on the page | report.json S3.5 |
+| platform-mcp-PR1-1 | platform-mcp | v4 E.3 (also J2.2) | `https://saltbasin.net/mcp` | 401 JSON error from the MCP server | 404 HTML from Netlify; never reaches Render | report.json S4.1 |
+| qr-gated-outputs-PR1-2 | qr-gated-outputs | v2 J10.1, J10.2 (and J5.1) | `https://saltbasin.net/r/AAAAAAAAAAAAAAAAAAAAAAAA`, `/r/short` | "This link isn't available" | site "Not Found" page | screens/r-AAAAAAAAAAAA-desktop.png, screens/r-short-desktop.png |
+| qr-gated-outputs-PR1-3 | qr-gated-outputs | v2 J5.3, J5.4 | `https://saltbasin.net/r/AAAAAAAAAAAAAAAAAAAAAAAA` | `X-Robots-Tag` noindex, `Referrer-Policy: no-referrer`, meta robots | none of the three on the page | report.json S3.5 |
 
 Triage: `docs/triage/production-smoke-regression-round-1.md`.
 
 ## Observations (not scored)
 
-- O1. saltbasin.net is served by **Netlify** (`netlify.toml`): the frontend bundle comes from Netlify, and only `/api/*` is proxied to Render. The Render backend is current: `/api/release-loop/*` (added 2026-10-09) answers, and `/api/shared-outputs` sets its headers. The frontend Netlify serves does not know `/r/:token`, so it is older than the backend. This split is the common cause of P1-P3.
+- O1. saltbasin.net is served by **Netlify** (`netlify.toml`): the frontend bundle comes from Netlify, and only `/api/*` is proxied to Render. The Render backend is current: `/api/release-loop/*` (added 2026-10-09) answers, and `/api/shared-outputs` sets its headers. The frontend Netlify serves does not know `/r/:token`, so it is older than the backend. This split is the common cause of platform-mcp-PR1-1, qr-gated-outputs-PR1-2 and qr-gated-outputs-PR1-3.
 - O2. For the same reason, the server-side SEO tag injection (`server/lib/seoMiddleware.js`, "prod-only") never runs on saltbasin.net. Link-unfurling bots get Netlify's plain `index.html`. No baseline step covers it.
 - O3. No public page links to a member site `/u/<slug>`, so S3.3 could not pick a slug. Not a defect; a fixed fictional member slug (owner decision, see the test-account question) would let S3.3 always run.
 - O4. Score total is 25, not the 24 in the session estimate: the spec gained an eighth layout step while being written (S5.1-S5.8 = 4 pages/surfaces x 2 checks).

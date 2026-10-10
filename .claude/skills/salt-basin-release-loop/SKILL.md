@@ -119,3 +119,15 @@ agent sets it up and records how in `docs/release-process.md`.
 - Nothing fails silently — failed, refused and partially applied commands are logged with the state they left.
 - Public repo: fictional data only in specs and logs; no employer/application-target names; nothing under
   `server/data/applicationPackages/` but its README.
+
+## Production rounds (feature production-smoke-regression)
+
+- After each merge to `main` deploys, `.github/workflows/production-smoke.yml` runs `scripts/production-smoke.mjs`
+  against https://saltbasin.net on GitHub Actions (the cloud sandbox cannot reach production). Record the run as
+  `docs/test-results/production-smoke-regression/round-N.md`, with the score block copied from the run. Its
+  `target` URL is what marks it as a production round.
+- File what it finds in `docs/test-results/production-smoke-regression/bugs.json`. Each bug has an id
+  `<owner feature>-PR<round>-<n>`, its owner `feature`, the baseline `stepId`, and the production steps that
+  prove it (`prodSteps`). The tracker sync (`scripts/production-rounds.mjs`) adds each bug to its owner, so the
+  owner's next resumed run fixes it like any other bug. Only a later production round verifies it; a local round
+  never does. The production feature itself is never launched as a local run.

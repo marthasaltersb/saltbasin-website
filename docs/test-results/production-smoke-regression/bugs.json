@@ -1,0 +1,95 @@
+{
+  "note": "Production bugs found by docs/test-results/production-smoke-regression/round-N.md (production rounds). Read by scripts/production-rounds.mjs: the tracker sync adds each to its owning feature; only a later production round verifies it. Fictional/public data only.",
+  "bugs": [
+    {
+      "id": "platform-mcp-PR1-1",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "product_defect",
+      "step": "platform-mcp v4 E.3 (also J2.2)",
+      "stepId": "E.3",
+      "prodSteps": [
+        "S4.1"
+      ],
+      "prodRound": 1,
+      "url": "https://saltbasin.net/mcp",
+      "expected": "POST /mcp with no token: HTTP 401, JSON error, WWW-Authenticate Bearer (the platform MCP server)",
+      "actual": "HTTP 404 text/html \"Page not found\" from Netlify; the request never reaches Render",
+      "rootCause": "saltbasin.net is served by Netlify (netlify.toml); only /api/* is proxied to Render. /mcp is mounted outside /api, so on production no agent can reach the MCP server at all.",
+      "files": [
+        "netlify.toml"
+      ],
+      "evidence": "artifact production-smoke-38083986076 (attempt 2, artifact id 11681985365): report.json step S4.1",
+      "run": "https://github.com/marthasaltersb/saltbasin-website/actions/runs/38083986076",
+      "foundIn": "production https://saltbasin.net, main 8f30987",
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Production smoke round 1 (https://github.com/marthasaltersb/saltbasin-website/actions/runs/38083986076); reproduced on re-run 6 minutes later after Render reported its deploy live"
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-PR1-2",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "product_defect",
+      "step": "qr-gated-outputs v2 J10.1, J10.2 (also J5.1: every live /r/<slug> page)",
+      "stepId": "J10.1",
+      "prodSteps": [
+        "S3.4",
+        "S3.6",
+        "R1.1",
+        "R1.2"
+      ],
+      "prodRound": 1,
+      "url": "https://saltbasin.net/r/AAAAAAAAAAAAAAAAAAAAAAAA and https://saltbasin.net/r/short",
+      "expected": "heading \"This link isn't available\" (SharedOutputPage)",
+      "actual": "The public site's \"Not Found / That page doesn't exist (yet).\" page; GET /api/shared-outputs/<token> correctly answers 404 with noindex, so the backend is current",
+      "rootCause": "Inferred: the frontend bundle Netlify serves predates the /r/:token route (React Router falls through to PublicSite NotFound). The Netlify deploy of current main is missing, skipped or failed; Render (backend) is live. Needs the Netlify deploy log to confirm. If so, every approved QR link on a printed document also shows Not Found on production.",
+      "files": [
+        "netlify.toml"
+      ],
+      "evidence": "artifact production-smoke-38083986076 (attempt 2, artifact id 11681985365): screens/r-AAAAAAAAAAAA-desktop.png, screens/r-short-desktop.png",
+      "run": "https://github.com/marthasaltersb/saltbasin-website/actions/runs/38083986076",
+      "foundIn": "production https://saltbasin.net, main 8f30987",
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Production smoke round 1 (https://github.com/marthasaltersb/saltbasin-website/actions/runs/38083986076); reproduced on re-run 6 minutes later after Render reported its deploy live"
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-PR1-3",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "product_defect",
+      "step": "qr-gated-outputs v2 J5.3, J5.4",
+      "stepId": "J5.3",
+      "prodSteps": [
+        "S3.5"
+      ],
+      "prodRound": 1,
+      "url": "https://saltbasin.net/r/AAAAAAAAAAAAAAAAAAAAAAAA",
+      "expected": "page response X-Robots-Tag \"noindex, nofollow, noarchive\", Referrer-Policy no-referrer, meta robots noindex",
+      "actual": "page X-Robots-Tag absent, Referrer-Policy absent, meta robots absent (API response does carry X-Robots-Tag)",
+      "rootCause": "The /r/ and /release-tracker/ privacy headers are set only by Express (server/index.js); Netlify serves the HTML, so they never apply. netlify.toml has no [[headers]] for these paths. The missing meta follows from P2.",
+      "files": [
+        "netlify.toml"
+      ],
+      "evidence": "artifact production-smoke-38083986076 (attempt 2, artifact id 11681985365): report.json step S3.5",
+      "run": "https://github.com/marthasaltersb/saltbasin-website/actions/runs/38083986076",
+      "foundIn": "production https://saltbasin.net, main 8f30987",
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Production smoke round 1 (https://github.com/marthasaltersb/saltbasin-website/actions/runs/38083986076); reproduced on re-run 6 minutes later after Render reported its deploy live"
+        }
+      ]
+    }
+  ]
+}

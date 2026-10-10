@@ -49,6 +49,7 @@ if (argv.includes('--export')) {
       step: clip(b.step, 200), rootCause: clip(b.rootCause, 400), files: b.files || [],
       scope: b.scope ? { scope: b.scope.scope, owner: b.scope.owner || null, evidence: clip(b.scope.evidence, 300) } : null,
       history: (b.history || []).map((h) => ({ round: h.round, event: h.event, note: clip(h.note, 200), commit: h.commit || null })),
+      ...(b.verifyBy === 'production' ? { verifyBy: 'production', prodSteps: b.prodSteps || [], stepId: b.stepId || null, url: b.url || null } : {}),
     })),
   };
   fs.writeFileSync(STATE, `${JSON.stringify(state, null, 2)}\n`);
@@ -67,8 +68,13 @@ if (argv.includes('--args')) {
   const owned = (key) => state.bugs.filter((b) => !DONE.has(b.status) && !HELD.has(b.status)
     && ((b.feature === key && !BACKLOG.has(b.status)) || (b.status === 'reassigned' && b.scope?.owner === key)));
   const unfinished = defs.features.filter((f) => !FINISHED.has(state.features[f.key]?.status) || owned(f.key).length);
+  // Features validated on production (scripts/production-rounds.mjs) are never launched as a local run: their
+  // next round is the production suite (.github/workflows/production-smoke.yml) after the fixes are deployed.
+  const { productionRounds } = await import('./production-rounds.mjs');
+  const onProduction = productionRounds();
+  for (const f of unfinished.filter((x) => onProduction[x.key])) console.error(`Not launched locally (validated on production): ${f.key}. After its owners' fixes reach main and deploy, run the production suite (Actions -> Production smoke and regression) and record round-${onProduction[f.key].at(-1).round + 1}.md.`);
   const groups = [];
-  for (const f of unfinished) {
+  for (const f of unfinished.filter((x) => !onProduction[x.key])) {
     const g = groups.find((x) => f.dependsOn.some((d) => x.some((y) => y.key === d)));
     if (g) g.push(f); else groups.push([f]);
   }
@@ -101,7 +107,8 @@ if (argv.includes('--args')) {
         scopeFromRound: (st?.lastRound || 0) + 1,
         fixNotes: `Continuing from an earlier session (state: docs/release-log/active-release.state.json, last round ${st?.lastRound || 0}: ${st?.lastScore || 'not tested'}). `
           + `Re-test the whole spec and every open bug below; a bug whose step now passes is verified, otherwise report it (with the baseline step id it maps to) so triage links it by id (recurrenceOf). Bugs found before baselines existed name steps by text; map each to its [J…] id. `
-          + `Open bugs: ${JSON.stringify(bugs.map((b) => ({ id: b.id, status: b.status, step: b.step, cause: b.rootCause, files: b.files })))}`,
+          + `Open bugs: ${JSON.stringify(bugs.map((b) => ({ id: b.id, status: b.status, step: b.step, cause: b.rootCause, files: b.files, ...(b.verifyBy === 'production' ? { verifyBy: 'production', url: b.url, prodSteps: b.prodSteps } : {}) })))}`
+          + (bugs.some((b) => b.verifyBy === 'production') ? ' Bugs with verifyBy "production" were found on the live site and may not reproduce locally (production is Netlify in front of Render; see docs/triage/production-smoke-regression-round-1.md): fix them in the files named, report them as fixed, and leave verification to the production suite - a local round never verifies them.' : ''),
       };
     }),
   }));

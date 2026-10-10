@@ -10,9 +10,9 @@ saltbasin.net is a Netlify site (`netlify.toml`) that proxies only `/api/*` to t
 
 | Bug | Class | Feature / baseline step | Members affected | Proposed fix (not applied; owner first) |
 | --- | --- | --- | --- | --- |
-| P1 `/mcp` 404 | product_defect | platform-mcp v4 E.3 | Every member or agent using a personal access token: Connected Agents cannot reach the MCP server at all | Add to `netlify.toml`, before the SPA fallback: `[[redirects]] from = "/mcp" to = "https://saltbasin-website.onrender.com/mcp" status = 200 force = true`. Re-run S4.1 |
-| P2 `/r/<token>` shows Not Found | product_defect | qr-gated-outputs v2 J10.1, J10.2, J5.1 | Anyone opening a QR link from an approved application document sees "Not Found" instead of the document | Check the Netlify deploy log for current `main` (missing, skipped by the `ignore` rule, or failed) and redeploy the frontend. Re-run S3.4, S3.6, R1.1, R1.2 |
-| P3 no privacy headers on `/r/` | product_defect | qr-gated-outputs v2 J5.3, J5.4 | Shared documents can be indexed and leak the referrer | Add `[[headers]] for = "/r/*"` and `for = "/release-tracker/*"` with `X-Robots-Tag = "noindex, nofollow, noarchive"` and `Referrer-Policy = "no-referrer"` to `netlify.toml`. Re-run S3.5 |
+| platform-mcp-PR1-1 `/mcp` 404 | product_defect | platform-mcp v4 E.3 | Every member or agent using a personal access token: Connected Agents cannot reach the MCP server at all | Add to `netlify.toml`, before the SPA fallback: `[[redirects]] from = "/mcp" to = "https://saltbasin-website.onrender.com/mcp" status = 200 force = true`. Re-run S4.1 |
+| qr-gated-outputs-PR1-2 `/r/<token>` shows Not Found | product_defect | qr-gated-outputs v2 J10.1, J10.2, J5.1 | Anyone opening a QR link from an approved application document sees "Not Found" instead of the document | Check the Netlify deploy log for current `main` (missing, skipped by the `ignore` rule, or failed) and redeploy the frontend. Re-run S3.4, S3.6, R1.1, R1.2 |
+| qr-gated-outputs-PR1-3 no privacy headers on `/r/` | product_defect | qr-gated-outputs v2 J5.3, J5.4 | Shared documents can be indexed and leak the referrer | Add `[[headers]] for = "/r/*"` and `for = "/release-tracker/*"` with `X-Robots-Tag = "noindex, nofollow, noarchive"` and `Referrer-Policy = "no-referrer"` to `netlify.toml`. Re-run S3.5 |
 
 Why not fixed in this session: the handover says a production bug that blocks members goes to the owner first, before any fix, and the fix changes production hosting configuration. All three proposed changes are confined to `netlify.toml`.
 
