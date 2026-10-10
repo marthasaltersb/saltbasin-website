@@ -546,7 +546,7 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
                               {over && (
                                 <div style={{ fontSize: '0.7rem', color: '#666', marginTop: 2 }}>
                                   Career Master: {masterValue || '(empty)'}{' '}
-                                  <button type="button" style={S.smallBtn} onClick={revert}>Revert to Career Master</button>
+                                  <button type="button" style={S.smallBtn} onClick={() => setField(null)}>Revert to Career Master</button>
                                 </div>
                               )}
                             </div>
@@ -592,7 +592,7 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
                               {over && (
                                 <div style={{ fontSize: '0.7rem', color: '#666', marginTop: 2 }}>
                                   Career Master: {masterValue || '(empty)'}{' '}
-                                  <button type="button" style={S.smallBtn} onClick={() => setField(null)}>Revert to Career Master</button>
+                                  <button type="button" style={S.smallBtn} onClick={revert}>Revert to Career Master</button>
                                 </div>
                               )}
                             </div>

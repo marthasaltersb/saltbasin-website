@@ -14,12 +14,18 @@ const ROUTERS = {
   resumeOutputs: () => import('../routes/resumeOutputs.js'),
   coverLetters: () => import('../routes/coverLetters.js'),
   career: () => import('../routes/careerMaster.js'),
+  careerReconciliation: () => import('../routes/careerReconciliation.js'),
+  careerBound: () => import('../routes/careerBound.js'),
+  outputTemplates: () => import('../routes/outputTemplates.js'),
 };
 export const MOUNTS = Object.freeze({
   careerAgents: '/api/career-agents',
   resumeOutputs: '/api/resume-outputs',
   coverLetters: '/api/cover-letters',
   career: '/api/career',
+  careerReconciliation: '/api/career-reconciliation',
+  careerBound: '/api/career-bound',
+  outputTemplates: '/api/output-templates',
 });
 
 function makeResponse(done) {
