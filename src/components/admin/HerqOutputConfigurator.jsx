@@ -559,12 +559,17 @@ export default function HerqOutputConfigurator({ outputs, onRefresh, adapter = n
           <span style={S.label}>Margin</span>
           <input value={config?.pageMargin || '0.75in'} onChange={e => setConfig(c => ({ ...c, pageMargin: e.target.value }))}
             style={{ ...S.input, width: 76 }} placeholder="0.75in" />
-          <span style={{ ...S.label, marginLeft: 'auto' }}>{blocks.length} blocks</span>
+          <span style={{ ...S.label, marginLeft: 'auto' }}>{config ? `${blocks.length} blocks` : 'Loading...'}</span>
         </div>
 
         {/* Blocks */}
         <div style={narrow ? { ...S.blockList, flex: 'none', overflow: 'visible' } : S.blockList}>
-          {blocks.length === 0 && (
+          {!config && (
+            <div style={{ padding: '2rem 1rem', textAlign: 'center', color: 'var(--sb-dusty)', fontSize: '0.8rem' }} data-testid="editor-loading">
+              Loading...
+            </div>
+          )}
+          {config && blocks.length === 0 && (
             <div style={{ padding: '2rem 1rem', textAlign: 'center', color: 'var(--sb-dusty)', fontSize: '0.8rem' }}>
               No blocks yet — add one below.
             </div>
