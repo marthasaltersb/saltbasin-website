@@ -281,6 +281,14 @@ Key shape, per the supplied spec: a Career Master Foundation of user-attested ca
 
 Explicitly out of scope for this subsystem, tracked separately per DEC-007/008/009: the free-trial gating model, an external-agent (Claude/Codex/ChatGPT) login-and-API spec for Salt Basin, Betsy's own request for temporary in-platform Claude Code access to build/test without leaving Salt Basin, and the "no recurring LLM cost once context/memory is cached" architecture goal. These are real, explicitly stated product asks, just not resume-product UX — don't fold them into this subsystem's build.
 
+### Global change standard (owner direction 2026-10-10, applies everywhere)
+
+Any change made anywhere in the platform (a screen, the API, an MCP tool, an in-app agent, the guided training agent) that affects other things follows one pattern: (1) **preview**: before anything is written, the person sees the change and every downstream impact it causes (other settings, renderings, outputs, scores, records); (2) **one approval** covers the source change and its downstream changes; (3) **automatic apply**: on approval the source change and all downstream changes are made by the platform, not left as manual follow-ups; (4) **source action on every history row**: each resulting change history entry records the action that caused it (which request, screen or agent, who approved, when), so a downstream change always traces back to its source. Reuse the render-bindings machinery (impact snapshot on `change_proposed`, `journey_rod_events`, approval steps) rather than building a parallel one. A change with no downstream impact needs no extra preview beyond the screen's own confirmation.
+
+### Universal functionality, provisioned (owner direction 2026-10-10)
+
+Functionality is built as universally available platform capability, then extended to a local module feature and provisioned to users through licenses, profiles and permissions. Never design for a fixed audience ("members first", "admin only"); express access as a permission or license that can be granted to any profile. Gated actions (for example code changes through agents) are gated by a profile or a specific permission setting, not by the admin role. **Note:** the security model (profiles, permissions, licenses, scopes) is to be expanded in parallel with the provisioning system (`product_licenses`, `data_entitlements`, platform access-token scopes); track it as feature `security-provisioning-model`.
+
 ### React rules of hooks
 
 All hooks (`useState`, `useMemo`, `useEffect`) must be declared **before** any conditional early return. This caused a blank-screen bug in `EditorPane.jsx` — be vigilant when adding hooks to components that have early null-guards.

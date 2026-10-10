@@ -235,10 +235,10 @@
       "title": "Guided training agent (help, lessons from frozen baselines, show-me replays, questions, confirmed actions)",
       "trainingSpec": "docs/training/guided-training-agent.md",
       "changeSpec": "docs/changes/guided-training-agent.md",
-      "build": "Design only. Blocked on owner decisions 1-5 in the change spec; do not build until answered.",
-      "blockedOn": "owner",
+      "build": "Owner decisions 1-4 recorded in the change spec v2 (text and voice; config changes under the global change standard; code changes gated by profile or permission; universal functionality provisioned by license/profile/permission). Build with the fixture adapter only; live LLM answers stay off until billing (question 5) is answered.",
       "dependsOn": [],
-      "kind": "new"
+      "kind": "new",
+      "blockedOnForLive": "owner: billing (question 5)"
     },
     {
       "key": "career-application-journey",
@@ -257,6 +257,24 @@
       "changeSpec": "docs/changes/career-master-single-source.md",
       "build": "Design only. Blocked on owner decisions 1-3 in the change spec.",
       "blockedOn": "owner",
+      "dependsOn": [],
+      "kind": "new"
+    },
+    {
+      "key": "security-provisioning-model",
+      "title": "Security model expanded in parallel with provisioning: licenses, profiles, permissions and scopes for every capability",
+      "trainingSpec": "docs/training/security-provisioning-model.md",
+      "changeSpec": "docs/changes/security-provisioning-model.md",
+      "build": "Design first, in parallel with provisioning (product_licenses, data_entitlements, platform access-token scopes). Map every capability in capabilityParity.js to the permission that grants it; gated actions (agent code changes, config changes through agents) gated by profile or permission, never by a fixed role. Owner reviews the design before build.",
+      "dependsOn": [],
+      "kind": "new"
+    },
+    {
+      "key": "global-change-standard",
+      "title": "Global change standard: downstream impact preview, one approval, automatic apply, source action on every history row",
+      "trainingSpec": "docs/training/global-change-standard.md",
+      "changeSpec": "docs/changes/global-change-standard.md",
+      "build": "Generalize the render-bindings impact/approval path into one shared change service used by every settings API, MCP tool and agent; audit existing settings screens for changes with downstream effects that skip the preview; every change history row carries its source action. Owner direction 2026-10-10 (CLAUDE.md).",
       "dependsOn": [],
       "kind": "new"
     }

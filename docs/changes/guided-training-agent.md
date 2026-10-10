@@ -1,7 +1,7 @@
 # Change spec: Guided training agent (the in-app guide)
 
-Feature key: `guided-training-agent` · Release: next release, after 0.2.0 passes · Version 1 (design) · 2026-10-10
-Status: design. The owner direction is recorded below; open owner questions are at the end. Nothing is built yet.
+Feature key: `guided-training-agent` · Release: 0.3.0 · Version 2 (design, owner decisions recorded) · 2026-10-10
+Status: design approved except billing (question 5). Version 1 asked five questions; version 2 records the answers to 1-4 below.
 
 ## Owner direction (2026-10-10)
 
@@ -49,8 +49,8 @@ runtime.
 | Kind | Example | How it happens |
 | --- | --- | --- |
 | **Navigate / fill in** | Open the Career Placement Agents screen; fill a form the member is on | Directly, after the member says yes. Nothing is saved until the member presses the screen's own Save |
-| **Config change** | Change a scoring weight, a theme, a template preset, a Release Intelligence rule | Shown as a before/after card. Applied through the same settings API the screen uses, after the member confirms. Recorded as an event with who, when and "via guide". Settings with an approval path (render bindings, data changes) go through that path, never around it |
-| **Code change** | "Add a column to this table" | Never made directly. The guide drafts a **work order** for the platform agent runner (items, intent, files, size, forbidden paths, done-when). It waits for a person to approve it, then runs through the release loop like any other change. Admin only |
+| **Config change** | Change a scoring weight, a theme, a template preset, a Release Intelligence rule | Global change standard: a before/after card plus a preview of every downstream impact; one approval; then the source change and all downstream changes are applied automatically through the same settings APIs the screens use, each recorded with the source action ("via guide", the request, who approved, when). Settings with their own approval path (render bindings, data changes) use that path |
+| **Code change** | "Add a column to this table" | Never made directly. The guide drafts a **work order** for the platform agent runner (items, intent, files, size, forbidden paths, done-when). It waits for a person to approve it, then runs through the release loop like any other change. Only for people whose profile or permission settings grant code changes |
 
 The guide never approves its own proposals, never edits a frozen spec or an approved output, and never calls a
 tool the member could not call themselves.
@@ -78,12 +78,22 @@ sheet), in the API (`/api/guide/*`), and as MCP tools (`guide_help`, `guide_less
   v4 changes a step.
 - No change to member site, config or profile rows.
 
-## Owner questions
+## Owner decisions (2026-10-10, version 2)
 
-1. **Voice or text?** Text first (recommended), with voice later; or voice in and out from the start.
-2. **Who may make config changes through the guide?** Recommended: anyone, for settings they could already
-   change themselves, always with confirmation.
-3. **Code changes**: admin only (recommended), always as a work order that a person approves?
-4. **Members or admins first?** Recommended: members, starting with the career journey (Career Master,
-   pipeline, application outputs), since those specs are the most complete.
-5. **Billing**: answers use the Anthropic API key, like the other in-app agents. Is that acceptable?
+1. **Text and voice from the start.** Every mode accepts typed and spoken questions and can answer in text and speech.
+   Speech is an input/output layer over the same answer: the transcript is what is answered, cited and logged.
+2. **Config changes: yes, under the global change standard** (CLAUDE.md, "Global change standard"). If a change affects
+   anything else, the guide first shows a preview of every downstream impact. The person approves once. The source change and
+   all its downstream changes are then made automatically. Every change history row records the source action (that it came
+   from this guide request, who approved it, and when).
+3. **Code changes: gated by a profile or a specific permission setting**, not by the admin role. They are still never
+   made directly: the guide drafts a work order for the platform agent runner.
+4. **No "who first".** The guide is built as universally available platform functionality. It is extended to a local
+   module feature and provisioned to users through licenses, profiles and permissions (CLAUDE.md, "Universal
+   functionality, provisioned"). What a person can see and do through the guide is exactly what their licenses, profile
+   and permissions grant, never a hard-coded member or admin audience.
+
+## Owner question still open
+
+5. **Billing**: answers use the Anthropic API key, like the other in-app agents. Is that acceptable? Until answered, the
+   guide is built and tested with the fixture adapter only (never the real API in tests), and live answers stay off.
