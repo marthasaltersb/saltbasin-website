@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T01:43:16.043Z",
+  "exportedAt": "2026-10-10T01:46:38.489Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -10,15 +10,15 @@
       "backlog": 6
     },
     "world-shell-navigation": {
-      "status": "triage",
+      "status": "scope",
       "lastRound": 3,
       "lastScore": "38/48",
       "lastReport": "docs/test-results/world-shell-navigation/round-3.md",
-      "openBugs": 16,
+      "openBugs": 18,
       "backlog": 6
     },
     "career-bound-outputs": {
-      "status": "fix",
+      "status": "reconcile",
       "lastRound": 4,
       "lastScore": "49/56",
       "lastReport": "docs/test-results/career-bound-outputs/round-4.md",
@@ -1162,21 +1162,38 @@
     {
       "id": "world-shell-navigation-F2-5",
       "feature": "world-shell-navigation",
-      "status": "open",
-      "class": "requirement_gap",
+      "status": "recurred",
+      "class": "spec_error",
       "attempts": 0,
-      "step": "J2.3,J4.1,J9.1,J9.2,J10.1",
-      "rootCause": "Training spec baseline v1 predates cover-letter auto-draft (4be0bec)",
+      "step": "Latent: package re-import 'unchanged' ids",
+      "rootCause": "Same as J3.2: ids shift by one because of the auto-drafted letter.",
       "files": [
-        "docs/spec-amendments/world-shell-navigation/",
-        "docs/training/baselines/world-shell-navigation/v1.json"
+        "docs/training/world-shell-opportunity-outputs.md"
       ],
       "scope": null,
       "history": [
         {
-          "round": 2,
-          "event": "found",
-          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "round": 3,
+          "event": "recurred",
+          "note": "Same as J9.1: relinking returns the package letter to three…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "recurred",
+          "note": "Same cause: with the auto-drafted letter and the two packag…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "recurred",
+          "note": "The auto-drafted letter takes id #1 on a fresh database, so…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "recurred",
+          "note": "Same as J3.2: ids shift by one because of the auto-drafted …",
           "commit": null
         }
       ]
@@ -1205,13 +1222,13 @@
     {
       "id": "world-shell-navigation-F2-7",
       "feature": "world-shell-navigation",
-      "status": "open",
-      "class": "environment",
+      "status": "recurred",
+      "class": "spec_error",
       "attempts": 0,
-      "step": "E.5",
-      "rootCause": "Missing key/fixture",
+      "step": "Missing fixture/key: no AI-generated JSON output can be produced",
+      "rootCause": "Product behaviour exists and is correct: editableDocumentContent() (opportunityOutputs.js:28-36) returns null for non document_blocks / non…",
       "files": [
-        "server/lib/resumeTargeting.js"
+        "docs/training/world-shell-opportunity-outputs.md"
       ],
       "scope": null,
       "history": [
@@ -1219,6 +1236,12 @@
           "round": 2,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (en…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "recurred",
+          "note": "Product behaviour exists and is correct: editableDocumentCo…",
           "commit": null
         }
       ]
@@ -1365,12 +1388,11 @@
       "id": "world-shell-navigation-wsn-B9",
       "feature": "world-shell-navigation",
       "status": "recurred",
-      "class": "spec_error",
+      "class": "environment",
       "attempts": 0,
-      "step": "E.1 Provisional-password login never shows an empty world",
-      "rootCause": "Same as B9: no provisional-password member can be produced under the fixed test accounts. The product behavior exists (WorldShell redirects…",
+      "step": "UI_GAP/MOBILE_GAP: provisional login cannot be produced under fixed test accounts",
+      "rootCause": "Same root cause as J0.1 (create-test-member.mjs line 51, missing --provisional).",
       "files": [
-        "docs/training/world-shell-opportunity-outputs.md",
         "scripts/create-test-member.mjs"
       ],
       "scope": {
@@ -1381,20 +1403,26 @@
       "history": [
         {
           "round": 2,
-          "event": "found",
-          "note": "RECURRED (B9). Spec precondition creates the member via cur…",
-          "commit": null
-        },
-        {
-          "round": 2,
-          "event": "recurred",
-          "note": "Blocked by J0.1: no provisional password exists, so no pass…",
-          "commit": null
-        },
-        {
-          "round": 2,
           "event": "recurred",
           "note": "Same as B9: no provisional-password member can be produced …",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "recurred",
+          "note": "scripts/create-test-member.mjs has no --provisional option …",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "recurred",
+          "note": "Same root cause as J0.1: no provisional member can be creat…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "recurred",
+          "note": "Same root cause as J0.1 (create-test-member.mjs line 51, mi…",
           "commit": null
         }
       ]
@@ -1402,31 +1430,29 @@
     {
       "id": "world-shell-navigation-wsn-r2-mobile-counters",
       "feature": "world-shell-navigation",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "J0.3 phone top bar shows 0 TRACKED, 7 AGENTS",
-      "rootCause": "src/components/WorldShell.jsx:127-133 MOBILE_CSS (max-width 700px) sets .sb-world-stats .sb-world-stat {display:none !important}; TopBar (~…",
-      "files": [
-        "src/components/WorldShell.jsx"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "MOBILE_CSS hiding .sb-world-stat introduced by 7cc95ed in WorldShell.jsx; spec requires c…"
+        "evidence": null
       },
       "history": [
-        {
-          "round": 2,
-          "event": "found",
-          "note": "src/components/WorldShell.jsx:127-133 MOBILE_CSS (max-width…",
-          "commit": null
-        },
         {
           "round": 2,
           "event": "fixed",
           "note": "At 700px and below the top bar keeps Tracked and Agents vis…",
           "commit": "2d001163320c04677ee45c67a74a3947da27cd17"
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3: this bug's step passed (the round had other…",
+          "commit": "0800b1c18ce1b2f1003085d0010f95a36fe75932"
         }
       ]
     },
@@ -1504,33 +1530,29 @@
     {
       "id": "world-shell-navigation-wsn-r2-mcp-gap",
       "feature": "world-shell-navigation",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "MCP tools for the spec's capabilities",
-      "rootCause": "Round-2 report says mcpToolRegistry.js is absent; on the integration head it exists (b77049b, ee3dc2b) with list/create/open opportunity, l…",
-      "files": [
-        "server/lib/mcpToolRegistry.js",
-        "server/lib/capabilityParity.js",
-        "server/routes/careerPlacementAgents.js"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "PATCH details and link/unlink/unlinked-outputs routes were added by 7cc95ed; capabilityPa…"
+        "evidence": null
       },
       "history": [
-        {
-          "round": 2,
-          "event": "found",
-          "note": "Round-2 report says mcpToolRegistry.js is absent; on the in…",
-          "commit": null
-        },
         {
           "round": 2,
           "event": "fixed",
           "note": "Added four MCP tools: career_opportunity_update_details, ap…",
           "commit": "2d001163320c04677ee45c67a74a3947da27cd17"
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3: this bug's step passed (the round had other…",
+          "commit": "0800b1c18ce1b2f1003085d0010f95a36fe75932"
         }
       ]
     },
@@ -1555,6 +1577,94 @@
           "round": 2,
           "event": "found",
           "note": "No baseline step enters an island from the 3D world; Journe…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "world-shell-navigation-wsn-r3-j03-phone-chip",
+      "feature": "world-shell-navigation",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "AMBIGUOUS: on the phone the name chip 'Riley Fenn · Member' collapses to avatar R",
+      "rootCause": "WorldShell.jsx:136-141 MOBILE_CSS (@media max-width 700px) hides .sb-world-profile-text on purpose and keeps the avatar. J12.1 of the same …",
+      "files": [
+        "docs/training/world-shell-opportunity-outputs.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "WorldShell.jsx:136-141 MOBILE_CSS (@media max-width 700px) …",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "world-shell-navigation-wsn-r3-mcp-j13",
+      "feature": "world-shell-navigation",
+      "status": "open",
+      "class": "environment",
+      "attempts": 0,
+      "step": "MCP_GAP: no MCP tool to add a Career Master entry",
+      "rootCause": "Not a product gap. career_record_create (plus _list/_update/_delete) is registered at mcpRouteTools.js:84-87, appended to MCP_TOOLS by mcpT…",
+      "files": [
+        "server/lib/mcpRouteTools.js",
+        "server/lib/capabilityParity.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Not a product gap. career_record_create (plus _list/_update…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "world-shell-navigation-wsn-r3-mcp-j101",
+      "feature": "world-shell-navigation",
+      "status": "needs_business_definition",
+      "class": "needs_business_definition",
+      "attempts": 0,
+      "step": "MCP_GAP: no MCP tool to import a PDF/DOCX/TXT document into an opportunity",
+      "rootCause": "capabilityParity.js:80 (row opportunity-import-output) records mcp:null with an explicit mcpExclusion ('File upload; an agent saves content…",
+      "files": [
+        "server/lib/capabilityParity.js",
+        "server/lib/mcpToolRegistry.js",
+        "server/data/mcpToolManifest.json"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "capabilityParity.js:80 (row opportunity-import-output) reco…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "world-shell-navigation-wsn-r3-editor-loading-state",
+      "feature": "world-shell-navigation",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "Observation: editor shows '0 BLOCKS / No blocks yet - add one below.' for 1-3 s before '9 BLOCKS'",
+      "rootCause": "The shared editor renders its empty state before the document content arrives, so a loading period reads as an empty document. Minor; no ba…",
+      "files": [
+        "src/components/OpportunityOutputsSection.jsx",
+        "src/lib/documentBlocksEditor.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "The shared editor renders its empty state before the docume…",
           "commit": null
         }
       ]
@@ -1691,7 +1801,7 @@
     {
       "id": "career-bound-outputs-F2-3",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Output Templates > Sections overrides (J9)",
@@ -1822,7 +1932,7 @@
     {
       "id": "career-bound-outputs-F2-8",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "recurred",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "Convert list ignores existing converted output",
@@ -1854,7 +1964,7 @@
     {
       "id": "career-bound-outputs-F2-9",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Legibility fix coverage (J1.2a, J9.0)",
@@ -1881,7 +1991,7 @@
     {
       "id": "career-bound-outputs-F2-10",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "J9 skills/tools/certifications overrides",
@@ -1907,7 +2017,7 @@
     {
       "id": "career-bound-outputs-F3-1",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "J1.2, J6.3, J6.10, J11.2, J9.8, J9.10",
@@ -1930,7 +2040,7 @@
     {
       "id": "career-bound-outputs-F3-2",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "recurred",
       "class": "spec_error",
       "attempts": 0,
       "step": "Sync failure toast and Applied - sync failed list with Retry sync",
@@ -1962,7 +2072,7 @@
     {
       "id": "career-bound-outputs-F3-3",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "recurred",
       "class": "spec_error",
       "attempts": 0,
       "step": "Invalid package JSON shows 'That is not valid JSON: ...' in a red box",
@@ -1993,7 +2103,7 @@
     {
       "id": "career-bound-outputs-F3-4",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "recurred",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "Validator observation: converted package row keeps an enabled Convert button",
@@ -2024,9 +2134,9 @@
     {
       "id": "career-bound-outputs-F3-5",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "MCP_GAP: platform MCP tools for this feature",
       "rootCause": "No career-bound/reconciliation entries in server/lib/mcpToolRegistry.js or server/lib/capabilityParity.js. check-interface-parity passes be…",
       "files": [
@@ -2051,13 +2161,19 @@
           "event": "recurred",
           "note": "No career-bound/reconciliation entries in server/lib/mcpToo…",
           "commit": null
+        },
+        {
+          "round": 4,
+          "event": "fixed",
+          "note": "Added 23 append-only route-backed MCP tools for reconciliat…",
+          "commit": "49d0e2df63c7ad168c623ebd51126f304ed2e0d4"
         }
       ]
     },
     {
       "id": "career-bound-outputs-F3-6",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "J9.9",
@@ -2079,7 +2195,7 @@
     {
       "id": "career-bound-outputs-F3-7",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "J9.11",
@@ -2102,7 +2218,7 @@
     {
       "id": "career-bound-outputs-F3-8",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "product_defect",
       "attempts": 0,
       "step": "J6.3",
@@ -2124,7 +2240,7 @@
     {
       "id": "career-bound-outputs-F3-9",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "n/a",
@@ -2226,9 +2342,9 @@
     {
       "id": "career-bound-outputs-T3-5",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 1,
+      "attempts": 2,
       "step": "Revert to Career Master on the skill only",
       "rootCause": "Line 595 skill/tool/cert Revert button still uses onClick={() => setField(null)}. shownIds (line 568) is override keys plus ovPicks; withOv…",
       "files": [
@@ -2258,13 +2374,19 @@
           "event": "recurred",
           "note": "Line 595 skill/tool/cert Revert button still uses onClick={…",
           "commit": null
+        },
+        {
+          "round": 4,
+          "event": "fixed",
+          "note": "Skill/tool/cert Revert button now uses the `revert` helper …",
+          "commit": "49d0e2df63c7ad168c623ebd51126f304ed2e0d4"
         }
       ]
     },
     {
       "id": "career-bound-outputs-T3-6",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "Sync failure toast and list",
@@ -2290,7 +2412,7 @@
     {
       "id": "career-bound-outputs-T3-7",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "Invalid package error box",
@@ -2316,9 +2438,9 @@
     {
       "id": "career-bound-outputs-T4-1",
       "feature": "career-bound-outputs",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Only expected browser noise in the console",
       "rootCause": "The only unexpected error is the ReferenceError from T4-1.",
       "files": [
@@ -2330,12 +2452,6 @@
         "evidence": "Line 549 onClick={revert} added by 4a70228 (round 3 fix of this feature); revert is decla…"
       },
       "history": [
-        {
-          "round": 4,
-          "event": "found",
-          "note": "OutputTemplateConfigurator.jsx line 549 uses onClick={rever…",
-          "commit": null
-        },
         {
           "round": 4,
           "event": "recurred",
@@ -2353,6 +2469,12 @@
           "event": "recurred",
           "note": "The only unexpected error is the ReferenceError from T4-1.",
           "commit": null
+        },
+        {
+          "round": 4,
+          "event": "fixed",
+          "note": "Job-field Revert button called out-of-scope `revert` (Refer…",
+          "commit": "49d0e2df63c7ad168c623ebd51126f304ed2e0d4"
         }
       ]
     },
