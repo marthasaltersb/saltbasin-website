@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T20:14:39.269Z",
+  "exportedAt": "2026-10-10T20:20:02.320Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -143,6 +143,62 @@
       "lastScore": null,
       "lastReport": null,
       "openBugs": 11,
+      "backlog": 0
+    },
+    "production-smoke-regression": {
+      "status": "queued",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
+    },
+    "release-cut-and-session-plans": {
+      "status": "queued",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
+    },
+    "owner-error-messages": {
+      "status": "queued",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
+    },
+    "scoring-preferences-mcp": {
+      "status": "queued",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
+    },
+    "guided-training-agent": {
+      "status": "queued",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
+    },
+    "career-application-journey": {
+      "status": "queued",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
+    },
+    "career-master-single-source": {
+      "status": "queued",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
       "backlog": 0
     }
   },
