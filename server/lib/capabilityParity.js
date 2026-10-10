@@ -21,6 +21,7 @@ export const GOVERNED_ROUTE_FILES = Object.freeze({
   'server/routes/platformAccess.js': '/api/platform',
   'server/routes/careerMaster.js': '/api/career',
   'server/routes/sharedOutputs.js': '/api/shared-outputs',
+  'server/routes/renderBindings.js': '/api/render-bindings',
 });
 
 /** For files governed only in part: file -> pattern a route (`METHOD /full/path`) must match to be governed.
@@ -31,6 +32,7 @@ const CPA = '/api/career-agents';
 const RO = '/api/resume-outputs';
 const CL = '/api/cover-letters';
 const CM = '/api/career';
+const RBA = '/api/render-bindings';
 const RR = `World Shell > Journeys > Career Master > Resume rollups`;
 const WS = 'World Shell';
 const PROF = `${WS} > Journeys > Career Master > Proficiency & Rollups > 3 · Rules & why`;
@@ -120,6 +122,14 @@ export const CAPABILITIES = Object.freeze([
   { key: 'release-loop-escalations', title: 'List escalations (admin)', group: 'Release loop', ui: `${WS} > Journeys > Release loop > Escalations`, api: ['GET /api/release-loop/escalations'], mcp: ['release_loop_list_escalations'] },
   // ── Release tracker ───────────────────────────────────────────────────────
   { key: 'release-tracker-read', title: 'Read release records (admin)', group: 'Release tracker', ui: `${WS} > Journeys > Release Intelligence`, api: ['GET /api/release-intelligence/releases', 'GET /api/release-intelligence/releases/:id'], mcp: ['release_tracker_read'] },
+
+  // ── Render bindings ───────────────────────────────────────────────────────
+  { key: 'render-bindings-view', title: 'Open a rendering, an item and its Data map; read history', group: 'Render bindings', ui: `${WS} > Journeys > Render Bindings > Renderings`, api: [`GET ${RBA}/renderings`, `GET ${RBA}/renderings/:key`, `GET ${RBA}/renderings/:key/subjects/:subjectKey`, `GET ${RBA}/renderings/:key/subjects/:subjectKey/history`, `GET ${RBA}/stream`], mcp: ['render_binding_renderings_list', 'render_binding_rendering_read', 'render_binding_item_read', 'render_binding_item_history'] },
+  { key: 'render-bindings-board-item', title: 'Add a workshop board item', group: 'Render bindings', ui: `${WS} > Journeys > Render Bindings > Renderings > Workshop board > Add item`, api: [`POST ${RBA}/renderings/:key/subjects`], mcp: ['render_binding_board_item_add'] },
+  { key: 'render-bindings-change', title: 'Change a mapped value (live, or proposed for approval)', group: 'Render bindings', ui: `${WS} > Journeys > Render Bindings > Renderings > (item) > Change a value`, api: [`POST ${RBA}/changes`], mcp: ['render_binding_change_submit'] },
+  { key: 'render-bindings-pending', title: 'Pending changes queue and impact analysis', group: 'Render bindings', ui: `${WS} > Journeys > Render Bindings > Pending changes`, api: [`GET ${RBA}/changes/pending`, `GET ${RBA}/changes/:id/impact`], mcp: ['render_binding_pending_list', 'render_binding_change_impact'] },
+  { key: 'render-bindings-decide', title: 'Approve or reject a pending change (admin)', group: 'Render bindings', ui: `${WS} > Journeys > Render Bindings > Pending changes > Approve / Reject`, api: [`POST ${RBA}/changes/:id/approve`, `POST ${RBA}/changes/:id/reject`], mcp: ['render_binding_change_decide'] },
+  { key: 'render-bindings-settings', title: 'Binding policy, field editable roles and approval steps (admin)', group: 'Render bindings', ui: `${WS} > Journeys > Render Bindings > Settings`, api: [`GET ${RBA}/settings`, `PUT ${RBA}/settings/bindings`, `DELETE ${RBA}/settings/bindings`, `PUT ${RBA}/settings/fields/:portKey/:objectKey/:fieldKey`, `PUT ${RBA}/settings/steps/:id`], mcp: ['render_binding_settings_read', 'render_binding_settings_save'] },
 
   // ── Platform access (this feature) ────────────────────────────────────────
   { key: 'access-tokens', title: 'Create, list and revoke access tokens', group: 'Platform access', ui: `${WS} > Journeys > Connected Agents`, api: ['GET /api/platform/tokens', 'POST /api/platform/tokens', 'DELETE /api/platform/tokens/:id'], mcp: null, mcpExclusion: 'Credentials are managed by a signed-in person in the website; a token can never mint or revoke tokens.' },
