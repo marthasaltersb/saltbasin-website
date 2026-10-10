@@ -87,6 +87,12 @@ SPECS.push(
   ['career_record_delete', 'Delete a Career Master record', 'Deletes one record, exactly as the website\'s Delete does.', 'career', 'DELETE', '/:resource/:id', { schemaProps: { resource: RESOURCE_PROP, recordId: { ...INT, description: 'The record id.' } }, required: ['resource', 'recordId'], pathArgs: { resource: 'resource', recordId: 'id' } }],
 );
 
+SPECS.push(
+  ['career_catalogs_read', 'Read the Career Master catalogs', 'Returns the shared Career Master vocabularies (catalogs) the website uses to fill pick lists.', 'career', 'GET', '/catalogs', {}],
+  ['career_public_rollup_read', 'Read a member\'s public career rollup', 'Returns the public rollup a member has chosen to publish. Arguments: slug (the member\'s public slug) and displayKey (the rollup display).', 'career', 'GET', '/public-rollup/:slug/:displayKey', { params: { slug: 'slug', displayKey: 'displayKey' }, strParams: ['slug', 'displayKey'] }],
+  ['career_site_metadata_sync', 'Sync site metadata into the Career Master', 'Runs the website\'s site metadata sync for the caller (administrators sync the admin site unless body.scope is member).', 'career', 'POST', '/sync-site-metadata', { body: 'scope (optional)' }],
+);
+
 function build([name, title, description, routerKey, method, path, opts]) {
   const idArgs = opts.params || {};
   const strParams = new Set(opts.strParams || []);
