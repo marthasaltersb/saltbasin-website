@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T21:08:08.932Z",
+  "exportedAt": "2026-10-10T21:09:06.264Z",
   "features": {
     "platform-mcp": {
       "status": "validate",
@@ -18,12 +18,12 @@
       "backlog": 2
     },
     "in-app-release-loop": {
-      "status": "scope",
+      "status": "fix",
       "lastRound": 4,
       "lastScore": "59/60",
       "lastReport": "docs/test-results/in-app-release-loop/round-4.md",
-      "openBugs": 3,
-      "backlog": 1
+      "openBugs": 2,
+      "backlog": 2
     },
     "session-mapping": {
       "status": "validate",
@@ -90,11 +90,11 @@
       "backlog": 10
     },
     "release-scope": {
-      "status": "failing",
+      "status": "scope",
       "lastRound": 1,
       "lastScore": "24/25",
       "lastReport": "docs/test-results/release-scope/round-1.md",
-      "openBugs": 0,
+      "openBugs": 1,
       "backlog": 0
     },
     "journey-flow-studio": {
@@ -299,7 +299,11 @@
         "server/lib/releaseIntelligenceConfig.js",
         "docs/changes/release-intelligence.md"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The importer script and importRepository() were created by this feature and do not exist …"
+      },
       "history": [
         {
           "round": 4,
@@ -312,16 +316,17 @@
     {
       "id": "in-app-release-loop-T4-1",
       "feature": "in-app-release-loop",
-      "status": "open",
+      "status": "reassigned",
       "class": "defect",
       "attempts": 0,
       "step": "Layout, both passes: no horizontal scroll and every visible control at least 44px tall",
-      "rootCause": "src/components/WorldBreadcrumbs.jsx: crumbBtn (line 18) has no height, and the only 44px min-height rule (CRUMB_CSS, lines 22-25) is inside…",
-      "files": [
-        "src/components/WorldBreadcrumbs.jsx",
-        "docs/changes/world-shell-layers.md"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "other_feature",
+        "owner": "world-shell-navigation",
+        "evidence": null
+      },
       "history": [
         {
           "round": 4,
@@ -588,6 +593,29 @@
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-scope-T1",
+      "feature": "release-scope",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "MCP_GAP: release tracker state (feature scope/added) has no MCP tool",
+      "rootCause": "RELEASE_TRACKER_TOOLS (releaseTrackerService.js:505-513, incl. release_tracker_get_state) is never imported or registered in server/lib/mcp…",
+      "files": [
+        "server/lib/mcpToolRegistry.js",
+        "server/lib/releaseTrackerService.js",
+        "server/lib/capabilityParity.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "RELEASE_TRACKER_TOOLS (releaseTrackerService.js:505-513, in…",
           "commit": null
         }
       ]
