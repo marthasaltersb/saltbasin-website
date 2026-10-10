@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-09T17:37:41.077Z",
+  "exportedAt": "2026-10-10T00:13:40.174Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -26,11 +26,11 @@
       "backlog": 5
     },
     "qr-gated-outputs": {
-      "status": "fix",
+      "status": "validate",
       "lastRound": 4,
       "lastScore": "36/38",
       "lastReport": "docs/test-results/qr-gated-outputs/round-4.md",
-      "openBugs": 13,
+      "openBugs": 19,
       "backlog": 12
     },
     "no-silent-failures": {
@@ -42,7 +42,7 @@
       "backlog": 3
     },
     "release-loop-tooling": {
-      "status": "passed",
+      "status": "validate",
       "lastRound": 5,
       "lastScore": "30/30",
       "lastReport": "docs/test-results/release-loop-tooling/round-5.md",
@@ -70,11 +70,11 @@
       "lastRound": 1,
       "lastScore": "28/32",
       "lastReport": "docs/test-results/resume-rollups/round-1.md",
-      "openBugs": 13,
+      "openBugs": 15,
       "backlog": 5
     },
     "release-intelligence": {
-      "status": "integrate",
+      "status": "validate",
       "lastRound": 1,
       "lastScore": "1/54",
       "lastReport": "docs/test-results/release-intelligence/round-1.md",
@@ -90,27 +90,19 @@
       "backlog": 7
     },
     "in-app-release-loop": {
-      "status": "awaiting_retest",
+      "status": "validate",
       "lastRound": 1,
       "lastScore": "59/60",
       "lastReport": "docs/test-results/in-app-release-loop/round-1.md",
-      "openBugs": 5,
+      "openBugs": 7,
       "backlog": 1
     },
     "session-mapping": {
-      "status": "validate",
+      "status": "failed",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
       "openBugs": 3,
-      "backlog": 0
-    },
-    "world-shell-layers": {
-      "status": "build",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
-      "openBugs": 0,
       "backlog": 0
     },
     "live-release-tracker": {
@@ -121,7 +113,15 @@
       "openBugs": 7,
       "backlog": 0
     },
-    "render-bindings": {
+    "platform-mcp": {
+      "status": "validate",
+      "lastRound": 1,
+      "lastScore": "62/62",
+      "lastReport": "docs/test-results/platform-mcp/round-1.md",
+      "openBugs": 10,
+      "backlog": 2
+    },
+    "world-shell-layers": {
       "status": "build",
       "lastRound": 0,
       "lastScore": null,
@@ -129,13 +129,13 @@
       "openBugs": 0,
       "backlog": 0
     },
-    "platform-mcp": {
-      "status": "reconcile",
-      "lastRound": 1,
-      "lastScore": "62/62",
-      "lastReport": "docs/test-results/platform-mcp/round-1.md",
-      "openBugs": 4,
-      "backlog": 2
+    "render-bindings": {
+      "status": "build",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
     },
     "platform-agent-runner": {
       "status": "build",
@@ -2456,7 +2456,7 @@
     {
       "id": "qr-gated-outputs-B7",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Preconditions 1, 4; Journey 3 step 4; Journey 8",
@@ -2537,7 +2537,7 @@
     {
       "id": "qr-gated-outputs-B10",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Journey 6 / request scope",
@@ -2564,7 +2564,7 @@
     {
       "id": "qr-gated-outputs-B11",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "Journey 6",
@@ -2854,7 +2854,7 @@
     {
       "id": "qr-gated-outputs-F2-11",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Preconditions / Where things are",
@@ -2885,7 +2885,7 @@
     {
       "id": "qr-gated-outputs-F2-12",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "J10.3/E.1/E.2/E.4 fixture",
@@ -2939,7 +2939,7 @@
     {
       "id": "qr-gated-outputs-F3-5",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "qr-gated-outputs-F2-11",
@@ -2959,13 +2959,19 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
           "commit": null
+        },
+        {
+          "round": 4,
+          "event": "not_fixed",
+          "note": "The product already works as the member from the World Shel…",
+          "commit": null
         }
       ]
     },
     {
       "id": "qr-gated-outputs-F3-6",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "qr-gated-outputs-F2-12",
@@ -2983,6 +2989,12 @@
           "round": 3,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (te…",
+          "commit": null
+        },
+        {
+          "round": 4,
+          "event": "not_fixed",
+          "note": "Needs a new spec step with a fixture (pkg-v3) and an import…",
           "commit": null
         }
       ]
@@ -3066,9 +3078,9 @@
     {
       "id": "qr-gated-outputs-F3-10",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "retesting",
       "class": "requirement_gap",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Known limitations: docx/site sync",
       "rootCause": "Partial: docx done, sync and journey missing.",
       "files": [
@@ -3086,15 +3098,21 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
           "commit": null
+        },
+        {
+          "round": 4,
+          "event": "fixed",
+          "note": "Verified the docx link target in a browser download. Decide…",
+          "commit": "e7a28dd360c35a49f1e588d40aa4d0e5b487fef1"
         }
       ]
     },
     {
       "id": "qr-gated-outputs-F3-11",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "retesting",
       "class": "product_defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "MOBILE",
       "rootCause": "Unverified.",
       "files": [],
@@ -3109,13 +3127,151 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
           "commit": null
+        },
+        {
+          "round": 4,
+          "event": "fixed",
+          "note": "Verified the phone walk at 390px as the member from the Wor…",
+          "commit": "e7a28dd360c35a49f1e588d40aa4d0e5b487fef1"
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F4-3",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "J2.1 / E.5",
+      "rootCause": "Copy mismatch carried since round 2, never in a fix scope.",
+      "files": [
+        "src/components/admin/MyResumePanel.jsx",
+        "server/routes/auth.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F4-4",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "P.1",
+      "rootCause": "Spec requires admin sign-in and Classic Tools path; only a reviewer-approved amendment can change it.",
+      "files": [
+        "docs/training/qr-gated-outputs.md",
+        "docs/spec-amendments/qr-gated-outputs/"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F4-5",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "test_harness",
+      "attempts": 0,
+      "step": "P.5 / J10.3, E.1, E.2, E.4",
+      "rootCause": "Spec supplies no Draft card after J9; E.3 ordering must stay deterministic.",
+      "files": [
+        "docs/spec-amendments/qr-gated-outputs/A5.json",
+        "docs/training/qr-gated-outputs.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (te…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F4-6",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Known limitations: import UI",
+      "rootCause": "UI_GAP: no website path for package import.",
+      "files": [
+        "src/components/admin/MyResumePanel.jsx",
+        "src/lib/api.js",
+        "server/routes/resumeOutputs.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F4-7",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Known limitations: docx and site sync not in spec",
+      "rootCause": "No scored journey; ownership decision pending.",
+      "files": [
+        "docs/spec-amendments/qr-gated-outputs/A3.json",
+        "scripts/sync-site-with-application-package.mjs"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F4-8",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "MCP parity",
+      "rootCause": "No baseline step.",
+      "files": [
+        "docs/spec-amendments/qr-gated-outputs/A4.json"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
         }
       ]
     },
     {
       "id": "T1",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "recurred",
       "class": "defect",
       "attempts": 0,
       "step": "J2.1 Read-only note in View dialog",
@@ -3246,7 +3402,7 @@
     {
       "id": "T5",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "recurred",
       "class": "defect",
       "attempts": 0,
       "step": "E.5 sign-in limit message",
@@ -3283,7 +3439,7 @@
     {
       "id": "G1",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "Where things are: phone route to My Resume",
@@ -3308,7 +3464,7 @@
     {
       "id": "G2",
       "feature": "qr-gated-outputs",
-      "status": "fixing",
+      "status": "open",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "Draft card fixture for J10.3, E.1, E.2, E.4",
@@ -5842,7 +5998,7 @@
     {
       "id": "release-intelligence-B7",
       "feature": "release-intelligence",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "B7: second admin-nav entry point for Release Intelligence (nearest J1.1)",
@@ -6061,7 +6217,7 @@
     {
       "id": "RI-R1-1",
       "feature": "release-intelligence",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Importer script exits 0 on second run (E.1)",
@@ -6120,7 +6276,7 @@
     {
       "id": "RI-R1-3",
       "feature": "release-intelligence",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Mobile: fixed min-width inputs overflow card at 390px (J2.1,J2.2,J3.2-J3.4,J4.1-J4.4,J5.1,J5.3,J6.1,J7.1-J7.12,J8.1,J9.1-J9.5,J9.7,J10.3,J10.4,E.2,E.4)",
@@ -6151,7 +6307,7 @@
     {
       "id": "RI-R1-4",
       "feature": "release-intelligence",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Mobile: wide tables escape the card (J3.1,J4.1-J4.6,J5.2,J6.2,J6.3,J7.5,J7.8,J10.1,J10.2,J10.5,E.3,E.5)",
@@ -6182,7 +6338,7 @@
     {
       "id": "RI-R1-5",
       "feature": "release-intelligence",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Mobile: Trends charts and grids force 420/320/280px columns (J8.2-J8.6,J9.6)",
@@ -6213,7 +6369,7 @@
     {
       "id": "RI-R1-6",
       "feature": "release-intelligence",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Mobile: card shifted left, heading cut (J4.5,J4.6,J6.3,E.3)",
@@ -7071,7 +7227,7 @@
     {
       "id": "in-app-release-loop-B1",
       "feature": "in-app-release-loop",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "requirement_gap",
       "attempts": 1,
       "step": "interface parity",
@@ -7103,7 +7259,7 @@
     {
       "id": "in-app-release-loop-B2",
       "feature": "in-app-release-loop",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "owner_direction_conflict",
       "attempts": 1,
       "step": "wiring",
@@ -7163,7 +7319,7 @@
     {
       "id": "in-app-release-loop-B4",
       "feature": "in-app-release-loop",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "requirement_gap",
       "attempts": 1,
       "step": "editable definition",
@@ -7193,9 +7349,54 @@
       ]
     },
     {
+      "id": "in-app-release-loop-F1-6",
+      "feature": "in-app-release-loop",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "spec governance / documentation",
+      "rootCause": "Fix agent could not edit frozen specs and did not file the amendment documents or correct the (unfrozen) change spec.",
+      "files": [
+        "docs/spec-amendments/in-app-release-loop/",
+        "docs/spec-amendments/release-loop-tooling/",
+        "docs/changes/in-app-release-loop.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "in-app-release-loop-F1-7",
+      "feature": "in-app-release-loop",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "editable definition (stage graph)",
+      "rootCause": "Gate logic references stage keys; deferred.",
+      "files": [
+        "src/components/admin/ReleaseLoopPanel.jsx",
+        "server/lib/releaseLoopDefinition.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "T1",
       "feature": "in-app-release-loop",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Run ls server/lib/mcpToolRegistry.js (MCP gap for platform-mcp)",
@@ -7632,6 +7833,138 @@
       ]
     },
     {
+      "id": "platform-mcp-F1-4",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "4 428 on tools/call",
+      "rootCause": "Frozen spec has no step; amendment not yet approved by a non-proposer.",
+      "files": [
+        "docs/spec-amendments/platform-mcp/A1.json",
+        "server/lib/mcpServer.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-F1-5",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "test_harness",
+      "attempts": 0,
+      "step": "5 default rate limit",
+      "rootCause": "No step or unit check at default value.",
+      "files": [
+        "server/lib/rateLimit.js",
+        "docs/spec-amendments/platform-mcp/A2.json"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (te…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-F1-8",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "8 platform-mcp-B12",
+      "rootCause": "Spec governance requires independent amendment approval and a new baseline before validators score the new behaviour.",
+      "files": [
+        "docs/spec-amendments/platform-mcp/A1.json",
+        "docs/spec-amendments/platform-mcp/A2.json",
+        "docs/spec-amendments/platform-mcp/A3.json"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-F1-9",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "G1 stale change spec",
+      "rootCause": "Fix notes appended but original sections not updated.",
+      "files": [
+        "docs/changes/platform-mcp.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-F1-10",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "G2 render-binding tools",
+      "rootCause": "Dependent feature has no server API yet, so MCP parity impossible.",
+      "files": [
+        "src/lib/renderBindings.js",
+        "server/lib/capabilityParity.js",
+        "server/lib/mcpToolRegistry.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-F1-11",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "G6 recorded exclusions",
+      "rootCause": "Scope decision made by builder, not owner.",
+      "files": [
+        "server/lib/capabilityParity.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "career-bound-outputs-F1-3",
       "feature": "career-bound-outputs",
       "status": "fixed_awaiting_retest",
@@ -7888,6 +8221,50 @@
           "event": "fixed",
           "note": "Removed min-width:500px from the proficiency, trend and tim…",
           "commit": "3b198a83584419755b4799a7a4691f279b6845ed"
+        }
+      ]
+    },
+    {
+      "id": "RR2-2",
+      "feature": "resume-rollups",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "E.3",
+      "rootCause": "Product matches the change spec: a manual (user-defined) tile is the member's own value marked with a dagger (docs/changes/resume-rollups.m…",
+      "files": [
+        "docs/training/resume-rollups.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Product matches the change spec: a manual (user-defined) ti…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "RR2-4",
+      "feature": "resume-rollups",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "P.2/E.3 MCP_GAP",
+      "rootCause": "Career Master record create/update/delete (Manual Intake add and delete) has no MCP tool; capabilityParity.js:103 row career-master-records…",
+      "files": [
+        "server/routes/careerMaster.js",
+        "server/lib/mcpToolRegistry.js",
+        "server/data/mcpToolManifest.json"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Career Master record create/update/delete (Manual Intake ad…",
+          "commit": null
         }
       ]
     }
