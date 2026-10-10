@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T00:40:17.248Z",
+  "exportedAt": "2026-10-10T00:43:34.995Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -66,15 +66,15 @@
       "backlog": 3
     },
     "resume-rollups": {
-      "status": "validate",
-      "lastRound": 1,
-      "lastScore": "28/32",
-      "lastReport": "docs/test-results/resume-rollups/round-1.md",
+      "status": "triage",
+      "lastRound": 2,
+      "lastScore": "30/32",
+      "lastReport": "docs/test-results/resume-rollups/round-2.md",
       "openBugs": 15,
       "backlog": 5
     },
     "release-intelligence": {
-      "status": "failing",
+      "status": "fix",
       "lastRound": 2,
       "lastScore": "55/55",
       "lastReport": "docs/test-results/release-intelligence/round-2.md",
@@ -90,7 +90,7 @@
       "backlog": 7
     },
     "in-app-release-loop": {
-      "status": "scope",
+      "status": "failing",
       "lastRound": 2,
       "lastScore": "59/60",
       "lastReport": "docs/test-results/in-app-release-loop/round-2.md",
@@ -114,11 +114,11 @@
       "backlog": 0
     },
     "platform-mcp": {
-      "status": "fix",
+      "status": "integrate",
       "lastRound": 2,
       "lastScore": "60/65",
       "lastReport": "docs/test-results/platform-mcp/round-2.md",
-      "openBugs": 15,
+      "openBugs": 18,
       "backlog": 2
     },
     "world-shell-layers": {
@@ -5926,7 +5926,7 @@
     {
       "id": "RR1-1",
       "feature": "resume-rollups",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "defect",
       "attempts": 1,
       "step": "Six KPI cards with computed lines (mobile 390px)",
@@ -6036,7 +6036,7 @@
     {
       "id": "RR1-5",
       "feature": "resume-rollups",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "defect",
       "attempts": 1,
       "step": "Platform MCP tools for rollup capabilities",
@@ -6231,7 +6231,7 @@
     {
       "id": "release-intelligence-F1-3",
       "feature": "release-intelligence",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "B7 / [J1.1], proposed [J1.2]",
@@ -6254,7 +6254,7 @@
     {
       "id": "release-intelligence-F1-4",
       "feature": "release-intelligence",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "RI-R1-7 (MCP surface)",
@@ -6276,7 +6276,7 @@
     {
       "id": "release-intelligence-F1-5",
       "feature": "release-intelligence",
-      "status": "open",
+      "status": "fixing",
       "class": "product_defect",
       "attempts": 0,
       "step": "RI-R1-3/4/5/6 (390px layout)",
@@ -6297,7 +6297,7 @@
     {
       "id": "release-intelligence-F1-7",
       "feature": "release-intelligence",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "RI-R1-2 / RI-R1-10 / RI-R1-11 and Known limitations",
@@ -6358,7 +6358,7 @@
     {
       "id": "RI-R1-2",
       "feature": "release-intelligence",
-      "status": "open",
+      "status": "fixing",
       "class": "spec_error",
       "attempts": 0,
       "step": "E.1 surface tag",
@@ -6533,7 +6533,7 @@
     {
       "id": "RI-R1-7",
       "feature": "release-intelligence",
-      "status": "recurred",
+      "status": "fixing",
       "class": "defect",
       "attempts": 0,
       "step": "MCP_GAP: platform MCP tools missing for most release-intelligence capabilities",
@@ -6546,7 +6546,7 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "mcpToolRegistry.js is now on the integration branch (b77049b); it has only release_tracke…"
+        "evidence": "No prior scope-review.json entry. The 17 routes without MCP tools are this feature's own …"
       },
       "history": [
         {
@@ -6572,7 +6572,7 @@
     {
       "id": "RI-R1-9",
       "feature": "release-intelligence",
-      "status": "open",
+      "status": "fixing",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "No step asserts the single entry point (B7)",
@@ -7628,7 +7628,11 @@
         "docs/training/baselines/in-app-release-loop/v1.json:709",
         "docs/changes/in-app-release-loop.md:65"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Spec step E.8 asserts server/lib/mcpToolRegistry.js is absent. It already existed on the …"
+      },
       "history": [
         {
           "round": 2,
@@ -7865,7 +7869,7 @@
     {
       "id": "platform-mcp-B5",
       "feature": "platform-mcp",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Interface parity for every capability",
@@ -7918,7 +7922,7 @@
     {
       "id": "platform-mcp-B10",
       "feature": "platform-mcp",
-      "status": "fixing",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Connected Agents / Capabilities screens reachable from the World Shell",
@@ -7945,7 +7949,7 @@
     {
       "id": "platform-mcp-B11",
       "feature": "platform-mcp",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Bearer-token auth on /mcp",
@@ -7971,7 +7975,7 @@
     {
       "id": "platform-mcp-B12",
       "feature": "platform-mcp",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "Account gates on tools/call (428)",
@@ -8021,7 +8025,7 @@
     {
       "id": "platform-mcp-F1-4",
       "feature": "platform-mcp",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "4 428 on tools/call",
@@ -8043,7 +8047,7 @@
     {
       "id": "platform-mcp-F1-5",
       "feature": "platform-mcp",
-      "status": "fixing",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "5 default rate limit",
@@ -8065,7 +8069,7 @@
     {
       "id": "platform-mcp-F1-8",
       "feature": "platform-mcp",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "8 platform-mcp-B12",
@@ -8088,7 +8092,7 @@
     {
       "id": "platform-mcp-F1-9",
       "feature": "platform-mcp",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "G1 stale change spec",
@@ -8109,7 +8113,7 @@
     {
       "id": "platform-mcp-F1-10",
       "feature": "platform-mcp",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "G2 render-binding tools",
@@ -8132,7 +8136,7 @@
     {
       "id": "platform-mcp-F1-11",
       "feature": "platform-mcp",
-      "status": "fixing",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "G6 recorded exclusions",
@@ -8151,9 +8155,73 @@
       ]
     },
     {
+      "id": "platform-mcp-F2-2",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "Known limitations",
+      "rootCause": "Spec text not updated after fix round 1",
+      "files": [
+        "docs/changes/platform-mcp.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-F2-3",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Known limitations",
+      "rootCause": "Dependent feature has no code",
+      "files": [
+        "server/lib/capabilityParity.js",
+        "server/lib/mcpToolRegistry.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-F2-4",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "Known limitations",
+      "rootCause": "Scope narrowed by builder",
+      "files": [
+        "server/lib/capabilityParity.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "platform-mcp-r2-T1",
       "feature": "platform-mcp",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "Type Research assistant, Create token with no scope: alert plus scope checkboxes",
@@ -8180,7 +8248,7 @@
     {
       "id": "platform-mcp-r2-T2",
       "feature": "platform-mcp",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "mcp-call list with TOKEN_A",
@@ -8207,9 +8275,9 @@
     {
       "id": "platform-mcp-r2-T3",
       "feature": "platform-mcp",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Import an application package card ready in all three cells; Gaps only shows the no-gaps message",
       "rootCause": "src/components/admin/CapabilitiesPanel.jsx (~lines 58 and 80-84): with Gaps only selected and zero gaps, rows is empty so groups is empty a…",
       "files": [
@@ -8226,13 +8294,19 @@
           "event": "found",
           "note": "src/components/admin/CapabilitiesPanel.jsx (~lines 58 and 8…",
           "commit": null
+        },
+        {
+          "round": 2,
+          "event": "fixed",
+          "note": "Added an empty-state status message in CapabilitiesPanel wh…",
+          "commit": "e83bb965c4e9c950bfe705974d02c89b700bc2a6"
         }
       ]
     },
     {
       "id": "platform-mcp-r2-T4",
       "feature": "platform-mcp",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "check-interface-parity.mjs: exit 0, first line Interface parity:, a Gaps: list, last line OK",
@@ -8258,7 +8332,7 @@
     {
       "id": "platform-mcp-r2-T5",
       "feature": "platform-mcp",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "check-interface-parity.mjs --strict",
