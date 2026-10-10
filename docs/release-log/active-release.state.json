@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T00:22:58.662Z",
+  "exportedAt": "2026-10-10T00:23:29.309Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -46,8 +46,8 @@
       "lastRound": 6,
       "lastScore": "30/30",
       "lastReport": "docs/test-results/release-loop-tooling/round-6.md",
-      "openBugs": 6,
-      "backlog": 4
+      "openBugs": 0,
+      "backlog": 0
     },
     "chart-gallery": {
       "status": "validate",
@@ -118,8 +118,8 @@
       "lastRound": 1,
       "lastScore": "62/62",
       "lastReport": "docs/test-results/platform-mcp/round-1.md",
-      "openBugs": 10,
-      "backlog": 2
+      "openBugs": 6,
+      "backlog": 0
     },
     "world-shell-layers": {
       "status": "build",
@@ -4063,7 +4063,7 @@
     {
       "id": "release-loop-tooling-F1-2",
       "feature": "release-loop-tooling",
-      "status": "recurred",
+      "status": "verified",
       "class": "defect",
       "attempts": 0,
       "step": "J5 5.2 at 390px stacked cards, no panel overflow",
@@ -4080,10 +4080,10 @@
       },
       "history": [
         {
-          "round": 1,
-          "event": "found",
-          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
-          "commit": null
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step",
+          "commit": "d8ee228"
         },
         {
           "round": 3,
@@ -4096,13 +4096,19 @@
           "event": "recurred",
           "note": "Fix-r1's 640px stacked-card CSS and data-label attributes o…",
           "commit": null
+        },
+        {
+          "round": 5,
+          "event": "verified",
+          "note": "Retest round 5 passed every step of baseline v3",
+          "commit": "8f1c8c4"
         }
       ]
     },
     {
       "id": "release-loop-tooling-F1-5",
       "feature": "release-loop-tooling",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "J4/J5 agent card",
@@ -4123,6 +4129,12 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
           "commit": null
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step",
+          "commit": "d8ee228"
         }
       ]
     },
@@ -4144,10 +4156,10 @@
       },
       "history": [
         {
-          "round": 1,
-          "event": "found",
-          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
-          "commit": null
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step",
+          "commit": "d8ee228"
         },
         {
           "round": 3,
@@ -4172,7 +4184,7 @@
     {
       "id": "release-loop-tooling-F1-7",
       "feature": "release-loop-tooling",
-      "status": "backlog_pre_existing",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Release loop inside the platform for in-app agents",
@@ -4191,13 +4203,19 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
           "commit": null
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step",
+          "commit": "d8ee228"
         }
       ]
     },
     {
       "id": "release-loop-tooling-B1",
       "feature": "release-loop-tooling",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Docs claim",
@@ -4218,13 +4236,19 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step",
+          "commit": "d8ee228"
         }
       ]
     },
     {
       "id": "release-loop-tooling-B2",
       "feature": "release-loop-tooling",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Sync",
@@ -4243,13 +4267,19 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step",
+          "commit": "d8ee228"
         }
       ]
     },
     {
       "id": "release-loop-tooling-B3",
       "feature": "release-loop-tooling",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Tracker 390px",
@@ -4268,13 +4298,19 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step",
+          "commit": "d8ee228"
         }
       ]
     },
     {
       "id": "release-loop-tooling-B4",
       "feature": "release-loop-tooling",
-      "status": "process_note",
+      "status": "verified",
       "class": "process",
       "attempts": 0,
       "step": "Host check",
@@ -4293,13 +4329,19 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step",
+          "commit": "d8ee228"
         }
       ]
     },
     {
       "id": "release-loop-tooling-B5",
       "feature": "release-loop-tooling",
-      "status": "backlog_pre_existing",
+      "status": "verified",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Owner direction",
@@ -4318,6 +4360,12 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step",
+          "commit": "d8ee228"
         }
       ]
     },
@@ -4399,7 +4447,7 @@
     {
       "id": "T4-1",
       "feature": "release-loop-tooling",
-      "status": "open",
+      "status": "verified",
       "class": "spec_error",
       "attempts": 0,
       "step": "In Chromium open /login, sign in as member@test.local; expect /world showing Your World, Journeys and Classic Tools (390x844)",
@@ -4419,13 +4467,19 @@
           "event": "found",
           "note": "src/components/WorldShell.jsx line 121 (MOBILE_CSS, max-wid…",
           "commit": null
+        },
+        {
+          "round": 5,
+          "event": "verified",
+          "note": "Retest round 5 passed every step of baseline v3",
+          "commit": "8f1c8c4"
         }
       ]
     },
     {
       "id": "T4-2",
       "feature": "release-loop-tooling",
-      "status": "backlog_pre_existing",
+      "status": "verified",
       "class": "environment",
       "attempts": 0,
       "step": "MCP_GAP: platform MCP server not built yet (feature platform-mcp)",
@@ -4445,6 +4499,12 @@
           "event": "found",
           "note": "server/lib/mcpToolRegistry.js does not exist because the se…",
           "commit": null
+        },
+        {
+          "round": 5,
+          "event": "verified",
+          "note": "Retest round 5 passed every step of baseline v3",
+          "commit": "8f1c8c4"
         }
       ]
     },
@@ -7679,7 +7739,7 @@
     {
       "id": "platform-mcp-B5",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Interface parity for every capability",
@@ -7700,13 +7760,19 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "verified",
+          "note": "Retest round 1 passed every step of baseline v1",
+          "commit": "47203b1"
         }
       ]
     },
     {
       "id": "platform-mcp-B6",
       "feature": "platform-mcp",
-      "status": "backlog_pre_existing",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Seed tools list in the brief",
@@ -7726,13 +7792,19 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "verified",
+          "note": "Retest round 1 passed every step of baseline v1",
+          "commit": "47203b1"
         }
       ]
     },
     {
       "id": "platform-mcp-B10",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "verified",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Connected Agents / Capabilities screens reachable from the World Shell",
@@ -7753,13 +7825,19 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "verified",
+          "note": "Retest round 1 passed every step of baseline v1",
+          "commit": "47203b1"
         }
       ]
     },
     {
       "id": "platform-mcp-B11",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Bearer-token auth on /mcp",
@@ -7779,13 +7857,19 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "verified",
+          "note": "Retest round 1 passed every step of baseline v1",
+          "commit": "47203b1"
         }
       ]
     },
     {
       "id": "platform-mcp-B12",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "verified",
       "class": "process",
       "attempts": 0,
       "step": "Account gates on tools/call (428)",
@@ -7804,13 +7888,19 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "verified",
+          "note": "Retest round 1 passed every step of baseline v1",
+          "commit": "47203b1"
         }
       ]
     },
     {
       "id": "platform-mcp-B13",
       "feature": "platform-mcp",
-      "status": "process_note",
+      "status": "verified",
       "class": "process",
       "attempts": 0,
       "step": "Validation evidence",
@@ -7829,6 +7919,12 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "verified",
+          "note": "Retest round 1 passed every step of baseline v1",
+          "commit": "47203b1"
         }
       ]
     },
