@@ -82,4 +82,4 @@ Values below assume the current year is 2026 (Forecast modeling = 13 years). If 
 - [E.2] **Failed load:** if Career Master data cannot be loaded, an orange alert says which data failed (with the HTTP status) and "This is a loading error, not missing Career Master data", with a **Retry** button; affected cards show the same message instead of a chart.
 - [E.3] **Top rows blank:** clearing the number box falls back to the chart's default (not zero rows).
 - [E.4] **Classic charts:** the two Bar Chart cards need grouped roll-up data (for example skills by category); for a member with none, their **+ Add** is disabled. The Capacity Gauge always has a count source (Roles Held and the other totals), so its **+ Add** is enabled, and for an empty member it shows the number 0.
-- [E.5] **Console:** any error other than the sandbox's `ERR_CERT_AUTHORITY_INVALID` for an external resource is a failure.
+- [E.5] **Console:** any error other than the sandbox's `ERR_CERT_AUTHORITY_INVALID` or `ERR_TUNNEL_CONNECTION_FAILED` for an external resource (a host that is not the app's own origin) is a failure.
