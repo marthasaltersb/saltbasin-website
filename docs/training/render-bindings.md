@@ -2,7 +2,7 @@
 
 Audience: a test agent driving a real browser as an administrator and as a member. Every step says exactly what to do and what you should see. All data is fictional (board item **Harbor dashboard refresh**, release **2030-01-05-garden-gate**, feature **Dock scheduler**). Everything happens inside the World Shell (`/world`); no admin URL is typed.
 
-Version 1 · 2026-10-09 · change spec: `docs/changes/render-bindings.md`
+Version 1 · 2026-10-09 · every journey names its UI path, API route and MCP tool on its `Interfaces:` line (the MCP tools call the same functions as the routes) · change spec: `docs/changes/render-bindings.md`
 
 ## Where things are
 
@@ -23,6 +23,8 @@ Fixed test constraints that apply to every step: fresh database; test accounts f
 
 ## Journey 1 — The Data map: every channel and where it comes from
 
+Interfaces: UI World Shell > Journeys > Render Bindings > Renderings (open an item; Data map). API `GET /api/render-bindings/renderings/:key/subjects/:subjectKey`, `POST /api/render-bindings/renderings/member-board/subjects`. MCP tools `render_binding_item_read`, `render_binding_board_item_add`.
+
 1. [J1.1] MEMBER WINDOW: on **Renderings** the **Workshop board** button is selected. Type **Harbor dashboard refresh** in **New item title**, click **Add item**. Expect the item opens: heading **Harbor dashboard refresh**, sub line "Workshop board · Added by Test Member", and the blocks **Data map**, **Change a value**, **History**.
 2. [J1.2] Read the **Data map**. Expect exactly five channel blocks, in this order: **Crystal colour**, **Crystal size**, **Crystal gold ring**, **Crystal badge**, **Crystal depth**.
 3. [J1.3] Crystal colour block: value **not set**; legend "Crystal colour = status"; "Source: member-board > items > status"; "Source type: Manual entry"; "Change policy: Live"; "Observed: not recorded"; "Confidence: not recorded".
@@ -33,11 +35,15 @@ Fixed test constraints that apply to every step: fresh database; test accounts f
 
 ## Journey 2 — Live path: a change redraws every open window
 
+Interfaces: UI World Shell > Journeys > Render Bindings > Renderings > (item) > Change a value. API `POST /api/render-bindings/changes`, `GET /api/render-bindings/stream`. MCP tool `render_binding_change_submit`.
+
 1. [J2.1] MEMBER WINDOW, **Change a value**, block **status**: it shows "Change policy: Live" and "Can edit: member, admin". In **New status** choose **active**, click **Change status**. Expect the confirmation line "status changed"; the **Crystal colour** block now reads **Active**, "Last changed by: Test Member", "Confidence: 100%" and an "Observed: YYYY-MM-DD HH:MM UTC" time (not "not recorded").
 2. [J2.2] ADMIN WINDOW: **Renderings**, click **Workshop board**, click the card **Harbor dashboard refresh**. Expect **Crystal colour** reads **Active**.
 3. [J2.3] MEMBER WINDOW: in **New status** choose **done**, click **Change status**. Within 15 seconds, without touching the ADMIN WINDOW, expect there **Crystal colour** reads **Done** and the line under the heading reads "Updated live: value_changed by Test Member".
 
 ## Journey 3 — Approval path: proposal, ghost, impact, two steps, apply, reject
+
+Interfaces: UI World Shell > Journeys > Render Bindings > Pending changes. API `POST /api/render-bindings/changes`, `GET /api/render-bindings/changes/pending`, `GET /api/render-bindings/changes/:id/impact`, `POST /api/render-bindings/changes/:id/approve|reject`. MCP tools `render_binding_change_submit`, `render_binding_pending_list`, `render_binding_change_impact`, `render_binding_change_decide`.
 
 1. [J3.1] ADMIN WINDOW (item open): block **priority** shows "Can edit: admin". In **New priority** enter **3**, click **Change priority**. Expect the confirmation line "priority changed". **Crystal gold ring** still reads **not recorded** (effort is not set).
 2. [J3.2] MEMBER WINDOW, block **effort** ("Change policy: Needs approval"): enter **8** in **New effort**, click **Propose effort**. Expect the confirmation line "effort proposed, waiting for Data owner review"; block **effort** now reads "Waiting for approval: 8 proposed by Test Member, step 1 of 2 (Data owner review). Decide it in Pending changes." and has no form.
@@ -49,6 +55,8 @@ Fixed test constraints that apply to every step: fresh database; test accounts f
 
 ## Journey 4 — History and the time slider
 
+Interfaces: UI World Shell > Journeys > Render Bindings > Renderings > (item) > History. API `GET /api/render-bindings/renderings/:key/subjects/:subjectKey/history`. MCP tool `render_binding_item_history`.
+
 1. [J4.1] MEMBER WINDOW, block **History**: the **Time slider** caption reads "Step 9 of 9: betsy@test.local rejected effort: 8 -> 13 at step 1 of 2 (Data owner review); the approved value stays: 8". Below it, **Event log** lists exactly eight events, in this order, with these pills: **value_changed**, **value_changed**, **value_changed**, **change_proposed**, **change_approved**, **change_approved**, **change_proposed**, **change_rejected**.
 2. [J4.2] Click the **Time slider**, press **Home**. Expect the caption "Step 1 of 9: Before any recorded change" and every slider channel reading **not set** or **not recorded** (Crystal depth reads **not mapped**).
 3. [J4.3] Press **ArrowRight** four times. Expect the caption "Step 5 of 9: Test Member proposed effort: not set -> 8, waiting for Data owner review (step 1 of 2)"; slider channel **Crystal size** reads **not set** with the line "Ghost (pending): 8"; the box "Pending at this point: effort: not set -> 8 (Test Member, Data owner review)".
@@ -56,6 +64,8 @@ Fixed test constraints that apply to every step: fresh database; test accounts f
 5. [J4.5] In the **Event log** the **change_proposed** entry for effort lists "Impact recorded when proposed:" with the same four lines as step [J3.4].
 
 ## Journey 5 — Who may change a field, and policy per binding
+
+Interfaces: UI World Shell > Journeys > Render Bindings > Settings (administrators). API `GET /api/render-bindings/settings`, `PUT /api/render-bindings/settings/fields/:portKey/:objectKey/:fieldKey`, `PUT /api/render-bindings/settings/bindings`. MCP tools `render_binding_settings_read`, `render_binding_settings_save`.
 
 1. [J5.1] MEMBER WINDOW: reopen the item (**← All items**, click the card). Block **priority** reads "Your role cannot edit this field. Roles that can: admin." and has no input and no button.
 2. [J5.2] ADMIN WINDOW: tab **Settings**. In the card "Who can edit each source field", under **Workshop board entries**, tick **member can edit member-board priority**. Expect the confirmation line "Editable roles saved".
@@ -65,6 +75,8 @@ Fixed test constraints that apply to every step: fresh database; test accounts f
 
 ## Journey 6 — A connector write-back that fails is shown, never hidden
 
+Interfaces: UI World Shell > Journeys > Render Bindings > Pending changes and the item's Data map and Event log. API `POST /api/render-bindings/changes`, `POST /api/render-bindings/changes/:id/approve`. MCP tools `render_binding_change_submit`, `render_binding_change_decide`.
+
 1. [J6.1] ADMIN WINDOW: **Renderings** → **Workshop board** → open **Harbor dashboard refresh**. Block **stage** reads "Change policy: Needs approval". In **New stage** choose **negotiating**, click **Propose stage**. Expect the confirmation line "stage proposed, waiting for Data owner review".
 2. [J6.2] Tab **Pending changes (1)**: the box lists "Workshop board: Crystal badge not set -> Negotiating" and "No connected rods". Click **Approve step 1 of 2**, then **Approve and apply (step 2 of 2)**. Expect the red confirmation line "Write-back failed: Salesforce is not connected for betsy@test.local, so the value was not written to Sandbox CRM. The approved value is kept here."
 3. [J6.3] Reopen the item. **Crystal badge** reads **Negotiating** and contains a red alert "Write-back failed: Salesforce is not connected for betsy@test.local, so the value was not written to Sandbox CRM. The approved value is kept here."
@@ -72,12 +84,16 @@ Fixed test constraints that apply to every step: fresh database; test accounts f
 
 ## Journey 7 — Not mapped is never filled in; bindings are configurable
 
+Interfaces: UI World Shell > Journeys > Render Bindings > Settings > Bindings (administrators). API `PUT|DELETE /api/render-bindings/settings/bindings`, `PUT /api/render-bindings/settings/steps/:id`. MCP tool `render_binding_settings_save`.
+
 1. [J7.1] ADMIN WINDOW, **Settings**, card **Bindings**: untick **Mapped: member-board:crystal.size** (confirmation line "Binding settings saved"). Open the item: **Crystal size** reads **not mapped** with no "Source:" line.
 2. [J7.2] **Settings**: tick **Mapped: member-board:crystal.size** again (confirmation line "Binding settings saved"). In the row "Workshop board / Crystal depth" (value **not mapped**) choose **member-board > items > effort** in **Source field for custom:member-board:crystal.depth**, click **Map channel** (confirmation line "Binding settings saved"). Open the item: **Crystal size** reads **8** again; **Crystal depth** reads **8** with "Source: member-board > items > effort".
 3. [J7.3] **Settings**: click **Reset bindings to platform defaults** (confirmation line "Binding settings saved"). Open the item: **Crystal depth** reads **not mapped** again and **Crystal size** reads **8**.
 4. [J7.4] **Settings**, card **Approval steps**: two steps listed, **Data owner review** (role label *Data owner*) and **Final approval** (*Final approver*), both **Active**.
 
 ## Journey 8 — First consumer: the release tracker (a platform table Port, data not moved)
+
+Interfaces: UI World Shell > Journeys > Render Bindings > Renderings > Release world. API `GET /api/render-bindings/renderings/release-world`, `POST /api/render-bindings/changes`. MCP tools `render_binding_rendering_read`, `render_binding_change_submit`.
 
 1. [J8.1] ADMIN WINDOW: **Journeys** → **Release Intelligence** → tab **Releases**. Fill **Release key** with `2030-01-05-garden-gate` and **Release name** with `Garden gate release`, click **Create release record**. In the new release fill **Feature key** `dock-scheduler`, **Feature name** `Dock scheduler`, **Final status** **failing**, click **Add feature to release**. Expect the feature `dock-scheduler` listed.
 2. [J8.2] **Journeys** → **Render Bindings** → **Renderings** → click **Release world** → click the card **Dock scheduler**. Expect Data map blocks **Crystal colour**, **Crystal size**, **Crystal gold ring**, **Satellites count**, **Crystal pulse**, **Crystal depth**. **Crystal colour** reads **Failing**, "Source: release-tracker > release_features > final_status", "Source type: Platform table", "Change policy: Live". **Crystal size** reads **not recorded**, "Source: release-tracker > release_features > steps_total". **Crystal gold ring** shows "Cannot be calculated: steps_passed, steps_total not recorded". **Satellites count** shows "Change policy: Needs approval". **Crystal pulse** shows "Calculated from: release-tracker > release_features > tracker_open_bugs and release-tracker > release_features > declared_rounds". **Crystal depth** reads **not mapped**.

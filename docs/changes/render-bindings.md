@@ -2,7 +2,7 @@
 
 Feature key: `render-bindings` · Release: `2026-10-02-application-packages` (0.2.0) · Version 2 (built) · 2026-10-09
 Training spec: `docs/training/render-bindings.md` (version 1, written by the build agent)
-Status: built. Version 1 (design, same day) is the owner direction, model, reuse audit and journeys below; the sections from "What changed" on describe what was built.
+Status: built (merged with the salvaged partial build, MCP registered). Version 1 (design, same day) is the owner direction, model, reuse audit and journeys below; the sections from "What changed" on describe what was built.
 
 ## Owner direction
 
@@ -28,6 +28,10 @@ Status: built. Version 1 (design, same day) is the owner direction, model, reuse
 | Settlement — `journey_rod_settlement_states` (`surface … bedrock`) | A bindable measure of how corroborated a value is. The underwater world can map it to depth. |
 | Visual metrics skill (`salt-basin-visual-metrics`) | Same principle: every displayed number has a defined meaning. A binding carries that meaning (business definition, unit, legend). |
 | Career reconciliation (`career_reconciliation_tasks`, `careerReconciliation.js`) | The precedent for queued, human-resolved data changes; the generic version below follows its shape. |
+| `platform-mcp` (`docs/changes/platform-mcp.md`, `docs/training/platform-mcp.md`; commit `0800b1c` integration head) | The MCP tool registry, token scopes, `capabilityParity.js` and `scripts/check-interface-parity.mjs` this feature registers its eleven tools and six parity rows in. |
+| `release-intelligence` (`docs/changes/release-intelligence.md`, training baseline v3) | The release tracker's `release_*` tables are the first consumer's source; J8 creates its fictional release through that screen. |
+| `live-release-tracker` (`docs/changes/live-release-tracker.md`) | The platform tracker World Shell entry; the `release-tracker` Port describes the same tables, data not moved. |
+| Salvage commit `68c5075` (branch `release-loop/render-bindings-build-salvage`) | An earlier build agent's untested partial build (stopped by the usage limit); merged, conflicts resolved against the integration head, then tested and completed here. |
 
 ## The model
 
@@ -156,9 +160,12 @@ No new tables are proposed.
   `GET /renderings/:key/subjects/:subjectKey` (Data map + editable fields), `GET .../history`, `POST /changes`, `GET /changes/pending`,
   `GET /changes/:id/impact` (computed fresh; the proposal-time snapshot is returned beside it), `POST /changes/:id/approve` (admin; `assertReadyToFinalize`),
   `POST /changes/:id/reject` (admin), `GET|PUT|DELETE /settings...` (admin: bindings, field roles, approval steps).
-- No `server/lib/mcpToolRegistry.js` exists in the repository yet, so there is no MCP registration. Recorded as MCP_GAP-pending: when the platform MCP
-  server lands, register one tool per route above calling the same `renderBindings.js` function (`viewRendering`, `viewSubject`, `submitChange`,
-  `listPending`, `impactForChange`, `decideChange`, `subjectHistory`) with the same `user` argument, so permissions are identical. Assigned to the `platform-mcp` feature.
+- MCP (interface parity): eleven append-only tools in `server/lib/mcpToolRegistry.js` (`RB_TOOLS`), each calling the same `renderBindings.js` function as its route with the same `user`, so
+  permissions are identical: `render_binding_renderings_list`, `render_binding_rendering_read`, `render_binding_item_read`, `render_binding_item_history`, `render_binding_board_item_add`,
+  `render_binding_change_submit`, `render_binding_pending_list`, `render_binding_change_impact`, `render_binding_change_decide` (admin; approve runs `assertReadyToFinalize` first, like the route),
+  `render_binding_settings_read`, `render_binding_settings_save` (admin). New token scopes `renderings.read`, `renderings.write`, `renderings.approve`. Six rows in `capabilityParity.js` (group
+  "Render bindings") and `server/routes/renderBindings.js` is added to `GOVERNED_ROUTE_FILES`; `node scripts/check-interface-parity.mjs --strict` passes. The live stream (`GET /stream`) is a push
+  channel, covered by the `render-bindings-view` row; MCP clients poll `render_binding_item_read`.
 
 ### Client
 
@@ -179,11 +186,11 @@ No new tables are proposed.
 
 ## Verified (initial check)
 
-See the build agent's report appended below once the walkthrough has run.
+Initial check (2026-10-10, build agent, fresh database `sb_rl_bld_6200_1`): `npm run build` passes; the server boots on the fresh database; `node scripts/check-interface-parity.mjs --strict` passes (78 of 78 capabilities, 121 tools); every journey of `docs/training/render-bindings.md` walked once in Chromium at desktop width (all steps J1.1 to J8.4 and E.layout pass), then once at 390px on a fresh database (result appended in the build report). MCP smoke: `render_binding_renderings_list` and `render_binding_pending_list` return data over `/mcp` with a token scoped `renderings.*`; an unknown item returns an `isError` result with `{status: 404, code: 'not_found'}`. Edge steps E.2 to E.7 are API/visual checks left to the validators.
 
 ## Known limitations
 
-- No MCP tool yet (no platform MCP server in the repository); see Server.
+- The SSE stream has no MCP equivalent (MCP is request/response); clients re-read the item instead.
 - Connector write-back has no adapter, so every connector write-back reports `writeback_failed` honestly. A real adapter per provider is future work.
 - Impact analysis covers bindings, calculations and Tributary-linked / parent-child rods of the subject rod; cross-subject effects (one item feeding another) are not modelled.
 - `approver` roles are the free-text `required_role_label` on each step; approval is administrator-only until an approver-role registry exists.
