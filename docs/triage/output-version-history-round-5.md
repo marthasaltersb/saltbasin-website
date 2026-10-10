@@ -1,0 +1,34 @@
+# Triage: output-version-history, round 5
+
+Round 5 result: 34/37 against baseline v3, same three failures as round 4. Ids reused from earlier triage (docs/triage/output-version-history-round-1.md and -round-4.md); the dispatch listed none. Reproduced by reading code at integration head d212f46 (no code changed since round 4's triage).
+
+| Id | Step | Class | Recurrence |
+|---|---|---|---|
+| T1 | J1.2 (mobile) | defect | recurred (rounds 1, 4, 5; never fixed) |
+| T2 | J5.1 (mobile) | defect | recurred, same root cause as T1 |
+| T3 | E.2 | needs_business_definition | recurred (rounds 1-5); A2/A7/A10 all needs_owner |
+
+## T1 / T2 [J1.2, J5.1 at 390px] Classic Tools has no tool list on phones
+Root cause: `src/brand.css` lines 630-631 hide `.sb-admin-topbar-actions` and `.sb-admin-desktop-subnav` with `display: none !important` under `max-width: 900px`. The tool tabs (MY RESUME, CAREER MASTER, ...) render only inside `<div className="sb-admin-topbar-actions">` (`src/components/admin/AdminShell.jsx` line 673-690, `TabToggle` over `configDraft.navigation.memberTabs`). The replacement mobile menu is fully styled (`brand.css` lines 614-617 and 632-712: `.sb-admin-mobile-current`, `-menu-button`, `-backdrop`, `-drawer`, `-drawer-head`, `-drawer-scroll`, `-nav-group`, `-drawer-actions`), but no JSX renders any of those classes. `grep -rn sb-admin-mobile src` outside brand.css finds only the unrelated `sb-admin-mobile-toggle` (AdminShell line 639, pages-list toggle on the content tab). Classic Tools is mounted at `src/components/WorldShell.jsx` line 764 (`<AdminShell scope={scope} initialTab={classicTargetTab} />`), so on a phone the default tab (Career Placement Agents) fills a squashed column with no way to switch tabs; the fixed `S.classicBack` button (WorldShell line 1769, `position: fixed; top/left 0.6rem`) overlaps the heading. Matches the validator's observation exactly.
+Why it fails this feature: J1.2 and J5.1 are written through Classic Tools; the Journeys route the validator used is a workaround, not the step. Desktop passes. Pre-existing platform gap (not introduced by this feature) that blocks its required phone walkthrough (interface parity, MOBILE_GAP).
+Proposed fix (do not leave the CSS orphaned): in `AdminShell.jsx`, inside the topbar, render
+- `<span className="sb-admin-mobile-current">` with the active tab/view label;
+- `<button className="sb-admin-mobile-menu-button" aria-expanded aria-controls>Menu</button>` toggling a `mobileMenuOpen` state declared with the other hooks, BEFORE the `if (!draft || !configDraft) return null` early return (rules of hooks);
+- `<button className="sb-admin-mobile-backdrop" aria-label="Close menu">` when open, and `<aside className={'sb-admin-mobile-drawer' + (open ? ' open' : '')}>` with `-drawer-head` (title + close), `-drawer-scroll` holding `.sb-admin-mobile-nav-group` buttons, and `-drawer-actions`.
+- Items: member = `configDraft.navigation.memberTabs` filtered `enabled !== false`, sorted by `sortOrder` (same list as the desktop `TabToggle`), onClick `setTab(id)`; admin = `adminNav.views` sorted, onClick `switchView(id)`, plus the active view's sub-tabs as a second group. Close the drawer on selection.
+- Under 900px make the default Career Placement Agents panel stack single column, and stop `S.classicBack` overlapping the topbar (left offset in WorldShell, or move Back to World into `-drawer-actions` on phones).
+Re-validate at 390px: Menu -> MY RESUME opens the career-bound editor (J1.2); Menu -> CAREER MASTER -> Jobs -> Harborline -> Title -> Save, then Menu -> MY RESUME (J5.1).
+Files: src/components/admin/AdminShell.jsx, src/brand.css, src/components/WorldShell.jsx.
+
+## T3 [E.2] No point-and-click way to make a saved version unreadable
+Product behaviour is correct and matches the change spec: `server/lib/outputVersionHistory.js` lines 118-122 catch a `versionBody` throw, log it, set `version.error = "This version's content could not be read: <message>"` and still list the version with changeSummary "Cannot compare (a version could not be read)". `src/components/admin/OutputVersionHistory.jsx` shows the red alert in the list (line 146) and viewer (line 184) and "One of the selected versions could not be read, so they cannot be compared." at line 213 (diff skipped when either side has `error`, line 98). Not a defect. The step needs corrupt stored content that no interface can create, and the fixed test constraints forbid database edits.
+Why not spec_error: A2, A7 and A10 each proposed the cli-only weakening; the reviewer returned all as needs_owner (not weaker / exact / deterministic checks fail). Re-proposing a fourth time adds nothing; none filed. A10 stays pending.
+Class: needs_business_definition (owner coverage-policy decision).
+Question for the owner: "Do you accept E.2 becoming a cli-only check against a fictional fixture lineage (second version with unparseable content) read through GET /api/resume-outputs/:id/versions, so the red message and the compare-area message 'One of the selected versions could not be read, so they cannot be compared.' are no longer walked in the browser at 1280px and 390px? If you want the browser walk kept, the alternative is a product change: a committed, admin-only fixture seeder (like scripts/create-test-member.mjs) the validator may run, which keeps E.2 as a browser step."
+Preparation either way: no `scripts/create-unreadable-version-fixture.mjs` exists yet. Write one that inserts two `resume_output_projections` rows in one lineage for a given member (v1 valid `document_blocks` content with fictional "Fixture Person"; v2 whose content makes `versionBody` throw; check first whether `parseJson` returns null on bad JSON, which yields "no stored content" rather than an error, and if so use a career-bound content whose resolver throws), and verify that it produces a non-null `error` before the spec step is rewritten. Until answered, E.2 stays a documented non-scorable step; record as not exercised, never as passed.
+
+## Validator observations
+- Baseline v3 unchanged from round 4; no BASELINE_MISMATCH. Fixes verified (T8 wording, B14, E.5, MCP tools): nothing to do.
+- Squashed scene column and Back to World overlap at 390px: part of T1 fix above, not a separate item.
+- B10/T6 (no chart handling in `src/lib/outputVersionDiff.js`), B11/T7 (no Version history control in `OutputTemplateConfigurator.jsx`), B8/T9 (draft wording freeze) and T10 (NAME/HEADING/ROLE vs "HEADER fields", already A8 rejected): no baseline step covers T6/T7; they are known open items from earlier rounds, no new amendment this round (coverage_gap steps were tried as A11 and rejected for MCP; T6/T7 can be raised only if the owner wants chart and template-configurator history in scope). T9 remains the round-1 owner question.
+- E.3 was simulated with a network rule: logged http/console errors are the simulation, not a product fault. External font/CDN blocks are the sandbox.
