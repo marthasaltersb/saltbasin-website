@@ -11,7 +11,7 @@ import { api } from '../../lib/api.js';
 import {
   STATS, makeHref, parseHash, hashFor, splitTok, agentName,
 } from '../../lib/releaseTrackerModel.js';
-import { LAYERS, RoundLayer } from './TrackerLayers.jsx';
+import { LAYERS, RoundLayer, SCOPE_GROUPS } from './TrackerLayers.jsx';
 import TrackerWorld from './TrackerWorld.jsx';
 import TrackerSettings from './TrackerSettings.jsx';
 
@@ -24,6 +24,7 @@ const store = {
 function crumbLabel(t, snap) {
   const [type, a, b] = splitTok(t);
   if (type === 'stat') return STATS[a]?.label || a;
+  if (type === 'scope') return (SCOPE_GROUPS.find(([g]) => g === a) || [])[1] || a;
   if (type === 'updates') return 'Status updates';
   if (type === 'update') return `Update ${a}`;
   if (type === 'round') return `${a} · round ${b}`;
