@@ -13,11 +13,14 @@
 //    their definitions (kind "carried"); delivered features that still have open bugs are carried as
 //    kind "carried_backlog" (bugs never disappear, but they are not re-validated unless a bug needs it);
 //    --add appends new feature definitions (kind "new"). updates.json/md start empty for the new release.
+//    Scope (server/lib/releaseScope.js): counts cover only scope "planned"; backlog and "added after the cut" are
+//    counted separately. Unfinished planned work carries as planned, backlog as backlog, delivered-with-bugs as backlog.
 //    The bug ledger and tracker-carry.json stay continuous across releases.
 // Fictional data only (public repo).
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { SCOPES, scopeOf, isAddedAfterCut } from '../server/lib/releaseScope.js';
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const argv = process.argv.slice(2);
@@ -53,7 +56,7 @@ const features = defs.features.map((f) => {
   const s = state.features?.[f.key] || {};
   const bugs = (state.bugs || []).filter((b) => b.feature === f.key && b.status !== 'seen_in_test');
   return {
-    key: f.key, title: f.title, kind: f.kind || 'new', status: s.status || 'not_started', lastRound: s.lastRound ?? null,
+    key: f.key, title: f.title, kind: f.kind || 'new', scope: scopeOf(f), ...(isAddedAfterCut(f) ? { added: f.added } : {}), status: s.status || 'not_started', lastRound: s.lastRound ?? null,
     lastScore: s.lastScore ?? null, baseline: baselineOf(f.key), delivered: DONE.has(s.status),
     bugs: {
       verified: bugs.filter((b) => b.status === 'verified').length,
@@ -72,10 +75,16 @@ const summary = {
   version, release: defs.release, title: defs.title, frozenAt: new Date().toISOString(), frozenCommit,
   startedAtCommit: defs.startedAtCommit || null,
   counts: {
-    planned: features.length,
-    delivered: features.filter((f) => f.delivered).length,
-    carried: features.filter((f) => !f.delivered).length,
-    newDelivered: features.filter((f) => f.delivered && f.kind === 'new').length,
+    // planned = this release's work (scope 'planned', including features added after the cut into it);
+    // backlog features are on the record but not counted; addedAfterCut shows scope growth.
+    planned: features.filter((f) => f.scope === 'planned').length,
+    delivered: features.filter((f) => f.scope === 'planned' && f.delivered).length,
+    carried: features.filter((f) => f.scope === 'planned' && !f.delivered).length,
+    newDelivered: features.filter((f) => f.scope === 'planned' && f.delivered && f.kind === 'new').length,
+    backlog: features.filter((f) => f.scope === 'backlog').length,
+    backlogDelivered: features.filter((f) => f.scope === 'backlog' && f.delivered).length,
+    addedAfterCut: features.filter((f) => f.added).length,
+    addedAfterCutPlanned: features.filter((f) => f.added && f.scope === 'planned').length,
     rounds: features.reduce((n, f) => n + (f.lastRound || 0), 0),
   },
   bugs: { verified: sum('verified'), open: sum('open'), backlog: sum('backlog'), needsPerson: sum('needsPerson') },
@@ -90,21 +99,28 @@ const index = rd(indexPath, { releases: [] });
 index.releases = index.releases.filter((r) => r.version !== version && r.version !== nextVersion);
 index.releases.push({ version, release: defs.release, title: defs.title, state: 'frozen', frozenAt: summary.frozenAt, frozenCommit,
   planned: summary.counts.planned, delivered: summary.counts.delivered, carried: summary.counts.carried, newDelivered: summary.counts.newDelivered,
+  backlog: summary.counts.backlog, addedAfterCut: summary.counts.addedAfterCut,
   bugsVerified: summary.bugs.verified, bugsOpen: summary.bugs.open, sessions: sessions.length, summary: `docs/release-log/releases/${version}/summary.json` });
 index.releases.push({ version: nextVersion, release: opt('--next-release') || nextVersion, title: opt('--next-title') || null, state: 'open', startedAt: summary.frozenAt, startedAtCommit: frozenCommit });
 index.updatedAt = summary.frozenAt;
 fs.writeFileSync(indexPath, `${JSON.stringify(index, null, 2)}\n`);
 
-const carried = defs.features.flatMap((f) => {
-  const s = features.find((x) => x.key === f.key);
+// Scope carries forward: unfinished planned work stays planned, backlog stays backlog, delivered work with open
+// bugs becomes backlog. "Added after the cut" belongs to the release it was added in (kept as addedInRelease).
+const nextScope = (f, s) => ({ ...(({ added, ...rest }) => rest)(f), scope: s.delivered ? 'backlog' : scopeOf(f),
+  ...(isAddedAfterCut(f) ? { addedInRelease: version } : {}) });
+const carried = defs.features.flatMap((f0) => {
+  const s = features.find((x) => x.key === f0.key);
+  const f = nextScope(f0, s);
   if (!s.delivered) return [{ ...f, kind: 'carried', carriedFrom: version, build: `Carried from ${version} (last ${s.lastScore || 'not validated'} on baseline v${s.baseline ?? '?'}). ${f.build || ''}`.trim() }];
   if (s.bugs.open + s.bugs.needsPerson > 0) return [{ ...f, kind: 'carried_backlog', carriedFrom: version, build: `Delivered in ${version}. Only its open bugs are carried; re-validate only when a fix touches a frozen step.` }];
   return [];
 });
-const added = (rd(opt('--add') || '', { features: [] }).features || []).map((f) => ({ ...f, kind: 'new' }));
+const added = (rd(opt('--add') || '', { features: [] }).features || []).map((f) => ({ ...f, kind: 'new', scope: SCOPES.includes(f.scope) ? f.scope : 'planned' }));
 const next = { ...defs, release: opt('--next-release') || nextVersion, version: nextVersion, title: opt('--next-title') || defs.title,
   startedAtCommit: frozenCommit, previousRelease: version, features: [...carried, ...added] };
+delete next.scopeDecision;   // each release records its own scope decision
 fs.writeFileSync(path.join(LOG, 'active-release.features.json'), `${JSON.stringify(next, null, 2)}\n`);
 fs.writeFileSync(path.join(LOG, 'updates.json'), '[]\n');
 fs.writeFileSync(path.join(LOG, 'updates.md'), `# Release ${nextVersion} updates\n\nNone yet. Release ${version} is frozen in docs/release-log/releases/${version}/.\n`);
-console.log(`Froze ${version} at ${frozenCommit}: ${summary.counts.delivered}/${summary.counts.planned} delivered, ${summary.counts.carried} carried. Opened ${nextVersion} with ${next.features.length} features (${carried.length} carried, ${added.length} new).`);
+console.log(`Froze ${version} at ${frozenCommit}: ${summary.counts.delivered}/${summary.counts.planned} planned delivered, ${summary.counts.carried} carried, ${summary.counts.backlog} in backlog, ${summary.counts.addedAfterCut} added after the cut. Opened ${nextVersion} with ${next.features.length} features (${carried.length} carried, ${added.length} new).`);

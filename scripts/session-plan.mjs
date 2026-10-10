@@ -19,6 +19,7 @@
 // never estimated after the fact and never filled in by hand: "not validated" stays null, never 0.
 import fs from 'node:fs';
 import path from 'node:path';
+import { scopeOf, isAddedAfterCut } from '../server/lib/releaseScope.js';
 import { execFileSync } from 'node:child_process';
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
@@ -41,7 +42,11 @@ function parseItem(raw) {
   const e = frac(o.expect);
   if (o.expect && !e) fail(`expect must look like 30/32: ${raw}`);
   if (o.size && !['S', 'M', 'L'].includes(o.size)) fail(`size must be S, M or L: ${raw}`);
-  return { feature: o.feature, goal: o.goal || null, expect: e, size: o.size || null };
+  // Scope (server/lib/releaseScope.js): an item outside the release's planned work is recorded as such, not refused.
+  const def = defs.features.find((f) => f.key === o.feature);
+  const scope = def ? scopeOf(def) : null;
+  if (def && scope !== 'planned') console.error(`Note: ${o.feature} is in the backlog of release ${defs.version}${isAddedAfterCut(def) ? ' (added after the cut)' : ''}, not its planned work; recorded as outOfScope.`);
+  return { feature: o.feature, goal: o.goal || null, expect: e, size: o.size || null, ...(def && scope !== 'planned' ? { outOfScope: true } : {}) };
 }
 
 function latestScore(feature) {

@@ -9,6 +9,7 @@
 // tracker page renders. Contains labels, statuses, summaries and counts only — never transcript text.
 import fs from 'node:fs';
 import path from 'node:path';
+import { annotateFeatures } from '../server/lib/releaseScope.js';
 
 const argv = process.argv.slice(2);
 const opt = (k) => { const i = argv.indexOf(k); return i >= 0 ? argv[i + 1] : null; };
@@ -351,8 +352,8 @@ if (carryOut) {
 // Numbered status updates (scripts/release-update.mjs), shown on the tracker with their comparisons.
 let updates = [];
 try { updates = JSON.parse(fs.readFileSync(new URL('../docs/release-log/updates.json', import.meta.url), 'utf8')); } catch { /* none yet */ }
-let releaseInfo = null;
-try { const d = JSON.parse(fs.readFileSync(new URL('../docs/release-log/active-release.features.json', import.meta.url), 'utf8')); releaseInfo = { version: d.version || null, release: d.release, title: d.title || null, previousRelease: d.previousRelease || null, startedAtCommit: d.startedAtCommit || null, kinds: Object.fromEntries((d.features || []).map((f) => [f.key, f.kind || 'new'])) }; } catch { /* optional */ }
+let releaseInfo = null; let featureDefs = null;   // scope: planned / backlog / added after the cut (server/lib/releaseScope.js)
+try { const d = JSON.parse(fs.readFileSync(new URL('../docs/release-log/active-release.features.json', import.meta.url), 'utf8')); releaseInfo = { version: d.version || null, release: d.release, title: d.title || null, previousRelease: d.previousRelease || null, startedAtCommit: d.startedAtCommit || null, kinds: Object.fromEntries((d.features || []).map((f) => [f.key, f.kind || 'new'])), scopeDecision: d.scopeDecision || null }; featureDefs = d.features || []; } catch { /* optional */ }
 // Session estimates for this release and the test results recorded at each merge (scripts/session-plan.mjs).
 let sessions = [];
 try {
@@ -370,7 +371,7 @@ const snapshot = {
   maxFixAttemptsPerBug: MAX_ATTEMPTS,
   repoUrl: opt('--repo-url') || null,
   maxFixRounds: definition.maxFixRounds,
-  features, agents: agentList.sort((x, y) => String(y.startedAt || '').localeCompare(String(x.startedAt || ''))), bugs,
+  features: featureDefs ? annotateFeatures([...features, ...featureDefs.filter((d) => !features.some((f) => f.key === d.key)).map((d) => ({ key: d.key, status: 'queued', rounds: 0, lastResult: null, openBugs: 0, backlog: 0, agents: 0 }))], featureDefs) : features, agents: agentList.sort((x, y) => String(y.startedAt || '').localeCompare(String(x.startedAt || ''))), bugs,
   totals: agentList.reduce((t, a) => {
     for (const k of ['input', 'cacheWrite', 'cacheRead', 'output']) t[k] += a.tokens?.[k] || 0;
     return t;

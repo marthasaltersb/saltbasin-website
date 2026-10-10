@@ -5,7 +5,7 @@
 //       Writes docs/release-log/active-release.state.json from a release-tracker-sync snapshot:
 //       each feature's status, last round and score, and every bug with its lifecycle.
 //
-//   node scripts/release-loop-resume.mjs --args [--port-base 5000] [--scripts <dir>]
+//   node scripts/release-loop-resume.mjs --args [--port-base 5000] [--scripts <dir>] [--include-backlog]
 //       Prints the Workflow args (one run per dependency group) that continue every unfinished
 //       feature: merged features restart at their next test round with their open bugs as fix
 //       notes; unbuilt features are built. Pass each printed object to the saved 'release-loop'
@@ -17,6 +17,7 @@
 //       survives restarts, since a resumed run does not keep its original args.
 import fs from 'node:fs';
 import path from 'node:path';
+import { scopeOf } from '../server/lib/releaseScope.js';
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const DEFS = path.join(root, 'docs/release-log/active-release.features.json');
@@ -66,7 +67,12 @@ if (argv.includes('--args')) {
   // A feature is unfinished while it has blocking bugs; bugs reassigned to it by the scope check count as its own.
   const owned = (key) => state.bugs.filter((b) => !DONE.has(b.status) && !HELD.has(b.status)
     && ((b.feature === key && !BACKLOG.has(b.status)) || (b.status === 'reassigned' && b.scope?.owner === key)));
-  const unfinished = defs.features.filter((f) => !FINISHED.has(state.features[f.key]?.status) || owned(f.key).length);
+  // Backlog features (server/lib/releaseScope.js) are not this release's work: they are listed, never launched,
+  // unless --include-backlog is given. Their bugs stay on the record.
+  const inScope = (f) => argv.includes('--include-backlog') || scopeOf(f) === 'planned';
+  const skipped = defs.features.filter((f) => !inScope(f));
+  if (skipped.length) console.error(`Not launched (backlog, not this release's work; --include-backlog to run them): ${skipped.map((f) => f.key).join(', ')}`);
+  const unfinished = defs.features.filter((f) => inScope(f) && (!FINISHED.has(state.features[f.key]?.status) || owned(f.key).length));
   const groups = [];
   for (const f of unfinished) {
     const g = groups.find((x) => f.dependsOn.some((d) => x.some((y) => y.key === d)));
