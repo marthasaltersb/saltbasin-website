@@ -21,6 +21,7 @@ export const GOVERNED_ROUTE_FILES = Object.freeze({
   'server/routes/platformAccess.js': '/api/platform',
   'server/routes/careerMaster.js': '/api/career',
   'server/routes/sharedOutputs.js': '/api/shared-outputs',
+  'server/routes/releaseIntelligence.js': '/api/release-intelligence',
 });
 
 /** For files governed only in part: file -> pattern a route (`METHOD /full/path`) must match to be governed.
@@ -120,6 +121,14 @@ export const CAPABILITIES = Object.freeze([
   { key: 'release-loop-escalations', title: 'List escalations (admin)', group: 'Release loop', ui: `${WS} > Journeys > Release loop > Escalations`, api: ['GET /api/release-loop/escalations'], mcp: ['release_loop_list_escalations'] },
   // ── Release tracker ───────────────────────────────────────────────────────
   { key: 'release-tracker-read', title: 'Read release records (admin)', group: 'Release tracker', ui: `${WS} > Journeys > Release Intelligence`, api: ['GET /api/release-intelligence/releases', 'GET /api/release-intelligence/releases/:id'], mcp: ['release_tracker_read'] },
+  { key: 'release-create', title: 'Create a release record (admin)', group: 'Release tracker', ui: `${WS} > Journeys > Release Intelligence`, api: ['POST /api/release-intelligence/releases'], mcp: ['release_create'] },
+  { key: 'release-feature-add', title: 'Add a feature to a release (admin)', group: 'Release tracker', ui: `${WS} > Journeys > Release Intelligence`, api: ['POST /api/release-intelligence/releases/:id/features'], mcp: ['release_feature_add'] },
+  { key: 'release-approve', title: 'Approve or reopen a release (admin)', group: 'Release tracker', ui: `${WS} > Journeys > Release Intelligence`, api: ['POST /api/release-intelligence/releases/:id/approve', 'POST /api/release-intelligence/releases/:id/reopen'], mcp: ['release_approve', 'release_reopen'] },
+  { key: 'release-failed-runs', title: 'List, record and dispose failed runs (admin)', group: 'Release tracker', ui: `${WS} > Journeys > Release Intelligence`, api: ['GET /api/release-intelligence/failed-runs', 'POST /api/release-intelligence/failed-runs', 'PUT /api/release-intelligence/failed-runs/:id/disposition'], mcp: ['release_failed_runs_list', 'release_failed_run_record', 'release_failed_run_dispose'] },
+  { key: 'release-outputs', title: 'List outputs and link them to releases (admin)', group: 'Release tracker', ui: `${WS} > Journeys > Release Intelligence`, api: ['GET /api/release-intelligence/outputs', 'PUT /api/release-intelligence/outputs/:id/release'], mcp: ['release_outputs_list', 'release_output_link'] },
+  { key: 'release-trends', title: 'Read contribution trends (admin)', group: 'Release tracker', ui: `${WS} > Journeys > Release Intelligence`, api: ['GET /api/release-intelligence/trends'], mcp: ['release_trends_read'] },
+  { key: 'release-import', title: 'Import release documents, snapshots and repository logs (admin)', group: 'Release tracker', ui: `${WS} > Journeys > Release Intelligence`, api: ['POST /api/release-intelligence/import/document', 'POST /api/release-intelligence/import/snapshot', 'POST /api/release-intelligence/import/repository'], mcp: ['release_import_document', 'release_import_snapshot', 'release_import_repository'] },
+  { key: 'release-config', title: 'Read, save and reset the tracker rules (admin)', group: 'Release tracker', ui: `${WS} > Journeys > Release Intelligence`, api: ['GET /api/release-intelligence/config', 'PUT /api/release-intelligence/config', 'DELETE /api/release-intelligence/config'], mcp: ['release_config_read', 'release_config_save', 'release_config_reset'] },
 
   // ── Platform access (this feature) ────────────────────────────────────────
   { key: 'access-tokens', title: 'Create, list and revoke access tokens', group: 'Platform access', ui: `${WS} > Journeys > Connected Agents`, api: ['GET /api/platform/tokens', 'POST /api/platform/tokens', 'DELETE /api/platform/tokens/:id'], mcp: null, mcpExclusion: 'Credentials are managed by a signed-in person in the website; a token can never mint or revoke tokens.' },

@@ -20,6 +20,7 @@ export const MCP_SCOPES = Object.freeze({
   'career.write': 'Track opportunities, save new draft versions, and ask the cover-letter agent for edits',
   'outputs.approve': 'Approve an output for its QR link (runs the finalization gate, same as the website)',
   'release.read': 'Read release records and the release tracker (administrators only)',
+  'release.write': 'Create, reconcile, approve and import release records, dispose failed runs and edit the tracker rules (administrators only)',
   'release.loop.read': 'Read the release loop definition, runs, bugs and escalations (administrators only)',
   'release.loop.write': 'Change the release loop definition and drive runs, rounds, bugs and reconciliation (administrators only)',
 });
@@ -44,6 +45,15 @@ const rlLoop = () => import('./releaseLoopPlatform.js');
 const rlDef = () => import('./releaseLoopDefinition.js');
 const rlObj = (description) => ({ type: 'object', description, additionalProperties: true });
 const rlTool = (name, title, description, inputSchema, scope, api, handler) => ({ name, title, description: `Administrators only. ${description}`, inputSchema, scope, permission: 'admin', api, handler });
+
+
+/** Release intelligence tools: same functions, validation and error statuses as server/routes/releaseIntelligence.js; the admin check is the registry's permission. */
+const riLib = () => import('./releaseIntelligence.js');
+const riImp = () => import('./releaseLogImporter.js');
+const riCfg = () => import('./releaseIntelligenceConfig.js');
+const riBad = (message) => Object.assign(new Error(message), { status: 400, code: 'bad_request' });
+const riTool = (name, title, description, inputSchema, scope, api, handler) => rlTool(name, title, description, inputSchema, scope, api, handler);
+const RI = 'release.write';
 
 const CORE_TOOLS = [
   {
@@ -722,6 +732,69 @@ const CORE_TOOLS = [
       return detail;
     },
   },
+  riTool('release_create', 'Create a release record', 'Creates a release record. Same body as POST /api/release-intelligence/releases.',
+    schema({ release: rlObj('The release fields the Release Intelligence screen sends.') }, ['release']), RI, 'POST /api/release-intelligence/releases',
+    async (args, { user }) => (await riLib()).createRelease(args.release || {}, rlActor(user))),
+  riTool('release_feature_add', 'Add a feature to a release', 'Adds a manual feature to a release record.',
+    schema({ releaseId: id('The release id.'), feature: rlObj('The feature fields (same body as POST /api/release-intelligence/releases/:id/features).') }, ['releaseId', 'feature']), RI, 'POST /api/release-intelligence/releases/:id/features',
+    async (args, { user }) => (await riLib()).addManualFeature(args.releaseId, args.feature || {}, rlActor(user))),
+  riTool('release_approve', 'Approve a release', 'Finalizes the reconciliation of a release. Runs the finalization gate first and is refused with 409 while a gate is open.',
+    schema({ releaseId: id('The release id.'), note: str('Approval note.', { maxLength: 2000 }) }, ['releaseId']), RI, 'POST /api/release-intelligence/releases/:id/approve',
+    async (args, { user }) => {
+      const { assertReadyToFinalize } = await import('./finalizationGates.js');
+      await assertReadyToFinalize(user.id);
+      return (await riLib()).approveRelease(args.releaseId, args.note, rlActor(user));
+    }),
+  riTool('release_reopen', 'Reopen a release', 'Reopens an approved release record.',
+    schema({ releaseId: id('The release id.'), note: str('Why.', { maxLength: 2000 }) }, ['releaseId']), RI, 'POST /api/release-intelligence/releases/:id/reopen',
+    async (args, { user }) => (await riLib()).reopenRelease(args.releaseId, args.note, rlActor(user))),
+  riTool('release_failed_runs_list', 'List failed runs', 'Lists failed, refused, partial or interrupted runs, optionally filtered (same query as GET /api/release-intelligence/failed-runs).',
+    schema({ filter: rlObj('Optional filter fields, as the query string of the route.') }), 'release.read', 'GET /api/release-intelligence/failed-runs',
+    async (args) => ({ runs: await (await riLib()).listFailedRuns(args.filter || {}) })),
+  riTool('release_failed_run_record', 'Record a failed run', 'Records a failed run by hand.',
+    schema({ run: rlObj('The failed-run fields (same body as POST /api/release-intelligence/failed-runs).') }, ['run']), RI, 'POST /api/release-intelligence/failed-runs',
+    async (args, { user }) => ({ id: await (await riLib()).addManualFailedRun(args.run || {}, rlActor(user)) })),
+  riTool('release_failed_run_dispose', 'Dispose a failed run', 'Sets a reviewer disposition (with a note) on a failed run.',
+    schema({ runId: id('The failed run id.'), disposition: rlObj('The disposition fields (same body as PUT /api/release-intelligence/failed-runs/:id/disposition).') }, ['runId', 'disposition']), RI, 'PUT /api/release-intelligence/failed-runs/:id/disposition',
+    async (args, { user }) => (await riLib()).setDisposition(args.runId, args.disposition || {}, rlActor(user))),
+  riTool('release_outputs_list', 'List outputs and their release links', 'Lists outputs with the release each is linked to.',
+    schema({}), 'release.read', 'GET /api/release-intelligence/outputs',
+    async () => ({ outputs: await (await riLib()).listOutputs() })),
+  riTool('release_output_link', 'Link an output to a release', 'Links an output to a release, or unlinks it with a null releaseId.',
+    schema({ outputId: id('The output id.'), releaseId: { type: ['integer', 'null'], minimum: 1, description: 'The release id, or null to unlink.' } }, ['outputId']), RI, 'PUT /api/release-intelligence/outputs/:id/release',
+    async (args, { user }) => ({ outputs: await (await riLib()).linkOutput(args.outputId, args.releaseId || null, rlActor(user)) })),
+  riTool('release_trends_read', 'Read contribution trends', 'Returns the token, time and contribution trends.',
+    schema({}), 'release.read', 'GET /api/release-intelligence/trends',
+    async () => (await riLib()).getTrends()),
+  riTool('release_import_document', 'Import a release document', 'Files one release-loop document (path and text) and attributes orphaned records.',
+    schema({ path: str('The document path.', { maxLength: 500 }), content: str('The document text.') }, ['path', 'content']), RI, 'POST /api/release-intelligence/import/document',
+    async (args, { user }) => {
+      if (!args.path || typeof args.content !== 'string' || !args.content.trim()) throw riBad('Give the document path and its text');
+      const imp = await riImp();
+      const result = await imp.importDocument(args.path, args.content, { actor: rlActor(user) });
+      return { ...result, attributed: await imp.attributeOrphans() };
+    }),
+  riTool('release_import_snapshot', 'Import a tracker snapshot', 'Files a release tracker snapshot (an object or a JSON string) under a release key.',
+    schema({ releaseKey: str('The release key.', { maxLength: 200 }), snapshot: { description: 'The snapshot, as an object or a JSON string.', type: ['object', 'string'] } }, ['releaseKey', 'snapshot']), RI, 'POST /api/release-intelligence/import/snapshot',
+    async (args, { user }) => {
+      let snap = args.snapshot;
+      if (typeof snap === 'string') { try { snap = JSON.parse(snap); } catch (e) { throw riBad(`The snapshot is not valid JSON: ${e.message}`); } }
+      const imp = await riImp();
+      const result = await imp.importSnapshot(String(args.releaseKey || '').trim(), snap, { actor: rlActor(user) });
+      return { ...result, attributed: await imp.attributeOrphans() };
+    }),
+  riTool('release_import_repository', 'Import release logs from the repository', 'Files the release-loop logs found under the server\'s own repository checkout. Takes no path.',
+    schema({}), RI, 'POST /api/release-intelligence/import/repository',
+    async (_args, { user }) => (await riImp()).importRepository((await import('node:path')).resolve(process.cwd()), { actor: rlActor(user) })),
+  riTool('release_config_read', 'Read the tracker rules', 'Returns the effective rules, the defaults and whether an override is stored.',
+    schema({}), 'release.read', 'GET /api/release-intelligence/config',
+    async () => { const c = await riCfg(); const { rules, overrideError, overridden } = await c.loadRules(); return { rules, defaults: c.DEFAULT_RULES, overrideError, overridden }; }),
+  riTool('release_config_save', 'Save the tracker rules', 'Saves the complete rules; invalid rules are refused with the problems listed.',
+    schema({ rules: rlObj('The complete rules, as returned by release_config_read.') }, ['rules']), RI, 'PUT /api/release-intelligence/config',
+    async (args) => ({ rules: await (await riCfg()).saveRules(args.rules) })),
+  riTool('release_config_reset', 'Reset the tracker rules', 'Removes the stored override so the shipped defaults apply.',
+    schema({}), RI, 'DELETE /api/release-intelligence/config',
+    async () => { await (await riCfg()).resetRules(); return { ok: true }; }),
   rlTool('release_loop_get_definition', 'Read the release loop definition', 'Returns the effective definition (roles, stages, gates), its version history and the platform agents.',
     schema({}), 'release.loop.read', 'GET /api/release-loop/definition',
     async () => (await rlLoop()).getDefinitionView()),
