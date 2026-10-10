@@ -476,6 +476,34 @@
           "reason": "Owner feedback 2026-10-10: the World view is a disconnected 3D orbit; nobody can tell what objects are or where navigation goes. It must be the whole view, where objects take the user to a view of data with related-data highlights and journey-specific highlights for historic and current state."
         }
       ]
+    },
+    {
+      "key": "journey-flow-import-existing",
+      "title": "Import Salt Basin's existing workflows as published process flows linked to the working screens, APIs, MCP tools and UX states",
+      "trainingSpec": "docs/training/journey-flow-import-existing.md",
+      "changeSpec": "docs/changes/journey-flow-import-existing.md",
+      "build": "Depends on journey-flow-studio and journey-flow-experience-mapping being on the integration branch (start from their code; if either is missing, stop and report). Build a deterministic importer (server function + scripts/import-existing-journey-flows.mjs, also an API route and an MCP tool, and a 'Import existing workflows' action in the studio) that generates versioned, PUBLISHED flows from the platform's own registries and code (never hand-drawn, never invented), each node carrying provenance (source file and symbol) and structured bindings: capability key (server/lib/capabilityParity.js), API route(s), MCP tool(s) (server/lib/mcpToolRegistry.js), World Shell layer / deep link (src/lib/worldLayers.js, /world?at=...), the UX state shown (screen + state, e.g. gate page, empty state, approved), actor/permission, system of record, and the live status of that step today (its feature's latest validated score from docs/release-log/active-release.state.json, parity gaps from capabilityParity, open bugs). Flows to import, at minimum: (1) member sign-in and first steps (forced password change, platform + Career Portfolio terms gate via getAccountGateBlock, World Shell); (2) career opportunity pipeline (career_opportunity_target stages from careerOpportunityRollups.js ALLOWED_TRANSITIONS, scoring, cover-letter auto draft, application outputs, editor, approve for QR, /r/ share, revoke); (3) Career Master intake -> Career Atom sync -> rollups -> public showcase; (4) the release loop (server/data/releaseLoop/definition.json stages, gates, escalations); (5) render-binding change: live path vs approval path; (6) agent runner work order lifecycle (agentRunner.js); (7) platform MCP: create access token -> call tool -> scope/role/gate checks. Each published flow opens in the studio with its nodes clickable through to the real screen (deep link), its API/MCP listed, and steps whose feature is failing or has a parity gap visibly marked (honest: 'not validated' is never shown as passing). Re-running the importer after code changes produces a new flow version with a diff (global change standard preview), never a silent overwrite of edits a person made. Fictional data only. Interface parity (desktop + 390px, API, MCP). Write docs/changes/journey-flow-import-existing.md and docs/training/journey-flow-import-existing.md, freeze baseline v1.",
+      "dependsOn": [
+        "journey-flow-studio",
+        "journey-flow-experience-mapping"
+      ],
+      "kind": "new",
+      "scope": "planned",
+      "added": {
+        "at": "2026-10-10T21:10:10.480Z",
+        "commit": "d703402",
+        "decidedBy": "owner",
+        "reason": "Owner request 2026-10-10: import process flows for the existing workflows in Salt Basin to show how a published process flow links to the existing working workflows and user experience states today."
+      },
+      "scopeHistory": [
+        {
+          "at": "2026-10-10T21:10:10.480Z",
+          "from": null,
+          "to": "planned",
+          "decidedBy": "owner",
+          "reason": "Owner request 2026-10-10: import process flows for the existing workflows in Salt Basin to show how a published process flow links to the existing working workflows and user experience states today."
+        }
+      ]
     }
   ],
   "startedAtCommit": "4df3ff7",
