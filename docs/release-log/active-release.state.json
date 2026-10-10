@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T00:53:22.740Z",
+  "exportedAt": "2026-10-10T00:56:41.240Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -50,11 +50,11 @@
       "backlog": 4
     },
     "chart-gallery": {
-      "status": "reconcile",
+      "status": "integrate",
       "lastRound": 4,
       "lastScore": "17/20",
       "lastReport": "docs/test-results/chart-gallery/round-4.md",
-      "openBugs": 18,
+      "openBugs": 24,
       "backlog": 7
     },
     "output-version-history": {
@@ -122,7 +122,7 @@
       "backlog": 2
     },
     "world-shell-layers": {
-      "status": "build",
+      "status": "reconcile",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -4525,6 +4525,136 @@
           "round": 3,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-F4-1",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "J2.2 phone",
+      "rootCause": "Fix applied on an unconfirmed root cause",
+      "files": [
+        "src/components/Output.jsx",
+        "src/lib/careerCharts.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-F4-3",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "J2.3 phone",
+      "rootCause": "Mobile nav JSX never written",
+      "files": [
+        "src/components/admin/AdminShell.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-F4-4",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "E.4",
+      "rootCause": "falsy check on interpolate input",
+      "files": [
+        "src/lib/outputBlocks.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-F4-5",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "MCP",
+      "rootCause": "Interface parity not built",
+      "files": [
+        "server/lib/mcpToolRegistry.js",
+        "server/lib/capabilityParity.js",
+        "server/data/mcpToolManifest.json"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-F4-6",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "atom sync (known limitation)",
+      "rootCause": "boolean bound to $3::jsonb",
+      "files": [
+        "server/lib/careerAtomMigration.js",
+        "server/lib/careerAtomRegistry.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-F4-7",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "test_harness",
+      "attempts": 0,
+      "step": "E.5",
+      "rootCause": "Spec wording gap",
+      "files": [
+        "docs/spec-amendments/chart-gallery/"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (te…",
           "commit": null
         }
       ]
