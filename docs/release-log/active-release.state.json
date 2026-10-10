@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T00:50:03.352Z",
+  "exportedAt": "2026-10-10T00:53:22.740Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -34,7 +34,7 @@
       "backlog": 14
     },
     "no-silent-failures": {
-      "status": "amend",
+      "status": "validate",
       "lastRound": 2,
       "lastScore": "24/29",
       "lastReport": "docs/test-results/no-silent-failures/round-2.md",
@@ -50,12 +50,12 @@
       "backlog": 4
     },
     "chart-gallery": {
-      "status": "scope",
+      "status": "reconcile",
       "lastRound": 4,
       "lastScore": "17/20",
       "lastReport": "docs/test-results/chart-gallery/round-4.md",
-      "openBugs": 19,
-      "backlog": 6
+      "openBugs": 18,
+      "backlog": 7
     },
     "output-version-history": {
       "status": "failing",
@@ -66,7 +66,7 @@
       "backlog": 6
     },
     "resume-rollups": {
-      "status": "awaiting_retest",
+      "status": "validate",
       "lastRound": 2,
       "lastScore": "30/32",
       "lastReport": "docs/test-results/resume-rollups/round-2.md",
@@ -74,11 +74,11 @@
       "backlog": 5
     },
     "release-intelligence": {
-      "status": "reconcile",
+      "status": "awaiting_retest",
       "lastRound": 2,
       "lastScore": "55/55",
       "lastReport": "docs/test-results/release-intelligence/round-2.md",
-      "openBugs": 9,
+      "openBugs": 10,
       "backlog": 1
     },
     "cover-letter-agent": {
@@ -98,12 +98,12 @@
       "backlog": 1
     },
     "session-mapping": {
-      "status": "failing",
+      "status": "fix",
       "lastRound": 1,
       "lastScore": "56/56",
       "lastReport": "docs/test-results/session-mapping/round-1.md",
-      "openBugs": 5,
-      "backlog": 0
+      "openBugs": 4,
+      "backlog": 1
     },
     "live-release-tracker": {
       "status": "validate",
@@ -4669,18 +4669,26 @@
     {
       "id": "chart-gallery-CG-R2b-3",
       "feature": "chart-gallery",
-      "status": "backlog_pre_existing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Skill strength chart fits inside Live Preview, no horizontal scroll (phone 390px)",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "Output.jsx OutputAuthorshipFooter chip spans (line ~109) keep whiteSpace nowrap; two chips are ~350px in a 316px preview column so the prev…",
+      "files": [
+        "src/components/Output.jsx"
+      ],
       "scope": {
-        "scope": "pre_existing",
+        "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "Could not reproduce on base a5e7883. Footer code is identical at base, but the chips are …"
       },
       "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "src/components/Output.jsx OutputAuthorshipFooter() (lines ~…",
+          "commit": null
+        },
         {
           "round": 3,
           "event": "recurred",
@@ -4692,6 +4700,12 @@
           "event": "recurred",
           "note": "Output.jsx OutputAuthorshipFooter chip spans (line ~109) ke…",
           "commit": null
+        },
+        {
+          "round": 4,
+          "event": "fixed",
+          "note": "Authorship footer chips wrap instead of nowrap (whiteSpace …",
+          "commit": "673b364bb300a940236ab1a20afa5243bf6cc440"
         }
       ]
     },
@@ -4732,7 +4746,7 @@
       "files": [],
       "scope": {
         "scope": "pre_existing",
-        "owner": "platform-mcp",
+        "owner": null,
         "evidence": null
       },
       "history": [
@@ -4837,16 +4851,17 @@
     {
       "id": "chart-gallery-CG-R4-1",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "backlog_pre_existing",
       "class": "defect",
       "attempts": 0,
       "step": "MCP_GAP: career_rollups_read returns different data than the UI",
-      "rootCause": "mcpRouteTools.js line 67 invokes GET /api/career/rollups with empty query; careerMaster.js resolveOwnerUserId(undefined) falls through to t…",
-      "files": [
-        "server/lib/mcpRouteTools.js",
-        "server/routes/careerMaster.js"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 4,
@@ -4859,16 +4874,17 @@
     {
       "id": "chart-gallery-CG-R4-2",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "backlog_pre_existing",
       "class": "defect",
       "attempts": 0,
       "step": "Outside baseline: atom sync fails with cannot cast type boolean to jsonb (F2-2/F3-8)",
-      "rootCause": "careerAtomMigration.js lines 63 and 102 bind a JS boolean rawValue to $3::jsonb; Postgres has no bool-to-jsonb cast. Errors are only consol…",
-      "files": [
-        "server/lib/careerAtomMigration.js",
-        "server/routes/careerMaster.js"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 4,
@@ -4881,21 +4897,31 @@
     {
       "id": "chart-gallery-CG-R4-3",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Outside baseline: Edit/Done button aria-label (F3-7)",
       "rootCause": "ChartGallery.jsx line 381 sets aria-label 'Edit <title>' on a button whose visible text toggles to 'Done'; accessible name does not contain…",
       "files": [
         "src/components/ChartGallery.jsx"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "ChartGallery.jsx line 381 blames to 6dd06e5, the feature's own file. The aria-label 'Edit…"
+      },
       "history": [
         {
           "round": 4,
           "event": "found",
           "note": "ChartGallery.jsx line 381 sets aria-label 'Edit <title>' on…",
           "commit": null
+        },
+        {
+          "round": 4,
+          "event": "fixed",
+          "note": "Edit/Done button aria-label now follows state (Edit <title>…",
+          "commit": "673b364bb300a940236ab1a20afa5243bf6cc440"
         }
       ]
     },
@@ -4910,7 +4936,11 @@
       "files": [
         "docs/training/chart-gallery.md"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Step [E.5] in docs/training/chart-gallery.md was written by the feature and names only ER…"
+      },
       "history": [
         {
           "round": 4,
@@ -6065,6 +6095,25 @@
           "round": 1,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-intelligence-F2-2",
+      "feature": "release-intelligence",
+      "status": "open",
+      "class": "informational",
+      "attempts": 0,
+      "step": "Known limitations: approval",
+      "rootCause": "Single-approver design.",
+      "files": [],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (in…",
           "commit": null
         }
       ]
@@ -7307,7 +7356,7 @@
     {
       "id": "session-mapping-B5",
       "feature": "session-mapping",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "MCP parity",
@@ -7330,7 +7379,7 @@
     {
       "id": "session-mapping-B7",
       "feature": "session-mapping",
-      "status": "open",
+      "status": "fixing",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Admin navigation entry points",
@@ -7353,7 +7402,7 @@
     {
       "id": "session-mapping-B8",
       "feature": "session-mapping",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "SessionEnd hook capture",
@@ -7376,7 +7425,7 @@
     {
       "id": "session-mapping-T1",
       "feature": "session-mapping",
-      "status": "open",
+      "status": "fixing",
       "class": "defect",
       "attempts": 0,
       "step": "MCP_GAP: no session_mapping_* MCP tools (open bug session-mapping-B5)",
@@ -7386,7 +7435,11 @@
         "server/data/mcpToolManifest.json",
         "server/lib/capabilityParity.js"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Registry commit b77049b (platform-mcp, 2026-10-09 16:34) predates session-mapping build 3…"
+      },
       "history": [
         {
           "round": 1,
@@ -7399,16 +7452,17 @@
     {
       "id": "session-mapping-T2",
       "feature": "session-mapping",
-      "status": "open",
+      "status": "backlog_pre_existing",
       "class": "environment",
       "attempts": 0,
       "step": "SessionEnd hook captures nothing when DATABASE_URL is unset (B8, no baseline step)",
-      "rootCause": "scripts/analyze-session.mjs --hook files via server/db.js, which throws at line 46 when DATABASE_URL is unset. dotenv reads only .env, and …",
-      "files": [
-        "scripts/analyze-session.mjs",
-        "server/db.js"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 1,
