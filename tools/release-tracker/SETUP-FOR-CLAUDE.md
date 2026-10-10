@@ -265,6 +265,9 @@ a.spark:hover, a.spark:focus-visible { border-color: var(--teal); }
 .spark .v { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .spark svg { display: block; width: 100%; height: 34px; margin-top: 4px; }
 .tableview { overflow-x: auto; }
+.relpick { font: 500 13px var(--body); color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.relpick select { font: 500 13px var(--body); border: 1px solid var(--line); border-radius: 999px; background: var(--panel-2); color: var(--ink); padding: 6px 12px; min-height: 34px; max-width: 100%; }
+.frozen-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; margin: 0 0 14px; }
 .head-right { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
 /* World view: the same data as Salt Basin crystals. */
 .world { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 0; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--panel); min-height: 640px; }
@@ -332,6 +335,7 @@ a.spark:hover, a.spark:focus-visible { border-color: var(--teal); }
     </div>
     <div class="head-right">
       <div class="seg" role="group" aria-label="View"><button type="button" data-mode="board" aria-pressed="true">Board</button><button type="button" data-mode="world" aria-pressed="false">World</button></div>
+      <label class="relpick">Release <select id="release" aria-label="Release"><option value="">Live release</option></select></label>
       <div class="sync" id="sync"><span class="live-dot"></span>Waiting for the first update…</div>
     </div>
   </header>
@@ -392,6 +396,25 @@ const STATS = {
   tokens: { label: 'Tokens out / cache read', tone: '', count: (s) => `${k(s.totals?.output)} / ${k(s.totals?.cacheRead)}`, list: 'agents', pick: (s) => [...s.agents].sort((a, b) => (b.tokens?.output || 0) - (a.tokens?.output || 0)), note: 'Every agent run, most output tokens first.' },
 };
 
+// Release scope (server/lib/releaseScope.js): planned = this release's work, added = joined after the cut,
+// backlog = kept on the record but not this release's work. Snapshots from before scopes existed show one list.
+function scopeGroups(s) {
+  const kinds = s.release?.kinds || {}; const out = { planned: [], added: [], backlog: [], other: [] };
+  for (const f of s.features || []) {
+    const sc = f.scope || (kinds[f.key] === 'carried_backlog' ? 'backlog' : kinds[f.key] ? 'planned' : 'not_in_release');
+    if (f.added) out.added.push(f); else if (sc === 'backlog') out.backlog.push(f); else if (sc === 'planned') out.planned.push(f); else out.other.push(f);
+  }
+  return out;
+}
+function featureSections(s) {
+  if (!(s.features || []).some((f) => f.scope)) return section('Features', featureRows(s.features));
+  const g = scopeGroups(s); const done = g.planned.filter((f) => f.status === 'passed' || f.status === 'passed_with_backlog').length;
+  const addedNote = g.added.length ? `<div class="panel muted" style="margin-bottom:8px">${g.added.map((f) => `<div style="margin-bottom:6px"><b>${esc(f.key)}</b> · added ${esc(String(f.added.at || '').slice(0, 10))}${f.added.commit ? ` (${esc(f.added.commit)})` : ''} · ${f.scope === 'planned' ? 'counted in this release' : 'kept in backlog'} · ${esc(f.added.reason || '')}</div>`).join('')}</div>` : '';
+  return section(`Planned at the cut: ${done} of ${g.planned.length} passed`, featureRows(g.planned))
+    + (g.added.length ? section(`Added after the cut (${g.added.length})`, addedNote + featureRows(g.added)) : '')
+    + section(`Backlog: kept on the record, not this release's work (${g.backlog.length})`, featureRows(g.backlog))
+    + (g.other.length ? section(`Other tracked work (${g.other.length})`, featureRows(g.other)) : '');
+}
 function featureRows(list) {
   if (!list.length) return '<div class="panel empty">Nothing here.</div>';
   return `<div class="panel"><table><thead><tr><th>Feature</th><th>Status</th><th>Latest test</th><th class="num">Rounds</th><th>Its own bugs verified</th></tr></thead><tbody>${list.map((f) => {
@@ -974,16 +997,43 @@ function renderWorld(layer) {
   $('world-panel').innerHTML = path.length ? `${mapSec}<div class="layer">${layer.html}</div>` : worldOverviewPanel(g);
 }
 
+// Releases (releases/index) and session estimates (snapshot.sessions, from scripts/session-plan.mjs).
+let RELEASES = null; let VIEWING = null; const FROZEN = {};
+function releasesTable() {
+  const list = RELEASES?.releases || [];
+  if (!list.length) return '<div class="panel empty">No release has been frozen yet.</div>';
+  return `<div class="panel"><table><thead><tr><th>Release</th><th>State</th><th class="num">Planned</th><th class="num">Delivered</th><th class="num">Carried to next</th><th class="num">Bugs verified / open</th><th class="num">Sessions</th></tr></thead><tbody>${list.map((r) => {
+    const live = r.state === 'open';
+    const cur = live && snap && !VIEWING ? (({ planned, added }) => [...planned, ...added.filter((f) => f.scope === 'planned')])(scopeGroups(snap)) : null;   // planned at the cut + added into planned
+    const planned = live ? (cur ? cur.length : '—') : r.planned;
+    const delivered = live ? (cur ? cur.filter((f) => f.status === 'passed' || f.status === 'passed_with_backlog').length : '—') : r.delivered;
+    return `<tr><td><b>${esc(r.version)}</b><div class="muted">${esc(r.title || r.release || '')}</div></td><td data-label="State">${live ? 'Open (live)' : `Frozen ${esc(String(r.frozenAt || '').slice(0, 10))}`}</td><td class="num" data-label="Planned">${esc(planned)}</td><td class="num" data-label="Delivered">${esc(delivered)}</td><td class="num" data-label="Carried to next">${live ? '—' : esc(r.carried)}</td><td class="num" data-label="Bugs verified / open">${live ? '—' : `${esc(r.bugsVerified)} / ${esc(r.bugsOpen)}`}</td><td class="num" data-label="Sessions">${esc(live ? (snap?.sessions?.length ?? 0) : r.sessions)}</td></tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+function sessionsTable(list) {
+  if (!list || !list.length) return `<div class="panel empty">${VIEWING ? 'No session estimates were recorded in this release (they start in 0.3.0).' : 'No session has recorded an estimate yet. Before starting work, run scripts/session-plan.mjs estimate.'}</div>`;
+  const rows = list.flatMap((p) => (p.estimate?.items || []).map((it) => {
+    const res = [...(p.merges || [])].reverse().flatMap((m) => m.results || []).find((r) => r.feature === it.feature);
+    const exp = it.expect ? `${it.expect.passed}/${it.expect.total}` : '—';
+    const act = res && res.passed != null ? `${res.passed}/${res.total}` : 'not validated';
+    const met = it.expect && res && res.passed != null ? (res.passed >= it.expect.passed && res.total === it.expect.total) : null;
+    return `<tr><td class="mono">${esc(p.session)}<div class="muted">${esc(p.intent || '')}</div></td><td data-label="Feature">${esc(it.feature)}${it.outOfScope ? ' <span class="muted">(backlog, outside planned scope)</span>' : ''}<div class="muted">${esc(it.goal || '')}</div></td><td data-label="Size">${esc(it.size || '—')}</td><td class="num" data-label="Expected">${esc(exp)}</td><td class="num" data-label="At last merge">${esc(act)}${res?.round ? `<div class="muted">round ${esc(res.round)}</div>` : ''}</td><td class="num" data-label="Merges">${esc((p.merges || []).length)}</td><td data-label="Result">${met === null ? '<span class="muted">—</span>' : met ? '<b>Met</b>' : '<b>Missed</b>'}</td></tr>`;
+  }));
+  return `<div class="panel"><table><thead><tr><th>Session</th><th>Feature and goal</th><th>Size</th><th class="num">Expected</th><th class="num">At last merge</th><th class="num">Merges</th><th>Result</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
+}
 const LAYERS = {
   '': () => {
     const s = snap; const human = STATS.human.count(s);
     const ups = s.updates || []; const u = ups[ups.length - 1];
     return { crumbs: [], html: `
+      ${VIEWING ? `<div class="frozen-note"><b>Release ${esc(VIEWING)} is frozen.</b> This is its final state, recorded ${esc(String(FROZEN[VIEWING]?.frozenAt || '').replace('T', ' ').slice(0, 16))} UTC at commit ${esc(FROZEN[VIEWING]?.frozenCommit || '')}. Nothing here changes; unfinished work moved to the next release.</div>` : ''}
       ${trendsHtml()}
+      ${section('Releases: features delivered per release', releasesTable())}
+      ${section('Sessions: estimate before the work, test results at each merge', sessionsTable(s.sessions))}
       <div class="strip">${Object.entries(STATS).map(([key, st]) => `<a class="stat ${st.tone}" href="${href('stat', key)}"><div class="n">${esc(st.count(s))}</div><div class="l">${esc(st.label)}</div><div class="go">Open ›</div></a>`).join('')}</div>
       ${human ? `<a class="callout" style="display:block;text-decoration:none" href="${href('stat', 'human')}"><b>${human} ${human === 1 ? 'bug needs' : 'bugs need'} a person.</b> Open them ›</a>` : ''}
       ${section('Agents working now', agentCards(s.agents.filter((a) => a.status === 'running')))}
-      ${section('Features', featureRows(s.features))}` };
+      ${featureSections(s)}` };
   },
   stat: ([key]) => {
     const st = STATS[key]; if (!st) return null;
@@ -1093,7 +1143,7 @@ function route() {
   document.title = `${trail[trail.length - 1][0]} · Release tracker`;
 }
 function render() {
-  if (!snap) return;
+  if (!snap || VIEWING) return;
   const age = (Date.now() - Date.parse(snap.syncedAt)) / 60000;
   $('sync').className = `sync${age > 20 ? ' stale' : ''}`;
   $('sync').innerHTML = `<span class="live-dot"></span>Updated <b>${esc(ago(snap.syncedAt))}</b>`;
@@ -1117,20 +1167,42 @@ try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () =
 (async () => {
   const db = await claude.use('db');
   if (!db) { $('sync').textContent = 'Live updates are unavailable in this view. Open the tracker signed in to claude.ai.'; return; }
-  db.doc('tracker/history').onSnapshot((d) => {
-    const data = d && (d.data ? d.data() : d);
-    if (data && data.json) { try { hist = JSON.parse(data.json); if (snap) render(); } catch { /* keep the last good history */ } }
-  }, () => {});
-  // Bugs live in their own document (tracker/bugs) so each document stays under the size cap.
-  let bugs = null;
-  db.doc('tracker/bugs').onSnapshot((d) => {
-    const data = d && (d.data ? d.data() : d);
-    if (data && data.json) { try { bugs = JSON.parse(data.json); if (snap && snap.bugsSeparate) { snap.bugs = bugs; render(); } } catch { /* keep the last good list */ } }
-  }, () => {});
+  // Live release: tracker/current, tracker/bugs, tracker/history. A frozen release: releases/<v>-current|-bugs|-history.
+  // Bugs may span two documents (<bugs> and <bugs>-2) so each stays under the per-document size limit.
+  const live = { snap: null, bugs: null, bugs2: [], hist: null }; const frozen = {};
+  const parse = (d) => { const data = d && (d.data ? d.data() : d); if (!data || !data.json) return null; try { return JSON.parse(data.json); } catch { return null; } };
+  const show = () => {
+    const src = VIEWING ? frozen[VIEWING] : live;
+    if (!src || !src.snap) { if (VIEWING) $('view').innerHTML = '<div class="panel empty">Loading the frozen release…</div>'; return; }
+    snap = { ...src.snap }; snap.features ||= []; snap.agents ||= []; snap.bugs = (snap.bugsSeparate ? (src.bugs ? [...src.bugs, ...(src.bugs2 || [])] : null) : snap.bugs) || []; snap.sessions ||= [];
+    hist = src.hist; if (chart) { chart.destroy(); chart = null; } if (typeof T === "object" && T) T.at = null;
+    if (VIEWING) { $('sync').className = 'sync'; $('sync').innerHTML = `Frozen release <b>${esc(VIEWING)}</b>`; route(); } else render();
+  };
+  db.doc('tracker/history').onSnapshot((d) => { const v = parse(d); if (v) { live.hist = v; if (!VIEWING) show(); } }, () => {});
+  db.doc('tracker/bugs').onSnapshot((d) => { const v = parse(d); if (v) { live.bugs = v; if (!VIEWING) show(); } }, () => {});
+  db.doc('tracker/bugs-2').onSnapshot((d) => { const v = parse(d); live.bugs2 = Array.isArray(v) ? v : []; if (!VIEWING && live.bugs) show(); }, () => {});
   db.doc('tracker/current').onSnapshot((d) => {
-    const data = d && (d.data ? d.data() : d);
-    if (data && data.json) { try { snap = JSON.parse(data.json); snap.features ||= []; snap.agents ||= []; if (snap.bugsSeparate) snap.bugs = bugs || []; snap.bugs ||= []; render(); } catch { $('sync').textContent = 'The latest update could not be read.'; } }
+    const v = parse(d);
+    if (v) { live.snap = v; if (!VIEWING) show(); } else if (!VIEWING) $('sync').textContent = 'The latest update could not be read.';
   }, () => { $('sync').textContent = 'Lost the live connection. Reload the page to reconnect.'; });
+  db.doc('releases/index').onSnapshot((d) => {
+    const v = parse(d); if (!v) return; RELEASES = v;
+    for (const r of v.releases) if (r.state === 'frozen') FROZEN[r.version] = r;
+    const sel = $('release'); const keep = sel.value;
+    sel.innerHTML = `<option value="">Live release${snap?.release?.version ? ` (${esc(snap.release.version)})` : ''}</option>${v.releases.filter((r) => r.state === 'frozen').map((r) => `<option value="${esc(r.version)}">${esc(r.version)} (frozen)</option>`).join('')}`;
+    sel.value = keep; if (snap) route();
+  }, () => {});
+  $('release').addEventListener('change', (e) => {
+    VIEWING = e.target.value || null; try { localStorage.setItem('rt-release', VIEWING || ''); } catch {}
+    if (VIEWING && !frozen[VIEWING]) {
+      const f = frozen[VIEWING] = { snap: null, bugs: null, bugs2: [], hist: null }; const v = VIEWING;
+      db.doc(`releases/${v}-current`).onSnapshot((d) => { f.snap = parse(d); if (VIEWING === v) show(); }, () => {});
+      db.doc(`releases/${v}-bugs`).onSnapshot((d) => { f.bugs = parse(d); if (VIEWING === v) show(); }, () => {});
+      db.doc(`releases/${v}-bugs-2`).onSnapshot((d) => { const x = parse(d); f.bugs2 = Array.isArray(x) ? x : []; if (VIEWING === v) show(); }, () => {});
+      db.doc(`releases/${v}-history`).onSnapshot((d) => { f.hist = parse(d); if (VIEWING === v) show(); }, () => {});
+    }
+    location.hash = '#/'; show();
+  });
 })();
 </script>
 ```

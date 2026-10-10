@@ -278,6 +278,25 @@ const STATS = {
   tokens: { label: 'Tokens out / cache read', tone: '', count: (s) => `${k(s.totals?.output)} / ${k(s.totals?.cacheRead)}`, list: 'agents', pick: (s) => [...s.agents].sort((a, b) => (b.tokens?.output || 0) - (a.tokens?.output || 0)), note: 'Every agent run, most output tokens first.' },
 };
 
+// Release scope (server/lib/releaseScope.js): planned = this release's work, added = joined after the cut,
+// backlog = kept on the record but not this release's work. Snapshots from before scopes existed show one list.
+function scopeGroups(s) {
+  const kinds = s.release?.kinds || {}; const out = { planned: [], added: [], backlog: [], other: [] };
+  for (const f of s.features || []) {
+    const sc = f.scope || (kinds[f.key] === 'carried_backlog' ? 'backlog' : kinds[f.key] ? 'planned' : 'not_in_release');
+    if (f.added) out.added.push(f); else if (sc === 'backlog') out.backlog.push(f); else if (sc === 'planned') out.planned.push(f); else out.other.push(f);
+  }
+  return out;
+}
+function featureSections(s) {
+  if (!(s.features || []).some((f) => f.scope)) return section('Features', featureRows(s.features));
+  const g = scopeGroups(s); const done = g.planned.filter((f) => f.status === 'passed' || f.status === 'passed_with_backlog').length;
+  const addedNote = g.added.length ? `<div class="panel muted" style="margin-bottom:8px">${g.added.map((f) => `<div style="margin-bottom:6px"><b>${esc(f.key)}</b> · added ${esc(String(f.added.at || '').slice(0, 10))}${f.added.commit ? ` (${esc(f.added.commit)})` : ''} · ${f.scope === 'planned' ? 'counted in this release' : 'kept in backlog'} · ${esc(f.added.reason || '')}</div>`).join('')}</div>` : '';
+  return section(`Planned at the cut: ${done} of ${g.planned.length} passed`, featureRows(g.planned))
+    + (g.added.length ? section(`Added after the cut (${g.added.length})`, addedNote + featureRows(g.added)) : '')
+    + section(`Backlog: kept on the record, not this release's work (${g.backlog.length})`, featureRows(g.backlog))
+    + (g.other.length ? section(`Other tracked work (${g.other.length})`, featureRows(g.other)) : '');
+}
 function featureRows(list) {
   if (!list.length) return '<div class="panel empty">Nothing here.</div>';
   return `<div class="panel"><table><thead><tr><th>Feature</th><th>Status</th><th>Latest test</th><th class="num">Rounds</th><th>Its own bugs verified</th></tr></thead><tbody>${list.map((f) => {
@@ -867,7 +886,7 @@ function releasesTable() {
   if (!list.length) return '<div class="panel empty">No release has been frozen yet.</div>';
   return `<div class="panel"><table><thead><tr><th>Release</th><th>State</th><th class="num">Planned</th><th class="num">Delivered</th><th class="num">Carried to next</th><th class="num">Bugs verified / open</th><th class="num">Sessions</th></tr></thead><tbody>${list.map((r) => {
     const live = r.state === 'open';
-    const cur = live && snap && !VIEWING ? snap.features.filter((f) => (snap.release?.kinds?.[f.key] || 'new') !== 'carried_backlog') : null;
+    const cur = live && snap && !VIEWING ? (({ planned, added }) => [...planned, ...added.filter((f) => f.scope === 'planned')])(scopeGroups(snap)) : null;   // planned at the cut + added into planned
     const planned = live ? (cur ? cur.length : '—') : r.planned;
     const delivered = live ? (cur ? cur.filter((f) => f.status === 'passed' || f.status === 'passed_with_backlog').length : '—') : r.delivered;
     return `<tr><td><b>${esc(r.version)}</b><div class="muted">${esc(r.title || r.release || '')}</div></td><td data-label="State">${live ? 'Open (live)' : `Frozen ${esc(String(r.frozenAt || '').slice(0, 10))}`}</td><td class="num" data-label="Planned">${esc(planned)}</td><td class="num" data-label="Delivered">${esc(delivered)}</td><td class="num" data-label="Carried to next">${live ? '—' : esc(r.carried)}</td><td class="num" data-label="Bugs verified / open">${live ? '—' : `${esc(r.bugsVerified)} / ${esc(r.bugsOpen)}`}</td><td class="num" data-label="Sessions">${esc(live ? (snap?.sessions?.length ?? 0) : r.sessions)}</td></tr>`;
@@ -880,7 +899,7 @@ function sessionsTable(list) {
     const exp = it.expect ? `${it.expect.passed}/${it.expect.total}` : '—';
     const act = res && res.passed != null ? `${res.passed}/${res.total}` : 'not validated';
     const met = it.expect && res && res.passed != null ? (res.passed >= it.expect.passed && res.total === it.expect.total) : null;
-    return `<tr><td class="mono">${esc(p.session)}<div class="muted">${esc(p.intent || '')}</div></td><td data-label="Feature">${esc(it.feature)}<div class="muted">${esc(it.goal || '')}</div></td><td data-label="Size">${esc(it.size || '—')}</td><td class="num" data-label="Expected">${esc(exp)}</td><td class="num" data-label="At last merge">${esc(act)}${res?.round ? `<div class="muted">round ${esc(res.round)}</div>` : ''}</td><td class="num" data-label="Merges">${esc((p.merges || []).length)}</td><td data-label="Result">${met === null ? '<span class="muted">—</span>' : met ? '<b>Met</b>' : '<b>Missed</b>'}</td></tr>`;
+    return `<tr><td class="mono">${esc(p.session)}<div class="muted">${esc(p.intent || '')}</div></td><td data-label="Feature">${esc(it.feature)}${it.outOfScope ? ' <span class="muted">(backlog, outside planned scope)</span>' : ''}<div class="muted">${esc(it.goal || '')}</div></td><td data-label="Size">${esc(it.size || '—')}</td><td class="num" data-label="Expected">${esc(exp)}</td><td class="num" data-label="At last merge">${esc(act)}${res?.round ? `<div class="muted">round ${esc(res.round)}</div>` : ''}</td><td class="num" data-label="Merges">${esc((p.merges || []).length)}</td><td data-label="Result">${met === null ? '<span class="muted">—</span>' : met ? '<b>Met</b>' : '<b>Missed</b>'}</td></tr>`;
   }));
   return `<div class="panel"><table><thead><tr><th>Session</th><th>Feature and goal</th><th>Size</th><th class="num">Expected</th><th class="num">At last merge</th><th class="num">Merges</th><th>Result</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
 }
@@ -896,7 +915,7 @@ const LAYERS = {
       <div class="strip">${Object.entries(STATS).map(([key, st]) => `<a class="stat ${st.tone}" href="${href('stat', key)}"><div class="n">${esc(st.count(s))}</div><div class="l">${esc(st.label)}</div><div class="go">Open ›</div></a>`).join('')}</div>
       ${human ? `<a class="callout" style="display:block;text-decoration:none" href="${href('stat', 'human')}"><b>${human} ${human === 1 ? 'bug needs' : 'bugs need'} a person.</b> Open them ›</a>` : ''}
       ${section('Agents working now', agentCards(s.agents.filter((a) => a.status === 'running')))}
-      ${section('Features', featureRows(s.features))}` };
+      ${featureSections(s)}` };
   },
   stat: ([key]) => {
     const st = STATS[key]; if (!st) return null;

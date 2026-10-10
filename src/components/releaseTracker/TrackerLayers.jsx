@@ -3,6 +3,7 @@
 // { crumbs: [[label, href?]...], node } or null when the item no longer exists.
 import React from 'react';
 import TrackerTrends from './TrackerTrends.jsx';
+import { groupByScope } from '../../../server/lib/releaseScope.js';
 import {
   STATS, STATUS, SCOPE, EVENT, BACKLOG, ROLE, statusText, isRunningLabel, sortBugs, ownBugs, agentName, ago, k, updateLabel,
 } from '../../lib/releaseTrackerModel.js';
@@ -20,6 +21,32 @@ const RowLink = ({ href, children }) => (
   <tr className="rt-rowlink" onClick={(e) => { if (e.target.closest('a')) return; go(href); }}>{children}</tr>
 );
 const Commit = ({ snap, c }) => (c ? <> <a className="rt-mono" href={`${snap.repoUrl || ''}/commit/${c}`} target="_blank" rel="noopener noreferrer">{String(c).slice(0, 7)}</a></> : null);
+
+// Release scope (server/lib/releaseScope.js): planned = this release's work, added = joined after the cut,
+// backlog = kept on the record but not this release's work. Snapshots from before scopes existed show one list.
+function FeatureSections({ snap, ctx }) {
+  const list = snap.features || [];
+  if (!list.some((f) => f.scope)) return <Section title="Features"><FeatureRows list={list} ctx={ctx} /></Section>;
+  const other = list.filter((f) => f.scope === 'not_in_release');
+  const g = groupByScope(list.filter((f) => f.scope !== 'not_in_release'));
+  const { planned } = g;
+  const done = planned.filter((f) => f.status === 'passed' || f.status === 'passed_with_backlog').length;
+  return (
+    <>
+      <Section title={`Planned at the cut: ${done} of ${planned.length} passed`}><FeatureRows list={planned} ctx={ctx} /></Section>
+      {g.added.length ? (
+        <Section title={`Added after the cut (${g.added.length})`}>
+          <div className="rt-panel rt-muted" style={{ marginBottom: 8 }} data-testid="rt-added-after-cut">
+            {g.added.map((f) => <div key={f.key} style={{ marginBottom: 6 }}><b>{f.key}</b> · added {String(f.added.at || '').slice(0, 10)}{f.added.commit ? ` (${f.added.commit})` : ''} · {f.scope === 'planned' ? 'counted in this release' : 'kept in backlog'} · {f.added.reason || ''}</div>)}
+          </div>
+          <FeatureRows list={g.added} ctx={ctx} />
+        </Section>
+      ) : null}
+      <Section title={`Backlog: kept on the record, not this release's work (${g.backlog.length})`}><FeatureRows list={g.backlog} ctx={ctx} /></Section>
+      {other.length ? <Section title={`Other tracked work (${other.length})`}><FeatureRows list={other} ctx={ctx} /></Section> : null}
+    </>
+  );
+}
 
 function FeatureRows({ list, ctx }) {
   const { snap, href } = ctx;
@@ -130,7 +157,7 @@ export const LAYERS = {
           ))}</div>
           {human ? <a className="rt-callout" href={href('stat', 'human')}><b>{human} {human === 1 ? 'bug needs' : 'bugs need'} a person.</b> Open them ›</a> : null}
           <Section title="Agents working now"><AgentCards list={snap.agents.filter((a) => a.status === 'running')} ctx={ctx} /></Section>
-          <Section title="Features"><FeatureRows list={snap.features} ctx={ctx} /></Section>
+          <FeatureSections snap={snap} ctx={ctx} />
         </>
       ),
     };

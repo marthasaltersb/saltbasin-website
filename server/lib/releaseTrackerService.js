@@ -17,6 +17,7 @@
 //    releaseLogImporter.importSnapshot so Release Intelligence stays in step.
 //  - Labels and counts only: ingest clips every string and drops unknown keys.
 //    Non-admin viewers see exactly what is stored.
+import { annotateFeatures } from './releaseScope.js';
 import crypto from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import { db, getJSON, setJSON } from '../db.js';
@@ -226,6 +227,7 @@ export function normalizeCommitted({ state, history, updates, features }, { fall
       openBugs: Number(s.openBugs) || 0, backlog: Number(s.backlog) || 0, agents: 0,
     };
   });
+  const scoped = defs.length ? annotateFeatures(feats, defs) : feats;   // planned / backlog / added after the cut
   const snapshot = {
     release: features ? { version: features.version || null, release: features.release || null, title: features.title || null } : null,
     updates: Array.isArray(updates) ? updates : [],
@@ -233,7 +235,7 @@ export function normalizeCommitted({ state, history, updates, features }, { fall
     syncedAt: isoOk(state.exportedAt) ? state.exportedAt : fallbackNow,
     maxFixAttemptsPerBug: 2,
     repoUrl: features?.repoUrl || null,
-    features: feats,
+    features: scoped,
     agents: [],
     bugs: Array.isArray(state.bugs) ? state.bugs : [],
     totals: { input: 0, cacheWrite: 0, cacheRead: 0, output: 0 },
