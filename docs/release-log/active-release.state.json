@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T01:39:53.367Z",
+  "exportedAt": "2026-10-10T01:43:16.043Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -10,10 +10,10 @@
       "backlog": 6
     },
     "world-shell-navigation": {
-      "status": "validate",
-      "lastRound": 2,
-      "lastScore": "36/47",
-      "lastReport": "docs/test-results/world-shell-navigation/round-2.md",
+      "status": "triage",
+      "lastRound": 3,
+      "lastScore": "38/48",
+      "lastReport": "docs/test-results/world-shell-navigation/round-3.md",
       "openBugs": 16,
       "backlog": 6
     },
@@ -82,12 +82,12 @@
       "backlog": 2
     },
     "cover-letter-agent": {
-      "status": "scope",
+      "status": "fix",
       "lastRound": 2,
       "lastScore": "45/48",
       "lastReport": "docs/test-results/cover-letter-agent/round-2.md",
-      "openBugs": 23,
-      "backlog": 8
+      "openBugs": 21,
+      "backlog": 10
     },
     "in-app-release-loop": {
       "status": "passed",
@@ -1402,7 +1402,7 @@
     {
       "id": "world-shell-navigation-wsn-r2-mobile-counters",
       "feature": "world-shell-navigation",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "defect",
       "attempts": 1,
       "step": "J0.3 phone top bar shows 0 TRACKED, 7 AGENTS",
@@ -1504,7 +1504,7 @@
     {
       "id": "world-shell-navigation-wsn-r2-mcp-gap",
       "feature": "world-shell-navigation",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "defect",
       "attempts": 1,
       "step": "MCP tools for the spec's capabilities",
@@ -7072,7 +7072,7 @@
     {
       "id": "cover-letter-agent-B3",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "World Shell reachability",
@@ -7145,7 +7145,7 @@
     {
       "id": "cover-letter-agent-B6",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "Test account rule",
@@ -7170,7 +7170,7 @@
     {
       "id": "cover-letter-agent-B7",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Career-bound integration",
@@ -7220,7 +7220,7 @@
     {
       "id": "cover-letter-agent-B9",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Scope additions",
@@ -7268,7 +7268,7 @@
     {
       "id": "cover-letter-agent-B11",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Second cover letter generator",
@@ -7316,7 +7316,7 @@
     {
       "id": "cover-letter-agent-F1-1",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "J1.2, J8.4, E.5",
@@ -7335,7 +7335,7 @@
     {
       "id": "cover-letter-agent-F1-2",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "test_harness",
       "attempts": 0,
       "step": "MCP_GAP (T8)",
@@ -7356,7 +7356,7 @@
     {
       "id": "cover-letter-agent-F1-5",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "product_defect",
       "attempts": 0,
       "step": "J1.1 mobile",
@@ -7378,7 +7378,7 @@
     {
       "id": "cover-letter-agent-F1-6",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "World Shell reachability (proposed J10.1)",
@@ -7401,7 +7401,7 @@
     {
       "id": "cover-letter-agent-F1-7",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "E.3, E.4, E.6, E.7",
@@ -7420,7 +7420,7 @@
     {
       "id": "cover-letter-agent-F1-8",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Career-bound integration",
@@ -7443,7 +7443,7 @@
     {
       "id": "cover-letter-agent-F1-9",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Package contents",
@@ -7466,7 +7466,7 @@
     {
       "id": "cover-letter-agent-F1-10",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "product_defect",
       "attempts": 0,
       "step": "Member terms 428",
@@ -7488,7 +7488,7 @@
     {
       "id": "cover-letter-agent-F1-11",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "environment",
       "attempts": 0,
       "step": "J4 real provider",
@@ -7507,16 +7507,17 @@
     {
       "id": "cover-letter-agent-F1-12",
       "feature": "cover-letter-agent",
-      "status": "recurred",
+      "status": "reassigned",
       "class": "defect",
       "attempts": 0,
       "step": "Observation O2: history row of an Approved letter says Not yet approved",
-      "rootCause": "DocumentBlocksView.jsx:31 formatMetadataLine prints 'Not yet approved' whenever metadata.approvedBy is empty, regardless of row status; mir…",
-      "files": [
-        "src/components/DocumentBlocksView.jsx",
-        "server/lib/outputRendering.js"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "other_feature",
+        "owner": "qr-gated-outputs",
+        "evidence": null
+      },
       "history": [
         {
           "round": 1,
@@ -7651,7 +7652,7 @@
     {
       "id": "cover-letter-agent-T5",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "spec_error",
       "attempts": 0,
       "step": "E.3 / E.4: another member's letter id; a resume id in the agent",
@@ -7676,7 +7677,7 @@
     {
       "id": "cover-letter-agent-T6",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "spec_error",
       "attempts": 0,
       "step": "E.6 second half: package key without any letter is refused",
@@ -7701,7 +7702,7 @@
     {
       "id": "cover-letter-agent-T7",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "spec_error",
       "attempts": 0,
       "step": "E.7: failed automatic draft shown as red alert",
@@ -7739,7 +7740,7 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "mcpToolRegistry.js came with platform-mcp (b77049b) after the feature; the cover-letter c…"
+        "evidence": "Parity rows introduced by 4be0bec's cover-letter routes; whether to exclude from MCP is a…"
       },
       "history": [
         {
@@ -7765,7 +7766,7 @@
     {
       "id": "cover-letter-agent-T9",
       "feature": "cover-letter-agent",
-      "status": "recurred",
+      "status": "fixing",
       "class": "defect",
       "attempts": 0,
       "step": "UI_GAP / MOBILE_GAP: World Shell Application outputs shows Edit with cover-letter agent and Build package with contents",
@@ -7778,7 +7779,7 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "The request says the agent is reachable from the World Shell opportunity view; B3 and B11…"
+        "evidence": "Request requires agent reachable from World Shell opportunity view; round 1 classified th…"
       },
       "history": [
         {
@@ -7798,7 +7799,7 @@
     {
       "id": "cover-letter-agent-T10",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "spec_error",
       "attempts": 0,
       "step": "Approve for QR on the package row (toast wording)",
@@ -7806,7 +7807,11 @@
       "files": [
         "docs/training/cover-letter-agent.md"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Hyphen toast set by 73505f4 on this feature's branch; em dash remains in this feature's o…"
+      },
       "history": [
         {
           "round": 2,
@@ -7819,15 +7824,17 @@
     {
       "id": "cover-letter-agent-T11",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "reassigned",
       "class": "defect",
       "attempts": 0,
       "step": "Observation O6: Import an application package card unreadable on phone",
-      "rootCause": "MyResumePanel.jsx:947-951 card has only a border, no explicit background or text colour, so light inherited text sits on a light card in th…",
-      "files": [
-        "src/components/admin/MyResumePanel.jsx"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "other_feature",
+        "owner": "qr-gated-outputs",
+        "evidence": null
+      },
       "history": [
         {
           "round": 2,
@@ -7840,7 +7847,7 @@
     {
       "id": "cover-letter-agent-T13",
       "feature": "cover-letter-agent",
-      "status": "open",
+      "status": "fixing",
       "class": "spec_error",
       "attempts": 0,
       "step": "Observation O5: J6.2 needs Resume Output History while the full-screen dialog is open",
@@ -7848,7 +7855,11 @@
       "files": [
         "docs/training/cover-letter-agent.md"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Spec step order J6.2/J6.3 in this feature's own training spec is unreachable; product mat…"
+      },
       "history": [
         {
           "round": 2,
