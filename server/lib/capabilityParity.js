@@ -24,6 +24,9 @@ export const GOVERNED_ROUTE_FILES = Object.freeze({
   'server/routes/releaseIntelligence.js': '/api/release-intelligence',
   'server/routes/sessionMapping.js': '/api/session-mapping',
   'server/routes/renderBindings.js': '/api/render-bindings',
+  'server/routes/careerReconciliation.js': '/api/career-reconciliation',
+  'server/routes/careerBound.js': '/api/career-bound',
+  'server/routes/outputTemplates.js': '/api/output-templates',
 });
 
 /** For files governed only in part: file -> pattern a route (`METHOD /full/path`) must match to be governed.
@@ -34,6 +37,9 @@ const CPA = '/api/career-agents';
 const RO = '/api/resume-outputs';
 const CL = '/api/cover-letters';
 const CM = '/api/career';
+const CR = '/api/career-reconciliation';
+const CB = '/api/career-bound';
+const OT = '/api/output-templates';
 const RBA = '/api/render-bindings';
 const RR = `World Shell > Journeys > Career Master > Resume rollups`;
 const WS = 'World Shell';
@@ -80,6 +86,14 @@ export const CAPABILITIES = Object.freeze([
   { key: 'opportunity-import-output', title: 'Import a document into an opportunity', group: 'Resume outputs', ui: `${OPP} > Or Import an Existing Document`, api: [`POST ${CPA}/opportunities/:id/import-output`], mcp: null, mcpExclusion: 'File upload; an agent saves content with application_output_new_draft_version.' },
   { key: 'resume-output-view-download', title: 'View, download PDF, ZIP or email outputs', group: 'Resume outputs', ui: `${RESUME}`, api: [`GET ${CPA}/resume-outputs/:id/view`, `GET ${CPA}/resume-outputs/:id/download.pdf`, `POST ${CPA}/resume-outputs/export-zip`, `POST ${CPA}/resume-outputs/email`], mcp: ['career_output_view', 'career_outputs_email'] },
   { key: 'opportunity-cover-letter-legacy', title: 'Generate and approve an agent cover letter (legacy path)', group: 'Cover letters', ui: `${OPP}`, api: [`POST ${CPA}/opportunities/:id/generate-cover-letter`, `POST ${CPA}/opportunities/:id/cover-letter-outputs`], mcp: ['career_cover_letter_generate', 'career_cover_letter_output_save'] },
+
+  // ── Career-bound outputs, package reconciliation, per-preset overrides ────
+  { key: 'reconciliation-tasks', title: 'See and resolve the Career Master reconciliation queue', group: 'Career-bound outputs', ui: `${WS} > Journeys > Career Master > Review queue`, api: [`GET ${CR}/tasks`, `POST ${CR}/tasks/:id/resolve`, `POST ${CR}/tasks/:id/retry-sync`], mcp: ['career_reconciliation_tasks_list', 'career_reconciliation_task_resolve', 'career_reconciliation_task_retry_sync'] },
+  { key: 'reconciliation-package-source', title: 'Import a package as a reconciliation source', group: 'Career-bound outputs', ui: `${RESUME} > Import an application package`, api: [`POST ${CR}/package-sources`], mcp: ['career_reconciliation_package_import'] },
+  { key: 'career-bound-bullets', title: 'Add, edit or delete a Career Master bullet', group: 'Career-bound outputs', ui: `${RESUME} > Career-bound output editor > Bullets`, api: [`GET ${CB}/jobs`, `POST ${CB}/jobs/:jobId/bullets`, `PATCH ${CB}/jobs/:jobId/bullets/:bulletId`, `DELETE ${CB}/jobs/:jobId/bullets/:bulletId`], mcp: ['career_bound_jobs_list', 'career_bound_bullet_add_to_master', 'career_bound_bullet_update', 'career_bound_bullet_delete'] },
+  { key: 'career-bound-convert', title: 'Convert a package resume to career-bound', group: 'Career-bound outputs', ui: `${RESUME} > Convert to career-bound`, api: [`GET ${CB}/convertible`, `GET ${CB}/convert/:projectionId/preview`, `POST ${CB}/convert/:projectionId`, `GET ${CB}/review-count`], mcp: ['career_bound_convertible_list', 'career_bound_convert_preview', 'career_bound_convert', 'career_bound_review_count'] },
+  { key: 'career-bound-output', title: 'Create, open, preview and edit a career-bound output (field overrides, output-only bullets)', group: 'Career-bound outputs', ui: `${RESUME} > Career-bound output editor`, api: [`POST ${CB}/outputs`, `GET ${CB}/outputs/:id`, `POST ${CB}/outputs/:id/preview`, `PUT ${CB}/outputs/:id`], mcp: ['career_bound_output_create', 'career_bound_output_open', 'career_bound_output_preview', 'career_bound_output_save'] },
+  { key: 'output-template-presets', title: 'Output presets and per-preset Career Master overrides', group: 'Career-bound outputs', ui: `${RESUME} > Output templates`, api: [`GET ${OT}`, `GET ${OT}/primary`, `GET ${OT}/portfolio`, `GET ${OT}/:id/public`, `POST ${OT}`, `PUT ${OT}/:id`, `DELETE ${OT}/:id`], mcp: ['output_templates_list', 'output_templates_primary_read', 'output_templates_portfolio_read', 'output_template_public_read', 'output_template_create', 'output_template_update', 'output_template_delete'] },
 
   // ── Cover letters ─────────────────────────────────────────────────────────
   { key: 'cover-letter-settings', title: 'Cover-letter settings', group: 'Cover letters', ui: `${RESUME} > Cover-letter settings`, api: [`GET ${CL}/settings`, `PUT ${CL}/settings`], mcp: ['cover_letter_settings_read', 'cover_letter_settings_save'] },
