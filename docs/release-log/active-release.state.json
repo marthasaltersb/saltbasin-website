@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T01:23:09.276Z",
+  "exportedAt": "2026-10-10T01:26:32.529Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -18,11 +18,11 @@
       "backlog": 6
     },
     "career-bound-outputs": {
-      "status": "triage",
+      "status": "fix",
       "lastRound": 4,
       "lastScore": "49/56",
       "lastReport": "docs/test-results/career-bound-outputs/round-4.md",
-      "openBugs": 23,
+      "openBugs": 20,
       "backlog": 5
     },
     "qr-gated-outputs": {
@@ -50,12 +50,12 @@
       "backlog": 4
     },
     "chart-gallery": {
-      "status": "triage",
+      "status": "fix",
       "lastRound": 5,
       "lastScore": "18/20",
       "lastReport": ".claude/worktrees/wf_cbb72b20-566-9/docs/test-results/chart-gallery/round-5.md",
-      "openBugs": 24,
-      "backlog": 7
+      "openBugs": 18,
+      "backlog": 11
     },
     "output-version-history": {
       "status": "failing",
@@ -1691,7 +1691,7 @@
     {
       "id": "career-bound-outputs-F2-3",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Output Templates > Sections overrides (J9)",
@@ -1764,88 +1764,65 @@
     {
       "id": "career-bound-outputs-F2-6",
       "feature": "career-bound-outputs",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "Save changes disabled styling",
-      "rootCause": "S.btn() in CareerBoundOutputEditor.jsx (lines 26-31) has no disabled styling; line 145 only sets the disabled attribute. Earlier F2-6 fix n…",
-      "files": [
-        "src/components/admin/CareerBoundOutputEditor.jsx",
-        "src/components/admin/CareerReconciliationPanel.jsx"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "CareerBoundOutputEditor.jsx absent on base ed0024d; new in 9df7a85. Prior scope-review de…"
+        "evidence": null
       },
       "history": [
-        {
-          "round": 2,
-          "event": "found",
-          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "recurred",
-          "note": "S.btn() in CareerBoundOutputEditor.jsx (lines 26-31) has no…",
-          "commit": null
-        },
         {
           "round": 3,
           "event": "fixed",
           "note": "S.btn now takes a disabled flag and applies disabled stylin…",
           "commit": "4a702283eba964d9bac1895e897f1ca07517cfac"
+        },
+        {
+          "round": 4,
+          "event": "verified",
+          "note": "Retest round 4: this bug's step passed (the round had other…",
+          "commit": "0800b1c18ce1b2f1003085d0010f95a36fe75932"
         }
       ]
     },
     {
       "id": "career-bound-outputs-F2-7",
       "feature": "career-bound-outputs",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "Dialog visible title (admin)",
-      "rootCause": "Same code path as J6.10 (MyResumePanel queue dialog has no visible title).",
-      "files": [
-        "src/components/admin/MyResumePanel.jsx"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "'Career Sources to Review' dialog absent from src on base ed0024d; added by 9df7a85/34721…"
+        "evidence": null
       },
       "history": [
-        {
-          "round": 2,
-          "event": "found",
-          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "recurred",
-          "note": "MyResumePanel.jsx lines 1113-1118: dialog has aria-label on…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "recurred",
-          "note": "Same code path as J6.10 (MyResumePanel queue dialog has no …",
-          "commit": null
-        },
         {
           "round": 3,
           "event": "fixed",
           "note": "The queue dialog has a visible h2 'Career Sources to Review…",
           "commit": "4a702283eba964d9bac1895e897f1ca07517cfac"
+        },
+        {
+          "round": 4,
+          "event": "verified",
+          "note": "Retest round 4: this bug's step passed (the round had other…",
+          "commit": "0800b1c18ce1b2f1003085d0010f95a36fe75932"
         }
       ]
     },
     {
       "id": "career-bound-outputs-F2-8",
       "feature": "career-bound-outputs",
-      "status": "recurred",
+      "status": "fixing",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "Convert list ignores existing converted output",
@@ -1877,7 +1854,7 @@
     {
       "id": "career-bound-outputs-F2-9",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Legibility fix coverage (J1.2a, J9.0)",
@@ -1904,7 +1881,7 @@
     {
       "id": "career-bound-outputs-F2-10",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "J9 skills/tools/certifications overrides",
@@ -1930,7 +1907,7 @@
     {
       "id": "career-bound-outputs-F3-1",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "J1.2, J6.3, J6.10, J11.2, J9.8, J9.10",
@@ -1953,20 +1930,31 @@
     {
       "id": "career-bound-outputs-F3-2",
       "feature": "career-bound-outputs",
-      "status": "open",
-      "class": "requirement_gap",
+      "status": "fixing",
+      "class": "spec_error",
       "attempts": 0,
-      "step": "E.4",
-      "rootCause": "Frozen spec step needs a server fault no browser user can trigger.",
+      "step": "Sync failure toast and Applied - sync failed list with Retry sync",
+      "rootCause": "Not a product bug. packageReconciliation.js records syncError, careerReconciliation.js lists status=sync_failed and exposes POST /tasks/:id…",
       "files": [
-        "docs/training/career-bound-outputs.md"
+        "server/lib/packageReconciliation.js",
+        "server/routes/careerReconciliation.js"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Spec error in this feature's own training spec: sync failure is implemented per the chang…"
+      },
       "history": [
         {
           "round": 3,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        },
+        {
+          "round": 4,
+          "event": "recurred",
+          "note": "Not a product bug. packageReconciliation.js records syncErr…",
           "commit": null
         }
       ]
@@ -1974,20 +1962,30 @@
     {
       "id": "career-bound-outputs-F3-3",
       "feature": "career-bound-outputs",
-      "status": "open",
-      "class": "requirement_gap",
+      "status": "fixing",
+      "class": "spec_error",
       "attempts": 0,
-      "step": "E.5",
-      "rootCause": "Spec wording differs from product-wide warn style.",
+      "step": "Invalid package JSON shows 'That is not valid JSON: ...' in a red box",
+      "rootCause": "CareerReconciliationPanel.jsx line 239 throws the message and the panel renders it in its standard warnBox (line 49, background #FBEBD0, te…",
       "files": [
-        "docs/training/career-bound-outputs.md"
+        "src/components/admin/CareerReconciliationPanel.jsx"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Spec wording error in this feature's training spec (red vs amber warnBox); CareerReconcil…"
+      },
       "history": [
         {
           "round": 3,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        },
+        {
+          "round": 4,
+          "event": "recurred",
+          "note": "CareerReconciliationPanel.jsx line 239 throws the message a…",
           "commit": null
         }
       ]
@@ -1995,21 +1993,30 @@
     {
       "id": "career-bound-outputs-F3-4",
       "feature": "career-bound-outputs",
-      "status": "open",
-      "class": "product_defect",
+      "status": "fixing",
+      "class": "coverage_gap",
       "attempts": 0,
-      "step": "J6.8 / J6.10 observation",
-      "rootCause": "No record of an existing converted output per package.",
+      "step": "Validator observation: converted package row keeps an enabled Convert button",
+      "rootCause": "No baseline step covers the post-conversion queue row state (recurrence of F2-8/F3-4).",
       "files": [
-        "server/lib/careerBound.js",
         "src/components/admin/CareerReconciliationPanel.jsx"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Converted-row Convert button state is in this feature's CareerReconciliationPanel.jsx; re…"
+      },
       "history": [
         {
           "round": 3,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        },
+        {
+          "round": 4,
+          "event": "recurred",
+          "note": "No baseline step covers the post-conversion queue row state…",
           "commit": null
         }
       ]
@@ -2017,22 +2024,32 @@
     {
       "id": "career-bound-outputs-F3-5",
       "feature": "career-bound-outputs",
-      "status": "open",
-      "class": "requirement_gap",
+      "status": "fixing",
+      "class": "defect",
       "attempts": 0,
-      "step": "Interface parity",
-      "rootCause": "Feature built UI+API only.",
+      "step": "MCP_GAP: platform MCP tools for this feature",
+      "rootCause": "No career-bound/reconciliation entries in server/lib/mcpToolRegistry.js or server/lib/capabilityParity.js. check-interface-parity passes be…",
       "files": [
         "server/lib/mcpToolRegistry.js",
-        "server/lib/careerBound.js",
-        "server/lib/packageReconciliation.js"
+        "server/lib/capabilityParity.js",
+        "server/data/mcpToolManifest.json"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Feature adds the reconciliation queue and output-override capability; interface-parity re…"
+      },
       "history": [
         {
           "round": 3,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        },
+        {
+          "round": 4,
+          "event": "recurred",
+          "note": "No career-bound/reconciliation entries in server/lib/mcpToo…",
           "commit": null
         }
       ]
@@ -2040,7 +2057,7 @@
     {
       "id": "career-bound-outputs-F3-6",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "J9.9",
@@ -2062,7 +2079,7 @@
     {
       "id": "career-bound-outputs-F3-7",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "J9.11",
@@ -2085,7 +2102,7 @@
     {
       "id": "career-bound-outputs-F3-8",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "product_defect",
       "attempts": 0,
       "step": "J6.3",
@@ -2107,7 +2124,7 @@
     {
       "id": "career-bound-outputs-F3-9",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "n/a",
@@ -2151,87 +2168,69 @@
     {
       "id": "career-bound-outputs-cbo-r2-inherited-cream-text",
       "feature": "career-bound-outputs",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "defect",
       "attempts": 2,
       "step": "Queue page legibility",
-      "rootCause": "WorldShell.jsx embedBody (dark #0d1417) hosts CareerReconciliationPanel whose text colours (navy groupTitle, dark teal banner) are for a li…",
-      "files": [
-        "src/components/WorldShell.jsx",
-        "src/components/admin/CareerReconciliationPanel.jsx"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Base WorldShell.jsx has no careerReconciliation entry; this feature added the World Shell…"
+        "evidence": null
       },
       "history": [
-        {
-          "round": 2,
-          "event": "found",
-          "note": "Light-surface components set no text colour and inherit cre…",
-          "commit": null
-        },
-        {
-          "round": 2,
-          "event": "fixed",
-          "note": "Set explicit dark text (#1b2a3b) on the light cards and whi…",
-          "commit": "95c2adf"
-        },
-        {
-          "round": 3,
-          "event": "recurred",
-          "note": "WorldShell.jsx embedBody (dark #0d1417) hosts CareerReconci…",
-          "commit": null
-        },
         {
           "round": 3,
           "event": "fixed",
           "note": "Reconciliation embed is flagged light, and SimpleEmbedView …",
           "commit": "4a702283eba964d9bac1895e897f1ca07517cfac"
+        },
+        {
+          "round": 4,
+          "event": "verified",
+          "note": "Retest round 4: this bug's step passed (the round had other…",
+          "commit": "0800b1c18ce1b2f1003085d0010f95a36fe75932"
         }
       ]
     },
     {
       "id": "career-bound-outputs-T3-4",
       "feature": "career-bound-outputs",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "Tool override selectable by name",
-      "rootCause": "OutputTemplateConfigurator.jsx ~565 uses field currentName for tools; tools entered via Name When Used have empty currentName (name_used se…",
-      "files": [
-        "src/components/admin/OutputTemplateConfigurator.jsx",
-        "src/lib/masterOverrides.js"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "masterOverrides absent on base; tools override list added by 95c2adf and uses currentName…"
+        "evidence": null
       },
       "history": [
-        {
-          "round": 3,
-          "event": "found",
-          "note": "OutputTemplateConfigurator.jsx ~565 uses field currentName …",
-          "commit": null
-        },
         {
           "round": 3,
           "event": "fixed",
           "note": "Tool override option text, label, aria-label, Career Master…",
           "commit": "4a702283eba964d9bac1895e897f1ca07517cfac"
+        },
+        {
+          "round": 4,
+          "event": "verified",
+          "note": "Retest round 4: this bug's step passed (the round had other…",
+          "commit": "0800b1c18ce1b2f1003085d0010f95a36fe75932"
         }
       ]
     },
     {
       "id": "career-bound-outputs-T3-5",
       "feature": "career-bound-outputs",
-      "status": "retest_failed_pending_triage",
+      "status": "fixing",
       "class": "defect",
       "attempts": 1,
-      "step": "Revert skill keeps box",
-      "rootCause": "shownIds = override keys U ovPicks (local state, empty after reload). Revert deletes the override key via withOverride so the row disappear…",
+      "step": "Revert to Career Master on the skill only",
+      "rootCause": "Line 595 skill/tool/cert Revert button still uses onClick={() => setField(null)}. shownIds (line 568) is override keys plus ovPicks; withOv…",
       "files": [
         "src/components/admin/OutputTemplateConfigurator.jsx",
         "src/lib/masterOverrides.js"
@@ -2239,7 +2238,7 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Same override UI added by 95c2adf; shownIds derives from override keys plus local ovPicks…"
+        "evidence": "Line 595 setField(null) Revert button from 95c2adf (this feature's fix r2); override UI i…"
       },
       "history": [
         {
@@ -2253,13 +2252,19 @@
           "event": "fixed",
           "note": "Revert to Career Master also adds the id to ovPicks[list], …",
           "commit": "4a702283eba964d9bac1895e897f1ca07517cfac"
+        },
+        {
+          "round": 4,
+          "event": "recurred",
+          "note": "Line 595 skill/tool/cert Revert button still uses onClick={…",
+          "commit": null
         }
       ]
     },
     {
       "id": "career-bound-outputs-T3-6",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "spec_error",
       "attempts": 0,
       "step": "Sync failure toast and list",
@@ -2285,7 +2290,7 @@
     {
       "id": "career-bound-outputs-T3-7",
       "feature": "career-bound-outputs",
-      "status": "open",
+      "status": "fixing",
       "class": "spec_error",
       "attempts": 0,
       "step": "Invalid package error box",
@@ -2304,6 +2309,49 @@
           "round": 3,
           "event": "found",
           "note": "Product uses the established amber warnBox (CareerReconcili…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-T4-1",
+      "feature": "career-bound-outputs",
+      "status": "fixing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "Only expected browser noise in the console",
+      "rootCause": "The only unexpected error is the ReferenceError from T4-1.",
+      "files": [
+        "src/components/admin/OutputTemplateConfigurator.jsx"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Line 549 onClick={revert} added by 4a70228 (round 3 fix of this feature); revert is decla…"
+      },
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "OutputTemplateConfigurator.jsx line 549 uses onClick={rever…",
+          "commit": null
+        },
+        {
+          "round": 4,
+          "event": "recurred",
+          "note": "Blocked by T4-1 (crash on first keystroke).",
+          "commit": null
+        },
+        {
+          "round": 4,
+          "event": "recurred",
+          "note": "Blocked by T4-1.",
+          "commit": null
+        },
+        {
+          "round": 4,
+          "event": "recurred",
+          "note": "The only unexpected error is the ReferenceError from T4-1.",
           "commit": null
         }
       ]
@@ -4456,7 +4504,7 @@
     {
       "id": "chart-gallery-F2-2",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "product_defect",
       "attempts": 0,
       "step": "Unmerged r1 hunks remain (careerAtomMigration jsonb cast fix, careerMaster atomSyncError, api.js toast, ChartGallery.jsx)",
@@ -4478,7 +4526,7 @@
     {
       "id": "chart-gallery-F2-7",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "test_harness",
       "attempts": 0,
       "step": "Round 3 validation setup",
@@ -4499,7 +4547,7 @@
     {
       "id": "chart-gallery-F2-8",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "J2 2.1 sticky check",
@@ -4543,7 +4591,7 @@
     {
       "id": "chart-gallery-B9",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "journey: pick a chart",
@@ -4569,7 +4617,7 @@
     {
       "id": "chart-gallery-B10",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "test_harness",
       "attempts": 0,
       "step": "validation setup",
@@ -4594,7 +4642,7 @@
     {
       "id": "chart-gallery-F3-3",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "product_defect",
       "attempts": 0,
       "step": "J2.3 mobile",
@@ -4616,7 +4664,7 @@
     {
       "id": "chart-gallery-F3-4",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "product_defect",
       "attempts": 0,
       "step": "J2.2 mobile",
@@ -4637,7 +4685,7 @@
     {
       "id": "chart-gallery-F3-5",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "product_defect",
       "attempts": 0,
       "step": "E.4",
@@ -4658,7 +4706,7 @@
     {
       "id": "chart-gallery-F3-6",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "MCP",
@@ -4679,7 +4727,7 @@
     {
       "id": "chart-gallery-F3-7",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "product_defect",
       "attempts": 0,
       "step": "J2",
@@ -4700,7 +4748,7 @@
     {
       "id": "chart-gallery-F3-8",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "product_defect",
       "attempts": 0,
       "step": "Career Master writes (outside gallery)",
@@ -4721,7 +4769,7 @@
     {
       "id": "chart-gallery-F4-1",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "J2.2 phone",
@@ -4730,7 +4778,11 @@
         "src/components/Output.jsx",
         "src/lib/careerCharts.js"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Same as CG-R2b-3: not reproducible on base; 316px preview column and 390px chart-fit requ…"
+      },
       "history": [
         {
           "round": 4,
@@ -4743,15 +4795,17 @@
     {
       "id": "chart-gallery-F4-3",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "backlog_pre_existing",
       "class": "product_defect",
       "attempts": 0,
       "step": "J2.3 phone",
-      "rootCause": "Mobile nav JSX never written",
-      "files": [
-        "src/components/admin/AdminShell.jsx"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 4,
@@ -4764,15 +4818,17 @@
     {
       "id": "chart-gallery-F4-4",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "backlog_pre_existing",
       "class": "product_defect",
       "attempts": 0,
       "step": "E.4",
-      "rootCause": "falsy check on interpolate input",
-      "files": [
-        "src/lib/outputBlocks.js"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 4,
@@ -4785,17 +4841,17 @@
     {
       "id": "chart-gallery-F4-5",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "backlog_pre_existing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "MCP",
-      "rootCause": "Interface parity not built",
-      "files": [
-        "server/lib/mcpToolRegistry.js",
-        "server/lib/capabilityParity.js",
-        "server/data/mcpToolManifest.json"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 4,
@@ -4808,16 +4864,17 @@
     {
       "id": "chart-gallery-F4-6",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "backlog_pre_existing",
       "class": "product_defect",
       "attempts": 0,
       "step": "atom sync (known limitation)",
-      "rootCause": "boolean bound to $3::jsonb",
-      "files": [
-        "server/lib/careerAtomMigration.js",
-        "server/lib/careerAtomRegistry.js"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 4,
@@ -4830,7 +4887,7 @@
     {
       "id": "chart-gallery-F4-7",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "test_harness",
       "attempts": 0,
       "step": "E.5",
@@ -4838,7 +4895,11 @@
       "files": [
         "docs/spec-amendments/chart-gallery/"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Step E.5 of docs/training/chart-gallery.md is the feature's own spec wording gap; change …"
+      },
       "history": [
         {
           "round": 4,
@@ -4932,7 +4993,7 @@
     {
       "id": "chart-gallery-CG-R2b-1",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "spec_error",
       "attempts": 0,
       "step": "Classic charts: Bar Chart and Capacity Gauge + Add disabled for a member with no roll-up source",
@@ -4972,15 +5033,15 @@
       },
       "history": [
         {
-          "round": 3,
-          "event": "recurred",
-          "note": "Recurred from round 2. src/lib/outputBlocks.js interpolate(…",
-          "commit": null
-        },
-        {
           "round": 4,
           "event": "recurred",
           "note": "outputBlocks.js interpolate() line 485 starts 'if (!text ||…",
+          "commit": null
+        },
+        {
+          "round": 5,
+          "event": "recurred",
+          "note": "outputBlocks.js line 485: interpolate() starts 'if (!text |…",
           "commit": null
         }
       ]
@@ -4988,50 +5049,36 @@
     {
       "id": "chart-gallery-CG-R2b-3",
       "feature": "chart-gallery",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "Skill strength chart fits inside Live Preview, no horizontal scroll (phone 390px)",
-      "rootCause": "Output.jsx OutputAuthorshipFooter chip spans (line ~109) keep whiteSpace nowrap; two chips are ~350px in a 316px preview column so the prev…",
-      "files": [
-        "src/components/Output.jsx"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Could not reproduce on base a5e7883. Footer code is identical at base, but the chips are …"
+        "evidence": null
       },
       "history": [
-        {
-          "round": 2,
-          "event": "found",
-          "note": "src/components/Output.jsx OutputAuthorshipFooter() (lines ~…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "recurred",
-          "note": "Recurred from round 2. src/components/Output.jsx OutputAuth…",
-          "commit": null
-        },
-        {
-          "round": 4,
-          "event": "recurred",
-          "note": "Output.jsx OutputAuthorshipFooter chip spans (line ~109) ke…",
-          "commit": null
-        },
         {
           "round": 4,
           "event": "fixed",
           "note": "Authorship footer chips wrap instead of nowrap (whiteSpace …",
           "commit": "673b364bb300a940236ab1a20afa5243bf6cc440"
+        },
+        {
+          "round": 5,
+          "event": "verified",
+          "note": "Retest round 5: this bug's step passed (the round had other…",
+          "commit": "e28d2e1"
         }
       ]
     },
     {
       "id": "chart-gallery-CG-R2b-4",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "spec_error",
       "attempts": 0,
       "step": "Expect the Live Preview column visible on the right at the same time (phone walkthrough)",
@@ -5060,7 +5107,7 @@
       "status": "backlog_pre_existing",
       "class": "defect",
       "attempts": 0,
-      "step": "MCP_GAP: no output-template list/save/delete tool",
+      "step": "MCP_GAP: no output-template tools",
       "rootCause": null,
       "files": [],
       "scope": {
@@ -5070,15 +5117,15 @@
       },
       "history": [
         {
-          "round": 3,
-          "event": "recurred",
-          "note": "Recurred. server/lib/mcpToolRegistry.js does not exist; def…",
-          "commit": null
-        },
-        {
           "round": 4,
           "event": "recurred",
           "note": "outputTemplates route is not in mcpRouteInvoker ROUTERS/MOU…",
+          "commit": null
+        },
+        {
+          "round": 5,
+          "event": "recurred",
+          "note": "routes/outputTemplates.js (/api/output-templates) is not in…",
           "commit": null
         }
       ]
@@ -5086,7 +5133,7 @@
     {
       "id": "chart-gallery-CG-R2b-6",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "Validator observation F2-8: sticky preview verified only in the World Shell host, not the AdminShell host",
@@ -5144,7 +5191,7 @@
       "status": "backlog_pre_existing",
       "class": "defect",
       "attempts": 0,
-      "step": "Admin Output Templates reachable at 390px, preview below gallery (MOBILE_GAP)",
+      "step": "MOBILE_GAP: admin Output Templates reachable on the 390px phone",
       "rootCause": null,
       "files": [],
       "scope": {
@@ -5154,15 +5201,15 @@
       },
       "history": [
         {
-          "round": 3,
-          "event": "found",
-          "note": "brand.css (lines 617, 630-700) hides .sb-admin-topbar-actio…",
-          "commit": null
-        },
-        {
           "round": 4,
           "event": "recurred",
           "note": "AdminShell.jsx renders the view selector only inside .sb-ad…",
+          "commit": null
+        },
+        {
+          "round": 5,
+          "event": "recurred",
+          "note": "AdminShell.jsx (lines 675-700) renders the admin view selec…",
           "commit": null
         }
       ]
@@ -5173,7 +5220,7 @@
       "status": "backlog_pre_existing",
       "class": "defect",
       "attempts": 0,
-      "step": "MCP_GAP: career_rollups_read returns different data than the UI",
+      "step": "MCP_GAP: career_rollups_read does not match the UI",
       "rootCause": null,
       "files": [],
       "scope": {
@@ -5185,6 +5232,12 @@
         {
           "round": 4,
           "event": "found",
+          "note": "mcpRouteTools.js line 67 invokes GET /api/career/rollups wi…",
+          "commit": null
+        },
+        {
+          "round": 5,
+          "event": "recurred",
           "note": "mcpRouteTools.js line 67 invokes GET /api/career/rollups wi…",
           "commit": null
         }
@@ -5216,38 +5269,36 @@
     {
       "id": "chart-gallery-CG-R4-3",
       "feature": "chart-gallery",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "Outside baseline: Edit/Done button aria-label (F3-7)",
-      "rootCause": "ChartGallery.jsx line 381 sets aria-label 'Edit <title>' on a button whose visible text toggles to 'Done'; accessible name does not contain…",
-      "files": [
-        "src/components/ChartGallery.jsx"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "ChartGallery.jsx line 381 blames to 6dd06e5, the feature's own file. The aria-label 'Edit…"
+        "evidence": null
       },
       "history": [
-        {
-          "round": 4,
-          "event": "found",
-          "note": "ChartGallery.jsx line 381 sets aria-label 'Edit <title>' on…",
-          "commit": null
-        },
         {
           "round": 4,
           "event": "fixed",
           "note": "Edit/Done button aria-label now follows state (Edit <title>…",
           "commit": "673b364bb300a940236ab1a20afa5243bf6cc440"
+        },
+        {
+          "round": 5,
+          "event": "verified",
+          "note": "Retest round 5: this bug's step passed (the round had other…",
+          "commit": "e28d2e1"
         }
       ]
     },
     {
       "id": "chart-gallery-CG-R4-4",
       "feature": "chart-gallery",
-      "status": "open",
+      "status": "fixing",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "E.5 Console: only ERR_CERT_AUTHORITY_INVALID is named as the sandbox external-resource error",
