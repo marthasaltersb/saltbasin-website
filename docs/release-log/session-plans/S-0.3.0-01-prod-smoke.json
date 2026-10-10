@@ -19,6 +19,22 @@
     ]
   },
   "reEstimates": [],
-  "merges": [],
-  "closedAt": null
+  "merges": [
+    {
+      "at": "2026-10-10T20:42:05.709Z",
+      "commit": "005e4de",
+      "results": [
+        {
+          "feature": "production-smoke-regression",
+          "round": 1,
+          "passed": 16,
+          "total": 25,
+          "baseline": null,
+          "report": "docs/test-results/production-smoke-regression/round-1.md"
+        }
+      ]
+    }
+  ],
+  "closedAt": "2026-10-10T20:42:05.762Z",
+  "closeNote": "Suite built and run on production from GitHub Actions: 16/25 (6 failed = 3 production bugs from the Netlify/Render split, 3 not_run for want of a fictional test account). Expected 20/24."
 }
