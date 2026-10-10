@@ -1031,17 +1031,19 @@ try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () =
   const db = await claude.use('db');
   if (!db) { $('sync').textContent = 'Live updates are unavailable in this view. Open the tracker signed in to claude.ai.'; return; }
   // Live release: tracker/current, tracker/bugs, tracker/history. A frozen release: releases/<v>-current|-bugs|-history.
-  const live = { snap: null, bugs: null, hist: null }; const frozen = {};
+  // Bugs may span two documents (<bugs> and <bugs>-2) so each stays under the per-document size limit.
+  const live = { snap: null, bugs: null, bugs2: [], hist: null }; const frozen = {};
   const parse = (d) => { const data = d && (d.data ? d.data() : d); if (!data || !data.json) return null; try { return JSON.parse(data.json); } catch { return null; } };
   const show = () => {
     const src = VIEWING ? frozen[VIEWING] : live;
     if (!src || !src.snap) { if (VIEWING) $('view').innerHTML = '<div class="panel empty">Loading the frozen release…</div>'; return; }
-    snap = { ...src.snap }; snap.features ||= []; snap.agents ||= []; snap.bugs = (snap.bugsSeparate ? src.bugs : snap.bugs) || []; snap.sessions ||= [];
+    snap = { ...src.snap }; snap.features ||= []; snap.agents ||= []; snap.bugs = (snap.bugsSeparate ? (src.bugs ? [...src.bugs, ...(src.bugs2 || [])] : null) : snap.bugs) || []; snap.sessions ||= [];
     hist = src.hist; if (chart) { chart.destroy(); chart = null; } if (typeof T === "object" && T) T.at = null;
     if (VIEWING) { $('sync').className = 'sync'; $('sync').innerHTML = `Frozen release <b>${esc(VIEWING)}</b>`; route(); } else render();
   };
   db.doc('tracker/history').onSnapshot((d) => { const v = parse(d); if (v) { live.hist = v; if (!VIEWING) show(); } }, () => {});
   db.doc('tracker/bugs').onSnapshot((d) => { const v = parse(d); if (v) { live.bugs = v; if (!VIEWING) show(); } }, () => {});
+  db.doc('tracker/bugs-2').onSnapshot((d) => { const v = parse(d); live.bugs2 = Array.isArray(v) ? v : []; if (!VIEWING && live.bugs) show(); }, () => {});
   db.doc('tracker/current').onSnapshot((d) => {
     const v = parse(d);
     if (v) { live.snap = v; if (!VIEWING) show(); } else if (!VIEWING) $('sync').textContent = 'The latest update could not be read.';
@@ -1056,9 +1058,10 @@ try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () =
   $('release').addEventListener('change', (e) => {
     VIEWING = e.target.value || null; try { localStorage.setItem('rt-release', VIEWING || ''); } catch {}
     if (VIEWING && !frozen[VIEWING]) {
-      const f = frozen[VIEWING] = { snap: null, bugs: null, hist: null }; const v = VIEWING;
+      const f = frozen[VIEWING] = { snap: null, bugs: null, bugs2: [], hist: null }; const v = VIEWING;
       db.doc(`releases/${v}-current`).onSnapshot((d) => { f.snap = parse(d); if (VIEWING === v) show(); }, () => {});
       db.doc(`releases/${v}-bugs`).onSnapshot((d) => { f.bugs = parse(d); if (VIEWING === v) show(); }, () => {});
+      db.doc(`releases/${v}-bugs-2`).onSnapshot((d) => { const x = parse(d); f.bugs2 = Array.isArray(x) ? x : []; if (VIEWING === v) show(); }, () => {});
       db.doc(`releases/${v}-history`).onSnapshot((d) => { f.hist = parse(d); if (VIEWING === v) show(); }, () => {});
     }
     location.hash = '#/'; show();

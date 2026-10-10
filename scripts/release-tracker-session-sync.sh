@@ -27,7 +27,8 @@ node scripts/release-tracker-sync.mjs "${RUNS[@]}" "${CARRY[@]}" \
 # Tracker documents: tracker/current (everything but bugs), tracker/bugs, tracker/history — field "json".
 python3 -c "
 import json;o=json.load(open('$T/snapshot.json'));b=o.pop('bugs',[]);o['bugsSeparate']=True
-json.dump({'json':json.dumps(o,separators=(',',':'))},open('$T/doc.json','w'));json.dump({'json':json.dumps(b,separators=(',',':'))},open('$T/bugs-doc.json','w'))"
+json.dump({'json':json.dumps(o,separators=(',',':'))},open('$T/doc.json','w'));"
+python3 scripts/tracker_split_bugs.py $T/snapshot.json $T/bugs-doc
 node scripts/release-history.mjs --current "$T/snapshot.json" >/dev/null && python3 -c "
 import json;s=open('docs/release-log/history.json').read();json.dump({'json':s},open('$T/history-doc.json','w'))"
 # Commit and push only under the shared merge lock and never during a merge.
