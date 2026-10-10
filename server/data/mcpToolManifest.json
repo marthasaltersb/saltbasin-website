@@ -136,6 +136,17 @@
     "session_mapping_proposal_decide",
     "session_mapping_import",
     "session_mapping_failures",
-    "session_mapping_failure_dispose"
+    "session_mapping_failure_dispose",
+    "render_binding_renderings_list",
+    "render_binding_rendering_read",
+    "render_binding_item_read",
+    "render_binding_item_history",
+    "render_binding_board_item_add",
+    "render_binding_change_submit",
+    "render_binding_pending_list",
+    "render_binding_change_impact",
+    "render_binding_change_decide",
+    "render_binding_settings_read",
+    "render_binding_settings_save"
   ]
 }

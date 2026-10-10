@@ -25,6 +25,9 @@ export const MCP_SCOPES = Object.freeze({
   'sessions.read': 'Read after-session metrics, trends, mapping proposals, capture failures and the mapping rules (administrators only)',
   'sessions.write': 'Change the mapping rules, re-map, import sessions, reject or apply proposals and dispose capture failures (administrators only)',
   'release.loop.write': 'Change the release loop definition and drive runs, rounds, bugs and reconciliation (administrators only)',
+  'renderings.read': 'Read renderings, their data map, history and pending changes',
+  'renderings.write': 'Propose or make a change to a mapped source value (live or for approval, by the binding policy)',
+  'renderings.approve': 'Approve or reject a pending data change; settings (administrators only; runs the finalization gate)',
 });
 
 const id = (description) => ({ type: 'integer', minimum: 1, description });
@@ -62,6 +65,66 @@ const smLib = () => import('./sessionMapping.js');
 const smCfg = () => import('./sessionMappingConfig.js');
 const smNotFound = (what) => Object.assign(new Error(`${what} not found`), { status: 404, code: 'not_found' });
 const smTool = (name, title, description, inputSchema, scope, api, handler) => rlTool(name, title, description, inputSchema, scope, api, handler);
+/** Render bindings tools: same functions (and error statuses) as server/routes/renderBindings.js. */
+const rbLib = () => import('./renderBindings.js');
+const rbTool = (name, title, description, inputSchema, scope, permission, api, handler) => ({ name, title, description, inputSchema, scope, permission, api, handler });
+const RB_TOOLS = [
+  rbTool('render_binding_renderings_list', 'List renderings', 'Lists the renderings the caller\'s role may open (each is a view over mapped source data).',
+    schema({}), 'renderings.read', 'user', 'GET /api/render-bindings/renderings',
+    async (_a, { user }) => { const RB = await rbLib(); await RB.ensureSeeded(); return { renderings: await RB.listRenderings(user) }; }),
+  rbTool('render_binding_rendering_read', 'Read a rendering', 'Returns one rendering with its items (subjects), channels and pending counts.',
+    schema({ renderingKey: str('Rendering key, for example release-world or member-board.', { maxLength: 80 }) }, ['renderingKey']),
+    'renderings.read', 'user', 'GET /api/render-bindings/renderings/:key',
+    async (args, { user }) => (await rbLib()).viewRendering(user, args.renderingKey)),
+  rbTool('render_binding_item_read', 'Read an item\'s data map', 'Returns the Data map of one item: every visual channel with its source, value, provenance, pending ghost value and the fields the caller may edit. An unbound channel reads "not mapped".',
+    schema({ renderingKey: str('Rendering key.', { maxLength: 80 }), subjectKey: str('Item key.', { maxLength: 120 }) }, ['renderingKey', 'subjectKey']),
+    'renderings.read', 'user', 'GET /api/render-bindings/renderings/:key/subjects/:subjectKey',
+    async (args, { user }) => (await rbLib()).viewSubject(user, args.renderingKey, args.subjectKey)),
+  rbTool('render_binding_item_history', 'Read an item\'s change history', 'Returns the event log used by the time slider: value changes, proposals, decisions and write-back failures.',
+    schema({ renderingKey: str('Rendering key.', { maxLength: 80 }), subjectKey: str('Item key.', { maxLength: 120 }) }, ['renderingKey', 'subjectKey']),
+    'renderings.read', 'user', 'GET /api/render-bindings/renderings/:key/subjects/:subjectKey/history',
+    async (args, { user }) => (await rbLib()).subjectHistory(user, args.renderingKey, args.subjectKey)),
+  rbTool('render_binding_board_item_add', 'Add a workshop board item', 'Adds an item to the workshop board (the manual-entry rendering).',
+    schema({ title: str('Item title.', { minLength: 1, maxLength: 200 }) }, ['title']),
+    'renderings.write', 'user', 'POST /api/render-bindings/renderings/:key/subjects',
+    async (args, { user }) => ({ subject: await (await rbLib()).createBoardItem(user, args.title) })),
+  rbTool('render_binding_change_submit', 'Change a mapped source value', 'Changes one source field. Live bindings write immediately and notify open renderings; bindings that require approval record a pending proposal (nothing is overwritten). The field\'s editable_roles are enforced for the caller.',
+    schema({ renderingKey: str('Rendering key.', { maxLength: 80 }), subjectKey: str('Item key.', { maxLength: 120 }), portKey: str('Port key.', { maxLength: 80 }), objectKey: str('Object key.', { maxLength: 80 }), fieldKey: str('Field key.', { maxLength: 80 }), value: { description: 'The new value.' }, note: str('Optional note.', { maxLength: 500 }) }, ['renderingKey', 'subjectKey', 'portKey', 'objectKey', 'fieldKey', 'value']),
+    'renderings.write', 'user', 'POST /api/render-bindings/changes',
+    async (args, { user }) => (await rbLib()).submitChange(user, args)),
+  rbTool('render_binding_pending_list', 'List pending changes', 'Lists changes waiting for approval that the caller may see.',
+    schema({}), 'renderings.read', 'user', 'GET /api/render-bindings/changes/pending',
+    async (_a, { user }) => ({ pending: await (await rbLib()).listPending(user) })),
+  rbTool('render_binding_change_impact', 'Impact analysis for a pending change', 'Computes on demand everything a pending change touches: bindings that read the field (before to after), calculated metrics, and connected rods.',
+    schema({ changeId: id('The pending change id.') }, ['changeId']), 'renderings.read', 'user', 'GET /api/render-bindings/changes/:id/impact',
+    async (args, { user }) => (await rbLib()).impactForChange(user, args.changeId)),
+  rbTool('render_binding_change_decide', 'Approve or reject a pending change', 'Administrators only. Approve moves the change through its approval steps (only the last step applies the value) and runs the finalization gate, same as the website; reject leaves the approved value.',
+    schema({ changeId: id('The pending change id.'), decision: { type: 'string', enum: ['approve', 'reject'] }, note: str('Optional note.', { maxLength: 500 }) }, ['changeId', 'decision']),
+    'renderings.approve', 'admin', 'POST /api/render-bindings/changes/:id/approve|reject',
+    async (args, { user }) => {
+      if (args.decision === 'approve') { const { assertReadyToFinalize } = await import('./finalizationGates.js'); await assertReadyToFinalize(user.id); }
+      return (await rbLib()).decideChange(user, args.changeId, args.decision, args.note);
+    }),
+  rbTool('render_binding_settings_read', 'Read render binding settings', 'Administrators only. Ports and fields (with editable roles), bindings with their change policy, and approval steps.',
+    schema({}), 'renderings.approve', 'admin', 'GET /api/render-bindings/settings',
+    async () => {
+      const RB = await rbLib(); const Reg = await import('./renderBindingRegistry.js');
+      const catalog = await RB.loadCatalog(); const { bindings, overrideError } = await RB.loadBindings();
+      return { ports: catalog.map((p) => ({ portKey: p.port_key, name: p.name, portType: p.port_type, fields: p.objects.flatMap((o) => o.fields.map((f) => ({ objectKey: o.object_key, fieldKey: f.field_key, editableRoles: f.editable_roles, derived: !!f.derived }))) })),
+        bindings: bindings.map((b) => ({ id: b.id, rendering: b.rendering, channel: b.channel, changePolicy: b.change_policy, enabled: b.enabled })), steps: await RB.listWorkflowSteps(), roles: Reg.ROLES, overrideError };
+    }),
+  rbTool('render_binding_settings_save', 'Change render binding settings', 'Administrators only. One of: overrides (binding on/off or change policy), fieldRoles (a field\'s editable roles), step (an approval step).',
+    schema({ overrides: rlObj('Same body as PUT /api/render-bindings/settings/bindings.'), fieldRoles: rlObj('{ portKey, objectKey, fieldKey, editableRoles: [] }'), step: rlObj('{ id, name, roleLabel, active }') }),
+    'renderings.approve', 'admin', 'PUT /api/render-bindings/settings/...',
+    async (args) => {
+      const RB = await rbLib(); const out = {};
+      if (args.overrides) out.overrides = await RB.saveOverrides(args.overrides);
+      if (args.fieldRoles) { const f = args.fieldRoles; out.field = await RB.updateFieldRoles(f.portKey, f.objectKey, f.fieldKey, f.editableRoles); }
+      if (args.step) { const { id: sid, ...rest } = args.step; out.steps = await RB.updateWorkflowStep(sid, rest); }
+      if (!Object.keys(out).length) { const e = new Error('Nothing to change: pass overrides, fieldRoles or step'); e.status = 400; e.code = 'bad_request'; throw e; }
+      return out;
+    }),
+];
 
 const CORE_TOOLS = [
   {
@@ -932,7 +995,7 @@ const CORE_TOOLS = [
 
 // Tools that run an existing website route's own handler in-process (see mcpRouteTools.js), appended after the
 // core tools. Append-only like everything above.
-export const MCP_TOOLS = Object.freeze([...CORE_TOOLS, ...ROUTE_TOOLS]);
+export const MCP_TOOLS = Object.freeze([...CORE_TOOLS, ...ROUTE_TOOLS, ...RB_TOOLS]);
 
 export const MCP_TOOL_NAMES = Object.freeze(MCP_TOOLS.map((t) => t.name));
 
