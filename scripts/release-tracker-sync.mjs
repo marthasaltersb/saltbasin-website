@@ -287,6 +287,23 @@ for (const b of bugs) {
     b.blockedStatus = b.status; b.status = SCOPE_STATUS[d.scope];
   }
 }
+// A feature's latest round that passed every step of its baseline also closes this feature's own bugs that
+// were still open or had come back (including ones carried over from runs that are gone): their steps are part
+// of that baseline. Backlog items (other owners), owner questions and people-held bugs stay as they are.
+for (const b of bugs) {
+  if (!['open', 'recurred', 'fixing', 'retest_failed', 'retest_failed_pending_triage', 'fixed_awaiting_retest', 'retesting'].includes(b.status)) continue;
+  const f = features.find((x) => x.key === b.feature);
+  const lastRound = Math.max(0, ...(b.history || []).map((h) => Number(h.round) || 0));
+  if (f && !f.carriedOver && f.lastResult?.passed && f.lastResult.round > lastRound) {
+    b.status = 'verified';
+    b.history = [...(b.history || []), { round: f.lastResult.round, event: 'verified', note: `Retest round ${f.lastResult.round} passed every step${f.lastResult.baseline ? ` of baseline v${f.lastResult.baseline}` : ''}` }];
+  }
+}
+if (ledgerPath) {   // record the final states (after scope and verification) so carried-over bugs keep them
+  const ledger = JSON.parse(fs.readFileSync(ledgerPath, 'utf8'));
+  for (const b of bugs) if (b.status !== 'seen_in_test') ledger[b.id] = b;
+  fs.writeFileSync(ledgerPath, JSON.stringify(ledger));
+}
 const NON_BLOCKING = new Set(['verified', 'seen_in_test', ...Object.values(SCOPE_STATUS)]);
 for (const f of features) {
   const mine = bugs.filter((b) => b.feature === f.key);
