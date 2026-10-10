@@ -20,6 +20,7 @@
     "verify:crystal-orbit": "node scripts/verify-crystal-orbit-chat.mjs",
     "verify:crystal-orbit:live": "node scripts/verify-crystal-orbit-chat.mjs --live",
     "test:cover-letter-agent": "node --test tests/cover-letter-agent.test.js",
+    "test:agent-runner": "node --test tests/agent-runner.test.js",
     "test:crystal-orbit": "node --test tests/crystal-orbit-chat.test.js",
     "scenarios:import": "node scripts/run-scenario-import.mjs",
     "scenarios:validate": "node scripts/validate-scenario-registry.mjs",

@@ -14,11 +14,13 @@
 //   ready -> shaped   a person may send it back (note required)
 import { db } from '../db.js';
 import { assertReadyToFinalize } from './finalizationGates.js';
+import { SEED_STAGES, seedGaps } from './backlogSeedRules.js';
+
+export { SEED_STAGES, seedGaps };
 
 const err = (m, status = 400, extra) => Object.assign(new Error(m), { status }, extra || {});
 const text = (v) => String(v ?? '').trim();
 const n = (v) => (v == null ? null : Number(v));
-export const SEED_STAGES = ['seed', 'shaped', 'ready', 'promoted'];
 
 let ready;
 export function ensureSeedSchema() {
@@ -68,24 +70,6 @@ export async function createSeed({ title, words }, actor) {
      VALUES ('seed',$1,$2,'pending','seed',$3::jsonb,$4::jsonb,$5,$5) RETURNING *`,
   ).get(t, w.slice(0, 300), emptyData(w), [{ at: now, by: actor?.label || 'admin', event: 'created', to: 'seed', note: 'Seed created in the owner\'s words' }], now);
   return mapSeed(row);
-}
-
-/** Gaps that stop a seed entering `to`. */
-export function seedGaps(seed, to) {
-  const d = seed.data;
-  const gaps = [];
-  if (to === 'shaped') {
-    if (!text(d.problem)) gaps.push('the problem is not written');
-    if (!(d.acceptanceCriteria || []).length) gaps.push('there is no acceptance criterion');
-  }
-  if (to === 'ready') {
-    const open = (d.openQuestions || []).filter((q) => !text(q.answer));
-    if (open.length) gaps.push(`${open.length} open question${open.length === 1 ? ' is' : 's are'} unanswered`);
-    if (!d.size) gaps.push('there is no size');
-    if (!text(d.draftChangeSpec)) gaps.push('there is no draft change spec');
-    if (!(d.draftJourneys || []).length) gaps.push('there is no draft journey');
-  }
-  return gaps;
 }
 
 /** The gardener agent (or a person) writes the shaped fields. Moves a plain seed to shaped when its gaps are filled. */

@@ -93,7 +93,10 @@ export function createFixtureAdapter() {
       hooks.emit({ type: 'progress', text: `Fixture adapter replaying "${key}"${sc.description ? `: ${sc.description}` : ''}` });
       for (const ev of sc.events || []) {
         if (hooks.shouldStop()) { hooks.emit({ type: 'progress', text: 'Stop requested: ending the session' }); return { stopped: true }; }
-        if (ev.delayMs) await hooks.sleep(ev.delayMs);
+        if (ev.delayMs) {
+          await hooks.sleep(ev.delayMs);
+          if (hooks.shouldStop()) { hooks.emit({ type: 'progress', text: 'Stop requested: ending the session' }); return { stopped: true }; }
+        }
         const e = fill(ev, scope);
         if (e.t === 'progress') hooks.emit({ type: 'progress', text: e.text });
         else if (e.t === 'step') hooks.emit({ type: 'step', stepId: e.stepId, surface: e.surface, status: e.status, note: e.note });
@@ -154,7 +157,7 @@ export function createAgentSdkAdapter({ loadSdk = () => import('@anthropic-ai/cl
         permissionMode: 'acceptEdits',
         systemPrompt: { type: 'preset', preset: 'claude_code', append: ctx.agent.prompt },
         settingSources: [],
-        env: { ...process.env },
+        env: { ...process.env, ...(ctx.extraEnv || {}) },
         hooks: { PreToolUse: [{ hooks: [preToolUse] }] },
         ...(schema ? { outputFormat: { type: 'json_schema', schema } } : {}),
         // A non-code agent has no file-writing tools at all; the hook above is the second line of defence.

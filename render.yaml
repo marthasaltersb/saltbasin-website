@@ -53,3 +53,30 @@ services:
     #   name: salt-basin-data
     #   mountPath: /opt/render/project/src/server/data
     #   sizeGB: 1
+
+# ── Salt Basin agent worker (platform-agent-runner) — NEEDS A PAID PLAN ──────────────────────────────────────────
+# Runs the release loop's agents on Salt Basin's own infrastructure with the Claude Agent SDK. It is a SEPARATE
+# service from the website above: the website stays on the free plan and is unchanged by this block.
+# Render background workers and persistent disks are not available on the free plan, so this block stays commented
+# until the owner picks a paid plan (docs/changes/platform-agent-runner.md, open decision 4). The worker builds from
+# Dockerfile.worker (Node 22, git, Postgres 16, Chromium, the test fonts, the Agent SDK).
+#
+#   - type: worker
+#     name: saltbasin-agent-worker
+#     runtime: docker
+#     dockerfilePath: ./Dockerfile.worker
+#     plan: starter                   # paid; raise it if browser runs need more memory
+#     branch: main
+#     disk:
+#       name: agent-work
+#       mountPath: /var/agent-work    # one working copy per run lives here
+#       sizeGB: 10
+#     envVars:
+#       - key: AGENT_RUNNER_API
+#         value: https://saltbasin.net
+#       - key: AGENT_RUNNER_TOKEN     # World Shell > Journeys > Agent runner > Settings > Worker token
+#         sync: false
+#       - key: AGENT_RUNNER_REPO      # owner/repo the agents work on
+#         sync: false
+#       - key: ANTHROPIC_API_KEY      # API-key billing; subscription sign-in is not used (see the change spec)
+#         sync: false

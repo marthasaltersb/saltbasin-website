@@ -1,0 +1,11 @@
+{
+  "description": "Holds the integration lock for about eight seconds (used to show one integration at a time per branch, and to stop a running session)",
+  "agents": ["release_integrator"],
+  "events": [
+    { "t": "progress", "text": "Taking the integration lock for the branch" },
+    { "delayMs": 8000, "t": "progress", "text": "Merged; npm run build passes (fixture)" },
+    { "delayMs": 500, "t": "progress", "text": "Releasing the integration lock" }
+  ],
+  "result": { "merged": true, "head": "fixture0003", "conflicts": [], "buildPassed": true, "notes": "Merged in the fixture session" },
+  "usage": { "inputTokens": 500, "outputTokens": 120, "observed": false }
+}

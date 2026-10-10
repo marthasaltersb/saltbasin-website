@@ -108,6 +108,8 @@ const mapBug = (b) => ({
   id: Number(b.id), runId: Number(b.run_id), bugKey: b.bug_key, title: b.title, triageClass: b.triage_class, status: b.status, stepId: b.step_id,
   observed: b.observed, question: b.question, ownerAnswer: b.owner_answer, fixAttempts: Number(b.fix_attempts), history: b.history || [],
   createdAt: n(b.created_at), updatedAt: n(b.updated_at),
+  // Additive (platform-agent-runner): the triage agent's work order and size for the fix; null until one is filed.
+  workOrder: b.work_order || null, size: b.size || null,
 });
 const mapStep = (s) => ({ id: Number(s.id), runId: Number(s.run_id), roundNo: Number(s.round_no), stepId: s.step_id, surface: s.surface, status: s.status, note: s.note, at: n(s.created_at) });
 

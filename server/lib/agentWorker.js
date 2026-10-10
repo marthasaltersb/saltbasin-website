@@ -91,7 +91,11 @@ export async function executeClaim(claim, deps) {
   };
   const timer = setInterval(flush, flushMs);
   try {
-    if (workspace) ({ dir: cwd, base } = await workspace(claim));
+    let setupError = null; let extraEnv = {}; let push = null;
+    if (workspace) {
+      try { const w = await workspace(claim); ({ dir: cwd, base } = w); extraEnv = w.agentEnv || {}; push = w.push || null; }
+      catch (e) { setupError = `The working copy could not be set up: ${e.message}`; }
+    }
     const hooks = {
       emit: (e) => queue.push(e),
       checkEdit: (file) => {
@@ -100,20 +104,22 @@ export async function executeClaim(claim, deps) {
       },
       scopeRequest: async (req) => { await flush(); await client.scopeRequest(runId, req); queue.push({ type: 'progress', text: `Scope request filed for ${req.file}` }); },
       shouldStop: () => state.stop,
-      sleep: (ms) => sleep(ms),
+      // A stop request ends a wait early (checked every 250 ms) so a quiet session can be interrupted.
+      sleep: async (ms) => { const end = Date.now() + ms; while (Date.now() < end && !state.stop) await sleep(Math.min(250, end - Date.now())); },
     };
     let out;
     try {
+      if (setupError) throw new Error(setupError);
       out = await adapter.execute({
         run: claim.run, agent: claim.agent, prompt: claim.prompt, workOrder: state.workOrder, cwd, model: claim.model, turnLimit: claim.turnLimit, params: claim.params,
-        pinnedBaseline: claim.pinnedBaseline, suiteStepIds: claim.suiteStepIds, fixtureScenario: claim.fixtureScenario, resultSchema: claim.resultSchema,
+        pinnedBaseline: claim.pinnedBaseline, suiteStepIds: claim.suiteStepIds, fixtureScenario: claim.fixtureScenario, resultSchema: claim.resultSchema, extraEnv,
       }, hooks);
     } catch (e) {
       out = { error: e.message };
     }
     clearInterval(timer);
     await flush();
-    let diff = out.diff ?? null;
+    let diff = out.diff ?? null; let pushed = null;
     if (!out.stopped && !out.error && claim.agent.canEditCode && workspace && base) {
       try {
         diff = await collectDiff(cwd, base);
@@ -122,10 +128,14 @@ export async function executeClaim(claim, deps) {
           // The worker repeats the platform's check so a violation is visible in the log immediately; the platform decides.
           const local = checkDiff(state.workOrder, diff);
           if (!local.ok) log(`run ${runId}: diff violates the work order: ${local.violations.map((v) => v.detail).join('; ')}`);
+          else if (push && claim.branch) {
+            // Only a branch that passed the same check the platform repeats is pushed, and only as its own work branch.
+            try { await push(); pushed = { ok: true, branch: claim.branch }; } catch (e) { pushed = { ok: false, branch: claim.branch, error: e.message }; }
+          }
         }
       } catch (e) { out = { ...out, error: `The branch diff could not be read: ${e.message}` }; }
     }
-    return await client.complete(runId, { result: out.result ?? null, usage: out.usage ?? null, diff, error: out.error || null, stopped: !!out.stopped, adapter: adapter.name });
+    return await client.complete(runId, { result: out.result ?? null, usage: out.usage ?? null, diff, error: out.error || null, stopped: !!out.stopped, adapter: adapter.name, push: pushed });
   } finally {
     clearInterval(timer);
   }
@@ -134,6 +144,7 @@ export async function executeClaim(claim, deps) {
 /** Poll loop: heartbeat, claim, run. Local concurrency is separate from the platform's global concurrency setting. */
 export async function workerLoop({ client, adapter, log = console.log, pollMs = 2000, localConcurrency = 1, workspace, once = false, signal }) {
   const active = new Set();
+  let rejected = false;
   const info = { adapter: adapter.name, scenarios: adapter.scenarios?.() || [], version: 'agent-worker/1' };
   for (;;) {
     if (signal?.aborted) break;
@@ -151,9 +162,10 @@ export async function workerLoop({ client, adapter, log = console.log, pollMs = 
       if (once && active.size === 0) break;
     } catch (e) {
       log(`platform call failed: ${e.message}`);
-      if (e.status === 401) { log('The worker token was rejected; stopping. Create a new token in World Shell > Journeys > Agent runner > Settings.'); break; }
+      if (e.status === 401) { log('The worker token was rejected; stopping. Create a new token in World Shell > Journeys > Agent runner > Settings.'); rejected = true; break; }
     }
     await sleep(pollMs);
   }
   await Promise.allSettled([...active]);
+  return { rejected };
 }

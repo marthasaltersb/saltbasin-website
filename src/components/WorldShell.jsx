@@ -48,6 +48,7 @@ const ConnectedAgentsPanel = lazy(() => import('./admin/ConnectedAgentsPanel.jsx
 const QualificationRulesPanel = lazy(() => import('./admin/QualificationRulesPanel.jsx'));
 const CapabilitiesPanel = lazy(() => import('./admin/CapabilitiesPanel.jsx'));
 const ReleaseLoopPanel = lazy(() => import('./admin/ReleaseLoopPanel.jsx'));
+const AgentRunnerPanel = lazy(() => import('./admin/AgentRunnerPanel.jsx'));
 const ReleaseTrackerApp = lazy(() => import('./releaseTracker/ReleaseTrackerApp.jsx'));
 const SessionMappingPanel = lazy(() => import('./admin/SessionMappingPanel.jsx'));
 
@@ -64,6 +65,7 @@ const SIMPLE_EMBED_COMPONENTS = {
   capabilities: { title: 'Capabilities', render: () => <CapabilitiesPanel /> },
   qualificationRules: { title: 'Qualification Rules', render: () => <QualificationRulesPanel /> },
   releaseLoop: { title: 'Release loop', render: () => <ReleaseLoopPanel /> },
+  agentRunner: { title: 'Agent runner', render: () => <AgentRunnerPanel /> },
   releaseTracker: { title: 'Release tracker', render: () => <ReleaseTrackerApp embedded /> },
   sessionMapping: { title: 'Sessions', render: () => <SessionMappingPanel /> },
 };

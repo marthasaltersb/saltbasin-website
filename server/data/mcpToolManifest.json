@@ -110,6 +110,19 @@
     "release_loop_bug_action",
     "release_loop_add_reconciliation",
     "release_loop_resolve_reconciliation",
-    "release_loop_list_escalations"
+    "release_loop_list_escalations",
+    "agent_runner_overview",
+    "agent_runner_settings",
+    "agent_runner_list_agents",
+    "agent_runner_start_run",
+    "agent_runner_list_runs",
+    "agent_runner_get_run",
+    "agent_runner_run_action",
+    "agent_runner_scope_decision",
+    "agent_runner_outputs",
+    "agent_runner_decide_output",
+    "agent_runner_test_plan",
+    "agent_runner_baselines",
+    "agent_runner_seeds"
   ]
 }

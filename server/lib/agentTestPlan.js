@@ -17,6 +17,9 @@ import { matchesAny } from './agentWorkOrder.js';
 const BASE = path.join(REPO_ROOT, 'docs/training/baselines');
 const FIXTURE_BASE = path.join(REPO_ROOT, 'server/data/agentRunner/fixtureBaselines');
 
+/** Fictional fixture baselines/scenarios are visible only in test environments, never on a deployed platform. */
+export const fixturesAllowed = () => (process.env.AGENT_RUNNER_FIXTURE_WORKER === '1' || process.env.AGENT_RUNNER_ALLOW_FIXTURES === '1') && !process.env.RENDER;
+
 export const DEFAULT_SHARED_MODULES = Object.freeze([
   'server/db.js', 'server/index.js', 'server/auth.js', 'src/lib/api.js', 'src/components/WorldShell.jsx', 'src/lib/worldIslands.js',
   'server/lib/mcpToolRegistry.js', 'server/lib/finalizationGates.js', 'package.json',

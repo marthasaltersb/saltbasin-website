@@ -44,6 +44,7 @@ import careerPlacementAgentsRouter from './routes/careerPlacementAgents.js';
 import commercialOpportunitiesRouter from './routes/commercialOpportunities.js';
 import releaseIntelligenceRouter from './routes/releaseIntelligence.js';
 import releaseLoopRouter from './routes/releaseLoop.js';
+import agentRunnerRouter from './routes/agentRunner.js';
 import releaseTrackerRouter, { githubWebhookHandler as releaseTrackerWebhook } from './routes/releaseTracker.js';
 import { startReleaseTrackerPoller } from './lib/releaseTrackerService.js';
 import sessionMappingRouter from './routes/sessionMapping.js';
@@ -192,6 +193,7 @@ app.use('/api/career-agents', careerPlacementAgentsRouter);
 app.use('/api/commercial-opportunities', commercialOpportunitiesRouter);
 app.use('/api/release-intelligence', releaseIntelligenceRouter);
 app.use('/api/release-loop', releaseLoopRouter);
+app.use('/api/agent-runner', agentRunnerRouter);
 app.use('/api/release-tracker', releaseTrackerRouter);
 app.use('/api/session-mapping', sessionMappingRouter);
 app.use('/api/admin/world-variant-studio', worldVariantStudioRouter);
@@ -275,6 +277,8 @@ const port = Number(process.env.PORT) || 3001;
 app.listen(port, async () => {
   console.log(`[server] Salt Basin ${isProd ? '(prod)' : '(dev)'} listening on port ${port}`);
   startReleaseTrackerPoller();
+  // Training/test environments only (AGENT_RUNNER_FIXTURE_WORKER=1, never on Render): replay recorded agent sessions.
+  import('./lib/agentRunnerEmbedded.js').then((m) => m.startEmbeddedFixtureWorker()).catch((e) => console.error('[agent-runner]', e.message));
 
   // One-shot baseline snapshot on first deploy after the build_progress_snapshots
   // table is introduced. captureBaselineIfEmpty is auth-agnostic (no HTTP cycle,

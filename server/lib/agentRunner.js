@@ -20,7 +20,7 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { db, getJSON, setJSON } from '../db.js';
-import { encrypt } from './crypto.js';
+import { encrypt, decrypt } from './crypto.js';
 import { assertReadyToFinalize } from './finalizationGates.js';
 import { recordEvent } from './releaseLogImporter.js';
 import { ensureReleaseIntelligenceSchema } from './releaseIntelligenceSchema.js';
@@ -29,7 +29,7 @@ import { ensureReleaseLoopSchema, addStep, recordRound, createBug, startFix, rec
 import { AGENT_CATALOG, QUALITY_AGENT_KEYS, RESULT_SCHEMAS, REPO_ROOT, getAgent, describeAgent, readAgentFiles, validateResult } from './agentRunnerCatalog.js';
 import { validateWorkOrder, checkDiff, widenWorkOrder, scopeNeedsOwner, DEFAULT_SIZE_LIMITS, SIZES } from './agentWorkOrder.js';
 import { listFixtureScenarios } from './agentRunnerAdapters.js';
-import { buildTestPlan, loadBaseline, latestBaselineVersion, loadSmoke, DEFAULT_SHARED_MODULES } from './agentTestPlan.js';
+import { fixturesAllowed, buildTestPlan, loadBaseline, latestBaselineVersion, loadSmoke, DEFAULT_SHARED_MODULES } from './agentTestPlan.js';
 import * as seeds from './backlogSeeds.js';
 
 const err = (m, status = 400, extra) => Object.assign(new Error(m), { status }, extra || {});
@@ -306,9 +306,9 @@ export async function getAgentPrompt(key) {
 
 // ── runs ────────────────────────────────────────────────────────────────────
 function pinBaseline(feature) {
-  const v = latestBaselineVersion(feature, { allowFixture: true });
+  const v = latestBaselineVersion(feature, { allowFixture: fixturesAllowed() });
   if (!v) return null;
-  const b = loadBaseline(feature, v, { allowFixture: true });
+  const b = loadBaseline(feature, v, { allowFixture: fixturesAllowed() });
   return { feature, version: v, specSha256: b.specSha256, scoredSteps: b.steps.filter((s) => s.kind !== 'precondition').length };
 }
 
@@ -329,6 +329,7 @@ export async function createRun(input, actor) {
   let loopRow = null; let workOrder = null; let pinned = null; let branch = text(input.branch) || null;
   let featureKey = text(params.feature) || null;
   const fixtureScenario = text(input.fixtureScenario) || null;
+  if (fixtureScenario && !fixturesAllowed()) throw err("Fixture scenarios are only available in test environments (AGENT_RUNNER_FIXTURE_WORKER=1)");
   if (fixtureScenario && !listFixtureScenarios().some((s) => s.key === fixtureScenario)) throw err(`Fixture scenario "${fixtureScenario}" does not exist`);
 
   if (agent.mode === 'quality') {
@@ -497,11 +498,11 @@ export async function requeueRun(id, actor) {
 }
 
 /** A new run with the same inputs and the CURRENT (possibly widened) work order, after a scope decision or a failure. */
-export async function retryRun(id, actor) {
+export async function retryRun(id, actor, { fixtureScenario } = {}) {
   const row = await getRunRow(id);
   if (OPEN_STATUSES.includes(row.status)) throw err('This run is still open', 409);
   const input = {
-    agentKey: row.agent_key, prompt: row.prompt, params: row.params || {}, fixtureScenario: row.fixture_scenario, branch: row.branch,
+    agentKey: row.agent_key, prompt: row.prompt, params: row.params || {}, fixtureScenario: text(fixtureScenario) || row.fixture_scenario, branch: row.branch,
     loopRunId: row.loop_run_id, workOrder: row.work_order || undefined,
   };
   return createRun(input, actor);
@@ -530,8 +531,8 @@ export async function claimNextRun(workerId) {
   // The worker needs everything to run the session; it needs no secret beyond its own API key and (optionally) the GitHub token.
   let pinned = null; let suiteStepIds = null;
   if (row.pinned_baseline) {
-    pinned = loadBaseline(row.pinned_baseline.feature, row.pinned_baseline.version, { allowFixture: true });
-    if (row.agent_key === 'release_test_runner' && (row.params || {}).suite === 'smoke') suiteStepIds = loadSmoke(row.feature_key, { allowFixture: true })?.stepIds || null;
+    pinned = loadBaseline(row.pinned_baseline.feature, row.pinned_baseline.version, { allowFixture: fixturesAllowed() });
+    if (row.agent_key === 'release_test_runner' && (row.params || {}).suite === 'smoke') suiteStepIds = loadSmoke(row.feature_key, { allowFixture: fixturesAllowed() })?.stepIds || null;
   }
   return {
     run: mapRun(row, s), agent: { key: agent.key, name: files.name, version: files.version, prompt: files.prompt, canEditCode: agent.canEditCode }, resultSchema: RESULT_SCHEMAS[agent.schema],
@@ -588,6 +589,15 @@ export async function appendEvents(runId, workerId, events = [], { workOrderVers
   const fresh = await getRunRow(runId);
   const approvals = (fresh.work_order?.approvals || []).length;
   return { stop: fresh.stop_requested, workOrder: approvals !== Number(workOrderVersion) ? fresh.work_order : undefined, workOrderVersion: approvals };
+}
+
+/** The stored GitHub token, for a worker that holds a live claim on the run (clone and push). Never returned to a browser. */
+export async function getGitCredential(runId, workerId) {
+  const row = await getRunRow(runId);
+  await assertClaim(row, workerId);
+  const s = await readSettings();
+  if (!s.githubTokenEnc) return { token: null, note: 'No GitHub token is stored. Add one in World Shell > Journeys > Agent runner > Settings.' };
+  return { token: decrypt(s.githubTokenEnc) };
 }
 
 /** The agent could not edit a file the work order does not list: it files a request instead of working around the refusal. */
@@ -685,6 +695,7 @@ export async function completeRun(runId, workerId, payload = {}) {
     return getRun(row.id);
   }
   if (payload.error) return fail('failed', `The session failed: ${text(payload.error)}`, 'session_error', { result: payload.result ?? null });
+  if (payload.push && payload.push.ok === false) return fail('failed', `The fix branch ${payload.push.branch} could not be pushed: ${text(payload.push.error)}. Nothing was merged.`, 'push_failed', { result: payload.result ?? null });
   if (payload.result === undefined || payload.result === null) return fail('failed', 'The session ended without a result. Nothing was recorded and nothing counts as passed.', 'no_result');
   const problems = validateResult(RESULT_SCHEMAS[agent.schema], payload.result);
   if (problems.length) return fail('failed', `The result does not match its schema: ${problems.slice(0, 6).join('; ')}`, 'invalid_result', { result: payload.result });
@@ -739,17 +750,17 @@ async function applyResult(row, agent, result, payload) {
     }
     case 'release_test_runner': {
       const feature = row.pinned_baseline?.feature;
-      const baseline = loadBaseline(feature, row.pinned_baseline?.version, { allowFixture: true });
+      const baseline = loadBaseline(feature, row.pinned_baseline?.version, { allowFixture: fixturesAllowed() });
       if (!baseline) throw err(`The pinned baseline ${feature} v${row.pinned_baseline?.version} could not be read`);
       if (result.feature !== feature) throw err(`The results are for "${result.feature}" but the run is pinned to "${feature}"`);
       if (Number(result.baselineVersion) !== Number(baseline.version)) throw err(`The results were scored against baseline v${result.baselineVersion}, not the pinned v${baseline.version}; nothing was recorded`, 409, { code: 'BASELINE_MISMATCH' });
-      const subset = (row.params || {}).suite === 'smoke' ? (loadSmoke(feature, { allowFixture: true })?.stepIds || []) : null;
+      const subset = (row.params || {}).suite === 'smoke' ? (loadSmoke(feature, { allowFixture: fixturesAllowed() })?.stepIds || []) : null;
       const score = await scoreAgainstBaseline(baseline, result.steps, subset);
-      const o = await mk('test_results', 'recorded', `${feature} ${row.params.suite} v${baseline.version}: ${score.passed} of ${score.total}`, { feature, suite: row.params.suite, baselineVersion: baseline.version, specSha256: baseline.specSha256, score, steps: result.steps, observations: result.observations || [], smokeSource: subset ? loadSmoke(feature, { allowFixture: true })?.source : null });
+      const o = await mk('test_results', 'recorded', `${feature} ${row.params.suite} v${baseline.version}: ${score.passed} of ${score.total}`, { feature, suite: row.params.suite, baselineVersion: baseline.version, specSha256: baseline.specSha256, score, steps: result.steps, observations: result.observations || [], smokeSource: subset ? loadSmoke(feature, { allowFixture: fixturesAllowed() })?.source : null });
       return { summary: `${row.params.suite} results recorded (output #${o.id}): ${score.passed} of ${score.total} steps passed on baseline v${baseline.version}`, checks: { score } };
     }
     case 'release_test_extender': {
-      const baseline = loadBaseline(row.pinned_baseline?.feature, row.pinned_baseline?.version, { allowFixture: true });
+      const baseline = loadBaseline(row.pinned_baseline?.feature, row.pinned_baseline?.version, { allowFixture: fixturesAllowed() });
       const known = new Set((baseline?.steps || []).map((s) => s.id));
       const needsOwner = [];
       result.changes.forEach((c, i) => {
@@ -777,7 +788,7 @@ async function applyResult(row, agent, result, payload) {
     }
     case 'release_test_planner': {
       const settings = await readSettings();
-      const plan = buildTestPlan(result.changedFiles, { sharedModules: settings.sharedModules, allowFixture: true });
+      const plan = buildTestPlan(result.changedFiles, { sharedModules: settings.sharedModules, allowFixture: fixturesAllowed() });
       const o = await mk('test_plan', 'recorded', `Test plan: ${plan.smoke.length} smoke suites, ${plan.regression.length} regression baseline${plan.regression.length === 1 ? '' : 's'}`, { ...plan, rationale: result.rationale });
       return { summary: `Test plan recorded (output #${o.id}): smoke for ${plan.smoke.length} features, regression for ${plan.regression.length}` };
     }
@@ -798,7 +809,7 @@ async function applyResult(row, agent, result, payload) {
 async function applyValidation(row, result) {
   const loopRow = await getLoopRow(row.loop_run_id);
   const pin = row.pinned_baseline;
-  const baseline = loadBaseline(pin.feature, pin.version, { allowFixture: true });
+  const baseline = loadBaseline(pin.feature, pin.version, { allowFixture: fixturesAllowed() });
   if (!baseline) throw err(`The pinned baseline ${pin.feature} v${pin.version} could not be read`);
   // Specification governance: a round scored against any baseline other than the pinned one is refused.
   if (Number(result.baselineVersion) !== Number(pin.version)) {
@@ -907,22 +918,22 @@ export async function overview() {
   const pendingOutputs = (await db.prepare(`SELECT COUNT(*)::int AS c FROM agent_runner_outputs WHERE status='proposed'`).get()).c;
   const pendingScope = (await db.prepare(`SELECT COUNT(*)::int AS c FROM agent_runner_runs, jsonb_array_elements(scope_requests) e WHERE e->>'status'='pending'`).get()).c;
   return {
-    worker, counts, pendingOutputs, pendingScopeRequests: pendingScope,
+    worker, counts, pendingOutputs, pendingScopeRequests: pendingScope, rejectedWorkerCalls: await listRejectedWorkerCalls(10),
     usage: { runsWithUsage: usage.runs, inputTokens: Number(usage.input), outputTokens: Number(usage.output), runsWithCost: usage.costed, listCostUsd: usage.costed ? Number(usage.cost) : null, note: 'Observed from finished runs. A run whose worker reported no cost shows "not recorded", never zero. Nothing here caps spend.' },
-    fixtureScenarios: listFixtureScenarios(),
+    fixtureScenarios: fixturesAllowed() ? listFixtureScenarios() : [], fixturesAllowed: fixturesAllowed(),
   };
 }
 
 export async function planTests(changedFiles) {
   const s = await getSettings();
-  return buildTestPlan(changedFiles, { sharedModules: s.sharedModules, allowFixture: true });
+  return buildTestPlan(changedFiles, { sharedModules: s.sharedModules, allowFixture: fixturesAllowed() });
 }
 
 /** Baselines the screens offer (features that have a frozen baseline), with their smoke suite. */
 export async function listBaselines() {
   const { listBaselineFeatures } = await import('./agentTestPlan.js');
-  return listBaselineFeatures({ allowFixture: true }).map((f) => {
-    const smoke = loadSmoke(f.feature, { allowFixture: true });
+  return listBaselineFeatures({ allowFixture: fixturesAllowed() }).map((f) => {
+    const smoke = loadSmoke(f.feature, { allowFixture: fixturesAllowed() });
     return { feature: f.feature, latest: f.latest, smokeSource: smoke?.source || null, smokeSteps: smoke?.stepIds?.length || 0, fixture: f.fixture };
   });
 }
