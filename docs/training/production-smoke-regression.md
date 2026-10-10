@@ -4,7 +4,7 @@ Version 1 · 2026-10-10 · covers `docs/changes/production-smoke-regression.md` 
 
 ## Where things are
 
-- Target: `<BASE>` = `https://saltbasin.net` (the Render service that deploys `main`). The suite also accepts any other base for a local rehearsal (`--base http://127.0.0.1:<port>`).
+- Target: `<BASE>` = `https://saltbasin.net`. It is a Netlify site (`netlify.toml`): Netlify serves the frontend bundle and proxies only `/api/*` to the Render service that runs the server. Anything the server does outside `/api/*` must also be configured in `netlify.toml` to exist on production. The suite also accepts any other base for a local rehearsal (`--base http://127.0.0.1:<port>`).
 - The Claude cloud sandbox cannot reach `<BASE>` (proxy CONNECT 403), so the suite runs on a GitHub-hosted runner: on every push to `main` (after Render reports the commit live), on demand (Actions -> **Production smoke and regression** -> **Run workflow**), and on pushes to `claude/prod-smoke-regression-0.3.0`.
 - Output: the run's artifact `production-smoke-<run id>` holds `report.json` (score block, every step with URL / expected / actual / evidence, the frozen-baseline mapping, the list of suppressed writes) and `screens/*.png`. The run summary repeats the score block and a step table.
 

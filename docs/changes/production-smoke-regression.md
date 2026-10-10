@@ -38,6 +38,8 @@ The Claude cloud environment's network policy refuses `saltbasin.net` (CONNECT 4
 
 ## Known limitations
 
+- Production is Netlify (frontend, plus an `/api/*` proxy) in front of Render (server). The workflow waits for the Render deploy only. It cannot see whether Netlify has deployed the same commit, and round 1 found that it had not (bugs production-smoke-regression-P1 to P3).
+
 - Every step that needs a signed-in account is `not_run` (R2.1, R2.2): no fictional production test account exists, and the suite may not create one or use a real account. Open question for the owner below.
 - The overlap check is a heuristic on text and control boxes; it skips fixed and sticky layers, canvases and SVGs (the 3D scenes), so it does not prove those are clear.
 - Only the first `/u/<slug>` link found is opened; S3.3 is `not_run` when no public page links to a member site.
