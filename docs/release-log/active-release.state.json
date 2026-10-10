@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T19:57:36.071Z",
+  "exportedAt": "2026-10-10T20:01:09.221Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -26,11 +26,11 @@
       "backlog": 5
     },
     "qr-gated-outputs": {
-      "status": "validate",
-      "lastRound": 7,
+      "status": "passed",
+      "lastRound": 8,
       "lastScore": "38/38",
-      "lastReport": "docs/test-results/qr-gated-outputs/round-7.md",
-      "openBugs": 5,
+      "lastReport": "docs/test-results/qr-gated-outputs/round-8.md",
+      "openBugs": 0,
       "backlog": 14
     },
     "no-silent-failures": {
@@ -2814,9 +2814,9 @@
           "commit": null
         },
         {
-          "round": 7,
+          "round": 8,
           "event": "verified",
-          "note": "Retest round 7 passed every step of baseline v2",
+          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -2889,9 +2889,9 @@
           "commit": null
         },
         {
-          "round": 7,
+          "round": 8,
           "event": "verified",
-          "note": "Retest round 7 passed every step of baseline v2",
+          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -2918,9 +2918,9 @@
           "commit": null
         },
         {
-          "round": 7,
+          "round": 8,
           "event": "verified",
-          "note": "Retest round 7 passed every step of baseline v2",
+          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3172,9 +3172,9 @@
           "commit": null
         },
         {
-          "round": 7,
+          "round": 8,
           "event": "verified",
-          "note": "Retest round 7 passed every step of baseline v2",
+          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3201,9 +3201,9 @@
           "commit": null
         },
         {
-          "round": 7,
+          "round": 8,
           "event": "verified",
-          "note": "Retest round 7 passed every step of baseline v2",
+          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3253,9 +3253,9 @@
           "commit": null
         },
         {
-          "round": 7,
+          "round": 8,
           "event": "verified",
-          "note": "Retest round 7 passed every step of baseline v2",
+          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3282,9 +3282,9 @@
           "commit": null
         },
         {
-          "round": 7,
+          "round": 8,
           "event": "verified",
-          "note": "Retest round 7 passed every step of baseline v2",
+          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3434,9 +3434,9 @@
           "commit": null
         },
         {
-          "round": 7,
+          "round": 8,
           "event": "verified",
-          "note": "Retest round 7 passed every step of baseline v2",
+          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3459,9 +3459,9 @@
           "commit": null
         },
         {
-          "round": 7,
+          "round": 8,
           "event": "verified",
-          "note": "Retest round 7 passed every step of baseline v2",
+          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3484,9 +3484,9 @@
           "commit": null
         },
         {
-          "round": 7,
+          "round": 8,
           "event": "verified",
-          "note": "Retest round 7 passed every step of baseline v2",
+          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3509,9 +3509,9 @@
           "commit": null
         },
         {
-          "round": 7,
+          "round": 8,
           "event": "verified",
-          "note": "Retest round 7 passed every step of baseline v2",
+          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3534,9 +3534,9 @@
           "commit": null
         },
         {
-          "round": 7,
+          "round": 8,
           "event": "verified",
-          "note": "Retest round 7 passed every step of baseline v2",
+          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3559,9 +3559,9 @@
           "commit": null
         },
         {
-          "round": 7,
+          "round": 8,
           "event": "verified",
-          "note": "Retest round 7 passed every step of baseline v2",
+          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3588,9 +3588,9 @@
           "commit": null
         },
         {
-          "round": 7,
+          "round": 8,
           "event": "verified",
-          "note": "Retest round 7 passed every step of baseline v2",
+          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3617,9 +3617,9 @@
           "commit": null
         },
         {
-          "round": 7,
+          "round": 8,
           "event": "verified",
-          "note": "Retest round 7 passed every step of baseline v2",
+          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3646,9 +3646,9 @@
           "commit": null
         },
         {
-          "round": 7,
+          "round": 8,
           "event": "verified",
-          "note": "Retest round 7 passed every step of baseline v2",
+          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3675,9 +3675,9 @@
           "commit": null
         },
         {
-          "round": 7,
+          "round": 8,
           "event": "verified",
-          "note": "Retest round 7 passed every step of baseline v2",
+          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3704,9 +3704,9 @@
           "commit": null
         },
         {
-          "round": 7,
+          "round": 8,
           "event": "verified",
-          "note": "Retest round 7 passed every step of baseline v2",
+          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3714,22 +3714,24 @@
     {
       "id": "qr-gated-outputs-F7-2",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "F6-4 / B10.1 / J6.4",
-      "rootCause": "Amendments not exact, wrong surface labelling, invalid ids; owner has not recorded site-sync decision.",
-      "files": [
-        "docs/spec-amendments/qr-gated-outputs/A3.json",
-        "docs/spec-amendments/qr-gated-outputs/A8.json",
-        "scripts/sync-site-with-application-package.mjs"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
           "round": 7,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        },
+        {
+          "round": 8,
+          "event": "verified",
+          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3737,15 +3739,12 @@
     {
       "id": "qr-gated-outputs-F7-3",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "F6-5 / P.1",
-      "rootCause": "Spec predates the World Shell member-only direction; A6 left admin-run imports.",
-      "files": [
-        "docs/training/qr-gated-outputs.md",
-        "docs/spec-amendments/qr-gated-outputs/A6.json"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
@@ -3753,20 +3752,24 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
           "commit": null
+        },
+        {
+          "round": 8,
+          "event": "verified",
+          "note": "Retest round 8 passed every step of baseline v2",
+          "commit": null
         }
       ]
     },
     {
       "id": "qr-gated-outputs-F7-4",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "test_harness",
       "attempts": 0,
       "step": "F6-6 / P.5",
-      "rootCause": "Spec has no step creating the Draft card.",
-      "files": [
-        "docs/spec-amendments/qr-gated-outputs/A7.json"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
@@ -3774,21 +3777,24 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (te…",
           "commit": null
+        },
+        {
+          "round": 8,
+          "event": "verified",
+          "note": "Retest round 8 passed every step of baseline v2",
+          "commit": null
         }
       ]
     },
     {
       "id": "qr-gated-outputs-F7-5",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "F6-7 / MCP",
-      "rootCause": "No scored MCP step in baseline.",
-      "files": [
-        "docs/spec-amendments/qr-gated-outputs/A4.json",
-        "server/lib/mcpToolRegistry.js"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
@@ -3796,27 +3802,36 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
           "commit": null
+        },
+        {
+          "round": 8,
+          "event": "verified",
+          "note": "Retest round 8 passed every step of baseline v2",
+          "commit": null
         }
       ]
     },
     {
       "id": "qr-gated-outputs-F7-6",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Known limitations: in-app import card",
-      "rootCause": "Spec only covers CLI import.",
-      "files": [
-        "src/components/admin/MyResumePanel.jsx",
-        "docs/training/qr-gated-outputs.md"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
           "round": 7,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        },
+        {
+          "round": 8,
+          "event": "verified",
+          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3959,9 +3974,9 @@
           "commit": null
         },
         {
-          "round": 7,
+          "round": 8,
           "event": "verified",
-          "note": "Retest round 7 passed every step of baseline v2",
+          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3988,9 +4003,9 @@
           "commit": null
         },
         {
-          "round": 7,
+          "round": 8,
           "event": "verified",
-          "note": "Retest round 7 passed every step of baseline v2",
+          "note": "Retest round 8 passed every step of baseline v2",
           "commit": null
         }
       ]
