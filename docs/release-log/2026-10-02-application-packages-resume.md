@@ -2,9 +2,9 @@
 
 - Release: 2026-10-02-application-packages-resume
 - Integration branch: `claude/zealous-meitner-5tuft5` (not pushed by this release)
-- Integration head when recorded: c020576 (last feature merge 0800b1c, the commit `release-loop-tooling` round 6 and `qr-gated-outputs` round 5 tested)
+- Integration head when recorded: 13edeb2 (process-definition change; last feature merge 0800b1c, the commit `release-loop-tooling` round 6, `qr-gated-outputs` round 5 and `resume-rollups` round 2 tested). The qr-gated-outputs and release-loop-tooling sections were recorded at c020576 and are unchanged.
 - Process: `server/data/releaseLoop/definition.json` (spec governance, interface parity, per-bug fix-attempt limit)
-- Recorded: 2026-10-10 by the release recorder. This recording adds `qr-gated-outputs` (rounds 1 to 5). The previous recording (7d89f3c) added round 6 of `release-loop-tooling`. Earlier recordings: dfc466b (2026-10-09, rounds 1 to 5) and 17a67e9 (only `proficiency-live-qr`, whose section is kept below).
+- Recorded: 2026-10-10 by the release recorder. This recording adds `resume-rollups` (rounds 1 and 2). The previous recording (acaaf03) added `qr-gated-outputs` (rounds 1 to 5); the one before it (7d89f3c) added round 6 of `release-loop-tooling`. Earlier recordings: dfc466b (2026-10-09, rounds 1 to 5) and 17a67e9 (only `proficiency-live-qr`, whose section is kept below).
 - Data: fictional only. No employer or application-target name appears in this log.
 
 ## Final results
@@ -13,9 +13,12 @@
 |---|---|---|---|---|---|---|
 | release-loop-tooling | **PASSED** | 6 | 0800b1c | 30 / 30 on **v3** | none in the workflow data (see "State discrepancy" below) | T4-2 (MCP_GAP, pre_existing), F1-7, B5 (pre_existing), B4 (process_note) |
 | qr-gated-outputs | **PASSED WITH BACKLOG (not a clean pass)** | 5 | 0800b1c | **36 / 38 on v2**; [J2.1] and [E.5] still fail on desktop and 390px | none per workflow data; **17 open in the state export** (see its "State discrepancy") | T1 [J2.1], T5 [E.5] (pre_existing defects, never fixed), F2-5, F2-7/F3-9/B9, F2-9/B8 (pre_existing), F2-1, F3-3 (process_note) |
+| resume-rollups | **NOT PASSED** (workflow verdict passed_with_backlog, refused under definition 13edeb2) | 2 | 0800b1c | **30 / 32 on v2**; [J12.1] (desktop + 390px) and [E.4] (390px) fail | RR1-3 [J12.1], RR1-4 [E.4] (scoped pre_existing, but block under 13edeb2); state export: 15 open | B4, B9 (other_feature), B14 (process_note), mobile header clip (cosmetic) |
 | proficiency-live-qr | **NOT PASSED** | 6 (state export) | see state export | 29 / 32 (state export; not handed to the recorder) | 8 open in the state export, 3 owner questions | see state export |
 
-**This recording (qr-gated-outputs).** The workflow ended `qr-gated-outputs` as passed_with_backlog, scoring 36/38 on baseline v2 at 0800b1c. Rounds 3, 4 and 5 all scored 36/38 on v2, with the same two failures: [J2.1] and [E.5]. Both are em-dash copy strings that the round-5 scope review found already present before the feature (base 9e729b6), so they went to backlog. Neither has ever been fixed, and both frozen steps still fail. The state export of 2026-10-10T00:40:17Z still says `failing` with 17 open bugs. Treat this feature as **not releasable until a person reconciles the state and either fixes T1/T5 or accepts them**. See the feature section below.
+**This recording (resume-rollups).** The workflow handed `resume-rollups` over as passed_with_backlog: round 2 scored 30/32 on baseline v2 at 0800b1c, and [J12.1] and [E.4] still fail. Both causes (RR1-3, RR1-4) were scoped `pre_existing` and moved to backlog. While the recorder worked, the process definition was changed at 13edeb2 (now the integration head): "a feature never ends passed or passed_with_backlog while a baseline step fails". The recorder therefore records `resume-rollups` as **NOT PASSED**. RR1-3 and RR1-4 have failed in two rounds and have never been in a fix list. The same rule applies to `qr-gated-outputs` (2 failing frozen steps), whose section below was written before 13edeb2. Under the current definition, it has not passed either.
+
+**Previous recording (qr-gated-outputs).** The workflow ended `qr-gated-outputs` as passed_with_backlog, scoring 36/38 on baseline v2 at 0800b1c. Rounds 3, 4 and 5 all scored 36/38 on v2, with the same two failures: [J2.1] and [E.5]. Both are em-dash copy strings that the round-5 scope review found already present before the feature (base 9e729b6), so they went to backlog. Neither has ever been fixed, and both frozen steps still fail. The state export of 2026-10-10T00:40:17Z still says `failing` with 17 open bugs. Treat this feature as **not releasable until a person reconciles the state and either fixes T1/T5 or accepts them**. See the feature section below.
 
 In the previous recording, `release-loop-tooling` passed again in round 6: 30/30 on baseline v3 at 0800b1c, with no steps failed, blocked or not run. Rounds 5 and 6 are on the same baseline (v3, spec sha256 `03924b9a...177bc`), so they compare like for like. Round 4 (29/30) was on v2; it compares with rounds 5 and 6 only through approved amendment A2, which changed step J3b.3 and nothing else.
 
@@ -30,7 +33,7 @@ In the previous recording, `release-loop-tooling` passed again in round 6: 30/30
 | no-silent-failures | validate | 1 | 18/28 | 7 |
 | chart-gallery | validate | 3 | 17/20 | 10 |
 | output-version-history | validate | 3 | 30/37 | 0 by status count (not handed to the recorder) |
-| resume-rollups | validate | 1 | 28/32 | 4 |
+| resume-rollups | triage (export 00:43:34Z; workflow says passed_with_backlog, refused under 13edeb2; see its section) | 2 | 30/32 on v2 | 15 per export |
 | release-intelligence | validate | 1 | 1/54 | 4 |
 | cover-letter-agent | validate | 1 | 38/46 | 10 |
 | in-app-release-loop | validate | 1 | 59/60 | 2 |
@@ -43,7 +46,7 @@ In the previous recording, `release-loop-tooling` passed again in round 6: 30/30
 
 The open-bug column counts state-export bugs for that feature whose status is not verified, backlog or process_note. It is the recorder's count from the export, not a triage decision.
 
-**The release as a whole did not pass.** One feature (`release-loop-tooling`) passed cleanly. One feature (`qr-gated-outputs`) ended passed_with_backlog, with 2 of its 38 frozen steps still failing; the state export disagrees with that verdict. Under the push gate, the integration branch must not be pushed unless the owner says otherwise. Nothing was pushed. No sweep was run (`sweep: null`).
+**The release as a whole did not pass.** One feature (`release-loop-tooling`) passed cleanly. Two features ended passed_with_backlog in the workflow while frozen steps still fail: `qr-gated-outputs` (36/38) and `resume-rollups` (30/32). The current definition (13edeb2) forbids that verdict, so the recorder counts both as **not passed**. Under the push gate, the integration branch must not be pushed unless the owner says otherwise. Nothing was pushed. No sweep was run (`sweep: null`).
 
 ---
 
@@ -425,6 +428,205 @@ No item has scope `other_feature`.
 
 ---
 
+## Feature: resume-rollups
+
+Title: Configurable resume rollups: KPI tiles, industry buckets, skill category groups, Career Atom rollups.
+
+Status: **NOT PASSED.** The workflow handed this feature over as `passed_with_backlog`. The recorder does not accept that as a pass:
+
+- Round 2 scored **30 / 32 on baseline v2** at commit 0800b1c. Two frozen steps still fail: **[J12.1]** on desktop and at 390px, and **[E.4]** on the 390px walkthrough.
+- The scope review classed both causes (RR1-3, RR1-4) as `pre_existing`, so the workflow moved them to backlog.
+- The process definition was amended at 13edeb2 (2026-10-10 00:47Z). The new rule in `scopeCheck.rule`: "an item that makes a frozen step of THIS feature fail stays this feature's to fix whatever its scope ... a feature never ends passed or passed_with_backlog while a baseline step fails." That commit is the current integration head. Under it, RR1-3 and RR1-4 block this feature.
+- The state export (00:43:34Z) also says `triage`, 30/32, with 15 open bugs and 5 backlog. See "State discrepancy".
+
+The feature needs a fix round for RR1-3 and RR1-4, then a round 3 on baseline v2.
+
+- Change spec: [docs/changes/resume-rollups.md](../changes/resume-rollups.md). Training spec: [docs/training/resume-rollups.md](../training/resume-rollups.md). Baselines: [v1](../training/baselines/resume-rollups/v1.json), [v2](../training/baselines/resume-rollups/v2.json) (spec sha256 `fd8842f5...3662`).
+- The recorder ran `node scripts/release-spec-baseline.mjs check --feature resume-rollups` at 13edeb2. It printed "baselines match: resume-rollups v2" (exit 0).
+
+### Rounds
+
+| Round | Commit tested | Baseline | Steps passed / total | Failed steps | Report |
+|---|---|---|---|---|---|
+| 1 | c3a71b4 | **v1** (sha256 `9cdd3c06...6bd0`) | 28 / 32 | J1.1 (mobile), J9.5, J12.1, E.4; observation MCP_GAP | [round-1](../test-results/resume-rollups/round-1.md) |
+| 2, first run (superseded) | 85a4895 | v2 | 29 / 32 | J12.1, E.3, E.4; observation MCP_GAP (Career Master record writes) | overwritten; preserved in git at e798b47:`docs/test-results/resume-rollups/round-2.md` |
+| 2 (scored run handed to the recorder) | 0800b1c | v2 | **30 / 32** | J12.1 (desktop + mobile), E.4 (mobile) | [round-2](../test-results/resume-rollups/round-2.md) |
+
+**How the scores compare.** Round 1 is on v1 and round 2 is on v2. They compare only through amendment **A1**, which changed step J9.5 and nothing else. The baseline diff from v1 to v2 shows 34 comparable ids, every one "same" except J9.5. Excluding J9.5:
+- Round 1: 28 of 31.
+- Round 2: 30 of 31.
+
+Round 2 fixed J1.1 (mobile). J12.1 and E.4 failed in both rounds.
+
+#### Round 1 (baseline v1): 28 / 32
+
+Failures:
+- F1 [J1.1] MOBILE_GAP: the card footer overflows at 390px, which clips Save.
+- F2 [J9.5] UI_GAP / MOBILE_GAP: the step tells the tester to type an API URL.
+- F3 [J12.1] UI_GAP / MOBILE_GAP: My Resume opens the platform owner's resume, not the member's.
+- F4 [E.4]: unlisted `404 GET /api/output-templates/preset-default/public`.
+- Observation MCP_GAP: no rollup MCP tools.
+
+Triage ([round-1](../triage/resume-rollups-round-1.md), integration head 1eebaf6):
+
+| Id | Step | Class | Root cause | Outcome |
+|---|---|---|---|---|
+| RR1-1 | J1.1 | defect | `Footer` rows in `src/components/admin/RollupGroupingsPanel.jsx` (243-254) cannot wrap | Fixed in fix r1 (ee3dc2b, merged 07e9942); passed in round 2 on both runs |
+| RR1-2 | J9.5 | spec_error | The step is a typed API URL, which interface parity v3 bans | Amendment A1 approved (baseline v2); J9.5 passed in round 2 |
+| RR1-3 | J12.1 | defect | My Resume layout, preview and full-tab links omit `owner=me` | **Not in fix r1's list, never fixed**; recurred in round 2 |
+| RR1-4 | E.4 | defect | `GET /api/output-templates/:id/public` returns 404 for the synthetic `preset-default` | **Not in fix r1's list, never fixed**; recurred in round 2 |
+| RR1-5 | MCP_GAP | defect | No MCP tools for the rollup capabilities | Fixed in fix r1 (8 tools; `server/routes/careerMaster.js`, `server/lib/mcpToolRegistry.js`, `server/data/mcpToolManifest.json`, `server/lib/capabilityParity.js`); verified in round 2 |
+| RR1-6 | (B5/B11 observation) | coverage_gap | No baseline step for the Career Rollup block picker or for the output column count | Amendments A2 (rejected) and A3 (needs_owner); still open |
+
+Fix round 1 (branch `release-loop/resume-rollups-fix-r1`, head ee3dc2b, merged 07e9942) changed these files:
+- `src/components/admin/RollupGroupingsPanel.jsx`
+- `server/routes/careerMaster.js`
+- `server/lib/mcpToolRegistry.js`
+- `server/data/mcpToolManifest.json`
+- `server/lib/capabilityParity.js`
+- `docs/changes/resume-rollups.md`
+
+The [fix-r1 reconciliation](../triage/resume-rollups-fix-r1-reconciliation.md) left two items open:
+- **F1-2**: MCP_GAP for the read-only proficiency, rollup-preview and legacy rollups routes.
+- **F1-3**: the browser walk of the Career Rollup block "Group by" and of an empty-Career-Master member.
+
+It also noted that RR1-3 and RR1-4 were not addressed. The recorder confirms that: the fix-r1 diff does not touch `src/lib/resumeUrls.js`, `MyResumePanel.jsx` or `server/routes/outputTemplates.js`.
+
+F1-2 was closed later, outside this feature's own fix branch. `proficiency_rules_read` came from 390e1ef (proficiency-live-qr round-6 fixes). `career_rollups_read` and `career_rollup_preview_read` came from 47cddd6 (platform-mcp fix r1). Round 2 confirmed all of them.
+
+#### Round 2 (baseline v2): 30 / 32 at 0800b1c
+
+Validator val-5600-1 ran the steps as `member@test.local` through the World Shell. Desktop (1280x900) and 390x844 touch each ran on a fresh database (`sb_rl_val_5600_1`, dropped afterwards). Score from `release-spec-baseline.mjs score`: total 32, passed 30, failed J12.1 and E.4, nothing not run or blocked.
+
+Failures:
+
+| Step | Surface | Expected | Observed | Evidence |
+|---|---|---|---|---|
+| [J12.1] UI_GAP / MOBILE_GAP | desktop + mobile | Executive Summary tiles ARR AUTOMATED, EXIT SIGNAL $250M, ENGAGEMENTS 1, INDUSTRIES 2, YEARS IN OPERATIONS 8, CERTIFIED PARTNERS 5†, EXPERT SKILLS 2†, TOTAL SKILL YEARS 21; no EMPLOYERS; footnote, capability and industry sections | The only UI route (My Resume > Preview PDF > Modern SB > full tab) opens `/output/resume?layout=modern`. That page renders the platform owner's resume with every tile as an em-dash, not the member's resume. Observation only: the typed URL with `&owner=me` showed every expectation | round-2/desktop-J12_1-output-view.png, mobile-J12_1-output-view.png, desktop-J12-OBS-owner-me-output-text.txt |
+| [E.4] | mobile | Only 404 `/api/members/me/profile` and certificate errors for external hosts | The mobile run also logged `404 GET /api/output-templates/preset-default/public` when it opened the output. The desktop run was clean | round-2/mobile-E_4.png, steps.jsonl E.4 mobile row |
+
+Evidence folder: `/var/tmp/sbpg/release-loop/resume-rollups/round-2/` (local, not committed).
+
+Fix verification in round 2:
+- **RR1-1 fixed**: the footer wraps at 390px (mobile-J3_1.png, mobile-J1_1.png).
+- **RR1-2 / A1**: J9.5 passes as a UI reload check.
+- **RR1-5 and F1-2 fixed**: with a token created in Connected Agents, MCP lists 94 tools. These include `resume_rollups_read`, `resume_rollup_preview`, `career_atom_rollups_read`, `career_experience_definitions_read`, `proficiency_rules_read`, `career_rollups_read` and `career_rollup_preview_read`. Results equal the API routes, invalid-preview errors match (400), and there is no MCP_GAP.
+- **B3 (J7.3), B12 (J7/J8), B13 (E.1-E.3)**: pass as written.
+- **B8**: the run used the member in the World Shell. P.1 still names the admin test user; see the proposed amendment.
+- **B5, B11, RR1-6, F1-3**: not tested, because no baseline step covers them.
+
+Validator observations (not scored):
+- **P.1 cannot be followed as admin.** As admin, World Shell Career Master has no Proficiency & Rollups card, and Classic Tools opens the admin shell (evidence in `round-2-admin-attempt`). The terms screen of P.1 does not appear, because the fixture pre-accepts terms.
+- **B10.** The owner=me output shows Strategy & Advisory "0 Expert - 2 skills", although Stakeholder alignment was set to Expert by hand. This matches the spec text. Whether the bars count the hand-set tier is an owner business rule (see below).
+- **Mobile output header.** "SALTBASIN.NET - RESUME - MODERN" is clipped by the Print button. This is cosmetic and has no step.
+- **Overwritten screenshots.** desktop-E_3.png and desktop-E_4.png were overwritten by a stray concurrent admin attempt. Their steps.jsonl rows are from the real run.
+
+Triage ([round-2](../triage/resume-rollups-round-2.md), written at integration head 47f12e3; no code or spec changed):
+
+| Id | Step | Class | Root cause | Files | Proposed fix |
+|---|---|---|---|---|---|
+| RR1-3 (recurred) | J12.1 | defect | My Resume builds output URLs without `owner=me`: `resumeUrls.js` `LAYOUT_URLS` / `resumeUrlFromPreset` (lines 1-20), `MyResumePanel.jsx` `LAYOUTS[].url` (~54/80/106), `presetPreviewUrl` (215), `previewUrl` state (577), full-tab link and iframe (1199-1204), print fallback (920). `Output.jsx` `useOutputOwnerSlug()` (~1148) returns '' and `resolveOwnerUserId` (`careerMaster.js` ~559-568) falls back to the default admin. Data and server are correct | `src/lib/resumeUrls.js`, `src/components/admin/MyResumePanel.jsx`, `src/components/Output.jsx`, `server/routes/careerMaster.js` | Give `resumeUrlFromPreset` an owner option that appends `owner=me` (joining with ? or &). Use it from `presetPreviewUrl`, the LAYOUTS urls, the initial state, the iframe, the full-tab link and the print fallback. Keep the LAYOUTS highlight working and leave the public site-owner link without owner. Verify at 390px. The step stands; no amendment |
+| RR1-4 (recurred) | E.4 | defect | `MyResumePanel.loadPresets()` (689-695) synthesises `{id:'preset-default'}`. `Output.jsx` (~1224) fetches `/api/output-templates/preset-default/public`, and `server/routes/outputTemplates.js` 120-131 answers 404 for a missing or non-portfolioVisible row. It is console noise only. It depends on whether the member has a saved preset, so it is state-dependent, not flaky | `server/routes/outputTemplates.js`, `src/components/admin/MyResumePanel.jsx`, `src/components/Output.jsx` | Preferred: `GET /:id/public` returns `200 {template:null}` for not found and for not portfolio-visible. Alternative: skip the fetch for the synthetic id. Do not widen the E.4 allowance |
+
+Scope review ([round-2 scope](../triage/resume-rollups-round-2-scope.md), base 2477b4a, the first parent of the first feature merge c2ccaa3):
+- **RR1-3: `pre_existing`.** At the base, `resumeUrls.js` has no owner handling and My Resume builds URLs without `owner=me`, so a member already saw the admin's resume before this feature.
+- **RR1-4: `pre_existing`.** At the base, `MyResumePanel.jsx:666` already synthesises `preset-default`, `Output.jsx:1265` already fetches the public template, and `outputTemplates.js:120-127` already returns 404.
+
+Both decisions rest on a code-level reproduction at the base only. The scope agent did not run the app on a fresh database. Its write to the main checkout was refused by worktree isolation, so it wrote the report in `.claude/worktrees/wf_44548e15-70c-3/`. The recorder copied that report unchanged into `docs/triage/resume-rollups-round-2-scope.md`. A concurrent state commit (d357db8) committed it.
+
+No fix round followed round 2.
+
+### Spec amendments
+
+| Id | Step | Status | What changed | Reviewer |
+|---|---|---|---|---|
+| [A1](../spec-amendments/resume-rollups/A1.json) | J9.5 (change) | **approved** (2026-10-09T18:00Z), produced baseline v2 (merged 0fd2110) | J9.5 changed from "open `/api/career/atom-rollups?owner=me` in the browser" to a UI reload check: the `Skills by proficiency` card still shows 'Advanced (1) · Expert (1) · Foundational (1) · Proficient (1)', and `Tools by wheel bucket` has Shown unticked. The API result is kept as evidence only | amend:resume-rollups:r1 (proposer triage:resume-rollups:r1) |
+| [A2](../spec-amendments/resume-rollups/A2.json) | J9.6 (add) | **rejected** | Would have added a site-editor step: pick `Skills by proficiency` in the Career Rollup block. Rejected because it is not exact, not reachable and not deterministic (no click path, no labels, no expected preview text). The coverage gap remains; it is to be re-proposed after the path has been walked | amend:resume-rollups:r1 |
+| [A3](../spec-amendments/resume-rollups/A3.json) | J12.2 (add) | **needs_owner** | Would have added a check of the Capability Confidence column count. The requirement is undefined in the change spec. The owner question is below | amend:resume-rollups:r1 |
+
+Proposed and not yet filed or reviewed:
+- **P.1 wording (spec_error).** Change "admin test user" to "member test user". Raised by the round-1 and round-2 validators and by the round-2 triage.
+- **E.3 wording (spec_error, RR2-2 in the state export).** Change it to "every computed tile is `—` with a reason; a manual (user-defined) tile keeps the member's own value marked †". Raised by the superseded first run of round 2.
+
+No spec or baseline file was changed by this recording.
+
+### Validator drift
+
+The same baseline (v2) scored differently across two round-2 runs:
+
+- **Run 1** (val-5600-7, commit 85a4895): **29/32**. It failed [E.3] as AMBIGUOUS, because the manual tile Certified partners keeps `5†` while "every tile" should be `—`.
+- **Run 2** (val-5600-1, commit 0800b1c): **30/32**. It passed [E.3] with the same observation. Round 1 (v1) also passed E.3 that way.
+
+The step text is identical in both runs, so this is interpretation drift, not a product change. The round-2 triage file says "E.3 is listed as failed in the round-2 report (AMBIGUOUS, F2)", which refers to run 1's report. Run 2 overwrote that report in 891751a. The 30/32 handed to the recorder is run 2's score.
+
+Until the E.3 wording amendment is decided, E.3's verdict depends on the validator's reading. Run 1's report is kept only in git history (e798b47).
+
+### Integration commits
+
+| Commit | What |
+|---|---|
+| c2ccaa3 | Merge `release-loop/resume-rollups-build` (2026-10-02). It adds `server/lib/resumeRollups.js`, `RollupGroupingsPanel.jsx` and `src/lib/resumeRollups.js`, plus changes to `careerMaster.js`, `Output.jsx`, `careerAtomRollups.js` and `CareerProspectBlocks.jsx`, the change spec and the training spec |
+| 07e9942 | Merge `release-loop/resume-rollups-fix-r1` (head ee3dc2b): RR1-1 and RR1-5 |
+| 3244ed3 | Release loop logs: resume-rollups (round 1) |
+| a1d6d1d / 0fd2110 | Spec amendment A1 and baseline v2 (merge of `release-loop/resume-rollups-spec-r1`) |
+| 390e1ef, 47cddd6 | Other features' fixes that closed F1-2 (MCP tools `proficiency_rules_read`, `career_rollups_read`, `career_rollup_preview_read`) |
+| e798b47 | Committed round-2 run 1's report (85a4895, 29/32) |
+| 891751a | Overwrote it with round-2 run 2's report (0800b1c, 30/32) |
+| 13edeb2 | Process definition change: a failing frozen step blocks the feature whatever its scope |
+
+### State discrepancy (reported, not resolved here)
+
+The state export (`active-release.state.json`, 2026-10-10T00:43:34Z) records `resume-rollups` as `status: triage`, `lastScore 30/32`, `openBugs 15`, `backlog 5`. It disagrees with the workflow data in these ways:
+
+- **RR1-1 and RR1-5** are `retest_failed_pending_triage` with 1 attempt each, although round 2 verified both fixed.
+- **RR1-3 and RR1-4** are `backlog_pre_existing`. Under the 13edeb2 rule they should be this feature's open bugs.
+- **resume-rollups-F1-2** is `open`, although round 2 found no MCP_GAP.
+- **RR2-2** (E.3 spec_error) and **RR2-4** are `open` with no scope. RR2-4 is a defect: Career Master record create/update/delete has no MCP tool (`capabilityParity.js` row `career-master-records`). Both come from round-2 run 1. Neither is in the workflow data handed to the recorder, and the committed round-2 triage file contains neither.
+- Bugs **B3, B5, B8, B10, B11, B12, B13** and **F1-3** are `open`. Round 2 reports:
+  - B3, B8, B12 and B13 pass.
+  - B10 is an owner question.
+  - B5, B11 and F1-3 have no baseline step.
+- **B4 and B9** are reassigned to another feature. **B14** is a process note.
+
+A person or the state writer must reconcile these. The recorder did not edit the state file.
+
+### Escalated for a business definition
+
+The workflow data lists no escalations (`escalated: []`). The following owner questions were raised in the logs and remain unanswered. The recorder has not guessed answers.
+
+1. **B10** (round-2 triage): "On the Capability Confidence bars, should a skill whose proficiency tier was set by hand to Expert count toward the 'N Expert' figure, or only skills whose tier is computed by the methodology? Today the bar for Strategy & Advisory shows '0 Expert - 2 skills' while one of those skills is hand-set to Expert."
+2. **A3 / B11** (amendment review, needs_owner): "Is the number of columns in the resume output's Capability Confidence block meant to be a member-configurable setting? If yes: where does the member set it (screen and control), what values are allowed, what is the default, and how many columns should the modern resume show for the J1.2 fixture (3 capability groups)? If no: should B11 be dropped from the coverage list?"
+
+### Bugs at the per-bug fix-attempt limit (needsHuman)
+
+None. The workflow data has `needsHuman: []`.
+
+RR1-3 and RR1-4 have failed in two rounds, but they were never in a fix list, so they have 0 fix attempts. Nobody has tried to fix them. The next fix round must address them; they are not stuck.
+
+### Backlog as classed by the workflow (stated NOT blocking by the workflow; blocking under definition 13edeb2)
+
+The workflow classed these items as `pre_existing` backlog that does not block this feature. Each one makes a frozen step of this feature fail. Under the current `scopeCheck` rule they therefore **stay this feature's to fix**, and the recorder lists them as blocking.
+
+| Id | Step | Scope | Class | Evidence | Owner |
+|---|---|---|---|---|---|
+| RR1-3 | [J12.1] | pre_existing (round 2 scope review) | defect | Code at base 2477b4a: `resumeUrls.js` has no owner handling and My Resume omits `owner=me`, so a member already saw the admin's resume. Code-level reproduction only; no runtime run on a fresh database | Unassigned in the workflow data. Under 13edeb2: resume-rollups (next fix round) |
+| RR1-4 | [E.4] | pre_existing (round 2 scope review) | defect | Code at base 2477b4a: `MyResumePanel.jsx:666`, `Output.jsx:1265` and `outputTemplates.js:120-127` already show the 404 path. Code-level reproduction only | Unassigned in the workflow data. Under 13edeb2: resume-rollups (next fix round) |
+
+Other non-blocking items, as recorded in the state export:
+- **B4, B9**: `other_feature`, reassigned to another feature as owner.
+- **B14**: `process_note`, "Branch not rebased".
+- **Mobile output header clipped by Print**: a cosmetic observation with no step and no owner.
+
+### What has to happen for this feature to pass
+
+1. Fix RR1-3 and RR1-4 as proposed in the round-2 triage.
+2. Run a round-3 validation on baseline v2. J12.1 must pass on desktop and at 390px through the My Resume UI route, and E.4 must pass on both surfaces.
+3. Have a reviewer decide the P.1 and E.3 wording amendments. Until then, E.3's verdict depends on the validator's reading.
+4. The owner answers the B10 and A3 questions.
+5. Reconcile the state export.
+
+---
+
 ## Feature: proficiency-live-qr (from the earlier recording, 17a67e9)
 
 Status: **NOT PASSED**. It was not in this run's workflow data. No agent ran for it in this run. Its last result is round 5 of release `2026-10-02-proficiency-live-qr`: 29 / 30 at 6ac1df0. That round predates baselines, so there is no baseline version. The result is out of date, because `OutputTemplateConfigurator.jsx` changed after 6ac1df0 (fix 95c2adf, merged in 957726a). The full earlier text follows, unchanged except for heading levels. The [earlier release log](2026-10-02-proficiency-live-qr.md) has the per-round detail.
@@ -558,10 +760,19 @@ The recorder started no server or database and has nothing to clean up.
 | qr-gated-outputs rounds 1 to 5 | External fonts and three.js blocked by the sandbox; `net::ERR_ABORTED` on PDF download | `external_blocked` and download behaviour; not counted |
 | qr-gated-outputs round 5 triage | The triage report was written inside worktree `.claude/worktrees/wf_20655f2f-37c-2/`, not the main checkout | Recorder copied it unchanged into `docs/triage/qr-gated-outputs-round-5.md` |
 | Bug-state export (c020576) | Bare ids T1/T5 collide across five features; qr-gated-outputs T1/T5 carry other features' evidence and scope | Not fixed by the recorder. A person or the state writer must namespace them. |
+| resume-rollups round 2 scope review | Write of `docs/triage/resume-rollups-round-2-scope.md` to the main checkout refused by worktree isolation | Report left in `.claude/worktrees/wf_44548e15-70c-3/docs/triage/`. Recorder copied it unchanged into `docs/triage/resume-rollups-round-2-scope.md`. A concurrent "Release loop state" commit (d357db8) committed that copy before the recorder's own commit |
+| resume-rollups round 2 scope review | Base reproduction for RR1-3 and RR1-4 was code-level only; the app was not run on a fresh base database | **Partial evidence.** Both `pre_existing` decisions rest on code inspection at 2477b4a |
+| resume-rollups round 2 validator (run 2) | A stray concurrent admin attempt overwrote `desktop-E_3.png` and `desktop-E_4.png` | Screenshots lost for those two steps. The steps.jsonl rows are from the real run, and the stray rows were moved to `round-2-admin-attempt/`. Server stopped, database `sb_rl_val_5600_1` dropped |
+| resume-rollups round 2 validator (run 1, 85a4895) | Four wrong automation checks (P.1, J7.3, J4.1, J8.1); port 5714 already in use by another validator | Re-checked, all pass. Original lines in `steps.superseded.jsonl`. Second server moved to 6914. Databases `sb_rl_val_5600_7` and `sb_rl_val_5600_7b` dropped |
+| resume-rollups round 2 (both runs) | The run 2 report overwrote run 1's report at the same path (891751a over e798b47) | Run 1's 29/32 result and its E.3 failure survive only in git history. See "Validator drift" |
+| resume-rollups fix r1 | RR1-3 and RR1-4 were in the round-1 triage but not in the fix list; `check-interface-parity --strict` not run by the fix agent | **Partial**: RR1-3 and RR1-4 are still failing at 0800b1c. The reconciler ran `--strict`: it failed with 28 of 56 capabilities having MCP gaps, mostly other features |
+| resume-rollups round 1 validator | External fonts blocked (`ERR_CERT_AUTHORITY_INVALID` / `ERR_TUNNEL_CONNECTION_FAILED`) | `external_blocked`, not counted. Server stopped, database dropped |
+| resume-rollups state export | RR1-1 and RR1-5 marked `retest_failed_pending_triage` although they are verified fixed; RR2-2 and RR2-4 have no triage file in the main checkout | Not fixed by the recorder; see the resume-rollups "State discrepancy" |
+| Process definition (concurrent) | 13edeb2 changed `scopeCheck.rule` at 00:47Z, after the workflow had given its verdict for resume-rollups | The recorder applied the current rule. The workflow verdict is reported but not accepted |
 | Earlier recording (17a67e9) | A recursive `grep -r` timed out and was replaced by `git grep` | Read-only; nothing written |
 | Earlier release (proficiency-live-qr) | 11 failed or refused commands | See the [earlier release log](2026-10-02-proficiency-live-qr.md) |
 
-The recorder started no server or database and has nothing to clean up. Nothing was pushed.
+The recorder started no server or database and has nothing to clean up. Nothing was pushed. One recorder command, a `git grep` over 200 revisions searching for RR2-2, ran past the 120 s foreground limit. It was moved to the background, completed later with exit 0, and wrote nothing. The same search was repeated with `git log -S` (13edeb2, ed234db, d3a2622).
 
 ## Log index
 
@@ -573,4 +784,7 @@ The recorder started no server or database and has nothing to clean up. Nothing 
 - qr-gated-outputs test results: [round-1](../test-results/qr-gated-outputs/round-1.md), [round-2](../test-results/qr-gated-outputs/round-2.md), [round-3](../test-results/qr-gated-outputs/round-3.md), [round-4](../test-results/qr-gated-outputs/round-4.md), [round-5](../test-results/qr-gated-outputs/round-5.md). Step logs and screenshots are in `/var/tmp/sbpg/release-loop/qr-gated-outputs/round-N/`, local and not committed.
 - qr-gated-outputs triage: [build reconciliation](../triage/qr-gated-outputs-build-reconciliation.md), [round-2](../triage/qr-gated-outputs-round-2.md), [round-2 scope](../triage/qr-gated-outputs-round-2-scope.md), [fix-r2 reconciliation](../triage/qr-gated-outputs-fix-r2-reconciliation.md), [round-3](../triage/qr-gated-outputs-round-3.md), [round-3 scope](../triage/qr-gated-outputs-round-3-scope.md), [fix-r3 reconciliation](../triage/qr-gated-outputs-fix-r3-reconciliation.md), [round-4](../triage/qr-gated-outputs-round-4.md), [round-4 scope](../triage/qr-gated-outputs-round-4-scope.md), [fix-r4 reconciliation](../triage/qr-gated-outputs-fix-r4-reconciliation.md), [round-5](../triage/qr-gated-outputs-round-5.md), [round-5 scope](../triage/qr-gated-outputs-round-5-scope.md). No round-1 triage file exists.
 - qr-gated-outputs amendments: [A1](../spec-amendments/qr-gated-outputs/A1.json) (approved), [A2](../spec-amendments/qr-gated-outputs/A2.json) to [A8](../spec-amendments/qr-gated-outputs/A8.json) (rejected)
+- resume-rollups test results: [round-1](../test-results/resume-rollups/round-1.md), [round-2](../test-results/resume-rollups/round-2.md) (run 2; run 1 is in git at e798b47). Step logs and screenshots are in `/var/tmp/sbpg/release-loop/resume-rollups/round-N/`, local and not committed.
+- resume-rollups triage: [round-1](../triage/resume-rollups-round-1.md), [fix-r1 reconciliation](../triage/resume-rollups-fix-r1-reconciliation.md), [round-2](../triage/resume-rollups-round-2.md), [round-2 scope](../triage/resume-rollups-round-2-scope.md). No round-1 scope file exists.
+- resume-rollups amendments: [A1](../spec-amendments/resume-rollups/A1.json) (approved), [A2](../spec-amendments/resume-rollups/A2.json) (rejected), [A3](../spec-amendments/resume-rollups/A3.json) (needs_owner)
 - Sweep: none run for this release.
