@@ -91,7 +91,7 @@ export function useCareerPlacementAgents({ enabled = true } = {}) {
       setScoringPreferences(prefs);
       setScoringDraftState(draftFromDimensions(prefs.dimensions));
     } catch (e) {
-      toast('Could not load scoring preferences: ' + e.message);
+      toast.error('Your scoring weights could not be loaded. Close this card and open it again to retry. ' + e.message);
     } finally {
       setLoadingScoringPreferences(false);
     }
@@ -113,7 +113,7 @@ export function useCareerPlacementAgents({ enabled = true } = {}) {
       toast('Saved — this changes only your own opportunity scores, never another member’s.');
       pipeline.reload();
     } catch (e) {
-      toast('Could not save weights: ' + e.message);
+      toast.error('Your weights were not saved, so your scores are unchanged. ' + e.message);
     } finally {
       setSavingScoringPreferences(false);
     }
@@ -128,7 +128,7 @@ export function useCareerPlacementAgents({ enabled = true } = {}) {
       toast('Reverted to the Salt Basin default weights.');
       pipeline.reload();
     } catch (e) {
-      toast('Could not reset: ' + e.message);
+      toast.error('Your weights were not reset, so your custom weights are still in use. ' + e.message);
     } finally {
       setSavingScoringPreferences(false);
     }

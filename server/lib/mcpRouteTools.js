@@ -122,6 +122,14 @@ SPECS.push(
   ['career_site_metadata_sync', 'Sync site metadata into the Career Master', 'Runs the website\'s site metadata sync for the caller (administrators sync the admin site unless body.scope is member).', 'career', 'POST', '/sync-site-metadata', { body: 'scope (optional)' }],
 );
 
+// Opportunity-scoring preferences (parity fix, release 2026-10-10-production-hardening-resume): the MCP face of the
+// three /api/career-agents/scoring-preferences routes the World Shell's "Opportunity Scoring Weights" card uses.
+SPECS.push(
+  ['career_scoring_preferences_read', 'Read my opportunity scoring weights', 'Returns the caller\'s opportunity-scoring weights (dimensions with weight as a fraction), whether they are a personal override or the Salt Basin default, and the platform default dimensions.', 'careerAgents', 'GET', '/scoring-preferences', {}],
+  ['career_scoring_preferences_save', 'Save my opportunity scoring weights', 'Saves the caller\'s personal weights; affects only the caller\'s own scores. Body field: weights (object of every dimension key to a fraction between 0 and 1; they must total 1.0, for example 0.15 for 15%).', 'careerAgents', 'PUT', '/scoring-preferences', { body: 'weights', bodyRequired: true }],
+  ['career_scoring_preferences_reset', 'Reset my opportunity scoring weights to the default', 'Removes the caller\'s personal weights so scoring reverts to the Salt Basin default. Safe to repeat.', 'careerAgents', 'DELETE', '/scoring-preferences', {}],
+);
+
 function build([name, title, description, routerKey, method, path, opts]) {
   const idArgs = opts.params || {};
   const strParams = new Set(opts.strParams || []);

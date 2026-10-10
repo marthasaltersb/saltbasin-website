@@ -1060,10 +1060,14 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
     draftingOutreachMessage, outreachDraft, draftMessage, discardOutreachDraft,
     savingOutreachMessage, saveOutreachMessage,
     mergingOutcome, mergeOutcome, reload,
+    scoringPreferences, loadingScoringPreferences, loadScoringPreferences,
+    scoringDraft, setScoringDraft, scoringDraftSum,
+    savingScoringPreferences, saveScoringPreferences, resetScoringPreferences,
   } = pipeline;
   const importInputRef = useRef(null);
   const importOutputInputRef = useRef(null);
   const [showAutomation, setShowAutomation] = useState(false);
+  const [showScoringWeights, setShowScoringWeights] = useState(false);
 
   // The selected opportunity is a layer, not local state (docs/changes/world-shell-layers.md):
   // island > opp > outputs > output > (editor | versions). Everything below is read from the stack.
@@ -1314,6 +1318,24 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
               >
                 {showAutomation ? 'Hide Automation' : 'Automation & Scheduling'}
               </button>
+              <button
+                style={S.ghost}
+                onClick={() => { setShowScoringWeights((v) => !v); if (!showScoringWeights && !scoringPreferences) loadScoringPreferences(); }}
+              >
+                {showScoringWeights ? 'Hide Scoring Weights' : 'Scoring Weights'}
+              </button>
+              {showScoringWeights && (
+                <ScoringWeightsPanel
+                  prefs={scoringPreferences}
+                  loading={loadingScoringPreferences}
+                  draft={scoringDraft}
+                  setDraft={setScoringDraft}
+                  sum={scoringDraftSum}
+                  saving={savingScoringPreferences}
+                  save={saveScoringPreferences}
+                  reset={resetScoringPreferences}
+                />
+              )}
               {showAutomation && (
                 <AutomationPanel
                   automation={automation}
@@ -1485,6 +1507,39 @@ function OutreachSection({
             ))}
           </div>
         </>
+      )}
+    </div>
+  );
+}
+
+// Personal opportunity-scoring weights (same API as the Classic Tools card: /api/career-agents/scoring-preferences,
+// and the career_scoring_preferences_* MCP tools). Whole percentages here; fractions on the wire.
+function ScoringWeightsPanel({ prefs, loading, draft, setDraft, sum, saving, save, reset }) {
+  if (loading || !prefs) return <div style={S.railEmpty}>Loading your scoring weights…</div>;
+  const balanced = Math.abs(sum - 100) < 0.5;
+  return (
+    <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: '0.6rem', margin: '0.4rem 0', fontSize: '0.74rem' }} data-testid="scoring-weights">
+      <div style={S.railSubtitle}>Opportunity Scoring Weights</div>
+      <div style={{ color: '#8b877c', fontSize: '0.68rem', marginBottom: '0.4rem' }}>
+        Changes only your own opportunity scores, never another member's.
+      </div>
+      <div style={{ marginBottom: '0.4rem', color: '#c4843a' }}>{prefs.isPersonalOverride ? 'Your custom weights' : 'Salt Basin default'}</div>
+      {prefs.dimensions.map((d) => (
+        <div key={d.key} style={{ marginBottom: '0.35rem' }}>
+          <label htmlFor={`sw-${d.key}`} style={{ display: 'block', color: '#cfc9bd', fontSize: '0.7rem' }}>{d.label}</label>
+          <input
+            id={`sw-${d.key}`} type="number" min="0" max="100" step="1" inputMode="numeric"
+            aria-label={`Weight for ${d.label} (percent)`}
+            style={S.dimInputWide} value={draft[d.key] ?? ''} onChange={(e) => setDraft(d.key, e.target.value)}
+          />
+        </div>
+      ))}
+      <div role="status" style={{ color: balanced ? '#8fbf98' : '#e5534b', margin: '0.3rem 0' }}>
+        Total: {sum}%{balanced ? '' : ' (must total 100% to save)'}
+      </div>
+      <button style={S.gold} onClick={save} disabled={saving || !balanced}>{saving ? 'Saving…' : 'Save My Weights'}</button>
+      {prefs.isPersonalOverride && (
+        <button style={S.ghost} onClick={reset} disabled={saving}>Reset to Salt Basin Default</button>
       )}
     </div>
   );
