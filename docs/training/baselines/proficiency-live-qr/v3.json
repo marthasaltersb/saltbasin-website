@@ -1,0 +1,518 @@
+{
+  "feature": "proficiency-live-qr",
+  "spec": "docs/training/proficiency-rules-and-live-qr.md",
+  "version": 3,
+  "frozenAt": "2026-10-10T01:11:52.037Z",
+  "commitAtFreeze": "49ca0c75e2709e50b49cc3c46a106fe0be057a8d",
+  "specSha256": "8d535c9c196fb734d6208ef68cc8d1b20d35f85824feeff9a052cc7dec479a05",
+  "amendment": "A2",
+  "previous": 2,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "P.1",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "395355ef1249d690",
+      "summary": "Log in."
+    },
+    {
+      "id": "P.2",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "762edd1b5c6fb873",
+      "summary": "Career Master → **Manual Intake**: add"
+    },
+    {
+      "id": "P.3",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "c2c1b92fa47c8afb",
+      "summary": "Have at least one output in **Resume Output History** (import one, or generate one)."
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "cae67e984c11e414",
+      "summary": "Open Proficiency & Rollups → click **3 · Rules & why**."
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b76aed99d8138f62",
+      "summary": "In **Levels and why**, find **Ledgerly ERP**."
+    },
+    {
+      "id": "J1.3",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1bd7009d68328f7f",
+      "summary": "Expect an amber banner above the table: \"**2 technologies need a proficiency category** (Ledgerly ERP, QuoteFlow CPQ)…\", and under each of those tools' dropdown"
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6a7ff5486d435f16",
+      "summary": "In **Levels and why**, Ledgerly ERP row, column **How it was used**, choose **Integration design**."
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "95655e8670467b32",
+      "summary": "Open Career Master → **Manual Intake** → Tools → Ledgerly ERP."
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c49367a52ef063b5",
+      "summary": "In **Levels and why**, row **Forecast modeling** (13 years + 4 = 17 pts → Expert), column **Your override**, choose **Advanced**."
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "14deb92af77f9fe5",
+      "summary": "To undo, choose **Use formula** in the same dropdown."
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9509a390b7d49052",
+      "summary": "In **Certification bonuses**, click **+ Add certification bonus**."
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2f6b353af604d74f",
+      "summary": "Choose certification **Ledgerly Certified Consultant**, bonus points **3**, keep \"Count even if lapsed\" ticked, click chip **Ledgerly ERP · tool** (it turns dar"
+    },
+    {
+      "id": "J4.3",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "52ca6b80ebfc5eaf",
+      "summary": "Click **Delete** on that bonus and confirm."
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "13f5182d5b942b17",
+      "summary": "In **Formula in use**, on the Salt Basin methodology row click **Duplicate**."
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6b2b7ca6e377744e",
+      "summary": "Change the *Cap* on **Years performed** to **10**; change the *Minimum points* for **Expert** to **12**. Click **Save and use this formula**."
+    },
+    {
+      "id": "J5.3",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d16c7ee7769c25c0",
+      "summary": "Click the **Salt Basin methodology** radio."
+    },
+    {
+      "id": "J5.4",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "905dc53ca6c4ee7d",
+      "summary": "Try to edit the methodology: click **View** — expect \"(read-only)\" and no inputs."
+    },
+    {
+      "id": "J6.1",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3ddcc88eb3bca58d",
+      "summary": "Make sure one tool still has no category (e.g. QuoteFlow CPQ)."
+    },
+    {
+      "id": "J6.2",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c776ad44c7f2e05b",
+      "summary": "Open **My Resume → Resume Output History**."
+    },
+    {
+      "id": "J6.3",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "007430e34afcb6cf",
+      "summary": "On any output click **Approve for QR** (or **Approve** / **Publish**) and confirm."
+    },
+    {
+      "id": "J6.4",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4f43dc0ebb320bc5",
+      "summary": "Choose **Hands-on**, click **Save to Career Master and continue**."
+    },
+    {
+      "id": "J6.5",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c4da25b52afe41d9",
+      "summary": "Click **Cancel** instead (repeat with another uncategorised tool) — expect toast \"Finalization cancelled — technologies still need a proficiency category.\" and "
+    },
+    {
+      "id": "J7.1",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "02f8f67fba84e3a8",
+      "summary": "Open the output's link `/r/<slug>` (or scan its QR code) in a private window."
+    },
+    {
+      "id": "J7.2",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "087d3833df1f7ed5",
+      "summary": "Back in Career Master, change a job title (Manual Intake → Jobs) and save. Wait ~3 seconds. Reload the QR page."
+    },
+    {
+      "id": "J7.3",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "01f25d4b4a1a4eef",
+      "summary": "Use the slider **Data timeline — slide from the printed version to live**: drag to the far left."
+    },
+    {
+      "id": "J7.4",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2d1e2c6322b52b94",
+      "summary": "On a chart click **Salt particles**: expect grains falling into columns, settling with a gold line and value on top; hover a column → tooltip with its name and "
+    },
+    {
+      "id": "J7.5",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "305aae796d029203",
+      "summary": "Set a tool category or override a level, wait ~3 seconds, reload — expect the change listed (e.g. \"Changed: Ledgerly ERP — printed Advanced · Integration design"
+    },
+    {
+      "id": "J8.1",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "cec37f88e08fc765",
+      "summary": "World Shell (`/world`) -> **Output Templates** island (title \"Output Templates\"). Open or create a template so the editor with the live preview opens."
+    },
+    {
+      "id": "J8.2",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "013394cee81df7e1",
+      "summary": "Click **Rules & why**."
+    },
+    {
+      "id": "J8.3",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fce92ef7178b94fc",
+      "summary": "On the Infographics tab make sure the Proficiency chart is in the template (add it if it is not), then override one level by hand (as Journey 3, step 1-2); the "
+    },
+    {
+      "id": "J8.4",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "08d366e39cc86bf7",
+      "summary": "At 390px wide, expect the tab row to wrap and **Rules & why** to stay reachable, and the whole editor (presets, Preset Info, tab content, preview) to stack in a"
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "062ba74fc74010e9",
+      "summary": "Empty Career Master: Rules & why shows \"No skills or tools yet — add them in Career Master → Manual Intake.\"; QR page shows no charts section."
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0d9743c3089749a8",
+      "summary": "A link that was revoked or never approved: QR page shows \"This link isn't available\"."
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d332faa7a4f05b45",
+      "summary": "Saving a formula with an unknown input or no thresholds: error toast, nothing saved."
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "89a39f9eea1f1038",
+      "summary": "Editing or deleting the Salt Basin methodology via the API: refused (403)."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "d42d74f1e3d9c6d3"
+    },
+    {
+      "title": "Preconditions (set up once)",
+      "kind": "precondition",
+      "hash": "580699e846906c2a"
+    },
+    {
+      "title": "Journey 1 — See each level and why",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 2 — Set how a technology was used (saves to Career Master)",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 3 — Override one level by hand",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 4 — Certification bonus",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 5 — Your own formula",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 6 — Finalizing requires every technology's category",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 7 — The live QR page",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 8 — Rules & why inside the Output Template editor",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    }
+  ],
+  "comparedWithPrevious": {
+    "same": [
+      "P.1",
+      "P.2",
+      "P.3",
+      "J1.1",
+      "J1.2",
+      "J1.3",
+      "J2.1",
+      "J2.2",
+      "J3.1",
+      "J3.2",
+      "J4.1",
+      "J4.2",
+      "J4.3",
+      "J5.1",
+      "J5.2",
+      "J5.3",
+      "J5.4",
+      "J6.1",
+      "J6.2",
+      "J6.3",
+      "J6.5",
+      "J7.1",
+      "J7.2",
+      "J7.3",
+      "J7.4",
+      "J7.5",
+      "J8.1",
+      "J8.2",
+      "J8.3",
+      "J8.4",
+      "E.1",
+      "E.2",
+      "E.3",
+      "E.4"
+    ],
+    "changed": [
+      "J6.4"
+    ],
+    "added": [],
+    "retired": [],
+    "contextChanged": []
+  }
+}
