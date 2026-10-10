@@ -22,6 +22,7 @@ export const GOVERNED_ROUTE_FILES = Object.freeze({
   'server/routes/careerMaster.js': '/api/career',
   'server/routes/sharedOutputs.js': '/api/shared-outputs',
   'server/routes/releaseIntelligence.js': '/api/release-intelligence',
+  'server/routes/sessionMapping.js': '/api/session-mapping',
 });
 
 /** For files governed only in part: file -> pattern a route (`METHOD /full/path`) must match to be governed.
@@ -119,6 +120,13 @@ export const CAPABILITIES = Object.freeze([
   { key: 'release-loop-bugs', title: 'Triage and fix bugs (admin)', group: 'Release loop', ui: `${WS} > Journeys > Release loop > Runs`, api: ['POST /api/release-loop/runs/:id/bugs', 'POST /api/release-loop/bugs/:id/fix'], mcp: ['release_loop_add_bug', 'release_loop_bug_action'] },
   { key: 'release-loop-reconciliation', title: 'Reconcile a run (admin)', group: 'Release loop', ui: `${WS} > Journeys > Release loop > Runs`, api: ['POST /api/release-loop/runs/:id/reconciliation', 'PUT /api/release-loop/runs/:id/reconciliation/:itemId'], mcp: ['release_loop_add_reconciliation', 'release_loop_resolve_reconciliation'] },
   { key: 'release-loop-escalations', title: 'List escalations (admin)', group: 'Release loop', ui: `${WS} > Journeys > Release loop > Escalations`, api: ['GET /api/release-loop/escalations'], mcp: ['release_loop_list_escalations'] },
+  // ── After-session mapping (admin) ─────────────────────────────────────────
+  { key: 'session-mapping-config', title: 'Read, save and reset the mapping rules (admin)', group: 'Session mapping', ui: `${WS} > Journeys > Sessions`, api: ['GET /api/session-mapping/config', 'PUT /api/session-mapping/config', 'DELETE /api/session-mapping/config'], mcp: ['session_mapping_config', 'session_mapping_config_save'] },
+  { key: 'session-mapping-sessions', title: 'List, read and re-map analysed sessions (admin)', group: 'Session mapping', ui: `${WS} > Journeys > Sessions`, api: ['GET /api/session-mapping/sessions', 'GET /api/session-mapping/sessions/:id', 'POST /api/session-mapping/sessions/:id/remap'], mcp: ['session_mapping_sessions', 'session_mapping_remap'] },
+  { key: 'session-mapping-trends', title: 'Read token, spend and time trends (admin)', group: 'Session mapping', ui: `${WS} > Journeys > Sessions`, api: ['GET /api/session-mapping/trends'], mcp: ['session_mapping_trends'] },
+  { key: 'session-mapping-proposals', title: 'List, reject and apply mapping proposals (admin; apply runs the finalization gate)', group: 'Session mapping', ui: `${WS} > Journeys > Sessions`, api: ['GET /api/session-mapping/proposals', 'POST /api/session-mapping/proposals/:id/reject', 'POST /api/session-mapping/proposals/:id/apply'], mcp: ['session_mapping_proposals', 'session_mapping_proposal_decide'] },
+  { key: 'session-mapping-import', title: 'Import a transcript, metrics JSON or scan the server folder (admin)', group: 'Session mapping', ui: `${WS} > Journeys > Sessions`, api: ['POST /api/session-mapping/import/transcript', 'POST /api/session-mapping/import/metrics', 'POST /api/session-mapping/import/scan'], mcp: ['session_mapping_import'] },
+  { key: 'session-mapping-failures', title: 'List and dispose capture failures (admin)', group: 'Session mapping', ui: `${WS} > Journeys > Sessions`, api: ['GET /api/session-mapping/failures', 'PUT /api/session-mapping/failures/:id/disposition'], mcp: ['session_mapping_failures', 'session_mapping_failure_dispose'] },
   // ── Release tracker ───────────────────────────────────────────────────────
   { key: 'release-tracker-read', title: 'Read release records (admin)', group: 'Release tracker', ui: `${WS} > Journeys > Release Intelligence`, api: ['GET /api/release-intelligence/releases', 'GET /api/release-intelligence/releases/:id'], mcp: ['release_tracker_read'] },
   { key: 'release-create', title: 'Create a release record (admin)', group: 'Release tracker', ui: `${WS} > Journeys > Release Intelligence`, api: ['POST /api/release-intelligence/releases'], mcp: ['release_create'] },

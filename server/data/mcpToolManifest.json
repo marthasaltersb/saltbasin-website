@@ -126,6 +126,16 @@
     "release_import_repository",
     "release_config_read",
     "release_config_save",
-    "release_config_reset"
+    "release_config_reset",
+    "session_mapping_config",
+    "session_mapping_config_save",
+    "session_mapping_sessions",
+    "session_mapping_remap",
+    "session_mapping_trends",
+    "session_mapping_proposals",
+    "session_mapping_proposal_decide",
+    "session_mapping_import",
+    "session_mapping_failures",
+    "session_mapping_failure_dispose"
   ]
 }
