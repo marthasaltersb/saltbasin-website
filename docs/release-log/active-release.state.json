@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T00:24:13.843Z",
+  "exportedAt": "2026-10-10T00:27:04.779Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -90,15 +90,15 @@
       "backlog": 7
     },
     "in-app-release-loop": {
-      "status": "validate",
-      "lastRound": 1,
+      "status": "failing",
+      "lastRound": 2,
       "lastScore": "59/60",
-      "lastReport": "docs/test-results/in-app-release-loop/round-1.md",
+      "lastReport": "docs/test-results/in-app-release-loop/round-2.md",
       "openBugs": 7,
       "backlog": 1
     },
     "session-mapping": {
-      "status": "failed",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -7263,7 +7263,7 @@
     {
       "id": "in-app-release-loop-B1",
       "feature": "in-app-release-loop",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "requirement_gap",
       "attempts": 1,
       "step": "interface parity",
@@ -7295,7 +7295,7 @@
     {
       "id": "in-app-release-loop-B2",
       "feature": "in-app-release-loop",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "owner_direction_conflict",
       "attempts": 1,
       "step": "wiring",
@@ -7355,7 +7355,7 @@
     {
       "id": "in-app-release-loop-B4",
       "feature": "in-app-release-loop",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "requirement_gap",
       "attempts": 1,
       "step": "editable definition",
@@ -7432,7 +7432,7 @@
     {
       "id": "T1",
       "feature": "in-app-release-loop",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "defect",
       "attempts": 1,
       "step": "Run ls server/lib/mcpToolRegistry.js (MCP gap for platform-mcp)",
