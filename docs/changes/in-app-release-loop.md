@@ -96,3 +96,10 @@ An admin (or an in-app agent acting through the same server functions) can now r
 ## Fix notes per round
 
 None yet.
+
+## Fix notes — round 4
+
+### in-app-release-loop-T4-1 (step E.1: every visible control at least 44px tall, both passes)
+- What changed: the breadcrumb buttons (Sun, Journeys, Copy link, Dismiss) had no height at desktop width; the 44px rule lived only inside the 700px media query. `crumbBtn` now carries `minHeight: 44` with `inline-flex` / `align-items: center`, so it applies at every width. The phone query keeps the 44px minimum width, larger padding and font. The world-shell-layers change doc now says 44px at every width.
+- Files: `src/components/WorldBreadcrumbs.jsx`, `docs/changes/world-shell-layers.md`.
+- Checked: built and served the app, logged in as the admin, opened `/world?at=island:release-loop` at 1280x900 and 390x844. Both widths: `scrollWidth` equals `innerWidth`, no visible button/select/input/textarea/summary under 44px (Sun and Copy link measure 44px). `npm run build` passes. The notice Dismiss button uses the same `crumbBtn` style.

@@ -11,12 +11,12 @@ const bar = {
   background: 'rgba(8,13,15,0.92)', borderBottom: '0.5px solid rgba(255,255,255,0.08)', fontSize: '0.74rem',
   color: C.text, fontFamily: 'DM Sans, sans-serif', minHeight: 34, boxSizing: 'border-box', flexShrink: 0, position: 'relative', zIndex: 30,
 };
-const crumbBtn = { background: 'transparent', border: 'none', color: C.teal, cursor: 'pointer', padding: '0.15rem 0.1rem', fontSize: '0.74rem', textDecoration: 'underline', textUnderlineOffset: 3, fontFamily: 'inherit' };
+const crumbBtn = { background: 'transparent', border: 'none', color: C.teal, cursor: 'pointer', padding: '0.15rem 0.1rem', minHeight: 44, display: 'inline-flex', alignItems: 'center', fontSize: '0.74rem', textDecoration: 'underline', textUnderlineOffset: 3, fontFamily: 'inherit' };
 const current = { color: C.gold, fontWeight: 600, padding: '0.15rem 0.1rem', overflowWrap: 'anywhere' };
 const sep = { color: C.muted };
-// Phone width: every crumb is a 44px tap target.
+// Every crumb is at least 44px tall at every width (min-height lives in crumbBtn); phone width widens the target.
 const CRUMB_CSS = `@media (max-width: 700px) {
-  .sb-world-crumbs button { min-height: 44px; min-width: 44px; padding: 0.4rem 0.55rem !important; font-size: 0.82rem !important; }
+  .sb-world-crumbs button { min-width: 44px; padding: 0.4rem 0.55rem !important; font-size: 0.82rem !important; }
   .sb-world-crumbs { font-size: 0.82rem !important; }
 }`;
 const note = { position: 'absolute', top: '100%', left: '0.75rem', right: '0.75rem', zIndex: 40, margin: '0.25rem 0 0', boxShadow: '0 6px 18px rgba(0,0,0,0.5)', padding: '0.35rem 0.5rem', borderRadius: 6, border: '0.5px solid rgba(196,132,58,0.6)', background: '#2a2014', color: '#f0d9b5', fontSize: '0.72rem', display: 'flex', gap: '0.6rem', alignItems: 'flex-start' };
