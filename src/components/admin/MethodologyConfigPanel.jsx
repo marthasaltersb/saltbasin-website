@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
+import { jsonProblem } from '../../lib/friendlyError.js';
 
 // Generic editor for every registered Config Envelope (server/lib/configEnvelope.js)
 // — this is the missing piece the runtime-config audit (2026-07-12,
@@ -37,7 +38,7 @@ function EnvelopeCard({ envelope, onSaved }) {
       parsed = JSON.parse(text);
       setParseError(null);
     } catch (e) {
-      setParseError(`Not valid JSON: ${e.message}`);
+      setParseError(jsonProblem('configuration', e));
       return;
     }
     setSaving(true);
@@ -76,7 +77,7 @@ function EnvelopeCard({ envelope, onSaved }) {
           : 'Using shipped default · no override saved yet'}
       </div>
       <textarea style={s.textarea} value={text} onChange={(e) => setText(e.target.value)} spellCheck={false} />
-      {parseError && <div style={s.errorBox}>{parseError}</div>}
+      {parseError && <div role="alert" style={{ ...s.errorBox, whiteSpace: 'pre-line' }}>{parseError}</div>}
       {errors.length > 0 && (
         <div style={s.errorBox}>
           {errors.map((err, i) => <div key={i}>{err}</div>)}

@@ -8,6 +8,7 @@
 // expects the next render (or the template editor's live preview, which posts
 // 'sb-output-data-refresh') to reflect it.
 import { useEffect, useState } from 'react';
+import { httpProblem } from './friendlyError.js';
 
 export async function fetchResumeRollups(ownerSlug = '', { atom = false } = {}) {
   const params = [ownerSlug ? `owner=${encodeURIComponent(ownerSlug)}` : '', atom ? 'include=atom' : ''].filter(Boolean);
@@ -16,7 +17,7 @@ export async function fetchResumeRollups(ownerSlug = '', { atom = false } = {}) 
   if (!r.ok) {
     let detail = '';
     try { detail = (await r.json())?.error || ''; } catch (e) { detail = `unreadable error body (${e.message})`; }
-    throw new Error(`Resume rollups request failed (${r.status})${detail ? `: ${detail}` : ''}`);
+    throw new Error(httpProblem(r.status, detail ? `Your resume summary could not be loaded. ${detail}` : ''));
   }
   return r.json();
 }

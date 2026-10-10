@@ -12,6 +12,7 @@ import {
   listReleases, getReleaseDetail, createRelease, addManualFeature, addManualFailedRun, setDisposition,
   listFailedRuns, listOutputs, linkOutput, approveRelease, reopenRelease, getTrends,
 } from '../lib/releaseIntelligence.js';
+import { jsonProblemMessage } from '../lib/friendlyErrors.js';
 
 const router = Router();
 router.use(requireAdmin);
@@ -69,7 +70,7 @@ router.post('/import/snapshot', wrap(async (req, res) => {
   const { releaseKey, snapshot } = req.body || {};
   let snap = snapshot;
   if (typeof snap === 'string') {
-    try { snap = JSON.parse(snap); } catch (e) { return res.status(400).json({ error: `The snapshot is not valid JSON: ${e.message}` }); }
+    try { snap = JSON.parse(snap); } catch (e) { return res.status(400).json({ error: jsonProblemMessage('snapshot', e) }); }
   }
   const result = await importSnapshot(String(releaseKey || '').trim(), snap, { actor: actorOf(req) });
   res.json({ ...result, attributed: await attributeOrphans() });

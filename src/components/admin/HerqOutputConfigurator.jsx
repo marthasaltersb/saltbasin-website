@@ -464,7 +464,7 @@ export default function HerqOutputConfigurator({ outputs, onRefresh, adapter = n
         await adapter.onSave(config, outputName);
         setSaveMsg(adapter.savedNote || 'Saved ✓');
       } catch (e) {
-        setSaveMsg(`Error: ${e.message}`);
+        setSaveMsg(`Your changes were not saved. ${e.message}`);
       } finally {
         setSaving(false);
       }

@@ -13,7 +13,7 @@ export default function BoundedCareerAgentPanel() {
 
   async function apply() {
     let parsed;
-    try { parsed = JSON.parse(changes); } catch { return toast.error('Changes must be valid JSON'); }
+    try { parsed = JSON.parse(changes); } catch { return toast.error('The changes could not be read because part of their text is mistyped or missing. Check for a missing comma, quote or bracket, then try again.'); }
     setBusy(true);
     try {
       const next = await api.runBoundedCareerAction({ targetType, targetId: targetType === 'resumePreset' ? targetId : Number(targetId), changes: parsed });
