@@ -338,8 +338,8 @@ export async function scanTranscripts({ actor } = {}) {
   // A missing transcripts folder must not stop spooled analyses and hook failures being filed.
   let files = [];
   let dirError = null;
-  try { files = listSessionFiles(dir); } catch (e) { dirError = e.message; }
-  const result = { dir, dirError, found: files.length, imported: 0, updated: 0, unchanged: 0, failed: [], hookFailuresFiled: 0, spooledFiled: 0 };
+  try { files = listSessionFiles(dir); } catch (e) { dirError = e; }
+  const result = { dir, found: files.length, imported: 0, updated: 0, unchanged: 0, failed: [], hookFailuresFiled: 0, spooledFiled: 0 };
   for (const f of files) {
     try {
       const rec = analyzeSessionFile(f, { idleCapMinutes: rules.idleCapMinutes });
@@ -381,6 +381,12 @@ export async function scanTranscripts({ actor } = {}) {
       result.hookFailuresFiled += 1;
     }
     fs.renameSync(logFile, `${logFile}.filed-${Date.now()}`);
+  }
+  // The folder problem is still a failure the member must see: surface it (400) after the spooled work was filed.
+  if (dirError) {
+    const filed = result.spooledFiled + result.hookFailuresFiled;
+    dirError.message = `${dirError.message}${filed ? `\nStill filed ${result.spooledFiled} spooled analys${result.spooledFiled === 1 ? 'is' : 'es'} and ${result.hookFailuresFiled} hook failure${result.hookFailuresFiled === 1 ? '' : 's'}.` : ''}`;
+    throw dirError;
   }
   return result;
 }

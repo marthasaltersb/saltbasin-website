@@ -60,7 +60,7 @@ const money = (v, cur) => `${cur} ${Number(v).toLocaleString('en-US', { minimumF
 const day = (ms) => (ms ? new Date(ms).toISOString().slice(0, 10) : 'undated');
 const totalTokens = (t) => (t ? (t.input || 0) + (t.cacheWrite || 0) + (t.cacheRead || 0) + (t.output || 0) : null);
 
-function ErrorBox({ error }) { return error ? <div role="alert" style={S.alert}>{error}</div> : null; }
+function ErrorBox({ error }) { return error ? <div role="alert" style={{ ...S.alert, whiteSpace: 'pre-line' }}>{error}</div> : null; }
 function Field({ label, children, style }) { return <label style={{ ...S.label, ...style }}><span>{label}</span>{children}</label>; }
 function AreaPill({ area }) { return <span style={S.pill(AREA_COLORS[area] || C.sec)}>{AREA_LABELS[area] || area}</span>; }
 function StatusPill({ status }) {
