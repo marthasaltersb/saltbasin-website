@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T21:47:53.039Z",
+  "exportedAt": "2026-10-10T21:50:56.604Z",
   "features": {
     "platform-mcp": {
       "status": "failed",
@@ -82,7 +82,7 @@
       "backlog": 6
     },
     "cover-letter-agent": {
-      "status": "validate",
+      "status": "failed",
       "lastRound": 2,
       "lastScore": "45/48",
       "lastReport": "docs/test-results/cover-letter-agent/round-2.md",
