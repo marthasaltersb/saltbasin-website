@@ -76,7 +76,7 @@ Methodology reminder (shown on screen): points = years × 1 (max 15) + engagemen
 3. [J6.3] On any output click **Approve for QR** (or **Approve** / **Publish**) and confirm.
    - Expect a dialog "**Set how each technology was used**" listing QuoteFlow CPQ with a dropdown preset to a value marked "(suggested)".
 4. [J6.4] Choose **Hands-on**, click **Save to Career Master and continue**.
-   - Expect the dialog to close, the approval to complete (for Approve for QR: toast "Approved — private QR link created…", a QR code and link under the output), and the banner gone.
+   - Expect the dialog to close, the approval to complete (for Approve for QR: toast "Approved - private QR link created…", a QR code and link under the output), and the banner gone.
 5. [J6.5] Click **Cancel** instead (repeat with another uncategorised tool) — expect toast "Finalization cancelled — technologies still need a proficiency category." and the output unchanged.
 
 ## Journey 7 — The live QR page
