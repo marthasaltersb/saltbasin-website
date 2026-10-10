@@ -83,7 +83,7 @@ Re-running the rules (a re-filed session, or saving Settings) updates undecided 
 
 | Capability | Website | API | MCP |
 | --- | --- | --- | --- |
-| All capabilities | World Shell -> Journeys -> Sessions, desktop and 390px (training spec walks both) | `/api/session-mapping/*` (same `requireAdmin` + `assertReadyToFinalize`) | **MCP_GAP (recorded, assigned to `platform-mcp`)**: `server/lib/mcpToolRegistry.js` does not exist in this repository, and creating a second registry here would fork it. Planned append-only tools, each a thin call to the same `sessionMapping.js` function with the same admin check: `session_mapping_config`, `session_mapping_sessions`, `session_mapping_trends`, `session_mapping_proposals` (list / reject / apply with the finalize gate), `session_mapping_import`, `session_mapping_failures`. |
+| All capabilities | World Shell -> Journeys -> Sessions, desktop and 390px (training spec walks both) | `/api/session-mapping/*` (same `requireAdmin` + `assertReadyToFinalize`) | Ten admin-only tools in `server/lib/mcpToolRegistry.js` (scopes `sessions.read` / `sessions.write`), each a thin lazy call to the same `sessionMapping.js` / `sessionMappingConfig.js` function the route calls: `session_mapping_config`, `session_mapping_config_save`, `session_mapping_sessions`, `session_mapping_remap`, `session_mapping_trends`, `session_mapping_proposals`, `session_mapping_proposal_decide` (apply runs `assertReadyToFinalize` first), `session_mapping_import`, `session_mapping_failures`, `session_mapping_failure_dispose`. Rows in `capabilityParity.js`; `routes/sessionMapping.js` is a governed route file. |
 
 ## Behaviour changes to know
 
@@ -105,7 +105,6 @@ Against a fresh database `sb_rl_bld_*` on Postgres 16, Chromium 1194, 2026-10-09
 
 ## Known limitations
 
-- MCP tools are planned, not built (see Interface parity).
 - Spend uses starter prices; there is no live price feed.
 - Mapping rules are thresholds on metrics: they point to *where* to edit and *why*; they do not read conversation text, so they cannot say *what* to write beyond the template, and nothing edits files automatically (the reviewer edits, then marks applied).
 - Before/after is correlational: sessions differ in task, so a change in a per-session average is evidence, not proof.
@@ -114,4 +113,8 @@ Against a fresh database `sb_rl_bld_*` on Postgres 16, Chromium 1194, 2026-10-09
 
 ## Fix notes per round (appended by fix agents)
 
-_None yet._
+### Fix notes - round 1
+
+**T1 - MCP_GAP (session-mapping-B5).** What changed: added scopes `sessions.read` and `sessions.write`; appended ten admin-permission tools (the six planned names, with read and write split into separate tools so a read-only token cannot change anything: `session_mapping_config` / `_config_save`, `_sessions` / `_remap`, `_proposals` / `_proposal_decide`, `_failures` / `_failure_dispose`, plus `_trends` and `_import`). Each calls the same server function as its route and surfaces the same error status and code; apply calls `assertReadyToFinalize(user.id)` first, so a blocked finalization comes back as `isError` with 409 `tool_category_required`, like `release_approve`. No tool returns transcript text (the functions return metrics only). Files: `server/lib/mcpToolRegistry.js`, `server/data/mcpToolManifest.json` (append-only), `server/lib/capabilityParity.js` (6 rows, `server/routes/sessionMapping.js` added to the governed route files), this change spec. The frozen training spec and baselines are untouched.
+How checked: `node scripts/check-interface-parity.mjs --strict` reports 86 of 86 capabilities in all three interfaces, 0 gaps, and `--self-test` passes. Against a fresh database, via `/mcp` with personal access tokens: the admin's config, sessions (list and one), trends, proposals and failures results were byte-equal to the API responses; remap, import (transcript, 60 messages, filed a cache proposal), reject and config reset worked; a read-only token was refused 403 `scope_not_granted` on a write tool and could read; a member token was refused 403 `forbidden` (and the API returned 403); unknown session id and an already-rejected proposal returned `isError` with 404 and 409. Not exercised live: the 409 `tool_category_required` block on apply (it is the same shared `assertReadyToFinalize` call that `release_approve` uses; the API route's own gate check on this path was verified in the original build). `npm run build` passes.
+

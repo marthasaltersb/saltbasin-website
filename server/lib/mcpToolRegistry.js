@@ -22,6 +22,8 @@ export const MCP_SCOPES = Object.freeze({
   'release.read': 'Read release records and the release tracker (administrators only)',
   'release.write': 'Create, reconcile, approve and import release records, dispose failed runs and edit the tracker rules (administrators only)',
   'release.loop.read': 'Read the release loop definition, runs, bugs and escalations (administrators only)',
+  'sessions.read': 'Read after-session metrics, trends, mapping proposals, capture failures and the mapping rules (administrators only)',
+  'sessions.write': 'Change the mapping rules, re-map, import sessions, reject or apply proposals and dispose capture failures (administrators only)',
   'release.loop.write': 'Change the release loop definition and drive runs, rounds, bugs and reconciliation (administrators only)',
 });
 
@@ -54,6 +56,12 @@ const riCfg = () => import('./releaseIntelligenceConfig.js');
 const riBad = (message) => Object.assign(new Error(message), { status: 400, code: 'bad_request' });
 const riTool = (name, title, description, inputSchema, scope, api, handler) => rlTool(name, title, description, inputSchema, scope, api, handler);
 const RI = 'release.write';
+
+/** After-session mapping tools: same functions and error statuses as server/routes/sessionMapping.js; admin check is the registry's permission. Metrics only - no transcript text is ever returned. */
+const smLib = () => import('./sessionMapping.js');
+const smCfg = () => import('./sessionMappingConfig.js');
+const smNotFound = (what) => Object.assign(new Error(`${what} not found`), { status: 404, code: 'not_found' });
+const smTool = (name, title, description, inputSchema, scope, api, handler) => rlTool(name, title, description, inputSchema, scope, api, handler);
 
 const CORE_TOOLS = [
   {
@@ -795,6 +803,68 @@ const CORE_TOOLS = [
   riTool('release_config_reset', 'Reset the tracker rules', 'Removes the stored override so the shipped defaults apply.',
     schema({}), RI, 'DELETE /api/release-intelligence/config',
     async () => { await (await riCfg()).resetRules(); return { ok: true }; }),
+  smTool('session_mapping_config', 'Read the session mapping rules', 'Returns the effective rules (prices, thresholds, target files), the shipped defaults and whether an override is stored.',
+    schema({}), 'sessions.read', 'GET /api/session-mapping/config',
+    async () => { const c = await smCfg(); const { rules, overrideError, overridden } = await c.loadRules(); return { rules, defaults: c.DEFAULT_RULES, overrideError, overridden }; }),
+  smTool('session_mapping_config_save', 'Save or reset the session mapping rules', 'Saves the complete rules (invalid rules are refused with the problems listed) or, with reset true, removes the stored override. Every session is re-mapped afterwards.',
+    schema({ rules: rlObj('The complete rules, as returned by session_mapping_config.'), reset: { type: 'boolean', description: 'Remove the stored override instead of saving.' } }),
+    'sessions.write', 'PUT /api/session-mapping/config',
+    async (args) => {
+      const c = await smCfg(); const l = await smLib();
+      if (args.reset) { await c.resetRules(); return { ok: true, remapped: await l.remapAll() }; }
+      const rules = await c.saveRules(args.rules);
+      return { rules, remapped: await l.remapAll() };
+    }),
+  smTool('session_mapping_sessions', 'List or read analysed sessions', 'Without sessionId, lists every analysed session with its metrics and open proposal count. With sessionId, returns that session with its proposals. Metrics only; never transcript text.',
+    schema({ sessionId: id('Optional analysis id.') }), 'sessions.read', 'GET /api/session-mapping/sessions',
+    async (args) => {
+      const l = await smLib();
+      if (args.sessionId == null) return l.listSessions();
+      const d = await l.getSession(args.sessionId);
+      if (!d) throw smNotFound('Session');
+      return d;
+    }),
+  smTool('session_mapping_remap', 'Re-map one session', 'Recomputes the mapping proposals of one session against the current rules and returns it.',
+    schema({ sessionId: id('The analysis id.') }, ['sessionId']), 'sessions.write', 'POST /api/session-mapping/sessions/:id/remap',
+    async (args) => {
+      const l = await smLib();
+      await l.remapSession(args.sessionId);
+      const d = await l.getSession(args.sessionId);
+      if (!d) throw smNotFound('Session');
+      return d;
+    }),
+  smTool('session_mapping_trends', 'Read token, spend and time trends', 'Returns observed tokens, inferred time and priced spend trends (a model with no price row is "not priced", never 0).',
+    schema({}), 'sessions.read', 'GET /api/session-mapping/trends',
+    async () => (await smLib()).getTrends()),
+  smTool('session_mapping_proposals', 'List mapping proposals', 'Lists context / prompt / cache / memory mapping proposals, optionally filtered by status or area.',
+    schema({ status: str('Optional status filter.', { maxLength: 40 }), area: str('Optional area filter.', { maxLength: 60 }) }), 'sessions.read', 'GET /api/session-mapping/proposals',
+    async (args) => ({ proposals: await (await smLib()).listProposals({ status: args.status, area: args.area }) })),
+  smTool('session_mapping_proposal_decide', 'Reject or apply a proposal', 'reject records a note; apply marks the proposal applied and runs the finalization gate first (refused 409 tool_category_required while any technology lacks a proficiency category), same as the website.',
+    schema({ proposalId: id('The proposal id.'), action: { type: 'string', enum: ['reject', 'apply'] }, note: str('Reviewer note.', { maxLength: 2000 }), appliedOn: str('apply only: date or label it was applied on.', { maxLength: 60 }), ref: str('apply only: commit or reference.', { maxLength: 300 }) }, ['proposalId', 'action']),
+    'sessions.write', 'POST /api/session-mapping/proposals/:id/apply',
+    async (args, { user }) => {
+      const l = await smLib(); const a = rlActor(user);
+      if (args.action === 'reject') return { proposal: await l.rejectProposal(args.proposalId, args.note, a) };
+      const { assertReadyToFinalize } = await import('./finalizationGates.js');
+      await assertReadyToFinalize(user.id);
+      return { proposal: await l.applyProposal(args.proposalId, { appliedOn: args.appliedOn, note: args.note, ref: args.ref }, a) };
+    }),
+  smTool('session_mapping_import', 'Import session metrics', 'kind transcript: analyse pasted transcript lines in memory (text is discarded, metrics kept). kind metrics: file an analysis JSON. kind scan: scan the server\'s transcript folder.',
+    schema({ kind: { type: 'string', enum: ['transcript', 'metrics', 'scan'] }, sessionId: str('transcript: any short session name.', { maxLength: 200 }), main: str('transcript: the main session lines.'), subagents: { type: 'array', items: rlObj('{label, text}'), description: 'transcript: optional subagent transcripts.' }, analysis: rlObj('metrics: the analysis JSON.') }, ['kind']),
+    'sessions.write', 'POST /api/session-mapping/import/transcript',
+    async (args, { user }) => {
+      const l = await smLib(); const a = rlActor(user);
+      if (args.kind === 'scan') return l.scanTranscripts({ actor: a });
+      if (args.kind === 'metrics') return l.importMetricsJson(args.analysis, { actor: a });
+      return l.importTranscriptText({ sessionId: args.sessionId, main: args.main, subagents: args.subagents }, { actor: a });
+    }),
+  smTool('session_mapping_failures', 'List capture failures', 'Lists sessions whose capture failed, with any reviewer disposition.',
+    schema({}), 'sessions.read', 'GET /api/session-mapping/failures',
+    async () => ({ failures: await (await smLib()).listCaptureFailures() })),
+  smTool('session_mapping_failure_dispose', 'Dispose a capture failure', 'Sets a reviewer disposition (with a note) on a capture failure.',
+    schema({ failureId: id('The failure id.'), disposition: str('The disposition key.', { maxLength: 60 }), note: str('Why.', { maxLength: 2000 }) }, ['failureId', 'disposition']),
+    'sessions.write', 'PUT /api/session-mapping/failures/:id/disposition',
+    async (args, { user }) => ({ failure: await (await smLib()).setCaptureFailureDisposition(args.failureId, { disposition: args.disposition, note: args.note }, rlActor(user)) })),
   rlTool('release_loop_get_definition', 'Read the release loop definition', 'Returns the effective definition (roles, stages, gates), its version history and the platform agents.',
     schema({}), 'release.loop.read', 'GET /api/release-loop/definition',
     async () => (await rlLoop()).getDefinitionView()),
