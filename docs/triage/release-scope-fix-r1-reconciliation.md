@@ -1,0 +1,12 @@
+# Reconciliation: release-scope, fix round 1 (branch release-loop/release-scope-fix-r1, head da35a40)
+
+1. Sandbox refusals of inline/heredoc commands: informational, resolved. Nothing changed; work redone as scripts.
+2. First create-test-member run before admin seed (admin: null, 401): test_harness, resolved. Fix agent recreated the DB, seeded, re-ran; DB dropped, server killed. Ordering rule: boot server against fresh DB (seeds admin) BEFORE create-test-member.
+3. Parity row release-tracker-admin MCP_GAP: requirement_gap, unresolved. Re-ran `node scripts/check-interface-parity.mjs`: 112/113, 1 MCP gap (release-tracker-admin); `--strict` exits FAIL. Not in J5.5 scope and owned by live-release-tracker, but it is a gap on the branch's own parity map. Proposed fix: register the remaining RELEASE_TRACKER_TOOLS (ingest, pull, settings, webhook secret, tokens, snapshots, ingest-log) in server/lib/mcpToolRegistry.js calling releaseTrackerService.js, add to mcpToolManifest.json, set mcp on the parity row.
+
+Gaps missed by the reported failures:
+- Branch is behind integration: integration head is 384d046 (release-cut-and-session-plans merged); `git merge-tree` shows a content conflict in server/lib/capabilityParity.js (manifest and registry auto-merge). Integration must resolve before merge; re-run check-interface-parity afterward. (process, unresolved)
+- Change spec "Interface parity" gap: no platform screen and no MCP tool to change a feature's scope (only scripts/release-scope.mjs). Owner direction is that capabilities work via website, API and MCP. requirement_gap, unresolved. Proposed fix: add an admin World Shell > Release tracker action plus API route plus MCP tool that call one shared server function and append scopeHistory, or the owner records an explicit exclusion.
+- Known limitation: stored() budget check in scripts/release-tracker-sync.mjs measures all bugs as one document though they are split across tracker/bugs and bugs-2, so it warns and trims detail that would fit. Pre-existing, left unchanged: informational (a requirement_gap only if the owner wants it fixed).
+- Round-1 fix verified feature scope fields only against an empty local snapshot, not with data: informational. J5.5 should be re-run with a seeded snapshot containing release-scope (planned, added.decidedBy owner) and qr-gated-outputs (backlog).
+- Owner-direction check: release_tracker_get_state is MCP, no new admin-navigation entry points added; no conflict found.
