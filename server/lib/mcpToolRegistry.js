@@ -842,6 +842,21 @@ const CORE_TOOLS = [
       return detail;
     },
   },
+  {
+    name: 'release_tracker_get_state',
+    title: 'Read the release tracker state',
+    description: 'Latest release tracker snapshot: features (each carries scope planned/backlog and added-after-the-cut), history points and numbered updates. Administrators, and members whose email is granted on the tracker Settings tab. Same as GET /api/release-tracker/state.',
+    inputSchema: schema({ release: str('Optional release key; omit for the current release.', { maxLength: 120 }) }),
+    scope: 'release.read',
+    permission: 'user',
+    api: 'GET /api/release-tracker/state',
+    handler: async (args, { user }) => {
+      const { getState, viewerKindForUser } = await import('./releaseTrackerService.js');
+      const viewer = await viewerKindForUser(user);
+      if (!viewer) { const e = new Error('You do not have access to the release tracker. Ask an admin to add your email on its Settings tab.'); e.status = 403; e.code = 'tracker_access_denied'; throw e; }
+      return { viewer, state: await getState({ releaseKey: args.release ? String(args.release) : null }) };
+    },
+  },
   riTool('release_create', 'Create a release record', 'Creates a release record. Same body as POST /api/release-intelligence/releases.',
     schema({ release: rlObj('The release fields the Release Intelligence screen sends.') }, ['release']), RI, 'POST /api/release-intelligence/releases',
     async (args, { user }) => (await riLib()).createRelease(args.release || {}, rlActor(user))),
