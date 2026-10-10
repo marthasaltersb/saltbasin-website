@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T21:41:37.195Z",
+  "exportedAt": "2026-10-10T21:44:47.956Z",
   "features": {
     "platform-mcp": {
       "status": "validate",
@@ -18,10 +18,10 @@
       "backlog": 2
     },
     "in-app-release-loop": {
-      "status": "validate",
-      "lastRound": 4,
-      "lastScore": "59/60",
-      "lastReport": "docs/test-results/in-app-release-loop/round-4.md",
+      "status": "failing",
+      "lastRound": 5,
+      "lastScore": "60/60",
+      "lastReport": ".claude/worktrees/wf_b28a3590-fda-17/docs/test-results/in-app-release-loop/round-5.md",
       "openBugs": 5,
       "backlog": 2
     },
@@ -42,7 +42,7 @@
       "backlog": 14
     },
     "release-cut-and-session-plans": {
-      "status": "validate",
+      "status": "failed",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -50,7 +50,7 @@
       "backlog": 0
     },
     "owner-error-messages": {
-      "status": "validate",
+      "status": "failed",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -74,7 +74,7 @@
       "backlog": 6
     },
     "resume-rollups": {
-      "status": "validate",
+      "status": "awaiting_retest",
       "lastRound": 4,
       "lastScore": "30/32",
       "lastReport": "docs/test-results/resume-rollups/round-4.md",
@@ -90,7 +90,7 @@
       "backlog": 10
     },
     "release-scope": {
-      "status": "validate",
+      "status": "awaiting_retest",
       "lastRound": 1,
       "lastScore": "24/25",
       "lastReport": "docs/test-results/release-scope/round-1.md",
@@ -106,7 +106,7 @@
       "backlog": 0
     },
     "graphify-data-model-map": {
-      "status": "build",
+      "status": "failed",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -122,7 +122,7 @@
       "backlog": 0
     },
     "tracker-world-navigation": {
-      "status": "build",
+      "status": "failed",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
