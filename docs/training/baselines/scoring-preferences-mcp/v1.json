@@ -1,0 +1,433 @@
+{
+  "feature": "scoring-preferences-mcp",
+  "spec": "docs/training/scoring-preferences-mcp.md",
+  "version": 1,
+  "frozenAt": "2026-10-10T21:04:42.550Z",
+  "commitAtFreeze": "4cee737dfdf0b618f898fd7c95671f9c0243fef5",
+  "specSha256": "9b1ab10e89e43357a2e9a781d487257555ebde7c97c9aff40adc763b2696a5b2",
+  "amendment": null,
+  "previous": null,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "P.1",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "92a1bd23705870a9",
+      "summary": "A fresh database is booted once and seeded (`npm run seed`); `node scripts/create-test-member.mjs` has run, giving the member `member@test.local` (password `Tes"
+    },
+    {
+      "id": "P.2",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "45386bdb80fdd332",
+      "summary": "The API and the web client run, the browser opens the web client, and the viewport is 1280x900 (desktop pass) or 390x844 with touch (phone pass). Browser sessio"
+    },
+    {
+      "id": "P.3",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "33fdd0801d90b2bc",
+      "summary": "Tokens created in the steps below are kept by the tester under the names **TOKEN_A** (Scoring probe) and **TOKEN_B** (Read only probe). A token is read from the"
+    },
+    {
+      "id": "P.4",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "da1188889f9bd140",
+      "summary": "Each pass (desktop, phone) starts from its own fresh database; a pass never reuses tokens or data from the other pass."
+    },
+    {
+      "id": "J0.1",
+      "kind": "step",
+      "journey": "0",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "846654f9c0e97666",
+      "summary": "Open `/login` and sign in with `member@test.local` / `TestPass!2345`. Expect the World Shell with **Test Member** and **Member** in the top bar and no password "
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "92bfc8d66c0c7bbf",
+      "summary": "Click **Journeys**, click the card **Career Placement Agents**, then click the button **Scoring Weights**. Expect the card **OPPORTUNITY SCORING WEIGHTS** with "
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c7f4460e8be74e0b",
+      "summary": "Set the field **Weight for Role scope and altitude (percent)** to `20`. Expect the line to read **Total: 105% (must total 100% to save)** in red, and **Save My "
+    },
+    {
+      "id": "J1.3",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "80ba0f36d41edc3e",
+      "summary": "Set the field **Weight for Practical fit (percent)** to `5`. Expect **Total: 100%** (no warning text) and **Save My Weights** enabled."
+    },
+    {
+      "id": "J1.4",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6725e4842098781b",
+      "summary": "Click **Save My Weights**. Expect a success notice **Saved — this changes only your own opportunity scores, never another member’s.**, the label now reading **Y"
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "dba69b582ec5860e",
+      "summary": "Click **← Back to World**, then **Journeys → Connected Agents**. In **Token name** type `Scoring probe`, tick **career.read** and **career.write** (and nothing "
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "9dabad6d9aad09f9",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> list`. Expect exit code 0, the three lines `career_scoring_preferences_read`, `career_scor"
+    },
+    {
+      "id": "J2.3",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "7e12b54c40c8f93e",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call career_scoring_preferences_read`. Expect `isError: false` and a result with `isPerson"
+    },
+    {
+      "id": "J2.4",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "b69b1791e9361554",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call career_scoring_preferences_save '{\"body\": {\"weights\": {\"scope_altitude\": 0.25, \"strat"
+    },
+    {
+      "id": "J2.5",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "53f2c96687972b8f",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call career_scoring_preferences_save '{\"body\": {\"weights\": {\"scope_altitude\": 0.2, \"strate"
+    },
+    {
+      "id": "J2.6",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "471b2fbd9cc967e2",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call career_scoring_preferences_save '{\"body\": {\"weights\": 5}}'`. Expect `isError: true` a"
+    },
+    {
+      "id": "J2.7",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "bb2256fe52216452",
+      "summary": "In the browser go **← Back to World**, **Journeys → Career Placement Agents → Scoring Weights**. Expect **Your custom weights** and the fields reading 25, 15, 1"
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "13e41b044443332c",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call career_scoring_preferences_reset`. Expect `isError: false`, `isPersonalOverride` fals"
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "365cee7a60924804",
+      "summary": "In the browser click **← Back to World**, then **Journeys → Career Placement Agents → Scoring Weights**. Expect the label **Salt Basin default**, the fields rea"
+    },
+    {
+      "id": "J3.3",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "1b72a55faaf70bc8",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call career_scoring_preferences_reset`. Expect `isError: false` and `isPersonalOverride` f"
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fc153737595a2f20",
+      "summary": "In the open card set **Weight for Role scope and altitude (percent)** to `20`, **Weight for Practical fit (percent)** to `5`, and click **Save My Weights**. Exp"
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "89ef3630553463d1",
+      "summary": "Click **Reset to Salt Basin Default**. Expect a success notice **Reverted to the Salt Basin default weights.**, the label **Salt Basin default**, the fields rea"
+    },
+    {
+      "id": "J4.3",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "ca97ada39a52b7e0",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call career_scoring_preferences_read`. Expect `isError: false`, `isPersonalOverride` false"
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b8b3824552158c16",
+      "summary": "In the browser go **← Back to World**, **Journeys → Connected Agents**. In **Token name** type `Read only probe`, tick only **career.read**, click **Create toke"
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "0f233208ae3d3182",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_B> list`. Expect the line `career_scoring_preferences_read` and no line `career_scoring_prefe"
+    },
+    {
+      "id": "J5.3",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "3f851aec4891f2a2",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_B> call career_scoring_preferences_save '{\"body\": {\"weights\": {\"scope_altitude\": 0.25, \"strat"
+    },
+    {
+      "id": "J5.4",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "d18476aeb25faa54",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_B> call career_scoring_preferences_read`. Expect `isError: false` and `isPersonalOverride` fa"
+    },
+    {
+      "id": "J6.1",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d839a6722135e94c",
+      "summary": "In the browser go **← Back to World**, **Journeys → Career Placement Agents → Scoring Weights**. Expect the page not to scroll sideways (the page is not wider t"
+    },
+    {
+      "id": "J6.2",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "827d882d3731ecbc",
+      "summary": "On a phone-width pass (390 pixels wide), expect the button **Save My Weights** and the button **Scoring Weights** to each be at least 44 pixels tall. On the des"
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d1948ae25cbfc7be",
+      "summary": "A field left empty counts as 0 in the total: clearing **Weight for Practical fit (percent)** from the defaults shows **Total: 90% (must total 100% to save)** an"
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "50a003c91e14f442",
+      "summary": "Weights that total 100% but with a field of `0` are accepted by the card (the dimension then has no influence): set **Weight for Transferable industry fit (perc"
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "e6bb03f2a0374b70",
+      "summary": "`curl -s -w \" %{http_code}\" http://localhost:<API_PORT>/api/career-agents/scoring-preferences` with no cookie prints an error body followed by status 401 and no"
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "888988e6c8aaef7c",
+      "summary": "Run `node scripts/check-interface-parity.mjs` exits 0 and prints `Interface parity: 110 of 110 capabilities work in all three interfaces (website UI gaps: 0, MC"
+    },
+    {
+      "id": "E.5",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1cb949ecaab8eb48",
+      "summary": "Weights are per member: the weights saved by `member@test.local` never appear for another member (a second member created with `node scripts/create-test-member."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "bd6ad84b451752a1"
+    },
+    {
+      "title": "Preconditions",
+      "kind": "precondition",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 0 - First login",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 1 - See the defaults and change them in the World Shell",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 2 - The same weights through MCP",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 3 - Reset through MCP",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 4 - Reset in the website, confirmed through MCP",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 5 - A read-only token cannot change weights",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 6 - Fit and tap targets at the current viewport",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    }
+  ]
+}
