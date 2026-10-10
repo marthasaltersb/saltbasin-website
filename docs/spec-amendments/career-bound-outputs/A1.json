@@ -5,6 +5,7 @@
   "proposedBy": "triage:career-bound-outputs:r3",
   "round": 3,
   "triageItems": [
+    "F3-2",
     "T3-6"
   ],
   "reason": "Fault injection cannot be produced through the interface; step E.4 is reported as a false UI_GAP every round.",
@@ -20,7 +21,7 @@
   ],
   "review": {
     "status": "needs_owner",
-    "reviewer": "amend:career-bound-outputs:r3",
+    "reviewer": "amend:career-bound-outputs:r4",
     "checklist": {
       "Traced": "pass",
       "Not weaker": "fail: drops the toast expectation and moves the step out of browser verification; change spec line 53 names only the \"Applied - sync failed\" list and Retry sync, so whether the toast stays is a product decision",
@@ -31,8 +32,24 @@
       "Fictional data only": "pass",
       "Independent of the fix": "pass"
     },
-    "note": "Fault injection is a real gap, but the proposal weakens the step (toast dropped, always passes in the browser) and baseline surfaces are desktop+mobile. Needs an owner decision on how this behaviour is verified.",
+    "note": "Fault injection is a real gap, but the proposal weakens the step (toast dropped, always passes in the browser) and baseline surfaces are desktop+mobile. Needs an owner decision on how this behaviour is verified. Round 4: Round 4 re-proposal (F3-2, spec_error) keeps the toast text but moves verification to an integrator script plus rendering the panel with a task whose metadata carries syncError. This is still a retirement of browser verification for E.4 and an unresolved owner choice between options (a) and (b); no owner answer has been filed, so the question is not asked again.",
     "question": "E.4 cannot be reached by clicking because a Career Atom sync failure needs an injected fault. Should we (a) retire browser verification of E.4 and verify it by the integrator's server test only, keeping the toast text \"Applied to Career Master, but the Career Atom sync failed: ...\" as a required behaviour in that test, or (b) provide a fixed test fixture or test-only fault hook in the validator environment so the validator can walk it? If (a), confirm the toast text is not a requirement.",
-    "at": "2026-10-09T17:01:37Z"
-  }
+    "at": "2026-10-10T00:00:00Z"
+  },
+  "additionalProposals": [
+    {
+      "proposedBy": "triage:career-bound-outputs:r4",
+      "round": 4,
+      "triageItem": "F3-2",
+      "change": {
+        "op": "change",
+        "stepId": "E.4",
+        "before": "Sync failure. If a Career Atom sync fails after an approval, a toast says \"Applied to Career Master, but the Career Atom sync failed: ...\" and the task appears under \"Applied - sync failed\" with Retry sync.",
+        "after": "Sync failure (verified by the integrator script, not the browser walk). With the Career Atom sync forced to fail by a test fault, an approval returns syncFailed true with a syncError, GET /api/career-reconciliation/tasks?status=sync_failed lists the task, and POST /tasks/:id/retry-sync with the fault removed clears it. The toast text and the \"Applied - sync failed\" list with Retry sync are checked by rendering the panel with a task whose metadata carries syncError.",
+        "tracesTo": "change spec career-bound-outputs: reconciliation approvals with sync-failure retry",
+        "whyNeeded": "Validators cannot cause a server-side sync fault from the browser (round 4 evidence, also rounds 2-3)."
+      }
+    }
+  ],
+  "round4Evidence": "Round 4 re-proposal (F3-2, spec_error) keeps the toast text but moves verification to an integrator script plus rendering the panel with a task whose metadata carries syncError. This is still a retirement of browser verification for E.4 and an unresolved owner choice between options (a) and (b); no owner answer has been filed, so the question is not asked again."
 }

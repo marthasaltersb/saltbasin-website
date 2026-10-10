@@ -5,6 +5,7 @@
   "proposedBy": "triage:career-bound-outputs:r3",
   "round": 3,
   "triageItems": [
+    "F3-3",
     "T3-7"
   ],
   "reason": "E.5 requires a red box; the product uses its standard amber warning box with role alert.",
@@ -20,7 +21,7 @@
   ],
   "review": {
     "status": "needs_owner",
-    "reviewer": "amend:career-bound-outputs:r3",
+    "reviewer": "amend:career-bound-outputs:r4",
     "checklist": {
       "Traced": "pass",
       "Not weaker": "pass",
@@ -31,8 +32,24 @@
       "Fictional data only": "pass",
       "Independent of the fix": "pass"
     },
-    "note": "The change spec does not require red, so the old wording is likely over-specific, but the replacement is not exact enough to approve and the colour/convention is a product rule.",
+    "note": "The change spec does not require red, so the old wording is likely over-specific, but the replacement is not exact enough to approve and the colour/convention is a product rule. Round 4: Round 4 re-proposal (F3-3, spec_error) is now exact (amber warning box) but states a product colour rule the owner has not confirmed, and omits role=alert. Same owner question as before; not asked again.",
     "question": "Confirm the product rule for E.5: the invalid-JSON message \"That is not valid JSON: ...\" must appear in the standard amber warning box (the one used for other errors in Career Sources to Review) exposed as role=\"alert\"; red is not required. If yes, the step can say exactly that and be approved.",
-    "at": "2026-10-09T17:01:37Z"
-  }
+    "at": "2026-10-10T00:00:00Z"
+  },
+  "additionalProposals": [
+    {
+      "proposedBy": "triage:career-bound-outputs:r4",
+      "round": 4,
+      "triageItem": "F3-3",
+      "change": {
+        "op": "change",
+        "stepId": "E.5",
+        "before": "Pasting text that is not JSON shows \"That is not valid JSON: ...\" in a red box",
+        "after": "Pasting text that is not JSON shows \"That is not valid JSON: ...\" in an amber warning box",
+        "tracesTo": "existing warnBox styling in CareerReconciliationPanel.jsx; change spec requires the message text only",
+        "whyNeeded": "Round 4 evidence: the panel's standard warning style is amber; red is not required by the change spec."
+      }
+    }
+  ],
+  "round4Evidence": "Round 4 re-proposal (F3-3, spec_error) is now exact (amber warning box) but states a product colour rule the owner has not confirmed, and omits role=alert. Same owner question as before; not asked again."
 }

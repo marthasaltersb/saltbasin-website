@@ -5,6 +5,7 @@
   "proposedBy": "triage:career-bound-outputs:r3",
   "round": 3,
   "triageItems": [
+    "F3-4",
     "career-bound-outputs-F2-8"
   ],
   "reason": "No baseline step covers a package that already has a converted career-bound output.",
@@ -20,7 +21,7 @@
   ],
   "review": {
     "status": "needs_owner",
-    "reviewer": "amend:career-bound-outputs:r3",
+    "reviewer": "amend:career-bound-outputs:r4",
     "checklist": {
       "Traced": "fail: the cited line only describes the \"Imported resumes you can convert\" list; no change-spec sentence says a converted package is disabled or annotated",
       "Not weaker": "pass",
@@ -31,8 +32,24 @@
       "Fictional data only": "pass",
       "Independent of the fix": "fail: it prescribes a disabled button and a note, a design choice the change spec does not set"
     },
-    "note": "The behaviour (block or allow a second conversion, and what to show) is a business rule not in the change spec. Cannot approve until defined.",
+    "note": "The behaviour (block or allow a second conversion, and what to show) is a business rule not in the change spec. Cannot approve until defined. Round 4: Round 4 coverage gap (F3-4, proposed as new step J6.8a) is the same missing behaviour as this amendment's J6.8b (observed rounds 2, 3 and 4). Merged here rather than filed twice; if the owner approves, the step takes the next unused J6 id. The proposed text 'disabled or reads Open converted output' offers two alternatives, so it is not exact, and the business rule is still undefined.",
     "question": "When an imported package has already been converted to a career-bound output, should Convert to career-bound output be disabled, or may a second copy be created? If disabled, what exact text should the row show (for example \"Already converted: Demo Package Resume (career-bound)\")?",
-    "at": "2026-10-09T17:01:37Z"
-  }
+    "at": "2026-10-10T00:00:00Z"
+  },
+  "additionalProposals": [
+    {
+      "proposedBy": "triage:career-bound-outputs:r4",
+      "round": 4,
+      "triageItem": "F3-4",
+      "change": {
+        "op": "add",
+        "stepId": "J6.8b",
+        "before": "",
+        "after": "After converting, the queue row shows a note that a converted output exists, and the Convert button is disabled or reads 'Open converted output'.",
+        "tracesTo": "round 2 and 3 convert-flow observations (F2-8, F3-4)",
+        "whyNeeded": "Observed in rounds 2, 3 and 4 with no step to hold a fix to."
+      }
+    }
+  ],
+  "round4Evidence": "Round 4 coverage gap (F3-4, proposed as new step J6.8a) is the same missing behaviour as this amendment's J6.8b (observed rounds 2, 3 and 4). Merged here rather than filed twice; if the owner approves, the step takes the next unused J6 id. The proposed text 'disabled or reads Open converted output' offers two alternatives, so it is not exact, and the business rule is still undefined."
 }
