@@ -64,17 +64,20 @@ if (argv.includes('--args')) {
   const state = fs.existsSync(STATE) ? JSON.parse(fs.readFileSync(STATE, 'utf8')) : { features: {}, bugs: [] };
   const portBase = Number(opt('--port-base') || 5000);
   const merged = (f) => fs.existsSync(path.join(root, f.trainingSpec)) && fs.existsSync(path.join(root, f.changeSpec));
+  // Features validated on production (scripts/production-rounds.mjs) are never launched as a local run: their
+  // next round is the production suite (.github/workflows/production-smoke.yml) after the fixes are deployed.
+  const onProduction = (await import('./production-rounds.mjs')).productionRounds();
   // A feature is unfinished while it has blocking bugs; bugs reassigned to it by the scope check count as its own.
   const owned = (key) => state.bugs.filter((b) => !DONE.has(b.status) && !HELD.has(b.status)
     && ((b.feature === key && !BACKLOG.has(b.status)) || (b.status === 'reassigned' && b.scope?.owner === key)));
   const unfinished = defs.features.filter((f) => !FINISHED.has(state.features[f.key]?.status) || owned(f.key).length);
-  // Features validated on production (scripts/production-rounds.mjs) are never launched as a local run: their
-  // next round is the production suite (.github/workflows/production-smoke.yml) after the fixes are deployed.
-  const { productionRounds } = await import('./production-rounds.mjs');
-  const onProduction = productionRounds();
-  for (const f of unfinished.filter((x) => onProduction[x.key])) console.error(`Not launched locally (validated on production): ${f.key}. After its owners' fixes reach main and deploy, run the production suite (Actions -> Production smoke and regression) and record round-${onProduction[f.key].at(-1).round + 1}.md.`);
   const groups = [];
-  for (const f of unfinished.filter((x) => !onProduction[x.key])) {
+  for (const f of unfinished.filter((x) => onProduction[x.key])) console.error(`Not launched locally (validated on production): ${f.key}. After its owners' fixes reach main and deploy, run the production suite (Actions -> Production smoke and regression) and record round-${onProduction[f.key].at(-1).round + 1}.md.`);
+  // Production bugs come first (HANDOVER): a feature left out above (finished, or not this release's work) that
+  // owns an open production bug is still launched, with only its production bugs as fix notes.
+  const prodOnly = new Set(defs.features.filter((f) => !unfinished.includes(f) && owned(f.key).some((b) => b.verifyBy === 'production')).map((f) => f.key));
+  if (prodOnly.size) console.error(`Launched for their production bugs only: ${[...prodOnly].join(', ')}`);
+  for (const f of [...unfinished, ...defs.features.filter((x) => prodOnly.has(x.key))].filter((x) => !onProduction[x.key])) {
     const g = groups.find((x) => f.dependsOn.some((d) => x.some((y) => y.key === d)));
     if (g) g.push(f); else groups.push([f]);
   }
@@ -91,7 +94,7 @@ if (argv.includes('--args')) {
     scopeCheck: true,
     features: group.map((f) => {
       const st = state.features[f.key];
-      const bugs = owned(f.key);
+      const bugs = owned(f.key).filter((b) => !prodOnly.has(f.key) || b.verifyBy === 'production');
       const base = { key: f.key, title: f.title, trainingSpec: f.trainingSpec, changeSpec: f.changeSpec, dependsOn: f.dependsOn.filter((d) => group.some((y) => y.key === d)) };
       if (!merged(f)) return { ...base, build: f.build };
       // Spec amendment proposals filed but not yet decided are reviewed before the first round (specGovernance).
