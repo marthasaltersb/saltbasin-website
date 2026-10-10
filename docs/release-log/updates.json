@@ -1057,5 +1057,142 @@
         "platform-mcp: being built → **in browser testing**"
       ]
     }
+  },
+  {
+    "version": "0.2.0-u10",
+    "release": "2026-10-02-application-packages",
+    "at": "2026-10-09T17:37:30.846Z",
+    "commit": "ee1aac4a013328b0fc7ad8e082680eb1dec84d43",
+    "previous": "0.2.0-u9",
+    "headline": "Agents running on all fronts; 6 questions waiting on the owner",
+    "note": "16 agents running. platform-mcp passed all 62 steps in round 1 and is closing its remaining items; in-app-release-loop 59/60; qr-gated-outputs 36/38 on baseline v2. platform-agent-runner (work-order-capped sessions, promptable quality agents) started building. Reviewers have filed owner questions: career-bound-outputs E.4, E.5 and convert-twice behaviour; output-version-history E.2 (asked three times, now merged into one question per step for future rounds) and the Version history button; resume-rollups column count.",
+    "metrics": {
+      "featuresTotal": 18,
+      "featuresPassed": 1,
+      "openBugs": 198,
+      "verified": 25,
+      "backlog": 61,
+      "needPerson": 4,
+      "agentsRunning": 16,
+      "features": {
+        "proficiency-live-qr": {
+          "status": "validate",
+          "round": 6,
+          "score": "29/32"
+        },
+        "world-shell-navigation": {
+          "status": "validate",
+          "round": 2,
+          "score": "36/47"
+        },
+        "career-bound-outputs": {
+          "status": "validate",
+          "round": 3,
+          "score": "48/56"
+        },
+        "qr-gated-outputs": {
+          "status": "fix",
+          "round": 4,
+          "score": "36/38"
+        },
+        "no-silent-failures": {
+          "status": "validate",
+          "round": 1,
+          "score": "18/28"
+        },
+        "release-loop-tooling": {
+          "status": "passed",
+          "round": 5,
+          "score": "30/30"
+        },
+        "chart-gallery": {
+          "status": "validate",
+          "round": 3,
+          "score": "17/20"
+        },
+        "output-version-history": {
+          "status": "validate",
+          "round": 3,
+          "score": "30/37"
+        },
+        "resume-rollups": {
+          "status": "validate",
+          "round": 1,
+          "score": "28/32"
+        },
+        "release-intelligence": {
+          "status": "awaiting_retest",
+          "round": 1,
+          "score": "1/54"
+        },
+        "cover-letter-agent": {
+          "status": "validate",
+          "round": 1,
+          "score": "38/46"
+        },
+        "in-app-release-loop": {
+          "status": "fix",
+          "round": 1,
+          "score": "59/60"
+        },
+        "session-mapping": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "world-shell-layers": {
+          "status": "build",
+          "round": null,
+          "score": null
+        },
+        "live-release-tracker": {
+          "status": "validate",
+          "round": null,
+          "score": null
+        },
+        "render-bindings": {
+          "status": "build",
+          "round": null,
+          "score": null
+        },
+        "platform-mcp": {
+          "status": "reconcile",
+          "round": 1,
+          "score": "62/62"
+        },
+        "platform-agent-runner": {
+          "status": "build",
+          "round": null,
+          "score": null
+        }
+      }
+    },
+    "comparison": {
+      "lines": [
+        "Features passed: 1 (no change) of 18",
+        "Open bugs caused by this work: 107 → **198** (+91) — new failures found in testing",
+        "Bugs verified fixed: 18 → **25** (+7)",
+        "Backlog (not this work): 48 → **61** (+13)",
+        "Waiting on a person: 3 → **4** (+1)",
+        "Agents running: 15 → 16"
+      ],
+      "featureChanges": [
+        "proficiency-live-qr: test round 5 29/30 → round 6 **29/32**",
+        "world-shell-navigation: test round 1 45/48 → round 2 **36/47**",
+        "career-bound-outputs: test round 2 54/56 → round 3 **48/56**",
+        "qr-gated-outputs: test round 2 33/38 → round 4 **36/38**; in browser testing → **being fixed**",
+        "no-silent-failures: reviewing failed commands → **in browser testing**",
+        "chart-gallery: test round 2 16/19 → round 3 **17/20**",
+        "output-version-history: test round 1 33/37 → round 3 **30/37**",
+        "resume-rollups: failures being triaged → **in browser testing**",
+        "release-intelligence: failing → **fixed, awaiting re-test**",
+        "cover-letter-agent: test not run → round 1 **38/46**",
+        "in-app-release-loop: test not run → round 1 **59/60**; in browser testing → **being fixed**",
+        "session-mapping: being built → **in browser testing**",
+        "live-release-tracker: being built → **in browser testing**",
+        "platform-mcp: test not run → round 1 **62/62**; in browser testing → **reviewing failed commands**",
+        "platform-agent-runner: new in this update (being built)"
+      ]
+    }
   }
 ]

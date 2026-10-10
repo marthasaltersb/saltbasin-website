@@ -1,0 +1,37 @@
+{
+  "id": "A3",
+  "feature": "platform-mcp",
+  "fromBaseline": 1,
+  "proposedBy": "fix:platform-mcp:r1",
+  "round": 1,
+  "triageItems": [
+    "platform-mcp-B5"
+  ],
+  "reason": "Triage item B5 required every recorded gap to be closed. The import-package capability now has a website screen, an API route and an MCP tool, so the baseline J10.4 (which shows it as a gap) can no longer pass. The reviewer split this amendment: J2.1, J11.2 and E.5 moved unchanged to A4.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "J10.4",
+      "before": "Find the card **Import an application package**. Expect the cells **Website GAP** and **MCP GAP** highlighted, and the note **Import is command-line only (scripts/import-application-package.mjs); no screen uploads a package.**",
+      "after": "Find the card **Import an application package**. Expect the cells **Website ready** (showing the path ending `My Resume > Import an application package`), **API ready** (showing `POST /api/resume-outputs/import-package`) and **MCP ready** (showing `application_package_import`), and no highlighted gap cell. With **Gaps only** selected expect the message that there are no gaps (zero cards).",
+      "tracesTo": "docs/changes/platform-mcp.md 'Known limitations' (3 capabilities have no website screen: application-package-import); triage platform-mcp-B5",
+      "whyNeeded": "The website screen for importing a package now exists, so the gap cell can no longer be shown."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:platform-mcp:r1",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass: the old expectation (Website GAP / MCP GAP for the import card) contradicts docs/changes/platform-mcp.md and triage B5 which closed that gap; the new step asserts three ready cells with exact path, route and tool name and zero gap cards",
+      "Retire only duplicates": "pass (no retirement)",
+      "Exact": "pass: server/lib/capabilityParity.js row application-package-import has ui \"My Resume > Import an application package\", api POST /api/resume-outputs/import-package, mcp application_package_import",
+      "Reachable": "pass",
+      "Deterministic": "pass: static registry row",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Approved for J10.4 only. The other three changes are in A4.",
+    "at": "2026-10-09T17:00:00.000Z"
+  }
+}

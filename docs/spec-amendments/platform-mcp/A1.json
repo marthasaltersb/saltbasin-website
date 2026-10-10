@@ -1,0 +1,50 @@
+{
+  "id": "A1",
+  "feature": "platform-mcp",
+  "fromBaseline": 1,
+  "proposedBy": "fix:platform-mcp:r1",
+  "round": 1,
+  "triageItems": [
+    "platform-mcp-B12"
+  ],
+  "reason": "The training spec has no step proving that tools/call is held to the account gates (428 career_terms_required) that every website API call is held to. The behaviour exists (server/lib/mcpServer.js executeTool, getAccountGateBlock) and nothing in the spec would fail if it were removed.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "J6.7",
+      "after": "Run `node scripts/create-test-member.mjs --email gated@test.local --out <creds file>` (fictional second member, terms accepted). Sign in as gated@test.local in the website, open Journeys -> Connected Agents, type **Gated probe**, tick only **career.read**, click **Create token**; keep the token as **TOKEN_D**. Then withdraw that member's career terms: `curl -s -b <gated member cookie jar> -H \"Content-Type: application/json\" -d '{\"consentType\":\"career_portfolio\",\"granted\":false}' <API_BASE>/api/career/consent`. Expect HTTP 200 and a body containing `\"ok\":true`.",
+      "tracesTo": "docs/changes/platform-mcp.md 'Server' (tools/call order ... account gates 428) and 'Known limitations' last bullet; server/auth.js getAccountGateBlock",
+      "reason": "Sets up a member whose career terms are not current, using only the website session and the existing consent API."
+    },
+    {
+      "op": "add",
+      "stepId": "J6.8",
+      "after": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_D> call career_opportunities_list`. Expect `isError: true` and an error with `status` 428, `code` `career_terms_required` and `message` `Accept the Career Portfolio terms in the website before agents can use your data.`. Run `list` with the same token: expect exit code 0 (listing tools is not a data call).",
+      "tracesTo": "docs/changes/platform-mcp.md 'Server' (tools/call order: ... account gates (428 password_change_required / career_terms_required, via getAccountGateBlock))",
+      "reason": "Proves an agent cannot read a member's data while the website would refuse the same member with 428."
+    },
+    {
+      "op": "add",
+      "stepId": "J6.9",
+      "after": "In the gated member's website session, open `/world`. Expect the Career Portfolio terms page (the member is asked to accept again) instead of the Journeys list; accept the terms. Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_D> call career_opportunities_list` again. Expect `isError: false`.",
+      "tracesTo": "docs/changes/platform-mcp.md 'Known limitations' last bullet",
+      "reason": "Proves the gate lifts as soon as the person accepts in the website, with the same token."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:platform-mcp:r1",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass (no retirement)",
+      "Exact": "pass",
+      "Reachable": "pass (browser steps plus cli curl/mcp-call, the same mixed pattern as J3-J5)",
+      "Deterministic": "pass",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass: tests that the website 428 gate also binds agent calls, a change-spec requirement, not an implementation choice"
+    },
+    "note": "Adds three steps, removes none. J6.7 sets up a member with withdrawn career terms through the website session and the existing consent API (POST /api/career/consent, consentType career_portfolio, granted false; server/routes/careerMaster.js). J6.8 expects the exact 428 career_terms_required code and message (matches server/lib/mcpServer.js). J6.9 proves the gate lifts when terms are accepted. Fictional address gated@test.local. New steps take J6.7, J6.8, J6.9.",
+    "at": "2026-10-09T17:00:00.000Z"
+  }
+}

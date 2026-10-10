@@ -51,6 +51,9 @@ async function maybePurgeExpiredSessions() {
 }
 
 export async function getUserFromCookie(req) {
+  // Set only by server/lib/mcpRouteInvoker.js on its own synthetic request (never from the network), so an MCP
+  // tool runs a route handler as the token's owner under the route's own requireUser/requireAdmin checks.
+  if (req.platformUser) return req.platformUser;
   const token = req.cookies?.[ADMIN_COOKIE];
   if (!token) return null;
   const row = await db

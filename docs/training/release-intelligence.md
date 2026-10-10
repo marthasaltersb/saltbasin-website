@@ -5,7 +5,7 @@ Version 1 · 2026-10-02 · covers `docs/changes/release-intelligence.md` v1. Aud
 ## Where things are
 
 - World Shell (`/world`) -> top tab **Journeys** -> card **Release Intelligence** ("Open configuration"). A full-screen panel opens with the heading **Release Intelligence**, a link **← Back to World**, and six tabs in this order: **Trends**, **Releases**, **Failed runs**, **Outputs**, **Import**, **Settings**.
-- Also reachable from **Classic Tools** -> menu **Platform Lifecycle Management** -> **Release Intelligence**.
+- It is reached only from World Shell -> Journeys. It is not listed in Classic Tools (checked in J1.2).
 - Nothing needs an API call or a terminal. The one optional terminal check is in "Edge cases".
 
 ## Preconditions
@@ -370,6 +370,8 @@ To import a document: tab **Import** -> card **Import a document** -> type the p
 1. [J1.1] Log in, open `/world`, accept the terms if asked, press **Journeys**, press the card **Release Intelligence**.
    - Expect the heading **Release Intelligence** and the six tabs **Trends**, **Releases**, **Failed runs**, **Outputs**, **Import**, **Settings**, with **Trends** selected.
    - Expect the text "No releases recorded yet. Import release logs on the Import tab, or create a release record on the Releases tab."
+2. [J1.2] Press **← Back to World**, then press **Classic Tools** in the top bar. On a desktop-width window open the module menu **Platform Lifecycle Management**; at 390px (where Classic Tools has no module menu) look at the whole page instead.
+   - Expect no tab, menu entry or text named **Release Intelligence** anywhere in Classic Tools (desktop: the tabs listed under **Platform Lifecycle Management** do not include it; 390px: the page contains no text "Release Intelligence").
 
 ## Journey 2 — Import a release log; re-import is idempotent
 
@@ -491,7 +493,7 @@ Open the release (`Releases` -> `Open`) after each import to read the header.
 
 ## Edge cases
 
-- [E.1] **Idempotent importer script** (needs a terminal, so it is optional for the browser validator): `node scripts/import-release-logs.mjs` run twice against the same database prints `imported`/`updated` lines the first time and only `unchanged` the second, exits 0, and prints a `warning:` line (never a silent skip) for each document missing a version line or a "Traces to" section. `--snapshot snapshot.json --release <key>` files a tracker snapshot the same way.
+- [E.1] `node scripts/import-release-logs.mjs` (idempotent importer script; a terminal step, run in bash in the validator worktree, not in the browser) run twice against the same database prints `imported`/`updated` lines the first time and only `unchanged` the second, exits 0, and prints a `warning:` line (never a silent skip) for each document missing a version line or a "Traces to" section. `--snapshot snapshot.json --release <key>` files a tracker snapshot the same way.
 - [E.2] Importing a document outside the configured folders, or not ending in `.md`, is reported as `skipped` with the reason, not ignored.
 - [E.3] A release log with no `Date:` header and a key that does not start with a date is refused with a message saying so; nothing is imported from it.
 - [E.4] Pasting something that is not JSON into **Snapshot JSON**, or JSON without an `agents` list, shows an error alert; nothing is imported.

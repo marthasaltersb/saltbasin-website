@@ -1,7 +1,6 @@
 // Release intelligence (2026-10-02): the admin screen where release-loop
 // outputs reconcile to release records and contribution trends are read over
-// time. Reachable from World Shell -> Release Intelligence (and Classic Tools
-// -> Platform Lifecycle Management -> Release Intelligence).
+// time. Reachable from World Shell -> Journeys -> Release Intelligence only.
 //
 // Every action surfaces its error inline (role="alert") as well as in a toast;
 // nothing here swallows a failure. Approving a release goes through
@@ -14,26 +13,30 @@ import { stackedBarsHtml, foldSeries } from '../../lib/releaseCharts.js';
 
 const C = { ink: '#1b2a3b', sec: '#536173', line: '#e5ded3', soft: '#f6f2ea', accent: '#c4843a', teal: '#2e7f9c', bad: '#a5391f', ok: '#2f7d4f' };
 const S = {
-  root: { background: '#fff', color: C.ink, borderRadius: 12, padding: '1.1rem', maxWidth: 1180, margin: '0 auto', fontFamily: 'DM Sans, sans-serif', fontSize: '.86rem' },
+  root: { background: '#fff', color: C.ink, borderRadius: 12, padding: '1.1rem', maxWidth: 1180, margin: '0 auto', fontFamily: 'DM Sans, sans-serif', fontSize: '.86rem', minWidth: 0, boxSizing: 'border-box', overflowX: 'hidden' },
   h1: { fontFamily: 'Fraunces, serif', fontSize: '1.25rem', margin: 0 },
   sub: { color: C.sec, fontSize: '.78rem', margin: '.25rem 0 .9rem', lineHeight: 1.5 },
   tabs: { display: 'flex', gap: '.3rem', borderBottom: `1px solid ${C.line}`, marginBottom: '1rem', flexWrap: 'wrap' },
   tab: (on) => ({ border: 0, background: on ? C.ink : 'transparent', color: on ? '#fff' : C.ink, padding: '.45rem .85rem', borderRadius: '8px 8px 0 0', cursor: 'pointer', fontSize: '.82rem', fontWeight: on ? 700 : 500 }),
-  card: { border: `1px solid ${C.line}`, borderRadius: 10, padding: '.9rem', marginBottom: '1rem', background: '#fff' },
+  card: { minWidth: 0, boxSizing: 'border-box', border: `1px solid ${C.line}`, borderRadius: 10, padding: '.9rem', marginBottom: '1rem', background: '#fff' },
   cardTitle: { fontWeight: 700, fontSize: '.88rem', marginBottom: '.5rem' },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: '.8rem' },
   th: { textAlign: 'left', padding: '.4rem .5rem', borderBottom: `1px solid ${C.line}`, fontSize: '.7rem', color: C.sec, textTransform: 'uppercase', letterSpacing: '.06em' },
   td: { padding: '.45rem .5rem', borderBottom: `1px solid ${C.soft}`, verticalAlign: 'top' },
-  input: { padding: '.4rem .5rem', borderRadius: 7, border: `1px solid rgba(27,42,59,.25)`, fontSize: '.82rem', font: 'inherit', background: '#fff', color: C.ink },
+  input: { boxSizing: 'border-box', minWidth: 0, maxWidth: '100%', padding: '.4rem .5rem', borderRadius: 7, border: `1px solid rgba(27,42,59,.25)`, fontSize: '.82rem', font: 'inherit', background: '#fff', color: C.ink },
   btn: { border: 0, background: C.ink, color: '#fff', borderRadius: 7, padding: '.45rem .85rem', cursor: 'pointer', fontSize: '.8rem', font: 'inherit' },
   btn2: { border: `1px solid rgba(27,42,59,.25)`, background: '#fff', color: C.ink, borderRadius: 7, padding: '.4rem .75rem', cursor: 'pointer', fontSize: '.78rem', font: 'inherit' },
-  label: { display: 'flex', flexDirection: 'column', gap: '.2rem', fontSize: '.72rem', color: C.sec },
+  label: { minWidth: 0, display: 'flex', flexDirection: 'column', gap: '.2rem', fontSize: '.72rem', color: C.sec },
   row: { display: 'flex', gap: '.6rem', flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: '.6rem' },
   alert: { background: '#fbeae5', border: `1px solid ${C.bad}`, color: C.bad, borderRadius: 8, padding: '.55rem .7rem', margin: '.5rem 0', fontSize: '.78rem' },
   note: { background: '#eef5f8', border: `1px solid ${C.teal}`, color: C.ink, borderRadius: 8, padding: '.55rem .7rem', margin: '.5rem 0', fontSize: '.78rem' },
   pill: (color) => ({ display: 'inline-block', padding: '.05rem .5rem', borderRadius: 999, fontSize: '.7rem', fontWeight: 700, color: '#fff', background: color }),
   empty: { color: C.sec, border: `1px dashed ${C.line}`, borderRadius: 8, padding: '.8rem', fontSize: '.8rem' },
 };
+
+function TableScroll({ children }) {
+  return <div style={{ overflowX: 'auto', maxWidth: '100%', minWidth: 0 }}>{children}</div>;
+}
 
 const TOKEN_LABELS = { all: 'All tokens', output: 'Output tokens', input: 'Input tokens', cacheWrite: 'Cache-write tokens', cacheRead: 'Cache-read tokens' };
 const COUNT_LABELS = { features: ['feature', 'features'], rounds: ['round', 'rounds'], fixes: ['fix', 'fixes'], failedRuns: ['failed run', 'failed runs'], agents: ['agent', 'agents'] };
@@ -87,7 +90,7 @@ function RunRow({ run, dispositions, classes, onSaved }) {
           <select aria-label={`Class for ${run.description.slice(0, 40)}`} value={failureClass} onChange={(e) => setFailureClass(e.target.value)} style={S.input}>
             {(classes.includes(failureClass) ? classes : [failureClass, ...classes]).map((d) => <option key={d} value={d}>{d}</option>)}
           </select>
-          <input aria-label={`Note for ${run.description.slice(0, 40)}`} placeholder="How it was resolved" value={note} onChange={(e) => setNote(e.target.value)} style={{ ...S.input, minWidth: 160 }} />
+          <input aria-label={`Note for ${run.description.slice(0, 40)}`} placeholder="How it was resolved" value={note} onChange={(e) => setNote(e.target.value)} style={{ ...S.input, width: '100%', maxWidth: 160 }} />
           <button type="button" style={S.btn2} disabled={busy} onClick={save}>Save disposition</button>
         </div>
         {run.dispositionBy && <div style={{ color: C.sec, fontSize: '.7rem' }}>Set by {run.dispositionBy} {fmtTime(run.dispositionAt)}</div>}
@@ -100,10 +103,10 @@ function RunRow({ run, dispositions, classes, onSaved }) {
 function RunsTable({ runs, dispositions, classes, onSaved }) {
   if (!runs.length) return <div style={S.empty}>No failed runs match.</div>;
   return (
-    <table style={S.table}>
+    <TableScroll><table style={S.table}>
       <thead><tr><th style={S.th}>State</th><th style={S.th}>Class</th><th style={S.th}>What failed</th><th style={S.th}>Disposition</th></tr></thead>
       <tbody>{runs.map((r) => <RunRow key={r.id} run={r} dispositions={dispositions} classes={classes} onSaved={onSaved} />)}</tbody>
-    </table>
+    </table></TableScroll>
   );
 }
 
@@ -165,7 +168,7 @@ function TrendsTab({ trends, rules }) {
             </select>
           </Field>
           <Field label={`Timeline: releases up to ${cur.releaseKey}`}>
-            <input type="range" aria-label="Timeline slider" min={1} max={releases.length} value={sel + 1} onChange={(e) => setIdx(Number(e.target.value) - 1)} style={{ minWidth: 220 }} />
+            <input type="range" aria-label="Timeline slider" min={1} max={releases.length} value={sel + 1} onChange={(e) => setIdx(Number(e.target.value) - 1)} style={{ width: '100%', maxWidth: 220, minWidth: 0 }} />
           </Field>
         </div>
         <div data-testid="basis-note" style={{ fontSize: '.72rem', color: C.sec, marginBottom: '.35rem' }}>
@@ -175,19 +178,19 @@ function TrendsTab({ trends, rules }) {
           Showing releases up to <strong>{cur.releaseKey}</strong> ({cur.date}) — {sel + 1} of {releases.length}
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', gap: '1rem' }}>
         {Object.entries(charts).map(([k, html]) => <div key={k} style={S.card} data-chart={k} dangerouslySetInnerHTML={{ __html: html }} />)}
       </div>
       <div style={S.card} data-testid="as-of">
         <div style={S.cardTitle}>As of {cur.releaseKey}</div>
-        <table style={S.table}><tbody>
+        <TableScroll><table style={S.table}><tbody>
           <tr><td style={S.td}>Features passed</td><td style={S.td}>{cur.features.passed} of {cur.features.total}</td></tr>
           <tr><td style={S.td}>Agents with recorded tokens</td><td style={S.td}>{cur.agents.withTokens} of {cur.agents.total}</td></tr>
           <tr><td style={S.td}>Agents with recorded time</td><td style={S.td}>{cur.agents.withTime} of {cur.agents.total}</td></tr>
           <tr><td style={S.td}>Mean rounds to pass</td><td style={S.td}>{cur.roundsToPass.mean == null ? 'No feature has passed yet' : cur.roundsToPass.mean}</td></tr>
           <tr><td style={S.td}>Failed runs (open / total)</td><td style={S.td}>{cur.failedRuns.open} / {cur.failedRuns.total}</td></tr>
           <tr><td style={S.td}>Release status</td><td style={S.td}>{cur.status}</td></tr>
-        </tbody></table>
+        </tbody></table></TableScroll>
       </div>
     </div>
   );
@@ -263,7 +266,7 @@ function ReleaseDetail({ id, rules, onBack, onChanged }) {
       )}
       <div style={S.card}>
         <div style={S.row}>
-          <Field label="Approval or reopen note"><input aria-label="Approval note" style={{ ...S.input, minWidth: 320 }} value={note} onChange={(e) => setNote(e.target.value)} /></Field>
+          <Field label="Approval or reopen note"><input aria-label="Approval note" style={{ ...S.input, width: '100%', maxWidth: 320 }} value={note} onChange={(e) => setNote(e.target.value)} /></Field>
           {d.status === 'approved'
             ? <button type="button" style={S.btn2} onClick={reopen}>Reopen release</button>
             : <button type="button" style={S.btn} onClick={approve}>Approve reconciliation</button>}
@@ -274,7 +277,7 @@ function ReleaseDetail({ id, rules, onBack, onChanged }) {
       <div style={S.card}>
         <div style={S.cardTitle}>Features</div>
         {d.features.length === 0 ? <div style={S.empty}>This release lists no features yet.</div> : (
-          <table style={S.table}>
+          <TableScroll><table style={S.table}>
             <thead><tr><th style={S.th}>Feature</th><th style={S.th}>Outcome</th><th style={S.th}>Specs traced to</th><th style={S.th}>Validation rounds</th><th style={S.th}>Fixes</th><th style={S.th}>Failed runs</th><th style={S.th}>Reconciled</th></tr></thead>
             <tbody>
               {d.features.map((f) => (
@@ -298,7 +301,7 @@ function ReleaseDetail({ id, rules, onBack, onChanged }) {
                   </tr>
                   <tr>
                     <td colSpan={7} style={{ ...S.td, background: C.soft }}>
-                      <div style={{ fontSize: '.74rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '.2rem .8rem' }}>
+                      <div style={{ fontSize: '.74rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%, 280px), 1fr))', gap: '.2rem .8rem' }}>
                         {f.reconciliation.checks.map((c) => (
                           <div key={c.id}><strong style={{ color: c.status === 'pass' ? C.ok : c.status === 'fail' ? C.bad : C.sec }}>{c.status === 'pass' ? '✓' : c.status === 'fail' ? '✕' : '–'}</strong> {c.label}: <span style={{ color: C.sec }}>{c.detail}</span></div>
                         ))}
@@ -308,7 +311,7 @@ function ReleaseDetail({ id, rules, onBack, onChanged }) {
                 </React.Fragment>
               ))}
             </tbody>
-          </table>
+          </table></TableScroll>
         )}
         <div style={{ ...S.row, marginTop: '.8rem' }}>
           <Field label="Feature key"><input aria-label="Feature key" style={S.input} value={feat.featureKey} placeholder="seed-catalog" onChange={(e) => setFeat({ ...feat, featureKey: e.target.value })} /></Field>
@@ -329,7 +332,7 @@ function ReleaseDetail({ id, rules, onBack, onChanged }) {
       <div style={S.card}>
         <div style={S.cardTitle}>Reconciliation history</div>
         {d.events.length === 0 ? <div style={S.empty}>No events yet.</div> : (
-          <table style={S.table}><tbody>{d.events.map((e) => <tr key={e.id}><td style={S.td}>{fmtTime(e.at)}</td><td style={S.td}>{e.type}</td><td style={S.td}>{e.kind}: {e.ref}</td><td style={S.td}>{e.state || ''} {e.note || ''}</td><td style={S.td}>{e.actor || ''}</td></tr>)}</tbody></table>
+          <TableScroll><table style={S.table}><tbody>{d.events.map((e) => <tr key={e.id}><td style={S.td}>{fmtTime(e.at)}</td><td style={S.td}>{e.type}</td><td style={S.td}>{e.kind}: {e.ref}</td><td style={S.td}>{e.state || ''} {e.note || ''}</td><td style={S.td}>{e.actor || ''}</td></tr>)}</tbody></table></TableScroll>
         )}
       </div>
       {gate.modal}
@@ -346,7 +349,7 @@ function ReleasesTab({ rules, releases, reload }) {
       <div style={S.card}>
         <div style={S.cardTitle}>Release records</div>
         {releases.length === 0 ? <div style={S.empty}>No release records yet.</div> : (
-          <table style={S.table}>
+          <TableScroll><table style={S.table}>
             <thead><tr><th style={S.th}>Release</th><th style={S.th}>Date</th><th style={S.th}>Status</th><th style={S.th}>Features passed</th><th style={S.th}>Failed runs</th><th style={S.th}>Reconciliation</th><th style={S.th} /></tr></thead>
             <tbody>{releases.map((r) => (
               <tr key={r.id} data-testid={`release-${r.releaseKey}`}>
@@ -359,7 +362,7 @@ function ReleasesTab({ rules, releases, reload }) {
                 <td style={S.td}><button type="button" style={S.btn2} aria-label={`Open ${r.releaseKey}`} onClick={() => setOpenId(r.id)}>Open</button></td>
               </tr>
             ))}</tbody>
-          </table>
+          </table></TableScroll>
         )}
       </div>
     </div>
@@ -414,8 +417,8 @@ function FailedRunsTab({ rules, releases, reloadReleases }) {
           </Field>
         </div>
         <div style={S.row}>
-          <Field label="What failed"><input aria-label="What failed" style={{ ...S.input, minWidth: 320 }} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></Field>
-          <Field label="State it left"><input aria-label="State it left" style={{ ...S.input, minWidth: 240 }} value={form.stateLeft} onChange={(e) => setForm({ ...form, stateLeft: e.target.value })} /></Field>
+          <Field label="What failed"><input aria-label="What failed" style={{ ...S.input, width: '100%', maxWidth: 320 }} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></Field>
+          <Field label="State it left"><input aria-label="State it left" style={{ ...S.input, width: '100%', maxWidth: 240 }} value={form.stateLeft} onChange={(e) => setForm({ ...form, stateLeft: e.target.value })} /></Field>
           <button type="button" style={S.btn} onClick={create}>Record failed run</button>
         </div>
         <ErrorBox error={formError} />
@@ -474,10 +477,10 @@ function OutputsTab({ releases, reloadReleases }) {
       <div style={S.cardTitle}>Session, design and build outputs</div>
       <div style={orphans ? S.alert : S.note} role="status">{orphans ? `${orphans} output${orphans === 1 ? ' is' : 's are'} not tied to any release. Link each one, or import the release log that lists its feature.` : 'Every imported output is tied to a release.'}</div>
       {outputs.length === 0 ? <div style={S.empty}>No outputs imported yet. Use the Import tab.</div> : (
-        <table style={S.table}>
+        <TableScroll><table style={S.table}>
           <thead><tr><th style={S.th}>Path</th><th style={S.th}>Kind</th><th style={S.th}>Feature</th><th style={S.th}>Spec version</th><th style={S.th}>Release</th><th style={S.th} /></tr></thead>
           <tbody>{outputs.map((o) => <OutputRow key={o.id} o={o} releases={releases} onLinked={async () => { await load(); await reloadReleases(); }} />)}</tbody>
-        </table>
+        </table></TableScroll>
       )}
     </div>
   );
@@ -523,7 +526,7 @@ function ImportTab({ reloadAll }) {
       <div style={S.card}>
         <div style={S.cardTitle}>Import a document</div>
         <div style={S.row}>
-          <Field label="Document path"><input aria-label="Document path" style={{ ...S.input, minWidth: 380 }} placeholder="docs/release-log/2030-01-05-garden-gate.md" value={doc.path} onChange={(e) => setDoc({ ...doc, path: e.target.value })} /></Field>
+          <Field label="Document path"><input aria-label="Document path" style={{ ...S.input, width: '100%', maxWidth: 380 }} placeholder="docs/release-log/2030-01-05-garden-gate.md" value={doc.path} onChange={(e) => setDoc({ ...doc, path: e.target.value })} /></Field>
         </div>
         <Field label="Document text"><textarea aria-label="Document text" rows={9} style={{ ...S.input, fontFamily: 'monospace', width: '100%', boxSizing: 'border-box' }} value={doc.content} onChange={(e) => setDoc({ ...doc, content: e.target.value })} /></Field>
         <div style={{ marginTop: '.5rem' }}><button type="button" style={S.btn} disabled={!!busy} onClick={() => run('doc', () => api.importReleaseDocument(doc.path, doc.content))}>Import document</button></div>
@@ -532,7 +535,7 @@ function ImportTab({ reloadAll }) {
         <div style={S.cardTitle}>Import a tracker snapshot</div>
         <div style={S.sub}>The JSON that scripts/release-tracker-sync.mjs writes. Tokens and elapsed minutes are recorded only where the snapshot has them.</div>
         <div style={S.row}>
-          <Field label="Release key for the snapshot"><input aria-label="Release key for the snapshot" style={{ ...S.input, minWidth: 320 }} value={snap.releaseKey} onChange={(e) => setSnap({ ...snap, releaseKey: e.target.value })} /></Field>
+          <Field label="Release key for the snapshot"><input aria-label="Release key for the snapshot" style={{ ...S.input, width: '100%', maxWidth: 320 }} value={snap.releaseKey} onChange={(e) => setSnap({ ...snap, releaseKey: e.target.value })} /></Field>
         </div>
         <Field label="Snapshot JSON"><textarea aria-label="Snapshot JSON" rows={8} style={{ ...S.input, fontFamily: 'monospace', width: '100%', boxSizing: 'border-box' }} value={snap.json} onChange={(e) => setSnap({ ...snap, json: e.target.value })} /></Field>
         <div style={{ marginTop: '.5rem' }}><button type="button" style={S.btn} disabled={!!busy} onClick={() => run('snap', () => api.importReleaseSnapshot(snap.releaseKey, snap.json))}>Import snapshot</button></div>
@@ -552,7 +555,7 @@ function SettingsTab({ reloadConfig }) {
       const c = await api.getReleaseIntelConfig();
       setCfg(c);
       const r = c.rules;
-      setForm({ runStates: r.runStates.join(', '), dispositions: r.dispositions.join(', '), failureClasses: r.failureClasses.join(', '), defaultTokenMeasure: r.defaultTokenMeasure, maxSeries: String(r.maxSeries), logLocations: { ...r.logLocations } });
+      setForm({ runStates: r.runStates.join(', '), dispositions: r.dispositions.join(', '), failureClasses: r.failureClasses.join(', '), defaultTokenMeasure: r.defaultTokenMeasure, maxSeries: String(r.maxSeries), generatedFiles: (r.generatedFiles || []).join(', '), logLocations: { ...r.logLocations } });
       setError('');
     } catch (e) { setError(e.message); }
   }, []);
@@ -562,7 +565,7 @@ function SettingsTab({ reloadConfig }) {
   async function save() {
     setError('');
     try {
-      await api.saveReleaseIntelConfig({ runStates: list(form.runStates), dispositions: list(form.dispositions), failureClasses: list(form.failureClasses), defaultTokenMeasure: form.defaultTokenMeasure, maxSeries: Number(form.maxSeries), logLocations: form.logLocations });
+      await api.saveReleaseIntelConfig({ runStates: list(form.runStates), dispositions: list(form.dispositions), failureClasses: list(form.failureClasses), defaultTokenMeasure: form.defaultTokenMeasure, maxSeries: Number(form.maxSeries), generatedFiles: list(form.generatedFiles), logLocations: form.logLocations });
       toast.success('Settings saved'); await load(); await reloadConfig();
     } catch (e) { setError(e.message); toast.error(e.message); }
   }
@@ -576,7 +579,7 @@ function SettingsTab({ reloadConfig }) {
       <div style={S.sub}>{cfg.overridden ? 'These settings override the built-in defaults.' : 'Showing the built-in defaults. Saving stores an override.'} Values use lowercase letters, digits and underscores, separated by commas.</div>
       {cfg.overrideError && <ErrorBox error={cfg.overrideError} />}
       <ErrorBox error={error} />
-      <div style={{ display: 'grid', gap: '.6rem', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))' }}>
+      <div style={{ display: 'grid', gap: '.6rem', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%, 320px), 1fr))' }}>
         <Field label="Run states"><input aria-label="Run states" style={S.input} value={form.runStates} onChange={(e) => setForm({ ...form, runStates: e.target.value })} /></Field>
         <Field label="Dispositions"><input aria-label="Dispositions" style={S.input} value={form.dispositions} onChange={(e) => setForm({ ...form, dispositions: e.target.value })} /></Field>
         <Field label="Failure classes"><input aria-label="Failure classes" style={S.input} value={form.failureClasses} onChange={(e) => setForm({ ...form, failureClasses: e.target.value })} /></Field>
@@ -586,6 +589,7 @@ function SettingsTab({ reloadConfig }) {
           </select>
         </Field>
         <Field label="Maximum chart series (1 to 5)"><input aria-label="Maximum chart series" style={S.input} value={form.maxSeries} onChange={(e) => setForm({ ...form, maxSeries: e.target.value })} /></Field>
+        <Field label="Generated files skipped on import (in the release-log folder)"><input aria-label="Generated files" style={S.input} value={form.generatedFiles} onChange={(e) => setForm({ ...form, generatedFiles: e.target.value })} /></Field>
         {Object.entries(LOCATION_LABELS).map(([k, label]) => (
           <Field key={k} label={label}><input aria-label={label} style={S.input} value={form.logLocations[k]} onChange={(e) => setForm({ ...form, logLocations: { ...form.logLocations, [k]: e.target.value } })} /></Field>
         ))}

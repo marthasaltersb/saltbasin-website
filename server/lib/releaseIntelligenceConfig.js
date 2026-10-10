@@ -25,6 +25,10 @@ export const DEFAULT_RULES = Object.freeze({
     triage: 'docs/triage/',
     releaseLog: 'docs/release-log/',
   },
+  // Files inside the release-log folder that the tracker generates (they are
+  // not release logs and carry no Date:). Importing reports each as 'skipped'.
+  // File names only, relative to the release-log folder.
+  generatedFiles: ['release-tracker.md', 'updates.md'],
   // What happened to a command or agent run. 'failed', 'refused' and
   // 'partial' are required (the importer maps to them); more can be added.
   runStates: ['failed', 'refused', 'partial', 'interrupted'],
@@ -76,6 +80,11 @@ export function validateRules(input) {
     else if (typeof v !== 'string' || !v.trim() || v.startsWith('/') || v.includes('..') || !v.endsWith('/')) errors.push(`logLocations.${k} must be a relative folder ending in "/"`);
   }
   rules.logLocations = loc;
+  if (!Array.isArray(rules.generatedFiles)) errors.push('generatedFiles must be a list of file names');
+  else {
+    rules.generatedFiles = [...new Set(rules.generatedFiles.map((v) => String(v ?? '').trim()).filter(Boolean))];
+    for (const f of rules.generatedFiles) if (f.startsWith('/') || f.includes('..') || f.includes('\\') || !/\.md$/i.test(f)) errors.push(`generatedFiles: "${f}" must be a relative .md file name`);
+  }
   if (!TOKEN_MEASURES.includes(rules.defaultTokenMeasure)) errors.push(`defaultTokenMeasure must be one of ${TOKEN_MEASURES.join(', ')}`);
   const ms = Number(rules.maxSeries);
   if (!Number.isInteger(ms) || ms < 1 || ms > 5) errors.push('maxSeries must be a whole number from 1 to 5');

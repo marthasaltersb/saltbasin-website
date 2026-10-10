@@ -66,7 +66,7 @@ Reuse audit (`salt-basin-channel-journey-architecture`): the Channel Journey sub
 
 - `src/components/admin/ReleaseIntelligencePanel.jsx`: tabs Trends, Releases, Failed runs, Outputs, Import, Settings. Every action shows its error inline in an alert and as a toast.
 - `src/lib/releaseCharts.js`: stacked bar charts in the `careerCharts.js` styling (same tokens, same validated palette, 24px bars, rounded data end, 2px gaps, SVG `<title>` on every mark), one value axis per chart, up to five series then "Other", a highlighted selected release, and an "n/r" marker for a release with nothing recorded.
-- Reachability: World Shell -> Journeys -> **Release Intelligence** (`worldIslands.js` `releaseIntelligence`, `WorldShell.jsx` embed registry) and Classic Tools -> Platform Lifecycle Management -> Release Intelligence (`AdminShell.jsx` `TAB_COMPONENTS`, fallback nav, and an idempotent tab insert in `db.js bootstrap()` for the shared `admin_nav` row, additive only).
+- Reachability: World Shell -> Journeys -> **Release Intelligence** only (`worldIslands.js` `releaseIntelligence`, `WorldShell.jsx` embed registry). There is no Classic Tools entry (owner direction, bug B7): `AdminShell.jsx` has no `TAB_COMPONENTS` entry or fallback nav item, and any `release-intelligence` tab in the stored `admin_nav` row is hidden from Classic Tools at render time (`withoutHiddenTabs`). The additive `db.js bootstrap()` insert stays, because World Shell islands resolve from `admin_nav` tabs; the row is the island's source, not a Classic Tools entry, and is never deleted from the shared row.
 
 ## Behaviour changes to know
 
@@ -95,3 +95,13 @@ Reuse audit (`salt-basin-channel-journey-architecture`): the Channel Journey sub
 ## Fix notes per round
 
 (none yet)
+
+## Fix notes - round 1
+
+- **RI-R1-1** (E.1): added a validated `generatedFiles` rule (default `release-tracker.md`, `updates.md`, editable on the Settings tab) to `releaseIntelligenceConfig.js`; `importRepository` in `releaseLogImporter.js` reports those files as `skipped` lines instead of erroring. Real release logs without a date still refuse (E.3). Checked: the import script run twice against a fresh database exits 0, 110 files read, 0 errors, two `skipped` lines.
+- **RI-R1-3**: in `ReleaseIntelligencePanel.jsx` the shared input style now has `boxSizing: border-box; minWidth: 0; maxWidth: 100%`, every hardcoded `minWidth` input became `width: 100%` with a `maxWidth`, and `Field`/label/card have `minWidth: 0`.
+- **RI-R1-4**: every table is wrapped in a `TableScroll` (`overflowX: auto`, `maxWidth: 100%`).
+- **RI-R1-5**: the three auto-fit grids use `minmax(min(100%, Npx), 1fr)`; `releaseCharts.js` unchanged.
+- **RI-R1-6**: `S.root` got `minWidth: 0; boxSizing: border-box; overflowX: hidden` as a guard. Checked in Chromium at 390px as admin, World Shell -> Journeys -> Release Intelligence, all six tabs: card left edge 24, right edge 366, no horizontal-scroll ancestor, no element past the card outside a scroll wrapper. `WorldShell.jsx` needed no change.
+- **RI-R1-7** (MCP_GAP): not fixed here. `mcpToolRegistry.js` is not on this branch; the tools stay assigned to platform-mcp per definition.json. No file changed.
+- **release-intelligence-B7**: removed the `TAB_COMPONENTS` entry and lazy import and the fallback-nav item from `AdminShell.jsx`; `withoutHiddenTabs` hides a `release-intelligence` tab from Classic Tools at render time (non-destructive, `admin_nav` stays additive-only). The `db.js` bootstrap insert is kept: World Shell islands resolve from `admin_nav` tabs, so removing it also removed the World Shell island (found by trying it; the island vanished). Change spec reachability line updated. Checked: the island is present in the World Shell Journeys list and opens.

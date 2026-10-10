@@ -77,6 +77,8 @@ function DefinitionTab() {
     const orig = view.definition.gates[key];
     set({ gates: { ...d.gates, [key]: Array.isArray(orig) ? value.split('\n').map((s) => s.trim()).filter(Boolean) : value } });
   };
+  const setStage = (key, patch) => set({ stages: d.stages.map((x) => (x.key === key ? { ...x, ...patch } : x)) });
+  const EDGE_FIELDS = ['next', 'onPass', 'onFail', 'onFixable', 'onBusinessDefinition'];
   async function save() {
     setBusy(true); setError('');
     try {
@@ -125,6 +127,26 @@ function DefinitionTab() {
             </Field>
           </div>
         ))}
+        <div style={{ ...S.cardTitle, marginTop: '.8rem' }}>Stage transitions</div>
+        <div style={S.meta}>Stage keys are fixed because the gates refer to them by name. Where a stage goes next can be changed; every transition a stage has must keep a target.</div>
+        {d.stages.map((st) => {
+          const fields = EDGE_FIELDS.filter((f) => st[f] !== undefined);
+          if (!fields.length) return null;
+          return (
+            <div key={st.key} style={S.item}>
+              <b>{st.key}</b>
+              <div style={S.row}>
+                {fields.map((f) => (
+                  <Field key={f} label={`${st.key} ${f}`}>
+                    <select aria-label={`Stage ${st.key} ${f}`} style={S.input} value={st[f]} onChange={(e) => setStage(st.key, { [f]: e.target.value })}>
+                      {d.stages.map((t) => <option key={t.key} value={t.key}>{t.key}</option>)}
+                    </select>
+                  </Field>
+                ))}
+              </div>
+            </div>
+          );
+        })}
         <div style={S.row}>
           <Field label="Change note"><input aria-label="Change note" style={S.input} placeholder="What changed and why" value={note} onChange={(e) => setNote(e.target.value)} /></Field>
         </div>

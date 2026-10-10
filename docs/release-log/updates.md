@@ -2,6 +2,66 @@
 
 Release **0.2.0** (`2026-10-02-application-packages`), built on branch `claude/zealous-meitner-5tuft5`. Each update is numbered `0.2.0-u<n>`, pinned to the commit it describes, and compared with the update before it. Newest first.
 
+## 0.2.0-u10 — 2026-10-09 17:37 UTC
+
+Commit [`ee1aac4`](https://github.com/marthasaltersb/saltbasin-website/commit/ee1aac4a013328b0fc7ad8e082680eb1dec84d43) · compared with 0.2.0-u9
+
+**Agents running on all fronts; 6 questions waiting on the owner**
+
+16 agents running. platform-mcp passed all 62 steps in round 1 and is closing its remaining items; in-app-release-loop 59/60; qr-gated-outputs 36/38 on baseline v2. platform-agent-runner (work-order-capped sessions, promptable quality agents) started building. Reviewers have filed owner questions: career-bound-outputs E.4, E.5 and convert-twice behaviour; output-version-history E.2 (asked three times, now merged into one question per step for future rounds) and the Version history button; resume-rollups column count.
+
+**Compared with the previous update**
+
+- Features passed: 1 (no change) of 18
+- Open bugs caused by this work: 107 → **198** (+91) — new failures found in testing
+- Bugs verified fixed: 18 → **25** (+7)
+- Backlog (not this work): 48 → **61** (+13)
+- Waiting on a person: 3 → **4** (+1)
+- Agents running: 15 → 16
+
+**Feature changes**
+
+- proficiency-live-qr: test round 5 29/30 → round 6 **29/32**
+- world-shell-navigation: test round 1 45/48 → round 2 **36/47**
+- career-bound-outputs: test round 2 54/56 → round 3 **48/56**
+- qr-gated-outputs: test round 2 33/38 → round 4 **36/38**; in browser testing → **being fixed**
+- no-silent-failures: reviewing failed commands → **in browser testing**
+- chart-gallery: test round 2 16/19 → round 3 **17/20**
+- output-version-history: test round 1 33/37 → round 3 **30/37**
+- resume-rollups: failures being triaged → **in browser testing**
+- release-intelligence: failing → **fixed, awaiting re-test**
+- cover-letter-agent: test not run → round 1 **38/46**
+- in-app-release-loop: test not run → round 1 **59/60**; in browser testing → **being fixed**
+- session-mapping: being built → **in browser testing**
+- live-release-tracker: being built → **in browser testing**
+- platform-mcp: test not run → round 1 **62/62**; in browser testing → **reviewing failed commands**
+- platform-agent-runner: new in this update (being built)
+
+<details><summary>Every feature at this update</summary>
+
+| Feature | Status | Latest test |
+|---|---|---|
+| proficiency-live-qr | in browser testing | round 6: 29/32 |
+| world-shell-navigation | in browser testing | round 2: 36/47 |
+| career-bound-outputs | in browser testing | round 3: 48/56 |
+| qr-gated-outputs | being fixed | round 4: 36/38 |
+| no-silent-failures | in browser testing | round 1: 18/28 |
+| release-loop-tooling | passed | round 5: 30/30 |
+| chart-gallery | in browser testing | round 3: 17/20 |
+| output-version-history | in browser testing | round 3: 30/37 |
+| resume-rollups | in browser testing | round 1: 28/32 |
+| release-intelligence | fixed, awaiting re-test | round 1: 1/54 |
+| cover-letter-agent | in browser testing | round 1: 38/46 |
+| in-app-release-loop | being fixed | round 1: 59/60 |
+| session-mapping | in browser testing | not tested yet |
+| world-shell-layers | being built | not tested yet |
+| live-release-tracker | in browser testing | not tested yet |
+| render-bindings | being built | not tested yet |
+| platform-mcp | reviewing failed commands | round 1: 62/62 |
+| platform-agent-runner | being built | not tested yet |
+
+</details>
+
 ## 0.2.0-u9 — 2026-10-09 16:43 UTC
 
 Commit [`5980892`](https://github.com/marthasaltersb/saltbasin-website/commit/598089293c274c54d7bb435ed8f2a4de412828fc) · compared with 0.2.0-u8

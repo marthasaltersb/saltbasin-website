@@ -73,9 +73,8 @@ export function defaultMemberConfig({ displayName, email }) {
         // (memberConfig.js's GET /draft), same pattern already used for
         // 'careerPlacementAgents' and 'resume'.
         { id: 'network', label: 'My Network', componentId: 'memberNrm', sortOrder: 16 },
-        // Platform MCP server (2026-10-09): access tokens for AI agents. Existing members pick this up via
-        // memberConfig.js's read-time additive GET /draft merge - never a write to their stored row.
-        { id: 'connected-agents', label: 'Connected Agents', componentId: 'connectedAgents', sortOrder: 30 },
+        // Connected Agents (platform MCP access tokens) is a World Shell entry point only - see
+        // src/lib/worldIslands.js PLATFORM_ISLAND_TABS - so it is not a member nav tab.
         // Live release tracker: only shown to members an admin lists on its Settings tab
         // (memberConfig.js GET /draft removes it for everyone else).
         { id: 'release-tracker', label: 'Release tracker', componentId: 'releaseTracker', sortOrder: 31 },
