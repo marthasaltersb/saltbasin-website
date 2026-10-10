@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T01:36:35.623Z",
+  "exportedAt": "2026-10-10T01:39:53.367Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -26,12 +26,12 @@
       "backlog": 5
     },
     "qr-gated-outputs": {
-      "status": "validate",
-      "lastRound": 6,
-      "lastScore": "36/38",
-      "lastReport": ".claude/worktrees/wf_1d376b6d-782-1/docs/test-results/qr-gated-outputs/round-6.md",
-      "openBugs": 21,
-      "backlog": 15
+      "status": "fix",
+      "lastRound": 7,
+      "lastScore": "38/38",
+      "lastReport": "docs/test-results/qr-gated-outputs/round-7.md",
+      "openBugs": 0,
+      "backlog": 14
     },
     "no-silent-failures": {
       "status": "validate",
@@ -82,7 +82,7 @@
       "backlog": 2
     },
     "cover-letter-agent": {
-      "status": "triage",
+      "status": "scope",
       "lastRound": 2,
       "lastScore": "45/48",
       "lastReport": "docs/test-results/cover-letter-agent/round-2.md",
@@ -98,11 +98,11 @@
       "backlog": 1
     },
     "session-mapping": {
-      "status": "fix",
+      "status": "validate",
       "lastRound": 2,
       "lastScore": "56/56",
       "lastReport": "docs/test-results/session-mapping/round-2.md",
-      "openBugs": 0,
+      "openBugs": 3,
       "backlog": 1
     },
     "live-release-tracker": {
@@ -138,7 +138,7 @@
       "backlog": 0
     },
     "platform-agent-runner": {
-      "status": "build",
+      "status": "reconcile",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -2359,26 +2359,28 @@
     {
       "id": "qr-gated-outputs-B7",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Preconditions 1, 4; Journey 3 step 4; Journey 8",
-      "rootCause": "Spec written before member@test.local accounts with accepted terms existed.",
-      "files": [
-        "docs/training/qr-gated-outputs.md",
-        "docs/changes/qr-gated-outputs.md",
-        "scripts/import-application-package.mjs"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "docs/training/qr-gated-outputs.md preconditions were written before member test accounts …"
+        "evidence": null
       },
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -2432,20 +2434,16 @@
     {
       "id": "qr-gated-outputs-B10",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Journey 6 / request scope",
-      "rootCause": "docx path only via stamp-application-package-docx.py, no UI or journey.",
-      "files": [
-        "scripts/stamp-application-package-docx.py",
-        "scripts/sync-site-with-application-package.mjs",
-        "server/lib/outputRendering.js"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "The feature title and request include \"clickable QR in PDF/docx\". The docx path (scripts/…"
+        "evidence": null
       },
       "history": [
         {
@@ -2453,30 +2451,40 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7 passed every step of baseline v2",
+          "commit": null
         }
       ]
     },
     {
       "id": "qr-gated-outputs-B11",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "test_harness",
       "attempts": 0,
       "step": "Journey 6",
-      "rootCause": "Browser cannot show annotations.",
-      "files": [
-        "docs/training/qr-gated-outputs.md"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Journey 6 of docs/training/qr-gated-outputs.md asks to verify PDF annotations that a brow…"
+        "evidence": null
       },
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -2709,30 +2717,28 @@
     {
       "id": "qr-gated-outputs-F2-11",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Preconditions / Where things are",
-      "rootCause": "Spec predates member test accounts and World Shell direction.",
-      "files": [
-        "docs/training/qr-gated-outputs.md"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Feature's own spec preconditions gap (B7); needs amendment."
+        "evidence": null
       },
       "history": [
-        {
-          "round": 2,
-          "event": "found",
-          "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
-          "commit": null
-        },
         {
           "round": 3,
           "event": "not_fixed",
           "note": "Needs a reviewer-approved amendment to the frozen spec. The…",
+          "commit": null
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -2740,30 +2746,28 @@
     {
       "id": "qr-gated-outputs-F2-12",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "test_harness",
       "attempts": 0,
       "step": "J10.3/E.1/E.2/E.4 fixture",
-      "rootCause": "Spec coverage gap.",
-      "files": [
-        "docs/training/qr-gated-outputs.md"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Feature's own spec fixture gap for J10.3/E.1/E.2/E.4 (round 2 G2); needs amendment."
+        "evidence": null
       },
       "history": [
-        {
-          "round": 2,
-          "event": "found",
-          "note": "Reported by the fix agent, unresolved on reconciliation (te…",
-          "commit": null
-        },
         {
           "round": 3,
           "event": "not_fixed",
           "note": "Needs a reviewer-approved amendment to the frozen spec, add…",
+          "commit": null
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -2794,31 +2798,28 @@
     {
       "id": "qr-gated-outputs-F3-5",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "qr-gated-outputs-F2-11",
-      "rootCause": "Spec routes through Classic Tools as admin; owner wants everything from World Shell as a member.",
-      "files": [
-        "docs/training/qr-gated-outputs.md",
-        "docs/spec-amendments/qr-gated-outputs/"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Spec's own preconditions (B7/F2-11); needs amendment."
+        "evidence": null
       },
       "history": [
-        {
-          "round": 3,
-          "event": "found",
-          "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
-          "commit": null
-        },
         {
           "round": 4,
           "event": "not_fixed",
           "note": "The product already works as the member from the World Shel…",
+          "commit": null
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -2826,30 +2827,28 @@
     {
       "id": "qr-gated-outputs-F3-6",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "test_harness",
       "attempts": 0,
       "step": "qr-gated-outputs-F2-12",
-      "rootCause": "No Draft card left for J10.3, E.1, E.2, E.4.",
-      "files": [
-        "docs/training/qr-gated-outputs.md"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Spec fixture gap for J10.3/E.1/E.2/E.4; needs amendment."
+        "evidence": null
       },
       "history": [
-        {
-          "round": 3,
-          "event": "found",
-          "note": "Reported by the fix agent, unresolved on reconciliation (te…",
-          "commit": null
-        },
         {
           "round": 4,
           "event": "not_fixed",
           "note": "Needs a new spec step with a fixture (pkg-v3) and an import…",
+          "commit": null
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -2984,21 +2983,24 @@
     {
       "id": "qr-gated-outputs-F4-3",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "product_defect",
       "attempts": 0,
       "step": "J2.1 / E.5",
-      "rootCause": "Copy mismatch carried since round 2, never in a fix scope.",
-      "files": [
-        "src/components/admin/MyResumePanel.jsx",
-        "server/routes/auth.js"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
           "round": 4,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3006,21 +3008,24 @@
     {
       "id": "qr-gated-outputs-F4-4",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "P.1",
-      "rootCause": "Spec requires admin sign-in and Classic Tools path; only a reviewer-approved amendment can change it.",
-      "files": [
-        "docs/training/qr-gated-outputs.md",
-        "docs/spec-amendments/qr-gated-outputs/"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
           "round": 4,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
+          "commit": null
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3028,21 +3033,24 @@
     {
       "id": "qr-gated-outputs-F4-5",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "test_harness",
       "attempts": 0,
       "step": "P.5 / J10.3, E.1, E.2, E.4",
-      "rootCause": "Spec supplies no Draft card after J9; E.3 ordering must stay deterministic.",
-      "files": [
-        "docs/spec-amendments/qr-gated-outputs/A5.json",
-        "docs/training/qr-gated-outputs.md"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
           "round": 4,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (te…",
+          "commit": null
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3050,22 +3058,24 @@
     {
       "id": "qr-gated-outputs-F4-6",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Known limitations: import UI",
-      "rootCause": "UI_GAP: no website path for package import.",
-      "files": [
-        "src/components/admin/MyResumePanel.jsx",
-        "src/lib/api.js",
-        "server/routes/resumeOutputs.js"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
           "round": 4,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3073,21 +3083,24 @@
     {
       "id": "qr-gated-outputs-F4-7",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Known limitations: docx and site sync not in spec",
-      "rootCause": "No scored journey; ownership decision pending.",
-      "files": [
-        "docs/spec-amendments/qr-gated-outputs/A3.json",
-        "scripts/sync-site-with-application-package.mjs"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
           "round": 4,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3095,14 +3108,12 @@
     {
       "id": "qr-gated-outputs-F4-8",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "MCP parity",
-      "rootCause": "No baseline step.",
-      "files": [
-        "docs/spec-amendments/qr-gated-outputs/A4.json"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
@@ -3110,27 +3121,40 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
           "commit": null
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7 passed every step of baseline v2",
+          "commit": null
         }
       ]
     },
     {
       "id": "qr-gated-outputs-F6-1",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "process",
       "attempts": 0,
       "step": "J2.1, E.5",
-      "rootCause": "Fix agent did not run the app; validation is the loop's job.",
-      "files": [
-        "src/components/admin/MyResumePanel.jsx",
-        "server/routes/auth.js"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 6,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3138,21 +3162,28 @@
     {
       "id": "qr-gated-outputs-F6-4",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Known limitations: docx and site sync",
-      "rootCause": "Amendments unapproved.",
-      "files": [
-        "docs/spec-amendments/qr-gated-outputs/A3.json",
-        "docs/spec-amendments/qr-gated-outputs/A8.json"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 6,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3160,21 +3191,28 @@
     {
       "id": "qr-gated-outputs-F6-5",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "P.1 and navigation",
-      "rootCause": "Amendment A6 not approved by a non-proposer.",
-      "files": [
-        "docs/training/qr-gated-outputs.md",
-        "docs/spec-amendments/qr-gated-outputs/A6.json"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 6,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
+          "commit": null
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3182,20 +3220,28 @@
     {
       "id": "qr-gated-outputs-F6-6",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "test_harness",
       "attempts": 0,
       "step": "J10.3, E.1, E.2, E.4",
-      "rootCause": "No Draft card fixture step in spec; A5/A7 unapproved.",
-      "files": [
-        "docs/spec-amendments/qr-gated-outputs/A7.json"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 6,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (te…",
+          "commit": null
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3203,21 +3249,28 @@
     {
       "id": "qr-gated-outputs-F6-7",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "MCP parity",
-      "rootCause": "MCP tools registered but no scored step; A4 unapproved.",
-      "files": [
-        "docs/spec-amendments/qr-gated-outputs/A4.json",
-        "server/lib/mcpToolRegistry.js"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 6,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -3341,18 +3394,16 @@
     {
       "id": "qr-gated-outputs-G1",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "Where things are: phone route to My Resume",
-      "rootCause": "At 390px the Classic Tools tab strip is display:none and the mobile menu button has no element, so the spec path is unreachable on a phone;…",
-      "files": [
-        "docs/training/qr-gated-outputs.md"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Spec lacks phone route to My Resume (spec gap for this feature, via amendment); underlyin…"
+        "evidence": null
       },
       "history": [
         {
@@ -3360,24 +3411,28 @@
           "event": "found",
           "note": "At 390px the Classic Tools tab strip is display:none and th…",
           "commit": null
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7 passed every step of baseline v2",
+          "commit": null
         }
       ]
     },
     {
       "id": "qr-gated-outputs-G2",
       "feature": "qr-gated-outputs",
-      "status": "open",
+      "status": "verified",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "Draft card fixture for J10.3, E.1, E.2, E.4",
-      "rootCause": "The spec gives no fixture for a Draft card needed by steps after Journey 9; the validator imported a third package version ad hoc.",
-      "files": [
-        "docs/training/qr-gated-outputs.md"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Spec's own Draft-card steps lack a fixture; spec gap, via amendment."
+        "evidence": null
       },
       "history": [
         {
@@ -3385,44 +3440,48 @@
           "event": "found",
           "note": "The spec gives no fixture for a Draft card needed by steps …",
           "commit": null
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7 passed every step of baseline v2",
+          "commit": null
         }
       ]
     },
     {
       "id": "qr-gated-outputs-T1 (rounds 2-5)",
       "feature": "qr-gated-outputs",
-      "status": "retesting",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "J2.1 View dialog Read-only note",
-      "rootCause": "src/components/admin/MyResumePanel.jsx:1109 hard-codes an em dash in 'Read-only — no edits can be made here.'; the spec expects a hyphen. T…",
-      "files": [
-        "src/components/admin/MyResumePanel.jsx"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Em dash exists on base (aa14653^1, from 9b5ad4f 2026-08-09) so it is not caused by the fe…"
+        "evidence": null
       },
       "history": [
-        {
-          "round": 6,
-          "event": "found",
-          "note": "src/components/admin/MyResumePanel.jsx:1109 hard-codes an e…",
-          "commit": null
-        },
         {
           "round": 6,
           "event": "fixed",
           "note": "View dialog note now reads 'Read-only - no edits can be mad…",
           "commit": "8b73f29e3839807257bfc3a147e866909bb40894"
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7 passed every step",
+          "commit": "6a71095"
         }
       ]
     },
     {
       "id": "qr-gated-outputs-T5 (rounds 2-5)",
       "feature": "qr-gated-outputs",
-      "status": "backlog_pre_existing",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "E.5 sign-in limit message",
@@ -3436,15 +3495,15 @@
       "history": [
         {
           "round": 6,
-          "event": "found",
-          "note": "server/routes/auth.js:28 authLimiter message uses an em das…",
-          "commit": null
-        },
-        {
-          "round": 6,
           "event": "fixed",
           "note": "authLimiter message now reads 'Too many attempts - please t…",
           "commit": "8b73f29e3839807257bfc3a147e866909bb40894"
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7 passed every step",
+          "commit": "6a71095"
         }
       ]
     },
@@ -7448,13 +7507,14 @@
     {
       "id": "cover-letter-agent-F1-12",
       "feature": "cover-letter-agent",
-      "status": "open",
-      "class": "informational",
+      "status": "recurred",
+      "class": "defect",
       "attempts": 0,
-      "step": "Observations O2, O3, O4, O5 (wording of Approved row, 170px letter pane at 390px, 1280px top bar overlap, J6.2 ordering)",
-      "rootCause": "Listed in docs/test-results round 1; none addressed by 52025de.",
+      "step": "Observation O2: history row of an Approved letter says Not yet approved",
+      "rootCause": "DocumentBlocksView.jsx:31 formatMetadataLine prints 'Not yet approved' whenever metadata.approvedBy is empty, regardless of row status; mir…",
       "files": [
-        "src/components/admin/MyResumePanel.jsx"
+        "src/components/DocumentBlocksView.jsx",
+        "server/lib/outputRendering.js"
       ],
       "scope": null,
       "history": [
@@ -7462,6 +7522,12 @@
           "round": 1,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (in…",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "recurred",
+          "note": "DocumentBlocksView.jsx:31 formatMetadataLine prints 'Not ye…",
           "commit": null
         }
       ]
@@ -7472,7 +7538,7 @@
       "status": "backlog_pre_existing",
       "class": "defect",
       "attempts": 0,
-      "step": "J1.1 (mobile): click My Resume tab at 390px",
+      "step": "MOBILE_GAP: click the My Resume tab at 390px",
       "rootCause": null,
       "files": [],
       "scope": {
@@ -7486,102 +7552,99 @@
           "event": "found",
           "note": "src/brand.css:630-631 hides .sb-admin-topbar-actions at <=9…",
           "commit": null
+        },
+        {
+          "round": 2,
+          "event": "recurred",
+          "note": "src/brand.css:630-631 hides .sb-admin-topbar-actions at <=9…",
+          "commit": null
         }
       ]
     },
     {
       "id": "cover-letter-agent-T2",
       "feature": "cover-letter-agent",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "J1.2: first-draft letter uses Career Master key metrics",
-      "rootCause": "Reproduced. coverLetterTemplate.js:196 picks the metrics template only when values.metrics && terms.length; with no job rec text terms is e…",
-      "files": [
-        "server/lib/coverLetterTemplate.js",
-        "src/components/admin/CoverLetterSettings.jsx",
-        "tests/cover-letter-agent.test.js"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "coverLetterTemplate.js does not exist at base 312f128; added by 4be0bec. Cannot reproduce…"
+        "evidence": null
       },
       "history": [
-        {
-          "round": 1,
-          "event": "found",
-          "note": "Reproduced. coverLetterTemplate.js:196 picks the metrics te…",
-          "commit": null
-        },
         {
           "round": 1,
           "event": "fixed",
           "note": "Added additive template key jobParagraphMetricsOnly, used w…",
           "commit": "52025de0db06af9e47a73ed7feee45b4ee0a630f"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other…",
+          "commit": "0800b1c18ce1b2f1003085d0010f95a36fe75932"
         }
       ]
     },
     {
       "id": "cover-letter-agent-T3",
       "feature": "cover-letter-agent",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "J8.4: 'Make it more formal' must be tagged Answered by rules",
-      "rootCause": "Reproduced. coverLetterRules.js:110 returns kind 'info' for a tone preset with nothing to change; coverLetterAgent.js:159-160 maps every 'i…",
-      "files": [
-        "server/lib/coverLetterRules.js"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "coverLetterRules.js and coverLetterAgent.js are new in 4be0bec; the info-to-search_only r…"
+        "evidence": null
       },
       "history": [
-        {
-          "round": 1,
-          "event": "found",
-          "note": "Reproduced. coverLetterRules.js:110 returns kind 'info' for…",
-          "commit": null
-        },
         {
           "round": 1,
           "event": "fixed",
           "note": "Tone preset with nothing to change now returns kind 'unsati…",
           "commit": "52025de0db06af9e47a73ed7feee45b4ee0a630f"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other…",
+          "commit": "0800b1c18ce1b2f1003085d0010f95a36fe75932"
         }
       ]
     },
     {
       "id": "cover-letter-agent-T4",
       "feature": "cover-letter-agent",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "E.5: agent scope text with no job rec text",
-      "rootCause": "packageSearch.js jobRecText() (133-142) always appends the rod's jobTitle/location/url, so recUnits is never empty and hasJobRec (line 160)…",
-      "files": [
-        "server/lib/packageSearch.js",
-        "server/lib/coverLetterAgent.js"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "packageSearch.js jobRecText/hasJobRec is new in 4be0bec; absent on base."
+        "evidence": null
       },
       "history": [
-        {
-          "round": 1,
-          "event": "found",
-          "note": "packageSearch.js jobRecText() (133-142) always appends the …",
-          "commit": null
-        },
         {
           "round": 1,
           "event": "fixed",
           "note": "hasJobRec now derives from real job-rec text only (rod meta…",
           "commit": "52025de0db06af9e47a73ed7feee45b4ee0a630f"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other…",
+          "commit": "0800b1c18ce1b2f1003085d0010f95a36fe75932"
         }
       ]
     },
@@ -7663,15 +7726,15 @@
     {
       "id": "cover-letter-agent-T8",
       "feature": "cover-letter-agent",
-      "status": "retest_failed_pending_triage",
-      "class": "defect",
+      "status": "needs_business_definition",
+      "class": "needs_business_definition",
       "attempts": 1,
-      "step": "MCP_GAP: MCP tools for each capability the spec exercises",
-      "rootCause": "The validator tested c3a71b4 before platform-mcp landed. At the integration head mcpToolRegistry.js exists with cover_letter_open, cover_le…",
+      "step": "MCP_GAP: accept/reject of a proposal and add-resume-to-package have no MCP tool",
+      "rootCause": "Round-1 T8 tools exist; the remaining two capabilityParity.js rows (cover-letter-turn-decide, cover-letter-add-resume) are recorded as mcpE…",
       "files": [
+        "server/lib/capabilityParity.js",
         "server/lib/mcpToolRegistry.js",
-        "server/data/mcpToolManifest.json",
-        "server/lib/capabilityParity.js"
+        "server/data/mcpToolManifest.json"
       ],
       "scope": {
         "scope": "this_feature",
@@ -7690,21 +7753,27 @@
           "event": "fixed",
           "note": "Added 7 append-only MCP tools (settings read/save, opportun…",
           "commit": "52025de0db06af9e47a73ed7feee45b4ee0a630f"
+        },
+        {
+          "round": 2,
+          "event": "recurred",
+          "note": "Round-1 T8 tools exist; the remaining two capabilityParity.…",
+          "commit": null
         }
       ]
     },
     {
       "id": "cover-letter-agent-T9",
       "feature": "cover-letter-agent",
-      "status": "open",
-      "class": "coverage_gap",
+      "status": "recurred",
+      "class": "defect",
       "attempts": 0,
-      "step": "Observation O1: World Shell opportunity view lacks agent, package build and settings entry points",
-      "rootCause": "Open bugs cover-letter-agent-B3 and B11 (entry points only in Classic Tools / My Resume; two generators coexist). No baseline step proves r…",
+      "step": "UI_GAP / MOBILE_GAP: World Shell Application outputs shows Edit with cover-letter agent and Build package with contents",
+      "rootCause": "Agent and package buttons are mounted only in CoverLetterPackagesPanel (lines 109, 126) and MyResumePanel (1068, 1173); OpportunityOutputsS…",
       "files": [
         "src/components/OpportunityOutputsSection.jsx",
         "src/components/WorldShell.jsx",
-        "docs/training/cover-letter-agent.md"
+        "src/components/admin/CoverLetterWorkbench.jsx"
       ],
       "scope": {
         "scope": "this_feature",
@@ -7716,6 +7785,75 @@
           "round": 1,
           "event": "found",
           "note": "Open bugs cover-letter-agent-B3 and B11 (entry points only …",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "recurred",
+          "note": "Agent and package buttons are mounted only in CoverLetterPa…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-T10",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "Approve for QR on the package row (toast wording)",
+      "rootCause": "Product toast at MyResumePanel.jsx:656 uses a hyphen, deliberately set by commit 73505f4 because qr-gated-outputs, no-silent-failures and p…",
+      "files": [
+        "docs/training/cover-letter-agent.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Product toast at MyResumePanel.jsx:656 uses a hyphen, delib…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-T11",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "Observation O6: Import an application package card unreadable on phone",
+      "rootCause": "MyResumePanel.jsx:947-951 card has only a border, no explicit background or text colour, so light inherited text sits on a light card in th…",
+      "files": [
+        "src/components/admin/MyResumePanel.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "MyResumePanel.jsx:947-951 card has only a border, no explic…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "cover-letter-agent-T13",
+      "feature": "cover-letter-agent",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "Observation O5: J6.2 needs Resume Output History while the full-screen dialog is open",
+      "rootCause": "Product matches the change spec; the step order asks to open the approved version from Resume Output History before J6.3 closes the dialog,…",
+      "files": [
+        "docs/training/cover-letter-agent.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Product matches the change spec; the step order asks to ope…",
           "commit": null
         }
       ]
@@ -8067,6 +8205,72 @@
           "round": 2,
           "event": "verified",
           "note": "Retest round 2 passed every step of baseline v1",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "session-mapping-F2-2",
+      "feature": "session-mapping",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "Admin navigation entry points (session-mapping-B7)",
+      "rootCause": "Classic admin-menu entry point added although owner direction is World Shell only.",
+      "files": [
+        "server/db.js",
+        "src/components/admin/AdminShell.jsx",
+        "docs/training/session-mapping.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "session-mapping-F2-3",
+      "feature": "session-mapping",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "SessionEnd hook capture (session-mapping-B8)",
+      "rootCause": "Hook files directly to the database, so default dev environment captures nothing automatically.",
+      "files": [
+        "scripts/analyze-session.mjs",
+        ".claude/settings.json"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "session-mapping-F2-5",
+      "feature": "session-mapping",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "CLAUDE.md stale statement about session-mapping MCP tools",
+      "rootCause": "Documentation not updated after round 1 T1.",
+      "files": [
+        "CLAUDE.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
           "commit": null
         }
       ]
