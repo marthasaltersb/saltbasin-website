@@ -9,6 +9,8 @@
 #   cp docs/release-log/tracker-carry.json /var/tmp/sbpg/tracker/carry-in.json   # earlier sessions' agents/rounds
 #   one workflow run directory per line in /var/tmp/sbpg/tracker/run_dir
 #   COMMIT_TRAILER in /var/tmp/sbpg/tracker/trailer.txt (this session's attribution lines)
+#   this session's id in /var/tmp/sbpg/tracker/session.txt, after recording its estimate with
+#   scripts/session-plan.mjs estimate (each sync then records new validated rounds against it)
 # The bug ledger (docs/release-log/bug-ledger.json) and the carry file are committed, so the next session
 # starts from everything this one knew. The carry-in copy is fixed for the session so nothing counts twice.
 set -u
@@ -31,6 +33,8 @@ import json;s=open('docs/release-log/history.json').read();json.dump({'json':s},
 # Commit and push only under the shared merge lock and never during a merge.
 if mkdir /var/tmp/sbpg/integrate.lockdir 2>/dev/null; then
   if [ ! -f .git/MERGE_HEAD ]; then
+    # This session's estimate (scripts/session-plan.mjs): record each merge's test results against it.
+    [ -s "$T/session.txt" ] && node scripts/session-plan.mjs merge --session "$(cat "$T/session.txt")" --if-new >/dev/null
     node scripts/release-loop-resume.mjs --export "$T/snapshot.json" >/dev/null
     node scripts/release-tracker-markdown.mjs "$T/snapshot.json" --out docs/release-log/release-tracker.md
     git add docs/release-log docs/test-results docs/triage docs/spec-amendments docs/training/baselines 2>/dev/null

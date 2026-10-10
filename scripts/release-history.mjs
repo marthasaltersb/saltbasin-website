@@ -38,7 +38,11 @@ function point(t, c, features, bugs) {
 }
 
 const points = [];
-const log = git('log', '--reverse', '--format=%H %cI', '--', STATE).trim().split('\n').filter(Boolean);
+// A release's history starts at its cut (startedAtCommit in active-release.features.json, or --since); the
+// earlier release's history is frozen in docs/release-log/releases/<version>/history.json.
+let since = opt('--since');
+if (!since) { try { since = JSON.parse(fs.readFileSync(path.join(root, 'docs/release-log/active-release.features.json'), 'utf8')).startedAtCommit || null; } catch { /* whole history */ } }
+const log = git('log', '--reverse', '--format=%H %cI', ...(since ? [`${since}..HEAD`] : []), '--', STATE).trim().split('\n').filter(Boolean);
 for (const line of log) {
   const [sha, at] = line.split(' ');
   let s; try { s = JSON.parse(git('show', `${sha}:${STATE}`)); } catch { continue; }

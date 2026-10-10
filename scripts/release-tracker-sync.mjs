@@ -352,10 +352,18 @@ if (carryOut) {
 let updates = [];
 try { updates = JSON.parse(fs.readFileSync(new URL('../docs/release-log/updates.json', import.meta.url), 'utf8')); } catch { /* none yet */ }
 let releaseInfo = null;
-try { const d = JSON.parse(fs.readFileSync(new URL('../docs/release-log/active-release.features.json', import.meta.url), 'utf8')); releaseInfo = { version: d.version || null, release: d.release, title: d.title || null }; } catch { /* optional */ }
+try { const d = JSON.parse(fs.readFileSync(new URL('../docs/release-log/active-release.features.json', import.meta.url), 'utf8')); releaseInfo = { version: d.version || null, release: d.release, title: d.title || null, previousRelease: d.previousRelease || null, startedAtCommit: d.startedAtCommit || null, kinds: Object.fromEntries((d.features || []).map((f) => [f.key, f.kind || 'new'])) }; } catch { /* optional */ }
+// Session estimates for this release and the test results recorded at each merge (scripts/session-plan.mjs).
+let sessions = [];
+try {
+  const sp = new URL('../docs/release-log/session-plans/', import.meta.url);
+  sessions = fs.readdirSync(sp).filter((f) => f.endsWith('.json')).map((f) => JSON.parse(fs.readFileSync(new URL(f, sp), 'utf8')))
+    .filter((p) => !releaseInfo || p.release === releaseInfo.version);
+} catch { /* none yet */ }
 
 const snapshot = {
   release: releaseInfo,
+  sessions,
   updates,
   runId: runDirs.map((d) => path.basename(d)).join(' + ') || null,
   syncedAt: new Date().toISOString(),
