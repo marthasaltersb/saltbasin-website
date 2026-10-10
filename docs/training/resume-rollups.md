@@ -118,5 +118,5 @@ Audience: a member using the platform, and a test agent driving a browser. Each 
 
 - [E.1] Removing a saved row asks "Remove “<label>”?" and removes it on confirm; the last saved row of a type cannot be removed — a red toast says to untick **Shown** instead (not exercised in the builder's walk).
 - [E.2] If the rollups cannot be loaded, the screen shows an amber alert "Resume rollups could not be loaded… not empty" with a **Retry** button, and an output shows "Resume rollups could not be loaded" instead of empty tiles (not exercised: needs a forced server failure).
-- [E.3] A member with an empty Career Master sees every tile as `—` with a reason; no figure is ever invented (not exercised).
+- [E.3] A member with an empty Career Master sees every tile computed from Career Master as `—` with a reason; a manual (user-defined) tile shows the member's own value marked †; no figure is ever invented (not exercised).
 - [E.4] Expected, non-defect console noise: `404 GET /api/members/me/profile` (admin test user has no member profile) and sandbox certificate errors for external hosts.

@@ -1,0 +1,36 @@
+{
+  "id": "A4",
+  "feature": "resume-rollups",
+  "fromBaseline": 2,
+  "proposedBy": "triage:resume-rollups:r4",
+  "round": 4,
+  "triageItems": ["resume-rollups-RR2-2"],
+  "reason": "E.3 as written says every tile is an em dash for an empty Career Master, which contradicts the specified manual tile.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "E.3",
+      "before": "A member with an empty Career Master sees every tile as `—` with a reason; no figure is ever invented (not exercised).",
+      "after": "A member with an empty Career Master sees every tile computed from Career Master as `—` with a reason; a manual (user-defined) tile shows the member's own value marked †; no figure is ever invented (not exercised).",
+      "tracesTo": "docs/changes/resume-rollups.md line 23 (manual {manualValue} metric); server/lib/resumeRollups.js honesty-rule header (manual tiles allowed, flagged userDefined with a footnote); J12.1 expects CERTIFIED PARTNERS 5†",
+      "whyNeeded": "The step contradicts the change spec: a manual tile holds the member's own typed value, not Career Master data, so it cannot be an em dash. The no-invented-figure intent is kept."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:resume-rollups:r4",
+    "checklist": {
+      "Traced": "pass: change spec manual metric and resumeRollups.js header (verified: manual tiles require a manualValue and are flagged userDefined)",
+      "Not weaker": "pass: the old expectation contradicts the change spec (manual tile allowed); computed tiles still must show an em dash with a reason and no invented figure",
+      "Retire only duplicates": "pass: nothing retired",
+      "Exact": "pass: names the em dash, the reason, and the dagger mark",
+      "Reachable": "pass: a screen view of a tile at desktop and 390px; the step remains not exercised as before",
+      "Deterministic": "pass: depends only on the member's empty Career Master and stored tile definitions",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass: tests the documented tile behaviour, not an implementation choice",
+      "Errors are plain and coloured by severity": "pass: no error or warning is checked"
+    },
+    "note": "Spec error confirmed against the change spec. Approved. The step stays not exercised; a later round that exercises it should name the manual tile fixture.",
+    "at": "2026-10-10T21:40:00Z"
+  }
+}
