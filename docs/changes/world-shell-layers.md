@@ -59,8 +59,8 @@ None. No table, column, config row or seed changes; nothing touches member rows.
 Environment: fresh database `sb_rl_bld_6000_1` on the local Postgres, seeded, accounts from `scripts/create-test-member.mjs`; production build served on port 6002; Chromium from the pinned path with software GL (slow, so every wait is condition-based).
 
 - `npm run build` passes; the server boots against the fresh database.
-- Every journey of `docs/training/world-shell-layers.md` was walked once in Chromium: Journeys 1-2 and 3-6 and 9 on desktop 1280x900 and again at the phone profile 390x844; Journey 7 (admin) on both; Journey 8 on the phone; Journey 10 with `curl`. All steps passed on the final code, plus edge cases [E.2] and [E.10] and the old `world-shell-navigation` flow (Edit draft on the opportunity card, save to version N+1, Approve for QR confirmation box, **← Tracked list**).
-- Failed requests seen and why they are not product failures: `fonts.googleapis.com` and `cdnjs.cloudflare.com` (three.js r128) are unreachable from the sandbox (certificate / tunnel errors); the one HTTP 400 is the intended `No changes to save.` of [E.10].
+- `npm run build` passes; the server boots against the fresh database; `node scripts/check-interface-parity.mjs` exits 0 (72 of 72 capabilities in all three interfaces, 110 tools, manifest matches).
+- Every journey of `docs/training/world-shell-layers.md` was walked once in Chromium on the merged code (integration head `0800b1c` plus this branch): Journeys 1-6 and 9 on desktop 1280x900, Journey 7 (admin), Journey 8 on the 390x844 phone profile, Journey 10 with `curl` (MCP via the parity check), and the edge cases the walker covers. All steps passed. A first pass failed only on the Sun menu entry counts (the integration head added the **Connected Agents** island for members and six more admin islands); the spec was corrected to ten member and seventeen admin entries and the pass repeated clean.
 
 ## Known limitations
 
