@@ -29,6 +29,8 @@ const DONE = new Set(['verified']);
 // exported, but they never block or re-open the feature they were first reported against.
 const BACKLOG = new Set(['backlog_pre_existing', 'reassigned', 'process_note']);
 const FINISHED = new Set(['passed', 'passed_with_backlog']);
+// Waiting on a person or the owner: a new run cannot resolve these, so they never relaunch a passed feature.
+const HELD = new Set(['needs_business_definition', 'needs_human']);
 
 if (argv.includes('--export')) {
   const snap = JSON.parse(fs.readFileSync(opt('--export'), 'utf8'));
@@ -62,7 +64,7 @@ if (argv.includes('--args')) {
   const portBase = Number(opt('--port-base') || 5000);
   const merged = (f) => fs.existsSync(path.join(root, f.trainingSpec)) && fs.existsSync(path.join(root, f.changeSpec));
   // A feature is unfinished while it has blocking bugs; bugs reassigned to it by the scope check count as its own.
-  const owned = (key) => state.bugs.filter((b) => !DONE.has(b.status)
+  const owned = (key) => state.bugs.filter((b) => !DONE.has(b.status) && !HELD.has(b.status)
     && ((b.feature === key && !BACKLOG.has(b.status)) || (b.status === 'reassigned' && b.scope?.owner === key)));
   const unfinished = defs.features.filter((f) => !FINISHED.has(state.features[f.key]?.status) || owned(f.key).length);
   const groups = [];
