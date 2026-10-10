@@ -106,7 +106,7 @@ function OutputAuthorshipFooter() {
           <span key={chip} style={{
             fontSize: '0.58rem', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--sb-font-label)',
             padding: '0.2rem 0.6rem', borderRadius: 12, border: '0.5px solid var(--sb-gold)', color: 'var(--sb-navy)',
-            background: 'rgba(196,132,58,0.08)', whiteSpace: 'nowrap',
+            background: 'rgba(196,132,58,0.08)', whiteSpace: 'normal', maxWidth: '100%', overflowWrap: 'anywhere', boxSizing: 'border-box',
           }}>
             {chip}
           </span>
@@ -520,7 +520,7 @@ function ExecutiveSummarySection({ execKpis, capabilityMeters, rollupError, roll
       <div style={{ fontSize: '0.6rem', letterSpacing: '0.24em', textTransform: 'uppercase', color: BRAND.navy, fontFamily: 'Georgia, serif', fontWeight: 700, marginBottom: '0.75rem', paddingBottom: '0.25rem', borderBottom: `1px solid ${BRAND.gold}` }}>
         Executive Summary
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.6rem', marginBottom: '1.25rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0, 1fr))', gap: '0.6rem', marginBottom: '1.25rem' }}>
         {execKpis.map((k, i) => <KPITile key={`${k.label}-${i}`} {...k} />)}
       </div>
       {rollupFootnote && <div style={{ fontSize: '0.64rem', color: BRAND.slate, fontStyle: 'italic', margin: '-0.8rem 0 1rem', fontFamily: 'sans-serif' }}>{rollupFootnote}</div>}
@@ -761,7 +761,7 @@ function ResumeLayoutModern({ rollupError, rollupFootnote, about, timeline, jobs
       </section>
 
       {/* ── Two column: Domains | Technology ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '2rem', marginBottom: '1.5rem' }}>
         <div>
           <SectionHeadingMod>Core Domains</SectionHeadingMod>
           {!memberOwned && DOMAIN_CATEGORIES.map(cat => (
@@ -799,7 +799,7 @@ function ResumeLayoutModern({ rollupError, rollupFootnote, about, timeline, jobs
       {/* ── Industry Experience — 3-col cards ── */}
       {!memberOwned && <section style={{ marginBottom: '1.5rem' }}>
         <SectionHeadingMod>Industry Experience</SectionHeadingMod>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.6rem' }}>
           {INDUSTRIES.map(ind => (
             <div key={ind.key} style={{ background: '#faf8f4', padding: '0.6rem 0.75rem', borderLeft: '2px solid #c4843a', pageBreakInside: 'avoid' }}>
               <div style={{ fontSize: '0.62rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#c4843a', fontFamily: 'sans-serif', marginBottom: '0.2rem' }}>{ind.icon} {ind.label}</div>
@@ -813,7 +813,7 @@ function ResumeLayoutModern({ rollupError, rollupFootnote, about, timeline, jobs
       {(about.philosophy || about.interpersonalStyle || about.workEthic) && (
         <section style={{ marginBottom: '1.5rem' }}>
           <SectionHeadingMod>Philosophy & Work Style</SectionHeadingMod>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '1rem' }}>
             {[['Philosophy', about.philosophy], ['Interpersonal Style', about.interpersonalStyle], ['Work Ethic', about.workEthic]].filter(([, v]) => v).map(([label, val]) => (
               <div key={label}>
                 <div style={{ fontSize: '0.62rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#c4843a', fontFamily: 'sans-serif', marginBottom: '0.3rem' }}>{label}</div>
@@ -885,7 +885,7 @@ function ResumeLayoutCorporate({ rollupError, rollupFootnote, about, timeline, j
       <ElevatedVisualSections industryDurations={industryDurations} toolBars={toolBars} clientQuotes={clientQuotes} />
 
       {/* ── Two-panel body: main (left 65%) + sidebar (right 35%) ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: '2rem' }}>
         {/* Main column */}
         <div>
           {/* Profile */}
@@ -918,7 +918,7 @@ function ResumeLayoutCorporate({ rollupError, rollupFootnote, about, timeline, j
           {/* Industry Experience */}
           {!memberOwned && <section>
             <CorpHead>Industry Experience</CorpHead>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.5rem' }}>
               {INDUSTRIES.map(ind => (
                 <div key={ind.key} style={{ pageBreakInside: 'avoid', padding: '0.5rem 0.65rem', background: '#faf8f4', borderLeft: '2px solid #c4843a' }}>
                   <div style={{ fontSize: '0.65rem', color: '#c4843a', fontFamily: 'sans-serif', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '0.15rem' }}>{ind.icon} {ind.label}</div>
@@ -1603,7 +1603,7 @@ export function ResumeOutput() {
         </section>
         {!isMemberOwnedPreview && <section style={{ marginBottom: '1.5rem' }}>
           <OutputHeading>Industries Served</OutputHeading>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.6rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.6rem' }}>
             {INDUSTRIES.map((ind) => (
               <div key={ind.key} style={{ pageBreakInside: 'avoid', background: '#FBF6F0', padding: '0.65rem 0.8rem', borderLeft: '3px solid var(--sb-gold)' }}>
                 <div style={{ fontFamily: 'var(--sb-font-display)', fontSize: '0.95rem', color: 'var(--sb-navy)', fontWeight: 500 }}>
@@ -1618,7 +1618,7 @@ export function ResumeOutput() {
         </section>}
         {(!isMemberOwnedPreview || handsOn.length + integrationDesign.length + adjacent.length > 0) && <section style={{ marginBottom: '1.5rem' }}>
           <OutputHeading>Technology & Capability</OutputHeading>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.6rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.6rem' }}>
             <TechColumn label="Hands-On" items={handsOn} />
             <TechColumn label="Integration Designs" items={integrationDesign} />
             <TechColumn label="Adjacent Exposure" items={adjacent} />
@@ -1812,7 +1812,7 @@ export function CaseStudyOutput() {
 
         {/* ── Actions | Impact side-by-side ── */}
         {(actions.length > 0 || impact.length > 0) && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '1.25rem', marginBottom: '1.25rem' }}>
             {actions.length > 0 && (
               <section style={{ pageBreakInside: 'avoid' }}>
                 <CaseSectionHead>Actions Taken</CaseSectionHead>
@@ -2382,11 +2382,11 @@ function InvestorProfileDashboard({ master }) {
   return (
     <div>
       {/* ── KPI strip ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.7rem', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.7rem', marginBottom: '1.5rem' }}>
         {kpis.map((k) => <KPITile key={k.label} {...k} />)}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '0.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '2rem', marginBottom: '0.5rem' }}>
         {/* ── Deal transaction size, deal over deal ── */}
         <section style={{ pageBreakInside: 'avoid' }}>
           <SectionHeadingMod>Deal Transaction Size — Deal over Deal</SectionHeadingMod>
@@ -2416,7 +2416,7 @@ function InvestorProfileDashboard({ master }) {
       {/* ── New investments, last 12 months ── */}
       <section style={{ marginBottom: '1.5rem', pageBreakInside: 'avoid' }}>
         <SectionHeadingMod>New Investments — Last 12 Months</SectionHeadingMod>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '0.35rem', alignItems: 'end', height: 74 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: '0.35rem', alignItems: 'end', height: 74 }}>
           {monthCells.map((c) => (
             <div key={c.key} style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '0.6rem', color: c.count ? BRAND.navy : BRAND.fog, fontWeight: c.count ? 700 : 400 }}>{c.count || ''}</div>
@@ -3075,7 +3075,7 @@ export function DomainsOutput() {
         {/* ── Core Domains — 3-col card grid ── */}
         <section style={{ marginBottom: '1.75rem' }}>
           <DomainsHead>Core Domain Areas</DomainsHead>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.75rem' }}>
             {domainCategories.map(cat => (
               <div key={cat.title} style={{ background: '#faf8f4', padding: '0.85rem 1rem', borderTop: '3px solid #c4843a' }}>
                 <div style={{ fontSize: '0.62rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: '#c4843a', fontFamily: 'sans-serif', marginBottom: '0.5rem' }}>{cat.icon} {cat.title}</div>
@@ -3092,7 +3092,7 @@ export function DomainsOutput() {
         {/* ── Niche Solutions — 3-col ── */}
         <section style={{ marginBottom: '1.75rem' }}>
           <DomainsHead>Niche Solutions</DomainsHead>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.75rem' }}>
             {nicheSolutions.map(ns => (
               <div key={ns.label} style={{ background: '#1b2a3b', color: 'white', padding: '0.85rem 1rem', borderTop: '3px solid #02a1a6' }}>
                 <div style={{ fontSize: '0.62rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: '#02a1a6', fontFamily: 'sans-serif', marginBottom: '0.5rem' }}>{ns.icon} {ns.label}</div>
@@ -3109,7 +3109,7 @@ export function DomainsOutput() {
         {/* ── Industry Experience ── */}
         <section style={{ marginBottom: '1.75rem' }}>
           <DomainsHead>Industry Experience</DomainsHead>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.6rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.6rem' }}>
             {industries.map(ind => (
               <div key={ind.key} style={{ pageBreakInside: 'avoid', display: 'flex', gap: '0.75rem', alignItems: 'flex-start', padding: '0.65rem 0.8rem', background: '#faf8f4', borderLeft: '3px solid #c4843a' }}>
                 <span style={{ fontSize: '1.1rem', marginTop: 2 }}>{ind.icon}</span>
@@ -3125,7 +3125,7 @@ export function DomainsOutput() {
         {/* ── Technology Proficiencies ── */}
         <section>
           <DomainsHead>Technology Proficiencies</DomainsHead>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.75rem' }}>
             {[['Hands-On', handsOn, '#c4843a'], ['Integration & Design', integrationDesign, '#02a1a6'], ['Adjacent Exposure', adjacent, '#5a5a5a']].map(([label, items, color]) => (
               <div key={label} style={{ borderTop: `3px solid ${color}`, paddingTop: '0.6rem' }}>
                 <div style={{ fontSize: '0.6rem', letterSpacing: '0.16em', textTransform: 'uppercase', color, fontFamily: 'sans-serif', marginBottom: '0.4rem' }}>{label}</div>
@@ -3255,7 +3255,7 @@ export function StrategicOperatorOutput() {
               “I build for the customer you keep, not just the deal you close.”
             </div>
           </header>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.7rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.7rem' }}>
             {teaserMetrics.map((m) => <HeroMetricCard key={m.label} {...m} />)}
           </div>
         </TeaserFade>
@@ -3307,18 +3307,18 @@ export function StrategicOperatorOutput() {
         {/* ── High-impact outcomes & exits ── */}
         <section style={{ marginBottom: '1.5rem' }}>
           <SectionHeadingMod>High-Impact Outcomes &amp; Exits</SectionHeadingMod>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.7rem', marginBottom: '0.7rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.7rem', marginBottom: '0.7rem' }}>
             {heroMetrics.map((m) => <HeroMetricCard key={m.label} {...m} />)}
           </div>
           <RollupErrorNotice message={rollupError} />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.7rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.7rem' }}>
             {statStrip.map((k, i) => <KPITile key={`${k.label}-${i}`} {...k} />)}
           </div>
           {rollupFootnote && <div style={{ fontSize: '0.64rem', color: BRAND.slate, fontStyle: 'italic', marginTop: '0.4rem', fontFamily: 'sans-serif' }}>{rollupFootnote}</div>}
         </section>
 
         {/* ── Industry duration + capability confidence ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '2rem' }}>
           <IndustryDurationSection rows={industryDurations} heading="Deep Industry Experience & Duration" />
           {capabilityMeters.length > 0 && (
             <section style={{ marginBottom: '1.5rem', pageBreakInside: 'avoid' }}>
@@ -3335,7 +3335,7 @@ export function StrategicOperatorOutput() {
         {ventures.length > 0 && (
           <section style={{ marginBottom: '1.5rem', pageBreakInside: 'avoid' }}>
             <SectionHeadingMod>AI-Native Product Studio</SectionHeadingMod>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.7rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.7rem' }}>
               {ventures.map((v) => {
                 const extra = typeof v.extra === 'string' ? (() => { try { return JSON.parse(v.extra); } catch { return {}; } })() : (v.extra || {});
                 return (
@@ -3435,7 +3435,7 @@ export function PortfolioAppendixOutput() {
         {/* ── Proficiency Level Definitions ── */}
         <section style={{ marginBottom: '1.75rem' }}>
           <DomainsHead>Proficiency Level Definitions</DomainsHead>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '0.75rem' }}>
             {TIER_LEGEND.map((t) => (
               <div key={t.tier} style={{ background: '#faf8f4', borderTop: `3px solid ${t.color}`, padding: '0.85rem 1rem' }}>
                 <div style={{ fontSize: '0.72rem', fontWeight: 700, color: t.color, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '0.4rem' }}>{t.tier}</div>
@@ -3484,7 +3484,7 @@ export function PortfolioAppendixOutput() {
         {/* ── Skills by Category ── */}
         <section style={{ marginBottom: '1.75rem' }}>
           <DomainsHead>Skills by Category</DomainsHead>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem 1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.4rem 1.5rem' }}>
             {Array.from(byCategory.entries()).sort((a, b) => b[1] - a[1]).map(([cat, count]) => (
               <div key={cat} style={{ fontSize: '0.8rem', color: '#3a3a3a' }}>
                 <span style={{ color: '#c4843a', fontWeight: 700 }}>{count}</span> {cat}
@@ -3610,7 +3610,7 @@ export function PortfolioAppendixOutput() {
         {certifications.length > 0 && (
           <section style={{ marginTop: '1.75rem' }}>
             <DomainsHead>Certifications ({certifications.length})</DomainsHead>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.6rem' }}>
               {certifications.map((c) => (
                 <div key={c.id} style={{ background: '#faf8f4', borderLeft: '3px solid #c4843a', padding: '0.65rem 0.8rem', pageBreakInside: 'avoid' }}>
                   <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#1b2a3b' }}>{c.name}</div>
@@ -3749,7 +3749,7 @@ export function OnePagerOutput() {
       <>
         <section style={{ marginBottom: '1.5rem' }}>
           <OutputHeading>Services</OutputHeading>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.6rem' }}>
             {SERVICE_OFFERINGS.map((s) => (
               <div key={s.slug} style={{ pageBreakInside: 'avoid', background: '#FBF6F0', padding: '0.7rem 0.85rem', borderLeft: '3px solid var(--sb-gold)' }}>
                 <div style={{ fontFamily: 'var(--sb-font-label)', fontSize: '0.58rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--sb-gold)', marginBottom: 2 }}>
@@ -3768,7 +3768,7 @@ export function OnePagerOutput() {
 
         <section style={{ marginBottom: '1.5rem' }}>
           <OutputHeading>Domains of Expertise</OutputHeading>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.6rem' }}>
             {DOMAIN_CATEGORIES.map((cat) => (
               <div key={cat.title} style={{ pageBreakInside: 'avoid' }}>
                 <div style={{ fontFamily: 'var(--sb-font-display)', fontSize: '0.95rem', color: 'var(--sb-navy)', fontWeight: 500, marginBottom: 4 }}>
@@ -3788,7 +3788,7 @@ export function OnePagerOutput() {
 
         <section>
           <OutputHeading>Niche Solutions</OutputHeading>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.6rem' }}>
             {NICHE_SOLUTIONS.map((n) => (
               <div key={n.label} style={{ pageBreakInside: 'avoid', background: 'var(--sb-navy)', color: 'var(--sb-cream)', padding: '0.7rem 0.85rem', borderLeft: '3px solid var(--sb-gold)' }}>
                 <div style={{ fontFamily: 'var(--sb-font-display)', fontSize: '0.95rem', fontWeight: 500, marginBottom: 4 }}>
@@ -5335,7 +5335,7 @@ export function MethodologyOutput() {
         A transparent methodology for measuring, attributing, and valuing human + AI contributions in enterprise software delivery.
         Built from the ground up during the Salt Basin Net Works platform build — the platform itself is the proof of concept.
       </p>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8, marginBottom: 20 }}>
         {[
           ['Four Contribution Types', 'Strategic Direction · Domain Authoring · Active Supervision · Code Generation'],
           ['2026 Rate Benchmarks', 'Activity-based rates locked to market equivalents at build date'],
@@ -5355,7 +5355,7 @@ export function MethodologyOutput() {
   const MEMBER_OVERVIEW = (
     <div>
       <IpTierBadge tier="member" />
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, marginBottom: 20 }}>
         {[
           { label: 'The Core Thesis', body: 'Human expertise is the irreducible input. AI is the execution multiplier. The practitioner\'s authority and accountability — not sole authorship — is what makes the output defensible.' },
           { label: 'What Gets Measured', body: 'Session active hours (JSONL burst analysis), turn density (user_turns / active_hours), contribution type per requirement, estimate vs actual variance per release.' },
@@ -5482,7 +5482,7 @@ export function L2RModelOutput() {
         The Lead to Revenue Capability Model™ is a practitioner-derived enterprise architecture that spans the full revenue lifecycle — from GTM strategy through product definition, pipeline, CPQ, contract, delivery, billing, and expansion.
         Nine operational stages. Five GTM nodes. Six cross-cutting dimensions. Four player types at every stage.
       </p>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginBottom: 20 }}>
         {[
           ['GTM Architecture', '5 nodes including Product Definition → performance obligations'],
           ['9 Revenue Stages', 'Lead Capture through Renew & Expand, delineated by handoff risk'],
@@ -5529,7 +5529,7 @@ export function L2RModelOutput() {
         <div style={{ fontSize: 13, fontWeight: 700, color: '#e8e4d9', marginBottom: 10 }}>
           {s.num} · {s.name}
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
           <div>
             <div style={{ fontSize: 10, fontWeight: 700, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Control Points</div>
             <ul style={{ listStyle: 'none', padding: 0 }}>

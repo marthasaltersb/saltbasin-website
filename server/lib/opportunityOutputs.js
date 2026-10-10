@@ -265,3 +265,22 @@ export async function updateOpportunityDetails(userId, rodId, { jobTitle, url, l
   const { opportunities } = await listCareerOpportunities(userId);
   return opportunities.find((o) => o.id === Number(rodId));
 }
+
+/**
+ * Tracks a new opportunity. A track with only a company + role title is a placeholder (details are filled in
+ * later and the entry says so). Shared by POST /api/career-agents/opportunities and the MCP tool
+ * career_opportunity_create.
+ */
+export async function trackCareerOpportunity(userId, { jobTitle, companyName, url, location, notes } = {}) {
+  const placeholder = !url && !location && !notes;
+  return createCareerOpportunity(userId, { jobTitle, companyName, url, location, notes, extraMetadata: placeholder ? { placeholder: true } : null });
+}
+
+/** One tracked opportunity (as the list shows it) with its linked outputs and provenance. */
+export async function openCareerOpportunity(userId, rodId) {
+  await assertOwnedOpportunity(userId, rodId);
+  const { opportunities } = await listCareerOpportunities(userId);
+  const opportunity = opportunities.find((o) => Number(o.id) === Number(rodId));
+  if (!opportunity) throw new Error('Career opportunity not found.');
+  return { opportunity, ...(await listOpportunityOutputs(userId, rodId)) };
+}

@@ -1,0 +1,38 @@
+{
+  "id": "A2",
+  "feature": "output-version-history",
+  "fromBaseline": 1,
+  "proposedBy": "triage:output-version-history:r1",
+  "round": 1,
+  "triageItems": [
+    "T3"
+  ],
+  "reason": "E.2 needs a stored version whose content is unreadable; no interface or permitted DB edit creates one.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "E.2",
+      "before": "A version whose content cannot be read is still listed with a red message; comparing against it shows **One of the selected versions could not be read, so they cannot be compared.** The server logs the reason.",
+      "after": "[cli] Feed getOutputVersionHistory a fixture lineage (fictional data) whose second version has unparseable content: that version is still listed with error beginning \"This version's content could not be read\", its changeSummary is 'Cannot compare (a version could not be read)', other versions are listed normally, and the server logs the reason. (The UI message 'One of the selected versions could not be read, so they cannot be compared.' is covered by the same fixture rendered in the dialog.)",
+      "tracesTo": "docs/changes/output-version-history.md error handling; definition.json interfaceParity",
+      "whyNeeded": "Without a forbidden DB edit the step cannot pass on any surface."
+    }
+  ],
+  "review": {
+    "status": "needs_owner",
+    "reviewer": "amend:output-version-history:r1",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "fail: drops the browser check of the red message and the compare-area message (desktop+mobile) in favour of a function call",
+      "Retire only duplicates": "pass",
+      "Exact": "fail: the fixture is not written in the spec, and the parenthetical claims UI coverage that no step performs",
+      "Reachable": "pass",
+      "Deterministic": "fail: no committed fixture exists to run against",
+      "Fictional data only": "pass",
+      "Independent of the fix": "fail: names the internal function getOutputVersionHistory"
+    },
+    "note": "Product behaviour matches the step (server/lib/outputVersionHistory.js lines 120-124; OutputVersionHistory.jsx line 213), so it is not a product defect; the open point is whether the UI expectation may be dropped.",
+    "at": "2026-10-09T00:00:00.000Z",
+    "question": "Do you accept E.2 becoming a cli-only check run against a committed fictional fixture (a lineage whose second version has unparseable content, checked through GET /api/resume-outputs/:id/versions rather than an internal function), accepting that the red message and the compare-area message are then no longer walked in the browser at 1280px and 390px? If yes, resubmit with the fixture written into the spec."
+  }
+}

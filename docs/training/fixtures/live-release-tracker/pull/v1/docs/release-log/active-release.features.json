@@ -1,0 +1,25 @@
+{
+  "release": "2030-01-09-demo-reef",
+  "version": "0.1.0",
+  "title": "Demo reef release",
+  "repoUrl": "https://example.test/demo-org/demo-repo",
+  "integrationBranch": "main",
+  "features": [
+    {
+      "key": "reef-survey",
+      "title": "reef-survey (fictional)"
+    },
+    {
+      "key": "tide-ledger",
+      "title": "tide-ledger (fictional)"
+    },
+    {
+      "key": "kelp-sync",
+      "title": "kelp-sync (fictional)"
+    },
+    {
+      "key": "coral-notes",
+      "title": "coral-notes (fictional)"
+    }
+  ]
+}

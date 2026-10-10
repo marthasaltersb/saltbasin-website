@@ -1,0 +1,1093 @@
+{
+  "feature": "live-release-tracker",
+  "spec": "docs/training/live-release-tracker.md",
+  "version": 1,
+  "frozenAt": "2026-10-09T16:49:13.829Z",
+  "commitAtFreeze": "281e863b584a00b7d50087389254a7e38b8c3c31",
+  "specSha256": "c58f835bdfac57af3928c843914257a8b4788e35c3e444182de27fe531cead87",
+  "amendment": null,
+  "previous": null,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "P.1",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "b3209b04978624c6",
+      "summary": "**Create the accounts**: run `node scripts/create-test-member.mjs` (creates `member@test.local`) and `node scripts/create-test-member.mjs --email other@test.loc"
+    },
+    {
+      "id": "P.2",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "6152608cc61db51a",
+      "summary": "**Start the fixture repository server**: run `node scripts/release-tracker-fixture-server.mjs --port 7300` in the background and confirm `curl <FIX>/__state` pr"
+    },
+    {
+      "id": "P.3",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "14ae5306a7ca927b",
+      "summary": "**Sign in** in the browser as the administrator at `<BASE>/login`, and sign in once as `member@test.local` and once as `other@test.local` in two more browser co"
+    },
+    {
+      "id": "P.4",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "4c4e0498877d1221",
+      "summary": "**Open the tracker as the administrator**: at `<BASE>/world` click **Journeys**, click the card **Release tracker**."
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3e73804a6aac8ff2",
+      "summary": "Look at the screen opened in P.4."
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fd02a8a3b2fdfa88",
+      "summary": "Click **Open Settings**."
+    },
+    {
+      "id": "J1.3",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ca2df1f4db529a39",
+      "summary": "Click **Fetch from repository now** before any repository is entered."
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0265409011f9dcca",
+      "summary": "Fill **Repository (owner/name)** with `demo-org/demo-repo`, **Branch** with `main`, **Source base URL** with `<FIX>` (for example `http://127.0.0.1:7300`), leav"
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2705e8dd00641825",
+      "summary": "Click **Fetch from repository now**."
+    },
+    {
+      "id": "J2.3",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e8f3369971b5ee3f",
+      "summary": "Click **Fetch from repository now** again."
+    },
+    {
+      "id": "J2.4",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1297827177ef2eb9",
+      "summary": "Read **Recent ingests**."
+    },
+    {
+      "id": "J2.5",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fb04c9e98419ea39",
+      "summary": "Click **Tracker** in the Screen group."
+    },
+    {
+      "id": "J2.6",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b11084aa1dec849c",
+      "summary": "Read the stat tiles under the trends panel (each is a link ending \"Open ›\")."
+    },
+    {
+      "id": "J2.7",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "38b44c0fafac53c8",
+      "summary": "Read the **Features** table."
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a3bbff3117cc1e88",
+      "summary": "Read the as-of tiles and the as-of line (Show **Bugs**, As **Totals**, Feature **All features**, slider at **Live**)."
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f8014099bfc66c47",
+      "summary": "Click **Previous update** (the ‹ button)."
+    },
+    {
+      "id": "J3.3",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "43b764a85f89d567",
+      "summary": "Click **Previous update** again."
+    },
+    {
+      "id": "J3.4",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8d679a3d8b9f23c9",
+      "summary": "Click **Next update** (the › button), then **Live**."
+    },
+    {
+      "id": "J3.5",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "126d32cf7fd6e65a",
+      "summary": "In the Show group click **Test scores**."
+    },
+    {
+      "id": "J3.6",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7f44c2c55c9ea0cf",
+      "summary": "In the Show group click **Features passed** (the first button with that name, not the legend)."
+    },
+    {
+      "id": "J3.7",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5a770d8a9fb5ac94",
+      "summary": "Click **Bugs** in the Show group, click **Change per update** in the As group."
+    },
+    {
+      "id": "J3.8",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0ba5efe3ee1088f6",
+      "summary": "Choose `tide-ledger` in the **Feature filter**."
+    },
+    {
+      "id": "J3.9",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a13bed6b8f4af396",
+      "summary": "Click the legend button **Open (this work)**, then click it again."
+    },
+    {
+      "id": "J3.10",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9e64478d98a00ad8",
+      "summary": "Click **Table view**."
+    },
+    {
+      "id": "J3.11",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d1d87be994c3e181",
+      "summary": "Move the pointer over the far right of the line chart, then the far left."
+    },
+    {
+      "id": "J3.12",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5e4373a5e9f834a2",
+      "summary": "Click the far left of the line chart."
+    },
+    {
+      "id": "J3.13",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5ab5f4eb34a3349e",
+      "summary": "Under **Test score by feature** read the four cards."
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4680b0bab7e81673",
+      "summary": "On the overview click the stat tile **Open bugs (this work)**."
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "33f6fab3bd90621a",
+      "summary": "Click the bug `tide-ledger-F1-1`."
+    },
+    {
+      "id": "J4.3",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "040a52e401bc341d",
+      "summary": "Click the browser Back button."
+    },
+    {
+      "id": "J4.4",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "71a48b4b04cc1cc1",
+      "summary": "Reload the page."
+    },
+    {
+      "id": "J4.5",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "900648aa01893876",
+      "summary": "On the overview click the card `kelp-sync` under **Test score by feature**."
+    },
+    {
+      "id": "J4.6",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e039b2c02c928dbb",
+      "summary": "Click the chip **Round 1**."
+    },
+    {
+      "id": "J4.7",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6a00bf01fe02fd04",
+      "summary": "Click `kelp-sync-F1-1`, then in the Reported-against line click the feature name `kelp-sync`."
+    },
+    {
+      "id": "J4.8",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "25c5b74f4b49ee2e",
+      "summary": "Click **Overview**, then the stat tile **Status updates**."
+    },
+    {
+      "id": "J4.9",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e60d3af7d1832cfd",
+      "summary": "Click `0.1.0-u3`."
+    },
+    {
+      "id": "J4.10",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "40624f3d260af96f",
+      "summary": "Click **Status updates** in the trail, then **Overview**."
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "20f0b4baa2589f3d",
+      "summary": "Open **Settings**. Under **Ingest tokens (push)** type `2030-02-05-demo-tide` in **Release key** and `agent container` in **Token label**, and click **Create in"
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "6df3392b607f8deb",
+      "summary": "Run `curl -s -o /dev/null -w \"%{http_code}\" -X POST <BASE>/api/release-tracker/snapshots -H \"Content-Type: application/json\" -H \"Authorization: Bearer <token>\" "
+    },
+    {
+      "id": "J5.3",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2240c18d4e9f860b",
+      "summary": "Run the identical command again and expect it to print `200` (nothing new, not stored twice)."
+    },
+    {
+      "id": "J5.4",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "efcb9bb7751419dc",
+      "summary": "Click **Tracker**."
+    },
+    {
+      "id": "J5.5",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "183a18fde7065f95",
+      "summary": "Read the stat tiles."
+    },
+    {
+      "id": "J5.6",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5fa1f2d628c68475",
+      "summary": "Under **Agents working now** read the card."
+    },
+    {
+      "id": "J5.7",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c65f81229ea2693e",
+      "summary": "Click the card."
+    },
+    {
+      "id": "J5.8",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ed577aee86b57df8",
+      "summary": "In the **Release** selector choose `2030-01-09-demo-reef`."
+    },
+    {
+      "id": "J5.9",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "97248ff08a9cf43d",
+      "summary": "Run the push command of [J5.2] with the header `Authorization: Bearer rti_notarealtokennotarealtoken` and expect `401`; run it with no Authorization header and "
+    },
+    {
+      "id": "J5.10",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e3a97b38900803ef",
+      "summary": "Open **Settings** and click **Revoke token agent container**."
+    },
+    {
+      "id": "J5.11",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "67e461b41dc04a20",
+      "summary": "Run the push command of [J5.2] with the revoked token and expect `401`. Under **Recent ingests** expect, newest first, a row via `push` result `unchanged` (the "
+    },
+    {
+      "id": "J5.12",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fb79122d913c84ea",
+      "summary": "Run `PLATFORM_URL=<BASE> RELEASE_TRACKER_INGEST_TOKEN=<revoked token> node scripts/release-tracker-push.mjs docs/training/fixtures/live-release-tracker/push/v1."
+    },
+    {
+      "id": "J6.1",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7d2c58cfffecabcf",
+      "summary": "Create a new ingest token as in [J5.1] (label `live demo`, same release key) and keep it. In a second browser tab (same signed-in session) open **Release tracke"
+    },
+    {
+      "id": "J6.2",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "375eec19968afb1d",
+      "summary": "In that tab click **Previous update** once (the line then reads \"As of Feb 5 08:30 UTC · commit 1111111 · after update 0.2.0-u1\", **Live** not pressed)."
+    },
+    {
+      "id": "J6.3",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "673aceb3c0aeca76",
+      "summary": "Run the push command of [J5.2] with the new token and `push/v2.json`."
+    },
+    {
+      "id": "J6.4",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "76d8f21320923625",
+      "summary": "Without touching or reloading the second tab, wait up to 10 seconds."
+    },
+    {
+      "id": "J6.5",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "30a418ecd4621634",
+      "summary": "Click **Live**."
+    },
+    {
+      "id": "J6.6",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8b718d232de8abea",
+      "summary": "Run the push command with `push/v3-snapshot-only.json` (a snapshot that carries no history)."
+    },
+    {
+      "id": "J6.7",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0cb63746a5a5727f",
+      "summary": "In **Settings**, paste the text of `push/v3-snapshot-only.json` into **Snapshot JSON** and click **Store snapshot**."
+    },
+    {
+      "id": "J7.1",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3c47b51f72a34469",
+      "summary": "In the `other@test.local` browser open `<BASE>/world`, click **Journeys**."
+    },
+    {
+      "id": "J7.2",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "73d7dedcbc8fe551",
+      "summary": "As the administrator open **Settings**, type `member@test.local` into **Member emails**, click **Save access**."
+    },
+    {
+      "id": "J7.3",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "098ea22cd09dce9a",
+      "summary": "In the `member@test.local` browser open `<BASE>/world`, click **Journeys**, click **Release tracker**."
+    },
+    {
+      "id": "J7.4",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "836b3f7df5b17e5b",
+      "summary": "As the administrator type `partner view` into **Share link label** and click **Create share link**."
+    },
+    {
+      "id": "J7.5",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "06b20351db129267",
+      "summary": "In a private window (no sign-in) open the share link."
+    },
+    {
+      "id": "J7.6",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b2a11ef1225cad0c",
+      "summary": "As the administrator clear **Member emails** and click **Save access**."
+    },
+    {
+      "id": "J7.7",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e13b762d2fa808ae",
+      "summary": "As the administrator click **Revoke share link partner view**."
+    },
+    {
+      "id": "J8.1",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "04779831a2e0b9ba",
+      "summary": "Click **World** in the View group."
+    },
+    {
+      "id": "J8.2",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b53332e10a55b8af",
+      "summary": "Read the side panel."
+    },
+    {
+      "id": "J8.3",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6c8a5675ffc204c8",
+      "summary": "Move the pointer over the `wave-gauge` crystal (use its position from `data-crystals`)."
+    },
+    {
+      "id": "J8.4",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "70b27e9eee8e6ab2",
+      "summary": "Click **Pause motion**, then read `data-crystals` twice one second apart."
+    },
+    {
+      "id": "J8.5",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "36a35dce5686d5c3",
+      "summary": "Click the `wave-gauge` crystal in the scene."
+    },
+    {
+      "id": "J8.6",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "539a2a60a1da449e",
+      "summary": "Read the next panel section."
+    },
+    {
+      "id": "J8.7",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4408319d5e4f0415",
+      "summary": "In the panel click the bug `wave-gauge-F1-1`."
+    },
+    {
+      "id": "J8.8",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "dbc799071d7a2dc3",
+      "summary": "Click **Overview** in the trail."
+    },
+    {
+      "id": "J8.9",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "240cb14343b3e27c",
+      "summary": "Move the world's history slider (labelled \"Replay the world at an earlier moment\") to its far left."
+    },
+    {
+      "id": "J8.10",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5685ab5548b2e67b",
+      "summary": "Click **Board**."
+    },
+    {
+      "id": "J8.11",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e450d3bc110f029a",
+      "summary": "Reduced motion: in a browser started with \"prefers-reduced-motion: reduce\", open the World."
+    },
+    {
+      "id": "J8.12",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2a2a285b22e6be5f",
+      "summary": "The same data map, ghosts and breadcrumbs must also exist for the Board: open `#/rt/feature:wave-gauge` on the Board."
+    },
+    {
+      "id": "J9.1",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "75e14bb5130d31ef",
+      "summary": "At 390px open the tracker overview."
+    },
+    {
+      "id": "J9.2",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9c719d588f165aba",
+      "summary": "Open the World at 390px."
+    },
+    {
+      "id": "J9.3",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "904bb2f4da0a1f6a",
+      "summary": "Tap a crystal (use `data-crystals`), then tap **Overview** in the trail."
+    },
+    {
+      "id": "J9.4",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1415e50c3f2c6d0d",
+      "summary": "Open **Settings** at 390px."
+    },
+    {
+      "id": "J9.5",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "05843ac9b20c3a37",
+      "summary": "Dark mode: in a browser started with \"prefers-color-scheme: dark\", open the overview with the **Auto** theme selected."
+    },
+    {
+      "id": "J9.6",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "cfd1ec5dc4a48f06",
+      "summary": "Open the World in dark mode."
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "def10a3f20c7e692",
+      "summary": "**Invalid JSON pasted**: in **Settings** > **Paste a snapshot** type `{not json` and click **Store snapshot**. Expect a red alert beginning \"That is not valid J"
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "904161b44a41e167",
+      "summary": "**A snapshot with no features**: paste `{\"snapshot\":{\"features\":[]}}` and click **Store snapshot**. Expect a red alert reading `The snapshot lists no features w"
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "06f7973985dded51",
+      "summary": "**Invalid repository**: type `not a repo` into **Repository (owner/name)** and click **Save source settings**. Expect a red alert \"Repository must look like own"
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "30aed91bf618c84f",
+      "summary": "**A token for another release**: with an ingest token for release `2030-02-05-demo-tide`, push a body `{\"snapshot\":{\"release\":{\"release\":\"2030-03-01-other\"},\"fe"
+    },
+    {
+      "id": "E.5",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7ebad0b2fc973c6d",
+      "summary": "**Webhook**: in **Settings** click **Generate webhook secret**. Expect a block \"New secret (shown once): \" followed by 48 hex characters and the line \"Secret: s"
+    },
+    {
+      "id": "E.6",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fcf41f35b15b82aa",
+      "summary": "**Share links switched off**: with a share link created, untick **Allow read-only share links**, click **Save access**. Expect **Create share link** disabled an"
+    },
+    {
+      "id": "E.7",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "87f56097b5664b2d",
+      "summary": "**Server stops**: stop the server process (cli) while the tracker is open. Expect, within 15 seconds, the freshness line to read \"Live stream interrupted — chec"
+    },
+    {
+      "id": "E.8",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8f6eff325755df38",
+      "summary": "**Unknown item**: open `<BASE>/release-tracker#/rt/bug:nope`. Expect \"That item is no longer in the tracker. Use the trail above to go back.\" and the trail \"Ove"
+    },
+    {
+      "id": "E.9",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4fc08482af955b38",
+      "summary": "**Nothing leaks**: a granted member's `GET <BASE>/api/release-tracker/tokens` returns 403, and the response of `GET <BASE>/api/release-tracker/state` never cont"
+    },
+    {
+      "id": "E.10",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8888902641d33a4a",
+      "summary": "**Failed push is not hidden**: the command of [J5.12] with the right release but the server stopped exits 3 and prints \"[release-tracker] push FAILED:\" with the"
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "d4c03ec464862988"
+    },
+    {
+      "title": "Preconditions (fictional data)",
+      "kind": "precondition",
+      "hash": "1f3073247bfcf2b1"
+    },
+    {
+      "title": "Journey 1: first open, empty state, Settings layout",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 2: ingest by pull (a repository state)",
+      "kind": "journey",
+      "hash": "b7457584ce91e410"
+    },
+    {
+      "title": "Journey 3: the trends panel (toggles, filter, slider, table)",
+      "kind": "journey",
+      "hash": "0c5ea13a1b58c20a"
+    },
+    {
+      "title": "Journey 4: drill-down layers, breadcrumbs, URL, Back and refresh",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 5: ingest by push with a per-release token, and revoking it",
+      "kind": "journey",
+      "hash": "e3a4776877653015"
+    },
+    {
+      "title": "Journey 6: a second ingest while the screen is open updates it live (no reload)",
+      "kind": "journey",
+      "hash": "33bfb3816d031ac5"
+    },
+    {
+      "title": "Journey 7: access (admins always, members by email, share link) and revocation",
+      "kind": "journey",
+      "hash": "e92ee6e36a33dbb9"
+    },
+    {
+      "title": "Journey 8: World view (the same data as a crystal world)",
+      "kind": "journey",
+      "hash": "801df192c82f0392"
+    },
+    {
+      "title": "Journey 9: 390px phone walkthrough and dark mode",
+      "kind": "journey",
+      "hash": "80ae1ebfa36044d9"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    }
+  ]
+}

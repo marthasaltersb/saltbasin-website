@@ -20,7 +20,7 @@ import { summarizeProjectionForViewResolved, renderProjectionToPdfBuffer, filena
 import { getOwnedOutputWithApprover, shareUrlFor } from '../lib/applicationPackages.js';
 import {
   listOpportunityOutputs, listUnlinkedOutputs, linkOutputToOpportunity, unlinkOutputFromOpportunity,
-  getOutputContentForEdit, saveEditedVersion, updateOpportunityDetails,
+  getOutputContentForEdit, saveEditedVersion, updateOpportunityDetails, trackCareerOpportunity, openCareerOpportunity,
 } from '../lib/opportunityOutputs.js';
 import { dispatchRaw } from '../lib/email.js';
 import archiver from 'archiver';
@@ -77,9 +77,17 @@ router.post('/opportunities', requireUser, async (req, res) => {
     const { jobTitle, companyName, url, location, notes } = req.body || {};
     // A track with only a company + role title is a placeholder: details
     // (posting URL, location, notes) are filled in later, and the entry says so.
-    const placeholder = !url && !location && !notes;
-    const opportunity = await createCareerOpportunity(req.user.id, { jobTitle, companyName, url, location, notes, extraMetadata: placeholder ? { placeholder: true } : null });
+    const opportunity = await trackCareerOpportunity(req.user.id, { jobTitle, companyName, url, location, notes });
     res.status(201).json(opportunity);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// One tracked opportunity with its linked outputs and provenance (the MCP tool career_opportunity_open).
+router.get('/opportunities/:id', requireUser, async (req, res) => {
+  try {
+    res.json(await openCareerOpportunity(req.user.id, Number(req.params.id)));
   } catch (e) {
     res.status(400).json({ error: e.message });
   }

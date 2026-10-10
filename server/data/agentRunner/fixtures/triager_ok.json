@@ -1,0 +1,37 @@
+{
+  "description": "Files a size-S defect with a work order",
+  "agents": [
+    "release_bug_triager"
+  ],
+  "events": [
+    {
+      "t": "progress",
+      "text": "Reproducing the report (fixture)"
+    },
+    {
+      "delayMs": 400,
+      "t": "progress",
+      "text": "Found the root cause in the label component"
+    }
+  ],
+  "result": {
+    "title": "Label is cut off at 390px",
+    "triageClass": "defect",
+    "stepId": "J2.1",
+    "observed": "The label is clipped on a phone",
+    "rootCause": "The label has a fixed width",
+    "files": [
+      "src/label.jsx"
+    ],
+    "size": "S",
+    "proposedFix": "Let the label wrap",
+    "doneWhen": [
+      "J2.1"
+    ]
+  },
+  "usage": {
+    "inputTokens": 800,
+    "outputTokens": 250,
+    "observed": false
+  }
+}

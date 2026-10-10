@@ -75,6 +75,8 @@ export const SALT_BASIN_TRACKED_INTERACTIONS = Object.freeze({
   resume_career: [
     'login', 'career_atom_edit', 'resume_output_generated', 'resume_output_downloaded',
     'career_prospect_page_viewed', 'career_rollup_queried',
+    // Platform MCP server (2026-10-09): one tracked interaction per tool call an agent makes as this member.
+    'mcp_tool_call',
   ],
 });
 

@@ -1,0 +1,35 @@
+{
+  "id": "A2",
+  "feature": "chart-gallery",
+  "fromBaseline": 2,
+  "proposedBy": "triage:chart-gallery:r4",
+  "round": 4,
+  "triageItems": ["CG-R4-4"],
+  "reason": "Round 4 observed ERR_TUNNEL_CONNECTION_FAILED on external fonts and CDN hosts. It is the same sandbox network block as ERR_CERT_AUTHORITY_INVALID, not a product error, and E.5 names only the second code.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "E.5",
+      "before": "any error other than the sandbox's `ERR_CERT_AUTHORITY_INVALID` for an external resource is a failure.",
+      "after": "any error other than the sandbox's `ERR_CERT_AUTHORITY_INVALID` or `ERR_TUNNEL_CONNECTION_FAILED` for an external resource (a host that is not the app's own origin) is a failure.",
+      "tracesTo": "definition.json testConstraints (sandboxed browser, external hosts blocked by the proxy); docs/test-results/chart-gallery/round-1.md, round-2.md, round-4.md (both codes seen on Google Fonts and cdnjs three.js)",
+      "whyNeeded": "The sandbox blocks external hosts with either code; the step must name both to be unambiguous and deterministic."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:chart-gallery:r4",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass (the exemption is limited to two named codes and only for hosts other than the app's own origin; any error from the app's own origin, and any other code, is still a failure; the old wording contradicted the fixed sandbox environment, where the second code appears in rounds 1, 2 and 4)",
+      "Retire only duplicates": "pass (no step retired)",
+      "Exact": "pass (two exact error codes and an explicit definition of external)",
+      "Reachable": "pass (console check on desktop and mobile)",
+      "Deterministic": "pass (fixed code list, fixed origin rule)",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass (tests console output, not implementation)"
+    },
+    "note": "Approved as proposed. No other proposals were pending and no needs_owner amendment exists for E.5.",
+    "at": "2026-10-10T01:10:00Z"
+  }
+}

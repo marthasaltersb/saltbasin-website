@@ -25,7 +25,7 @@ export function documentToEditorConfig(content) {
   if (h.name || h.headline) {
     push({ type: 'page-header', props: { eyebrow: '', title: h.name || '', subtitle: h.headline || '' }, docRole: 'header', docSource: { header: h } });
   }
-  if (h.contact) push({ type: 'contact-line', props: { items: [h.contact] }, docRole: 'contact' });
+  if (h.contact) push({ type: 'contact-line', props: { items: Array.isArray(h.contact) ? h.contact.filter(Boolean) : [h.contact] }, docRole: 'contact' });
   for (const b of content?.blocks || []) {
     if (b.type === 'heading') push({ type: 'heading', props: { text: b.text || '', level: 1 }, docSource: b });
     else if (b.type === 'paragraph') push({ type: 'body', props: { text: b.text || '' }, docSource: b });

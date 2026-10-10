@@ -6,8 +6,8 @@ description: Required release process for every Salt Basin session that changes 
 # Salt Basin release loop
 
 The process is data: `server/data/releaseLoop/definition.json` (roles, stages, gates, spec standards, log
-locations). The same definition is what in-app agents read (`/api/release-loop/*`, World Shell → Release
-loop), so Claude Code sessions and platform agents follow one process. Change the process by editing that
+locations). In-app agents read the same definition file (there is no API or World Shell view for it), so
+Claude Code sessions and in-app agents follow one process. Change the process by editing that
 file (version bump + note in `docs/release-process.md`), never by improvising per session.
 
 ## Every session that changes code
@@ -17,7 +17,8 @@ file (version bump + note in `docs/release-process.md`), never by improvising pe
    `docs/training/<feature>.md` (journeys a separate agent can follow literally in a browser). No
    API-only configuration: if it's configurable, a UI screen changes it.
 2. **Initial check** per feature: `npm run build`, server boots on a fresh database, the builder walks its
-   own journeys once.
+   own journeys once. If `tools/release-tracker/` changed, `node tools/release-tracker/sync-setup-guide.mjs`
+   must exit 0 (run with `--write` to regenerate the embedded page copy).
 3. **Run the loop** with the saved workflow:
    `Workflow({ name: 'release-loop', args: { release, repo, integrationBranch, env, chromium, commitTrailer, features: [...], sweep: true } })`.
    Each feature: build (own worktree) → integrate (serial) → validate (browser, literal spec) → triage →
@@ -35,8 +36,10 @@ file (version bump + note in `docs/release-process.md`), never by improvising pe
 
 If `docs/release-log/active-release.state.json` shows unfinished features, a new session continues them:
 
-1. Work on the WIP branch named in `docs/release-log/active-release.features.json` (`wipBranch`): fetch it,
-   check it out, and use it as the integration branch for this session. Set up the local environment
+1. Work on the integration branch named in `docs/release-log/active-release.features.json`
+   (`integrationBranch`; every merge, baseline, amendment and tracker state is pushed there): fetch it,
+   check it out, and keep pushing to it (the open PR tracks it). Do not start from `wipBranch`, which is an
+   older snapshot. Set up the local environment
    (Postgres 16 on port 5433 with socket in /tmp, `/var/tmp/sbpg/env.sh` with test admin credentials) if it
    is missing, and record how in `docs/release-process.md`.
 2. `node scripts/release-loop-resume.mjs --args --scripts <scratch dir>` writes one self-contained workflow
@@ -46,18 +49,45 @@ If `docs/release-log/active-release.state.json` shows unfinished features, a new
    Before launching, check Postgres is up (a container restart stops it) and salvage any unmerged agent
    work: commit dirty `.claude/worktrees/wf_*` trees to their branches and name the branch in the
    feature's `fixNotes` (or `salvage` for a build).
-3. Keep the tracker live: write the new runs' transcript dirs to a run_dir file, run
-   `scripts/release-tracker-sync.mjs --run <dir>... --ledger /var/tmp/sbpg/tracker/bug-ledger.json`, and
-   publish the snapshot to the tracker artifact (`trackerArtifact`, collection `tracker`, doc `current`,
-   field `json`). Bugs never leave the tracker; they end as verified fixed.
+3. Keep the tracker live WITHOUT losing its history. Everything the tracker knew is in git: the bug ledger
+   (`docs/release-log/bug-ledger.json`, every bug ever found, never deleted), the carry file
+   (`docs/release-log/tracker-carry.json`: every earlier agent with its tokens, and each feature's rounds and
+   last result), the trend history (`docs/release-log/history.json`, rebuilt from the state file's git
+   history) and the numbered updates (`docs/release-log/updates.json`). Once, at session start:
+   `mkdir -p /var/tmp/sbpg/tracker && cp docs/release-log/tracker-carry.json /var/tmp/sbpg/tracker/carry-in.json`
+   (a fixed copy, so nothing is counted twice), write this session's attribution lines to
+   `/var/tmp/sbpg/tracker/trailer.txt`, and after launching the runs put their transcript dirs, one per
+   line, in `/var/tmp/sbpg/tracker/run_dir`. Then run `scripts/release-tracker-session-sync.sh` every
+   3 minutes in the background. Publish to the tracker artifact (`trackerArtifact` in
+   active-release.features.json; collection `tracker`; docs `current`, `bugs`, `history`; field `json`)
+   from `/var/tmp/sbpg/tracker/doc.json`, `bugs-doc.json` and `history-doc.json` with ArtifactData,
+   pinning `if_version` to the version you read first. The artifact keeps its documents between sessions,
+   so the page never goes blank while a new session starts. Never publish a snapshot built without the
+   carry-in: it would drop earlier sessions' agents and rounds. Bugs never leave the tracker; they end as
+   verified fixed.
 4. After each merge, `--export` the snapshot to the state file, commit, and push the WIP branch so the next
    session can resume again. Push the owner's integration branch only when every feature has passed.
+
+## Status updates to the owner
+
+Every status update given to the owner is also recorded as a numbered release update:
+`node scripts/release-update.mjs --snapshot /var/tmp/sbpg/tracker/snapshot.json --headline "..." --note "..."`
+(sync first). It is versioned `<release version>-u<n>` (release version = `version` in
+`docs/release-log/active-release.features.json`, the version the release ships as), pinned to the commit,
+and compared automatically with the previous update; `docs/release-log/updates.md` is the copy to send to
+others, and the tracker shows the latest update and the full history. Write the note for a reader outside
+the project. Number the next release by bumping `version` when this one ships.
+The tracker overview charts the release's history (`scripts/release-history.mjs` rebuilds
+`docs/release-log/history.json` from every committed state file; publish it to the tracker doc
+`tracker/history`). History is never overwritten — the slider replays any earlier moment.
 
 ## Owner directions that always apply
 
 - Everything a member does is reachable from the World Shell (`/world`); admin navigation is not a route.
 - Career Master is the source of truth for outputs; per-output overrides are allowed and marked.
 - No API-only configuration; every rule and rollup is editable in a screen.
+- Interface parity: every capability works by point-and-click on desktop, as a phone walkthrough at 390px, via the API and via an MCP tool (`definition.json` `interfaceParity`). A training guide that can't be walked that way fails.
+- Fixed test constraints (`definition.json` `specGovernance`): training specs are frozen baselines with stable step ids (`node scripts/release-spec-baseline.mjs freeze | check | diff | score | show`). Only the code varies between rounds. No agent edits a spec mid-release; step changes are amendments in `docs/spec-amendments/<feature>/` decided by the amendment reviewer, never the proposer. Before relaunching, run `check --all`; a new feature's spec is frozen as v1 by the integrator when it first merges. Proposed amendments on disk are reviewed before the feature's next round (`release-loop-resume.mjs` passes them as `pendingAmendments`).
 - Failures are never silent, never "done" while unreconciled, and a blank or clipped screen is a failure.
 - Test as `member@test.local` from `scripts/create-test-member.mjs` (career terms accepted).
 - Repo is public: fictional data only; never an employer or application-target name.

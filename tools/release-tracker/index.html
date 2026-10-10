@@ -1,39 +1,47 @@
 <title>Salt Basin Release Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Jost:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
 /* Layout: control-room board — summary strip, then feature lanes, live agents, bug queue, agent ledger */
+/* Salt Basin design language: cream / parchment surfaces, teal + gold structure, Fraunces + Jost.
+   Chart series (--s1..--s4) are validated for CVD separation, chroma and contrast in each mode. */
 :root {
-  --bg: #f3f6f7; --panel: #ffffff; --ink: #14262e; --muted: #5a6d75; --line: #d9e3e6;
-  --teal: #1b4f66; --teal-soft: #dcecf1; --gold: #b07a1c; --gold-soft: #f6ead2;
-  --good: #23784f; --good-soft: #dff1e7; --warn: #9a6200; --warn-soft: #fbedd0;
-  --bad: #b03a26; --bad-soft: #f8e0da; --human: #6b4bb0; --human-soft: #ebe4f8;
-  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
-  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --bg: #F8F4EC; --panel: #FFFCF6; --panel-2: #F1EBDD; --ink: #2B2A28; --muted: #6B665E; --line: #E4DCCB;
+  --teal: #345A68; --teal-soft: #DCE9EC; --gold: #9A5F1C; --gold-soft: #F3E3CE;
+  --good: #2F6B45; --good-soft: #DCEFE2; --warn: #8A5A12; --warn-soft: #F6E7CC;
+  --bad: #A4432F; --bad-soft: #F6DED7; --human: #6E4B7E; --human-soft: #ECE1F1;
+  --s1: #0B79A8; --s2: #B0661A; --s3: #9C4A8C; --s4: #4A8C2A; --grid: rgba(43,42,40,.08);
+  --water-top: #D3EDF2; --water-mid: #8FC4D1; --water-deep: #4A8BA1; --sand: #8FB3AE;
+  --display: "Fraunces", Georgia, serif;
+  --body: "Jost", "Segoe UI", system-ui, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #0f1a1f; --panel: #16242b; --ink: #e3edf0; --muted: #94a8b0; --line: #26383f;
-  --teal: #7cc2dc; --teal-soft: #1b3440; --gold: #e0ad55; --gold-soft: #3a2d14;
-  --good: #6fd0a0; --good-soft: #163327; --warn: #f0b85a; --warn-soft: #372a10;
-  --bad: #f08c78; --bad-soft: #3d1d17; --human: #b9a3f0; --human-soft: #2a2244; color-scheme: dark } }
+  --bg: #161A1C; --panel: #1E2325; --panel-2: #252B2E; --ink: #EFE8DC; --muted: #A9A296; --line: #2F3639;
+  --teal: #8CC3D3; --teal-soft: #22343B; --gold: #E0A458; --gold-soft: #3A2C17;
+  --good: #7CC99A; --good-soft: #163327; --warn: #F0B85A; --warn-soft: #372A10;
+  --bad: #EE9580; --bad-soft: #3D1D17; --human: #C7A3D6; --human-soft: #2C2236;
+  --s1: #2794C9; --s2: #C27C28; --s3: #B566A6; --s4: #6BA642; --grid: rgba(239,232,220,.08); --water-top: #16404E; --water-mid: #0D2A35; --water-deep: #061820; --sand: #1F332F; color-scheme: dark } }
 :root[data-theme="dark"] {
-  --bg: #0f1a1f; --panel: #16242b; --ink: #e3edf0; --muted: #94a8b0; --line: #26383f;
-  --teal: #7cc2dc; --teal-soft: #1b3440; --gold: #e0ad55; --gold-soft: #3a2d14;
-  --good: #6fd0a0; --good-soft: #163327; --warn: #f0b85a; --warn-soft: #372a10;
-  --bad: #f08c78; --bad-soft: #3d1d17; --human: #b9a3f0; --human-soft: #2a2244; color-scheme: dark }
+  --bg: #161A1C; --panel: #1E2325; --panel-2: #252B2E; --ink: #EFE8DC; --muted: #A9A296; --line: #2F3639;
+  --teal: #8CC3D3; --teal-soft: #22343B; --gold: #E0A458; --gold-soft: #3A2C17;
+  --good: #7CC99A; --good-soft: #163327; --warn: #F0B85A; --warn-soft: #372A10;
+  --bad: #EE9580; --bad-soft: #3D1D17; --human: #C7A3D6; --human-soft: #2C2236;
+  --s1: #2794C9; --s2: #C27C28; --s3: #B566A6; --s4: #6BA642; --grid: rgba(239,232,220,.08); --water-top: #16404E; --water-mid: #0D2A35; --water-deep: #061820; --sand: #1F332F; color-scheme: dark }
 body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body); }
 .wrap { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; display: grid; gap: 22px; }
 header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 20px; }
-h1 { font: 800 26px/1.15 var(--display); letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
-h2 { font: 700 13px/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 10px; }
+h1 { font: 600 28px/1.15 var(--display); letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+h2 { font: 500 12px/1.2 var(--body); text-transform: uppercase; letter-spacing: 0.18em; color: var(--muted); margin: 0 0 10px; }
 .sync { font: 12px var(--mono); color: var(--muted); }
 .sync b { color: var(--ink); font-weight: 600; }
 .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--good); margin-right: 6px; vertical-align: 1px; }
 .stale .live-dot { background: var(--warn); }
 .strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
 .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
-.stat .n { font: 800 28px/1 var(--display); font-variant-numeric: tabular-nums; }
+.stat .n { font: 600 28px/1 var(--display); font-variant-numeric: tabular-nums; }
 .stat .l { font-size: 13px; color: var(--muted); margin-top: 4px; }
 .stat.human .n { color: var(--human); } .stat.bad .n { color: var(--bad); } .stat.good .n { color: var(--good); }
 .filters { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -52,7 +60,7 @@ tr:last-child td { border-bottom: 0; }
 .pill { display: inline-block; font: 600 12px/1 var(--body); padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
 .s-running { background: var(--teal-soft); color: var(--teal); }
 .s-passed, .s-verified, .s-done { background: var(--good-soft); color: var(--good); }
-.s-failing, .s-open, .s-recurred, .s-retest_failed, .s-failed, .s-done_unreconciled, .s-seen_in_test { background: var(--bad-soft); color: var(--bad); }
+.s-stalled, .s-failing, .s-open, .s-recurred, .s-retest_failed, .s-failed, .s-done_unreconciled, .s-seen_in_test { background: var(--bad-soft); color: var(--bad); }
 .s-fixing, .s-fixed_awaiting_retest, .s-between_stages, .s-awaiting_retest, .s-retesting, .s-retest_failed_pending_triage { background: var(--gold-soft); color: var(--gold); }
 .s-needs_human, .s-needs_business_definition { background: var(--human-soft); color: var(--human); }
 .s-passed_with_backlog { background: var(--good-soft); color: var(--good); }
@@ -61,7 +69,7 @@ tr:last-child td { border-bottom: 0; }
 .bar i { display: block; height: 100%; background: var(--good); border-radius: 3px; }
 .now { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
 .agent { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--teal); border-radius: 8px; padding: 12px 14px; min-width: 0; }
-.agent .role { font: 700 12px var(--display); text-transform: uppercase; letter-spacing: 0.06em; color: var(--teal); }
+.agent .role { font: 600 12px var(--body); text-transform: uppercase; letter-spacing: 0.06em; color: var(--teal); }
 .agent .feat { font-weight: 600; margin: 2px 0 6px; overflow-wrap: anywhere; }
 .agent .act { font: 12.5px/1.45 var(--mono); color: var(--muted); overflow-wrap: anywhere; }
 .agent .meta { font-size: 12px; color: var(--muted); margin-top: 6px; }
@@ -80,7 +88,7 @@ a { color: var(--teal); }
 .crumbs a:hover { text-decoration: underline; }
 .crumbs .sep { color: var(--muted); }
 .crumbs .here { font-weight: 700; overflow-wrap: anywhere; }
-.layer-title { font: 800 22px/1.2 var(--display); margin: 0; overflow-wrap: anywhere; }
+.layer-title { font: 600 23px/1.2 var(--display); margin: 0; overflow-wrap: anywhere; }
 .layer-sub { color: var(--muted); margin-top: 4px; }
 a.stat { display: block; color: inherit; text-decoration: none; transition: border-color .15s, transform .15s; }
 a.stat:hover, a.stat:focus-visible { border-color: var(--teal); }
@@ -95,12 +103,110 @@ a:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; padding: 14px; font-size: 14px; }
 .kv dt { color: var(--muted); } .kv dd { margin: 0; overflow-wrap: anywhere; }
 .layer { display: grid; gap: 22px; min-width: 0; }
+.update { display: block; background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--gold); border-radius: 8px; padding: 14px 16px; color: inherit; text-decoration: none; }
+a.update:hover, a.update:focus-visible { border-color: var(--teal); border-left-color: var(--gold); }
+.update .ver { font: 600 12px var(--body); text-transform: uppercase; letter-spacing: .06em; color: var(--gold); }
+.update .head { font: 600 18px/1.3 var(--display); margin: 4px 0 6px; }
+.update ul { margin: 6px 0 0; padding-left: 18px; font-size: 14px; }
+.update .note { font-size: 14px; color: var(--ink); }
+.md b, .md strong { font-weight: 700; }
+/* Trends panel */
+.trends { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.trends-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 16px; }
+.trends-head h3 { font: 600 21px/1.2 var(--display); margin: 0; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 2px; background: var(--panel-2); }
+.seg button { font: 500 13px var(--body); border: 0; background: transparent; color: var(--ink); border-radius: 999px; padding: 5px 12px; cursor: pointer; min-height: 32px; }
+.seg button[aria-pressed="true"] { background: var(--teal); color: var(--panel); }
+.controls select { font: 500 13px var(--body); border: 1px solid var(--line); border-radius: 999px; background: var(--panel-2); color: var(--ink); padding: 6px 12px; min-height: 34px; max-width: 100%; }
+.controls label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; display: inline-flex; gap: 8px; align-items: center; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px; }
+.legend button { font: 500 13px var(--body); display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 999px; padding: 4px 11px; cursor: pointer; min-height: 30px; }
+.legend button[aria-pressed="false"] { color: var(--muted); opacity: .6; }
+.legend .sw { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.legend button[aria-pressed="false"] .sw { opacity: .35; }
+.asof-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.asof-tiles .stat { padding: 10px 12px; }
+.asof-tiles .d { font-size: 12px; color: var(--muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.chartbox { position: relative; height: 290px; min-width: 0; }
+.slider { display: grid; gap: 6px; }
+.slider-row { display: flex; align-items: center; gap: 8px; }
+.slider input[type=range] { flex: 1; min-width: 0; accent-color: var(--teal); height: 28px; }
+.slider .step { font: 600 13px var(--body); border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); border-radius: 999px; min-width: 34px; min-height: 32px; cursor: pointer; }
+.slider .live { padding: 0 12px; }
+.slider .live[aria-pressed="true"] { background: var(--teal); color: var(--panel); }
+.asof { font-size: 13px; color: var(--muted); }
+.asof b { color: var(--ink); font-weight: 600; }
+.ticks { position: relative; height: 16px; margin: 0 42px 0 42px; }
+.ticks span { position: absolute; transform: translateX(-50%); font: 600 11px var(--body); color: var(--gold); white-space: nowrap; }
+.update-note { border-left: 3px solid var(--gold); padding: 6px 12px; background: var(--panel-2); border-radius: 0 8px 8px 0; font-size: 14px; }
+.spark-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+a.spark { display: block; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; color: inherit; text-decoration: none; background: var(--panel); min-width: 0; }
+a.spark:hover, a.spark:focus-visible { border-color: var(--teal); }
+.spark .k { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.spark .v { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.spark svg { display: block; width: 100%; height: 34px; margin-top: 4px; }
+.tableview { overflow-x: auto; }
+.relpick { font: 500 13px var(--body); color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.relpick select { font: 500 13px var(--body); border: 1px solid var(--line); border-radius: 999px; background: var(--panel-2); color: var(--ink); padding: 6px 12px; min-height: 34px; max-width: 100%; }
+.frozen-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; margin: 0 0 14px; }
+.head-right { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+/* World view: the same data as Salt Basin crystals. */
+.world { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 0; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--panel); min-height: 640px; }
+.world-stage { position: relative; min-height: 640px; overflow: hidden; touch-action: none; background: linear-gradient(180deg, var(--water-top) 0%, var(--water-mid) 45%, var(--water-deep) 100%); }
+.world-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; }
+.world-stage canvas.pointing { cursor: pointer; }
+.world-labels { position: absolute; inset: 0; pointer-events: none; }
+.wl { position: absolute; transform: translate(-50%, 14px); font: 500 12px/1.25 var(--body); color: var(--ink); text-align: center; white-space: nowrap; background: color-mix(in srgb, var(--panel) 78%, transparent); padding: 2px 7px; border-radius: 8px; transition: opacity .2s; }
+.wl b { font: 600 13px var(--display); display: block; }
+.wl.dim { opacity: .25; }
+.wl.sun b { font-size: 17px; }
+.world-tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font-size: 13px; box-shadow: 0 8px 22px -12px rgba(0,0,0,.35); max-width: 260px; display: none; z-index: 3; }
+.world-panel { border-left: 1px solid var(--line); background: var(--panel); overflow: auto; max-height: 780px; padding: 16px; display: grid; gap: 16px; align-content: start; }
+.world-panel .layer { gap: 16px; }
+.world-panel table { font-size: 13px; }
+.world-bar { position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; align-items: center; gap: 8px; background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line); border-radius: 999px; padding: 4px 8px; z-index: 2; }
+.world-bar input[type=range] { flex: 1; min-width: 0; accent-color: var(--teal); }
+.world-bar .asof { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45%; }
+.world-key { display: grid; gap: 6px; font-size: 13px; }
+.world-key .row { display: flex; flex-wrap: wrap; gap: 6px 12px; }
+.world-key .k { display: inline-flex; align-items: center; gap: 6px; }
+.world-key .gem { width: 10px; height: 10px; transform: rotate(45deg); display: inline-block; border-radius: 2px; }
+.world-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.world-list a { display: flex; justify-content: space-between; gap: 10px; padding: 6px 8px; border-radius: 8px; text-decoration: none; color: var(--ink); font-size: 13px; }
+.world-list a:hover, .world-list a:focus-visible { background: var(--teal-soft); }
+.bindings { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.bindings th, .bindings td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.bindings th { font: 600 11px var(--body); color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.src { font: 12px var(--mono); color: var(--teal); overflow-wrap: anywhere; }
+.bind-list { display: grid; gap: 8px; }
+.bind { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; display: grid; gap: 3px; font-size: 13px; background: var(--panel); }
+.bind-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.bind-val { font-weight: 600; text-align: right; }
+.bind-foot { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; }
+.policy { display: inline-block; font: 600 11px/1 var(--body); padding: 3px 7px; border-radius: 999px; background: var(--teal-soft); color: var(--teal); }
+.policy.approval { background: var(--gold-soft); color: var(--gold); }
+.pending-card { border: 1px dashed var(--gold); border-radius: 10px; padding: 10px 12px; background: var(--gold-soft); font-size: 13px; display: grid; gap: 4px; }
+.pending-card ul { margin: 2px 0 0; padding-left: 18px; }
+.world-hint { position: absolute; top: 12px; left: 12px; color: var(--ink) !important; font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--panel) 80%, transparent); padding: 4px 10px; border-radius: 999px; z-index: 2; }
+@media (max-width: 900px) { .world { grid-template-columns: 1fr; } .world-stage { min-height: 460px; } .world-panel { border-left: 0; border-top: 1px solid var(--line); max-height: none; } .world-bar .asof { display: none; } }
+@media (max-width: 640px) { .chartbox { height: 240px; } .trends { padding: 12px; } .ticks { margin: 0 34px; } }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { display: inline-block; border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 3px 10px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--ink); }
 .chip:hover { border-color: var(--teal); }
 .timeline { list-style: none; margin: 0; padding: 14px; display: grid; gap: 10px; }
 .timeline li { display: grid; grid-template-columns: 60px 130px 1fr; gap: 10px; font-size: 14px; }
 @media (max-width: 640px) { .timeline li { grid-template-columns: 44px 1fr; } .timeline li > :last-child { grid-column: 1 / -1; } .kv { grid-template-columns: 1fr; } .kv dt { margin-top: 6px; } .kv dt:first-child { margin-top: 0; } }
+@media (max-width: 640px) {
+  /* Tables become stacked cards so nothing needs sideways scrolling; the panel's overflow-x stays as a fallback. */
+  .panel table, .panel tbody, .panel tr, .panel td { display: block; width: 100%; box-sizing: border-box; }
+  .panel thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .panel tr { padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  .panel tr:last-child { border-bottom: 0; }
+  .panel td { border: 0; padding: 3px 0; overflow-wrap: anywhere; }
+  .panel td[data-label]::before { content: attr(data-label); display: block; font: 600 11px var(--body); color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .panel td .bar { max-width: 100%; }
+}
 </style>
 
 <div class="wrap">
@@ -109,7 +215,11 @@ a:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
       <h1>Release tracker</h1>
       <div class="muted">Click any number, feature, round, bug or agent to go one layer deeper. The trail at the top takes you back.</div>
     </div>
-    <div class="sync" id="sync"><span class="live-dot"></span>Waiting for the first update…</div>
+    <div class="head-right">
+      <div class="seg" role="group" aria-label="View"><button type="button" data-mode="board" aria-pressed="true">Board</button><button type="button" data-mode="world" aria-pressed="false">World</button></div>
+      <label class="relpick">Release <select id="release" aria-label="Release"><option value="">Live release</option></select></label>
+      <div class="sync" id="sync"><span class="live-dot"></span>Waiting for the first update…</div>
+    </div>
   </header>
   <nav class="crumbs" id="crumbs" aria-label="Where you are"></nav>
   <main id="view"><div class="panel empty">Waiting for the first update…</div></main>
@@ -119,10 +229,10 @@ a:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 const ROLE = { build: 'Build', integrate: 'Integrate', validate: 'Validate', triage: 'Triage', scope: 'Scope check', fix: 'Fix', record: 'Record', reconcile: 'Reconcile' };
 const BACKLOG = ['backlog_pre_existing', 'reassigned', 'process_note'];
 const STATUS = {
-  running: 'Running', passed: 'Passed', failing: 'Failing', queued: 'Queued', between_stages: 'Between stages',
+  stalled: 'Stalled (no sign of life)', running: 'Running', passed: 'Passed', failing: 'Failing', queued: 'Queued', between_stages: 'Between stages',
   needs_human: 'Needs a person', needs_business_definition: 'Needs a business decision', open: 'Open', recurred: 'Came back',
   fixing: 'Being fixed', fixed_awaiting_retest: 'Fixed, awaiting re-test', retest_failed: 'Re-test failed', verified: 'Verified fixed',
-  done: 'Done', failed: 'Failed', idle_or_done: 'Idle', done_unreconciled: 'Finished, failures not reconciled',
+  done: 'Done', failed: 'Agent stopped', idle_or_done: 'Idle', done_unreconciled: 'Finished, failures not reconciled',
   seen_in_test: 'Seen in test, awaiting triage', retesting: 'Fixed, being retested now',
   retest_failed_pending_triage: 'Retest failed, being triaged', passed_with_backlog: 'Passed (backlog elsewhere)',
   backlog_pre_existing: 'Backlog: was already broken', reassigned: 'Belongs to another feature', process_note: 'Test or process note', stopped: 'Stopped (run replaced)', awaiting_retest: 'Fixed, awaiting retest',
@@ -149,6 +259,8 @@ const href = (...parts) => {
   return `#/${next.join('/')}`;
 };
 const commit = (c) => (c ? ` <a class="mono" href="${esc((snap.repoUrl || '') + '/commit/' + c)}" target="_blank" rel="noopener">${esc(String(c).slice(0, 7))}</a>` : '');
+const mdb = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+const updateLabel = (u) => `${u.version} · ${u.at.replace('T', ' ').slice(0, 16)} UTC`;
 const sortBugs = (list) => [...list].sort((a, b) => (BUG_ORDER[a.status] ?? 7) - (BUG_ORDER[b.status] ?? 7));
 const ownBugs = (key) => (snap.bugs || []).filter((b) => b.status !== 'seen_in_test' && ((b.feature === key && !BACKLOG.includes(b.status)) || (b.status === 'reassigned' && b.scope?.owner === key)));
 const agentName = (a) => `${ROLE[a.role] || a.role || 'Agent'}${a.round ? ` · round ${a.round}` : ''}`;
@@ -162,6 +274,7 @@ const STATS = {
   verified: { label: 'Bugs verified fixed', tone: 'good', count: (s) => s.bugs.filter((b) => b.status === 'verified').length, list: 'bugs', pick: (s) => s.bugs.filter((b) => b.status === 'verified'), note: 'Bugs whose step passed in a later browser test after the fix.' },
   human: { label: 'Need a person', tone: 'human', count: (s) => s.bugs.filter((b) => ['needs_human', 'needs_business_definition'].includes(b.status)).length, list: 'bugs', pick: (s) => s.bugs.filter((b) => ['needs_human', 'needs_business_definition'].includes(b.status)), note: 'Out of the automated loop: fix attempts ran out, or a business decision is missing.' },
   unreconciled: { label: 'Finished with unreconciled failures', tone: 'bad', count: (s) => s.agents.filter((a) => a.status === 'done_unreconciled').length, list: 'agents', pick: (s) => s.agents.filter((a) => a.status === 'done_unreconciled'), note: 'Agents that finished but reported failures nobody has reconciled yet. They are not done.' },
+  updates: { label: 'Status updates', tone: '', count: (s) => (s.updates || []).length ? s.updates[s.updates.length - 1].version : '—', list: 'updates', pick: () => [], note: '' },
   tokens: { label: 'Tokens out / cache read', tone: '', count: (s) => `${k(s.totals?.output)} / ${k(s.totals?.cacheRead)}`, list: 'agents', pick: (s) => [...s.agents].sort((a, b) => (b.tokens?.output || 0) - (a.tokens?.output || 0)), note: 'Every agent run, most output tokens first.' },
 };
 
@@ -170,16 +283,17 @@ function featureRows(list) {
   return `<div class="panel"><table><thead><tr><th>Feature</th><th>Status</th><th>Latest test</th><th class="num">Rounds</th><th>Its own bugs verified</th></tr></thead><tbody>${list.map((f) => {
     const r = f.lastResult; const pct = r && r.stepsTotal ? Math.round((r.stepsPassed / r.stepsTotal) * 100) : 0;
     const own = ownBugs(f.key); const v = own.filter((b) => b.status === 'verified').length;
-    return `<tr class="rowlink" data-href="${href('feature', f.key)}"><td><a class="cell" href="${href('feature', f.key)}">${esc(f.key)}</a></td><td>${featStatus(f.status)}</td><td>${r ? `<div class="num">Round ${r.round}: ${r.stepsPassed}/${r.stepsTotal} steps</div><div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>` : '<span class="muted">Not tested yet</span>'}</td><td class="num">${f.rounds}</td><td>${own.length ? `<div class="num">${v} of ${own.length}</div><div class="bar" aria-hidden="true"><i style="width:${Math.round((v / own.length) * 100)}%"></i></div>` : '<span class="muted">None of its own</span>'}${f.backlog ? `<div class="muted">+ ${f.backlog} in backlog</div>` : ''}</td></tr>`;
+    return `<tr class="rowlink" data-href="${href('feature', f.key)}"><td><a class="cell" href="${href('feature', f.key)}">${esc(f.key)}</a></td><td data-label="Status">${featStatus(f.status)}</td><td data-label="Latest test">${r ? `<div class="num">Round ${r.round}: ${r.stepsPassed}/${r.stepsTotal} steps${r.baseline ? ` · baseline v${r.baseline}` : ''}</div><div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>` : '<span class="muted">Not tested yet</span>'}</td><td data-label="Rounds" class="num">${f.rounds}</td><td data-label="Its own bugs verified">${own.length ? `<div class="num">${v} of ${own.length}</div><div class="bar" aria-hidden="true"><i style="width:${Math.round((v / own.length) * 100)}%"></i></div>` : '<span class="muted">None of its own</span>'}${f.backlog ? `<div class="muted">+ ${f.backlog} in backlog</div>` : ''}</td></tr>`;
   }).join('')}</tbody></table></div>`;
 }
 function bugRows(list, showFeature = true) {
   if (!list.length) return '<div class="panel empty">No bugs here.</div>';
-  return `<div class="panel"><table><thead><tr><th>Bug</th>${showFeature ? '<th>Feature</th>' : ''}<th>Status</th><th class="num">Fix attempts</th><th>What fails</th></tr></thead><tbody>${sortBugs(list).map((b) => `<tr class="rowlink" data-href="${href('bug', b.id)}"><td class="mono"><a class="cell" href="${href('bug', b.id)}">${esc(b.id)}</a>${b.carriedOver ? '<div class="muted">kept from an earlier run</div>' : ''}</td>${showFeature ? `<td>${esc(b.feature)}${b.status === 'reassigned' && b.scope?.owner ? `<div class="muted">→ ${esc(b.scope.owner)}</div>` : ''}</td>` : ''}<td>${pill(b.status)}</td><td class="num">${b.attempts || 0} / ${esc(snap.maxFixAttemptsPerBug)}</td><td>${esc(b.step)}</td></tr>`).join('')}</tbody></table></div>`;
+  return `<div class="panel"><table><thead><tr><th>Bug</th>${showFeature ? '<th>Feature</th>' : ''}<th>Status</th><th class="num">Fix attempts</th><th>What fails</th></tr></thead><tbody>${sortBugs(list).map((b) => `<tr class="rowlink" data-href="${href('bug', b.id)}"><td class="mono"><a class="cell" href="${href('bug', b.id)}">${esc(b.id)}</a>${b.carriedOver ? '<div class="muted">kept from an earlier run</div>' : ''}</td>${showFeature ? `<td data-label="Feature">${esc(b.feature)}${b.status === 'reassigned' && b.scope?.owner ? `<div class="muted">→ ${esc(b.scope.owner)}</div>` : ''}</td>` : ''}<td data-label="Status">${pill(b.status)}</td><td class="num" data-label="Fix attempts">${b.attempts || 0} / ${esc(snap.maxFixAttemptsPerBug)}</td><td data-label="What fails">${esc(b.step)}</td></tr>`).join('')}</tbody></table></div>`;
 }
 function agentRows(list) {
-  if (!list.length) return '<div class="panel empty">No agent runs here.</div>';
-  return `<div class="panel"><table><thead><tr><th>Agent</th><th>Status</th><th>Result</th><th class="num">Tokens (out / cache read)</th><th>Last activity</th></tr></thead><tbody>${list.map((a) => `<tr class="rowlink" data-href="${href('agent', a.id)}"><td><a class="cell" href="${href('agent', a.id)}">${esc(agentName(a))}</a><div class="muted">${esc(a.feature || '—')}</div></td><td>${pill(a.status)}</td><td>${esc(a.summary || '—')}${a.failures?.length ? `<div class="muted">${a.failures.length} command failure${a.failures.length > 1 ? 's' : ''} reported</div>` : ''}</td><td class="num">${k(a.tokens?.output)} / ${k(a.tokens?.cacheRead)}</td><td class="muted">${esc(ago(a.lastActivityAt))}</td></tr>`).join('')}</tbody></table></div>`;
+  const trimmed = snap.agentsTrimmed ? `<div class="muted" style="font-size:13px;margin:6px 0">${snap.agentsTrimmed} older finished agent runs are not shown here to keep the live tracker fast; their full records are in the release logs.</div>` : '';
+  if (!list.length) return `${trimmed}<div class="panel empty">No agent runs here.</div>`;
+  return `${trimmed}<div class="panel"><table><thead><tr><th>Agent</th><th>Status</th><th>Result</th><th class="num">Tokens (out / cache read)</th><th>Last activity</th></tr></thead><tbody>${list.map((a) => `<tr class="rowlink" data-href="${href('agent', a.id)}"><td><a class="cell" href="${href('agent', a.id)}">${esc(agentName(a))}</a><div class="muted">${esc(a.feature || '—')}</div></td><td data-label="Status">${pill(a.status)}</td><td data-label="Result">${esc(a.summary || '—')}${a.failures?.length ? `<div class="muted">${a.failures.length} command failure${a.failures.length > 1 ? 's' : ''} reported</div>` : ''}</td><td class="num" data-label="Tokens (out / cache read)">${k(a.tokens?.output)} / ${k(a.tokens?.cacheRead)}</td><td class="muted" data-label="Last activity">${esc(ago(a.lastActivityAt))}</td></tr>`).join('')}</tbody></table></div>`;
 }
 function agentCards(list) {
   if (!list.length) return '<div class="panel empty">No agent is running here right now.</div>';
@@ -187,10 +301,598 @@ function agentCards(list) {
 }
 const section = (title, html) => `<section><h2>${esc(title)}</h2>${html}</section>`;
 
+
+// ---- Trends: graphs over the release's recorded history, with toggles, a feature filter and a time slider.
+// History (tracker/history) is every recorded state of the release; nothing is overwritten, so any earlier
+// moment can be replayed. Per point: f[key] = [status, round, stepsPassed, stepsTotal, open, verified, backlog, needsPerson].
+let hist = null; let chart = null;
+const T = { measure: 'bugs', view: 'totals', feature: 'all', at: null, live: true, hidden: {}, table: false };
+try { Object.assign(T, JSON.parse(localStorage.getItem('rt-trends') || '{}'), { at: null, live: true }); } catch {}
+const saveT = () => { try { const { at, live, ...keep } = T; localStorage.setItem('rt-trends', JSON.stringify(keep)); } catch {} };
+const PASSED_S = ['passed', 'passed_with_backlog'];
+const BUG_SERIES = [
+  { key: 'open', label: 'Open (this work)', idx: 4, color: '--s1' },
+  { key: 'verified', label: 'Verified fixed', idx: 5, color: '--s2' },
+  { key: 'backlog', label: 'Backlog (not this work)', idx: 6, color: '--s3' },
+  { key: 'person', label: 'Waiting on a person', idx: 7, color: '--s4' },
+];
+const cssv = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmtT = (iso) => { const d = new Date(iso); return `${d.toLocaleString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })} ${d.toISOString().slice(11, 16)}`; };
+const rows = (pt) => Object.entries(pt.f).filter(([k]) => T.feature === 'all' || k === T.feature);
+function measureAt(pt) {
+  const r = rows(pt);
+  if (T.measure === 'bugs') return Object.fromEntries(BUG_SERIES.map((s) => [s.key, r.reduce((n, [, v]) => n + (v[s.idx] || 0), 0)]));
+  if (T.measure === 'features') return { passed: r.filter(([, v]) => PASSED_S.includes(v[0])).length, tested: r.filter(([, v]) => v[3]).length };
+  const scored = r.filter(([, v]) => v[3]);
+  return { score: scored.length ? Math.round((scored.reduce((n, [, v]) => n + v[2] / v[3], 0) / scored.length) * 1000) / 10 : null };
+}
+function seriesDefs() {
+  if (T.measure === 'bugs') return BUG_SERIES.map((s) => ({ key: s.key, label: s.label, color: s.color }));
+  if (T.measure === 'features') return [{ key: 'passed', label: 'Features passed', color: '--s1' }, { key: 'tested', label: 'Features tested at least once', color: '--s2' }];
+  return [{ key: 'score', label: T.feature === 'all' ? 'Average step pass rate (tested features)' : 'Step pass rate', color: '--s1' }];
+}
+// The update in force at a point: the latest update recorded at or before it.
+// An update belongs to the recorded state nearest its time (they are written seconds apart).
+const pointIndexAt = (iso) => { const t = Date.parse(iso); let best = 0; hist.points.forEach((p, j) => { if (Math.abs(Date.parse(p.t) - t) < Math.abs(Date.parse(hist.points[best].t) - t)) best = j; }); return best; };
+const updateAt = (pt) => { const i = hist.points.indexOf(pt); return [...(hist?.updates || [])].reverse().find((u) => pointIndexAt(u.at) <= i) || null; };
+
+function trendsHtml() {
+  if (!hist || !hist.points?.length) return `<section class="trends"><div class="trends-head"><h3>Release trends</h3></div><div class="empty">Trend history loads with the next sync.</div></section>`;
+  const keys = Object.keys(hist.points[hist.points.length - 1].f);
+  const seg = (name, opts) => `<div class="seg" role="group" aria-label="${esc(name)}">${opts.map(([v, l]) => `<button type="button" data-t="${name}" data-v="${v}" aria-pressed="${T[name] === v}">${esc(l)}</button>`).join('')}</div>`;
+  return `<section class="trends" id="trends">
+    <div class="trends-head"><h3>Release trends${snap.release?.version ? ` · ${esc(snap.release.version)}` : ''}</h3><span class="asof">History since <b>${esc(fmtT(hist.points[0].t))} UTC</b> · ${hist.points.length} recorded states · ${(hist.updates || []).length} updates</span></div>
+    <div class="controls">
+      <label>Show ${seg('measure', [['bugs', 'Bugs'], ['scores', 'Test scores'], ['features', 'Features passed']])}</label>
+      <label>As ${seg('view', [['totals', 'Totals'], ['change', 'Change per update']])}</label>
+      <label>Feature <select id="t-feature"><option value="all">All features</option>${keys.map((k) => `<option value="${esc(k)}" ${T.feature === k ? 'selected' : ''}>${esc(k)}</option>`).join('')}</select></label>
+      <div class="seg" role="group" aria-label="View"><button type="button" id="t-table" aria-pressed="${T.table}">Table view</button></div>
+    </div>
+    <div class="legend" id="t-legend"></div>
+    <div class="asof-tiles" id="t-tiles"></div>
+    <div class="chartbox" id="t-chartbox"><canvas id="t-chart" role="img" aria-label="Release trend chart"></canvas></div>
+    <div class="tableview" id="t-tableview" hidden></div>
+    <div class="slider">
+      <div class="ticks" id="t-ticks" aria-hidden="true"></div>
+      <div class="slider-row">
+        <button type="button" class="step" id="t-prev" title="Previous update" aria-label="Previous update">‹</button>
+        <input type="range" id="t-range" min="0" max="${hist.points.length - 1}" step="1" value="${hist.points.length - 1}" aria-label="Move through the release history">
+        <button type="button" class="step" id="t-next" title="Next update" aria-label="Next update">›</button>
+        <button type="button" class="step live" id="t-live" aria-pressed="true">Live</button>
+      </div>
+      <div class="asof" id="t-asof"></div>
+    </div>
+    <div id="t-note"></div>
+    <div><h2 style="margin-top:6px">Test score by feature</h2><div class="spark-grid" id="t-sparks"></div></div>
+  </section>`;
+}
+
+function renderTiles(i) {
+  const pt = hist.points[i]; const cur = measureAt(pt); const u = updateAt(pt);
+  const prevU = u ? (hist.updates || [])[(hist.updates || []).indexOf(u) - 1] : null;
+  const base = prevU ? measureAt(hist.points[pointIndexAt(prevU.at)]) : null;
+  $('t-tiles').innerHTML = seriesDefs().map((d) => {
+    const v = cur[d.key]; const b = base?.[d.key];
+    const delta = v != null && b != null ? v - b : null;
+    const unit = T.measure === 'scores' ? '%' : '';
+    return `<div class="stat"><div class="n">${v == null ? '—' : esc(v + unit)}</div><div class="l">${esc(d.label)}</div><div class="d">${delta == null ? 'no earlier update to compare' : delta === 0 ? `no change since ${esc(prevU.version)}` : `${delta > 0 ? '+' : ''}${Math.round(delta * 10) / 10}${unit} since ${esc(prevU.version)}`}</div></div>`;
+  }).join('');
+}
+
+function renderAsOf(i) {
+  const pt = hist.points[i]; const u = updateAt(pt); const last = i === hist.points.length - 1;
+  $('t-asof').innerHTML = `${last ? '<b>Live</b> · ' : ''}As of <b>${esc(fmtT(pt.t))} UTC</b> · commit ${commit(pt.c) || esc(pt.c)}${u ? ` · after update <a href="${href('update', u.version)}">${esc(u.version)}</a>` : ' · before the first update'}`;
+  const full = u && (snap.updates || []).find((x) => x.version === u.version);
+  $('t-note').innerHTML = full ? `<div class="update-note"><b>${esc(full.version)}</b>${full.headline ? ` — ${esc(full.headline)}` : ''} · <a href="${href('update', full.version)}">Read the update notes ›</a></div>` : '';
+  const live = $('t-live'); live.setAttribute('aria-pressed', String(last));
+}
+
+function sparkSvg(vals, at) {
+  const W = 200; const H = 34; const n = vals.length;
+  const pts = vals.map((v, j) => (v == null ? null : [n > 1 ? (j / (n - 1)) * (W - 8) + 4 : W / 2, H - 4 - (v / 100) * (H - 8)]));
+  let d = ''; let pen = false;
+  for (const p of pts) { if (!p) { pen = false; continue; } d += `${pen ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`; pen = true; }
+  const m = pts[at];
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><line x1="4" x2="${W - 4}" y1="${H - 4}" y2="${H - 4}" stroke="var(--grid)" stroke-width="1"/>${d ? `<path d="${d}" fill="none" stroke="var(--s1)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>` : ''}${m ? `<circle cx="${m[0]}" cy="${m[1]}" r="4" fill="var(--s1)" stroke="var(--panel)" stroke-width="2"/>` : ''}</svg>`;
+}
+function renderSparks(i) {
+  const keys = Object.keys(hist.points[hist.points.length - 1].f).filter((k) => T.feature === 'all' || k === T.feature);
+  $('t-sparks').innerHTML = keys.map((k) => {
+    const vals = hist.points.map((p) => { const v = p.f[k]; return v && v[3] ? Math.round((v[2] / v[3]) * 1000) / 10 : null; });
+    const v = hist.points[i].f[k];
+    return `<a class="spark" href="${href('feature', k)}" title="${esc(k)}: step pass rate over time"><div class="k">${esc(k)}</div><div class="v">${v && v[3] ? `round ${v[1]}: ${v[2]}/${v[3]} steps (${vals[i]}%)` : 'not tested yet'} · ${esc(STATUS[v?.[0]] || (v?.[0] ? String(v[0]).split(', ').map((r) => ROLE[r] || r).join(' + ') : '—'))}</div>${sparkSvg(vals, i)}</a>`;
+  }).join('');
+}
+
+function renderTable() {
+  const box = $('t-tableview'); box.hidden = !T.table; $('t-chartbox').hidden = T.table;
+  if (!T.table) return;
+  const defs = seriesDefs();
+  box.innerHTML = `<table><thead><tr><th>When (UTC)</th><th>Update</th>${defs.map((d) => `<th class="num">${esc(d.label)}</th>`).join('')}</tr></thead><tbody>${[...hist.points].reverse().map((p) => { const m = measureAt(p); const u = updateAt(p); return `<tr><td class="num" data-label="When (UTC)">${esc(fmtT(p.t))}</td><td data-label="Update">${u ? esc(u.version) : '—'}</td>${defs.map((d) => `<td class="num" data-label="${esc(d.label)}">${m[d.key] ?? '—'}</td>`).join('')}</tr>`; }).join('')}</tbody></table>`;
+}
+
+const markersPlugin = {
+  id: 'rtMarkers',
+  afterDatasetsDraw(c) {
+    if (T.view !== 'totals') return;
+    const { ctx, chartArea: a, scales: { x } } = c;
+    ctx.save();
+    for (const u of hist.updates || []) {   // update markers: dashed gold rules
+      const px = x.getPixelForValue(pointIndexAt(u.at));
+      ctx.strokeStyle = cssv('--gold'); ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(px, a.top); ctx.lineTo(px, a.bottom); ctx.stroke();
+    }
+    const px = x.getPixelForValue(T.at);   // slider cursor: solid ink rule
+    ctx.setLineDash([]); ctx.strokeStyle = cssv('--ink'); ctx.globalAlpha = 0.55; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(px, a.top); ctx.lineTo(px, a.bottom); ctx.stroke();
+    ctx.restore();
+  },
+};
+
+function renderChart() {
+  if (!window.Chart) { $('t-chartbox').innerHTML = '<div class="empty">The chart library did not load. Use Table view.</div>'; return; }
+  const defs = seriesDefs(); const ink = cssv('--muted'); const grid = cssv('--grid');
+  const font = { family: cssv('--body') || 'Jost', size: 12 };
+  let labels; let datasets; let type;
+  if (T.view === 'totals') {
+    type = 'line';
+    labels = hist.points.map((p) => fmtT(p.t));
+    datasets = defs.map((d) => ({ label: d.label, key: d.key, data: hist.points.map((p) => measureAt(p)[d.key]), borderColor: cssv(d.color), backgroundColor: cssv(d.color), borderWidth: 2, pointRadius: 0, pointHoverRadius: 5, pointHitRadius: 12, tension: 0, spanGaps: true, hidden: !!T.hidden[d.key] }));
+  } else {
+    // Change per update: each update compared with the one before it, then live vs the last update.
+    type = 'bar';
+    const ups = hist.updates || []; const marks = ups.map((u) => ({ label: u.version, i: pointIndexAt(u.at) }));
+    marks.push({ label: 'Live', i: hist.points.length - 1 });
+    const pairs = marks.slice(1).map((m, j) => ({ label: `${marks[j].label} → ${m.label}`, a: measureAt(hist.points[marks[j].i]), b: measureAt(hist.points[m.i]) }));
+    labels = pairs.map((p) => p.label);
+    datasets = defs.map((d) => ({ label: d.label, key: d.key, data: pairs.map((p) => (p.a[d.key] != null && p.b[d.key] != null ? Math.round((p.b[d.key] - p.a[d.key]) * 10) / 10 : null)), backgroundColor: cssv(d.color), borderRadius: 4, borderSkipped: false, borderColor: cssv('--panel'), borderWidth: 2, maxBarThickness: 26, hidden: !!T.hidden[d.key] }));
+  }
+  if (chart) chart.destroy();
+  chart = new Chart($('t-chart'), {
+    type, data: { labels, datasets }, plugins: [markersPlugin],
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: cssv('--panel'), titleColor: cssv('--ink'), bodyColor: cssv('--ink'), borderColor: cssv('--line'), borderWidth: 1, titleFont: font, bodyFont: font, padding: 10, usePointStyle: true,
+          callbacks: { afterTitle: (it) => { if (T.view !== 'totals') return ''; const u = updateAt(hist.points[it[0].dataIndex]); return u ? `after ${u.version}` : ''; },
+            label: (c) => ` ${c.dataset.label}: ${c.parsed.y == null ? '—' : (T.view === 'change' && c.parsed.y > 0 ? '+' : '') + c.parsed.y + (T.measure === 'scores' ? '%' : '')}` } },
+      },
+      scales: {
+        x: { ticks: { color: ink, font, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 }, grid: { display: false }, border: { color: grid } },
+        y: { beginAtZero: T.view === 'totals', suggestedMax: T.measure === 'scores' && T.view === 'totals' ? 100 : undefined, ticks: { color: ink, font, precision: 0, callback: (v) => v + (T.measure === 'scores' ? '%' : '') }, grid: { color: grid }, border: { display: false } },
+      },
+      onClick: (e, els) => { if (T.view === 'totals' && els.length) setAt(els[0].index); },
+    },
+  });
+}
+
+function renderLegend() {
+  $('t-legend').innerHTML = seriesDefs().map((d) => `<button type="button" data-series="${esc(d.key)}" aria-pressed="${!T.hidden[d.key]}"><span class="sw" style="background:var(${d.color})"></span>${esc(d.label)}</button>`).join('');
+}
+function renderTicks() {
+  const n = hist.points.length - 1;
+  $('t-ticks').innerHTML = (hist.updates || []).map((u) => `<span style="left:${n ? (pointIndexAt(u.at) / n) * 100 : 50}%">${esc(u.version.split('-').pop())}</span>`).join('');
+}
+function setAt(i, fromUser = true) {
+  T.at = Math.max(0, Math.min(hist.points.length - 1, i)); T.live = T.at === hist.points.length - 1;
+  $('t-range').value = T.at; renderTiles(T.at); renderAsOf(T.at); renderSparks(T.at); if (chart) chart.draw();
+}
+function mountTrends() {
+  if (!hist || !$('trends')) return;
+  if (T.live || T.at == null || T.at > hist.points.length - 1) T.at = hist.points.length - 1;
+  renderLegend(); renderTicks(); renderTable(); if (!T.table) renderChart(); setAt(T.at, false);
+  const box = $('trends');
+  box.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.t) { T[b.dataset.t] = b.dataset.v; T.hidden = {}; saveT(); route(); return; }
+    if (b.dataset.series) { T.hidden[b.dataset.series] = !T.hidden[b.dataset.series]; saveT(); renderLegend(); renderChart(); return; }
+    if (b.id === 't-table') { T.table = !T.table; saveT(); route(); return; }
+    if (b.id === 't-live') { setAt(hist.points.length - 1); return; }
+    if (b.id === 't-prev' || b.id === 't-next') {   // step to the previous / next update marker
+      const idx = (hist.updates || []).map((u) => pointIndexAt(u.at));
+      const target = b.id === 't-prev' ? [...idx].reverse().find((x) => x < T.at) : idx.find((x) => x > T.at);
+      setAt(target ?? (b.id === 't-prev' ? 0 : hist.points.length - 1));
+    }
+  });
+  $('t-range').addEventListener('input', (e) => setAt(Number(e.target.value)));
+  $('t-feature').addEventListener('change', (e) => { T.feature = e.target.value; saveT(); route(); });
+}
+
+
+
+// ---- Render bindings: the world is a view. Every visual channel it draws is declared here and points to the
+// source field it reads (Port → object → field), how the value is transformed, what the legend says, and how
+// changes arrive (live, or requiring approval). The renderer only receives bound values; anything unbound is
+// "not mapped", never invented. Platform version: server/lib/renderBindingRegistry.js (docs/changes/render-bindings.md).
+const SOURCE_PORT = { key: 'release-tracker', label: 'Release tracker snapshot', type: 'platform_table' };
+const BINDINGS = [
+  { id: 'crystal.colour', mark: 'Crystal', channel: 'Colour', object: 'features', field: 'status', transform: 'status → tone', legend: 'Feature status', policy: 'live', read: (f) => statusText(f.status) },
+  { id: 'crystal.size', mark: 'Crystal', channel: 'Size', object: 'features', field: 'lastResult.stepsTotal', transform: '÷ largest suite → 0.35–1', legend: 'Test steps in the suite', policy: 'live', read: (f) => (f.lastResult ? `${f.lastResult.stepsTotal} steps` : 'not tested') },
+  { id: 'crystal.ring', mark: 'Crystal', channel: 'Gold ring', object: 'features', field: 'lastResult.stepsPassed ÷ stepsTotal', transform: 'calculation → arc 0–1', legend: 'Share of steps passing', policy: 'requires_approval', approver: 'a browser test round', read: (f) => (f.lastResult ? `${f.lastResult.stepsPassed}/${f.lastResult.stepsTotal} (${Math.round((f.lastResult.stepsPassed / f.lastResult.stepsTotal) * 100)}%)` : 'not tested') },
+  { id: 'crystal.river', mark: 'Crystal', channel: 'Bubble stream', object: 'agents', field: 'status = running (feature)', transform: 'any → on/off', legend: 'An agent is working on it', policy: 'live', read: (f) => (snap.agents.some((a) => a.feature === f.key && a.status === 'running') ? 'yes' : 'no') },
+  { id: 'satellite.colour', mark: 'Satellite', channel: 'Colour', object: 'bugs', field: 'status', transform: 'status → series', legend: 'Bug state', policy: 'requires_approval', approver: 'the next browser re-test', read: (f) => { const b = (snap.bugs || []).filter((x) => x.feature === f.key && x.status !== 'seen_in_test'); return `${b.length} bugs`; } },
+  { id: 'satellite.ghost', mark: 'Satellite', channel: 'Ghost (translucent)', object: 'bugs', field: 'status ∈ fixed_awaiting_retest, retesting', transform: 'pending → translucent', legend: 'Fix proposed, awaiting re-test', policy: 'requires_approval', approver: 'the next browser re-test', read: (f) => `${pendingFor(f.key).length} pending` },
+];
+const PENDING = ['fixed_awaiting_retest', 'retesting'];
+const pendingFor = (key) => (snap.bugs || []).filter((b) => b.feature === key && PENDING.includes(b.status));
+const policyPill = (b) => (b.policy === 'live' ? '<span class="policy">Live</span>' : `<span class="policy approval">Needs approval</span>`);
+const srcText = (b) => `${SOURCE_PORT.key} › ${b.object} › ${b.field}`;
+function dataMapTable(f) {
+  return `<div class="bind-list">${BINDINGS.map((b) => `<div class="bind"><div class="bind-top"><b>${esc(b.mark)} ${esc(b.channel.toLowerCase())}</b>${f ? `<span class="bind-val">${esc(b.read(f))}</span>` : ''}</div><div class="muted">${esc(b.legend)}</div><div class="src">${esc(srcText(b))}</div><div class="bind-foot">${policyPill(b)}<span class="muted">${esc(b.transform)}${b.approver ? ` · approved by ${esc(b.approver)}` : ''}</span></div></div>`).join('')}</div>`;
+}
+// What changes, everywhere, when a pending change is approved (computed from the bindings, not stored).
+function impactOf(bug) {
+  const f = snap.features.find((x) => x.key === bug.feature);
+  return [
+    `Satellite ${bug.id}: colour ${BUG_SERIES[0].label} → ${BUG_SERIES[1].label}; no longer translucent`,
+    `Tiles and trend lines: Open (this work) −1, Verified fixed +1`,
+    `Crystal ${bug.feature}: gold ring and size update from the re-test result (now ${f?.lastResult ? `${f.lastResult.stepsPassed}/${f.lastResult.stepsTotal}` : 'not tested'})`,
+    `Board: bug layer, feature layer, ${f ? statusText(f.status) : ''} → new status after the round; history keeps both states`,
+  ];
+}
+function pendingSection(key) {
+  const p = pendingFor(key);
+  if (!p.length) return '';
+  return `<section><h2>Pending changes (${p.length}) — awaiting approval</h2><div style="display:grid;gap:8px">${p.map((b) => `<div class="pending-card"><div><b>${esc(b.id)}</b> · fix proposed${(b.history || []).filter((h) => h.event === 'fixed').slice(-1).map((h) => h.commit ? ` in ${commit(h.commit)}` : '').join('')} · approver: the next browser re-test</div><div class="muted">${esc(b.step || '')}</div><div><b>If approved, it changes:</b><ul>${impactOf(b).map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div><div class="muted">If rejected (the re-test still fails), the bug returns to Open and the fix attempt is counted.</div></div>`).join('')}</div></section>`;
+}
+
+// ---- World view: the tracker as a Salt Basin crystal world.
+// Engine contract (reusable for any dataset): adapter(...) -> { root: { label, sub }, nodes: [{ id, label, sub,
+//   status, statusLabel, weight 0..1 (gem size), progress 0..1|null (gold ring), active (river of light),
+//   href (layer to open), satellites: [{ id, label, cat 1..4, href }] }] }. The renderer knows nothing about
+// releases; a new world (opportunities, Career Master, outputs…) only needs a new adapter.
+// Geometry follows src/lib/crystalGeometry.js (signature core + gold wire, octahedron gems, rivers of light).
+let MODE = 'board'; try { MODE = localStorage.getItem('rt-mode') || 'board'; } catch {}
+const reduceMotion = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } })();
+const STATUS_TONE = (st) => (['passed', 'passed_with_backlog', 'verified'].includes(st) ? '--good' : ['failing', 'done_unreconciled', 'not_passed_after_max_rounds'].includes(st) ? '--bad' : ['needs_human', 'needs_business_definition'].includes(st) ? '--human' : ['queued', 'stopped', 'idle_or_done', 'failed'].includes(st) || !st ? '--muted' : ['awaiting_retest', 'between_stages'].includes(st) ? '--gold' : '--teal');
+const statusText = (st) => STATUS[st] || (st ? String(st).split(', ').map((r) => ROLE[r] || r).join(' + ') : 'Not started');
+const BUG_CAT = (st) => (st === 'verified' ? 2 : BACKLOG.includes(st) ? 3 : ['needs_human', 'needs_business_definition'].includes(st) ? 4 : 1);
+
+// Adapter: release tracker -> world graph. Live uses the snapshot (individual bugs, running agents);
+// an earlier slider point uses the recorded history (counts per category).
+function trackerGraph(pointIdx) {
+  const live = !hist || pointIdx == null || pointIdx >= hist.points.length - 1;
+  const pt = hist && !live ? hist.points[pointIdx] : null;
+  const feats = snap.features.filter((f) => f.key !== 'whole-app-sweep');
+  const maxSteps = Math.max(1, ...feats.map((f) => f.lastResult?.stepsTotal || 0));
+  const nodes = feats.map((f) => {
+    const h = pt?.f[f.key];
+    const status = h ? h[0] : f.status;
+    const total = h ? h[3] : f.lastResult?.stepsTotal; const passed = h ? h[2] : f.lastResult?.stepsPassed;
+    let satellites;
+    if (h) {
+      satellites = [];
+      [[4, 1], [5, 2], [6, 3], [7, 4]].forEach(([idx, cat]) => { const n = idx === 4 ? h[4] - h[7] : h[idx]; for (let i = 0; i < Math.min(n, 14); i++) satellites.push({ id: `${f.key}-${cat}-${i}`, label: BUG_SERIES[cat - 1].label, cat, href: href('feature', f.key) }); });
+    } else {
+      satellites = (snap.bugs || []).filter((b) => b.feature === f.key && b.status !== 'seen_in_test').map((b) => ({ id: b.id, label: `${b.id}: ${b.step || ''}`, cat: BUG_CAT(b.status), pending: PENDING.includes(b.status), href: href('bug', b.id) }));
+    }
+    return {
+      id: f.key, label: f.key, status, statusLabel: statusText(status),
+      sub: total ? `${passed}/${total} steps` : 'not tested yet',
+      weight: total ? 0.35 + 0.65 * (total / maxSteps) : 0.3,
+      progress: total ? passed / total : null,
+      active: !h && snap.agents.some((a) => a.feature === f.key && a.status === 'running'),
+      href: href('feature', f.key), satellites,
+    };
+  });
+  return { root: { label: snap.release?.version ? `Release ${snap.release.version}` : 'Release', sub: pt ? `as of ${fmtT(pt.t)} UTC` : 'live' }, nodes };
+}
+
+
+// ---- Environments: the setting a world is drawn in, independent of the data. Each returns
+// { update(t, dt, camera), recolor(), dispose() }. Underwater: depth fog, sand seabed with moving
+// caustics, light shafts from the surface, rising bubbles, drifting marine snow, swaying kelp.
+function canvasTexture(size, draw) { const c = document.createElement('canvas'); c.width = c.height = size; draw(c.getContext('2d'), size); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; }
+function underwaterEnv(scene, col) {
+  const parts = [];
+  const add = (o) => { scene.add(o); parts.push(o); return o; };
+  scene.fog = new THREE.FogExp2(col('--water-mid'), 0.028);
+  scene.add(new THREE.HemisphereLight(0xBFEFFF, 0x2A4A3A, 0.45));
+  // Seabed: gently rolling sand.
+  const bedGeo = new THREE.PlaneGeometry(200, 200, 90, 90); bedGeo.rotateX(-Math.PI / 2);
+  const bp = bedGeo.getAttribute('position');
+  for (let i = 0; i < bp.count; i++) { const x = bp.getX(i); const z = bp.getZ(i); bp.setY(i, Math.sin(x * 0.18) * 0.35 + Math.cos(z * 0.22) * 0.3 + Math.sin((x + z) * 0.07) * 0.6); }
+  bedGeo.computeVertexNormals();
+  const bed = add(new THREE.Mesh(bedGeo, new THREE.MeshStandardMaterial({ color: col('--sand'), roughness: 0.95, metalness: 0, flatShading: false })));
+  bed.position.y = -9;
+  // Caustics: two drifting layers of bright net-like lines over the sand.
+  const caus = canvasTexture(256, (g, n) => {   // soft cellular light network, tileable
+    g.clearRect(0, 0, n, n); g.strokeStyle = 'rgba(255,255,255,0.75)'; g.lineWidth = 3; g.shadowColor = 'rgba(255,255,255,0.9)'; g.shadowBlur = 6;
+    const cells = 7; const step = n / cells;
+    for (let i = 0; i < cells; i++) for (let j = 0; j < cells; j++) {
+      const cx = (i + 0.5 + (Math.random() - 0.5) * 0.5) * step; const cy = (j + 0.5 + (Math.random() - 0.5) * 0.5) * step; const r = step * (0.42 + Math.random() * 0.12);
+      for (const dx of [-n, 0, n]) for (const dy of [-n, 0, n]) { g.beginPath(); for (let a = 0; a <= 6.3; a += 0.35) { const rr = r * (0.85 + 0.15 * Math.sin(a * 3 + i + j)); const x = cx + dx + Math.cos(a) * rr; const y = cy + dy + Math.sin(a) * rr; a === 0 ? g.moveTo(x, y) : g.lineTo(x, y); } g.closePath(); g.stroke(); }
+    }
+  });
+  caus.repeat.set(14, 14);
+  const causMats = [0, 1].map((k) => new THREE.MeshBasicMaterial({ map: caus.clone(), transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false }));
+  causMats.forEach((m, k) => { m.map.needsUpdate = true; m.map.repeat.set(9 + k * 4, 9 + k * 4); const pl = add(new THREE.Mesh(bedGeo, m)); pl.position.y = -8.95 + k * 0.02; });
+  // Light shafts from the surface: soft vertical beams that sway and breathe.
+  const shaftTex = canvasTexture(64, (g, n) => { const gr = g.createLinearGradient(0, 0, n, 0); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.5, 'rgba(255,255,255,1)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, n, n); const v = g.createLinearGradient(0, 0, 0, n); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,1)'); g.globalCompositeOperation = 'destination-out'; g.fillStyle = v; g.fillRect(0, 0, n, n); });
+  const shafts = [];
+  for (let i = 0; i < 9; i++) {
+    const m = add(new THREE.Mesh(new THREE.PlaneGeometry(2.2 + Math.random() * 2.5, 34), new THREE.MeshBasicMaterial({ map: shaftTex, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, color: 0xE8FBFF })));
+    m.position.set((Math.random() - 0.5) * 34, 9, (Math.random() - 0.5) * 34); m.rotation.z = 0.18 + (Math.random() - 0.5) * 0.12;
+    m.userData.phase = Math.random() * 6; shafts.push(m);
+  }
+  // Bubbles rising, and fine marine snow drifting.
+  const mkPoints = (n, spread, size, color, opacity) => {
+    const pos = new Float32Array(n * 3); for (let i = 0; i < n; i++) pos.set([(Math.random() - 0.5) * spread, -9 + Math.random() * 24, (Math.random() - 0.5) * spread], i * 3);
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const tex = canvasTexture(32, (g, k) => { const r = g.createRadialGradient(k / 2, k / 2, 1, k / 2, k / 2, k / 2); r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(0.55, 'rgba(255,255,255,0.35)'); r.addColorStop(0.7, 'rgba(255,255,255,0.9)'); r.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = r; g.fillRect(0, 0, k, k); });
+    return add(new THREE.Points(geo, new THREE.PointsMaterial({ size, map: tex, color, transparent: true, opacity, depthWrite: false, blending: THREE.AdditiveBlending })));
+  };
+  const bubbles = mkPoints(220, 40, 0.28, 0xFFFFFF, 0.55);
+  const snow = mkPoints(600, 60, 0.07, 0xF4FBFF, 0.5);
+  // Kelp around the edge: tapered strands anchored in the sand, swaying from the base.
+  const kelp = [];
+  const kelpMat = new THREE.MeshStandardMaterial({ color: 0x4F7A3A, roughness: 0.8, transparent: true, opacity: 0.85 });
+  for (let i = 0; i < 26; i++) {
+    const a = (i / 26) * Math.PI * 2 + Math.random() * 0.2; const r = 31 + Math.random() * 10; const h = 12 + Math.random() * 12;   // outside the camera's orbit, so kelp frames the scene and never crosses a crystal
+    const pts = []; for (let j = 0; j <= 6; j++) pts.push(new THREE.Vector3(Math.sin(j * 0.9 + i) * 0.35, (j / 6) * h, Math.cos(j * 0.7 + i) * 0.25));
+    const tube = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 24, 0.16, 5, false), kelpMat);
+    const g = add(new THREE.Group()); g.add(tube); g.position.set(Math.cos(a) * r, -9, Math.sin(a) * r); g.userData.phase = Math.random() * 6; kelp.push(g);
+  }
+  return {
+    update(t, dt, camera) {
+      causMats[0].map.offset.set(t * 0.012, t * 0.008); causMats[1].map.offset.set(-t * 0.009, t * 0.011);
+      shafts.forEach((m) => { m.lookAt(camera.position.x, m.position.y, camera.position.z); m.rotateZ(0.18); m.material.opacity = 0.08 + 0.06 * (0.5 + 0.5 * Math.sin(t * 0.4 + m.userData.phase)); });
+      const bp2 = bubbles.geometry.getAttribute('position');
+      for (let i = 0; i < bp2.count; i++) { let y = bp2.getY(i) + dt * (0.9 + (i % 7) * 0.12); if (y > 15) y = -9; bp2.setY(i, y); bp2.setX(i, bp2.getX(i) + Math.sin(t * 2 + i) * dt * 0.15); }
+      bp2.needsUpdate = true;
+      snow.rotation.y += dt * 0.01; snow.position.y = Math.sin(t * 0.2) * 0.4;
+      kelp.forEach((g) => { g.rotation.z = Math.sin(t * 0.7 + g.userData.phase) * 0.09; g.rotation.x = Math.cos(t * 0.5 + g.userData.phase) * 0.06; });
+    },
+    recolor() { scene.fog.color = col('--water-mid'); bed.material.color = col('--sand'); },
+  };
+}
+
+const World = !window.THREE ? { ensure() {}, setGraph() {}, focus() {}, refreshColors() {} } : (() => {
+  let renderer, scene, camera, raf, stage, labelsEl, tipEl, graph = null, objs = {}, sun, rivers = [], focusId = null;
+  const pickables = []; const ray = new THREE.Raycaster(); const mouse = new THREE.Vector2();
+  const cam = { theta: 0.6, phi: 1.12, dist: 24, target: new THREE.Vector3(), want: { dist: 17, target: new THREE.Vector3() } };
+  let drag = null; let hover = null; let clock = new THREE.Clock(); let env = null;
+  const col = (v) => new THREE.Color(cssv(v) || '#888');
+  const dispose = (o) => o.traverse((x) => { x.geometry?.dispose?.(); (Array.isArray(x.material) ? x.material : [x.material]).forEach((m) => m?.dispose?.()); });
+
+  function buildSun() {
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.7, 1), new THREE.MeshStandardMaterial({ color: 0xF1EBDD, metalness: 0.25, roughness: 0.35, flatShading: true })));
+    g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.86, 1), new THREE.MeshBasicMaterial({ color: 0xC4843A, wireframe: true, transparent: true, opacity: 0.55 })));
+    g.userData = { kind: 'sun', href: '#/' };
+    g.children.forEach((m) => { m.userData = g.userData; pickables.push(m); });
+    return g;
+  }
+  function river(from, to, color) {   // buildRiverParticles from crystalGeometry.js
+    const mid = from.clone().add(to).multiplyScalar(0.5); mid.y += 0.9;
+    const curve = new THREE.CatmullRomCurve3([from.clone(), mid, to.clone()]);
+    const n = 70; const pos = new Float32Array(n * 3); const off = new Float32Array(n);
+    for (let i = 0; i < n; i++) { off[i] = i / n; const p = curve.getPoint(off[i]); pos.set([p.x, p.y, p.z], i * 3); }
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const pts = new THREE.Points(geo, new THREE.PointsMaterial({ color, size: 0.1, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
+    pts.userData = { curve, off, speed: 0.14 + Math.random() * 0.05 };
+    return pts;
+  }
+  function build(g) {
+    Object.values(objs).forEach((o) => { scene.remove(o.group); dispose(o.group); });
+    rivers.forEach((r) => { scene.remove(r); dispose(r); }); rivers = []; objs = {};
+    pickables.length = 0; sun.children.forEach((m) => pickables.push(m));
+    const n = g.nodes.length; const R = Math.max(6.5, n * 0.62);
+    g.nodes.forEach((node, i) => {
+      const a = (i / n) * Math.PI * 2;
+      const group = new THREE.Group();
+      group.position.set(Math.cos(a) * R, Math.sin(a * 2) * 0.6, Math.sin(a) * R);
+      const size = 0.32 + node.weight * 0.5;
+      const tc = col(STATUS_TONE(node.status));
+      const gem = new THREE.Mesh(new THREE.OctahedronGeometry(size, 0), new THREE.MeshStandardMaterial({ color: tc, emissive: tc, emissiveIntensity: 0.45, metalness: 0.15, roughness: 0.45, flatShading: true, transparent: true }));
+      gem.userData = { kind: 'node', node }; pickables.push(gem); group.add(gem);
+      gem.add(new THREE.LineSegments(new THREE.EdgesGeometry(gem.geometry), new THREE.LineBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.7 })));
+      const ringR = size + 0.32;
+      const track = new THREE.Mesh(new THREE.TorusGeometry(ringR, 0.025, 6, 64), new THREE.MeshBasicMaterial({ color: col('--line'), transparent: true, opacity: 0.9 }));
+      track.rotation.x = Math.PI / 2; group.add(track);
+      if (node.progress != null && node.progress > 0) {
+        const arc = new THREE.Mesh(new THREE.TorusGeometry(ringR, 0.05, 8, 96, Math.PI * 2 * node.progress), new THREE.MeshBasicMaterial({ color: 0xC4843A, transparent: true }));
+        arc.rotation.x = Math.PI / 2; group.add(arc);
+      }
+      const sats = new THREE.Group(); const sCount = node.satellites.length;
+      node.satellites.forEach((sat, j) => {
+        const sc = col(`--s${sat.cat}`);
+        const m = new THREE.Mesh(new THREE.OctahedronGeometry(0.085, 0), new THREE.MeshStandardMaterial({ color: sc, emissive: sc, emissiveIntensity: 0.4, flatShading: true, roughness: 0.45, transparent: true }));
+        const ang = (j / Math.max(1, sCount)) * Math.PI * 2; const rr = ringR + 0.35 + (j % 3) * 0.16;
+        m.position.set(Math.cos(ang) * rr, ((j % 5) - 2) * 0.12, Math.sin(ang) * rr);
+        if (sat.pending) { m.material.opacity = 0.35; m.material.depthWrite = false; m.userData.ghost = true; m.add(new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry), new THREE.LineDashedMaterial({ color: 0xC4843A, dashSize: 0.03, gapSize: 0.02, transparent: true }))); m.children[0].computeLineDistances(); }
+        m.userData = { ...m.userData, kind: 'sat', sat, node }; pickables.push(m); sats.add(m);
+      });
+      group.add(sats);
+      scene.add(group);
+      objs[node.id] = { group, gem, sats, node, baseY: group.position.y };
+      if (node.active) { const r = river(new THREE.Vector3(0, 0, 0), group.position, 0xE8FBFF); r.material.size = 0.16; scene.add(r); rivers.push(r); }   // a stream of bubbles
+    });
+    env?.recolor();
+    labelsEl.innerHTML = `<div class="wl sun" data-id="__sun"><b>${esc(g.root.label)}</b>${esc(g.root.sub)}</div>` + g.nodes.map((nd) => `<div class="wl" data-id="${esc(nd.id)}"><b>${esc(nd.label)}</b>${nd.progress != null ? `${Math.round(nd.progress * 100)}% passing` : esc(nd.statusLabel)}</div>`).join('');
+    applyFocus();
+  }
+  function applyFocus() {
+    const f = focusId && objs[focusId];
+    Object.values(objs).forEach((o) => {
+      const on = !f || o === f;
+      o.group.traverse((x) => { if (x.material) x.material.opacity = (on ? 1 : 0.18) * (x.userData?.ghost ? 0.35 : 1); });
+      o.sats.scale.setScalar(o === f ? 1.6 : 1);
+    });
+    labelsEl.querySelectorAll('.wl').forEach((el) => el.classList.toggle('dim', !!f && el.dataset.id !== focusId));
+    if (f) { cam.want.target.copy(f.group.position); cam.want.dist = 5.2; }
+    else {   // fit the whole orbit (radius + labels) inside the narrower screen dimension
+      const R = Math.max(6.5, (graph?.nodes.length || 10) * 0.62) + 1.8;
+      const half = Math.tan((camera.fov * Math.PI) / 360);
+      cam.want.target.set(0, -0.4, 0); cam.want.dist = Math.max(18, (R / half / Math.min(1, camera.aspect || 1)) * 1.12);
+    }
+    if (reduceMotion) { cam.target.copy(cam.want.target); cam.dist = cam.want.dist; }
+  }
+  function placeCamera() {
+    const k = reduceMotion ? 1 : 0.08;
+    cam.target.lerp(cam.want.target, k); cam.dist += (cam.want.dist - cam.dist) * k;
+    camera.position.set(cam.target.x + cam.dist * Math.sin(cam.phi) * Math.cos(cam.theta), cam.target.y + cam.dist * Math.cos(cam.phi), cam.target.z + cam.dist * Math.sin(cam.phi) * Math.sin(cam.theta));
+    camera.lookAt(cam.target);
+  }
+  function frame() {
+    raf = requestAnimationFrame(frame);
+    const dt = Math.min(clock.getDelta(), 0.05); const t = clock.elapsedTime;
+    if (!reduceMotion) {
+      sun.rotation.y += dt * 0.18;
+      Object.values(objs).forEach((o, i) => { o.gem.rotation.y += dt * 0.5; o.sats.rotation.y += dt * (0.25 + (i % 3) * 0.05); o.group.position.y = o.baseY + Math.sin(t * 0.8 + i * 1.3) * 0.18; });
+      sun.position.y = Math.sin(t * 0.5) * 0.12;
+      env?.update(t, dt, camera);
+      rivers.forEach((r) => { const { curve, off, speed } = r.userData; const pa = r.geometry.getAttribute('position'); for (let i = 0; i < off.length; i++) { off[i] = (off[i] + dt * speed) % 1; const p = curve.getPoint(off[i]); pa.setXYZ(i, p.x, p.y, p.z); } pa.needsUpdate = true; });
+      if (!drag && !focusId) cam.theta += dt * 0.02;
+    }
+    placeCamera();
+    renderer.render(scene, camera);
+    const w = stage.clientWidth; const h = stage.clientHeight; const v = new THREE.Vector3();
+    labelsEl.querySelectorAll('.wl').forEach((el) => {
+      const o = el.dataset.id === '__sun' ? sun : objs[el.dataset.id]?.group; if (!o) return;
+      v.copy(o.position).project(camera);
+      const narrow = w < 640 && el.dataset.id !== '__sun' && el.dataset.id !== focusId;   // phone: names live in the panel list
+      const off = narrow || v.z > 1 || Math.abs(v.x) > 1.1 || Math.abs(v.y) > 1.1;
+      el.style.display = off ? 'none' : '';
+      el.style.left = `${(v.x * 0.5 + 0.5) * w}px`; el.style.top = `${(-v.y * 0.5 + 0.5) * h + (el.dataset.id === '__sun' ? 30 : el.dataset.id === focusId ? 70 : 14)}px`;
+    });
+  }
+  function pick(e) {
+    const r = renderer.domElement.getBoundingClientRect();
+    mouse.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(mouse, camera);
+    const hit = ray.intersectObjects(pickables, false).find((h) => h.object.visible);
+    return hit ? hit.object.userData : null;
+  }
+  function onMove(e) {
+    if (drag) { cam.theta += (e.clientX - drag.x) * 0.006; cam.phi = Math.max(0.55, Math.min(1.42, cam.phi - (e.clientY - drag.y) * 0.004)); drag.moved += Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y); drag.x = e.clientX; drag.y = e.clientY; return; }
+    const u = pick(e); hover = u;
+    renderer.domElement.classList.toggle('pointing', !!u);
+    if (!u || u.kind === 'sun') { tipEl.style.display = 'none'; return; }
+    const r = stage.getBoundingClientRect();
+    tipEl.innerHTML = u.kind === 'node' ? `<b>${esc(u.node.label)}</b><br>${esc(u.node.statusLabel)} · ${esc(u.node.sub)}<br><span class="muted">${u.node.satellites.length} bug${u.node.satellites.length === 1 ? '' : 's'} in orbit · click to enter</span>` : `<b>${esc(u.sat.label)}</b><br><span class="muted">${esc(BUG_SERIES[u.sat.cat - 1].label)}${u.sat.pending ? ' · fix pending approval (re-test)' : ''} · ${esc(u.node.label)}</span>`;
+    tipEl.style.display = 'block'; tipEl.style.left = `${Math.min(e.clientX - r.left + 14, r.width - 270)}px`; tipEl.style.top = `${e.clientY - r.top + 14}px`;
+  }
+  function onUp(e) {
+    const wasDrag = drag && drag.moved > 6; drag = null; if (wasDrag) return;
+    const u = pick(e); if (!u) return;
+    location.hash = u.kind === 'sun' ? '#/' : u.kind === 'node' ? u.node.href : u.sat.href;
+  }
+  function mount(el) {
+    stage = el.querySelector('.world-stage'); labelsEl = el.querySelector('.world-labels'); tipEl = el.querySelector('.world-tip');
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    stage.prepend(renderer.domElement);
+    scene = new THREE.Scene(); camera = new THREE.PerspectiveCamera(45, 1, 0.1, 400);
+    const key = new THREE.DirectionalLight(0xC4843A, 1.4); key.position.set(4, 5, 5); scene.add(key);   // addCrystalLights
+    const fill = new THREE.DirectionalLight(0x4A7C8E, 0.9); fill.position.set(-5, -2, 3); scene.add(fill);
+    scene.add(new THREE.AmbientLight(0xF8F4EC, 0.55));
+    sun = buildSun(); scene.add(sun);
+    env = underwaterEnv(scene, col);
+    const ro = new ResizeObserver(() => { const w = stage.clientWidth; const h = stage.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / Math.max(1, h); camera.updateProjectionMatrix(); applyFocus(); });
+    ro.observe(stage);
+    const c = renderer.domElement;
+    c.addEventListener('pointerdown', (e) => { drag = { x: e.clientX, y: e.clientY, moved: 0 }; c.setPointerCapture(e.pointerId); });
+    c.addEventListener('pointermove', onMove); c.addEventListener('pointerup', onUp);
+    c.addEventListener('pointerleave', () => { tipEl.style.display = 'none'; });
+    c.addEventListener('wheel', (e) => { e.preventDefault(); cam.want.dist = Math.max(3, Math.min(60, cam.want.dist * (1 + Math.sign(e.deltaY) * 0.1))); }, { passive: false });
+    frame();
+  }
+  return {
+    ensure(el) { if (!renderer) mount(el); else if (!el.contains(renderer.domElement)) { el.querySelector('.world-stage').prepend(renderer.domElement); stage = el.querySelector('.world-stage'); labelsEl = el.querySelector('.world-labels'); tipEl = el.querySelector('.world-tip'); } },
+    setGraph(g) { const sig = JSON.stringify(g); if (sig === this._sig) return; this._sig = sig; graph = g; build(g); },
+    focus(id) { focusId = id && objs[id] ? id : null; applyFocus(); },
+    refreshColors() { this._sig = null; },
+  };
+})();
+
+let worldAt = null;   // history index shown in the world; null = live
+function worldFocusId() {
+  for (const t of [...path].reverse()) {
+    const [type, a] = t.split(':').map(decodeURIComponent);
+    if (type === 'feature' || type === 'round') return a;
+    if (type === 'bug') return (snap.bugs || []).find((b) => b.id === a)?.feature || null;
+    if (type === 'agent') return (snap.agents || []).find((x) => x.id === a)?.feature || null;
+  }
+  return null;
+}
+function worldOverviewPanel(g) {
+  const at = worldAt != null && hist ? hist.points[worldAt] : null;
+  const m = at ? measureAtAll(at) : null;
+  const bugs = snap.bugs || [];
+  const counts = m || { open: bugs.filter((b) => !['verified', 'seen_in_test', ...BACKLOG].includes(b.status)).length, verified: bugs.filter((b) => b.status === 'verified').length, backlog: bugs.filter((b) => BACKLOG.includes(b.status)).length, person: bugs.filter((b) => ['needs_human', 'needs_business_definition'].includes(b.status)).length };
+  const tone = [['--teal', 'In progress'], ['--good', 'Passed'], ['--bad', 'Failing'], ['--gold', 'Awaiting re-test'], ['--human', 'Needs a person'], ['--muted', 'Queued, not started or agent stopped']];
+  return `<div><h3 class="layer-title">${esc(g.root.label)}</h3><div class="layer-sub">${esc(g.root.sub === 'live' ? 'Live' : g.root.sub)} · drag to orbit, scroll to zoom, click a crystal to enter it</div></div>
+    <div class="asof-tiles">${BUG_SERIES.map((sr) => `<a class="stat" href="${href('stat', { open: 'open-bugs', verified: 'verified', backlog: 'backlog', person: 'human' }[sr.key])}"><div class="n">${counts[sr.key]}</div><div class="l">${esc(sr.label)}</div></a>`).join('')}</div>
+    <div class="world-key"><h2>How to read the world</h2>
+      <div><b>Crystal colour</b> = feature status</div><div class="row">${tone.map(([c, l]) => `<span class="k"><span class="gem" style="background:var(${c})"></span>${esc(l)}</span>`).join('')}</div>
+      <div><b>Crystal size</b> = how many test steps it has · <b>gold ring</b> = share of steps passing · <b>stream of bubbles</b> from the centre = an agent working on it now</div>
+      <div><b>Small satellites</b> = its bugs</div><div class="row">${BUG_SERIES.map((sr) => `<span class="k"><span class="gem" style="background:var(${sr.color})"></span>${esc(sr.label)}</span>`).join('')}</div>
+    </div>
+    <div><h2>The world is a view — its data map</h2><div class="muted" style="font-size:13px;margin-bottom:6px">Every property the world draws is mapped to a source field. Nothing is drawn without a mapping. Changes marked <b>Needs approval</b> show as translucent ghosts until approved.</div>${dataMapTable(null)}</div>
+    <div><h2>Every crystal</h2><ul class="world-list">${g.nodes.map((n) => `<li><a href="${n.href}"><span><b>${esc(n.label)}</b><br><span class="muted">${esc(n.statusLabel)}</span></span><span class="num muted">${esc(n.sub)}</span></a></li>`).join('')}</ul></div>`;
+}
+function measureAtAll(pt) { const o = { open: 0, verified: 0, backlog: 0, person: 0 }; Object.values(pt.f).forEach((v) => { o.open += v[4]; o.verified += v[5]; o.backlog += v[6]; o.person += v[7]; }); return o; }
+function renderWorld(layer) {
+  if (!window.THREE) { $('view').innerHTML = '<div class="panel empty">The 3D library did not load. Switch to Board.</div>'; return; }
+  let el = $('world');
+  if (!el) {
+    $('view').innerHTML = `<div class="world" id="world"><div class="world-stage"><div class="world-hint">Drag to orbit · scroll to zoom · click a crystal</div><div class="world-labels" aria-hidden="true"></div><div class="world-tip" role="status"></div>
+      <div class="world-bar"><button type="button" class="step" id="w-prev" aria-label="Previous update">‹</button><input type="range" id="w-range" aria-label="Replay the world at an earlier moment"><button type="button" class="step" id="w-next" aria-label="Next update">›</button><button type="button" class="step live" id="w-live" aria-pressed="true">Live</button><span class="asof" id="w-asof"></span></div></div>
+      <aside class="world-panel" id="world-panel" aria-live="polite"></aside></div>`;
+    el = $('world');
+    const rng = $('w-range');
+    rng.addEventListener('input', () => { worldAt = Number(rng.value) >= hist.points.length - 1 ? null : Number(rng.value); route(); });
+    $('w-live').addEventListener('click', () => { worldAt = null; route(); });
+    const stepTo = (dir) => { const idx = (hist?.updates || []).map((u) => pointIndexAt(u.at)); const cur = worldAt ?? hist.points.length - 1; const tgt = dir < 0 ? [...idx].reverse().find((x) => x < cur) : idx.find((x) => x > cur); worldAt = tgt == null ? (dir < 0 ? 0 : null) : tgt; if (worldAt != null && worldAt >= hist.points.length - 1) worldAt = null; route(); };
+    $('w-prev').addEventListener('click', () => stepTo(-1)); $('w-next').addEventListener('click', () => stepTo(1));
+  }
+  World.ensure(el);
+  const g = trackerGraph(worldAt);
+  World.setGraph(g); World.focus(worldFocusId());
+  if (hist) { const r = $('w-range'); r.min = 0; r.max = hist.points.length - 1; r.value = worldAt ?? hist.points.length - 1; }
+  $('w-live').setAttribute('aria-pressed', String(worldAt == null));
+  const pt = hist && worldAt != null ? hist.points[worldAt] : null; const u = pt ? updateAt(pt) : null;
+  $('w-asof').innerHTML = pt ? `${esc(fmtT(pt.t))} UTC${u ? ` · after ${esc(u.version)}` : ''}` : '<b>Live</b>';
+  const fk = worldFocusId(); const fobj = fk && snap.features.find((x) => x.key === fk);
+  const mapSec = fobj && worldAt == null ? `<section><h2>Data map — what this crystal draws, and from where</h2>${dataMapTable(fobj)}</section>${pendingSection(fk)}` : '';
+  $('world-panel').innerHTML = path.length ? `${mapSec}<div class="layer">${layer.html}</div>` : worldOverviewPanel(g);
+}
+
+// Releases (releases/index) and session estimates (snapshot.sessions, from scripts/session-plan.mjs).
+let RELEASES = null; let VIEWING = null; const FROZEN = {};
+function releasesTable() {
+  const list = RELEASES?.releases || [];
+  if (!list.length) return '<div class="panel empty">No release has been frozen yet.</div>';
+  return `<div class="panel"><table><thead><tr><th>Release</th><th>State</th><th class="num">Planned</th><th class="num">Delivered</th><th class="num">Carried to next</th><th class="num">Bugs verified / open</th><th class="num">Sessions</th></tr></thead><tbody>${list.map((r) => {
+    const live = r.state === 'open';
+    const cur = live && snap && !VIEWING ? snap.features.filter((f) => (snap.release?.kinds?.[f.key] || 'new') !== 'carried_backlog') : null;
+    const planned = live ? (cur ? cur.length : '—') : r.planned;
+    const delivered = live ? (cur ? cur.filter((f) => f.status === 'passed' || f.status === 'passed_with_backlog').length : '—') : r.delivered;
+    return `<tr><td><b>${esc(r.version)}</b><div class="muted">${esc(r.title || r.release || '')}</div></td><td data-label="State">${live ? 'Open (live)' : `Frozen ${esc(String(r.frozenAt || '').slice(0, 10))}`}</td><td class="num" data-label="Planned">${esc(planned)}</td><td class="num" data-label="Delivered">${esc(delivered)}</td><td class="num" data-label="Carried to next">${live ? '—' : esc(r.carried)}</td><td class="num" data-label="Bugs verified / open">${live ? '—' : `${esc(r.bugsVerified)} / ${esc(r.bugsOpen)}`}</td><td class="num" data-label="Sessions">${esc(live ? (snap?.sessions?.length ?? 0) : r.sessions)}</td></tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+function sessionsTable(list) {
+  if (!list || !list.length) return `<div class="panel empty">${VIEWING ? 'No session estimates were recorded in this release (they start in 0.3.0).' : 'No session has recorded an estimate yet. Before starting work, run scripts/session-plan.mjs estimate.'}</div>`;
+  const rows = list.flatMap((p) => (p.estimate?.items || []).map((it) => {
+    const res = [...(p.merges || [])].reverse().flatMap((m) => m.results || []).find((r) => r.feature === it.feature);
+    const exp = it.expect ? `${it.expect.passed}/${it.expect.total}` : '—';
+    const act = res && res.passed != null ? `${res.passed}/${res.total}` : 'not validated';
+    const met = it.expect && res && res.passed != null ? (res.passed >= it.expect.passed && res.total === it.expect.total) : null;
+    return `<tr><td class="mono">${esc(p.session)}<div class="muted">${esc(p.intent || '')}</div></td><td data-label="Feature">${esc(it.feature)}<div class="muted">${esc(it.goal || '')}</div></td><td data-label="Size">${esc(it.size || '—')}</td><td class="num" data-label="Expected">${esc(exp)}</td><td class="num" data-label="At last merge">${esc(act)}${res?.round ? `<div class="muted">round ${esc(res.round)}</div>` : ''}</td><td class="num" data-label="Merges">${esc((p.merges || []).length)}</td><td data-label="Result">${met === null ? '<span class="muted">—</span>' : met ? '<b>Met</b>' : '<b>Missed</b>'}</td></tr>`;
+  }));
+  return `<div class="panel"><table><thead><tr><th>Session</th><th>Feature and goal</th><th>Size</th><th class="num">Expected</th><th class="num">At last merge</th><th class="num">Merges</th><th>Result</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
+}
 const LAYERS = {
   '': () => {
     const s = snap; const human = STATS.human.count(s);
+    const ups = s.updates || []; const u = ups[ups.length - 1];
     return { crumbs: [], html: `
+      ${VIEWING ? `<div class="frozen-note"><b>Release ${esc(VIEWING)} is frozen.</b> This is its final state, recorded ${esc(String(FROZEN[VIEWING]?.frozenAt || '').replace('T', ' ').slice(0, 16))} UTC at commit ${esc(FROZEN[VIEWING]?.frozenCommit || '')}. Nothing here changes; unfinished work moved to the next release.</div>` : ''}
+      ${trendsHtml()}
+      ${section('Releases: features delivered per release', releasesTable())}
+      ${section('Sessions: estimate before the work, test results at each merge', sessionsTable(s.sessions))}
       <div class="strip">${Object.entries(STATS).map(([key, st]) => `<a class="stat ${st.tone}" href="${href('stat', key)}"><div class="n">${esc(st.count(s))}</div><div class="l">${esc(st.label)}</div><div class="go">Open ›</div></a>`).join('')}</div>
       ${human ? `<a class="callout" style="display:block;text-decoration:none" href="${href('stat', 'human')}"><b>${human} ${human === 1 ? 'bug needs' : 'bugs need'} a person.</b> Open them ›</a>` : ''}
       ${section('Agents working now', agentCards(s.agents.filter((a) => a.status === 'running')))}
@@ -198,6 +900,7 @@ const LAYERS = {
   },
   stat: ([key]) => {
     const st = STATS[key]; if (!st) return null;
+    if (st.list === 'updates') return LAYERS.updates();
     const items = st.pick(snap);
     const html = st.list === 'features' ? featureRows(items) : st.list === 'bugs' ? bugRows(items) : agentRows(items);
     return { crumbs: [[st.label]], html: `<div><h3 class="layer-title">${esc(st.label)}: ${esc(st.count(snap))}</h3><div class="layer-sub">${esc(st.note)}</div></div>${html}` };
@@ -210,12 +913,26 @@ const LAYERS = {
     const rounds = [...new Set(agents.map((a) => a.round).filter((r) => r != null))].sort((a, b) => a - b);
     const r = f.lastResult;
     return { crumbs: [[key]], html: `
-      <div><h3 class="layer-title">${esc(key)}</h3><div class="layer-sub">${featStatus(f.status)} · ${f.rounds} test round${f.rounds === 1 ? '' : 's'}${r ? ` · latest: round ${r.round}, ${r.stepsPassed}/${r.stepsTotal} steps` : ''}</div></div>
+      <div><h3 class="layer-title">${esc(key)}</h3><div class="layer-sub">${featStatus(f.status)} · ${f.rounds} test round${f.rounds === 1 ? '' : 's'}${r ? ` · latest: round ${r.round}, ${r.stepsPassed}/${r.stepsTotal} steps${r.baseline ? ` on baseline v${r.baseline} (scores compare only within one baseline version)` : ''}` : ''}</div></div>
       ${section('Test rounds', rounds.length ? `<div class="chips">${rounds.map((n) => { const v = agents.find((a) => a.role === 'validate' && a.round === n); return `<a class="chip" href="${href('feature', key, 'round', n)}">Round ${n}${v?.summary ? ` · ${esc(v.summary)}` : v ? ` · ${esc(STATUS[v.status] || v.status)}` : ''}</a>`; }).join('')}</div>` : '<div class="panel empty">Not tested yet.</div>')}
       ${section('Working now', agentCards(agents.filter((a) => a.status === 'running')))}
       ${section(`Its own bugs (${own.length})`, bugRows(own, false))}
       ${backlog.length ? section(`Moved to backlog (${backlog.length})`, bugRows(backlog, false)) : ''}
       ${section(`Agent runs (${agents.length})`, agentRows(agents))}` };
+  },
+  updates: () => {
+    const ups = [...(snap.updates || [])].reverse();
+    return { html: `<div><h3 class="layer-title">Status updates${snap.release?.version ? ` — release ${esc(snap.release.version)}` : ''}</h3><div class="layer-sub">Each update is numbered, pinned to a commit and compared with the one before. Newest first.</div></div>
+      ${ups.length ? `<div class="panel"><table><thead><tr><th>Version</th><th>Headline</th><th>Features passed</th><th class="num">Open bugs</th><th class="num">Verified</th></tr></thead><tbody>${ups.map((u) => `<tr class="rowlink" data-href="${href('update', u.version)}"><td class="num"><a class="cell" href="${href('update', u.version)}">${esc(u.version)}</a><div class="muted">${esc(u.at.replace('T', ' ').slice(0, 16))} UTC</div></td><td data-label="Headline">${esc(u.headline || '—')}</td><td class="num" data-label="Features passed">${u.metrics.featuresPassed} / ${u.metrics.featuresTotal}</td><td class="num" data-label="Open bugs">${u.metrics.openBugs}</td><td class="num" data-label="Verified">${u.metrics.verified}</td></tr>`).join('')}</tbody></table></div>` : '<div class="panel empty">No updates recorded yet.</div>'}` };
+  },
+  update: ([v]) => {
+    const ups = snap.updates || []; const i = ups.findIndex((x) => x.version === v); const u = ups[i]; if (!u) return null;
+    const prev = ups[i - 1]; const next = ups[i + 1];
+    return { html: `<div><h3 class="layer-title">${esc(u.headline || u.version)}</h3><div class="layer-sub">${esc(updateLabel(u))} · commit ${commit(u.commit)}${prev ? ` · compared with <a href="${href('update', prev.version)}">${esc(prev.version)}</a>` : ' · baseline'}${next ? ` · next: <a href="${href('update', next.version)}">${esc(next.version)}</a>` : ''}</div></div>
+      <section><h2>What happened</h2><div class="panel" style="padding:14px 16px">${esc(u.note)}</div></section>
+      ${section('Compared with the previous update', `<div class="panel" style="padding:6px 16px"><ul class="md">${(u.comparison?.lines || []).map((l) => `<li>${mdb(l)}</li>`).join('')}</ul></div>`)}
+      ${u.comparison?.featureChanges?.length ? section('Feature changes', `<div class="panel" style="padding:6px 16px"><ul class="md">${u.comparison.featureChanges.map((l) => { const k = l.split(':')[0]; return `<li><a href="${href('feature', k)}">${esc(k)}</a>${mdb(l.slice(k.length))}</li>`; }).join('')}</ul></div>`) : ''}
+      ${section('Every feature at this update', `<div class="panel"><table><thead><tr><th>Feature</th><th>Status</th><th>Latest test</th></tr></thead><tbody>${Object.entries(u.metrics.features).map(([k, f]) => `<tr class="rowlink" data-href="${href('feature', k)}"><td><a class="cell" href="${href('feature', k)}">${esc(k)}</a></td><td data-label="Status">${featStatus(f.status)}</td><td class="num" data-label="Latest test">${f.round ? `Round ${f.round}: ${esc(f.score)}` : '<span class="muted">Not tested yet</span>'}</td></tr>`).join('')}</tbody></table></div>`)}` };
   },
   bug: ([id]) => {
     const b = (snap.bugs || []).find((x) => x.id === id); if (!b) return null;
@@ -245,7 +962,7 @@ const LAYERS = {
         <dt>Last activity</dt><dd>${esc(ago(a.lastActivityAt))}</dd>
         <dt>Tokens</dt><dd class="num">${k(a.tokens?.input)} in · ${k(a.tokens?.cacheWrite)} cache write · ${k(a.tokens?.cacheRead)} cache read · ${k(a.tokens?.output)} out</dd>
       </dl></div></section>
-      ${ls ? section('Live test log', `<div class="panel"><dl class="kv"><dt>Checks logged</dt><dd>${ls.checked} (${ls.passed} passed)</dd></dl>${ls.failed.length ? `<ul class="timeline">${ls.failed.map((f) => `<li><span class="muted">Failed</span><b>${esc(f.step)}</b><span>Expected: ${esc(f.expect || '—')}<br>Saw: ${esc(f.seen || '—')}</span></li>`).join('')}</ul>` : ''}${ls.errors?.length ? `<ul class="timeline">${ls.errors.map((e) => `<li><span class="muted">Error</span><b>${esc(e.type)}</b><span>${esc(e.detail)}</span></li>`).join('')}</ul>` : ''}</div>`) : ''}
+      ${ls ? section('Live test log', `<div class="panel"><dl class="kv"><dt>Checks logged</dt><dd>${ls.checked} (${ls.passed} passed)</dd></dl>${ls.failedTotal > ls.failed.length ? `<div class="muted" style="padding:0 14px">Showing ${ls.failed.length} of ${ls.failedTotal} failed checks; the full log is in the round's test report.</div>` : ''}${ls.failed.length ? `<ul class="timeline">${ls.failed.map((f) => `<li><span class="muted">Failed</span><b>${esc(f.step)}</b><span>Expected: ${esc(f.expect || '—')}<br>Saw: ${esc(f.seen || '—')}</span></li>`).join('')}</ul>` : ''}${ls.errors?.length ? `<ul class="timeline">${ls.errors.map((e) => `<li><span class="muted">Error</span><b>${esc(e.type)}</b><span>${esc(e.detail)}</span></li>`).join('')}</ul>` : ''}</div>`) : ''}
       ${a.signals?.length ? section('Page errors and failed requests seen', `<div class="panel"><ul class="timeline">${a.signals.map((e) => `<li><span class="muted">Seen</span><b>${esc(e.type)}</b><span>${esc(e.detail)}</span></li>`).join('')}</ul></div>`) : ''}
       ${a.failures?.length ? section(`Command failures it reported (${a.failures.length})`, `<div class="panel"><ul class="timeline">${a.failures.map((f, i) => `<li><span class="muted">#${i + 1}</span><span></span><span>${esc(typeof f === 'string' ? f : JSON.stringify(f))}</span></li>`).join('')}</ul></div>`) : ''}` };
   },
@@ -264,6 +981,8 @@ function roundLayer(f, n, agents) {
 const crumbLabel = (t) => {
   const [type, a, b] = t.split(':').map(decodeURIComponent);
   if (type === 'stat') return STATS[a]?.label || a;
+  if (type === 'updates') return 'Status updates';
+  if (type === 'update') return `Update ${a}`;
   if (type === 'round') return `${a} · round ${b}`;
   if (type === 'agent') { const ag = snap.agents.find((x) => x.id === a); return ag ? `${agentName(ag)} · ${ag.feature || ''}` : a; }
   return a;
@@ -282,11 +1001,12 @@ function route() {
   const layer = (fn && fn(args)) || { html: '<div class="panel empty">That item is no longer in the tracker. Use the trail above to go back.</div>' };
   const trail = [['Overview', '#/'], ...path.map((t, i) => [crumbLabel(t), `#/${path.slice(0, i + 1).join('/')}`])];
   $('crumbs').innerHTML = trail.map(([label, h], i) => (i === trail.length - 1 ? `<span class="here" aria-current="page">${esc(label)}</span>` : `<a href="${h}">${esc(label)}</a><span class="sep" aria-hidden="true">›</span>`)).join('');
-  $('view').innerHTML = `<div class="layer">${layer.html}</div>`;
+  if (MODE === 'world') renderWorld(layer);
+  else { $('view').innerHTML = `<div class="layer">${layer.html}</div>`; if (!path.length) mountTrends(); }
   document.title = `${trail[trail.length - 1][0]} · Release tracker`;
 }
 function render() {
-  if (!snap) return;
+  if (!snap || VIEWING) return;
   const age = (Date.now() - Date.parse(snap.syncedAt)) / 60000;
   $('sync').className = `sync${age > 20 ? ' stale' : ''}`;
   $('sync').innerHTML = `<span class="live-dot"></span>Updated <b>${esc(ago(snap.syncedAt))}</b>`;
@@ -302,13 +1022,46 @@ window.addEventListener('hashchange', () => {
 // A whole table row is a target; the link inside it stays the keyboard/focus target.
 $('view').addEventListener('click', (e) => { if (e.target.closest('a')) return; const row = e.target.closest('tr[data-href]'); if (row) location.hash = row.dataset.href; });
 setInterval(render, 30000);
+const setModeButtons = () => document.querySelectorAll('[data-mode]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === MODE)));
+setModeButtons();
+document.querySelector('.head-right').addEventListener('click', (e) => { const b = e.target.closest('[data-mode]'); if (!b || b.dataset.mode === MODE) return; MODE = b.dataset.mode; try { localStorage.setItem('rt-mode', MODE); } catch {} setModeButtons(); $('view').innerHTML = ''; World.refreshColors(); route(); });
+try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { World.refreshColors(); render(); }); } catch {}
 
 (async () => {
   const db = await claude.use('db');
   if (!db) { $('sync').textContent = 'Live updates are unavailable in this view. Open the tracker signed in to claude.ai.'; return; }
+  // Live release: tracker/current, tracker/bugs, tracker/history. A frozen release: releases/<v>-current|-bugs|-history.
+  const live = { snap: null, bugs: null, hist: null }; const frozen = {};
+  const parse = (d) => { const data = d && (d.data ? d.data() : d); if (!data || !data.json) return null; try { return JSON.parse(data.json); } catch { return null; } };
+  const show = () => {
+    const src = VIEWING ? frozen[VIEWING] : live;
+    if (!src || !src.snap) { if (VIEWING) $('view').innerHTML = '<div class="panel empty">Loading the frozen release…</div>'; return; }
+    snap = { ...src.snap }; snap.features ||= []; snap.agents ||= []; snap.bugs = (snap.bugsSeparate ? src.bugs : snap.bugs) || []; snap.sessions ||= [];
+    hist = src.hist; if (chart) { chart.destroy(); chart = null; } if (typeof T === "object" && T) T.at = null;
+    if (VIEWING) { $('sync').className = 'sync'; $('sync').innerHTML = `Frozen release <b>${esc(VIEWING)}</b>`; route(); } else render();
+  };
+  db.doc('tracker/history').onSnapshot((d) => { const v = parse(d); if (v) { live.hist = v; if (!VIEWING) show(); } }, () => {});
+  db.doc('tracker/bugs').onSnapshot((d) => { const v = parse(d); if (v) { live.bugs = v; if (!VIEWING) show(); } }, () => {});
   db.doc('tracker/current').onSnapshot((d) => {
-    const data = d && (d.data ? d.data() : d);
-    if (data && data.json) { try { snap = JSON.parse(data.json); snap.features ||= []; snap.agents ||= []; snap.bugs ||= []; render(); } catch { $('sync').textContent = 'The latest update could not be read.'; } }
+    const v = parse(d);
+    if (v) { live.snap = v; if (!VIEWING) show(); } else if (!VIEWING) $('sync').textContent = 'The latest update could not be read.';
   }, () => { $('sync').textContent = 'Lost the live connection. Reload the page to reconnect.'; });
+  db.doc('releases/index').onSnapshot((d) => {
+    const v = parse(d); if (!v) return; RELEASES = v;
+    for (const r of v.releases) if (r.state === 'frozen') FROZEN[r.version] = r;
+    const sel = $('release'); const keep = sel.value;
+    sel.innerHTML = `<option value="">Live release${snap?.release?.version ? ` (${esc(snap.release.version)})` : ''}</option>${v.releases.filter((r) => r.state === 'frozen').map((r) => `<option value="${esc(r.version)}">${esc(r.version)} (frozen)</option>`).join('')}`;
+    sel.value = keep; if (snap) route();
+  }, () => {});
+  $('release').addEventListener('change', (e) => {
+    VIEWING = e.target.value || null; try { localStorage.setItem('rt-release', VIEWING || ''); } catch {}
+    if (VIEWING && !frozen[VIEWING]) {
+      const f = frozen[VIEWING] = { snap: null, bugs: null, hist: null }; const v = VIEWING;
+      db.doc(`releases/${v}-current`).onSnapshot((d) => { f.snap = parse(d); if (VIEWING === v) show(); }, () => {});
+      db.doc(`releases/${v}-bugs`).onSnapshot((d) => { f.bugs = parse(d); if (VIEWING === v) show(); }, () => {});
+      db.doc(`releases/${v}-history`).onSnapshot((d) => { f.hist = parse(d); if (VIEWING === v) show(); }, () => {});
+    }
+    location.hash = '#/'; show();
+  });
 })();
 </script>

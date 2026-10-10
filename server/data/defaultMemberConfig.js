@@ -61,6 +61,7 @@ export function defaultMemberConfig({ displayName, email }) {
         { id: 'careerMaster', label: 'Career Master', componentId: 'careerMaster', sortOrder: 10 },
         { id: 'careerReconciliation', label: 'Career Sources to Review', componentId: 'careerReconciliation', sortOrder: 11 },
         { id: 'resume', label: 'My Resume', componentId: 'resume', sortOrder: 12 },
+        { id: 'render-bindings', label: 'Render Bindings', componentId: 'renderBindings', sortOrder: 25 },
         { id: 'outputTemplates', label: 'Output Templates', componentId: 'outputTemplates', sortOrder: 20 },
         { id: 'config', label: 'Site Configuration', componentId: 'config', sortOrder: 15 },
         // Re-added 2026-09-06 alongside the visibility_mode/marketplace-search
@@ -73,6 +74,11 @@ export function defaultMemberConfig({ displayName, email }) {
         // (memberConfig.js's GET /draft), same pattern already used for
         // 'careerPlacementAgents' and 'resume'.
         { id: 'network', label: 'My Network', componentId: 'memberNrm', sortOrder: 16 },
+        // Connected Agents (platform MCP access tokens) is a World Shell entry point only - see
+        // src/lib/worldIslands.js PLATFORM_ISLAND_TABS - so it is not a member nav tab.
+        // Live release tracker: only shown to members an admin lists on its Settings tab
+        // (memberConfig.js GET /draft removes it for everyone else).
+        { id: 'release-tracker', label: 'Release tracker', componentId: 'releaseTracker', sortOrder: 31 },
       ],
     },
     site: {

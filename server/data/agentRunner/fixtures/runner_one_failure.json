@@ -1,0 +1,32 @@
+{
+  "description": "One step of the chosen suite fails on desktop",
+  "agents": [
+    "release_test_runner"
+  ],
+  "events": [
+    {
+      "t": "progress",
+      "text": "Opening the app (fixture)"
+    },
+    {
+      "delayMs": 600,
+      "t": "progress",
+      "text": "Walking the suite"
+    }
+  ],
+  "result": {
+    "$testResults": {
+      "except": {
+        "J1.1": "fail"
+      },
+      "observations": [
+        "The Reminders heading is clipped at 390px (not in any step)"
+      ]
+    }
+  },
+  "usage": {
+    "inputTokens": 1000,
+    "outputTokens": 300,
+    "observed": false
+  }
+}

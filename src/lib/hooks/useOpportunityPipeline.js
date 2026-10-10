@@ -21,6 +21,11 @@ export function useOpportunityPipeline({
   enabled = true,
 }) {
   const [loading, setLoading] = useState(enabled);
+  // `loaded` flips true once the first fetch has finished (success or failure) so a
+  // deep link to one opportunity is not judged "missing" before the list has arrived.
+  const [loaded, setLoaded] = useState(false);
+  // Set when this session tracks a new item, so a layered shell can open it as the next layer.
+  const [lastCreated, setLastCreated] = useState(null);
   const [agents, setAgents] = useState([]);
   const [workflow, setWorkflow] = useState([]);
   const [opportunities, setOpportunities] = useState([]);
@@ -41,6 +46,7 @@ export function useOpportunityPipeline({
       toast(`Failed to load ${pipelineLabel}: ` + e.message);
     } finally {
       setLoading(false);
+      setLoaded(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -78,6 +84,7 @@ export function useOpportunityPipeline({
       const created = await createOpportunity(payload);
       setOpportunities((prev) => [created, ...prev]);
       setSelectedOpportunityId(created.id);
+      setLastCreated((prev) => ({ seq: (prev?.seq || 0) + 1, id: created.id, label: itemLabel(created) }));
       setShowAddForm(false);
       setAddForm(initialAddForm);
       toast(`Tracked "${itemLabel(created)}".`);
@@ -110,7 +117,7 @@ export function useOpportunityPipeline({
   }
 
   return {
-    loading, agents, workflow, opportunities,
+    loading, loaded, lastCreated, agents, workflow, opportunities,
     selectedAgentKey, selectedOpportunityId, selectedAgent, selectedOpportunity,
     selectAgent, selectOpportunity,
     showAddForm, setShowAddForm, addForm, setAddForm, handleAddOpportunity,

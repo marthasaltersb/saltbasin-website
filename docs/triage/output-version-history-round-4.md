@@ -1,0 +1,46 @@
+# Triage: output-version-history, round 4
+
+Validator report: docs/test-results/output-version-history/round-4.md (failed J1.2 mobile, J5.1 mobile, E.2). Baseline v3. Method: code reading in a fresh worktree at the integration head (f76786c), grep of `src/` for the drawer classes, and review of the earlier round-1 triage file and amendments A1-A11. I did not boot the app: both root causes are fully explained by static evidence and unchanged since round 1. No code or spec was changed. Nothing was started, no database created, nothing committed.
+
+Note: the dispatch said there were no earlier triage items, but docs/triage/output-version-history-round-1.md exists and the validator cites T1 and T3. Ids are reused and marked recurred.
+
+| Id | Step | Class | Recurrence |
+|---|---|---|---|
+| T1 | J1.2 (mobile) | defect | recurred (round 1, still unfixed) |
+| T2 | J5.1 (mobile) | defect | recurred, same root cause as T1 |
+| T3 | E.2 | needs_business_definition | recurred (rounds 1, 2, 3; A2/A7/A10 all needs_owner) |
+
+## T1 / T2 [J1.2, J5.1 at 390px] Classic Tools has no tool list on phones (recurrence of T1/T2)
+Root cause: `src/brand.css` lines 630-631 hide `.sb-admin-topbar-actions` and `.sb-admin-desktop-subnav` with `display: none !important` at `max-width: 900px`. The tool tabs (MY RESUME, CAREER MASTER, ...) render only inside `.sb-admin-topbar-actions` (`src/components/admin/AdminShell.jsx` line 672, `TabToggle` for member tabs at ~680). The replacement mobile menu is styled in `brand.css` lines 614-617 and 632-712 (`.sb-admin-mobile-current`, `.sb-admin-mobile-menu-button`, `.sb-admin-mobile-backdrop`, `.sb-admin-mobile-drawer`, `-drawer-head`, `-drawer-scroll`, `-nav-group`, `-drawer-actions`) but no JSX renders any of these classes. A grep of `src/` for `sb-admin-mobile` finds only the unrelated `sb-admin-mobile-toggle` (AdminShell.jsx line 637, a pages-list toggle shown only on the `content` tab). Classic Tools is mounted by `WorldShell.jsx` line 593 (`<AdminShell ... initialTab={classicTargetTab} />`), so the default tab (Career Placement Agents) fills the narrow screen with no way to switch tabs; only the fixed Back to World button (WorldShell `S.classicBack`) and the panel's own buttons are tappable. This matches the validator's observation exactly. The same CSS block was reused by the fix commits for other features (e.g. 6fc3bd3 "hide Classic Tools entry" for release-intelligence) without adding the drawer to AdminShell, so the gap persists.
+Why it fails this feature: J1.2 and J5.1 route through Classic Tools and the spec allows no Journeys workaround; the validator's fallback via Journeys works but does not satisfy the step. Desktop passes.
+Pre-existing, not introduced by this feature, but it blocks its required phone walkthrough.
+Fix (do not leave the CSS orphaned): in `AdminShell.jsx`, inside the topbar, render
+- `<span className="sb-admin-mobile-current">` showing the active tab/view label;
+- `<button className="sb-admin-mobile-menu-button" aria-expanded aria-controls>Menu</button>` toggling a `mobileMenuOpen` state (declare it with the other hooks, before the `if (!draft || !configDraft) return null` early return, per the React hooks rule);
+- `<button className="sb-admin-mobile-backdrop" aria-label="Close menu">` when open, and `<aside className={'sb-admin-mobile-drawer' + (open ? ' open' : '')}>` with `-drawer-head` (title + close button), `-drawer-scroll` containing `.sb-admin-mobile-nav-group` buttons, and `-drawer-actions`.
+- Items: member = `configDraft.navigation.memberTabs` filtered `enabled !== false` and sorted by `sortOrder` (same list as the desktop `TabToggle`), onClick `setTab(id)`; admin = `adminNav.views` sorted, onClick `switchView(id)`, plus the active view's sub-tabs in a second group. Close on selection. Min 44px touch targets are already in the CSS.
+- Also make the default Career Placement Agents panel stack single column under 900px, and keep `WorldShell` `S.classicBack` from overlapping the topbar (add a left offset or move it into the drawer actions on phones).
+Re-validate J1.2 and J5.1 at 390px: Menu -> MY RESUME opens the career-bound editor; Menu -> CAREER MASTER -> Jobs -> title edit -> Save works.
+Files: src/components/admin/AdminShell.jsx, src/brand.css, src/components/WorldShell.jsx.
+
+## T3 [E.2] No point-and-click way to make a saved version unreadable (recurrence of T3)
+Product behaviour is correct and matches the change spec: `server/lib/outputVersionHistory.js` lines 120-124 catch a `versionBody` throw, log it, set `version.error = "This version's content could not be read: <message>"` and keep the version listed with `changeSummary` 'Cannot compare (a version could not be read)'. `src/components/admin/OutputVersionHistory.jsx` line 146 shows the red alert in the list, line 184 in the viewer, and line 213 shows "One of the selected versions could not be read, so they cannot be compared." So this is not a defect. The step requires corrupt stored content, which no interface creates (versionBody throws only on stored JSON/shape problems, e.g. a career-bound resolver failure) and the fixed test constraints forbid direct database edits.
+Why not spec_error again: amendments A2 (r1), A7 (r2) and A10 (r3) each proposed the cli-only weakening and the amendment reviewer returned all three as `needs_owner`: it drops the desktop and mobile browser check of the red message and compare message (Not weaker / Retire only duplicates fail), and the fixture and exact strings are not written down (Exact / Deterministic fail). The reviewer's note states it cannot be approved until the owner accepts weaker coverage. That is a coverage-policy decision, not something triage can settle, and re-proposing the same amendment a fourth time adds nothing. No amendment is filed this round; A10 stays pending.
+Class: needs_business_definition (owner decision on test coverage, not a product rule gap).
+Question for the owner: "Do you accept E.2 becoming a cli-only check against a fictional fixture lineage (second version with unparseable content) read through GET /api/resume-outputs/:id/versions, so the red message and the compare-area message 'One of the selected versions could not be read, so they cannot be compared.' are no longer walked in the browser at 1280px and 390px? If you want the browser walk kept, the alternative is a product change: a committed, admin-only fixture seeder (e.g. scripts/create-unreadable-version-fixture.mjs, allowed by the harness like create-test-member.mjs) that the validator may run, which keeps E.2 as a browser step."
+Proposed fix, in either answer (so the next resubmission passes the reviewer's checklist):
+- Commit `scripts/create-unreadable-version-fixture.mjs --email member@test.local` that inserts, for that member, two `resume_output_projections` rows in one lineage: v1 with valid `generated_content` `{"format":"document_blocks","header":{"name":"Fixture Person"},"blocks":[{"type":"paragraph","text":"Fixture line"}]}` and v2 with `generated_content` = the literal text `{not json` plus `source='imported'`, title "Unreadable fixture". Check first whether `parseJson` (outputVersionHistory.js top) returns null on bad JSON, which would give "no stored content" instead of an error; if so use a `career_bound` content whose resolver throws (a reference to a deleted Career Master row) so the throw path at line 120 is hit. Verify the fixture really produces `error` before writing the step.
+- Resubmit with exact strings: the list row shows red text beginning "This version's content could not be read:"; selecting both versions and Compare shows exactly "One of the selected versions could not be read, so they cannot be compared."; `GET /api/resume-outputs/<id>/versions` returns v2 with a non-null `error` starting "This version's content could not be read" and v1 with `error: null`. If the owner accepts cli-only, keep the compare message check as a one-off component check rather than dropping it.
+- Without an answer, E.2 stays a documented, non-scorable step; the validator should keep recording it as not exercised, not as passed.
+
+## Validator observations
+- Baseline v2 -> v3 (A9): consistent with commit f340fb1; no BASELINE_MISMATCH. Nothing to do.
+- MCP tools (output_versions_list, output_version_read, output_versions_compare): coverage_gap already filed as A11 (E.9, status pending review); not repeated.
+- E.5 passes: no action.
+- J4.2 NAME/HEADING/ROLE wording: already A8; no action.
+- B10 (chart-only change shows no diff) and B11 (no Version history entry in OutputTemplateConfigurator): already filed as A3 (E.7) and A4 (E.8), both needs_owner. The product fixes remain open (`src/lib/outputVersionDiff.js` has no chart handling; `OutputTemplateConfigurator.jsx` has no OutputVersionHistory button) but no baseline step covers them, so they cannot fail a round until the owner approves the steps. Nothing new.
+- B8/T9 draft wording freeze: still the round-1 needs_business_definition question; J3.1/J5.3 stand.
+- E.3 simulated 500: expected; E.4 control whitelist note: no action. Stale evidence folder moved: no action.
+
+## Cleanup
+No processes started, no databases created, nothing committed. Only this report was written.

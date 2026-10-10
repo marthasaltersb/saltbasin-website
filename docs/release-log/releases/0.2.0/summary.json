@@ -1,0 +1,313 @@
+{
+  "version": "0.2.0",
+  "release": "2026-10-02-application-packages",
+  "title": "Salt Basin application packages release",
+  "frozenAt": "2026-10-10T20:16:48.317Z",
+  "frozenCommit": "4df3ff7",
+  "startedAtCommit": null,
+  "counts": {
+    "planned": 18,
+    "delivered": 4,
+    "carried": 14,
+    "newDelivered": 4,
+    "rounds": 59
+  },
+  "bugs": {
+    "verified": 69,
+    "open": 262,
+    "backlog": 85,
+    "needsPerson": 6
+  },
+  "features": [
+    {
+      "key": "proficiency-live-qr",
+      "title": "Proficiency rules, technology categories, finalization gate, live QR page",
+      "kind": "new",
+      "status": "validate",
+      "lastRound": 7,
+      "lastScore": "30/32",
+      "baseline": 3,
+      "delivered": false,
+      "bugs": {
+        "verified": 10,
+        "backlog": 6,
+        "needsPerson": 1,
+        "open": 18
+      }
+    },
+    {
+      "key": "qr-gated-outputs",
+      "title": "QR-gated tailored application outputs: import, metadata, approve for QR, private slug, clickable QR in PDF/docx, revoke",
+      "kind": "new",
+      "status": "passed",
+      "lastRound": 8,
+      "lastScore": "38/38",
+      "baseline": 2,
+      "delivered": true,
+      "bugs": {
+        "verified": 9,
+        "backlog": 14,
+        "needsPerson": 0,
+        "open": 25
+      }
+    },
+    {
+      "key": "no-silent-failures",
+      "title": "No silent failures: snapshot, history, live-data and load errors surfaced",
+      "kind": "new",
+      "status": "validate",
+      "lastRound": 2,
+      "lastScore": "24/29",
+      "baseline": 3,
+      "delivered": false,
+      "bugs": {
+        "verified": 2,
+        "backlog": 6,
+        "needsPerson": 0,
+        "open": 22
+      }
+    },
+    {
+      "key": "release-loop-tooling",
+      "title": "Release loop tooling: definition, saved workflow, skill, bug-attempt limit, failure reconciliation, live step logs, tracker sync, test accounts",
+      "kind": "new",
+      "status": "passed",
+      "lastRound": 6,
+      "lastScore": "30/30",
+      "baseline": 3,
+      "delivered": true,
+      "bugs": {
+        "verified": 6,
+        "backlog": 4,
+        "needsPerson": 0,
+        "open": 5
+      }
+    },
+    {
+      "key": "world-shell-navigation",
+      "title": "World Shell navigation to a tracked job opportunity, its linked draft outputs, provenance and the shared editor",
+      "kind": "new",
+      "status": "validate",
+      "lastRound": 3,
+      "lastScore": "38/48",
+      "baseline": 4,
+      "delivered": false,
+      "bugs": {
+        "verified": 2,
+        "backlog": 11,
+        "needsPerson": 0,
+        "open": 20
+      }
+    },
+    {
+      "key": "career-bound-outputs",
+      "title": "Outputs populate from Career Master with per-output overrides; packages enter Career Master via the reconciliation queue",
+      "kind": "new",
+      "status": "validate",
+      "lastRound": 4,
+      "lastScore": "49/56",
+      "baseline": 1,
+      "delivered": false,
+      "bugs": {
+        "verified": 9,
+        "backlog": 5,
+        "needsPerson": 0,
+        "open": 28
+      }
+    },
+    {
+      "key": "output-version-history",
+      "title": "Output version history: dates, tracked changes and a timeline slider across versions",
+      "kind": "new",
+      "status": "scope",
+      "lastRound": 5,
+      "lastScore": "34/37",
+      "baseline": 3,
+      "delivered": false,
+      "bugs": {
+        "verified": 1,
+        "backlog": 6,
+        "needsPerson": 2,
+        "open": 11
+      }
+    },
+    {
+      "key": "resume-rollups",
+      "title": "Configurable resume rollups: KPI tiles, industry buckets, skill category groups, Career Atom rollups",
+      "kind": "new",
+      "status": "validate",
+      "lastRound": 3,
+      "lastScore": "30/32",
+      "baseline": 2,
+      "delivered": false,
+      "bugs": {
+        "verified": 2,
+        "backlog": 5,
+        "needsPerson": 0,
+        "open": 17
+      }
+    },
+    {
+      "key": "chart-gallery",
+      "title": "Visual chart gallery inside the Output Template editor next to the live preview",
+      "kind": "new",
+      "status": "validate",
+      "lastRound": 5,
+      "lastScore": "18/20",
+      "baseline": 3,
+      "delivered": false,
+      "bugs": {
+        "verified": 5,
+        "backlog": 11,
+        "needsPerson": 0,
+        "open": 24
+      }
+    },
+    {
+      "key": "cover-letter-agent",
+      "title": "Cover letter per opportunity, package table of contents, confined cover-letter agent",
+      "kind": "new",
+      "status": "validate",
+      "lastRound": 2,
+      "lastScore": "45/48",
+      "baseline": 2,
+      "delivered": false,
+      "bugs": {
+        "verified": 3,
+        "backlog": 10,
+        "needsPerson": 1,
+        "open": 21
+      }
+    },
+    {
+      "key": "release-intelligence",
+      "title": "Release reconciliation, failed-run states and contribution intelligence trends",
+      "kind": "new",
+      "status": "passed",
+      "lastRound": 3,
+      "lastScore": "55/55",
+      "baseline": 3,
+      "delivered": true,
+      "bugs": {
+        "verified": 8,
+        "backlog": 2,
+        "needsPerson": 2,
+        "open": 7
+      }
+    },
+    {
+      "key": "in-app-release-loop",
+      "title": "Release loop available inside the platform for in-app agents",
+      "kind": "new",
+      "status": "passed",
+      "lastRound": 3,
+      "lastScore": "60/60",
+      "baseline": 2,
+      "delivered": true,
+      "bugs": {
+        "verified": 6,
+        "backlog": 1,
+        "needsPerson": 0,
+        "open": 2
+      }
+    },
+    {
+      "key": "session-mapping",
+      "title": "After-session context / prompt / cache / memory mapping with token, spend and time trends",
+      "kind": "new",
+      "status": "triage",
+      "lastRound": 4,
+      "lastScore": "55/56",
+      "baseline": 2,
+      "delivered": false,
+      "bugs": {
+        "verified": 1,
+        "backlog": 1,
+        "needsPerson": 0,
+        "open": 9
+      }
+    },
+    {
+      "key": "world-shell-layers",
+      "title": "World Shell layered navigation: the sun crystal is the root menu and every click moves one layer deeper, with more detail on each object",
+      "kind": "new",
+      "status": "validate",
+      "lastRound": 0,
+      "lastScore": null,
+      "baseline": 1,
+      "delivered": false,
+      "bugs": {
+        "verified": 0,
+        "backlog": 0,
+        "needsPerson": 0,
+        "open": 5
+      }
+    },
+    {
+      "key": "live-release-tracker",
+      "title": "Live release tracker inside the Salt Basin platform: real-time trends, history slider, drill-down layers and numbered updates",
+      "kind": "new",
+      "status": "validate",
+      "lastRound": 1,
+      "lastScore": "82/87",
+      "baseline": 1,
+      "delivered": false,
+      "bugs": {
+        "verified": 0,
+        "backlog": 0,
+        "needsPerson": 0,
+        "open": 12
+      }
+    },
+    {
+      "key": "render-bindings",
+      "title": "Render bindings: every rendering is a view over mapped source data, updated live or through approval with impact analysis",
+      "kind": "new",
+      "status": "validate",
+      "lastRound": 0,
+      "lastScore": null,
+      "baseline": 1,
+      "delivered": false,
+      "bugs": {
+        "verified": 0,
+        "backlog": 0,
+        "needsPerson": 0,
+        "open": 10
+      }
+    },
+    {
+      "key": "platform-mcp",
+      "title": "Platform MCP server: every capability usable by AI agents through MCP, with the same permissions as the website and API, plus a parity map",
+      "kind": "new",
+      "status": "validate",
+      "lastRound": 3,
+      "lastScore": "65/65",
+      "baseline": 4,
+      "delivered": false,
+      "bugs": {
+        "verified": 5,
+        "backlog": 3,
+        "needsPerson": 0,
+        "open": 15
+      }
+    },
+    {
+      "key": "platform-agent-runner",
+      "title": "Platform agent runner: work-order-capped agent sessions and a promptable quality-agent roster, run by a Salt Basin agent worker",
+      "kind": "new",
+      "status": "validate",
+      "lastRound": 0,
+      "lastScore": null,
+      "baseline": 1,
+      "delivered": false,
+      "bugs": {
+        "verified": 0,
+        "backlog": 0,
+        "needsPerson": 0,
+        "open": 11
+      }
+    }
+  ],
+  "sessions": [],
+  "note": "Frozen at the release cut. Scores are the last validated round against the pinned baseline; \"delivered\" means passed or passed_with_backlog. Fictional data only."
+}

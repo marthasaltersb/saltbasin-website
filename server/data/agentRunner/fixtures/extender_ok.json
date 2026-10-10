@@ -1,0 +1,29 @@
+{
+  "description": "Proposes one added step with its trace",
+  "agents": [
+    "release_test_extender"
+  ],
+  "events": [
+    {
+      "t": "progress",
+      "text": "Reading the change spec and the latest baseline (fixture)"
+    }
+  ],
+  "result": {
+    "feature": "{{params.feature}}",
+    "reason": "A bug escaped: clearing the Product field after a failed save kept the old error text",
+    "changes": [
+      {
+        "op": "add",
+        "after": "Clear **Product** after a failed save and click **Save**. Expect the error text to be replaced by **Choose a product**.",
+        "tracesTo": "Change spec: errors are shown for the current input only",
+        "whyNeeded": "No step covers a second failed save"
+      }
+    ]
+  },
+  "usage": {
+    "inputTokens": 900,
+    "outputTokens": 300,
+    "observed": false
+  }
+}

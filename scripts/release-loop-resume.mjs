@@ -29,6 +29,8 @@ const DONE = new Set(['verified']);
 // exported, but they never block or re-open the feature they were first reported against.
 const BACKLOG = new Set(['backlog_pre_existing', 'reassigned', 'process_note']);
 const FINISHED = new Set(['passed', 'passed_with_backlog']);
+// Waiting on a person or the owner: a new run cannot resolve these, so they never relaunch a passed feature.
+const HELD = new Set(['needs_business_definition', 'needs_human']);
 
 if (argv.includes('--export')) {
   const snap = JSON.parse(fs.readFileSync(opt('--export'), 'utf8'));
@@ -62,7 +64,7 @@ if (argv.includes('--args')) {
   const portBase = Number(opt('--port-base') || 5000);
   const merged = (f) => fs.existsSync(path.join(root, f.trainingSpec)) && fs.existsSync(path.join(root, f.changeSpec));
   // A feature is unfinished while it has blocking bugs; bugs reassigned to it by the scope check count as its own.
-  const owned = (key) => state.bugs.filter((b) => !DONE.has(b.status)
+  const owned = (key) => state.bugs.filter((b) => !DONE.has(b.status) && !HELD.has(b.status)
     && ((b.feature === key && !BACKLOG.has(b.status)) || (b.status === 'reassigned' && b.scope?.owner === key)));
   const unfinished = defs.features.filter((f) => !FINISHED.has(state.features[f.key]?.status) || owned(f.key).length);
   const groups = [];
@@ -86,13 +88,19 @@ if (argv.includes('--args')) {
       const bugs = owned(f.key);
       const base = { key: f.key, title: f.title, trainingSpec: f.trainingSpec, changeSpec: f.changeSpec, dependsOn: f.dependsOn.filter((d) => group.some((y) => y.key === d)) };
       if (!merged(f)) return { ...base, build: f.build };
+      // Spec amendment proposals filed but not yet decided are reviewed before the first round (specGovernance).
+      const adir = path.join(root, 'docs/spec-amendments', f.key);
+      const pendingAmendments = fs.existsSync(adir) ? fs.readdirSync(adir).filter((x) => x.endsWith('.json'))
+        .map((x) => ({ file: `docs/spec-amendments/${f.key}/${x}`, ...JSON.parse(fs.readFileSync(path.join(adir, x), 'utf8')) }))
+        .filter((a) => !a.review || a.review.status === 'proposed') : [];
       return {
         ...base,
         build: null,
+        pendingAmendments,
         startRound: (st?.lastRound || 0) + 1,
         scopeFromRound: (st?.lastRound || 0) + 1,
         fixNotes: `Continuing from an earlier session (state: docs/release-log/active-release.state.json, last round ${st?.lastRound || 0}: ${st?.lastScore || 'not tested'}). `
-          + `Re-test the whole spec and every open bug below; a bug whose step now passes is verified, otherwise report it so triage links it by id (recurrenceOf). `
+          + `Re-test the whole spec and every open bug below; a bug whose step now passes is verified, otherwise report it (with the baseline step id it maps to) so triage links it by id (recurrenceOf). Bugs found before baselines existed name steps by text; map each to its [J…] id. `
           + `Open bugs: ${JSON.stringify(bugs.map((b) => ({ id: b.id, status: b.status, step: b.step, cause: b.rootCause, files: b.files })))}`,
       };
     }),

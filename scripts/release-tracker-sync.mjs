@@ -17,6 +17,8 @@ const runDir = runDirs[0] || null;
 const out = opt('--out');
 // Where validators append live step logs (<root>/<feature>/round-N/steps.jsonl). Default is the shared local test root.
 const stepsRoot = opt('--steps-root') || '/var/tmp/sbpg/release-loop';
+// Minutes of silence after which a started agent with no end entry is treated as dead (override for fixtures).
+const STALE_MIN = Number(opt('--stale-minutes') ?? 15);
 const extras = argv.flatMap((a, i) => (a === '--extra' ? [argv[i + 1]] : []));
 const definition = JSON.parse(fs.readFileSync(new URL('../server/data/releaseLoop/definition.json', import.meta.url), 'utf8'));
 const MAX_ATTEMPTS = definition.bugEscalation?.maxFixAttemptsPerBug ?? 2;
@@ -82,7 +84,7 @@ for (const e of journal) {
   const a = agents.get(e.agentId) || { id: e.agentId, label: e.label, phase: e.phase, status: 'running', result: null, file: path.join(e.runDir, `agent-${e.agentId}.jsonl`), fromRun: true };
   if (e.label) a.label = e.label;
   if (e.phase) a.phase = e.phase;
-  if (e.type === 'started') a.status = e.archived ? 'stopped' : 'running';
+  if (e.type === 'started') { a.status = e.archived ? 'stopped' : 'running'; a.journalStart = e.at || e.ts || e.timestamp || null; }
   else {
     const res = e.result ?? e.value ?? e.output ?? null;
     // A finished agent with no result died or was skipped — shown as failed, never as done.
@@ -112,14 +114,17 @@ const agentList = [];
 for (const a of agents.values()) {
   const file = a.file;
   const act = file && fs.existsSync(file) ? agentActivity(file) : { activity: null, usage: null };
-  if (!a.fromRun && act.lastAt && Date.now() - Date.parse(act.lastAt) > 15 * 60 * 1000 && a.status === 'running') a.status = 'idle_or_done';
+  // Dead-agent detection for every running agent. Last sign of life = latest transcript line, else the journal start time.
+  // A journal-built agent with no end entry is 'stalled' (it died or was cut off); a hand-added --extra transcript stays 'idle_or_done'.
+  const alive = act.lastAt || a.journalStart;
+  if (a.status === 'running' && alive && Date.now() - Date.parse(alive) > STALE_MIN * 60 * 1000) a.status = a.fromRun ? 'stalled' : 'idle_or_done';
   const [role, feature, round] = String(a.label || '').split(':');
   const r = a.result && typeof a.result === 'object' ? a.result : null;
   let summary = null;
   if (r) {
     if (role === 'build') summary = `Initial check ${r.initialCheckPassed ? 'passed' : 'did not pass'} · branch ${r.branch}`;
     else if (role === 'integrate') summary = r.merged ? `Merged → ${String(r.head).slice(0, 7)}${r.conflicts?.length ? ` · ${r.conflicts.length} conflicts resolved` : ''}${r.buildPassed ? '' : ' · BUILD FAILED'}` : 'Merge failed';
-    else if (role === 'validate') summary = `${r.stepsPassed}/${r.stepsTotal} steps passed${r.passed ? ' · PASS' : ' · FAIL'}`;
+    else if (role === 'validate') summary = `${r.stepsPassed}/${r.stepsTotal} steps passed${r.baselineVersion ? ` on baseline v${r.baselineVersion}` : ''}${r.passed ? ' · PASS' : ' · FAIL'}`;
     else if (role === 'triage') summary = `${r.items?.length ?? 0} triage items`;
     else if (role === 'fix') summary = `${r.fixed?.length ?? 0} fixed · ${r.notFixed?.length ?? 0} not fixed`;
     else if (role === 'scope') { const own = (r.items || []).filter((i) => i.scope === 'this_feature').length; summary = `${r.items?.length ?? 0} items · ${own} this feature's · ${(r.items?.length ?? 0) - own} backlog`; }
@@ -143,7 +148,7 @@ for (const a of agents.values()) {
   agentList.push({ liveSteps, signals: act.signals || [],
     id: a.id, label: a.label, role, feature, round: round ? Number(round.replace('r', '')) : null,
     phase: a.phase, status: a.status, activity: act.activity, summary, tokens: act.usage,
-    startedAt: act.firstAt || null, lastActivityAt: act.lastAt || null,
+    startedAt: act.firstAt || a.journalStart || null, lastActivityAt: act.lastAt || null,
     failures: r?.failures && Array.isArray(r.failures) ? r.failures.slice(0, 20).map((f) => clip(typeof f === 'string' ? f : JSON.stringify(f), 240)) : [],
   });
 }
@@ -163,9 +168,12 @@ const SCOPE_STATUS = { pre_existing: 'backlog_pre_existing', other_feature: 'rea
 try {
   const raw = JSON.parse(fs.readFileSync(opt('--scope-review') || new URL('../docs/triage/scope-review.json', import.meta.url), 'utf8'));
   const items = Array.isArray(raw) ? raw : raw.items || raw.bugs || Object.entries(raw.decisions || {}).map(([id, d]) => ({ id, ...d }));
-  for (const it of items) if (it?.id && it.scope) scopeDecisions.set(it.id, { ...it, decidedBy: 'scope review' });
+  for (const it of items) if (it?.id && it.scope) scopeDecisions.set(it.feature && !String(it.id).startsWith(`${it.feature}-`) ? `${it.feature}-${it.id}` : it.id, { ...it, decidedBy: 'scope review' });
 } catch { /* no review yet */ }
 for (const [key, list] of Object.entries(byFeature)) {
+  // Triage agents number bugs per feature (T1, T5 ...), so the same short id exists in several features.
+  // Every bug id is qualified with its feature key so one feature's bug never absorbs another's history.
+  const q = (id) => (!id || String(id).startsWith(`${key}-`) ? id : `${key}-${id}`);
   const res = (role, round) => agents.get(list.find((a) => a.role === role && (round == null || a.round === round))?.id)?.result;
   const validations = list.filter((a) => a.role === 'validate').sort((x, y) => x.round - y.round);
   const fb = new Map(); const attempts = {};
@@ -188,7 +196,7 @@ for (const [key, list] of Object.entries(byFeature)) {
       continue;
     }
     const tr = res('triage', v.round);
-    const reported = new Set((tr?.items || []).map((i) => i.recurrenceOf || i.id));
+    const reported = new Set((tr?.items || []).map((i) => q(i.recurrenceOf || i.id)));
     for (const b of fb.values()) {
       if (!['fixed_awaiting_retest', 'retesting'].includes(b.status)) continue;
       if (vr.passed) { b.status = 'verified'; b.history.push({ round: v.round, event: 'verified', note: `Retest round ${v.round} passed every step`, commit: vr.commitTested || null }); }
@@ -197,10 +205,10 @@ for (const [key, list] of Object.entries(byFeature)) {
     }
     if (vr.passed) continue;
     for (const item of tr?.items || []) {
-      const id = item.recurrenceOf || item.id;
+      const id = q(item.recurrenceOf || item.id);
       const prev = fb.get(id);
       const b = prev || { id, feature: key, firstRound: v.round, history: [] };
-      b.step = clip(item.step, 200); b.rootCause = clip(item.rootCause, 400); b.class = item.class; b.files = item.files;
+      b.step = clip(item.step, 200); if (item.stepId) b.stepId = item.stepId; b.rootCause = clip(item.rootCause, 400); b.class = item.class; b.files = item.files;
       b.question = item.question || null;
       b.history.push({ round: v.round, event: prev ? 'recurred' : 'found', note: clip(item.rootCause, 200) });
       if (item.class === 'needs_business_definition') b.status = 'needs_business_definition';
@@ -211,12 +219,12 @@ for (const [key, list] of Object.entries(byFeature)) {
     const fr = res('fix', v.round);
     if (fr) {
       for (const f of fr.fixed || []) {
-        const b = fb.get(f.id); if (!b) continue;
-        attempts[f.id] = (attempts[f.id] || 0) + 1; b.attempts = attempts[f.id];
+        const fid = q(f.id); const b = fb.get(fid); if (!b) continue;
+        attempts[fid] = (attempts[fid] || 0) + 1; b.attempts = attempts[fid];
         b.status = 'fixed_awaiting_retest'; b.history.push({ round: v.round, event: 'fixed', note: clip(f.what, 200), files: f.files, commit: fr.commit || null });
       }
       for (const f of fr.notFixed || []) {
-        const b = fb.get(f.id); if (!b) continue;
+        const b = fb.get(q(f.id)); if (!b) continue;
         b.history.push({ round: v.round, event: 'not_fixed', note: clip(f.why, 200) });
       }
     } else if (list.some((a) => a.role === 'fix' && a.round === v.round && a.status === 'running')) {
@@ -236,7 +244,7 @@ for (const [key, list] of Object.entries(byFeature)) {
   }
   // Scope check results for this feature (scope:<feature>:r<N>): whose bug each triage item is.
   for (const sc of list.filter((a) => a.role === 'scope')) {
-    for (const it of agents.get(sc.id)?.result?.items || []) scopeDecisions.set(it.id, { ...it, round: sc.round, decidedBy: sc.label });
+    for (const it of agents.get(sc.id)?.result?.items || []) scopeDecisions.set(q(it.id), { ...it, round: sc.round, decidedBy: sc.label });
   }
   bugs.push(...fb.values());
   const last = [...validations].reverse().find((v) => agents.get(v.id)?.result) || null;   // last round that finished
@@ -249,11 +257,12 @@ for (const [key, list] of Object.entries(byFeature)) {
   else if (lastRes?.passed) status = 'passed';
   else if ([...fb.values()].some((b) => b.status === 'needs_human')) status = 'needs_human';
   else if (lastRes) status = 'failing';
-  else if (list.length && list[list.length - 1].status === 'failed') status = 'failed';   // the latest agent died with no result
+  else if (list.length && list[list.length - 1].status === 'failed') status = 'failed';
+  else if (list.length && list[list.length - 1].status === 'stalled') status = 'stalled';   // the latest agent died with no result
   else if (list.length) status = 'between_stages';
   features.push({
     key, status, rounds: validations.length,
-    lastResult: lastRes ? { round: last.round, passed: lastRes.passed, stepsPassed: lastRes.stepsPassed, stepsTotal: lastRes.stepsTotal, report: lastRes.reportPath } : null,
+    lastResult: lastRes ? { round: last.round, passed: lastRes.passed, stepsPassed: lastRes.stepsPassed, stepsTotal: lastRes.stepsTotal, baseline: lastRes.baselineVersion ?? null, report: lastRes.reportPath } : null,
     openBugs: [...fb.values()].filter((b) => !['verified'].includes(b.status)).length,
     agents: list.length,
   });
@@ -265,6 +274,10 @@ const ledgerPath = opt('--ledger');
 if (ledgerPath) {
   let ledger = {};
   try { ledger = JSON.parse(fs.readFileSync(ledgerPath, 'utf8')); } catch { /* first run */ }
+  // Older ledgers keyed bugs by the bare triage id; qualify them with their feature (the record's own feature).
+  for (const [id, b] of Object.entries(ledger)) {
+    if (b?.feature && !id.startsWith(`${b.feature}-`)) { delete ledger[id]; const nid = `${b.feature}-${id}`; if (!ledger[nid]) ledger[nid] = { ...b, id: nid }; }
+  }
   const now = new Map(bugs.map((b) => [b.id, b]));
   for (const [id, old] of Object.entries(ledger)) {
     if (!now.has(id) && old.status !== 'seen_in_test') bugs.push({ ...old, carriedOver: true });
@@ -281,6 +294,26 @@ for (const b of bugs) {
     b.blockedStatus = b.status; b.status = SCOPE_STATUS[d.scope];
   }
 }
+// A feature's latest round that passed every step of its baseline also closes this feature's own bugs that
+// were still open or had come back (including ones carried over from runs that are gone): their steps are part
+// of that baseline. Backlog items (other owners), owner questions and people-held bugs stay as they are.
+for (const b of bugs) {
+  if (!['open', 'recurred', 'fixing', 'retest_failed', 'retest_failed_pending_triage', 'fixed_awaiting_retest', 'retesting'].includes(b.status)) continue;
+  const f = features.find((x) => x.key === b.feature);
+  const lastRound = Math.max(0, ...(b.history || []).map((h) => Number(h.round) || 0));
+  // Only a bug tied to a baseline step can be proven fixed by a passing round; a bug with no step (a coverage
+  // gap, an observation) stays open until an amendment adds its step or a person closes it.
+  const tiedToStep = /^[JEP][0-9a-z]*\.[0-9]+$/.test(b.stepId || '');
+  if (tiedToStep && f && !f.carriedOver && f.lastResult?.passed && f.lastResult.round > lastRound) {
+    b.status = 'verified';
+    b.history = [...(b.history || []), { round: f.lastResult.round, event: 'verified', note: `Retest round ${f.lastResult.round} passed every step${f.lastResult.baseline ? ` of baseline v${f.lastResult.baseline}` : ''}, including ${b.stepId}` }];
+  }
+}
+if (ledgerPath) {   // record the final states (after scope and verification) so carried-over bugs keep them
+  const ledger = JSON.parse(fs.readFileSync(ledgerPath, 'utf8'));
+  for (const b of bugs) if (b.status !== 'seen_in_test') ledger[b.id] = b;
+  fs.writeFileSync(ledgerPath, JSON.stringify(ledger));
+}
 const NON_BLOCKING = new Set(['verified', 'seen_in_test', ...Object.values(SCOPE_STATUS)]);
 for (const f of features) {
   const mine = bugs.filter((b) => b.feature === f.key);
@@ -291,7 +324,47 @@ for (const f of features) {
   if (f.status === 'failing' && f.openBugs === 0 && f.backlog > 0) f.status = 'passed_with_backlog';
 }
 
+// Carry-over from earlier sessions (--carry <file>): a new session's runs start from nothing, so the agents,
+// round counts and last results recorded by earlier sessions come from the carry file (committed as
+// docs/release-log/tracker-carry.json) and are merged in. Read once per session from a fixed copy, so
+// nothing is counted twice; --carry-out writes the merged result for the next session.
+const carryPath = opt('--carry');
+if (carryPath && fs.existsSync(carryPath)) {
+  const carry = JSON.parse(fs.readFileSync(carryPath, 'utf8'));
+  const ids = new Set(agentList.map((a) => a.id));
+  for (const a of carry.agents || []) if (!ids.has(a.id)) agentList.push({ ...a, status: a.status === 'running' ? 'stopped' : a.status, carriedOver: true });
+  const counts = Object.fromEntries(Object.entries(byFeature).map(([k, l]) => [k, l.length]));
+  for (const cf of carry.features || []) {
+    const f = features.find((x) => x.key === cf.key);
+    if (!f) { features.push({ ...cf, carriedOver: true }); continue; }
+    if (!counts[cf.key]) { Object.assign(f, { ...cf, status: /^(build|integrate|validate|triage|scope|fix|reconcile|record|amend)/.test(cf.status) ? 'between_stages' : cf.status, carriedOver: true }); continue; }
+    f.rounds += cf.rounds || 0; f.agents += cf.agents || 0;
+    if (!f.lastResult && cf.lastResult) f.lastResult = cf.lastResult;
+  }
+}
+const carryOut = opt('--carry-out');
+if (carryOut) {
+  const lean = agentList.map(({ liveSteps, signals, ...a }) => ({ ...a, failures: (a.failures || []).slice(0, 5).map((f) => clip(typeof f === 'string' ? f : JSON.stringify(f), 160)), activity: clip(a.activity, 120) }));
+  fs.writeFileSync(carryOut, `${JSON.stringify({ writtenAt: new Date().toISOString(), agents: lean, features }, null, 0)}\n`);
+}
+
+// Numbered status updates (scripts/release-update.mjs), shown on the tracker with their comparisons.
+let updates = [];
+try { updates = JSON.parse(fs.readFileSync(new URL('../docs/release-log/updates.json', import.meta.url), 'utf8')); } catch { /* none yet */ }
+let releaseInfo = null;
+try { const d = JSON.parse(fs.readFileSync(new URL('../docs/release-log/active-release.features.json', import.meta.url), 'utf8')); releaseInfo = { version: d.version || null, release: d.release, title: d.title || null, previousRelease: d.previousRelease || null, startedAtCommit: d.startedAtCommit || null, kinds: Object.fromEntries((d.features || []).map((f) => [f.key, f.kind || 'new'])) }; } catch { /* optional */ }
+// Session estimates for this release and the test results recorded at each merge (scripts/session-plan.mjs).
+let sessions = [];
+try {
+  const sp = new URL('../docs/release-log/session-plans/', import.meta.url);
+  sessions = fs.readdirSync(sp).filter((f) => f.endsWith('.json')).map((f) => JSON.parse(fs.readFileSync(new URL(f, sp), 'utf8')))
+    .filter((p) => !releaseInfo || p.release === releaseInfo.version);
+} catch { /* none yet */ }
+
 const snapshot = {
+  release: releaseInfo,
+  sessions,
+  updates,
   runId: runDirs.map((d) => path.basename(d)).join(' + ') || null,
   syncedAt: new Date().toISOString(),
   maxFixAttemptsPerBug: MAX_ATTEMPTS,
@@ -303,5 +376,84 @@ const snapshot = {
     return t;
   }, { input: 0, cacheWrite: 0, cacheRead: 0, output: 0 }),
 };
-const json = JSON.stringify(snapshot);
+// The tracker database holds one document of at most 256 KB. Finished agents keep their counts and only
+// their first few failures, shortened; running agents keep full detail. Bug records are never dropped.
+for (const a of snapshot.agents) {
+  a.failures = (a.failures || []).map((f) => clip(typeof f === 'string' ? f : JSON.stringify(f), 240));
+  if (a.status !== 'running' && a.liveSteps) {
+    const trim = (x) => ({ ...x, expect: clip(x.expect, 120), seen: clip(x.seen, 120), detail: clip(x.detail, 160) });
+    a.liveSteps = { ...a.liveSteps, failedTotal: a.liveSteps.failed.length, failed: a.liveSteps.failed.slice(0, 8).map(trim), errors: (a.liveSteps.errors || []).slice(0, 5).map(trim) };
+  }
+}
+let json = JSON.stringify(snapshot);
+// Measured as stored: the tracker keeps the snapshot as one JSON-quoted string field, which adds escaping.
+// Bugs are stored in their own document (tracker/bugs), so each of the two documents must fit the cap.
+const LIMIT = 230 * 1024;   // headroom under the 256 KB document cap as the release grows
+const stored = (j) => { const o = JSON.parse(j); const bugs = o.bugs || []; delete o.bugs;
+  return Math.max(Buffer.byteLength(JSON.stringify({ json: JSON.stringify(o) })), Buffer.byteLength(JSON.stringify({ json: JSON.stringify(bugs) }))); };
+if (stored(json) > LIMIT) {   // over budget: keep running agents, the latest per feature+role, and the last six hours; count the rest
+  const dayAgo = Date.now() - 6 * 3600 * 1000; const latest = new Map();
+  for (const a of snapshot.agents) { const k = `${a.feature}|${a.role}`; const t = Date.parse(a.lastActivityAt || a.startedAt || 0) || 0; if (!latest.has(k) || t > latest.get(k).t) latest.set(k, { id: a.id, t }); }
+  const keep = (a) => a.status === 'running' || [...latest.values()].some((x) => x.id === a.id) || (Date.parse(a.lastActivityAt || 0) || 0) > dayAgo;
+  const before = snapshot.agents.length; snapshot.agents = snapshot.agents.filter(keep);
+  snapshot.agentsTrimmed = before - snapshot.agents.length;   // full records stay in the run journals and git history
+  json = JSON.stringify(snapshot);
+}
+if (stored(json) > LIMIT) {   // still too big: drop finished agents' step detail, then shorten history notes
+  for (const a of snapshot.agents) if (a.status !== 'running' && a.liveSteps) a.liveSteps = { ...a.liveSteps, failed: [], errors: [] };
+  json = JSON.stringify(snapshot);
+  if (stored(json) > LIMIT) for (const b of snapshot.bugs) for (const h of b.history || []) h.note = clip(h.note, 100);
+  json = JSON.stringify(snapshot);
+  if (stored(json) > LIMIT) {   // last resort: drop finished agents' latest-step text and failure text (counts stay)
+    for (const a of snapshot.agents) if (a.status !== 'running') { a.activity = clip(a.activity, 80); a.failures = a.failures.map((f) => clip(f, 80)); }
+    json = JSON.stringify(snapshot);
+  }
+  if (stored(json) > LIMIT) {   // then shorten bug text (full text stays in the ledger and triage files) and older updates' per-feature detail
+    const done = new Set(['verified', 'backlog_pre_existing', 'reassigned', 'process_note']);
+    for (const b of snapshot.bugs) {
+      b.rootCause = clip(b.rootCause, done.has(b.status) ? 160 : 400);
+      if (b.scope?.evidence) b.scope = { ...b.scope, evidence: clip(b.scope.evidence, 160) };
+      if (done.has(b.status)) for (const h of b.history || []) h.note = clip(h.note, 60);
+    }
+    (snapshot.updates || []).slice(0, -2).forEach((u) => { if (u.metrics) u.metrics = { ...u.metrics, features: undefined }; });
+    json = JSON.stringify(snapshot);
+  }
+  if (stored(json) > LIMIT) {   // finally: every bug keeps its short root cause and its last six history events in full
+    for (const b of snapshot.bugs) {
+      b.rootCause = clip(b.rootCause, 200);
+      if ((b.history || []).length > 6) { b.historyTrimmed = b.history.length - 6; b.history = b.history.slice(-6); }
+      for (const h of b.history || []) h.note = clip(h.note, 80);
+    }
+    json = JSON.stringify(snapshot);
+  }
+  if (stored(json) > LIMIT) {   // still over: compact every bug to its essentials (full records: bug ledger, triage files, git)
+    for (const b of snapshot.bugs) {
+      b.step = clip(b.step, 160); b.rootCause = clip(b.rootCause, 140);
+      if ((b.files || []).length > 3) { b.filesTrimmed = b.files.length - 3; b.files = b.files.slice(0, 3); }
+      if (b.scope?.evidence) b.scope = { ...b.scope, evidence: clip(b.scope.evidence, 90) };
+      if ((b.history || []).length > 4) { b.historyTrimmed = (b.historyTrimmed || 0) + b.history.length - 4; b.history = b.history.slice(-4); }
+      for (const h of b.history || []) h.note = clip(h.note, 60);
+      if (b.status === 'seen_in_test') { delete b.rootCause; delete b.files; delete b.history; }
+    }
+    json = JSON.stringify(snapshot);
+  }
+  if (stored(json) > LIMIT) {   // last: verified and backlog bugs keep only what the tracker lists (full record in the ledger)
+    const done = new Set(['verified', 'backlog_pre_existing', 'reassigned', 'process_note']);
+    for (const b of snapshot.bugs) if (done.has(b.status)) {
+      b.step = clip(b.step, 90); delete b.rootCause; delete b.files;
+      if (b.scope) b.scope = { scope: b.scope.scope, owner: b.scope.owner || null, decidedBy: b.scope.decidedBy };
+      if ((b.history || []).length > 2) { b.historyTrimmed = (b.historyTrimmed || 0) + b.history.length - 2; b.history = b.history.slice(-2); }
+    }
+    json = JSON.stringify(snapshot);
+  }
+  if (stored(json) > LIMIT) console.error(`Snapshot is ${stored(json)} bytes stored, over the tracker's ${LIMIT}-byte budget.`);
+}
 if (out) fs.writeFileSync(out, json); else process.stdout.write(json);
+
+// Optional live push to the platform (PLATFORM_URL + RELEASE_TRACKER_INGEST_TOKEN). A failure is logged and
+// makes this command exit 3 after the snapshot has been written; it is never swallowed.
+if (process.env.PLATFORM_URL && process.env.RELEASE_TRACKER_INGEST_TOKEN) {
+  const { pushToPlatform } = await import('./release-tracker-push.mjs');
+  const r = await pushToPlatform(JSON.parse(json));
+  if (r.ok === false) process.exitCode = 3;
+}

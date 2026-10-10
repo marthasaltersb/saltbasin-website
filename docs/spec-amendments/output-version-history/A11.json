@@ -1,0 +1,35 @@
+{
+  "id": "A11",
+  "feature": "output-version-history",
+  "fromBaseline": 2,
+  "proposedBy": "fix:output-version-history:r3",
+  "round": 3,
+  "triageItems": [],
+  "reason": "New MCP tools output_versions_list, output_version_read, output_versions_compare exist; no baseline step covers MCP parity for version history.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "E.9",
+      "before": "",
+      "after": "[E.9] Via the MCP endpoint with the member's bearer token (minted in the UI), call output_versions_list for the output from Journey 2: expect 2 versions with status, created, modified, approvedBy and change summary equal to the Version history dialog; call output_version_read for one version: expect its blocks as the dialog shows; call output_versions_compare for the two versions: expect the same changes as the dialog's tracked changes; call output_versions_list with another member's output id: expect not found (404).",
+      "tracesTo": "definition.json interfaceParity; change spec requirement that version history is available through the API (GET /api/resume-outputs/:id/versions)",
+      "whyNeeded": "No baseline step covers MCP parity for version history."
+    }
+  ],
+  "review": {
+    "status": "rejected",
+    "reviewer": "amend:output-version-history:r3",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "fail: no invocation (which client, which arguments), no surface, and 'equal to the dialog' / 'as the dialog shows' / 'the same changes' name no exact values or counts",
+      "Reachable": "fail: no surface declared; the step must be a cli step by design with the exact command (platform-mcp spec uses node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN> call <tool> '<json>'), and the token 'minted in the UI' is not given as clicks",
+      "Deterministic": "fail: 'the output from Journey 2' has no fixed state when an edge case runs (after Journey 6 the lineage has more versions and different summaries), and 'not found (404)' is not stated in MCP terms (isError true plus what text)",
+      "Fictional data only": "pass",
+      "Independent of the fix": "fail: the tool names are the fixer's implementation choices; the step must be justified from the interface-parity requirement and read the names from the tool list"
+    },
+    "note": "Rejected as written; not a product defect. The coverage gap is real (interfaceParity requires an MCP path). An acceptable resubmission is: a cli step; token created on Connected Agents (clicks written out) or by the harness; an explicit lineage state (for example right after [J2.4], or the final state with exact row count, statuses, approver 'Test Member' and change summaries copied from the spec); exact mcp-call.mjs commands with JSON arguments; exact expected values per tool; and the exact result for another member's output id (isError true and the not_found text the server returns). Resubmit through the fix loop.",
+    "at": "2026-10-09T17:30:00.000Z"
+  }
+}

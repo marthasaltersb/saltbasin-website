@@ -33,11 +33,12 @@ const S = {
   reasoning: { fontSize: '0.75rem', color: '#555', lineHeight: 1.5, margin: '0.4rem 0' },
   dictateBox: { width: '100%', boxSizing: 'border-box', border: '0.5px solid rgba(0,0,0,0.18)', borderRadius: 7, padding: '0.5rem 0.65rem', fontSize: '0.78rem', fontFamily: 'inherit', marginTop: '0.5rem' },
   btnRow: { display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.6rem' },
-  btn: (tone = 'outline') => ({
+  btn: (tone = 'outline', disabled = false) => ({
     padding: '0.4rem 0.8rem', borderRadius: 7, border: tone === 'outline' ? '0.5px solid rgba(0,0,0,0.18)' : 'none',
     cursor: 'pointer', fontSize: '0.74rem', fontFamily: 'var(--sb-font-label)',
     background: tone === 'gold' ? 'var(--sb-gold, #c4843a)' : tone === 'navy' ? 'var(--sb-navy, #1b2a3b)' : 'white',
     color: tone === 'gold' || tone === 'navy' ? 'white' : '#333',
+    ...(disabled ? { opacity: 0.5, cursor: 'not-allowed', background: '#d9dde1', color: '#5b6672' } : {}),
   }),
   empty: { padding: '2rem', textAlign: 'center', color: '#888', fontSize: '0.85rem' },
   beforeAfter: { display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '0.5rem', alignItems: 'stretch', margin: '0.5rem 0' },
@@ -98,24 +99,24 @@ function ConflictCard({ task, onResolved }) {
             <div style={S.sourceValue}>{String(ref.value ?? '—')}</div>
             <div style={S.sourceMeta}>{ref.sourceFilename || ref.sourceKind || 'source'}{ref.sourceLocation ? ` — ${ref.sourceLocation}` : ''}</div>
           </div>
-          <button type="button" style={S.btn('gold')} disabled={busy} onClick={() => resolve({ method: 'chose_source', chosenSourceReference: ref.sourceMappingId })}>
+          <button type="button" style={S.btn('gold', busy)} disabled={busy} onClick={() => resolve({ method: 'chose_source', chosenSourceReference: ref.sourceMappingId })}>
             Use this
           </button>
         </div>
       ))}
       {!dictating && (
         <div style={S.btnRow}>
-          <button type="button" style={S.btn('outline')} disabled={busy} onClick={() => setDictating(true)}>Tell BestyStaff what's correct</button>
+          <button type="button" style={S.btn('outline', busy)} disabled={busy} onClick={() => setDictating(true)}>Tell BestyStaff what's correct</button>
         </div>
       )}
       {dictating && (
         <div>
           <textarea style={S.dictateBox} rows={2} value={dictated} onChange={(e) => setDictated(e.target.value)} placeholder="e.g. The end date should be March 2024, none of the sources have it exactly right" />
           <div style={S.btnRow}>
-            <button type="button" style={S.btn('navy')} disabled={busy || !dictated.trim()} onClick={askBestyStaff}>
+            <button type="button" style={S.btn('navy', busy || !dictated.trim())} disabled={busy || !dictated.trim()} onClick={askBestyStaff}>
               {busy ? 'Asking BestyStaff…' : 'Ask BestyStaff to apply'}
             </button>
-            <button type="button" style={S.btn('outline')} disabled={busy} onClick={() => setDictating(false)}>Cancel</button>
+            <button type="button" style={S.btn('outline', busy)} disabled={busy} onClick={() => setDictating(false)}>Cancel</button>
           </div>
           {agentReply && <div style={S.reasoning} role="status">{agentReply}</div>}
         </div>
@@ -155,7 +156,7 @@ function AmbiguousCard({ task, onResolved }) {
         This reasoning was correct — worth remembering for similar cases
       </label>
       <div style={S.btnRow}>
-        <button type="button" style={S.btn('navy')} disabled={busy} onClick={acknowledge}>{busy ? 'Saving…' : 'Reviewed'}</button>
+        <button type="button" style={S.btn('navy', busy)} disabled={busy} onClick={acknowledge}>{busy ? 'Saving…' : 'Reviewed'}</button>
       </div>
     </div>
   );
@@ -212,8 +213,8 @@ function PackageTaskCard({ task, onDecided }) {
       </div>
       <div style={S.sourceMeta}>From package {task.metadata?.packageKey}{sources ? ` (${sources})` : ''}</div>
       <div style={S.btnRow}>
-        <button type="button" style={S.btn('gold')} disabled={busy} onClick={() => decide('approve')}>Approve - apply to Career Master</button>
-        <button type="button" style={S.btn('outline')} disabled={busy} onClick={() => decide('reject')}>Reject - leave Career Master as is</button>
+        <button type="button" style={S.btn('gold', busy)} disabled={busy} onClick={() => decide('approve')}>Approve - apply to Career Master</button>
+        <button type="button" style={S.btn('outline', busy)} disabled={busy} onClick={() => decide('reject')}>Reject - leave Career Master as is</button>
       </div>
     </div>
   );
@@ -255,7 +256,7 @@ function PackageImportCard({ onImported }) {
       <input type="file" accept="application/json,.json" onChange={readFile} aria-label="Package JSON file" />
       <textarea style={S.dictateBox} rows={3} value={text} onChange={(e) => setText(e.target.value)} placeholder="...or paste package JSON here" aria-label="Package JSON" />
       <div style={S.btnRow}>
-        <button type="button" style={S.btn('navy')} disabled={busy || !text.trim()} onClick={run}>{busy ? 'Importing...' : 'Import and check against Career Master'}</button>
+        <button type="button" style={S.btn('navy', busy || !text.trim())} disabled={busy || !text.trim()} onClick={run}>{busy ? 'Importing...' : 'Import and check against Career Master'}</button>
       </div>
       {error && <div role="alert" style={{ ...S.warnBox, marginTop: '0.6rem' }}>{error}</div>}
       {summary && (
@@ -306,7 +307,7 @@ function ConvertSection({ openEditor, refreshKey }) {
           <div style={S.fieldName}>{item.name} <span style={S.sourceMeta}>({item.packageKey} / {item.variant})</span></div>
           {item.openTasks > 0 && <div style={S.reasoning}>{item.openTasks} review task{item.openTasks === 1 ? '' : 's'} for this package still need a decision before it can be converted.</div>}
           <div style={S.btnRow}>
-            <button type="button" style={S.btn('navy')} disabled={busyId === item.id || item.openTasks > 0} onClick={() => convert(item)}>{busyId === item.id ? 'Converting...' : 'Convert to career-bound output'}</button>
+            <button type="button" style={S.btn('navy', busyId === item.id || item.openTasks > 0)} disabled={busyId === item.id || item.openTasks > 0} onClick={() => convert(item)}>{busyId === item.id ? 'Converting...' : 'Convert to career-bound output'}</button>
           </div>
         </div>
       ))}

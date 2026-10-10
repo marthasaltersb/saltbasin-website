@@ -1,0 +1,617 @@
+{
+  "feature": "render-bindings",
+  "spec": "docs/training/render-bindings.md",
+  "version": 1,
+  "frozenAt": "2026-10-10T01:18:43.554Z",
+  "commitAtFreeze": "039460eda406ed7d56df2fadea47cd2e7a5b16ac",
+  "specSha256": "c4af5676c77d3ef5a8238c61b9b59fd35e7ad94d840bf6058cbc20ffef09bfb6",
+  "amendment": null,
+  "previous": null,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "P.1",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "3472ed129daa09db",
+      "summary": "ADMIN WINDOW: sign in as betsy@test.local. MEMBER WINDOW: sign in as member@test.local. Open `/world` in each. Expect both land in the World Shell with the top "
+    },
+    {
+      "id": "P.2",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "fb82a198033a1f3e",
+      "summary": "In both windows click **Journeys**, then the **Render Bindings** card. Expect the panel heading **Render Bindings**, tabs **Renderings** and **Pending changes ("
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "652da610f5a66c54",
+      "summary": "MEMBER WINDOW: on **Renderings** the **Workshop board** button is selected. Type **Harbor dashboard refresh** in **New item title**, click **Add item**. Expect "
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c936b75283945eef",
+      "summary": "Read the **Data map**. Expect exactly five channel blocks, in this order: **Crystal colour**, **Crystal size**, **Crystal gold ring**, **Crystal badge**, **Crys"
+    },
+    {
+      "id": "J1.3",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "315868a39a2a21eb",
+      "summary": "Crystal colour block: value **not set**; legend \"Crystal colour = status\"; \"Source: member-board > items > status\"; \"Source type: Manual entry\"; \"Change policy:"
+    },
+    {
+      "id": "J1.4",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "457159466e893f30",
+      "summary": "Crystal size block: value **not set**; legend \"Crystal size = effort points\"; \"Source: member-board > items > effort\"; \"Change policy: Needs approval\"."
+    },
+    {
+      "id": "J1.5",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "22973bd83dbe8386",
+      "summary": "Crystal gold ring block: value **not recorded**; \"Source: board-metrics > metrics > urgency\"; \"Source type: Calculation\"; \"Calculated from: member-board > items"
+    },
+    {
+      "id": "J1.6",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4d37c8d38f7dfb45",
+      "summary": "Crystal badge block: value **not set**; \"Source: sandbox-crm > accounts > stage\"; \"Source type: Connector\"; \"Change policy: Needs approval\"."
+    },
+    {
+      "id": "J1.7",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d81416d9a5b22cd1",
+      "summary": "Crystal depth block: name **Crystal depth**, value **not mapped**, the line \"No source field is mapped to this channel, so nothing is drawn for it.\" and no \"Sou"
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7e076b40069da603",
+      "summary": "MEMBER WINDOW, **Change a value**, block **status**: it shows \"Change policy: Live\" and \"Can edit: member, admin\". In **New status** choose **active**, click **"
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "59abe002e03acd78",
+      "summary": "ADMIN WINDOW: **Renderings**, click **Workshop board**, click the card **Harbor dashboard refresh**. Expect **Crystal colour** reads **Active**."
+    },
+    {
+      "id": "J2.3",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "33924873a12ebd64",
+      "summary": "MEMBER WINDOW: in **New status** choose **done**, click **Change status**. Within 15 seconds, without touching the ADMIN WINDOW, expect there **Crystal colour**"
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9ce18669a0ad174e",
+      "summary": "ADMIN WINDOW (item open): block **priority** shows \"Can edit: admin\". In **New priority** enter **3**, click **Change priority**. Expect the confirmation line \""
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f8d8fb9513b59b13",
+      "summary": "MEMBER WINDOW, block **effort** (\"Change policy: Needs approval\"): enter **8** in **New effort**, click **Propose effort**. Expect the confirmation line \"effort"
+    },
+    {
+      "id": "J3.3",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0c6e011a83c89a1b",
+      "summary": "MEMBER WINDOW, ghost: **Crystal size** still reads **not set** and shows \"Pending: proposed 8 by Test Member, waiting for step 1 of 2 (Data owner review). Shown"
+    },
+    {
+      "id": "J3.4",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a4404c74194dd028",
+      "summary": "ADMIN WINDOW: click the tab **Pending changes (1)** (the count updates by itself). Expect one card titled \"Harbor dashboard refresh · effort\", the pill \"Step 1 "
+    },
+    {
+      "id": "J3.5",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e18836eb2c0667b5",
+      "summary": "Click **Approve step 1 of 2**. Expect the confirmation line \"Step approved, now waiting for Final approval\", the card now shows \"Step 2 of 2: Final approval\" an"
+    },
+    {
+      "id": "J3.6",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "cc77917a5b797e4f",
+      "summary": "Click **Approve and apply (step 2 of 2)**. Expect the confirmation line \"Change approved and applied\", the text \"No changes are waiting for approval.\" and the t"
+    },
+    {
+      "id": "J3.7",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c5b18e0931e4fd43",
+      "summary": "MEMBER WINDOW: propose **13** for **effort** (button **Propose effort**). ADMIN WINDOW: **Pending changes (1)**; type **Estimate not agreed** in **Decision note"
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b06e8e6a13363954",
+      "summary": "MEMBER WINDOW, block **History**: the **Time slider** caption reads \"Step 9 of 9: betsy@test.local rejected effort: 8 -> 13 at step 1 of 2 (Data owner review); "
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "33c2cacec4c9c5f2",
+      "summary": "Click the **Time slider**, press **Home**. Expect the caption \"Step 1 of 9: Before any recorded change\" and every slider channel reading **not set** or **not re"
+    },
+    {
+      "id": "J4.3",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "860305e0308c050b",
+      "summary": "Press **ArrowRight** four times. Expect the caption \"Step 5 of 9: Test Member proposed effort: not set -> 8, waiting for Data owner review (step 1 of 2)\"; slide"
+    },
+    {
+      "id": "J4.4",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9395936f90b83270",
+      "summary": "Press **ArrowRight** twice. Expect the caption \"Step 7 of 9: betsy@test.local approved effort: not set -> 8 (change applied)\"; slider channel **Crystal size** r"
+    },
+    {
+      "id": "J4.5",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0628e5d53fcfa2de",
+      "summary": "In the **Event log** the **change_proposed** entry for effort lists \"Impact recorded when proposed:\" with the same four lines as step [J3.4]."
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ef723ad6141b33fd",
+      "summary": "MEMBER WINDOW: reopen the item (**← All items**, click the card). Block **priority** reads \"Your role cannot edit this field. Roles that can: admin.\" and has no"
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "eff4f2ff74bd9b40",
+      "summary": "ADMIN WINDOW: tab **Settings**. In the card \"Who can edit each source field\", under **Workshop board entries**, tick **member can edit member-board priority**. "
+    },
+    {
+      "id": "J5.3",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9b92714de3d04055",
+      "summary": "MEMBER WINDOW: reopen the item. Block **priority** now has **New priority** and the button **Change priority**. Enter **5**, click **Change priority**. Expect t"
+    },
+    {
+      "id": "J5.4",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a38218eed0c2abca",
+      "summary": "ADMIN WINDOW: untick **member can edit member-board priority** (confirmation line \"Editable roles saved\"). MEMBER WINDOW: reopen the item; block **priority** ag"
+    },
+    {
+      "id": "J5.5",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a4590a77d7f6d1c9",
+      "summary": "ADMIN WINDOW, **Settings**, card **Bindings**, row \"Workshop board / Crystal size\": set **Change policy: member-board:crystal.size** to **Live** (confirmation l"
+    },
+    {
+      "id": "J6.1",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c6d7b3a6204cffa7",
+      "summary": "ADMIN WINDOW: **Renderings** → **Workshop board** → open **Harbor dashboard refresh**. Block **stage** reads \"Change policy: Needs approval\". In **New stage** c"
+    },
+    {
+      "id": "J6.2",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2033f0b7f92e71f2",
+      "summary": "Tab **Pending changes (1)**: the box lists \"Workshop board: Crystal badge not set -> Negotiating\" and \"No connected rods\". Click **Approve step 1 of 2**, then *"
+    },
+    {
+      "id": "J6.3",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d611ea1aefbb2ff5",
+      "summary": "Reopen the item. **Crystal badge** reads **Negotiating** and contains a red alert \"Write-back failed: Salesforce is not connected for betsy@test.local, so the v"
+    },
+    {
+      "id": "J6.4",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "86272bd179d73f7f",
+      "summary": "In **Event log** an entry with pill **writeback_failed** reads \"Write-back to Sandbox CRM failed for stage: Salesforce is not connected for betsy@test.local, so"
+    },
+    {
+      "id": "J7.1",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "cebd8540d82d2943",
+      "summary": "ADMIN WINDOW, **Settings**, card **Bindings**: untick **Mapped: member-board:crystal.size** (confirmation line \"Binding settings saved\"). Open the item: **Cryst"
+    },
+    {
+      "id": "J7.2",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "651db3d26100ed23",
+      "summary": "**Settings**: tick **Mapped: member-board:crystal.size** again (confirmation line \"Binding settings saved\"). In the row \"Workshop board / Crystal depth\" (value "
+    },
+    {
+      "id": "J7.3",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ddc0b7f00ced584a",
+      "summary": "**Settings**: click **Reset bindings to platform defaults** (confirmation line \"Binding settings saved\"). Open the item: **Crystal depth** reads **not mapped** "
+    },
+    {
+      "id": "J7.4",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7368b5ead8e9ced1",
+      "summary": "**Settings**, card **Approval steps**: two steps listed, **Data owner review** (role label *Data owner*) and **Final approval** (*Final approver*), both **Activ"
+    },
+    {
+      "id": "J8.1",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3087675637a175f5",
+      "summary": "ADMIN WINDOW: **Journeys** → **Release Intelligence** → tab **Releases**. Fill **Release key** with `2030-01-05-garden-gate` and **Release name** with `Garden g"
+    },
+    {
+      "id": "J8.2",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c85eb8f241ca726e",
+      "summary": "**Journeys** → **Render Bindings** → **Renderings** → click **Release world** → click the card **Dock scheduler**. Expect Data map blocks **Crystal colour**, **"
+    },
+    {
+      "id": "J8.3",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8ea060f47e9a8a4c",
+      "summary": "In block **final status** choose **passed**, click **Change final status**: confirmation line \"final status changed\", **Crystal colour** reads **Passed**. In bl"
+    },
+    {
+      "id": "J8.4",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f1788b89eeaf3ea4",
+      "summary": "Back in **Render Bindings** → **Release world** → **Dock scheduler**: block **tracker open bugs** enter **4**, click **Propose tracker open bugs** (confirmation"
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8de51daf59dc8cd7",
+      "summary": "Phone width (390px, both windows): every journey above is walkable with taps only; the page never scrolls sideways; every button, select and text input in the p"
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "15b04ae4220a0cd9",
+      "summary": "Run `curl -s -c jar.txt -H 'Content-Type: application/json' -d '{\"email\":\"member@test.local\",\"password\":\"TestPass!2345\"}' http://127.0.0.1:<API_PORT>/api/auth/l"
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7e66d600dc077dcc",
+      "summary": "Opening **Pending changes** as the member (with a change waiting) shows the same card but no **Approve** or **Reject** buttons, instead \"Only an administrator c"
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1ffe0517afdaa685",
+      "summary": "A member sees only **Workshop board** in the rendering buttons; asking for the release world through the API answers 403 \"Your role (member) cannot open the Rel"
+    },
+    {
+      "id": "E.5",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b8416eacc4f15d9e",
+      "summary": "Dark colour scheme: the panel background is dark and all text stays readable (no black text on a dark background). Reduced-motion preference: the crystal pulse "
+    },
+    {
+      "id": "E.6",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1d65c9d303fbd69b",
+      "summary": "Proposing a value that equals the current value is refused with the inline error \"effort is already 8\"; proposing out-of-range text for a number (for example 99"
+    },
+    {
+      "id": "E.7",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5ac141b9f846412f",
+      "summary": "Expected network noise during the walk: none besides external font and CDN requests that may fail offline and one `favicon.ico` 404. The server-sent-events requ"
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "8b812ebac0e0bb0b"
+    },
+    {
+      "title": "Preconditions",
+      "kind": "precondition",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 1 — The Data map: every channel and where it comes from",
+      "kind": "journey",
+      "hash": "8f60609b3e0c810f"
+    },
+    {
+      "title": "Journey 2 — Live path: a change redraws every open window",
+      "kind": "journey",
+      "hash": "916dd5c8715cc0d1"
+    },
+    {
+      "title": "Journey 3 — Approval path: proposal, ghost, impact, two steps, apply, reject",
+      "kind": "journey",
+      "hash": "0dcb2522a684d5ed"
+    },
+    {
+      "title": "Journey 4 — History and the time slider",
+      "kind": "journey",
+      "hash": "415321326e5eeefc"
+    },
+    {
+      "title": "Journey 5 — Who may change a field, and policy per binding",
+      "kind": "journey",
+      "hash": "21088328d1ab8d47"
+    },
+    {
+      "title": "Journey 6 — A connector write-back that fails is shown, never hidden",
+      "kind": "journey",
+      "hash": "5acfddcbc59394e1"
+    },
+    {
+      "title": "Journey 7 — Not mapped is never filled in; bindings are configurable",
+      "kind": "journey",
+      "hash": "873174b93596048f"
+    },
+    {
+      "title": "Journey 8 — First consumer: the release tracker (a platform table Port, data not moved)",
+      "kind": "journey",
+      "hash": "7e5380184aade5bd"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    }
+  ]
+}

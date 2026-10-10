@@ -1,0 +1,85 @@
+{
+  "id": "A1",
+  "feature": "cover-letter-agent",
+  "fromBaseline": 1,
+  "proposedBy": "triage:cover-letter-agent:r1",
+  "round": 1,
+  "triageItems": [
+    "T5",
+    "T6",
+    "T7",
+    "T9"
+  ],
+  "reason": "Round-1 triage found three spec errors (E.3/E.4 and E.6 describe API-only behaviour as if a screen offered it; E.7 has no reachable setup) and one coverage gap (no step checks World Shell reachability required by the owner).",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "E.3",
+      "before": "- [E.3] **Another member's letter**: opening a letter id that is not yours (via the URL of the API) answers \"Cover letter not found.\" — the dialog shows \"Could not open this cover letter: …\".",
+      "after": "- [E.3] `curl -s -i -b <session cookie of Test Member> http://127.0.0.1:<PORT>/api/cover-letters/letters/<id>` where `<id>` is the cover-letter output id of a second member (fixture: `node scripts/create-test-member.mjs --email second@test.local --name 'Second Member'`, who tracks one opportunity with auto-draft left on; no screen offers another member's letter, so this step is API/MCP only). Expect HTTP 404 and the body `{\"error\":\"Cover letter not found.\"}`; the MCP tool `cover_letter_open` called as Test Member with the same id returns the same message.",
+      "tracesTo": "docs/changes/cover-letter-agent.md Server section (ownedLetter confinement in server/lib/coverLetterAgent.js, 404 'Cover letter not found.' and 400 'only works on cover letters'); definition.json interfaceParity v3 (capability reachable on website, API and MCP, with cli steps by design)",
+      "whyNeeded": "No screen can open another member's letter by id (CoverLetterWorkbench is mounted only from MyResumePanel with the member's own ids), so the 'dialog shows Could not open' clause is unreachable by point-and-click; the server rule is reachable by API and MCP and is now a cli step with a stated second-member fixture.",
+      "reviewerNote": "Reviewer rewrote the proposed text to open with a curl command so scripts/release-spec-baseline.mjs classifies the step as cli (not desktop+mobile), and added exact HTTP status, body and fixture command."
+    },
+    {
+      "op": "change",
+      "stepId": "E.4",
+      "before": "- [E.4] **Not a cover letter**: the agent only opens cover letters; a resume id answers \"The cover-letter agent only works on cover letters. This output is a resume.\"",
+      "after": "- [E.4] `curl -s -i -b <session cookie of Test Member> http://127.0.0.1:<PORT>/api/cover-letters/letters/<id>` where `<id>` is the output id of Test Member's own imported resume (API/MCP only; no screen opens a resume in the agent). Expect HTTP 400 and the body `{\"error\":\"The cover-letter agent only works on cover letters. This output is a resume.\"}`; the MCP tool `cover_letter_open` with the same id returns the same message.",
+      "tracesTo": "docs/changes/cover-letter-agent.md Server section (ownedLetter confinement in server/lib/coverLetterAgent.js, 404 'Cover letter not found.' and 400 'only works on cover letters'); definition.json interfaceParity v3 (capability reachable on website, API and MCP, with cli steps by design)",
+      "whyNeeded": "Triage proposal T5 grouped E.4 with E.3 ('E.4 likewise'): the same unreachable-by-screen situation. Expected text is unchanged; only the surface and the exact request are stated.",
+      "reviewerNote": "Reviewer made E.4 its own change so its id and cli surface are explicit in the baseline."
+    },
+    {
+      "op": "change",
+      "stepId": "E.6",
+      "before": "- [E.6] **Package without a letter**: building a package for an opportunity that has no cover letter files one first (Journey 2 step 4 in a variant where the auto-draft failed). A package key without any cover letter is refused with \"This package has no cover letter. Every application package must include one — create it from the opportunity first.\"",
+      "after": "- [E.6] **Package without a letter**: building a package for an opportunity that has no cover letter files one first (Journey 2 step 4 in a variant where the auto-draft failed).",
+      "tracesTo": "docs/changes/cover-letter-agent.md packageAssembly.js: always includes the cover letter; Behaviour changes",
+      "whyNeeded": "The UI half (Build package files a letter first) stays on the browser surfaces; the bare-package-key refusal cannot be sent from any screen and moves to the new cli step E.8.",
+      "reviewerNote": "Reviewer split the proposed single step in two so each step has exactly one surface; no expectation was dropped (the refusal text is carried verbatim by E.8)."
+    },
+    {
+      "op": "add",
+      "stepId": "E.8",
+      "before": null,
+      "after": "- [E.8] `curl -s -i -b <session cookie of Test Member> -H 'Content-Type: application/json' -d '{\"packageKey\":\"no-such-package\"}' http://127.0.0.1:<PORT>/api/cover-letters/packages/assemble` (API/MCP only; no screen can send a bare package key). Expect a refusal whose error text is \"This package has no cover letter. Every application package must include one — create it from the opportunity first.\"; the MCP tool `cover_letter_package_build` with `packageKey` `no-such-package` returns the same message.",
+      "tracesTo": "docs/changes/cover-letter-agent.md packageAssembly.js: always includes the cover letter; interfaceParity v3 (API and MCP)",
+      "whyNeeded": "Carries the second half of the old E.6 as a cli step, so the refusal stays tested."
+    },
+    {
+      "op": "change",
+      "stepId": "E.7",
+      "before": "- [E.7] **A failed automatic draft** is shown on the opportunity row as a red alert \"The automatic cover-letter draft failed (<time>): <reason>\" with the Generate for this opportunity button available.",
+      "after": "- [E.7] **A failed automatic draft**. Setup (harness fixture, run before the browser steps, not a user action): with auto-draft still off (J1.5), track a new opportunity Job Title `Data Steward`, Company `Contoso Rail`, Location `Remote`, then run `psql` on the test database: `INSERT INTO journey_rod_events (rod_id, event_type, metadata, created_at) SELECT id, 'cover_letter_autodraft_failed', '{\"error\":\"test failure\"}'::jsonb, (extract(epoch from now())*1000)::bigint FROM journey_data_rods WHERE rod_type='career_opportunity_target' ORDER BY id DESC LIMIT 1;`. Reload My Resume. Expect on the `Data Steward — Contoso Rail` row a red alert \"The automatic cover-letter draft failed (<any time>): test failure\", **Cover letter: none yet** and the button **Generate for this opportunity**. Click it: expect the toast \"Cover letter drafted.\", **Cover letter: Draft (#N)** and the red alert gone.",
+      "tracesTo": "docs/changes/cover-letter-agent.md Behaviour changes: a failed draft is recorded and shown on the row, never swallowed; server/lib/coverLetterAutoDraft.js latestAutoDraftError()",
+      "whyNeeded": "The failure cannot be produced through any supported interface, so without a written fixture the step is unreachable.",
+      "reviewerNote": "Reviewer made the fixture exact (psql insert, new opportunity with no letter so the Generate button is shown) and removed the proposed 'files a letter' ambiguity by stating the toast and the alert disappearing, which follow from latestAutoDraftError() reading the newest event."
+    },
+    {
+      "op": "add",
+      "stepId": "J10.1",
+      "before": null,
+      "after": "1. [J10.1] On the World Shell open Journeys > Career Placement Agents > the `Principal Value Architect` opportunity > Application outputs. Expect, next to the generated cover letter, the buttons **Edit with cover-letter agent** and **Build package with contents**; clicking **Edit with cover-letter agent** opens the same dialog \"Cover letter and agent\" as J3.1. Repeat at 390 × 844 with the same result and no horizontal page scroll.",
+      "tracesTo": "Owner direction recorded in bugs cover-letter-agent-B3 and B11 (everything comes from the World Shell); docs/changes/cover-letter-agent.md Integration hook points item 5; definition.json interfaceParity v3 (desktop and 390px)",
+      "whyNeeded": "No step checks World Shell reachability although the owner required it. Expected to fail until B3/B11 are fixed; that is a product defect, not a spec problem.",
+      "reviewerNote": "Reviewer added the opportunity name, the dialog title reference and the 390px repeat so the step is exact on both surfaces."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:cover-letter-agent:r1",
+    "checklist": {
+      "Traced": "pass (every change names a change-spec section, interfaceParity v3 or owner direction B3/B11)",
+      "Not weaker": "pass (E.3: the only dropped text is the 'dialog shows Could not open' clause, which no screen can reach; verified CoverLetterWorkbench is mounted only in MyResumePanel with the member's own letter ids; the server answers are now stated with exact status and body, which is stricter. E.4 and E.6 refusal texts unchanged)",
+      "Retire only duplicates": "pass (no step retired)",
+      "Exact": "pass after reviewer rewrites (HTTP status, body, fixture commands and exact row labels stated)",
+      "Reachable": "pass (E.3, E.4, E.8 are cli steps by design, written to start with a curl command so the baseline marks them cli; E.7 browser steps after a stated harness fixture; J10.1 walkable at 1280 and 390)",
+      "Deterministic": "pass (fixtures are stated; the only variable, the alert time, is written as <any time>)",
+      "Fictional data only": "pass (second@test.local, Contoso Rail, Data Steward)",
+      "Independent of the fix": "pass (steps test visible labels, HTTP answers and messages, not implementation; J10.1 will fail until the World Shell entry points exist, which is the intended signal)"
+    },
+    "note": "All four triage items approved as one amendment, with reviewer wording tightenings. E.6 was split into E.6 (browser) and new E.8 (cli); E.4 was made an explicit change. J10.1 is expected to fail until B3/B11 are fixed and goes back to the fix loop as a defect, not a spec issue.",
+    "at": "2026-10-09T17:24:05Z"
+  }
+}

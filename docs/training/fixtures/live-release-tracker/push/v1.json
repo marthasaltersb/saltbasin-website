@@ -1,0 +1,495 @@
+{
+  "snapshot": {
+    "release": {
+      "version": "0.2.0",
+      "release": "2030-02-05-demo-tide",
+      "title": "Demo tide release"
+    },
+    "updates": [
+      {
+        "version": "0.2.0-u1",
+        "release": "2030-02-05-demo-tide",
+        "at": "2030-02-05T08:30:00Z",
+        "commit": "1111111111111111111111111111111111111111",
+        "previous": null,
+        "headline": "Pier built",
+        "note": "salt-pier was built and queued for testing.",
+        "metrics": {
+          "featuresTotal": 3,
+          "featuresPassed": 0,
+          "openBugs": 1,
+          "verified": 0,
+          "backlog": 0,
+          "needPerson": 0,
+          "agentsRunning": 1,
+          "features": {
+            "wave-gauge": {
+              "status": "validate",
+              "round": 1,
+              "score": "8/12"
+            },
+            "salt-pier": {
+              "status": "validate",
+              "round": null,
+              "score": null
+            },
+            "moon-clock": {
+              "status": "queued",
+              "round": null,
+              "score": null
+            }
+          }
+        },
+        "comparison": {
+          "lines": [
+            "First update: nothing to compare with yet."
+          ],
+          "featureChanges": []
+        }
+      },
+      {
+        "version": "0.2.0-u2",
+        "release": "2030-02-05-demo-tide",
+        "at": "2030-02-05T09:10:00Z",
+        "commit": "2222222222222222222222222222222222222222",
+        "previous": "0.2.0-u1",
+        "headline": "Pier passes",
+        "note": "salt-pier passed; wave-gauge is being tested.",
+        "metrics": {
+          "featuresTotal": 3,
+          "featuresPassed": 1,
+          "openBugs": 2,
+          "verified": 1,
+          "backlog": 0,
+          "needPerson": 1,
+          "agentsRunning": 1,
+          "features": {
+            "wave-gauge": {
+              "status": "validate",
+              "round": 1,
+              "score": "8/12"
+            },
+            "salt-pier": {
+              "status": "passed",
+              "round": 2,
+              "score": "10/10"
+            },
+            "moon-clock": {
+              "status": "queued",
+              "round": null,
+              "score": null
+            }
+          }
+        },
+        "comparison": {
+          "lines": [
+            "Features passed **1 of 3** (was 0)."
+          ],
+          "featureChanges": []
+        }
+      }
+    ],
+    "runId": "demo-run",
+    "syncedAt": "2030-02-05T09:20:00.000Z",
+    "maxFixAttemptsPerBug": 2,
+    "repoUrl": "https://example.test/demo-org/demo-repo",
+    "maxFixRounds": 4,
+    "features": [
+      {
+        "key": "wave-gauge",
+        "status": "validate",
+        "rounds": 1,
+        "lastResult": {
+          "round": 1,
+          "passed": false,
+          "stepsPassed": 8,
+          "stepsTotal": 12,
+          "baseline": 1,
+          "report": "docs/test-results/wave-gauge/round-1.md"
+        },
+        "openBugs": 1,
+        "backlog": 0,
+        "agents": 1
+      },
+      {
+        "key": "salt-pier",
+        "status": "passed",
+        "rounds": 2,
+        "lastResult": {
+          "round": 2,
+          "passed": true,
+          "stepsPassed": 10,
+          "stepsTotal": 10,
+          "baseline": 1,
+          "report": "docs/test-results/salt-pier/round-2.md"
+        },
+        "openBugs": 0,
+        "backlog": 0,
+        "agents": 1
+      },
+      {
+        "key": "moon-clock",
+        "status": "queued",
+        "rounds": 0,
+        "lastResult": null,
+        "openBugs": 0,
+        "backlog": 0,
+        "agents": 0
+      }
+    ],
+    "agents": [
+      {
+        "id": "agent-1",
+        "label": "validate:wave-gauge:r2",
+        "role": "validate",
+        "feature": "wave-gauge",
+        "round": 2,
+        "status": "running",
+        "startedAt": "2030-02-05T09:00:00.000Z",
+        "lastActivityAt": "2030-02-05T09:20:00.000Z",
+        "activity": "$ node walk-journeys --journey 2",
+        "summary": null,
+        "tokens": {
+          "input": 1200,
+          "cacheWrite": 30000,
+          "cacheRead": 900000,
+          "output": 8000
+        },
+        "failures": [],
+        "signals": [],
+        "liveSteps": {
+          "checked": 14,
+          "passed": 12,
+          "failedTotal": 1,
+          "failed": [
+            {
+              "step": "[J2.3]",
+              "expect": "Total shows 12",
+              "seen": "Total shows 11"
+            }
+          ],
+          "errors": []
+        }
+      },
+      {
+        "id": "agent-2",
+        "label": "build:salt-pier",
+        "role": "build",
+        "feature": "salt-pier",
+        "round": null,
+        "status": "done",
+        "startedAt": "2030-02-05T07:00:00.000Z",
+        "lastActivityAt": "2030-02-05T08:00:00.000Z",
+        "activity": "Write docs/changes/salt-pier.md",
+        "summary": "Built the pier list",
+        "tokens": {
+          "input": 900,
+          "cacheWrite": 20000,
+          "cacheRead": 500000,
+          "output": 5000
+        },
+        "failures": [],
+        "signals": []
+      }
+    ],
+    "bugs": [
+      {
+        "id": "wave-gauge-F1-1",
+        "feature": "wave-gauge",
+        "status": "open",
+        "class": "defect",
+        "attempts": 0,
+        "step": "[J1.3] Gauge needle position",
+        "rootCause": "Needle angle is computed in degrees but drawn in radians.",
+        "files": [
+          "src/demo/gauge.js"
+        ],
+        "scope": {
+          "scope": "this_feature",
+          "owner": null,
+          "evidence": "Gauge written in this feature",
+          "decidedBy": "scope:wave-gauge:r1",
+          "round": 1
+        },
+        "history": [
+          {
+            "round": 1,
+            "event": "found",
+            "note": "Needle points the wrong way",
+            "commit": null
+          }
+        ]
+      },
+      {
+        "id": "wave-gauge-F1-2",
+        "feature": "wave-gauge",
+        "status": "needs_business_definition",
+        "class": "needs_business_definition",
+        "attempts": 0,
+        "step": "[J2.1] Warning threshold",
+        "rootCause": "Nobody has defined the warning threshold for the gauge.",
+        "question": "At what wave height should the gauge turn amber?",
+        "files": [],
+        "scope": null,
+        "history": [
+          {
+            "round": 1,
+            "event": "found",
+            "note": "No threshold defined",
+            "commit": null
+          }
+        ]
+      },
+      {
+        "id": "salt-pier-F1-1",
+        "feature": "salt-pier",
+        "status": "verified",
+        "class": "defect",
+        "attempts": 1,
+        "step": "[J1.1] Pier list order",
+        "rootCause": "List sorted by id not name.",
+        "files": [
+          "src/demo/pier.js"
+        ],
+        "scope": {
+          "scope": "this_feature",
+          "owner": null,
+          "evidence": "Sorting added here",
+          "decidedBy": "scope:salt-pier:r1",
+          "round": 1
+        },
+        "history": [
+          {
+            "round": 1,
+            "event": "found",
+            "note": "Unsorted list",
+            "commit": null
+          },
+          {
+            "round": 1,
+            "event": "verified",
+            "note": "Round 2 passed this step",
+            "commit": "1111111111111111111111111111111111111111"
+          }
+        ]
+      }
+    ],
+    "totals": {
+      "input": 2100,
+      "cacheWrite": 50000,
+      "cacheRead": 1400000,
+      "output": 13000
+    }
+  },
+  "history": {
+    "generatedAt": "2030-02-05T09:20:00.000Z",
+    "points": [
+      {
+        "t": "2030-02-05T08:30:00.000Z",
+        "c": "1111111",
+        "f": {
+          "wave-gauge": [
+            "build",
+            null,
+            0,
+            null,
+            0,
+            0,
+            0,
+            0
+          ],
+          "salt-pier": [
+            "validate",
+            null,
+            0,
+            null,
+            0,
+            0,
+            0,
+            0
+          ],
+          "moon-clock": [
+            "queued",
+            null,
+            0,
+            null,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      {
+        "t": "2030-02-05T09:10:00.000Z",
+        "c": "2222222",
+        "f": {
+          "wave-gauge": [
+            "validate",
+            1,
+            8,
+            12,
+            2,
+            0,
+            0,
+            1
+          ],
+          "salt-pier": [
+            "passed",
+            2,
+            10,
+            10,
+            0,
+            1,
+            0,
+            0
+          ],
+          "moon-clock": [
+            "queued",
+            null,
+            0,
+            null,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      {
+        "t": "2030-02-05T09:20:00.000Z",
+        "c": "2222222",
+        "f": {
+          "wave-gauge": [
+            "validate",
+            1,
+            8,
+            12,
+            2,
+            0,
+            0,
+            1
+          ],
+          "salt-pier": [
+            "passed",
+            2,
+            10,
+            10,
+            0,
+            1,
+            0,
+            0
+          ],
+          "moon-clock": [
+            "queued",
+            null,
+            0,
+            null,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    ],
+    "updates": [
+      {
+        "version": "0.2.0-u1",
+        "at": "2030-02-05T08:30:00Z",
+        "headline": "Pier built",
+        "commit": "1111111111111111111111111111111111111111"
+      },
+      {
+        "version": "0.2.0-u2",
+        "at": "2030-02-05T09:10:00Z",
+        "headline": "Pier passes",
+        "commit": "2222222222222222222222222222222222222222"
+      }
+    ]
+  },
+  "updates": [
+    {
+      "version": "0.2.0-u1",
+      "release": "2030-02-05-demo-tide",
+      "at": "2030-02-05T08:30:00Z",
+      "commit": "1111111111111111111111111111111111111111",
+      "previous": null,
+      "headline": "Pier built",
+      "note": "salt-pier was built and queued for testing.",
+      "metrics": {
+        "featuresTotal": 3,
+        "featuresPassed": 0,
+        "openBugs": 1,
+        "verified": 0,
+        "backlog": 0,
+        "needPerson": 0,
+        "agentsRunning": 1,
+        "features": {
+          "wave-gauge": {
+            "status": "validate",
+            "round": 1,
+            "score": "8/12"
+          },
+          "salt-pier": {
+            "status": "validate",
+            "round": null,
+            "score": null
+          },
+          "moon-clock": {
+            "status": "queued",
+            "round": null,
+            "score": null
+          }
+        }
+      },
+      "comparison": {
+        "lines": [
+          "First update: nothing to compare with yet."
+        ],
+        "featureChanges": []
+      }
+    },
+    {
+      "version": "0.2.0-u2",
+      "release": "2030-02-05-demo-tide",
+      "at": "2030-02-05T09:10:00Z",
+      "commit": "2222222222222222222222222222222222222222",
+      "previous": "0.2.0-u1",
+      "headline": "Pier passes",
+      "note": "salt-pier passed; wave-gauge is being tested.",
+      "metrics": {
+        "featuresTotal": 3,
+        "featuresPassed": 1,
+        "openBugs": 2,
+        "verified": 1,
+        "backlog": 0,
+        "needPerson": 1,
+        "agentsRunning": 1,
+        "features": {
+          "wave-gauge": {
+            "status": "validate",
+            "round": 1,
+            "score": "8/12"
+          },
+          "salt-pier": {
+            "status": "passed",
+            "round": 2,
+            "score": "10/10"
+          },
+          "moon-clock": {
+            "status": "queued",
+            "round": null,
+            "score": null
+          }
+        }
+      },
+      "comparison": {
+        "lines": [
+          "Features passed **1 of 3** (was 0)."
+        ],
+        "featureChanges": []
+      }
+    }
+  ]
+}

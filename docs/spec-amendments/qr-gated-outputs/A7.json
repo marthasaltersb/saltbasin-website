@@ -1,0 +1,38 @@
+{
+  "id": "A7",
+  "feature": "qr-gated-outputs",
+  "fromBaseline": 2,
+  "proposedBy": "fix:qr-gated-outputs:r4",
+  "round": 4,
+  "triageItems": [
+    "F2-12",
+    "F3-6"
+  ],
+  "reason": "J10.3, E.1, E.2 and E.4 need a Draft card; no step creates one.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "P.5",
+      "before": "",
+      "after": "After J9.3 and before J10.3: sed 's/Leads fictional process redesign programs\\./Leads fictional process redesign programs, second revision./' /var/tmp/qr-demo/pkg-v1.json > /var/tmp/qr-demo/pkg-v3.json, then run the P.4 import command against pkg-v3.json. Expect 'resume_main #<new id> new_version' and 'cover_letter #<id> unchanged'. The new Harbor Demo Resume is the Draft card for J10.3, E.1, E.2 and E.4.",
+      "tracesTo": "F2-12 / F3-6",
+      "whyNeeded": "No Draft card exists for those steps."
+    }
+  ],
+  "review": {
+    "status": "rejected",
+    "reviewer": "amend:qr-gated-outputs:r4",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "fail: the command is given as 'run the P.4 import command', which signs in as the administrator (P.4, J8.1 and the proposed P.5 run scripts/import-application-package.mjs with ADMIN_EMAIL/ADMIN_INITIAL_PASSWORD, so they sign in as the seeded administrator and file the documents under the administrator's account, not under member@test.local); the E.3 change is prose ('or'), not an edited step",
+      "Reachable": "pass",
+      "Deterministic": "fail: E.3 as written re-runs the Journey 8 command (pkg-v2.json); after P.5 the latest content is pkg-v3, so that run reports resume_main new_version, not unchanged. The proposal leaves E.3 unedited and offers two alternatives ('re-import the latest file, or run before P.5'). E.4 (Archive) also changes what a later re-import sees",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Rejected as written. The gap is real; the fixture, sed command, expected output and placement are acceptable. Remaining defects: (1) the import must run as the member (see A6); (2) E.3 must be edited in the same amendment as a change op: re-import /var/tmp/qr-demo/pkg-v3.json (the latest file), expect every output unchanged, and fix its position relative to E.4 (Archive) so the result does not depend on order. Resubmit P.5 and the E.3 change together. Spec resubmission, not a product defect.",
+    "at": "2026-10-09T00:00:00.000Z"
+  }
+}

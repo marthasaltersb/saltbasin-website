@@ -1,0 +1,1047 @@
+{
+  "feature": "world-shell-layers",
+  "spec": "docs/training/world-shell-layers.md",
+  "version": 1,
+  "frozenAt": "2026-10-10T01:00:47.320Z",
+  "commitAtFreeze": "770b8aa453ac163d091587ea67aba120aafe8a98",
+  "specSha256": "06cbb7cd2a4461b4203bb940fdee9a16316760f23b711602e65c473be11c47a0",
+  "amendment": null,
+  "previous": null,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "P.1",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "0c8f04a4190b1b13",
+      "summary": "Harness-level, not part of the journeys: the database is booted once and seeded (`npm run seed`), then `node scripts/create-test-member.mjs` creates **member@te"
+    },
+    {
+      "id": "P.2",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "0ff7572347e37f2d",
+      "summary": "Create the file `/tmp/layers-resume.txt` containing exactly these three paragraphs, separated by blank lines: `Principal Value Architect resume`, `Builds quote-"
+    },
+    {
+      "id": "P.3",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "6624de07aa24e7fa",
+      "summary": "Open `/login`, enter **member@test.local** and `TestPass!2345`, click **Sign In**. Expect the World Shell at `/world` with the trail `Sun` and the right-hand pa"
+    },
+    {
+      "id": "P.4",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "50be73045fb5df71",
+      "summary": "In the Sun menu click **Career Placement Agents**, click **+ Add**, type **Principal Value Architect** in **Job title** and **Northwind Freight** in **Company**"
+    },
+    {
+      "id": "P.5",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "18ab27b552a429b4",
+      "summary": "In that opportunity click **Import Resume (PDF/DOCX/TXT)** and choose `/tmp/layers-resume.txt`. Expect, under **APPLICATION OUTPUTS**, the line `2 outputs linke"
+    },
+    {
+      "id": "P.6",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "e95b3a411151c23b",
+      "summary": "Click **← Tracked list**, click **+ Add**, type **Senior Pricing Lead** and **Contoso Logistics**, click **Track**, then click **← Tracked list**. Expect **TRAC"
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f1269a20a8ee59c5",
+      "summary": "Click the **World** tab. Expect the trail `Sun`, no `at=` in the address bar, the panel **Sun menu** with its explanatory text (`The sun is the root of your wor"
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3fb1d4d90d2f2072",
+      "summary": "Activate the Sun: on the desktop click the Sun crystal in the 3D area (the large faceted crystal in the middle); on the phone tap the crumb **Sun** at the left "
+    },
+    {
+      "id": "J1.3",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "03bea38e4ee67800",
+      "summary": "Press Enter. Expect the trail `Sun › Career Placement Agents` and the address bar ending `?at=island:careerPlacementAgents`."
+    },
+    {
+      "id": "J1.4",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8cd86402ea3a5eb5",
+      "summary": "Press Escape. Expect one layer popped: the trail `Sun` and no `at=` in the address bar."
+    },
+    {
+      "id": "J1.5",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "71f922f7f14328ed",
+      "summary": "Press Escape again. Expect nothing to change: the trail still `Sun`, the Sun menu still shown."
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8202527e092efa42",
+      "summary": "In the Sun menu click **Career Placement Agents**. Expect the trail `Sun › Career Placement Agents`, the panel **Career Placement Agents** with **TRACKED (2)**,"
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6f630e000d993aed",
+      "summary": "Type `Principal` in the filter box. Expect exactly one row, **Principal Value Architect**."
+    },
+    {
+      "id": "J2.3",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f89fb3d9d6ac5051",
+      "summary": "Click the row **Principal Value Architect**. Expect the trail `Sun › Career Placement Agents › Principal Value Architect`, the address bar ending `,opp:<ID>`, t"
+    },
+    {
+      "id": "J2.4",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "adcab5575844782a",
+      "summary": "Scroll the panel down until **Open application outputs (2) ›** is on screen, then click it. Expect the trail `Sun › Career Placement Agents › Principal Value Ar"
+    },
+    {
+      "id": "J2.5",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "98a969a4d4a58c6b",
+      "summary": "In the select **Filter outputs by status** choose **Draft only**. Expect both entries to stay and the select to read **Draft only**."
+    },
+    {
+      "id": "J2.6",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d7aad168b97336ab",
+      "summary": "Click the entry **Imported Resume — layers-resume.txt**. Expect the trail `Sun › Career Placement Agents › Principal Value Architect › Application outputs › Imp"
+    },
+    {
+      "id": "J2.7",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "10c4d5193290479d",
+      "summary": "Click **Edit draft**. Expect the editor to fill the screen with the title `Imported Resume — layers-resume.txt`, the text `Version 1 - shared block editor`, and"
+    },
+    {
+      "id": "J2.8",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2d8f7c43c07fc505",
+      "summary": "Click the first **Body Text** row, replace its text with `Principal Value Architect resume - revised.` and click **Save**. Expect the toast **Saved as a new dra"
+    },
+    {
+      "id": "J2.9",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "de33f872ae650cb4",
+      "summary": "Click the entry **Version 1**. Expect the dated version-history window titled `Version history: Imported Resume — layers-resume.txt`, the rows **v1** and **v2 ("
+    },
+    {
+      "id": "J2.10",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e9fced92b35c180f",
+      "summary": "Click the crumb **Application outputs**. Expect the window to close, the trail `Sun › Career Placement Agents › Principal Value Architect › Application outputs`"
+    },
+    {
+      "id": "J2.11",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "515f68cb3ee4305a",
+      "summary": "Click the crumb **Principal Value Architect**. Expect the trail `Sun › Career Placement Agents › Principal Value Architect` and the button **Open application ou"
+    },
+    {
+      "id": "J2.12",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4f79add8773d7182",
+      "summary": "Click the crumb **Career Placement Agents**. Expect the trail `Sun › Career Placement Agents`, the filter box still containing `Principal`, and exactly one row,"
+    },
+    {
+      "id": "J2.13",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "737f4c6d873017dc",
+      "summary": "Click the crumb **Sun**. Expect the trail `Sun`, no `at=` in the address bar and the **Sun menu** panel."
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e801c064d577b46b",
+      "summary": "Click the **Journeys** tab. Expect the trail `Sun › Journeys`, the address bar ending `?at=journeys`, and a grid of cards in which **Career Placement Agents** r"
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "39078d7ee18316af",
+      "summary": "Click the card **Career Placement Agents**. Expect the trail `Sun › Journeys › Career Placement Agents`, the address bar ending `?at=journeys,island:careerPlace"
+    },
+    {
+      "id": "J3.3",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d6d75fdf47e57a8b",
+      "summary": "Click the row **Principal Value Architect**. Expect the trail `Sun › Journeys › Career Placement Agents › Principal Value Architect` and the same opportunity de"
+    },
+    {
+      "id": "J3.4",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e07203435804db06",
+      "summary": "Click **Open application outputs (2) ›**. Expect the trail `Sun › Journeys › Career Placement Agents › Principal Value Architect › Application outputs` and the "
+    },
+    {
+      "id": "J3.5",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b67e631400757636",
+      "summary": "Click the crumb **Principal Value Architect**, then on the **Imported Resume — layers-resume.txt** card click **Open output ›**. Expect the trail `Sun › Journey"
+    },
+    {
+      "id": "J3.6",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "680f9c380aa87526",
+      "summary": "Click the crumb **Journeys**. Expect the trail `Sun › Journeys` and the grid of cards (the summary page this trail came from), not the Sun menu."
+    },
+    {
+      "id": "J3.7",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ca4eae17b28b1fe0",
+      "summary": "Click the crumb **Sun**. Expect the trail `Sun` and the **Sun menu** panel."
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7e9b4872ff53551c",
+      "summary": "In the Sun menu click **Career Placement Agents**, click the row **Principal Value Architect**, click **Open application outputs (2) ›**, click the entry **Impo"
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9bcccf98f3449a64",
+      "summary": "Press Escape. Expect exactly one layer popped: the trail `Sun › Career Placement Agents › Principal Value Architect › Application outputs`."
+    },
+    {
+      "id": "J4.3",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d26cac4f6e770ea6",
+      "summary": "Use the browser's Back (the browser button, or Alt+Left). Expect the trail `Sun › Career Placement Agents › Principal Value Architect` (the page before the outp"
+    },
+    {
+      "id": "J4.4",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a1e017c230972243",
+      "summary": "Use the browser's Forward (Alt+Right). Expect the trail `Sun › Career Placement Agents › Principal Value Architect › Application outputs`."
+    },
+    {
+      "id": "J4.5",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "cdbd3e1d35d2056e",
+      "summary": "Click the top-left button **← Back to Principal Value Architect**. Expect the trail `Sun › Career Placement Agents › Principal Value Architect`."
+    },
+    {
+      "id": "J4.6",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "dcf74f549a6629f4",
+      "summary": "Click the top-left button **← Back to Career Placement Agents**. Expect the trail `Sun › Career Placement Agents` and the tracked list."
+    },
+    {
+      "id": "J4.7",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "aad2db11248fedaa",
+      "summary": "Click the top-left button **← Back to World**. Expect the trail `Sun` and the **Sun menu** panel."
+    },
+    {
+      "id": "J4.8",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "dcef940a71c4544c",
+      "summary": "In the Sun menu click **Career Placement Agents**, click **Principal Value Architect**, click the button **← Tracked list**. Expect the trail `Sun › Career Plac"
+    },
+    {
+      "id": "J4.9",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d773bb1aa0789244",
+      "summary": "Click into the filter box (the box is shown because two items are tracked), type `x`, and press Escape. Expect the trail to stay `Sun › Career Placement Agents`"
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b709adb88b975e65",
+      "summary": "Open the output layer again: Sun menu → **Career Placement Agents** → **Principal Value Architect** → **Open application outputs (2) ›** → **Imported Resume — l"
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7539194e752a1e31",
+      "summary": "Reload the page (F5). Expect the same address, the same trail `Sun › Career Placement Agents › Principal Value Architect › Application outputs › Imported Resume"
+    },
+    {
+      "id": "J5.3",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "91a6b79792d39c2a",
+      "summary": "Open the copied address in a new browser tab of the same signed-in browser. Expect the same trail and the same panel."
+    },
+    {
+      "id": "J5.4",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d598f30d0ec88c4e",
+      "summary": "Type `/world?at=island:careerPlacementAgents,opp:999999` into the address bar and open it. Expect the trail `Sun › Career Placement Agents`, the address to chan"
+    },
+    {
+      "id": "J5.5",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a6ce010b4a75eff1",
+      "summary": "Open `/world?at=island:nonsense`. Expect the trail `Sun` and the note `The link pointed to \"island nonsense\", which is not available here (it is not one of your"
+    },
+    {
+      "id": "J5.6",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6cb1c24d4fb733a9",
+      "summary": "Open `/world?at=bogus:1`. Expect the trail `Sun` and the note `The link pointed to \"bogus 1\", which is not available here (unknown layer). Showing the deepest l"
+    },
+    {
+      "id": "J5.7",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a1d7f740a57f216d",
+      "summary": "Open `/world?at=island:careerPlacementAgents,opp:<ID>,outputs,output:777` (with your `<ID>`). Expect the trail `Sun › Career Placement Agents › Principal Value "
+    },
+    {
+      "id": "J5.8",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "aed806499014e5ff",
+      "summary": "Open `/world?at=island:careerPlacementAgents,opp:<ID>,outputs,output:<OID2>,editor:<OID2>` (your numbers). Expect the draft editor to open on **Imported Resume "
+    },
+    {
+      "id": "J5.9",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "199dffed18bf329e",
+      "summary": "In a separate private browser window sign in as **other@test.local** (`TestPass!2345`) and open the address from step 1. Expect the trail `Sun › Career Placemen"
+    },
+    {
+      "id": "J6.1",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "17daa9fcb7e2f5e0",
+      "summary": "In the Sun menu click **Career Master**. Expect the full-screen **Career Master**, the trail `Sun › Career Master` and the address bar ending `?at=island:career"
+    },
+    {
+      "id": "J6.2",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "300054aeb29ca0ce",
+      "summary": "In the Sun menu click **My Website**. Expect the planet view, the trail `Sun › My Website`, the address ending `?at=island:content`, and the buttons **Definitio"
+    },
+    {
+      "id": "J6.3",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "34abd464ce0c6193",
+      "summary": "Click the **Classic Tools** tab. Expect the trail `Sun › Classic Tools` and the address ending `?at=classic:_`. Click **← Back to World**. Expect the trail `Sun"
+    },
+    {
+      "id": "J6.4",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "21ff656baa448e5a",
+      "summary": "Click the **Journeys** tab, then the card **Career Master**. Expect the trail `Sun › Journeys › Career Master`. Click **← Back to World**. Expect exactly one la"
+    },
+    {
+      "id": "J7.1",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f2ac817d94603ebd",
+      "summary": "In a new private browser window open `/login` and sign in with the administrator account (`ADMIN_EMAIL`, `ADMIN_INITIAL_PASSWORD`). Expect `/world` with the tra"
+    },
+    {
+      "id": "J7.2",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4e844ea98f73a059",
+      "summary": "Click **Commercial Opportunity Pipeline**. Expect the trail `Sun › Commercial Opportunity Pipeline`. Click **+ Add**, type **Northwind Freight** in **Company** "
+    },
+    {
+      "id": "J7.3",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "00f36e45062fcc74",
+      "summary": "Click the button **← Tracked list**. Expect the trail `Sun › Commercial Opportunity Pipeline`."
+    },
+    {
+      "id": "J7.4",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e99f025a5bbc0ec6",
+      "summary": "Click the crumb **Sun**, then **Leads** in the Sun menu. Expect the full-screen Leads module and the trail `Sun › Leads`. Click **← Back to World**. Expect the "
+    },
+    {
+      "id": "J7.5",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3774167f7cd4dc5c",
+      "summary": "Click the **Journeys** tab, the card **Commercial Opportunity Pipeline**, the row **Northwind Freight**. Expect the trail `Sun › Journeys › Commercial Opportuni"
+    },
+    {
+      "id": "J8.1",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "438103007782ed04",
+      "summary": "On the phone profile, signed in as **member@test.local**, open `/world`. Expect no horizontal scrolling (the page is exactly 390 px wide), the trail bar reading"
+    },
+    {
+      "id": "J8.2",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "71978ac8b2205237",
+      "summary": "Tap the **Journeys** tab, the card **Career Placement Agents**, the row **Principal Value Architect**, **Open application outputs (2) ›**, the entry **Imported "
+    },
+    {
+      "id": "J8.3",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e897fa15b9c8a6a4",
+      "summary": "Tap **…** (label \"Show full trail\"). Expect a numbered list under the bar with exactly six entries in this order: `Sun`, `Journeys`, `Career Placement Agents`, "
+    },
+    {
+      "id": "J8.4",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "eb50b098d77f47af",
+      "summary": "Tap the entry `Application outputs`. Expect the trail `Sun › Journeys › Career Placement Agents › Principal Value Architect › Application outputs` (read via **…"
+    },
+    {
+      "id": "J8.5",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "50901dc0a7f462ce",
+      "summary": "Tap the entry **Imported Resume — layers-resume.txt**, then **Edit draft**. Expect the editor to fill the screen, the trail bar still visible at the top and not"
+    },
+    {
+      "id": "J8.6",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2622adceea3d4ede",
+      "summary": "Tap **← Back** in the editor toolbar, then **Version 2** under **Versions of this output**. Expect the version-history window fitting the screen (no horizontal "
+    },
+    {
+      "id": "J8.7",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c22de48d49be7248",
+      "summary": "Tap the **…** button, then the entry `Journeys`. Expect the window to close and the trail `Sun › Journeys` with the grid of cards."
+    },
+    {
+      "id": "J8.8",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9e6b816700db4688",
+      "summary": "Measure the buttons **Copy link**, **…** and every crumb button: each is at least 44 px high."
+    },
+    {
+      "id": "J9.1",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "62ee478e5c78e14f",
+      "summary": "With the browser's reduced-motion setting on (emulate `prefers-reduced-motion: reduce`), open `/world` signed in as **member@test.local**. Expect the **Sun menu"
+    },
+    {
+      "id": "J9.2",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e714e8899f8feb37",
+      "summary": "In the Sun menu click **Career Placement Agents**. Expect the trail `Sun › Career Placement Agents` and the panel at once, with no travelling animation; then cl"
+    },
+    {
+      "id": "J9.3",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f66c8a2c0c429bd6",
+      "summary": "Turn reduced motion off (default) and reload: expect the **Sun menu** panel to show no such line."
+    },
+    {
+      "id": "J10.1",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "4ee0faf8543a4700",
+      "summary": "`curl -s -c /tmp/layers-jar -H 'Content-Type: application/json' -d '{\"email\":\"member@test.local\",\"password\":\"TestPass!2345\"}' http://localhost:<API_PORT>/api/au"
+    },
+    {
+      "id": "J10.2",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "6fdfbac843eb39e9",
+      "summary": "`curl -s -b /tmp/layers-jar 'http://localhost:<API_PORT>/api/world-layers/resolve?at=island:careerPlacementAgents,opp:<ID>,outputs,output:<OID2>'` returns JSON "
+    },
+    {
+      "id": "J10.3",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "407c35e77c9c6104",
+      "summary": "`curl -s -b /tmp/layers-jar 'http://localhost:<API_PORT>/api/world-layers/resolve?at=island:careerPlacementAgents,opp:999999'` returns `\"valid\":false`, `\"at\":\"i"
+    },
+    {
+      "id": "J10.4",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "756df362b17602e9",
+      "summary": "`curl -s 'http://localhost:<API_PORT>/api/world-layers/resolve?at=island:careerPlacementAgents'` (no cookie) returns HTTP 401 with `{\"error\":\"unauthorized\"}`."
+    },
+    {
+      "id": "J10.5",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "3760a444fc0245b3",
+      "summary": "`curl -s -c /tmp/layers-jar-other -H 'Content-Type: application/json' -d '{\"email\":\"other@test.local\",\"password\":\"TestPass!2345\"}' http://localhost:<API_PORT>/a"
+    },
+    {
+      "id": "J10.6",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "e6d37199a653dfbd",
+      "summary": "Run `node scripts/check-interface-parity.mjs` in the repository. Expect the last line `OK: the registry matches the code.` and exit code 0 (the capability `worl"
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fbef1ab18c681891",
+      "summary": "A link whose layer is not allowed for the viewer (another member's opportunity, an island they do not have, a layer kind that does not exist) never shows a blan"
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3fa7f005dd99f18f",
+      "summary": "A link to an output (or draft) that was unlinked or never existed falls back one layer with the note `That output is no longer linked to this opportunity. Showi"
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d404384d6b78dec4",
+      "summary": "The Escape key never pops a layer while a text field, text area or select has focus, while the version-history window is open (that window closes itself, which "
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "de09292c595ca356",
+      "summary": "A layer that is only a hop to another place is not itself a layer: choosing a moon that points at another planet pushes that planet's island; choosing a moon th"
+    },
+    {
+      "id": "E.5",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d5f601629af62078",
+      "summary": "Without WebGL the 3D area shows `This device/browser doesn't support WebGL — use the Sun menu on the right, or the Journeys tab above, for a list view.` and eve"
+    },
+    {
+      "id": "E.6",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7fd709c3382b827a",
+      "summary": "Opening the same opportunity from the Sun menu and from the Journeys grid gives different trails and different remembered filters, scroll positions and select v"
+    },
+    {
+      "id": "E.7",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0d27b7c3a04a8e67",
+      "summary": "The Sun menu entries and the Journeys cards are keyboard operable: Tab reaches each, Enter or Space opens it."
+    },
+    {
+      "id": "E.8",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "84c9ab246c111a75",
+      "summary": "The old training spec `world-shell-navigation` (docs/training/world-shell-opportunity-outputs.md) steps still work: the output cards, **Edit draft**, **Approve "
+    },
+    {
+      "id": "E.9",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "515d0ca788685af3",
+      "summary": "Approving an output for its QR link from any layer goes through the same finalization gate as before (`useToolCategoryGate().run` on the client, `assertReadyToF"
+    },
+    {
+      "id": "E.10",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "27a05926c6495a50",
+      "summary": "Saving the editor with no change shows the red status `Error: No changes to save.` and stays on the **Draft editor** layer (no layer is popped on failure); the "
+    },
+    {
+      "id": "E.11",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4297ca0f92924d0f",
+      "summary": "When the opportunity list cannot be loaded the panel shows the load error and the trail still reads `Sun › Career Placement Agents`; the layers never hide an er"
+    },
+    {
+      "id": "E.12",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ac88b14b0a3d0687",
+      "summary": "MCP: the tool `world_layers_resolve` is registered in `server/lib/mcpToolRegistry.js` (append-only, listed in `server/data/mcpToolManifest.json`) and returns th"
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "3012ced61fce6ff5"
+    },
+    {
+      "title": "Preconditions (set up once, on a fresh database)",
+      "kind": "precondition",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 1 — The Sun is the root menu",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 2 — Path A: Sun menu → island → opportunity → output → version, and back out by crumb",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 3 — Path B: Journeys grid → same opportunity, a different trail that returns to the Journeys grid",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 4 — Back buttons, Escape and the browser's Back and Forward each pop or replay one layer",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 5 — Refresh, shared link, and links that no longer work",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 6 — Full-screen modules, planets and Classic Tools are layers too",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 7 — The same layers for an administrator",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 8 — Phone (390 x 844): the same journey with a collapsed trail",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 9 — Reduced motion",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 10 — The API and MCP",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    }
+  ]
+}

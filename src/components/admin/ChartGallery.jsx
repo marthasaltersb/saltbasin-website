@@ -378,7 +378,7 @@ export default function ChartGallery({ items, onChange, master, rollupCatalog, p
                     <div style={{ fontSize: '0.8rem', color: '#1b2a3b' }}>{idx + 1}. {item.params?.title || def?.name || item.blockType}</div>
                     <div style={{ fontSize: '0.68rem', color: '#aaa' }}>{def?.name || item.blockType}{srcLabel ? ` · ${srcLabel}` : ''}</div>
                   </div>
-                  <button type="button" style={G.small} onClick={() => setEditingId(editing ? null : item.id)} aria-label={`Edit ${item.params?.title || def?.name}`}>{editing ? 'Done' : 'Edit'}</button>
+                  <button type="button" style={G.small} onClick={() => setEditingId(editing ? null : item.id)} aria-label={`${editing ? 'Done editing' : 'Edit'} ${item.params?.title || def?.name}`}>{editing ? 'Done' : 'Edit'}</button>
                   <button type="button" style={G.small} disabled={idx === 0} onClick={() => reorder(idx, idx - 1)} aria-label="Move up">▲</button>
                   <button type="button" style={G.small} disabled={idx === sorted.length - 1} onClick={() => reorder(idx, idx + 1)} aria-label="Move down">▼</button>
                   <button type="button" style={G.small} onClick={() => onChange(items.filter((i) => i.id !== item.id))} aria-label="Remove">✕</button>

@@ -1,0 +1,43 @@
+{
+  "id": "A1",
+  "feature": "proficiency-live-qr",
+  "fromBaseline": 1,
+  "proposedBy": "triage:proficiency-live-qr:r6",
+  "round": 6,
+  "triageItems": ["T6-6", "T6-7"],
+  "reason": "Two spec wording gaps found in round 6; the product passes both steps. J7.5's example level-change line does not match the line the QR page prints, and J8.3 has an unstated precondition (the preview shows proficiency only when the Proficiency chart is in the template).",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "J7.5",
+      "before": "or a level change such as Forecast modeling printed Expert → now Advanced †",
+      "after": "or a level change such as \"Changed: Forecast modeling — printed Expert → now Advanced (user-defined)\"",
+      "tracesTo": "docs/changes/proficiency-rules-and-live-qr.md (basis labelled user-defined, dagger footnote on outputs); src/components/SharedLiveStates.jsx and src/lib/shareSnapshotDiff.js line format",
+      "whyNeeded": "The example said a dagger and omitted the separator; the page prints the label 'user-defined' and the same 'Changed: <label> — printed <from> → now <to>' format as the Ledgerly example. Reviewer corrected the proposal's colon after the label to the em dash the page actually prints."
+    },
+    {
+      "op": "change",
+      "stepId": "J8.3",
+      "before": "Override one level by hand (as Journey 3, step 1-2).",
+      "after": "On the Infographics tab make sure the Proficiency chart is in the template (add it if it is not), then override one level by hand (as Journey 3, step 1-2); the preview shows proficiency only when that chart is present.",
+      "tracesTo": "docs/changes/proficiency-rules-and-live-qr.md (preview refreshes with the Proficiency chart); round 5 and round 6 validator observations",
+      "whyNeeded": "Removes an unstated precondition so a literal validator gets the expected preview and thumbnails."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:proficiency-live-qr:r6",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass: J7.5 now names the exact line the product prints, which is stricter than a loose example; J8.3 expectations are unchanged and only a precondition is stated",
+      "Retire only duplicates": "pass: nothing retired",
+      "Exact": "pass: J7.5 gives the exact line text; J8.3 names the tab and the chart",
+      "Reachable": "pass: Infographics tab chart gallery is walkable at desktop and 390px",
+      "Deterministic": "pass: the precondition is stated, so the preview result no longer depends on the template's prior content",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass: tests the displayed line and preview behaviour named in the change spec"
+    },
+    "note": "Both approved. The proposal's J7.5 after-text used a colon after the label; the page prints an em dash (SharedLiveStates.jsx), so the exact printed form is used.",
+    "at": "2026-10-09T18:00:00Z"
+  }
+}

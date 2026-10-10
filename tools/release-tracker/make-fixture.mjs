@@ -84,12 +84,16 @@ fs.writeFileSync(path.join(out, 'steps', 'delta-board', 'round-1', 'steps.jsonl'
   { type: 'pageerror', detail: 'Uncaught ReferenceError: foo' },
 ].map((r) => JSON.stringify(r)).join('\n') + '\n');
 
+// echo-audit: its validator started 40 minutes ago, wrote no transcript and never ended -> stalled (journal start time is the only sign of life).
+journals[dirB].push({ type: 'started', key: 'v2:fxstale', agentId: 'fxstale', label: 'validate:echo-audit:r1', phase: 'Validate', at: new Date(Date.now() - 40 * 60 * 1000).toISOString() });
+n += 1;
+
 for (const [d, rows] of Object.entries(journals)) fs.writeFileSync(path.join(d, 'journal.jsonl'), rows.map((r) => JSON.stringify(r)).join('\n') + '\n');
 
 const sum = (k) => Object.values(expectedTokens).reduce((t, u) => t + u[k], 0);
 fs.writeFileSync(path.join(out, 'expected.json'), JSON.stringify({
   sentinel: SENTINEL,
-  features: { 'alpha-ledger': 'passed', 'bravo-forms': 'needs_human', 'charlie-export': 'failed', 'delta-board': 'validate' },
+  features: { 'alpha-ledger': 'passed', 'bravo-forms': 'needs_human', 'charlie-export': 'failed', 'delta-board': 'validate', 'echo-audit': 'stalled' },
   bugs: { A1: { status: 'verified', attempts: 1 }, B1: { status: 'needs_human', attempts: 2 }, B9: { status: 'needs_business_definition', attempts: 0 } },
   totals: { input: sum('input'), cacheWrite: sum('cacheWrite'), cacheRead: sum('cacheRead'), output: sum('output') },
   agentTokens: expectedTokens,

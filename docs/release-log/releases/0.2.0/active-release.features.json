@@ -1,0 +1,162 @@
+{
+  "release": "2026-10-02-application-packages",
+  "version": "0.2.0",
+  "title": "Salt Basin application packages release",
+  "repoUrl": "https://github.com/marthasaltersb/saltbasin-website",
+  "integrationBranch": "claude/zealous-meitner-5tuft5",
+  "wipBranch": "claude/zealous-meitner-5tuft5-wip",
+  "trackerArtifact": "https://claude.ai/artifact/5pmGUtvSVEVEyaTCp3EVma",
+  "note": "Feature definitions for the release loop. scripts/release-loop-resume.mjs combines these with docs/release-log/active-release.state.json to produce Workflow args. Fictional data only.",
+  "features": [
+    {
+      "key": "proficiency-live-qr",
+      "title": "Proficiency rules, technology categories, finalization gate, live QR page",
+      "trainingSpec": "docs/training/proficiency-rules-and-live-qr.md",
+      "changeSpec": "docs/changes/proficiency-rules-and-live-qr.md",
+      "build": "Already built (a0ff84a, f1ad622, b1ae2d3, 8fc685e, dd58da6). Validate and fix only.",
+      "dependsOn": []
+    },
+    {
+      "key": "qr-gated-outputs",
+      "title": "QR-gated tailored application outputs: import, metadata, approve for QR, private slug, clickable QR in PDF/docx, revoke",
+      "trainingSpec": "docs/training/qr-gated-outputs.md",
+      "changeSpec": "docs/changes/qr-gated-outputs.md",
+      "build": "Already built (d78bcda, 76b33ad; CLAUDE.md 'Tailored application packages + QR-gated sharing'). Covers: fictional package import, outputs with authors/created/modified metadata, Approve for QR through the technology-category gate, QR image + private /r/<slug> link, private-window view (document, metadata, clickable QR, noindex/no-referrer), PDF with clickable QR to the same slug, newer approval moving the slug, revoke shows 'This link isn't available' and never reissues.",
+      "dependsOn": []
+    },
+    {
+      "key": "no-silent-failures",
+      "title": "No silent failures: snapshot, history, live-data and load errors surfaced",
+      "trainingSpec": "docs/training/no-silent-failures.md",
+      "changeSpec": "docs/changes/no-silent-failures.md",
+      "build": "Already built (8fc685e, dd58da6; docs/changes/failed-commands-reconciliation.md). Journeys inject each failure in the test database and check what the user sees.",
+      "dependsOn": []
+    },
+    {
+      "key": "release-loop-tooling",
+      "title": "Release loop tooling: definition, saved workflow, skill, bug-attempt limit, failure reconciliation, live step logs, tracker sync, test accounts",
+      "trainingSpec": "docs/training/release-loop-tooling.md",
+      "changeSpec": "docs/changes/release-loop-tooling.md",
+      "build": "Already built: server/data/releaseLoop/definition.json, .claude/workflows/release-loop.js, .claude/skills/salt-basin-release-loop/SKILL.md, docs/release-process.md, scripts/release-tracker-sync.mjs, scripts/create-test-member.mjs, scripts/release-loop-resume.mjs, tools/release-tracker/.",
+      "dependsOn": []
+    },
+    {
+      "key": "world-shell-navigation",
+      "title": "World Shell navigation to a tracked job opportunity, its linked draft outputs, provenance and the shared editor",
+      "trainingSpec": "docs/training/world-shell-opportunity-outputs.md",
+      "changeSpec": "docs/changes/world-shell-opportunity-outputs.md",
+      "build": "The member journey works entirely from the World Shell (/world) — admin navigation is irrelevant. Member logs in (lands on /world), reaches the career opportunity pipeline from a World Shell island/entry, opens a tracked opportunity (placeholder: company + role title), sees the application-package outputs linked to it (drafts) with provenance proving they came from the member's own Career Master (source, dates, authors, version, lineage). Opens a draft in the EXISTING shared editor (HerqOutputConfigurator / OutputTemplateConfigurator — no new editor), edits, saves (new draft version), Approve for QR through useToolCategoryGate().run and assertReadyToFinalize. UI to create a placeholder opportunity and link/unlink outputs; import-application-package.mjs option to create/link the placeholder from the gitignored package JSON (never hardcode a company or role). Additive storage. Desktop + 390px. Fictional data: 'Northwind Freight', 'Principal Value Architect'.",
+      "dependsOn": []
+    },
+    {
+      "key": "career-bound-outputs",
+      "title": "Outputs populate from Career Master with per-output overrides; packages enter Career Master via the reconciliation queue",
+      "trainingSpec": "docs/training/career-bound-outputs.md",
+      "changeSpec": "docs/changes/career-bound-outputs.md",
+      "build": "Career Master is the source of truth ('Career Master + overrides'). Template-driven AND imported outputs bind sections (roles, skills, tools, certifications, KPIs) to Career Master, with per-output overrides stored on the output and shown as overridden in the editor (revert per field). An imported package's differences go to the Career Reconciliation queue — accept writes to Career Master through normal CRUD, reject keeps the override. Queue reachable from the World Shell and the output editor (UI, not API-only). Approve/publish through the finalization gate.",
+      "dependsOn": []
+    },
+    {
+      "key": "output-version-history",
+      "title": "Output version history: dates, tracked changes and a timeline slider across versions",
+      "trainingSpec": "docs/training/output-version-history.md",
+      "changeSpec": "docs/changes/output-version-history.md",
+      "build": "Every output lineage (lineage_root_id) shows its full version history in the output editor and My Resume: created/modified dates per version, approver, tracked changes between any two versions (block-level diff shown inline like tracked changes), and a timeline slider scrubbing previous states with the rendered output updating. Reachable from the World Shell opportunity view and the editor.",
+      "dependsOn": [
+        "career-bound-outputs"
+      ]
+    },
+    {
+      "key": "resume-rollups",
+      "title": "Configurable resume rollups: KPI tiles, industry buckets, skill category groups, Career Atom rollups",
+      "trainingSpec": "docs/training/resume-rollups.md",
+      "changeSpec": "docs/changes/resume-rollups.md",
+      "build": "Every rollup feeding resume outputs is editable in a UI screen ('5 · Resume rollups' in CareerExperienceConfigurator, reached from the World Shell): KPI tiles, industry buckets, skill category groups, Career Atom groupings, with live preview. Member-scoped definitions, additive. Outputs read the configured rollups; proficiency from careerProficiencyEngine.js incl. † footnotes.",
+      "dependsOn": []
+    },
+    {
+      "key": "chart-gallery",
+      "title": "Visual chart gallery inside the Output Template editor next to the live preview",
+      "trainingSpec": "docs/training/chart-gallery.md",
+      "changeSpec": "docs/changes/chart-gallery.md",
+      "build": "Replace the old chart picker ('trash') with a visual gallery of the career chart family (src/lib/careerCharts.js) rendered as real thumbnails from the member's data, inside OutputTemplateConfigurator in the same screen as the live preview: pick a chart → it inserts/updates the block → preview updates; options editable in place; 'Rules & why' as a tab in the same editor. Dataviz palette; append-only block registry; reachable from the World Shell.",
+      "dependsOn": []
+    },
+    {
+      "key": "cover-letter-agent",
+      "title": "Cover letter per opportunity, package table of contents, confined cover-letter agent",
+      "trainingSpec": "docs/training/cover-letter-agent.md",
+      "changeSpec": "docs/changes/cover-letter-agent.md",
+      "build": "1) Every job opportunity gets a template cover letter auto-generated against its job rec (no LLM) into its linked drafts, plus a 'Generate for this opportunity' action. 2) The printed package has a title block and numbered table of contents like the original upload (page numbers, clickable entries) and always includes the cover letter. 3) A cover-letter agent the member talks to in plain text from the package editor, reachable from the World Shell opportunity view: confined to the one letter; library search confined to that package; search + deterministic edits first; only then the cheapest model (UI setting, default claude-haiku-4-5-20251001) with search hits and only affected paragraphs, returning iterative edit operations — never a regenerated letter; tracked-changes accept/reject; accept = new draft version; per-turn LLM used/model/tokens/latency recorded; approve/publish through the finalization gate; template/model/tone editable in UI; errors surfaced.",
+      "dependsOn": []
+    },
+    {
+      "key": "release-intelligence",
+      "title": "Release reconciliation, failed-run states and contribution intelligence trends",
+      "trainingSpec": "docs/training/release-intelligence.md",
+      "changeSpec": "docs/changes/release-intelligence.md",
+      "build": "Session, design and build outputs (change specs, training specs, test results, triage, reconciliation reports, release logs, commits) reconcile to master outputs per feature release: features, traced spec versions, validation per round, fixes, failed runs (incl. usage-limit deaths) as first-class states. Contribution trends over time: tokens and time per feature/role/release, rounds-to-pass, failure classes. Additive tables + idempotent importer (scripts/import-release-logs.mjs). Admin screen reachable from the World Shell with dated trend charts and a timeline slider.",
+      "dependsOn": []
+    },
+    {
+      "key": "in-app-release-loop",
+      "title": "Release loop available inside the platform for in-app agents",
+      "trainingSpec": "docs/training/in-app-release-loop.md",
+      "changeSpec": "docs/changes/in-app-release-loop.md",
+      "build": "Platform version of the release loop (server/data/releaseLoop/definition.json): seed the roles incl. reconciliation as platform-default agent_definitions (insert-if-missing); admin /api/release-loop/* endpoints (definition, runs, stage transitions, live step logs) enforcing the gates (no done without passing validation and zero unresolved reconciliation items; per-bug attempt limit → needs_human; maxFixRounds → not passed; needs_business_definition → owner escalation), reusing release-intelligence tables; a 'Release loop' screen from the World Shell (admin) showing the editable definition (version bump), runs, rounds, live steps, bugs with lifecycle incl. verified, fixes, reconciliation items, escalations.",
+      "dependsOn": [
+        "release-intelligence"
+      ]
+    },
+    {
+      "key": "session-mapping",
+      "title": "After-session context / prompt / cache / memory mapping with token, spend and time trends",
+      "trainingSpec": "docs/training/session-mapping.md",
+      "changeSpec": "docs/changes/session-mapping.md",
+      "build": "scripts/analyze-session.mjs reads Claude Code transcripts (+ subagents; message.usage counted once per message id; compactions and usage-limit errors = limit events) and in-app agent runs: tokens by type, cache-hit ratio, agents, time, limit events, spend from a UI-editable price table — metrics and mapping summary only, never transcript text. Mapping proposals into context (CLAUDE.md / skill refs), prompt (skills, workflows, agent prompts), cache (stable prefixes), memory (docs/active-universal-salt-basin-agent-memory-register.md) with evidence and suggested edits. Additive tables; 'Sessions' screen from the World Shell (admin) with mapping queue and dated trends (one axis per chart, timeline slider, before/after of applied mappings). Non-blocking SessionEnd hook in .claude/settings.json plus the in-app agent completion path.",
+      "dependsOn": [
+        "release-intelligence"
+      ]
+    },
+    {
+      "key": "world-shell-layers",
+      "title": "World Shell layered navigation: the sun crystal is the root menu and every click moves one layer deeper, with more detail on each object",
+      "trainingSpec": "docs/training/world-shell-layers.md",
+      "changeSpec": "docs/changes/world-shell-layers.md",
+      "build": "Owner direction (2026-10-09): 'the world shell navigation should leverage the sun crystal menu nav and then every click after is the user moving another layer deep … the user moving through layers with more detail exposed against each object in the scene at each layer.' Today (src/components/WorldShell.jsx) the sun core (CRYSTAL_VARIANTS.signature, ~:259) only zooms out on click; islands come from resolveWorldIslands (src/lib/worldIslands.js); deeper levels are ad-hoc React state (focusedKey, atmosphereKey, selectedOpportunityId in useOpportunityPipeline, OpportunityOutputsSection's editor/historyOpen) with a separate '← Back to World' per level, returnKeyRef one level deep, no breadcrumb and no URL state (refresh loses place). Build ONE layer model, reusing what exists (no new 3D scene, no forked crystal variants — crystalGeometry.js rules): 1) Layer 0 = the sun: clicking the sun crystal opens the root menu — the islands presented around the sun as the menu (keyboard/screen-reader accessible list mirrored in the DOM), each labelled. 2) A useWorldLayers stack hook ({kind, key, label} per layer: island → atmosphere/moon or docked panel → item e.g. opportunity → sub-object e.g. output → version/editor) that every existing level pushes to instead of its own state; every click into an object pushes exactly one layer; the camera moves toward the selected object and the panel for that layer shows more detail about that object than the layer above (summary at the layer above, full detail + its child objects as clickable entries at its own layer). 3) A breadcrumb trail (Sun › island › item › sub-object) always visible in the World Shell; clicking a crumb pops to that layer; existing back buttons become 'pop one layer' (keep their labels working so world-shell-navigation's training spec still passes); Escape and browser Back pop one layer. 4) The stack is in the URL (/world?at=...) so refresh, Back/Forward and shared links restore the exact layer; unknown or no-longer-permitted entries fall back to the deepest valid layer with a visible note (never a blank screen). 5) Applies to members and admins, World / Journeys tabs (Journeys cards push the same layers), classic/embed views are layers too. Desktop and 390px (rail becomes a bottom sheet; crumbs wrap or collapse to '… › current' with the full trail one tap away). Reduced motion: camera cuts instead of flights. Training spec journeys must cover: sun menu → island → opportunity → output → version and back out by crumb, Back, Escape; refresh at depth; a deep link; member and admin; 390px. Fictional data only ('Northwind Freight', 'Principal Value Architect'). Change spec traces to docs/changes/world-shell-opportunity-outputs.md v1 and the island registry design in src/lib/worldIslands.js. BREADCRUMBS ARE THE PATH TAKEN (owner, 2026-10-09: 'i also need to be able to navigate back to the summary pages so i need breadcrumbs'): the trail records every layer the user actually passed through, including summary/list pages — the sun menu, the Journeys grid, an island's list view (e.g. the tracked-opportunities list), an outputs list, a version history — so every summary page is a clickable crumb that returns to it with its scroll position and filters intact. Opening the same object from a different summary page yields a different trail. Training spec must include: reach the same opportunity once via the sun menu and once via the Journeys grid and show each trail returns to the summary page it came from.",
+      "dependsOn": []
+    },
+    {
+      "key": "live-release-tracker",
+      "title": "Live release tracker inside the Salt Basin platform: real-time trends, history slider, drill-down layers and numbered updates",
+      "trainingSpec": "docs/training/live-release-tracker.md",
+      "changeSpec": "docs/changes/live-release-tracker.md",
+      "build": "Owner direction (2026-10-09): 'i want to rebuild this into my platform for real time updates in the salt basin website itself.' Port the release tracker (reference implementation: tools/release-tracker/index.html — its data rules, layers and validated chart palette are the spec; scripts/release-tracker-sync.mjs, release-history.mjs and release-update.mjs define the data shapes) into the platform as a real, live screen. REUSE FIRST: build on release-intelligence (release_* tables created lazily by releaseIntelligenceSchema.js, releaseLogImporter.js already reads tracker snapshots) and on the in-app release loop's screen if it is merged (never a second parallel release store). 1) INGEST, append-only (every snapshot kept, nothing overwritten, so history replays): (a) push — POST /api/release-tracker/snapshots with a per-release ingest token (generated, shown once, stored hashed, revocable in the UI) carrying the snapshot, history and updates JSON; (b) pull — because the agents' cloud container cannot reach saltbasin.net, the platform also fetches the committed files (docs/release-log/active-release.state.json, history.json, updates.json, active-release.features.json) from the configured public GitHub repo + branch, on a GitHub push webhook (HMAC-verified secret) and on a configurable poll interval as fallback. Repo, branch, interval, webhook secret and tokens are all edited in a Settings tab — no API-only configuration. 2) REAL TIME: a server-sent-events stream (/api/release-tracker/stream) notifies open viewers the moment a new snapshot lands; the client refetches and re-renders without a page reload, shows 'Updated N s ago' and a reconnecting state, and falls back to polling if the stream drops — never a silent stale screen. 3) UI reachable from the World Shell (an island/entry 'Release tracker'), rendered in the Salt Basin design language (brand.css tokens, Fraunces/Jost, light + dark): the overview trends panel (Show: Bugs / Test scores / Features passed; As: Totals / Change per update; Feature filter; legend toggles per series; as-of tiles with change vs previous update; time slider over every recorded state with update markers, prev/next-update and Live; the update note at the slider point; per-feature test-score sparklines; Table view), then the drill-down layers with path breadcrumbs (stat tile → list; feature → rounds, own bugs, backlog, agents; round → stages and bugs; bug → root cause, scope with evidence, history with commit links; agent → result, live test log, failures; status updates list → update detail with comparison). URL holds the path so refresh, Back and shared links restore it. Keep the validated chart colours (light #0B79A8,#B0661A,#9C4A8C,#4A8C2A; dark #2794C9,#C27C28,#B566A6,#6BA642), one axis per chart, hover tooltips, and the Table view. Use an existing chart approach in the repo (src/lib/careerCharts.js SVG helpers) or add chart.js as an npm dependency — not a CDN script. 4) ACCESS, configurable in Settings: admins always; selected members by email (e.g. a partner); optional read-only share link with a revocable token. Default admin-only. Bug/agent text shown to non-admin viewers is the same counts/labels-only data the snapshot already limits itself to. 5) The Claude Code side: extend scripts/release-tracker-sync.mjs (or a small companion script) with an optional push to the platform when PLATFORM_URL + an ingest token are set, logging (never hiding) a failed push. Training journeys must cover: ingest by pull with a fictional fixture repo state and by push with a token; a second ingest arriving while the screen is open updates it live without reload (SSE); slider back to an earlier state and Live; each toggle/filter; drill-down and breadcrumbs back to a summary page; access denied for a member not granted; share link view; revoked token rejected; 390px and dark mode. Fictional data only; this repo is public. WORLD VIEW (owner, 2026-10-09: 'turn this into something accessible through a 3d interactive experience using salt basin 3d objects', as a prototype to extend to other data): a Board / World toggle; World renders the same data as a crystal world built ONLY from src/lib/crystalGeometry.js (addCrystalLights, CRYSTAL_VARIANTS.signature as the release sun, buildGemMesh for features and bug satellites, buildRiverParticles for features with a running agent, projectToScreen for labels) — never forked geometry. Encoding (from the reference tools/release-tracker/index.html): crystal colour = feature status (legend in the panel), size = test steps, gold ring arc = share of steps passing, satellites = bugs coloured by the chart series (open / verified / backlog / waiting on a person), light river = agent working now. Drag to orbit, wheel/pinch to zoom, hover tooltip, click a crystal to fly in and open the same drill-down layer in a side panel (bottom sheet at 390px), breadcrumbs and URL shared with the Board, history slider replays the world at any recorded moment, reduced motion = camera cuts and no spin, a DOM list of every crystal for keyboard/screen-reader users, phone hides crowded labels. Build it as a reusable engine: a generic graph contract (root + nodes { id, label, sub, status, statusLabel, weight, progress, active, href, satellites[] }) and a release-tracker adapter, so other worlds (opportunities, Career Master, outputs) only add adapters. Training journeys cover World mode at desktop and 390px, light and dark, fly-in and back by crumb, slider replay. ENVIRONMENT (owner, 2026-10-09: 'make it an underwater scene'): the World is drawn in a swappable environment module, default UNDERWATER (reference: underwaterEnv in tools/release-tracker/index.html) — depth-gradient water with exponential fog, a sea-tinted sand seabed fading into the blue, moving cellular caustics on the sand, swaying light shafts from the surface, rising bubbles and drifting marine snow, kelp anchored outside the camera's orbit so it never crosses a crystal, crystals bobbing gently, white edge lines on crystals for separation from the water, and 'agent working' shown as a stream of bubbles from the centre. Light and dark water palettes; reduced motion stills the water. Add the environment to crystalGeometry.js's family (an environment builder alongside addCrystalLights) rather than a component-local fork. RENDER BINDINGS (owner, 2026-10-09): the tracker's Board and World draw ONLY through render bindings (docs/changes/render-bindings.md, feature render-bindings) — every visual channel mapped to a Port field with transform, legend and change policy; Data map panel per object; pending (approval-required) changes drawn as ghosts with an impact list. If render-bindings is not merged yet when this builds, implement the tracker's bindings through a local registry with the same contract so it swaps to the shared one without changing the renderer.",
+      "dependsOn": []
+    },
+    {
+      "key": "render-bindings",
+      "title": "Render bindings: every rendering is a view over mapped source data, updated live or through approval with impact analysis",
+      "trainingSpec": "docs/training/render-bindings.md",
+      "changeSpec": "docs/changes/render-bindings.md",
+      "build": "Build exactly the design in docs/changes/render-bindings.md (read it first; it includes the reuse-first audit — no new tables). Sources are L1 Ports (data_ports / port_source_objects / port_source_fields) with port_type platform_table | connector | calculation | manual; bound values and provenance in journey_rod_evidence (+ additive columns status, proposed_by, decided_by, decided_at); events in journey_rod_events (value_changed, change_proposed, change_approved, change_rejected, writeback_failed); approval steps in agent_approval_workflows (pipeline 'data_change'); calculations via server/lib/metricIntelligence.js variables; bindings in server/lib/renderBindingRegistry.js (code registry + org/member override seam like currentRegistry.js). Deliver: the binding registry and resolver (renderer receives only bound values, unbound = 'not mapped'); a live path (event + SSE fan-out) and an approval path (proposal → steps → approve/reject, ghost rendering of the proposed value, nothing overwritten); impact analysis computed on demand (bindings reading the field, metrics whose variables include it, Tributary-connected rods), snapshot stored on the change_proposed event; enforcement of port_source_fields.editable_roles; a 'Data map' panel for any rendered object and a 'Pending changes' queue screen reachable from the World Shell (prototype: tools/release-tracker/index.html BINDINGS, dataMapTable, pendingSection). First consumer: the release tracker (a platform_table Port describing the release_* tables, data not moved). Fictional data in specs.",
+      "dependsOn": []
+    },
+    {
+      "key": "platform-mcp",
+      "title": "Platform MCP server: every capability usable by AI agents through MCP, with the same permissions as the website and API, plus a parity map",
+      "trainingSpec": "docs/training/platform-mcp.md",
+      "changeSpec": "docs/changes/platform-mcp.md",
+      "build": "Owner direction (2026-10-09): 'make sure the user interface is accessible not just through APIs but also through MCP and platform interface through my website'. Build the Salt Basin MCP server inside the Express app using the official @modelcontextprotocol/sdk (Streamable HTTP transport at /mcp). AUTH: the caller acts as a real platform user — personal access tokens a user creates, names, scopes and revokes in a 'Connected agents' screen reachable from the World Shell (stored hashed; shown once), and the same requireAuth / role / entitlement checks the API applies (never a privileged bypass). REGISTRY: server/lib/mcpToolRegistry.js — append-only (like the block REGISTRY): each tool { name, title, description, inputSchema, permission, handler } whose handler calls the SAME server/lib function the matching API route calls; tools are never removed or renamed once shipped. Seed tools for the capabilities that exist on the branch today, each mirroring an existing route: Career Master read; career opportunities list/create/open; application outputs list/open/new draft version; approve-for-QR through assertReadyToFinalize (respecting the same gates); cover-letter agent turn; release tracker read (and render-binding data map + pending changes when those exist). Tool calls are tracked through usageTracking.js / SALT_BASIN_TRACKED_INTERACTIONS (reuse, no new analytics table) and failures are returned as MCP errors, never swallowed. PARITY MAP: a config registry (server/lib/capabilityParity.js, no table) listing every capability with its UI path (World Shell route), API route and MCP tool name; a 'Capabilities' screen from the World Shell (admin) shows the map with gaps highlighted, and a check script (scripts/check-interface-parity.mjs) that fails CI-style when a registered API route has no UI path or MCP tool. Training journeys: create a token in the UI (desktop and 390px), connect with an MCP client (the validator uses @modelcontextprotocol/sdk Client over Streamable HTTP) and list tools, call a read tool and see the same data as the UI, call a write tool and see the change appear in the UI, a member without permission gets an MCP error, a revoked token is rejected, the Capabilities screen shows parity and gaps. Fictional data only.",
+      "dependsOn": []
+    },
+    {
+      "key": "platform-agent-runner",
+      "title": "Platform agent runner: work-order-capped agent sessions and a promptable quality-agent roster, run by a Salt Basin agent worker",
+      "trainingSpec": "docs/training/platform-agent-runner.md",
+      "changeSpec": "docs/changes/platform-agent-runner.md",
+      "build": "Owner direction (2026-10-09): run the release loop's agents from inside Salt Basin, on Salt Basin's own infrastructure with the Claude Agent SDK; cap sessions by the change they may make, not by spend; promptable agents for test scripts, test runs (smoke and regression), extra test steps, bugs and triage, enhancement proposals and backlog seeds. The design spec docs/changes/platform-agent-runner.md (version 2) is the requirement: follow its Work orders, Promptable quality agents, model, reuse audit, interface parity and journeys sections exactly. REUSE FIRST: release_loop_* tables and gates from in-app-release-loop (releaseLoopPlatform.js), agent_definitions for the roster, mcpToolRegistry.js for MCP tools, release intelligence for usage, the existing backlog for seeds; additive columns only; no new tables unless the reuse audit proves a gap. BUILD NOW: (1) server/lib/agentRunner.js with one adapter interface and two adapters — a fixture adapter replaying recorded fictional run timelines (all journeys use it; no network, no API key) and an Agent SDK adapter for the worker that is code-complete but only exercised by a dry-run self-test that skips cleanly when no key is set; (2) the worker entry point (scripts/agent-worker.mjs) that claims queued runs, sets up a working copy per run, enforces the work order with a pre-edit check and a post-run diff check (SCOPE_EXCEEDED), and reports progress to the platform API with a worker token; (3) work orders: fields, S/M/L size limits editable in the UI, scope requests with approval; (4) the seven quality agents with versioned prompt files under agents/release-loop/<role>/ and a screen to prompt each one, every output landing as its governed object (draft spec, results, amendment proposal, bug, test plan, enhancement proposal, shaped seed); (5) smoke suites as docs/training/baselines/<feature>/smoke.json (changed only by amendment) and a test plan that picks smoke plus affected regression baselines; (6) backlog seeds seed→shaped→ready→promoted with history; (7) API /api/agent-runner/* (admin) and MCP tools calling the same functions; (8) a Dockerfile/render.yaml worker service definition, commented as needing a paid plan, without changing the existing web service. Do NOT add spend caps. Do NOT call the real Anthropic API in tests. Everything reachable from the World Shell on desktop and at 390px.",
+      "dependsOn": []
+    }
+  ]
+}

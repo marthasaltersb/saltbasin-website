@@ -1,0 +1,796 @@
+{
+  "feature": "release-intelligence",
+  "spec": "docs/training/release-intelligence.md",
+  "version": 1,
+  "frozenAt": "2026-10-09T12:07:13.700Z",
+  "commitAtFreeze": "f63f46bcc9c5bbc32d315f282facd26aac442d05",
+  "specSha256": "77be12c9a16726bfa67075a79bc3008eca265f968c6f9b68f6acf5b540627101",
+  "amendment": null,
+  "previous": null,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "61820eccc9fe16aa",
+      "summary": "Log in, open `/world`, accept the terms if asked, press **Journeys**, press the card **Release Intelligence**."
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4d28ee1a91d3667e",
+      "summary": "**Import** tab: import LOG A at its path."
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "760cefa8098ba1fa",
+      "summary": "Press **Import document** again without changing anything."
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d24392132bbc0eb7",
+      "summary": "**Releases** tab."
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8bc1eb562e0226c9",
+      "summary": "Press **Open** on that row."
+    },
+    {
+      "id": "J3.3",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e74a5f490e8cbd4b",
+      "summary": "In the Features table, row **seed-catalog**:"
+    },
+    {
+      "id": "J3.4",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a4963754826f22f6",
+      "summary": "Row **water-planner**: outcome pill \"not passed\"; rounds cell \"Round 1: fail (3/9 steps) · 1112223\" and \"Not passed\"; fixes \"none\"; failed runs \"1 (1 open)\"; pi"
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a075b598a52800d4",
+      "summary": "**Failed runs** tab."
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "58a72c5dabe6f3e1",
+      "summary": "Set **Filter by state** to `refused`: only the build run remains. Set it back to \"Any state\". Set **Filter by disposition** to `open`: only \"Browser would not s"
+    },
+    {
+      "id": "J4.3",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5fffa75770ec261b",
+      "summary": "In the card **Record a failed run** press **Record failed run** with the form empty."
+    },
+    {
+      "id": "J4.4",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "266151f1e8342561",
+      "summary": "Fill: **Release for new failed run** `2030-01-05-garden-gate`, **Failed run feature key** `water-planner`, **Failed run state** `partial`, **Failed run class** "
+    },
+    {
+      "id": "J4.5",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f54d2cf7a82ca316",
+      "summary": "In the row \"Browser would not start\" set the disposition select (aria-label \"Disposition for Browser would not start\") to `reconciled`, leave the note empty, pr"
+    },
+    {
+      "id": "J4.6",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "387120dee4449d5d",
+      "summary": "In the same row set the class select (\"Class for Browser would not start\") to `test_harness`, type the note `Chromium path was wrong in the harness; fixed and r"
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6ef29b5d2872e5bf",
+      "summary": "**Import** tab: import tracker snapshot A under the key `2030-01-05-garden-gate`."
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "83822626d123dd59",
+      "summary": "**Failed runs** tab."
+    },
+    {
+      "id": "J5.3",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "db7e8429af885235",
+      "summary": "**Releases** -> **Open** `2030-01-05-garden-gate`."
+    },
+    {
+      "id": "J6.1",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "246482f1db72867e",
+      "summary": "**Import** tab: import the document at `docs/changes/compost-notes.md`."
+    },
+    {
+      "id": "J6.2",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a387d5822f109e9d",
+      "summary": "**Outputs** tab."
+    },
+    {
+      "id": "J6.3",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5b5430fc0db5d19a",
+      "summary": "In that row choose `2030-01-05-garden-gate` in the select (aria-label \"Release for docs/changes/compost-notes.md\") and press that row's **Link to release**."
+    },
+    {
+      "id": "J7.1",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c0dd764b93d96bef",
+      "summary": "Import `docs/changes/seed-catalog.md`. Expect the header \"8 gaps\" and, in the seed-catalog row, \"Change: docs/changes/seed-catalog.md (version 1)\". (The spec fi"
+    },
+    {
+      "id": "J7.2",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9a2d0d21f16a8cdf",
+      "summary": "Import `docs/training/seed-catalog.md`. Expect \"6 gaps\" and \"Training: docs/training/seed-catalog.md (version 1)\". A gap now reads \"seed-catalog — Traces-to tar"
+    },
+    {
+      "id": "J7.3",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ede45c5fb61766db",
+      "summary": "Import `docs/changes/base-catalog.md`. Expect \"5 gaps\" and the check \"✓ Traces-to targets resolve: 1 spec trace resolved\"."
+    },
+    {
+      "id": "J7.4",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9fbda70a5808bc3a",
+      "summary": "Import `docs/changes/water-planner.md` and `docs/training/water-planner.md`. Expect \"3 gaps\": \"seed-catalog — No open failed runs: 1 failed run is still open\", "
+    },
+    {
+      "id": "J7.5",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "faf1ac835058be16",
+      "summary": "**Failed runs** tab. For each of these three runs set the disposition, class and note, and press **Save disposition** (each row then shows \"Set by betsy@test.lo"
+    },
+    {
+      "id": "J7.6",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a41638ae79b24d73",
+      "summary": "**Releases** -> **Open** `2030-01-05-garden-gate`. Type `Looks complete` in **Approval or reopen note** and press **Approve reconciliation**."
+    },
+    {
+      "id": "J7.7",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "758f1923958c7a43",
+      "summary": "**Import** tab: import LOG A2 at the same path as LOG A."
+    },
+    {
+      "id": "J7.8",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3cdd3ce18b9457df",
+      "summary": "**Failed runs** tab: the run \"Browser would not start\" still shows \"Set by betsy@test.local\" and class `test_harness` (a reviewer's decision survives a re-impor"
+    },
+    {
+      "id": "J7.9",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "15b4606de7d4045f",
+      "summary": "**Releases** -> **Open** `2030-01-05-garden-gate`."
+    },
+    {
+      "id": "J7.10",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a72b1abea30aecfd",
+      "summary": "Type `Every check passes; specs, rounds and failed runs reconciled` in the note, press **Approve reconciliation**."
+    },
+    {
+      "id": "J7.11",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9fb239c28ce15aec",
+      "summary": "Clear the note and press **Reopen release**."
+    },
+    {
+      "id": "J7.12",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6a81ab5bcefc6253",
+      "summary": "In **Reconciliation history** expect, newest first, events `reopen`, `approve`, `import` (document, \"updated\"), three `disposition` lines with their notes, and "
+    },
+    {
+      "id": "J8.1",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "43d85702f3177837",
+      "summary": "**Import** tab: import release log B and then tracker snapshot B (key `2030-02-09-harvest-board`); then import release log C only (no snapshot yet)."
+    },
+    {
+      "id": "J8.2",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9c63130bde01542a",
+      "summary": "**Trends** tab."
+    },
+    {
+      "id": "J8.3",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9da9120f47f2002d",
+      "summary": "**Import** tab: import tracker snapshot C (key `2030-03-14-orchard-map`), return to **Trends**."
+    },
+    {
+      "id": "J8.4",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "334a04236a1e5740",
+      "summary": "Focus the **Timeline slider** and press **Home**."
+    },
+    {
+      "id": "J8.5",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6a0ce673a130b562",
+      "summary": "Set **Break down by** to `By role`: the Tokens chart gets a legend with `build` and `validate`; tooltips for 2030-01-05 are `build: 9,000 tokens` and `validate:"
+    },
+    {
+      "id": "J8.6",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fe2d26233b8b3384",
+      "summary": "Set **Break down by** to `By feature` and **Token measure** to `All tokens`: the chart subtitle reads \"All tokens per release, by feature\"; the tooltip for 2030"
+    },
+    {
+      "id": "J9.1",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f53b589ca5738c32",
+      "summary": "**Settings** tab."
+    },
+    {
+      "id": "J9.2",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4e8798c5b326a0eb",
+      "summary": "Set **Maximum chart series** to `9`, press **Save settings**: alert \"maxSeries must be a whole number from 1 to 5\". Set it back to `5`."
+    },
+    {
+      "id": "J9.3",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ae61e0013b6b4064",
+      "summary": "Set **Change specs folder** to `docs/changes` (no trailing slash), press **Save settings**: alert `logLocations.changeSpec must be a relative folder ending in \""
+    },
+    {
+      "id": "J9.4",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4baa6532abcdf396",
+      "summary": "Remove `, unclassified` from **Failure classes**, press **Save settings**: alert `failureClasses must include \"unclassified\"`. Put it back."
+    },
+    {
+      "id": "J9.5",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "cb8f3fafca7894c6",
+      "summary": "Append `, flaky_network` to **Failure classes**, set **Default token measure** to `Input tokens`, press **Save settings**."
+    },
+    {
+      "id": "J9.6",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d051ee7842894751",
+      "summary": "**Failed runs** tab: **Failed run class** now offers `flaky_network`. **Trends** tab: **Token measure** starts on \"Input tokens\" and the Tokens chart subtitle s"
+    },
+    {
+      "id": "J9.7",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "bed61126e6282fee",
+      "summary": "**Settings** -> **Reset to defaults**: expect \"Showing the built-in defaults. Saving stores an override.\""
+    },
+    {
+      "id": "J10.1",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4dfae8e2671be49e",
+      "summary": "**Releases** tab, **New release record**. Type `pond` into **Release key**, press **Create release record**."
+    },
+    {
+      "id": "J10.2",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "aa0ba93d16d2c1bb",
+      "summary": "Type `bad key!`: alert `Release key may use letters, digits, \".\", \"_\" and \"-\" only`."
+    },
+    {
+      "id": "J10.3",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8f7dae13fe99cbe4",
+      "summary": "Type `2030-04-01-pond-lights` into **Release key** and `Pond Lights` into **Release name**, press **Create release record**."
+    },
+    {
+      "id": "J10.4",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9ac13b6cc7663437",
+      "summary": "Under Features fill **Feature key** `pond-pump`, **Feature name** `Pond pump`, keep **Final status** `passed`, press **Add feature to release**."
+    },
+    {
+      "id": "J10.5",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1aeb2ed2fde8fcc2",
+      "summary": "Press **Approve reconciliation**: alert \"This release is not reconciled yet\". Press **← All releases**, type `2030-04-01-pond-lights` into **Release key** again"
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "99f48d7077ce587a",
+      "summary": "**Idempotent importer script** (needs a terminal, so it is optional for the browser validator): `node scripts/import-release-logs.mjs` run twice against the sam"
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "cc594ffd62391ba9",
+      "summary": "Importing a document outside the configured folders, or not ending in `.md`, is reported as `skipped` with the reason, not ignored."
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "394f5e03d9c7db06",
+      "summary": "A release log with no `Date:` header and a key that does not start with a date is refused with a message saying so; nothing is imported from it."
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "177127f7f04f85d5",
+      "summary": "Pasting something that is not JSON into **Snapshot JSON**, or JSON without an `agents` list, shows an error alert; nothing is imported."
+    },
+    {
+      "id": "E.5",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3c5bcc1c954c212c",
+      "summary": "The platform's own repository logs (`docs/changes/failed-commands-reconciliation.md`) import as real failed runs, with their \"Status\" mapped to dispositions; no"
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "44918a1b006ad6fd"
+    },
+    {
+      "title": "Preconditions",
+      "kind": "precondition",
+      "hash": "e76f6b1526296664"
+    },
+    {
+      "title": "Features",
+      "kind": "context",
+      "hash": "8d378d64da1105f3"
+    },
+    {
+      "title": "Validation rounds",
+      "kind": "context",
+      "hash": "e7b000321b5e90e3"
+    },
+    {
+      "title": "Fixes",
+      "kind": "context",
+      "hash": "9375b58ea2889685"
+    },
+    {
+      "title": "Failed runs",
+      "kind": "context",
+      "hash": "a4c3da6cf05f3f26"
+    },
+    {
+      "title": "Traces to",
+      "kind": "context",
+      "hash": "d789759bdc2f63d4"
+    },
+    {
+      "title": "What changed",
+      "kind": "context",
+      "hash": "a2fae21cfa56d78d"
+    },
+    {
+      "title": "Traces to",
+      "kind": "context",
+      "hash": "e7f86fadab04f1ac"
+    },
+    {
+      "title": "What changed",
+      "kind": "context",
+      "hash": "c5c3834fc6220732"
+    },
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "a17cec2650e26969"
+    },
+    {
+      "title": "Traces to",
+      "kind": "context",
+      "hash": "e7f86fadab04f1ac"
+    },
+    {
+      "title": "What changed",
+      "kind": "context",
+      "hash": "df37369c4f79bad1"
+    },
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "6f0bc4d173bd38e7"
+    },
+    {
+      "title": "Traces to",
+      "kind": "context",
+      "hash": "d789759bdc2f63d4"
+    },
+    {
+      "title": "What changed",
+      "kind": "context",
+      "hash": "ff854c052b24a0c6"
+    },
+    {
+      "title": "Features",
+      "kind": "context",
+      "hash": "7727f0255932739f"
+    },
+    {
+      "title": "Validation rounds",
+      "kind": "context",
+      "hash": "09d77feea4a9eb04"
+    },
+    {
+      "title": "Fixes",
+      "kind": "context",
+      "hash": "6e2a8cfc4efb1ad2"
+    },
+    {
+      "title": "Failed runs",
+      "kind": "context",
+      "hash": "096e967959369c14"
+    },
+    {
+      "title": "Features",
+      "kind": "context",
+      "hash": "d8a666aebfac0a3b"
+    },
+    {
+      "title": "Validation rounds",
+      "kind": "context",
+      "hash": "189e65b525ad675a"
+    },
+    {
+      "title": "Journey 1 — Open the screen; empty state",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 2 — Import a release log; re-import is idempotent",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 3 — Release record, features and reconciliation checks",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 4 — Failed runs are first-class: list, filter, record, dispose",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 5 — Tracker snapshot: tokens, time, and an agent that died at a usage limit",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 6 — Outputs: nothing is left unattributed",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 7 — Reconcile a release to its specs, then approve",
+      "kind": "journey",
+      "hash": "7cf2164903316694"
+    },
+    {
+      "title": "Journey 8 — Contribution trends over time",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 9 — Everything configurable is editable on screen",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 10 — Create a release record by hand",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    }
+  ]
+}

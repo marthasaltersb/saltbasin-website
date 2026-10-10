@@ -1,0 +1,24 @@
+{
+  "description": "Proposes one improvement from observations",
+  "agents": [
+    "release_enhancement_proposer"
+  ],
+  "events": [
+    {
+      "t": "progress",
+      "text": "Reading recent observations (fixture)"
+    }
+  ],
+  "result": {
+    "title": "Show a seed packet count on the reminders list",
+    "problem": "Owners cannot see how many reminders exist without scrolling",
+    "evidence": "Observation from the seed-catalog round 1 (fictional)",
+    "value": "Faster scanning of the list",
+    "size": "S"
+  },
+  "usage": {
+    "inputTokens": 500,
+    "outputTokens": 200,
+    "observed": false
+  }
+}

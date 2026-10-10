@@ -1,0 +1,27 @@
+{
+  "description": "A short, parseable draft training spec for a fictional feature",
+  "agents": [
+    "release_test_script_writer"
+  ],
+  "events": [
+    {
+      "t": "progress",
+      "text": "Reading the change spec (fixture)"
+    },
+    {
+      "delayMs": 500,
+      "t": "progress",
+      "text": "Drafting preconditions, one journey and edge cases"
+    }
+  ],
+  "result": {
+    "feature": "seed-reminders",
+    "title": "Seed packet reminders",
+    "markdown": "# Training spec - seed packet reminders\n\nFictional garden-supplies feature used only as a recorded example.\n\n## Where things are\n\n- Garden shop > Reminders (reachable from the shop home screen).\n\n## Preconditions\n\n1. A shop account exists with one product \"Basil seed packet\".\n\n## Journey 1 - Create a reminder\n\n1. Click **Reminders**, then **New reminder**.\n   - Expect the heading **New reminder** and an empty **Product** field.\n2. Type `Basil seed packet` into **Product** and click **Save**.\n   - Expect the text **Reminder saved** and one row **Basil seed packet**.\n\n## Edge cases\n\n- Saving with **Product** empty shows **Choose a product** and saves nothing.\n"
+  },
+  "usage": {
+    "inputTokens": 1500,
+    "outputTokens": 900,
+    "observed": false
+  }
+}

@@ -22,7 +22,7 @@ const STATUS = {
   seen_in_test: 'Seen in test, awaiting triage', retesting: 'Fixed, being retested now',
   retest_failed_pending_triage: 'Retest failed, being triaged', passed_with_backlog: 'Passed (backlog elsewhere)',
   backlog_pre_existing: 'Backlog: was already broken', reassigned: 'Belongs to another feature', process_note: 'Test or process note',
-  stopped: 'Stopped (run replaced)', awaiting_retest: 'Fixed, awaiting retest',
+  stopped: 'Stopped (run replaced)', stalled: 'Stalled (no sign of life)', awaiting_retest: 'Fixed, awaiting retest',
 };
 const EVENT = { found: 'Found', recurred: 'Came back', fixed: 'Fix applied', not_fixed: 'Not fixed', seen: 'Seen in test', verified: 'Verified fixed' };
 const SCOPE = { this_feature: 'This feature', pre_existing: 'Was already broken before this work', other_feature: 'Another feature', process_note: 'Test or process note, not a product bug' };
@@ -64,7 +64,7 @@ L.push('# Release tracker', '',
 L.push('## Features', '', '| Feature | Status | Latest test | Rounds | Its own bugs verified | Backlog |', '|---|---|---|---|---|---|',
   ...features.map((f) => {
     const r = f.lastResult; const ob = ownBugs(f.key);
-    return `| ${fLink(f.key)} | ${st(f.status)} | ${r ? `Round ${r.round}: ${r.stepsPassed}/${r.stepsTotal}` : 'Not tested yet'} | ${f.rounds} | ${ob.length ? `${ob.filter((b) => b.status === 'verified').length} of ${ob.length}` : '—'} | ${f.backlog || 0} |`;
+    return `| ${fLink(f.key)} | ${st(f.status)} | ${r ? `Round ${r.round}: ${r.stepsPassed}/${r.stepsTotal}${r.baseline ? ` (baseline v${r.baseline})` : ''}` : 'Not tested yet'} | ${f.rounds} | ${ob.length ? `${ob.filter((b) => b.status === 'verified').length} of ${ob.length}` : '—'} | ${f.backlog || 0} |`;
   }), '');
 
 L.push('## Agents running', '', running.length

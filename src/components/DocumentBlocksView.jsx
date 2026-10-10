@@ -4,6 +4,7 @@
 // (SharedOutputPage). The PDF twin of this layout is
 // server/lib/outputRendering.js's renderDocumentBlocks — keep them aligned.
 import React from 'react';
+import { contactText } from '../lib/headerContact.js';
 
 const INK = '#1B2A3B';
 const GOLD = '#C4843A';
@@ -91,7 +92,7 @@ export default function DocumentBlocksView({ content, qrSvg = null, qrHref = nul
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: '1.6rem', fontWeight: 700, lineHeight: 1.15 }}>{header.name}</div>
           {header.headline && <div style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.06em', color: TEAL, marginTop: '0.25rem' }}>{header.headline}</div>}
-          {header.contact && <div style={{ fontSize: '0.75rem', color: MUTED, marginTop: '0.2rem' }}>{header.contact}</div>}
+          {contactText(header.contact) && <div style={{ fontSize: '0.75rem', color: MUTED, marginTop: '0.2rem' }}>{contactText(header.contact)}</div>}
         </div>
         {qrSvg && (
           <figure style={{ margin: 0, width: 84, flexShrink: 0, textAlign: 'center' }}>

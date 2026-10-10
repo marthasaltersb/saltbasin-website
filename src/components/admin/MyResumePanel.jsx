@@ -14,7 +14,7 @@ import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
 import { fetchCareerMaster } from '../../lib/careerMaster.js';
 import CareerIntakePanel from './CareerIntakePanel.jsx';
-import { resumeUrlFromPreset } from '../../lib/resumeUrls.js';
+import { resumeUrlFromPreset, withOwnerMe } from '../../lib/resumeUrls.js';
 import DocumentBlocksView, { formatMetadataLine, isDocumentBlocks } from '../DocumentBlocksView.jsx';
 import { useToolCategoryGate } from './ToolCategoryGate.jsx';
 import CareerBoundOutputEditor from './CareerBoundOutputEditor.jsx';
@@ -213,7 +213,7 @@ const LAYOUTS = [
 // Executive Summary dashboard on the Modern/Corporate layouts. Only added
 // when explicitly turned off, since both default to on.
 function presetPreviewUrl(preset) {
-  return resumeUrlFromPreset(preset, { includePresetId: true });
+  return resumeUrlFromPreset(preset, { includePresetId: true, owner: 'me' });
 }
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
@@ -490,6 +490,26 @@ export default function MyResumePanel({ scope = 'member' }) {
   // generated, imported, or the general preset-based ones this panel already
   // creates) — see server/lib/outputRendering.js.
   const [selectedOutputIds, setSelectedOutputIds] = useState(new Set());
+  const [freshness, setFreshness] = useState({}); // outputId -> staleness result or { error }
+  const [pkgImport, setPkgImport] = useState({ busy: false, linkOpportunity: false, message: null });
+  async function checkFreshness(id) {
+    try {
+      const r = await api.getResumeOutputStaleness(id);
+      setFreshness((f) => ({ ...f, [id]: r }));
+    } catch (e) { setFreshness((f) => ({ ...f, [id]: { error: e.message } })); }
+  }
+  async function importPackageFile(file) {
+    if (!file) return;
+    setPkgImport((s) => ({ ...s, busy: true, message: null }));
+    try {
+      let pkg;
+      try { pkg = JSON.parse(await file.text()); } catch (e) { throw new Error(`That file is not valid JSON: ${e.message}`); }
+      const r = await api.importApplicationPackage(pkg, pkgImport.linkOpportunity);
+      const n = (r.results || []).length;
+      setPkgImport((s) => ({ ...s, busy: false, message: { ok: true, text: `Imported ${n} document${n === 1 ? '' : 's'}${r.opportunity ? ' and linked them to an opportunity' : ''}. Unchanged documents are skipped.` } }));
+      loadResumeOutputs();
+    } catch (e) { setPkgImport((s) => ({ ...s, busy: false, message: { ok: false, text: e.message } })); }
+  }
   const [historyOutputId, setHistoryOutputId] = useState(null); // output whose version history is open
   const [viewingOutput, setViewingOutput] = useState(null); // fetched digital-view JSON, or null
   const [exportingZip, setExportingZip] = useState(false);
@@ -554,7 +574,7 @@ export default function MyResumePanel({ scope = 'member' }) {
   const [agentDiff, setAgentDiff] = useState(null); // structured diff from agent
   const [acceptingDiff, setAcceptingDiff] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState('/output/resume');
+  const [previewUrl, setPreviewUrl] = useState(withOwnerMe('/output/resume'));
   const iframeRef = useRef(null);
 
   useEffect(() => {
@@ -633,7 +653,7 @@ export default function MyResumePanel({ scope = 'member' }) {
     try {
       const shared = await categoryGate.run(() => api.shareResumeOutput(output.id));
       try { await navigator.clipboard.writeText(shared.url); } catch { /* clipboard is best-effort */ }
-      toast.success('Approved — private QR link created (copied to clipboard).');
+      toast.success('Approved - private QR link created (copied to clipboard).');
       for (const w of shared.warnings || []) toast.error(w);
       loadResumeOutputs();
     } catch (e) { toast.error(e.message); }
@@ -924,6 +944,20 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
         </div>
       </div>
 
+      <div data-testid="package-import" style={{ margin: '1rem 0', padding: '0.9rem', border: '1px solid var(--sb-border, #ddd)', borderRadius: 8 }}>
+        <h3 style={{ margin: '0 0 0.3rem', fontSize: '1rem' }}>Import an application package</h3>
+        <p style={{ margin: '0 0 0.5rem', fontSize: '0.82rem', lineHeight: 1.5 }}>
+          Choose a package file (.json) prepared with the extraction tool. Each document is filed as a draft output; unchanged documents are skipped. Nothing is approved or shared by importing.
+        </p>
+        <label style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', fontSize: '0.82rem', marginBottom: '0.5rem' }}>
+          <input type="checkbox" checked={pkgImport.linkOpportunity} onChange={(e) => setPkgImport((s) => ({ ...s, linkOpportunity: e.target.checked }))} />
+          Link the documents to an opportunity made from the package's company and role
+        </label>
+        <input type="file" accept="application/json,.json" aria-label="Application package file" disabled={pkgImport.busy}
+          onChange={(e) => { importPackageFile(e.target.files?.[0]); e.target.value = ''; }} style={{ maxWidth: '100%', minHeight: 44 }} />
+        {pkgImport.busy && <div role="status" style={{ fontSize: '0.8rem', marginTop: '0.4rem' }}>Importing…</div>}
+        {pkgImport.message && <div role={pkgImport.message.ok ? 'status' : 'alert'} style={{ fontSize: '0.82rem', marginTop: '0.4rem', color: pkgImport.message.ok ? '#2e7d32' : '#b3261e' }}>{pkgImport.message.text}</div>}
+      </div>
       <CoverLetterPackagesPanel onOpenLetter={setAgentLetterId} onOutputsChanged={loadResumeOutputs} reloadKey={packagesReload} />
 
       {/* Resume Output Projection history — master-org-admin-config.md §5.
@@ -1008,6 +1042,16 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
                 </div>
                 <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                   <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setHistoryOutputId(output.id)}>Version history</button>
+                  <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => checkFreshness(output.id)} data-testid={`check-freshness-${output.id}`}>Check freshness</button>
+                  {freshness[output.id] && (
+                    <span role="status" style={{ fontSize: '0.72rem', alignSelf: 'center', color: freshness[output.id].error ? '#b3261e' : freshness[output.id].isStale ? '#b36b00' : '#2e7d32' }}>
+                      {freshness[output.id].error
+                        ? `Could not check: ${freshness[output.id].error}`
+                        : freshness[output.id].isStale
+                          ? `Out of date: your Career Master has ${Math.abs(freshness[output.id].atomCountDelta)} atom change${Math.abs(freshness[output.id].atomCountDelta) === 1 ? '' : 's'} since this was generated (${freshness[output.id].projectionAtomCount} then, ${freshness[output.id].currentAtomCount} now).`
+                          : 'Up to date with your Career Master.'}
+                    </span>
+                  )}
                   {output.generatedContent?.format === 'career_bound' && output.outputStatus !== 'archived' && (
                     <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setBoundEditId(output.id)}>Edit sections</button>
                   )}
@@ -1015,6 +1059,9 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
                     <>
                       <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => openOutputView(output.id)}>View</button>
                       <a href={api.downloadResumeOutputUrl(output.id)} style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Download PDF</a>
+                      {output.generatedContent?.format === 'document_blocks' && (
+                        <a href={api.downloadResumeOutputDocxUrl(output.id)} style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Download .docx</a>
+                      )}
                     </>
                   )}
                   {output.outputType === 'cover_letter' && output.generatedContent && output.outputStatus !== 'archived' && (
@@ -1059,7 +1106,7 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
               <div>
                 <h3 style={{ margin: 0, color: 'var(--sb-navy, #1b2a3b)' }}>{viewingOutput.title}</h3>
                 <div style={{ fontSize: '0.72rem', color: '#888' }}>
-                  Generated {new Date(viewingOutput.generatedAt).toLocaleString()} · Read-only — no edits can be made here.
+                  Generated {new Date(viewingOutput.generatedAt).toLocaleString()} · Read-only - no edits can be made here.
                 </div>
               </div>
               <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => setViewingOutput(null)}>Close</button>
@@ -1110,9 +1157,10 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
         </div>
       )}
       {queueOpen && createPortal(
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} role="dialog" aria-label="Career Sources to Review">
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} role="dialog" aria-modal="true" aria-labelledby="career-sources-dialog-title">
           <div style={{ background: '#fff', color: '#1b2a3b', borderRadius: 10, padding: 'clamp(0.5rem, 2.5vw, 1.25rem)', width: 'min(1100px, 98vw)', maxHeight: '94vh', overflowY: 'auto', boxSizing: 'border-box' }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.4rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+              <h2 id="career-sources-dialog-title" style={{ margin: 0, fontSize: '1.05rem', color: '#1b2a3b' }}>Career Sources to Review</h2>
               <button style={{ ...S.btn('outline'), padding: '4px 10px', fontSize: '0.72rem' }} onClick={() => { setQueueOpen(false); loadResumeOutputs(); }}>Close</button>
             </div>
             <Suspense fallback={<div style={{ fontSize: '0.8rem', color: '#666' }}>Loading...</div>}><CareerReconciliationPanel /></Suspense>
@@ -1145,10 +1193,10 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
       {showPreview && (
         <div style={{ marginBottom: '1.5rem', border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: 10, overflow: 'hidden' }}>
           <div style={{ background: 'rgba(0,0,0,0.03)', borderBottom: '0.5px solid rgba(0,0,0,0.1)', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '0.75rem', color: '#666' }}>Resume Preview · {LAYOUTS.find(l => l.url === previewUrl)?.name || 'Resume'}</span>
+            <span style={{ fontSize: '0.75rem', color: '#666' }}>Resume Preview · {LAYOUTS.find(l => withOwnerMe(l.url) === previewUrl.replace(/&(preset|execSummary|capabilityMeters|industryBars|toolBars|clientVoice)=[^&]*/g,'').replace(/\?(preset)=[^&]*&?/,'?'))?.name || 'Resume'}</span>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
               {LAYOUTS.filter(l => l.url !== '/output/domains' && l.url !== '/output/portfolio-appendix' && l.url !== '/output/case-study-portfolio').map(l => (
-                <button key={l.id} style={{ ...S.btn(previewUrl === l.url ? 'navy' : 'outline'), padding: '2px 8px', fontSize: '0.68rem' }} onClick={() => setPreviewUrl(l.url)}>{l.name}</button>
+                <button key={l.id} style={{ ...S.btn(previewUrl === withOwnerMe(l.url) ? 'navy' : 'outline'), padding: '2px 8px', fontSize: '0.68rem' }} onClick={() => setPreviewUrl(withOwnerMe(l.url))}>{l.name}</button>
               ))}
               <a href={previewUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.72rem', color: 'var(--sb-teal-deep, #02a1a6)', textDecoration: 'none', marginLeft: 4 }}>↗ full tab</a>
             </div>

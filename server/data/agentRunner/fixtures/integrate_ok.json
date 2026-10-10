@@ -1,0 +1,34 @@
+{
+  "description": "Merges after a short pause (used to show integrations running one after another)",
+  "agents": [
+    "release_integrator"
+  ],
+  "events": [
+    {
+      "t": "progress",
+      "text": "Taking the integration lock for the branch"
+    },
+    {
+      "delayMs": 2500,
+      "t": "progress",
+      "text": "Merged; npm run build passes (fixture)"
+    },
+    {
+      "delayMs": 1500,
+      "t": "progress",
+      "text": "Releasing the integration lock"
+    }
+  ],
+  "result": {
+    "merged": true,
+    "head": "fixture0002",
+    "conflicts": [],
+    "buildPassed": true,
+    "notes": "Merged in the fixture session"
+  },
+  "usage": {
+    "inputTokens": 700,
+    "outputTokens": 150,
+    "observed": false
+  }
+}

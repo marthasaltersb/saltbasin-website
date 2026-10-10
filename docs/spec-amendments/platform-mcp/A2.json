@@ -1,0 +1,36 @@
+{
+  "id": "A2",
+  "feature": "platform-mcp",
+  "fromBaseline": 1,
+  "proposedBy": "fix:platform-mcp:r1",
+  "round": 1,
+  "triageItems": [
+    "platform-mcp-B11"
+  ],
+  "reason": "Bearer-token authentication on /mcp had no abuse limit, unlike the website's login. The product now answers 429 after repeated failed token attempts from one address (same in-process pattern as the auth limiter: 10 failures per 15 minutes) and after too many requests per token (300 per minute). The spec has no step for either.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "E.7",
+      "after": "(Run this step LAST in a pass: it locks the tester's address out of /mcp for 15 minutes.) Run 11 times: `curl -s -o /dev/null -w \"%{http_code} \" -H \"Authorization: Bearer sbpat_not-a-real-token\" -X POST <API_BASE>/mcp`. Expect ten responses of `401` followed by `429`. Then run `curl -s -i -H \"Authorization: Bearer sbpat_not-a-real-token\" -X POST <API_BASE>/mcp`. Expect status 429, a `Retry-After` header of at most 900, and a JSON body whose `error.data.code` is `rate_limited`.",
+      "tracesTo": "docs/changes/platform-mcp.md 'Known limitations' (Rate limiting of /mcp is not added in this version); server/routes/auth.js authLimiter (10 attempts / 15 min / IP)",
+      "reason": "A guessed-token flood must be slowed the same way a password-guessing flood is."
+    }
+  ],
+  "review": {
+    "status": "rejected",
+    "reviewer": "amend:platform-mcp:r1",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass (no retirement)",
+      "Exact": "pass",
+      "Reachable": "pass",
+      "Deterministic": "fail: server/lib/mcpServer.js counts EVERY 401 from an address in one 15 minute window (failedAuth.hit on any 401, including a missing token). Earlier steps of the same pass already produce 401s from the tester address: J2.2, J2.3, E.3, J9.4 and J9.5 (five). Run after them, 11 requests give five 401 then six 429, not ten 401 then 429. The result depends on which other steps ran before it.",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "The requirement is right (a guessed-token flood must be slowed like login: 10 failures per 15 minutes per address), but E.7 as written fails against the code under test. No product change needed. Re-propose with an exact expectation that counts the earlier failures: send bad-token requests one at a time and expect 401 until the cumulative number of 401 responses from the tester address in this pass (counting J2.2, J2.3, E.3, J9.4, J9.5) reaches 10, then 429 on every request after that with Retry-After <= 900 and error.data.code rate_limited; or state the MCP_AUTH_FAIL_MAX the server is booted with.",
+    "at": "2026-10-09T17:00:00.000Z"
+  }
+}

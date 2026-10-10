@@ -1,0 +1,560 @@
+{
+  "feature": "qr-gated-outputs",
+  "spec": "docs/training/qr-gated-outputs.md",
+  "version": 1,
+  "frozenAt": "2026-10-09T12:07:13.073Z",
+  "commitAtFreeze": "f63f46bcc9c5bbc32d315f282facd26aac442d05",
+  "specSha256": "a57784296471ae79e8921426fe1f1f5e38c04b8f225d2900cf22295e3d0cb779",
+  "amendment": null,
+  "previous": null,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "P.1",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "e506bca5e4b178c6",
+      "summary": "**Sign in** at `<BASE>/login` as the seeded administrator (the `ADMIN_EMAIL` / `ADMIN_INITIAL_PASSWORD` of the environment). Sign in once and reuse the session;"
+    },
+    {
+      "id": "P.2",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "d4b552be7139b380",
+      "summary": "**Add a technology with no category** (this is what makes the finalization gate appear). Go to Career Master, click **Tools (0)**, click **+ Add**, and fill:"
+    },
+    {
+      "id": "P.3",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "2bc50131b8ae8cf8",
+      "summary": "**Create the fictional package file** (outside the repository; never commit it). Run:"
+    },
+    {
+      "id": "P.4",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "ee3d7b9a5999025d",
+      "summary": "**Import version 1** (this one command is the only non-UI precondition; there is no import screen):"
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "88e1befd46219735",
+      "summary": "Open My Resume and scroll to **Resume Output History** (reload the page if you were already on it)."
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6d048bc263837cd5",
+      "summary": "Read each card."
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2afcc2a16139df63",
+      "summary": "On **Harbor Demo Resume** click **View**."
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d51ec129fe9e0388",
+      "summary": "Click **Close**. Expect the dialog to disappear."
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0768dfb75d04fbf2",
+      "summary": "On **Harbor Demo Resume** click **Approve for QR**."
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3c9a69ba04916f23",
+      "summary": "Expect a dialog titled **Set how each technology was used** listing **Harborbook ERP** with a dropdown whose options are `Choose…`, `Hands-on (suggested)`, `Int"
+    },
+    {
+      "id": "J3.3",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3abaadcf7537b703",
+      "summary": "Choose `Hands-on (suggested)` (already selected) and click **Save to Career Master and continue**."
+    },
+    {
+      "id": "J3.4",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1e9a3879c332f2b2",
+      "summary": "Read the **Harbor Demo Resume** card."
+    },
+    {
+      "id": "J3.5",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2055465bdb623fef",
+      "summary": "Open Career Master, **Tools (1)**, click Harborbook ERP. Expect its field \"How it was used - proficiency category\" to read `hands_on`."
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "419dc83da3529084",
+      "summary": "Click **Copy link**. Expect the toast \"Link copied.\" Paste the clipboard into the address bar: it equals the link on the card."
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e03fbbfadd265ebc",
+      "summary": "Click the QR image. Expect a new tab opening `<BASE>/r/<SLUG1>` (the document renders)."
+    },
+    {
+      "id": "J4.3",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4d4714f175039112",
+      "summary": "Click **QR (SVG)** and **QR (PNG)**. Expect downloads named `qr-<id>.svg` and `qr-<id>.png`; the SVG is an image of a QR code, the PNG is at least 600 px wide."
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b0b4b489381d4ab2",
+      "summary": "Expect the page (no sign-in prompt) with:"
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "55a109010192cece",
+      "summary": "Click the QR image. Expect to stay on `<BASE>/r/<SLUG1>` (the QR is a link to its own slug)."
+    },
+    {
+      "id": "J5.3",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "779a9b72e0cebc8d",
+      "summary": "Check the page's privacy headers:"
+    },
+    {
+      "id": "J5.4",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "14e94b27cbe6aaca",
+      "summary": "In the browser console or developer tools, expect `meta[name=robots]` with content `noindex, nofollow, noarchive`."
+    },
+    {
+      "id": "J6.1",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3f9e827c0e8e8819",
+      "summary": "On the private page click **Download PDF** (or open `<BASE>/api/shared-outputs/<SLUG1>/download.pdf`). Expect an HTTP 200 `application/pdf` with a filename like"
+    },
+    {
+      "id": "J6.2",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4735b5a0cd0a27f1",
+      "summary": "Save it as `/var/tmp/qr-demo/resume.pdf` and run:"
+    },
+    {
+      "id": "J6.3",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "bb9ba14bae4cbd46",
+      "summary": "In My Resume click **Download PDF** on the same card. Expect the same kind of PDF (HTTP 200)."
+    },
+    {
+      "id": "J7.1",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "45a4c0c3f410b09e",
+      "summary": "On **Harbor Demo Cover Letter** click **Approve for QR**; accept the confirm (`Approve \"Harbor Demo Cover Letter\" ...`)."
+    },
+    {
+      "id": "J7.2",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2e1b131548a26a71",
+      "summary": "Expect `<SLUG2>` to differ from `<SLUG1>`. Open both in a private window: each shows its own document (the cover letter text `Dear hiring team, this is a fictio"
+    },
+    {
+      "id": "J8.1",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e04f89c65399ff77",
+      "summary": "Import a changed version of the package:"
+    },
+    {
+      "id": "J8.2",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "81f33634c426213d",
+      "summary": "Reload My Resume. Expect a **new** **Harbor Demo Resume** card at the top with the later Generated time, status **Draft**, \"Not yet approved\", and an **Approve "
+    },
+    {
+      "id": "J8.3",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1ce6ffe65e1259f1",
+      "summary": "On the new card click **Approve for QR** and accept the confirm. Expect no category dialog."
+    },
+    {
+      "id": "J8.4",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6ff683fed46c0947",
+      "summary": "Read both Harbor Demo Resume cards."
+    },
+    {
+      "id": "J8.5",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e02e94a11e975737",
+      "summary": "In a private window open `<BASE>/r/<SLUG1>`. Expect the new text `Revised summary: leads fictional process redesign programs.` (and no longer the old summary). "
+    },
+    {
+      "id": "J9.1",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1fbb97ec786b5e64",
+      "summary": "On the card showing `<SLUG1>` click **Revoke QR** and accept the confirm (`Revoke this QR link? Anyone scanning an already-printed copy will see \"link not avail"
+    },
+    {
+      "id": "J9.2",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d27b687d7dea8b62",
+      "summary": "In a private window open `<BASE>/r/<SLUG1>`."
+    },
+    {
+      "id": "J9.3",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3e55fe3e9909a022",
+      "summary": "Click **Approve for QR** again on that card and accept."
+    },
+    {
+      "id": "J10.1",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "27f3e8f0c228fbf2",
+      "summary": "In a private window open `<BASE>/r/AAAAAAAAAAAAAAAAAAAAAAAA`."
+    },
+    {
+      "id": "J10.2",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "acef419ba71bb820",
+      "summary": "Open `<BASE>/r/short`. Expect the same page."
+    },
+    {
+      "id": "J10.3",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8081a7249796b2cb",
+      "summary": "A document that was imported but never approved has no slug: on a card whose status is **Draft** there is no link anywhere. (The unapproved version has nothing "
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2221e1d1a58cca50",
+      "summary": "**Cancel the confirm**: click **Approve for QR**, then choose Cancel in the browser dialog. Expect nothing to change."
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d04fbd35c6dfbe02",
+      "summary": "**Cancel the gate**: do this before Journey 3 step 1's save (or add another tool in Career Master with \"How it was used\" left at `(none)` first). Click **Approv"
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "236f8580af8ee3d1",
+      "summary": "**Re-importing the same package**: running the Journey 8 command again reports every output `unchanged` and adds no cards."
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5d527b179b07daa8",
+      "summary": "**Archived outputs**: after **Archive** on a card, expect no **Approve for QR** button on it."
+    },
+    {
+      "id": "E.5",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ad2a03ff80f1f790",
+      "summary": "**Sign-in limit**: more than 10 sign-in attempts in 15 minutes returns \"Too many attempts - please try again in 15 minutes\"; sign in once and reuse the session."
+    },
+    {
+      "id": "E.6",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "297ad7bd411fecc2",
+      "summary": "**Privacy of the repository**: package JSON stays under `/var/tmp`; never add anything under `server/data/applicationPackages/` to git."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "555769f7675b026b"
+    },
+    {
+      "title": "Preconditions (fictional data)",
+      "kind": "precondition",
+      "hash": "bda252a97c23f012"
+    },
+    {
+      "title": "Journey 1: imported outputs appear with authors, created and modified dates",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 2: view an output in the platform",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 3: Approve for QR through the technology-category gate",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 4: the QR image and link in My Resume",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 5: open the link in a private window",
+      "kind": "journey",
+      "hash": "d970cf32c231f893"
+    },
+    {
+      "title": "Journey 6: the PDF carries a clickable QR to the same slug",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 7: approving the cover letter creates its own, independent link",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 8: approving a newer version moves the same slug to it",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 9: revoke makes the link unavailable and the slug is never reissued",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 10: unknown or never-approved slugs show the same page",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    }
+  ]
+}

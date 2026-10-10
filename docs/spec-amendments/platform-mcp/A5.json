@@ -1,0 +1,64 @@
+{
+  "id": "A5",
+  "feature": "platform-mcp",
+  "fromBaseline": 3,
+  "proposedBy": "triage:platform-mcp:r2",
+  "round": 2,
+  "triageItems": [
+    "platform-mcp-r2-T1",
+    "platform-mcp-r2-T2",
+    "platform-mcp-r2-T4",
+    "platform-mcp-r2-T5"
+  ],
+  "reason": "Four baseline steps describe the product before the append-only scope list and tool registry grew and the parity gaps were closed (stale counts and lists).",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "J1.4",
+      "before": "Type **Research assistant** in **Token name** and click **Create token** with no scope ticked. Expect a red alert reading **Choose at least one scope for the token.** Expect four scope checkboxes: **career.read**, **career.write**, **outputs.approve**, **release.read (administrators only)**.",
+      "after": "Type **Research assistant** in **Token name** and click **Create token** with no scope ticked. Expect a red alert reading **Choose at least one scope for the token.** Expect six scope checkboxes: **career.read**, **career.write**, **outputs.approve**, **release.read (administrators only)**, **release.loop.read (administrators only)**, **release.loop.write (administrators only)**.",
+      "tracesTo": "CLAUDE.md 'Release loop inside the platform' + 'Platform MCP server' (registry append-only); docs/changes/in-app-release-loop.md; MCP_SCOPES in server/lib/mcpToolRegistry.js",
+      "whyNeeded": "The scope list is append-only and grew with the release-loop tools; four is stale."
+    },
+    {
+      "op": "change",
+      "stepId": "J2.1",
+      "before": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> list`. Expect exit code 0 and exactly these lines in this order: `career_master_read`, `career_opportunities_list`, `career_opportunity_create`, `career_opportunity_open`, `application_outputs_list`, `application_output_open`, `application_output_new_draft_version`, `application_output_approve_for_qr`, `cover_letter_open`, `cover_letter_agent_turn`, `10 tools` (no `release_tracker_read`, because **release.read** was not ticked).",
+      "after": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> list`. Expect exit code 0 and exactly these 96 tool lines in this order, then `96 tools`: `career_master_read`, `career_opportunities_list`, `career_opportunity_create`, `career_opportunity_open`, `application_outputs_list`, `application_output_open`, `application_output_new_draft_version`, `output_versions_list`, `output_version_read`, `output_versions_compare`, `application_output_approve_for_qr`, `application_output_revoke_qr`, `application_package_import`, `shared_output_resolve`, `career_opportunity_update_details`, `application_outputs_unlinked_list`, `application_output_link`, `application_output_unlink`, `cover_letter_open`, `cover_letter_agent_turn`, `cover_letter_settings_read`, `cover_letter_settings_save`, `cover_letter_opportunities_list`, `cover_letter_job_rec_save`, `cover_letter_generate`, `cover_letter_package_build`, `cover_letter_turns_list`, `resume_rollups_read`, `resume_rollup_preview`, `career_atom_rollups_read`, `career_experience_definitions_read`, `career_experience_definition_save`, `career_experience_definition_delete`, `career_proficiency_override_save`, `career_proficiency_override_clear`, `proficiency_rules_read`, `proficiency_override_set`, `proficiency_override_clear`, `technology_category_set`, `proficiency_formula_save`, `proficiency_formula_select`, `certification_mapping_save`, `shared_output_live_read`, `career_agent_hub_read`, `career_opportunity_scores_record`, `career_opportunity_approve`, `career_opportunity_advance_stage`, `career_research_run`, `career_pipeline_verify`, `career_verification_current_read`, `career_verification_current_save`, `career_agent_schedule_read`, `career_agent_schedule_save`, `career_outreach_read`, `career_outreach_start`, `career_outreach_research_contacts`, `career_outreach_draft_message`, `career_outreach_message_save`, `career_outreach_merge_outcome`, `career_resume_generate`, `career_resume_output_save`, `career_opportunity_resumes_list`, `career_resume_queue_generate`, `career_auto_queue_outputs`, `career_cover_letter_generate`, `career_cover_letter_output_save`, `career_output_view`, `career_outputs_email`, `resume_outputs_list`, `resume_output_generate`, `resume_output_staleness`, `resume_output_versions`, `resume_output_status_set`, `finalization_check`, `cover_letter_packages_list`, `cover_letter_job_text_set`, `cover_letter_draft_for_opportunity`, `cover_letter_packages_assemble`, `cover_letter_turns_read`, `cover_letter_metrics_read`, `career_rollups_read`, `career_rollup_preview_read`, `career_intake_documents_list`, `career_intake_linkedin_pull`, `career_intake_runs_list`, `career_intake_run_create`, `career_intake_run_execute`, `career_semantic_template_read`, `career_mappings_classify`, `career_mappings_lineage`, `career_mappings_commit`, `career_bounded_agent_action`, `career_record_list`, `career_record_create`, `career_record_update`, `career_record_delete`. No tool whose scope is release.read, release.loop.read or release.loop.write appears (those scopes were not ticked). The count line equals the number of tool lines.",
+      "tracesTo": "docs/changes/platform-mcp.md 'Server' and 'Known limitations'; append-only registry",
+      "whyNeeded": "Registry grew; the old ten-tool list cannot pass. Full ordered list retained, not weaker."
+    },
+    {
+      "op": "change",
+      "stepId": "J11.1",
+      "before": "Run `node scripts/check-interface-parity.mjs`. Expect exit code 0, a first line starting `Interface parity:`, a `Gaps:` list, and the last line `OK: the registry matches the code.`",
+      "after": "Run `node scripts/check-interface-parity.mjs`. Expect exit code 0, a first line starting `Interface parity:`, and the last line `OK: the registry matches the code.` When the first line reports any gap count above 0 a `Gaps:` list follows it; when all three gap counts are 0 there is no `Gaps:` line.",
+      "tracesTo": "docs/changes/platform-mcp.md 'Known limitations' (gaps closed); triage platform-mcp-B5",
+      "whyNeeded": "The Gaps: list exists only while a gap exists."
+    },
+    {
+      "op": "change",
+      "stepId": "J11.2",
+      "before": "Run `node scripts/check-interface-parity.mjs --strict`. Expect exit code 1, the gaps list containing the line `application-package-import: UI_GAP MCP_GAP - Import is command-line only (scripts/import-application-package.mjs); no screen uploads a package.`, and the last line `FAIL (--strict): gaps remain.`",
+      "after": "Run `node scripts/check-interface-parity.mjs --strict`. Expect exit code 0, a first line `Interface parity: 72 of 72 capabilities work in all three interfaces (website UI gaps: 0, MCP gaps: 0, API gaps: 0).`, no `Gaps:` line, and the last line `OK: the registry matches the code.`",
+      "tracesTo": "docs/changes/platform-mcp.md 'Known limitations'; J10.4; triage platform-mcp-B5",
+      "whyNeeded": "With all gaps closed --strict exits 0."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:platform-mcp:r2",
+    "checklist": {
+      "Traced: every added or changed step names the change-spec requirement or owner direction it proves (tracesTo).": "pass: each names CLAUDE.md / docs/changes/platform-mcp.md and the triage item",
+      "Not weaker: a changed expected result is at least as strict as before, unless the evidence shows the old expectation contradicts the change spec or owner direction (then say which).": "pass: J1.4 adds two required checkboxes; J2.1 pins every name in registry order plus a count; J11.1 ties the Gaps: list to the reported counts; J11.2 asserts exit code and the exact summary line. Old J2.1/J11.2 expectations contradict the append-only registry and J10.4 (all gaps closed).",
+      "Retire only duplicates: removing a step is approved only when another step tests the same thing (name it); any other removal is needs_owner.": "pass: nothing retired",
+      "Exact: action plus exact expected result (labels, text, values, counts); no 'should look right', no 'roughly'.": "pass: recomputed at 7e301b7: MCP_SCOPES has 6 keys; registry 110 tools, 96 with career.read/career.write/outputs.approve, J2.1 list matches that order name for name; check-interface-parity (plain and --strict) exits 0 printing '72 of 72 ... gaps: 0' and no Gaps: line",
+      "Reachable: the step is walkable by point-and-click on desktop and at 390px (interfaceParity), or is a cli step by design.": "pass: J1.4 is the existing desktop+mobile step (ConnectedAgentsPanel renders every scope, adding '(administrators only)' for adminOnly); J2.1, J11.1, J11.2 are cli",
+      "Deterministic: same result every run against the fixed constraints (no dependence on wall-clock time, random data, earlier failed steps, or leftovers from another test); timing tolerances are stated.": "pass for the code under test; counts (96, 72) are pinned to 7e301b7 and must be recounted and re-amended if the registry or parity map grows before the round",
+      "Fictional data only; fixtures written in the spec, never fetched.": "pass",
+      "Independent of the fix: the step tests behaviour, not the implementation the fixer chose.": "pass: the steps test the registry and scope behaviour required by the change spec"
+    },
+    "note": "Approved, no product change needed. Observation (not an amendment): E.5 still says eleven tool names and no longer matches the registry (110 tools); propose it in a later round. docs/changes/platform-mcp.md 'Known limitations' still says --strict fails (documentation staleness only).",
+    "at": "2026-10-10T01:00:00.000Z"
+  }
+}

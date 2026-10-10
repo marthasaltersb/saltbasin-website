@@ -1,0 +1,29 @@
+{
+  "releases": [
+    {
+      "version": "0.2.0",
+      "release": "2026-10-02-application-packages",
+      "title": "Salt Basin application packages release",
+      "state": "frozen",
+      "frozenAt": "2026-10-10T20:16:48.317Z",
+      "frozenCommit": "4df3ff7",
+      "planned": 18,
+      "delivered": 4,
+      "carried": 14,
+      "newDelivered": 4,
+      "bugsVerified": 69,
+      "bugsOpen": 262,
+      "sessions": 0,
+      "summary": "docs/release-log/releases/0.2.0/summary.json"
+    },
+    {
+      "version": "0.3.0",
+      "release": "2026-10-10-production-hardening",
+      "title": "Salt Basin production hardening release",
+      "state": "open",
+      "startedAt": "2026-10-10T20:16:48.317Z",
+      "startedAtCommit": "4df3ff7"
+    }
+  ],
+  "updatedAt": "2026-10-10T20:16:48.317Z"
+}

@@ -1,0 +1,8 @@
+{
+  "role": "release_test_script_writer",
+  "name": "Test script writer",
+  "version": 1,
+  "outputKind": "draft_spec",
+  "canEditCode": false,
+  "changeNote": "2026-10-09: first version. Changing this prompt is a reviewed change to this file, like a spec amendment."
+}

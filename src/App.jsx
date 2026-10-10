@@ -18,6 +18,8 @@ const TermsOfService = lazy(() => import('./components/TermsOfService.jsx'));
 const BusinessDefinitionExperience = lazy(() => import('./components/BusinessDefinitionExperience.jsx'));
 const OrgPortal = lazy(() => import('./components/OrgPortal.jsx'));
 const ReferenceExperiencePage = lazy(() => import('./components/ReferenceExperiencePage.jsx'));
+const ReleaseTrackerPage = lazy(() => import('./components/releaseTracker/ReleaseTrackerPages.jsx').then((m) => ({ default: m.ReleaseTrackerPage })));
+const SharedReleaseTrackerPage = lazy(() => import('./components/releaseTracker/ReleaseTrackerPages.jsx').then((m) => ({ default: m.SharedReleaseTrackerPage })));
 
 const lazyOutput = (name) => lazy(() =>
   import('./components/Output.jsx').then((module) => ({ default: module[name] }))
@@ -106,6 +108,8 @@ export default function App() {
       <Route path="/terms" element={<TermsOfService />} />
       {/* QR-gated tailored application documents — unlisted, slug-only. */}
       <Route path="/r/:token" element={<SharedOutputPage />} />
+      <Route path="/release-tracker" element={<ReleaseTrackerPage />} />
+      <Route path="/release-tracker/shared/:token" element={<SharedReleaseTrackerPage />} />
       <Route path="/output/resume" element={<ResumeOutput />} />
       <Route path="/output/case-study/:slug" element={<CaseStudyOutput />} />
       <Route path="/output/proposal/:type" element={<ProposalOutput />} />

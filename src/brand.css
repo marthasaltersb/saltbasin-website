@@ -471,6 +471,14 @@ option {
   to   { transform: translateY(0); opacity: 1; }
 }
 
+.sb-toast.sb-toast-error,
+.sb-admin-shell .sb-toast.sb-toast-error {
+  background: #7A1F1F;
+  border-color: #E5484D;
+  border-left-width: 6px;
+  color: #FFFFFF;
+}
+
 /* Form primitives */
 .sb-input {
   width: 100%;
@@ -713,6 +721,7 @@ option {
   .sb-admin-publish-bar > span { grid-column: 1 / -1; min-height: 1rem; }
   .sb-admin-publish-bar > button { min-width: 0; min-height: 42px; padding: .5rem .35rem !important; }
   .sb-admin-workspace { flex-direction: column !important; overflow-y: auto !important; }
+  .sb-admin-scroll { flex: none !important; overflow-y: visible !important; }
   .sb-admin-sidebar {
     width: 100% !important;
     max-width: 100% !important;

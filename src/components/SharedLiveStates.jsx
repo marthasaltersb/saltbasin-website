@@ -117,11 +117,15 @@ function LiveBody({ documentState, states, index, setIndex, approved, selected, 
       >
         <div style={{ fontSize: '0.95rem', fontWeight: 800, letterSpacing: '0.04em' }}>
           {live ? 'LIVE DATA' : 'RECORDED DATA'} — {liveChanges.length
-            ? `${liveChanges.length} change${liveChanges.length === 1 ? '' : 's'} since the approved printed version`
-            : 'matches the approved printed version'}
+            ? `${liveChanges.length} ${live ? '' : 'recorded '}change${liveChanges.length === 1 ? '' : 's'} since the approved printed version`
+            : (live ? 'matches the approved printed version' : 'no recorded changes since the approved printed version')}
+          {live ? '' : ' (live data unavailable)'}
         </div>
         <div style={{ fontSize: '0.78rem', marginTop: '0.3rem', lineHeight: 1.55, opacity: 0.92 }}>
-          The career charts on this page update from the Salt Basin Career Master. The printed copy was approved on{' '}
+          {live
+            ? 'The career charts on this page update from the Salt Basin Career Master.'
+            : 'Live career data could not be loaded, so these charts show the last recorded state.'}
+          {' '}The printed copy was approved on{' '}
           <strong>{fmt(approved.at)}</strong>. {wordingSentence(documentState)}
         </div>
         {liveChanges.length > 0 && (

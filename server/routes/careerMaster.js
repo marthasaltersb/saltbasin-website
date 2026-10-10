@@ -457,6 +457,40 @@ function serializeVal(camel, value, jsonFields) {
 // `scoped: false` opts a table out of per-user ownership — used only for
 // career_meta_options, which has no user_id column (shared, admin-curated
 // vocabulary, not per-member data).
+// Shared by every resource router's PATCH and the MCP technology-category tool, so both run the same update,
+// Career Atom sync and change notification.
+async function patchOwnedRow({ table, fieldMap, jsonFields = new Set(), scoped = true }, userId, id, body) {
+  const sets = [];
+  const vals = [];
+  let i = 1;
+  for (const [camel, snake] of Object.entries(fieldMap)) {
+    if (body[camel] === undefined) continue;
+    sets.push(`${snake} = $${i++}`);
+    vals.push(serializeVal(camel, body[camel], jsonFields));
+  }
+  if (!sets.length) return { noop: true };
+  sets.push(`updated_at = $${i++}`);
+  vals.push(Date.now());
+  vals.push(id);
+  const where = scoped ? `WHERE id = $${i} AND user_id = $${i + 1}` : `WHERE id = $${i}`;
+  if (scoped) vals.push(userId);
+  const result = await db.prepare(`UPDATE ${table} SET ${sets.join(', ')} ${where}`).run(...vals);
+  if (!result.changes) return { notFound: true };
+  if (scoped && sourceForTable(table)) {
+    syncSingleEntry(userId, table, id).catch((e) => console.error('[careerMaster] atom sync failed:', e.message));
+  }
+  if (scoped) notifyCareerChanged(userId);
+  return { ok: true };
+}
+
+/** Sets (or clears, with null) how a technology was used. Same write as PATCH /api/career/tools/:id. */
+export async function setToolProficiencyCategory(userId, toolId, category) {
+  if (category != null && !TOOL_PROFICIENCY_CATEGORIES[category]) throw httpError(400, `category must be one of: ${Object.keys(TOOL_PROFICIENCY_CATEGORIES).join(', ')}`);
+  const out = await patchOwnedRow({ table: 'career_tools', fieldMap: TOOL_FIELDS }, userId, Number(toolId), { wheelBucket: category || null });
+  if (out.notFound) throw httpError(404, 'Tool not found', 'not_found');
+  return { ok: true, toolId: Number(toolId), category: category || null };
+}
+
 function makeResourceRouter(table, fieldMap, jsonFields = new Set(), { scoped = true } = {}) {
   const r = Router();
 
@@ -499,29 +533,9 @@ function makeResourceRouter(table, fieldMap, jsonFields = new Set(), { scoped = 
   });
 
   r.patch('/:id', async (req, res) => {
-    const id = Number(req.params.id);
-    const body = req.body || {};
-    const sets = [];
-    const vals = [];
-    let i = 1;
-    for (const [camel, snake] of Object.entries(fieldMap)) {
-      if (body[camel] === undefined) continue;
-      sets.push(`${snake} = $${i++}`);
-      vals.push(serializeVal(camel, body[camel], jsonFields));
-    }
-    if (!sets.length) return res.json({ ok: true, noop: true });
-    sets.push(`updated_at = $${i++}`);
-    vals.push(Date.now());
-    vals.push(id);
-    const where = scoped ? `WHERE id = $${i} AND user_id = $${i + 1}` : `WHERE id = $${i}`;
-    if (scoped) vals.push(req.user.id);
-    const result = await db.prepare(`UPDATE ${table} SET ${sets.join(', ')} ${where}`).run(...vals);
-    if (!result.changes) return res.status(404).json({ error: 'Not found' });
-    if (scoped && sourceForTable(table)) {
-      syncSingleEntry(req.user.id, table, id).catch((e) => console.error('[careerMaster] atom sync failed:', e.message));
-    }
-    if (scoped) notifyCareerChanged(req.user.id);
-    res.json({ ok: true });
+    const out = await patchOwnedRow({ table, fieldMap, jsonFields, scoped }, req.user.id, Number(req.params.id), req.body || {});
+    if (out.notFound) return res.status(404).json({ error: 'Not found' });
+    res.json(out.noop ? { ok: true, noop: true } : { ok: true });
   });
 
   r.delete('/:id', async (req, res) => {
@@ -601,6 +615,16 @@ export async function loadPublicCareerMaster(ownerUserId) {
 
 async function loadMasterPayload(req) {
   const ownerUserId = await resolveOwnerUserId(req.query.owner, req);
+  let user = null;
+  try { user = await getUserFromCookie(req); } catch { /* unauthenticated - public payload only */ }
+  return loadMasterPayloadForOwner(ownerUserId, user);
+}
+
+function httpError(status, message, code) { const e = new Error(message); e.status = status; if (code) e.code = code; return e; }
+
+// Shared by GET /master and the platform MCP tool career_master_read: the same redaction rules, applied
+// to whoever is asking (`user` null = public). Private deal data only ever goes to the data owner.
+export async function loadMasterPayloadForOwner(ownerUserId, user) {
   const payload = await loadPublicCareerMaster(ownerUserId);
 
   // Deal transactions carry private financial data (individual return
@@ -608,8 +632,6 @@ async function loadMasterPayload(req) {
   // owner (their own private investor profile), not exposed to other
   // viewers even if they're viewing their own site. Meta options are shared,
   // admin-curated vocabulary — safe for any authenticated user to read.
-  let user = null;
-  try { user = await getUserFromCookie(req); } catch { /* unauthenticated — public payload only */ }
   if (user) {
     const [metaRows] = await Promise.all([
       db.prepare(`SELECT * FROM career_meta_options ORDER BY field_key, order_index, id`).all(),
@@ -641,7 +663,7 @@ router.get('/master', async (req, res) => {
 // Proficiency levels (and † basis) come from the existing engine
 // (loadProficiencyResolution) so a tile can never disagree with the
 // proficiency screens. `?include=atom` adds the Career Atom groupings.
-async function computeResumeRollups(ownerUserId, master, { draftRows = null, includeAtom = false } = {}) {
+export async function computeResumeRollups(ownerUserId, master, { draftRows = null, includeAtom = false } = {}) {
   const defRows = draftRows || (await db.prepare(`SELECT definition_type, definition_key, label, definition, sort_order, is_active FROM career_experience_definitions WHERE user_id=$1 AND definition_type = ANY($2)`).all(ownerUserId, ROLLUP_DEFINITION_TYPES)).map(definitionRowToItem);
   const { definitions, resolution } = await loadProficiencyResolution(ownerUserId, 'current', { seed: false });
   const levels = definitions.filter((d) => d.type === 'proficiency_level' && d.isActive)
@@ -666,24 +688,28 @@ router.get('/resume-rollups', async (req, res) => {
 // Live preview of UNSAVED definitions: body.definitions replaces the member's
 // stored rows of each rollup type for this one computation. Nothing is written.
 // An invalid draft is a 400 with the reason, shown to the member.
+// Shared by POST /resume-rollups/preview and the MCP tool resume_rollup_preview.
+export async function previewResumeRollups(user, drafts) {
+  const rows = [];
+  for (const d of Array.isArray(drafts) ? drafts : []) {
+    if (!ROLLUP_DEFINITION_TYPES.includes(d?.type)) throw httpError(400, `invalid rollup type ${d?.type}`);
+    if (d.isActive === false) { rows.push({ type: d.type, key: String(d.key), label: String(d.label || ''), definition: {}, sortOrder: 0, isActive: false }); continue; }
+    const checked = validateRollupDefinition(d.type, d.definition);
+    if (!checked.ok) throw httpError(400, `${d.label || d.key}: ${checked.error}`);
+    rows.push({ type: d.type, key: String(d.key), label: String(d.label || '').slice(0, 120), definition: checked.definition, sortOrder: Number(d.sortOrder) || 0, isActive: true });
+  }
+  // Types the client did not send keep the member's stored rows.
+  const sent = new Set(rows.map((r) => r.type));
+  const stored = (await db.prepare(`SELECT definition_type, definition_key, label, definition, sort_order, is_active FROM career_experience_definitions WHERE user_id=$1 AND definition_type = ANY($2)`).all(user.id, ROLLUP_DEFINITION_TYPES)).map(definitionRowToItem).filter((r) => !sent.has(r.type));
+  const master = await loadMasterPayloadForOwner(user.id, user);
+  return computeResumeRollups(user.id, master, { draftRows: [...stored, ...rows], includeAtom: true });
+}
+
 router.post('/resume-rollups/preview', requireUser, async (req, res) => {
   try {
-    const drafts = Array.isArray(req.body?.definitions) ? req.body.definitions : [];
-    const rows = [];
-    for (const d of drafts) {
-      if (!ROLLUP_DEFINITION_TYPES.includes(d?.type)) return res.status(400).json({ error: `invalid rollup type ${d?.type}` });
-      if (d.isActive === false) { rows.push({ type: d.type, key: String(d.key), label: String(d.label || ''), definition: {}, sortOrder: 0, isActive: false }); continue; }
-      const checked = validateRollupDefinition(d.type, d.definition);
-      if (!checked.ok) return res.status(400).json({ error: `${d.label || d.key}: ${checked.error}` });
-      rows.push({ type: d.type, key: String(d.key), label: String(d.label || '').slice(0, 120), definition: checked.definition, sortOrder: Number(d.sortOrder) || 0, isActive: true });
-    }
-    // Types the client did not send keep the member's stored rows.
-    const sent = new Set(rows.map((r) => r.type));
-    const stored = (await db.prepare(`SELECT definition_type, definition_key, label, definition, sort_order, is_active FROM career_experience_definitions WHERE user_id=$1 AND definition_type = ANY($2)`).all(req.user.id, ROLLUP_DEFINITION_TYPES)).map(definitionRowToItem).filter((r) => !sent.has(r.type));
-    req.query.owner = 'me';
-    const master = await loadMasterPayload(req);
-    res.json(await computeResumeRollups(req.user.id, master, { draftRows: [...stored, ...rows], includeAtom: true }));
+    res.json(await previewResumeRollups(req.user, req.body?.definitions));
   } catch (e) {
+    if (e.status) return res.status(e.status).json({ error: e.message });
     console.error('[career] resume-rollups preview failed', e);
     res.status(500).json({ error: 'Failed to compute the rollup preview' });
   }
@@ -1539,28 +1565,33 @@ export async function loadProficiencyResolution(userId, periodKey = 'current', {
 
 // GET /api/career/proficiency — one resolved level per skill/tool, with the
 // inputs, per-term points, mapped certifications, and basis behind it.
+export async function buildProficiencyView(userId, periodKey = 'current') {
+  const { resolution, definitions } = await loadProficiencyResolution(userId, periodKey);
+  const levels = definitions.filter((d) => d.type === 'proficiency_level' && d.isActive)
+    .map((d) => ({ key: d.key, label: d.label, ordinal: Number(d.definition?.ordinal) || 0 }))
+    .sort((a, b) => a.ordinal - b.ordinal);
+  return { ...resolution, levels, footnote: proficiencyFootnote(resolution.proficiencies), formulaInputs: FORMULA_INPUTS, toolProficiencyCategories: TOOL_PROFICIENCY_CATEGORIES };
+}
+
 router.get('/proficiency', requireUser, async (req, res) => {
   try {
-    const { resolution, definitions } = await loadProficiencyResolution(req.user.id, String(req.query.period || 'current'));
-    const levels = definitions.filter((d) => d.type === 'proficiency_level' && d.isActive)
-      .map((d) => ({ key: d.key, label: d.label, ordinal: Number(d.definition?.ordinal) || 0 }))
-      .sort((a, b) => a.ordinal - b.ordinal);
-    res.json({ ...resolution, levels, footnote: proficiencyFootnote(resolution.proficiencies), formulaInputs: FORMULA_INPUTS, toolProficiencyCategories: TOOL_PROFICIENCY_CATEGORIES });
+    res.json(await buildProficiencyView(req.user.id, String(req.query.period || 'current')));
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-router.get('/experience-definitions', requireUser, async (req, res) => {
-  await ensureExperienceDefinitions(req.user.id);
+// Shared by the experience-definition routes and the MCP tools career_experience_definition*.
+export async function listExperienceDefinitions(userId) {
+  await ensureExperienceDefinitions(userId);
   const rows = await db.prepare(`
     SELECT definition_type, definition_key, label, description, definition,
            sort_order, is_active, updated_at
       FROM career_experience_definitions
      WHERE user_id=$1
      ORDER BY definition_type, sort_order, definition_key
-  `).all(req.user.id);
-  res.json({ definitions: rows.map((row) => ({
+  `).all(userId);
+  return { definitions: rows.map((row) => ({
     type: row.definition_type,
     key: row.definition_key,
     label: row.label,
@@ -1569,23 +1600,21 @@ router.get('/experience-definitions', requireUser, async (req, res) => {
     sortOrder: Number(row.sort_order),
     isActive: row.is_active !== false,
     updatedAt: Number(row.updated_at),
-  })) });
-});
+  })) };
+}
 
-router.put('/experience-definitions/:type/:key', requireUser, async (req, res) => {
-  const type = String(req.params.type || '');
-  const key = String(req.params.key || '');
-  if (!EXPERIENCE_DEFINITION_TYPES.has(type)) return res.status(400).json({ error: 'invalid definition type' });
-  if (!/^[a-z][a-z0-9_]{1,79}$/.test(key)) return res.status(400).json({ error: 'definition key must be lowercase letters, numbers, and underscores' });
-  if (LOCKED_DEFINITIONS.has(`${type}:${key}`)) return res.status(403).json({ error: 'The Salt Basin methodology is locked. Duplicate it under a new key to make your own formula.' });
-  const body = req.body || {};
+export async function saveExperienceDefinition(userId, type, key, body = {}) {
+  type = String(type || ''); key = String(key || '');
+  if (!EXPERIENCE_DEFINITION_TYPES.has(type)) throw httpError(400, 'invalid definition type');
+  if (!/^[a-z][a-z0-9_]{1,79}$/.test(key)) throw httpError(400, 'definition key must be lowercase letters, numbers, and underscores');
+  if (LOCKED_DEFINITIONS.has(`${type}:${key}`)) throw httpError(403, 'The Salt Basin methodology is locked. Duplicate it under a new key to make your own formula.');
   const label = String(body.label || '').trim().slice(0, 120);
-  if (!label) return res.status(400).json({ error: 'label is required' });
+  if (!label) throw httpError(400, 'label is required');
   let definition = body.definition && typeof body.definition === 'object' && !Array.isArray(body.definition) ? body.definition : {};
   try {
-    definition = await validateDefinitionShape(req.user.id, type, definition);
+    definition = await validateDefinitionShape(userId, type, definition);
   } catch (e) {
-    return res.status(400).json({ error: e.message });
+    throw httpError(400, e.message);
   }
   const sortOrder = Number.isFinite(Number(body.sortOrder)) ? Math.trunc(Number(body.sortOrder)) : 0;
   const now = Date.now();
@@ -1596,21 +1625,59 @@ router.put('/experience-definitions/:type/:key', requireUser, async (req, res) =
     ON CONFLICT (user_id, definition_type, definition_key) DO UPDATE SET
       label=EXCLUDED.label, description=EXCLUDED.description, definition=EXCLUDED.definition,
       sort_order=EXCLUDED.sort_order, is_active=EXCLUDED.is_active, updated_at=EXCLUDED.updated_at
-  `).run(req.user.id, type, key, label, body.description ? String(body.description).slice(0, 600) : null,
+  `).run(userId, type, key, label, body.description ? String(body.description).slice(0, 600) : null,
     definition, sortOrder, body.isActive !== false, now);
-  notifyCareerChanged(req.user.id);
-  res.json({ ok: true, updatedAt: now });
+  notifyCareerChanged(userId);
+  return { ok: true, updatedAt: now };
+}
+
+export async function deleteExperienceDefinition(userId, type, key) {
+  type = String(type || ''); key = String(key || '');
+  if (!EXPERIENCE_DEFINITION_TYPES.has(type)) throw httpError(400, 'invalid definition type');
+  if (LOCKED_DEFINITIONS.has(`${type}:${key}`)) throw httpError(403, 'The Salt Basin methodology is locked and cannot be deleted.');
+  await db.prepare(`DELETE FROM career_experience_definitions WHERE user_id=$1 AND definition_type=$2 AND definition_key=$3`)
+    .run(userId, type, key);
+  notifyCareerChanged(userId);
+  return { ok: true };
+}
+
+function sendHttpError(res, e) {
+  if (e.status) return res.status(e.status).json({ error: e.message });
+  console.error('[career]', e);
+  return res.status(500).json({ error: 'Request failed' });
+}
+
+router.get('/experience-definitions', requireUser, async (req, res) => {
+  try { res.json(await listExperienceDefinitions(req.user.id)); } catch (e) { sendHttpError(res, e); }
 });
 
+router.put('/experience-definitions/:type/:key', requireUser, async (req, res) => {
+  try { res.json(await saveExperienceDefinition(req.user.id, req.params.type, req.params.key, req.body)); } catch (e) { sendHttpError(res, e); }
+});
+
+
+/** Saves one of the member's own formulas, keeping whether it is currently selected (new formulas start unselected). */
+export async function saveProficiencyFormula(userId, key, body = {}) {
+  const existing = await db.prepare(`SELECT definition FROM career_experience_definitions WHERE user_id=$1 AND definition_type='proficiency_formula' AND definition_key=$2`).get(userId, String(key || ''));
+  const selected = existing?.definition?.selected === true;
+  return saveExperienceDefinition(userId, 'proficiency_formula', key, { ...body, definition: { ...(body.definition || {}), selected } });
+}
+
+/** Selects one member formula (or the methodology, which clears all member selections). Same writes as the website's "Use this formula". */
+export async function selectProficiencyFormula(userId, key) {
+  const rows = await db.prepare(`SELECT definition_type, definition_key, label, description, definition, sort_order, is_active FROM career_experience_definitions WHERE user_id=$1 AND definition_type='proficiency_formula'`).all(userId);
+  const items = rows.map(definitionRowToItem);
+  if (key !== METHODOLOGY_FORMULA_KEY && !items.some((f) => f.key === key)) throw httpError(404, 'formula not found', 'not_found');
+  for (const f of items.filter((x) => x.key !== METHODOLOGY_FORMULA_KEY)) {
+    const want = f.key === key;
+    if (Boolean(f.definition?.selected) === want) continue;
+    await saveExperienceDefinition(userId, f.type, f.key, { label: f.label, description: f.description || '', definition: { ...f.definition, selected: want }, sortOrder: f.sortOrder, isActive: f.isActive !== false });
+  }
+  return { ok: true, selected: key };
+}
+
 router.delete('/experience-definitions/:type/:key', requireUser, async (req, res) => {
-  const type = String(req.params.type || '');
-  const key = String(req.params.key || '');
-  if (!EXPERIENCE_DEFINITION_TYPES.has(type)) return res.status(400).json({ error: 'invalid definition type' });
-  if (LOCKED_DEFINITIONS.has(`${type}:${key}`)) return res.status(403).json({ error: 'The Salt Basin methodology is locked and cannot be deleted.' });
-  await db.prepare(`DELETE FROM career_experience_definitions WHERE user_id=$1 AND definition_type=$2 AND definition_key=$3`)
-    .run(req.user.id, type, key);
-  notifyCareerChanged(req.user.id);
-  res.json({ ok: true });
+  try { res.json(await deleteExperienceDefinition(req.user.id, req.params.type, req.params.key)); } catch (e) { sendHttpError(res, e); }
 });
 
 router.get('/proficiency-assertions', async (req, res) => {
@@ -1631,22 +1698,21 @@ router.get('/proficiency-assertions', async (req, res) => {
   })) });
 });
 
-router.put('/proficiency-assertions/:entityType/:entityId/:periodKey', async (req, res) => {
-  const entityType = String(req.params.entityType || '');
-  const entityId = Number(req.params.entityId);
-  const periodKey = String(req.params.periodKey || '');
+// Shared by PUT/DELETE /proficiency-assertions and the MCP tools career_proficiency_override_*.
+export async function saveProficiencyAssertion(userId, entityType, entityId, periodKey, body = {}) {
+  entityType = String(entityType || ''); entityId = Number(entityId); periodKey = String(periodKey || '');
   const entityTable = entityType === 'skill' ? 'career_skills' : entityType === 'tool' ? 'career_tools' : null;
-  if (!entityTable || !Number.isInteger(entityId) || entityId <= 0) return res.status(400).json({ error: 'invalid career entity' });
-  const entity = await db.prepare(`SELECT id FROM ${entityTable} WHERE id=$1 AND user_id=$2`).get(entityId, req.user.id);
-  if (!entity) return res.status(404).json({ error: 'career entity not found' });
-  const period = await db.prepare(`SELECT 1 FROM career_experience_definitions WHERE user_id=$1 AND definition_type='period' AND definition_key=$2 AND is_active=true`).get(req.user.id, periodKey);
-  const levelKey = String(req.body?.levelKey || '');
-  const level = await db.prepare(`SELECT 1 FROM career_experience_definitions WHERE user_id=$1 AND definition_type='proficiency_level' AND definition_key=$2 AND is_active=true`).get(req.user.id, levelKey);
-  if (!period || !level) return res.status(400).json({ error: 'active period and proficiency level definitions are required' });
-  const confidence = Math.max(0, Math.min(1, Number(req.body?.confidence ?? 1)));
-  const evidenceCount = Math.max(0, Math.trunc(Number(req.body?.evidenceCount || 0)));
-  const lastPracticedAt = req.body?.lastPracticedAt == null ? null : Number(req.body.lastPracticedAt);
-  const visibility = ['private','resume','portfolio','public'].includes(req.body?.visibility) ? req.body.visibility : 'private';
+  if (!entityTable || !Number.isInteger(entityId) || entityId <= 0) throw httpError(400, 'invalid career entity');
+  const entity = await db.prepare(`SELECT id FROM ${entityTable} WHERE id=$1 AND user_id=$2`).get(entityId, userId);
+  if (!entity) throw httpError(404, 'career entity not found', 'not_found');
+  const period = await db.prepare(`SELECT 1 FROM career_experience_definitions WHERE user_id=$1 AND definition_type='period' AND definition_key=$2 AND is_active=true`).get(userId, periodKey);
+  const levelKey = String(body?.levelKey || '');
+  const level = await db.prepare(`SELECT 1 FROM career_experience_definitions WHERE user_id=$1 AND definition_type='proficiency_level' AND definition_key=$2 AND is_active=true`).get(userId, levelKey);
+  if (!period || !level) throw httpError(400, 'active period and proficiency level definitions are required');
+  const confidence = Math.max(0, Math.min(1, Number(body?.confidence ?? 1)));
+  const evidenceCount = Math.max(0, Math.trunc(Number(body?.evidenceCount || 0)));
+  const lastPracticedAt = body?.lastPracticedAt == null ? null : Number(body.lastPracticedAt);
+  const visibility = ['private','resume','portfolio','public'].includes(body?.visibility) ? body.visibility : 'private';
   const now = Date.now();
   await db.prepare(`
     INSERT INTO career_proficiency_assertions
@@ -1658,19 +1724,27 @@ router.put('/proficiency-assertions/:entityType/:entityId/:periodKey', async (re
       assessment_source=EXCLUDED.assessment_source, evidence_count=EXCLUDED.evidence_count,
       last_practiced_at=EXCLUDED.last_practiced_at, visibility=EXCLUDED.visibility,
       notes=EXCLUDED.notes, updated_at=EXCLUDED.updated_at
-  `).run(req.user.id, entityType, entityId, periodKey, levelKey, confidence,
-    String(req.body?.assessmentSource || 'user_confirmed').slice(0, 80), evidenceCount,
+  `).run(userId, entityType, entityId, periodKey, levelKey, confidence,
+    String(body?.assessmentSource || 'user_confirmed').slice(0, 80), evidenceCount,
     Number.isFinite(lastPracticedAt) ? lastPracticedAt : null, visibility,
-    req.body?.notes ? String(req.body.notes).slice(0, 1000) : null, now);
-  notifyCareerChanged(req.user.id);
-  res.json({ ok: true, updatedAt: now });
+    body?.notes ? String(body.notes).slice(0, 1000) : null, now);
+  notifyCareerChanged(userId);
+  return { ok: true, updatedAt: now };
+}
+
+export async function deleteProficiencyAssertion(userId, entityType, entityId, periodKey) {
+  await db.prepare(`DELETE FROM career_proficiency_assertions WHERE user_id=$1 AND entity_type=$2 AND entity_id=$3 AND period_key=$4`)
+    .run(userId, String(entityType), Number(entityId), String(periodKey));
+  notifyCareerChanged(userId);
+  return { ok: true };
+}
+
+router.put('/proficiency-assertions/:entityType/:entityId/:periodKey', async (req, res) => {
+  try { res.json(await saveProficiencyAssertion(req.user.id, req.params.entityType, req.params.entityId, req.params.periodKey, req.body)); } catch (e) { sendHttpError(res, e); }
 });
 
 router.delete('/proficiency-assertions/:entityType/:entityId/:periodKey', async (req, res) => {
-  await db.prepare(`DELETE FROM career_proficiency_assertions WHERE user_id=$1 AND entity_type=$2 AND entity_id=$3 AND period_key=$4`)
-    .run(req.user.id, req.params.entityType, Number(req.params.entityId), req.params.periodKey);
-  notifyCareerChanged(req.user.id);
-  res.json({ ok: true });
+  try { res.json(await deleteProficiencyAssertion(req.user.id, req.params.entityType, req.params.entityId, req.params.periodKey)); } catch (e) { sendHttpError(res, e); }
 });
 
 router.get('/rollup-preview/:key', async (req, res) => {

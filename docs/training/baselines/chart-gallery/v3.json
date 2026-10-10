@@ -1,0 +1,375 @@
+{
+  "feature": "chart-gallery",
+  "spec": "docs/training/chart-gallery.md",
+  "version": 3,
+  "frozenAt": "2026-10-10T00:57:37.409Z",
+  "commitAtFreeze": "a4625ac8d0b85865de288ff8fb3a8195738c954c",
+  "specSha256": "829b2c1b808a5594b1103d50644ae9237c49ba58f40a8355738a2f4a90877b44",
+  "amendment": "A2",
+  "previous": 2,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "P.1",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "6b8022f46597bc7f",
+      "summary": "Skills (Skill / Category / Years Experience / # Engagements / First Used):"
+    },
+    {
+      "id": "P.2",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "c4603c6accb50c2d",
+      "summary": "Tools: **Ledgerly ERP** (category *ERP*, first used 2019, # Roles 2, \"How it was used\" = *integration_design*); **QuoteFlow CPQ** (category *CPQ*, first used 20"
+    },
+    {
+      "id": "P.3",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "48ee6d9b2298de3c",
+      "summary": "Roles (Company / Title / Start / End / Industry): **Northwind Analytics Ltd**, Senior Analyst, Jan 2012, Dec 2015, Software; **Harbor Freight Labs**, Operations"
+    },
+    {
+      "id": "P.4",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "1728303455ac7b49",
+      "summary": "Case study (Engagements): Internal Name **Billing Revamp**, Employer **Brightfield Systems**, Client Display Name **Project Aster**, Industry Software, Period 2"
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9a18459707ff7832",
+      "summary": "Open World Shell -> **Journeys** -> **Output Templates** -> pill **Resume** -> tab **Infographics**."
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ed31a750dfc8ad6b",
+      "summary": "Look at the thumbnails: Skill Years Dots lists \"Forecast modeling\" with \"13 yrs\" first; Industry Share Bars shows \"Software\" 67% and \"Logistics\" 33%; Outcome Ti"
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "03e260ceba535132",
+      "summary": "Click the **Proficiency Tiers** card (not its Add button)."
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5b98d2f817bb1de2",
+      "summary": "Choose **Skills only** under Show; set **Top rows** to `4`; type `Skill strength` in the title box. Press **+ Add**."
+    },
+    {
+      "id": "J2.3",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a0d46c82a285fa70",
+      "summary": "Signed in as the admin, open Admin -> Output Templates (the same editor in the admin shell) -> pill **Resume** -> **Infographics**. With the gallery taller than"
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5ec0fe6fe7b0a4ce",
+      "summary": "Open the **Rules & why** tab. In **Levels and why**, row **Forecast modeling**, column **Your override**, choose **Advanced**."
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0976e01e1ea99e79",
+      "summary": "Return to **Infographics**."
+    },
+    {
+      "id": "J3.3",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ec471a5bb167be62",
+      "summary": "In the Configured list press **Edit** on \"1. Skill strength\". Untick **Show footnote**."
+    },
+    {
+      "id": "J3.4",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "afd9a667c7bdd1b3",
+      "summary": "Set **Top rows** (in the same edit panel) to `2`: the preview shows only Process design and Forecast modeling (no Pricing analytics). Set it back to `4`. Press "
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1502532a71d6e95b",
+      "summary": "Press **+ Add** on each of the other five career cards without opening them (Trend Bars, Outcome Tiles, Career Timeline, Skill Years Dots, Industry Share Bars)."
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5cea89eba7607883",
+      "summary": "Press the up arrow (\"Move up\") on row 2."
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7770434a52c7961f",
+      "summary": "Press the remove (✕) button on the last row."
+    },
+    {
+      "id": "J6.1",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8437086adf78160d",
+      "summary": "Press **Save & Set Primary** (bottom of the editor)."
+    },
+    {
+      "id": "J6.2",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0cacf04b5481c9bf",
+      "summary": "Reload the page, open the same editor and tab again."
+    },
+    {
+      "id": "J6.3",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "36d163d026b0486d",
+      "summary": "Cleanup: Rules & why -> Forecast modeling -> **Your override** -> **Use formula**."
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fbac153e6687cdbd",
+      "summary": "**Empty member:** a brand-new member sees each career card with a plain sentence (e.g. \"No proficiency levels yet — add skills or tools in Career Master...\") an"
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8244fcd58891cb0d",
+      "summary": "**Failed load:** if Career Master data cannot be loaded, an orange alert says which data failed (with the HTTP status) and \"This is a loading error, not missing"
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "391dfc976ad44e7c",
+      "summary": "**Top rows blank:** clearing the number box falls back to the chart's default (not zero rows)."
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7f54b7c6ef75de88",
+      "summary": "**Classic charts:** the two Bar Chart cards need grouped roll-up data (for example skills by category); for a member with none, their **+ Add** is disabled. The"
+    },
+    {
+      "id": "E.5",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "55cb223b69c9fe38",
+      "summary": "**Console:** any error other than the sandbox's `ERR_CERT_AUTHORITY_INVALID` or `ERR_TUNNEL_CONNECTION_FAILED` for an external resource (a host that is not the "
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "1746b2ed5fde1a0e"
+    },
+    {
+      "title": "Preconditions (set up once)",
+      "kind": "precondition",
+      "hash": "9482d7c8aa3ebc70"
+    },
+    {
+      "title": "Journey 1 — Find the gallery beside the live preview",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 2 — Pick a chart, set options in place, insert, see the preview change",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 3 — Edit a configured chart in place; footnote follows the rules",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 4 — Add the other charts",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 5 — Reorder and remove",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 6 — Save and reload",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    }
+  ],
+  "comparedWithPrevious": {
+    "same": [
+      "P.1",
+      "P.2",
+      "P.3",
+      "P.4",
+      "J1.1",
+      "J1.2",
+      "J2.1",
+      "J2.2",
+      "J2.3",
+      "J3.1",
+      "J3.2",
+      "J3.3",
+      "J3.4",
+      "J4.1",
+      "J5.1",
+      "J5.2",
+      "J6.1",
+      "J6.2",
+      "J6.3",
+      "E.1",
+      "E.2",
+      "E.3",
+      "E.4"
+    ],
+    "changed": [
+      "E.5"
+    ],
+    "added": [],
+    "retired": [],
+    "contextChanged": []
+  }
+}

@@ -3322,8 +3322,19 @@ async function bootstrap() {
         { viewId: 'system',   viewLabel: 'System',                        id: 'lineage',         label: 'Data Lineage',    componentId: 'lineage',        sortOrder: 3 },
         { viewId: 'content',  viewLabel: 'My Profile',                    id: 'inbox',           label: 'Inbox',           componentId: 'inbox',          sortOrder: 10 },
         { viewId: 'system',   viewLabel: 'System',                        id: 'command-center',  label: 'Command Center',  componentId: 'commandCenter',  sortOrder: 4 },
-        // Release reconciliation + contribution trends (additive; reachable from the World Shell).
+        // Release reconciliation + contribution trends. This row is the World Shell island's source
+        // (islands resolve from admin_nav); AdminShell hides it from Classic Tools (HIDDEN_NAV_TAB_IDS).
         { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'release-intelligence', label: 'Release Intelligence', componentId: 'releaseIntelligence', sortOrder: 4 },
+        // Connected Agents / Capabilities are NOT injected here: they are World Shell entry points only
+        // (src/lib/worldIslands.js PLATFORM_ISLAND_TABS). Rows an earlier boot already stored are left alone.
+        // Release loop inside the platform (additive; reachable from the World Shell).
+        { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'release-loop', label: 'Release loop', componentId: 'releaseLoop', sortOrder: 5 },
+        // Live release tracker (additive; reachable from the World Shell).
+        { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'release-tracker', label: 'Release tracker', componentId: 'releaseTracker', sortOrder: 6 },
+        // After-session mapping + token/spend/time trends (additive; World Shell island source only, hidden from Classic Tools by HIDDEN_NAV_TAB_IDS).
+        { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'session-mapping', label: 'Sessions', componentId: 'sessionMapping', sortOrder: 7 },
+        // Render bindings: data map + pending changes (additive; reachable from the World Shell).
+        { viewId: 'plm',      viewLabel: 'Platform Lifecycle Management', id: 'render-bindings', label: 'Render Bindings', componentId: 'renderBindings', sortOrder: 8 },
       ];
 
       for (const t of newTabs) {
@@ -5323,6 +5334,17 @@ Rod state, per event:
     console.warn('[db] journey_rod_evidence.source_tier schema warning:', e.message);
   }
 
+  // Render bindings (2026-10-09, docs/changes/render-bindings.md): approval state of a bound
+  // value. Additive columns only; every pre-existing evidence row reads as 'approved'.
+  try {
+    await sql.unsafe(`ALTER TABLE journey_rod_evidence ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'approved'`);
+    await sql.unsafe(`ALTER TABLE journey_rod_evidence ADD COLUMN IF NOT EXISTS proposed_by BIGINT`);
+    await sql.unsafe(`ALTER TABLE journey_rod_evidence ADD COLUMN IF NOT EXISTS decided_by BIGINT`);
+    await sql.unsafe(`ALTER TABLE journey_rod_evidence ADD COLUMN IF NOT EXISTS decided_at BIGINT`);
+  } catch (e) {
+    console.warn('[db] journey_rod_evidence approval columns warning:', e.message);
+  }
+
   // Platform-default (org_id NULL) seed for the 8 spec agent roles and the
   // shared 2-step approval workflow — seed DATA an org can override via the
   // same org_id seam used everywhere else in this file, never hardcoded
@@ -5420,6 +5442,16 @@ Rod state, per event:
     }
   } catch (e) {
     console.warn('[db] agent roster/workflow seed warning:', e.message);
+  }
+
+  // Release loop roles (incl. reconciliation) as platform-default agent
+  // definitions, built from server/data/releaseLoop/definition.json.
+  // Insert-if-missing only; never touches an org's or admin's edited row.
+  try {
+    const { seedReleaseLoopAgents } = await import('./lib/releaseLoopAgents.js');
+    await seedReleaseLoopAgents(sql);
+  } catch (e) {
+    console.warn('[db] release loop agent seed warning:', e.message);
   }
 
   // Scoring + cadence Currents (journey_current_definitions) for the two
@@ -6054,6 +6086,31 @@ Rod state, per event:
     `);
   } catch (error) {
     console.warn('[db] cover-letter agent tables warning:', error.message);
+  }
+
+  // ── Platform access tokens (2026-10-09, platform MCP server) ─────────────
+  // A personal access token lets an AI agent act through /mcp as the user who
+  // created it. Only the SHA-256 hash is stored (the token is shown once);
+  // scopes narrow what the token may call, never widen what the user may do.
+  // Additive: no existing table or row is touched.
+  try {
+    await sql.unsafe(`
+      CREATE TABLE IF NOT EXISTS platform_access_tokens (
+        id           BIGSERIAL PRIMARY KEY,
+        user_id      BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        name         TEXT NOT NULL,
+        token_hash   TEXT NOT NULL UNIQUE,
+        token_prefix TEXT NOT NULL,
+        scopes       JSONB NOT NULL DEFAULT '[]',
+        created_at   BIGINT NOT NULL,
+        expires_at   BIGINT,
+        last_used_at BIGINT,
+        revoked_at   BIGINT
+      );
+      CREATE INDEX IF NOT EXISTS idx_platform_access_tokens_user ON platform_access_tokens (user_id, created_at DESC);
+    `);
+  } catch (error) {
+    console.warn('[db] platform access tokens table warning:', error.message);
   }
 
   // (journey_current_definitions' personal-override column and indexes are

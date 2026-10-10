@@ -15,7 +15,9 @@ const MemberStatsPanel = lazy(() => import('./MemberPanels.jsx').then((module) =
 const MemberAuditPanel = lazy(() => import('./MemberPanels.jsx').then((module) => ({ default: module.MemberAuditPanel })));
 const MemberAgentPanel = lazy(() => import('./MemberPanels.jsx').then((module) => ({ default: module.MemberAgentPanel })));
 const MyResumePanel = lazy(() => import('./MyResumePanel.jsx'));
-const ReleaseIntelligencePanel = lazy(() => import('./ReleaseIntelligencePanel.jsx'));
+const ReleaseTrackerApp = lazy(() => import('../releaseTracker/ReleaseTrackerApp.jsx'));
+const SessionMappingPanel = lazy(() => import('./SessionMappingPanel.jsx'));
+const RenderBindingsPanel = lazy(() => import('./RenderBindingsPanel.jsx'));
 const OutputTemplateConfiguratorHub = lazy(() => import('./OutputTemplateConfigurator.jsx').then((module) => ({ default: module.OutputTemplateConfiguratorHub })));
 const CareerMasterPanel = lazy(() => import('./CareerMasterPanel.jsx'));
 const ProfileHub = lazy(() => import('./ProfileHub.jsx'));
@@ -66,16 +68,19 @@ const GtmDeliverablesPanel = lazy(() => import('./GtmDeliverablesPanel.jsx'));
 // 'content' is a sentinel — it stays as inline JSX in AdminShell below because
 // the content editor is too tangled with the shell's state to be a standalone
 // panel without a real refactor.
+const WORLD_SHELL_ONLY = new Set(['releaseLoop']);
 const TAB_COMPONENTS = {
   leads:          () => <LeadsPanel />,
   networks:       () => <NetWorksPanel />,
   backlog:        () => <BacklogPanel />,
   feedback:       () => <FeedbackPanel />,
   qa:             () => <QAPanel />,
-  releaseIntelligence: () => <ReleaseIntelligencePanel />,
+  releaseTracker: () => <ReleaseTrackerApp embedded />,
+  sessionMapping: () => <SessionMappingPanel />,
+  renderBindings: () => <RenderBindingsPanel />,
   plmDashboard:   () => <MemberPlmPanel scope="admin" />,
   resume:         (props) => <MyResumePanel {...props} />,
-  outputTemplates: (props) => <OutputTemplateConfiguratorHub {...props} />,
+  outputTemplates: (props) => <div className="sb-admin-scroll" style={{ flex: 1, minWidth: 0, minHeight: 0, overflowY: 'auto' }}><OutputTemplateConfiguratorHub {...props} /></div>,
   careerMaster:   () => <CareerMasterPanel scope="admin" />,
   contentManager: () => <ContentManagerShell />,
   nrm:            () => <NrmPanel isAdmin={true} />,
@@ -125,7 +130,8 @@ const FALLBACK_ADMIN_NAV = {
       { id: 'plm-dashboard', label: 'Operating Model Dashboard', componentId: 'plmDashboard', sortOrder: 0 },
       { id: 'backlog', label: 'Backlog', componentId: 'backlog', sortOrder: 1 },
       { id: 'qa', label: 'QA', componentId: 'qa', sortOrder: 2 },
-      { id: 'release-intelligence', label: 'Release Intelligence', componentId: 'releaseIntelligence', sortOrder: 4 },
+      { id: 'release-tracker', label: 'Release tracker', componentId: 'releaseTracker', sortOrder: 6 },
+      { id: 'render-bindings', label: 'Render Bindings', componentId: 'renderBindings', sortOrder: 5 },
     ]},
     { id: 'crm', label: 'Customer Relationship Management', sortOrder: 2, tabs: [
       { id: 'leads', label: 'Leads', componentId: 'leads', sortOrder: 0 },
@@ -177,6 +183,15 @@ const FALLBACK_PAGE_TYPES = {
     ]},
   ],
 };
+
+// Release Intelligence and Sessions are reached only from the World Shell island. A shared
+// admin_nav row written by an earlier build may still list it under Classic
+// Tools; admin_nav is additive-only, so the entry is hidden here at render
+// time instead of being deleted from the row.
+const HIDDEN_NAV_TAB_IDS = new Set(['release-intelligence', 'session-mapping']);
+function withoutHiddenTabs(nav) {
+  return { ...nav, views: (nav.views || []).map((v) => ({ ...v, tabs: (v.tabs || []).filter((t) => !HIDDEN_NAV_TAB_IDS.has(t.id)) })).filter((v) => v.tabs.length) };
+}
 
 const STATUS_CYCLE = ['live', 'draft', 'soon'];
 
@@ -336,7 +351,10 @@ export default function AdminShell({ scope = 'admin', orgId = null, initialTab =
     api.getAdminNav()
       .then((data) => {
         if (cancelled) return;
-        const useNav = (data?.views || []).length > 0 ? data : FALLBACK_ADMIN_NAV;
+        const rawNav = withoutHiddenTabs((data?.views || []).length > 0 ? data : FALLBACK_ADMIN_NAV);
+        // World Shell-only tabs keep their admin_nav row (it is what produces the World Shell island) but are not
+        // listed in Classic Tools (owner direction: the release loop is reached from the World Shell only).
+        const useNav = { ...rawNav, views: rawNav.views.map((v) => ({ ...v, tabs: (v.tabs || []).filter((t) => !WORLD_SHELL_ONLY.has(t.componentId)) })).filter((v) => v.tabs.length) };
         setAdminNav(useNav);
         // Seed active view: pick the view that owns the current tab, or first.
         const owningView = useNav.views.find((v) => v.tabs.some((t) => t.id === tab));
@@ -922,7 +940,7 @@ export default function AdminShell({ scope = 'admin', orgId = null, initialTab =
             );
           }
           if (componentId === 'resume')          return <CareerConsentGate><MyResumePanel scope={scope} /></CareerConsentGate>;
-          if (componentId === 'outputTemplates') return <OutputTemplateConfiguratorHub scope={scope} />;
+          if (componentId === 'outputTemplates') return <div className="sb-admin-scroll" style={{ flex: 1, minWidth: 0, minHeight: 0, overflowY: 'auto' }}><OutputTemplateConfiguratorHub scope={scope} /></div>;
           if (componentId === 'careerMaster')    return <CareerMasterEntryPoint scope={scope} />;
           if (componentId === 'careerReconciliation') return <CareerReconciliationPanel scope={scope} />;
           if (componentId === 'inbox')           return <InboxPanel />;

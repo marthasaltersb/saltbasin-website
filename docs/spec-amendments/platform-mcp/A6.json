@@ -1,0 +1,35 @@
+{
+  "id": "A6",
+  "feature": "platform-mcp",
+  "fromBaseline": 4,
+  "proposedBy": "fix:platform-mcp:r3",
+  "round": 3,
+  "triageItems": ["platform-mcp-F2-4"],
+  "reason": "Proves the five tools added in round 3 close former exclusions and keep the website's permissions.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "J3.6",
+      "before": null,
+      "after": "Call platform_mcp_info, career_catalogs_read and career_public_rollup_read (unknown slug) with a member token via scripts/mcp-call.mjs. Expected: the first two return isError false with data; the third returns isError true with status 404 not_found. platform_capabilities_map as a member returns 403 forbidden.",
+      "tracesTo": "Owner direction 2026-10-09: make the interface accessible through MCP",
+      "whyNeeded": "Proves the five tools added in round 3 close former exclusions and keep the website's permissions."
+    }
+  ],
+  "review": {
+    "status": "rejected",
+    "reviewer": "amend:platform-mcp:r3",
+    "checklist": {
+      "Traced: every added or changed step names the change-spec requirement or owner direction it proves (tracesTo).": "pass: owner direction 2026-10-09 and docs/changes/platform-mcp.md 'Fix notes - round 3' (F2-4)",
+      "Not weaker: a changed expected result is at least as strict as before, unless the evidence shows the old expectation contradicts the change spec or owner direction (then say which).": "pass: n/a, new step, nothing weakened",
+      "Retire only duplicates: removing a step is approved only when another step tests the same thing (name it); any other removal is needs_owner.": "pass: nothing retired",
+      "Exact: action plus exact expected result (labels, text, values, counts); no 'should look right', no 'roughly'.": "fail: no command lines (no --url, no `call <tool> '<json>'`), no tool arguments (career_public_rollup_read needs slug and displayKey; the unknown values are not written), 'return data' names no field, and '404 not_found' / '403 forbidden' are not tied to the {status, code, message} error shape used by J6.3-J6.6. 'a member token' does not say which token: TOKEN_A has no release.read scope, so the step cannot tell a missing-scope refusal from the role refusal it means to test.",
+      "Reachable: the step is walkable by point-and-click on desktop and at 390px (interfaceParity), or is a cli step by design.": "pass: intended as a cli step by design, but the proposal states no group or surface and must say cli",
+      "Deterministic: same result every run against the fixed constraints (no dependence on wall-clock time, random data, earlier failed steps, or leftovers from another test); timing tolerances are stated.": "fail: 'unknown slug' is not a written fixture value and the catalogs result is not pinned to a key or count",
+      "Fictional data only; fixtures written in the spec, never fetched.": "pass",
+      "Independent of the fix: the step tests behaviour, not the implementation the fixer chose.": "pass: it tests the 404 and 403 behaviour the website routes already have"
+    },
+    "note": "Rejected as written. This is not a product defect, so nothing returns to the fix loop as a defect. The intent is traced and wanted; re-propose with exact text: (a) group and id (next unused in J3 is J3.6) and surface cli; (b) full command lines for platform_mcp_info, career_catalogs_read and career_public_rollup_read with written fictional args (slug and displayKey values), and for each success one named field that must be present (for platform_mcp_info `transport` and `url`); (c) the error expectation as `isError: true` with `status` 404 and the `code` the product actually returns, in the J6.x wording; (d) for platform_capabilities_map, name the token. platform_capabilities_map needs the admin-only release.read scope, so a member cannot hold a token that reaches the role check; with TOKEN_A (no release.read) the refusal is the scope refusal J6.4 documents, so state that expected status and code explicitly. Observations for the integrator, not amendments (each needs its own proposal against the recounted registry): (1) J2.1 pins 96 tools for TOKEN_A, but the round 3 registry has 100 tools carrying career.read/career.write/outputs.approve (152 total) because platform_mcp_info, career_catalogs_read, career_public_rollup_read and career_site_metadata_sync were appended with those scopes, so J2.1 will fail on count and list until re-amended. (2) E.5 still says eleven tool names and is stale. (3) J11.2 pins 72 of 72 capabilities while docs/changes/platform-mcp.md reports 87 of 87 as of round 3.",
+    "at": "2026-10-10T02:00:00.000Z"
+  }
+}

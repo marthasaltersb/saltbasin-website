@@ -1,0 +1,38 @@
+{
+  "id": "A3",
+  "feature": "qr-gated-outputs",
+  "fromBaseline": 2,
+  "proposedBy": "fix:qr-gated-outputs:r3",
+  "round": 3,
+  "triageItems": [
+    "F2-8",
+    "B10"
+  ],
+  "reason": "The stamped .docx download exists and no journey proves it.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "[B10.1]",
+      "before": "",
+      "after": "As the member, on a QR-approved Harbor Demo Resume click Download .docx, open the file and click the QR image in the header. Expect the link target to equal the approve-for-QR URL. Expect core properties to show the package's true created date and the authors, not 2013-12-23.",
+      "tracesTo": "request: clickable QR in PDF/docx; bug B10",
+      "whyNeeded": "The stamped .docx download now exists and has no journey proving it."
+    }
+  ],
+  "review": {
+    "status": "rejected",
+    "reviewer": "amend:qr-gated-outputs:r3",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "fail: no property names or values ('core properties ... authors' is not exact; the file stores authors in dc:creator as 'Avery Example; Jordan Sample' and created as 2026-09-30T13:00:01Z); no way to inspect the file or read a header hyperlink is written; 'the approve-for-QR URL' is not a concrete value",
+      "Reachable": "fail: the id [B10.1] is not a valid step id (formats are J<journey>.<n>, E.<n>, P.<n>); 'click the QR image in the header' is a Word action, not a browser step on desktop or 390px, so it must be a cli step by design with its commands; the Download .docx button path must also be stated (Resume Output History card, desktop and 390px)",
+      "Deterministic": "fail: does not say which card or state it runs in (after J3.4 the resume is approved with <SLUG1>; after J9.1 it is not; after J8.3 the approved card is the new version), and the sign-in cookie needed by the authenticated download.docx route is not specified",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Rejected as written; the product is fine (GET /api/resume-outputs/:id/download.docx, server/lib/outputDocx.js writes dc:creator = authors joined by '; ' and dcterms:created = package createdAt; header QR hyperlink target = /r/<slug> URL). Spec resubmission, not a defect. Resubmit as a cli step in an existing journey group (e.g. J6.4, after J6.3 so the resume is approved with <SLUG1>). Give exact commands: download via the signed-in browser's Download .docx button (desktop and 390px) or curl with the session cookie to /var/tmp/qr-demo/resume.docx, then `python3 -I` reading the docx core properties and the header part's relationship Target. Exact expectations: author 'Avery Example; Jordan Sample'; created 2026-09-30T13:00:01; header hyperlink Target equals <BASE>/r/<SLUG1> (the link on the card); created is not 2013-12-23. State which card is used.",
+    "at": "2026-10-09T00:00:00.000Z"
+  }
+}

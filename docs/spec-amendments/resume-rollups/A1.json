@@ -1,0 +1,37 @@
+{
+  "id": "A1",
+  "feature": "resume-rollups",
+  "fromBaseline": 1,
+  "proposedBy": "triage:resume-rollups:r1",
+  "round": 1,
+  "triageItems": [
+    "RR1-2"
+  ],
+  "reason": "J9.5 sends the tester to a typed API URL, which interface parity v3 forbids as a step.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "J9.5",
+      "before": "Open `/api/career/atom-rollups?owner=me` in the browser. Expect `\"tools_by_wheel_bucket\": []` and a `groupings` array containing an entry labelled \"Skills by proficiency\".",
+      "after": "Reload Proficiency & Rollups and open Career Atom rollups. Expect the `Skills by proficiency` card still present with the computed line 'Advanced (1) · Expert (1) · Foundational (1) · Proficient (1)', and the `Tools by wheel bucket` card with Shown unticked. (The API result of GET /api/career/atom-rollups?owner=me is checked from the page session and kept as evidence, not as a tester step.)",
+      "tracesTo": "definition.json interfaceParity rule v3 (no typed URLs or API calls standing in for a step); change spec docs/changes/resume-rollups.md Server section (Career Atom groupings come from member definitions; a hidden grouping resolves to [])",
+      "whyNeeded": "The old step cannot be walked by point and click on desktop or at 390px."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:resume-rollups:r1",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass: the old expectation contradicts owner direction (interfaceParity: no typed URLs standing in for a step). The facts it checked (grouping saved and listed, tools grouping hidden) are kept and verified after a reload, which also proves persistence. The API result stays as non-scored evidence.",
+      "Retire only duplicates": "pass: no step retired",
+      "Exact": "pass: names the card, the exact computed line and the Shown state; screen and section names are defined in \"Where things are\"",
+      "Reachable": "pass",
+      "Deterministic": "pass: uses only data created by P.2 and J9.2-J9.4",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass: observes saved state in the UI, not the implementation"
+    },
+    "note": "Approved. The product matches the change spec (triage RR1-2; the validator confirmed the API through the page session). Residual risk, not a blocker: the downstream effect of a hidden grouping on the public consumer is no longer a scored step; it stays recorded as evidence.",
+    "at": "2026-10-09T18:00:00Z"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "id": "A3",
+  "feature": "world-shell-navigation",
+  "fromBaseline": 1,
+  "proposedBy": "triage:world-shell-navigation:r2",
+  "round": 2,
+  "triageItems": [
+    "wsn-r2-b11-island-entry"
+  ],
+  "reason": "No step enters an island from the 3D world.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "",
+      "before": "",
+      "after": "[J1.5] On the World tab select the Career Placement Agents island; the right rail opens the same panel as Journeys -> Career Placement Agents, showing TRACKED (n).",
+      "tracesTo": "World Shell navigation change spec (docs/changes/world-shell-opportunity-outputs.md)",
+      "whyNeeded": "Island entry is a primary navigation path with no scored step."
+    }
+  ],
+  "review": {
+    "status": "rejected",
+    "reviewer": "amend:world-shell-navigation:r2",
+    "checklist": {
+      "Traced": "fail: the change spec (docs/changes/world-shell-opportunity-outputs.md) states no requirement that island selection opens the panel; it only names the Journeys cards path",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "fail: 'select the island' names no click target or position; 'TRACKED (n)' leaves n unspecified (it is 0 at this point in the journey)",
+      "Reachable": "fail: islands exist only as meshes in a WebGL canvas picked by raycast on pointerdown (WorldShell.jsx lines 348-403) with no DOM element; at 390px touch there is no stated gesture",
+      "Deterministic": "fail: islands orbit and drift every frame (WorldShell.jsx lines 437-441), so screen position depends on wall-clock time; headless WebGL availability is also not fixed by testConstraints",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Rejected as written. This is not a product defect and does not go to the fix loop as one. If island entry must be covered, the product needs a stable, labelled DOM control per island (for example an accessible island list) so a step can name an exact target; that is a product/business decision for the owner, after which a new proposal can be reviewed. Owner question if wanted: 'Should each 3D island also be reachable through a labelled, focusable control so island entry can be tested at desktop and 390px?'",
+    "at": "2026-10-09T00:00:00.000Z"
+  }
+}

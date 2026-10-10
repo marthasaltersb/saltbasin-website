@@ -1,0 +1,38 @@
+{
+  "id": "A6",
+  "feature": "qr-gated-outputs",
+  "fromBaseline": 2,
+  "proposedBy": "fix:qr-gated-outputs:r4",
+  "round": 4,
+  "triageItems": [
+    "F2-11",
+    "F3-5"
+  ],
+  "reason": "Owner direction: every journey runs as a member from the World Shell, desktop and 390px.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "P.1",
+      "before": "Sign in at <BASE>/login as the seeded administrator",
+      "after": "Sign in at <BASE>/login as member@test.local (TestPass!2345), open <BASE>/world, tap or click Journeys, then My Resume. Expect My Resume with Resume Output History. After approval the card reads 'Approved by Test Member'.",
+      "tracesTo": "F2-11 / F3-5",
+      "whyNeeded": "Owner direction: journeys run as a member from the World Shell."
+    }
+  ],
+  "review": {
+    "status": "rejected",
+    "reviewer": "amend:qr-gated-outputs:r4",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "fail: P.4, J8.1 and the proposed P.5 run scripts/import-application-package.mjs with ADMIN_EMAIL/ADMIN_INITIAL_PASSWORD, so they sign in as the seeded administrator and file the documents under the administrator's account, not under member@test.local; the member signed in by the new P.1 would see no Harbor Demo cards. 'Where things are' (Classic Tools path) and P.2 navigation are also left unaligned with the new entry point",
+      "Reachable": "pass",
+      "Deterministic": "fail: the import account and the browsing account differ, so the cards later steps read do not exist for the signed-in member",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Rejected as written; the direction is right but the change is incomplete. Resubmit as one amendment that changes together: P.1 (member sign-in, World Shell path; the member comes from scripts/create-test-member.mjs per testConstraints), P.4 and J8.1 (and P.5 if approved) so the import runs as the member with SB_EMAIL=member@test.local SB_PASSWORD='TestPass!2345' (the script already honours these), and the 'Where things are' / P.2 navigation text so desktop uses the Journeys path. Put the 'Approved by Test Member' expectation in a scored step (J3.4 or J8.4), not only in an unscored precondition. Spec resubmission, not a product defect.",
+    "at": "2026-10-09T00:00:00.000Z"
+  }
+}

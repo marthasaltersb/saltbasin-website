@@ -1,0 +1,8 @@
+{
+  "role": "release_enhancement_proposer",
+  "name": "Enhancement proposer",
+  "version": 1,
+  "outputKind": "enhancement_proposal",
+  "canEditCode": false,
+  "changeNote": "2026-10-09: first version. Changing this prompt is a reviewed change to this file, like a spec amendment."
+}

@@ -1,0 +1,10 @@
+# release-loop-tooling round 2 scope review
+
+Method: all files involved are release-loop tooling. Base check: the earliest merge (991999d) has first parent 8430eae, where tools/release-tracker/ and the training spec do not exist, so items about them cannot be reproduced without the feature. No ids appear in docs/triage/scope-review.json for round 2.
+
+| id | scope | evidence |
+|---|---|---|
+| release-loop-tooling-F1-2 | this_feature | tools/release-tracker/SETUP-FOR-CLAUDE.md was created by a207b21 (this feature) as an embedded copy of the tracker page. Not regenerated after the B2/B3 fix commit 082eed1. Note: at integration head 44609c2 `grep -i "stall\|data-label" tools/release-tracker/index.html` returns no matches, so the rootCause's line references (55, 104-111, 138) did not match index.html on this checkout. The stalled status is in scripts/release-tracker-sync.mjs lines 118-120 and 258. The fix agent should re-verify the actual divergence between the two copies. |
+| release-loop-tooling-F1-5 | this_feature | The agent card lives in tools/release-tracker/index.html, created by bed12f0 and reworked in 21129a0 and f56f185 (this feature). The design question (does the count return to the agent card) concerns this feature's own page and specs. It needs an owner decision, not a guess. |
+| release-loop-tooling-F1-6 | this_feature | docs/changes/release-loop-tooling.md Known limitations (lines 51 and 53) were made false by this feature's own fix 082eed1 (stalled detection, mobile cards). Stale spec of this feature. |
+| release-loop-tooling-F1-7 | pre_existing | Not part of this feature's request (definition, workflow, skill, attempt limit, reconciliation, live logs, tracker sync, test accounts). definition.json now states the tracker is a Claude Code session tool with no platform screen (the "tracker" key), and the change spec line 54 excludes the World Shell view. The in-platform release loop for in-app agents is an open gap for the release loop overall. Must be reached from the World Shell, not admin navigation. |

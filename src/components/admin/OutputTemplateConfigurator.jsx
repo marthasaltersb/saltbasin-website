@@ -108,7 +108,7 @@ const OUTPUT_TYPES = [
 export function OutputTemplateConfiguratorHub({ scope = 'member' }) {
   const [outputType, setOutputType] = useState('resume');
   return (
-    <div style={{ flex: 1, overflowY: 'auto', background: 'var(--sb-ivory, #faf8f4)' }}>
+    <div style={{ background: 'var(--sb-ivory, #faf8f4)' }}>
       <div style={{ padding: '1rem 1.5rem 0', display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
         {OUTPUT_TYPES.map((t) => (
           <button key={t.id} style={S.tab(outputType === t.id)} onClick={() => setOutputType(t.id)}>{t.label}</button>
@@ -180,7 +180,11 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
   // its own error (HTTP status or network message) instead of collapsing to null.
   async function loadJson(url) {
     const r = await fetch(url, { credentials: 'include' });
-    if (!r.ok) throw new Error(`HTTP ${r.status}${r.statusText ? ` ${r.statusText}` : ''}`);
+    if (!r.ok) {
+      let detail = '';
+      try { const b = await r.json(); detail = b?.error ? ` - ${b.error}` : ''; } catch { /* empty or non-JSON body */ }
+      throw new Error(`HTTP ${r.status}${r.statusText ? ` ${r.statusText}` : ''}${detail}`);
+    }
     return r.json();
   }
   function loadChartData() {
@@ -195,7 +199,7 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
     }).finally(() => setLoading((l) => ({ ...l, [key]: false })));
     settle('rollups', loadJson(`/api/career/rollups${ownerParam}`), setRollupCatalog);
     settle('master', loadJson(`/api/career/master${ownerParam}`), setMaster);
-    settle('proficiency', api.getCareerProficiency(), setProficiency);
+    settle('proficiency', loadJson('/api/career/proficiency?period=current'), setProficiency);
   }
 
   // Tell the preview iframe (Output.jsx) to re-read Career Master data.
@@ -318,18 +322,18 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
   const placeholderSections = (sitePages?.['_placeholders']?.sections || []);
 
   return (
-    <div style={{ flex: 1, overflowY: 'auto', background: 'var(--sb-ivory, #faf8f4)' }}>
+    <div style={{ background: 'var(--sb-ivory, #faf8f4)' }}>
       <div style={narrow ? { ...S.wrap, padding: '0.75rem' } : S.wrap}>
         <div style={S.h1}>Output Template — {outputType}</div>
         <div style={S.sub}>
           Pick which Career Master data feeds this output's header/footer, stat cards, infographics, and content sections.
           The Salt Basin copyright footer always renders and can never be changed here — your own footer is added below it.
-          Changes preview live on the right; Save makes the preset selectable.
+          Changes preview live beside the editor (below it on narrow screens); Save makes the preset selectable.
         </div>
 
         <div style={narrow ? { ...S.shell, gridTemplateColumns: 'minmax(0, 1fr)' } : S.shell}>
           {/* ── Preset list ── */}
-          <div>
+          <div style={{ minWidth: 0 }}>
             <div style={S.label}>Presets</div>
             <button style={{ ...S.btn('outline'), width: '100%', marginBottom: '0.6rem' }} onClick={newPreset}>+ New Preset</button>
             {presets.map((p) => (
@@ -345,7 +349,7 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
           </div>
 
           {/* ── Editor ── */}
-          <div>
+          <div style={{ minWidth: 0 }}>
             <div style={S.card}>
               <div style={S.label}>Preset Info</div>
               <div style={{ display: 'grid', gridTemplateColumns: narrow ? 'minmax(0, 1fr)' : '1fr 1fr', gap: '0.6rem', marginBottom: '0.6rem' }}>
@@ -560,6 +564,7 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
                   </div>
                   {[['skills', 'Skill', 'skill'], ['tools', 'Tool', 'currentName'], ['certifications', 'Certification', 'name']].map(([list, noun, field]) => {
                     const rows = master?.[list] || [];
+                    const disp = (r) => (r[field] || (list === 'tools' ? r.nameUsed : '') || '');
                     const shownIds = [...new Set([...Object.keys(config.masterOverrides?.[list] || {}), ...ovPicks[list]])];
                     const addable = rows.filter((r) => !shownIds.includes(String(r.id)));
                     const box = { width: '100%', boxSizing: 'border-box', padding: '0.35rem 0.5rem', fontSize: '0.78rem', border: '1px solid rgba(0,0,0,0.2)', borderRadius: 6 };
@@ -568,16 +573,17 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
                         <select aria-label={`Add ${noun.toLowerCase()} override`} value="" style={box}
                           onChange={(e) => { const v = e.target.value; if (v) setOvPicks((p) => ({ ...p, [list]: [...p[list], v] })); }}>
                           <option value="">{`Reword a ${noun.toLowerCase()} for this output...`}</option>
-                          {addable.map((r) => <option key={r.id} value={String(r.id)}>{r[field]}</option>)}
+                          {addable.map((r) => <option key={r.id} value={String(r.id)}>{disp(r)}</option>)}
                         </select>
                         {shownIds.map((id) => {
                           const row = rows.find((r) => String(r.id) === id);
                           if (!row) return null;
                           const stored = config.masterOverrides?.[list]?.[id]?.[field];
-                          const masterValue = row[field] ?? '';
+                          const masterValue = disp(row);
                           const shown = typeof stored === 'string' ? stored : masterValue;
                           const over = typeof stored === 'string' && stored !== masterValue;
                           const setField = (v) => update('masterOverrides', withOverride(config.masterOverrides, list, id, field, v));
+                          const revert = () => { setField(null); setOvPicks((p) => (p[list].includes(id) ? p : { ...p, [list]: [...p[list], id] })); };
                           return (
                             <div key={id} style={{ marginTop: '0.3rem' }}>
                               <label style={{ fontSize: '0.7rem', color: '#666' }}>{noun} {masterValue}</label>
@@ -586,7 +592,7 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
                               {over && (
                                 <div style={{ fontSize: '0.7rem', color: '#666', marginTop: 2 }}>
                                   Career Master: {masterValue || '(empty)'}{' '}
-                                  <button type="button" style={S.smallBtn} onClick={() => setField(null)}>Revert to Career Master</button>
+                                  <button type="button" style={S.smallBtn} onClick={revert}>Revert to Career Master</button>
                                 </div>
                               )}
                             </div>
@@ -650,10 +656,10 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
           </div>
 
           {/* ── Live preview (sticky so it stays beside the chart gallery while scrolling) ── */}
-          <div style={{ position: 'sticky', top: 0 }} data-testid="live-preview-column">
+          <div style={narrow ? { minWidth: 0 } : { position: 'sticky', top: 0, minWidth: 0 }} data-testid="live-preview-column">
             <div style={S.label}>Live Preview</div>
             {previewSrc ? (
-              <iframe ref={iframeRef} src={previewSrc} style={S.previewFrame} title="Output preview" />
+              <iframe ref={iframeRef} src={previewSrc} style={narrow ? { ...S.previewFrame, height: 520 } : { ...S.previewFrame, height: 'min(640px, calc(100vh - 3.5rem))' }} title="Output preview" />
             ) : (
               <div style={{ ...S.previewFrame, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', fontSize: '0.8rem' }}>
                 Preview unavailable — no case study to preview against yet.

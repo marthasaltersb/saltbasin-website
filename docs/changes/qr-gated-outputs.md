@@ -75,7 +75,7 @@ Run 2026-10-02 against a fresh database `sb_rl_bld_1` (Postgres 16, local) with 
 
 ## Known limitations
 
-- Import is a command-line script (`scripts/import-application-package.mjs`), not a screen. It files documents and does not configure anything, but there is no in-app import UI yet.
+- Import is available both as a command-line script (`scripts/import-application-package.mjs`) and as the "Import an application package" card in My Resume (file picker, optional link-to-opportunity checkbox, `POST /api/resume-outputs/import-package`). It files draft documents only; nothing is approved or shared by importing. No baseline step scores the card yet.
 - `.docx` QR stamping and site sync are scripts too (`scripts/stamp-application-package-docx.py`, `scripts/sync-site-with-application-package.mjs`); not covered by the training spec.
 - The training spec checks the PDF's link annotations with a command line (`grep`/`pdftotext`), since a browser cannot show them.
 - Package JSON must never be committed (the repo is public); the training spec uses fictional JSON under `/var/tmp`.
@@ -83,3 +83,56 @@ Run 2026-10-02 against a fresh database `sb_rl_bld_1` (Postgres 16, local) with 
 ## Fix notes per round
 
 (none yet; fix agents append here)
+
+### Fix notes — round 2
+
+- **T3 (J3.3, J7.1, J8.3)**: the Approve-for-QR toast in `approveForQr` used an em dash; changed to ` - ` to match the specified text. File: `src/components/admin/MyResumePanel.jsx`. Checked: the string is the only occurrence in the source and now matches the spec text; the vite build passes.
+- **T2 (J2.1)**: `header.contact` may be an array; the view concatenated entries with no separator. Added a shared normaliser `contactText()` in `src/lib/headerContact.js` (array joined with ` · `, string passed through) and used it in `src/components/DocumentBlocksView.jsx` and `server/lib/outputRendering.js`; `src/lib/documentBlocksEditor.js` now spreads an array contact into the editor's items instead of nesting it. Checked: rendered a PDF from an array-contact fixture and extracted "avery@example.test · Example City"; vite build passes. The in-browser walk of the journey steps was not run in this round (only the build and the PDF render were checked).
+
+## Fix notes — round 3
+
+- **qr-gated-outputs-F2-6** (contact separator): no code change needed. `contactText()` in `src/lib/headerContact.js` already joins an array with " · " and is used by `DocumentBlocksView.jsx`, the PDF path and the new .docx path. Checked: a fictional package with `contact: ["avery@example.test", "Example City"]` was imported and its downloaded .docx reads "avery@example.test · Example City". No browser walk of the View dialog was done this round.
+- **qr-gated-outputs-F2-8** (docx QR / site sync): added `GET /api/resume-outputs/:id/download.docx` (`server/routes/resumeOutputs.js`), `server/lib/outputDocx.js`, `renderProjectionToDocxBuffer` in `server/lib/outputRendering.js`, a "Download .docx" button beside Download PDF in `MyResumePanel.jsx`, and `api.downloadResumeOutputDocxUrl`. The file carries the real created date, authors and approver in core properties, and (once approved) the slug QR in the header as an image whose hyperlink target is the slug URL, plus a "Verified copy" link line. Checked against a local server: imported, approved, downloaded; python-docx opened the file (created 2026-09-30T13:00:01Z) and the header relationship target equals the `/r/<slug>` URL returned by approve. Not re-walked in a browser. `scripts/sync-site-with-application-package.mjs` was not changed or exercised.
+- **qr-gated-outputs-F2-10** (MCP_GAP): registered `application_output_revoke_qr`, `application_package_import`, `shared_output_resolve` in `server/lib/mcpToolRegistry.js` (approve already existed). Each calls the same server function as its route (`revokeOutputSharing`, `importApplicationPackage`, `getSharedOutputByToken`). Approve keeps the finalization gate. Parity map and manifest updated; `node scripts/check-interface-parity.mjs` reports OK. Handlers exercised directly against a local database: resolve, revoke (then resolve gives not_found, new approval mints a new slug), re-import as new version, approve.
+- **qr-gated-outputs-F2-11 / F2-12**: spec amendments, not edited here (see proposedSteps in the fix output).
+
+### Fix notes — round 4
+
+No product code changed this round: every item is a spec amendment, or verification of behaviour that was already built. The training spec and baselines are untouched. Proposed steps are returned for the amendment reviewer.
+
+- **qr-gated-outputs-F3-5** (member from the World Shell). The product already supports it; no code change. Walked as `member@test.local` on a fresh database at 1280x900 and at 390x844 (touch): `/login`, `/world`, Journeys, My Resume, Resume Output History. Approve for QR on the imported Harbor Demo Resume and on the Harbor Demo Cover Letter returned 200. The card then read "Approved by Test Member on Oct 9, 2026" with the private link, QR (SVG), QR (PNG) and Revoke QR, and the private `/r/<slug>` page opened. No horizontal overflow at 390px. The spec change itself is a proposed step below. Files: none.
+- **qr-gated-outputs-F3-6** (no Draft card for J10.3, E.1, E.2, E.4). Not a product defect; it needs a spec step, which this agent may not write. The exact proposal is below. The import command was run as the member against `pkg-v1.json` and reported `resume_main #1 created`, `cover_letter #2 created`. Files: none.
+- **qr-gated-outputs-F3-10** (docx and site sync). Docx: clicked Download .docx in the browser on the approved resume card (desktop) and on the cover-letter card (phone). Core properties: creator `Avery Example; Jordan Sample`, created `2026-09-30T13:00:01Z` (not 2013-12-23). `word/_rels/header1.xml.rels` and `document.xml.rels` carry a hyperlink Target equal to the card's `/r/<slug>` link. Site sync decision: it stays an owner-run command-line script, because it rewrites the public site draft (and publishes with `--publish`); exposing it as a member screen or MCP tool would give every member a site-wide edit. Ran it as a dry run (no `--apply`) as the administrator against the fictional package: exit 0, 0 site-draft findings, one report-only Career Master finding. The docx journey is proposed as a cli step below. Files: none.
+- **qr-gated-outputs-F3-11** (MOBILE). Walked at 390x844 with touch as the member from the World Shell: Approve for QR (confirm dialog, 200), Approved-by line, link, Download .docx, private page, `scrollWidth - innerWidth = 0`. Files: none.
+
+Not touched, outside this round's items: the em dash copy at `src/components/admin/MyResumePanel.jsx:1065` and `server/routes/auth.js:28` (J2.1, E.5) that differs from the spec's hyphen. Which side changes is a triage or amendment decision.
+
+Proposed steps for the reviewer:
+
+1. Change [P.1]: sign in at `<BASE>/login` as `member@test.local` (password `TestPass!2345`), then open `<BASE>/world`, tap or click Journeys, then My Resume. Expect "My Resume" with Resume Output History, and after approval "Approved by Test Member". Traces to F2-11.
+2. Add [P.5], after J9.3 and before J10.3: write `/var/tmp/qr-demo/pkg-v3.json` from `pkg-v1.json` with `sed 's/Leads fictional process redesign programs\./Leads fictional process redesign programs, second revision./'`, then run the P.4 import command against it. Expect `resume_main #<new id> new_version` and `cover_letter #<id> unchanged`; the new Harbor Demo Resume is the Draft card for J10.3, E.1, E.2, E.4. E.3 must re-import the latest file and expect every output unchanged, or run before P.5. Traces to F2-12.
+3. Add a cli step after J6.3 (resume approved with `<SLUG1>`): click Download .docx on the Harbor Demo Resume card (desktop and 390px), save as `/var/tmp/qr-demo/resume.docx`, then run `python3 -I` reading `docProps/core.xml` and `word/_rels/header1.xml.rels`. Expect creator `Avery Example; Jordan Sample`, created `2026-09-30T13:00:01Z`, and a hyperlink Target equal to `<BASE>/r/<SLUG1>`. Traces to F2-8 and F3-10.
+
+## Fix notes — round 6
+
+### qr-gated-outputs-T1 (rounds 2-5)
+- Changed: the View dialog note in `src/components/admin/MyResumePanel.jsx` now reads "Read-only - no edits can be made here." (hyphen, as step J2.1 expects).
+- Files: `src/components/admin/MyResumePanel.jsx`.
+- Checked: grep finds no "Read-only —" left in `src`; `npm run build` passes.
+
+### qr-gated-outputs-T5 (rounds 2-5)
+- Changed: the `authLimiter` message in `server/routes/auth.js` now reads "Too many attempts - please try again in 15 minutes" (hyphen, as step E.5 expects).
+- Files: `server/routes/auth.js`.
+- Checked: grep finds no em-dash form left in `server`; `npm run build` passes.
+
+### Fix notes — round 7
+
+#### qr-gated-outputs-F6-1 (J2.1, E.5)
+- Changed: no product code (the round 6 string fixes are already in the branch). Updated the stale "Known limitations" import line in this spec to describe the import card.
+- Files: `docs/changes/qr-gated-outputs.md`.
+- Checked: ran the app (fresh database, production build, port 7116), imported the fictional pkg-v1 as member@test.local, then walked it in Chromium. J2.1 on desktop (1280px) and phone (390px, touch): World Shell > Journeys > My Resume > View shows "Read-only - no edits can be made here." on both. E.5 on both surfaces: the 10-attempt limiter returns 429 "Too many attempts - please try again in 15 minutes" (each surface on a restarted server so the in-memory limiter was clean). Server stopped and database dropped afterwards.
+
+#### qr-gated-outputs-F6-4, F6-5, F6-6, F6-7 (amendments A3/A8, A6, A7, A4)
+- Changed: nothing. These are spec amendments awaiting a reviewer other than the proposer; this agent may not edit `docs/training/**`, baselines or amendment review state, and may not approve its own proposals. Amendments A3 to A8 are all currently `rejected` by the amendment reviewer, with resubmission notes in each file. Site sync staying an owner-run script is an owner decision, not recorded here.
+- Product side is already built for each: stamped .docx download (A3/A8), member sign-in through World Shell Journeys (A6), Draft card via a third package import (A7), MCP tools `application_package_import`, `application_output_approve_for_qr`, `application_output_revoke_qr`, `shared_output_resolve` (A4).
+- Checked: no files under `docs/spec-amendments/` or `docs/training/` touched.

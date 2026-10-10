@@ -25,7 +25,7 @@ import { generateTotpSecret, verifyTotp, totpUri } from '../lib/totp.js';
 import { organizationSsoConfig, discoverOidc, exchangeOidcCode, hashSsoState, randomSsoValue } from '../lib/organizationSso.js';
 
 // 10 attempts per IP per 15 minutes on auth endpoints
-const authLimiter = makeRateLimiter({ windowMs: 15 * 60_000, max: 10, message: 'Too many attempts — please try again in 15 minutes' });
+const authLimiter = makeRateLimiter({ windowMs: 15 * 60_000, max: 10, message: 'Too many attempts - please try again in 15 minutes' });
 
 const router = Router();
 const SSO_TTL_MS = 10 * 60_000;

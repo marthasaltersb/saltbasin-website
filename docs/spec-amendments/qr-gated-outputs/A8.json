@@ -1,0 +1,38 @@
+{
+  "id": "A8",
+  "feature": "qr-gated-outputs",
+  "fromBaseline": 2,
+  "proposedBy": "fix:qr-gated-outputs:r4",
+  "round": 4,
+  "triageItems": [
+    "F2-8",
+    "F3-10"
+  ],
+  "reason": "No journey proves the stamped .docx download.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "J6.4",
+      "before": "",
+      "after": "cli, after J6.3 with the Harbor Demo Resume approved as <SLUG1>: click Download .docx on its card (desktop and 390px) and save as /var/tmp/qr-demo/resume.docx. Run python3 -I to read docProps/core.xml and word/_rels/header1.xml.rels. Expect dc:creator 'Avery Example; Jordan Sample', dcterms:created 2026-09-30T13:00:01Z (not 2013-12-23), and a hyperlink Target equal to <BASE>/r/<SLUG1>.",
+      "tracesTo": "F2-8 / F3-10, request: clickable QR in PDF/docx",
+      "whyNeeded": "The stamped .docx download exists and no journey proves it."
+    }
+  ],
+  "review": {
+    "status": "rejected",
+    "reviewer": "amend:qr-gated-outputs:r4",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "fail: 'run python3 -I to read docProps/core.xml and word/_rels/header1.xml.rels' gives no literal command or output format, so two validators would write different checks",
+      "Reachable": "fail: the step is labelled 'cli' but its first action is clicking Download .docx on desktop and at 390px; a click at 390px is a browser surface and the baseline fixes one surface set per step. Split into a desktop+mobile download step and a cli inspection step",
+      "Deterministic": "fail: both surfaces save to the same path and the step does not say which file is inspected; header1.xml.rels is an implementation file name, so say 'any word/_rels/*.rels part' with a Target equal to <BASE>/r/<SLUG1>",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Rejected as written; the requirement is traced (feature title names the clickable QR in docx) and the expected values match the P.3 fixture (authors, createdAt). Resubmit as two steps with exact content: J6.4 (desktop+mobile) click Download .docx, expect a download named like Harbor-Demo-Resume-<id>.docx, save it to /var/tmp/qr-demo/resume.docx; J6.5 (cli) a literal python3 -I command (zipfile + regex over docProps/core.xml and every word/_rels/*.rels) with the exact printed expected values: creator 'Avery Example; Jordan Sample', created 2026-09-30T13:00:01Z, and a Target equal to <BASE>/r/<SLUG1>. Also the change spec Known limitations still says .docx stamping is not covered by the training spec; that line needs updating by the fix loop. Spec resubmission, not a product defect.",
+    "at": "2026-10-09T00:00:00.000Z"
+  }
+}

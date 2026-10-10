@@ -23,11 +23,12 @@ const S = {
   h: { fontSize: '0.9rem', fontWeight: 700, color: INK, margin: '0 0 0.4rem' },
   sub: { fontSize: '0.72rem', color: '#6a6a6a', lineHeight: 1.5 },
   input: { width: '100%', boxSizing: 'border-box', padding: '0.4rem 0.5rem', borderRadius: 6, border: '1px solid rgba(0,0,0,0.2)', fontSize: '0.8rem', fontFamily: 'inherit' },
-  btn: (tone = 'outline') => ({
+  btn: (tone = 'outline', disabled = false) => ({
     padding: '4px 10px', fontSize: '0.72rem', borderRadius: 6, cursor: 'pointer', fontWeight: 600,
     border: tone === 'outline' ? '1px solid rgba(0,0,0,0.25)' : 'none',
     background: tone === 'gold' ? '#c4843a' : tone === 'navy' ? INK : 'white',
     color: tone === 'gold' || tone === 'navy' ? 'white' : '#333',
+    ...(disabled ? { opacity: 0.5, cursor: 'not-allowed', background: '#d9dde1', color: '#5b6672' } : {}),
   }),
   badge: { display: 'inline-block', marginLeft: 6, fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: '#8a5a12', background: '#FBEBD0', border: '1px solid #E8C98F', borderRadius: 999, padding: '0 6px', verticalAlign: 'middle' },
   warn: { background: '#FBEBD0', border: '1px solid #E8C98F', color: '#5C3B08', borderRadius: 8, padding: '0.55rem 0.75rem', fontSize: '0.76rem', marginBottom: '0.7rem', lineHeight: 1.5 },
@@ -142,7 +143,7 @@ export default function CareerBoundOutputEditor({ projectionId, onSaved, onOpenR
         <label style={{ fontSize: '0.72rem', fontWeight: 700 }} htmlFor="cb-name">Output name</label>
         <input id="cb-name" style={{ ...S.input, width: 280 }} value={name} onChange={(e) => { setName(e.target.value); setDirty(true); }} />
         <span style={S.sub}>Status: <strong style={{ textTransform: 'capitalize' }}>{state.outputStatus}</strong></span>
-        <button type="button" style={S.btn('gold')} disabled={saving || !dirty} onClick={save}>{saving ? 'Saving...' : 'Save changes'}</button>
+        <button type="button" style={S.btn('gold', saving || !dirty)} disabled={saving || !dirty} onClick={save}>{saving ? 'Saving...' : 'Save changes'}</button>
         <button type="button" style={S.btn('outline')} onClick={() => setShowHistory((v) => !v)}>{showHistory ? 'Hide version history' : 'Version history'}</button>
         {!hideQueueLink && (
           <button type="button" style={S.btn('outline')} onClick={() => { onOpenReviewQueue ? onOpenReviewQueue() : window.dispatchEvent(new CustomEvent('sb-admin-switch-tab', { detail: { tab: 'careerReconciliation' } })); }}>
@@ -235,8 +236,8 @@ export default function CareerBoundOutputEditor({ projectionId, onSaved, onOpenR
                         </div>
                       </div>
                       <div style={{ display: 'grid', gap: 2 }}>
-                        <button type="button" style={S.btn()} aria-label="Move bullet up" disabled={bi === 0} onClick={() => edit((d) => { const a = cfgOf(d, job.id).bulletIds; [a[bi - 1], a[bi]] = [a[bi], a[bi - 1]]; })}>↑</button>
-                        <button type="button" style={S.btn()} aria-label="Move bullet down" disabled={bi === cfg.bulletIds.length - 1} onClick={() => edit((d) => { const a = cfgOf(d, job.id).bulletIds; [a[bi + 1], a[bi]] = [a[bi], a[bi + 1]]; })}>↓</button>
+                        <button type="button" style={S.btn('outline', bi === 0)} aria-label="Move bullet up" disabled={bi === 0} onClick={() => edit((d) => { const a = cfgOf(d, job.id).bulletIds; [a[bi - 1], a[bi]] = [a[bi], a[bi - 1]]; })}>↑</button>
+                        <button type="button" style={S.btn('outline', bi === cfg.bulletIds.length - 1)} aria-label="Move bullet down" disabled={bi === cfg.bulletIds.length - 1} onClick={() => edit((d) => { const a = cfgOf(d, job.id).bulletIds; [a[bi + 1], a[bi]] = [a[bi], a[bi + 1]]; })}>↓</button>
                         <button type="button" style={S.btn()} onClick={() => edit((d) => { const c = cfgOf(d, job.id); c.bulletIds = c.bulletIds.filter((x) => x !== bid); if (ext) c.extraBullets = c.extraBullets.filter((x) => x.id !== bid); })}>Remove</button>
                       </div>
                     </div>
@@ -257,8 +258,8 @@ export default function CareerBoundOutputEditor({ projectionId, onSaved, onOpenR
                 <div style={{ marginTop: 6 }}>
                   <textarea style={S.input} rows={2} placeholder="Write a new bullet" aria-label={`New bullet for ${job.company}`} value={newBullet[job.id] || ''} onChange={(e) => setNewBullet((n) => ({ ...n, [job.id]: e.target.value }))} />
                   <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
-                    <button type="button" style={S.btn()} onClick={() => addExtra(job.id)} disabled={!(newBullet[job.id] || '').trim()}>Add to this output only</button>
-                    <button type="button" style={S.btn('navy')} onClick={() => addToLibrary(job.id)} disabled={!(newBullet[job.id] || '').trim()}>Add to Career Master and this output</button>
+                    <button type="button" style={S.btn('outline', !(newBullet[job.id] || '').trim())} onClick={() => addExtra(job.id)} disabled={!(newBullet[job.id] || '').trim()}>Add to this output only</button>
+                    <button type="button" style={S.btn('navy', !(newBullet[job.id] || '').trim())} onClick={() => addToLibrary(job.id)} disabled={!(newBullet[job.id] || '').trim()}>Add to Career Master and this output</button>
                   </div>
                 </div>
                 <div style={{ marginTop: 6 }}>

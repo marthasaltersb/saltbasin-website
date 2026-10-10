@@ -1,0 +1,23 @@
+{
+  "description": "After a scope request was approved: edits the newly allowed file, one commit that names the item",
+  "agents": ["release_fixer"],
+  "events": [
+    { "t": "progress", "text": "Reading the widened work order" },
+    { "delayMs": 500, "t": "edit", "file": "src/gate.jsx", "added": 6, "deleted": 1 },
+    { "delayMs": 400, "t": "progress", "text": "npm run build passes (fixture)" }
+  ],
+  "result": {
+    "branch": "release-loop/seed-catalog-fix-r1",
+    "commit": "abc1235",
+    "fixed": [
+      { "id": "{{workOrder.items.0.key}}", "what": "Computed the label width in the gate", "files": ["src/gate.jsx"], "selfCheck": "Re-ran the failed step; it passes (fixture)" }
+    ],
+    "notFixed": [],
+    "failures": []
+  },
+  "diff": {
+    "files": [{ "file": "src/gate.jsx", "added": 6, "deleted": 1 }],
+    "commits": [{ "sha": "abc1235", "message": "{{workOrder.items.0.key}}: compute the label width in the gate" }]
+  },
+  "usage": { "inputTokens": 2100, "outputTokens": 700, "observed": false }
+}

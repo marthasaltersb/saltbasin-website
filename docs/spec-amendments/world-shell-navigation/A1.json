@@ -1,0 +1,53 @@
+{
+  "id": "A1",
+  "feature": "world-shell-navigation",
+  "fromBaseline": 1,
+  "proposedBy": "triage:world-shell-navigation:r2",
+  "round": 2,
+  "triageItems": [
+    "wsn-B9"
+  ],
+  "reason": "Precondition created Riley with the public signup curl; fixed test-account rules allow users only via scripts/create-test-member.mjs, which today always clears must_change_password, so J0.1/J0.2/E.1 are unreachable as written.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "J0.1",
+      "before": "Precondition: curl -s ... /api/members/signup with riley.member@example.test",
+      "after": "Precondition: node scripts/create-test-member.mjs --email riley.member@example.test --password 'Member!Pass#2468xx' --name 'Riley Fenn' --provisional --no-terms",
+      "tracesTo": "definition.json interfaceParity rule (create-test-member.mjs is the only setup exception) and the original J0.1/E.1 intent (provisional-password first login)",
+      "whyNeeded": "Keeps the provisional-password flow testable without forbidden user creation. The text lives in the Preconditions section, so the baseline records it as a changed context section; J0.1 step text itself is unchanged."
+    },
+    {
+      "op": "change",
+      "stepId": "J0.2",
+      "before": "(depends on the signup curl precondition)",
+      "after": "(no wording change; depends on the --provisional precondition above)",
+      "tracesTo": "A1 J0.1 change",
+      "whyNeeded": "Recorded for traceability only; no step text edited, so the step hash is unchanged."
+    },
+    {
+      "op": "change",
+      "stepId": "E.1",
+      "before": "(depends on the signup curl precondition)",
+      "after": "(no wording change; uses the member created with --provisional)",
+      "tracesTo": "A1 J0.1 change",
+      "whyNeeded": "Recorded for traceability only; no step text edited, so the step hash is unchanged."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:world-shell-navigation:r2",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "pass",
+      "Reachable": "pass",
+      "Deterministic": "pass: with the flag the member's state is fixed (provisional password, no terms). Condition: scripts/create-test-member.mjs does not yet have --provisional (line 51 clears must_change_password unconditionally); the fix loop must add it as an environment/tooling change (default behaviour unchanged). Until it exists J0.2/J0.3 and E.1 are reported blocked-by-tooling, not passed, and not failed against the product.",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Approved. Nothing is weakened; only the setup method changes. J0.2 and E.1 need no text edit (listed for traceability). Tooling requirement for the fix loop: add --provisional to scripts/create-test-member.mjs (leave must_change_password true for the member, still ready the admin).",
+    "at": "2026-10-09T00:00:00.000Z"
+  }
+}

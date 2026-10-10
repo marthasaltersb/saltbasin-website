@@ -1,0 +1,37 @@
+{
+  "id": "A5",
+  "feature": "output-version-history",
+  "fromBaseline": 1,
+  "proposedBy": "triage:output-version-history:r1",
+  "round": 1,
+  "triageItems": [
+    "T8"
+  ],
+  "reason": "Spec text contradicts the harness account rule and the shipped label for header lines.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "J4.2",
+      "before": "HEADER fields",
+      "after": "NAME (and the member's display name replaces 'Riley Fenn'; preconditions and Journey 0 use the harness account from create-test-member.mjs instead of public signup)",
+      "tracesTo": "harness rule on test accounts; shipped labels in src/components/admin/OutputVersionHistory.jsx",
+      "whyNeeded": "Spec contradicts the fixed test environment and the shipped labels."
+    }
+  ],
+  "review": {
+    "status": "rejected",
+    "reviewer": "amend:output-version-history:r1",
+    "checklist": {
+      "Traced": "fail: the account change also alters Journey 0, the preconditions and every 'Riley Fenn' expectation (J3.2 and others), none listed as changes",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "fail: the after text mixes a label with instructions, and 'the member's display name' is not a value (the harness default is 'Test Member')",
+      "Reachable": "pass",
+      "Deterministic": "pass",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass"
+    },
+    "note": "Rejected as written; not a product defect, no product change required. The label part (a header line renders its field name: Name, Headline or Contact, in capitals) and the account part (testConstraints fix the accounts) both look valid, but must be resubmitted as separate amendments that list every affected step id, give the exact account email and display name, and exact labels.",
+    "at": "2026-10-09T00:00:00.000Z"
+  }
+}

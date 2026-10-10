@@ -1,0 +1,35 @@
+{
+  "id": "A2",
+  "feature": "proficiency-live-qr",
+  "fromBaseline": 2,
+  "proposedBy": "triage:proficiency-live-qr:r7",
+  "round": 7,
+  "triageItems": ["T7-1"],
+  "reason": "J6.4 quotes the approval toast with an em dash; the shipped toast uses a plain hyphen, a deliberate earlier decision that two other frozen specs depend on. The product is right and the step text is wrong.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "J6.4",
+      "before": "toast \"Approved — private QR link created…\"",
+      "after": "toast \"Approved - private QR link created…\" (plain hyphen)",
+      "tracesTo": "commit 73505f4; docs/training/qr-gated-outputs.md lines 101/156/170; docs/training/no-silent-failures.md line 70; src/components/admin/MyResumePanel.jsx:656",
+      "whyNeeded": "Reviewer verified the source string is 'Approved - private QR link created (copied to clipboard).' and that qr-gated-outputs and no-silent-failures expect that same plain-hyphen text; the change spec does not require an em dash."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:proficiency-live-qr:r7",
+    "checklist": {
+      "Traced": "pass: names the source line and the two other frozen specs",
+      "Not weaker": "pass: the expectation is the same toast, now with the exact character; the old text contradicted the shipped string and the other frozen specs, and the change spec does not call for an em dash",
+      "Retire only duplicates": "pass: nothing retired",
+      "Exact": "pass: exact toast text with the hyphen stated",
+      "Reachable": "pass: same Approve for QR walk on desktop and 390px",
+      "Deterministic": "pass: fixed string",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass: tests the user-visible toast text, already shipped and used by other specs"
+    },
+    "note": "Approved. Spec error, not a product defect.",
+    "at": "2026-10-10T02:00:00Z"
+  }
+}

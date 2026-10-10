@@ -1,0 +1,773 @@
+{
+  "feature": "career-bound-outputs",
+  "spec": "docs/training/career-bound-outputs.md",
+  "version": 1,
+  "frozenAt": "2026-10-09T12:07:13.352Z",
+  "commitAtFreeze": "f63f46bcc9c5bbc32d315f282facd26aac442d05",
+  "specSha256": "b3bc57959cb82a9cc7ef39f339b23ecf483493cdd633221ff0a8fb63092bb298",
+  "amendment": null,
+  "previous": null,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "P.1",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "c0dda500e6cd7fdc",
+      "summary": "Log in as `member@test.local`. Open `/world`, click **Journeys**, click the **Career Master** card. Click the tab **Jobs (0)**, **+ Add**, fill and **Save**:"
+    },
+    {
+      "id": "P.2",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "e8c9ff338746a2b2",
+      "summary": "Tab **Skills**, **+ Add**, **Save**: Skill `Process design`, Years Experience `11`, # Engagements `14`. Then Skill `Forecast modeling`, First Used (Year) `2013`"
+    },
+    {
+      "id": "P.3",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "b3cd3e5853fc7a4f",
+      "summary": "Tab **Tools**, **+ Add**: Name When Used `Ledgerly ERP`, First Used (Year) `2019`, # Roles `2`, and set the select \"How it was used — proficiency category …\" to"
+    },
+    {
+      "id": "P.4",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "3048619b4f4c8eb1",
+      "summary": "Tab **Certifications**, **+ Add**: Certification Name `Ledgerly Certified Consultant`, Status `Active`. **Save**."
+    },
+    {
+      "id": "P.5",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "af71b798028e1ba1",
+      "summary": "Expect the tab labels to read: Skills (2), Jobs (2), Tools (1), Certifications (1)."
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e8cd155a4e8375b7",
+      "summary": "`/world` → **Journeys** → click the card **My Resume**."
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "bbfe2940b5092266",
+      "summary": "Replace the name field with `Finance systems resume`, click **New career-bound resume from Career Master**."
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1a9e722e34134d8d",
+      "summary": "Type `Led the ledger consolidation across four regions.` into the box labelled \"New bullet for Harborline Freight Systems\", click **Add to Career Master and thi"
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5ea32c8e8398160b",
+      "summary": "Type `Presented results to the board quarterly.` into the same new-bullet box, click **Add to this output only**."
+    },
+    {
+      "id": "J2.3",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0089d7d1e46645a3",
+      "summary": "Before saving, look at **Preview**."
+    },
+    {
+      "id": "J2.4",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7df2d9c2e3033439",
+      "summary": "Click **Save changes**."
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6df684870e106141",
+      "summary": "In \"Bullet 1 for Harborline Freight Systems\" replace the text with `Led the ledger consolidation across five regions.`"
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6ff07ff4fb6733cc",
+      "summary": "Click **Save changes**. Expect the Preview bullet to read \"...five regions.\" followed by an `output-only` badge."
+    },
+    {
+      "id": "J3.3",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9cb703b30eafdbd8",
+      "summary": "Click **Revert to Career Master** (next to the badge)."
+    },
+    {
+      "id": "J3.4",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8fecb5b5419982c0",
+      "summary": "Click **Save changes**. Expect the Preview to read \"...four regions.\" with no \"five regions\" anywhere."
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a243f15e5d4a3a41",
+      "summary": "Untick **Include Forecast modeling**. In the box \"Wording for Process design\" type `Process design (finance)`."
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9fe6bf22397915a1",
+      "summary": "**Save changes**. Expect Preview SKILLS to read `Process design (finance)` and not mention Forecast modeling."
+    },
+    {
+      "id": "J4.3",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "72719b9d28959900",
+      "summary": "Click **Revert to Career Master** in the Skills card, then **Save changes**. Expect Preview SKILLS to read `Process design` (no \"(finance)\")."
+    },
+    {
+      "id": "J4.4",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4c3559f6bf6126d2",
+      "summary": "Click **Close** (dialog top right). Expect, in Resume Output History, a row `Finance systems resume` with the label `Career-bound` and an **Edit sections** butt"
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "734d40733cb2a686",
+      "summary": "`/world` → **Journeys** → **Career Master** → tab **Jobs**. Click the row `Harborline Freight Systems`. Change Title to `Finance Systems Director`, click **Save"
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5b57dd24dc3f72db",
+      "summary": "`/world` → **Journeys** → **My Resume**. On the row `Finance systems resume` click **View** (exact word)."
+    },
+    {
+      "id": "J6.1",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6865326a2ed39005",
+      "summary": "Reachability from the World Shell (as the member): `/world` → **Journeys** → click the card **Career Sources to Review**."
+    },
+    {
+      "id": "J6.2",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1273e3b9909cb5b6",
+      "summary": "Click the box labelled \"Package JSON\", paste the package JSON from Preconditions, click **Import and check against Career Master**."
+    },
+    {
+      "id": "J6.3",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "71e32a77565f9629",
+      "summary": "Under \"Imported resumes you can convert to career-bound\" the row `Demo Package Resume` says \"6 review tasks for this package still need a decision before it can"
+    },
+    {
+      "id": "J6.4",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f7247ddd51428ad9",
+      "summary": "The **Package differs from Career Master** card is titled `Harborline Freight Systems - job title`. Expect the left box \"Career Master now\" = `Finance Systems D"
+    },
+    {
+      "id": "J6.5",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7a28e49f5aeaf3e8",
+      "summary": "Click **Approve - apply to Career Master** on each of the remaining five cards (New bullet variant, Add job `Westbrook Logistics - Operations Analyst`, New skil"
+    },
+    {
+      "id": "J6.6",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0c8c74aaddca4d71",
+      "summary": "Paste the same package again and click **Import and check against Career Master**. Expect \"Filed 1 output; 0 new tasks; 1 already decided or merged.\" and no tas"
+    },
+    {
+      "id": "J6.7",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "dad613958425e8b2",
+      "summary": "Check Career Master: `/world` → **Journeys** → **Career Master**. Expect tabs Jobs (3), Skills (3), Tools (2), Certifications (2). Jobs lists `Westbrook Logisti"
+    },
+    {
+      "id": "J6.8",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3ab5b2434bd9fa0c",
+      "summary": "`/world` → **Journeys** → **Career Sources to Review**. On the row `Demo Package Resume` click **Convert to career-bound output**. Expect \"Career-bound draft cr"
+    },
+    {
+      "id": "J6.9",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9cf2867f62f600c0",
+      "summary": "Reachability from the editor: **My Resume** → on the row `Demo Package Resume (career-bound)` click **Edit sections**. In the Harborline card click **Revert to "
+    },
+    {
+      "id": "J6.10",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "54ae2e046fd20ff9",
+      "summary": "Click the button `Career Sources to Review (0 open)` at the top of the editor. Expect the editor to close and a dialog \"Career Sources to Review\" over My Resume"
+    },
+    {
+      "id": "J7.1",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "969041636bd1c05a",
+      "summary": "**My Resume**. Above the history list expect the amber notice \"1 technology needs a proficiency category … (QuoteFlow CPQ)\"."
+    },
+    {
+      "id": "J7.2",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6f00739a75edeb4b",
+      "summary": "On the row `Demo Package Resume (career-bound)` click **Approve**."
+    },
+    {
+      "id": "J7.3",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b242923ca1d61c14",
+      "summary": "Click **Approve for QR** (accept the browser confirmation). Expect a link `http://<host>/r/<slug>` shown as text, with **Copy link**, **QR (SVG)**, **QR (PNG)**"
+    },
+    {
+      "id": "J7.4",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0220977dc264c160",
+      "summary": "Open that link. Expect `Pat Example`, `Westbrook Logistics | Operations Analyst`, and **no** \"wording … has changed\" banner."
+    },
+    {
+      "id": "J8.1",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e7ef7e98a13057f8",
+      "summary": "`/world` → **Journeys** → **Career Master** → **Jobs** → row `Westbrook Logistics`, Title `Operations Manager`, **Save**."
+    },
+    {
+      "id": "J8.2",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b0ea6105ffa81360",
+      "summary": "Reload the `/r/<slug>` page. Expect a banner \"The wording of this document has changed since the printed version was approved. Showing the current wording.\" and"
+    },
+    {
+      "id": "J8.3",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "aa150ae52e4d2666",
+      "summary": "Click **Show printed wording**. Expect `Westbrook Logistics | Operations Analyst`. The link then reads **Show current wording**."
+    },
+    {
+      "id": "J8.4",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f66fe7921cbf78da",
+      "summary": "`/world` → **Journeys** → **My Resume** → row `Demo Package Resume (career-bound)` → **Edit sections**. Expect the notice \"This version is published. Saving wil"
+    },
+    {
+      "id": "J9.1",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "09379f81baac1cc9",
+      "summary": "`/world` → **Journeys** → click the card **Output Templates**. The **Resume** type is selected. Click the tab **Sections**."
+    },
+    {
+      "id": "J9.2",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d573bd42a6087235",
+      "summary": "Under \"Job Experience\", tick the row `Finance Systems Director (Harborline Freight Systems)`."
+    },
+    {
+      "id": "J9.3",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d10313daf36278c2",
+      "summary": "Replace the box \"Title for Harborline Freight Systems\" with `Finance Systems Lead (template)`."
+    },
+    {
+      "id": "J9.4",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f2122430473074f7",
+      "summary": "Click **Save & Set Primary**, then open `/output/resume?owner=me`."
+    },
+    {
+      "id": "J9.5",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "81a46426cbf6692f",
+      "summary": "Back in the editor click **Revert to Career Master**. Expect the box to read `Finance Systems Director` and the button and badge on that field to disappear. Cli"
+    },
+    {
+      "id": "J9.6",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e47e0f4ece9e696c",
+      "summary": "Contrast: on the Sections tab, the heading \"Career Master wording for this output only\", the field labels (for example \"Title for Harborline Freight Systems\") a"
+    },
+    {
+      "id": "J9.7",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "adcb56fcbeb0b272",
+      "summary": "Skills, tools and certifications. Below the jobs card expect a card \"Skills, tools and certifications wording for this output only\" with three selects. In the s"
+    },
+    {
+      "id": "J9.8",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "50849e651f224397",
+      "summary": "In \"Add tool override\" choose `Ledgerly ERP`, change its box to `Ledgerly ERP (template)`; in \"Add certification override\" choose `Ledgerly Certified Consultant"
+    },
+    {
+      "id": "J9.9",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "900742173c7f0420",
+      "summary": "Click **Save & Set Primary**, then leave and reopen **Output Templates** → **Sections** (full page reload is fine). Expect the three boxes still to read `Proces"
+    },
+    {
+      "id": "J9.10",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2b8f4938222d5533",
+      "summary": "Click **Revert to Career Master** on the skill only. Expect its box to read `Process design` and its badge to disappear while the tool and certification stay ov"
+    },
+    {
+      "id": "J9.11",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a8b7428e50e3eadd",
+      "summary": "Scope note (by design, pending owner confirmation): these overrides are saved on the template preset, so they apply to every view of that preset."
+    },
+    {
+      "id": "J10.1",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "afa89d7077262a5b",
+      "summary": "`/world` → **Journeys** → **My Resume** → **Edit sections** on `Finance systems resume`."
+    },
+    {
+      "id": "J11.1",
+      "kind": "step",
+      "journey": "11",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "859930e4c1b4dfec",
+      "summary": "`/world` → **Journeys**. Expect a **My Resume** card. (There is no admin-only \"Career Sources to Review\" card; the queue is reached from My Resume.)"
+    },
+    {
+      "id": "J11.2",
+      "kind": "step",
+      "journey": "11",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2922344b4c088083",
+      "summary": "Click **My Resume**. Click the button **Career Sources to Review**. Expect a dialog \"Career Sources to Review\" containing \"Import a tailored package as a source"
+    },
+    {
+      "id": "J11.3",
+      "kind": "step",
+      "journey": "11",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d3ccc583e7efb53b",
+      "summary": "Type `Admin check resume` in the name field, click **New career-bound resume from Career Master**. Expect the editor dialog with \"Status: draft\"."
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fb60d2703ecbc5e9",
+      "summary": "**Revert is per field.** Reverting the title does not revert the bullets; an overridden bullet and an overridden title each have their own **Revert to Career Ma"
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "eb6d9fd41b9b5335",
+      "summary": "**Removed from Career Master.** If a Career Master skill/job/bullet used by an output is deleted, the editor shows a notice such as \"Career Master job #… no lon"
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b97aee68e31baa02",
+      "summary": "**Convert before deciding** is refused (Journey 6 step 3); calling it anyway returns \"N reconciliation task(s) for this package still need a decision (approve o"
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "12eaa792bcf86dc4",
+      "summary": "**Sync failure.** If a Career Atom sync fails after an approval, a toast says \"Applied to Career Master, but the Career Atom sync failed: …\" and the task appear"
+    },
+    {
+      "id": "E.5",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b139b4e0a892ce7e",
+      "summary": "**Invalid package.** Pasting text that is not JSON shows \"That is not valid JSON: …\" in a red box; a package with an unsupported output shows the server's messa"
+    },
+    {
+      "id": "E.6",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "364c80b27308ff00",
+      "summary": "**Certification not in Career Master.** A package certification Career Master lacks is raised as a **New certification** task (Journey 6); declining it keeps it"
+    },
+    {
+      "id": "E.7",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9853318368289752",
+      "summary": "**Expected browser noise.** In the sandbox, requests for external fonts fail (`ERR_CERT_AUTHORITY_INVALID`, `ERR_TUNNEL_CONNECTION_FAILED`) and Journey 7 step 2"
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "6d96245c4fe7c57e"
+    },
+    {
+      "title": "Preconditions (create through the UI)",
+      "kind": "precondition",
+      "hash": "92cc29656efc49cc"
+    },
+    {
+      "title": "Journey 1 — Create a career-bound resume from Career Master",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 2 — Add bullets (Career Master library vs this output only)",
+      "kind": "journey",
+      "hash": "972001fe177cef42"
+    },
+    {
+      "title": "Journey 3 — Override one field, then revert it to Career Master",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 4 — Skills, tools and certifications bound to Career Master",
+      "kind": "journey",
+      "hash": "d8c2535566927baf"
+    },
+    {
+      "title": "Journey 5 — A Career Master edit flows into the output with no re-save",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 6 — A package enters Career Master through the review queue",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 7 — Finalizing goes through the gate",
+      "kind": "journey",
+      "hash": "68e64ff949d8926c"
+    },
+    {
+      "title": "Journey 8 — The QR page shows when the wording changed",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 9 — A template-driven output: per-output override with per-field revert",
+      "kind": "journey",
+      "hash": "494389fbdf307a5a"
+    },
+    {
+      "title": "Journey 10 — Phone width",
+      "kind": "journey",
+      "hash": "289be3c934a8c5a1"
+    },
+    {
+      "title": "Journey 11 — Admin scope (one check)",
+      "kind": "journey",
+      "hash": "4751b0ef896f42a2"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    }
+  ]
+}

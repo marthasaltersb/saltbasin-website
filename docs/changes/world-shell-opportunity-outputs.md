@@ -74,3 +74,19 @@ No seed or bootstrap code writes member rows.
 ## Fix notes per round
 
 (none yet — appended by fix agents)
+
+## Fix notes — round 2
+
+### wsn-r2-mobile-counters (J0.3)
+- Changed: at 700px and below the top bar keeps the Tracked and Agents counters visible (compact) and hides only Avg Score (new `sb-world-stat-avg` class). The counters are ordered into the first row beside the brand, with the nav tabs wrapping beneath, so the side rail no longer covers them.
+- Files: `src/components/WorldShell.jsx` (MOBILE_CSS, TopBar).
+- Checked: Chromium at 390px as the test member on `/world`: the top bar reads "0 TRACKED, 7 AGENTS", visible in a screenshot, no horizontal scroll.
+
+### wsn-r2-mcp-gap (J9, J11)
+- Changed: the registry already held list/create/open opportunity, list/open outputs, new draft version and approve-for-QR. Added `career_opportunity_update_details`, `application_outputs_unlinked_list`, `application_output_link` and `application_output_unlink`. Each calls the same function as its route (`updateOpportunityDetails`, `listUnlinkedOutputs`, `linkOutputToOpportunity`, `unlinkOutputFromOpportunity`) with the signed-in member's id, so scoping is unchanged. Parity rows `opportunity-details` and `application-output-link` now list them; `mcpToolManifest.json` gained the four names (append-only).
+- Files: `server/lib/mcpToolRegistry.js`, `server/lib/capabilityParity.js`, `server/data/mcpToolManifest.json`.
+- Checked: `node scripts/check-interface-parity.mjs` reports "OK: the registry matches the code" and neither row has an MCP_GAP. Called three of the new handlers against a local database as the test member (created an opportunity, updated its location, listed unlinked outputs). Link and unlink were not exercised against a real output (none existed in the fresh database). `vite build` passes.
+
+## Fix notes — round 3
+
+- **wsn-r3-editor-loading-state**: the shared editor config state is null for the first render while its effect builds the config from the adapter, and the block list treated that as a zero-block document. `HerqOutputConfigurator.jsx` now shows "Loading..." (and a "Loading..." count) while config is null, and "No blocks yet" only for a loaded document with zero blocks. Files: `src/components/admin/HerqOutputConfigurator.jsx`. Checked: `npm run build` passes; code-path review only, no browser walk of J6.1 was run in this fix pass.
