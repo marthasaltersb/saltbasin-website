@@ -1,0 +1,701 @@
+{
+  "feature": "world-shell-navigation",
+  "spec": "docs/training/world-shell-opportunity-outputs.md",
+  "version": 4,
+  "frozenAt": "2026-10-10T01:53:21.660Z",
+  "commitAtFreeze": "2f1ff3a32d85465c0e2483672bd6eb5224c85322",
+  "specSha256": "394a4e121ec4f7a855c5f9d6b36dffee96ec709800f44caee24060ddd29f5e1f",
+  "amendment": "A4",
+  "previous": 3,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "J0.1",
+      "kind": "step",
+      "journey": "0",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "04a34e3e2880b745",
+      "summary": "Open `/login`. Enter email `riley.member@example.test`, password `Member!Pass#2468xx`, click **Sign In**."
+    },
+    {
+      "id": "J0.2",
+      "kind": "step",
+      "journey": "0",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "dc36e6ac94bc52fb",
+      "summary": "Enter current `Member!Pass#2468xx`, new and confirm `Member!Pass#2468yy`, click **Save password and continue**."
+    },
+    {
+      "id": "J0.3",
+      "kind": "step",
+      "journey": "0",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "af124d26700519d8",
+      "summary": "Tick every checkbox, click **I Agree — Continue**."
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b87c809886cf2fa1",
+      "summary": "Click **Journeys**. Expect the card **Career Placement Agents — 0 tracked · 7 agents**."
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "590f96307bf089ab",
+      "summary": "Click the card **Career Master**. Expect a full-screen **Career Master** with the tabs listed above. Click **Manual Intake**, then the button **Tools (0)**, the"
+    },
+    {
+      "id": "J1.3",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "771512b8b94a0748",
+      "summary": "Type **Ledgerly ERP** in NAME WHEN USED, **ERP** in CATEGORY, **2019** in FIRST USED (YEAR), **2** in # ROLES. Leave HOW IT WAS USED at **(none)**. Click **Save"
+    },
+    {
+      "id": "J1.4",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "dbbb7102b9aa3bba",
+      "summary": "Click **← Back to World**."
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "33e7398dbfeb2070",
+      "summary": "Click **Journeys → Career Placement Agents**. Expect the panel **Career Placement Agents**, **TRACKED (0)**, **Nothing tracked yet.**, and buttons **+ Add**, **"
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1f73d55a17254449",
+      "summary": "Click **+ Add**. Expect two inputs (placeholders **Job title**, **Company**), the hint **Only a job title and company are needed - add details later.** and a bu"
+    },
+    {
+      "id": "J2.3",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "430e7195d25e1ec0",
+      "summary": "Enter Job title **Principal Value Architect**, Company **Northwind Freight**, click **Track**."
+    },
+    {
+      "id": "J2.4",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1f48557c3b4f81d0",
+      "summary": "Click **← Tracked list**. Expect **TRACKED (1)** and a row **Principal Value Architect** with the small tag **PLACEHOLDER**."
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "01b1c9a8fe391018",
+      "summary": "Refusal first. Make a copy of the package without the `role` key (`/tmp/northwind-package-norole.json`) and run"
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "970063697f142586",
+      "summary": "Run the same command with `/tmp/northwind-package.json`."
+    },
+    {
+      "id": "J3.3",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a920f99297f2ee45",
+      "summary": "Run it again. Expect `resume_salt_basin #1 unchanged` and `cover_letter #2 unchanged`, and the opportunity line again."
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d72f57a37c3aa97b",
+      "summary": "Reload `/world`. Click **Journeys → Career Placement Agents**, then the row **Principal Value Architect**. Scroll to **APPLICATION OUTPUTS**."
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "bbe10967318ca03c",
+      "summary": "On **Northwind Freight - Salt Basin Resume** expect the line **resume - version 1 of 1** and a **PROVENANCE** list with these exact values:"
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d8c4e75f36e9cab8",
+      "summary": "On the resume card click **Open my Career Master**. Expect the full-screen **Career Master** (with **Manual Intake**)."
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f5b670020f46c187",
+      "summary": "Click **← Back to World**."
+    },
+    {
+      "id": "J6.1",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f2fe2ac73a147740",
+      "summary": "On the resume card click **Edit draft**."
+    },
+    {
+      "id": "J6.2",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c29b32f05c1d5adb",
+      "summary": "Click **Save** without changing anything. Expect a red status line **Error: No changes to save.** and the editor stays open."
+    },
+    {
+      "id": "J6.3",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1a0d75abbc16b5f1",
+      "summary": "Click **+ Add Block**. Expect only four choices: **Heading**, **Body Text**, **Bullet List**, **Role Line** (and **Cancel**). Click **Cancel**."
+    },
+    {
+      "id": "J6.4",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "eabad092c8b16067",
+      "summary": "Click the row **Body Text**. Expect a textarea whose value is `Builds quote-to-revenue systems for freight networks.` Replace it with `Builds quote-to-revenue s"
+    },
+    {
+      "id": "J6.5",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8f17c2448dee6d0c",
+      "summary": "Click **Save**. Expect the editor to close, toast **Saved as a new draft version**, and the resume card now reading **resume - version 2 of 2**, **Version 2 of "
+    },
+    {
+      "id": "J7.1",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f9ad14a1e5accafa",
+      "summary": "On the resume card click **Approve for QR**. Expect an inline box: `Approve \"Northwind Freight - Salt Basin Resume\" (version 2) as the final version for its QR "
+    },
+    {
+      "id": "J7.2",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b7ec8e567a0cdef1",
+      "summary": "Click **Approve for QR → Confirm approval**."
+    },
+    {
+      "id": "J7.3",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2f6a3c6930888466",
+      "summary": "Click **Cancel**. Expect the message **Finalization cancelled — technologies still need a proficiency category.** and the card still **DRAFT**."
+    },
+    {
+      "id": "J7.4",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e22fd7672c0ca171",
+      "summary": "Repeat step 2, choose **Hands-on** in the dropdown, click **Save to Career Master and continue**."
+    },
+    {
+      "id": "J7.5",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0e19251916f8eed9",
+      "summary": "Click the `/r/…` link (new tab)."
+    },
+    {
+      "id": "J8.1",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ce0c56ee6c130cff",
+      "summary": "On the resume card click **Edit draft**, click the first **Bullet List** row, replace its text with two lines: `Cut quote cycle time by 30 percent.` and `Added "
+    },
+    {
+      "id": "J8.2",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6c280556c972359c",
+      "summary": "Click **Approve for QR → Confirm approval**."
+    },
+    {
+      "id": "J9.1",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a518a43724d837a8",
+      "summary": "On the **Northwind Freight - Cover Letter** card click **Unlink**. Expect the card to disappear (one card left) and, under **LINK AN EXISTING OUTPUT**, a select"
+    },
+    {
+      "id": "J9.2",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "05b12d978f70b3c0",
+      "summary": "Choose that option, click **Link output**. Expect two cards again."
+    },
+    {
+      "id": "J10.1",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "44ab6100c20d1968",
+      "summary": "Under the opportunity (below the outputs) click **Import Resume (PDF/DOCX/TXT)** and choose `/tmp/note.txt`."
+    },
+    {
+      "id": "J10.2",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b230c572274a484d",
+      "summary": "Click **Edit draft** on it. Expect three **Body Text** rows (the three paragraphs). Edit the first to `Avery Quill, Principal Value Architect candidate`, **Save"
+    },
+    {
+      "id": "J11.1",
+      "kind": "step",
+      "journey": "11",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8266866ec5a81c46",
+      "summary": "In the **Placeholder opportunity** box type Posting URL `https://careers.northwind.example/principal-value-architect`, Location `Remote`, click **Save details**"
+    },
+    {
+      "id": "J12.1",
+      "kind": "step",
+      "journey": "12",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c6833264bf16da54",
+      "summary": "Expect no horizontal scrolling (page width = 390). The top bar shows the brand, the three tabs and the avatar **R** on one or two rows, not clipped."
+    },
+    {
+      "id": "J12.2",
+      "kind": "step",
+      "journey": "12",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8f8fd04b34324863",
+      "summary": "**Journeys → Career Placement Agents → Principal Value Architect**: the panel spans the screen (about 8px margins), nothing cut off at the right edge."
+    },
+    {
+      "id": "J12.3",
+      "kind": "step",
+      "journey": "12",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "cbbd74ab7f8740cf",
+      "summary": "On the Salt Basin Resume card (scroll down) click **Edit draft**: the editor fills the screen in one column (block list, then **Print / Save PDF** and the previ"
+    },
+    {
+      "id": "J12.4",
+      "kind": "step",
+      "journey": "12",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "cefb15be8743981f",
+      "summary": "Click **Approve for QR**: the confirmation box fits inside the card with both buttons visible; **Confirm approval**: badge **APPROVED - QR LIVE** (no category d"
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ffddce759a9824d8",
+      "summary": "Login with a still-provisional password never shows an empty world: it redirects to the password page; after saving it returns to `/world`."
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "bb5bca015012f497",
+      "summary": "If the member's navigation cannot be loaded the right panel shows **Your islands could not be loaded: <reason>** (never a blank panel)."
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e22b4d9845d4f839",
+      "summary": "Saving the editor with no change → **Error: No changes to save.** (HTTP 400, visible, nothing created)."
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1732769bb946b548",
+      "summary": "Approving when a technology has no category → dialog; **Cancel** leaves the draft untouched with the message above."
+    },
+    {
+      "id": "E.5",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c8c1c133899262e6",
+      "summary": "An output that is not editable (AI-generated JSON content) shows the reason instead of **Edit draft**; it can still be linked/unlinked."
+    },
+    {
+      "id": "E.6",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "64965ddb66a908a5",
+      "summary": "Unlinking only removes the link; the output remains in My Resume → Resume Output History and appears under **LINK AN EXISTING OUTPUT**."
+    },
+    {
+      "id": "E.7",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a258244f8031ccfb",
+      "summary": "Signed in as a second member, TRACKED shows (0) and none of Riley's outputs appear under LINK AN EXISTING OUTPUT or in My Resume."
+    },
+    {
+      "id": "E.9",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "3b2523b544d30f23",
+      "summary": "`curl -s -b <second member's cookie jar> http://localhost:<API_PORT>/api/career-agents/opportunities/<Riley's opportunity id>/outputs` and `curl -s -X POST -b <"
+    },
+    {
+      "id": "E.8",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2954742760a27836",
+      "summary": "The `--link-opportunity` import is idempotent: re-running neither duplicates the opportunity nor re-links anything."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "58ba7f93b3f2e339"
+    },
+    {
+      "title": "Preconditions (set up once, on a fresh database)",
+      "kind": "precondition",
+      "hash": "083422d674735cf9"
+    },
+    {
+      "title": "Journey 0 — First login lands you in your world",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 1 — Add a technology to Career Master (so provenance and the finalization gate have real data)",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 2 — Create a placeholder opportunity (company + role only)",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 3 — File a package and link it (script option)",
+      "kind": "journey",
+      "hash": "48f0efffe4757c40"
+    },
+    {
+      "title": "Journey 4 — Open the opportunity and read each output's provenance",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 5 — Follow the link to the Career Master data and come back",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 6 — Open the draft in the shared editor and save a new version",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 7 — Approve for QR (through the finalization gate)",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 8 — Edit an approved output: the QR keeps its version until you approve the new one",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 9 — Link and unlink outputs",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 10 — Import a document from the UI and edit it",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 11 — Fill in the placeholder later",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 12 — Phone width (390 × 800), same account",
+      "kind": "journey",
+      "hash": "b7e95e193588d256"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    }
+  ],
+  "comparedWithPrevious": {
+    "same": [
+      "J0.1",
+      "J0.2",
+      "J1.1",
+      "J1.2",
+      "J1.3",
+      "J1.4",
+      "J2.1",
+      "J2.2",
+      "J2.3",
+      "J2.4",
+      "J3.1",
+      "J3.2",
+      "J3.3",
+      "J4.1",
+      "J4.2",
+      "J5.1",
+      "J5.2",
+      "J6.1",
+      "J6.2",
+      "J6.3",
+      "J6.4",
+      "J6.5",
+      "J7.1",
+      "J7.2",
+      "J7.3",
+      "J7.4",
+      "J7.5",
+      "J8.1",
+      "J8.2",
+      "J9.1",
+      "J9.2",
+      "J10.1",
+      "J10.2",
+      "J11.1",
+      "J12.1",
+      "J12.2",
+      "J12.3",
+      "J12.4",
+      "E.1",
+      "E.2",
+      "E.3",
+      "E.4",
+      "E.5",
+      "E.6",
+      "E.7",
+      "E.9",
+      "E.8"
+    ],
+    "changed": [
+      "J0.3"
+    ],
+    "added": [],
+    "retired": [],
+    "contextChanged": []
+  }
+}

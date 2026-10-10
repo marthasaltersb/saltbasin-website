@@ -76,7 +76,7 @@ Notes for the tester: the login endpoint allows 10 attempts per 15 minutes per I
 2. [J0.2] Enter current `Member!Pass#2468xx`, new and confirm `Member!Pass#2468yy`, click **Save password and continue**.
    - Expect `/world` showing **BESTYSTAFF · REQUIRED FIRST PROMPT** and **Career Portfolio Terms & Data Conditions** (not an empty world).
 3. [J0.3] Tick every checkbox, click **I Agree — Continue**.
-   - Expect the World Shell: top bar with **World / Journeys / Classic Tools**, **Riley Fenn · Member**, toast **Consent recorded**. Counters read **0 TRACKED**, **7 AGENTS**.
+   - Expect the World Shell: top bar with **World / Journeys / Classic Tools**, **Riley Fenn · Member** (at phone width, 390px, only the avatar **R** is shown in place of the name text), toast **Consent recorded**. Counters read **0 TRACKED**, **7 AGENTS**.
 
 ## Journey 1 — Add a technology to Career Master (so provenance and the finalization gate have real data)
 
