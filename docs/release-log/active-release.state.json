@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T20:45:11.182Z",
+  "exportedAt": "2026-10-10T20:49:25.517Z",
   "features": {
     "platform-mcp": {
       "status": "validate",
@@ -80,6 +80,14 @@
       "lastReport": "docs/test-results/cover-letter-agent/round-2.md",
       "openBugs": 21,
       "backlog": 10
+    },
+    "release-scope": {
+      "status": "validate",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
     },
     "qr-gated-outputs": {
       "status": "passed",
