@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T21:31:54.552Z",
+  "exportedAt": "2026-10-10T21:35:09.800Z",
   "features": {
     "platform-mcp": {
       "status": "validate",
@@ -34,7 +34,7 @@
       "backlog": 1
     },
     "chart-gallery": {
-      "status": "integrate",
+      "status": "validate",
       "lastRound": 6,
       "lastScore": "18/20",
       "lastReport": "docs/test-results/chart-gallery/round-6.md",
@@ -74,7 +74,7 @@
       "backlog": 6
     },
     "resume-rollups": {
-      "status": "integrate",
+      "status": "validate",
       "lastRound": 4,
       "lastScore": "30/32",
       "lastReport": "docs/test-results/resume-rollups/round-4.md",
