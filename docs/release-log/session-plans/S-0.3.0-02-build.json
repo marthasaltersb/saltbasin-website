@@ -1,12 +1,21 @@
 {
   "session": "S-0.3.0-02-build",
   "release": "0.3.0",
-  "intent": "Fix production bugs first (none filed yet), re-validate the closest carried features, build the three unblocked 0.3.0 features, and add release scope (planned vs backlog vs added) at the owner's request (item added before any merge was recorded)",
+  "intent": "Production bugs first (netlify fix, prod smoke re-run, fictional prod test account), re-validate the closest carried features, build the unblocked 0.3.0 features, release scope, and the owner's new journey flow studio + experience mapping + Graphify data model map (items added before any merge was recorded; totals for specs not yet written are estimates)",
   "estimate": {
-    "recordedAt": "2026-10-10T20:48:47.291Z",
-    "atCommit": "d8ebe98",
-    "intent": "Fix production bugs first (none filed yet), re-validate the closest carried features, build the three unblocked 0.3.0 features, and add release scope (planned vs backlog vs added) at the owner's request (item added before any merge was recorded)",
+    "recordedAt": "2026-10-10T20:57:43.090Z",
+    "atCommit": "cea5b94",
+    "intent": "Production bugs first (netlify fix, prod smoke re-run, fictional prod test account), re-validate the closest carried features, build the unblocked 0.3.0 features, release scope, and the owner's new journey flow studio + experience mapping + Graphify data model map (items added before any merge was recorded; totals for specs not yet written are estimates)",
     "items": [
+      {
+        "feature": "production-smoke-regression",
+        "goal": "merge the suite, re-run after the netlify fix, provision the fictional test account",
+        "expect": {
+          "passed": 22,
+          "total": 25
+        },
+        "size": "M"
+      },
       {
         "feature": "platform-mcp",
         "goal": "re-test on baseline v4, close the round",
@@ -94,6 +103,33 @@
         "expect": {
           "passed": 24,
           "total": 25
+        },
+        "size": "M"
+      },
+      {
+        "feature": "journey-flow-studio",
+        "goal": "persisted metadata-driven flow builder, downloadable, World Shell + API + MCP",
+        "expect": {
+          "passed": 28,
+          "total": 40
+        },
+        "size": "L"
+      },
+      {
+        "feature": "journey-flow-experience-mapping",
+        "goal": "structured gate/actor/authority/system bindings and experience mapping, publish to a journey definition",
+        "expect": {
+          "passed": 12,
+          "total": 30
+        },
+        "size": "L"
+      },
+      {
+        "feature": "graphify-data-model-map",
+        "goal": "local Graphify graph of schema + code, World Shell data model map, catalog API/MCP",
+        "expect": {
+          "passed": 18,
+          "total": 22
         },
         "size": "M"
       }
