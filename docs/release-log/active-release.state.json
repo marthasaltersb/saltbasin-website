@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T00:56:41.240Z",
+  "exportedAt": "2026-10-10T01:03:14.766Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -50,7 +50,7 @@
       "backlog": 4
     },
     "chart-gallery": {
-      "status": "integrate",
+      "status": "validate",
       "lastRound": 4,
       "lastScore": "17/20",
       "lastReport": "docs/test-results/chart-gallery/round-4.md",
@@ -74,7 +74,7 @@
       "backlog": 5
     },
     "release-intelligence": {
-      "status": "awaiting_retest",
+      "status": "validate",
       "lastRound": 2,
       "lastScore": "55/55",
       "lastReport": "docs/test-results/release-intelligence/round-2.md",
@@ -98,7 +98,7 @@
       "backlog": 1
     },
     "session-mapping": {
-      "status": "fix",
+      "status": "awaiting_retest",
       "lastRound": 1,
       "lastScore": "56/56",
       "lastReport": "docs/test-results/session-mapping/round-1.md",
@@ -122,11 +122,11 @@
       "backlog": 2
     },
     "world-shell-layers": {
-      "status": "reconcile",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
-      "openBugs": 0,
+      "openBugs": 5,
       "backlog": 0
     },
     "render-bindings": {
@@ -4799,7 +4799,7 @@
     {
       "id": "chart-gallery-CG-R2b-3",
       "feature": "chart-gallery",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Skill strength chart fits inside Live Preview, no horizontal scroll (phone 390px)",
@@ -5027,7 +5027,7 @@
     {
       "id": "chart-gallery-CG-R4-3",
       "feature": "chart-gallery",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Outside baseline: Edit/Done button aria-label (F3-7)",
@@ -6422,7 +6422,7 @@
     {
       "id": "release-intelligence-RI-R1-7",
       "feature": "release-intelligence",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "MCP_GAP: platform MCP tools missing for most release-intelligence capabilities",
@@ -7486,7 +7486,7 @@
     {
       "id": "session-mapping-B5",
       "feature": "session-mapping",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "MCP parity",
@@ -7509,7 +7509,7 @@
     {
       "id": "session-mapping-B7",
       "feature": "session-mapping",
-      "status": "fixing",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Admin navigation entry points",
@@ -7532,7 +7532,7 @@
     {
       "id": "session-mapping-B8",
       "feature": "session-mapping",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "SessionEnd hook capture",
@@ -7555,9 +7555,9 @@
     {
       "id": "session-mapping-T1",
       "feature": "session-mapping",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "MCP_GAP: no session_mapping_* MCP tools (open bug session-mapping-B5)",
       "rootCause": "docs/changes/session-mapping.md deferred MCP because mcpToolRegistry.js did not exist when the spec was frozen. The registry now exists (pl…",
       "files": [
@@ -7576,6 +7576,12 @@
           "event": "found",
           "note": "docs/changes/session-mapping.md deferred MCP because mcpToo…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Added scopes sessions.read and sessions.write and ten admin…",
+          "commit": "e027ef92302fe3d21110f900f08a93e24eed7a0c"
         }
       ]
     },
@@ -8237,6 +8243,107 @@
           "round": 2,
           "event": "found",
           "note": "scripts/check-interface-parity.mjs line 148: failed = probl…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "world-shell-layers-B7",
+      "feature": "world-shell-layers",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "spec governance",
+      "rootCause": "The spec was never frozen with scripts/release-spec-baseline.mjs.",
+      "files": [
+        "docs/training/world-shell-layers.md",
+        "docs/training/baselines/"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "world-shell-layers-B8",
+      "feature": "world-shell-layers",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "validation log",
+      "rootCause": "The build agent's own walk was never filed as a round.",
+      "files": [],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "world-shell-layers-B9",
+      "feature": "world-shell-layers",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "integration",
+      "rootCause": "The integration head moved after the build started.",
+      "files": [],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "world-shell-layers-B10",
+      "feature": "world-shell-layers",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Known limitations: moons",
+      "rootCause": "Picking is a canvas gesture, so there is no DOM path to test.",
+      "files": [
+        "src/components/PlanetAtmosphereView.jsx",
+        "docs/training/world-shell-layers.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "world-shell-layers-B11",
+      "feature": "world-shell-layers",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Known limitations: no WebGL",
+      "rootCause": "The build agent's walker ran with software GL only.",
+      "files": [],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
         }
       ]
