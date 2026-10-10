@@ -1,0 +1,31 @@
+# Salt Basin agent worker image (docs/changes/platform-agent-runner.md).
+#
+# NOT used by the website. The website (render.yaml "saltbasin-website") stays a free Render web service and never
+# imports the Claude Agent SDK. This image is for the separate background worker, which needs a PAID Render plan
+# (a worker service and a persistent disk are not available on the free tier). See the commented block in render.yaml.
+#
+# What the worker needs that the website does not: git, Chromium (for validator runs), Postgres 16 (for test
+# databases), the test fonts, and @anthropic-ai/claude-agent-sdk.
+FROM node:22-bookworm-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      git ca-certificates curl gnupg postgresql postgresql-client chromium fonts-dejavu-core fonts-liberation \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+# The Agent SDK is installed here only, never added to package.json (the website must not depend on it).
+RUN npm install --no-save @anthropic-ai/claude-agent-sdk@0.3.295
+COPY . .
+
+ENV AGENT_RUNNER_ADAPTER=sdk \
+    AGENT_RUNNER_WORKDIR=/var/agent-work \
+    AGENT_RUNNER_BASE_BRANCH=main
+# AGENT_RUNNER_API, AGENT_RUNNER_TOKEN, AGENT_RUNNER_REPO and ANTHROPIC_API_KEY are set in the Render dashboard.
+
+# Dry-run check at build time: needs no key and no network.
+RUN node scripts/agent-worker.mjs --self-test
+
+CMD ["node", "scripts/agent-worker.mjs"]

@@ -1,0 +1,20 @@
+{
+  "description": "The session fails with an error",
+  "agents": [
+    "release_validator",
+    "release_fixer",
+    "release_integrator"
+  ],
+  "events": [
+    {
+      "t": "progress",
+      "text": "Starting (fixture)"
+    },
+    {
+      "delayMs": 300,
+      "t": "fail",
+      "message": "Fixture session error: the browser would not start"
+    }
+  ],
+  "result": null
+}

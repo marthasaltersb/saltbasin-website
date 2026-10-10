@@ -28,6 +28,8 @@ export const MCP_SCOPES = Object.freeze({
   'renderings.read': 'Read renderings, their data map, history and pending changes',
   'renderings.write': 'Propose or make a change to a mapped source value (live or for approval, by the binding policy)',
   'renderings.approve': 'Approve or reject a pending data change; settings (administrators only; runs the finalization gate)',
+  'agent.runner.read': 'Read agent runner settings, the agent roster, runs, outputs, test plans and backlog seeds (administrators only)',
+  'agent.runner.write': 'Prompt agents, stop runs, decide scope requests and proposals, change runner settings and move backlog seeds (administrators only)',
 });
 
 const id = (description) => ({ type: 'integer', minimum: 1, description });
@@ -48,7 +50,9 @@ import { ROUTE_TOOLS } from './mcpRouteTools.js';
 const rlActor = (user) => ({ id: user.id, label: user.name || user.email || `user ${user.id}` });
 const rlLoop = () => import('./releaseLoopPlatform.js');
 const rlDef = () => import('./releaseLoopDefinition.js');
-const rlObj = (description) => ({ type: 'object', description, additionalProperties: true });
+const arLib = () => import('./agentRunner.js');
+const arTool = (name, title, description, inputSchema, scope, api, handler) => ({ name, title, description: `Administrators only. ${description}`, inputSchema, scope, permission: 'admin', api, handler });
+const rlObj =(description) => ({ type: 'object', description, additionalProperties: true });
 const rlTool = (name, title, description, inputSchema, scope, api, handler) => ({ name, title, description: `Administrators only. ${description}`, inputSchema, scope, permission: 'admin', api, handler });
 
 
@@ -1025,6 +1029,57 @@ const CORE_TOOLS = [
   rlTool('release_loop_list_escalations', 'List escalations', 'Lists bugs escalated to a person, with the maximum fix attempts per bug.',
     schema({}), 'release.loop.read', 'GET /api/release-loop/escalations',
     async () => ({ escalations: await (await rlLoop()).listEscalations(), maxFixAttemptsPerBug: (await (await rlDef()).getEffectiveDefinition()).definition.bugEscalation.maxFixAttemptsPerBug })),
+  // ── Platform agent runner (docs/changes/platform-agent-runner.md): same functions as server/routes/agentRunner.js ──
+  arTool('agent_runner_overview', 'Agent runner overview', 'Returns worker status, run counts, proposals and scope requests waiting for a person, observed usage and the fixture scenarios.',
+    schema({}), 'agent.runner.read', 'GET /api/agent-runner/overview', async () => (await arLib()).overview()),
+  arTool('agent_runner_settings', 'Read or save agent runner settings', 'Without "settings": returns the settings (size limits S/M/L, turn limit, concurrency, stalled-after seconds, model, shared modules, extra forbidden paths; secrets are only ever reported as set or not set). With "settings": saves them. The GitHub token and worker token are managed on the website only.',
+    schema({ settings: rlObj('Fields to change, same body as PUT /api/agent-runner/settings.') }), 'agent.runner.write', 'GET|PUT /api/agent-runner/settings',
+    async (args, { user }) => { const l = await arLib(); return args.settings ? l.saveSettings(args.settings, rlActor(user)) : l.settingsView(); }),
+  arTool('agent_runner_list_agents', 'List the agent roster', 'Lists the quality agents and the release loop stage agents with what you can ask each one, what it writes, how it is governed and the version of its prompt file.',
+    schema({ agentKey: str('Optional: return this agent\'s full prompt text and version instead of the roster.', { maxLength: 80 }) }), 'agent.runner.read', 'GET /api/agent-runner/agents[/:key/prompt]',
+    async (args) => { const l = await arLib(); return args.agentKey ? l.getAgentPrompt(args.agentKey) : { agents: await l.listAgents() }; }),
+  arTool('agent_runner_start_run', 'Prompt an agent (start a run)', 'Queues a run for one agent. Quality agents take a prompt plus params (feature, suite, loopRunId, changedFiles, seedId); stage agents take loopRunId (and a work order or bugKeys for the fixer, a branch for the integrator). Nothing runs until a worker claims it.',
+    schema({ agentKey: str('An agent key from agent_runner_list_agents.', { maxLength: 80 }), prompt: str('Your request, in your own words.', { maxLength: 8000 }), params: rlObj('Structured inputs (feature, suite, loopRunId, changedFiles, seedId).'), loopRunId: id('Release-loop run id, for stage agents.'), bugKeys: { type: 'array', items: { type: 'string' }, description: 'Fixer: bugs whose work orders become this run\'s work order.' }, workOrder: rlObj('Fixer/integrator: the work order (items with key, intent, files, size, doneWhen).'), branch: str('Branch, for the integrator.', { maxLength: 120 }), fixtureScenario: str('Fixture scenario key (test environments).', { maxLength: 80 }) }, ['agentKey']),
+    'agent.runner.write', 'POST /api/agent-runner/runs', async (args, { user }) => (await arLib()).createRun(args, rlActor(user))),
+  arTool('agent_runner_list_runs', 'List agent runs', 'Lists runs, newest first, optionally filtered by status, release-loop run or agent.',
+    schema({ status: str('queued, running, succeeded, failed, scope_exceeded or stopped.', { maxLength: 30 }), loopRunId: id('Release-loop run id.'), agentKey: str('Agent key.', { maxLength: 80 }) }),
+    'agent.runner.read', 'GET /api/agent-runner/runs', async (args) => ({ runs: await (await arLib()).listRuns(args) })),
+  arTool('agent_runner_get_run', 'Read one agent run', 'Returns a run with its timeline, work order, scope requests, result, diff check and the proposals it produced.',
+    schema({ runId: id('The agent run id.') }, ['runId']), 'agent.runner.read', 'GET /api/agent-runner/runs/:id', async (args) => (await arLib()).getRun(args.runId)),
+  arTool('agent_runner_run_action', 'Stop, requeue or retry a run', 'stop interrupts a queued or running run and records who stopped it; requeue puts a stalled run back on the queue; retry starts a new run with the same inputs and the current work order.',
+    schema({ runId: id('The agent run id.'), action: { type: 'string', enum: ['stop', 'requeue', 'retry'] }, fixtureScenario: str('Retry only, test environments: replay this recorded scenario instead of the original.', { maxLength: 80 }) }, ['runId', 'action']),
+    'agent.runner.write', 'POST /api/agent-runner/runs/:id/(stop|requeue|retry)',
+    async (args, { user }) => { const l = await arLib(); const a = rlActor(user); return args.action === 'stop' ? l.stopRun(args.runId, a) : args.action === 'requeue' ? l.requeueRun(args.runId, a) : l.retryRun(args.runId, a, { fixtureScenario: args.fixtureScenario }); }),
+  arTool('agent_runner_scope_decision', 'Decide a scope request', 'Approves or declines an agent\'s request to edit a file outside its work order. Approving widens the work order, is recorded with your note and runs the finalization gate.',
+    schema({ runId: id('The agent run id.'), requestId: str('The scope request id, for example S1.', { maxLength: 20 }), decision: { type: 'string', enum: ['approve', 'decline'] }, note: str('Why.', { minLength: 1, maxLength: 500 }) }, ['runId', 'requestId', 'decision', 'note']),
+    'agent.runner.write', 'POST /api/agent-runner/runs/:id/scope-requests/:rid/decision',
+    async (args, { user }) => (await arLib()).decideScopeRequest(args.runId, args.requestId, { decision: args.decision, note: args.note }, rlActor(user), user.id)),
+  arTool('agent_runner_outputs', 'List or read agent outputs', 'Without outputId: lists the governed objects agents produced (draft specs, results, amendment proposals, bugs, test plans, enhancement proposals, shaped seeds), optionally by kind or status. With outputId: one output with its payload.',
+    schema({ outputId: id('Optional output id.'), kind: str('Optional kind.', { maxLength: 40 }), status: str('Optional status.', { maxLength: 30 }), amendment: { type: 'boolean', description: 'With outputId on an amendment proposal: return the docs/spec-amendments file shape instead.' } }),
+    'agent.runner.read', 'GET /api/agent-runner/outputs[/:id[/amendment]]',
+    async (args) => { const l = await arLib(); return args.outputId ? (args.amendment ? l.exportAmendment(args.outputId) : l.getOutput(args.outputId)) : { outputs: await l.listOutputs({ kind: args.kind, status: args.status }) }; }),
+  arTool('agent_runner_decide_output', 'Decide an agent proposal', 'Approve/reject a draft spec or amendment proposal, accept/decline an enhancement proposal (accepting files a backlog seed). A note is required; approving and accepting run the finalization gate.',
+    schema({ outputId: id('The output id.'), decision: { type: 'string', enum: ['approve', 'reject', 'accept', 'decline'] }, note: str('Why.', { minLength: 1, maxLength: 500 }) }, ['outputId', 'decision', 'note']),
+    'agent.runner.write', 'POST /api/agent-runner/outputs/:id/decision',
+    async (args, { user }) => (await arLib()).decideOutput(args.outputId, { decision: args.decision, note: args.note }, rlActor(user), user.id)),
+  arTool('agent_runner_test_plan', 'Plan smoke and regression tests', 'Given the changed files, returns every feature\'s smoke suite plus the regression baselines of features whose files or shared modules changed, with the reason for each.',
+    schema({ changedFiles: { type: 'array', items: { type: 'string' }, minItems: 1, description: 'Repository-relative paths.' } }, ['changedFiles']),
+    'agent.runner.read', 'POST /api/agent-runner/test-plan', async (args) => (await arLib()).planTests(args.changedFiles)),
+  arTool('agent_runner_baselines', 'List frozen baselines and smoke suites', 'Lists features that have a frozen baseline, the latest version and the size and source of their smoke suite.',
+    schema({}), 'agent.runner.read', 'GET /api/agent-runner/baselines', async () => ({ baselines: await (await arLib()).listBaselines() })),
+  arTool('agent_runner_seeds', 'Backlog seeds', 'action list (optionally by stage), get, create (title + words), answer (seedId, index, answer) or move (seedId, to: shaped|ready|promoted, note). Promotion is a finalize path (gate) and builds nothing.',
+    schema({ action: { type: 'string', enum: ['list', 'get', 'create', 'answer', 'move'] }, seedId: id('Seed id.'), stage: str('Stage filter for list.', { maxLength: 20 }), title: str('Seed title.', { maxLength: 160 }), words: str('The idea in your own words.', { maxLength: 4000 }), index: { type: 'integer', minimum: 0 }, answer: str('Your answer.', { maxLength: 4000 }), to: str('Target stage.', { maxLength: 20 }), note: str('Note.', { maxLength: 500 }) }, ['action']),
+    'agent.runner.write', 'GET|POST /api/agent-runner/seeds[...]',
+    async (args, { user }) => {
+      const s = (await arLib()).seeds; const a = rlActor(user);
+      switch (args.action) {
+        case 'list': return { seeds: await s.listSeeds({ stage: args.stage }) };
+        case 'get': return s.getSeed(args.seedId);
+        case 'create': return s.createSeed({ title: args.title, words: args.words }, a);
+        case 'answer': return s.answerQuestion(args.seedId, args.index, args.answer, a);
+        default: return s.moveSeed(args.seedId, args.to, { note: args.note, actor: a, userId: user.id });
+      }
+    }),
 ];
 
 // Tools that run an existing website route's own handler in-process (see mcpRouteTools.js), appended after the

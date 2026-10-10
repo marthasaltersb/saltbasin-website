@@ -1,0 +1,25 @@
+{
+  "description": "Every step of the chosen suite passes on desktop and phone",
+  "agents": [
+    "release_test_runner"
+  ],
+  "events": [
+    {
+      "t": "progress",
+      "text": "Opening the app in the pinned Chromium (fixture)"
+    },
+    {
+      "delayMs": 600,
+      "t": "progress",
+      "text": "Walking the suite on desktop, then at 390px"
+    }
+  ],
+  "result": {
+    "$testResults": {}
+  },
+  "usage": {
+    "inputTokens": 1000,
+    "outputTokens": 300,
+    "observed": false
+  }
+}

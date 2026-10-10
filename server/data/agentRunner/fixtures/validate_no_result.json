@@ -1,0 +1,18 @@
+{
+  "description": "The session ends without returning a result",
+  "agents": [
+    "release_validator"
+  ],
+  "events": [
+    {
+      "t": "progress",
+      "text": "Opening the app (fixture)"
+    }
+  ],
+  "result": null,
+  "usage": {
+    "inputTokens": 300,
+    "outputTokens": 50,
+    "observed": false
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "description": "Recognises the report as a duplicate of an earlier bug",
+  "agents": [
+    "release_bug_triager"
+  ],
+  "events": [
+    {
+      "t": "progress",
+      "text": "Comparing with the open bugs (fixture)"
+    }
+  ],
+  "result": {
+    "title": "Label still clipped",
+    "triageClass": "defect",
+    "stepId": "J2.1",
+    "observed": "The label is clipped on a phone",
+    "rootCause": "Same root cause as the earlier bug",
+    "files": [
+      "src/label.jsx"
+    ],
+    "size": "S",
+    "proposedFix": "Let the label wrap",
+    "doneWhen": [
+      "J2.1"
+    ],
+    "duplicateOf": "{{params.duplicateOf}}"
+  },
+  "usage": {
+    "inputTokens": 600,
+    "outputTokens": 150,
+    "observed": false
+  }
+}

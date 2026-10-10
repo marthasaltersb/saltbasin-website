@@ -11,6 +11,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
 import { useToolCategoryGate } from './ToolCategoryGate.jsx';
+import AgentRunnerLoopCard from './AgentRunnerLoopCard.jsx';
 
 const C = { ink: '#1b2a3b', sec: '#536173', line: '#e5ded3', soft: '#f6f2ea', accent: '#c4843a', teal: '#2e7f9c', bad: '#a5391f', ok: '#2f7d4f' };
 const S = {
@@ -361,6 +362,8 @@ function RunDetail({ runId, onBack, onChanged }) {
           {!d.doneGate.ok && <ul style={{ margin: '.3rem 0 0 1rem', padding: 0 }}>{d.doneGate.gaps.map((g) => <li key={g}>{g}</li>)}</ul>}
         </div>
       </div>
+
+      <AgentRunnerLoopCard runId={runId} stage={r.stage} active={!closed} onChanged={load} />
 
       <div style={S.card}>
         <div style={S.cardTitle}>Validation rounds</div>

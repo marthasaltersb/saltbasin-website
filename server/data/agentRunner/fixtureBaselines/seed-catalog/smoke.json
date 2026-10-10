@@ -1,0 +1,9 @@
+{
+  "feature": "seed-catalog",
+  "baselineVersion": 1,
+  "description": "Fictional smoke suite for fixture runs",
+  "steps": [
+    "J1.1",
+    "J2.1"
+  ]
+}

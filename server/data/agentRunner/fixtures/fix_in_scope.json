@@ -1,0 +1,60 @@
+{
+  "description": "Edits only the listed file, one commit that names the item",
+  "agents": [
+    "release_fixer"
+  ],
+  "events": [
+    {
+      "t": "progress",
+      "text": "Reading the work order"
+    },
+    {
+      "delayMs": 500,
+      "t": "edit",
+      "file": "src/label.jsx",
+      "added": 10,
+      "deleted": 4
+    },
+    {
+      "delayMs": 400,
+      "t": "progress",
+      "text": "npm run build passes (fixture)"
+    }
+  ],
+  "diff": {
+    "files": [
+      {
+        "file": "src/label.jsx",
+        "added": 10,
+        "deleted": 4
+      }
+    ],
+    "commits": [
+      {
+        "sha": "abc1234",
+        "message": "{{workOrder.items.0.key}}: wrap the label"
+      }
+    ]
+  },
+  "result": {
+    "branch": "release-loop/seed-catalog-fix-r1",
+    "commit": "abc1234",
+    "fixed": [
+      {
+        "id": "{{workOrder.items.0.key}}",
+        "what": "Wrapped the label",
+        "files": "{{workOrder.items.0.files}}",
+        "selfCheck": "Re-ran the failed step; it passes (fixture)"
+      }
+    ],
+    "notFixed": [],
+    "failures": []
+  },
+  "usage": {
+    "inputTokens": 2400,
+    "outputTokens": 800,
+    "activeSeconds": 4,
+    "turns": 7,
+    "observed": false
+  }
+}

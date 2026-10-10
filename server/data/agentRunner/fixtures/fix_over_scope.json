@@ -1,0 +1,67 @@
+{
+  "description": "The branch changes a file the work order does not list and exceeds its size",
+  "agents": [
+    "release_fixer"
+  ],
+  "events": [
+    {
+      "t": "progress",
+      "text": "Reading the work order"
+    },
+    {
+      "delayMs": 500,
+      "t": "edit",
+      "file": "src/label.jsx",
+      "added": 30,
+      "deleted": 20
+    },
+    {
+      "delayMs": 400,
+      "t": "progress",
+      "text": "Also edited src/extra.jsx with a shell command (not seen by the pre-edit check)"
+    }
+  ],
+  "diff": {
+    "files": [
+      {
+        "file": "src/label.jsx",
+        "added": 30,
+        "deleted": 20
+      },
+      {
+        "file": "src/extra.jsx",
+        "added": 12,
+        "deleted": 0
+      }
+    ],
+    "commits": [
+      {
+        "sha": "def5678",
+        "message": "{{workOrder.items.0.key}}: rework the label"
+      },
+      {
+        "sha": "9990000",
+        "message": "tidy up"
+      }
+    ]
+  },
+  "result": {
+    "branch": "release-loop/seed-catalog-fix-r1",
+    "commit": "abc1234",
+    "fixed": [
+      {
+        "id": "{{workOrder.items.0.key}}",
+        "what": "Reworked the label",
+        "files": "{{workOrder.items.0.files}}",
+        "selfCheck": "Re-ran the failed step; it passes (fixture)"
+      }
+    ],
+    "notFixed": [],
+    "failures": []
+  },
+  "usage": {
+    "inputTokens": 2600,
+    "outputTokens": 900,
+    "observed": false
+  }
+}

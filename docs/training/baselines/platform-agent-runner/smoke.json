@@ -1,0 +1,6 @@
+{
+  "feature": "platform-agent-runner",
+  "baselineVersion": 1,
+  "description": "Smoke suite for the platform agent runner: settings saved, a validation round scored from the pinned baseline, a draft held for a person, an in-scope fix, an over-scope fix refused, the MCP tool list, and the phone layout. Changed only by an approved amendment.",
+  "steps": ["J1.1", "J1.7", "J2.4", "J4.4", "J10.1", "J10.9", "J13.2", "E.1"]
+}

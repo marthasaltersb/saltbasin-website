@@ -1,0 +1,39 @@
+{
+  "description": "Shapes one seed: problem, one open question, acceptance criteria, draft change spec and journeys",
+  "agents": [
+    "release_backlog_gardener"
+  ],
+  "events": [
+    {
+      "t": "progress",
+      "text": "Reading the seed and its history (fixture)"
+    },
+    {
+      "delayMs": 500,
+      "t": "progress",
+      "text": "Drafting the problem and the questions only the owner can answer"
+    }
+  ],
+  "result": {
+    "seedId": "{{params.seedId}}",
+    "problem": "Shop owners forget to re-order seed packets before the planting season.",
+    "openQuestions": [
+      "Should reminders be sent by email, in the app, or both?"
+    ],
+    "acceptanceCriteria": [
+      "An owner can create a reminder for a product",
+      "A reminder shows its due date"
+    ],
+    "draftChangeSpec": "Change spec outline: a reminders list and form; data model additive (one table); server routes; client screen; interface parity (UI, API, MCP).",
+    "draftJourneys": [
+      "Create a reminder",
+      "Edit and delete a reminder"
+    ],
+    "size": "M"
+  },
+  "usage": {
+    "inputTokens": 1100,
+    "outputTokens": 600,
+    "observed": false
+  }
+}

@@ -1,9 +1,9 @@
 # Change spec — Platform agent runner: Salt Basin runs the release loop's agents itself
 
-Feature key: `platform-agent-runner` · Release: `2026-10-02-application-packages` (0.2.0) · Version 1 (design) · 2026-10-09
-Training spec: `docs/training/platform-agent-runner.md` (written by the build agent, from the journeys below)
-Version 2 (design) · 2026-10-09: sessions capped by the change they are allowed to make, not by spend; a promptable roster of quality agents.
-Status: design. Owner decisions recorded at the end; billing and hosting remain open. Nothing here is built yet.
+Feature key: `platform-agent-runner` · Release: `2026-10-02-application-packages` (0.2.0) · Version 3 (built) · 2026-10-09
+Training spec: `docs/training/platform-agent-runner.md` (version 1, written by the build agent from the journeys below)
+Version 1 (design) · 2026-10-09. Version 2 (design) · 2026-10-09: sessions capped by the change they are allowed to make, not by spend; a promptable roster of quality agents. Version 3 (built) · 2026-10-09: the build, described in "What changed (version 3)" and the sections after it. The design sections above it are kept as the record of the requirement.
+Status: built and initially checked against fixture sessions. Billing and the Render plan for the worker remain open owner decisions (see the end); nothing in the build calls the real Anthropic API.
 
 ## Owner direction
 
@@ -29,6 +29,8 @@ platform tracker reads live.
 | Agent definitions (`agent_definitions`, `resolveAgentRoster()`) | The release-loop roles are already seeded here by `in-app-release-loop`; each row gains the id of its Claude agent configuration. No new roster table. |
 | `.claude/workflows/release-loop.js` | The role prompts move from this script into versioned agent configurations, so the platform and the Claude Code workflow use the same prompts until cut-over. |
 | Session mapping / release intelligence | Per-session usage (tokens, list cost, active seconds) is recorded per agent run, so spend trends come from observed numbers. |
+| `release-intelligence` (`docs/changes/release-intelligence.md`, `server/lib/releaseIntelligence.js`) | A failed, refused, stopped or `SCOPE_EXCEEDED` agent run on a release-loop run becomes a `release_failed_runs` reconciliation item (`addManualFailedRun`); every run, stop and decision is a `release_reconciliation_events` row (`recordEvent`). Nothing is added to those tables. |
+| Earlier partial build (commit `5573227`, branch `release-loop/platform-agent-runner-build`, stopped by a usage limit, untested) | Reviewed and reused: `agentRunner.js`, `agentRunnerAdapters.js`, `agentRunnerCatalog.js`, `agentTestPlan.js`, `agentWorkOrder.js`, `agentWorker.js`, `backlogSeeds.js`, the ten prompt files and the recorded fixtures. Fixed while testing (see "Fix notes"). |
 
 ## Choice of Claude surface (recommendation: Managed Agents)
 
@@ -170,7 +172,7 @@ code changes) or a proposal (for specs and backlog); nothing an agent writes byp
 | Webhook endpoint, runner service | New code, no new tables | `server/lib/agentRunner.js`, `server/routes/agentRunner.js` |
 | Anthropic SDK | Dependency upgrade | `@anthropic-ai/sdk` is at `^0.40.0`; Managed Agents needs a current SDK. The other modules that use the SDK (`careerResumeExtraction.js`, `qualificationGateCheckers.js`, `hiringManagerResearchAgent.js`) are re-checked after the upgrade |
 
-No new tables are proposed.
+No new tables are proposed. (Version 3 correction: building it proved two gaps, so the build adds `agent_runner_runs` and `agent_runner_outputs`; see "Data model" under "What changed (version 3)".)
 
 ## Interface parity
 
@@ -246,3 +248,92 @@ Open:
    orders.
 4. Which GitHub account owns the fine-grained token the worker pushes with, and the Render plan for the
    worker.
+
+---
+
+# Version 3 - the build
+
+Built 2026-10-09/10 by the build agent from the design above and the earlier partial branch (commit `5573227`). Everything below is what exists in the repository now; the sections above are the requirement it answers.
+
+## What changed (version 3)
+
+### Data model (additive only)
+
+Nothing in bootstrap and nothing touching member rows: every schema statement runs lazily from `ensureAgentRunnerSchema()` (`server/lib/agentRunner.js`) on first use of the runner, with `IF NOT EXISTS`.
+
+| Change | Why it is not a reuse |
+| --- | --- |
+| New table `agent_runner_runs` (agent key, kind, optional `loop_run_id`, prompt and prompt version, `work_order` JSONB, pinned baseline, queue state, claim, timeline JSONB with a monotonic `seq`, scope requests JSONB, result, usage, diff and checks JSONB, stop request) | The reuse audit (see "Reuse-first audit" above) said no new tables. Building it proved a gap: `release_loop_runs` is one row per feature per release (a stage machine), but one stage needs many agent sessions (a retry, a second validator, an integration queue, a quality agent that belongs to no loop run). `release_failed_runs` holds failures only; `journey_rod_events` is rod-scoped. Queue state (claimed by which worker, attempt, stalled) has no home in any of them. Each row points at its loop run and writes its outcome into the existing `release_loop_*` tables. |
+| New table `agent_runner_outputs` (run, kind, status, title, JSONB payload, ref, decision, note) | A proposal that waits for a person (draft spec, amendment proposal, enhancement proposal) and the record of a quality agent's result (test results, plan, bug link, shaped seed) need one place a screen can list by kind and status. The governed objects that already exist (bugs, rounds, seeds, backlog) are written to their own tables as before; this table is the index and the holder of what has no table yet. Nothing in it changes a spec, a baseline or code. |
+| `agent_definitions.claude_agent_ref` (JSONB) | From the design: records the prompt file and version each role runs. Seven quality-agent rows are added to the platform default (`org_id`/`owner_user_id` NULL, `pipeline='release_loop_quality'`) insert-if-missing; the release-loop roles learn their prompt file only where unset. |
+| `release_loop_bugs.work_order` (JSONB), `.size` | The bug triager's work order for the fix. The release loop's run detail now includes `workOrder` and `size` on each bug (null until filed). |
+| `backlog_items.seed_stage`, `.seed_data` (JSONB), `.seed_history` (JSONB) | A seed is a backlog item; `seed -> shaped -> ready -> promoted` is a stage on the existing list, not a second list. A promoted seed becomes `kind='feature'`. |
+| `config_state` rows `agent_runner_settings`, `agent_runner_workers` (TEXT JSON) | Settings (size limits, turn limit, concurrency, stalled-after seconds, model, shared modules, extra forbidden paths, settings history), the GitHub token (AES-256-GCM through `crypto.js`, last four characters shown, never returned), the worker token (SHA-256 hash only, shown once) and worker heartbeats. JSON.stringify is correct for these TEXT columns; the JSONB columns above receive raw values. |
+
+### Server
+
+- `server/lib/agentRunner.js`: the one implementation behind the API and MCP: settings, tokens, roster, runs (create, queue, claim, progress, scope requests, complete, stop, requeue, retry), outputs and decisions, overview, test plan, baselines. A run is verified server-side whatever the worker says: the claim, the result schema (`agentRunnerCatalog.js`), the pinned baseline (`BASELINE_MISMATCH`), the score (recomputed with `scripts/release-spec-baseline.mjs score`; the agent's own `passed` flag never decides), and the work-order diff (`SCOPE_EXCEEDED`).
+- `server/lib/agentWorkOrder.js` (pure): work-order validation, the pre-edit check `checkEdit`, the post-run `checkDiff` (files, size per item, commits that name an item, forbidden paths), `widenWorkOrder`, `scopeNeedsOwner`. The worker and the platform call the same functions.
+- `server/lib/agentRunnerAdapters.js`: ONE interface, two adapters. The **fixture adapter** replays recorded, fictional timelines from `server/data/agentRunner/fixtures/*.json` (no network, no key, no cost); the **Agent SDK adapter** runs `@anthropic-ai/claude-agent-sdk` `query()` with a `PreToolUse` hook that denies an edit outside the work order before it runs, an output schema, the turn limit and a stop signal. It is code-complete, checked against the SDK's type definitions (0.3.295), and exercised here only by the dry run (`node scripts/agent-worker.mjs --self-test`), which uses an in-memory stand-in for the SDK and skips the live call cleanly without a key.
+- `server/lib/agentWorker.js` + `scripts/agent-worker.mjs`: the worker. It sends a heartbeat, claims a run, sets up one working copy per run (`git clone`, a work branch for code-editing agents), runs the adapter, streams progress, collects the branch diff, refuses uncommitted changes, pushes only a work branch that passes the same work-order check (never the integration branch), and reports completion. A failed working-copy setup, a rejected token (exit code 3) or an unpushable branch is reported, never swallowed. A stop request ends a quiet session within about a second.
+- `server/lib/agentTestPlan.js`: smoke suites (`docs/training/baselines/<feature>/smoke.json`, or a labelled derived list when a feature has none), the shared-module list (editable in Settings) and the smoke-vs-regression plan. `server/lib/backlogSeeds.js` + `backlogSeedRules.js` (pure): the seed lifecycle and its gates.
+- `server/routes/agentRunner.js`: `/api/agent-runner/*` (administrators) and `/api/agent-runner/worker/*` (worker token; a rejected call is written to `release_reconciliation_events` and listed on the Overview).
+- `server/lib/agentRunnerEmbedded.js`: with `AGENT_RUNNER_FIXTURE_WORKER=1` the website process runs the worker engine in-process on the fixture adapter, so training journeys need no second process. It is refused whenever `RENDER` is set and it can never use the Agent SDK adapter. The same switch is what makes the fictional fixture baseline and scenarios visible; a deployed platform shows neither.
+- Agent runs that fail, are refused (`SCOPE_EXCEEDED`) or are stopped on a release-loop run add a reconciliation item to that run, so the run cannot be marked done until a person closes it (`release-intelligence`).
+
+### Client
+
+World Shell -> Journeys -> **Agent runner** (administrators; a World Shell entry point, no nav row, like Capabilities): `src/components/admin/AgentRunnerPanel.jsx` (Overview, Test plan, Settings and the tab frame), `AgentRunnerAgents.jsx`, `AgentRunnerRuns.jsx`, `AgentRunnerOutputs.jsx`, `AgentRunnerSeeds.jsx`, shared bits in `agentRunnerUi.jsx`. Release loop -> a run gains the card **Agent runner** (`AgentRunnerLoopCard.jsx`). One column, 44px tap targets, no hover-only actions, no horizontal scroll at 390px. Every approve, accept, promote and scope-approval path goes through `useToolCategoryGate().run` and the matching server function's `assertReadyToFinalize`. Every error is shown inline (`role="alert"`) and as a toast.
+
+### Quality agents and prompts
+
+Ten prompt files under `agents/release-loop/<role>/` (`agent.json` with the version, `prompt.md`): the seven quality agents (test script writer, test runner, test extender, bug triager, smoke vs regression planner, enhancement proposer, backlog gardener) and the three stage agents (validator, fixer, integrator). The Agents tab shows each file and version read-only; a run records the version it used. Each agent's result is validated against a small schema and lands as its governed object: draft spec, test results, amendment proposal, bug (with work order) or duplicate link, test plan, enhancement proposal, shaped seed. Nothing an agent writes edits a spec, a baseline, the code or the feature list.
+
+### Interface parity
+
+12 rows added to `server/lib/capabilityParity.js` (`Agent runner` group, `server/routes/agentRunner.js` governed) and 13 MCP tools appended to `server/lib/mcpToolRegistry.js` (append-only; `server/data/mcpToolManifest.json` updated): `agent_runner_overview`, `agent_runner_settings`, `agent_runner_list_agents`, `agent_runner_start_run`, `agent_runner_list_runs`, `agent_runner_get_run`, `agent_runner_run_action`, `agent_runner_scope_decision`, `agent_runner_outputs`, `agent_runner_decide_output`, `agent_runner_test_plan`, `agent_runner_baselines`, `agent_runner_seeds`, with scopes `agent.runner.read` and `agent.runner.write`. This replaces the design's four tool names (`release_loop_start_stage` and so on): the tools follow the screens, and stop / requeue / retry are one tool with an action. Two capabilities carry a stated exclusion instead of a tool: the GitHub and worker tokens (a secret never passes through an agent session) and the worker protocol (a program, not a user action). `node scripts/check-interface-parity.mjs` reports every capability working in all three interfaces.
+
+### Deployment
+
+`Dockerfile.worker` (Node 22, git, Postgres 16, Chromium, fonts, the Agent SDK installed with `--no-save`, never in `package.json`; the build runs the dry-run self-test) and a commented, "NEEDS A PAID PLAN" worker service block at the end of `render.yaml`. The website's own service block is unchanged (`plan: free`).
+
+## Behaviour changes to know
+
+- Sessions are capped by their work order, not by spend. There is no spend cap anywhere; usage is recorded as observed (tokens, list cost, active seconds) and a run whose worker reported no cost shows "cost not recorded", never zero.
+- A session's turn limit (default 40, editable) only stops a run that loops without progress.
+- An edit outside the work order is refused with the reason before it happens; the agent files a scope request instead of working around it. Approving one adds the file to that item and is recorded with the approver and note; a dependency file or an item already at size L is flagged "Needs the owner".
+- A branch that touches a file outside the work order, exceeds an item's size, touches a forbidden path or has a commit that names no item ends as `SCOPE_EXCEEDED` and is not merged or pushed.
+- A validation round is scored by the platform from the pinned baseline's own steps; an agent that scored against another baseline version, returned nothing, or returned an invalid result is a failed run (and a reconciliation item), never a pass.
+- The design's Managed Agents surface (version 1) is superseded by the owner decision of 2026-10-09 (Agent SDK on Salt Basin's own worker); the design's webhook journey (bad signature, late webhook) is replaced by its worker equivalents: a bad worker token is rejected and listed on the Overview, and a worker that stops reporting is shown as stalled and can be put back on the queue.
+- The release loop's run detail gained `workOrder` and `size` on bugs (additive). `package.json` gained the script `test:agent-runner`.
+
+## Verified (initial check)
+
+Run on 2026-10-10 against a fresh database (`sb_rl_bld_6400_1`), the production build served, `AGENT_RUNNER_FIXTURE_WORKER=1`:
+
+- `npm run build` passes. The server boots on a fresh database and the runner schema is created lazily.
+- Every journey of `docs/training/platform-agent-runner.md` was walked once in Chromium, scripted from the spec, on the desktop pass (1280x900) and the phone pass (390x844, touch): all 88 browser steps passed on both passes, and the command steps of Journeys 12 and 13 and the edge cases passed (28 checks; J12.6 and J12.8 failed on the first run and were fixed, see "Fix notes", and re-checked).
+- `node --test tests/agent-runner.test.js`: 13 tests pass (work-order checks, result schemas, test plan, fixture and SDK adapters, seed rules, and the worker against a real local repository: diff collection, push of an in-scope branch only, uncommitted changes, unnamed commits, failed setup).
+- `node scripts/check-interface-parity.mjs`: every capability works in all three interfaces; `--self-test` proves the check can fail.
+- `node scripts/agent-worker.mjs --self-test`: the Agent SDK adapter dry run passes; `--live` skips cleanly without a key. No real Anthropic API call was made anywhere.
+- Also checked by hand (not scripted into the spec): putting a stalled run back on the queue, stopping a stalled run (the platform closes it itself), and that the worker routes answer 401 with a bad token.
+
+## Known limitations
+
+- The Agent SDK adapter has never run a real session in this build (no key, by design). Its first live check is the owner-approved single run described under "Testing without spending money"; until then its behaviour is verified only against the SDK's published types and the dry run.
+- The worker has not been deployed: the Render plan for it and the GitHub account that owns its token are open decisions 3 and 4 above. The image has not been built here.
+- A session's `usage` is whatever the adapter reports; the fixture adapter reports recorded numbers and no cost. Spend trends in Release Intelligence read observed numbers only.
+- The release loop's other roles (builder, triage, spec reviewer, scope agent, reconciler, recorder) are not started by the runner yet; the three stage agents it does start (validation, fix, integration) plus the seven quality agents cover the owner's request. The remaining prompts stay in `.claude/workflows/release-loop.js` until the cut-over.
+- Approving a draft spec or an amendment records the decision; the amendment reviewer still freezes the baseline and commits the amendment file (`GET /outputs/:id/amendment` gives its shape). The runner never edits `docs/training`.
+- The open screens poll (Overview every 3 seconds, runs every 1.5 seconds); real-time server push from `render-bindings` is not used yet.
+
+## Fix notes
+
+Found and fixed while building and checking (before any validator round):
+
+1. The first worker version exited with code 0 when its token was rejected; it now stops with code 3 and says so.
+2. A stop request did not interrupt a quiet session (a replayed 8-second wait) and the fixture still printed the step it was about to run; waits now end early on a stop request and nothing runs after it.
+3. `--self-test` left a placeholder key in the environment when `ANTHROPIC_API_KEY` was set to an empty string, which made the `--live` check try a real call; it now restores the environment exactly.
+4. A failed working-copy setup left the run claimed forever; it is now reported as a failed run with the reason.
+5. Fictional fixture baselines and scenarios were visible on any platform; they now need `AGENT_RUNNER_FIXTURE_WORKER=1` (or `AGENT_RUNNER_ALLOW_FIXTURES=1`) and are never available on Render.
+6. `backlogSeeds.js` rules were untestable without a database; they moved to `backlogSeedRules.js`.

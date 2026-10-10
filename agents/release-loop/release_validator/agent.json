@@ -1,0 +1,8 @@
+{
+  "role": "release_validator",
+  "name": "Validation agent",
+  "version": 1,
+  "outputKind": "validation_round",
+  "canEditCode": false,
+  "changeNote": "2026-10-09: first version. Changing this prompt is a reviewed change to this file, like a spec amendment."
+}

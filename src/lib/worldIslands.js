@@ -223,6 +223,13 @@ export const ISLAND_REGISTRY = {
     dataBinding: { store: 'release_loop_runs' },
     permission: { requiredRole: 'admin', crud: ['read', 'update', 'approve'], enforced: true },
   },
+  // Agent runner (2026-10-09): Salt Basin runs the release loop's agents itself (work-order-capped sessions, a
+  // promptable quality-agent roster). Admin only; a World Shell entry point (PLATFORM_ISLAND_TABS), no nav row.
+  agentRunner: {
+    variant: 'rings', kind: 'embed', accent: 'teal',
+    dataBinding: { store: 'agent_runner_runs' },
+    permission: { requiredRole: 'admin', crud: ['read', 'update', 'approve'], enforced: true },
+  },
   // Live release tracker (2026-10-09): admins always, members the admin lists by
   // email. Read by /api/release-tracker/* (see docs/changes/live-release-tracker.md).
   releaseTracker: {
@@ -264,6 +271,7 @@ export const PLATFORM_ISLAND_TABS = Object.freeze([
   { id: 'connected-agents', label: 'Connected Agents', componentId: 'connectedAgents', sortOrder: 30, adminOnly: false },
   { id: 'capabilities', label: 'Capabilities', componentId: 'capabilities', sortOrder: 31, adminOnly: true },
   { id: 'qualification-rules', label: 'Qualification Rules', componentId: 'qualificationRules', sortOrder: 32, adminOnly: true },
+  { id: 'agent-runner', label: 'Agent runner', componentId: 'agentRunner', sortOrder: 33, adminOnly: true },
 ]);
 
 /** `tabs` plus the World Shell-only entry points this user may see (a stored tab with the same componentId wins). */

@@ -1,0 +1,22 @@
+{
+  "description": "The draft has no journeys, so it does not parse as a training spec",
+  "agents": [
+    "release_test_script_writer"
+  ],
+  "events": [
+    {
+      "t": "progress",
+      "text": "Drafting (fixture)"
+    }
+  ],
+  "result": {
+    "feature": "seed-reminders",
+    "title": "Seed packet reminders",
+    "markdown": "# A spec with no sections at all, only an introduction paragraph of prose."
+  },
+  "usage": {
+    "inputTokens": 500,
+    "outputTokens": 100,
+    "observed": false
+  }
+}

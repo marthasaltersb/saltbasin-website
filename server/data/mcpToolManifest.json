@@ -175,6 +175,19 @@
     "output_template_public_read",
     "output_template_create",
     "output_template_update",
-    "output_template_delete"
+    "output_template_delete",
+    "agent_runner_overview",
+    "agent_runner_settings",
+    "agent_runner_list_agents",
+    "agent_runner_start_run",
+    "agent_runner_list_runs",
+    "agent_runner_get_run",
+    "agent_runner_run_action",
+    "agent_runner_scope_decision",
+    "agent_runner_outputs",
+    "agent_runner_decide_output",
+    "agent_runner_test_plan",
+    "agent_runner_baselines",
+    "agent_runner_seeds"
   ]
 }

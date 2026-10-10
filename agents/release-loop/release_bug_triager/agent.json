@@ -1,0 +1,8 @@
+{
+  "role": "release_bug_triager",
+  "name": "Bug triager",
+  "version": 1,
+  "outputKind": "bug",
+  "canEditCode": false,
+  "changeNote": "2026-10-09: first version. Changing this prompt is a reviewed change to this file, like a spec amendment."
+}

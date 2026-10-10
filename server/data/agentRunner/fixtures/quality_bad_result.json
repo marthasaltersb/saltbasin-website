@@ -1,0 +1,26 @@
+{
+  "description": "The result is missing required fields",
+  "agents": [
+    "release_test_script_writer",
+    "release_test_runner",
+    "release_test_extender",
+    "release_bug_triager",
+    "release_test_planner",
+    "release_enhancement_proposer",
+    "release_backlog_gardener"
+  ],
+  "events": [
+    {
+      "t": "progress",
+      "text": "Working (fixture)"
+    }
+  ],
+  "result": {
+    "note": "nothing useful"
+  },
+  "usage": {
+    "inputTokens": 100,
+    "outputTokens": 20,
+    "observed": false
+  }
+}
