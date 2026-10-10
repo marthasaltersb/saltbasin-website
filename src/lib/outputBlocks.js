@@ -532,7 +532,7 @@ export function renderBlockToHtml(block, ctx = {}) {
         </div>`).join('');
       return `<div style="${styleStr(s)}">
   <div style="font-size:0.6rem;letter-spacing:0.24em;text-transform:uppercase;color:#172A45;font-family:Georgia,serif;font-weight:700;margin-bottom:0.75rem;padding-bottom:0.25rem;border-bottom:1px solid #C4843A">Executive Summary</div>
-  <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:0.6rem;margin-bottom:1.25rem">${tileHtml}</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(7.5rem,1fr));gap:0.6rem;margin-bottom:1.25rem">${tileHtml}</div>
   ${ctx.rollupFootnote ? `<div style="font-size:0.64rem;color:#536173;font-style:italic;margin:-0.8rem 0 1rem;font-family:sans-serif">${eh(ctx.rollupFootnote)}</div>` : ''}
   ${meters.length ? `<div style="background:#F7F2E8;border-radius:10px;padding:1rem 1.1rem">
     <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:#536173;margin-bottom:0.6rem;font-family:sans-serif">Capability Confidence</div>

@@ -520,7 +520,7 @@ function ExecutiveSummarySection({ execKpis, capabilityMeters, rollupError, roll
       <div style={{ fontSize: '0.6rem', letterSpacing: '0.24em', textTransform: 'uppercase', color: BRAND.navy, fontFamily: 'Georgia, serif', fontWeight: 700, marginBottom: '0.75rem', paddingBottom: '0.25rem', borderBottom: `1px solid ${BRAND.gold}` }}>
         Executive Summary
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0, 1fr))', gap: '0.6rem', marginBottom: '1.25rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(7.5rem, 1fr))', gap: '0.6rem', marginBottom: '1.25rem' }}>
         {execKpis.map((k, i) => <KPITile key={`${k.label}-${i}`} {...k} />)}
       </div>
       {rollupFootnote && <div style={{ fontSize: '0.64rem', color: BRAND.slate, fontStyle: 'italic', margin: '-0.8rem 0 1rem', fontFamily: 'sans-serif' }}>{rollupFootnote}</div>}
