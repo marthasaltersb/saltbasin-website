@@ -110,6 +110,22 @@
     "release_loop_bug_action",
     "release_loop_add_reconciliation",
     "release_loop_resolve_reconciliation",
-    "release_loop_list_escalations"
+    "release_loop_list_escalations",
+    "release_create",
+    "release_feature_add",
+    "release_approve",
+    "release_reopen",
+    "release_failed_runs_list",
+    "release_failed_run_record",
+    "release_failed_run_dispose",
+    "release_outputs_list",
+    "release_output_link",
+    "release_trends_read",
+    "release_import_document",
+    "release_import_snapshot",
+    "release_import_repository",
+    "release_config_read",
+    "release_config_save",
+    "release_config_reset"
   ]
 }
