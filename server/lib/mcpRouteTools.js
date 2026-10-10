@@ -64,7 +64,7 @@ const SPECS = [
   ['cover_letter_metrics_read', 'Read cover-letter agent metrics', 'Returns the cover-letter agent usage metrics for the caller. Query field: sessionKey (optional).', 'coverLetters', 'GET', '/metrics', { query: 'sessionKey' }],
 
   // ── Career Master ──
-  ['career_rollups_read', 'Read rollup policy results', 'Returns the legacy Career Master rollups the Proficiency screen compares against.', 'career', 'GET', '/rollups', {}],
+  ['career_rollups_read', 'Read rollup policy results', 'Returns the Career Master rollups (the same data the Output Template chart gallery reads). Query field: owner (optional; a member slug, or me; defaults to me, the caller).', 'career', 'GET', '/rollups', { query: 'owner (me by default, or a member slug)', defaultQuery: { owner: 'me' } }],
   ['career_rollup_preview_read', 'Preview one rollup policy', 'Returns the preview of one rollup policy by key.', 'career', 'GET', '/rollup-preview/:key', { params: { key: 'key' }, strParams: ['key'] }],
   ['career_intake_documents_list', 'List intake documents', 'Lists the documents the caller has taken in for Career Master intake. File upload itself is a website action.', 'career', 'GET', '/intake-documents', {}],
   ['career_intake_linkedin_pull', 'Pull intake from LinkedIn', 'Pulls profile content from the caller\'s connected LinkedIn account into intake documents.', 'career', 'POST', '/intake-documents/linkedin-pull', { body: 'route settings' }],
@@ -151,7 +151,7 @@ function build([name, title, description, routerKey, method, path, opts]) {
     api: `${method} ${MOUNTS[routerKey]}${path}`,
     handler: async (args, ctx) => invokeRoute(routerKey, method, path, ctx, {
       params: Object.fromEntries(Object.entries(pathArgs).map(([arg, p]) => [p, args[arg]])),
-      query: args.query || {},
+      query: { ...(opts.defaultQuery || {}), ...(args.query || {}) },
       body: args.body || {},
     }),
   };

@@ -649,7 +649,7 @@ option {
     justify-content: space-between;
     gap: 0.55rem;
     min-width: 82px;
-    min-height: 42px;
+    min-height: 44px;
     padding: 0.55rem 0.7rem;
     border: 1px solid var(--sb-admin-border-strong);
     border-radius: 8px;
