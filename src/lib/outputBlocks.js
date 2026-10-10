@@ -482,7 +482,8 @@ function styleStr(obj) {
 
 // Simple {{key}} template substitution against a flat or nested context
 function interpolate(text, ctx) {
-  if (!text || !ctx) return text || '';
+  if (text == null || text === '') return '';
+  if (!ctx) return String(text);
   return String(text).replace(/\{\{([^}]+)\}\}/g, (_, path) => {
     const val = path.trim().split('.').reduce((o, k) => (o != null ? o[k] : ''), ctx);
     return val != null ? val : '';

@@ -295,6 +295,7 @@ export default function AdminShell({ scope = 'admin', orgId = null, initialTab =
   // On desktop the sidebar is always visible; on mobile it slides over.
   // Default starts visible so first-time users can find pages.
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // <=900px nav drawer
 
   // Split-view editor/preview ratio. 0.55 = editor takes 55%, preview 45%.
   // Persisted in localStorage so each browser remembers the user's preference.
@@ -658,9 +659,38 @@ export default function AdminShell({ scope = 'admin', orgId = null, initialTab =
 
   if (!draft || !configDraft) return null;
 
+  // Mobile (<=900px) navigation: the desktop group selector and tab strip are
+  // hidden by brand.css, so the same nav is offered as a drawer.
+  const mobileGroups = isMember
+    ? [{
+        id: 'member',
+        label: 'My Workspace',
+        tabs: (configDraft?.navigation?.memberTabs || [])
+          .filter((item) => item.enabled !== false)
+          .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+          .map((item) => ({ id: item.id, label: item.label })),
+      }]
+    : adminNav
+      ? [...adminNav.views]
+          .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+          .map((v) => ({
+            id: v.id,
+            label: v.label,
+            tabs: [...v.tabs].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)).map((t) => ({ id: t.id, label: t.label })),
+          }))
+      : [];
+  const mobileCurrentGroup = mobileGroups.find((g) => (isMember ? true : g.id === activeViewId));
+  const mobileCurrentTab = mobileCurrentGroup?.tabs.find((t) => t.id === tab);
+  const mobileCurrentLabel = [!isMember && mobileCurrentGroup?.label, mobileCurrentTab?.label].filter(Boolean).join(' / ');
+  function pickMobileTab(groupId, tabId) {
+    if (!isMember) switchView(groupId);
+    setTab(tabId);
+    setMobileMenuOpen(false);
+  }
+
   return (
     <div className="sb-admin-shell" style={styles.shell}>
-      <div style={styles.topbar}>
+      <div className="sb-admin-topbar" style={styles.topbar}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           {tab === 'content' && (
             <button
@@ -699,6 +729,16 @@ export default function AdminShell({ scope = 'admin', orgId = null, initialTab =
             </div>
           </div>
         </div>
+        <span className="sb-admin-mobile-current" aria-live="polite">{mobileCurrentLabel}</span>
+        <button
+          type="button"
+          className="sb-admin-mobile-menu-button"
+          onClick={() => setMobileMenuOpen(true)}
+          aria-haspopup="dialog"
+          aria-expanded={mobileMenuOpen}
+        >
+          Menu
+        </button>
         <div
           className="sb-admin-topbar-actions"
           style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}
@@ -796,7 +836,7 @@ export default function AdminShell({ scope = 'admin', orgId = null, initialTab =
         const activeView = adminNav.views.find((v) => v.id === activeViewId);
         if (!activeView || activeView.tabs.length <= 1) return null;
         return (
-          <div style={{
+          <div className="sb-admin-desktop-subnav" style={{
             display: 'flex',
             gap: '0.5rem',
             padding: '0.5rem 1.5rem',
@@ -814,6 +854,40 @@ export default function AdminShell({ scope = 'admin', orgId = null, initialTab =
           </div>
         );
       })()}
+
+      {mobileMenuOpen && (
+        <button type="button" className="sb-admin-mobile-backdrop" aria-label="Close menu" onClick={() => setMobileMenuOpen(false)} />
+      )}
+      <aside className={`sb-admin-mobile-drawer${mobileMenuOpen ? ' open' : ''}`} aria-label="Admin navigation" aria-hidden={!mobileMenuOpen} role="dialog">
+        <div className="sb-admin-mobile-drawer-head">
+          <div>
+            <strong>{isMember ? (configDraft?.site?.ownerName || 'My Profile') : 'Salt Basin Net Works'}</strong>
+            <span>{mobileCurrentLabel || 'Menu'}</span>
+          </div>
+          <button type="button" onClick={() => setMobileMenuOpen(false)} aria-label="Close menu">×</button>
+        </div>
+        <div className="sb-admin-mobile-drawer-scroll">
+          {mobileGroups.map((g) => (
+            <div key={g.id} className="sb-admin-mobile-nav-group">
+              <h2>{g.label}</h2>
+              {g.tabs.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  className={tab === t.id && (isMember || g.id === activeViewId) ? 'active' : ''}
+                  onClick={() => pickMobileTab(g.id, t.id)}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div className="sb-admin-mobile-drawer-actions">
+          <a href="/" target="_blank" rel="noreferrer">View Public</a>
+          <button type="button" onClick={logout}>Logout</button>
+        </div>
+      </aside>
 
       <div ref={workspaceRef} className="sb-admin-workspace" style={{ ...styles.workspace, userSelect: dragging ? 'none' : undefined, cursor: dragging ? 'col-resize' : undefined }}>
         {/* Single resolver: figures out which panel/component renders for the
