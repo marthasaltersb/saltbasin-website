@@ -1,12 +1,12 @@
 {
-  "exportedAt": "2026-10-10T20:57:27.184Z",
+  "exportedAt": "2026-10-10T20:58:58.343Z",
   "features": {
     "platform-mcp": {
       "status": "validate",
       "lastRound": 3,
       "lastScore": "65/65",
       "lastReport": "docs/test-results/platform-mcp/round-3.md",
-      "openBugs": 15,
+      "openBugs": 16,
       "backlog": 3
     },
     "release-intelligence": {
@@ -114,10 +114,10 @@
       "backlog": 0
     },
     "production-smoke-regression": {
-      "status": "build",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
+      "status": "failing",
+      "lastRound": 1,
+      "lastScore": "16/25",
+      "lastReport": "docs/test-results/production-smoke-regression/round-1.md",
       "openBugs": 0,
       "backlog": 0
     },
@@ -251,6 +251,90 @@
     }
   },
   "bugs": [
+    {
+      "id": "platform-mcp-PR1-1",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "platform-mcp v4 E.3 (also J2.2)",
+      "rootCause": "saltbasin.net is served by Netlify (netlify.toml); only /api/* is proxied to Render. /mcp is mounted outside /api, so on production no agen…",
+      "files": [
+        "netlify.toml"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Production smoke round 1 (https://github.com/marthasaltersb…",
+          "commit": null
+        }
+      ],
+      "verifyBy": "production",
+      "prodSteps": [
+        "S4.1"
+      ],
+      "stepId": "E.3",
+      "url": "https://saltbasin.net/mcp"
+    },
+    {
+      "id": "qr-gated-outputs-PR1-2",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "qr-gated-outputs v2 J10.1, J10.2 (also J5.1: every live /r/<slug> page)",
+      "rootCause": "Inferred: the frontend bundle Netlify serves predates the /r/:token route (React Router falls through to PublicSite NotFound). The Netlify …",
+      "files": [
+        "netlify.toml"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Production smoke round 1 (https://github.com/marthasaltersb…",
+          "commit": null
+        }
+      ],
+      "verifyBy": "production",
+      "prodSteps": [
+        "S3.4",
+        "S3.6",
+        "R1.1",
+        "R1.2"
+      ],
+      "stepId": "J10.1",
+      "url": "https://saltbasin.net/r/AAAAAAAAAAAAAAAAAAAAAAAA and https://saltbasin.net/r/short"
+    },
+    {
+      "id": "qr-gated-outputs-PR1-3",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "qr-gated-outputs v2 J5.3, J5.4",
+      "rootCause": "The /r/ and /release-tracker/ privacy headers are set only by Express (server/index.js); Netlify serves the HTML, so they never apply. netl…",
+      "files": [
+        "netlify.toml"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Production smoke round 1 (https://github.com/marthasaltersb…",
+          "commit": null
+        }
+      ],
+      "verifyBy": "production",
+      "prodSteps": [
+        "S3.5"
+      ],
+      "stepId": "J5.3",
+      "url": "https://saltbasin.net/r/AAAAAAAAAAAAAAAAAAAAAAAA"
+    },
     {
       "id": "proficiency-live-qr-F2-1",
       "feature": "proficiency-live-qr",
