@@ -27,8 +27,10 @@ export const DEFAULT_RULES = Object.freeze({
   },
   // Files inside the release-log folder that the tracker generates (they are
   // not release logs and carry no Date:). Importing reports each as 'skipped'.
-  // File names only, relative to the release-log folder.
-  generatedFiles: ['release-tracker.md', 'updates.md'],
+  // A name without "/" matches that file name at any depth under the folder
+  // (so frozen copies under releases/<version>/ are covered); a path with "/"
+  // matches that exact path relative to the folder. "*" is a wildcard.
+  generatedFiles: ['release-tracker.md', 'updates.md', 'HANDOVER-*.md'],
   // What happened to a command or agent run. 'failed', 'refused' and
   // 'partial' are required (the importer maps to them); more can be added.
   runStates: ['failed', 'refused', 'partial', 'interrupted'],
@@ -83,13 +85,23 @@ export function validateRules(input) {
   if (!Array.isArray(rules.generatedFiles)) errors.push('generatedFiles must be a list of file names');
   else {
     rules.generatedFiles = [...new Set(rules.generatedFiles.map((v) => String(v ?? '').trim()).filter(Boolean))];
-    for (const f of rules.generatedFiles) if (f.startsWith('/') || f.includes('..') || f.includes('\\') || !/\.md$/i.test(f)) errors.push(`generatedFiles: "${f}" must be a relative .md file name`);
+    for (const f of rules.generatedFiles) if (f.startsWith('/') || f.includes('..') || f.includes('\\') || !/^[A-Za-z0-9_.*\/-]+\.md$/i.test(f)) errors.push(`generatedFiles: "${f}" must be a relative .md file name (letters, digits, "-", "_", "." and "*" only)`);
   }
   if (!TOKEN_MEASURES.includes(rules.defaultTokenMeasure)) errors.push(`defaultTokenMeasure must be one of ${TOKEN_MEASURES.join(', ')}`);
   const ms = Number(rules.maxSeries);
   if (!Number.isInteger(ms) || ms < 1 || ms > 5) errors.push('maxSeries must be a whole number from 1 to 5');
   rules.maxSeries = ms;
   return { rules, errors };
+}
+
+/** True when `relToFolder` (path relative to the release-log folder) matches a generatedFiles pattern. */
+export function isGeneratedFile(relToFolder, patterns) {
+  const rel = String(relToFolder).replace(/\\/g, '/');
+  const base = rel.split('/').pop();
+  return (patterns || []).some((p) => {
+    const re = new RegExp(`^${p.split('*').map((x) => x.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('[^/]*')}$`, 'i');
+    return re.test(p.includes('/') ? rel : base);
+  });
 }
 
 export async function loadRules() {
@@ -105,6 +117,9 @@ export async function loadRules() {
   if (override && typeof override === 'object' && !Array.isArray(override)) {
     const { rules, errors } = validateRules(override);
     if (errors.length) return { rules: { ...DEFAULT_RULES }, overrideError: `Saved rules are invalid, defaults are in use: ${errors.join('; ')}`, overridden: false };
+    // New shipped defaults are merged in additively so an older saved row
+    // still skips generated files added later.
+    rules.generatedFiles = [...new Set([...DEFAULT_RULES.generatedFiles, ...rules.generatedFiles])];
     return { rules, overrideError: null, overridden: true };
   }
   return { rules: { ...DEFAULT_RULES }, overrideError: null, overridden: false };

@@ -14,7 +14,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { db } from '../db.js';
 import { ensureReleaseIntelligenceSchema } from './releaseIntelligenceSchema.js';
-import { loadRules } from './releaseIntelligenceConfig.js';
+import { loadRules, isGeneratedFile } from './releaseIntelligenceConfig.js';
 import { hashText } from './releaseReconcile.js';
 import {
   parseDocument, parseTrackerSnapshot, dispositionFromStatus, inferRunState, normalizeClass,
@@ -363,9 +363,10 @@ export async function importRepository(root, { actor = null } = {}) {
   const order = (f) => (f.startsWith(rules.logLocations.releaseLog) ? 0 : 1);
   files.sort((a, b) => order(a) - order(b) || a.localeCompare(b));
   const documents = []; const errors = [];
-  const generated = new Set((rules.generatedFiles || []).map((f) => `${rules.logLocations.releaseLog}${f}`));
+  const logDir = rules.logLocations.releaseLog;
+  const isGenerated = (rel) => rel.startsWith(logDir) && isGeneratedFile(rel.slice(logDir.length), rules.generatedFiles);
   for (const rel of files) {
-    if (generated.has(rel)) {
+    if (isGenerated(rel)) {
       documents.push({ path: rel, kind: null, status: 'skipped', warnings: ['tracker-generated file listed under "Generated files" in Release Intelligence Settings; not a release log'], counts: {} });
       continue;
     }
