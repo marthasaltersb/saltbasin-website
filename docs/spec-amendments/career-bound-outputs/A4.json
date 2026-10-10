@@ -1,0 +1,25 @@
+{
+  "id": "A4",
+  "feature": "career-bound-outputs",
+  "fromBaseline": 1,
+  "proposedBy": "owner (2026-10-10)",
+  "round": null,
+  "triageItems": [
+    "career-bound-outputs-F3-3",
+    "career-bound-outputs-T3-7"
+  ],
+  "reason": "Owner direction 2026-10-10: 'I want any warning messages to actually appear as the error and not something that a user won't understand, and in whatever color is appropriate.' The current message 'That is not valid JSON: <parser error>' uses developer language and is shown in an amber box.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "E.5",
+      "before": "Pasting text that is not JSON shows \"That is not valid JSON: ...\" in a red box; a package with an unsupported output shows the server's message. Nothing is filed.",
+      "after": "Pasting text that is not a package shows a red error box (role alert) whose first sentence says in plain words what is wrong and what to do, with no developer terms (for example: \"This isn't a valid application package. Check that you pasted the whole package file.\"), followed by the technical detail on a separate line. A package with an unsupported output shows a plain-language red error naming the output that cannot be imported. Nothing is filed.",
+      "tracesTo": "Owner direction 2026-10-10 (plain-language errors, colour by severity); definition.json specGovernance.reviewChecklist rule 'Errors are plain and coloured by severity'",
+      "whyNeeded": "The owner set the rule for how errors read and look; the step must require it."
+    }
+  ],
+  "review": {
+    "status": "proposed"
+  }
+}

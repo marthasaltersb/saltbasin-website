@@ -155,6 +155,7 @@ OAuth provider keys follow the pattern `{PROVIDER}_CLIENT_ID` / `{PROVIDER}_CLIE
 
 - All API calls go through `src/lib/api.js` — always `credentials: 'include'`, always JSON.
 - Toast notifications via `src/lib/toast.js` — `toast.success(msg)` / `toast.error(msg)`.
+- **Errors and warnings are written for the member, coloured by severity** (owner direction 2026-10-10): the first sentence says what went wrong and what to do in plain words (never a bare parser/HTTP/stack message such as "That is not valid JSON: Unexpected token"); technical detail may follow on its own line. Red (`toast.error`, red alert box, `role="alert"`) for a failure or a rejected input; amber only for a caution where nothing failed.
 - Admin styles via `src/components/admin/adminStyles.js` — inline style objects, no CSS modules.
 - CSS variables (colors, fonts) defined in `src/brand.css` under `--sb-*` prefix (not `index.css` — corrected 2026-07-16).
 - No test framework. No TypeScript. ESM throughout (`"type": "module"` in package.json).

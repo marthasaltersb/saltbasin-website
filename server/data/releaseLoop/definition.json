@@ -2,7 +2,7 @@
   "key": "salt_basin_release_loop",
   "version": 4,
   "name": "Salt Basin release loop",
-  "summary": "Every code change moves build → initial check → integrate → browser validation → triage → fix → re-validate, looping until every training journey passes or a failure needs a business definition. Every step leaves a dated log traced to the version before it.",
+  "summary": "Every code change moves build \u2192 initial check \u2192 integrate \u2192 browser validation \u2192 triage \u2192 fix \u2192 re-validate, looping until every training journey passes or a failure needs a business definition. Every step leaves a dated log traced to the version before it.",
   "roles": [
     {
       "key": "release_builder",
@@ -122,8 +122,8 @@
       "the feature's own journeys pass when the builder walks them once",
       "when tools/release-tracker/ changed: node tools/release-tracker/sync-setup-guide.mjs exits 0 (embedded page copy matches index.html)"
     ],
-    "validation": "Every step of every journey in the feature's training spec passes in a real browser twice — point-and-click on desktop and as a full walkthrough at 390px — with no page errors and no failed network requests the spec does not expect, and every capability is also reachable through the API and an MCP tool (see interfaceParity).",
-    "noSilentCaps": "When a feature reaches maxFixRounds still failing, it is recorded as not passed with its open triage items — never reported as done.",
+    "validation": "Every step of every journey in the feature's training spec passes in a real browser twice \u2014 point-and-click on desktop and as a full walkthrough at 390px \u2014 with no page errors and no failed network requests the spec does not expect, and every capability is also reachable through the API and an MCP tool (see interfaceParity).",
+    "noSilentCaps": "When a feature reaches maxFixRounds still failing, it is recorded as not passed with its open triage items \u2014 never reported as done.",
     "push": "The integration branch is pushed only when the release log shows every feature passed, or the owner says otherwise.",
     "baseline": "Before validation round 1 a frozen baseline exists for the feature, and release-spec-baseline.mjs check passes on every merge (specGovernance)."
   },
@@ -165,9 +165,9 @@
       "Fix notes per round (appended by fix agents)"
     ],
     "trainingSpec": [
-      "Where things are (reachable from the UI — no API-only configuration)",
+      "Where things are (reachable from the UI \u2014 no API-only configuration)",
       "Preconditions with fictional data",
-      "Numbered journeys: action → exact expected result",
+      "Numbered journeys: action \u2192 exact expected result",
       "Edge cases"
     ],
     "testResult": [
@@ -201,10 +201,10 @@
     "when": "End of every session (Claude Code or in-app agent run)",
     "does": "Analyse the session: what was learned or repeated, and where each piece belongs so the next session doesn't re-derive it",
     "destinations": {
-      "context": "CLAUDE.md / skill reference docs — stable facts every session needs",
-      "prompt": "skills, saved workflows, agent role prompts — repeatable procedures",
+      "context": "CLAUDE.md / skill reference docs \u2014 stable facts every session needs",
+      "prompt": "skills, saved workflows, agent role prompts \u2014 repeatable procedures",
       "cache": "stable prompt prefixes and reusable reference blocks kept unchanged so they stay cached",
-      "memory": "the agent memory register (docs/active-universal-salt-basin-agent-memory-register.md) — decisions, preferences, open questions"
+      "memory": "the agent memory register (docs/active-universal-salt-basin-agent-memory-register.md) \u2014 decisions, preferences, open questions"
     },
     "metrics": [
       "input, cache-write, cache-read and output tokens",
@@ -233,12 +233,12 @@
   },
   "tracker": "Every agent start/finish, bug and status change is shown live in the release tracker (the tracker artifact in the Claude Code session, synced from the workflow journal by scripts/release-tracker-sync.mjs; there is no platform screen).",
   "failureReconciliation": {
-    "rule": "An agent finishing is not the work finishing. Every failure, refusal, partial step, known limitation or deviation an agent reports is reconciled by a separate agent that verifies it on the branch and classifies it (product_defect, requirement_gap, owner_direction_conflict, test_harness, environment, process, informational) as resolved — only with evidence — or unresolved. Unresolved items are carried into the fix loop as bugs; a feature cannot pass while any remain.",
+    "rule": "An agent finishing is not the work finishing. Every failure, refusal, partial step, known limitation or deviation an agent reports is reconciled by a separate agent that verifies it on the branch and classifies it (product_defect, requirement_gap, owner_direction_conflict, test_harness, environment, process, informational) as resolved \u2014 only with evidence \u2014 or unresolved. Unresolved items are carried into the fix loop as bugs; a feature cannot pass while any remain.",
     "report": "docs/triage/<feature>-<build|fix>[-rN]-reconciliation.md"
   },
   "liveLogging": "Validators append each checked expectation and every page error or failed request to /var/tmp/.../<feature>/round-N/steps.jsonl as it happens; the tracker shows them live, so a failure is visible before the round ends.",
   "scopeCheck": {
-    "rule": "After triage and before fixing, a scope agent decides whose bug each item is: this_feature (the feature's diff or spec caused it — it blocks the feature), pre_existing (it reproduces on the base before this feature's commits — backlog, non-blocking), other_feature (another feature's change caused it — reassigned to that feature as owner, non-blocking here), or process_note (a test-harness, environment or spec-wording problem, not a product bug — recorded, non-blocking). Each decision carries evidence (a base-branch reproduction, the commit that introduced it, or the file it lives in). A feature whose only remaining items are out of scope ends as passed_with_backlog; the backlog stays on the tracker and is never deleted. Exception (2026-10-10): an item that makes a frozen step of THIS feature fail stays this feature’s to fix whatever its scope (older code or another feature’s file); a feature never ends passed or passed_with_backlog while a baseline step fails. Bug ids are qualified with the feature key (<feature>-<id>).",
+    "rule": "After triage and before fixing, a scope agent decides whose bug each item is: this_feature (the feature's diff or spec caused it \u2014 it blocks the feature), pre_existing (it reproduces on the base before this feature's commits \u2014 backlog, non-blocking), other_feature (another feature's change caused it \u2014 reassigned to that feature as owner, non-blocking here), or process_note (a test-harness, environment or spec-wording problem, not a product bug \u2014 recorded, non-blocking). Each decision carries evidence (a base-branch reproduction, the commit that introduced it, or the file it lives in). A feature whose only remaining items are out of scope ends as passed_with_backlog; the backlog stays on the tracker and is never deleted. Exception (2026-10-10): an item that makes a frozen step of THIS feature fail stays this feature\u2019s to fix whatever its scope (older code or another feature\u2019s file); a feature never ends passed or passed_with_backlog while a baseline step fails. Bug ids are qualified with the feature key (<feature>-<id>).",
     "scopes": [
       "this_feature",
       "pre_existing",
@@ -248,7 +248,7 @@
     "decisionsFile": "docs/triage/scope-review.json"
   },
   "interfaceParity": {
-    "rule": "Every capability a training spec exercises must be usable through all three interfaces: (1) the website — point-and-click from the World Shell on desktop AND a full walkthrough at 390px phone width, with no typed URLs, API calls, scripts or database edits standing in for any step or precondition (test accounts from scripts/create-test-member.mjs are the only setup exception); (2) the API — the same route the UI uses, with the same permission checks; (3) MCP — a tool in the platform MCP server (server/lib/mcpToolRegistry.js) that calls the same server function, with the same permission checks. A step that can only be done through an API, script or typed URL fails as a UI gap. A capability with no MCP tool fails as an MCP gap once the platform MCP server exists; before that, it is recorded and assigned to the platform-mcp feature.",
+    "rule": "Every capability a training spec exercises must be usable through all three interfaces: (1) the website \u2014 point-and-click from the World Shell on desktop AND a full walkthrough at 390px phone width, with no typed URLs, API calls, scripts or database edits standing in for any step or precondition (test accounts from scripts/create-test-member.mjs are the only setup exception); (2) the API \u2014 the same route the UI uses, with the same permission checks; (3) MCP \u2014 a tool in the platform MCP server (server/lib/mcpToolRegistry.js) that calls the same server function, with the same permission checks. A step that can only be done through an API, script or typed URL fails as a UI gap. A capability with no MCP tool fails as an MCP gap once the platform MCP server exists; before that, it is recorded and assigned to the platform-mcp feature.",
     "surfaces": [
       "desktop_point_and_click",
       "mobile_390_walkthrough",
@@ -308,7 +308,8 @@
       "Reachable: the step is walkable by point-and-click on desktop and at 390px (interfaceParity), or is a cli step by design.",
       "Deterministic: same result every run against the fixed constraints (no dependence on wall-clock time, random data, earlier failed steps, or leftovers from another test); timing tolerances are stated.",
       "Fictional data only; fixtures written in the spec, never fetched.",
-      "Independent of the fix: the step tests behaviour, not the implementation the fixer chose."
+      "Independent of the fix: the step tests behaviour, not the implementation the fixer chose.",
+      "Errors are plain and coloured by severity: any step that checks an error or warning requires the message to state the actual problem in plain words a member understands (no developer terms such as JSON, 500, null as the main message; technical detail may follow on its own line), and the colour that fits: red for a failure or a rejected input, amber only for a caution where nothing failed (owner direction 2026-10-10)."
     ],
     "testConstraints": {
       "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",

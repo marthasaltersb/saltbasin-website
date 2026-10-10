@@ -20,8 +20,8 @@
     }
   ],
   "review": {
-    "status": "needs_owner",
-    "reviewer": "amend:career-bound-outputs:r4",
+    "status": "rejected",
+    "reviewer": "owner",
     "checklist": {
       "Traced": "pass",
       "Not weaker": "pass",
@@ -32,9 +32,9 @@
       "Fictional data only": "pass",
       "Independent of the fix": "pass"
     },
-    "note": "The change spec does not require red, so the old wording is likely over-specific, but the replacement is not exact enough to approve and the colour/convention is a product rule. Round 4: Round 4 re-proposal (F3-3, spec_error) is now exact (amber warning box) but states a product colour rule the owner has not confirmed, and omits role=alert. Same owner question as before; not asked again.",
+    "note": "Owner direction 2026-10-10: 'I want any warning messages to actually appear as the error and not something that a user won't understand, and in whatever color is appropriate.' Every error or warning states the actual problem in plain words a member understands, styled by severity (red for a failure or a rejected input; amber only for a caution where nothing failed). An invalid package is a rejected input, so it is red, not amber. Replaced by amendment A4.",
     "question": "Confirm the product rule for E.5: the invalid-JSON message \"That is not valid JSON: ...\" must appear in the standard amber warning box (the one used for other errors in Career Sources to Review) exposed as role=\"alert\"; red is not required. If yes, the step can say exactly that and be approved.",
-    "at": "2026-10-10T00:00:00Z"
+    "at": "2026-10-10T19:40:25Z"
   },
   "additionalProposals": [
     {
