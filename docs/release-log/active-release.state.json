@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T01:33:15.509Z",
+  "exportedAt": "2026-10-10T01:36:35.623Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -82,10 +82,10 @@
       "backlog": 2
     },
     "cover-letter-agent": {
-      "status": "validate",
-      "lastRound": 1,
-      "lastScore": "38/46",
-      "lastReport": "docs/test-results/cover-letter-agent/round-1.md",
+      "status": "triage",
+      "lastRound": 2,
+      "lastScore": "45/48",
+      "lastReport": "docs/test-results/cover-letter-agent/round-2.md",
       "openBugs": 23,
       "backlog": 8
     },
@@ -98,11 +98,11 @@
       "backlog": 1
     },
     "session-mapping": {
-      "status": "validate",
-      "lastRound": 1,
+      "status": "fix",
+      "lastRound": 2,
       "lastScore": "56/56",
-      "lastReport": "docs/test-results/session-mapping/round-1.md",
-      "openBugs": 5,
+      "lastReport": "docs/test-results/session-mapping/round-2.md",
+      "openBugs": 0,
       "backlog": 1
     },
     "live-release-tracker": {
@@ -7492,7 +7492,7 @@
     {
       "id": "cover-letter-agent-T2",
       "feature": "cover-letter-agent",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "defect",
       "attempts": 1,
       "step": "J1.2: first-draft letter uses Career Master key metrics",
@@ -7525,7 +7525,7 @@
     {
       "id": "cover-letter-agent-T3",
       "feature": "cover-letter-agent",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "defect",
       "attempts": 1,
       "step": "J8.4: 'Make it more formal' must be tagged Answered by rules",
@@ -7556,7 +7556,7 @@
     {
       "id": "cover-letter-agent-T4",
       "feature": "cover-letter-agent",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "defect",
       "attempts": 1,
       "step": "E.5: agent scope text with no job rec text",
@@ -7663,7 +7663,7 @@
     {
       "id": "cover-letter-agent-T8",
       "feature": "cover-letter-agent",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "defect",
       "attempts": 1,
       "step": "MCP_GAP: MCP tools for each capability the spec exercises",
@@ -7970,22 +7970,24 @@
     {
       "id": "session-mapping-B5",
       "feature": "session-mapping",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "MCP parity",
-      "rootCause": "Build branch cut before platform-mcp merged; the six planned tools were never built",
-      "files": [
-        "server/lib/mcpToolRegistry.js",
-        "server/data/mcpToolManifest.json",
-        "server/lib/sessionMapping.js"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step of baseline v1",
           "commit": null
         }
       ]
@@ -7993,22 +7995,24 @@
     {
       "id": "session-mapping-B7",
       "feature": "session-mapping",
-      "status": "open",
+      "status": "verified",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Admin navigation entry points",
-      "rootCause": "Classic admin-menu entry point added and documented as a supported route although owner direction is World Shell only",
-      "files": [
-        "server/db.js",
-        "src/components/admin/AdminShell.jsx",
-        "src/lib/worldIslands.js"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step of baseline v1",
           "commit": null
         }
       ]
@@ -8016,16 +8020,12 @@
     {
       "id": "session-mapping-B8",
       "feature": "session-mapping",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "SessionEnd hook capture",
-      "rootCause": "Hook files directly to the database, so default dev environment captures nothing automatically",
-      "files": [
-        "scripts/analyze-session.mjs",
-        "server/lib/sessionMapping.js",
-        ".claude/settings.json"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
@@ -8033,26 +8033,40 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step of baseline v1",
+          "commit": null
         }
       ]
     },
     {
       "id": "session-mapping-F1-2",
       "feature": "session-mapping",
-      "status": "open",
+      "status": "verified",
       "class": "product_defect",
       "attempts": 0,
       "step": "session_mapping_config_save with {nope:1}",
-      "rootCause": "validateRules does not reject unknown top-level keys, so junk keys persist in config_state session_mapping_rules.",
-      "files": [
-        "server/lib/sessionMappingConfig.js"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 1,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step of baseline v1",
           "commit": null
         }
       ]
@@ -8060,33 +8074,29 @@
     {
       "id": "session-mapping-T1",
       "feature": "session-mapping",
-      "status": "retesting",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "MCP_GAP: no session_mapping_* MCP tools (open bug session-mapping-B5)",
-      "rootCause": "docs/changes/session-mapping.md deferred MCP because mcpToolRegistry.js did not exist when the spec was frozen. The registry now exists (pl…",
-      "files": [
-        "server/lib/mcpToolRegistry.js",
-        "server/data/mcpToolManifest.json",
-        "server/lib/capabilityParity.js"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Registry commit b77049b (platform-mcp, 2026-10-09 16:34) predates session-mapping build 3…"
+        "evidence": null
       },
       "history": [
-        {
-          "round": 1,
-          "event": "found",
-          "note": "docs/changes/session-mapping.md deferred MCP because mcpToo…",
-          "commit": null
-        },
         {
           "round": 1,
           "event": "fixed",
           "note": "Added scopes sessions.read and sessions.write and ten admin…",
           "commit": "e027ef92302fe3d21110f900f08a93e24eed7a0c"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step",
+          "commit": "160edab6e3246a00524a60c3aff2b83a4f1fa163"
         }
       ]
     },
