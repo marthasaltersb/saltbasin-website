@@ -1,0 +1,37 @@
+{
+  "id": "A1",
+  "feature": "in-app-release-loop",
+  "fromBaseline": 1,
+  "proposedBy": "triage:in-app-release-loop:r2",
+  "round": 2,
+  "triageItems": [
+    "T2 (round 1)"
+  ],
+  "reason": "E.8 asserts mcpToolRegistry.js is absent; it exists since platform-mcp landed, so the step cannot pass and is not deterministic.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "E.8",
+      "before": "Run `ls server/lib/mcpToolRegistry.js`. At this baseline it prints `ls: cannot access ... No such file or directory`. Record it as an MCP gap assigned to the `platform-mcp` feature; it does not fail this feature.",
+      "after": "Run `ls server/lib/mcpToolRegistry.js` and `node scripts/check-interface-parity.mjs`. Expect the file to exist, `server/data/mcpToolManifest.json` to list all 13 names `release_loop_get_definition`, `release_loop_save_definition`, `release_loop_list_runs`, `release_loop_start_run`, `release_loop_get_run`, `release_loop_transition_run`, `release_loop_record_round`, `release_loop_log_step`, `release_loop_add_bug`, `release_loop_bug_action`, `release_loop_add_reconciliation`, `release_loop_resolve_reconciliation` and `release_loop_list_escalations`, and the parity script to print a final line `OK: the registry matches the code.` The tools call the exports of `server/lib/releaseLoopPlatform.js` and `server/lib/releaseLoopDefinition.js`.",
+      "tracesTo": "definition.json interfaceParity; docs/changes/in-app-release-loop.md T1/B1 fix round 1; platform-mcp b77049b",
+      "whyNeeded": "The old step cannot pass after platform-mcp landed; the replacement checks the stable owner-directed MCP parity outcome."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:in-app-release-loop:r2",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass: the old step asserted a past repo state (file absent) that contradicts the change spec and owner direction once platform-mcp landed; the replacement is stricter (file, 13 named tools, parity script output)",
+      "Retire only duplicates": "pass: nothing retired",
+      "Exact": "pass: exact command, 13 exact tool names, exact final output line",
+      "Reachable": "pass: cli step by design",
+      "Deterministic": "pass: depends only on committed files and the parity script, not on a past state",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass: tests the owner-directed outcome that every capability has an MCP tool, not an implementation choice"
+    },
+    "note": "Verified at integration head: file exists, manifest lists all 13 release_loop_* names, parity script prints OK.",
+    "at": "2026-10-10T01:00:00Z"
+  }
+}
