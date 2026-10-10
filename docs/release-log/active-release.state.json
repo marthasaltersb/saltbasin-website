@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T21:10:00.996Z",
+  "exportedAt": "2026-10-10T21:13:13.365Z",
   "features": {
     "platform-mcp": {
       "status": "validate",
@@ -10,7 +10,7 @@
       "backlog": 3
     },
     "release-intelligence": {
-      "status": "failing",
+      "status": "fix",
       "lastRound": 4,
       "lastScore": "54/55",
       "lastReport": "docs/test-results/release-intelligence/round-4.md",
@@ -18,7 +18,7 @@
       "backlog": 2
     },
     "in-app-release-loop": {
-      "status": "fix",
+      "status": "awaiting_retest",
       "lastRound": 4,
       "lastScore": "59/60",
       "lastReport": "docs/test-results/in-app-release-loop/round-4.md",
@@ -34,15 +34,15 @@
       "backlog": 1
     },
     "chart-gallery": {
-      "status": "validate",
-      "lastRound": 5,
+      "status": "triage",
+      "lastRound": 6,
       "lastScore": "18/20",
-      "lastReport": ".claude/worktrees/wf_cbb72b20-566-9/docs/test-results/chart-gallery/round-5.md",
+      "lastReport": "docs/test-results/chart-gallery/round-6.md",
       "openBugs": 24,
       "backlog": 11
     },
     "release-cut-and-session-plans": {
-      "status": "build",
+      "status": "reconcile",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -74,10 +74,10 @@
       "backlog": 6
     },
     "resume-rollups": {
-      "status": "validate",
-      "lastRound": 3,
+      "status": "triage",
+      "lastRound": 4,
       "lastScore": "30/32",
-      "lastReport": "docs/test-results/resume-rollups/round-3.md",
+      "lastReport": "docs/test-results/resume-rollups/round-4.md",
       "openBugs": 17,
       "backlog": 5
     },
@@ -256,6 +256,14 @@
       "lastReport": null,
       "openBugs": 0,
       "backlog": 0
+    },
+    "journey-flow-import-existing": {
+      "status": "queued",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
     }
   },
   "bugs": [
@@ -289,7 +297,7 @@
     {
       "id": "release-intelligence-RI-R1-1",
       "feature": "release-intelligence",
-      "status": "open",
+      "status": "fixing",
       "class": "defect",
       "attempts": 0,
       "step": "node scripts/import-release-logs.mjs run twice against the same database exits 0, prints imported/updated then only unchanged, warns for documents missing a ve…",
@@ -318,7 +326,7 @@
       "feature": "in-app-release-loop",
       "status": "reassigned",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Layout, both passes: no horizontal scroll and every visible control at least 44px tall",
       "rootCause": null,
       "files": [],
@@ -333,6 +341,12 @@
           "event": "found",
           "note": "src/components/WorldBreadcrumbs.jsx: crumbBtn (line 18) has…",
           "commit": null
+        },
+        {
+          "round": 4,
+          "event": "fixed",
+          "note": "Moved the 44px minimum height (with inline-flex, align-item…",
+          "commit": "65e21792a8602829b13d01ab9ecbd1651efca038"
         }
       ]
     },
