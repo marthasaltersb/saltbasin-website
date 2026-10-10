@@ -53,6 +53,9 @@ export function validateRules(input) {
   const errors = [];
   const src = input && typeof input === 'object' && !Array.isArray(input) ? input : null;
   if (!src) return { rules: null, errors: ['Rules must be an object'] };
+  const ALLOWED_KEYS = ['currency', 'prices', 'idleCapMinutes', 'transcriptsDir', 'thresholds', 'targets', 'maxSeries'];
+  const unknown = Object.keys(src).filter((k) => !ALLOWED_KEYS.includes(k));
+  if (unknown.length) errors.push(`unknown rule key${unknown.length > 1 ? 's' : ''}: ${unknown.map((k) => `"${k}"`).join(', ')} (allowed: ${ALLOWED_KEYS.join(', ')})`);
   const rules = { ...DEFAULT_RULES, ...src };
 
   rules.currency = String(rules.currency || '').trim().toUpperCase();
