@@ -1,11 +1,11 @@
 {
-  "exportedAt": "2026-10-10T01:06:38.135Z",
+  "exportedAt": "2026-10-10T01:09:58.922Z",
   "features": {
     "proficiency-live-qr": {
-      "status": "validate",
-      "lastRound": 6,
-      "lastScore": "29/32",
-      "lastReport": "docs/test-results/proficiency-live-qr/round-6.md",
+      "status": "triage",
+      "lastRound": 7,
+      "lastScore": "30/32",
+      "lastReport": "docs/test-results/proficiency-live-qr/round-7.md",
       "openBugs": 19,
       "backlog": 6
     },
@@ -66,10 +66,10 @@
       "backlog": 6
     },
     "resume-rollups": {
-      "status": "validate",
-      "lastRound": 2,
+      "status": "scope",
+      "lastRound": 3,
       "lastScore": "30/32",
-      "lastReport": "docs/test-results/resume-rollups/round-2.md",
+      "lastReport": "docs/test-results/resume-rollups/round-3.md",
       "openBugs": 13,
       "backlog": 5
     },
@@ -98,11 +98,11 @@
       "backlog": 1
     },
     "session-mapping": {
-      "status": "reconcile",
+      "status": "validate",
       "lastRound": 1,
       "lastScore": "56/56",
       "lastReport": "docs/test-results/session-mapping/round-1.md",
-      "openBugs": 4,
+      "openBugs": 5,
       "backlog": 1
     },
     "live-release-tracker": {
@@ -831,7 +831,7 @@
     {
       "id": "proficiency-live-qr-T6-1",
       "feature": "proficiency-live-qr",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "defect",
       "attempts": 1,
       "step": "J5.2 MOBILE_GAP rows unidentifiable (blank selects)",
@@ -894,7 +894,7 @@
     {
       "id": "proficiency-live-qr-T6-4",
       "feature": "proficiency-live-qr",
-      "status": "retesting",
+      "status": "retest_failed_pending_triage",
       "class": "defect",
       "attempts": 1,
       "step": "MCP_GAP no MCP tools for proficiency rules, category, override, formula, certification bonus, live QR",
@@ -5917,7 +5917,7 @@
       "status": "backlog_pre_existing",
       "class": "defect",
       "attempts": 0,
-      "step": "UI_GAP/MOBILE_GAP: Open /output/resume?layout=modern; expect member's configured tiles",
+      "step": "UI_GAP/MOBILE_GAP: Open resume output (modern layout); member's own configured tiles expe…",
       "rootCause": null,
       "files": [],
       "scope": {
@@ -5927,15 +5927,15 @@
       },
       "history": [
         {
-          "round": 1,
-          "event": "found",
-          "note": "resumeUrls.js (LAYOUT_URLS/resumeUrlFromPreset) and MyResum…",
-          "commit": null
-        },
-        {
           "round": 2,
           "event": "recurred",
           "note": "Recurrence of round-1 RR1-3, which was never fixed. My Resu…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "recurred",
+          "note": "Third occurrence, the fix was never applied. src/lib/resume…",
           "commit": null
         }
       ]
@@ -5946,7 +5946,7 @@
       "status": "backlog_pre_existing",
       "class": "defect",
       "attempts": 0,
-      "step": "Only expected console noise (mobile walkthrough)",
+      "step": "Only expected console noise",
       "rootCause": null,
       "files": [],
       "scope": {
@@ -5956,15 +5956,15 @@
       },
       "history": [
         {
-          "round": 1,
-          "event": "found",
-          "note": "MyResumePanel.loadPresets (~line 675) synthesises a preset …",
-          "commit": null
-        },
-        {
           "round": 2,
           "event": "recurred",
           "note": "Recurrence of round-1 RR1-4, which was never fixed. MyResum…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "recurred",
+          "note": "Third occurrence, the fix was never applied. MyResumePanel.…",
           "commit": null
         }
       ]
@@ -7563,9 +7563,30 @@
       ]
     },
     {
+      "id": "session-mapping-F1-2",
+      "feature": "session-mapping",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "session_mapping_config_save with {nope:1}",
+      "rootCause": "validateRules does not reject unknown top-level keys, so junk keys persist in config_state session_mapping_rules.",
+      "files": [
+        "server/lib/sessionMappingConfig.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "session-mapping-T1",
       "feature": "session-mapping",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "MCP_GAP: no session_mapping_* MCP tools (open bug session-mapping-B5)",
