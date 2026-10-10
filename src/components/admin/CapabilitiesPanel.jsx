@@ -78,6 +78,7 @@ export default function CapabilitiesPanel() {
         <button type="button" aria-pressed={gapsOnly} onClick={() => setGapsOnly(true)}>Gaps only</button>
       </div>
       {!data && !error && <div className="sub">Loading...</div>}
+      {data && !error && gapsOnly && rows.length === 0 && <div className="sub" role="status">No gaps: every capability works on the website, in the API and as an MCP tool.</div>}
       {groups.map((g) => (
         <div key={g}>
           <div className="group">{g}</div>
