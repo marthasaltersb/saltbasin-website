@@ -451,6 +451,31 @@
           "reason": "Owner request 2026-10-10: leverage Graphify to produce visuals for the existing data model (resolves the open Graphify-trial question)."
         }
       ]
+    },
+    {
+      "key": "tracker-world-navigation",
+      "title": "Release tracker World view as the whole navigation: labelled objects that open data views with related and journey highlights, current vs historic",
+      "trainingSpec": "docs/training/tracker-world-navigation.md",
+      "changeSpec": "docs/changes/tracker-world-navigation.md",
+      "build": "Redesign the World mode of BOTH tracker surfaces with one shared engine: the artifact page tools/release-tracker/index.html (keep tools/release-tracker/SETUP-FOR-CLAUDE.md in sync with node tools/release-tracker/sync-setup-guide.mjs --write) and the platform screen src/components/releaseTracker/TrackerWorld.jsx (World Shell Release tracker island). Requirements: (1) The world IS the whole view (full width; data views open as layers over/inside it, not a disconnected orbit beside a side panel). (2) Every object is identifiable at a glance: persistent readable labels (name, status, score), a legend in place, structure that means something (e.g. the three scope groups from server/lib/releaseScope.js — This release / Added after the cut / Backlog — as distinct rings or districts; features as crystals; bugs, rounds and agents as their satellites), no unlabeled geometry. (3) Clicking an object opens ITS data view (feature: rounds, step scores, bugs, agents, scope/added reason; bug: history, root cause, fix attempts; agent: activity, tokens) and highlights in the world everything related to it (its bugs, the agents working on it, features it depends on or shares bugs with), dimming the rest. (4) Journey-specific highlights: for the selected object, show its journey through the release (rounds over time, bug found -> fixing -> verified) with a Current vs Historic toggle and the existing time slider; historic state draws from tracker/history and visibly marks what changed between the chosen point and now. (5) Navigation makes sense: one layer stack shared with the Board view (same #/ trail tokens and breadcrumb), Back pops exactly one layer, camera moves to the selected object and returns on Back, keyboard and touch work, phone 390px is usable (labels may collapse into a list, but every object stays reachable). (6) Reduced motion respected; no fabricated values ('not tested' never drawn as 0). Follow crystal design conventions (src/lib/crystalGeometry.js). Write docs/changes/tracker-world-navigation.md and docs/training/tracker-world-navigation.md with literal journeys (artifact page via the local preview harness tools/release-tracker/preview.html/serve.mjs with a fixture, and the platform island with a pasted snapshot), freeze baseline v1. Fictional data only in fixtures.",
+      "dependsOn": [],
+      "kind": "new",
+      "scope": "planned",
+      "added": {
+        "at": "2026-10-10T21:07:42.589Z",
+        "commit": "e26ffb0",
+        "decidedBy": "owner",
+        "reason": "Owner feedback 2026-10-10: the World view is a disconnected 3D orbit; nobody can tell what objects are or where navigation goes. It must be the whole view, where objects take the user to a view of data with related-data highlights and journey-specific highlights for historic and current state."
+      },
+      "scopeHistory": [
+        {
+          "at": "2026-10-10T21:07:42.589Z",
+          "from": null,
+          "to": "planned",
+          "decidedBy": "owner",
+          "reason": "Owner feedback 2026-10-10: the World view is a disconnected 3D orbit; nobody can tell what objects are or where navigation goes. It must be the whole view, where objects take the user to a view of data with related-data highlights and journey-specific highlights for historic and current state."
+        }
+      ]
     }
   ],
   "startedAtCommit": "4df3ff7",
