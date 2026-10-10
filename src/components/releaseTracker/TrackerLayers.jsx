@@ -124,6 +124,33 @@ function AgentCards({ list, ctx }) {
   );
 }
 
+// The release's scope at a glance (top of the overview): features and their open bugs per group.
+export const SCOPE_GROUPS = [
+  ['planned', 'This release: planned work', 'Planned at the cut plus anything added into planned. Only these count toward the release.'],
+  ['added', 'Added after the cut', 'Features that joined after the release was cut, with when, why and whether they count.'],
+  ['backlog', 'Backlog: not this release', 'Everything kept on the record but not worked or counted in this release, including features added after the cut into backlog.'],
+];
+function scopeMembers(snap, key) {
+  const g = groupByScope((snap.features || []).filter((f) => f.scope !== 'not_in_release'));
+  if (key === 'planned') return [...g.planned, ...g.added.filter((f) => f.scope === 'planned')];
+  if (key === 'backlog') return [...g.backlog, ...g.added.filter((f) => f.scope !== 'planned')];
+  return g[key] || [];
+}
+function ScopeSummary({ ctx }) {
+  const { snap, href } = ctx;
+  if (!(snap.features || []).some((f) => f.scope)) return null;
+  const openOf = (list) => list.reduce((n, f) => n + ownBugs(snap, f.key).filter((b) => b.status !== 'verified').length, 0);
+  return (
+    <Section title={`Release ${snap.release?.version || ''} scope: this release vs backlog`}>
+      <div className="rt-strip">{SCOPE_GROUPS.map(([key, label]) => {
+        const list = scopeMembers(snap, key); const passed = list.filter((f) => ['passed', 'passed_with_backlog'].includes(f.status)).length;
+        const sub = key === 'added' ? `${list.filter((f) => f.scope === 'planned').length} counted in this release · ${list.filter((f) => f.scope !== 'planned').length} in backlog` : `${passed} of ${list.length} passed`;
+        return <a key={key} className={`rt-stat${key === 'planned' ? ' good' : ''}`} href={href('scope', key)} data-testid={`rt-scope-${key}`}><div className="rt-n">{list.length}</div><div className="rt-l">{label}</div><div className="rt-muted" style={{ fontSize: 12, marginTop: 2 }}>{sub} · {openOf(list)} open bugs</div><div className="rt-go">Open ›</div></a>;
+      })}</div>
+    </Section>
+  );
+}
+
 export function RoundLayer(ctx, f, n) {
   const { snap, href } = ctx;
   const agents = snap.agents.filter((a) => a.feature === f.key);
@@ -151,6 +178,7 @@ export const LAYERS = {
       crumbs: [],
       node: (
         <>
+          <ScopeSummary ctx={ctx} />
           <TrackerTrends ctx={ctx} />
           <div className="rt-strip">{Object.entries(STATS).map(([key, st]) => (
             <a key={key} className={`rt-stat ${st.tone}`} href={href('stat', key)}><div className="rt-n">{String(st.count(snap))}</div><div className="rt-l">{st.label}</div><div className="rt-go">Open ›</div></a>
@@ -158,6 +186,20 @@ export const LAYERS = {
           {human ? <a className="rt-callout" href={href('stat', 'human')}><b>{human} {human === 1 ? 'bug needs' : 'bugs need'} a person.</b> Open them ›</a> : null}
           <Section title="Agents working now"><AgentCards list={snap.agents.filter((a) => a.status === 'running')} ctx={ctx} /></Section>
           <FeatureSections snap={snap} ctx={ctx} />
+        </>
+      ),
+    };
+  },
+  scope: (ctx, [key]) => {
+    const def = SCOPE_GROUPS.find(([k]) => k === key); if (!def) return null;
+    const list = scopeMembers(ctx.snap, key);
+    return {
+      crumbs: [[def[1]]],
+      node: (
+        <>
+          <div><h3 className="rt-layer-title">{def[1]}: {list.length}</h3><div className="rt-layer-sub">{def[2]}</div></div>
+          {key === 'added' ? <div className="rt-panel rt-muted" style={{ padding: '10px 14px' }}>{list.map((f) => <div key={f.key} style={{ marginBottom: 6 }}><b>{f.key}</b> · added {String(f.added?.at || '').slice(0, 10)}{f.added?.commit ? ` (${f.added.commit})` : ''} · {f.scope === 'planned' ? 'counted in this release' : 'kept in backlog'} · {f.added?.reason || ''}</div>)}</div> : null}
+          <FeatureRows list={list} ctx={ctx} />
         </>
       ),
     };

@@ -406,6 +406,28 @@ function scopeGroups(s) {
   }
   return out;
 }
+// The release's scope at a glance (top of the overview): features and their open bugs per group.
+const SCOPE_GROUPS = [
+  ['planned', 'This release: planned work', 'Planned at the cut plus anything added into planned. Only these count toward the release.'],
+  ['added', 'Added after the cut', 'Features that joined after the release was cut, with when, why and whether they count.'],
+  ['backlog', 'Backlog: not this release', 'Everything kept on the record but not worked or counted in this release, including features added after the cut into backlog.'],
+];
+function scopeMembers(s, key) {
+  const g = scopeGroups(s);
+  if (key === 'planned') return [...g.planned, ...g.added.filter((f) => f.scope === 'planned')];
+  if (key === 'backlog') return [...g.backlog, ...g.added.filter((f) => f.scope !== 'planned')];
+  return g[key] || [];
+}
+function scopeSummary(s) {
+  if (!(s.features || []).some((f) => f.scope)) return '';
+  const openOf = (list) => list.reduce((n, f) => n + ownBugs(f.key).filter((b) => b.status !== 'verified').length, 0);
+  const tiles = SCOPE_GROUPS.map(([key, label]) => {
+    const list = scopeMembers(s, key); const passed = list.filter((f) => ['passed', 'passed_with_backlog'].includes(f.status)).length;
+    const sub = key === 'added' ? `${list.filter((f) => f.scope === 'planned').length} counted in this release · ${list.filter((f) => f.scope !== 'planned').length} in backlog` : `${passed} of ${list.length} passed`;
+    return `<a class="stat${key === 'planned' ? ' good' : ''}" href="${href('scope', key)}" data-testid="rt-scope-${key}"><div class="n">${list.length}</div><div class="l">${esc(label)}</div><div class="d muted" style="font-size:12px;margin-top:2px">${esc(sub)} · ${openOf(list)} open bugs</div><div class="go">Open ›</div></a>`;
+  }).join('');
+  return section(`Release ${s.release?.version || ''} scope: this release vs backlog`, `<div class="strip">${tiles}</div>`);
+}
 function featureSections(s) {
   if (!(s.features || []).some((f) => f.scope)) return section('Features', featureRows(s.features));
   const g = scopeGroups(s); const done = g.planned.filter((f) => f.status === 'passed' || f.status === 'passed_with_backlog').length;
@@ -1027,6 +1049,7 @@ const LAYERS = {
     const ups = s.updates || []; const u = ups[ups.length - 1];
     return { crumbs: [], html: `
       ${VIEWING ? `<div class="frozen-note"><b>Release ${esc(VIEWING)} is frozen.</b> This is its final state, recorded ${esc(String(FROZEN[VIEWING]?.frozenAt || '').replace('T', ' ').slice(0, 16))} UTC at commit ${esc(FROZEN[VIEWING]?.frozenCommit || '')}. Nothing here changes; unfinished work moved to the next release.</div>` : ''}
+      ${scopeSummary(s)}
       ${trendsHtml()}
       ${section('Releases: features delivered per release', releasesTable())}
       ${section('Sessions: estimate before the work, test results at each merge', sessionsTable(s.sessions))}
@@ -1034,6 +1057,12 @@ const LAYERS = {
       ${human ? `<a class="callout" style="display:block;text-decoration:none" href="${href('stat', 'human')}"><b>${human} ${human === 1 ? 'bug needs' : 'bugs need'} a person.</b> Open them ›</a>` : ''}
       ${section('Agents working now', agentCards(s.agents.filter((a) => a.status === 'running')))}
       ${featureSections(s)}` };
+  },
+  scope: ([key]) => {
+    const def = SCOPE_GROUPS.find(([k]) => k === key); if (!def) return null;
+    const list = scopeMembers(snap, key);
+    const notes = key === 'added' ? `<div class="panel" style="padding:10px 14px">${list.map((f) => `<div style="margin-bottom:6px"><b>${esc(f.key)}</b> · added ${esc(String(f.added?.at || '').slice(0, 10))}${f.added?.commit ? ` (${esc(f.added.commit)})` : ''} · ${f.scope === 'planned' ? 'counted in this release' : 'kept in backlog'} · ${esc(f.added?.reason || '')}</div>`).join('')}</div>` : '';
+    return { crumbs: [[def[1]]], html: `<div><h3 class="layer-title">${esc(def[1])}: ${list.length}</h3><div class="layer-sub">${esc(def[2])}</div></div>${notes}${featureRows(list)}` };
   },
   stat: ([key]) => {
     const st = STATS[key]; if (!st) return null;
@@ -1118,6 +1147,7 @@ function roundLayer(f, n, agents) {
 const crumbLabel = (t) => {
   const [type, a, b] = t.split(':').map(decodeURIComponent);
   if (type === 'stat') return STATS[a]?.label || a;
+  if (type === 'scope') return (SCOPE_GROUPS.find(([k]) => k === a) || [])[1] || a;
   if (type === 'updates') return 'Status updates';
   if (type === 'update') return `Update ${a}`;
   if (type === 'round') return `${a} · round ${b}`;
