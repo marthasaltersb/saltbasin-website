@@ -14,8 +14,26 @@
       "stepId": "B7",
       "before": "Also reachable from **Classic Tools** -> menu **Platform Lifecycle Management** -> **Sessions**.",
       "after": "Reachable from the World Shell only: **Classic Tools** -> **Platform Lifecycle Management** does not list **Sessions**.",
-      "tracesTo": "docs/training/session-mapping.md line 7; docs/changes/session-mapping.md fix notes round 3"
+      "tracesTo": "docs/training/session-mapping.md line 7; docs/changes/session-mapping.md fix notes round 3",
+      "note": "B7 is the proposer's label for the Screen paragraph (training spec line 7); it is free text, not a scored step id, so no baseline step is added, changed or retired.",
+      "whyNeeded": "Without it the spec states the product is reachable from Classic Tools, which the owner removed; no scored step tests that sentence."
     }
   ],
-  "status": "proposed"
+  "status": "approved",
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:session-mapping:r3",
+    "checklist": {
+      "Traced": "pass: names the spec line and the owner direction (Sessions is World Shell only, recorded in CLAUDE.md and the change spec round 3 fix notes)",
+      "Not weaker": "pass: no expected result of any step changes; the sentence is descriptive, and the new wording is a stricter, checkable statement",
+      "Retire only duplicates": "pass: nothing retired",
+      "Exact": "pass: names the menu and the item that must not appear",
+      "Reachable": "pass: Classic Tools menu is walkable on desktop and at 390px; no scored step depends on it",
+      "Deterministic": "pass: static text",
+      "Fictional data only": "pass: no data",
+      "Independent of the fix": "pass: states the owner-directed behaviour (World Shell only), not the implementation (HIDDEN_NAV_TAB_IDS)"
+    },
+    "note": "Approved. Only free text in the Screen paragraph changes; all step ids and expectations are unchanged, so baseline v2 has the same scored steps as v1.",
+    "at": "2026-10-10T00:00:00Z"
+  }
 }

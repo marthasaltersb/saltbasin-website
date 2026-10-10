@@ -4,7 +4,7 @@ Version 1 · 2026-10-09 · covers `docs/changes/session-mapping.md` v1. Audience
 
 ## Where things are
 
-- **Screen**: `/world` -> top tab **Journeys** -> card **Sessions** (subtitle "Open configuration"). A full-screen panel opens with a **← Back to World** button, the title **Sessions**, a heading **Sessions** and five tabs in this order: **Trends**, **Sessions**, **Mapping queue**, **Import**, **Settings**. Also reachable from **Classic Tools** -> menu **Platform Lifecycle Management** -> **Sessions**. Admin only: a member never sees the card.
+- **Screen**: `/world` -> top tab **Journeys** -> card **Sessions** (subtitle "Open configuration"). A full-screen panel opens with a **← Back to World** button, the title **Sessions**, a heading **Sessions** and five tabs in this order: **Trends**, **Sessions**, **Mapping queue**, **Import**, **Settings**. Reachable from the World Shell only: **Classic Tools** -> **Platform Lifecycle Management** does not list **Sessions**. Admin only: a member never sees the card.
 - **What the screen shows**: metrics only (token counts, cache-hit ratio, agents, time, limit events, spend, mapping proposals). It never shows or stores conversation text.
 - **Words in capitals** (the four summary tiles and every chart heading) are drawn in capitals on screen: SESSIONS, TOKENS, SPEND, CACHE-HIT RATIO; TOKENS BY TYPE, SPEND, CACHE-HIT RATIO, ACTIVE TIME, LIMIT EVENTS.
 - **Interface parity** (every capability, three ways):
