@@ -1,0 +1,24 @@
+{
+  "session": "S-0.3.0-01-prod-smoke",
+  "release": "0.3.0",
+  "intent": "Production smoke and regression after the 0.2.0 merge",
+  "estimate": {
+    "recordedAt": "2026-10-10T20:22:42.053Z",
+    "atCommit": "8f30987",
+    "intent": "Production smoke and regression after the 0.2.0 merge",
+    "items": [
+      {
+        "feature": "production-smoke-regression",
+        "goal": "Read-only production smoke suite (health, public pages, world/login/member site, /r not-found noindex, /mcp 401, desktop+phone layout) plus read-only replay of frozen smoke suites and delivered baselines, run from GitHub Actions",
+        "expect": {
+          "passed": 20,
+          "total": 24
+        },
+        "size": "M"
+      }
+    ]
+  },
+  "reEstimates": [],
+  "merges": [],
+  "closedAt": null
+}
