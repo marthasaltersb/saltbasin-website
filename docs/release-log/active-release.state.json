@@ -1,8 +1,8 @@
 {
-  "exportedAt": "2026-10-10T21:44:47.956Z",
+  "exportedAt": "2026-10-10T21:47:53.039Z",
   "features": {
     "platform-mcp": {
-      "status": "validate",
+      "status": "failed",
       "lastRound": 3,
       "lastScore": "65/65",
       "lastReport": "docs/test-results/platform-mcp/round-3.md",
@@ -10,7 +10,7 @@
       "backlog": 3
     },
     "release-intelligence": {
-      "status": "validate",
+      "status": "awaiting_retest",
       "lastRound": 4,
       "lastScore": "54/55",
       "lastReport": "docs/test-results/release-intelligence/round-4.md",
@@ -34,7 +34,7 @@
       "backlog": 1
     },
     "chart-gallery": {
-      "status": "validate",
+      "status": "awaiting_retest",
       "lastRound": 6,
       "lastScore": "18/20",
       "lastReport": "docs/test-results/chart-gallery/round-6.md",
@@ -58,7 +58,7 @@
       "backlog": 0
     },
     "scoring-preferences-mcp": {
-      "status": "validate",
+      "status": "failed",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -66,7 +66,7 @@
       "backlog": 0
     },
     "proficiency-live-qr": {
-      "status": "validate",
+      "status": "failed",
       "lastRound": 7,
       "lastScore": "30/32",
       "lastReport": "docs/test-results/proficiency-live-qr/round-7.md",
@@ -98,7 +98,15 @@
       "backlog": 1
     },
     "journey-flow-studio": {
-      "status": "build",
+      "status": "failed",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
+    },
+    "journey-flow-experience-mapping": {
+      "status": "failed",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -249,14 +257,6 @@
       "openBugs": 0,
       "backlog": 0
     },
-    "journey-flow-experience-mapping": {
-      "status": "queued",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
-      "openBugs": 0,
-      "backlog": 0
-    },
     "journey-flow-import-existing": {
       "status": "queued",
       "lastRound": 0,
@@ -324,7 +324,7 @@
     {
       "id": "release-intelligence-RI-R1-1",
       "feature": "release-intelligence",
-      "status": "retesting",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
       "attempts": 1,
       "step": "node scripts/import-release-logs.mjs run twice against the same database exits 0, prints imported/updated then only unchanged, warns for documents missing a ve…",
