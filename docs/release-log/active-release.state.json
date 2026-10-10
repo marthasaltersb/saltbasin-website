@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T19:39:55.809Z",
+  "exportedAt": "2026-10-10T19:43:19.243Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -98,7 +98,7 @@
       "backlog": 1
     },
     "session-mapping": {
-      "status": "amend",
+      "status": "validate",
       "lastRound": 3,
       "lastScore": "56/56",
       "lastReport": ".claude/worktrees/wf_2027c3f1-e7d-26/docs/test-results/session-mapping/round-3.md",
