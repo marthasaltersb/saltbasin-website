@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T20:08:17.520Z",
+  "exportedAt": "2026-10-10T20:14:39.269Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -58,10 +58,10 @@
       "backlog": 11
     },
     "output-version-history": {
-      "status": "validate",
-      "lastRound": 4,
+      "status": "scope",
+      "lastRound": 5,
       "lastScore": "34/37",
-      "lastReport": "docs/test-results/output-version-history/round-4.md",
+      "lastReport": "docs/test-results/output-version-history/round-5.md",
       "openBugs": 11,
       "backlog": 6
     },
@@ -98,10 +98,10 @@
       "backlog": 1
     },
     "session-mapping": {
-      "status": "validate",
-      "lastRound": 3,
-      "lastScore": "56/56",
-      "lastReport": ".claude/worktrees/wf_2027c3f1-e7d-26/docs/test-results/session-mapping/round-3.md",
+      "status": "triage",
+      "lastRound": 4,
+      "lastScore": "55/56",
+      "lastReport": "docs/test-results/session-mapping/round-4.md",
       "openBugs": 9,
       "backlog": 1
     },
@@ -6212,15 +6212,15 @@
       },
       "history": [
         {
-          "round": 3,
-          "event": "recurred",
-          "note": "Same root cause as T1: the mobile drawer markup was never r…",
-          "commit": null
-        },
-        {
           "round": 4,
           "event": "recurred",
           "note": "brand.css lines 630-631 hide .sb-admin-topbar-actions (the …",
+          "commit": null
+        },
+        {
+          "round": 5,
+          "event": "recurred",
+          "note": "src/brand.css lines 630-631 hide .sb-admin-topbar-actions (…",
           "commit": null
         }
       ]
@@ -6232,7 +6232,7 @@
       "class": "needs_business_definition",
       "attempts": 0,
       "step": "UI_GAP: no point-and-click way to make a saved version unreadable",
-      "rootCause": "Product behaves per spec (outputVersionHistory.js:120-124 sets version.error and keeps the version listed; OutputVersionHistory.jsx lines 1…",
+      "rootCause": "Product matches the change spec: server/lib/outputVersionHistory.js ~118-122 catches a versionBody throw and sets version.error; OutputVers…",
       "files": [
         "server/lib/outputVersionHistory.js",
         "src/components/admin/OutputVersionHistory.jsx",
@@ -6244,12 +6244,6 @@
         "evidence": "Product matches spec (version.error shown). Gap is the feature's own spec requiring unrea…"
       },
       "history": [
-        {
-          "round": 1,
-          "event": "found",
-          "note": "The product behaviour exists and matches the spec (server/l…",
-          "commit": null
-        },
         {
           "round": 2,
           "event": "recurred",
@@ -6266,6 +6260,12 @@
           "round": 4,
           "event": "recurred",
           "note": "Product behaves per spec (outputVersionHistory.js:120-124 s…",
+          "commit": null
+        },
+        {
+          "round": 5,
+          "event": "recurred",
+          "note": "Product matches the change spec: server/lib/outputVersionHi…",
           "commit": null
         }
       ]
@@ -6507,6 +6507,12 @@
           "round": 4,
           "event": "found",
           "note": "Same root cause as T1: the Classic Tools tab strip is hidde…",
+          "commit": null
+        },
+        {
+          "round": 5,
+          "event": "recurred",
+          "note": "Same cause as T1: the Classic Tools tab list is hidden at <…",
           "commit": null
         }
       ]
