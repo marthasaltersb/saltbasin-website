@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T21:26:47.880Z",
+  "exportedAt": "2026-10-10T21:31:54.552Z",
   "features": {
     "platform-mcp": {
       "status": "validate",
@@ -10,7 +10,7 @@
       "backlog": 3
     },
     "release-intelligence": {
-      "status": "integrate",
+      "status": "validate",
       "lastRound": 4,
       "lastScore": "54/55",
       "lastReport": "docs/test-results/release-intelligence/round-4.md",
@@ -30,15 +30,15 @@
       "lastRound": 5,
       "lastScore": "55/56",
       "lastReport": "docs/test-results/session-mapping/round-5.md",
-      "openBugs": 10,
+      "openBugs": 13,
       "backlog": 1
     },
     "chart-gallery": {
-      "status": "fix",
+      "status": "integrate",
       "lastRound": 6,
       "lastScore": "18/20",
       "lastReport": "docs/test-results/chart-gallery/round-6.md",
-      "openBugs": 24,
+      "openBugs": 29,
       "backlog": 14
     },
     "release-cut-and-session-plans": {
@@ -115,9 +115,9 @@
     },
     "production-smoke-regression": {
       "status": "failing",
-      "lastRound": 1,
-      "lastScore": "16/25",
-      "lastReport": "docs/test-results/production-smoke-regression/round-1.md",
+      "lastRound": 2,
+      "lastScore": "18/28",
+      "lastReport": "docs/test-results/production-smoke-regression/round-2.md",
       "openBugs": 0,
       "backlog": 0
     },
@@ -285,6 +285,12 @@
           "event": "found",
           "note": "Production smoke round 1 (https://github.com/marthasaltersb…",
           "commit": null
+        },
+        {
+          "round": 2,
+          "event": "still_failing_in_production",
+          "note": "Production round 2: S4.1 still failing",
+          "commit": null
         }
       ],
       "verifyBy": "production",
@@ -318,7 +324,7 @@
     {
       "id": "release-intelligence-RI-R1-1",
       "feature": "release-intelligence",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "node scripts/import-release-logs.mjs run twice against the same database exits 0, prints imported/updated then only unchanged, warns for documents missing a ve…",
@@ -445,6 +451,72 @@
       ]
     },
     {
+      "id": "session-mapping-F5-2",
+      "feature": "session-mapping",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "E.8 (desktop and mobile) plus MCP session_mapping_import kind=scan",
+      "rootCause": "Fix agent verified through the HTTP API only.",
+      "files": [
+        "server/lib/sessionMapping.js",
+        "src/components/admin/SessionMappingPanel.jsx",
+        "server/lib/mcpToolRegistry.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 5,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "session-mapping-F5-4",
+      "feature": "session-mapping",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "round-4 observations 1 and 2",
+      "rootCause": "Toasts not auto-dismissed or capped on narrow screens; Settings form state set after the message.",
+      "files": [
+        "src/lib/toast.js",
+        "src/components/admin/SessionMappingPanel.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 5,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "session-mapping-F5-5",
+      "feature": "session-mapping",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "spec interface-parity table",
+      "rootCause": "Spec frozen at v1/v2 before MCP tools were built.",
+      "files": [
+        "docs/training/session-mapping.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 5,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "session-mapping-round 4 E.8 failure (see docs/test-results/session-mapping/round-4.md; no earlier triage id exists)",
       "feature": "session-mapping",
       "status": "open",
@@ -472,11 +544,119 @@
       ]
     },
     {
+      "id": "chart-gallery-F6-3",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "test_harness",
+      "attempts": 0,
+      "step": "J2.3 mobile",
+      "rootCause": "The closed drawer remains in the DOM and is not inert, so a literal validator can hit hidden controls.",
+      "files": [
+        "src/components/admin/AdminShell.jsx",
+        "src/brand.css"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 6,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (te…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-F6-6",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "J2.3 mobile",
+      "rootCause": "Baseline J2.3 walks the admin shell, so the fix added admin navigation instead of a World Shell path.",
+      "files": [
+        "src/components/admin/AdminShell.jsx",
+        "src/brand.css"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 6,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-F6-8",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "Career Master write, fresh DB",
+      "rootCause": "A boolean value is bound to a $n::jsonb parameter in the atom sync.",
+      "files": [
+        "server/lib/careerAtomMigration.js",
+        "server/lib/careerAtomRegistry.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 6,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-F6-9",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "J2.3 member path",
+      "rootCause": "No member or World Shell journey was validated.",
+      "files": [
+        "src/components/WorldShell.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 6,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-F6-10",
+      "feature": "chart-gallery",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "E.4 / J2.2 phone",
+      "rootCause": "Fix agents measured only parts of each journey.",
+      "files": [
+        "docs/training/chart-gallery.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 6,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "chart-gallery-T6-1",
       "feature": "chart-gallery",
       "status": "backlog_pre_existing",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "MOBILE_GAP: admin Output Templates reachable at 390px",
       "rootCause": null,
       "files": [],
@@ -491,6 +671,12 @@
           "event": "found",
           "note": "brand.css @media(max-width:900px) hides .sb-admin-topbar-ac…",
           "commit": null
+        },
+        {
+          "round": 6,
+          "event": "fixed",
+          "note": "Built the missing mobile admin navigation. AdminShell topba…",
+          "commit": "82b8d6226ed7259200c045dfbff343a0d0fdeb46"
         }
       ]
     },
@@ -499,7 +685,7 @@
       "feature": "chart-gallery",
       "status": "backlog_pre_existing",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Capacity Gauge shows the number 0 for an empty member",
       "rootCause": null,
       "files": [],
@@ -514,6 +700,12 @@
           "event": "found",
           "note": "outputBlocks.js interpolate() line 485 `if (!text || !ctx) …",
           "commit": null
+        },
+        {
+          "round": 6,
+          "event": "fixed",
+          "note": "interpolate() now returns an empty string only for null, un…",
+          "commit": "82b8d6226ed7259200c045dfbff343a0d0fdeb46"
         }
       ]
     },
@@ -522,7 +714,7 @@
       "feature": "chart-gallery",
       "status": "reassigned",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "MCP_GAP: career_rollups_read returns the same data as the gallery",
       "rootCause": null,
       "files": [],
@@ -537,6 +729,12 @@
           "event": "found",
           "note": "mcpRouteTools.js line 67 registers career_rollups_read with…",
           "commit": null
+        },
+        {
+          "round": 6,
+          "event": "fixed",
+          "note": "career_rollups_read now accepts an optional query argument …",
+          "commit": "82b8d6226ed7259200c045dfbff343a0d0fdeb46"
         }
       ]
     },
@@ -1205,6 +1403,12 @@
           "event": "found",
           "note": "Production smoke round 1 (https://github.com/marthasaltersb…",
           "commit": null
+        },
+        {
+          "round": 2,
+          "event": "still_failing_in_production",
+          "note": "Production round 2: S3.4, S3.6, R1.1, R1.2 still failing",
+          "commit": null
         }
       ],
       "verifyBy": "production",
@@ -1234,6 +1438,12 @@
           "round": 1,
           "event": "found",
           "note": "Production smoke round 1 (https://github.com/marthasaltersb…",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "still_failing_in_production",
+          "note": "Production round 2: S3.5 still failing",
           "commit": null
         }
       ],
