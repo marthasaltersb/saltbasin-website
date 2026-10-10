@@ -78,9 +78,9 @@ groups features through it, so the scripts, the artifact page and the platform s
   `added`), the tracker artifact.
 - Changing scope: repository tooling (`scripts/release-scope.mjs`), like `release-cut.mjs` and `session-plan.mjs`,
   because the scope lives in the committed release file that the platform pulls. **Gap, for the owner:** there is
-  no platform screen or MCP tool to change a feature's scope. The live release tracker's own MCP tools
-  (`RELEASE_TRACKER_TOOLS`, including `release_tracker_get_state`) are still not registered in
-  `mcpToolRegistry.js`; that is the live-release-tracker feature's existing gap, not new here.
+  no platform screen or MCP tool to change a feature's scope. Reading scope over MCP is
+  `release_tracker_get_state` (registered in round 1 fix, see Fix notes). The other `RELEASE_TRACKER_TOOLS`
+  descriptors remain unregistered (parity gap row `release-tracker-admin`).
 
 ## Verified (initial check)
 
@@ -94,3 +94,16 @@ horizontal scroll and no page errors. A release cut on a throwaway copy froze 0/
 - The tracker's snapshot budget check (`stored()` in `release-tracker-sync.mjs`) still measures all bugs as one
   document although they are split across `tracker/bugs` and `tracker/bugs-2`, so it warns and trims detail
   that would fit. Existing behaviour, not changed here.
+
+## Fix notes — round 1
+
+### release-scope-T1 (J5.5, MCP_GAP)
+- Changed: registered `release_tracker_get_state` in `server/lib/mcpToolRegistry.js` (scope `release.read`, optional
+  `release` arg, lazy-imports `getState` and `viewerKindForUser`, refuses with 403 `tracker_access_denied` exactly as
+  `requireViewer` does, returns `{ viewer, state }`). Added it to `server/data/mcpToolManifest.json`; added
+  `server/routes/releaseTracker.js` to `GOVERNED_ROUTE_FILES` and three parity rows in `capabilityParity.js` (state,
+  stream/share with an explicit exclusion, admin routes with an honest `gap` note); updated the stale comment in
+  `releaseTrackerService.js`.
+- Files: `server/lib/mcpToolRegistry.js`, `server/data/mcpToolManifest.json`, `server/lib/capabilityParity.js`,
+  `server/lib/releaseTrackerService.js`, `docs/changes/release-scope.md`.
+- Checked: `node scripts/check-interface-parity.mjs` reports the registry matches the code and `--self-test` detects all 3 injected problems; the only gap left is the new honest row `release-tracker-admin` (admin routes without MCP tools, owned by live-release-tracker), so `--strict` still fails on it. On a fresh database with the test admin, a `release.read` token lists `release_tracker_get_state`, its result equals `GET /api/release-tracker/state` byte for byte (viewer admin), and the ungranted test member gets 403 `tracker_access_denied` on both the tool and the API. `npm run build` exits 0. Note: the local snapshot is empty, so feature scope fields were compared as identical empty state, not exercised with data.
