@@ -326,6 +326,7 @@ export function defaultTranscriptsDir(rules) {
   return path.join(os.homedir(), '.claude', 'projects', projectFolderFor(process.cwd()));
 }
 
+export const HOOK_SPOOL_DIR = () => path.join(process.cwd(), 'server', 'data', 'sessionMapping', 'spool');
 export const HOOK_FAILURE_LOG = () => path.join(process.cwd(), 'server', 'data', 'sessionMapping', 'hook-failures.jsonl');
 
 /** Scan the server's Claude Code transcripts folder; also files any failures the SessionEnd hook logged while the database was unreachable. */
@@ -333,8 +334,11 @@ export async function scanTranscripts({ actor } = {}) {
   await ensureSessionMappingSchema();
   const { rules } = await loadRules();
   const dir = defaultTranscriptsDir(rules);
-  const files = listSessionFiles(dir);
-  const result = { dir, found: files.length, imported: 0, updated: 0, unchanged: 0, failed: [], hookFailuresFiled: 0 };
+  // A missing transcripts folder must not stop spooled analyses and hook failures being filed.
+  let files = [];
+  let dirError = null;
+  try { files = listSessionFiles(dir); } catch (e) { dirError = e.message; }
+  const result = { dir, dirError, found: files.length, imported: 0, updated: 0, unchanged: 0, failed: [], hookFailuresFiled: 0, spooledFiled: 0 };
   for (const f of files) {
     try {
       const rec = analyzeSessionFile(f, { idleCapMinutes: rules.idleCapMinutes });
@@ -348,6 +352,23 @@ export async function scanTranscripts({ actor } = {}) {
     } catch (e) {
       await recordCaptureFailure('scan', path.basename(f), e);
       result.failed.push({ file: path.basename(f), error: e.message });
+    }
+  }
+  // Analyses the SessionEnd hook spooled because it had no database (metrics only).
+  const spool = HOOK_SPOOL_DIR();
+  if (fs.existsSync(spool)) {
+    for (const name of fs.readdirSync(spool).filter((n) => n.endsWith('.json'))) {
+      const full = path.join(spool, name);
+      try {
+        const r = await importMetricsJson(fs.readFileSync(full, 'utf8'), { actor });
+        if (r.created) result.imported += 1; else result.updated += 1;
+        result.spooledFiled += 1;
+        fs.renameSync(full, `${full}.filed-${Date.now()}`);
+      } catch (e) {
+        await recordCaptureFailure('session_end_hook', name, e);
+        result.failed.push({ file: name, error: e.message });
+        fs.renameSync(full, `${full}.failed-${Date.now()}`);
+      }
     }
   }
   const logFile = HOOK_FAILURE_LOG();

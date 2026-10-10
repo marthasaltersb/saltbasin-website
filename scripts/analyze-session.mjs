@@ -12,6 +12,9 @@
 // same one the server uses) so it appears on World Shell -> Journeys -> Sessions.
 // Without it nothing is written anywhere.
 //
+// With no DATABASE_URL, hook mode spools the metrics-only analysis to
+// server/data/sessionMapping/spool/ (ignored); "Scan server transcripts" files it.
+//
 // Hook mode ALWAYS exits 0 so it can never block a session ending. If the
 // import fails, the failure is appended to server/data/sessionMapping/hook-failures.jsonl
 // (git-ignored); the Sessions screen's "Scan server transcripts" files it as a
@@ -24,6 +27,8 @@ import { DEFAULT_RULES, priceSession } from '../server/lib/sessionMappingConfig.
 import { proposeMappings } from '../server/lib/sessionMappingRules.js';
 
 // Importing the database module prints Postgres "already exists, skipping" notices; drop only those.
+// Same .env the server reads, so a dev checkout with DATABASE_URL files directly.
+try { await import('dotenv/config'); } catch { /* optional */ }
 const realLog = console.log;
 console.log = (...a) => { if (a.length === 1 && a[0] && typeof a[0] === 'object' && a[0].severity === 'NOTICE') return; realLog(...a); };
 
@@ -34,6 +39,7 @@ const hook = flag('--hook');
 const quiet = flag('--quiet') || hook;
 const positional = argv.filter((a, i) => !a.startsWith('--') && !['--dir', '--prices'].includes(argv[i - 1]));
 
+const SPOOL_DIR = path.join(process.cwd(), 'server', 'data', 'sessionMapping', 'spool');
 const FAILURE_LOG = path.join(process.cwd(), 'server', 'data', 'sessionMapping', 'hook-failures.jsonl');
 
 function logFailure(ref, error) {
@@ -113,7 +119,13 @@ async function main() {
   const rec = analyzeSessionFile(file, { idleCapMinutes: rules.idleCapMinutes });
   if (rec.messages === 0) throw new Error(`${path.basename(file)} has no assistant messages with token usage`);
 
-  if (flag('--import') || hook) {
+  if (hook && !process.env.DATABASE_URL) {
+    // No database reachable from the hook (default dev environment): spool the metrics-only
+    // analysis to an ignored file. "Scan server transcripts" files every spooled analysis.
+    fs.mkdirSync(SPOOL_DIR, { recursive: true });
+    const name = `${String(rec.sourceKey).replace(/[^A-Za-z0-9_.-]/g, '_')}.json`;
+    fs.writeFileSync(path.join(SPOOL_DIR, name), JSON.stringify(rec));
+  } else if (flag('--import') || hook) {
     const svc = await import('../server/lib/sessionMapping.js');
     const cfg = await import('../server/lib/sessionMappingConfig.js');
     rules = (await cfg.loadRules()).rules;

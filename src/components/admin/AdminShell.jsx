@@ -125,7 +125,6 @@ const FALLBACK_ADMIN_NAV = {
       { id: 'backlog', label: 'Backlog', componentId: 'backlog', sortOrder: 1 },
       { id: 'qa', label: 'QA', componentId: 'qa', sortOrder: 2 },
       { id: 'release-tracker', label: 'Release tracker', componentId: 'releaseTracker', sortOrder: 6 },
-      { id: 'session-mapping', label: 'Sessions', componentId: 'sessionMapping', sortOrder: 7 },
       { id: 'render-bindings', label: 'Render Bindings', componentId: 'renderBindings', sortOrder: 5 },
     ]},
     { id: 'crm', label: 'Customer Relationship Management', sortOrder: 2, tabs: [
@@ -178,11 +177,11 @@ const FALLBACK_PAGE_TYPES = {
   ],
 };
 
-// Release Intelligence is reached only from the World Shell island. A shared
+// Release Intelligence and Sessions are reached only from the World Shell island. A shared
 // admin_nav row written by an earlier build may still list it under Classic
 // Tools; admin_nav is additive-only, so the entry is hidden here at render
 // time instead of being deleted from the row.
-const HIDDEN_NAV_TAB_IDS = new Set(['release-intelligence']);
+const HIDDEN_NAV_TAB_IDS = new Set(['release-intelligence', 'session-mapping']);
 function withoutHiddenTabs(nav) {
   return { ...nav, views: (nav.views || []).map((v) => ({ ...v, tabs: (v.tabs || []).filter((t) => !HIDDEN_NAV_TAB_IDS.has(t.id)) })).filter((v) => v.tabs.length) };
 }
