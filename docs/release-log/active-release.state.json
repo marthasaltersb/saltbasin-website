@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T01:46:38.489Z",
+  "exportedAt": "2026-10-10T01:53:08.655Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -10,27 +10,27 @@
       "backlog": 6
     },
     "world-shell-navigation": {
-      "status": "scope",
+      "status": "amend",
       "lastRound": 3,
       "lastScore": "38/48",
       "lastReport": "docs/test-results/world-shell-navigation/round-3.md",
-      "openBugs": 18,
-      "backlog": 6
+      "openBugs": 20,
+      "backlog": 11
     },
     "career-bound-outputs": {
-      "status": "reconcile",
+      "status": "validate",
       "lastRound": 4,
       "lastScore": "49/56",
       "lastReport": "docs/test-results/career-bound-outputs/round-4.md",
-      "openBugs": 20,
+      "openBugs": 28,
       "backlog": 5
     },
     "qr-gated-outputs": {
-      "status": "fix",
+      "status": "validate",
       "lastRound": 7,
       "lastScore": "38/38",
       "lastReport": "docs/test-results/qr-gated-outputs/round-7.md",
-      "openBugs": 0,
+      "openBugs": 5,
       "backlog": 14
     },
     "no-silent-failures": {
@@ -98,19 +98,19 @@
       "backlog": 1
     },
     "session-mapping": {
-      "status": "validate",
-      "lastRound": 2,
+      "status": "reconcile",
+      "lastRound": 3,
       "lastScore": "56/56",
-      "lastReport": "docs/test-results/session-mapping/round-2.md",
-      "openBugs": 3,
+      "lastReport": ".claude/worktrees/wf_2027c3f1-e7d-26/docs/test-results/session-mapping/round-3.md",
+      "openBugs": 0,
       "backlog": 1
     },
     "live-release-tracker": {
-      "status": "validate",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
-      "openBugs": 7,
+      "status": "fix",
+      "lastRound": 1,
+      "lastScore": "82/87",
+      "lastReport": ".claude/worktrees/wf_408f72f2-08e-1/docs/test-results/live-release-tracker/round-1.md",
+      "openBugs": 12,
       "backlog": 0
     },
     "platform-mcp": {
@@ -1162,28 +1162,18 @@
     {
       "id": "world-shell-navigation-F2-5",
       "feature": "world-shell-navigation",
-      "status": "recurred",
+      "status": "reassigned",
       "class": "spec_error",
       "attempts": 0,
       "step": "Latent: package re-import 'unchanged' ids",
-      "rootCause": "Same as J3.2: ids shift by one because of the auto-drafted letter.",
-      "files": [
-        "docs/training/world-shell-opportunity-outputs.md"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "other_feature",
+        "owner": "cover-letter-agent",
+        "evidence": null
+      },
       "history": [
-        {
-          "round": 3,
-          "event": "recurred",
-          "note": "Same as J9.1: relinking returns the package letter to three…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "recurred",
-          "note": "Same cause: with the auto-drafted letter and the two packag…",
-          "commit": null
-        },
         {
           "round": 3,
           "event": "recurred",
@@ -1222,15 +1212,17 @@
     {
       "id": "world-shell-navigation-F2-7",
       "feature": "world-shell-navigation",
-      "status": "recurred",
+      "status": "process_note",
       "class": "spec_error",
       "attempts": 0,
       "step": "Missing fixture/key: no AI-generated JSON output can be produced",
-      "rootCause": "Product behaviour exists and is correct: editableDocumentContent() (opportunityOutputs.js:28-36) returns null for non document_blocks / non…",
-      "files": [
-        "docs/training/world-shell-opportunity-outputs.md"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 2,
@@ -1356,6 +1348,156 @@
       ]
     },
     {
+      "id": "world-shell-navigation-F3-1",
+      "feature": "world-shell-navigation",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "J6.1 (fix verification)",
+      "rootCause": "Fix agent skipped the browser walk.",
+      "files": [
+        "src/components/admin/HerqOutputConfigurator.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "world-shell-navigation-F3-3",
+      "feature": "world-shell-navigation",
+      "status": "open",
+      "class": "test_harness",
+      "attempts": 0,
+      "step": "J0.1, J0.2, E.1",
+      "rootCause": "create-test-member.mjs always clears must_change_password.",
+      "files": [
+        "scripts/create-test-member.mjs"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (te…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "world-shell-navigation-F3-4",
+      "feature": "world-shell-navigation",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "J2.3, J4.1, J9.1, J9.2, J10.1",
+      "rootCause": "Spec predates cover-letter auto-draft.",
+      "files": [
+        "docs/training/world-shell-navigation.md",
+        "docs/spec-amendments/world-shell-navigation/"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "world-shell-navigation-F3-5",
+      "feature": "world-shell-navigation",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "J0.3 (phone)",
+      "rootCause": "Responsive CSS hides name; spec says full name.",
+      "files": [
+        "src/components/WorldShell.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "world-shell-navigation-F3-6",
+      "feature": "world-shell-navigation",
+      "status": "open",
+      "class": "environment",
+      "attempts": 0,
+      "step": "E.5",
+      "rootCause": "Missing key and fixture.",
+      "files": [],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (en…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "world-shell-navigation-F3-7",
+      "feature": "world-shell-navigation",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "J1.3, J10.1 (MCP parity)",
+      "rootCause": "No MCP tools for these capabilities.",
+      "files": [
+        "server/lib/mcpToolRegistry.js",
+        "server/lib/capabilityParity.js",
+        "server/data/mcpToolManifest.json"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "world-shell-navigation-F3-8",
+      "feature": "world-shell-navigation",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Known limitations and round-3 observations",
+      "rootCause": "Not addressed in any fix round.",
+      "files": [
+        "src/components/OpportunityOutputsSection.jsx",
+        "src/components/WorldShell.jsx",
+        "scripts/import-application-package.mjs"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "world-shell-navigation-wsn-r1-auto-cover-letter",
       "feature": "world-shell-navigation",
       "status": "reassigned",
@@ -1387,32 +1529,18 @@
     {
       "id": "world-shell-navigation-wsn-B9",
       "feature": "world-shell-navigation",
-      "status": "recurred",
+      "status": "reassigned",
       "class": "environment",
       "attempts": 0,
       "step": "UI_GAP/MOBILE_GAP: provisional login cannot be produced under fixed test accounts",
-      "rootCause": "Same root cause as J0.1 (create-test-member.mjs line 51, missing --provisional).",
-      "files": [
-        "scripts/create-test-member.mjs"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
-        "scope": "this_feature",
-        "owner": null,
-        "evidence": "Reused world-shell-navigation-B9: the feature's own spec uses curl signup, forbidden by t…"
+        "scope": "other_feature",
+        "owner": "release-loop-tooling",
+        "evidence": null
       },
       "history": [
-        {
-          "round": 2,
-          "event": "recurred",
-          "note": "Same as B9: no provisional-password member can be produced …",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "recurred",
-          "note": "scripts/create-test-member.mjs has no --provisional option …",
-          "commit": null
-        },
         {
           "round": 3,
           "event": "recurred",
@@ -1592,7 +1720,11 @@
       "files": [
         "docs/training/world-shell-opportunity-outputs.md"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "MOBILE_CSS hiding .sb-world-profile-text came from 7cc95ed; J12.1 already says avatar on …"
+      },
       "history": [
         {
           "round": 3,
@@ -1605,16 +1737,17 @@
     {
       "id": "world-shell-navigation-wsn-r3-mcp-j13",
       "feature": "world-shell-navigation",
-      "status": "open",
+      "status": "process_note",
       "class": "environment",
       "attempts": 0,
       "step": "MCP_GAP: no MCP tool to add a Career Master entry",
-      "rootCause": "Not a product gap. career_record_create (plus _list/_update/_delete) is registered at mcpRouteTools.js:84-87, appended to MCP_TOOLS by mcpT…",
-      "files": [
-        "server/lib/mcpRouteTools.js",
-        "server/lib/capabilityParity.js"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 3,
@@ -1627,17 +1760,17 @@
     {
       "id": "world-shell-navigation-wsn-r3-mcp-j101",
       "feature": "world-shell-navigation",
-      "status": "needs_business_definition",
+      "status": "backlog_pre_existing",
       "class": "needs_business_definition",
       "attempts": 0,
       "step": "MCP_GAP: no MCP tool to import a PDF/DOCX/TXT document into an opportunity",
-      "rootCause": "capabilityParity.js:80 (row opportunity-import-output) records mcp:null with an explicit mcpExclusion ('File upload; an agent saves content…",
-      "files": [
-        "server/lib/capabilityParity.js",
-        "server/lib/mcpToolRegistry.js",
-        "server/data/mcpToolManifest.json"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 3,
@@ -1650,22 +1783,32 @@
     {
       "id": "world-shell-navigation-wsn-r3-editor-loading-state",
       "feature": "world-shell-navigation",
-      "status": "open",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "Observation: editor shows '0 BLOCKS / No blocks yet - add one below.' for 1-3 s before '9 BLOCKS'",
       "rootCause": "The shared editor renders its empty state before the document content arrives, so a loading period reads as an empty document. Minor; no ba…",
       "files": [
         "src/components/OpportunityOutputsSection.jsx",
         "src/lib/documentBlocksEditor.js"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Empty state in HerqOutputConfigurator.jsx:566 renders before the adapter setConfig effect…"
+      },
       "history": [
         {
           "round": 3,
           "event": "found",
           "note": "The shared editor renders its empty state before the docume…",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "fixed",
+          "note": "The shared editor's config state is null on first render, s…",
+          "commit": "cabdbc77def39f09e1fa9ad72e7e46c184aeb1f4"
         }
       ]
     },
@@ -2134,7 +2277,7 @@
     {
       "id": "career-bound-outputs-F3-5",
       "feature": "career-bound-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "MCP_GAP: platform MCP tools for this feature",
@@ -2257,6 +2400,177 @@
       ]
     },
     {
+      "id": "career-bound-outputs-F4-2",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "J9.3/J9.4/J9.5/E.7",
+      "rootCause": "Round-3 fix edited the wrong button; revert was out of scope. Fixed in code at 49d0e2d.",
+      "files": [
+        "src/components/admin/OutputTemplateConfigurator.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F4-3",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "J9.10",
+      "rootCause": "Button used setField(null) so row left shownIds after reload.",
+      "files": [
+        "src/components/admin/OutputTemplateConfigurator.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F4-4",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "E.4",
+      "rootCause": "Frozen step needs a server fault no browser user can cause.",
+      "files": [
+        "docs/spec-amendments/career-bound-outputs/A1.json",
+        "docs/training/career-bound-outputs.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F4-5",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "E.5",
+      "rootCause": "Spec wording defect.",
+      "files": [
+        "docs/spec-amendments/career-bound-outputs/A2.json"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F4-6",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "MCP parity",
+      "rootCause": "No end-to-end MCP proof.",
+      "files": [
+        "server/lib/mcpRouteTools.js",
+        "server/lib/capabilityParity.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F4-7",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "J6.8 convert",
+      "rootCause": "Convertible listing does not report existing converted output.",
+      "files": [
+        "src/components/admin/CareerReconciliationPanel.jsx",
+        "server/lib/careerBound.js",
+        "server/routes/careerBound.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F4-8",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "J9.9/J9.11 Known limitations",
+      "rootCause": "Overrides stored in preset config, resume layout renders jobs only.",
+      "files": [
+        "src/components/Output.jsx",
+        "src/components/admin/OutputTemplateConfigurator.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "career-bound-outputs-F4-9",
+      "feature": "career-bound-outputs",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "process",
+      "rootCause": "No independent proof before handing over.",
+      "files": [],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "career-bound-outputs-cbo-r1-phone-editor",
       "feature": "career-bound-outputs",
       "status": "verified",
@@ -2342,7 +2656,7 @@
     {
       "id": "career-bound-outputs-T3-5",
       "feature": "career-bound-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 2,
       "step": "Revert to Career Master on the skill only",
@@ -2438,7 +2752,7 @@
     {
       "id": "career-bound-outputs-T4-1",
       "feature": "career-bound-outputs",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Only expected browser noise in the console",
@@ -3393,6 +3707,116 @@
           "round": 7,
           "event": "verified",
           "note": "Retest round 7 passed every step of baseline v2",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F7-2",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "F6-4 / B10.1 / J6.4",
+      "rootCause": "Amendments not exact, wrong surface labelling, invalid ids; owner has not recorded site-sync decision.",
+      "files": [
+        "docs/spec-amendments/qr-gated-outputs/A3.json",
+        "docs/spec-amendments/qr-gated-outputs/A8.json",
+        "scripts/sync-site-with-application-package.mjs"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 7,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F7-3",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "F6-5 / P.1",
+      "rootCause": "Spec predates the World Shell member-only direction; A6 left admin-run imports.",
+      "files": [
+        "docs/training/qr-gated-outputs.md",
+        "docs/spec-amendments/qr-gated-outputs/A6.json"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 7,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F7-4",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "test_harness",
+      "attempts": 0,
+      "step": "F6-6 / P.5",
+      "rootCause": "Spec has no step creating the Draft card.",
+      "files": [
+        "docs/spec-amendments/qr-gated-outputs/A7.json"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 7,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (te…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F7-5",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "F6-7 / MCP",
+      "rootCause": "No scored MCP step in baseline.",
+      "files": [
+        "docs/spec-amendments/qr-gated-outputs/A4.json",
+        "server/lib/mcpToolRegistry.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 7,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-F7-6",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Known limitations: in-app import card",
+      "rootCause": "Spec only covers CLI import.",
+      "files": [
+        "src/components/admin/MyResumePanel.jsx",
+        "docs/training/qr-gated-outputs.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 7,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
           "commit": null
         }
       ]
@@ -8256,9 +8680,9 @@
           "commit": null
         },
         {
-          "round": 2,
+          "round": 3,
           "event": "verified",
-          "note": "Retest round 2 passed every step of baseline v1",
+          "note": "Retest round 3 passed every step of baseline v1",
           "commit": null
         }
       ]
@@ -8281,9 +8705,9 @@
           "commit": null
         },
         {
-          "round": 2,
+          "round": 3,
           "event": "verified",
-          "note": "Retest round 2 passed every step of baseline v1",
+          "note": "Retest round 3 passed every step of baseline v1",
           "commit": null
         }
       ]
@@ -8306,9 +8730,9 @@
           "commit": null
         },
         {
-          "round": 2,
+          "round": 3,
           "event": "verified",
-          "note": "Retest round 2 passed every step of baseline v1",
+          "note": "Retest round 3 passed every step of baseline v1",
           "commit": null
         }
       ]
@@ -8335,9 +8759,9 @@
           "commit": null
         },
         {
-          "round": 2,
+          "round": 3,
           "event": "verified",
-          "note": "Retest round 2 passed every step of baseline v1",
+          "note": "Retest round 3 passed every step of baseline v1",
           "commit": null
         }
       ]
@@ -8345,22 +8769,28 @@
     {
       "id": "session-mapping-F2-2",
       "feature": "session-mapping",
-      "status": "open",
+      "status": "verified",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Admin navigation entry points (session-mapping-B7)",
-      "rootCause": "Classic admin-menu entry point added although owner direction is World Shell only.",
-      "files": [
-        "server/db.js",
-        "src/components/admin/AdminShell.jsx",
-        "docs/training/session-mapping.md"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 2,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v1",
           "commit": null
         }
       ]
@@ -8368,21 +8798,28 @@
     {
       "id": "session-mapping-F2-3",
       "feature": "session-mapping",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "SessionEnd hook capture (session-mapping-B8)",
-      "rootCause": "Hook files directly to the database, so default dev environment captures nothing automatically.",
-      "files": [
-        "scripts/analyze-session.mjs",
-        ".claude/settings.json"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 2,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v1",
           "commit": null
         }
       ]
@@ -8390,20 +8827,28 @@
     {
       "id": "session-mapping-F2-5",
       "feature": "session-mapping",
-      "status": "open",
+      "status": "verified",
       "class": "process",
       "attempts": 0,
       "step": "CLAUDE.md stale statement about session-mapping MCP tools",
-      "rootCause": "Documentation not updated after round 1 T1.",
-      "files": [
-        "CLAUDE.md"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 2,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v1",
           "commit": null
         }
       ]
@@ -8463,7 +8908,7 @@
     {
       "id": "live-release-tracker-B1",
       "feature": "live-release-tracker",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Interface parity: MCP tools for every capability",
@@ -8486,7 +8931,7 @@
     {
       "id": "live-release-tracker-B6",
       "feature": "live-release-tracker",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "Spec governance",
@@ -8508,7 +8953,7 @@
     {
       "id": "live-release-tracker-B10",
       "feature": "live-release-tracker",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Render bindings",
@@ -8531,7 +8976,7 @@
     {
       "id": "live-release-tracker-B11",
       "feature": "live-release-tracker",
-      "status": "open",
+      "status": "fixing",
       "class": "test_harness",
       "attempts": 0,
       "step": "Spec E.7 and dark World journeys",
@@ -8552,7 +8997,7 @@
     {
       "id": "live-release-tracker-B12",
       "feature": "live-release-tracker",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "Process definition",
@@ -8573,7 +9018,7 @@
     {
       "id": "live-release-tracker-B13",
       "feature": "live-release-tracker",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "Integration",
@@ -8596,7 +9041,7 @@
     {
       "id": "live-release-tracker-B14",
       "feature": "live-release-tracker",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Reuse first",
@@ -8611,6 +9056,135 @@
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "live-release-tracker-T1",
+      "feature": "live-release-tracker",
+      "status": "fixing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "Save source settings after a failed fetch",
+      "rootCause": "TrackerSettings.jsx uses one useAction() per button. pull.error from the J1.3 failed fetch is rendered under the fetch button and is never …",
+      "files": [
+        "src/components/releaseTracker/TrackerSettings.jsx"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "TrackerSettings.jsx was created in 6f9a155 (this feature); base d7340d6 has no tracker fi…"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "TrackerSettings.jsx uses one useAction() per button. pull.e…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "live-release-tracker-T2",
+      "feature": "live-release-tracker",
+      "status": "fixing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "Previous update once from Live (J6.2) and slider stays where left (J6.4)",
+      "rootCause": "stepUpdate() in src/lib/releaseTrackerModel.js:113 returns the nearest update marker strictly before the current position. From Live (09:20…",
+      "files": [
+        "docs/training/live-release-tracker.md",
+        "src/lib/releaseTrackerModel.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Spec error in the feature's own docs/training/live-release-tracker.md (J6.2/J6.4); stepUp…"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "stepUpdate() in src/lib/releaseTrackerModel.js:113 returns …",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "live-release-tracker-T3",
+      "feature": "live-release-tracker",
+      "status": "fixing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "World at 390px: hint and Pause motion visible, sheet below scene",
+      "rootCause": "releaseTracker.css:164-165 position .rt-world-hint (top:12 left:12, no max-width) and .rt-world-tools (top:8 right:8) absolutely; at 390px …",
+      "files": [
+        "src/components/releaseTracker/releaseTracker.css",
+        "src/components/releaseTracker/TrackerWorld.jsx"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "CSS for .rt-world-hint/.rt-world-tools came from this feature (6f9a155, 98e05dd); absent …"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "releaseTracker.css:164-165 position .rt-world-hint (top:12 …",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "live-release-tracker-T4",
+      "feature": "live-release-tracker",
+      "status": "fixing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "Paste a snapshot with no features",
+      "rootCause": "The Store snapshot handler in TrackerSettings.jsx calls load() only when paste.run returns a result; run() swallows the error and returns u…",
+      "files": [
+        "src/components/releaseTracker/TrackerSettings.jsx"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Paste-snapshot handler in TrackerSettings.jsx reloads only on a result; feature code from…"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "The Store snapshot handler in TrackerSettings.jsx calls loa…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "live-release-tracker-T5",
+      "feature": "live-release-tracker",
+      "status": "fixing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "MCP_GAP: live release tracker MCP tools (bug B1)",
+      "rootCause": "RELEASE_TRACKER_TOOLS in server/lib/releaseTrackerService.js (~line 503) is never imported by server/lib/mcpToolRegistry.js (comment still …",
+      "files": [
+        "server/lib/mcpToolRegistry.js",
+        "server/lib/releaseTrackerService.js",
+        "server/lib/capabilityParity.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "MCP parity is required of every capability; RELEASE_TRACKER_TOOLS (6f9a155) is not regist…"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "RELEASE_TRACKER_TOOLS in server/lib/releaseTrackerService.j…",
           "commit": null
         }
       ]
