@@ -75,7 +75,7 @@ Run 2026-10-02 against a fresh database `sb_rl_bld_1` (Postgres 16, local) with 
 
 ## Known limitations
 
-- Import is a command-line script (`scripts/import-application-package.mjs`), not a screen. It files documents and does not configure anything, but there is no in-app import UI yet.
+- Import is available both as a command-line script (`scripts/import-application-package.mjs`) and as the "Import an application package" card in My Resume (file picker, optional link-to-opportunity checkbox, `POST /api/resume-outputs/import-package`). It files draft documents only; nothing is approved or shared by importing. No baseline step scores the card yet.
 - `.docx` QR stamping and site sync are scripts too (`scripts/stamp-application-package-docx.py`, `scripts/sync-site-with-application-package.mjs`); not covered by the training spec.
 - The training spec checks the PDF's link annotations with a command line (`grep`/`pdftotext`), since a browser cannot show them.
 - Package JSON must never be committed (the repo is public); the training spec uses fictional JSON under `/var/tmp`.
@@ -124,3 +124,15 @@ Proposed steps for the reviewer:
 - Changed: the `authLimiter` message in `server/routes/auth.js` now reads "Too many attempts - please try again in 15 minutes" (hyphen, as step E.5 expects).
 - Files: `server/routes/auth.js`.
 - Checked: grep finds no em-dash form left in `server`; `npm run build` passes.
+
+### Fix notes — round 7
+
+#### qr-gated-outputs-F6-1 (J2.1, E.5)
+- Changed: no product code (the round 6 string fixes are already in the branch). Updated the stale "Known limitations" import line in this spec to describe the import card.
+- Files: `docs/changes/qr-gated-outputs.md`.
+- Checked: ran the app (fresh database, production build, port 7116), imported the fictional pkg-v1 as member@test.local, then walked it in Chromium. J2.1 on desktop (1280px) and phone (390px, touch): World Shell > Journeys > My Resume > View shows "Read-only - no edits can be made here." on both. E.5 on both surfaces: the 10-attempt limiter returns 429 "Too many attempts - please try again in 15 minutes" (each surface on a restarted server so the in-memory limiter was clean). Server stopped and database dropped afterwards.
+
+#### qr-gated-outputs-F6-4, F6-5, F6-6, F6-7 (amendments A3/A8, A6, A7, A4)
+- Changed: nothing. These are spec amendments awaiting a reviewer other than the proposer; this agent may not edit `docs/training/**`, baselines or amendment review state, and may not approve its own proposals. Amendments A3 to A8 are all currently `rejected` by the amendment reviewer, with resubmission notes in each file. Site sync staying an owner-run script is an owner decision, not recorded here.
+- Product side is already built for each: stamped .docx download (A3/A8), member sign-in through World Shell Journeys (A6), Draft card via a third package import (A7), MCP tools `application_package_import`, `application_output_approve_for_qr`, `application_output_revoke_qr`, `shared_output_resolve` (A4).
+- Checked: no files under `docs/spec-amendments/` or `docs/training/` touched.
