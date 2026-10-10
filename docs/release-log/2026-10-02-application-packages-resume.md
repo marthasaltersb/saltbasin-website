@@ -2,42 +2,45 @@
 
 - Release: 2026-10-02-application-packages-resume
 - Integration branch: `claude/zealous-meitner-5tuft5` (not pushed by this release)
-- Integration head when recorded: 6082e1b (last feature merge 8f1c8c4)
+- Integration head when recorded: d2beb30 (last feature merge 0800b1c, the commit round 6 tested)
 - Process: `server/data/releaseLoop/definition.json` (spec governance, interface parity, per-bug fix-attempt limit)
-- Recorded: 2026-10-09 by the release recorder. This recording replaces the earlier one in 17a67e9, which covered only `proficiency-live-qr`; that feature's section is kept below.
+- Recorded: 2026-10-10 by the release recorder, adding round 6 of `release-loop-tooling`. Earlier recordings: dfc466b (2026-10-09, rounds 1 to 5) and 17a67e9 (only `proficiency-live-qr`, whose section is kept below).
 - Data: fictional only. No employer or application-target name appears in this log.
 
 ## Final results
 
 | Feature | Final status | Last round | Commit tested | Steps passed / total (baseline) | Open blocking items | Backlog (not blocking) |
 |---|---|---|---|---|---|---|
-| release-loop-tooling | **PASSED** | 5 | 8f1c8c4 | 30 / 30 on **v3** | none in the workflow data (see "State discrepancy" below) | T4-2 (MCP_GAP, pre_existing), F1-7, B5 (pre_existing), B4 (process_note) |
-| proficiency-live-qr | **NOT PASSED** | 5 (earlier release) | 6ac1df0 | 29 / 30 (pre-baseline) | 6 items, 3 owner questions | 5 |
+| release-loop-tooling | **PASSED** | 6 | 0800b1c | 30 / 30 on **v3** | none in the workflow data (see "State discrepancy" below) | T4-2 (MCP_GAP, pre_existing), F1-7, B5 (pre_existing), B4 (process_note) |
+| proficiency-live-qr | **NOT PASSED** | 6 (state export) | see state export | 29 / 32 (state export; not handed to the recorder) | 8 open in the state export, 3 owner questions | see state export |
 
-Only `release-loop-tooling` was handed to the recorder in this run, and it passed. Its last two scores are on different baselines: round 4 was 29/30 on v2, round 5 was 30/30 on v3. The only difference between v2 and v3 is step J3b.3, changed by approved amendment A2. The scores are comparable only through that amendment.
+Only `release-loop-tooling` was handed to the recorder in this run, and it passed again in round 6: 30/30 on baseline v3 at 0800b1c, with no steps failed, blocked or not run. Rounds 5 and 6 are on the same baseline (v3, spec sha256 `03924b9a...177bc`), so they compare like for like. Round 4 (29/30) was on v2; it compares with rounds 5 and 6 only through approved amendment A2, which changed step J3b.3 and nothing else.
 
-**Features that did NOT pass.** The bug-state export (`active-release.state.json`, exported 2026-10-09T16:12Z) lists these features. None of them has a passing result, so none of them is releasable:
+**Features that did NOT pass.** The bug-state export (`active-release.state.json`, exported 2026-10-10T00:16:59Z, committed in d2beb30) lists these features. None of them was handed to this recorder with a passing result, so none of them is releasable. Scores are copied from the export; the recorder has no baseline version for them and does not compare them with each other or with earlier recordings.
 
-| Feature | State status | Last round | Last score | Open bugs | Backlog |
-|---|---|---|---|---|---|
-| proficiency-live-qr | validate | 5 | 29/30 | 6 | 5 |
-| world-shell-navigation | validate | 1 | 45/48 | 2 | 4 |
-| career-bound-outputs | validate | 2 | 54/56 | 10 | 5 |
-| qr-gated-outputs | validate | 1 | 45/48 | 6 | 2 |
-| chart-gallery | validate | 1 | 17/20 | 8 | 2 |
-| no-silent-failures | validate | 0 | not run | 3 | 3 |
-| release-intelligence | validate | 0 | not run | 3 | 1 |
-| output-version-history | validate | 0 | not run | 4 | 3 |
-| resume-rollups | validate | 0 | not run | 7 | 3 |
-| cover-letter-agent | validate | 0 | not run | 5 | 7 |
-| session-mapping | **failed** | 0 | not run | 0 | 0 |
-| in-app-release-loop | build | 0 | not run | 0 | 0 |
-| world-shell-layers | build | 0 | not run | 0 | 0 |
-| live-release-tracker | build | 0 | not run | 0 | 0 |
-| render-bindings | build | 0 | not run | 0 | 0 |
-| platform-mcp | build | 0 | not run | 0 | 0 |
+| Feature | State status | Last round | Last score (state export) | Open blocking bugs (this_feature, not verified) |
+|---|---|---|---|---|
+| proficiency-live-qr | validate | 6 | 29/32 | 8 |
+| world-shell-navigation | validate | 2 | 36/47 | 9 |
+| career-bound-outputs | validate | 3 | 48/56 | 9 |
+| qr-gated-outputs | validate | 4 | 36/38 | 6 |
+| no-silent-failures | validate | 1 | 18/28 | 7 |
+| chart-gallery | validate | 3 | 17/20 | 10 |
+| output-version-history | validate | 3 | 30/37 | 0 by status count (not handed to the recorder) |
+| resume-rollups | validate | 1 | 28/32 | 4 |
+| release-intelligence | validate | 1 | 1/54 | 4 |
+| cover-letter-agent | validate | 1 | 38/46 | 10 |
+| in-app-release-loop | validate | 1 | 59/60 | 2 |
+| platform-mcp | validate | 1 | 62/62 (not marked passed in the state export) | 6 |
+| session-mapping | **failed** | 0 | not run | 3 |
+| live-release-tracker | validate | 0 | not run | 7 |
+| world-shell-layers | build | 0 | not run | 0 |
+| render-bindings | build | 0 | not run | 0 |
+| platform-agent-runner | build | 0 | not run | 0 |
 
-**The release as a whole did not pass.** One feature passed. Under the push gate, the integration branch must not be pushed unless the owner says otherwise. No sweep was run (`sweep: null`).
+The open-bug column counts state-export bugs for that feature whose status is not verified, backlog or process_note. It is the recorder's count from the export, not a triage decision.
+
+**The release as a whole did not pass.** One feature (`release-loop-tooling`) passed. Under the push gate, the integration branch must not be pushed unless the owner says otherwise. Nothing was pushed. No sweep was run (`sweep: null`).
 
 ---
 
@@ -45,7 +48,7 @@ Only `release-loop-tooling` was handed to the recorder in this run, and it passe
 
 Title: Release loop tooling: definition, saved workflow, skill, bug-attempt limit, failure reconciliation, live step logs, tracker sync, test accounts.
 
-Status: **PASSED** in round 5. It scored 30/30 on baseline v3 at commit 8f1c8c4, with no steps blocked or not run. The spec sha256 was `03924b9abae72dd99085b511db948016cfb8c7f49bd2f7a86a95432a31b177bc`.
+Status: **PASSED** in round 6, confirming round 5. It scored 30/30 on baseline v3 at commit 0800b1c, with no steps failed, blocked or not run. The spec sha256 was `03924b9abae72dd99085b511db948016cfb8c7f49bd2f7a86a95432a31b177bc`, the same as round 5. `node scripts/release-spec-baseline.mjs check --feature release-loop-tooling` prints "baselines match: release-loop-tooling v3" at d2beb30 (re-run by the recorder, exit 0).
 
 - Training spec: [docs/training/release-loop-tooling.md](../training/release-loop-tooling.md); baselines: [v1](../training/baselines/release-loop-tooling/v1.json), [v2](../training/baselines/release-loop-tooling/v2.json), [v3](../training/baselines/release-loop-tooling/v3.json)
 - Change spec: [docs/changes/release-loop-tooling.md](../changes/release-loop-tooling.md)
@@ -59,10 +62,11 @@ Status: **PASSED** in round 5. It scored 30/30 on baseline v3 at commit 8f1c8c4,
 | 3 | 536aa29 | v1 (frozen afterwards) | FAIL, 104 / 126 checks | [round-3](../test-results/release-loop-tooling/round-3.md) | [round-3](../triage/release-loop-tooling-round-3.md), [round-3 scope](../triage/release-loop-tooling-round-3-scope.md) |
 | 4 | 08468b1 | **v2** (A1) | FAIL, 29 / 30 steps | [round-4](../test-results/release-loop-tooling/round-4.md) | `docs/triage/release-loop-tooling-round-4.md` and `-round-4-scope.md` are **missing** (see failed commands) |
 | 5 | 8f1c8c4 | **v3** (A2) | **PASS, 30 / 30 steps** | [round-5](../test-results/release-loop-tooling/round-5.md) | none needed |
+| 6 | 0800b1c | **v3** (unchanged) | **PASS, 30 / 30 steps** | [round-6](../test-results/release-loop-tooling/round-6.md) | none needed |
 
-Round 1 to 3 counts are checked expectations across 5 viewport and theme runs. Round 4 and 5 counts are baseline steps scored by `release-spec-baseline.mjs score`. These are different units. Round 3's 104/126 cannot be compared with round 4's 29/30 or round 5's 30/30.
+Round 1 to 3 counts are checked expectations across 5 viewport and theme runs. Round 4 to 6 counts are baseline steps scored by `release-spec-baseline.mjs score`. These are different units. Round 3's 104/126 cannot be compared with round 4's 29/30 or round 5's 30/30.
 
-Rounds 1 to 3 are summarized here from their committed files. The workflow data for this recording carried rounds 4 and 5 in full.
+Rounds 1 to 3 are summarized here from their committed files. Rounds 4 and 5 come from the workflow data of the previous recording (dfc466b). The workflow data for this recording carried round 6 in full.
 
 #### Round 3 (v1): failures and triage (summary)
 
@@ -118,6 +122,37 @@ Observations:
 - On the phone after login, the Career Placement Agents panel fills the screen and hides the world. Only the header tabs stay usable. This is not a failure under A2, because the step checks the tabs. It is not filed as a bug. It is a candidate for the owner or the world-shell-navigation feature.
 - External scripts and fonts were blocked by the sandbox (not counted).
 
+#### Round 6 (baseline v3): 30 / 30, PASSED
+
+- Commit tested: 0800b1c (integration head, merge of release-intelligence-spec-r1). Report: [round-6](../test-results/release-loop-tooling/round-6.md). Failed: none. Blocked: none. Not run: none.
+- Score output: `{"baseline":3,"specSha256":"03924b9abae72dd99085b511db948016cfb8c7f49bd2f7a86a95432a31b177bc","total":30,"passed":30,"failed":[],"blocked":[],"notRun":[]}`.
+- Baseline unchanged since round 5 (v3), so no baseline diff table was needed and the scores compare directly.
+- Why it was re-run: between 8f1c8c4 and 0800b1c, other work changed this feature's files: `scripts/release-tracker-sync.mjs` (+47), `tools/release-tracker/index.html`, `tools/release-tracker/SETUP-FOR-CLAUDE.md`, `.claude/skills/salt-basin-release-loop/SKILL.md` and `.claude/workflows/release-loop.js` (commits 6f9a155, d7340d6 via 281e863, af2ee11, 86d4ada). Round 6 confirms the pass still holds after those changes.
+- Environment: fresh database, seed, test accounts via `scripts/create-test-member.mjs`; Chromium 1280x900 and 390x844 touch; light, dark and `?theme=dark`; en-US; UTC.
+
+Open bugs verified by baseline step in round 6 (the state export still shows them open; see "State discrepancy"):
+
+| Bug | Step | Round-6 evidence |
+|---|---|---|
+| release-loop-tooling-F1-2 | [J5.3] | 390px stacked cards with `data-label` cells (Status, Latest test, Rounds, Its own bugs verified); no `.panel` overflow on overview, feature, round and Tokens layers; tapping card text opens the feature layer. Light, dark and `?theme=dark`. |
+| release-loop-tooling-B3 | [J5.3] | Same evidence as F1-2. |
+| release-loop-tooling-F1-5 | [J4.1] | Agent card matches the current spec wording (VALIDATE - ROUND 1, delta-board, "Click the Save button", "2 checks - 1 passed - 1 failed", started / last step line). |
+| release-loop-tooling-B1 | [J1.3] | `d.tracker` mentions the tracker artifact and has no `World Shell` or `/api/release-loop`; the grep prints nothing. |
+| release-loop-tooling-B2 | [J3.4], [E.4] | `validate:echo-audit:r1` reported stalled and the feature stalled; running with `--stale-minutes 60` passes. |
+| T4-1 | [J3b.3] | Passes under A2: desktop shows Your World, Journeys, Classic Tools; phone shows Journeys and Classic Tools. |
+
+Note: the round-5 log above said no baseline step covers B1, B2 or F1-5. The round-6 validator mapped them to J1.3, J3.4/E.4 and J4.1. Those steps were already in v3 (v3 has not changed), so this is a more precise mapping by the validator, not a spec change and not validator drift.
+
+Observations and non-step findings (none affects the score):
+
+- **MCP_GAP (not a baseline step).** `server/lib/mcpToolRegistry.js` now exists (platform-mcp, merged 20b2769), but has no tool for the tracker sync, the tracker preview or the test-account script. The related `release_tracker_read` tool reads the release-intelligence database, not this tooling. This feature is developer tooling with no platform screen, so it stays an observation, as in round 5. Tracked as backlog T4-2 below.
+- **Flake, second time.** `preview.html?theme=dark` at 1280 failed J4.1 once in the full run: the heading element was not present after the fixed 1.5 s wait. An immediate re-run of that config passed every step. Round 5 saw the same flake on the 390 config. Likely slow first paint of the preview page. Recorded here as a process note; it recurred, so a person should decide whether the validator's fixed wait needs a wait-for-element (that would be an amendment, not an edit).
+- After login on the 390px phone, the Career Placement Agents panel fills the screen and hides the world. Journeys and Classic Tools stay usable, so J3b.3 passes under A2. Not filed as a bug in this feature; a candidate for the owner or world-shell-navigation.
+- Port 6302 was already in use by another process, so the preview server used 6352.
+- The app and tracker load external fonts and Chart.js/three.js, which the sandbox blocks (`external_blocked`, not counted).
+
+Triage and fix for round 6: none. The round passed, so no triage agent or fix agent ran.
+
 ### Spec amendments
 
 | Id | Status | Round | What changed | Proposed by | Reviewer | Branch / commit | Merged in | New baseline |
@@ -127,7 +162,9 @@ Observations:
 
 Both amendment runs reported no failures.
 
-**Validator drift:** none found. Each scored round names its baseline and spec sha256. `release-spec-baseline.mjs check --all` passed at both integrations. The round-5 sha256 is the v3 spec. The proposed J3b.3 clarification from round 4 was filed as A2, not edited in.
+No amendment was proposed or made in round 6.
+
+**Validator drift:** none found. Each scored round names its baseline and spec sha256. `release-spec-baseline.mjs check --all` passed at both integrations. The round-5 and round-6 sha256 values are both the v3 spec, and the recorder's `check --feature release-loop-tooling` at d2beb30 matched v3. The proposed J3b.3 clarification from round 4 was filed as A2, not edited in.
 
 ### Integration commits
 
@@ -139,36 +176,37 @@ Both amendment runs reported no failures.
 | 9be77fb | Merge `spec-r3` (4cf9d9a, A1, baseline v2); pre-merge HEAD ec5e365 | none | passed | `check --all` exit 0. No logs commit (nothing staged). |
 | 8f1c8c4 | Merge `spec-r4` (ffb5fce, A2, baseline v3); pre-merge HEAD 1b6eb38 | none | passed (twice; vite built in 55.45s) | `check --all` exit 0, with all 11 baselines matching. No logs commit. |
 
+No integration commit was made for this feature in round 6: the round passed and nothing was fixed. Round 6 tested 0800b1c, the merge of `release-loop/release-intelligence-spec-r1` (another feature). The commits after 0800b1c (ed234db, c1ef03b, d2beb30) are release-state and tracker-update commits with no code for this feature.
+
 The rows marked n/a predate the workflow data given to this recorder. Their merges are in `git log`; build results for them are in the earlier test-result files.
 
 ### State discrepancy (reported, not resolved here)
 
-The workflow data marks this feature passed, with no blocking items left. The bug-state export (2026-10-09T16:12Z) still lists these items as not closed. A person should reconcile them before relying on the state file.
+The workflow data marks this feature passed, with no blocking items left. The bug-state export (2026-10-10T00:16:59Z, d2beb30) still has the feature at `validate`, last round 5, `openBugs: 6`, and still lists these items as not closed. Round 6 verified each of them by step id (table in Round 6). A person or the loop's state writer should move them to verified before relying on the state file. The recorder did not edit the state file.
 
-- **T4-1** (spec_error): `open`, 0 attempts. It was resolved by A2, and round 5 passed J3b.3. It should move to verified.
-- **release-loop-tooling-F1-2** (defect, 390px stacked cards and stalled label): `recurred`, 0 attempts. Round 4 recorded J5.3 passing after fix-r3b, and round 5 passed J5.3. It should move to verified.
-- **B3** (390px reflow, requirement_gap): `open`. This has the same subject as F1-2 and is covered by passing J5.3.
-- **B1** (requirement_gap, `open`): `definition.json` line 210, `docs/release-process.md` line 52 and the skill claim a World Shell release-loop view and `/api/release-loop/*`, but the change spec says these are out of scope. No baseline step covers it. The capability belongs to `in-app-release-loop` (in build), but the docs claim is this feature's.
-- **B2** (requirement_gap, `open`): `scripts/release-tracker-sync.mjs` line 115 skips the idle check for `fromRun` agents. No baseline step covers it.
-- **release-loop-tooling-F1-5** (requirement_gap, `open`): an owner design decision on whether the agent card shows a page-errors count. No baseline step covers it.
-
-B1, B2 and F1-5 are this_feature items with no baseline step. They did not block the frozen-spec pass. They remain open work, and B1 is a documentation accuracy problem.
+- **T4-1** (spec_error): `open`, 0 attempts. Resolved by A2; J3b.3 passed in rounds 5 and 6.
+- **release-loop-tooling-F1-2** (defect, 390px stacked cards and stalled label): `recurred`, 0 attempts. J5.3 passed in rounds 4, 5 and 6.
+- **B3** (390px reflow, requirement_gap): `open`. Same subject as F1-2; J5.3 passed in round 6.
+- **B1** (requirement_gap, `open`): the docs claim of a World Shell release-loop view. Round 6 passed J1.3 (`d.tracker` no longer mentions `World Shell` or `/api/release-loop`). Note that `in-app-release-loop` has since been merged (50b5c98, 3e4bcc1) and does add a World Shell release-loop screen, so a person should confirm the docs now describe both correctly.
+- **B2** (requirement_gap, `open`): `fromRun` agents and the idle check. J3.4 and E.4 passed in round 6.
+- **release-loop-tooling-F1-5** (requirement_gap, `open`): the agent card. J4.1 passed against the current spec wording in round 6. The owner question below (page-errors count) is still unanswered, so "verified" here means "matches the frozen spec", not "owner approved the design".
 
 ### Escalated for a business definition
 
-There are none in the workflow data. One owner decision is open from earlier rounds (F1-5). The question is: "Should the agent card on the release tracker show a page-errors count again, as the original design did, or is the current `checks · passed · failed` card final?"
+There are none in the round-6 workflow data (`escalated: []`). One owner decision is still open from earlier rounds (F1-5). The question is: "Should the agent card on the release tracker show a page-errors count again, as the original design did, or is the current `checks · passed · failed` card final?"
 
 Round 4 also raised a non-blocking question under T4-2: "Should creating test accounts be reachable over MCP, given it is restricted to local test databases?"
 
 ### Bugs at the per-bug fix-attempt limit (needsHuman)
 
-None. The highest attempt count on any release-loop-tooling item is 1 (RLT-T1, RLT-T2, F1-6, T3-1, T3-3, all verified).
+None. The workflow data for round 6 lists no `needsHuman` items, and no bug in the state export (any feature) is marked needs_human. The highest attempt count on any release-loop-tooling item is 1 (RLT-T1, RLT-T2, F1-6, T3-1, T3-3, all verified).
 
 ### Backlog: NOT blocking this feature
 
 | Id | Scope | Class / status | Evidence | Owner |
 |---|---|---|---|---|
-| T4-2 | pre_existing | environment, `backlog_pre_existing` (round 4) | Not part of this feature's request. `server/lib/mcpToolRegistry.js` belongs to the separate feature platform-mcp (active-release.features.json line 146, still in build). definition.json `interfaceParity.rule` assigns missing MCP tools to platform-mcp until the server exists. No merged feature caused it. platform-mcp should add tracker-read and test-account-status tools. | platform-mcp feature (no person assigned) |
+| T4-2 | pre_existing | environment, `backlog_pre_existing` (round 4; seen again in round 6) | Not part of this feature's request. `server/lib/mcpToolRegistry.js` belongs to the separate feature platform-mcp. In round 4 the file did not exist; by round 6 it exists (merged 20b2769) but has no tool for the tracker sync/preview or `create-test-member.mjs`. Its `release_tracker_read` tool reads the release-intelligence database, not this tooling. No merged feature caused the gap. | platform-mcp feature (no person assigned) |
+| (round-6 flake) | process_note | process, not filed in the bug state | `preview.html?theme=dark` at 1280 failed J4.1 once (heading not present after the fixed 1.5 s wait); re-run passed. Same flake in round 5 on the 390 config. | not assigned |
 | F1-7 | pre_existing | requirement_gap, `backlog_pre_existing` | The release loop inside the platform for in-app agents is out of this feature's request. definition.json and the change spec already say the tracker has no platform screen. When built, it must be reached from the World Shell. | in-app-release-loop feature (no person assigned) |
 | B5 | pre_existing | owner_direction_conflict, `backlog_pre_existing` | The feature definition lists a static tracker page and scripts with no World Shell requirement. The World Shell surface belongs to the separate in-app-release-loop feature. | in-app-release-loop feature (no person assigned) |
 | B4 | process_note | process | Only the local harness stub of the host check was tested. This is a limit of the validation environment. | not assigned |
@@ -285,10 +323,15 @@ The recorder started no server or database and has nothing to clean up.
 | release-loop-tooling fix round 2 | The fix agent was stopped by a usage limit. Its partial work was salvaged to `release-loop/release-loop-tooling-fix-r2` (fc60764, "untested"). | **Not merged.** The branch still exists. Merging it wholesale would revert the newer tracker page (round-3 triage). Superseded by fix-r3b. |
 | release-loop-tooling fix round 3 | fe190e2 edited the training spec directly, which was refused under spec governance (definition v4). | **Not merged.** The branch `release-loop/release-loop-tooling-fix-r3` still exists. The code was re-applied as fix-r3b (dac3ce6, merged 06bd1c8). The spec edits were filed as A1. |
 | release-loop-tooling round 4 triage | The triage agent's reports `docs/triage/release-loop-tooling-round-4.md` and `docs/triage/release-loop-tooling-round-4-scope.md` are named in the workflow data, but neither exists on disk or in any git ref (`git log --all` finds nothing). | Partial. The triage content (T4-1, T4-2) survives only in the workflow data, which this log reproduces in full, and in `active-release.state.json`. A person should decide whether to regenerate the files. |
+| release-loop-tooling round 6 validator | First full run: `preview.html?theme=dark` at 1280, J4.1 threw (heading not present after the fixed 1.5 s wait). | Immediate re-run of that config passed every step. Not reproduced. App server and preview stopped, database dropped (per round-6 report). |
+| release-loop-tooling round 6 validator | Port 6302 (suggested preview port) already in use by another process | Not a failure of the feature. Preview server used 6352 instead. The other process was not touched. |
+| release-loop-tooling round 6 validator | External fonts, Chart.js and three.js requests blocked by the sandbox | `external_blocked`, not counted. Nothing left behind. |
+| Release recorder (this recording) | `node scripts/release-spec-baseline.mjs check release-loop-tooling` refused: "check needs --feature <key> or --all" | Read-only. Re-run as `check --feature release-loop-tooling`, which printed "baselines match: release-loop-tooling v3" (exit 0). |
 | release-loop-tooling round 5 validator | First full run: config m-theme (390 touch, `?theme=dark`) J4.1 threw (heading not present after a fixed 1.5 s wait). | Re-run passed. Not reproduced. The validator stopped its server and preview and dropped its database. |
 | Integration 9be77fb | No failure. The working tree had two edits the integrator did not make: `scripts/release-tracker-sync.mjs` (+18 lines, present before it started) and `docs/release-log/history.json`. | Left uncommitted and unreverted at that time. The recorder found a clean tree at 6082e1b, so they were later committed or discarded by another run sharing the checkout. Not verified which. |
 | Integration 8f1c8c4 | No failure. `npm run build` regenerated `docs/release-log/history.json` (1 line). | Left uncommitted at that time. Clean at 6082e1b (see above). |
 | Concurrent writers | Another process committed "Release loop state" commits (27668ef, 24636dc, 6082e1b) to this checkout while the recorder worked. 6082e1b also committed `docs/test-results/release-loop-tooling/round-5.md`. | Informational. The recorder built on 6082e1b. |
+| Concurrent writers (this recording) | "Release loop state" and "Release update" commits (ed234db, c1ef03b, d2beb30) landed after 0800b1c. `docs/test-results/release-loop-tooling/round-6.md` was untracked when the recorder started. | Informational. While the recorder worked, another process committed 39ffdd1 ("Release loop state ... 00:20Z"), which also committed round-6.md. The recorder's log commit sits on top of 39ffdd1 and contains only this log. |
 | Earlier recording (17a67e9) | A recursive `grep -r` timed out and was replaced by `git grep` | Read-only; nothing written |
 | Earlier release (proficiency-live-qr) | 11 failed or refused commands | See the [earlier release log](2026-10-02-proficiency-live-qr.md) |
 
@@ -296,9 +339,9 @@ The recorder started no server or database and has nothing to clean up. Nothing 
 
 ## Log index
 
-- release-loop-tooling test results: [round-1](../test-results/release-loop-tooling/round-1.md), [round-2](../test-results/release-loop-tooling/round-2.md), [round-3](../test-results/release-loop-tooling/round-3.md), [round-4](../test-results/release-loop-tooling/round-4.md), [round-5](../test-results/release-loop-tooling/round-5.md). Step logs and screenshots are in `/var/tmp/sbpg/release-loop/release-loop-tooling/round-N/`, local and not committed.
+- release-loop-tooling test results: [round-1](../test-results/release-loop-tooling/round-1.md), [round-2](../test-results/release-loop-tooling/round-2.md), [round-3](../test-results/release-loop-tooling/round-3.md), [round-4](../test-results/release-loop-tooling/round-4.md), [round-5](../test-results/release-loop-tooling/round-5.md), [round-6](../test-results/release-loop-tooling/round-6.md). Step logs and screenshots are in `/var/tmp/sbpg/release-loop/release-loop-tooling/round-N/`, local and not committed.
 - release-loop-tooling triage: [round-1 scope](../triage/release-loop-tooling-round-1-scope.md), [fix-r1 reconciliation](../triage/release-loop-tooling-fix-r1-reconciliation.md), [round-2 scope](../triage/release-loop-tooling-round-2-scope.md), [round-3](../triage/release-loop-tooling-round-3.md), [round-3 scope](../triage/release-loop-tooling-round-3-scope.md). The round-4 and round-4 scope files are **missing**.
 - release-loop-tooling amendments: [A1](../spec-amendments/release-loop-tooling/A1.json), [A2](../spec-amendments/release-loop-tooling/A2.json)
 - proficiency-live-qr test results: [round-1](../test-results/proficiency-live-qr/round-1.md) to [round-5](../test-results/proficiency-live-qr/round-5.md) (earlier release). Triage: [round-1](../triage/proficiency-live-qr-round-1.md), [round-2](../triage/proficiency-live-qr-round-2.md), [round-3](../triage/proficiency-live-qr-round-3.md); reconciliations [r2](../triage/proficiency-live-qr-fix-r2-reconciliation.md), [r3](../triage/proficiency-live-qr-fix-r3-reconciliation.md), [r4](../triage/proficiency-live-qr-fix-r4-reconciliation.md)
-- Cross-feature: [scope review](../triage/scope-review.md), [bug state](active-release.state.json) (exported 2026-10-09T16:12Z), [release tracker](release-tracker.md)
+- Cross-feature: [scope review](../triage/scope-review.md), [bug state](active-release.state.json) (exported 2026-10-10T00:16:59Z), [release tracker](release-tracker.md)
 - Sweep: none run for this release.
