@@ -17,14 +17,18 @@
 // Fictional data only (public repo).
 import fs from 'node:fs';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
 
-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+import * as rc from '../server/lib/releaseCut.js';
+
+// --root <dir> = SB_RELEASE_ROOT: use another folder that holds docs/ (the training spec's fixture).
+{ const i = process.argv.indexOf('--root'); if (i >= 0 && process.argv[i + 1]) process.env.SB_RELEASE_ROOT = path.resolve(process.argv[i + 1]); }
+
+// SB_RELEASE_ROOT=<dir> points the cut at another folder that holds docs/ (the training spec's fixture uses it).
+const root = rc.releaseRoot();
 const argv = process.argv.slice(2);
 const opt = (k) => { const i = argv.indexOf(k); return i >= 0 ? argv[i + 1] : null; };
 const LOG = path.join(root, 'docs/release-log');
 const rd = (p, d = null) => { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return d; } };
-const git = (...a) => execFileSync('git', a, { cwd: root }).toString().trim();
 
 const nextVersion = opt('--next-version');
 if (!nextVersion) { console.error('--next-version is required'); process.exit(2); }
@@ -42,32 +46,12 @@ for (const f of fs.readdirSync(LOG)) if (/^\d{4}-\d{2}-\d{2}-.*\.md$/.test(f)) f
 const snapPath = opt('--snapshot');
 if (snapPath && fs.existsSync(snapPath)) fs.copyFileSync(snapPath, path.join(dir, 'tracker-snapshot.json'));
 
-const BACKLOG = new Set(['backlog_pre_existing', 'reassigned', 'process_note']);
-const PERSON = new Set(['needs_human', 'needs_business_definition']);
-const DONE = new Set(['passed', 'passed_with_backlog']);
-const baselineOf = (key) => {
-  const d = path.join(root, 'docs/training/baselines', key);
-  try { return Math.max(...fs.readdirSync(d).map((f) => Number((f.match(/^v(\d+)\.json$/) || [])[1])).filter(Boolean)); } catch { return null; }
-};
-const features = defs.features.map((f) => {
-  const s = state.features?.[f.key] || {};
-  const bugs = (state.bugs || []).filter((b) => b.feature === f.key && b.status !== 'seen_in_test');
-  return {
-    key: f.key, title: f.title, kind: f.kind || 'new', status: s.status || 'not_started', lastRound: s.lastRound ?? null,
-    lastScore: s.lastScore ?? null, baseline: baselineOf(f.key), delivered: DONE.has(s.status),
-    bugs: {
-      verified: bugs.filter((b) => b.status === 'verified').length,
-      backlog: bugs.filter((b) => BACKLOG.has(b.status)).length,
-      needsPerson: bugs.filter((b) => PERSON.has(b.status)).length,
-      open: bugs.filter((b) => b.status !== 'verified' && !BACKLOG.has(b.status)).length,
-    },
-  };
-});
+const features = rc.featureRows(defs, state);
 const sessions = fs.existsSync(path.join(LOG, 'session-plans'))
   ? fs.readdirSync(path.join(LOG, 'session-plans')).filter((f) => f.endsWith('.json')).map((f) => rd(path.join(LOG, 'session-plans', f))).filter((p) => p && p.release === version)
   : [];
 const sum = (k) => features.reduce((n, f) => n + f.bugs[k], 0);
-const frozenCommit = git('rev-parse', '--short=7', 'HEAD');
+const frozenCommit = rc.gitHead() || 'unknown';
 const summary = {
   version, release: defs.release, title: defs.title, frozenAt: new Date().toISOString(), frozenCommit,
   startedAtCommit: defs.startedAtCommit || null,

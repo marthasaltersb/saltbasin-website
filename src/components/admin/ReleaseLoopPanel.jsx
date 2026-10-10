@@ -12,6 +12,7 @@ import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
 import { useToolCategoryGate } from './ToolCategoryGate.jsx';
 import AgentRunnerLoopCard from './AgentRunnerLoopCard.jsx';
+import { ReleasesTab, SessionPlansTab } from './ReleaseCutTabs.jsx';
 
 const C = { ink: '#1b2a3b', sec: '#536173', line: '#e5ded3', soft: '#f6f2ea', accent: '#c4843a', teal: '#2e7f9c', bad: '#a5391f', ok: '#2f7d4f' };
 const S = {
@@ -577,7 +578,7 @@ function EscalationsTab() {
   );
 }
 
-const TABS = ['Definition', 'Runs', 'Escalations'];
+const TABS = ['Definition', 'Runs', 'Escalations', 'Releases', 'Session plans'];
 export default function ReleaseLoopPanel() {
   const [tab, setTab] = useState('Runs');
   return (
@@ -590,6 +591,8 @@ export default function ReleaseLoopPanel() {
       {tab === 'Definition' && <DefinitionTab />}
       {tab === 'Runs' && <RunsTab />}
       {tab === 'Escalations' && <EscalationsTab />}
+      {tab === 'Releases' && <ReleasesTab />}
+      {tab === 'Session plans' && <SessionPlansTab />}
     </div>
   );
 }

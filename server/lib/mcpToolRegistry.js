@@ -50,6 +50,7 @@ import { ROUTE_TOOLS } from './mcpRouteTools.js';
 const rlActor = (user) => ({ id: user.id, label: user.name || user.email || `user ${user.id}` });
 const rlLoop = () => import('./releaseLoopPlatform.js');
 const rlDef = () => import('./releaseLoopDefinition.js');
+const rcLib = () => import('./releaseCut.js');
 const arLib = () => import('./agentRunner.js');
 const arTool = (name, title, description, inputSchema, scope, api, handler) => ({ name, title, description: `Administrators only. ${description}`, inputSchema, scope, permission: 'admin', api, handler });
 const rlObj =(description) => ({ type: 'object', description, additionalProperties: true });
@@ -1029,6 +1030,38 @@ const CORE_TOOLS = [
   rlTool('release_loop_list_escalations', 'List escalations', 'Lists bugs escalated to a person, with the maximum fix attempts per bug.',
     schema({}), 'release.loop.read', 'GET /api/release-loop/escalations',
     async () => ({ escalations: await (await rlLoop()).listEscalations(), maxFixAttemptsPerBug: (await (await rlDef()).getEffectiveDefinition()).definition.bugEscalation.maxFixAttemptsPerBug })),
+  // ── Release cut + session plans (docs/changes/release-cut-and-session-plans.md): same functions as server/routes/releaseCut.js ──
+  rlTool('release_cut_list_releases', 'List releases', 'Lists every release (frozen ones and the open one) with planned, delivered and carried feature counts and the number of session plans.',
+    schema({}), 'release.loop.read', 'GET /api/release-cut/releases',
+    async () => (await rcLib()).listReleases()),
+  rlTool('release_cut_get_release', 'Read one release', 'Returns a frozen release exactly as it was cut (features with last score and baseline, bug counts, sessions) or the open release as it stands now.',
+    schema({ version: str('The release version, for example 0.2.0.', { minLength: 1, maxLength: 40 }) }, ['version']),
+    'release.loop.read', 'GET /api/release-cut/releases/:version',
+    async (args) => (await rcLib()).getRelease(args.version)),
+  rlTool('release_cut_list_sessions', 'List session plans', 'Lists the session estimates of a release (the open release when none is given) with their merges.',
+    schema({ release: str('Optional release version.', { maxLength: 40 }), session: str('Optional: return only this session id.', { maxLength: 120 }) }),
+    'release.loop.read', 'GET /api/release-cut/sessions[/:session]',
+    async (args) => { const l = await rcLib(); return args.session ? { session: l.getSessionPlan(args.session) } : { release: args.release || l.activeDefs().version, sessions: l.listSessionPlans({ release: args.release }) }; }),
+  rlTool('release_cut_session_report', 'Expected versus actual per session', 'One row per estimated item: expected score, the score at the latest merge (null when not validated, never 0) and whether it was met.',
+    schema({ release: str('Optional release version.', { maxLength: 40 }) }),
+    'release.loop.read', 'GET /api/release-cut/sessions/report',
+    async (args) => (await rcLib()).sessionReport({ release: args.release })),
+  rlTool('release_cut_record_estimate', 'Record a session estimate', 'Records what a session expects to deliver before it starts. An estimate is fixed once a merge is recorded; changing it then needs a reestimate reason and keeps the original.',
+    schema({ session: str('Session id.', { minLength: 1, maxLength: 120 }), intent: str('One line on what the session is for.', { maxLength: 500 }), items: { type: 'array', minItems: 1, items: rlObj('{feature, goal, expect like "30/32", size S|M|L}') }, reestimate: str('Reason, required when a merge is already recorded.', { maxLength: 500 }) }, ['session', 'items']),
+    'release.loop.write', 'POST /api/release-cut/sessions/estimate',
+    async (args) => (await rcLib()).recordEstimate(args)),
+  rlTool('release_cut_record_merge', 'Record a merge against a session estimate', 'Reads each feature\'s latest validated round (never filled in by hand) and files it against the session. No feature given means every feature in the estimate.',
+    schema({ session: str('Session id.', { minLength: 1, maxLength: 120 }), commit: str('Merged commit; defaults to the repository head.', { maxLength: 80 }), features: { type: 'array', items: { type: 'string' } }, ifNew: { type: 'boolean', description: 'Record only when a feature has a new validated round.' } }, ['session']),
+    'release.loop.write', 'POST /api/release-cut/sessions/:session/merge',
+    async (args) => (await rcLib()).recordMerge(args)),
+  rlTool('release_cut_close_session', 'Close a session', 'Seals the session\'s estimate-versus-result record. A finalize path: runs the finalization gate first (refused 409 tool_category_required while any technology lacks a proficiency category), same as the website.',
+    schema({ session: str('Session id.', { minLength: 1, maxLength: 120 }), note: str('What happened.', { maxLength: 1000 }) }, ['session']),
+    'release.loop.write', 'POST /api/release-cut/sessions/:session/close',
+    async (args, { user }) => {
+      const { assertReadyToFinalize } = await import('./finalizationGates.js');
+      await assertReadyToFinalize(user.id);
+      return (await rcLib()).closeSession(args);
+    }),
   // ── Platform agent runner (docs/changes/platform-agent-runner.md): same functions as server/routes/agentRunner.js ──
   arTool('agent_runner_overview', 'Agent runner overview', 'Returns worker status, run counts, proposals and scope requests waiting for a person, observed usage and the fixture scenarios.',
     schema({}), 'agent.runner.read', 'GET /api/agent-runner/overview', async () => (await arLib()).overview()),

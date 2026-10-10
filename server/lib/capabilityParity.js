@@ -28,6 +28,7 @@ export const GOVERNED_ROUTE_FILES = Object.freeze({
   'server/routes/careerBound.js': '/api/career-bound',
   'server/routes/outputTemplates.js': '/api/output-templates',
   'server/routes/agentRunner.js': '/api/agent-runner',
+  'server/routes/releaseCut.js': '/api/release-cut',
 });
 
 /** For files governed only in part: file -> pattern a route (`METHOD /full/path`) must match to be governed.
@@ -138,6 +139,10 @@ export const CAPABILITIES = Object.freeze([
   { key: 'release-loop-validation', title: 'Record rounds and live steps (admin)', group: 'Release loop', ui: `${WS} > Journeys > Release loop > Runs`, api: ['POST /api/release-loop/runs/:id/rounds', 'POST /api/release-loop/runs/:id/steps'], mcp: ['release_loop_record_round', 'release_loop_log_step'] },
   { key: 'release-loop-bugs', title: 'Triage and fix bugs (admin)', group: 'Release loop', ui: `${WS} > Journeys > Release loop > Runs`, api: ['POST /api/release-loop/runs/:id/bugs', 'POST /api/release-loop/bugs/:id/fix'], mcp: ['release_loop_add_bug', 'release_loop_bug_action'] },
   { key: 'release-loop-reconciliation', title: 'Reconcile a run (admin)', group: 'Release loop', ui: `${WS} > Journeys > Release loop > Runs`, api: ['POST /api/release-loop/runs/:id/reconciliation', 'PUT /api/release-loop/runs/:id/reconciliation/:itemId'], mcp: ['release_loop_add_reconciliation', 'release_loop_resolve_reconciliation'] },
+  { key: 'release-cut-read', title: 'List releases and read a frozen or open release (admin)', group: 'Release cut', ui: `${WS} > Journeys > Release loop > Releases`, api: ['GET /api/release-cut/releases', 'GET /api/release-cut/releases/:version'], mcp: ['release_cut_list_releases', 'release_cut_get_release'] },
+  { key: 'session-plans-read', title: 'List session estimates, read one, and see expected versus actual (admin)', group: 'Release cut', ui: `${WS} > Journeys > Release loop > Session plans`, api: ['GET /api/release-cut/sessions', 'GET /api/release-cut/sessions/report', 'GET /api/release-cut/sessions/:session'], mcp: ['release_cut_list_sessions', 'release_cut_session_report'] },
+  { key: 'session-plans-write', title: 'Record an estimate (or re-estimate) and record a merge (admin)', group: 'Release cut', ui: `${WS} > Journeys > Release loop > Session plans`, api: ['POST /api/release-cut/sessions/estimate', 'POST /api/release-cut/sessions/:session/merge'], mcp: ['release_cut_record_estimate', 'release_cut_record_merge'] },
+  { key: 'session-plans-close', title: 'Close a session (finalize path: runs the finalization gate) (admin)', group: 'Release cut', ui: `${WS} > Journeys > Release loop > Session plans`, api: ['POST /api/release-cut/sessions/:session/close'], mcp: ['release_cut_close_session'] },
   { key: 'release-loop-escalations', title: 'List escalations (admin)', group: 'Release loop', ui: `${WS} > Journeys > Release loop > Escalations`, api: ['GET /api/release-loop/escalations'], mcp: ['release_loop_list_escalations'] },
   // ── After-session mapping (admin) ─────────────────────────────────────────
   { key: 'session-mapping-config', title: 'Read, save and reset the mapping rules (admin)', group: 'Session mapping', ui: `${WS} > Journeys > Sessions`, api: ['GET /api/session-mapping/config', 'PUT /api/session-mapping/config', 'DELETE /api/session-mapping/config'], mcp: ['session_mapping_config', 'session_mapping_config_save'] },
