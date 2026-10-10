@@ -1,0 +1,12 @@
+{
+  "release_validator": "validate_pass",
+  "release_fixer": "fix_in_scope",
+  "release_integrator": "integrate_ok",
+  "release_test_script_writer": "script_ok",
+  "release_test_runner": "runner_ok",
+  "release_test_extender": "extender_ok",
+  "release_bug_triager": "triager_ok",
+  "release_test_planner": "planner_ok",
+  "release_enhancement_proposer": "enhancement_ok",
+  "release_backlog_gardener": "gardener_ok"
+}

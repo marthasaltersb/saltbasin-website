@@ -1,0 +1,54 @@
+{
+  "description": "Every step of the pinned baseline passes on desktop and phone",
+  "agents": [
+    "release_validator"
+  ],
+  "events": [
+    {
+      "t": "progress",
+      "text": "Opening the app in the pinned Chromium (fixture)"
+    },
+    {
+      "delayMs": 400,
+      "t": "step",
+      "stepId": "J1.1",
+      "surface": "desktop",
+      "status": "pass",
+      "note": "Matched the expected result"
+    },
+    {
+      "delayMs": 400,
+      "t": "step",
+      "stepId": "J1.1",
+      "surface": "mobile",
+      "status": "pass",
+      "note": "Matched the expected result"
+    },
+    {
+      "delayMs": 400,
+      "t": "step",
+      "stepId": "J1.2",
+      "surface": "desktop",
+      "status": "pass",
+      "note": "Matched the expected result"
+    },
+    {
+      "delayMs": 300,
+      "t": "progress",
+      "text": "Scoring against the pinned baseline"
+    }
+  ],
+  "result": {
+    "$validateResult": {}
+  },
+  "usage": {
+    "inputTokens": 1200,
+    "outputTokens": 340,
+    "cacheReadTokens": 800,
+    "cacheWriteTokens": 0,
+    "listCostUsd": null,
+    "activeSeconds": 3,
+    "turns": 4,
+    "observed": false
+  }
+}

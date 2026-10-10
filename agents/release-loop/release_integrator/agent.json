@@ -1,0 +1,8 @@
+{
+  "role": "release_integrator",
+  "name": "Integration agent",
+  "version": 1,
+  "outputKind": "integration",
+  "canEditCode": false,
+  "changeNote": "2026-10-09: first version. Changing this prompt is a reviewed change to this file, like a spec amendment."
+}

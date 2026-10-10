@@ -1,0 +1,52 @@
+{
+  "description": "Tries to edit a file outside the work order, is refused, and files a scope request",
+  "agents": [
+    "release_fixer"
+  ],
+  "events": [
+    {
+      "t": "progress",
+      "text": "Reading the work order"
+    },
+    {
+      "delayMs": 500,
+      "t": "edit",
+      "file": "src/gate.jsx",
+      "added": 6,
+      "deleted": 1
+    },
+    {
+      "delayMs": 400,
+      "t": "scope_request",
+      "file": "src/gate.jsx",
+      "why": "The label width is computed in src/gate.jsx, so the root cause is there",
+      "item": "{{workOrder.items.0.key}}"
+    },
+    {
+      "delayMs": 300,
+      "t": "progress",
+      "text": "Nothing else in the work order can fix this item"
+    }
+  ],
+  "diff": {
+    "files": [],
+    "commits": []
+  },
+  "result": {
+    "branch": "release-loop/seed-catalog-fix-r1",
+    "commit": "abc1234",
+    "fixed": [],
+    "notFixed": [
+      {
+        "id": "{{workOrder.items.0.key}}",
+        "why": "Root cause is in src/gate.jsx, which the work order does not list; a scope request was filed"
+      }
+    ],
+    "failures": []
+  },
+  "usage": {
+    "inputTokens": 1800,
+    "outputTokens": 500,
+    "observed": false
+  }
+}

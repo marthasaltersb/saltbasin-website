@@ -1,0 +1,30 @@
+{
+  "description": "Proposes removing a step without naming a duplicate (goes to the owner)",
+  "agents": [
+    "release_test_extender"
+  ],
+  "events": [
+    {
+      "t": "progress",
+      "text": "Reading the latest baseline (fixture)"
+    }
+  ],
+  "result": {
+    "feature": "{{params.feature}}",
+    "reason": "The step seems unnecessary",
+    "changes": [
+      {
+        "op": "retire",
+        "stepId": "J1.2",
+        "after": "Retire the step",
+        "tracesTo": "Tidying",
+        "whyNeeded": "It is not needed"
+      }
+    ]
+  },
+  "usage": {
+    "inputTokens": 500,
+    "outputTokens": 100,
+    "observed": false
+  }
+}

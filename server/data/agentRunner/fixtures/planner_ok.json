@@ -1,0 +1,21 @@
+{
+  "description": "Supplies the changed files of a change that touches one feature",
+  "agents": [
+    "release_test_planner"
+  ],
+  "events": [
+    {
+      "t": "progress",
+      "text": "Listing the changed files (fixture)"
+    }
+  ],
+  "result": {
+    "changedFiles": "{{params.changedFiles}}",
+    "rationale": "The change touches the files listed"
+  },
+  "usage": {
+    "inputTokens": 400,
+    "outputTokens": 100,
+    "observed": false
+  }
+}

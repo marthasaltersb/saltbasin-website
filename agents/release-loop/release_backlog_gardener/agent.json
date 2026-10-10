@@ -1,0 +1,8 @@
+{
+  "role": "release_backlog_gardener",
+  "name": "Backlog gardener",
+  "version": 1,
+  "outputKind": "shaped_seed",
+  "canEditCode": false,
+  "changeNote": "2026-10-09: first version. Changing this prompt is a reviewed change to this file, like a spec amendment."
+}

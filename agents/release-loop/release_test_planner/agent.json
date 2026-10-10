@@ -1,0 +1,8 @@
+{
+  "role": "release_test_planner",
+  "name": "Smoke vs regression planner",
+  "version": 1,
+  "outputKind": "test_plan",
+  "canEditCode": false,
+  "changeNote": "2026-10-09: first version. Changing this prompt is a reviewed change to this file, like a spec amendment."
+}
