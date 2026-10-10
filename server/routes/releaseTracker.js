@@ -14,6 +14,7 @@ import {
   ingestSnapshot, getState, listSnapshots, listIngestLog, createToken, listTokens, revokeToken, verifyToken,
   viewerKindForUser, shareTokenAllowed, pullFromRepo, subscribe, streamClientCount,
 } from '../lib/releaseTrackerService.js';
+import { jsonProblemMessage } from '../lib/friendlyErrors.js';
 
 const router = Router();
 const fail = (res, e) => {
@@ -91,7 +92,7 @@ router.post('/snapshots', wrap(async (req, res) => {
   res.status(out.outcome === 'stored' ? 201 : 200).json(out);
 }));
 function safeParse(text, what) {
-  try { return JSON.parse(text); } catch (e) { throw new TrackerError(`The ${what} is not valid JSON: ${e.message}`, 400, 'json_invalid'); }
+  try { return JSON.parse(text); } catch (e) { throw new TrackerError(jsonProblemMessage(what, e), 400, 'json_invalid'); }
 }
 
 // ── Pull ────────────────────────────────────────────────────────────────────

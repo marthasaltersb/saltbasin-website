@@ -17,6 +17,7 @@ import { toast } from '../../lib/toast.js';
 import ChartGallery from './ChartGallery.jsx';
 import ProficiencyRulesPanel from './ProficiencyRulesPanel.jsx';
 import { OVERRIDABLE_JOB_FIELDS, withOverride } from '../../lib/masterOverrides.js';
+import { httpProblem } from '../../lib/friendlyError.js';
 
 const TABS = ['Header / Footer', 'Stat Cards', 'Infographics', 'Sections', 'Rules & why'];
 
@@ -183,7 +184,7 @@ export default function OutputTemplateConfigurator({ outputType, scope = 'member
     if (!r.ok) {
       let detail = '';
       try { const b = await r.json(); detail = b?.error ? ` - ${b.error}` : ''; } catch { /* empty or non-JSON body */ }
-      throw new Error(`HTTP ${r.status}${r.statusText ? ` ${r.statusText}` : ''}${detail}`);
+      throw new Error(httpProblem(r.status, detail ? detail.replace(/^ - /, '') : ''));
     }
     return r.json();
   }

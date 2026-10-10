@@ -290,7 +290,7 @@ function Field({ f, value, onChange, metaOptions, catalogs }) {
         style={S.textarea}
         defaultValue={JSON.stringify(value ?? {}, null, 2)}
         onBlur={(e) => {
-          try { onChange(JSON.parse(e.target.value || '{}')); } catch { toast('Invalid JSON — change not applied'); }
+          try { onChange(JSON.parse(e.target.value || '{}')); } catch { toast.error('Your change was not applied because part of the text is mistyped or missing. Check for a missing comma, quote or bracket, then try again.'); }
         }}
       />
     );

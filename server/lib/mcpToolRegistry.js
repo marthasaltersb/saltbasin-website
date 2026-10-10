@@ -45,6 +45,7 @@ async function versionHistoryOr404(userId, outputId) {
 }
 
 import { ROUTE_TOOLS } from './mcpRouteTools.js';
+import { jsonProblemMessage } from './friendlyErrors.js';
 
 /** Release loop tools: same functions and error statuses as server/routes/releaseLoop.js; the admin check is the registry's permission. */
 const rlActor = (user) => ({ id: user.id, label: user.name || user.email || `user ${user.id}` });
@@ -887,7 +888,7 @@ const CORE_TOOLS = [
     schema({ releaseKey: str('The release key.', { maxLength: 200 }), snapshot: { description: 'The snapshot, as an object or a JSON string.', type: ['object', 'string'] } }, ['releaseKey', 'snapshot']), RI, 'POST /api/release-intelligence/import/snapshot',
     async (args, { user }) => {
       let snap = args.snapshot;
-      if (typeof snap === 'string') { try { snap = JSON.parse(snap); } catch (e) { throw riBad(`The snapshot is not valid JSON: ${e.message}`); } }
+      if (typeof snap === 'string') { try { snap = JSON.parse(snap); } catch (e) { throw riBad(jsonProblemMessage('snapshot', e)); } }
       const imp = await riImp();
       const result = await imp.importSnapshot(String(args.releaseKey || '').trim(), snap, { actor: rlActor(user) });
       return { ...result, attributed: await imp.attributeOrphans() };

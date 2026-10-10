@@ -5,6 +5,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
+import { jsonProblem } from '../../lib/friendlyError.js';
 
 const C = { ink: '#1b2a3b', sec: '#536173', line: '#e5ded3', bad: '#a5391f', ok: '#2f7d4f' };
 
@@ -25,7 +26,7 @@ export default function QualificationRulesPanel() {
 
   async function save() {
     let parsed;
-    try { parsed = JSON.parse(text); } catch (e) { setMessage({ ok: false, text: `That is not valid JSON: ${e.message}` }); return; }
+    try { parsed = JSON.parse(text); } catch (e) { setMessage({ ok: false, text: jsonProblem('gate list', e) }); return; }
     setBusy(true); setMessage(null);
     try {
       const r = await api.saveCareerVerificationCurrent(parsed);
@@ -58,7 +59,7 @@ export default function QualificationRulesPanel() {
           <button onClick={save} disabled={busy} style={{ minHeight: 44, marginTop: '0.6rem', padding: '0.45rem 1.1rem', borderRadius: 8, border: 'none', background: C.ink, color: '#fff', fontWeight: 600, cursor: 'pointer' }}>
             {busy ? 'Saving…' : 'Save qualification rule'}
           </button>
-          {message && <div role={message.ok ? 'status' : 'alert'} style={{ marginTop: '0.6rem', color: message.ok ? C.ok : C.bad }}>{message.text}</div>}
+          {message && <div role={message.ok ? 'status' : 'alert'} style={{ marginTop: '0.6rem', whiteSpace: 'pre-line', color: message.ok ? C.ok : C.bad }}>{message.text}</div>}
         </>
       )}
     </div>

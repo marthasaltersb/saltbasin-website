@@ -5220,7 +5220,7 @@ function OutputGeneratorBlock({ section, mode }) {
       const data = await res.json();
       setOutput(data.reply || data.response || data.content || JSON.stringify(data));
     } catch (e) {
-      setOutput(`Error: ${e.message}`);
+      setOutput('That did not work, so there is no reply to show. Check your connection and try again.');
     }
     setGenerating(false);
   }

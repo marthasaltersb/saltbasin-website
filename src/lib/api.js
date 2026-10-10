@@ -1,3 +1,4 @@
+import { httpProblem } from './friendlyError.js';
 // Thin fetch wrapper. All admin routes are cookie-authed; we always send credentials.
 async function request(path, options = {}) {
   const res = await fetch(path, {
@@ -11,7 +12,7 @@ async function request(path, options = {}) {
   const contentType = res.headers.get('content-type') || '';
   const body = contentType.includes('application/json') ? await res.json() : await res.text();
   if (!res.ok) {
-    const err = new Error(body?.error || `Request failed: ${res.status}`);
+    const err = new Error(httpProblem(res.status, body?.error));
     err.status = res.status;
     err.body = body;
     throw err;
@@ -481,7 +482,7 @@ export const api = {
     const contentType = res.headers.get('content-type') || '';
     const body = contentType.includes('application/json') ? await res.json() : await res.text();
     if (!res.ok) {
-      const err = new Error(body?.error || `Request failed: ${res.status}`);
+      const err = new Error(httpProblem(res.status, body?.error));
       err.status = res.status;
       err.body = body;
       throw err;
@@ -495,19 +496,19 @@ export const api = {
   downloadCareerSemanticTemplate: async () => {
     const res = await fetch('/api/career/semantic-template', { credentials: 'include' });
     if (res.status === 404) { const e = new Error('not_built'); e.status = 404; throw e; }
-    if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+    if (!res.ok) { const e = new Error(httpProblem(res.status)); e.status = res.status; throw e; }
     return res.blob();
   },
   importCareerSemanticWorkbook: async (formData) => {
     const res = await fetch('/api/career/semantic-import', { method: 'POST', credentials: 'include', body: formData });
     const body = await res.json().catch(() => ({}));
-    if (!res.ok) { const e = new Error(body?.error || `Request failed: ${res.status}`); e.status = res.status; throw e; }
+    if (!res.ok) { const e = new Error(httpProblem(res.status, body?.error)); e.status = res.status; throw e; }
     return body;
   },
   analyzeCareerResume: async (formData) => {
     const res = await fetch('/api/career/resume-analysis', { method: 'POST', credentials: 'include', body: formData });
     const body = await res.json().catch(() => ({}));
-    if (!res.ok) { const e = new Error(body?.error || `Request failed: ${res.status}`); e.status = res.status; throw e; }
+    if (!res.ok) { const e = new Error(httpProblem(res.status, body?.error)); e.status = res.status; throw e; }
     return body;
   },
   commitCareerMappings: (entries, source) =>
@@ -683,14 +684,14 @@ export const api = {
       method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ projectionIds }),
     });
-    if (!res.ok) { const body = await res.json().catch(() => ({})); const e = new Error(body?.error || `Request failed: ${res.status}`); e.status = res.status; throw e; }
+    if (!res.ok) { const body = await res.json().catch(() => ({})); const e = new Error(httpProblem(res.status, body?.error)); e.status = res.status; throw e; }
     return res.blob();
   },
   emailResumeOutputs: (projectionIds, toEmail) => request('/api/career-agents/resume-outputs/email', { method: 'POST', body: JSON.stringify({ projectionIds, toEmail }) }),
   importOutputForOpportunity: async (opportunityId, formData) => {
     const res = await fetch(`/api/career-agents/opportunities/${opportunityId}/import-output`, { method: 'POST', credentials: 'include', body: formData });
     const body = await res.json().catch(() => ({}));
-    if (!res.ok) { const e = new Error(body?.error || `Request failed: ${res.status}`); e.status = res.status; throw e; }
+    if (!res.ok) { const e = new Error(httpProblem(res.status, body?.error)); e.status = res.status; throw e; }
     return body;
   },
   generateResumeQueue: (limit) => request('/api/career-agents/generate-resume-queue', { method: 'POST', body: JSON.stringify({ limit }) }),
@@ -716,7 +717,7 @@ export const api = {
   importCareerPipelineWorkbook: async (formData) => {
     const res = await fetch('/api/career-agents/import', { method: 'POST', credentials: 'include', body: formData });
     const body = await res.json().catch(() => ({}));
-    if (!res.ok) { const e = new Error(body?.error || `Request failed: ${res.status}`); e.status = res.status; throw e; }
+    if (!res.ok) { const e = new Error(httpProblem(res.status, body?.error)); e.status = res.status; throw e; }
     return body;
   },
 
@@ -772,7 +773,7 @@ export const api = {
     const contentType = res.headers.get('content-type') || '';
     const body = contentType.includes('application/json') ? await res.json() : await res.text();
     if (!res.ok) {
-      const err = new Error(body?.error || `Request failed: ${res.status}`);
+      const err = new Error(httpProblem(res.status, body?.error));
       err.status = res.status;
       err.body = body;
       throw err;

@@ -8,10 +8,11 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
 import { useToolCategoryGate } from '../admin/ToolCategoryGate.jsx';
+import { jsonProblem, headlineOf } from '../../lib/friendlyError.js';
 
 const when = (ms) => (ms ? new Date(ms).toISOString().replace('T', ' ').slice(0, 19) + ' UTC' : '—');
 const Field = ({ label, children, hint }) => <label className="rt-field"><span>{label}</span>{children}{hint ? <span style={{ fontSize: 12 }}>{hint}</span> : null}</label>;
-const Err = ({ error }) => (error ? <div role="alert" className="rt-alert">{error}</div> : null);
+const Err = ({ error }) => (error ? <div role="alert" className="rt-alert" style={{ whiteSpace: 'pre-line' }}>{error}</div> : null);
 
 function useAction() {
   const [busy, setBusy] = useState(false); const [error, setError] = useState('');
@@ -131,7 +132,7 @@ export default function TrackerSettings({ currentRelease }) {
         <Field label="Snapshot JSON"><textarea aria-label="Snapshot JSON" value={pasteText} onChange={(e) => setPasteText(e.target.value)} spellCheck="false" /></Field>
         <Err error={paste.error} />
         <div className="rt-actions"><button type="button" className="rt-btn primary" disabled={paste.busy || !pasteText.trim()} onClick={async () => {
-          let body; try { body = JSON.parse(pasteText); } catch (e) { paste.setError(`That is not valid JSON: ${e.message}`); toast.error('That is not valid JSON'); return; }
+          let body; try { body = JSON.parse(pasteText); } catch (e) { const m = jsonProblem('snapshot', e); paste.setError(m); toast.error(headlineOf(m)); return; }
           const r = await paste.run(() => api.releaseTrackerStoreSnapshot(body)); if (r) { toast.success(r.outcome === 'stored' ? `Snapshot ${r.id} stored` : 'Nothing new: identical to the latest snapshot'); setPasteText(''); load(); }
         }}>Store snapshot</button></div>
       </section>

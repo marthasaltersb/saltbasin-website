@@ -11,6 +11,7 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
 import CareerBoundOutputEditor from './CareerBoundOutputEditor.jsx';
+import { jsonProblem, headlineOf } from '../../lib/friendlyError.js';
 
 const ENTRY_TYPE_LABELS = {
   career_job_entry: 'Job', career_skill_entry: 'Skill', career_tool_entry: 'Tool',
@@ -34,7 +35,7 @@ const S = {
   dictateBox: { width: '100%', boxSizing: 'border-box', border: '0.5px solid rgba(0,0,0,0.18)', borderRadius: 7, padding: '0.5rem 0.65rem', fontSize: '0.78rem', fontFamily: 'inherit', marginTop: '0.5rem' },
   btnRow: { display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.6rem' },
   btn: (tone = 'outline', disabled = false) => ({
-    padding: '0.4rem 0.8rem', borderRadius: 7, border: tone === 'outline' ? '0.5px solid rgba(0,0,0,0.18)' : 'none',
+    padding: '0.4rem 0.8rem', minHeight: 44, borderRadius: 7, border: tone === 'outline' ? '0.5px solid rgba(0,0,0,0.18)' : 'none',
     cursor: 'pointer', fontSize: '0.74rem', fontFamily: 'var(--sb-font-label)',
     background: tone === 'gold' ? 'var(--sb-gold, #c4843a)' : tone === 'navy' ? 'var(--sb-navy, #1b2a3b)' : 'white',
     color: tone === 'gold' || tone === 'navy' ? 'white' : '#333',
@@ -47,6 +48,7 @@ const S = {
   boxLabel: { fontSize: '0.6rem', letterSpacing: '0.06em', textTransform: 'uppercase', color: '#888', fontWeight: 700, marginBottom: 2 },
   packageTag: { display: 'inline-block', fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#1e565a', background: 'rgba(2,161,166,0.12)', borderRadius: 999, padding: '0.15rem 0.55rem', marginBottom: '0.6rem', marginRight: '0.4rem' },
   warnBox: { background: '#FBEBD0', border: '1px solid #E8C98F', color: '#5C3B08', borderRadius: 8, padding: '0.6rem 0.8rem', fontSize: '0.78rem', marginBottom: '0.75rem', lineHeight: 1.5 },
+  errBox: { background: '#FBE4DF', border: '1px solid #D9877A', color: '#7A1F0F', borderRadius: 8, padding: '0.6rem 0.8rem', fontSize: '0.78rem', marginBottom: '0.75rem', lineHeight: 1.5, whiteSpace: 'pre-line' },
   checkboxLabel: { display: 'flex', gap: '0.4rem', alignItems: 'center', fontSize: '0.72rem', color: '#666', marginTop: '0.5rem' },
 };
 
@@ -229,21 +231,21 @@ function PackageImportCard({ onImported }) {
   async function readFile(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    try { setText(await file.text()); setError(null); } catch (err) { setError(`Could not read the file: ${err.message}`); }
+    try { setText(await file.text()); setError(null); } catch (err) { setError(`That file could not be read. Pick it again, or paste its text instead.\nTechnical detail: ${err.message}`); }
   }
 
   async function run() {
     setBusy(true); setError(null); setSummary(null);
     try {
       let pkg;
-      try { pkg = JSON.parse(text); } catch (err) { throw new Error(`That is not valid JSON: ${err.message}`); }
+      try { pkg = JSON.parse(text); } catch (err) { throw new Error(jsonProblem('package', err)); }
       const result = await api.importCareerPackageSource(pkg);
       setSummary(result);
       toast.success(`Package filed - ${result.created} review task${result.created === 1 ? '' : 's'} raised`);
       onImported();
     } catch (err) {
       setError(err.message);
-      toast.error(err.message);
+      toast.error(headlineOf(err.message));
     } finally {
       setBusy(false);
     }
@@ -258,7 +260,7 @@ function PackageImportCard({ onImported }) {
       <div style={S.btnRow}>
         <button type="button" style={S.btn('navy', busy || !text.trim())} disabled={busy || !text.trim()} onClick={run}>{busy ? 'Importing...' : 'Import and check against Career Master'}</button>
       </div>
-      {error && <div role="alert" style={{ ...S.warnBox, marginTop: '0.6rem' }}>{error}</div>}
+      {error && <div role="alert" style={{ ...S.errBox, marginTop: '0.6rem' }}>{error}</div>}
       {summary && (
         <div role="status" style={S.reasoning} data-testid="package-import-summary">
           Filed {summary.outputs.length} output{summary.outputs.length === 1 ? '' : 's'}; {summary.created} new task{summary.created === 1 ? '' : 's'}
@@ -297,7 +299,7 @@ function ConvertSection({ openEditor, refreshKey }) {
     }
   }
 
-  if (error) return <div role="alert" style={S.warnBox}>Could not load imported resumes: {error}</div>;
+  if (error) return <div role="alert" style={S.errBox}>Could not load imported resumes: {error}</div>;
   if (!items || !items.length) return null;
   return (
     <>
@@ -311,7 +313,7 @@ function ConvertSection({ openEditor, refreshKey }) {
           </div>
         </div>
       ))}
-      {notice?.error && <div role="alert" style={S.warnBox}>{notice.error}</div>}
+      {notice?.error && <div role="alert" style={S.errBox}>{notice.error}</div>}
       {notice?.id && (
         <div role="status" style={S.banner} data-testid="convert-notice">
           Career-bound draft created.
@@ -342,7 +344,7 @@ function SyncFailedSection({ refreshKey, onRetried }) {
     } catch (e) { toast.error(e.message); }
   }
 
-  if (error) return <div role="alert" style={S.warnBox}>Could not check for failed syncs: {error}</div>;
+  if (error) return <div role="alert" style={S.errBox}>Could not check for failed syncs: {error}</div>;
   if (!items || !items.length) return null;
   return (
     <>

@@ -17,6 +17,7 @@ import { proposeMappings } from './sessionMappingRules.js';
 import {
   analyzeLines, combineAgents, analyzeSessionFile, listSessionFiles, projectFolderFor, cacheHitRatio, TOKEN_TYPES,
 } from './sessionAnalysis.js';
+import { jsonProblemMessage } from './friendlyErrors.js';
 
 const n = (v) => (v == null ? null : Number(v));
 const bad = (message, status = 400) => { const e = new Error(message); e.status = status; return e; };
@@ -316,7 +317,7 @@ export async function importTranscriptText({ sessionId, main, subagents = [] }, 
 export async function importMetricsJson(input, { actor } = {}) {
   let rec = input;
   if (typeof rec === 'string') {
-    try { rec = JSON.parse(rec); } catch (e) { throw bad(`The analysis is not valid JSON: ${e.message}`); }
+    try { rec = JSON.parse(rec); } catch (e) { throw bad(jsonProblemMessage('analysis', e)); }
   }
   return saveAnalysis(rec, { actor: actor?.label });
 }

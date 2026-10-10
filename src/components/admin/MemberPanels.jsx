@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { styles } from './adminStyles.js';
+import { httpProblem } from '../../lib/friendlyError.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -33,7 +34,7 @@ export function MemberStatsPanel({ isAdmin = false }) {
   React.useEffect(() => {
     const url = isAdmin ? '/api/members/admin/stats' : '/api/members/me/stats';
     fetch(url, { credentials: 'same-origin' })
-      .then((r) => { if (!r.ok) throw new Error(r.statusText); return r.json(); })
+      .then((r) => { if (!r.ok) throw new Error(httpProblem(r.status)); return r.json(); })
       .then(setData)
       .catch((e) => setError(e.message));
   }, [isAdmin]);
@@ -48,7 +49,7 @@ export function MemberStatsPanel({ isAdmin = false }) {
         </div>
       </div>
       <div style={styles.editorBody}>
-        {error && <div style={{ color: 'var(--sb-risk-critical)', fontSize: '0.85rem' }}>{error}</div>}
+        {error && <div style={{ color: 'var(--sb-risk-critical)', fontSize: '0.85rem', whiteSpace: 'pre-line' }}>{error}</div>}
         {!data && !error && <div style={{ color: 'var(--sb-dusty)', fontSize: '0.85rem' }}>Loading…</div>}
 
         {data && !isAdmin && (
@@ -173,7 +174,7 @@ export function MemberAuditPanel({ isAdmin = false }) {
       ? `/api/members/admin/audit?limit=${LIMIT}&offset=${off}`
       : `/api/members/me/audit?limit=${LIMIT}&offset=${off}`;
     fetch(url, { credentials: 'same-origin' })
-      .then((r) => { if (!r.ok) throw new Error(r.statusText); return r.json(); })
+      .then((r) => { if (!r.ok) throw new Error(httpProblem(r.status)); return r.json(); })
       .then((d) => {
         setEntries((prev) => off === 0 ? d.entries : [...(prev || []), ...d.entries]);
         setOffset(off + d.entries.length);
@@ -191,7 +192,7 @@ export function MemberAuditPanel({ isAdmin = false }) {
         </div>
       </div>
       <div style={styles.editorBody}>
-        {error && <div style={{ color: 'var(--sb-risk-critical)', fontSize: '0.85rem' }}>{error}</div>}
+        {error && <div style={{ color: 'var(--sb-risk-critical)', fontSize: '0.85rem', whiteSpace: 'pre-line' }}>{error}</div>}
         {!entries && !error && <div style={{ color: 'var(--sb-dusty)', fontSize: '0.85rem' }}>Loading…</div>}
 
         {entries && entries.length === 0 && (

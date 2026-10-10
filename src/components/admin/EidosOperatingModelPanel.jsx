@@ -86,7 +86,7 @@ function Field({ f, value, onChange, disabled }) {
         defaultValue={JSON.stringify(value ?? (f.arrayShape ? [] : {}), null, 2)}
         disabled={disabled}
         onBlur={(e) => {
-          try { onChange(JSON.parse(e.target.value || (f.arrayShape ? '[]' : '{}'))); } catch { toast('Invalid JSON — change not applied'); }
+          try { onChange(JSON.parse(e.target.value || (f.arrayShape ? '[]' : '{}'))); } catch { toast.error('Your change was not applied because part of the text is mistyped or missing. Check for a missing comma, quote or bracket, then try again.'); }
         }}
       />
     );

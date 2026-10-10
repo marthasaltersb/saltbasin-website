@@ -21,6 +21,7 @@ import CareerBoundOutputEditor from './CareerBoundOutputEditor.jsx';
 import { OutputVersionHistoryModal } from './OutputVersionHistory.jsx';
 import CoverLetterPackagesPanel from './CoverLetterPackagesPanel.jsx';
 import CoverLetterWorkbench from './CoverLetterWorkbench.jsx';
+import { jsonProblem } from '../../lib/friendlyError.js';
 
 // The review queue opens over this panel (portalled to <body>: the World Shell rail's
 // backdrop-filter would otherwise trap a position:fixed layer), so it is reachable from
@@ -503,7 +504,7 @@ export default function MyResumePanel({ scope = 'member' }) {
     setPkgImport((s) => ({ ...s, busy: true, message: null }));
     try {
       let pkg;
-      try { pkg = JSON.parse(await file.text()); } catch (e) { throw new Error(`That file is not valid JSON: ${e.message}`); }
+      try { pkg = JSON.parse(await file.text()); } catch (e) { throw new Error(jsonProblem('package file', e)); }
       const r = await api.importApplicationPackage(pkg, pkgImport.linkOpportunity);
       const n = (r.results || []).length;
       setPkgImport((s) => ({ ...s, busy: false, message: { ok: true, text: `Imported ${n} document${n === 1 ? '' : 's'}${r.opportunity ? ' and linked them to an opportunity' : ''}. Unchanged documents are skipped.` } }));
@@ -956,7 +957,7 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
         <input type="file" accept="application/json,.json" aria-label="Application package file" disabled={pkgImport.busy}
           onChange={(e) => { importPackageFile(e.target.files?.[0]); e.target.value = ''; }} style={{ maxWidth: '100%', minHeight: 44 }} />
         {pkgImport.busy && <div role="status" style={{ fontSize: '0.8rem', marginTop: '0.4rem' }}>Importing…</div>}
-        {pkgImport.message && <div role={pkgImport.message.ok ? 'status' : 'alert'} style={{ fontSize: '0.82rem', marginTop: '0.4rem', color: pkgImport.message.ok ? '#2e7d32' : '#b3261e' }}>{pkgImport.message.text}</div>}
+        {pkgImport.message && <div role={pkgImport.message.ok ? 'status' : 'alert'} style={{ fontSize: '0.82rem', marginTop: '0.4rem', whiteSpace: 'pre-line', color: pkgImport.message.ok ? '#2e7d32' : '#b3261e' }}>{pkgImport.message.text}</div>}
       </div>
       <CoverLetterPackagesPanel onOpenLetter={setAgentLetterId} onOutputsChanged={loadResumeOutputs} reloadKey={packagesReload} />
 
