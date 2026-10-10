@@ -27,45 +27,45 @@ Under it, on its own line, the message continues `Technical detail: ` followed b
 
 ## Preconditions (fictional data)
 
-1. Signed in as `admin@test.local` with the platform and Career Portfolio terms already accepted (the test account script does this).
-2. A file named `bad-package.json` outside the repository containing exactly the 15 characters `{"documents": [` (an unfinished list).
-3. Nothing else is required; every journey starts by opening its screen.
+1. [P.1] Signed in as `admin@test.local` with the platform and Career Portfolio terms already accepted (the test account script does this).
+2. [P.2] A file named `bad-package.json` outside the repository containing exactly the 15 characters `{"documents": [` (an unfinished list).
+3. [P.3] Nothing else is required; every journey starts by opening its screen.
 
 ## Journey 1 — Qualification Rules: broken gate list
 
-1. Open `/world`, click **Qualification Rules** in the Sun menu. Expect the screen titled **Qualification Rules** with a text box labelled **Gates (JSON)** holding the current gate chain and the button **Save qualification rule**.
-2. Replace the whole text of **Gates (JSON)** with `{"gates": [ {"key": "a", }` and click **Save qualification rule**. Expect, below the button, an alert whose first line is exactly PLAIN-SENTENCE(gate list) and whose second line starts with `Technical detail:`.
-3. Check the colour of that alert text. Expect red (computed colour `rgb(165, 57, 31)`), not amber and not green.
-4. Check the page for sideways scrolling and the button size. Expect no horizontal page scroll, and the button **Save qualification rule** at least 44px tall.
-5. Click **← Back to World**, then **Qualification Rules** again. Expect the text box to hold the original saved gate chain, not the broken text (nothing was saved).
+1. [J1.1] Open `/world`, click **Qualification Rules** in the Sun menu. Expect the screen titled **Qualification Rules** with a text box labelled **Gates (JSON)** holding the current gate chain and the button **Save qualification rule**.
+2. [J1.2] Replace the whole text of **Gates (JSON)** with `{"gates": [ {"key": "a", }` and click **Save qualification rule**. Expect, below the button, an alert whose first line is exactly PLAIN-SENTENCE(gate list) and whose second line starts with `Technical detail:`.
+3. [J1.3] Check the colour of that alert text. Expect red (computed colour `rgb(165, 57, 31)`), not amber and not green.
+4. [J1.4] Check the page for sideways scrolling and the button size. Expect no horizontal page scroll, and the button **Save qualification rule** at least 44px tall.
+5. [J1.5] Click **← Back to World**, then **Qualification Rules** again. Expect the text box to hold the original saved gate chain, not the broken text (nothing was saved).
 
 ## Journey 2 — Release tracker: broken pasted snapshot
 
-1. Open `/world`, click **Release tracker**, then the tab **Settings**. Expect a card headed **Paste a snapshot** with a box labelled **Snapshot JSON**.
-2. Type `{"snapshot": ` into **Snapshot JSON** and click **Store snapshot**. Expect an alert box under the box whose first line is exactly PLAIN-SENTENCE(snapshot) and whose second line starts with `Technical detail:`.
-3. Look for the pop-up message. Expect a red toast (role alert) whose whole text is exactly PLAIN-SENTENCE(snapshot), with no detail line.
-4. Check the page for sideways scrolling. Expect none.
-5. Select all the text in **Snapshot JSON** and delete it. Expect the button **Store snapshot** to be disabled.
+1. [J2.1] Open `/world`, click **Release tracker**, then the tab **Settings**. Expect a card headed **Paste a snapshot** with a box labelled **Snapshot JSON**.
+2. [J2.2] Type `{"snapshot": ` into **Snapshot JSON** and click **Store snapshot**. Expect an alert box under the box whose first line is exactly PLAIN-SENTENCE(snapshot) and whose second line starts with `Technical detail:`.
+3. [J2.3] Look for the pop-up message. Expect a red toast (role alert) whose whole text is exactly PLAIN-SENTENCE(snapshot), with no detail line.
+4. [J2.4] Check the page for sideways scrolling. Expect none.
+5. [J2.5] Select all the text in **Snapshot JSON** and delete it. Expect the button **Store snapshot** to be disabled.
 
 ## Journey 3 — Career Sources to Review: broken package text
 
-1. Open `/world`, click **My Resume**, then the button **Career Sources to Review**. Expect a screen with a text box labelled **Package JSON** (placeholder "...or paste package JSON here") and the button **Import and check against Career Master**, disabled while the box is empty.
-2. Type `{"package": ` into **Package JSON**. Expect the button **Import and check against Career Master** to become enabled and to be at least 44px tall.
-3. Click **Import and check against Career Master**. Expect an alert whose first line is exactly PLAIN-SENTENCE(package) and whose second line starts with `Technical detail:`.
-4. Check the alert background. Expect a red tint (`rgb(251, 228, 223)`), not the amber of the other cards on the screen.
-5. Look for the pop-up. Expect a red toast with whole text exactly PLAIN-SENTENCE(package) and no detail line.
-6. Check the page for sideways scrolling. Expect none.
+1. [J3.1] Open `/world`, click **My Resume**, then the button **Career Sources to Review**. Expect a screen with a text box labelled **Package JSON** (placeholder "...or paste package JSON here") and the button **Import and check against Career Master**, disabled while the box is empty.
+2. [J3.2] Type `{"package": ` into **Package JSON**. Expect the button **Import and check against Career Master** to become enabled and to be at least 44px tall.
+3. [J3.3] Click **Import and check against Career Master**. Expect an alert whose first line is exactly PLAIN-SENTENCE(package) and whose second line starts with `Technical detail:`.
+4. [J3.4] Check the alert background. Expect a red tint (`rgb(251, 228, 223)`), not the amber of the other cards on the screen.
+5. [J3.5] Look for the pop-up. Expect a red toast with whole text exactly PLAIN-SENTENCE(package) and no detail line.
+6. [J3.6] Check the page for sideways scrolling. Expect none.
 
 ## Journey 4 — My Resume: broken application package file
 
-1. Open `/world`, click **My Resume**. Expect the card **Import an application package** with the file chooser **Application package file**.
-2. Choose `bad-package.json` in **Application package file**. Expect an alert under the chooser whose first line is exactly PLAIN-SENTENCE(package file) and whose second line starts with `Technical detail:`.
-3. Check the alert colour. Expect red (`rgb(179, 38, 30)`).
-4. Check the page for sideways scrolling. Expect none.
+1. [J4.1] Open `/world`, click **My Resume**. Expect the card **Import an application package** with the file chooser **Application package file**.
+2. [J4.2] Choose `bad-package.json` in **Application package file**. Expect an alert under the chooser whose first line is exactly PLAIN-SENTENCE(package file) and whose second line starts with `Technical detail:`.
+3. [J4.3] Check the alert colour. Expect red (`rgb(179, 38, 30)`).
+4. [J4.4] Check the page for sideways scrolling. Expect none.
 
 ## Journey 5 — Same sentence over the API
 
-1. While signed in, in the browser console on any page of the app run `fetch('/api/release-intelligence/import/snapshot', {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify({releaseKey:'r1', snapshot:'{"a": '})}).then(async r => [r.status, (await r.json()).error])`. Expect the result `[400, "<text>"]` where `<text>` starts with PLAIN-SENTENCE(snapshot) followed by a newline and `Technical detail:`.
+1. [J5.1] While signed in, in the browser console on any page of the app run `fetch('/api/release-intelligence/import/snapshot', {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify({releaseKey:'r1', snapshot:'{"a": '})}).then(async r => [r.status, (await r.json()).error])`. Expect the result `[400, "<text>"]` where `<text>` starts with PLAIN-SENTENCE(snapshot) followed by a newline and `Technical detail:`.
 
 ## Edge cases
 

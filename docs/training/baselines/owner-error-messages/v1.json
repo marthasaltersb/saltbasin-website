@@ -1,0 +1,387 @@
+{
+  "feature": "owner-error-messages",
+  "spec": "docs/training/owner-error-messages.md",
+  "version": 1,
+  "frozenAt": "2026-10-10T21:06:43.105Z",
+  "commitAtFreeze": "4460f886abdc250792a172100e7bc7fabb0d59bc",
+  "specSha256": "8eb46d8077e74a9881d566505fcb82782df39aa59f5eeb2d2ff014609d770948",
+  "amendment": null,
+  "previous": null,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "P.1",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "ba88d81cfc2405dc",
+      "summary": "Signed in as `admin@test.local` with the platform and Career Portfolio terms already accepted (the test account script does this)."
+    },
+    {
+      "id": "P.2",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "a24de24419fd238e",
+      "summary": "A file named `bad-package.json` outside the repository containing exactly the 15 characters `{\"documents\": [` (an unfinished list)."
+    },
+    {
+      "id": "P.3",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "c1ba13db243ec915",
+      "summary": "Nothing else is required; every journey starts by opening its screen."
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "bcd0e4b2a48a22fd",
+      "summary": "Open `/world`, click **Qualification Rules** in the Sun menu. Expect the screen titled **Qualification Rules** with a text box labelled **Gates (JSON)** holding"
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d9f9797b67ddc388",
+      "summary": "Replace the whole text of **Gates (JSON)** with `{\"gates\": [ {\"key\": \"a\", }` and click **Save qualification rule**. Expect, below the button, an alert whose fir"
+    },
+    {
+      "id": "J1.3",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "07d71a9afb2647f7",
+      "summary": "Check the colour of that alert text. Expect red (computed colour `rgb(165, 57, 31)`), not amber and not green."
+    },
+    {
+      "id": "J1.4",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "824b901583a26930",
+      "summary": "Check the page for sideways scrolling and the button size. Expect no horizontal page scroll, and the button **Save qualification rule** at least 44px tall."
+    },
+    {
+      "id": "J1.5",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "cdce8f31ad56c722",
+      "summary": "Click **← Back to World**, then **Qualification Rules** again. Expect the text box to hold the original saved gate chain, not the broken text (nothing was saved"
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "93539ec7b33791a8",
+      "summary": "Open `/world`, click **Release tracker**, then the tab **Settings**. Expect a card headed **Paste a snapshot** with a box labelled **Snapshot JSON**."
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f8500a018df803e2",
+      "summary": "Type `{\"snapshot\": ` into **Snapshot JSON** and click **Store snapshot**. Expect an alert box under the box whose first line is exactly PLAIN-SENTENCE(snapshot)"
+    },
+    {
+      "id": "J2.3",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9cd5aac3fea0d5f6",
+      "summary": "Look for the pop-up message. Expect a red toast (role alert) whose whole text is exactly PLAIN-SENTENCE(snapshot), with no detail line."
+    },
+    {
+      "id": "J2.4",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f934e1e490b50bcb",
+      "summary": "Check the page for sideways scrolling. Expect none."
+    },
+    {
+      "id": "J2.5",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d0af1de4a65539dc",
+      "summary": "Select all the text in **Snapshot JSON** and delete it. Expect the button **Store snapshot** to be disabled."
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "610c1f8229553c5b",
+      "summary": "Open `/world`, click **My Resume**, then the button **Career Sources to Review**. Expect a screen with a text box labelled **Package JSON** (placeholder \"...or "
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "463b7d830ea8cb08",
+      "summary": "Type `{\"package\": ` into **Package JSON**. Expect the button **Import and check against Career Master** to become enabled and to be at least 44px tall."
+    },
+    {
+      "id": "J3.3",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "498c11cbf54eaccc",
+      "summary": "Click **Import and check against Career Master**. Expect an alert whose first line is exactly PLAIN-SENTENCE(package) and whose second line starts with `Technic"
+    },
+    {
+      "id": "J3.4",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5219078a546b1c7c",
+      "summary": "Check the alert background. Expect a red tint (`rgb(251, 228, 223)`), not the amber of the other cards on the screen."
+    },
+    {
+      "id": "J3.5",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "39122465b5cac30e",
+      "summary": "Look for the pop-up. Expect a red toast with whole text exactly PLAIN-SENTENCE(package) and no detail line."
+    },
+    {
+      "id": "J3.6",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f934e1e490b50bcb",
+      "summary": "Check the page for sideways scrolling. Expect none."
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "987a51832518a92c",
+      "summary": "Open `/world`, click **My Resume**. Expect the card **Import an application package** with the file chooser **Application package file**."
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "dd7ccf5409ae17f1",
+      "summary": "Choose `bad-package.json` in **Application package file**. Expect an alert under the chooser whose first line is exactly PLAIN-SENTENCE(package file) and whose "
+    },
+    {
+      "id": "J4.3",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "febc9f97a33c53cc",
+      "summary": "Check the alert colour. Expect red (`rgb(179, 38, 30)`)."
+    },
+    {
+      "id": "J4.4",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f934e1e490b50bcb",
+      "summary": "Check the page for sideways scrolling. Expect none."
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0ecd8aa135433560",
+      "summary": "While signed in, in the browser console on any page of the app run `fetch('/api/release-intelligence/import/snapshot', {method:'POST', credentials:'include', he"
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2bd0ba8b30854370",
+      "summary": "Journey 2 step 2 with the box holding only spaces. Expect **Store snapshot** to stay disabled and no alert."
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f8fc878a336fd37d",
+      "summary": "Journey 3: type valid text `{\"package\": {}}` and click the import button. Expect that no alert contains the words \"could not be read because part of its text\" ("
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d608ac54506c7b36",
+      "summary": "Journey 1 on a phone (390x844): both lines of the alert wrap inside the card; nothing is cut off at the right edge and the page does not scroll sideways."
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "883f4cd66595debd",
+      "summary": "Journey 5 in a private window with no sign-in (run the same `fetch`). Expect status `401` and a non-empty error text."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "9c3ea4faa7e9fe33"
+    },
+    {
+      "title": "Interface parity",
+      "kind": "context",
+      "hash": "f91bf000ff2a42b2"
+    },
+    {
+      "title": "Preconditions (fictional data)",
+      "kind": "precondition",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 1 — Qualification Rules: broken gate list",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 2 — Release tracker: broken pasted snapshot",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 3 — Career Sources to Review: broken package text",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 4 — My Resume: broken application package file",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 5 — Same sentence over the API",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    }
+  ]
+}
