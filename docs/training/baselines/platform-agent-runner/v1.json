@@ -1,0 +1,1416 @@
+{
+  "feature": "platform-agent-runner",
+  "spec": "docs/training/platform-agent-runner.md",
+  "version": 1,
+  "frozenAt": "2026-10-10T19:34:03.487Z",
+  "commitAtFreeze": "e4870f6748186d5effc3e7b49c0e13476b1f59cf",
+  "specSha256": "6270be4a6e269ceadf1aa9995713e48efbdadcf6dd27631ac652815a0376a9a6",
+  "amendment": null,
+  "previous": null,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "P.1",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "7c08d5ae389e3d54",
+      "summary": "A freshly seeded database (`npm run seed`), `node scripts/create-test-member.mjs` run once, the production build served, and the server booted with the environm"
+    },
+    {
+      "id": "P.2",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "e6cec519a26bbb11",
+      "summary": "Open `/world`, click **Journeys**, click the card **Agent runner**. Expect the heading **Agent runner**, the seven tabs **Overview**, **Agents**, **Runs**, **Ou"
+    },
+    {
+      "id": "P.3",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "ae0724e1ebca9e32",
+      "summary": "Open **Journeys** -> **Release loop** -> **Open configuration** (tab **Runs**). Type `2030-04-01-garden-gate` into **Release key**, `seed-catalog` into **Featur"
+    },
+    {
+      "id": "P.4",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "35ef1119b0ea9bf3",
+      "summary": "Phone passes use a viewport 390px wide and 844px tall with touch and the same steps. Desktop passes use 1280px wide. Each pass runs on its own freshly seeded da"
+    },
+    {
+      "id": "P.5",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "24b8f44235ac13a2",
+      "summary": "Expected noise: console errors for blocked web fonts or certificates (`net::ERR_CERT_AUTHORITY_INVALID`, `ERR_TUNNEL_CONNECTION_FAILED`) are environment noise. "
+    },
+    {
+      "id": "P.6",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "83e4cabba6944d48",
+      "summary": "After every **Ask ...** or **Start run** the worker needs a moment (fixture sessions take 0 to 10 seconds). Wait until the thing the step names appears (each st"
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ab93222c19122647",
+      "summary": "Click the tab **Settings**."
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e0b588731e73f672",
+      "summary": "Type `abc` into **GitHub token** and click **Save GitHub token**."
+    },
+    {
+      "id": "J1.3",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0a49f58fbbc945cc",
+      "summary": "Type `ghp_fictional_token_1234` into **GitHub token** and click **Save GitHub token**."
+    },
+    {
+      "id": "J1.4",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "49065872f5bce165",
+      "summary": "Click **Create new worker token**."
+    },
+    {
+      "id": "J1.5",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8c000bd9f7c1823f",
+      "summary": "Click **I have copied it**."
+    },
+    {
+      "id": "J1.6",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d51053540b49f08b",
+      "summary": "Set **Size S (lines)** to `20` and **Size M (lines)** to `10`, click **Save settings**."
+    },
+    {
+      "id": "J1.7",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fa90d0a4b2e65632",
+      "summary": "Set **Size M (lines)** to `100`, **Size L (lines)** to `300` and **Stalled after (seconds)** to `30`, click **Save settings**."
+    },
+    {
+      "id": "J1.8",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "cf8f41af23c57558",
+      "summary": "Click **Overview**, then **Settings** again."
+    },
+    {
+      "id": "J1.9",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0b441c235a8e4a1c",
+      "summary": "Type `0` into **Concurrency** and click **Save settings**; then type `2` back into **Concurrency** without saving."
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "eefd1f33ce07b899",
+      "summary": "Open **Journeys** -> **Release loop** -> **Open configuration** -> **Open run seed-catalog** (run A, stage validate)."
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "04489d61115563c6",
+      "summary": "Choose **validate_fail_one** in **Fixture scenario (test environments)** and click **Start validation round with the agent runner**."
+    },
+    {
+      "id": "J2.3",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0fa520414a41d5bb",
+      "summary": "Watch the card **Live steps** (no page reload)."
+    },
+    {
+      "id": "J2.4",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6f31591ebaf72734",
+      "summary": "Wait for the run to finish."
+    },
+    {
+      "id": "J2.5",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5b1242111b24ac31",
+      "summary": "Read the card **Stage**."
+    },
+    {
+      "id": "J2.6",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "10457fbcec3bf277",
+      "summary": "Click **← Back to World**, open **Journeys** -> **Agent runner** -> **Runs**, click **Open run #1**."
+    },
+    {
+      "id": "J2.7",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "98c910bb0e1b29a9",
+      "summary": "Click **← All runs**, then the tab **Overview**."
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4de66384f39e8e90",
+      "summary": "Open **Journeys** -> **Release loop** -> **Open run seed-catalog**. Choose **validate_wrong_baseline** and click **Start validation round with the agent runner*"
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ba501cbd9fd9aa30",
+      "summary": "Choose **validate_no_result** and start a round."
+    },
+    {
+      "id": "J3.3",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a58c5c2985ac3130",
+      "summary": "Choose **validate_bad_result** and start a round."
+    },
+    {
+      "id": "J3.4",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "bc37e02f7fffc707",
+      "summary": "Choose **session_error** and start a round."
+    },
+    {
+      "id": "J3.5",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b4081b5d6c6ef032",
+      "summary": "Read **Validation rounds** and **Reconciliation items**."
+    },
+    {
+      "id": "J3.6",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b7e86a0ff5fb926c",
+      "summary": "Click **Mark done**."
+    },
+    {
+      "id": "J3.7",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "da866bf91d20ab8e",
+      "summary": "Choose **validate_pass** and start a round."
+    },
+    {
+      "id": "J3.8",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "615ed97f4caef155",
+      "summary": "Click **Mark done** again."
+    },
+    {
+      "id": "J3.9",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8f31d8d782ff9560",
+      "summary": "Click **← Back to World**, open **Agent runner** (tab **Overview**)."
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1c4f632d76ea62d9",
+      "summary": "Click the tab **Agents**. In the card **Test script writer** read the text, then click **View prompt of Test script writer**."
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f65820f6b207ce09",
+      "summary": "Type `Write the training spec for seed packet reminders` into **Your request to Test script writer** and click **Ask Test script writer**."
+    },
+    {
+      "id": "J4.3",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f8a1875ed974905a",
+      "summary": "Click the tab **Outputs**. Wait for a row **Draft spec: Seed packet reminders** with the status **proposed** (up to 20 seconds). Click its **Open output** butto"
+    },
+    {
+      "id": "J4.4",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "214265a49e57aa18",
+      "summary": "Click **Approve draft** with **Decision note** empty."
+    },
+    {
+      "id": "J4.5",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6c37de70398eba5f",
+      "summary": "On **Agents**, choose **script_unparseable** in **Fixture scenario for Test script writer (test environments)**, type `Second draft` into the request and click "
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "adbf8ad199637cee",
+      "summary": "On **Agents**, in **Test runner** choose **seed-catalog (baseline v1)** in **Feature for Test runner**, **Smoke** in **Suite for Test runner**, type `Run the sm"
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fbf6a16c445ca5a3",
+      "summary": "Ask **Test runner** again with **Regression**."
+    },
+    {
+      "id": "J5.3",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f481305c6be43e09",
+      "summary": "Ask **Test runner** with **Smoke** and the fixture scenario **runner_one_failure**."
+    },
+    {
+      "id": "J5.4",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4dd1948b54bf8bcb",
+      "summary": "On **Agents**, choose **Choose a feature** in **Feature for Test runner**, type `Run it`, click **Ask Test runner**."
+    },
+    {
+      "id": "J5.5",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b5dcb425f253d9bc",
+      "summary": "Ask **Test runner** (seed-catalog, Smoke) once more, open its run from **Runs**."
+    },
+    {
+      "id": "J6.1",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e44504ae58a1335f",
+      "summary": "On **Agents**, in **Test extender** choose **seed-catalog (baseline v1)**, type `A bug escaped: a second failed save keeps the old error`, click **Ask Test exte"
+    },
+    {
+      "id": "J6.2",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "046e9baf1136c064",
+      "summary": "Type `Reviewed against the checklist` into **Decision note** and click **Approve amendment**."
+    },
+    {
+      "id": "J6.3",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "895e919170af4c9f",
+      "summary": "Click **Show amendment file for output <n>**."
+    },
+    {
+      "id": "J6.4",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f0996f1acf6f2841",
+      "summary": "On **Agents** ask **Test extender** (seed-catalog) with the fixture scenario **extender_retire**. On **Outputs** open the new **proposed** amendment row."
+    },
+    {
+      "id": "J6.5",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4a69b6215c1f8d65",
+      "summary": "On **Agents**, choose **Choose a feature** in **Feature for Test extender**, type `x`, click **Ask Test extender**."
+    },
+    {
+      "id": "J7.1",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2f2fe3ab4ab11b88",
+      "summary": "Open **Journeys** -> **Release loop**. Type `2030-04-02-garden-gate` into **Release key**, `seed-catalog` into **Feature key**, `Seed catalog` into **Feature na"
+    },
+    {
+      "id": "J7.2",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fd069dc3c596cab0",
+      "summary": "In the card **Agent runner** choose **validate_fail_one**, click **Start validation round with the agent runner**, wait for **Round 1: failed 4 of 5 steps**, th"
+    },
+    {
+      "id": "J7.3",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "852d86fb485d4848",
+      "summary": "Click **← Back to World**, open **Agent runner** -> **Agents**. In **Bug triager** open **Release-loop run for Bug triager**."
+    },
+    {
+      "id": "J7.4",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4352c73eaf5c2dcc",
+      "summary": "On **Outputs** open the row **Bug: seed-catalog-B1: Label is cut off at 390px** (status **filed**)."
+    },
+    {
+      "id": "J7.5",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f886ec0d84a40aa0",
+      "summary": "On **Runs** choose **Fix agent** in **Stage agent** and run #2 in **Release-loop run**."
+    },
+    {
+      "id": "J7.6",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "29b9bb7297d33f35",
+      "summary": "On **Agents** ask **Bug triager** (run #2) with the fixture scenario **triager_duplicate**, type `seed-catalog-B1` into **Fixture parameter: duplicate of (bug i"
+    },
+    {
+      "id": "J7.7",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "df65482dd9d6620b",
+      "summary": "Ask **Bug triager** (run #2) again with **triager_duplicate** and `seed-catalog-B9` as the duplicate parameter; open its run."
+    },
+    {
+      "id": "J7.8",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ec8628575a274aea",
+      "summary": "On **Agents** choose **Choose a release-loop run** in **Release-loop run for Bug triager**, type `x`, click **Ask Bug triager**."
+    },
+    {
+      "id": "J7.9",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e83efb5894fbaf6f",
+      "summary": "Open **Journeys** -> **Release loop** -> the run **2030-04-02-garden-gate** (click the **Open run seed-catalog** button of that run), read **Bugs**."
+    },
+    {
+      "id": "J8.1",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "723e4656662fd35d",
+      "summary": "Open **Agent runner** -> **Test plan**."
+    },
+    {
+      "id": "J8.2",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a97b52db845de016",
+      "summary": "Type `docs/fictional-note.md` into **Changed files** and click **Build test plan**."
+    },
+    {
+      "id": "J8.3",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d6e1184e070747a0",
+      "summary": "Replace the text with `server/db.js` and click **Build test plan**."
+    },
+    {
+      "id": "J8.4",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "84991636a6cac626",
+      "summary": "Clear **Changed files** and click **Build test plan**."
+    },
+    {
+      "id": "J8.5",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b7677aae73b5c115",
+      "summary": "Open **Agents**, in **Smoke vs regression planner** type `server/db.js` then a new line `docs/fictional-note.md` into **Changed files for Smoke vs regression pl"
+    },
+    {
+      "id": "J8.6",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3e32ea9514cda50c",
+      "summary": "Open **Settings**, remove the line `server/db.js` from **Shared modules (a change forces a full regression, one path or glob per line)** and click **Save settin"
+    },
+    {
+      "id": "J9.1",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "56610586e6da6552",
+      "summary": "On **Agents**, type `Suggest one improvement` into **Your request to Enhancement proposer** and click **Ask Enhancement proposer**. On **Outputs** open the row "
+    },
+    {
+      "id": "J9.2",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b9568460c4ee647e",
+      "summary": "Click **Accept enhancement** with the note empty; then type `Worth doing` and click **Accept enhancement** again."
+    },
+    {
+      "id": "J9.3",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9327e49b31a028f5",
+      "summary": "Open **Backlog seeds**."
+    },
+    {
+      "id": "J9.4",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "62236583dbff5d28",
+      "summary": "Type `Seed packet reminders` into **Seed title**, `Remind shop owners to re-order seed packets before planting season` into **Your idea in your own words**, cli"
+    },
+    {
+      "id": "J9.5",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0bacca4d7ae06e31",
+      "summary": "Click **Move seed 2 to shaped**."
+    },
+    {
+      "id": "J9.6",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8596461f1d4cfb73",
+      "summary": "Click **Ask the Backlog gardener to grow seed 2**."
+    },
+    {
+      "id": "J9.7",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "092324623f6eb4cd",
+      "summary": "Open **Backlog seeds** again."
+    },
+    {
+      "id": "J9.8",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "99bb3ba22e7945e7",
+      "summary": "Click **Mark seed 2 ready**."
+    },
+    {
+      "id": "J9.9",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "26100e0b606b5e1f",
+      "summary": "Type `Both: email and in the app` into **Answer to question 1 of seed 2**, click **Save answer 1 of seed 2**, then **Mark seed 2 ready**."
+    },
+    {
+      "id": "J9.10",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "95cec1aedede41fa",
+      "summary": "Click **Promote seed 2 to a feature**."
+    },
+    {
+      "id": "J9.11",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fc61596e884b5ff6",
+      "summary": "Open **Agents** and open **Backlog seed for Backlog gardener**."
+    },
+    {
+      "id": "J9.12",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3f1f729625ba35ef",
+      "summary": "Count the rows on **Outputs**. On **Agents** ask **Enhancement proposer** with the fixture scenario **quality_bad_result** (request `Suggest again`); open its r"
+    },
+    {
+      "id": "J10.1",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "914b188dbf60aac5",
+      "summary": "Open **Agent runner** -> **Runs**. Choose **Fix agent** in **Stage agent**, run #2 in **Release-loop run**, tick **Use work order of seed-catalog-B1**, choose *"
+    },
+    {
+      "id": "J10.2",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "90f87bd7c6018a7a",
+      "summary": "Read **Branch check against the work order** and the **Timeline**."
+    },
+    {
+      "id": "J10.3",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1e4f097f231b2d99",
+      "summary": "Open **Release loop** -> run **2030-04-02-garden-gate**."
+    },
+    {
+      "id": "J10.4",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9fd9aebc74cb18e9",
+      "summary": "In **Add a bug from triage** add two bugs: **Bug title** `Label cut off two` and then `Label cut off three`, **Bug step id** `J2.1`, **Observed** `Clipped`, cli"
+    },
+    {
+      "id": "J10.5",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "290a3925f5ed408c",
+      "summary": "Back in **Agent runner** -> **Runs**: **Fix agent**, run #2, type `seed-catalog-B2` into **Item id**, `Let the label wrap` into **Intent (the one change intende"
+    },
+    {
+      "id": "J10.6",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1db7c942b4519961",
+      "summary": "Click **← All runs**, then the tab **Overview**."
+    },
+    {
+      "id": "J10.7",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a09bfbb52582dc93",
+      "summary": "Open that run again (the newest **Fix agent** row), click **Approve scope request S1** with **Note for S1** empty; then type `The width is computed in the gate;"
+    },
+    {
+      "id": "J10.8",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "802a33ac23c0c85f",
+      "summary": "Choose **fix_widened** in **Fixture scenario for the retry (test environments)** and click **Retry with the current work order**."
+    },
+    {
+      "id": "J10.9",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3af97f45603cc2c8",
+      "summary": "Click **← All runs**. Start a **Fix agent** run for run #2 with the item `seed-catalog-B3` (intent `Let the label wrap`, files `src/label.jsx`, size `S`, done w"
+    },
+    {
+      "id": "J10.10",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f8d2caa893c80cac",
+      "summary": "Open **Release loop** -> run **2030-04-02-garden-gate**."
+    },
+    {
+      "id": "J10.11",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b1c3e05b0eea92d2",
+      "summary": "In **Agent runner** -> **Runs** start a **Fix agent** run for run #2 with the item `seed-catalog-B3` (as above) and the scenario **fix_refused_edit**. On its pa"
+    },
+    {
+      "id": "J10.12",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "82b996120e3bcb1c",
+      "summary": "Click **← All runs**. With **Fix agent** and run #2 chosen and nothing added, click **Start run**; then type only `x` into **Intent** and click **Add item to wo"
+    },
+    {
+      "id": "J10.13",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a2b0bf60c8019666",
+      "summary": "Reload the page and open **Agent runner** -> **Runs**. Choose **Fix agent**, run #1 (the validate-stage run A), item `seed-catalog-B1` (intent `x`, files `src/a"
+    },
+    {
+      "id": "J11.1",
+      "kind": "step",
+      "journey": "11",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0a516cf78b372704",
+      "summary": "On **Runs** choose **Integration agent**, type `release-loop/seed-catalog-build` into **Branch to integrate**, choose **integrate_slow**, click **Start run**."
+    },
+    {
+      "id": "J11.2",
+      "kind": "step",
+      "journey": "11",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3cc53d9108c29b8f",
+      "summary": "Click **← All runs** and start the same again (same branch, **integrate_slow**)."
+    },
+    {
+      "id": "J11.3",
+      "kind": "step",
+      "journey": "11",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e6843fab94276866",
+      "summary": "Wait."
+    },
+    {
+      "id": "J11.4",
+      "kind": "step",
+      "journey": "11",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8e071cf31fb2f767",
+      "summary": "While the second run is **running**, click **Stop run**."
+    },
+    {
+      "id": "J11.5",
+      "kind": "step",
+      "journey": "11",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b81f421661993f05",
+      "summary": "Click **← All runs**, then the tab **Overview**."
+    },
+    {
+      "id": "J12.1",
+      "kind": "step",
+      "journey": "12",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "99d05440ee73c052",
+      "summary": "Run `node scripts/agent-worker.mjs --once --api <API_BASE> --id cli-bad --token sbw_not-the-token`."
+    },
+    {
+      "id": "J12.2",
+      "kind": "step",
+      "journey": "12",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "612b3b9a62288ff9",
+      "summary": "Open **Agent runner** -> **Overview**."
+    },
+    {
+      "id": "J12.3",
+      "kind": "step",
+      "journey": "12",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "a66a248eeaa5bf0c",
+      "summary": "Run `node scripts/agent-worker.mjs --once --api <API_BASE> --id cli-check --token <WORKER_TOKEN>`."
+    },
+    {
+      "id": "J12.4",
+      "kind": "step",
+      "journey": "12",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2d6e075fc69cb5af",
+      "summary": "Reload **Overview**."
+    },
+    {
+      "id": "J12.5",
+      "kind": "step",
+      "journey": "12",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "69f93f39cf13b38e",
+      "summary": "Run `node scripts/agent-worker.mjs --self-test`."
+    },
+    {
+      "id": "J12.6",
+      "kind": "step",
+      "journey": "12",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "1fe7d52cdf4377db",
+      "summary": "Run `node scripts/agent-worker.mjs --self-test --live` in a shell where `ANTHROPIC_API_KEY` is not set."
+    },
+    {
+      "id": "J12.7",
+      "kind": "step",
+      "journey": "12",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b5ab04b6f6e2cd3e",
+      "summary": "In **Settings** click **Create new worker token**, click **I have copied it**, then run `node scripts/agent-worker.mjs --once --api <API_BASE> --id cli-old --to"
+    },
+    {
+      "id": "J12.8",
+      "kind": "step",
+      "journey": "12",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "5e4505d1c39db3f1",
+      "summary": "Run `grep -n \"^ plan: free\" render.yaml` and then `grep -c \"NEEDS A PAID PLAN\" render.yaml`."
+    },
+    {
+      "id": "J13.1",
+      "kind": "step",
+      "journey": "13",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "06a2335e1111a11d",
+      "summary": "Open **Journeys** -> **Connected Agents**, type `Runner agent` into **Token name**, tick **agent.runner.read** and **agent.runner.write**, click **Create token*"
+    },
+    {
+      "id": "J13.2",
+      "kind": "step",
+      "journey": "13",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "60ed540f0c3be0a6",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_R> list`."
+    },
+    {
+      "id": "J13.3",
+      "kind": "step",
+      "journey": "13",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "744275ee9fcbb1ad",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_R> call agent_runner_list_agents`."
+    },
+    {
+      "id": "J13.4",
+      "kind": "step",
+      "journey": "13",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "44eec4eba5cc29c5",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_R> call agent_runner_start_run '{\"agentKey\": \"release_enhancement_proposer\", \"prompt\": \"Sugge"
+    },
+    {
+      "id": "J13.5",
+      "kind": "step",
+      "journey": "13",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "03539d83d59d83cb",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_R> call agent_runner_test_plan '{\"changedFiles\": [\" \"]}'`."
+    },
+    {
+      "id": "J13.6",
+      "kind": "step",
+      "journey": "13",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "41a6a48e20d6919f",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_R> call agent_runner_run_action '{\"runId\": <RUN_MCP>, \"action\": \"stop\"}'`."
+    },
+    {
+      "id": "J13.7",
+      "kind": "step",
+      "journey": "13",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "c343c7259dc190f1",
+      "summary": "Run `curl -s -c admin.jar -H \"Content-Type: application/json\" -d '{\"email\":\"betsy@test.local\",\"password\":\"<ADMIN_PASSWORD>\"}' <API_BASE>/api/auth/login`, then `"
+    },
+    {
+      "id": "J13.8",
+      "kind": "step",
+      "journey": "13",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "5e3909a3fa5d182a",
+      "summary": "Run `curl -s -o /dev/null -w \"%{http_code}\" -b admin.jar -H \"Content-Type: application/json\" -d '{\"changedFiles\":[]}' <API_BASE>/api/agent-runner/test-plan`."
+    },
+    {
+      "id": "J13.9",
+      "kind": "step",
+      "journey": "13",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "438630332a1f8f5e",
+      "summary": "Run `curl -s -o /dev/null -w \"%{http_code}\" -X POST <API_BASE>/api/agent-runner/worker/claim`."
+    },
+    {
+      "id": "J13.10",
+      "kind": "step",
+      "journey": "13",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d21ccaeba3061889",
+      "summary": "In a second browser session sign in as the member `member@test.local` (password `TestPass!2345`) at `/login`, open `/world`, click **Journeys**."
+    },
+    {
+      "id": "J13.11",
+      "kind": "step",
+      "journey": "13",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "de53ba18e5bb0179",
+      "summary": "As the member open **Connected Agents**, type `Member probe` into **Token name**, tick **agent.runner.read**, click **Create token** (keep the token as **TOKEN_"
+    },
+    {
+      "id": "J13.12",
+      "kind": "step",
+      "journey": "13",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "a057be44622837a8",
+      "summary": "Run `curl -s -c member.jar -H \"Content-Type: application/json\" -d '{\"email\":\"member@test.local\",\"password\":\"TestPass!2345\"}' <API_BASE>/api/auth/login`, then `c"
+    },
+    {
+      "id": "J13.13",
+      "kind": "step",
+      "journey": "13",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "78ee56f221da3b99",
+      "summary": "In the administrator's session open **Journeys** -> **Capabilities** and find the card **Prompt an agent, watch, stop, requeue and retry its run (admin)**."
+    },
+    {
+      "id": "J13.14",
+      "kind": "step",
+      "journey": "13",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "7f51c14201ab0c4a",
+      "summary": "Run `node scripts/check-interface-parity.mjs`."
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7b0f446994b2758d",
+      "summary": "On each of the seven tabs of **Agent runner** at the current viewport, expect no horizontal scrolling (the page is not wider than the viewport) and every button"
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "9e28b819ad085717",
+      "summary": "Run `node scripts/agent-worker.mjs --once --api <API_BASE> --adapter nope --token x`. Expect exit code 2 and a line starting `Unknown adapter \"nope\"`."
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "90d10c85cc8c723b",
+      "summary": "Run `curl -s -o /dev/null -w \"%{http_code}\" -b admin.jar -H \"Content-Type: application/json\" -d '{\"agentKey\":\"release_enhancement_proposer\",\"prompt\":\"x\",\"fixtur"
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "d04eaec74e7f46c1",
+      "summary": "Run `grep -h '\"version\"' agents/release-loop/*/agent.json | sort | uniq -c`. Expect exactly one line, ignoring leading spaces: `10 \"version\": 1,` (ten versioned"
+    },
+    {
+      "id": "E.5",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "bdfe43ff6440656b",
+      "summary": "Run `node scripts/check-interface-parity.mjs --self-test`. Expect exit code 0 and the last line `SELF-TEST OK: all 3 injected problems were detected.`"
+    },
+    {
+      "id": "E.6",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "ef01175f77c13aca",
+      "summary": "Run `ls docs/training/baselines/platform-agent-runner/`. Expect the file `smoke.json` (the feature's own smoke suite, changed only by amendment) and, once the i"
+    },
+    {
+      "id": "E.7",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7d80e749d6c87076",
+      "summary": "On **Agents**, open **View prompt of Bug triager**. Expect the prompt text to contain **ROLE: Bug triager.** and the card to say **version 1**; there is no butt"
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "2732857d52638eb3"
+    },
+    {
+      "title": "Preconditions",
+      "kind": "precondition",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 1 — Settings, size limits and tokens",
+      "kind": "journey",
+      "hash": "39929c0b9543cb11"
+    },
+    {
+      "title": "Journey 2 — A validation round, started from the Release loop screen",
+      "kind": "journey",
+      "hash": "0fc5041b1e03a1d7"
+    },
+    {
+      "title": "Journey 3 — A missing, invalid or wrongly scored result is never a pass",
+      "kind": "journey",
+      "hash": "8a49779911524704"
+    },
+    {
+      "title": "Journey 4 — Test script writer",
+      "kind": "journey",
+      "hash": "e75988ff651d86ee"
+    },
+    {
+      "title": "Journey 5 — Test runner: smoke and regression",
+      "kind": "journey",
+      "hash": "4e35f4ce7fa2a602"
+    },
+    {
+      "title": "Journey 6 — Test extender",
+      "kind": "journey",
+      "hash": "cdee9ab6c38a79bc"
+    },
+    {
+      "title": "Journey 7 — Bug triager and the work order it writes",
+      "kind": "journey",
+      "hash": "3a95357ff7322c1b"
+    },
+    {
+      "title": "Journey 8 — Test plan: smoke always, regression where the change reaches",
+      "kind": "journey",
+      "hash": "64fc4f05b6f9b74f"
+    },
+    {
+      "title": "Journey 9 — Enhancement proposer, backlog seeds and the Backlog gardener",
+      "kind": "journey",
+      "hash": "cf51740de746f00a"
+    },
+    {
+      "title": "Journey 10 — Work orders: a fix agent can do what its work order lists, and nothing else",
+      "kind": "journey",
+      "hash": "b287063edbf11a64"
+    },
+    {
+      "title": "Journey 11 — One integration at a time per branch, and stopping a run",
+      "kind": "journey",
+      "hash": "1f38e71db02deb4d"
+    },
+    {
+      "title": "Journey 12 — The worker program, its token and the Agent SDK dry run",
+      "kind": "journey",
+      "hash": "eb4c7afdfe7f0ebd"
+    },
+    {
+      "title": "Journey 13 — The same actions through the API and MCP, with the same permissions",
+      "kind": "journey",
+      "hash": "6932a63588a895a0"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Appendix - fixtures and fixed constraints",
+      "kind": "context",
+      "hash": "ed320ad10811ba40"
+    }
+  ]
+}
