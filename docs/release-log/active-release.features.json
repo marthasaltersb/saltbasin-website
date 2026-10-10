@@ -374,6 +374,83 @@
           "reason": "Owner request 2026-10-10 in session S-0.3.0-02-build: define this release's work vs the backlog vs features added after the cut."
         }
       ]
+    },
+    {
+      "key": "journey-flow-studio",
+      "title": "Journey flow studio: metadata-driven, persisted, downloadable process flow builder (configuration studio)",
+      "trainingSpec": "docs/training/journey-flow-studio.md",
+      "changeSpec": "docs/changes/journey-flow-studio.md",
+      "build": "Port the owner's process flow builder into the platform. Source (NOT in git; read only, never commit it or any real names from it): /var/tmp/sbpg/uploads/process-flow-builder.html and its requirements/coverage spec /var/tmp/sbpg/uploads/process-flow-builder-spec.md. Build every requirement R1-R7 in that spec (BPMN shapes with the 3D effect in Salt Basin tokens, exec-mode and parallel/sequential badges, multi-branch decisions with renameable labels + per-branch params/notes, self-loops, swimlanes, step metadata fields, L1/L2/L3 scenarios with per-scenario overrides, templates, Current vs Future state with pain points/handover gaps/leakage) AND close its Part 5 gaps: lane labels persisted, Future steps link to the Current-state pain/leakage they resolve, scenario overlays on connectors, structural validation (orphans, single-branch decisions, unreachable steps), undo/redo, templates shared per org/profile instead of browser-only. METADATA DRIVEN: shape types, colours, field definitions, field sections and validation rules are a versioned config definition (config_state row, editable on a Settings screen), never hardcoded JSX. PERSISTED: flow definitions are versioned server records reusing the Channel Journey substrate where it fits (run the salt-basin-channel-journey-architecture and salt-basin-config-audit skills before and after; prefer journey scenarios/gates/molecules + journey_rod_events for history over new tables; any new table must be justified in the change spec). DOWNLOADABLE: export a flow (and a template) as JSON and as a single self-contained HTML viewer; import JSON back (validated, plain-language errors). Global change standard (CLAUDE.md): an edit with downstream impact (published journey, templates in use) shows the impact preview, one approval, automatic apply, source action on every history row. Universal functionality provisioned by permission (not admin-only). Interface parity: World Shell island (desktop + 390px), REST API, MCP tools in mcpToolRegistry.js + capabilityParity.js rows. The in-builder AI draft must use the existing in-app agent path with the fixture adapter in tests (never the real Anthropic API in tests). Seed templates use fictional data only. Write docs/changes/journey-flow-studio.md and docs/training/journey-flow-studio.md (literal journeys with exact expected results), freeze baseline v1.",
+      "dependsOn": [],
+      "kind": "new",
+      "scope": "planned",
+      "added": {
+        "at": "2026-10-10T20:56:20.930Z",
+        "commit": "b2235f5",
+        "decidedBy": "owner",
+        "reason": "Owner request 2026-10-10: turn the process flow builder into persisted, metadata-driven platform functionality that becomes the user journey definition experience."
+      },
+      "scopeHistory": [
+        {
+          "at": "2026-10-10T20:56:20.930Z",
+          "from": null,
+          "to": "planned",
+          "decidedBy": "owner",
+          "reason": "Owner request 2026-10-10: turn the process flow builder into persisted, metadata-driven platform functionality that becomes the user journey definition experience."
+        }
+      ]
+    },
+    {
+      "key": "journey-flow-experience-mapping",
+      "title": "Journey flow to experience: each shape captures gates, variants, actors, decisions, capabilities, authorities and system, and maps to the user experience asset",
+      "trainingSpec": "docs/training/journey-flow-experience-mapping.md",
+      "changeSpec": "docs/changes/journey-flow-experience-mapping.md",
+      "build": "Depends on journey-flow-studio. Make the studio the journey definition experience: (1) each node/edge type carries structured (not free-text) bindings, defined in the metadata config: gate, variant/scenario, actor (role/profile), decision tree branch conditions, capability (capabilityParity.js key), system authority (system of record, e.g. a Port from data_ports), action authority (permission/license that may perform it), system name, data objects/fields it reads/writes (pick from the real schema; the graphify-data-model-map feature provides the catalog when it lands, fall back to information_schema), plus open extension fields defined in config. (2) Experience mapping per node: which static asset, World Shell layer/scene, crystal variant, animation, interaction, link or destination it renders as, through the render-bindings machinery (renderBindingRegistry.js / renderBindings.js) rather than a parallel mechanism. (3) Publish: a flow version compiles into a journey definition the platform runs (journey scenario gates + molecules, consumed by journeyDefinitionFromPersistedRod / SpatialJourneyWorld / World Shell layers), with a preview of the generated user journey and the global change standard on publish (impact preview of members/journeys affected, one approval, automatic apply, source action on history). Unmapped bindings show 'not mapped', never invented. Interface parity (desktop + 390px, API, MCP). Fictional data only. Write docs/changes/journey-flow-experience-mapping.md and docs/training/journey-flow-experience-mapping.md, freeze baseline v1.",
+      "dependsOn": [
+        "journey-flow-studio"
+      ],
+      "kind": "new",
+      "scope": "planned",
+      "added": {
+        "at": "2026-10-10T20:56:20.985Z",
+        "commit": "b2235f5",
+        "decidedBy": "owner",
+        "reason": "Owner request 2026-10-10: the configuration studio defines the admin/config setup; each shape, colour, connection and decision captures gates, variants, actors, decision trees, capabilities, system authority, action authority, system name and more, which translate to the user experience (static asset, scene, animation, interaction, link or destination)."
+      },
+      "scopeHistory": [
+        {
+          "at": "2026-10-10T20:56:20.985Z",
+          "from": null,
+          "to": "planned",
+          "decidedBy": "owner",
+          "reason": "Owner request 2026-10-10: the configuration studio defines the admin/config setup; each shape, colour, connection and decision captures gates, variants, actors, decision trees, capabilities, system authority, action authority, system name and more, which translate to the user experience (static asset, scene, animation, interaction, link or destination)."
+        }
+      ]
+    },
+    {
+      "key": "graphify-data-model-map",
+      "title": "Graphify data model map: knowledge-graph visuals of the platform's data model and code, inside World Shell",
+      "trainingSpec": "docs/training/graphify-data-model-map.md",
+      "changeSpec": "docs/changes/graphify-data-model-map.md",
+      "build": "Use Graphify (pip package graphifyy 0.9.84; wheel cached at /var/tmp/sbpg/uploads/graphifyy-0.9.84-py3-none-any.whl; install into a venv under your scratch dir, never globally) LOCALLY ONLY: code mode (tree-sitter AST, no LLM) over server/ and src/, and its Postgres introspection (graphify/pg_introspect.py) against a FRESH local database booted from server/db.js bootstrap + seed (schema only, fictional seed rows; never production, never member data). Never run its LLM/semantic pass and never call any external API (no API keys). Script it: scripts/graphify-data-model.mjs (or .sh) regenerates committed outputs under docs/data-model/ (graph JSON, report markdown, an HTML/SVG view) with a version stamp and the commit it was generated from; it fails loudly with a plain-language message if graphify is missing. In the platform: a World Shell island 'Data model map' (desktop + 390px) rendering the graph as an interactive crystal-family view (src/lib/crystalGeometry.js conventions; tables grouped by domain: career, journey/rods, release, render bindings, agents, ...), with search, click-through to a table's columns/relations and which routes/modules use it; an API route and MCP tool returning the same catalog (capabilityParity.js row). Expose the catalog as a data-object/field picker source for journey-flow-experience-mapping (a small exported function). Note the pre-existing FK ordering bug in CLAUDE.md (organization_profiles) — if it blocks a fresh-db introspection, work around it in the script and record it, do not silently change bootstrap order without a test. Write docs/changes/graphify-data-model-map.md and docs/training/graphify-data-model-map.md, freeze baseline v1.",
+      "dependsOn": [],
+      "kind": "new",
+      "scope": "planned",
+      "added": {
+        "at": "2026-10-10T20:56:21.183Z",
+        "commit": "b2235f5",
+        "decidedBy": "owner",
+        "reason": "Owner request 2026-10-10: leverage Graphify to produce visuals for the existing data model (resolves the open Graphify-trial question)."
+      },
+      "scopeHistory": [
+        {
+          "at": "2026-10-10T20:56:21.183Z",
+          "from": null,
+          "to": "planned",
+          "decidedBy": "owner",
+          "reason": "Owner request 2026-10-10: leverage Graphify to produce visuals for the existing data model (resolves the open Graphify-trial question)."
+        }
+      ]
     }
   ],
   "startedAtCommit": "4df3ff7",
