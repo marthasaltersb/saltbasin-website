@@ -1,11 +1,11 @@
 {
   "session": "S-0.3.0-02-build",
   "release": "0.3.0",
-  "intent": "Fix production bugs first (none filed yet), re-validate the closest carried features, then build the three unblocked 0.3.0 features",
+  "intent": "Fix production bugs first (none filed yet), re-validate the closest carried features, build the three unblocked 0.3.0 features, and add release scope (planned vs backlog vs added) at the owner's request (item added before any merge was recorded)",
   "estimate": {
-    "recordedAt": "2026-10-10T20:28:12.272Z",
-    "atCommit": "2ac6b83",
-    "intent": "Fix production bugs first (none filed yet), re-validate the closest carried features, then build the three unblocked 0.3.0 features",
+    "recordedAt": "2026-10-10T20:48:47.291Z",
+    "atCommit": "d8ebe98",
+    "intent": "Fix production bugs first (none filed yet), re-validate the closest carried features, build the three unblocked 0.3.0 features, and add release scope (planned vs backlog vs added) at the owner's request (item added before any merge was recorded)",
     "items": [
       {
         "feature": "platform-mcp",
@@ -87,6 +87,15 @@
           "total": 10
         },
         "size": "S"
+      },
+      {
+        "feature": "release-scope",
+        "goal": "planned/backlog/added on every tracker surface, cut, resume and estimates",
+        "expect": {
+          "passed": 24,
+          "total": 25
+        },
+        "size": "M"
       }
     ]
   },
