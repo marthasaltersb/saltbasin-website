@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T01:53:08.655Z",
+  "exportedAt": "2026-10-10T19:39:55.809Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -10,7 +10,7 @@
       "backlog": 6
     },
     "world-shell-navigation": {
-      "status": "amend",
+      "status": "validate",
       "lastRound": 3,
       "lastScore": "38/48",
       "lastReport": "docs/test-results/world-shell-navigation/round-3.md",
@@ -38,8 +38,8 @@
       "lastRound": 2,
       "lastScore": "24/29",
       "lastReport": "docs/test-results/no-silent-failures/round-2.md",
-      "openBugs": 20,
-      "backlog": 7
+      "openBugs": 22,
+      "backlog": 6
     },
     "release-loop-tooling": {
       "status": "passed",
@@ -58,7 +58,7 @@
       "backlog": 11
     },
     "output-version-history": {
-      "status": "failing",
+      "status": "validate",
       "lastRound": 4,
       "lastScore": "34/37",
       "lastReport": "docs/test-results/output-version-history/round-4.md",
@@ -82,7 +82,7 @@
       "backlog": 2
     },
     "cover-letter-agent": {
-      "status": "fix",
+      "status": "validate",
       "lastRound": 2,
       "lastScore": "45/48",
       "lastReport": "docs/test-results/cover-letter-agent/round-2.md",
@@ -98,15 +98,15 @@
       "backlog": 1
     },
     "session-mapping": {
-      "status": "reconcile",
+      "status": "amend",
       "lastRound": 3,
       "lastScore": "56/56",
       "lastReport": ".claude/worktrees/wf_2027c3f1-e7d-26/docs/test-results/session-mapping/round-3.md",
-      "openBugs": 0,
+      "openBugs": 2,
       "backlog": 1
     },
     "live-release-tracker": {
-      "status": "fix",
+      "status": "validate",
       "lastRound": 1,
       "lastScore": "82/87",
       "lastReport": ".claude/worktrees/wf_408f72f2-08e-1/docs/test-results/live-release-tracker/round-1.md",
@@ -138,11 +138,11 @@
       "backlog": 0
     },
     "platform-agent-runner": {
-      "status": "reconcile",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
-      "openBugs": 0,
+      "openBugs": 11,
       "backlog": 0
     }
   },
@@ -1783,7 +1783,7 @@
     {
       "id": "world-shell-navigation-wsn-r3-editor-loading-state",
       "feature": "world-shell-navigation",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Observation: editor shows '0 BLOCKS / No blocks yet - add one below.' for 1-3 s before '9 BLOCKS'",
@@ -4685,14 +4685,14 @@
     {
       "id": "no-silent-failures-T-R2-4",
       "feature": "no-silent-failures",
-      "status": "backlog_pre_existing",
+      "status": "process_note",
       "class": "defect",
       "attempts": 0,
       "step": "J4.1 MCP_GAP: output templates have no MCP tool",
       "rootCause": null,
       "files": [],
       "scope": {
-        "scope": "pre_existing",
+        "scope": "process_note",
         "owner": null,
         "evidence": null
       },
@@ -4708,16 +4708,19 @@
     {
       "id": "no-silent-failures-T-R2-5",
       "feature": "no-silent-failures",
-      "status": "backlog_pre_existing",
+      "status": "open",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "J1.3 load-failure toast is plain success style, not red (validator observation)",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "CareerMasterPanel.jsx:363 calls toast(...) (success style) for a load failure; the step only checks text, not that it is styled as an error.",
+      "files": [
+        "src/components/admin/CareerMasterPanel.jsx",
+        "docs/training/no-silent-failures.md"
+      ],
       "scope": {
-        "scope": "pre_existing",
+        "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "CareerMasterPanel.jsx:363 plain toast() is unchanged from base, but load errors surfaced …"
       },
       "history": [
         {
@@ -7618,7 +7621,7 @@
     {
       "id": "cover-letter-agent-B3",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "World Shell reachability",
@@ -7691,7 +7694,7 @@
     {
       "id": "cover-letter-agent-B6",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "Test account rule",
@@ -7716,7 +7719,7 @@
     {
       "id": "cover-letter-agent-B7",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Career-bound integration",
@@ -7766,7 +7769,7 @@
     {
       "id": "cover-letter-agent-B9",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Scope additions",
@@ -7814,7 +7817,7 @@
     {
       "id": "cover-letter-agent-B11",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Second cover letter generator",
@@ -7862,7 +7865,7 @@
     {
       "id": "cover-letter-agent-F1-1",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "J1.2, J8.4, E.5",
@@ -7881,7 +7884,7 @@
     {
       "id": "cover-letter-agent-F1-2",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "MCP_GAP (T8)",
@@ -7902,7 +7905,7 @@
     {
       "id": "cover-letter-agent-F1-5",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "product_defect",
       "attempts": 0,
       "step": "J1.1 mobile",
@@ -7924,7 +7927,7 @@
     {
       "id": "cover-letter-agent-F1-6",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "World Shell reachability (proposed J10.1)",
@@ -7947,7 +7950,7 @@
     {
       "id": "cover-letter-agent-F1-7",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "E.3, E.4, E.6, E.7",
@@ -7966,7 +7969,7 @@
     {
       "id": "cover-letter-agent-F1-8",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Career-bound integration",
@@ -7989,7 +7992,7 @@
     {
       "id": "cover-letter-agent-F1-9",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Package contents",
@@ -8012,7 +8015,7 @@
     {
       "id": "cover-letter-agent-F1-10",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "product_defect",
       "attempts": 0,
       "step": "Member terms 428",
@@ -8034,7 +8037,7 @@
     {
       "id": "cover-letter-agent-F1-11",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "environment",
       "attempts": 0,
       "step": "J4 real provider",
@@ -8198,7 +8201,7 @@
     {
       "id": "cover-letter-agent-T5",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "E.3 / E.4: another member's letter id; a resume id in the agent",
@@ -8223,7 +8226,7 @@
     {
       "id": "cover-letter-agent-T6",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "E.6 second half: package key without any letter is refused",
@@ -8248,7 +8251,7 @@
     {
       "id": "cover-letter-agent-T7",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "E.7: failed automatic draft shown as red alert",
@@ -8312,7 +8315,7 @@
     {
       "id": "cover-letter-agent-T9",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "recurred",
       "class": "defect",
       "attempts": 0,
       "step": "UI_GAP / MOBILE_GAP: World Shell Application outputs shows Edit with cover-letter agent and Build package with contents",
@@ -8345,7 +8348,7 @@
     {
       "id": "cover-letter-agent-T10",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "Approve for QR on the package row (toast wording)",
@@ -8393,7 +8396,7 @@
     {
       "id": "cover-letter-agent-T13",
       "feature": "cover-letter-agent",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "Observation O5: J6.2 needs Resume Output History while the full-screen dialog is open",
@@ -8854,6 +8857,51 @@
       ]
     },
     {
+      "id": "session-mapping-F3-1",
+      "feature": "session-mapping",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "F2-2 / spec step B7",
+      "rootCause": "Owner direction (World Shell only) came after the spec was frozen. The code now follows it, but the frozen spec and baseline still contradi…",
+      "files": [
+        "src/components/admin/AdminShell.jsx",
+        "docs/spec-amendments/session-mapping/A1.json",
+        "docs/training/session-mapping.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "session-mapping-F3-4",
+      "feature": "session-mapping",
+      "status": "open",
+      "class": "informational",
+      "attempts": 0,
+      "step": "F2-3 spool verification (missed by reports)",
+      "rootCause": "The new behaviour has no spec step, so no validator exercises it, and the spooled file is filed only when an admin runs Scan.",
+      "files": [
+        "scripts/analyze-session.mjs",
+        "server/lib/sessionMapping.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (in…",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "session-mapping-T1",
       "feature": "session-mapping",
       "status": "verified",
@@ -8908,7 +8956,7 @@
     {
       "id": "live-release-tracker-B1",
       "feature": "live-release-tracker",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Interface parity: MCP tools for every capability",
@@ -8931,7 +8979,7 @@
     {
       "id": "live-release-tracker-B6",
       "feature": "live-release-tracker",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "Spec governance",
@@ -8953,7 +9001,7 @@
     {
       "id": "live-release-tracker-B10",
       "feature": "live-release-tracker",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Render bindings",
@@ -8976,7 +9024,7 @@
     {
       "id": "live-release-tracker-B11",
       "feature": "live-release-tracker",
-      "status": "fixing",
+      "status": "open",
       "class": "test_harness",
       "attempts": 0,
       "step": "Spec E.7 and dark World journeys",
@@ -8997,7 +9045,7 @@
     {
       "id": "live-release-tracker-B12",
       "feature": "live-release-tracker",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "Process definition",
@@ -9018,7 +9066,7 @@
     {
       "id": "live-release-tracker-B13",
       "feature": "live-release-tracker",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "Integration",
@@ -9041,7 +9089,7 @@
     {
       "id": "live-release-tracker-B14",
       "feature": "live-release-tracker",
-      "status": "fixing",
+      "status": "open",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Reuse first",
@@ -9063,7 +9111,7 @@
     {
       "id": "live-release-tracker-T1",
       "feature": "live-release-tracker",
-      "status": "fixing",
+      "status": "open",
       "class": "defect",
       "attempts": 0,
       "step": "Save source settings after a failed fetch",
@@ -9088,7 +9136,7 @@
     {
       "id": "live-release-tracker-T2",
       "feature": "live-release-tracker",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "Previous update once from Live (J6.2) and slider stays where left (J6.4)",
@@ -9114,7 +9162,7 @@
     {
       "id": "live-release-tracker-T3",
       "feature": "live-release-tracker",
-      "status": "fixing",
+      "status": "open",
       "class": "defect",
       "attempts": 0,
       "step": "World at 390px: hint and Pause motion visible, sheet below scene",
@@ -9140,7 +9188,7 @@
     {
       "id": "live-release-tracker-T4",
       "feature": "live-release-tracker",
-      "status": "fixing",
+      "status": "open",
       "class": "defect",
       "attempts": 0,
       "step": "Paste a snapshot with no features",
@@ -9165,7 +9213,7 @@
     {
       "id": "live-release-tracker-T5",
       "feature": "live-release-tracker",
-      "status": "fixing",
+      "status": "open",
       "class": "defect",
       "attempts": 0,
       "step": "MCP_GAP: live release tracker MCP tools (bug B1)",
@@ -10111,6 +10159,245 @@
       ]
     },
     {
+      "id": "platform-agent-runner-B9",
+      "feature": "platform-agent-runner",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "baseline check --all",
+      "rootCause": "Integrator has not frozen v1",
+      "files": [
+        "docs/training/platform-agent-runner.md",
+        "docs/training/baselines/platform-agent-runner/smoke.json"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-agent-runner-B11",
+      "feature": "platform-agent-runner",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "U1 branch stale vs integration",
+      "rootCause": "Integration advanced after the b7b90dc merge",
+      "files": [
+        "server/lib/capabilityParity.js",
+        "server/lib/mcpToolRegistry.js",
+        "server/data/mcpToolManifest.json"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-agent-runner-B12",
+      "feature": "platform-agent-runner",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "U2 integration push",
+      "rootCause": "Integration step is self-reported and contradictory",
+      "files": [
+        "agents/release-loop/release_integrator/prompt.md",
+        "server/lib/agentWorker.js",
+        "scripts/agent-worker.mjs"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-agent-runner-B13",
+      "feature": "platform-agent-runner",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "U3 usage into Release Intelligence",
+      "rootCause": "Reuse audit promise not implemented",
+      "files": [
+        "server/lib/agentRunner.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-agent-runner-B14",
+      "feature": "platform-agent-runner",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "U4 prompts shared with workflow",
+      "rootCause": "Cut-over deferred",
+      "files": [
+        ".claude/workflows/release-loop.js",
+        "agents/release-loop"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-agent-runner-B15",
+      "feature": "platform-agent-runner",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "U5 pre-edit check scope",
+      "rootCause": "Hook only checks EDIT_TOOLS",
+      "files": [
+        "server/lib/agentRunnerAdapters.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-agent-runner-B16",
+      "feature": "platform-agent-runner",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "U6 live SDK check",
+      "rootCause": "No key by design",
+      "files": [
+        "server/lib/agentRunnerAdapters.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-agent-runner-B17",
+      "feature": "platform-agent-runner",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "U7 worker deployment",
+      "rootCause": "Open owner decisions 3 and 4",
+      "files": [
+        "Dockerfile.worker",
+        "render.yaml"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-agent-runner-B18",
+      "feature": "platform-agent-runner",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "U8 other roles",
+      "rootCause": "Out of scope for this phase",
+      "files": [
+        ".claude/workflows/release-loop.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-agent-runner-B19",
+      "feature": "platform-agent-runner",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "U9 amendment freeze",
+      "rootCause": "Governance keeps freezing with amendment reviewer",
+      "files": [
+        "server/lib/agentRunner.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-agent-runner-B20",
+      "feature": "platform-agent-runner",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "U10 polling",
+      "rootCause": "render-bindings not in branch",
+      "files": [
+        "src/components/admin/AgentRunnerRuns.jsx",
+        "src/components/admin/AgentRunnerPanel.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "career-bound-outputs-F1-3",
       "feature": "career-bound-outputs",
       "status": "fixed_awaiting_retest",
@@ -10390,6 +10677,31 @@
           "round": 2,
           "event": "found",
           "note": "Career Master record create/update/delete (Manual Intake ad…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "no-silent-failures-T-R3-3",
+      "feature": "no-silent-failures",
+      "status": "open",
+      "class": "coverage_gap",
+      "attempts": 0,
+      "step": "Setup P4 is ambiguous: gallery or console fixture",
+      "rootCause": "P4 says to use the gallery if present, otherwise the console fixture. A gallery-only template gives header 'Test Member' and titles 'Profic…",
+      "files": [
+        "docs/training/no-silent-failures.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "P4 in this feature's own training spec is ambiguous between gallery and console fixture; …"
+      },
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "P4 says to use the gallery if present, otherwise the consol…",
           "commit": null
         }
       ]
