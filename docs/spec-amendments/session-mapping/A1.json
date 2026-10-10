@@ -1,0 +1,21 @@
+{
+  "id": "A1",
+  "feature": "session-mapping",
+  "fromBaseline": 1,
+  "proposedBy": "fix:session-mapping:r3",
+  "round": 3,
+  "triageItems": [
+    "session-mapping-F2-2"
+  ],
+  "reason": "Owner direction: the Sessions screen is reached from the World Shell only. The Classic Tools entry was removed (hidden via HIDDEN_NAV_TAB_IDS), so the Screen sentence in the spec no longer matches the product.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "B7",
+      "before": "Also reachable from **Classic Tools** -> menu **Platform Lifecycle Management** -> **Sessions**.",
+      "after": "Reachable from the World Shell only: **Classic Tools** -> **Platform Lifecycle Management** does not list **Sessions**.",
+      "tracesTo": "docs/training/session-mapping.md line 7; docs/changes/session-mapping.md fix notes round 3"
+    }
+  ],
+  "status": "proposed"
+}
