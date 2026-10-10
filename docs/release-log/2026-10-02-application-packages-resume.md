@@ -2,9 +2,9 @@
 
 - Release: 2026-10-02-application-packages-resume
 - Integration branch: `claude/zealous-meitner-5tuft5` (not pushed by this release)
-- Integration head when recorded: d2beb30 (last feature merge 0800b1c, the commit round 6 tested)
+- Integration head when recorded: c020576 (last feature merge 0800b1c, the commit `release-loop-tooling` round 6 and `qr-gated-outputs` round 5 tested)
 - Process: `server/data/releaseLoop/definition.json` (spec governance, interface parity, per-bug fix-attempt limit)
-- Recorded: 2026-10-10 by the release recorder, adding round 6 of `release-loop-tooling`. Earlier recordings: dfc466b (2026-10-09, rounds 1 to 5) and 17a67e9 (only `proficiency-live-qr`, whose section is kept below).
+- Recorded: 2026-10-10 by the release recorder. This recording adds `qr-gated-outputs` (rounds 1 to 5). The previous recording (7d89f3c) added round 6 of `release-loop-tooling`. Earlier recordings: dfc466b (2026-10-09, rounds 1 to 5) and 17a67e9 (only `proficiency-live-qr`, whose section is kept below).
 - Data: fictional only. No employer or application-target name appears in this log.
 
 ## Final results
@@ -12,9 +12,12 @@
 | Feature | Final status | Last round | Commit tested | Steps passed / total (baseline) | Open blocking items | Backlog (not blocking) |
 |---|---|---|---|---|---|---|
 | release-loop-tooling | **PASSED** | 6 | 0800b1c | 30 / 30 on **v3** | none in the workflow data (see "State discrepancy" below) | T4-2 (MCP_GAP, pre_existing), F1-7, B5 (pre_existing), B4 (process_note) |
+| qr-gated-outputs | **PASSED WITH BACKLOG (not a clean pass)** | 5 | 0800b1c | **36 / 38 on v2**; [J2.1] and [E.5] still fail on desktop and 390px | none per workflow data; **17 open in the state export** (see its "State discrepancy") | T1 [J2.1], T5 [E.5] (pre_existing defects, never fixed), F2-5, F2-7/F3-9/B9, F2-9/B8 (pre_existing), F2-1, F3-3 (process_note) |
 | proficiency-live-qr | **NOT PASSED** | 6 (state export) | see state export | 29 / 32 (state export; not handed to the recorder) | 8 open in the state export, 3 owner questions | see state export |
 
-Only `release-loop-tooling` was handed to the recorder in this run, and it passed again in round 6: 30/30 on baseline v3 at 0800b1c, with no steps failed, blocked or not run. Rounds 5 and 6 are on the same baseline (v3, spec sha256 `03924b9a...177bc`), so they compare like for like. Round 4 (29/30) was on v2; it compares with rounds 5 and 6 only through approved amendment A2, which changed step J3b.3 and nothing else.
+**This recording (qr-gated-outputs).** The workflow ended `qr-gated-outputs` as passed_with_backlog, scoring 36/38 on baseline v2 at 0800b1c. Rounds 3, 4 and 5 all scored 36/38 on v2, with the same two failures: [J2.1] and [E.5]. Both are em-dash copy strings that the round-5 scope review found already present before the feature (base 9e729b6), so they went to backlog. Neither has ever been fixed, and both frozen steps still fail. The state export of 2026-10-10T00:40:17Z still says `failing` with 17 open bugs. Treat this feature as **not releasable until a person reconciles the state and either fixes T1/T5 or accepts them**. See the feature section below.
+
+In the previous recording, `release-loop-tooling` passed again in round 6: 30/30 on baseline v3 at 0800b1c, with no steps failed, blocked or not run. Rounds 5 and 6 are on the same baseline (v3, spec sha256 `03924b9a...177bc`), so they compare like for like. Round 4 (29/30) was on v2; it compares with rounds 5 and 6 only through approved amendment A2, which changed step J3b.3 and nothing else.
 
 **Features that did NOT pass.** The bug-state export (`active-release.state.json`, exported 2026-10-10T00:16:59Z, committed in d2beb30) lists these features. None of them was handed to this recorder with a passing result, so none of them is releasable. Scores are copied from the export; the recorder has no baseline version for them and does not compare them with each other or with earlier recordings.
 
@@ -23,7 +26,7 @@ Only `release-loop-tooling` was handed to the recorder in this run, and it passe
 | proficiency-live-qr | validate | 6 | 29/32 | 8 |
 | world-shell-navigation | validate | 2 | 36/47 | 9 |
 | career-bound-outputs | validate | 3 | 48/56 | 9 |
-| qr-gated-outputs | validate | 4 | 36/38 | 6 |
+| qr-gated-outputs | failing (export 00:40:17Z; workflow says passed_with_backlog, see its section) | 5 | 36/38 on v2 | 17 per export |
 | no-silent-failures | validate | 1 | 18/28 | 7 |
 | chart-gallery | validate | 3 | 17/20 | 10 |
 | output-version-history | validate | 3 | 30/37 | 0 by status count (not handed to the recorder) |
@@ -40,7 +43,7 @@ Only `release-loop-tooling` was handed to the recorder in this run, and it passe
 
 The open-bug column counts state-export bugs for that feature whose status is not verified, backlog or process_note. It is the recorder's count from the export, not a triage decision.
 
-**The release as a whole did not pass.** One feature (`release-loop-tooling`) passed. Under the push gate, the integration branch must not be pushed unless the owner says otherwise. Nothing was pushed. No sweep was run (`sweep: null`).
+**The release as a whole did not pass.** One feature (`release-loop-tooling`) passed cleanly. One feature (`qr-gated-outputs`) ended passed_with_backlog, with 2 of its 38 frozen steps still failing; the state export disagrees with that verdict. Under the push gate, the integration branch must not be pushed unless the owner says otherwise. Nothing was pushed. No sweep was run (`sweep: null`).
 
 ---
 
@@ -215,6 +218,213 @@ No item has scope `other_feature`.
 
 ---
 
+## Feature: qr-gated-outputs
+
+Title: QR-gated tailored application outputs: import, metadata, approve for QR, private slug, clickable QR in PDF/docx, revoke.
+
+Status (workflow data): **passed_with_backlog**. This is **not a clean pass**. Round 5 scored **36 / 38 on baseline v2** at commit 0800b1c. Two frozen steps still fail on desktop and on the 390px phone: **[J2.1]** and **[E.5]**. The workflow ended the feature as passed_with_backlog because the scope review (round 5) classed both failures as `pre_existing`. Both strings were already in the code at base 9e729b6, before this feature's first merge, and the process definition (`scopeReview`) makes pre-existing items non-blocking. Both still need a code fix before these two steps can pass. See "State discrepancy" below: the bug-state export does **not** agree that this feature passed.
+
+- Training spec: [docs/training/qr-gated-outputs.md](../training/qr-gated-outputs.md); baselines: [v1](../training/baselines/qr-gated-outputs/v1.json), [v2](../training/baselines/qr-gated-outputs/v2.json). The recorder ran `node scripts/release-spec-baseline.mjs check --feature qr-gated-outputs` at c020576, which printed "baselines match: qr-gated-outputs v2" (exit 0).
+- Change spec: [docs/changes/qr-gated-outputs.md](../changes/qr-gated-outputs.md)
+- Built in d78bcda and 76b33ad (branch `release-loop/qr-gated-outputs-build`, 51b006c).
+
+### Rounds
+
+| Round | Commit tested | Baseline | Result | Test result | Triage |
+|---|---|---|---|---|---|
+| 1 | 8430eae | none (before spec governance) | FAIL, 45 / 48 checked expectations | [round-1](../test-results/qr-gated-outputs/round-1.md) | No round-1 triage file was written (round-2 triage says so). Build reconciliation: [build](../triage/qr-gated-outputs-build-reconciliation.md) |
+| 2 | c3a71b4 | **v1** (sha256 `a5778429...0cb779`) | FAIL, 33 / 38 steps | [round-2](../test-results/qr-gated-outputs/round-2.md) | [round-2](../triage/qr-gated-outputs-round-2.md), [round-2 scope](../triage/qr-gated-outputs-round-2-scope.md), [fix-r2 reconciliation](../triage/qr-gated-outputs-fix-r2-reconciliation.md) |
+| 3 | 379d72a | **v2** (A1; sha256 `ec0b3830...b2e00e`) | FAIL, 36 / 38 steps | [round-3](../test-results/qr-gated-outputs/round-3.md) | [round-3](../triage/qr-gated-outputs-round-3.md), [round-3 scope](../triage/qr-gated-outputs-round-3-scope.md), [fix-r3 reconciliation](../triage/qr-gated-outputs-fix-r3-reconciliation.md) |
+| 4 | 2fd2e2e | **v2** (unchanged) | FAIL, 36 / 38 steps | [round-4](../test-results/qr-gated-outputs/round-4.md) | [round-4](../triage/qr-gated-outputs-round-4.md), [round-4 scope](../triage/qr-gated-outputs-round-4-scope.md), [fix-r4 reconciliation](../triage/qr-gated-outputs-fix-r4-reconciliation.md) |
+| 5 | 0800b1c | **v2** (unchanged) | 36 / 38 steps; workflow verdict passed_with_backlog | [round-5](../test-results/qr-gated-outputs/round-5.md) | [round-5](../triage/qr-gated-outputs-round-5.md) (see note), [round-5 scope](../triage/qr-gated-outputs-round-5-scope.md) |
+
+**Comparing scores.** Round 1 counted checked expectations, not baseline steps, so its 45/48 cannot be compared with any later round. Round 2 (v1, 33/38) compares with rounds 3 to 5 (v2, 36/38) only through amendment A1. A1 changed no scored step: the v1-to-v2 baseline diff is 38 steps the same, none changed, added or retired (round-3 report). It added only a phone-route note to "Where things are". The 3-step gain from round 2 to round 3 came from fix T3 (hyphen toast), which made J3.3, J7.1 and J8.3 pass. Rounds 3, 4 and 5 are on the same baseline and the same spec sha256. They compare directly: the score is identical and the same two steps fail in each.
+
+**Round-5 triage file.** The workflow data gives the round-5 triage path as `.claude/worktrees/wf_20655f2f-37c-2/docs/triage/qr-gated-outputs-round-5.md`, inside a worktree, not in the main checkout. The recorder copied it unchanged to [docs/triage/qr-gated-outputs-round-5.md](../triage/qr-gated-outputs-round-5.md) so the link resolves. The workflow data lists round-5 triage `items: []`. The file itself describes T1 and T5 (class defect, recurrences), and the scope step then moved both to backlog. This log records them under Backlog.
+
+#### Round 1 (no baseline): 45 / 48 checked expectations
+
+- Commit 8430eae. Validator val-4600-5. Signed in as the seeded administrator. Clicked to My Resume through `/world` > Classic Tools > Network Relationship Management.
+- Failures: J2.1 (Read-only note uses an em dash), J2.1b (header contact entries ran together as "avery@example.testExample City", and the PDF showed a comma), J3.3 (approve toast uses an em dash).
+- No triage file was written for round 1. Those failures carried into round 2 as T1, T2 and T3.
+
+#### Round 2 (baseline v1): 33 / 38
+
+- Commit c3a71b4. Validator val-5100-1. Desktop 1280x900 and phone 390x844, each on its own fresh database. Ran as the seeded administrator, as the spec's P.1 says.
+- Failed: J2.1, J3.3, J7.1, J8.3, E.5, on both surfaces. Each one is a single em dash where the frozen spec has a hyphen. Observations: J2.1b, J3.2b, J5.1m.
+- Triage ([round-2](../triage/qr-gated-outputs-round-2.md)) and scope ([round-2 scope](../triage/qr-gated-outputs-round-2-scope.md), base e0ea466):
+
+| Id | Step | Class | Scope | Root cause | Files |
+|---|---|---|---|---|---|
+| T1 | [J2.1] | defect | pre_existing | `MyResumePanel.jsx:1062` Read-only note uses an em dash; the string is already at e0ea466 (line 922, blame 9b5ad4f0, 2026-08-09) | `src/components/admin/MyResumePanel.jsx` |
+| T3 | [J3.3], [J7.1], [J8.3] | defect | this_feature | `MyResumePanel.jsx:636` `approveForQr` toast uses an em dash; introduced by d78bcda | `src/components/admin/MyResumePanel.jsx` |
+| T2 | [J2.1] (contact) | defect | this_feature | `DocumentBlocksView.jsx:94` renders an array `header.contact` with no separator; the PDF stringified it with commas | `src/components/DocumentBlocksView.jsx`, `server/lib/outputRendering.js`, `src/lib/documentBlocksEditor.js` |
+| T5 | [E.5] | defect | pre_existing | `server/routes/auth.js:28` `authLimiter` message uses an em dash; the string is already at e0ea466 (blame a875b9b, 2026-07-10) | `server/routes/auth.js` |
+| G1 | navigation | coverage_gap | this_feature | The spec has no phone route to My Resume (the Classic Tools strip is hidden at 390px) | training spec (amendment A1) |
+| G2 | [J10.3], [E.1], [E.2], [E.4] | coverage_gap | this_feature | No step leaves a Draft card behind after Journey 9 | training spec (amendment A2) |
+
+- **Fix r2** (73505f4, merged fc1e20b) applied T3 and T2 only. Files: `src/components/admin/MyResumePanel.jsx` (toast line 636), `src/lib/headerContact.js` (new shared normaliser), `src/components/DocumentBlocksView.jsx`, `server/lib/outputRendering.js`, `src/lib/documentBlocksEditor.js`, `docs/changes/qr-gated-outputs.md`. **T1 and T5 were left off the fix list** ([fix-r2 reconciliation](../triage/qr-gated-outputs-fix-r2-reconciliation.md) N1, N2). The fix agent did not walk the fix in a browser (F2-1, process_note).
+
+#### Round 3 (baseline v2): 36 / 38
+
+- Commit 379d72a. Validator val-5100-7. Still ran as the seeded administrator.
+- T3 is verified: J3.3, J7.1 and J8.3 pass on both surfaces. T2 is verified: the contact line reads `avery@example.test · Example City`.
+- Still failing on both surfaces: **J2.1** (Read-only em dash, now `MyResumePanel.jsx:1062`) and **E.5** (limit message em dash).
+- Triage ([round-3](../triage/qr-gated-outputs-round-3.md)): T1 and T5 recurred, class defect, not a spec_error. Scope ([round-3 scope](../triage/qr-gated-outputs-round-3-scope.md)): T1/F2-2 and T5/F2-3 are pre_existing. F2-6 and F2-8 (docx), F2-10 (MCP revoke tool), F2-11 (spec preconditions) and F2-12 (Draft fixture) are this_feature. F2-5 (fresh-database NOTICEs), F2-7 (in-app import) and F2-9 (mobile Classic Tools) are pre_existing. F2-1 is a process_note.
+- **Fix r3** (27e4fda, merged 238767f) added MCP tools `application_output_revoke_qr`, `application_package_import` and `shared_output_resolve`, plus a stamped `.docx` download. Files: `server/lib/mcpToolRegistry.js`, `server/data/mcpToolManifest.json`, `server/lib/capabilityParity.js`, `server/lib/outputDocx.js` (new), `server/lib/outputRendering.js`, `server/routes/resumeOutputs.js`, `src/components/admin/MyResumePanel.jsx` (button), `src/lib/api.js`, `docs/changes/qr-gated-outputs.md`. **T1 and T5 were again left unfixed** ([fix-r3 reconciliation](../triage/qr-gated-outputs-fix-r3-reconciliation.md) N1, N2). The fix agent proposed amendments A3, A4 and A5, and all three were rejected.
+
+#### Round 4 (baseline v2): 36 / 38
+
+- Commit 2fd2e2e. Validator val-5100-13. Ran as the seeded administrator. Phone route per A1.
+- Same score and the same two failures as round 3: J2.1 (`MyResumePanel.jsx:1065`) and E.5 (`auth.js:28`).
+- Observations: the docx download works (O1, not scored), and the MCP tools work and match the UI (O2, not scored). A pkg-v3 import was run as harness setup for the Draft card.
+- Triage ([round-4](../triage/qr-gated-outputs-round-4.md)): T1 and T5 recurred again, both class defect. Scope ([round-4 scope](../triage/qr-gated-outputs-round-4-scope.md)): T1 and T5 pre_existing; F3-7 and F3-8 are duplicates of T1 and T5 (pre_existing). F3-9 is pre_existing. F3-5, F3-6, F3-10 and F3-11 are this_feature. F3-3 is a process_note.
+- **Fix r4** (e7a28dd, merged 4620984) changed only `docs/changes/qr-gated-outputs.md` (+17 lines of verification and fix notes). **It contained no code.** T1 and T5 were not applied for the third fix round in a row ([fix-r4 reconciliation](../triage/qr-gated-outputs-fix-r4-reconciliation.md) R3, N1, N2). The fix agent proposed amendments A6, A7 and A8, and all three were rejected.
+
+#### Round 5 (baseline v2): 36 / 38, workflow verdict passed_with_backlog
+
+- Commit tested: 0800b1c. Validator val-5100-1. Report: [round-5](../test-results/qr-gated-outputs/round-5.md). Not run: none. Blocked: none.
+- Score output: `{"baseline":2,"specSha256":"ec0b38300916588f2be4249e36c6237ef9b95636972ebfc7ed8dfec2a2e2b00e","total":38,"passed":36,"failed":["J2.1","E.5"],"blocked":[],"notRun":[],"preconditionsFailed":[],"observations":["J2.1b","J3.2b","J5.1m"]}`
+- Baseline v2 is unchanged since round 3, so no diff table is needed.
+- First round run as **member@test.local** (display name "Test Member"), using the test-account constraint. Desktop at 1280x900 and phone at 390x844 with touch, each on its own fresh database.
+
+Failures:
+
+| Step | Surface | Expected | Observed | Evidence |
+|---|---|---|---|---|
+| [J2.1] On Harbor Demo Resume click View | desktop+mobile | Dialog contains "Read-only - no edits can be made here." (hyphen) | "Read-only — no edits can be made here." (em dash). All other listed content is present. Fix T1 is not in this head: `MyResumePanel.jsx:1109` still has the em dash. | `/var/tmp/sbpg/release-loop/qr-gated-outputs/round-5/desktop/j2-1-view.png`, `.../mobile/j2-1-view.png` |
+| [E.5] Sign-in limit message | desktop+mobile | "Too many attempts - please try again in 15 minutes" (hyphen) | "Too many attempts — please try again in 15 minutes" (em dash) after 6 attempts. Fix T5 is not in this head: `server/routes/auth.js:28` still has the em dash. | `/var/tmp/sbpg/release-loop/qr-gated-outputs/round-5/desktop/e5-limit.png`, `.../mobile/e5-limit.png` |
+
+The recorder confirmed by grep at c020576 that both em-dash strings are still present (`MyResumePanel.jsx:1109`, `server/routes/auth.js:28`).
+
+Observations (none affects the score):
+
+- **O1. Spec desktop path vs member account.** The path "Classic Tools > Network Relationship Management > sub tab" does not exist for a member: the sub tabs are the top row directly. P.1 says to sign in as the administrator, but the validator used member@test.local per the test-account constraint. Proposed amendment wording, from the report and **not filed**: "My Resume: open `<BASE>/world`, click **Classic Tools**, click the tab **My Resume** (administrators first click **Network Relationship Management**)." See "Validator drift".
+- **O2.** The card and footer show the member's display name, "Approved by Test Member". The spec allows this ("your display name or email"). The spec's note "for the seeded administrator this is the email" does not apply to the member.
+- **O3.** No spec step supplies a Draft card for J10.3, E.1, E.2 and E.4 (F2-12 / G2 are still unresolved in the spec). The validator imported a third package version as harness setup.
+- **MCP parity: no MCP_GAP.** The validator called `/mcp` with a token created in the UI. `shared_output_resolve` returned the document for a live slug and 404 for a revoked one. `application_output_revoke_qr` returned ok. `application_package_import` returned unchanged. `application_output_approve_for_qr` returned 409 `tool_category_required`, the same gate the website applies. All results matched the UI.
+- The Download .docx button is present on every card. Its contents were not re-inspected this round, and B10/F3-10 have no baseline step.
+- E.5 hit the limit after 6 attempts rather than after more than 10, because earlier sign-ins in the same server run count toward the shared limiter. Triage says this is expected, not a defect.
+- `net::ERR_ABORTED` on the PDF download URL is the browser turning the response into a download. External font and three.js requests were blocked by the sandbox (`external_blocked`, not counted).
+
+Triage and scope for round 5:
+
+| Id | Step | Class | Scope | Root cause | Files | Proposed fix |
+|---|---|---|---|---|---|---|
+| T1 | [J2.1] | defect | pre_existing | `src/components/admin/MyResumePanel.jsx:1109` hard-codes the Read-only note with an em dash; spec line 89 expects a hyphen. Recurrence of T1 from rounds 2 to 4. The fix was never applied (the fix-r4 branch holds notes only). | `src/components/admin/MyResumePanel.jsx` | Replace the em dash with ' - ' in that JSX string only, leaving the comment at line 1100. Re-walk J2.1 on desktop and at 390px. |
+| T5 | [E.5] | defect | pre_existing | `server/routes/auth.js:28` `authLimiter` message uses an em dash; spec line 201 expects a hyphen. Recurrence of T5 from rounds 2 to 4. Tripping after 6 attempts is expected, because the shared limiter counts all sign-ins per IP. | `server/routes/auth.js` | Change the message to 'Too many attempts - please try again in 15 minutes'. First grep the other specs (cover-letter-agent, in-app-release-loop) for the em-dash form. |
+
+Scope evidence for round 5 ([round-5 scope](../triage/qr-gated-outputs-round-5-scope.md), base 9e729b6, the first parent of the earliest qr-gated-outputs merge aa14653):
+
+- T1: "Read-only — no edits can be made here." is already at 9e729b6 (`MyResumePanel.jsx:1042`).
+- T5: the em-dash `authLimiter` message is already at 9e729b6 (`server/routes/auth.js:28`).
+
+This matches the round-2 to round-4 reproductions on e0ea466.
+
+Fix for round 5: none. The loop ended the feature as passed_with_backlog.
+
+### Spec amendments
+
+| Id | Status | Round | What it proposed / changed | Proposed by | Reviewer | Branch / merge | Baseline |
+|---|---|---|---|---|---|---|---|
+| [A1](../spec-amendments/qr-gated-outputs/A1.json) | **approved** | 2 | Adds a phone route to "Where things are": World Shell > Journeys > My Resume (or Career Master), because the Classic Tools strip is hidden at 390px. No scored step changed. | triage:qr-gated-outputs:r2 (G1) | amend:qr-gated-outputs:r2 | `release-loop/qr-gated-outputs-spec-r2` 8055be7, merged 72fb85b | v1 to **v2** |
+| [A2](../spec-amendments/qr-gated-outputs/A2.json) | rejected | 2 | Import a third package version so a Draft card exists for J10.3, E.1, E.2 and E.4 | triage:qr-gated-outputs:r2 (G2) | amend:qr-gated-outputs:r2 | not merged (file only) | none |
+| [A3](../spec-amendments/qr-gated-outputs/A3.json) | rejected | 3 | New step [B10.1]: Download .docx, check the QR hyperlink target and the core-property dates and authors | fix:qr-gated-outputs:r3 (F2-8, B10) | amend:qr-gated-outputs:r3 | file only | none |
+| [A4](../spec-amendments/qr-gated-outputs/A4.json) | rejected | 3 | New step [P.2]: MCP import, approve, resolve, revoke, resolve | fix:qr-gated-outputs:r3 (F2-10) | amend:qr-gated-outputs:r3 | file only | none |
+| [A5](../spec-amendments/qr-gated-outputs/A5.json) | rejected | 3 | New fixture step [J10.0]: import the Harbor Demo package before J10.3, E.1, E.2 and E.4 | fix:qr-gated-outputs:r3 (F2-12) | amend:qr-gated-outputs:r3 | file only | none |
+| [A6](../spec-amendments/qr-gated-outputs/A6.json) | rejected | 4 | P.1: sign in as member@test.local and go to My Resume via World Shell > Journeys | fix:qr-gated-outputs:r4 (F2-11, F3-5) | amend:qr-gated-outputs:r4 | file only | none |
+| [A7](../spec-amendments/qr-gated-outputs/A7.json) | rejected | 4 | New P.5: create pkg-v3 with sed after J9.3 and import it, so a Draft card exists | fix:qr-gated-outputs:r4 (F2-12, F3-6) | amend:qr-gated-outputs:r4 | file only | none |
+| [A8](../spec-amendments/qr-gated-outputs/A8.json) | rejected | 4 | New J6.4: Download .docx, then a cli read of `docProps/core.xml` and the header rels | fix:qr-gated-outputs:r4 (F2-8, F3-10) | amend:qr-gated-outputs:r4 | file only | none |
+
+Why each amendment was rejected, from each file's `review`:
+
+- **A2** failed Exact and Deterministic. No fixture file or import command was written. Re-running pkg-v2 in E.3 would report new_version once a third version exists.
+- **A3** failed Exact, Reachable and Deterministic. No property names or values were given, `[B10.1]` is not a valid id, "click the QR in Word" is not a browser step, and the step did not say which card it uses.
+- **A4** failed Exact, Reachable and Deterministic. `[P.2]` is already used and ids are never reused. No transport, auth or arguments were written. Import would report unchanged, not created, and the step would disturb the J3 to J9 state.
+- **A5** failed Exact and Deterministic. No fixture or command was written, `[J10.0]` is not a valid id, and the expected "created" is wrong.
+- **A6** failed Exact and Deterministic. P.4, J8.1 and P.5 still import with `ADMIN_EMAIL`, so the member would see no cards. The reviewer asked for a single amendment that changes P.1, P.4, J8.1, "Where things are" and P.2 together, with "Approved by Test Member" in a scored step.
+- **A7** failed Exact and Deterministic. The import still runs as the administrator, and E.3 was not edited as a change op. The reviewer found the fixture, sed command and placement acceptable.
+- **A8** failed Exact, Reachable and Deterministic. It gave no literal command, mixed a browser click into a cli step, and used one save path for both surfaces. The reviewer asked for J6.4 (desktop+mobile download) and J6.5 (cli, a literal `python3 -I` command with exact expected values).
+
+The A2 to A8 review notes all say the same thing: these are spec resubmissions, not product defects. **None has been resubmitted.** As a result the spec still says to sign in as the administrator (P.1), still has no Draft-card fixture, and still has no scored step for the docx or the MCP parity.
+
+**Proposed, not filed:** the round-5 validator's O1 wording for the desktop path, quoted above. It needs an amendment file and a reviewer other than the proposer. It overlaps A6's requested resubmission.
+
+No amendment was approved, merged or changed in round 5. `docs/training/qr-gated-outputs.md` and `docs/training/baselines/qr-gated-outputs/**` are byte-for-byte unchanged by this recording.
+
+### Validator drift
+
+- **Account used vs P.1.** Rounds 2 to 4 ran as the seeded administrator, as P.1 says. Round 5 ran as member@test.local because of the test-account constraint. P.1 is an unscored precondition and still names the administrator, so round 5 departed from the frozen spec text. All 38 scored steps were still walked and scored on v2, and the two failures are the same as in rounds 3 and 4. The recorder therefore treats the scores as comparable but flags the deviation. It is resolved only by a resubmitted A6-style amendment.
+- **Desktop path.** Round 5 could not follow "Network Relationship Management" as a member (O1) and clicked Classic Tools > My Resume instead.
+- **Harness fixture outside the spec.** Rounds 2, 4 and 5 each imported a third package version as harness setup to get a Draft card for J10.3, E.1, E.2 and E.4. The spec does not contain this step (A2, A5 and A7 were rejected), so those four steps pass on a setup the spec does not define.
+- No validator edited the spec or a baseline, and the sha256 is the same for rounds 3 to 5.
+
+### Integration commits
+
+| Commit | What | Code files | Notes |
+|---|---|---|---|
+| aa14653 | Merge `release-loop/qr-gated-outputs-build` (51b006c) | `server/db.js` (+4, seeds the My Resume tab in `admin_nav`), change spec, training spec | Feature code itself: d78bcda, 76b33ad |
+| fc1e20b | Merge `fix-r2` (73505f4) | `MyResumePanel.jsx`, `headerContact.js` (new), `DocumentBlocksView.jsx`, `outputRendering.js`, `documentBlocksEditor.js` | T3 and T2 fixed; T1 and T5 not applied |
+| 72fb85b | Merge `spec-r2` (8055be7): A1 approved, A2 rejected file, baseline v2 | training spec (+1 line), `baselines/qr-gated-outputs/v2.json` | Amendment merge |
+| 238767f | Merge `fix-r3` (27e4fda) | `mcpToolRegistry.js`, `mcpToolManifest.json`, `capabilityParity.js`, `outputDocx.js` (new), `outputRendering.js`, `resumeOutputs.js`, `MyResumePanel.jsx`, `api.js` | MCP tools and .docx; T1 and T5 not applied |
+| 4620984 | Merge `fix-r4` (e7a28dd) | none (change spec notes only) | T1 and T5 not applied |
+| 18e76d1, f2b44f7, 379d72a | "Release loop logs: qr-gated-outputs" | none | Log commits |
+
+**Not merged:** `release-loop/qr-gated-outputs-fix-r1` (7d97fe8, 2026-10-08). It contains a contact normaliser, an in-world My Resume island, an Import package control, a .docx download and "spec corrections" (it edits `docs/training/qr-gated-outputs.md`, 97 lines). Editing the frozen spec directly is not allowed under spec governance (definition v4). The branch still exists. Its import UI was never re-applied, which is why the in-app import gap (G1 / F3-9 / F4-6) is still open. The workflow data has no record of why it was not merged; the recorder infers the spec-edit reason from the diff.
+
+No build or `check --all` result for these merges is in the workflow data handed to the recorder.
+
+### State discrepancy (reported, not resolved here)
+
+The workflow data says `passed_with_backlog` with no blocking items. The bug-state export (`active-release.state.json`, exported **2026-10-10T00:40:17Z**, committed in c020576) says something different: feature `status: failing`, `lastRound: 5`, `lastScore: 36/38`, **`openBugs: 17`**, `backlog: 12`. The recorder did not edit the state file. A person should reconcile the two before the feature is called releasable. The differences are:
+
+1. **Ids T1 and T5 collide across features.** The export holds one `T1` and one `T5` record, each with `scope: this_feature`, `status: recurred`, `attempts: 0`. Their evidence text belongs to other features ("mcpToolRegistry.js already exists ... in-app-release-loop" for T1, "error is in this feature's own training spec" for T5). Bare ids `T1`/`T5` also exist for no-silent-failures, output-version-history, cover-letter-agent and in-app-release-loop. So the export does not reliably carry the round-5 `pre_existing` decision for qr-gated-outputs T1/T5. The duplicates `qr-gated-outputs-F2-2`, `F2-3`, `F3-7` and `F3-8` do carry `backlog_pre_existing`.
+2. **Open items in the export with scope `this_feature`** that the workflow did not list as blocking: B7, F2-11, F3-5 and F4-4 (P.1 / member and World Shell, owner_direction_conflict); F2-12, F3-6, F4-5 and G2 (Draft-card fixture, test_harness); B10 and F4-7 (docx and site sync in the spec, requirement_gap); B11 (PDF annotations, test_harness); F4-8 (MCP parity step); G1 (phone route, coverage_gap, though A1 was approved and merged for it). Items F4-3 to F4-8 have no scope at all in the export. Almost all of these can only be closed by a reviewed amendment, and every amendment after A1 was rejected and never resubmitted.
+3. **maxFixRounds.** `definition.json` sets `maxFixRounds: 4`. The feature has had four fix rounds: r1 (not merged), r2, r3 and r4 (notes only). Under the `noSilentCaps` rule, a feature still failing at the cap is recorded as not passed. The workflow's passed_with_backlog verdict depends entirely on the round-5 scope call that both remaining failures are pre_existing.
+
+### Escalated for a business definition
+
+The workflow data has none (`escalated: []`). The reconciliations name these owner decisions as unresolved. They are copied as written, not answered and not guessed:
+
+- **Site sync** ([fix-r4 reconciliation](../triage/qr-gated-outputs-fix-r4-reconciliation.md) G2): "Site sync stays an owner-run script by explicit fix-agent decision (member would gain site-wide edit); that decision needs the owner to record it." The question is whether `scripts/sync-site-with-application-package.mjs` stays owner-run only, with no UI or MCP path.
+- **In-app import** (fix-r3 and fix-r4 reconciliation G1): add "Import package" in Resume Output History, "or owner records acceptance of the script." Scope calls F2-7, F3-9 and B9 pre_existing, because the request says "fictional package import". F4-6 is still open with no scope.
+- **Superseded version re-approval** ([build reconciliation](../triage/qr-gated-outputs-build-reconciliation.md) O6): "confirm with owner that moving the slug back is intended". An older version keeps "Approved by" and offers Approve for QR again.
+- **Entry point** (build reconciliation O2): needs an owner decision on whether My Resume is reached from a World Shell island, which now exists, or whether the owner OKs the Classic Tools path. The round-5 desktop walk used Classic Tools.
+
+### Bugs at the per-bug fix-attempt limit (needsHuman)
+
+None in the workflow data (`needsHuman: []`). No qr-gated-outputs item in the export is `needs_human`. The limit is `maxFixAttemptsPerBug: 2`.
+
+**Process note for a person.** T1 and T5 were triaged as defects with a one-string fix in rounds 2, 3, 4 and 5. The fix lists of r2, r3 and r4 dropped them each time, so their recorded attempt count is **0** and the per-bug limit never triggered. They never left the automated loop, and they were never fixed. Their full history:
+
+| Round | T1 [J2.1] | T5 [E.5] |
+|---|---|---|
+| 1 | Seen (em dash), no triage file | not reported |
+| 2 | Triaged defect (`MyResumePanel.jsx:1062`); scope pre_existing (e0ea466:922) | Triaged defect (`auth.js:28`); scope pre_existing (a875b9b) |
+| fix r2 | Not applied (reconciliation N1) | Not applied (N2) |
+| 3 | Failed again; recurrence; scope pre_existing | Failed again; recurrence; scope pre_existing |
+| fix r3 | Not applied (N1, line 1065) | Not applied (N2) |
+| 4 | Failed again; triage repeated "fix agent must be told explicitly to include both" | Same |
+| fix r4 | Not applied (notes only; R3, N1) | Not applied (N2) |
+| 5 | Failed again (`MyResumePanel.jsx:1109`); scope pre_existing (9e729b6:1042) moved it to backlog | Failed again (`auth.js:28`); scope pre_existing moved it to backlog |
+
+A person taking these over needs to make two one-string edits and re-walk J2.1 and E.5 on desktop and at 390px. Before changing the E.5 text, they should first check that no other feature's spec asserts the em-dash form.
+
+### Backlog: NOT blocking this feature
+
+| Id | Scope | Class | Evidence | Owner |
+|---|---|---|---|---|
+| T1 (also F2-2, F3-7) | pre_existing | defect | At 9e729b6 (first parent of aa14653) `MyResumePanel.jsx:1042` already reads "Read-only — no edits can be made here."; also at e0ea466:922 (blame 9b5ad4f0, 2026-08-09). Still fails frozen step J2.1. | not assigned (needs a person, see above) |
+| T5 (also F2-3, F3-8) | pre_existing | defect | At 9e729b6 `server/routes/auth.js:28` already has the em-dash `authLimiter` message (blame a875b9b, 2026-07-10). Still fails frozen step E.5. | not assigned |
+| F2-5 | pre_existing | environment | Fresh-database bootstrap NOTICEs (42701/42P07) reproduce on e0ea466; not errors | not assigned |
+| F2-7, F3-9, B9 | pre_existing | requirement_gap | In-app import is not in the request (script import); script-only since d78bcda | owner decision (see escalations) |
+| F2-9, B8 | pre_existing | product_defect / owner_direction_conflict | Hidden Classic Tools strip at 390px predates the feature (eb62057); the World Shell island came from 3472137 (career-bound fix r1) | not assigned |
+| F2-1, F3-3 | process_note | process | Fix agents in r2 and r3 skipped browser verification | not assigned |
+
+No item has scope `other_feature`.
+
+---
+
 ## Feature: proficiency-live-qr (from the earlier recording, 17a67e9)
 
 Status: **NOT PASSED**. It was not in this run's workflow data. No agent ran for it in this run. Its last result is round 5 of release `2026-10-02-proficiency-live-qr`: 29 / 30 at 6ac1df0. That round predates baselines, so there is no baseline version. The result is out of date, because `OutputTemplateConfigurator.jsx` changed after 6ac1df0 (fix 95c2adf, merged in 957726a). The full earlier text follows, unchanged except for heading levels. The [earlier release log](2026-10-02-proficiency-live-qr.md) has the per-round detail.
@@ -332,6 +542,22 @@ The recorder started no server or database and has nothing to clean up.
 | Integration 8f1c8c4 | No failure. `npm run build` regenerated `docs/release-log/history.json` (1 line). | Left uncommitted at that time. Clean at 6082e1b (see above). |
 | Concurrent writers | Another process committed "Release loop state" commits (27668ef, 24636dc, 6082e1b) to this checkout while the recorder worked. 6082e1b also committed `docs/test-results/release-loop-tooling/round-5.md`. | Informational. The recorder built on 6082e1b. |
 | Concurrent writers (this recording) | "Release loop state" and "Release update" commits (ed234db, c1ef03b, d2beb30) landed after 0800b1c. `docs/test-results/release-loop-tooling/round-6.md` was untracked when the recorder started. | Informational. While the recorder worked, another process committed 39ffdd1 ("Release loop state ... 00:20Z"), which also committed round-6.md. The recorder's log commit sits on top of 39ffdd1 and contains only this log. |
+| qr-gated-outputs build | `createdb sb_rl_bld_1` failed because the database already existed | Dropped and recreated fresh ([build reconciliation](../triage/qr-gated-outputs-build-reconciliation.md) R1) |
+| qr-gated-outputs build | The sandbox refused compound source/git/sed commands | Nothing ran, so no state changed; split into plain commands (R2) |
+| qr-gated-outputs build | Login rate limit (10 per 15 min) hit; server restarted to clear it | By design; reuse the session (R3) |
+| qr-gated-outputs build | Playwright APIRequestContext got 401 on QR routes (Secure cookie over http) | Harness only; validators use in-page fetch (R5) |
+| qr-gated-outputs fix r1 | 7d97fe8 edited the frozen training spec directly (97 lines) | **Not merged.** Branch `release-loop/qr-gated-outputs-fix-r1` still exists. Its import UI and in-world island were never re-applied. |
+| qr-gated-outputs fix r2 | `npm run build` exited non-zero (postbuild needed DATABASE_URL because Codex logs were present) | The vite build itself passed; the reconciler's re-run passed ([fix-r2 reconciliation](../triage/qr-gated-outputs-fix-r2-reconciliation.md) R2). Postbuild depending on a database is a release-loop-tooling issue. |
+| qr-gated-outputs fix r2 reconciler | Booting against a scratch database was refused by the sandbox (shell construct) | Scratch database created and dropped; boot not done. R3 ("column name collision") was later found to be harmless NOTICEs in the fix-r3 reconciliation. |
+| qr-gated-outputs fix r2, r3 | Fix agents skipped browser verification (F2-1, F3-3) | Process notes; covered by the next validation round |
+| qr-gated-outputs fix r2, r3, r4 | T1 and T5 were in the triage fix list each round but never applied | **Partial**: both are still failing at c020576. See "Bugs at the per-bug fix-attempt limit" in the qr-gated-outputs section. |
+| qr-gated-outputs fix r3 | Compound shell lines refused by the worktree guard | Nothing ran; re-run as separate calls |
+| qr-gated-outputs fix r4 | Compound commands and `source` refused; the first server stop killed only the wrapper, so DROP DATABASE was blocked until the real node PID was killed | DROP then succeeded ([fix-r4 reconciliation](../triage/qr-gated-outputs-fix-r4-reconciliation.md) R1, R2) |
+| qr-gated-outputs round 2 validator | One desktop J5.1 line failed on a case-sensitive harness match; also 276 log lines from an aborted attempt on port 8102 | Superseded line moved aside; re-run passed. Server stopped, database `sb_rl_val_5100_1` dropped |
+| qr-gated-outputs round 3 validator | First desktop pass logged J7.1 as failing (harness checked the toast too late); first mobile pass crashed at boot (duplicate-key error, bootstrap racing seed after 8 s) | Both passes re-run in full on fresh databases; superseded logs kept under `/var/tmp/sbpg/agents/val-5100-7/superseded/`. Database `sb_rl_val_5100_7` dropped |
+| qr-gated-outputs rounds 1 to 5 | External fonts and three.js blocked by the sandbox; `net::ERR_ABORTED` on PDF download | `external_blocked` and download behaviour; not counted |
+| qr-gated-outputs round 5 triage | The triage report was written inside worktree `.claude/worktrees/wf_20655f2f-37c-2/`, not the main checkout | Recorder copied it unchanged into `docs/triage/qr-gated-outputs-round-5.md` |
+| Bug-state export (c020576) | Bare ids T1/T5 collide across five features; qr-gated-outputs T1/T5 carry other features' evidence and scope | Not fixed by the recorder. A person or the state writer must namespace them. |
 | Earlier recording (17a67e9) | A recursive `grep -r` timed out and was replaced by `git grep` | Read-only; nothing written |
 | Earlier release (proficiency-live-qr) | 11 failed or refused commands | See the [earlier release log](2026-10-02-proficiency-live-qr.md) |
 
@@ -344,4 +570,7 @@ The recorder started no server or database and has nothing to clean up. Nothing 
 - release-loop-tooling amendments: [A1](../spec-amendments/release-loop-tooling/A1.json), [A2](../spec-amendments/release-loop-tooling/A2.json)
 - proficiency-live-qr test results: [round-1](../test-results/proficiency-live-qr/round-1.md) to [round-5](../test-results/proficiency-live-qr/round-5.md) (earlier release). Triage: [round-1](../triage/proficiency-live-qr-round-1.md), [round-2](../triage/proficiency-live-qr-round-2.md), [round-3](../triage/proficiency-live-qr-round-3.md); reconciliations [r2](../triage/proficiency-live-qr-fix-r2-reconciliation.md), [r3](../triage/proficiency-live-qr-fix-r3-reconciliation.md), [r4](../triage/proficiency-live-qr-fix-r4-reconciliation.md)
 - Cross-feature: [scope review](../triage/scope-review.md), [bug state](active-release.state.json) (exported 2026-10-10T00:16:59Z), [release tracker](release-tracker.md)
+- qr-gated-outputs test results: [round-1](../test-results/qr-gated-outputs/round-1.md), [round-2](../test-results/qr-gated-outputs/round-2.md), [round-3](../test-results/qr-gated-outputs/round-3.md), [round-4](../test-results/qr-gated-outputs/round-4.md), [round-5](../test-results/qr-gated-outputs/round-5.md). Step logs and screenshots are in `/var/tmp/sbpg/release-loop/qr-gated-outputs/round-N/`, local and not committed.
+- qr-gated-outputs triage: [build reconciliation](../triage/qr-gated-outputs-build-reconciliation.md), [round-2](../triage/qr-gated-outputs-round-2.md), [round-2 scope](../triage/qr-gated-outputs-round-2-scope.md), [fix-r2 reconciliation](../triage/qr-gated-outputs-fix-r2-reconciliation.md), [round-3](../triage/qr-gated-outputs-round-3.md), [round-3 scope](../triage/qr-gated-outputs-round-3-scope.md), [fix-r3 reconciliation](../triage/qr-gated-outputs-fix-r3-reconciliation.md), [round-4](../triage/qr-gated-outputs-round-4.md), [round-4 scope](../triage/qr-gated-outputs-round-4-scope.md), [fix-r4 reconciliation](../triage/qr-gated-outputs-fix-r4-reconciliation.md), [round-5](../triage/qr-gated-outputs-round-5.md), [round-5 scope](../triage/qr-gated-outputs-round-5-scope.md). No round-1 triage file exists.
+- qr-gated-outputs amendments: [A1](../spec-amendments/qr-gated-outputs/A1.json) (approved), [A2](../spec-amendments/qr-gated-outputs/A2.json) to [A8](../spec-amendments/qr-gated-outputs/A8.json) (rejected)
 - Sweep: none run for this release.
