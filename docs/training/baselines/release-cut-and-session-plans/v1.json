@@ -1,0 +1,803 @@
+{
+  "feature": "release-cut-and-session-plans",
+  "spec": "docs/training/release-cut-and-session-plans.md",
+  "version": 1,
+  "frozenAt": "2026-10-10T21:16:40.774Z",
+  "commitAtFreeze": "478bb766d3caa4bcf15727f706e68451851ca313",
+  "specSha256": "89a7db47639d75cb09ef8ec0531d737c5314d0746b9f467c6f25c035270ebc64",
+  "amendment": null,
+  "previous": null,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "P.1",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "5f4a735c21b0e70e",
+      "summary": "A freshly seeded database, the production build served, and the admin account signed in (it is the platform's first admin; its email and password are the enviro"
+    },
+    {
+      "id": "P.2",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "e2bf64dbbee5a1ae",
+      "summary": "In the validator's worktree delete leftovers from an earlier pass: `rm -f docs/release-log/session-plans/S-garden-*.json`. Run it again before the phone pass. N"
+    },
+    {
+      "id": "P.3",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "8d9e40562ca3e703",
+      "summary": "Open World -> **Journeys** -> the **Release loop** card -> **Open configuration**. Expect the heading **Release loop** and the tabs **Definition**, **Runs**, **"
+    },
+    {
+      "id": "P.4",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "66033b2dfe49dd43",
+      "summary": "Phone passes use a viewport 390px wide and 844px tall and the same steps. Desktop passes use 1280px wide. Run each pass on its own freshly seeded database."
+    },
+    {
+      "id": "P.5",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "24b8f44235ac13a2",
+      "summary": "Expected noise: console errors for blocked web fonts or certificates (`net::ERR_CERT_AUTHORITY_INVALID`, `ERR_TUNNEL_CONNECTION_FAILED`) are environment noise. "
+    },
+    {
+      "id": "P.6",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "ad71c7d41423c9fc",
+      "summary": "Command fixture (used only by Journey 6): make an empty folder, called `<FIX>` below (for example `/tmp/garden-cut`, outside any git repository), then create th"
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "929cbc8a557d855a",
+      "summary": "Click the tab **Releases**."
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a59883cf9e9d311e",
+      "summary": "Click **Open release 0.2.0**."
+    },
+    {
+      "id": "J1.3",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "040081ed5994704d",
+      "summary": "Read the **Features** list of this release."
+    },
+    {
+      "id": "J1.4",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0a0dd5f51bb26f07",
+      "summary": "Read the **Sessions** list of this release."
+    },
+    {
+      "id": "J1.5",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4aeeada515d19642",
+      "summary": "Click **← All releases**."
+    },
+    {
+      "id": "J1.6",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ffdd5974d035cc42",
+      "summary": "Click **Open release 0.3.0**."
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4c5de133fccdacdf",
+      "summary": "Click the tab **Session plans**."
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1c9460975587412b",
+      "summary": "With every field empty click **Save estimate**."
+    },
+    {
+      "id": "J2.3",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "187387f840153b74",
+      "summary": "Type `S-garden-01` into **Session id** and `Garden walkthrough` into **Intent**, leave **Feature 1** unchosen and click **Save estimate**."
+    },
+    {
+      "id": "J2.4",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f09ef4cd19e451b9",
+      "summary": "Choose `in-app-release-loop` in **Feature 1**, type `70/60` into **Expected score 1** and click **Save estimate**."
+    },
+    {
+      "id": "J2.5",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ac1573e3826cb38d",
+      "summary": "Type `sixty` into **Expected score 1** and click **Save estimate**."
+    },
+    {
+      "id": "J2.6",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6721cd886ce880e5",
+      "summary": "Type `60/60` into **Expected score 1**, `Keep it passing` into **Goal 1**, choose `S` in **Size 1**, click **Add item**, choose `guided-training-agent` in **Fea"
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5c570ade5d2c3174",
+      "summary": "Click **Record merge for S-garden-01**."
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "eb766a231a23fd51",
+      "summary": "Look for any field that accepts a score on the session card."
+    },
+    {
+      "id": "J3.3",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8cf48b521e39b95c",
+      "summary": "In **Record an estimate** type `S-garden-01` into **Session id**, choose `in-app-release-loop` in **Feature 1**, type `59/60` into **Expected score 1** and clic"
+    },
+    {
+      "id": "J3.4",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "070d9226040e19fa",
+      "summary": "Type `Scope changed` into **Re-estimate reason** and click **Save estimate**."
+    },
+    {
+      "id": "J3.5",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "dac1b82dbb4a0f93",
+      "summary": "Type `S-garden-02` into **Session id**, choose `in-app-release-loop` in **Feature 1**, type `60/62` into **Expected score 1**, click **Save estimate**, then cli"
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6ce479860883307b",
+      "summary": "Type `Walkthrough done` into **Closing note for S-garden-01** and click **Close session S-garden-01**."
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "09728c500d69d7dc",
+      "summary": "Look at card **S-garden-01**."
+    },
+    {
+      "id": "J4.3",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0a54c4f4db50035f",
+      "summary": "Look at card **S-garden-02**."
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "23a632f3593d2872",
+      "summary": "Choose `0.2.0` in **Release**."
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c7e1468329df5042",
+      "summary": "Look for the card **Record an estimate** while 0.2.0 is selected."
+    },
+    {
+      "id": "J5.3",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "71ec06e87ae10daa",
+      "summary": "Choose `0.3.0` in **Release**."
+    },
+    {
+      "id": "J6.1",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "6dee36d55cec88b2",
+      "summary": "Run `node scripts/session-plan.mjs estimate --root <FIX> --session S-garden-cli --intent \"Cut walk\" --item \"feature=seed-catalog;goal=ship;expect=12/12;size=S\" "
+    },
+    {
+      "id": "J6.2",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "88a8915b6db6a71e",
+      "summary": "Run `node scripts/session-plan.mjs estimate --root <FIX> --session S-garden-cli --item \"feature=nope;expect=1/1\"`."
+    },
+    {
+      "id": "J6.3",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "9271599dd1c9492f",
+      "summary": "Run `node scripts/session-plan.mjs merge --root <FIX> --session S-garden-cli --commit abc1234`."
+    },
+    {
+      "id": "J6.4",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "cd32685297faa6d5",
+      "summary": "Run `node scripts/session-plan.mjs report --root <FIX>`."
+    },
+    {
+      "id": "J6.5",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "a505cb97d563eee8",
+      "summary": "Run `node scripts/session-plan.mjs estimate --root <FIX> --session S-garden-cli --item \"feature=seed-catalog;expect=11/12\"`."
+    },
+    {
+      "id": "J6.6",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "f3127cd775523334",
+      "summary": "Run `node scripts/release-cut.mjs --root <FIX> --next-version 1.1.0 --next-release 2030-05-01-garden-path --next-title \"Garden path release\"`."
+    },
+    {
+      "id": "J6.7",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "41f19609487a445a",
+      "summary": "Run `node -e \"const s=require('<FIX>/docs/release-log/releases/1.0.0/summary.json');console.log(s.counts.planned,s.counts.delivered,s.counts.carried,s.features."
+    },
+    {
+      "id": "J6.8",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "e312c984cdcf6ca7",
+      "summary": "Run `node -e \"const n=require('<FIX>/docs/release-log/active-release.features.json');console.log(n.version,n.features.map(f=>f.key+':'+f.kind).join(','))\"`."
+    },
+    {
+      "id": "J6.9",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "8d48863890ee0700",
+      "summary": "Run `bash -c \"mkdir -p <FIX>/docs/release-log/releases/1.1.0; node scripts/release-cut.mjs --root <FIX> --next-version 1.2.0\"`."
+    },
+    {
+      "id": "J6.10",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "1853b6043e569288",
+      "summary": "Run `node scripts/release-cut.mjs --root <FIX>`."
+    },
+    {
+      "id": "J7.1",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "b60709ec99485b22",
+      "summary": "Run `curl -s -c admin.jar -H \"Content-Type: application/json\" -d '{\"email\":\"<ADMIN_EMAIL>\",\"password\":\"<ADMIN_PASSWORD>\"}' <API_BASE>/api/auth/login`, then `cur"
+    },
+    {
+      "id": "J7.2",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "3ce17174aad2cb8f",
+      "summary": "Run `curl -s -o /dev/null -w \"%{http_code}\" <API_BASE>/api/release-cut/releases`."
+    },
+    {
+      "id": "J7.3",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "8c000058ee0af89d",
+      "summary": "Run `curl -s -c member.jar -H \"Content-Type: application/json\" -d '{\"email\":\"member@test.local\",\"password\":\"TestPass!2345\"}' <API_BASE>/api/auth/login`, then `c"
+    },
+    {
+      "id": "J7.4",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "029580eb18fd4dc4",
+      "summary": "Run `curl -s -w \" %{http_code}\" -b admin.jar <API_BASE>/api/release-cut/releases/9.9.9`."
+    },
+    {
+      "id": "J7.5",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "5055c7c7ddeeb637",
+      "summary": "Run `curl -s -b admin.jar <API_BASE>/api/release-cut/releases/0.2.0`."
+    },
+    {
+      "id": "J7.6",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "9bce5e43f9fb84d4",
+      "summary": "Run `curl -s -o /dev/null -w \"%{http_code}\" -b admin.jar -H \"Content-Type: application/json\" -d '{\"session\":\"S-garden-api\",\"intent\":\"API walk\",\"items\":[{\"featur"
+    },
+    {
+      "id": "J7.7",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "3ecffff7f9f09fdc",
+      "summary": "Run `curl -s -w \" %{http_code}\" -b admin.jar -H \"Content-Type: application/json\" -d '{\"session\":\"S-garden-api\",\"items\":[{\"feature\":\"nope\"}]}' <API_BASE>/api/rel"
+    },
+    {
+      "id": "J7.8",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "608aa1203aaf5306",
+      "summary": "Run `curl -s -b admin.jar -H \"Content-Type: application/json\" -d '{}' <API_BASE>/api/release-cut/sessions/S-garden-api/merge`."
+    },
+    {
+      "id": "J7.9",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "16c940e40fde44b8",
+      "summary": "Run `curl -s -b admin.jar <API_BASE>/api/release-cut/sessions/report`."
+    },
+    {
+      "id": "J7.10",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "f96c707b5d91aa95",
+      "summary": "Run `curl -s -w \" %{http_code}\" -b admin.jar -H \"Content-Type: application/json\" -d '{\"note\":\"done\"}' <API_BASE>/api/release-cut/sessions/S-garden-api/close`."
+    },
+    {
+      "id": "J7.11",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "45601ecd04e29e4c",
+      "summary": "In the browser open **Session plans** (leave and re-enter the **Release loop** screen so it reloads)."
+    },
+    {
+      "id": "J8.1",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8d7c7ab09d4beba6",
+      "summary": "Open **Journeys** -> **Connected Agents**, type `Cut agent` into **Token name**, tick **release.loop.read** and **release.loop.write**, click **Create token**."
+    },
+    {
+      "id": "J8.2",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "2354761c80d5f9c6",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_C> list`."
+    },
+    {
+      "id": "J8.3",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "fd23d68c1ef2a381",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_C> call release_cut_get_release '{\"version\":\"0.2.0\"}'`."
+    },
+    {
+      "id": "J8.4",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "6d6026479d7e7142",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_C> call release_cut_record_merge '{\"session\":\"S-garden-nope\"}'`."
+    },
+    {
+      "id": "J8.5",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "6600577f76c28110",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_C> call release_cut_record_estimate '{\"session\":\"S-garden-mcp\",\"intent\":\"MCP walk\",\"items\":[{"
+    },
+    {
+      "id": "J8.6",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "e784d94612cf9be6",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_C> call release_cut_record_merge '{\"session\":\"S-garden-mcp\"}'`."
+    },
+    {
+      "id": "J8.7",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "69115707d6d2c62b",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_C> call release_cut_session_report`."
+    },
+    {
+      "id": "J8.8",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "d4446fc1130e1e2f",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_C> call release_cut_close_session '{\"session\":\"S-garden-mcp\",\"note\":\"mcp done\"}'`."
+    },
+    {
+      "id": "J8.9",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d8c5bda30fbf0fd8",
+      "summary": "In a second browser session sign in as the member `member@test.local` (password `TestPass!2345`) at `/login`, open `/world`, click **Journeys**."
+    },
+    {
+      "id": "J8.10",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1e9c6a62119c5794",
+      "summary": "As the member open **Connected Agents**, type `Member probe` into **Token name**, tick **release.loop.read**, click **Create token** (keep the token as **TOKEN_"
+    },
+    {
+      "id": "J8.11",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fba49cc106cf2885",
+      "summary": "In the administrator's session open **Journeys** -> **Capabilities** and find the card **Record an estimate (or re-estimate) and record a merge (admin)**."
+    },
+    {
+      "id": "J8.12",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "7f51c14201ab0c4a",
+      "summary": "Run `node scripts/check-interface-parity.mjs`."
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6051d5009da222ce",
+      "summary": "**Layout, both passes**: after Journey 1 and Journey 2 the document has no horizontal scroll (`document.documentElement.scrollWidth` is not more than `window.in"
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c9889f9ed6c84ddf",
+      "summary": "**Re-saving before any merge replaces the estimate**: on **Session plans** type `S-garden-03` into **Session id**, choose `in-app-release-loop` in **Feature 1**"
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2a8e948b5bd5853e",
+      "summary": "**Reload keeps everything**: reload the page and reopen **Session plans**. Expect the cards **S-garden-01** (closed), **S-garden-02** and **S-garden-03**, and t"
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "7a58a7239da387ae",
+      "summary": "Run `git diff --stat -- docs/release-log/releases` after all other steps (a frozen release is never rewritten). Expect exit code 0 and no output."
+    },
+    {
+      "id": "E.5",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "abdfbea05f502317",
+      "summary": "Run `node scripts/session-plan.mjs report --release 0.2.0`. Expect exit code 0 and exactly the output `Release 0.2.0: 0 session plan(s)`."
+    },
+    {
+      "id": "E.6",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "1bd8a86729094978",
+      "summary": "Run `curl -s -b admin.jar <API_BASE>/api/release-cut/sessions/report` after Journey 7 (not validated is never 0). Expect the row for `S-garden-01` / `guided-tra"
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "27b71f8106f20c7a"
+    },
+    {
+      "title": "Preconditions",
+      "kind": "precondition",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 1 — Every release, frozen ones exactly as cut",
+      "kind": "journey",
+      "hash": "f0978334ad6e99d1"
+    },
+    {
+      "title": "Journey 2 — Record an estimate before the work",
+      "kind": "journey",
+      "hash": "2e82f5affd3ef9e0"
+    },
+    {
+      "title": "Journey 3 — Record a merge: the score is read, never typed",
+      "kind": "journey",
+      "hash": "62df9bad0eb85fcb"
+    },
+    {
+      "title": "Journey 4 — Close a session",
+      "kind": "journey",
+      "hash": "78c7f3c01243f971"
+    },
+    {
+      "title": "Journey 5 — The release selector",
+      "kind": "journey",
+      "hash": "9b1ea459fbc400e9"
+    },
+    {
+      "title": "Journey 6 — The command line: estimates, merges and the cut (commands)",
+      "kind": "journey",
+      "hash": "12beec65583742f0"
+    },
+    {
+      "title": "Journey 7 — The same actions through the API, with the same permissions (commands)",
+      "kind": "journey",
+      "hash": "90f122adc6363550"
+    },
+    {
+      "title": "Journey 8 — The same actions through MCP, with the same permissions",
+      "kind": "journey",
+      "hash": "aede1900b138276a"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    }
+  ]
+}
