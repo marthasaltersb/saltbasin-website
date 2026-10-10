@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T00:36:55.785Z",
+  "exportedAt": "2026-10-10T00:40:17.248Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -26,11 +26,11 @@
       "backlog": 5
     },
     "qr-gated-outputs": {
-      "status": "validate",
-      "lastRound": 4,
+      "status": "failing",
+      "lastRound": 5,
       "lastScore": "36/38",
-      "lastReport": "docs/test-results/qr-gated-outputs/round-4.md",
-      "openBugs": 19,
+      "lastReport": "docs/test-results/qr-gated-outputs/round-5.md",
+      "openBugs": 17,
       "backlog": 12
     },
     "no-silent-failures": {
@@ -58,10 +58,10 @@
       "backlog": 6
     },
     "output-version-history": {
-      "status": "validate",
-      "lastRound": 3,
-      "lastScore": "30/37",
-      "lastReport": "docs/test-results/output-version-history/round-3.md",
+      "status": "failing",
+      "lastRound": 4,
+      "lastScore": "34/37",
+      "lastReport": "docs/test-results/output-version-history/round-4.md",
       "openBugs": 14,
       "backlog": 3
     },
@@ -74,11 +74,11 @@
       "backlog": 5
     },
     "release-intelligence": {
-      "status": "validate",
-      "lastRound": 1,
-      "lastScore": "1/54",
-      "lastReport": "docs/test-results/release-intelligence/round-1.md",
-      "openBugs": 15,
+      "status": "failing",
+      "lastRound": 2,
+      "lastScore": "55/55",
+      "lastReport": "docs/test-results/release-intelligence/round-2.md",
+      "openBugs": 9,
       "backlog": 1
     },
     "cover-letter-agent": {
@@ -90,11 +90,11 @@
       "backlog": 7
     },
     "in-app-release-loop": {
-      "status": "failing",
+      "status": "scope",
       "lastRound": 2,
       "lastScore": "59/60",
       "lastReport": "docs/test-results/in-app-release-loop/round-2.md",
-      "openBugs": 7,
+      "openBugs": 4,
       "backlog": 1
     },
     "session-mapping": {
@@ -114,11 +114,11 @@
       "backlog": 0
     },
     "platform-mcp": {
-      "status": "validate",
-      "lastRound": 1,
-      "lastScore": "62/62",
-      "lastReport": "docs/test-results/platform-mcp/round-1.md",
-      "openBugs": 6,
+      "status": "fix",
+      "lastRound": 2,
+      "lastScore": "60/65",
+      "lastReport": "docs/test-results/platform-mcp/round-2.md",
+      "openBugs": 15,
       "backlog": 2
     },
     "world-shell-layers": {
@@ -3078,7 +3078,7 @@
     {
       "id": "qr-gated-outputs-F3-10",
       "feature": "qr-gated-outputs",
-      "status": "retesting",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 1,
       "step": "Known limitations: docx/site sync",
@@ -3104,13 +3104,19 @@
           "event": "fixed",
           "note": "Verified the docx link target in a browser download. Decide…",
           "commit": "e7a28dd360c35a49f1e588d40aa4d0e5b487fef1"
+        },
+        {
+          "round": 5,
+          "event": "verified",
+          "note": "Retest round 5: this bug's step passed (the round had other…",
+          "commit": "0800b1c"
         }
       ]
     },
     {
       "id": "qr-gated-outputs-F3-11",
       "feature": "qr-gated-outputs",
-      "status": "retesting",
+      "status": "verified",
       "class": "product_defect",
       "attempts": 1,
       "step": "MOBILE",
@@ -3133,6 +3139,12 @@
           "event": "fixed",
           "note": "Verified the phone walk at 390px as the member from the Wor…",
           "commit": "e7a28dd360c35a49f1e588d40aa4d0e5b487fef1"
+        },
+        {
+          "round": 5,
+          "event": "verified",
+          "note": "Retest round 5: this bug's step passed (the round had other…",
+          "commit": "0800b1c"
         }
       ]
     },
@@ -3274,8 +3286,8 @@
       "status": "recurred",
       "class": "defect",
       "attempts": 0,
-      "step": "J2.1 Read-only note in View dialog",
-      "rootCause": "src/components/admin/MyResumePanel.jsx:1065 hard-codes an em dash in 'Read-only — no edits can be made here.'; frozen step J2.1 (spec line …",
+      "step": "Read-only note in View dialog",
+      "rootCause": "src/components/admin/MyResumePanel.jsx:1109 hard-codes 'Read-only — no edits can be made here.' with an em dash; spec line 89 expects a hyp…",
       "files": [
         "src/components/admin/MyResumePanel.jsx"
       ],
@@ -3285,12 +3297,6 @@
         "evidence": "mcpToolRegistry.js already exists on the first parent of the earliest in-app-release-loop…"
       },
       "history": [
-        {
-          "round": 1,
-          "event": "found",
-          "note": "Shipped UI copy at MyResumePanel.jsx:1052 uses an em dash; …",
-          "commit": null
-        },
         {
           "round": 2,
           "event": "recurred",
@@ -3307,6 +3313,12 @@
           "round": 4,
           "event": "recurred",
           "note": "src/components/admin/MyResumePanel.jsx:1065 hard-codes an e…",
+          "commit": null
+        },
+        {
+          "round": 5,
+          "event": "recurred",
+          "note": "src/components/admin/MyResumePanel.jsx:1109 hard-codes 'Rea…",
           "commit": null
         }
       ]
@@ -3405,8 +3417,8 @@
       "status": "recurred",
       "class": "defect",
       "attempts": 0,
-      "step": "E.5 sign-in limit message",
-      "rootCause": "server/routes/auth.js:28 authLimiter message uses an em dash: 'Too many attempts — please try again in 15 minutes'; frozen step E.5 expects…",
+      "step": "Sign-in limit message",
+      "rootCause": "server/routes/auth.js:28 authLimiter message uses an em dash; spec line 201 expects a hyphen. Recurrence of T5 from rounds 2-4. Tripping af…",
       "files": [
         "server/routes/auth.js"
       ],
@@ -3430,6 +3442,12 @@
         },
         {
           "round": 4,
+          "event": "recurred",
+          "note": "server/routes/auth.js:28 authLimiter message uses an em das…",
+          "commit": null
+        },
+        {
+          "round": 5,
           "event": "recurred",
           "note": "server/routes/auth.js:28 authLimiter message uses an em das…",
           "commit": null
@@ -5264,11 +5282,12 @@
       "status": "recurred",
       "class": "defect",
       "attempts": 0,
-      "step": "MOBILE_GAP: Classic Tools -> CAREER MASTER -> Jobs -> Save, then MY RESUME at 390px",
-      "rootCause": "Same root cause as T1: the mobile drawer markup was never rendered, so CAREER MASTER and MY RESUME cannot be reached by touch in Classic To…",
+      "step": "MOBILE_GAP: Classic Tools -> MY RESUME at 390px",
+      "rootCause": "brand.css lines 630-631 hide .sb-admin-topbar-actions (the only place the tool tabs render, AdminShell.jsx ~672) at max-width 900px. The re…",
       "files": [
         "src/components/admin/AdminShell.jsx",
-        "src/brand.css"
+        "src/brand.css",
+        "src/components/WorldShell.jsx"
       ],
       "scope": {
         "scope": "this_feature",
@@ -5276,12 +5295,6 @@
         "evidence": "mcpToolRegistry.js already exists on the first parent of the earliest in-app-release-loop…"
       },
       "history": [
-        {
-          "round": 2,
-          "event": "recurred",
-          "note": "brand.css 613-704 hides .sb-admin-topbar-actions at <=900px…",
-          "commit": null
-        },
         {
           "round": 2,
           "event": "recurred",
@@ -5299,19 +5312,27 @@
           "event": "recurred",
           "note": "Same root cause as T1: the mobile drawer markup was never r…",
           "commit": null
+        },
+        {
+          "round": 4,
+          "event": "recurred",
+          "note": "brand.css lines 630-631 hide .sb-admin-topbar-actions (the …",
+          "commit": null
         }
       ]
     },
     {
       "id": "T3",
       "feature": "output-version-history",
-      "status": "recurred",
-      "class": "spec_error",
+      "status": "needs_business_definition",
+      "class": "needs_business_definition",
       "attempts": 0,
       "step": "UI_GAP: no point-and-click way to make a saved version unreadable",
-      "rootCause": "Product matches the step (server/lib/outputVersionHistory.js ~122-124 sets version.error and 'Cannot compare'; src/components/admin/OutputV…",
+      "rootCause": "Product behaves per spec (outputVersionHistory.js:120-124 sets version.error and keeps the version listed; OutputVersionHistory.jsx lines 1…",
       "files": [
-        "docs/training/output-version-history.md"
+        "server/lib/outputVersionHistory.js",
+        "src/components/admin/OutputVersionHistory.jsx",
+        "docs/spec-amendments/output-version-history/A10.json"
       ],
       "scope": {
         "scope": "this_feature",
@@ -5335,6 +5356,12 @@
           "round": 3,
           "event": "recurred",
           "note": "Product matches the step (server/lib/outputVersionHistory.j…",
+          "commit": null
+        },
+        {
+          "round": 4,
+          "event": "recurred",
+          "note": "Product behaves per spec (outputVersionHistory.js:120-124 s…",
           "commit": null
         }
       ]
@@ -5534,7 +5561,7 @@
     {
       "id": "T11",
       "feature": "output-version-history",
-      "status": "retesting",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "MCP_GAP: no MCP tool to list, read or compare an output's versions",
@@ -5561,6 +5588,39 @@
           "event": "fixed",
           "note": "Added read-only MCP tools output_versions_list, output_vers…",
           "commit": "2a4654e5417a0cb1daf76df42e8a898a5cfacc4a"
+        },
+        {
+          "round": 4,
+          "event": "verified",
+          "note": "Retest round 4: this bug's step passed (the round had other…",
+          "commit": "0800b1c"
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "feature": "output-version-history",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "MOBILE_GAP: Classic Tools -> CAREER MASTER at 390px",
+      "rootCause": "Same root cause as T1: the Classic Tools tab strip is hidden by brand.css at <=900px and the mobile drawer was never built in AdminShell.js…",
+      "files": [
+        "src/components/admin/AdminShell.jsx",
+        "src/brand.css",
+        "src/components/WorldShell.jsx"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "E.8 in the feature's own spec asserts the registry is absent, but it was already present …"
+      },
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Same root cause as T1: the Classic Tools tab strip is hidde…",
+          "commit": null
         }
       ]
     },
@@ -6034,7 +6094,7 @@
     {
       "id": "release-intelligence-B7",
       "feature": "release-intelligence",
-      "status": "retesting",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "B7: second admin-nav entry point for Release Intelligence (nearest J1.1)",
@@ -6067,6 +6127,12 @@
           "event": "fixed",
           "note": "Removed AdminShell TAB_COMPONENTS entry, lazy import and fa…",
           "commit": "6fc3bd39ac7a144381e7634383d2f40803a9dee7"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other…",
+          "commit": "0800b1c"
         }
       ]
     },
@@ -6253,7 +6319,7 @@
     {
       "id": "RI-R1-1",
       "feature": "release-intelligence",
-      "status": "retesting",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "Importer script exits 0 on second run (E.1)",
@@ -6280,6 +6346,12 @@
           "event": "fixed",
           "note": "Added validated generatedFiles rule (release-tracker.md, up…",
           "commit": "6fc3bd39ac7a144381e7634383d2f40803a9dee7"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other…",
+          "commit": "0800b1c"
         }
       ]
     },
@@ -6312,7 +6384,7 @@
     {
       "id": "RI-R1-3",
       "feature": "release-intelligence",
-      "status": "retesting",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "Mobile: fixed min-width inputs overflow card at 390px (J2.1,J2.2,J3.2-J3.4,J4.1-J4.4,J5.1,J5.3,J6.1,J7.1-J7.12,J8.1,J9.1-J9.5,J9.7,J10.3,J10.4,E.2,E.4)",
@@ -6337,13 +6409,19 @@
           "event": "fixed",
           "note": "Inputs use width 100% with maxWidth, boxSizing border-box, …",
           "commit": "6fc3bd39ac7a144381e7634383d2f40803a9dee7"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other…",
+          "commit": "0800b1c"
         }
       ]
     },
     {
       "id": "RI-R1-4",
       "feature": "release-intelligence",
-      "status": "retesting",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "Mobile: wide tables escape the card (J3.1,J4.1-J4.6,J5.2,J6.2,J6.3,J7.5,J7.8,J10.1,J10.2,J10.5,E.3,E.5)",
@@ -6368,13 +6446,19 @@
           "event": "fixed",
           "note": "All tables wrapped in TableScroll (overflowX auto, maxWidth…",
           "commit": "6fc3bd39ac7a144381e7634383d2f40803a9dee7"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other…",
+          "commit": "0800b1c"
         }
       ]
     },
     {
       "id": "RI-R1-5",
       "feature": "release-intelligence",
-      "status": "retesting",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "Mobile: Trends charts and grids force 420/320/280px columns (J8.2-J8.6,J9.6)",
@@ -6399,13 +6483,19 @@
           "event": "fixed",
           "note": "Three auto-fit grids use minmax(min(100%, Npx), 1fr).",
           "commit": "6fc3bd39ac7a144381e7634383d2f40803a9dee7"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other…",
+          "commit": "0800b1c"
         }
       ]
     },
     {
       "id": "RI-R1-6",
       "feature": "release-intelligence",
-      "status": "retesting",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "Mobile: card shifted left, heading cut (J4.5,J4.6,J6.3,E.3)",
@@ -6431,20 +6521,27 @@
           "event": "fixed",
           "note": "S.root guard (minWidth 0, border-box, overflowX hidden); co…",
           "commit": "6fc3bd39ac7a144381e7634383d2f40803a9dee7"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other…",
+          "commit": "0800b1c"
         }
       ]
     },
     {
       "id": "RI-R1-7",
       "feature": "release-intelligence",
-      "status": "open",
-      "class": "environment",
+      "status": "recurred",
+      "class": "defect",
       "attempts": 0,
-      "step": "MCP_GAP: no MCP tool for this feature's capabilities",
-      "rootCause": "server/lib/mcpToolRegistry.js is not on the integration branch; it exists only on release-loop/platform-mcp-build (not yet integrated). def…",
+      "step": "MCP_GAP: platform MCP tools missing for most release-intelligence capabilities",
+      "rootCause": "Recurrence of RI-R1-7. The round-1 blocker (mcpToolRegistry.js not on the branch) no longer applies, so the failure is now a defect. The to…",
       "files": [
         "server/lib/mcpToolRegistry.js",
-        "server/routes/releaseIntelligence.js"
+        "server/lib/capabilityParity.js",
+        "server/data/mcpToolManifest.json"
       ],
       "scope": {
         "scope": "this_feature",
@@ -6462,6 +6559,12 @@
           "round": 1,
           "event": "not_fixed",
           "note": "mcpToolRegistry.js is not on the integration branch; it sta…",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "recurred",
+          "note": "Recurrence of RI-R1-7. The round-1 blocker (mcpToolRegistry…",
           "commit": null
         }
       ]
@@ -7263,7 +7366,7 @@
     {
       "id": "in-app-release-loop-B1",
       "feature": "in-app-release-loop",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 1,
       "step": "interface parity",
@@ -7289,13 +7392,19 @@
           "event": "fixed",
           "note": "Same fix as T1: the 13 release_loop_* tools are now registe…",
           "commit": "8ff2cb3d6de624ae5bcf019d67bf63ac83359bf2"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other…",
+          "commit": "0800b1c18ce1b2f1003085d0010f95a36fe75932"
         }
       ]
     },
     {
       "id": "in-app-release-loop-B2",
       "feature": "in-app-release-loop",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "owner_direction_conflict",
       "attempts": 1,
       "step": "wiring",
@@ -7322,6 +7431,12 @@
           "event": "fixed",
           "note": "Removed the Classic Tools registrations in AdminShell (TAB_…",
           "commit": "8ff2cb3d6de624ae5bcf019d67bf63ac83359bf2"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other…",
+          "commit": "0800b1c18ce1b2f1003085d0010f95a36fe75932"
         }
       ]
     },
@@ -7355,7 +7470,7 @@
     {
       "id": "in-app-release-loop-B4",
       "feature": "in-app-release-loop",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 1,
       "step": "editable definition",
@@ -7381,6 +7496,12 @@
           "event": "fixed",
           "note": "The Definition tab has a Stage transitions section with a s…",
           "commit": "8ff2cb3d6de624ae5bcf019d67bf63ac83359bf2"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other…",
+          "commit": "0800b1c18ce1b2f1003085d0010f95a36fe75932"
         }
       ]
     },
@@ -7432,7 +7553,7 @@
     {
       "id": "T1",
       "feature": "in-app-release-loop",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "Run ls server/lib/mcpToolRegistry.js (MCP gap for platform-mcp)",
@@ -7459,6 +7580,12 @@
           "event": "fixed",
           "note": "Registered the 13 admin-only release_loop_* MCP tools with …",
           "commit": "8ff2cb3d6de624ae5bcf019d67bf63ac83359bf2"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2: this bug's step passed (the round had other…",
+          "commit": "0800b1c18ce1b2f1003085d0010f95a36fe75932"
         }
       ]
     },
@@ -7484,6 +7611,29 @@
           "round": 1,
           "event": "found",
           "note": "Step E.8 and change spec line 65 assert the registry does n…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "T2 (round 1)",
+      "feature": "in-app-release-loop",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "Run ls server/lib/mcpToolRegistry.js; spec expects it absent",
+      "rootCause": "The step hard-codes a point-in-time repo state (file absent 'at this baseline', MCP gap assigned to platform-mcp). platform-mcp added serve…",
+      "files": [
+        "docs/training/in-app-release-loop.md:171",
+        "docs/training/baselines/in-app-release-loop/v1.json:709",
+        "docs/changes/in-app-release-loop.md:65"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "The step hard-codes a point-in-time repo state (file absent…",
           "commit": null
         }
       ]
@@ -7715,7 +7865,7 @@
     {
       "id": "platform-mcp-B5",
       "feature": "platform-mcp",
-      "status": "verified",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Interface parity for every capability",
@@ -7735,12 +7885,6 @@
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
-          "commit": null
-        },
-        {
-          "round": 1,
-          "event": "verified",
-          "note": "Retest round 1 passed every step of baseline v1",
           "commit": null
         }
       ]
@@ -7774,7 +7918,7 @@
     {
       "id": "platform-mcp-B10",
       "feature": "platform-mcp",
-      "status": "verified",
+      "status": "fixing",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Connected Agents / Capabilities screens reachable from the World Shell",
@@ -7795,19 +7939,13 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
-        },
-        {
-          "round": 1,
-          "event": "verified",
-          "note": "Retest round 1 passed every step of baseline v1",
-          "commit": null
         }
       ]
     },
     {
       "id": "platform-mcp-B11",
       "feature": "platform-mcp",
-      "status": "verified",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Bearer-token auth on /mcp",
@@ -7827,19 +7965,13 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
-        },
-        {
-          "round": 1,
-          "event": "verified",
-          "note": "Retest round 1 passed every step of baseline v1",
-          "commit": null
         }
       ]
     },
     {
       "id": "platform-mcp-B12",
       "feature": "platform-mcp",
-      "status": "verified",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "Account gates on tools/call (428)",
@@ -7857,12 +7989,6 @@
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
-          "commit": null
-        },
-        {
-          "round": 1,
-          "event": "verified",
-          "note": "Retest round 1 passed every step of baseline v1",
           "commit": null
         }
       ]
@@ -7895,7 +8021,7 @@
     {
       "id": "platform-mcp-F1-4",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "4 428 on tools/call",
@@ -7917,7 +8043,7 @@
     {
       "id": "platform-mcp-F1-5",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "fixing",
       "class": "test_harness",
       "attempts": 0,
       "step": "5 default rate limit",
@@ -7939,7 +8065,7 @@
     {
       "id": "platform-mcp-F1-8",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "8 platform-mcp-B12",
@@ -7962,7 +8088,7 @@
     {
       "id": "platform-mcp-F1-9",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "G1 stale change spec",
@@ -7983,7 +8109,7 @@
     {
       "id": "platform-mcp-F1-10",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "G2 render-binding tools",
@@ -8006,7 +8132,7 @@
     {
       "id": "platform-mcp-F1-11",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "fixing",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "G6 recorded exclusions",
@@ -8020,6 +8146,137 @@
           "round": 1,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-r2-T1",
+      "feature": "platform-mcp",
+      "status": "fixing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "Type Research assistant, Create token with no scope: alert plus scope checkboxes",
+      "rootCause": "MCP_SCOPES in server/lib/mcpToolRegistry.js (lines ~23-24) gained release.loop.read and release.loop.write when the in-app release loop shi…",
+      "files": [
+        "server/lib/mcpToolRegistry.js",
+        "src/components/admin/ConnectedAgentsPanel.jsx",
+        "docs/training/platform-mcp.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Step is platform-mcp's own spec and pins 4 scopes. MCP_SCOPES and the registry first appe…"
+      },
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "MCP_SCOPES in server/lib/mcpToolRegistry.js (lines ~23-24) …",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-r2-T2",
+      "feature": "platform-mcp",
+      "status": "fixing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "mcp-call list with TOKEN_A",
+      "rootCause": "The registry grew from 10 to 110 tools (A3 gap closure, output versions, cover letter, release loop). tools/list correctly returns every to…",
+      "files": [
+        "server/lib/mcpToolRegistry.js",
+        "server/lib/mcpServer.js",
+        "docs/training/platform-mcp.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "mcp-call/tools list and the registry originate in b77049b. Growth to 110 tools is by desi…"
+      },
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "The registry grew from 10 to 110 tools (A3 gap closure, out…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-r2-T3",
+      "feature": "platform-mcp",
+      "status": "fixing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "Import an application package card ready in all three cells; Gaps only shows the no-gaps message",
+      "rootCause": "src/components/admin/CapabilitiesPanel.jsx (~lines 58 and 80-84): with Gaps only selected and zero gaps, rows is empty so groups is empty a…",
+      "files": [
+        "src/components/admin/CapabilitiesPanel.jsx"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "CapabilitiesPanel.jsx created in b77049b; read at f76786c: rows filtered by gapsOnly, gro…"
+      },
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "src/components/admin/CapabilitiesPanel.jsx (~lines 58 and 8…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-r2-T4",
+      "feature": "platform-mcp",
+      "status": "fixing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "check-interface-parity.mjs: exit 0, first line Interface parity:, a Gaps: list, last line OK",
+      "rootCause": "scripts/check-interface-parity.mjs lines 142-145 print the Gaps: list only when gaps.length is non-zero. With 72 of 72 capabilities complet…",
+      "files": [
+        "scripts/check-interface-parity.mjs",
+        "docs/training/platform-mcp.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "scripts/check-interface-parity.mjs (b77049b) lines 142-145 print 'Gaps:' only if gaps.len…"
+      },
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "scripts/check-interface-parity.mjs lines 142-145 print the …",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-r2-T5",
+      "feature": "platform-mcp",
+      "status": "fixing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "check-interface-parity.mjs --strict",
+      "rootCause": "scripts/check-interface-parity.mjs line 148: failed = problems.length > 0 || (strict && gaps.length > 0). With zero gaps --strict exits 0 a…",
+      "files": [
+        "scripts/check-interface-parity.mjs",
+        "docs/training/platform-mcp.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Line 148 makes --strict exit 0 with zero gaps, matching the change spec and triage B5; J1…"
+      },
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "scripts/check-interface-parity.mjs line 148: failed = probl…",
           "commit": null
         }
       ]
