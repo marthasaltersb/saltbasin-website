@@ -403,17 +403,35 @@ async function runFeature(feature) {
       for (const c of carry.splice(0)) if (!t.items.some((i) => i.id === c.id)) t.items.push(c)
       allItems.push(...t.items)
       log_.rounds[log_.rounds.length - 1].triage = t
-      for (const i of t.items) if (i.recurrenceOf) i.id = i.recurrenceOf   // same bug keeps its id
+      // Bug ids are qualified with the feature key (triage numbers per feature, so T1 exists in many features),
+      // and the same bug keeps its id across rounds.
+      const qid = (id) => (!id || String(id).startsWith(`${feature.key}-`) ? id : `${feature.key}-${id}`)
+      for (const i of t.items) { i.id = qid(i.recurrenceOf || i.id); if (i.recurrenceOf) i.recurrenceOf = i.id }
       // Scope check (from the round named in scopeFromRound, so resumed runs keep their cached history):
       // only failures this feature owns block it; the rest are tracked in the backlog.
       if (A.scopeCheck && round >= (feature.scopeFromRound || 1) && t.items.length) {
         const sc = await scopeCheck(feature, round, t.items)
         log_.rounds[log_.rounds.length - 1].scope = sc
-        const byId = new Map((sc?.items || []).map((x) => [x.id, x]))
+        const byId = new Map((sc?.items || []).map((x) => [qid(x.id), { ...x, id: qid(x.id) }]))
+        // A frozen step of THIS feature that fails is this feature's to fix, even when its cause is older than
+        // the feature (pre_existing) or lives in another feature's code: the feature cannot pass with a failing
+        // baseline step. Only items that fail no baseline step of this feature may move to the backlog.
+        const failingSteps = new Set((v.failures || []).map((f) => f.stepId).filter((id) => /^[JEP][0-9a-z]*\.[0-9]+$/.test(id || '')))
+        const tiedToFailingStep = (i) => failingSteps.has(i.stepId)
+        for (const i of t.items) if (BACKLOG_SCOPES.has(byId.get(i.id)?.scope) && tiedToFailingStep(i)) {
+          i.note = `Scope says ${byId.get(i.id).scope}, but frozen step ${i.stepId} of this feature fails because of it, so it is fixed here (${byId.get(i.id).evidence || 'see scope report'}).`
+          byId.delete(i.id)
+        }
         const moved = t.items.filter((i) => BACKLOG_SCOPES.has(byId.get(i.id)?.scope))
         log_.backlog = [...(log_.backlog || []), ...moved.map((i) => ({ ...i, ...byId.get(i.id), round }))]
         t.items = t.items.filter((i) => !BACKLOG_SCOPES.has(byId.get(i.id)?.scope))
         if (moved.length) log(`${feature.key} r${round}: ${moved.length} item(s) moved out of this feature (pre-existing / other feature / process note)`)
+        // A failing frozen step with no item left (triage missed it) still blocks: it comes back as a defect.
+        const covered = new Set(t.items.map((i) => i.stepId))
+        for (const stepId of failingSteps) if (!covered.has(stepId)) {
+          const f = v.failures.find((x) => x.stepId === stepId)
+          t.items.push({ id: qid(`S-${stepId}`), stepId, step: f.step, rootCause: `Frozen step ${stepId} failed (${f.observed}) and no remaining triage item covers it.`, class: 'defect', files: [], proposedFix: 'Find the root cause of this step failure and fix it.' })
+        }
         if (!t.items.length) { log_.status = v.passed ? 'passed' : 'passed_with_backlog'; break }
       }
       log_.escalated.push(...t.items.filter(i => i.class === 'needs_business_definition'))

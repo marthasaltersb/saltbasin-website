@@ -48,7 +48,7 @@ it — blocks the feature), *pre-existing* (reproduces on the base without this 
 *another feature's* (reassigned to that feature), or *process note* (test harness, environment or spec
 wording — recorded, not a product bug). Every decision names its evidence. A feature whose only remaining
 items are out of scope ends **passed with backlog**; backlog items stay on the tracker until fixed and
-verified. Earlier decisions are kept in `docs/triage/scope-review.json` and reused.
+verified. Earlier decisions are kept in `docs/triage/scope-review.json` and reused. One exception: if a frozen test step of this feature fails, the cause is this feature's to fix even when it is older code or another feature's file, because a feature never passes with a failing step. Bug ids carry their feature (`qr-gated-outputs-T1`), since every feature's triage numbers from T1.
 
 ## Who does what
 
