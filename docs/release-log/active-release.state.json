@@ -1,8 +1,8 @@
 {
-  "exportedAt": "2026-10-10T01:13:21.692Z",
+  "exportedAt": "2026-10-10T01:16:37.632Z",
   "features": {
     "proficiency-live-qr": {
-      "status": "integrate",
+      "status": "validate",
       "lastRound": 7,
       "lastScore": "30/32",
       "lastReport": "docs/test-results/proficiency-live-qr/round-7.md",
@@ -26,11 +26,11 @@
       "backlog": 5
     },
     "qr-gated-outputs": {
-      "status": "validate",
-      "lastRound": 5,
+      "status": "scope",
+      "lastRound": 6,
       "lastScore": "36/38",
-      "lastReport": "docs/test-results/qr-gated-outputs/round-5.md",
-      "openBugs": 15,
+      "lastReport": ".claude/worktrees/wf_1d376b6d-782-1/docs/test-results/qr-gated-outputs/round-6.md",
+      "openBugs": 17,
       "backlog": 14
     },
     "no-silent-failures": {
@@ -74,12 +74,12 @@
       "backlog": 5
     },
     "release-intelligence": {
-      "status": "validate",
-      "lastRound": 2,
+      "status": "passed",
+      "lastRound": 3,
       "lastScore": "55/55",
-      "lastReport": "docs/test-results/release-intelligence/round-2.md",
-      "openBugs": 10,
-      "backlog": 1
+      "lastReport": "docs/test-results/release-intelligence/round-3.md",
+      "openBugs": 2,
+      "backlog": 2
     },
     "cover-letter-agent": {
       "status": "validate",
@@ -114,7 +114,7 @@
       "backlog": 0
     },
     "platform-mcp": {
-      "status": "fix",
+      "status": "reconcile",
       "lastRound": 3,
       "lastScore": "65/65",
       "lastReport": "docs/test-results/platform-mcp/round-3.md",
@@ -3232,6 +3232,48 @@
       ]
     },
     {
+      "id": "qr-gated-outputs-T1 (rounds 2-5)",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "J2.1 View dialog Read-only note",
+      "rootCause": "src/components/admin/MyResumePanel.jsx:1109 hard-codes an em dash in 'Read-only — no edits can be made here.'; the spec expects a hyphen. T…",
+      "files": [
+        "src/components/admin/MyResumePanel.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 6,
+          "event": "found",
+          "note": "src/components/admin/MyResumePanel.jsx:1109 hard-codes an e…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "qr-gated-outputs-T5 (rounds 2-5)",
+      "feature": "qr-gated-outputs",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "E.5 sign-in limit message",
+      "rootCause": "server/routes/auth.js:28 authLimiter message uses an em dash instead of the spec's hyphen. Tripping after 6 attempts is expected since the …",
+      "files": [
+        "server/routes/auth.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 6,
+          "event": "found",
+          "note": "server/routes/auth.js:28 authLimiter message uses an em das…",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "no-silent-failures-B11",
       "feature": "no-silent-failures",
       "status": "backlog_pre_existing",
@@ -6164,22 +6206,24 @@
     {
       "id": "release-intelligence-F1-3",
       "feature": "release-intelligence",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "B7 / [J1.1], proposed [J1.2]",
-      "rootCause": "Fix never validated in a browser; RI-R1-9 amendment (add [J1.2], retire line 8) never written.",
-      "files": [
-        "src/components/admin/AdminShell.jsx",
-        "docs/training/release-intelligence.md",
-        "docs/spec-amendments/release-intelligence/"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
           "round": 1,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v3",
           "commit": null
         }
       ]
@@ -6187,21 +6231,24 @@
     {
       "id": "release-intelligence-F1-4",
       "feature": "release-intelligence",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "RI-R1-7 (MCP surface)",
-      "rootCause": "platform-mcp not integrated.",
-      "files": [
-        "server/lib/mcpToolRegistry.js",
-        "server/routes/releaseIntelligence.js"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
           "round": 1,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v3",
           "commit": null
         }
       ]
@@ -6209,14 +6256,12 @@
     {
       "id": "release-intelligence-F1-5",
       "feature": "release-intelligence",
-      "status": "open",
+      "status": "verified",
       "class": "product_defect",
       "attempts": 0,
       "step": "RI-R1-3/4/5/6 (390px layout)",
-      "rootCause": "Code present in ReleaseIntelligencePanel.jsx but not independently re-validated by me on all six tabs.",
-      "files": [
-        "src/components/admin/ReleaseIntelligencePanel.jsx"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
@@ -6224,21 +6269,24 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v3",
+          "commit": null
         }
       ]
     },
     {
       "id": "release-intelligence-F1-7",
       "feature": "release-intelligence",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "RI-R1-2 / RI-R1-10 / RI-R1-11 and Known limitations",
-      "rootCause": "Awaiting amendments and owner answers (B8 rule, B10 three questions, second-reviewer approval).",
-      "files": [
-        "docs/changes/release-intelligence.md",
-        "server/lib/releaseReconcile.js"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
@@ -6246,19 +6294,29 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v3",
+          "commit": null
         }
       ]
     },
     {
       "id": "release-intelligence-F2-2",
       "feature": "release-intelligence",
-      "status": "open",
+      "status": "backlog_pre_existing",
       "class": "informational",
       "attempts": 0,
       "step": "Known limitations: approval",
-      "rootCause": "Single-approver design.",
+      "rootCause": null,
       "files": [],
-      "scope": null,
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 2,
@@ -6300,25 +6358,28 @@
     {
       "id": "release-intelligence-RI-R1-2",
       "feature": "release-intelligence",
-      "status": "open",
+      "status": "verified",
       "class": "spec_error",
       "attempts": 0,
       "step": "E.1 surface tag",
-      "rootCause": "Baseline tags the terminal-only E.1 as desktop+mobile although the step says it needs a terminal and definition.json allows cli steps by de…",
-      "files": [
-        "docs/training/release-intelligence.md",
-        "docs/training/baselines/release-intelligence/v1.json"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "E.1 tag is in the feature's own frozen spec; needs an approved amendment."
+        "evidence": null
       },
       "history": [
         {
           "round": 1,
           "event": "found",
           "note": "Baseline tags the terminal-only E.1 as desktop+mobile altho…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v3",
           "commit": null
         }
       ]
@@ -6442,70 +6503,57 @@
     {
       "id": "release-intelligence-RI-R1-7",
       "feature": "release-intelligence",
-      "status": "retesting",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "MCP_GAP: platform MCP tools missing for most release-intelligence capabilities",
-      "rootCause": "Recurrence of RI-R1-7. The round-1 blocker (mcpToolRegistry.js not on the branch) no longer applies, so the failure is now a defect. The to…",
-      "files": [
-        "server/lib/mcpToolRegistry.js",
-        "server/lib/capabilityParity.js",
-        "server/data/mcpToolManifest.json"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "No prior scope-review.json entry. The 17 routes without MCP tools are this feature's own …"
+        "evidence": null
       },
       "history": [
-        {
-          "round": 1,
-          "event": "found",
-          "note": "server/lib/mcpToolRegistry.js is not on the integration bra…",
-          "commit": null
-        },
-        {
-          "round": 1,
-          "event": "not_fixed",
-          "note": "mcpToolRegistry.js is not on the integration branch; it sta…",
-          "commit": null
-        },
-        {
-          "round": 2,
-          "event": "recurred",
-          "note": "Recurrence of RI-R1-7. The round-1 blocker (mcpToolRegistry…",
-          "commit": null
-        },
         {
           "round": 2,
           "event": "fixed",
           "note": "Added 16 admin-only MCP tools covering every release-intell…",
           "commit": "c6d3a0f51e41c2f2f378aa972d9db2488cb75647"
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step",
+          "commit": "e28d2e1557ee9c1183aaa64dc0e366c4e6702032"
         }
       ]
     },
     {
       "id": "release-intelligence-RI-R1-9",
       "feature": "release-intelligence",
-      "status": "open",
+      "status": "verified",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "No step asserts the single entry point (B7)",
-      "rootCause": "Frozen 'Where things are' context line 8 says 'Also reachable from Classic Tools', contradicting owner direction, and no step checks Classi…",
-      "files": [
-        "docs/training/release-intelligence.md",
-        "docs/training/baselines/release-intelligence/v1.json"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Frozen spec line 8 is the feature's own spec; needs an amendment."
+        "evidence": null
       },
       "history": [
         {
           "round": 1,
           "event": "found",
           "note": "Frozen 'Where things are' context line 8 says 'Also reachab…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v3",
           "commit": null
         }
       ]
