@@ -102,9 +102,17 @@ function moonSubtitle(moon) {
   return 'not yet defined';
 }
 
-export default function PlanetAtmosphereView({ island, scope, onClear, onNavigateToIsland, onOpenClassicTools }) {
+export default function PlanetAtmosphereView({ island, scope, onClear, onNavigateToIsland, onOpenClassicTools, moonKey, onMoonChange }) {
   const hostRef = useRef(null);
-  const [activeMoonKey, setActiveMoonKey] = useState(null);
+  // Layered navigation (2026-10-09): WorldShell passes `moonKey`/`onMoonChange`
+  // so the open moon is one layer in the World Shell stack (breadcrumb, URL,
+  // Back/Escape). Without them this view keeps its own local state as before.
+  const controlled = typeof onMoonChange === 'function';
+  const [localMoonKey, setLocalMoonKey] = useState(null);
+  const activeMoonKey = controlled ? (moonKey || null) : localMoonKey;
+  const setActiveMoonKey = (k) => { if (controlled) onMoonChange(k); else setLocalMoonKey(k); };
+  const pickMoonRef = useRef(null);
+  pickMoonRef.current = setActiveMoonKey;
   const allMoons = island.moons || EMPTY_ARRAY;
 
   // journeyScenarioKeys (plural) — a toggle between an island's connected
@@ -255,7 +263,7 @@ export default function PlanetAtmosphereView({ island, scope, onClear, onNavigat
         const hit = raycaster.intersectObjects(moonPickables.map((m) => m.obj), true)[0];
         if (hit) {
           const picked = moonPickables.find((m) => m.obj === hit.object);
-          if (picked) setActiveMoonKey(picked.key);
+          if (picked) pickMoonRef.current(picked.key);
         }
       }
       drag = null;

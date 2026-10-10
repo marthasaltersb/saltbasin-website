@@ -605,6 +605,7 @@ export const api = {
   createCareerOpportunity: (body) => request('/api/career-agents/opportunities', { method: 'POST', body: JSON.stringify(body) }),
   updateCareerOpportunity: (id, body) => request(`/api/career-agents/opportunities/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   getOpportunityOutputs: (id) => request(`/api/career-agents/opportunities/${id}/outputs`),
+  resolveWorldLayers: (at) => request(`/api/world-layers/resolve?at=${encodeURIComponent(at || '')}`),
   listUnlinkedOutputs: () => request('/api/career-agents/unlinked-outputs'),
   linkOutputToOpportunity: (id, outputId) => request(`/api/career-agents/opportunities/${id}/outputs/${outputId}/link`, { method: 'POST' }),
   unlinkOutputFromOpportunity: (id, outputId) => request(`/api/career-agents/opportunities/${id}/outputs/${outputId}/link`, { method: 'DELETE' }),

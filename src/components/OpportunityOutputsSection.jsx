@@ -6,13 +6,20 @@
 // document-blocks adapter - no second editor), save it as a new draft
 // version, and Approve for QR through the finalization gate
 // (useToolCategoryGate().run + server assertReadyToFinalize).
+//
+// Layered navigation (2026-10-09, docs/changes/world-shell-layers.md): the same
+// data is shown at three layers of the World Shell stack, each with more detail
+// than the one above - `summary` (inside the opportunity: counts only),
+// `list` (the Application Outputs layer: one entry per output, clickable) and
+// `detail` (one output: full provenance and actions). The editor is a further
+// layer on top of `detail`. Every click into an object pushes exactly one layer.
 import React, { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { api } from '../lib/api.js';
 import { toast } from '../lib/toast.js';
 import { useToolCategoryGate } from './admin/ToolCategoryGate.jsx';
-import { OutputVersionHistoryModal } from './admin/OutputVersionHistory.jsx';
 import { documentToEditorConfig, editorConfigToDocument, DOCUMENT_EDITOR_ALLOWED_TYPES } from '../lib/documentBlocksEditor.js';
+import { useWorldLayersContext } from '../lib/useWorldLayers.jsx';
 
 const HerqOutputConfigurator = lazy(() => import('./admin/HerqOutputConfigurator.jsx'));
 
@@ -30,15 +37,21 @@ const S = {
   input: { width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.05)', border: '0.5px solid rgba(255,255,255,0.15)', borderRadius: 6, padding: '0.4rem 0.5rem', color: C.text, fontSize: '0.76rem', marginTop: '0.3rem' },
   alert: { border: '0.5px solid rgba(217,140,160,0.7)', background: 'rgba(217,140,160,0.1)', color: '#f0c4d0', borderRadius: 6, padding: '0.4rem 0.5rem', fontSize: '0.72rem', margin: '0.4rem 0' },
   muted: { color: C.muted, fontSize: '0.74rem' },
-  editorShell: { position: 'fixed', inset: 0, zIndex: 60, background: '#0d1417', display: 'flex', flexDirection: 'column' },
+  editorShell: { position: 'fixed', top: 56, left: 0, right: 0, bottom: 0, zIndex: 60, background: '#0d1417', display: 'flex', flexDirection: 'column' },
+  entry: { display: 'block', width: '100%', textAlign: 'left', border: `0.5px solid ${C.line}`, borderRadius: 8, padding: '0.6rem', marginBottom: '0.5rem', background: 'rgba(255,255,255,0.03)', color: C.text, cursor: 'pointer', font: 'inherit' },
   editorBar: { display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.6rem 1rem', borderBottom: `0.5px solid ${C.line}`, color: C.text, fontSize: '0.8rem', flexShrink: 0, flexWrap: 'wrap' },
 };
 
 const fmtDate = (ms) => (ms ? new Date(Number(ms)).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' }) : 'not recorded');
 const statusText = (o) => (o.status === 'published' ? 'Approved - QR live' : o.status === 'approved' ? 'Approved' : o.status === 'archived' ? 'Archived' : 'Draft');
 
-export default function OpportunityOutputsSection({ opportunity, onOpenCareerMaster, onOpportunityChanged, refreshSignal = '' }) {
+export default function OpportunityOutputsSection({
+  opportunity, onOpenCareerMaster, onOpportunityChanged, refreshSignal = '',
+  mode = 'summary', outputId = null, overlay = null, oppIndex = 0, outputIndex = null, editorIndex = null,
+}) {
   const gate = useToolCategoryGate();
+  const layers = useWorldLayersContext();
+  const [statusFilter, setStatusFilter] = useState(() => layers?.getUi().statusFilter || 'all');
   const [data, setData] = useState(null); // { outputs, careerMaster, memberSiteSlug }
   const [unlinked, setUnlinked] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -48,7 +61,6 @@ export default function OpportunityOutputsSection({ opportunity, onOpenCareerMas
   const [busy, setBusy] = useState(false);
   const [editor, setEditor] = useState(null); // { id, title, status, content, versionNumber }
   const [details, setDetails] = useState({ url: '', location: '', notes: '' });
-  const [historyOpen, setHistoryOpen] = useState(false); // version history opened from inside the editor
 
   const oppId = opportunity.id;
 
@@ -66,6 +78,8 @@ export default function OpportunityOutputsSection({ opportunity, onOpenCareerMas
   }, [oppId]);
 
   useEffect(() => { setLoading(true); setData(null); setEditor(null); setConfirmingId(null); setLinkChoice(''); load(); }, [load]);
+
+  const findOutput = useCallback((id) => (data?.outputs || []).find((o) => String(o.id) === String(id) || (o.provenance?.lineage || []).some((l) => String(l.id) === String(id))) || null, [data]);
 
   // The panel's other actions (import a document, approve a generated resume or
   // cover letter) add outputs to this opportunity; reload when one finishes.
@@ -90,31 +104,37 @@ export default function OpportunityOutputsSection({ opportunity, onOpenCareerMas
     }
   }
 
-  async function openEditor(output) {
-    setBusy(true);
+  // The editor is a layer: "Edit draft" pushes it, and this effect loads the
+  // draft once the layer is on top (so a refresh or shared link at the editor
+  // layer reopens the same draft).
+  const editorLoadingRef = React.useRef(false);
+  useEffect(() => {
+    if (overlay !== 'editor') { if (editor) setEditor(null); return; }
+    if (!data || editor || editorLoadingRef.current) return;
+    const output = findOutput(outputId);
+    if (!output) { layers?.invalidate((editorIndex ?? oppIndex + 3), 'That draft is no longer linked to this opportunity. Showing the layer above.'); return; }
+    if (!output.editable) { layers?.invalidate((editorIndex ?? oppIndex + 3), `${output.notEditableReason || 'This version cannot be edited.'} Showing the output instead.`); return; }
+    editorLoadingRef.current = true;
     setError('');
-    try {
-      const doc = await api.getOutputContent(output.id);
-      setEditor({ id: output.id, title: doc.title, status: output.status, content: doc.content, versionNumber: output.provenance.versionNumber });
-    } catch (e) {
-      setError(`Could not open the draft: ${e.message}`);
-      toast.error(e.message);
-    } finally {
-      setBusy(false);
-    }
-  }
+    api.getOutputContent(output.id)
+      .then((doc) => setEditor({ id: output.id, title: doc.title, status: output.status, content: doc.content, versionNumber: output.provenance.versionNumber }))
+      .catch((e) => { setError(`Could not open the draft: ${e.message}`); toast.error(e.message); layers?.invalidate((editorIndex ?? oppIndex + 3), `Could not open the draft (${e.message}). Showing the output instead.`); })
+      .finally(() => { editorLoadingRef.current = false; });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [overlay, data, outputId, editor]);
 
   const adapter = useMemo(() => (editor ? {
     toConfig: () => documentToEditorConfig(editor.content),
     allowedTypes: DOCUMENT_EDITOR_ALLOWED_TYPES,
     statusText: `Editing version ${editor.versionNumber} - Save creates version ${editor.versionNumber + 1} (draft)`,
-    onBack: () => setEditor(null),
+    onBack: () => layers?.pop(),
     onSave: async (config, name) => {
       const content = editorConfigToDocument(config);
       try {
         const saved = await api.saveOutputVersion(editor.id, { content, name: name && name !== editor.title ? name : undefined });
         toast.success('Saved as a new draft version');
         setEditor(null);
+        layers?.pop();
         await load();
         return saved;
       } catch (e) {
@@ -122,7 +142,7 @@ export default function OpportunityOutputsSection({ opportunity, onOpenCareerMas
         throw e;
       }
     },
-  } : null), [editor, load]);
+  } : null), [editor, load, layers]);
 
   async function approve(output) {
     setConfirmingId(null);
@@ -135,13 +155,22 @@ export default function OpportunityOutputsSection({ opportunity, onOpenCareerMas
   // the finalization gate prompt) are portalled to <body> or they clip to the rail.
   const gateLayer = gate.modal ? createPortal(gate.modal, document.body) : null;
 
+  // Detail layer: the output must still be linked; otherwise fall back one layer with a note.
+  const detailOutput = mode === 'detail' ? findOutput(outputId) : null;
+  useEffect(() => {
+    if (mode !== 'detail' || !data) return;
+    if (!detailOutput) layers?.invalidate(outputIndex ?? oppIndex + 2, 'That output is no longer linked to this opportunity. Showing the layer above.');
+    else layers?.rememberLabel({ kind: 'output', key: outputId }, detailOutput.title);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, data, detailOutput?.id, detailOutput?.title]);
+
   if (editor) {
     return createPortal(
       <div style={S.editorShell} role="dialog" aria-label="Draft editor">
         <div style={S.editorBar}>
           <strong>{editor.title}</strong>
           <span style={S.muted}>Version {editor.versionNumber} - shared block editor</span>
-          <button style={S.btn} onClick={() => setHistoryOpen(true)}>Version history</button>
+          <button style={S.btn} onClick={() => layers?.push({ kind: 'versions', key: editor.id, label: 'Version history' })}>Version history</button>
         </div>
         <div style={{ flex: 1, minHeight: 0 }}>
           <Suspense fallback={<div style={{ ...S.muted, padding: '1rem' }}>Loading editor...</div>}>
@@ -153,119 +182,199 @@ export default function OpportunityOutputsSection({ opportunity, onOpenCareerMas
           </Suspense>
         </div>
         {gate.modal}
-        {historyOpen && <OutputVersionHistoryModal projectionId={editor.id} onClose={() => setHistoryOpen(false)} />}
       </div>,
       document.body,
     );
   }
 
   const placeholder = opportunity.metadata?.placeholder === true;
+  const outputs = data?.outputs || [];
+  const counts = { draft: outputs.filter((o) => !['approved', 'published', 'archived'].includes(o.status)).length, approved: outputs.filter((o) => o.status === 'approved' || o.status === 'published').length };
 
+  // Remember the filter with the layer so coming back to the list finds it as left.
+  function changeStatusFilter(v) { setStatusFilter(v); layers?.saveUi({ statusFilter: v }); }
+
+  function renderOutputCard(o, openable = false) {
+    const p = o.provenance;
+    const cm = p.careerState;
+    return (
+      <div key={o.id} style={S.card} data-testid="linked-output">
+        <div style={S.cardTitle}>
+          {o.title}
+          <span style={S.badge(o.status === 'published' ? 'ok' : 'warn')}>{statusText(o)}</span>
+        </div>
+        <div style={S.muted}>{o.outputType.replace('_', ' ')} - version {p.versionNumber} of {p.versionCount}</div>
+
+        <div style={{ ...S.title, margin: '0.6rem 0 0.2rem' }}>Provenance</div>
+        <dl style={S.dl} aria-label={`Provenance of ${o.title}`}>
+          <dt style={S.dt}>Source</dt><dd style={S.dd}>{p.sourceLabel}</dd>
+          <dt style={S.dt}>{p.source === 'imported' ? 'Imported' : 'Generated'}</dt><dd style={S.dd}>{fmtDate(p.importedOrGeneratedAt)}</dd>
+          <dt style={S.dt}>Document created</dt><dd style={S.dd}>{fmtDate(p.documentCreatedAt)}</dd>
+          <dt style={S.dt}>Last changed</dt><dd style={S.dd}>{fmtDate(p.lastChangedAt)}</dd>
+          <dt style={S.dt}>Authors</dt><dd style={S.dd}>{p.authors.length ? p.authors.join(', ') : 'none recorded'}</dd>
+          <dt style={S.dt}>Version</dt><dd style={S.dd}>Version {p.versionNumber} of {p.versionCount}{p.parentVersionId ? ` (edited from version ${p.lineage.find((l) => l.id === p.parentVersionId)?.version ?? '?'})` : ''}</dd>
+          <dt style={S.dt}>Lineage</dt>
+          <dd style={S.dd}>{p.lineage.map((l) => `v${l.version} ${statusText({ status: l.status })}${l.isQrVersion ? ' (QR)' : ''}`).join(' > ')}</dd>
+          <dt style={S.dt}>Career Master</dt>
+          <dd style={S.dd}>
+            {cm.filedAgainstFingerprint
+              ? `Filed against ${cm.filedAtomCount} Career Master data points (state ${cm.filedAgainstFingerprint}).`
+              : 'Filed before any Career Master data existed.'}{' '}
+            {cm.filedAgainstFingerprint ? (cm.unchangedSinceFiled ? 'Unchanged since.' : `Career Master now has ${cm.currentAtomCount} data points - it has changed since.`) : `Career Master now has ${cm.currentAtomCount} data points.`}
+          </dd>
+          <dt style={S.dt}>Draws on</dt>
+          <dd style={S.dd}>Your Career Master - Jobs {data.careerMaster.jobs}, Skills {data.careerMaster.skills}, Tools {data.careerMaster.tools}, Certifications {data.careerMaster.certifications}, Engagements {data.careerMaster.engagements}</dd>
+          <dt style={S.dt}>Salt Basin site</dt>
+          <dd style={S.dd}>{data.memberSite?.published ? 'Published - your site is live.' : 'Not published yet.'}</dd>
+          {p.approvedAt && (<><dt style={S.dt}>Approved</dt><dd style={S.dd}>{fmtDate(p.approvedAt)} by {p.approvedBy || 'you'}</dd></>)}
+        </dl>
+        <div>
+          <button style={S.btn} onClick={onOpenCareerMaster}>Open my Career Master</button>
+          {data.memberSite?.published && data.memberSite.slug && <a href={`/u/${data.memberSite.slug}`} target="_blank" rel="noreferrer" style={{ ...S.btn, display: 'inline-block', textDecoration: 'none' }}>View my Salt Basin site</a>}
+        </div>
+
+        {o.share && (
+          <div style={{ ...S.muted, marginTop: '0.4rem' }}>
+            QR link {o.share.live ? 'is live' : 'is not live'} on version {o.share.versionNumber}{o.share.isShownVersion ? '' : ' (a newer draft exists)'}:{' '}
+            <a href={`/r/${o.share.token}`} target="_blank" rel="noreferrer" style={{ color: C.gold }}>/r/{o.share.token.slice(0, 6)}...</a>
+          </div>
+        )}
+
+        {confirmingId === o.id ? (
+          <div style={{ ...S.card, marginTop: '0.5rem' }} role="group" aria-label="Confirm approval">
+            <div style={{ fontSize: '0.74rem', color: C.text }}>
+              Approve "{o.title}" (version {p.versionNumber}) as the final version for its QR code? You will be recorded as the approver. If an earlier version already has a QR code, that same code will open this version.
+            </div>
+            <button style={S.btnGold} disabled={busy} onClick={() => approve(o)}>Confirm approval</button>
+            <button style={S.btn} onClick={() => setConfirmingId(null)}>Cancel</button>
+          </div>
+        ) : (
+          <div>
+            {o.editable
+              ? <button style={S.btnGold} disabled={busy} onClick={() => layers?.push({ kind: 'editor', key: o.id, label: 'Draft editor' })}>Edit draft</button>
+              : <span style={{ ...S.muted, display: 'block', marginTop: '0.4rem' }}>{o.notEditableReason}</span>}
+            <button style={S.btn} disabled={busy} onClick={() => layers?.push({ kind: 'versions', key: o.id, label: 'Version history' })}>Version history</button>
+            {openable && <button style={S.btn} disabled={busy} data-testid="open-output" onClick={() => layers?.push({ kind: 'output', key: o.id, label: o.title })}>Open output &rsaquo;</button>}
+            <button style={S.btn} disabled={busy || (o.status === 'published' && o.share?.isShownVersion)} onClick={() => setConfirmingId(o.id)}>Approve for QR</button>
+            <button style={S.btn} disabled={busy} onClick={() => act(() => api.unlinkOutputFromOpportunity(oppId, o.id), 'Output unlinked from this opportunity')}>Unlink</button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const placeholderCard = placeholder && (
+    <div style={S.card} data-testid="placeholder-card">
+      <div style={{ ...S.cardTitle, fontSize: '0.78rem' }}>Placeholder opportunity <span style={S.badge('warn')}>details to be filled later</span></div>
+      <div style={S.muted}>Only the company and role are known so far. Add what you learn:</div>
+      <input aria-label="Posting URL" placeholder="Posting URL" style={S.input} value={details.url} onChange={(e) => setDetails({ ...details, url: e.target.value })} />
+      <input aria-label="Location" placeholder="Location" style={S.input} value={details.location} onChange={(e) => setDetails({ ...details, location: e.target.value })} />
+      <input aria-label="Notes" placeholder="Notes" style={S.input} value={details.notes} onChange={(e) => setDetails({ ...details, notes: e.target.value })} />
+      <button
+        style={S.btnGold} disabled={busy || !(details.url || details.location || details.notes)}
+        onClick={async () => {
+          const updated = await act(() => api.updateCareerOpportunity(oppId, { url: details.url || undefined, location: details.location || undefined, notes: details.notes || undefined }), 'Opportunity details saved');
+          if (updated) { setDetails({ url: '', location: '', notes: '' }); onOpportunityChanged?.(); }
+        }}
+      >Save details</button>
+    </div>
+  );
+
+  const errorBox = error && <div role="alert" style={S.alert}>{error}</div>;
+
+  const linkUi = (
+    <>
+      <div style={S.title}>Link an Existing Output</div>
+        {unlinked.length === 0 ? (
+          <div style={S.muted}>Every output you have is already linked, or you have none yet.</div>
+        ) : (
+          <>
+            <select aria-label="Output to link" style={S.input} value={linkChoice} onChange={(e) => setLinkChoice(e.target.value)}>
+              <option value="">Choose an output...</option>
+              {unlinked.map((u) => <option key={u.id} value={u.id}>{u.title} ({u.outputType.replace('_', ' ')}, {statusText(u)})</option>)}
+            </select>
+            <button style={S.btnGold} disabled={!linkChoice || busy} onClick={() => act(() => api.linkOutputToOpportunity(oppId, Number(linkChoice)), 'Output linked to this opportunity')}>Link output</button>
+          </>
+        )}
+    </>
+  );
+
+  // ── Layer: inside the opportunity - a summary only; the outputs are one click deeper ──
+  if (mode === 'summary') {
+    return (
+      <div>
+        <div style={S.title}>Application Outputs</div>
+        {placeholderCard}
+        {errorBox}
+        {loading && <div style={S.muted}>Loading outputs...</div>}
+        {data && !loading && (
+          <div style={S.muted} data-testid="outputs-summary">
+            {outputs.length === 0
+              ? 'No outputs linked to this opportunity yet. Link an existing output below, or import an application package.'
+              : `${outputs.length} output${outputs.length === 1 ? '' : 's'} linked: ${counts.draft} draft, ${counts.approved} approved.`}
+          </div>
+        )}
+        {outputs.map((o) => renderOutputCard(o, true))}
+        <button style={S.btnGold} disabled={loading} data-testid="open-outputs-list" onClick={() => layers?.push({ kind: 'outputs', key: '', label: 'Application outputs' })}>
+          Open application outputs{data ? ` (${outputs.length})` : ''} &rsaquo;
+        </button>
+        {linkUi}
+        {gateLayer}
+      </div>
+    );
+  }
+
+  // ── Layer: Application Outputs list - one clickable entry per output ──
+  if (mode === 'list') {
+    const shown = outputs.filter((o) => statusFilter === 'all'
+      || (statusFilter === 'approved' ? (o.status === 'approved' || o.status === 'published') : !['approved', 'published', 'archived'].includes(o.status)));
+    return (
+      <div>
+        <div style={S.title}>Application Outputs</div>
+        {errorBox}
+        {loading && <div style={S.muted}>Loading outputs...</div>}
+        {data && outputs.length === 0 && !loading && (
+          <div style={S.muted}>No outputs linked to this opportunity yet. Link an existing output below, or import an application package.</div>
+        )}
+        {outputs.length > 0 && (
+          <select aria-label="Filter outputs by status" style={S.input} value={statusFilter} onChange={(e) => changeStatusFilter(e.target.value)}>
+            <option value="all">All statuses</option>
+            <option value="draft">Draft only</option>
+            <option value="approved">Approved only</option>
+          </select>
+        )}
+        {outputs.length > 0 && shown.length === 0 && <div style={{ ...S.muted, marginTop: '0.4rem' }}>No outputs match this filter.</div>}
+        <div style={{ marginTop: '0.5rem' }}>
+          {shown.map((o) => (
+            <button key={o.id} type="button" style={S.entry} data-testid="output-entry" onClick={() => layers?.push({ kind: 'output', key: o.id, label: o.title })}>
+              <div style={S.cardTitle}>{o.title}<span style={S.badge(o.status === 'published' ? 'ok' : 'warn')}>{statusText(o)}</span></div>
+              <div style={S.muted}>{o.outputType.replace('_', ' ')} - version {o.provenance.versionNumber} of {o.provenance.versionCount}</div>
+            </button>
+          ))}
+        </div>
+
+        {linkUi}
+        {gateLayer}
+      </div>
+    );
+  }
+
+  // ── Layer: one output - full provenance and every action ──
   return (
     <div>
-      <div style={S.title}>Application Outputs</div>
-
-      {placeholder && (
-        <div style={S.card} data-testid="placeholder-card">
-          <div style={{ ...S.cardTitle, fontSize: '0.78rem' }}>Placeholder opportunity <span style={S.badge('warn')}>details to be filled later</span></div>
-          <div style={S.muted}>Only the company and role are known so far. Add what you learn:</div>
-          <input aria-label="Posting URL" placeholder="Posting URL" style={S.input} value={details.url} onChange={(e) => setDetails({ ...details, url: e.target.value })} />
-          <input aria-label="Location" placeholder="Location" style={S.input} value={details.location} onChange={(e) => setDetails({ ...details, location: e.target.value })} />
-          <input aria-label="Notes" placeholder="Notes" style={S.input} value={details.notes} onChange={(e) => setDetails({ ...details, notes: e.target.value })} />
-          <button
-            style={S.btnGold} disabled={busy || !(details.url || details.location || details.notes)}
-            onClick={async () => {
-              const updated = await act(() => api.updateCareerOpportunity(oppId, { url: details.url || undefined, location: details.location || undefined, notes: details.notes || undefined }), 'Opportunity details saved');
-              if (updated) { setDetails({ url: '', location: '', notes: '' }); onOpportunityChanged?.(); }
-            }}
-          >Save details</button>
-        </div>
-      )}
-
-      {error && <div role="alert" style={S.alert}>{error}</div>}
-      {loading && <div style={S.muted}>Loading outputs...</div>}
-
-      {data && data.outputs.length === 0 && !loading && (
-        <div style={S.muted}>No outputs linked to this opportunity yet. Link an existing output below, or import an application package.</div>
-      )}
-
-      {data?.outputs.map((o) => {
-        const p = o.provenance;
-        const cm = p.careerState;
-        return (
-          <div key={o.id} style={S.card} data-testid="linked-output">
-            <div style={S.cardTitle}>
-              {o.title}
-              <span style={S.badge(o.status === 'published' ? 'ok' : 'warn')}>{statusText(o)}</span>
-            </div>
-            <div style={S.muted}>{o.outputType.replace('_', ' ')} - version {p.versionNumber} of {p.versionCount}</div>
-
-            <div style={{ ...S.title, margin: '0.6rem 0 0.2rem' }}>Provenance</div>
-            <dl style={S.dl} aria-label={`Provenance of ${o.title}`}>
-              <dt style={S.dt}>Source</dt><dd style={S.dd}>{p.sourceLabel}</dd>
-              <dt style={S.dt}>{p.source === 'imported' ? 'Imported' : 'Generated'}</dt><dd style={S.dd}>{fmtDate(p.importedOrGeneratedAt)}</dd>
-              <dt style={S.dt}>Document created</dt><dd style={S.dd}>{fmtDate(p.documentCreatedAt)}</dd>
-              <dt style={S.dt}>Last changed</dt><dd style={S.dd}>{fmtDate(p.lastChangedAt)}</dd>
-              <dt style={S.dt}>Authors</dt><dd style={S.dd}>{p.authors.length ? p.authors.join(', ') : 'none recorded'}</dd>
-              <dt style={S.dt}>Version</dt><dd style={S.dd}>Version {p.versionNumber} of {p.versionCount}{p.parentVersionId ? ` (edited from version ${p.lineage.find((l) => l.id === p.parentVersionId)?.version ?? '?'})` : ''}</dd>
-              <dt style={S.dt}>Lineage</dt>
-              <dd style={S.dd}>{p.lineage.map((l) => `v${l.version} ${statusText({ status: l.status })}${l.isQrVersion ? ' (QR)' : ''}`).join(' > ')}</dd>
-              <dt style={S.dt}>Career Master</dt>
-              <dd style={S.dd}>
-                {cm.filedAgainstFingerprint
-                  ? `Filed against ${cm.filedAtomCount} Career Master data points (state ${cm.filedAgainstFingerprint}).`
-                  : 'Filed before any Career Master data existed.'}{' '}
-                {cm.filedAgainstFingerprint ? (cm.unchangedSinceFiled ? 'Unchanged since.' : `Career Master now has ${cm.currentAtomCount} data points - it has changed since.`) : `Career Master now has ${cm.currentAtomCount} data points.`}
-              </dd>
-              <dt style={S.dt}>Draws on</dt>
-              <dd style={S.dd}>Your Career Master - Jobs {data.careerMaster.jobs}, Skills {data.careerMaster.skills}, Tools {data.careerMaster.tools}, Certifications {data.careerMaster.certifications}, Engagements {data.careerMaster.engagements}</dd>
-              <dt style={S.dt}>Salt Basin site</dt>
-              <dd style={S.dd}>{data.memberSite?.published ? 'Published - your site is live.' : 'Not published yet.'}</dd>
-              {p.approvedAt && (<><dt style={S.dt}>Approved</dt><dd style={S.dd}>{fmtDate(p.approvedAt)} by {p.approvedBy || 'you'}</dd></>)}
-            </dl>
-            <div>
-              <button style={S.btn} onClick={onOpenCareerMaster}>Open my Career Master</button>
-              {data.memberSite?.published && data.memberSite.slug && <a href={`/u/${data.memberSite.slug}`} target="_blank" rel="noreferrer" style={{ ...S.btn, display: 'inline-block', textDecoration: 'none' }}>View my Salt Basin site</a>}
-            </div>
-
-            {o.share && (
-              <div style={{ ...S.muted, marginTop: '0.4rem' }}>
-                QR link {o.share.live ? 'is live' : 'is not live'} on version {o.share.versionNumber}{o.share.isShownVersion ? '' : ' (a newer draft exists)'}:{' '}
-                <a href={`/r/${o.share.token}`} target="_blank" rel="noreferrer" style={{ color: C.gold }}>/r/{o.share.token.slice(0, 6)}...</a>
-              </div>
-            )}
-
-            {confirmingId === o.id ? (
-              <div style={{ ...S.card, marginTop: '0.5rem' }} role="group" aria-label="Confirm approval">
-                <div style={{ fontSize: '0.74rem', color: C.text }}>
-                  Approve "{o.title}" (version {p.versionNumber}) as the final version for its QR code? You will be recorded as the approver. If an earlier version already has a QR code, that same code will open this version.
-                </div>
-                <button style={S.btnGold} disabled={busy} onClick={() => approve(o)}>Confirm approval</button>
-                <button style={S.btn} onClick={() => setConfirmingId(null)}>Cancel</button>
-              </div>
-            ) : (
-              <div>
-                {o.editable
-                  ? <button style={S.btnGold} disabled={busy} onClick={() => openEditor(o)}>Edit draft</button>
-                  : <span style={{ ...S.muted, display: 'block', marginTop: '0.4rem' }}>{o.notEditableReason}</span>}
-                <button style={S.btn} disabled={busy || (o.status === 'published' && o.share?.isShownVersion)} onClick={() => setConfirmingId(o.id)}>Approve for QR</button>
-                <button style={S.btn} disabled={busy} onClick={() => act(() => api.unlinkOutputFromOpportunity(oppId, o.id), 'Output unlinked from this opportunity')}>Unlink</button>
-              </div>
-            )}
-          </div>
-        );
-      })}
-
-      <div style={S.title}>Link an Existing Output</div>
-      {unlinked.length === 0 ? (
-        <div style={S.muted}>Every output you have is already linked, or you have none yet.</div>
-      ) : (
+      <div style={S.title}>Output</div>
+      {errorBox}
+      {loading && <div style={S.muted}>Loading output...</div>}
+      {detailOutput && renderOutputCard(detailOutput)}
+      {detailOutput && (
         <>
-          <select aria-label="Output to link" style={S.input} value={linkChoice} onChange={(e) => setLinkChoice(e.target.value)}>
-            <option value="">Choose an output...</option>
-            {unlinked.map((u) => <option key={u.id} value={u.id}>{u.title} ({u.outputType.replace('_', ' ')}, {statusText(u)})</option>)}
-          </select>
-          <button style={S.btnGold} disabled={!linkChoice || busy} onClick={() => act(() => api.linkOutputToOpportunity(oppId, Number(linkChoice)), 'Output linked to this opportunity')}>Link output</button>
+          <div style={S.title}>Versions of this output</div>
+          {detailOutput.provenance.lineage.map((l) => (
+            <button key={l.id} type="button" style={S.entry} data-testid="version-entry" onClick={() => layers?.push({ kind: 'versions', key: `${detailOutput.id}.${l.id}`, label: 'Version history' })}>
+              <div style={S.cardTitle}>Version {l.version}<span style={S.badge(l.isQrVersion ? 'ok' : 'warn')}>{statusText({ status: l.status })}{l.isQrVersion ? ' (QR)' : ''}</span></div>
+              <div style={S.muted}>Open this version in the version history &rsaquo;</div>
+            </button>
+          ))}
         </>
       )}
       {gateLayer}
