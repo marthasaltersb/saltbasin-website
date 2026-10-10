@@ -12,7 +12,8 @@
 // lost). See /root/.claude/plans/nested-tickling-micali.md for the full
 // design rationale and the explicitly-deferred Phase 2/3 (governed
 // user-customizable world views).
-import React, { useEffect, useMemo, useRef, useState, useCallback, lazy, Suspense } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState, useCallback, lazy, Suspense } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import * as THREE from 'three';
 import { api } from '../lib/api.js';
@@ -29,6 +30,9 @@ import { attachSceneManifestTree, publishSceneManifest, removePublishedSceneMani
 import PlanetAtmosphereView from './PlanetAtmosphereView.jsx';
 import OpportunityOutputsSection from './OpportunityOutputsSection.jsx';
 import CareerConsentGate from './admin/CareerConsentGate.jsx';
+import WorldBreadcrumbs from './WorldBreadcrumbs.jsx';
+import { useWorldLayers, WorldLayersProvider, useWorldLayersContext } from '../lib/useWorldLayers.jsx';
+import { lastIslandIndex, prefersReducedMotion } from '../lib/worldLayers.js';
 
 // Simple, self-contained panels — no AdminShell-local shared state, so they
 // can be lifted straight into a real WorldShell embed (module-by-module
@@ -122,7 +126,10 @@ const MOBILE_CSS = `
   .sb-world-topbar button { white-space: nowrap; }
   .sb-world-stats .sb-world-stat, .sb-world-profile-text { display: none !important; }
   .sb-world-stats { margin-left: auto; }
-  .sb-world-rail { left: 0.5rem !important; right: 0.5rem !important; width: auto !important; top: 4.4rem !important; bottom: 0.5rem !important; }
+  .sb-world-rail { left: 0.5rem !important; right: 0.5rem !important; width: auto !important; top: auto !important; bottom: 0.5rem !important; height: 66vh !important; max-height: 66vh; border-radius: 14px 14px 12px 12px !important; box-shadow: 0 -8px 24px rgba(0,0,0,0.45); }
+  .sb-world-crumbs { padding: 0.35rem 0.75rem !important; }
+  .sb-world-rail button, .sb-world-rail select, .sb-world-rail input:not([type=file]), .sb-world-rail [role=button] { min-height: 44px; }
+  .sb-world-topbar button { min-height: 44px; }
 }
 `;
 
@@ -133,20 +140,6 @@ function WorldShellInner() {
   const [user, setUser] = useState(undefined); // undefined = checking, null = redirecting
   const [tabsConfig, setTabsConfig] = useState(null);
   const [tabsError, setTabsError] = useState('');
-  const [view, setView] = useState('world'); // 'world' | 'journeys' | 'classic' | 'atmosphere'
-  const [focusedKey, setFocusedKey] = useState(null);
-  const [atmosphereKey, setAtmosphereKey] = useState(null);
-  // Which Classic Tools tab to land on — set when the user dollies into a
-  // 'classic'-kind island (e.g. Career Master) and hits "Open in Classic
-  // Tools", so they land on that exact tab instead of the scope's generic
-  // default. Cleared for the plain "Classic Tools" nav button so that one
-  // keeps opening the default tab.
-  const [classicTargetTab, setClassicTargetTab] = useState(null);
-  const openClassic = useCallback((tabKey = null) => {
-    setClassicTargetTab(tabKey);
-    setView('classic');
-  }, []);
-
   useEffect(() => {
     api.me()
       .then(({ user: u }) => { if (!u) nav('/login', { replace: true }); else setUser(u); })
@@ -182,48 +175,170 @@ function WorldShellInner() {
   const commercial = useCommercialOpportunities({ enabled: hasCommercialIsland });
   const herq = usePublicationPipeline({ enabled: hasHerqIsland });
 
-  const focused = islands.find((i) => i.key === focusedKey) || null;
-  const atmosphereIsland = islands.find((i) => i.key === atmosphereKey) || null;
+  const scope = user?.role === 'admin' ? 'admin' : 'member';
+  const pipelineOf = (island) => (island?.componentId === 'careerPlacementAgents' ? career : island?.componentId === 'commercialOpportunities' ? commercial : null);
 
-  // 'classic' islands have no in-world docked/embed view built yet. Clicking
-  // one used to dolly in and show a RightRail card whose only job was a
-  // second "Open in Classic Tools" button — exactly the two-D-card-before-
-  // the-module click-through this was built to remove. Go straight to
-  // Classic Tools, deep-linked to that island's own tab id (islands' `key`
-  // is the same memberTabs/admin_nav tab id AdminShell's `tab` state uses),
-  // so the click on the 3D object *is* the navigation, full stop.
+  // ── The layer stack (docs/changes/world-shell-layers.md) ──────────────────
+  // ONE stack replaces the old per-level state (focusedKey, atmosphereKey,
+  // selectedOpportunityId, the editor/history flags, returnKeyRef). The URL
+  // (`/world?at=...`) holds it. `validate` drops layers this user can't (or can
+  // no longer) open and says why; the hook then fixes the URL and shows a note.
+  const validate = (raw) => {
+    if (!tabsConfig) return { stack: raw }; // islands not known yet: trust the link for now
+    for (let i = 0; i < raw.length; i += 1) {
+      const l = raw[i];
+      const prev = raw[i - 1];
+      if (l.kind === 'island' && !islands.some((x) => x.key === l.key)) {
+        return { stack: raw.slice(0, i), problem: { layer: l, why: 'it is not one of your islands' } };
+      }
+      if (l.kind === 'moon') {
+        const isl = islands.find((x) => x.key === prev?.key);
+        // A moon that is only a hop (to another planet, or into Classic Tools) is never a layer itself.
+        const ok = isl?.moons?.some((m) => m.key === l.key && (!m.scopes || m.scopes.includes(scope)) && !m.destinationKey && m.panel !== 'classicTools');
+        if (!ok) return { stack: raw.slice(0, i), problem: { layer: l, why: 'that moon is not available to you' } };
+      }
+      if (l.kind === 'opp') {
+        const pipe = pipelineOf(islands.find((x) => x.key === prev?.key));
+        if (!pipe) return { stack: raw.slice(0, i), problem: { layer: l, why: 'this island does not track opportunities' } };
+        if (pipe.loaded && !pipe.opportunities.some((o) => String(o.id) === l.key)) {
+          return { stack: raw.slice(0, i), problem: { layer: l, why: 'that opportunity no longer exists or is not yours' } };
+        }
+      }
+    }
+    return { stack: raw };
+  };
+  const layers = useWorldLayers(validate);
+  const { stack } = layers;
+  const top = stack[stack.length - 1] || null;
+  const islandIdx = lastIslandIndex(stack);
+  const activeIsland = islandIdx >= 0 ? islands.find((i) => i.key === stack[islandIdx].key) || null : null;
+  const afterIsland = islandIdx >= 0 ? stack.slice(islandIdx + 1) : [];
+  const classicLayer = top?.kind === 'classic' ? top : null;
+  const view = classicLayer ? 'classic' : top?.kind === 'journeys' ? 'journeys' : activeIsland?.kind === 'atmosphere' ? 'atmosphere' : 'world';
+  const focused = view === 'world' ? activeIsland : null;
+  const atmosphereIsland = view === 'atmosphere' ? activeIsland : null;
+  const atmosphereMoon = atmosphereIsland && afterIsland[0]?.kind === 'moon' ? afterIsland[0].key : null;
+  const classicTargetTab = classicLayer && classicLayer.key !== '_' ? classicLayer.key : null;
+
+  const oppTitle = (o) => o?.metadata?.jobTitle || o?.metadata?.companyName;
+  const labelOf = (l, i) => {
+    const cached = layers.labels[`${l.kind}:${l.key}`];
+    switch (l.kind) {
+      case 'journeys': return 'Journeys';
+      case 'island': return islands.find((x) => x.key === l.key)?.label || cached || l.key;
+      case 'moon': return islands.find((x) => x.key === stack[i - 1]?.key)?.moons?.find((m) => m.key === l.key)?.label || cached || l.key;
+      case 'classic': return cached || (l.key === '_' ? 'Classic Tools' : islands.find((x) => x.key === l.key)?.label || 'Classic Tools');
+      case 'opp': return oppTitle(pipelineOf(islands.find((x) => x.key === stack[i - 1]?.key))?.opportunities.find((o) => String(o.id) === l.key)) || cached || `Opportunity ${l.key}`;
+      case 'outputs': return 'Application outputs';
+      case 'output': return cached || `Output ${l.key}`;
+      case 'versions': return 'Version history';
+      case 'editor': return 'Draft editor';
+      default: return l.key;
+    }
+  };
+  const crumbs = [{ label: 'Sun', index: -1 }, ...stack.map((l, i) => ({ label: labelOf(l, i), index: i }))];
+  const floatingCrumbs = top?.kind === 'versions' || top?.kind === 'editor';
+
+  // Every click into an object pushes exactly one layer.
   const selectIsland = useCallback((key) => {
     const island = islands.find((i) => i.key === key);
-    if (island?.kind === 'classic') {
-      openClassic(island.key);
-      return;
-    }
-    // 'atmosphere' islands: the mount effect below already ran the full
-    // travel-and-collapse cinematic before ever calling onSelect for one of
-    // these (see beginAtmosphereTravel) — by the time this fires, the camera
-    // has already arrived. This just swaps the view to the dedicated zoomed
-    // scene; it never itself triggers the travel.
-    if (island?.kind === 'atmosphere') {
-      setAtmosphereKey(island.key);
-      setView('atmosphere');
-      return;
-    }
-    setFocusedKey(key);
-  }, [islands]);
-  // Leaving a sub-view that was opened from inside an island (e.g. "Open my
-  // Career Master" from an opportunity's provenance) returns to that island
-  // instead of dropping the member back at the bare world.
-  const returnKeyRef = useRef(null);
-  const clearFocus = useCallback(() => {
-    setFocusedKey(returnKeyRef.current || null);
-    returnKeyRef.current = null;
-  }, []);
+    if (!island) return;
+    // 'classic' islands have no in-world view: the click goes straight to Classic Tools at that tab.
+    if (island.kind === 'classic') { layers.push({ kind: 'classic', key: island.key, label: island.label }); return; }
+    // 'atmosphere' islands: the travel cinematic already ran before this fires (beginAtmosphereTravel).
+    layers.push({ kind: 'island', key: island.key, label: island.label });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [islands, layers.push]);
+  const openClassic = useCallback((tabKey = null, label = 'Classic Tools') => {
+    layers.push({ kind: 'classic', key: tabKey || '_', label });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layers.push]);
+  const goTab = useCallback((name) => {
+    if (name === 'world') layers.reset([]);
+    else if (name === 'journeys') layers.reset([{ kind: 'journeys', key: '', label: 'Journeys' }]);
+    else layers.reset([{ kind: 'classic', key: '_', label: 'Classic Tools' }]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layers.reset]);
   const openCareerMaster = useCallback(() => {
     const island = islands.find((i) => i.componentId === 'careerMaster');
-    returnKeyRef.current = focusedKey;
-    if (island) selectIsland(island.key); else { returnKeyRef.current = null; openClassic('careerMaster'); }
-  }, [islands, focusedKey, selectIsland, openClassic]);
-  const clearAtmosphere = useCallback(() => { setAtmosphereKey(null); setView('world'); }, []);
+    if (island) selectIsland(island.key); else openClassic('careerMaster', 'Career Master');
+  }, [islands, selectIsland, openClassic]);
+  const popLayer = layers.pop;
+  // The Sun (crystal or crumb) hands keyboard focus to the first Sun menu entry.
+  const focusSunMenu = () => setTimeout(() => document.querySelector('[data-testid=sun-menu-item]')?.focus(), 80);
+  const popToLayer = (i) => { layers.popTo(i); if (i === -1) focusSunMenu(); };
+  const backLabel = (n = 1) => `← Back to ${crumbs[Math.max(0, crumbs.length - 1 - n)].label}`;
+
+  // Tracking a new item opens it as the next layer (the old "detail view appears" behaviour).
+  const handledCreated = useRef({});
+  useEffect(() => {
+    [['career', career], ['commercial', commercial]].forEach(([k, pipe]) => {
+      const c = pipe.lastCreated;
+      if (!c || handledCreated.current[k] === c.seq) return;
+      handledCreated.current[k] = c.seq;
+      if (pipelineOf(activeIsland) === pipe) layers.push({ kind: 'opp', key: c.id, label: c.label });
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [career.lastCreated, commercial.lastCreated]);
+
+  // Escape pops one layer (not inside text fields, dialogs, Classic Tools or embedded
+  // modules, which own Escape; the version-history modal closes itself = pops itself).
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key !== 'Escape' || e.defaultPrevented) return;
+      const t = e.target;
+      const tag = t?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || t?.isContentEditable) return;
+      if (!top || top.kind === 'versions' || view === 'classic') return;
+      if (focused?.kind === 'embed') return;
+      if (document.querySelector('[role="dialog"]:not([aria-label="Draft editor"]), [aria-modal="true"]')) return;
+      popLayer();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [top?.kind, view, focused?.kind, popLayer]);
+
+  // Scroll position per layer: recorded as the user scrolls, restored when the layer returns.
+  // While a restore is still catching up with late-loading content, scroll events are not
+  // recorded (a clamped scroll position must never overwrite the remembered one).
+  const saveUi = layers.saveUi;
+  const restoringRef = useRef(false);
+  useEffect(() => {
+    const onScroll = (e) => {
+      const t = e.target;
+      if (restoringRef.current) return;
+      if (t?.dataset && 'layerScroll' in t.dataset) saveUi({ scroll: t.scrollTop });
+    };
+    const stopRestoring = () => { restoringRef.current = false; };
+    document.addEventListener('scroll', onScroll, true);
+    document.addEventListener('wheel', stopRestoring, true);
+    document.addEventListener('touchstart', stopRestoring, true);
+    document.addEventListener('keydown', stopRestoring, true);
+    return () => {
+      document.removeEventListener('scroll', onScroll, true);
+      document.removeEventListener('wheel', stopRestoring, true);
+      document.removeEventListener('touchstart', stopRestoring, true);
+      document.removeEventListener('keydown', stopRestoring, true);
+    };
+  }, [saveUi]);
+  useLayoutEffect(() => {
+    const want = layers.getUi().scroll || 0;
+    const el0 = document.querySelector('[data-layer-scroll]');
+    if (el0 && !want) el0.scrollTop = 0;
+    if (!want) { restoringRef.current = false; return undefined; }
+    restoringRef.current = true;
+    const started = Date.now();
+    const apply = () => {
+      const el = document.querySelector('[data-layer-scroll]');
+      if (el && Math.abs(el.scrollTop - want) > 2) el.scrollTop = want;
+      // Content below may still be loading: keep trying until the position holds (or 8 s pass).
+      if ((el && Math.abs(el.scrollTop - want) <= 2) || Date.now() - started > 8000) { restoringRef.current = false; clearInterval(timer); }
+    };
+    const timer = setInterval(apply, 150);
+    apply();
+    return () => { clearInterval(timer); restoringRef.current = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layers.trailKey, view]);
 
   // Gates when the canvas-host div actually exists in the DOM: on first
   // render (before user/tabsConfig load) the component returns the loading
@@ -264,7 +379,7 @@ function WorldShellInner() {
       source: { type: 'platform-world', id: 'salt-basin', configEnvelope: 'admin_nav/member navigation' },
       visualRules: { geometryId: 'molecule_lattice', materialId: 'crystal-variant-signature', colorRule: 'brand-crystal-core' },
       scene: { component: 'WorldShell', builder: 'CRYSTAL_VARIANTS.signature' },
-      interaction: { events: ['SELECT'], stateTarget: 'focusedKey' },
+      interaction: { events: ['SELECT'], stateTarget: 'worldLayers.stack' },
     });
     scene.add(coreGroup);
 
@@ -306,7 +421,7 @@ function WorldShellInner() {
         startTarget: cameraTarget.clone(),
         endTarget: worldPos.clone(),
         others,
-        duration: 1650,
+        duration: prefersReducedMotion() ? 1 : 1650,
         elapsed: 0,
       };
     }
@@ -438,7 +553,10 @@ function WorldShellInner() {
     engineRef.current = {
       scene, coreGroup, islandsGroup, riversGroup,
       setPickables: (p) => { pickables = p; },
-      dollyTo: (point, radius) => { dollyTarget = { point, radius }; },
+      // `cut` = reduced motion: jump instead of flying.
+      dollyTo: (point, radius, cut = false) => {
+        if (cut) { cameraTarget.copy(point); orbitRadius = radius; dollyTarget = null; } else dollyTarget = { point, radius };
+      },
       onSelect: () => {},
     };
 
@@ -471,8 +589,14 @@ function WorldShellInner() {
   // forever, since this effect would never fire again to overwrite it —
   // clicks would raycast correctly but silently do nothing.
   useEffect(() => {
-    if (engineRef.current) engineRef.current.onSelect = selectIsland;
-  }, [selectIsland, view, ready]);
+    // The sun (key null) is the root menu: clicking it returns to layer 0.
+    if (engineRef.current) engineRef.current.onSelect = (key) => {
+      if (key != null) { selectIsland(key); return; }
+      // The sun: layer 0. Back to the root menu, and hand keyboard focus to its first entry.
+      layers.reset([]);
+      focusSunMenu();
+    };
+  }, [selectIsland, layers.reset, view, ready]);
 
   // ── Data changes: rebuild islands + rivers, don't touch renderer/core ──
   useEffect(() => {
@@ -520,7 +644,7 @@ function WorldShellInner() {
         source: { type: 'navigation-item', id: isl.key, field: 'componentId', configEnvelope: user?.role === 'admin' ? 'admin_nav' : 'member navigation' },
         visualRules: { geometryId: 'molecule_lattice', materialId: `crystal-variant-${isl.variant}`, colorRule: `island-accent-${isl.accent}` },
         scene: { component: 'WorldShell', builder: `CRYSTAL_VARIANTS.${isl.variant}`, parent: 'world-core:salt-basin' },
-        interaction: { events: ['SELECT', 'FOCUS'], stateTarget: 'focusedKey' },
+        interaction: { events: ['SELECT', 'FOCUS'], stateTarget: 'worldLayers.stack' },
       });
 
       islandsGroup.add(holder);
@@ -550,98 +674,147 @@ function WorldShellInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [islands, hasCareerIsland, hasCommercialIsland, hasHerqIsland, career.opportunities.length, commercial.opportunities.length, herq.items.length, view]);
 
-  // Dolly the camera when focus changes from outside the canvas (e.g. the
-  // right-rail "Back to World" control), not just from an in-canvas click.
+  // The camera follows the stack: the deeper the layer, the closer it moves toward the
+  // selected island (reduced motion: it cuts instead of flying).
   useEffect(() => {
     const engine = engineRef.current;
     if (!engine) return;
-    if (!focused) { engine.dollyTo(new THREE.Vector3(0, 0.6, 0), 17); return; }
+    const cut = prefersReducedMotion();
+    if (!focused) { engine.dollyTo(new THREE.Vector3(0, 0.6, 0), 22, cut); return; }
     const idx = islands.findIndex((i) => i.key === focused.key);
     if (idx < 0) return;
     const angle = (idx / islands.length) * Math.PI * 2 + 0.3;
     const point = new THREE.Vector3(Math.cos(angle) * ISLAND_RADIUS, 0.4, Math.sin(angle) * ISLAND_RADIUS);
-    engine.dollyTo(point, 5.2);
-  }, [focused, islands, view]);
-
-  if (view === 'classic') {
-    return (
-      <div style={{ position: 'fixed', inset: 0, zIndex: 10 }}>
-        <button style={S.classicBack} onClick={() => setView('world')}>← Back to World</button>
-        <AdminShell scope={user?.role === 'admin' ? 'admin' : 'member'} initialTab={classicTargetTab} />
-      </div>
-    );
-  }
-
-  if (view === 'atmosphere' && atmosphereIsland) {
-    return (
-      <PlanetAtmosphereView
-        island={atmosphereIsland}
-        scope={user?.role === 'admin' ? 'admin' : 'member'}
-        onClear={clearAtmosphere}
-        onNavigateToIsland={setAtmosphereKey}
-        onOpenClassicTools={(tab) => openClassic(tab)}
-      />
-    );
-  }
-
-  if (focused?.kind === 'embed') {
-    const embedScope = user?.role === 'admin' ? 'admin' : 'member';
-    if (SIMPLE_EMBED_COMPONENTS[focused.componentId]) {
-      return <SimpleEmbedView componentId={focused.componentId} scope={embedScope} onClear={clearFocus} />;
-    }
-    if (focused.componentId === 'config') {
-      return <SiteConfigView scope={embedScope} onClear={clearFocus} />;
-    }
-  }
+    const depth = Math.max(0, stack.length - 1 - islandIdx);
+    engine.dollyTo(point, Math.max(2.6, 5.2 - depth * 0.7), cut);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focused, islands, view, layers.trailKey]);
 
   if (user === undefined || !tabsConfig) {
     return <div style={S.loading}>Entering your world…</div>;
   }
 
+  const ctx = {
+    stack, push: layers.push, pop: layers.pop, popTo: layers.popTo, reset: layers.reset, invalidate: layers.invalidate,
+    rememberLabel: layers.rememberLabel, saveUi: layers.saveUi, getUi: layers.getUi, trailKey: layers.trailKey,
+  };
+  const crumbBar = (hidden = false) => (
+    <WorldBreadcrumbs crumbs={crumbs} onPopTo={popToLayer} notice={layers.note} onDismissNotice={layers.clearNote} hidden={hidden} />
+  );
+  // While a modal-like layer (version history, the draft editor) covers the screen, the trail
+  // stays visible above it.
+  const floating = floatingCrumbs
+    ? createPortal(<WorldBreadcrumbs crumbs={crumbs} onPopTo={popToLayer} notice={layers.note} onDismissNotice={layers.clearNote} floating />, document.body)
+    : null;
+  const framed = (el) => (
+    <WorldLayersProvider value={ctx}>
+      <div style={S.frame}>
+        {crumbBar(floatingCrumbs)}
+        <div style={S.frameBody}>{el}</div>
+      </div>
+      {floating}
+    </WorldLayersProvider>
+  );
+
+  // A moon is a layer, except the two kinds that are really a hop elsewhere: one that points at
+  // another planet pushes that island; one that lives in Classic Tools pushes Classic Tools.
+  const onMoonChange = (key) => {
+    if (!key) { if (top?.kind === 'moon') popLayer(); return; }
+    const moon = atmosphereIsland?.moons?.find((m) => m.key === key);
+    if (!moon) return;
+    if (moon.destinationKey) {
+      const target = islands.find((i) => i.key === moon.destinationKey || i.componentId === moon.destinationKey);
+      if (target) { selectIsland(target.key); return; }
+    }
+    if (moon.panel === 'classicTools') { openClassic(moon.classicTab || null, `${moon.label} (Classic Tools)`); return; }
+    layers.push({ kind: 'moon', key: moon.key, label: moon.label });
+  };
+
+  if (view === 'classic') {
+    return framed(
+      <>
+        <button style={S.classicBack} onClick={popLayer}>← Back to World</button>
+        <AdminShell scope={scope} initialTab={classicTargetTab} />
+      </>,
+    );
+  }
+
+  if (view === 'atmosphere' && atmosphereIsland) {
+    return framed(
+      <PlanetAtmosphereView
+        island={atmosphereIsland}
+        scope={scope}
+        onClear={popLayer}
+        onNavigateToIsland={(k) => selectIsland(islands.find((i) => i.key === k || i.componentId === k)?.key || k)}
+        onOpenClassicTools={(tab) => openClassic(tab)}
+        moonKey={atmosphereMoon}
+        onMoonChange={onMoonChange}
+      />,
+    );
+  }
+
+  if (focused?.kind === 'embed') {
+    if (SIMPLE_EMBED_COMPONENTS[focused.componentId]) {
+      return framed(<SimpleEmbedView componentId={focused.componentId} scope={scope} onClear={popLayer} />);
+    }
+    if (focused.componentId === 'config') {
+      return framed(<SiteConfigView scope={scope} onClear={popLayer} />);
+    }
+  }
+
   return (
-    <div style={S.shell}>
-      <style>{MOBILE_CSS}</style>
-      <TopBar
-        user={user}
-        view={view}
-        setView={setView}
-        openClassic={openClassic}
-        career={career}
-        commercial={commercial}
-        hasCareerIsland={hasCareerIsland}
-        hasCommercialIsland={hasCommercialIsland}
-      />
-      {view === 'journeys' ? (
-        <JourneysGrid islands={islands} career={career} commercial={commercial} herq={herq} onOpen={(key) => { setFocusedKey(key); setView('world'); }} />
-      ) : (
-        <div style={S.stage}>
-          {hasWebGL() ? (
-            <>
-              <div ref={hostRef} style={S.canvasHost} />
-              {!focused && <div style={S.hint}>Drag to orbit · scroll to zoom · click an island to enter</div>}
-            </>
-          ) : (
-            <div style={S.webglFallback}>
-              This device/browser doesn't support WebGL — switch to the Journeys tab above for a list view.
-            </div>
-          )}
-        </div>
-      )}
-      {view === 'world' && (
-        <RightRail
-          focused={focused}
-          onClear={clearFocus}
-          onOpenClassic={() => openClassic(focused?.key)}
+    <WorldLayersProvider value={ctx}>
+      <div style={S.shell}>
+        <style>{MOBILE_CSS}</style>
+        <TopBar
+          user={user}
+          view={view}
+          onTab={goTab}
           career={career}
           commercial={commercial}
-          herq={herq}
           hasCareerIsland={hasCareerIsland}
           hasCommercialIsland={hasCommercialIsland}
-          onOpenCareerMaster={openCareerMaster}
-          loadError={tabsError}
         />
-      )}
-    </div>
+        {crumbBar(floatingCrumbs)}
+        {view === 'journeys' ? (
+          <JourneysGrid islands={islands} career={career} commercial={commercial} herq={herq} onOpen={selectIsland} />
+        ) : (
+          <div style={S.stage}>
+            {hasWebGL() ? (
+              <>
+                <div ref={hostRef} style={S.canvasHost} />
+                {!focused && <div style={S.hint}>Click the sun for the menu · drag to orbit · scroll to zoom · click an island to enter{prefersReducedMotion() ? ' · Reduced motion is on: the camera cuts to each layer instead of flying.' : ''}</div>}
+              </>
+            ) : (
+              <div style={S.webglFallback}>
+                This device/browser doesn't support WebGL — use the Sun menu on the right, or the Journeys tab above, for a list view.
+              </div>
+            )}
+          </div>
+        )}
+        {view === 'world' && (
+          <RightRail
+            focused={focused}
+            islands={islands}
+            onSelectIsland={selectIsland}
+            onOpenJourneys={() => layers.push({ kind: 'journeys', key: '', label: 'Journeys' })}
+            islandIdx={islandIdx}
+            afterIsland={afterIsland}
+            backLabel={backLabel}
+            onClear={popLayer}
+            onOpenClassic={() => openClassic(focused?.key)}
+            career={career}
+            commercial={commercial}
+            herq={herq}
+            hasCareerIsland={hasCareerIsland}
+            hasCommercialIsland={hasCommercialIsland}
+            onOpenCareerMaster={openCareerMaster}
+            loadError={tabsError}
+          />
+        )}
+      </div>
+      {floating}
+    </WorldLayersProvider>
   );
 }
 
@@ -669,7 +842,7 @@ export default function WorldShell() {
   );
 }
 
-function TopBar({ user, view, setView, openClassic, career, commercial, hasCareerIsland, hasCommercialIsland }) {
+function TopBar({ user, view, onTab, career, commercial, hasCareerIsland, hasCommercialIsland }) {
   const trackedCount = hasCareerIsland ? career.opportunities.length : hasCommercialIsland ? commercial.opportunities.length : 0;
   const scored = (hasCareerIsland ? career.opportunities : hasCommercialIsland ? commercial.opportunities : []).filter((o) => o.score);
   const avgScore = scored.length ? Math.round(scored.reduce((s, o) => s + o.score.score, 0) / scored.length) : null;
@@ -684,9 +857,9 @@ function TopBar({ user, view, setView, openClassic, career, commercial, hasCaree
         </div>
       </div>
       <div style={S.navTabs}>
-        <button style={S.navTab(view === 'world')} onClick={() => setView('world')}>World</button>
-        <button style={S.navTab(view === 'journeys')} onClick={() => setView('journeys')}>Journeys</button>
-        <button style={S.navTab(view === 'classic')} onClick={() => openClassic()}>Classic Tools</button>
+        <button style={S.navTab(view === 'world')} onClick={() => onTab('world')}>World</button>
+        <button style={S.navTab(view === 'journeys')} onClick={() => onTab('journeys')}>Journeys</button>
+        <button style={S.navTab(view === 'classic')} onClick={() => onTab('classic')}>Classic Tools</button>
       </div>
       <div className="sb-world-stats" style={S.stats}>
         <div className="sb-world-stat" style={S.stat}><span style={S.statVal}>{trackedCount}</span><span style={S.statLabel}>Tracked</span></div>
@@ -706,7 +879,7 @@ function TopBar({ user, view, setView, openClassic, career, commercial, hasCaree
 
 function JourneysGrid({ islands, career, commercial, herq, onOpen }) {
   return (
-    <div style={S.journeysGrid}>
+    <div style={S.journeysGrid} data-layer-scroll="1" data-testid="journeys-grid">
       {islands.map((isl) => {
         const opp = isl.componentId === 'careerPlacementAgents' ? career : isl.componentId === 'commercialOpportunities' ? commercial : null;
         const sub = opp
@@ -719,7 +892,7 @@ function JourneysGrid({ islands, career, commercial, herq, onOpen }) {
                 ? 'Open configuration'
                 : 'Open in Classic Tools';
         return (
-          <div key={isl.key} style={S.journeyCard} onClick={() => onOpen(isl.key)}>
+          <div key={isl.key} style={S.journeyCard} role="button" tabIndex={0} data-testid="journey-card" onClick={() => onOpen(isl.key)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(isl.key); } }}>
             <div style={{ ...S.journeyAccent, background: '#' + (ACCENT_HEX[isl.accent] || ACCENT_HEX.gold).toString(16).padStart(6, '0') }} />
             <div style={S.journeyLabel}>{isl.label}</div>
             <div style={S.journeySub}>{sub}</div>
@@ -730,7 +903,38 @@ function JourneysGrid({ islands, career, commercial, herq, onOpen }) {
   );
 }
 
-function RightRail({ focused, onClear, onOpenClassic, career, commercial, herq, hasCareerIsland, hasCommercialIsland, onOpenCareerMaster, loadError }) {
+// Layer 0: the Sun menu. The islands orbiting the sun are the menu; this list mirrors
+// them for keyboard and screen-reader users (each island is labelled and focusable).
+const KIND_HINT = { docked: 'opens a panel', embed: 'opens full screen', atmosphere: 'enter the planet', classic: 'opens in Classic Tools' };
+function SunMenu({ islands, onSelectIsland, onOpenJourneys }) {
+  return (
+    <nav aria-label="Sun menu" data-testid="sun-menu">
+      <div style={S.railTitle}>Sun menu</div>
+      <p style={S.railText}>The sun is the root of your world. Pick a destination - every click after this goes one layer deeper, and the trail above always leads back.</p>
+      {prefersReducedMotion() && <p style={S.railText} data-testid="reduced-motion-note">Reduced motion is on: the camera cuts to each layer instead of flying.</p>}
+      <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+        {islands.map((isl) => (
+          <li key={isl.key}>
+            <button type="button" style={S.menuItem} data-testid="sun-menu-item" onClick={() => onSelectIsland(isl.key)}>
+              <span style={{ ...S.menuDot, background: '#' + (ACCENT_HEX[isl.accent] || ACCENT_HEX.gold).toString(16).padStart(6, '0') }} aria-hidden="true" />
+              <span style={{ flex: 1 }}>{isl.label}</span>
+              <span style={S.menuHint}>{KIND_HINT[isl.kind] || ''}</span>
+            </button>
+          </li>
+        ))}
+        <li>
+          <button type="button" style={S.menuItem} data-testid="sun-menu-item" onClick={onOpenJourneys}>
+            <span style={{ ...S.menuDot, background: '#8fadb6' }} aria-hidden="true" />
+            <span style={{ flex: 1 }}>Journeys</span>
+            <span style={S.menuHint}>card list</span>
+          </button>
+        </li>
+      </ul>
+    </nav>
+  );
+}
+
+function RightRail({ focused, islands, onSelectIsland, onOpenJourneys, islandIdx, afterIsland, backLabel, onClear, onOpenClassic, career, commercial, herq, hasCareerIsland, hasCommercialIsland, onOpenCareerMaster, loadError }) {
   if (focused) {
     if (focused.componentId === 'herqPublications') {
       return <PublicationDockedPanel label={focused.label} herq={herq} onClear={onClear} />;
@@ -738,10 +942,10 @@ function RightRail({ focused, onClear, onOpenClassic, career, commercial, herq, 
     if (focused.kind === 'docked') {
       const pipeline = focused.componentId === 'careerPlacementAgents' ? career : commercial;
       const dimensionFields = focused.componentId === 'careerPlacementAgents' ? CAREER_DIMENSION_FIELDS : COMMERCIAL_DIMENSION_FIELDS;
-      return <DockedPipelinePanel label={focused.label} pipeline={pipeline} dimensionFields={dimensionFields} onClear={onClear} isCommercial={focused.componentId === 'commercialOpportunities'} onOpenCareerMaster={onOpenCareerMaster} />;
+      return <DockedPipelinePanel label={focused.label} pipeline={pipeline} dimensionFields={dimensionFields} onClear={onClear} isCommercial={focused.componentId === 'commercialOpportunities'} onOpenCareerMaster={onOpenCareerMaster} islandIdx={islandIdx} afterIsland={afterIsland} backLabel={backLabel} />;
     }
     return (
-      <div className="sb-world-rail" style={S.rail}>
+      <div className="sb-world-rail" data-layer-scroll="1" style={S.rail}>
         <button style={S.backBtn} onClick={onClear}>← Back to World</button>
         <div style={S.railTitle}>{focused.label}</div>
         <p style={S.railText}>This module doesn't have its own in-world view yet — open it in Classic Tools to work with it directly.</p>
@@ -754,11 +958,9 @@ function RightRail({ focused, onClear, onOpenClassic, career, commercial, herq, 
   const label = hasCareerIsland ? 'Career Placement Agents' : hasCommercialIsland ? 'Commercial Opportunity Pipeline' : null;
   if (!pipeline) {
     return (
-      <div className="sb-world-rail" style={S.rail}>
-        <div style={S.railTitle}>Your World</div>
-        {loadError
-          ? <div role="alert" style={{ color: '#f0c4d0', border: '0.5px solid rgba(217,140,160,0.7)', borderRadius: 6, padding: '0.5rem', fontSize: '0.74rem' }}>Your islands could not be loaded: {loadError}</div>
-          : <p style={S.railText}>Click an island to enter it.</p>}
+      <div className="sb-world-rail" data-layer-scroll="1" style={S.rail}>
+        {loadError && <div role="alert" style={{ color: '#f0c4d0', border: '0.5px solid rgba(217,140,160,0.7)', borderRadius: 6, padding: '0.5rem', fontSize: '0.74rem', marginBottom: '0.6rem' }}>Your islands could not be loaded: {loadError}</div>}
+        <SunMenu islands={islands} onSelectIsland={onSelectIsland} onOpenJourneys={onOpenJourneys} />
       </div>
     );
   }
@@ -771,8 +973,9 @@ function RightRail({ focused, onClear, onOpenClassic, career, commercial, herq, 
     .slice(0, 5);
 
   return (
-    <div className="sb-world-rail" style={S.rail}>
-      <div style={S.railTitle}>{label}</div>
+    <div className="sb-world-rail" data-layer-scroll="1" style={S.rail}>
+      <SunMenu islands={islands} onSelectIsland={onSelectIsland} onOpenJourneys={onOpenJourneys} />
+      <div style={{ ...S.railTitle, marginTop: '1.1rem' }}>{label}</div>
       <div style={S.gaugeWrap}>
         <div style={S.gauge}>{avgScore ?? '—'}</div>
         <div style={S.gaugeLabel}>Avg score{avgScore != null ? ' / 100' : ''}</div>
@@ -804,9 +1007,10 @@ function scoreColor(score) {
   return '#d98ca0';
 }
 
-function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isCommercial, onOpenCareerMaster }) {
+function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isCommercial, onOpenCareerMaster, islandIdx, afterIsland, backLabel }) {
+  const layers = useWorldLayersContext();
   const {
-    loading, opportunities, selectedOpportunityId, selectedOpportunity, selectOpportunity,
+    loading, opportunities, selectOpportunity: syncPipelineSelection,
     showAddForm, setShowAddForm, addForm, setAddForm, handleAddOpportunity,
     scoreDraft, setScoreDraft, handleSaveScore, saving,
     runningResearch, runResearch,
@@ -828,18 +1032,75 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
   const importOutputInputRef = useRef(null);
   const [showAutomation, setShowAutomation] = useState(false);
 
+  // The selected opportunity is a layer, not local state (docs/changes/world-shell-layers.md):
+  // island > opp > outputs > output > (editor | versions). Everything below is read from the stack.
+  const oppLayer = afterIsland[0]?.kind === 'opp' ? afterIsland[0] : null;
+  const selectedOpportunity = oppLayer ? opportunities.find((o) => String(o.id) === oppLayer.key) || null : null;
+  const tail = oppLayer ? afterIsland.slice(1) : afterIsland;
+  const oppIndex = islandIdx + 1;
+  const lastLayer = afterIsland[afterIsland.length - 1] || null;
+  const versionsOverEditor = lastLayer?.kind === 'versions' && tail[tail.length - 2]?.kind === 'editor';
+  // The pipeline hook still owns score drafts keyed on its own selection, so mirror the layer into it.
+  useEffect(() => { syncPipelineSelection(selectedOpportunity ? selectedOpportunity.id : null); }, [selectedOpportunity?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  const openOpportunity = (o) => layers.push({ kind: 'opp', key: o.id, label: o.metadata?.jobTitle || o.metadata?.companyName });
+  const trackedFilterKey = `${layers.trailKey}`;
+  const [trackedFilter, setTrackedFilter] = useState(() => layers.getUi(trackedFilterKey).filter || '');
+  useEffect(() => { setTrackedFilter(layers.getUi(trackedFilterKey).filter || ''); }, [trackedFilterKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const changeTrackedFilter = (v) => { setTrackedFilter(v); layers.saveUi({ filter: v }); };
+  const shownOpportunities = trackedFilter.trim()
+    ? opportunities.filter((o) => `${o.metadata?.jobTitle || ''} ${o.metadata?.companyName || ''}`.toLowerCase().includes(trackedFilter.trim().toLowerCase()))
+    : opportunities;
+
   const outreachEligible = !isCommercial && selectedOpportunity && ['applied', 'interviewing'].includes(selectedOpportunity.currentStage);
   useEffect(() => {
     if (outreachEligible) loadOutreach(selectedOpportunity.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedOpportunity?.id, outreachEligible]);
 
-  return (
-    <div className="sb-world-rail" style={S.rail}>
-      <button style={S.backBtn} onClick={onClear}>← Back to World</button>
-      <div style={S.railTitle}>{label}</div>
+  const oppName = selectedOpportunity ? (selectedOpportunity.metadata?.jobTitle || selectedOpportunity.metadata?.companyName) : '';
+  // A versions layer key is "<outputId>" (open at the latest version) or "<outputId>.<versionId>" (open at that version).
+  const [versionsOutputId, versionsVersionId] = lastLayer?.kind === 'versions' ? String(lastLayer.key).split('.') : [];
+  const versionsModal = lastLayer?.kind === 'versions'
+    ? <OutputVersionHistoryModal projectionId={versionsVersionId || versionsOutputId} startAtLatest={!versionsOverEditor && !versionsVersionId} onClose={layers.pop} />
+    : null;
+  const outputsIdx = tail.findIndex((l) => l.kind === 'outputs');
+  const outputIdx = tail.findIndex((l) => l.kind === 'output');
+  const editorIdx = tail.findIndex((l) => l.kind === 'editor');
+  const editorOverlay = editorIdx >= 0 ? { outputId: tail[editorIdx].key, index: oppIndex + 1 + editorIdx } : null;
 
-      {loading ? (
+  // Layer: Application Outputs (list) and one output (detail), with the editor over it.
+  if (selectedOpportunity && !isCommercial && (outputsIdx >= 0 || outputIdx >= 0)) {
+    const detail = outputIdx >= 0;
+    return (
+      <div className="sb-world-rail" data-layer-scroll="1" style={S.rail}>
+        <button style={S.backBtn} onClick={onClear}>{backLabel()}</button>
+        <div style={S.railTitle}>{detail ? 'Output' : 'Application Outputs'}</div>
+        <div style={S.railSubtitle}>{oppName}</div>
+        <OpportunityOutputsSection
+          key={detail ? 'detail' : 'list'}
+          opportunity={selectedOpportunity}
+          mode={detail ? 'detail' : 'list'}
+          outputId={detail ? tail[outputIdx].key : null}
+          overlay={editorOverlay ? 'editor' : null}
+          oppIndex={oppIndex}
+          outputIndex={detail ? oppIndex + 1 + outputIdx : null}
+          editorIndex={editorOverlay?.index ?? null}
+          onOpenCareerMaster={onOpenCareerMaster}
+          onOpportunityChanged={reload}
+          refreshSignal={[importingOutput, approvingResume, approvingCoverLetter].join('|')}
+        />
+        {versionsModal}
+      </div>
+    );
+  }
+
+  return (
+    <div className="sb-world-rail" data-layer-scroll="1" style={S.rail}>
+      <button style={S.backBtn} onClick={onClear}>{selectedOpportunity ? backLabel() : '← Back to World'}</button>
+      <div style={S.railTitle}>{label}</div>
+      {versionsModal}
+
+      {loading || (oppLayer && !selectedOpportunity) ? (
         <div style={S.railEmpty}>Loading…</div>
       ) : selectedOpportunity ? (
         <>
@@ -895,6 +1156,11 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
 
               <OpportunityOutputsSection
                 opportunity={selectedOpportunity}
+                mode="summary"
+                outputId={editorOverlay?.outputId ?? null}
+                overlay={editorOverlay ? 'editor' : null}
+                editorIndex={editorOverlay?.index ?? null}
+                oppIndex={oppIndex}
                 onOpenCareerMaster={onOpenCareerMaster}
                 onOpportunityChanged={reload}
                 refreshSignal={[importingOutput, approvingResume, approvingCoverLetter].join('|')}
@@ -960,6 +1226,7 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
               </button>
 
               <OpportunityOutputVersions
+                onOpen={(id) => layers.push({ kind: 'versions', key: id, label: 'Version history' })}
                 opportunityId={selectedOpportunity.id}
                 refreshKey={`${generatingResume}|${approvingResume}|${approvingCoverLetter}|${importingOutput}`}
               />
@@ -985,7 +1252,7 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
               )}
             </>
           )}
-          <button style={S.ghost} onClick={() => selectOpportunity(null)}>← Tracked list</button>
+          <button style={S.ghost} onClick={onClear}>← Tracked list</button>
         </>
       ) : (
         <>
@@ -1047,9 +1314,16 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
               <button type="submit" style={S.gold} disabled={saving}>{saving ? 'Saving…' : 'Track'}</button>
             </form>
           )}
+          {opportunities.length > 1 && (
+            <input
+              aria-label="Filter tracked opportunities" placeholder="Filter tracked..." style={S.dimInputWide}
+              value={trackedFilter} onChange={(e) => changeTrackedFilter(e.target.value)}
+            />
+          )}
           {!opportunities.length && !showAddForm && <div style={S.railEmpty}>Nothing tracked yet.</div>}
-          {opportunities.map((o) => (
-            <div key={o.id} style={S.railRow} onClick={() => selectOpportunity(o.id)} className="sb-world-row">
+          {opportunities.length > 0 && shownOpportunities.length === 0 && <div style={S.railEmpty}>No tracked item matches this filter.</div>}
+          {shownOpportunities.map((o) => (
+            <div key={o.id} style={S.railRow} onClick={() => openOpportunity(o)} className="sb-world-row" role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openOpportunity(o); } }}>
               <span>
                 {o.metadata?.jobTitle || o.metadata?.companyName}
                 {o.metadata?.placeholder && <span style={{ color: '#8fadb6', fontSize: '0.62rem', marginLeft: '0.4rem', textTransform: 'uppercase' }}>Placeholder</span>}
@@ -1086,10 +1360,9 @@ function DockedPipelinePanel({ label, pipeline, dimensionFields, onClear, isComm
 // lineage - an approved output edited later is a new version of the same
 // output) with a button that opens its dated versions, timeline slider and
 // tracked changes (admin/OutputVersionHistory.jsx).
-function OpportunityOutputVersions({ opportunityId, refreshKey }) {
+function OpportunityOutputVersions({ opportunityId, refreshKey, onOpen }) {
   const [outputs, setOutputs] = useState(null);
   const [error, setError] = useState(null);
-  const [openId, setOpenId] = useState(null);
   useEffect(() => {
     let cancelled = false;
     setOutputs(null); setError(null);
@@ -1116,10 +1389,9 @@ function OpportunityOutputVersions({ opportunityId, refreshKey }) {
       {lineages.map((p) => (
         <div key={p.lineageRootId} style={S.railRow}>
           <span>{p.presetName || p.presetId} <span style={{ color: '#8b877c', textTransform: 'capitalize' }}>({p.outputStatus})</span></span>
-          <button style={S.ghostSmall} onClick={() => setOpenId(p.id)}>Version history</button>
+          <button style={S.ghostSmall} onClick={() => onOpen(p.id)}>Version history</button>
         </div>
       ))}
-      {openId && <OutputVersionHistoryModal projectionId={openId} startAtLatest onClose={() => setOpenId(null)} />}
     </div>
   );
 }
@@ -1285,10 +1557,10 @@ function PublicationDockedPanel({ label, herq, onClear }) {
     });
   }
 
-  if (loading) return <div className="sb-world-rail" style={S.rail}><div style={S.railEmpty}>Loading…</div></div>;
+  if (loading) return <div className="sb-world-rail" data-layer-scroll="1" style={S.rail}><div style={S.railEmpty}>Loading…</div></div>;
 
   return (
-    <div className="sb-world-rail" style={S.rail}>
+    <div className="sb-world-rail" data-layer-scroll="1" style={S.rail}>
       <button style={S.backBtn} onClick={onClear}>← Back to World</button>
       <div style={S.railTitle}>{label}</div>
 
@@ -1403,6 +1675,8 @@ const glass = { background: 'rgba(13,20,23,0.72)', backdropFilter: 'blur(10px)',
 
 const S = {
   shell: { position: 'fixed', inset: 0, background: '#05090b', color: '#f5f0e8', fontFamily: 'DM Sans, sans-serif', display: 'flex', flexDirection: 'column', zIndex: 5 },
+  frame: { position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', background: '#05090b', zIndex: 10 },
+  frameBody: { position: 'relative', flex: 1, minHeight: 0, transform: 'translateZ(0)' },
   embedShell: { position: 'fixed', inset: 0, background: '#0d1417', color: '#f5f0e8', zIndex: 10, display: 'flex', flexDirection: 'column' },
   embedHeader: { display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.8rem 1.5rem', borderBottom: '0.5px solid rgba(255,255,255,0.08)', flexShrink: 0 },
   embedTitle: { fontFamily: 'Fraunces, serif', fontSize: '1rem' },
@@ -1456,5 +1730,8 @@ const S = {
   journeyAccent: { width: 28, height: 4, borderRadius: 2, marginBottom: '0.6rem' },
   journeyLabel: { fontFamily: 'Fraunces, serif', fontSize: '1rem', marginBottom: '0.3rem' },
   journeySub: { fontSize: '0.72rem', color: '#a9a49a' },
+  menuItem: { display: 'flex', alignItems: 'center', gap: '0.6rem', width: '100%', textAlign: 'left', padding: '0.55rem 0.5rem', marginBottom: '0.3rem', borderRadius: 8, border: '0.5px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.03)', color: '#f5f0e8', cursor: 'pointer', font: 'inherit', fontSize: '0.8rem' },
+  menuDot: { width: 10, height: 10, borderRadius: '50%', flexShrink: 0 },
+  menuHint: { fontSize: '0.62rem', color: '#8b877c', textTransform: 'uppercase', letterSpacing: '0.05em' },
   classicBack: { position: 'fixed', top: '0.6rem', left: '0.6rem', zIndex: 20, padding: '0.4rem 0.8rem', borderRadius: 6, border: '0.5px solid rgba(196,132,58,0.4)', background: 'rgba(13,20,23,0.85)', color: '#c4843a', fontSize: '0.74rem', cursor: 'pointer' },
 };
