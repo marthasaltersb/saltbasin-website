@@ -106,7 +106,7 @@ function OutputAuthorshipFooter() {
           <span key={chip} style={{
             fontSize: '0.58rem', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--sb-font-label)',
             padding: '0.2rem 0.6rem', borderRadius: 12, border: '0.5px solid var(--sb-gold)', color: 'var(--sb-navy)',
-            background: 'rgba(196,132,58,0.08)', whiteSpace: 'nowrap',
+            background: 'rgba(196,132,58,0.08)', whiteSpace: 'normal', maxWidth: '100%', overflowWrap: 'anywhere', boxSizing: 'border-box',
           }}>
             {chip}
           </span>
