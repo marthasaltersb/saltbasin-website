@@ -1,12 +1,12 @@
 {
-  "exportedAt": "2026-10-10T01:09:58.922Z",
+  "exportedAt": "2026-10-10T01:13:21.692Z",
   "features": {
     "proficiency-live-qr": {
-      "status": "triage",
+      "status": "integrate",
       "lastRound": 7,
       "lastScore": "30/32",
       "lastReport": "docs/test-results/proficiency-live-qr/round-7.md",
-      "openBugs": 19,
+      "openBugs": 18,
       "backlog": 6
     },
     "world-shell-navigation": {
@@ -66,7 +66,7 @@
       "backlog": 6
     },
     "resume-rollups": {
-      "status": "scope",
+      "status": "fix",
       "lastRound": 3,
       "lastScore": "30/32",
       "lastReport": "docs/test-results/resume-rollups/round-3.md",
@@ -114,12 +114,12 @@
       "backlog": 0
     },
     "platform-mcp": {
-      "status": "validate",
-      "lastRound": 2,
-      "lastScore": "60/65",
-      "lastReport": "docs/test-results/platform-mcp/round-2.md",
-      "openBugs": 18,
-      "backlog": 2
+      "status": "fix",
+      "lastRound": 3,
+      "lastScore": "65/65",
+      "lastReport": "docs/test-results/platform-mcp/round-3.md",
+      "openBugs": 0,
+      "backlog": 3
     },
     "world-shell-layers": {
       "status": "validate",
@@ -130,7 +130,7 @@
       "backlog": 0
     },
     "render-bindings": {
-      "status": "build",
+      "status": "reconcile",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -831,37 +831,29 @@
     {
       "id": "proficiency-live-qr-T6-1",
       "feature": "proficiency-live-qr",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "J5.2 MOBILE_GAP rows unidentifiable (blank selects)",
-      "rootCause": "Same as T6-1: blank selects at 390px mean Years performed / Expert rows cannot be identified; the save/use flow itself works.",
-      "files": [
-        "src/components/admin/ProficiencyRulesPanel.jsx"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "ProficiencyRulesPanel.jsx was created by f1ad622 (this feature); the only later commit is…"
+        "evidence": null
       },
       "history": [
-        {
-          "round": 6,
-          "event": "found",
-          "note": "FormulaEditor renders two width:100% tables with width:100%…",
-          "commit": null
-        },
-        {
-          "round": 6,
-          "event": "recurred",
-          "note": "Same as T6-1: blank selects at 390px mean Years performed /…",
-          "commit": null
-        },
         {
           "round": 6,
           "event": "fixed",
           "note": "Formula editor at phone width (max-width 900px) now renders…",
           "commit": "390e1efe50aa8d97c350719c36ffce4ddd55b145"
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7: this bug's step passed (the round had other…",
+          "commit": "0800b1c"
         }
       ]
     },
@@ -871,8 +863,8 @@
       "status": "needs_business_definition",
       "class": "needs_business_definition",
       "attempts": 0,
-      "step": "J8.4 Levels and why table needs in-table swipe at 390px",
-      "rootCause": "ProficiencyRulesPanel.jsx lines 358-361: overflowX:scroll scroller around a table with minWidth:940 plus a swipe caption. Matches round-1 f…",
+      "step": "At 390px wide: tab row wraps, Rules & why reachable, editor stacks in one column, no sideways panning inside the page or its scroller",
+      "rootCause": "src/components/admin/ProficiencyRulesPanel.jsx:409-410: the Levels and why table is in an overflow-x:scroll wrapper with minWidth 940 and a…",
       "files": [
         "src/components/admin/ProficiencyRulesPanel.jsx",
         "docs/training/proficiency-rules-and-live-qr.md"
@@ -880,7 +872,7 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "The scroller around the minWidth 940 table is in this feature's ProficiencyRulesPanel.jsx…"
+        "evidence": "ProficiencyRulesPanel.jsx was created by f1ad622 in this feature, so it cannot exist on t…"
       },
       "history": [
         {
@@ -888,39 +880,41 @@
           "event": "found",
           "note": "ProficiencyRulesPanel.jsx lines 358-361: overflowX:scroll s…",
           "commit": null
+        },
+        {
+          "round": 7,
+          "event": "recurred",
+          "note": "src/components/admin/ProficiencyRulesPanel.jsx:409-410: the…",
+          "commit": null
         }
       ]
     },
     {
       "id": "proficiency-live-qr-T6-4",
       "feature": "proficiency-live-qr",
-      "status": "retest_failed_pending_triage",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
-      "step": "MCP_GAP no MCP tools for proficiency rules, category, override, formula, certification bonus, live QR",
-      "rootCause": "Report claim that mcpToolRegistry.js does not exist is stale: it exists on head (commit b77049b, 11 tools). But it has no tool for the capa…",
-      "files": [
-        "server/lib/mcpToolRegistry.js",
-        "server/lib/capabilityParity.js",
-        "server/routes/careerMaster.js"
-      ],
+      "step": "MCP_GAP no MCP tools for proficiency rules, category, override, formula, certification bo…",
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "The proficiency, category, override, formula and bonus routes in careerMaster.js and the …"
+        "evidence": null
       },
       "history": [
-        {
-          "round": 6,
-          "event": "found",
-          "note": "Report claim that mcpToolRegistry.js does not exist is stal…",
-          "commit": null
-        },
         {
           "round": 6,
           "event": "fixed",
           "note": "Added 8 MCP tools (proficiency_rules_read, proficiency_over…",
           "commit": "390e1efe50aa8d97c350719c36ffce4ddd55b145"
+        },
+        {
+          "round": 7,
+          "event": "verified",
+          "note": "Retest round 7: this bug's step passed (the round had other…",
+          "commit": "0800b1c"
         }
       ]
     },
@@ -993,6 +987,32 @@
           "round": 6,
           "event": "found",
           "note": "Preview shows proficiency only when the Proficiency chart i…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "proficiency-live-qr-T7-1",
+      "feature": "proficiency-live-qr",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "Choose Hands-on, click Save to Career Master and continue: toast 'Approved — private QR link created…' with em dash",
+      "rootCause": "src/components/admin/MyResumePanel.jsx:656 emits 'Approved - private QR link created (copied to clipboard).' with a plain hyphen. This was …",
+      "files": [
+        "src/components/admin/MyResumePanel.jsx",
+        "docs/training/proficiency-rules-and-live-qr.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "MyResumePanel.jsx:656 hyphen toast was deliberately set by 73505f4 (qr-gated-outputs-fix-…"
+      },
+      "history": [
+        {
+          "round": 7,
+          "event": "found",
+          "note": "src/components/admin/MyResumePanel.jsx:656 emits 'Approved …",
           "commit": null
         }
       ]
@@ -5568,7 +5588,7 @@
     {
       "id": "resume-rollups-B3",
       "feature": "resume-rollups",
-      "status": "open",
+      "status": "fixing",
       "class": "test_harness",
       "attempts": 0,
       "step": "Journey 7 step 3",
@@ -5616,7 +5636,7 @@
     {
       "id": "resume-rollups-B5",
       "feature": "resume-rollups",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Journey 9 (Site editor part missing)",
@@ -5643,7 +5663,7 @@
     {
       "id": "resume-rollups-B8",
       "feature": "resume-rollups",
-      "status": "open",
+      "status": "fixing",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Preconditions / all journeys",
@@ -5691,7 +5711,7 @@
     {
       "id": "resume-rollups-B10",
       "feature": "resume-rollups",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Journey 10/12",
@@ -5717,7 +5737,7 @@
     {
       "id": "resume-rollups-B11",
       "feature": "resume-rollups",
-      "status": "open",
+      "status": "fixing",
       "class": "product_defect",
       "attempts": 0,
       "step": "Journey 12 (block)",
@@ -5742,7 +5762,7 @@
     {
       "id": "resume-rollups-B12",
       "feature": "resume-rollups",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Journeys 7/8",
@@ -5767,7 +5787,7 @@
     {
       "id": "resume-rollups-B13",
       "feature": "resume-rollups",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Edge cases",
@@ -5815,7 +5835,7 @@
     {
       "id": "resume-rollups-F1-2",
       "feature": "resume-rollups",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "MCP_GAP (interface parity)",
@@ -5838,7 +5858,7 @@
     {
       "id": "resume-rollups-F1-3",
       "feature": "resume-rollups",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Known limitations (change spec)",
@@ -5889,7 +5909,7 @@
     {
       "id": "resume-rollups-RR1-2",
       "feature": "resume-rollups",
-      "status": "open",
+      "status": "fixing",
       "class": "spec_error",
       "attempts": 0,
       "step": "Open /api/career/atom-rollups?owner=me in the browser",
@@ -6001,7 +6021,7 @@
     {
       "id": "resume-rollups-RR1-6",
       "feature": "resume-rollups",
-      "status": "open",
+      "status": "fixing",
       "class": "coverage_gap",
       "attempts": 0,
       "step": "Site editor Career Rollup block picker and output block column count (validator observation B5/B11)",
@@ -7797,26 +7817,28 @@
     {
       "id": "platform-mcp-B5",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Interface parity for every capability",
-      "rootCause": "Seed tools covered only the 11 named capabilities; remaining routes recorded as gaps rather than built.",
-      "files": [
-        "server/lib/capabilityParity.js",
-        "server/lib/mcpToolRegistry.js",
-        "server/data/mcpToolManifest.json"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Owner direction and the request ask for every capability via UI, API and MCP, plus a pari…"
+        "evidence": null
       },
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v4",
           "commit": null
         }
       ]
@@ -7847,26 +7869,28 @@
     {
       "id": "platform-mcp-B10",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "verified",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Connected Agents / Capabilities screens reachable from the World Shell",
-      "rootCause": "Followed the older admin_nav tab pattern in addition to World Shell islands.",
-      "files": [
-        "server/db.js",
-        "src/components/admin/AdminShell.jsx",
-        "server/data/defaultMemberConfig.js"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "b77049b injected connected-agents and capabilities into admin_nav (server/db.js ~3328-332…"
+        "evidence": null
       },
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v4",
           "commit": null
         }
       ]
@@ -7874,19 +7898,16 @@
     {
       "id": "platform-mcp-B11",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Bearer-token auth on /mcp",
-      "rootCause": "Out of build scope.",
-      "files": [
-        "server/lib/mcpServer.js",
-        "server/index.js"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "/mcp is new in b77049b. mcpServer.js and its server/index.js mount have no rate limiter, …"
+        "evidence": null
       },
       "history": [
         {
@@ -7894,30 +7915,40 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v4",
+          "commit": null
         }
       ]
     },
     {
       "id": "platform-mcp-B12",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "verified",
       "class": "process",
       "attempts": 0,
       "step": "Account gates on tools/call (428)",
-      "rootCause": "Training spec lacks a step.",
-      "files": [
-        "docs/training/platform-mcp.md"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "docs/training/platform-mcp.md, added in b77049b, has no step for the 428 account gate on …"
+        "evidence": null
       },
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v4",
           "commit": null
         }
       ]
@@ -7948,21 +7979,24 @@
     {
       "id": "platform-mcp-F1-4",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "4 428 on tools/call",
-      "rootCause": "Frozen spec has no step; amendment not yet approved by a non-proposer.",
-      "files": [
-        "docs/spec-amendments/platform-mcp/A1.json",
-        "server/lib/mcpServer.js"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
           "round": 1,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v4",
           "commit": null
         }
       ]
@@ -7970,15 +8004,12 @@
     {
       "id": "platform-mcp-F1-5",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "verified",
       "class": "test_harness",
       "attempts": 0,
       "step": "5 default rate limit",
-      "rootCause": "No step or unit check at default value.",
-      "files": [
-        "server/lib/rateLimit.js",
-        "docs/spec-amendments/platform-mcp/A2.json"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
@@ -7986,28 +8017,36 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (te…",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v4",
+          "commit": null
         }
       ]
     },
     {
       "id": "platform-mcp-F1-8",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "verified",
       "class": "process",
       "attempts": 0,
       "step": "8 platform-mcp-B12",
-      "rootCause": "Spec governance requires independent amendment approval and a new baseline before validators score the new behaviour.",
-      "files": [
-        "docs/spec-amendments/platform-mcp/A1.json",
-        "docs/spec-amendments/platform-mcp/A2.json",
-        "docs/spec-amendments/platform-mcp/A3.json"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
           "round": 1,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v4",
           "commit": null
         }
       ]
@@ -8015,20 +8054,24 @@
     {
       "id": "platform-mcp-F1-9",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "verified",
       "class": "process",
       "attempts": 0,
       "step": "G1 stale change spec",
-      "rootCause": "Fix notes appended but original sections not updated.",
-      "files": [
-        "docs/changes/platform-mcp.md"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
           "round": 1,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v4",
           "commit": null
         }
       ]
@@ -8036,16 +8079,12 @@
     {
       "id": "platform-mcp-F1-10",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "G2 render-binding tools",
-      "rootCause": "Dependent feature has no server API yet, so MCP parity impossible.",
-      "files": [
-        "src/lib/renderBindings.js",
-        "server/lib/capabilityParity.js",
-        "server/lib/mcpToolRegistry.js"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
@@ -8053,20 +8092,24 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v4",
+          "commit": null
         }
       ]
     },
     {
       "id": "platform-mcp-F1-11",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "verified",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "G6 recorded exclusions",
-      "rootCause": "Scope decision made by builder, not owner.",
-      "files": [
-        "server/lib/capabilityParity.js"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
@@ -8074,26 +8117,40 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v4",
+          "commit": null
         }
       ]
     },
     {
       "id": "platform-mcp-F2-2",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "verified",
       "class": "process",
       "attempts": 0,
       "step": "Known limitations",
-      "rootCause": "Spec text not updated after fix round 1",
-      "files": [
-        "docs/changes/platform-mcp.md"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 2,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v4",
           "commit": null
         }
       ]
@@ -8101,16 +8158,17 @@
     {
       "id": "platform-mcp-F2-3",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "backlog_pre_existing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Known limitations",
-      "rootCause": "Dependent feature has no code",
-      "files": [
-        "server/lib/capabilityParity.js",
-        "server/lib/mcpToolRegistry.js"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 2,
@@ -8123,20 +8181,28 @@
     {
       "id": "platform-mcp-F2-4",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "verified",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Known limitations",
-      "rootCause": "Scope narrowed by builder",
-      "files": [
-        "server/lib/capabilityParity.js"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 2,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v4",
           "commit": null
         }
       ]
@@ -8144,20 +8210,16 @@
     {
       "id": "platform-mcp-r2-T1",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "verified",
       "class": "spec_error",
       "attempts": 0,
       "step": "Type Research assistant, Create token with no scope: alert plus scope checkboxes",
-      "rootCause": "MCP_SCOPES in server/lib/mcpToolRegistry.js (lines ~23-24) gained release.loop.read and release.loop.write when the in-app release loop shi…",
-      "files": [
-        "server/lib/mcpToolRegistry.js",
-        "src/components/admin/ConnectedAgentsPanel.jsx",
-        "docs/training/platform-mcp.md"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Step is platform-mcp's own spec and pins 4 scopes. MCP_SCOPES and the registry first appe…"
+        "evidence": null
       },
       "history": [
         {
@@ -8165,26 +8227,28 @@
           "event": "found",
           "note": "MCP_SCOPES in server/lib/mcpToolRegistry.js (lines ~23-24) …",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v4",
+          "commit": null
         }
       ]
     },
     {
       "id": "platform-mcp-r2-T2",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "verified",
       "class": "spec_error",
       "attempts": 0,
       "step": "mcp-call list with TOKEN_A",
-      "rootCause": "The registry grew from 10 to 110 tools (A3 gap closure, output versions, cover letter, release loop). tools/list correctly returns every to…",
-      "files": [
-        "server/lib/mcpToolRegistry.js",
-        "server/lib/mcpServer.js",
-        "docs/training/platform-mcp.md"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "mcp-call/tools list and the registry originate in b77049b. Growth to 110 tools is by desi…"
+        "evidence": null
       },
       "history": [
         {
@@ -8192,56 +8256,57 @@
           "event": "found",
           "note": "The registry grew from 10 to 110 tools (A3 gap closure, out…",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v4",
+          "commit": null
         }
       ]
     },
     {
       "id": "platform-mcp-r2-T3",
       "feature": "platform-mcp",
-      "status": "retesting",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
-      "step": "Import an application package card ready in all three cells; Gaps only shows the no-gaps message",
-      "rootCause": "src/components/admin/CapabilitiesPanel.jsx (~lines 58 and 80-84): with Gaps only selected and zero gaps, rows is empty so groups is empty a…",
-      "files": [
-        "src/components/admin/CapabilitiesPanel.jsx"
-      ],
+      "step": "Import an application package card ready in all three cells; Gaps only shows the no-gaps …",
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "CapabilitiesPanel.jsx created in b77049b; read at f76786c: rows filtered by gapsOnly, gro…"
+        "evidence": null
       },
       "history": [
-        {
-          "round": 2,
-          "event": "found",
-          "note": "src/components/admin/CapabilitiesPanel.jsx (~lines 58 and 8…",
-          "commit": null
-        },
         {
           "round": 2,
           "event": "fixed",
           "note": "Added an empty-state status message in CapabilitiesPanel wh…",
           "commit": "e83bb965c4e9c950bfe705974d02c89b700bc2a6"
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step",
+          "commit": "aa329a5"
         }
       ]
     },
     {
       "id": "platform-mcp-r2-T4",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "verified",
       "class": "spec_error",
       "attempts": 0,
-      "step": "check-interface-parity.mjs: exit 0, first line Interface parity:, a Gaps: list, last line OK",
-      "rootCause": "scripts/check-interface-parity.mjs lines 142-145 print the Gaps: list only when gaps.length is non-zero. With 72 of 72 capabilities complet…",
-      "files": [
-        "scripts/check-interface-parity.mjs",
-        "docs/training/platform-mcp.md"
-      ],
+      "step": "check-interface-parity.mjs: exit 0, first line Interface parity:, a Gaps: list, last line…",
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "scripts/check-interface-parity.mjs (b77049b) lines 142-145 print 'Gaps:' only if gaps.len…"
+        "evidence": null
       },
       "history": [
         {
@@ -8249,31 +8314,40 @@
           "event": "found",
           "note": "scripts/check-interface-parity.mjs lines 142-145 print the …",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v4",
+          "commit": null
         }
       ]
     },
     {
       "id": "platform-mcp-r2-T5",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "verified",
       "class": "spec_error",
       "attempts": 0,
       "step": "check-interface-parity.mjs --strict",
-      "rootCause": "scripts/check-interface-parity.mjs line 148: failed = problems.length > 0 || (strict && gaps.length > 0). With zero gaps --strict exits 0 a…",
-      "files": [
-        "scripts/check-interface-parity.mjs",
-        "docs/training/platform-mcp.md"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Line 148 makes --strict exit 0 with zero gaps, matching the change spec and triage B5; J1…"
+        "evidence": null
       },
       "history": [
         {
           "round": 2,
           "event": "found",
           "note": "scripts/check-interface-parity.mjs line 148: failed = probl…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v4",
           "commit": null
         }
       ]
