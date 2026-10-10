@@ -1,0 +1,63 @@
+{
+  "id": "A4",
+  "feature": "no-silent-failures",
+  "fromBaseline": 2,
+  "proposedBy": "triage:no-silent-failures:r2",
+  "round": 2,
+  "triageItems": [
+    "T-R2-1",
+    "T-R2-3",
+    "T-R2-6"
+  ],
+  "reason": "Round 2: success toast wording/colour in the spec contradicts shipped string and sibling specs; E.4 409 count ambiguous; P1 cannot be followed as written (admin has no Career Master / My Resume, bug B12).",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "J0.2",
+      "before": "a toast \"Approved — private QR link created (copied to clipboard).\"",
+      "after": "a toast \"Approved - private QR link created (copied to clipboard).\" (plain hyphen; a normal, non-red success toast)",
+      "tracesTo": "docs/changes/no-silent-failures.md T2 (only toast.error is restyled red); docs/training/qr-gated-outputs.md lines 101,156,170; MyResumePanel.jsx:656",
+      "whyNeeded": "Em dash and 'green' cannot be observed; the string and style are product behaviour unchanged by this feature. Red-toast absence is still asserted."
+    },
+    {
+      "op": "change",
+      "stepId": "J3.4",
+      "before": "a green toast \"Approved — private QR link created (copied to clipboard).\" followed by a **red** toast",
+      "after": "the normal, non-red success toast \"Approved - private QR link created (copied to clipboard).\" followed by a **red** toast",
+      "tracesTo": "same as J0.2",
+      "whyNeeded": "Same wording error as J0.2."
+    },
+    {
+      "op": "change",
+      "stepId": "E.4",
+      "before": "one HTTP 409 on /api/resume-outputs/<id>/share per first approval that opens the gate dialog;",
+      "after": "one HTTP 409 on /api/resume-outputs/<id>/share for each approval attempt that opens the gate dialog; a request cancelled by navigation or reload (net::ERR_ABORTED) is not a finding;",
+      "tracesTo": "Change spec: gate returns 409 when technologies lack a category",
+      "whyNeeded": "Validator found the count ambiguous; aborted requests are browser noise, other unexpected requests remain findings."
+    },
+    {
+      "op": "change",
+      "stepId": "P1",
+      "before": "Sign in as the test admin (ADMIN_EMAIL / ADMIN_INITIAL_PASSWORD from the environment) and accept the terms.",
+      "after": "Sign in as member@test.local (the admin's Classic Tools has no Career Master or My Resume; password from scripts/create-test-member.mjs) and accept the terms.",
+      "tracesTo": "Open bug no-silent-failures-B12; testConstraints.accounts; scripts/create-test-member.mjs",
+      "whyNeeded": "Every later step needs Career Master and My Resume, which the admin account does not have; round-1 and round-2 runs only passed as the member. Needed together with this amendment's step set per A2 note."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:no-silent-failures:r2",
+    "checklist": {
+      "Traced: every added or changed step names the change-spec requirement or owner direction it proves (tracesTo).": "pass",
+      "Not weaker: a changed expected result is at least as strict as before, unless the evidence shows the old expectation contradicts the change spec or owner direction (then say which).": "pass: J0.2/J3.4 evidence shows the old text ('green', em dash) contradicts shipped string and qr-gated-outputs steps; red-vs-non-red is still checked; E.4 only adds the unambiguous per-attempt count and excludes aborted requests; P1 keeps the sign-in and terms step",
+      "Retire only duplicates: removing a step is approved only when another step tests the same thing (name it); any other removal is needs_owner.": "pass: no step retired",
+      "Exact: action plus exact expected result (labels, text, values, counts); no 'should look right', no 'roughly'.": "pass",
+      "Reachable: the step is walkable by point-and-click on desktop and at 390px (interfaceParity), or is a cli step by design.": "pass: P1 sign-in as member@test.local is walkable; admin cannot reach Career Master",
+      "Deterministic: same result every run against the fixed constraints (no dependence on wall-clock time, random data, earlier failed steps, or leftovers from another test); timing tolerances are stated.": "pass",
+      "Fictional data only; fixtures written in the spec, never fetched.": "pass",
+      "Independent of the fix: the step tests behaviour, not the implementation the fixer chose.": "pass: toast text and sign-in are product behaviour, not fixer choices"
+    },
+    "note": "Approved. A2's rejection asked that a P1 change only come together with the step that needs it: P1 is itself the step that cannot be followed (B12), evidenced in round 2. Wording corrected from the proposal: the admin-shell success toast is not 'navy', so the spec says 'normal, non-red'.",
+    "at": "2026-10-10T00:00:00Z"
+  }
+}
