@@ -23,6 +23,12 @@ const STALE_MIN = Number(opt('--stale-minutes') ?? 15);
 const extras = argv.flatMap((a, i) => (a === '--extra' ? [argv[i + 1]] : []));
 const definition = JSON.parse(fs.readFileSync(new URL('../server/data/releaseLoop/definition.json', import.meta.url), 'utf8'));
 const MAX_ATTEMPTS = definition.bugEscalation?.maxFixAttemptsPerBug ?? 2;
+// Production rounds and the bugs they found (scripts/production-rounds.mjs): rounds are committed round-N.md
+// files with a "target" URL; each bug joins its owning feature and only a later production round verifies it.
+const prod = await import('./production-rounds.mjs');
+const prodRounds = prod.productionRounds();
+const prodLedger = (() => { try { return JSON.parse(fs.readFileSync(opt('--ledger'), 'utf8')); } catch { return {}; } })();
+const prodBugs = prod.productionBugs().map((b) => ({ ...b, ...(prodLedger[b.id] || {}), verifyBy: 'production', prodSteps: b.prodSteps, roundsFeature: b.roundsFeature }));
 
 const clip = (s, n = 280) => (typeof s === 'string' && s.length > n ? `${s.slice(0, n - 1)}…` : s ?? null);
 const readJsonl = (p) => {
@@ -178,6 +184,8 @@ for (const [key, list] of Object.entries(byFeature)) {
   const res = (role, round) => agents.get(list.find((a) => a.role === role && (round == null || a.round === round))?.id)?.result;
   const validations = list.filter((a) => a.role === 'validate').sort((x, y) => x.round - y.round);
   const fb = new Map(); const attempts = {};
+  // Production bugs owned by this feature: its fix agents fix them like any other bug.
+  for (const pb of prodBugs.filter((b) => b.feature === key)) { fb.set(pb.id, { ...pb, history: [...(pb.history || [])] }); attempts[pb.id] = pb.attempts || 0; }
   // 1. Failures the build/fix reconciliation left unresolved are bugs from the start (ids match the
   //    workflow's carried items: <feature>-B<n> for the build, <feature>-F<round>-<n> for a fix round).
   for (const rc of list.filter((a) => a.role === 'reconcile')) {
@@ -199,7 +207,7 @@ for (const [key, list] of Object.entries(byFeature)) {
     const tr = res('triage', v.round);
     const reported = new Set((tr?.items || []).map((i) => q(i.recurrenceOf || i.id)));
     for (const b of fb.values()) {
-      if (!['fixed_awaiting_retest', 'retesting'].includes(b.status)) continue;
+      if (!['fixed_awaiting_retest', 'retesting'].includes(b.status) || b.verifyBy === 'production') continue;
       if (vr.passed) { b.status = 'verified'; b.history.push({ round: v.round, event: 'verified', note: `Retest round ${v.round} passed every step`, commit: vr.commitTested || null }); }
       else if (!tr) b.status = 'retest_failed_pending_triage';
       else if (!reported.has(b.id)) { b.status = 'verified'; b.history.push({ round: v.round, event: 'verified', note: `Retest round ${v.round}: this bug's step passed (the round had other failures)`, commit: vr.commitTested || null }); }
@@ -269,6 +277,11 @@ for (const [key, list] of Object.entries(byFeature)) {
   });
 }
 
+// Production bugs whose owner had no agents and no --features entry still reach the tracker; then later
+// production rounds verify them (a local round never does).
+for (const pb of prodBugs) if (!bugs.some((b) => b.id === pb.id)) bugs.push({ ...pb, history: [...(pb.history || [])] });
+for (const b of bugs) if (b.verifyBy === 'production') prod.applyProductionRounds(b, prodRounds);
+
 // Permanent bug ledger: a bug never disappears from the tracker. If a later sync no longer derives it
 // (a run was replaced or restarted), its last known state is kept and marked as carried over.
 const ledgerPath = opt('--ledger');
@@ -300,6 +313,7 @@ for (const b of bugs) {
 // of that baseline. Backlog items (other owners), owner questions and people-held bugs stay as they are.
 for (const b of bugs) {
   if (!['open', 'recurred', 'fixing', 'retest_failed', 'retest_failed_pending_triage', 'fixed_awaiting_retest', 'retesting'].includes(b.status)) continue;
+  if (b.verifyBy === 'production') continue;   // only a production round proves a production bug fixed
   const f = features.find((x) => x.key === b.feature);
   const lastRound = Math.max(0, ...(b.history || []).map((h) => Number(h.round) || 0));
   // Only a bug tied to a baseline step can be proven fixed by a passing round; a bug with no step (a coverage
@@ -342,6 +356,14 @@ if (carryPath && fs.existsSync(carryPath)) {
     f.rounds += cf.rounds || 0; f.agents += cf.agents || 0;
     if (!f.lastResult && cf.lastResult) f.lastResult = cf.lastResult;
   }
+}
+// Features validated on production: their rounds come from the committed production round files, not from
+// workflow agents (the suite runs on GitHub Actions). Applied after the carry so the files always win.
+for (const [key, rounds] of Object.entries(prodRounds)) {
+  const entry = prod.productionFeatureEntry(key, rounds);
+  const f = features.find((x) => x.key === key);
+  const counts = { openBugs: f?.openBugs ?? 0, backlog: f?.backlog ?? 0, agents: f?.agents ?? 0 };
+  if (f) Object.assign(f, entry, counts); else features.push({ ...entry, ...counts });
 }
 const carryOut = opt('--carry-out');
 if (carryOut) {

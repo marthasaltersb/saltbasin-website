@@ -1,0 +1,108 @@
+name: Production smoke and regression
+
+# Read-only smoke + regression against https://saltbasin.net (feature production-smoke-regression,
+# spec docs/training/production-smoke-regression.md). Runs here because the Claude cloud sandbox
+# cannot reach production. Never signs in and never writes production data: scripts/production-smoke.mjs
+# stubs every non-GET request a page makes in the browser.
+#
+# Triggers:
+#   - push to main: waits for Render to report this commit live (RENDER_API_KEY / RENDER_SERVICE_ID,
+#     same secrets as render-deploy-verify.yml), or 10 minutes when those secrets are missing.
+#   - workflow_dispatch: run now (optional base URL and round number).
+#   - push to the suite's own development branch, so it can be run before the workflow file exists on
+#     main (workflow_dispatch only sees workflows on the default branch).
+# Output: artifact production-smoke-<run id> with report.json (score block, every step, the frozen
+# baseline mapping) and screens/*.png. The job fails when any step fails; not_run steps do not fail it.
+
+on:
+  push:
+    branches: [main, claude/prod-smoke-regression-0.3.0]
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: Site to test
+        default: https://saltbasin.net
+        required: false
+      round:
+        description: Round number for the report (docs/test-results/production-smoke-regression/round-N.md)
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for Render to deploy this commit (push to main only)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          if [ -z "$RENDER_API_KEY" ] || [ -z "$RENDER_SERVICE_ID" ]; then
+            echo "Render secrets missing; waiting a fixed 10 minutes for the deploy."
+            sleep 600
+            exit 0
+          fi
+          for i in $(seq 1 40); do
+            status=$(curl -sS -H "Authorization: Bearer $RENDER_API_KEY" -H "Accept: application/json" \
+              "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys?limit=10" \
+              | jq -r --arg sha "$COMMIT_SHA" '[.[] | select(.deploy.commit.id == $sha) | .deploy.status][0] // "none"')
+            echo "attempt $i: deploy of $COMMIT_SHA is $status"
+            case "$status" in
+              live) exit 0 ;;
+              build_failed|update_failed|canceled|deactivated) echo "::warning::Render deploy ended $status; testing what is live."; exit 0 ;;
+            esac
+            sleep 30
+          done
+          echo "::warning::Render did not report $COMMIT_SHA live within 20 minutes; testing what is live."
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --no-save --no-audit --no-fund --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+
+      - name: Run the suite
+        env:
+          SMOKE_BASE_URL: ${{ inputs.base_url || 'https://saltbasin.net' }}
+          SMOKE_ROUND: ${{ inputs.round }}
+        run: node scripts/production-smoke.mjs --out smoke-out
+
+      - name: Summary
+        if: always()
+        run: |
+          if [ -f smoke-out/report.json ]; then
+            {
+              echo "### Production smoke and regression"
+              echo '```json'
+              jq -c .score smoke-out/report.json
+              echo '```'
+              echo "| Step | Status | Actual |"
+              echo "| --- | --- | --- |"
+              jq -r '.steps[] | "| \(.id) | \(.status) | \((.actual // "") | tostring | gsub("\\|"; "/") | .[0:180]) |"' smoke-out/report.json
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No report was written." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload report and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-smoke-${{ github.run_id }}
+          path: smoke-out/
+          retention-days: 30
