@@ -208,7 +208,7 @@ for (const [key, list] of Object.entries(byFeature)) {
       const id = q(item.recurrenceOf || item.id);
       const prev = fb.get(id);
       const b = prev || { id, feature: key, firstRound: v.round, history: [] };
-      b.step = clip(item.step, 200); b.rootCause = clip(item.rootCause, 400); b.class = item.class; b.files = item.files;
+      b.step = clip(item.step, 200); if (item.stepId) b.stepId = item.stepId; b.rootCause = clip(item.rootCause, 400); b.class = item.class; b.files = item.files;
       b.question = item.question || null;
       b.history.push({ round: v.round, event: prev ? 'recurred' : 'found', note: clip(item.rootCause, 200) });
       if (item.class === 'needs_business_definition') b.status = 'needs_business_definition';
@@ -301,9 +301,12 @@ for (const b of bugs) {
   if (!['open', 'recurred', 'fixing', 'retest_failed', 'retest_failed_pending_triage', 'fixed_awaiting_retest', 'retesting'].includes(b.status)) continue;
   const f = features.find((x) => x.key === b.feature);
   const lastRound = Math.max(0, ...(b.history || []).map((h) => Number(h.round) || 0));
-  if (f && !f.carriedOver && f.lastResult?.passed && f.lastResult.round > lastRound) {
+  // Only a bug tied to a baseline step can be proven fixed by a passing round; a bug with no step (a coverage
+  // gap, an observation) stays open until an amendment adds its step or a person closes it.
+  const tiedToStep = /^[JEP][0-9a-z]*\.[0-9]+$/.test(b.stepId || '');
+  if (tiedToStep && f && !f.carriedOver && f.lastResult?.passed && f.lastResult.round > lastRound) {
     b.status = 'verified';
-    b.history = [...(b.history || []), { round: f.lastResult.round, event: 'verified', note: `Retest round ${f.lastResult.round} passed every step${f.lastResult.baseline ? ` of baseline v${f.lastResult.baseline}` : ''}` }];
+    b.history = [...(b.history || []), { round: f.lastResult.round, event: 'verified', note: `Retest round ${f.lastResult.round} passed every step${f.lastResult.baseline ? ` of baseline v${f.lastResult.baseline}` : ''}, including ${b.stepId}` }];
   }
 }
 if (ledgerPath) {   // record the final states (after scope and verification) so carried-over bugs keep them
