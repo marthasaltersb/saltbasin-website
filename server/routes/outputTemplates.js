@@ -120,9 +120,12 @@ router.get('/portfolio', async (req, res) => {
 router.get('/:id/public', async (req, res) => {
   try {
     const row = await db.prepare(`SELECT * FROM unified_outputs WHERE id = $1 AND app_id = $2`).get(req.params.id, APP_ID);
-    if (!row) return res.status(404).json({ error: 'Not found' });
+    // 200 { template: null } (not 404) for missing / non-visible presets: the
+    // synthetic client id 'preset-default' is requested routinely and a 404
+    // is console/network noise; nothing extra is revealed.
+    if (!row) return res.json({ template: null });
     const config = typeof row.config === 'string' ? JSON.parse(row.config) : row.config;
-    if (!config?.meta?.portfolioVisible) return res.status(404).json({ error: 'Not found' });
+    if (!config?.meta?.portfolioVisible) return res.json({ template: null });
     res.json({ template: { id: row.id, name: row.title, config } });
   } catch (e) {
     console.error('[output-templates] read error:', e.message);

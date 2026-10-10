@@ -14,7 +14,7 @@ import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
 import { fetchCareerMaster } from '../../lib/careerMaster.js';
 import CareerIntakePanel from './CareerIntakePanel.jsx';
-import { resumeUrlFromPreset } from '../../lib/resumeUrls.js';
+import { resumeUrlFromPreset, withOwnerMe } from '../../lib/resumeUrls.js';
 import DocumentBlocksView, { formatMetadataLine, isDocumentBlocks } from '../DocumentBlocksView.jsx';
 import { useToolCategoryGate } from './ToolCategoryGate.jsx';
 import CareerBoundOutputEditor from './CareerBoundOutputEditor.jsx';
@@ -213,7 +213,7 @@ const LAYOUTS = [
 // Executive Summary dashboard on the Modern/Corporate layouts. Only added
 // when explicitly turned off, since both default to on.
 function presetPreviewUrl(preset) {
-  return resumeUrlFromPreset(preset, { includePresetId: true });
+  return resumeUrlFromPreset(preset, { includePresetId: true, owner: 'me' });
 }
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
@@ -574,7 +574,7 @@ export default function MyResumePanel({ scope = 'member' }) {
   const [agentDiff, setAgentDiff] = useState(null); // structured diff from agent
   const [acceptingDiff, setAcceptingDiff] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState('/output/resume');
+  const [previewUrl, setPreviewUrl] = useState(withOwnerMe('/output/resume'));
   const iframeRef = useRef(null);
 
   useEffect(() => {
@@ -1193,10 +1193,10 @@ Respond ONLY with a JSON object in this exact format (no markdown, no explanatio
       {showPreview && (
         <div style={{ marginBottom: '1.5rem', border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: 10, overflow: 'hidden' }}>
           <div style={{ background: 'rgba(0,0,0,0.03)', borderBottom: '0.5px solid rgba(0,0,0,0.1)', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '0.75rem', color: '#666' }}>Resume Preview · {LAYOUTS.find(l => l.url === previewUrl)?.name || 'Resume'}</span>
+            <span style={{ fontSize: '0.75rem', color: '#666' }}>Resume Preview · {LAYOUTS.find(l => withOwnerMe(l.url) === previewUrl.replace(/&(preset|execSummary|capabilityMeters|industryBars|toolBars|clientVoice)=[^&]*/g,'').replace(/\?(preset)=[^&]*&?/,'?'))?.name || 'Resume'}</span>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
               {LAYOUTS.filter(l => l.url !== '/output/domains' && l.url !== '/output/portfolio-appendix' && l.url !== '/output/case-study-portfolio').map(l => (
-                <button key={l.id} style={{ ...S.btn(previewUrl === l.url ? 'navy' : 'outline'), padding: '2px 8px', fontSize: '0.68rem' }} onClick={() => setPreviewUrl(l.url)}>{l.name}</button>
+                <button key={l.id} style={{ ...S.btn(previewUrl === withOwnerMe(l.url) ? 'navy' : 'outline'), padding: '2px 8px', fontSize: '0.68rem' }} onClick={() => setPreviewUrl(withOwnerMe(l.url))}>{l.name}</button>
               ))}
               <a href={previewUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.72rem', color: 'var(--sb-teal-deep, #02a1a6)', textDecoration: 'none', marginLeft: 4 }}>↗ full tab</a>
             </div>
