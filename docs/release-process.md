@@ -87,3 +87,9 @@ Edit `definition.json`, bump `version`, and add a line below.
 | 2 | 2026-10-09 | Scope check after triage: pre-existing, other-feature and process-note items become non-blocking backlog with evidence |
 | 3 | 2026-10-09 | Interface parity: every capability usable on desktop and phone by point-and-click, via the API and via an MCP tool; validators walk both and check MCP |
 | 4 | 2026-10-09 | Spec governance: frozen, versioned baselines with stable step ids and fixed test constraints; scores computed against the baseline; guide changes only by reviewed amendment; integrator gate. Owner: retries had different test steps (e.g. one feature's step total went 31 → 29 → 33 → 30) |
+
+## Release scope (2026-10-10)
+
+Each release separates its **planned** work from its **backlog** and records every feature **added after the cut**
+(`docs/changes/release-scope.md`). `node scripts/release-scope.mjs show` prints the three groups; scope changes go
+through `release-scope.mjs add|set` with a decider and a reason. The release loop launches planned features only.

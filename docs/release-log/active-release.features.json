@@ -349,6 +349,31 @@
           "reason": "Added after the cut; kept in backlog for 0.3.0 (owner chose \"Recommended, minus added\")."
         }
       ]
+    },
+    {
+      "key": "release-scope",
+      "title": "Release scope: planned vs backlog vs added after the cut, on every tracker surface and in the release cut",
+      "trainingSpec": "docs/training/release-scope.md",
+      "changeSpec": "docs/changes/release-scope.md",
+      "build": "Built in session S-0.3.0-02-build (server/lib/releaseScope.js, scripts/release-scope.mjs, tracker sync/cut/resume/session-plan, both tracker screens). Validate and fix only.",
+      "dependsOn": [],
+      "kind": "new",
+      "scope": "planned",
+      "added": {
+        "at": "2026-10-10T20:43:19.856Z",
+        "commit": "4841d2a",
+        "decidedBy": "owner",
+        "reason": "Owner request 2026-10-10 in session S-0.3.0-02-build: define this release's work vs the backlog vs features added after the cut."
+      },
+      "scopeHistory": [
+        {
+          "at": "2026-10-10T20:43:19.856Z",
+          "from": null,
+          "to": "planned",
+          "decidedBy": "owner",
+          "reason": "Owner request 2026-10-10 in session S-0.3.0-02-build: define this release's work vs the backlog vs features added after the cut."
+        }
+      ]
     }
   ],
   "startedAtCommit": "4df3ff7",

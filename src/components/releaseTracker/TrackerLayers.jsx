@@ -33,7 +33,7 @@ function FeatureSections({ snap, ctx }) {
   const done = planned.filter((f) => f.status === 'passed' || f.status === 'passed_with_backlog').length;
   return (
     <>
-      <Section title={`Planned for this release: ${done} of ${planned.length} passed`}><FeatureRows list={planned} ctx={ctx} /></Section>
+      <Section title={`Planned at the cut: ${done} of ${planned.length} passed`}><FeatureRows list={planned} ctx={ctx} /></Section>
       {g.added.length ? (
         <Section title={`Added after the cut (${g.added.length})`}>
           <div className="rt-panel rt-muted" style={{ marginBottom: 8 }} data-testid="rt-added-after-cut">

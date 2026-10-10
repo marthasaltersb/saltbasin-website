@@ -410,7 +410,7 @@ function featureSections(s) {
   if (!(s.features || []).some((f) => f.scope)) return section('Features', featureRows(s.features));
   const g = scopeGroups(s); const done = g.planned.filter((f) => f.status === 'passed' || f.status === 'passed_with_backlog').length;
   const addedNote = g.added.length ? `<div class="panel muted" style="margin-bottom:8px">${g.added.map((f) => `<div style="margin-bottom:6px"><b>${esc(f.key)}</b> · added ${esc(String(f.added.at || '').slice(0, 10))}${f.added.commit ? ` (${esc(f.added.commit)})` : ''} · ${f.scope === 'planned' ? 'counted in this release' : 'kept in backlog'} · ${esc(f.added.reason || '')}</div>`).join('')}</div>` : '';
-  return section(`Planned for this release: ${done} of ${g.planned.length} passed`, featureRows(g.planned))
+  return section(`Planned at the cut: ${done} of ${g.planned.length} passed`, featureRows(g.planned))
     + (g.added.length ? section(`Added after the cut (${g.added.length})`, addedNote + featureRows(g.added)) : '')
     + section(`Backlog: kept on the record, not this release's work (${g.backlog.length})`, featureRows(g.backlog))
     + (g.other.length ? section(`Other tracked work (${g.other.length})`, featureRows(g.other)) : '');
@@ -1004,7 +1004,7 @@ function releasesTable() {
   if (!list.length) return '<div class="panel empty">No release has been frozen yet.</div>';
   return `<div class="panel"><table><thead><tr><th>Release</th><th>State</th><th class="num">Planned</th><th class="num">Delivered</th><th class="num">Carried to next</th><th class="num">Bugs verified / open</th><th class="num">Sessions</th></tr></thead><tbody>${list.map((r) => {
     const live = r.state === 'open';
-    const cur = live && snap && !VIEWING ? scopeGroups(snap).planned : null;
+    const cur = live && snap && !VIEWING ? (({ planned, added }) => [...planned, ...added.filter((f) => f.scope === 'planned')])(scopeGroups(snap)) : null;   // planned at the cut + added into planned
     const planned = live ? (cur ? cur.length : '—') : r.planned;
     const delivered = live ? (cur ? cur.filter((f) => f.status === 'passed' || f.status === 'passed_with_backlog').length : '—') : r.delivered;
     return `<tr><td><b>${esc(r.version)}</b><div class="muted">${esc(r.title || r.release || '')}</div></td><td data-label="State">${live ? 'Open (live)' : `Frozen ${esc(String(r.frozenAt || '').slice(0, 10))}`}</td><td class="num" data-label="Planned">${esc(planned)}</td><td class="num" data-label="Delivered">${esc(delivered)}</td><td class="num" data-label="Carried to next">${live ? '—' : esc(r.carried)}</td><td class="num" data-label="Bugs verified / open">${live ? '—' : `${esc(r.bugsVerified)} / ${esc(r.bugsOpen)}`}</td><td class="num" data-label="Sessions">${esc(live ? (snap?.sessions?.length ?? 0) : r.sessions)}</td></tr>`;

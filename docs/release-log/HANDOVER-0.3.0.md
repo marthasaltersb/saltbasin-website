@@ -15,6 +15,15 @@ Fictional data only in specs, logs and test results (the repo is public).
 - **Release index**: `docs/release-log/releases/index.json`, one row per release (planned, delivered, carried, bugs, sessions).
 - **Bug ledger and tracker carry stay continuous** (`bug-ledger.json`, `tracker-carry.json`): bugs never disappear across releases.
 
+## Scope of 0.3.0 (owner decision 2026-10-10)
+
+`node scripts/release-scope.mjs show` lists it. **Planned** (18 at the cut): production-smoke-regression, the 14 carried
+unfinished features, release-cut-and-session-plans, owner-error-messages, scoring-preferences-mcp. **Added after the cut**:
+release-scope (planned), guided-training-agent, global-change-standard, security-provisioning-model (all three backlog for
+now). **Backlog**: qr-gated-outputs, release-loop-tooling, release-intelligence, in-app-release-loop (delivered, open bugs
+only), career-application-journey, career-master-single-source (blocked on owner). Moving a feature is
+`release-scope.mjs set --key <k> --scope planned|backlog --by <who> --reason "<why>"`.
+
 ## Tracker
 
 - Artifact: https://claude.ai/artifact/5pmGUtvSVEVEyaTCp3EVma. The **Release** picker in the header switches between the live
