@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T20:51:18.321Z",
+  "exportedAt": "2026-10-10T20:57:27.184Z",
   "features": {
     "platform-mcp": {
       "status": "validate",
@@ -18,11 +18,19 @@
       "backlog": 2
     },
     "in-app-release-loop": {
-      "status": "validate",
-      "lastRound": 3,
-      "lastScore": "60/60",
-      "lastReport": "docs/test-results/in-app-release-loop/round-3.md",
+      "status": "failing",
+      "lastRound": 4,
+      "lastScore": "59/60",
+      "lastReport": "docs/test-results/in-app-release-loop/round-4.md",
       "openBugs": 2,
+      "backlog": 1
+    },
+    "session-mapping": {
+      "status": "validate",
+      "lastRound": 4,
+      "lastScore": "55/56",
+      "lastReport": "docs/test-results/session-mapping/round-4.md",
+      "openBugs": 9,
       "backlog": 1
     },
     "chart-gallery": {
@@ -89,6 +97,30 @@
       "openBugs": 0,
       "backlog": 0
     },
+    "journey-flow-studio": {
+      "status": "build",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
+    },
+    "graphify-data-model-map": {
+      "status": "build",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
+    },
+    "production-smoke-regression": {
+      "status": "build",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
+    },
     "qr-gated-outputs": {
       "status": "passed",
       "lastRound": 8,
@@ -137,14 +169,6 @@
       "openBugs": 11,
       "backlog": 6
     },
-    "session-mapping": {
-      "status": "between_stages",
-      "lastRound": 4,
-      "lastScore": "55/56",
-      "lastReport": "docs/test-results/session-mapping/round-4.md",
-      "openBugs": 9,
-      "backlog": 1
-    },
     "world-shell-layers": {
       "status": "between_stages",
       "lastRound": 0,
@@ -175,14 +199,6 @@
       "lastScore": null,
       "lastReport": null,
       "openBugs": 11,
-      "backlog": 0
-    },
-    "production-smoke-regression": {
-      "status": "queued",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
-      "openBugs": 0,
       "backlog": 0
     },
     "guided-training-agent": {
@@ -218,6 +234,14 @@
       "backlog": 0
     },
     "global-change-standard": {
+      "status": "queued",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
+    },
+    "journey-flow-experience-mapping": {
       "status": "queued",
       "lastRound": 0,
       "lastScore": null,
