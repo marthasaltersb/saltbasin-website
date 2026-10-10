@@ -36,6 +36,22 @@
   status = 200
   force  = true
 
+# ── MCP endpoint ────────────────────────────────────────────────────────────
+# AI agents reach the platform MCP server (server/lib/mcpServer.js) at /mcp with a personal access token.
+# Without this proxy Netlify answered /mcp with its own 404 page (production smoke P1, 2026-10-10).
+
+[[redirects]]
+  from   = "/mcp"
+  to     = "https://saltbasin-website.onrender.com/mcp"
+  status = 200
+  force  = true
+
+[[redirects]]
+  from   = "/mcp/*"
+  to     = "https://saltbasin-website.onrender.com/mcp/:splat"
+  status = 200
+  force  = true
+
 # /uploads/* used to proxy to Render's disk. Now that uploads live on Supabase
 # Storage and the upload API returns absolute Supabase CDN URLs, the browser
 # fetches images directly from Supabase — no proxy needed here.
@@ -49,3 +65,20 @@
   from   = "/*"
   to     = "/index.html"
   status = 200
+
+# ── Privacy headers ───────────────────────────────────────────────────────
+# QR-gated documents (/r/<token>) and shared release-tracker links are unlisted by design. Express sets these
+# headers when it serves the page, but on saltbasin.net Netlify serves the page, so it must set them too
+# (production smoke P3, 2026-10-10; mirrors server/index.js).
+
+[[headers]]
+  for = "/r/*"
+  [headers.values]
+    X-Robots-Tag    = "noindex, nofollow, noarchive"
+    Referrer-Policy = "no-referrer"
+
+[[headers]]
+  for = "/release-tracker/*"
+  [headers.values]
+    X-Robots-Tag    = "noindex, nofollow, noarchive"
+    Referrer-Policy = "no-referrer"
