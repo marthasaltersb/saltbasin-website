@@ -48,6 +48,14 @@ Version 1 · 2026-10-10 · covers `docs/changes/production-smoke-regression.md` 
 19. [S5.7] `/login` at phone: as S5.1.
 20. [S5.8] `/login` at phone: as S5.2.
 
+## Public site vs the server behind it
+
+`<SERVER>` = `https://saltbasin-website.onrender.com` (option `--backend`; with no separate server these three steps are `not_run`). They tell a stale Netlify frontend or a missing Netlify rule apart from a server defect.
+
+20a. [S6.1] `GET <BASE>/` and `GET <SERVER>/`. Expect both pages to load the same `/assets/index-<hash>.js`. A different hash means the public site serves an older (or newer) frontend build than the server runs. `blocked` when the server page cannot be read.
+20b. [S6.2] `POST <SERVER>/mcp` with no token. Expect HTTP 401 with a JSON body: the target of the public site's `/mcp` proxy rule works.
+20c. [S6.3] `GET <SERVER>/r/AAAAAAAAAAAAAAAAAAAAAAAA`. Expect `X-Robots-Tag` containing `noindex` and `Referrer-Policy: no-referrer`.
+
 ## Regression
 
 Anonymous, read-only steps of the delivered features' frozen baselines, replayed against production under their own ids:
@@ -63,7 +71,7 @@ Steps that need an account (C.2):
 
 ## Scoring
 
-- The score block is `report.json` -> `score`: `total` counts S and R steps (25 at v1), `passed`, and the ids under `failed`, `blocked` and `notRun`. A `not_run` or `blocked` step is never counted as passed and never as 0 of anything.
+- The score block is `report.json` -> `score`: `total` counts S and R steps (28 at v1: 25 plus S6.1-S6.3, added after round 1 and before the suite is frozen), `passed`, and the ids under `failed`, `blocked` and `notRun`. A `not_run` or `blocked` step is never counted as passed and never as 0 of anything.
 - The workflow run is red when any step failed; `not_run` and `blocked` alone do not make it red.
 
 ## Filing a failure

@@ -2,6 +2,7 @@
 // Production smoke + read-only regression for https://saltbasin.net (feature production-smoke-regression).
 //
 //   node scripts/production-smoke.mjs [--base https://saltbasin.net] [--out smoke-out] [--round N]
+//        [--backend https://saltbasin-website.onrender.com]   (the server behind the site; '' skips S6)
 //        [--ignore-blocked-external]   (local rehearsal behind a CDN-blocking proxy only)
 //
 // Spec: docs/training/production-smoke-regression.md (step ids S*.*, R*.* are stable, never renumbered).
@@ -26,6 +27,9 @@ const BASE = String(opt('--base', process.env.SMOKE_BASE_URL || 'https://saltbas
 const OUT = path.resolve(opt('--out', 'smoke-out'));
 const ROUND = Number(opt('--round', process.env.SMOKE_ROUND || 0)) || null;
 const ORIGIN = new URL(BASE).origin;
+// The server behind the public site. saltbasin.net is Netlify (frontend + /api proxy) in front of Render; S6.*
+// compare the two so a stale frontend or a missing proxy rule shows up as such. Empty string skips S6.
+const BACKEND = String(opt('--backend', process.env.SMOKE_BACKEND_URL ?? 'https://saltbasin-website.onrender.com')).replace(/\/$/, '');
 // Local rehearsal only (a sandbox whose proxy blocks CDNs): drop load failures of OTHER hosts that the
 // proxy refused. Never set on the GitHub runner, where every console error counts.
 const IGNORE_BLOCKED_EXTERNAL = argv.includes('--ignore-blocked-external');
@@ -160,7 +164,7 @@ async function main() {
   });
   if (health.status === 0) {
     // Nothing else can be judged; report honestly rather than a cascade of failures.
-    for (const id of ['S2.1', 'S2.2', 'S2.3', 'S2.4', 'S3.1', 'S3.2', 'S3.3', 'S3.4', 'S3.5', 'S3.6', 'S4.1', 'S5.1', 'S5.2', 'S5.3', 'S5.4', 'S5.5', 'S5.6', 'S5.7', 'S5.8', 'R1.1', 'R1.2', 'R1.3']) {
+    for (const id of ['S2.1', 'S2.2', 'S2.3', 'S2.4', 'S3.1', 'S3.2', 'S3.3', 'S3.4', 'S3.5', 'S3.6', 'S4.1', 'S5.1', 'S5.2', 'S5.3', 'S5.4', 'S5.5', 'S5.6', 'S5.7', 'S5.8', 'S6.1', 'S6.2', 'S6.3', 'R1.1', 'R1.2', 'R1.3']) {
       record(id, 'production unreachable', 'blocked', { actual: health.error });
     }
     return finish(startedAt, null);
@@ -293,6 +297,27 @@ async function main() {
       });
     }
     await v.ctx.close();
+  }
+
+  // ---- S6 public site vs the server behind it ---------------------------------------------------------
+  if (BACKEND && BACKEND !== BASE) {
+    const bundle = (html) => [...String(html || '').matchAll(/\/assets\/index-[A-Za-z0-9_-]+\.js/g)].map((m) => m[0])[0] || null;
+    const [pub, srv] = await Promise.all([http(`${BASE}/`), http(`${BACKEND}/`)]);
+    const a = bundle(pub.text); const b = bundle(srv.text);
+    record('S6.1', 'The public site serves the same frontend build as the server', a && b && a === b ? 'pass' : (!b ? 'blocked' : 'fail'), {
+      url: `${BASE}/ vs ${BACKEND}/`, expected: 'the same /assets/index-<hash>.js in both pages',
+      actual: `public ${a || `none (HTTP ${pub.status})`}, server ${b || `none (HTTP ${srv.status}${srv.error ? ` ${srv.error}` : ''})`}`,
+    });
+    const mcpB = await http(`${BACKEND}/mcp`, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json, text/event-stream' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} }) });
+    record('S6.2', 'The server answers /mcp without a token with 401 JSON', mcpB.status === 401 && mcpB.json ? 'pass' : (mcpB.status === 0 ? 'blocked' : 'fail'), {
+      url: `${BACKEND}/mcp`, expected: 'HTTP 401 JSON (so a /mcp proxy rule on the public site has a working target)', actual: mcpB.error || `HTTP ${mcpB.status} ${mcpB.text?.slice(0, 160)}`,
+    });
+    const rB = await http(`${BACKEND}/r/AAAAAAAAAAAAAAAAAAAAAAAA`);
+    record('S6.3', 'The server sends the /r/ privacy headers', /noindex/.test(rB.headers?.['x-robots-tag'] || '') && /no-referrer/.test(rB.headers?.['referrer-policy'] || '') ? 'pass' : (rB.status === 0 ? 'blocked' : 'fail'), {
+      url: `${BACKEND}/r/AAAAAAAAAAAAAAAAAAAAAAAA`, expected: 'X-Robots-Tag noindex and Referrer-Policy no-referrer', actual: rB.error || `HTTP ${rB.status}, X-Robots-Tag "${rB.headers?.['x-robots-tag'] || ''}", Referrer-Policy "${rB.headers?.['referrer-policy'] || ''}"`,
+    });
+  } else {
+    for (const id of ['S6.1', 'S6.2', 'S6.3']) record(id, 'public site vs server', 'not_run', { actual: 'no separate server URL (--backend)' });
   }
 
   // ---- R regression: anonymous, read-only steps of the delivered features' frozen baselines ------
