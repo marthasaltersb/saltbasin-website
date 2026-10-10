@@ -788,6 +788,40 @@ const CORE_TOOLS = [
     },
   },
   {
+    name: 'platform_mcp_info',
+    title: 'Show the MCP address and tools',
+    description: 'Returns the MCP address, transport and the tools registered. Same facts as GET /api/platform/mcp (Connected Agents screen).',
+    inputSchema: schema({}),
+    scope: 'career.read',
+    permission: 'user',
+    api: 'GET /api/platform/mcp',
+    handler: async (args, ctx) => {
+      const base = (process.env.APP_BASE_URL || '').replace(/\/+$/, '');
+      return {
+        url: base ? `${base}/mcp` : '/mcp',
+        transport: 'Streamable HTTP (stateless, POST)',
+        authorization: 'Authorization: Bearer <token>',
+        isAdmin: ctx.user.role === 'admin',
+        scopes: Object.entries(MCP_SCOPES).map(([key, description]) => ({ key, description, tools: MCP_TOOLS.filter((t) => t.scope === key).map((t) => t.name) })),
+        tools: MCP_TOOLS.map(describeTool),
+      };
+    },
+  },
+  {
+    name: 'platform_capabilities_map',
+    title: 'Read the interface parity map',
+    description: 'Administrators only. Returns the parity map: every capability with its website path, API routes and MCP tools, plus a summary. Same as GET /api/platform/capabilities.',
+    inputSchema: schema({}),
+    scope: 'release.read',
+    permission: 'admin',
+    api: 'GET /api/platform/capabilities',
+    handler: async () => {
+      const { CAPABILITIES, evaluateCapabilities, summarizeCapabilities } = await import('./capabilityParity.js');
+      const rows = evaluateCapabilities(CAPABILITIES);
+      return { summary: summarizeCapabilities(rows), capabilities: rows };
+    },
+  },
+  {
     name: 'release_tracker_read',
     title: 'Read release records',
     description: 'Administrators only. Without releaseId: lists release records. With releaseId: that release with its features, rounds and failed runs.',

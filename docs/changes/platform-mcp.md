@@ -24,7 +24,7 @@ Training spec: `docs/training/platform-mcp.md`
 
 ## What changed, in one paragraph
 
-An AI agent can now work in Salt Basin as a real platform user through an MCP server at `/mcp` (official `@modelcontextprotocol/sdk`, Streamable HTTP, stateless). A person creates, names, scopes and revokes personal access tokens on a new **Connected Agents** screen in the World Shell (phone-usable); the token is shown once and only its SHA-256 hash is stored. Every tool call re-checks scope, role, forced password change and Career Portfolio terms, then calls the same server function the matching API route calls. Eleven seed tools cover Career Master read, career opportunities (list, create, open), application outputs (list, open, save a new draft version, approve for QR through the finalization gate), the cover-letter agent (open, one turn) and, for administrators, the release tracker. A **parity map** (`server/lib/capabilityParity.js`, a config registry with no table) lists every capability with its World Shell path, API route and MCP tool; an admin **Capabilities** screen shows it with gaps highlighted, and `scripts/check-interface-parity.mjs` fails when a route in the governed files has no row, when a row points at something that does not exist, or when a shipped tool was removed.
+An AI agent can now work in Salt Basin as a real platform user through an MCP server at `/mcp` (official `@modelcontextprotocol/sdk`, Streamable HTTP, stateless). A person creates, names, scopes and revokes personal access tokens on a new **Connected Agents** screen in the World Shell (phone-usable); the token is shown once and only its SHA-256 hash is stored. Every tool call re-checks scope, role, forced password change and Career Portfolio terms, then calls the same server function the matching API route calls. Eleven seed tools cover Career Master read, career opportunities (list, create, open), application outputs (list, open, save a new draft version, approve for QR through the finalization gate), the cover-letter agent (open, one turn) and, for administrators, the release tracker. Fix rounds 1 and 3 grew the registry to 141 tools: route-backed tools run each website route's own handler in-process (`mcpRouteInvoker.js`, `mcpRouteTools.js`), so every API capability has a tool except the deliberate exclusions listed under Known limitations. A **parity map** (`server/lib/capabilityParity.js`, a config registry with no table) lists every capability with its World Shell path, API route and MCP tool; an admin **Capabilities** screen shows it with gaps highlighted, and `scripts/check-interface-parity.mjs` fails when a route in the governed files has no row, when a row points at something that does not exist, or when a shipped tool was removed.
 
 ## Data model (additive only)
 
@@ -32,8 +32,7 @@ An AI agent can now work in Salt Basin as a real platform user through an MCP se
 | --- | --- | --- |
 | `platform_access_tokens` (new table, `CREATE TABLE IF NOT EXISTS` in `db.js bootstrap()`) | `id, user_id, name, token_hash (unique, SHA-256), token_prefix, scopes JSONB, created_at, expires_at, last_used_at, revoked_at` | Justified new table: no existing table stores a named, scoped, revocable, hashed credential (`sessions` is a cookie session with no name/scope/revocation record). Never seeded; no member rows are written by bootstrap. `scopes` is bound as a raw JS array (JSONB param convention). |
 | `SALT_BASIN_TRACKED_INTERACTIONS.resume_career` | appended interaction `mcp_tool_call` | Reuse, no analytics table: `recordMcpToolCall()` in `usageTracking.js` records through `recordInteraction()` when the user has the module's entitlement rod, else inserts the same-shaped `analytics_events` row (`object_type='platform_access_token'`). Metadata `{ tool, tokenId, ok, errorCode }`; the token list's "tool calls" count reads `analytics_events`. |
-| `config_state` `admin_nav` | two appended tabs `connected-agents`, `capabilities` (System view) | Additive injection like the existing tabs; keys never renamed. |
-| `defaultMemberConfig.js` `memberTabs` | one appended tab `connected-agents` | Existing members get it through `memberConfig.js` GET `/draft`'s read-time additive merge, never a write. |
+| World Shell entry points | `PLATFORM_ISLAND_TABS` in `src/lib/worldIslands.js` (round 1) | No `admin_nav` / `memberTabs` entry is added any more (the original injection was removed in round 1, B10); already-stored rows are never deleted or rewritten. |
 | `server/data/mcpToolManifest.json` | names of shipped tools | Append-only guard, see below. |
 
 ## Server
@@ -57,7 +56,7 @@ An AI agent can now work in Salt Basin as a real platform user through an MCP se
 - `server/lib/mcpServer.js` (new): Express router mounted at `/mcp` (before the SPA fallback). Per request: bearer token -> 401 on failure; low-level SDK `Server` + `StreamableHTTPServerTransport` (stateless, JSON responses); `tools/list` returns the tools the token's scopes include; `tools/call` order is unknown tool (404 `unknown_tool`) -> scope (403 `scope_not_granted`) -> role (403 `forbidden`) -> account gates (428 `password_change_required` / `career_terms_required`, via `getAccountGateBlock`) -> argument schema (400 `invalid_arguments`) -> handler. Handler errors keep the status/code the API route would answer (`FinalizationBlockedError` 409 `tool_category_required` with its `details`; `AgentRequestError` statuses; plain errors 400 `bad_request`). Every failure is an MCP result with `isError: true`, text `Error <status> <code>: <message>` and `structuredContent.error`. GET/DELETE answer 405 (stateless). One tracked interaction is recorded per call, success or failure; if recording itself fails the result carries a "Warning" line.
 - `server/auth.js`: `getAccountGateBlock(user)` extracted from `enforceCurrentCareerTerms` so the API middleware and MCP share one definition of the first-step gates (behaviour of the middleware unchanged).
 - `server/routes/platformAccess.js` (new, mounted `/api/platform`, cookie auth only - a token cannot manage tokens): `GET/POST /tokens`, `DELETE /tokens/:id`, `GET /mcp` (address, scopes, tools), `GET /capabilities` (admin).
-- `server/lib/capabilityParity.js` (new): `CAPABILITIES` (43 rows covering the 67 routes of the four governed route files plus the existing career-master and release-intelligence reads), `GOVERNED_ROUTE_FILES`, `evaluateCapabilities`, `summarizeCapabilities`.
+- `server/lib/capabilityParity.js` (new): `CAPABILITIES` (87 rows as of round 3, covering the 167 governed routes), `GOVERNED_ROUTE_FILES`, `evaluateCapabilities`, `summarizeCapabilities`.
 - `scripts/check-interface-parity.mjs` (new): see "Verified". `scripts/mcp-call.mjs` (new): a small MCP client (list / call) used by the training spec and as an example for any MCP client.
 
 ## Client
@@ -84,11 +83,18 @@ An AI agent can now work in Salt Basin as a real platform user through an MCP se
 ## Known limitations
 
 - Render-binding tools (data map, pending changes) are not built because that feature has no code on this branch yet.
-- Gaps recorded in the map (as of this version): 25 capabilities have no MCP tool, 3 have no website screen (`verification-current-edit`, `application-package-import`, `resume-output-staleness`). They are listed with reasons on World Shell -> Capabilities. `--strict` fails until they are closed; the default check passes because every gap is recorded.
+- Parity map as of round 3: 87 of 87 capabilities have a recorded status and `check-interface-parity.mjs --strict` exits 0 (141 tools, 167 governed routes). Capabilities without an MCP tool are recorded as explicit `mcpExclusion` rows, shown on World Shell -> Capabilities, and are waiting for the owner to confirm each one or ask for a tool (they are not claimed as parity):
+  - binary downloads (QR image, stamped .docx, PDF from the live QR page): a tool cannot return a file the way the website saves it; the data equivalents exist (`shared_output_live_read`, the approve tool's URL);
+  - file uploads (pipeline workbook import, document import into an opportunity, add a resume to a package from a file, intake uploads): MCP arguments are JSON; the agent files content with `application_output_new_draft_version`;
+  - accept / reject a cover-letter proposal: a human decision made in the website, by design;
+  - Career Portfolio terms (consent): a personal decision; MCP calls return 428 until it is made;
+  - token create / list / revoke: credentials are managed by a signed-in person; a token can never mint or revoke tokens;
+  - the one-time Career Master definition seed (`POST /api/career/seed`): platform maintenance.
+- Closed in round 3: public/shared Career Master reads (`career_catalogs_read`, `career_public_rollup_read`), site metadata sync (`career_site_metadata_sync`), the MCP connection info (`platform_mcp_info`) and the parity map (`platform_capabilities_map`, administrators).
 - Tokens authenticate `/mcp` only, not `/api/*`.
-- The MCP server is stateless: no server-initiated notifications, resources or prompts. Rate limiting of `/mcp` is not added in this version.
+- The MCP server is stateless: no server-initiated notifications, resources or prompts. `/mcp` is rate limited (round 1, B11): failed token attempts per IP and requests per token.
 - `capabilityParity.js` verifies that routes, tools and rows agree; it cannot prove that a UI path string matches a screen label (that is what the training spec's walk checks).
-- A token created before a user's terms lapse keeps working for reads only after the user re-accepts: calls return 428 `career_terms_required` until they do (by design, not separately tested in the spec).
+- A token created before a user's terms lapse keeps working only after the user re-accepts: calls return 428 `career_terms_required` until they do.
 
 ## Fix notes per round
 
@@ -121,3 +127,15 @@ Branch `release-loop/platform-mcp-fix-r1`. The frozen spec and baselines are unt
 - What changed: `CapabilitiesPanel.jsx` now renders a status message ("No gaps: every capability works on the website, in the API and as an MCP tool.") when Gaps only is selected, data has loaded, there is no error and zero rows match. All capabilities is unchanged.
 - Files: `src/components/admin/CapabilitiesPanel.jsx`.
 - Checked: `npm run build` passes. The condition is `gapsOnly && rows.length === 0` on loaded data, so All capabilities (rows non-empty) never shows it. A full browser walk at 1280x900 and 390x844 was not run in this fix round; re-validation should confirm it.
+
+## Fix notes — round 3
+
+**platform-mcp-F2-2 - change spec out of date after fix round 1.**
+- What changed: the overview paragraph, the data model table (removed the `admin_nav` / `memberTabs` injection rows that round 1 removed), the parity-map row count and the Known limitations section were rewritten to the current state (141 tools, 87 capabilities, rate limiting present, exclusions listed by name instead of "25 gaps").
+- Files: `docs/changes/platform-mcp.md`.
+- Checked: counts compared with `node scripts/check-interface-parity.mjs --strict` output (87 of 87 capabilities, 167 governed routes, 141 tools).
+
+**platform-mcp-F2-4 - exclusions narrowed the owner's direction ("accessible through MCP").**
+- What changed: every exclusion that is data-shaped was turned into a tool, appended to the registry: `career_catalogs_read`, `career_public_rollup_read`, `career_site_metadata_sync` (route-backed, the route's own handler), `platform_mcp_info` and `platform_capabilities_map` (administrators; same data as the two `/api/platform` routes). The mixed "site metadata sync and definition seeding" row was split so the seed route has its own explicit exclusion instead of borrowing the sync tool. Binary downloads, file uploads, accept/reject of proposals, consent, token management and the seed stay as named exclusions: these are not buildable as JSON tools or are deliberate security/consent decisions, so they need the owner's explicit confirmation (listed in Known limitations); no exclusion was added or widened.
+- Files: `server/lib/mcpRouteTools.js`, `server/lib/mcpToolRegistry.js`, `server/lib/capabilityParity.js`, `server/data/mcpToolManifest.json`.
+- Checked: `check-interface-parity.mjs --strict` exits 0 and `--self-test` passes; on a fresh database with a member token, `platform_mcp_info`, `career_catalogs_read` return data, `career_public_rollup_read` for an unknown slug returns the route's 404, and `platform_capabilities_map` as a member returns 403 `forbidden`.

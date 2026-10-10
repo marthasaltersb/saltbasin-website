@@ -147,6 +147,11 @@
     "render_binding_change_impact",
     "render_binding_change_decide",
     "render_binding_settings_read",
-    "render_binding_settings_save"
+    "render_binding_settings_save",
+    "platform_mcp_info",
+    "platform_capabilities_map",
+    "career_catalogs_read",
+    "career_public_rollup_read",
+    "career_site_metadata_sync"
   ]
 }
