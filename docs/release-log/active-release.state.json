@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T21:13:13.365Z",
+  "exportedAt": "2026-10-10T21:26:47.880Z",
   "features": {
     "platform-mcp": {
       "status": "validate",
@@ -10,43 +10,43 @@
       "backlog": 3
     },
     "release-intelligence": {
-      "status": "fix",
+      "status": "integrate",
       "lastRound": 4,
       "lastScore": "54/55",
       "lastReport": "docs/test-results/release-intelligence/round-4.md",
-      "openBugs": 8,
+      "openBugs": 9,
       "backlog": 2
     },
     "in-app-release-loop": {
-      "status": "awaiting_retest",
+      "status": "validate",
       "lastRound": 4,
       "lastScore": "59/60",
       "lastReport": "docs/test-results/in-app-release-loop/round-4.md",
-      "openBugs": 2,
+      "openBugs": 5,
       "backlog": 2
     },
     "session-mapping": {
-      "status": "validate",
-      "lastRound": 4,
+      "status": "awaiting_retest",
+      "lastRound": 5,
       "lastScore": "55/56",
-      "lastReport": "docs/test-results/session-mapping/round-4.md",
-      "openBugs": 9,
+      "lastReport": "docs/test-results/session-mapping/round-5.md",
+      "openBugs": 10,
       "backlog": 1
     },
     "chart-gallery": {
-      "status": "triage",
+      "status": "fix",
       "lastRound": 6,
       "lastScore": "18/20",
       "lastReport": "docs/test-results/chart-gallery/round-6.md",
       "openBugs": 24,
-      "backlog": 11
+      "backlog": 14
     },
     "release-cut-and-session-plans": {
-      "status": "reconcile",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
-      "openBugs": 0,
+      "openBugs": 4,
       "backlog": 0
     },
     "owner-error-messages": {
@@ -74,12 +74,12 @@
       "backlog": 6
     },
     "resume-rollups": {
-      "status": "triage",
+      "status": "integrate",
       "lastRound": 4,
       "lastScore": "30/32",
       "lastReport": "docs/test-results/resume-rollups/round-4.md",
-      "openBugs": 17,
-      "backlog": 5
+      "openBugs": 21,
+      "backlog": 6
     },
     "cover-letter-agent": {
       "status": "validate",
@@ -90,11 +90,11 @@
       "backlog": 10
     },
     "release-scope": {
-      "status": "fix",
+      "status": "validate",
       "lastRound": 1,
       "lastScore": "24/25",
       "lastReport": "docs/test-results/release-scope/round-1.md",
-      "openBugs": 0,
+      "openBugs": 5,
       "backlog": 1
     },
     "journey-flow-studio": {
@@ -295,11 +295,32 @@
       "url": "https://saltbasin.net/mcp"
     },
     {
+      "id": "release-intelligence-F4-4",
+      "feature": "release-intelligence",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "change spec Known limitations",
+      "rootCause": "Single-approver design; owner has not decided whether a second reviewer is required.",
+      "files": [
+        "server/lib/releaseIntelligence.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "release-intelligence-RI-R1-1",
       "feature": "release-intelligence",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "node scripts/import-release-logs.mjs run twice against the same database exits 0, prints imported/updated then only unchanged, warns for documents missing a ve…",
       "rootCause": "importRepository() in server/lib/releaseLogImporter.js (~lines 354-377) walks docs/release-log/ recursively and treats every .md as a relea…",
       "files": [
@@ -317,6 +338,79 @@
           "round": 4,
           "event": "found",
           "note": "importRepository() in server/lib/releaseLogImporter.js (~li…",
+          "commit": null
+        },
+        {
+          "round": 4,
+          "event": "fixed",
+          "note": "generatedFiles patterns now match by basename at any depth …",
+          "commit": "a67cc79568eb03929f82ff7b7bec17221b0db032"
+        }
+      ]
+    },
+    {
+      "id": "in-app-release-loop-F4-3",
+      "feature": "in-app-release-loop",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "documentation / spec governance",
+      "rootCause": "Fix notes appended to docs/changes/in-app-release-loop.md but old statements never corrected; frozen training line 8 still lists Classic To…",
+      "files": [
+        "docs/changes/in-app-release-loop.md",
+        "docs/spec-amendments/in-app-release-loop/"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "in-app-release-loop-F4-4",
+      "feature": "in-app-release-loop",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "definition editable in platform",
+      "rootCause": "Only transition targets are editable; stage keys, add/remove stages and per-stage role are fixed",
+      "files": [
+        "src/components/admin/ReleaseLoopPanel.jsx",
+        "server/lib/releaseLoopDefinition.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "in-app-release-loop-F4-5",
+      "feature": "in-app-release-loop",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "process documentation",
+      "rootCause": "Blocked by frozen release-loop-tooling spec journey 1 step 3 that fails if docs claim a platform screen",
+      "files": [
+        "server/data/releaseLoop/definition.json",
+        "docs/release-process.md",
+        ".claude/skills/salt-basin-release-loop/SKILL.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
           "commit": null
         }
       ]
@@ -347,6 +441,189 @@
           "event": "fixed",
           "note": "Moved the 44px minimum height (with inline-flex, align-item…",
           "commit": "65e21792a8602829b13d01ab9ecbd1651efca038"
+        }
+      ]
+    },
+    {
+      "id": "session-mapping-round 4 E.8 failure (see docs/test-results/session-mapping/round-4.md; no earlier triage id exists)",
+      "feature": "session-mapping",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "Settings: Transcripts folder set to a nonexistent path, then Import -> Scan server transcripts (desktop, mobile, and MCP session_mapping_import kind=scan)",
+      "rootCause": "scanTranscripts() in server/lib/sessionMapping.js lines 339-342 catches the 400 error thrown by listSessionFiles() (server/lib/sessionAnaly…",
+      "files": [
+        "server/lib/sessionMapping.js",
+        "src/components/admin/SessionMappingPanel.jsx",
+        "server/lib/mcpToolRegistry.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "No entry in docs/triage/scope-review.json. scanTranscripts, listSessionFiles, the scan ro…"
+      },
+      "history": [
+        {
+          "round": 5,
+          "event": "found",
+          "note": "scanTranscripts() in server/lib/sessionMapping.js lines 339…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-T6-1",
+      "feature": "chart-gallery",
+      "status": "backlog_pre_existing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "MOBILE_GAP: admin Output Templates reachable at 390px",
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": null
+      },
+      "history": [
+        {
+          "round": 6,
+          "event": "found",
+          "note": "brand.css @media(max-width:900px) hides .sb-admin-topbar-ac…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-T6-2",
+      "feature": "chart-gallery",
+      "status": "backlog_pre_existing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "Capacity Gauge shows the number 0 for an empty member",
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": null
+      },
+      "history": [
+        {
+          "round": 6,
+          "event": "found",
+          "note": "outputBlocks.js interpolate() line 485 `if (!text || !ctx) …",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "chart-gallery-T6-3",
+      "feature": "chart-gallery",
+      "status": "reassigned",
+      "class": "defect",
+      "attempts": 0,
+      "step": "MCP_GAP: career_rollups_read returns the same data as the gallery",
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "other_feature",
+        "owner": "career-bound-outputs",
+        "evidence": null
+      },
+      "history": [
+        {
+          "round": 6,
+          "event": "found",
+          "note": "mcpRouteTools.js line 67 registers career_rollups_read with…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-cut-and-session-plans-B3",
+      "feature": "release-cut-and-session-plans",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "Build notes 3 / parity",
+      "rootCause": "Checker lacks apiExclusion; builder deleted the row rather than recording an exclusion, and the cut never got UI/API/MCP forms, violating i…",
+      "files": [
+        "server/lib/capabilityParity.js",
+        "scripts/check-interface-parity.mjs",
+        "server/lib/releaseCut.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-cut-and-session-plans-B7",
+      "feature": "release-cut-and-session-plans",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Change spec Behaviour changes",
+      "rootCause": "No durable store, chosen to avoid schema changes; not listed in Known limitations",
+      "files": [
+        "server/lib/releaseCut.js",
+        "src/components/admin/ReleaseCutTabs.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-cut-and-session-plans-B8",
+      "feature": "release-cut-and-session-plans",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Change spec Known limitations",
+      "rootCause": "Report view not built on screen",
+      "files": [
+        "src/components/admin/ReleaseCutTabs.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-cut-and-session-plans-B9",
+      "feature": "release-cut-and-session-plans",
+      "status": "open",
+      "class": "informational",
+      "attempts": 0,
+      "step": "Change spec Known limitations",
+      "rootCause": "Journeys use accounts with no Career Master technologies",
+      "files": [
+        "docs/training/release-cut-and-session-plans.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
         }
       ]
     },
@@ -612,11 +889,281 @@
       ]
     },
     {
+      "id": "resume-rollups-F4-4",
+      "feature": "resume-rollups",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "J12.1 mobile",
+      "rootCause": "Unknown element exceeds viewport by 1px; may be the grid, header or pre-existing.",
+      "files": [
+        "src/components/Output.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "resume-rollups-F4-5",
+      "feature": "resume-rollups",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "RR1-6 / B5 (proposed J9.6)",
+      "rootCause": "No baseline step, so validators never drive it.",
+      "files": [
+        "src/components/blocks/CareerProspectBlocks.jsx",
+        "src/components/admin/EditorPane.jsx",
+        "docs/spec-amendments/resume-rollups/A2.json"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "resume-rollups-F4-6",
+      "feature": "resume-rollups",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "RR1-6 / A3 / proposed J12.2",
+      "rootCause": "Behaviour undefined; needs business definition.",
+      "files": [
+        "docs/spec-amendments/resume-rollups/A3.json",
+        "src/components/Output.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "resume-rollups-F4-7",
+      "feature": "resume-rollups",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Capability bars N Expert",
+      "rootCause": "Business rule undefined (needs_business_definition).",
+      "files": [
+        "src/components/Output.jsx",
+        "server/routes/careerMaster.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "resume-rollups-F4-8",
+      "feature": "resume-rollups",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "E.3 / P.1 / J4.1 wording",
+      "rootCause": "Spec wording, not code.",
+      "files": [
+        "docs/spec-amendments/resume-rollups/"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "resume-rollups-B11",
+      "feature": "resume-rollups",
+      "status": "backlog_pre_existing",
+      "class": "defect",
+      "attempts": 1,
+      "step": "MOBILE_GAP: output tile grid unreadable at 390px",
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": null
+      },
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "The Executive Summary tile grid hardcodes six columns with …",
+          "commit": null
+        },
+        {
+          "round": 4,
+          "event": "fixed",
+          "note": "Replaced the hardcoded six-column tile grid with repeat(aut…",
+          "commit": "0ab0050d03eb1748a6defd88cfc4cdcab63af6a6"
+        }
+      ]
+    },
+    {
+      "id": "resume-rollups-RR2-2",
+      "feature": "resume-rollups",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "AMBIGUOUS: empty Career Master shows every tile as — with a reason",
+      "rootCause": "Product behaviour matches the change spec. server/lib/resumeRollups.js (header lines 16-19 and case 'manual' at lines 317-320) returns the …",
+      "files": [
+        "docs/training/resume-rollups.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Spec step E.3 in this feature's own training spec contradicts its documented manual-metri…"
+      },
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Product behaviour matches the change spec. server/lib/resum…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-scope-F1-3",
+      "feature": "release-scope",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "J5.5 / interface parity",
+      "rootCause": "Only release_tracker_get_state was registered; other RELEASE_TRACKER_TOOLS (ingest, pull, settings, tokens, snapshots, ingest-log) have no …",
+      "files": [
+        "server/lib/mcpToolRegistry.js",
+        "server/data/mcpToolManifest.json",
+        "server/lib/capabilityParity.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-scope-F1-4",
+      "feature": "release-scope",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Interface parity",
+      "rootCause": "Scope lives in the committed features file and is changed only by repo tooling.",
+      "files": [
+        "scripts/release-scope.mjs",
+        "server/lib/releaseScope.js",
+        "server/lib/releaseTrackerService.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-scope-F1-5",
+      "feature": "release-scope",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "integrate",
+      "rootCause": "release-cut-and-session-plans merged to integration after the branch base 39bb354.",
+      "files": [
+        "server/lib/capabilityParity.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-scope-F1-6",
+      "feature": "release-scope",
+      "status": "open",
+      "class": "informational",
+      "attempts": 0,
+      "step": "sync",
+      "rootCause": "Bugs split across tracker/bugs and bugs-2 but budget measured combined.",
+      "files": [
+        "scripts/release-tracker-sync.mjs"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (in…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-scope-F1-7",
+      "feature": "release-scope",
+      "status": "open",
+      "class": "informational",
+      "attempts": 0,
+      "step": "J5.5",
+      "rootCause": "No seeded snapshot used.",
+      "files": [],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (in…",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "release-scope-T1",
       "feature": "release-scope",
       "status": "backlog_pre_existing",
       "class": "defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "MCP_GAP: release tracker state (feature scope/added) has no MCP tool",
       "rootCause": null,
       "files": [],
@@ -631,6 +1178,12 @@
           "event": "found",
           "note": "RELEASE_TRACKER_TOOLS (releaseTrackerService.js:505-513, in…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Registered release_tracker_get_state in mcpToolRegistry.js …",
+          "commit": "da35a4081b6594ab585a47499c61454e9ff80294"
         }
       ]
     },
@@ -1727,31 +2280,6 @@
         "scope": "this_feature",
         "owner": null,
         "evidence": "The capability bars in Output.jsx are now computed by resume-rollups (4f35fd4, replacing …"
-      },
-      "history": [
-        {
-          "round": 0,
-          "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (…",
-          "commit": null
-        }
-      ]
-    },
-    {
-      "id": "resume-rollups-B11",
-      "feature": "resume-rollups",
-      "status": "open",
-      "class": "product_defect",
-      "attempts": 0,
-      "step": "Journey 12 (block)",
-      "rootCause": "Column count not updated.",
-      "files": [
-        "src/lib/outputBlocks.js"
-      ],
-      "scope": {
-        "scope": "this_feature",
-        "owner": null,
-        "evidence": "src/lib/outputBlocks.js column count was last changed by 4f35fd4; the new default tile se…"
       },
       "history": [
         {
@@ -7846,27 +8374,6 @@
           "event": "verified",
           "note": "Retest round 4: this bug's step passed (the round had other…",
           "commit": "0800b1c"
-        }
-      ]
-    },
-    {
-      "id": "resume-rollups-RR2-2",
-      "feature": "resume-rollups",
-      "status": "open",
-      "class": "spec_error",
-      "attempts": 0,
-      "step": "E.3",
-      "rootCause": "Product matches the change spec: a manual (user-defined) tile is the member's own value marked with a dagger (docs/changes/resume-rollups.m…",
-      "files": [
-        "docs/training/resume-rollups.md"
-      ],
-      "scope": null,
-      "history": [
-        {
-          "round": 2,
-          "event": "found",
-          "note": "Product matches the change spec: a manual (user-defined) ti…",
-          "commit": null
         }
       ]
     },
