@@ -31,7 +31,7 @@ Do **not** restart the server while a fault is in place (boot recreates the miss
 
 ## Preconditions (fictional data)
 
-P1. Sign in as the test admin (`ADMIN_EMAIL` / `ADMIN_INITIAL_PASSWORD` from the environment) and accept the terms.
+P1. Sign in as `member@test.local` (the admin's Classic Tools has no Career Master or My Resume; password from `scripts/create-test-member.mjs`) and accept the terms.
 
 P2. In **Career Master → Manual Intake** add, using **+ Add** then **Save** each time:
 - Skills tab: **Process design** (category *Operations*, tier *Expert*, years 11, engagements 14, first used 2012) and **Forecast modeling** (*Strategy*, *Advanced*, 13, 8, 2013).
@@ -67,7 +67,7 @@ Expect `200`. If you cannot create it, mark Journey 7 **BLOCKED** (not failed) a
    - Expect a dialog **Set how each technology was used** listing **Ledgerly ERP** and **QuoteFlow CPQ**, each with a dropdown (options *Choose…*, *Hands-on (suggested)*, *Integration design*, *Adjacent exposure*).
    - Expect **no** line containing "Suggestions are unavailable".
 2. [J0.2] In each dropdown choose **Hands-on (suggested)**, click **Save to Career Master and continue**.
-   - Expect the dialog to close, a toast "Approved — private QR link created (copied to clipboard).", **no** red toast, and under the output a QR image and a link `/r/<slug>`. Note this link as **RESUME LINK**.
+   - Expect the dialog to close, a toast "Approved - private QR link created (copied to clipboard)." (plain hyphen; a normal, non-red success toast), **no** red toast, and under the output a QR image and a link `/r/<slug>`. Note this link as **RESUME LINK**.
 3. [J0.3] On **Example Corp - Cover Letter** click **Approve for QR**, accept the confirm.
    - Expect no dialog (every technology now has a category), the same success toast, and a second link. Note it as **COVER LINK**.
 4. [J0.4] Open RESUME LINK in a private window.
@@ -107,7 +107,7 @@ Expect `200`. If you cannot create it, mark Journey 7 **BLOCKED** (not failed) a
    - Expect, inside the dialog, an alert: "**Suggestions are unavailable (**" … `relation "career_proficiency_assertions" does not exist) — choose each category yourself.`
    - Expect the dropdown options to be *Choose…*, *Hands-on*, *Integration design*, *Adjacent exposure* with **no** "(suggested)" on any option.
 4. [J3.4] Choose **Hands-on**, click **Save to Career Master and continue**.
-   - Expect the dialog to close and a green toast "Approved — private QR link created (copied to clipboard)." followed by a **red** toast: `The chart snapshot for the printed version could not be captured (relation "career_jobs" does not exist). The QR page will say so and can't compare live data to print.`
+   - Expect the dialog to close and the normal, non-red success toast "Approved - private QR link created (copied to clipboard)." followed by a **red** toast: `The chart snapshot for the printed version could not be captured (relation "career_jobs" does not exist). The QR page will say so and can't compare live data to print.`
    - Expect the new version to show a QR code and the **same** link as RESUME LINK (the link follows the lineage).
    - Expect the earlier version now reads *Approved* with no QR image.
 5. [J3.5] Open RESUME LINK in a private window.
@@ -144,7 +144,7 @@ Expect `200`. If you cannot create it, mark Journey 7 **BLOCKED** (not failed) a
 - [E.1] Run last, after J5.6: on My Resume click **Revoke QR** on Example Corp - Cover Letter (confirm). Open COVER LINK in a private window: the page shows "This link isn't available".
 - [E.2] Fault A only (no Fault B) when the gate dialog opens: it shows suggestions normally (Pipeline Tracker preselected "Integration design (suggested)") and no "Suggestions are unavailable" line, because the suggestions lookup does not read `career_jobs`.
 - [E.3] Cancelling the gate dialog in Journey 3 shows the toast "Finalization cancelled — technologies still need a proficiency category." and leaves the output unchanged.
-- [E.4] Expected network noise during the whole walk: HTTP 500 on `/api/career/master`, `/api/career/catalogs`, `/api/career/proficiency`, `/api/career/rollups`, `/api/career/resume-rollups` only while a fault is in place; one HTTP 404 on `/api/shared-outputs/<slug>` after the E.1 revoke step; one HTTP 409 on `/api/resume-outputs/<id>/share` per first approval that opens the gate dialog; HTTP 404 on `/api/members/me/profile` (a member with no profile row). Anything else is a finding.
+- [E.4] Expected network noise during the whole walk: HTTP 500 on `/api/career/master`, `/api/career/catalogs`, `/api/career/proficiency`, `/api/career/rollups`, `/api/career/resume-rollups` only while a fault is in place; one HTTP 404 on `/api/shared-outputs/<slug>` after the E.1 revoke step; one HTTP 409 on `/api/resume-outputs/<id>/share` for each approval attempt that opens the gate dialog; a request cancelled by navigation or reload (`net::ERR_ABORTED`) is not a finding; HTTP 404 on `/api/members/me/profile` (a member with no profile row). Anything else is a finding.
 
 ## Appendix A — fictional package `pkg.json`
 
