@@ -1,0 +1,96 @@
+{
+  "session": "S-0.3.0-02-build",
+  "release": "0.3.0",
+  "intent": "Fix production bugs first (none filed yet), re-validate the closest carried features, then build the three unblocked 0.3.0 features",
+  "estimate": {
+    "recordedAt": "2026-10-10T20:28:12.272Z",
+    "atCommit": "2ac6b83",
+    "intent": "Fix production bugs first (none filed yet), re-validate the closest carried features, then build the three unblocked 0.3.0 features",
+    "items": [
+      {
+        "feature": "platform-mcp",
+        "goal": "re-test on baseline v4, close the round",
+        "expect": {
+          "passed": 65,
+          "total": 65
+        },
+        "size": "S"
+      },
+      {
+        "feature": "session-mapping",
+        "goal": "fix the last failing step, re-validate",
+        "expect": {
+          "passed": 56,
+          "total": 56
+        },
+        "size": "S"
+      },
+      {
+        "feature": "chart-gallery",
+        "goal": "fix the 2 failing steps, re-validate",
+        "expect": {
+          "passed": 19,
+          "total": 20
+        },
+        "size": "M"
+      },
+      {
+        "feature": "proficiency-live-qr",
+        "goal": "fix the 2 failing steps (J8.4 is owner-blocked)",
+        "expect": {
+          "passed": 31,
+          "total": 32
+        },
+        "size": "M"
+      },
+      {
+        "feature": "resume-rollups",
+        "goal": "fix the 2 failing steps (A3 is owner-blocked)",
+        "expect": {
+          "passed": 31,
+          "total": 32
+        },
+        "size": "M"
+      },
+      {
+        "feature": "cover-letter-agent",
+        "goal": "fix the 3 failing steps, re-validate",
+        "expect": {
+          "passed": 46,
+          "total": 48
+        },
+        "size": "M"
+      },
+      {
+        "feature": "release-cut-and-session-plans",
+        "goal": "write change + training spec, freeze v1, validate",
+        "expect": {
+          "passed": 18,
+          "total": 20
+        },
+        "size": "M"
+      },
+      {
+        "feature": "owner-error-messages",
+        "goal": "plain-language red/amber errors in QualificationRulesPanel, TrackerSettings + sweep",
+        "expect": {
+          "passed": 12,
+          "total": 12
+        },
+        "size": "M"
+      },
+      {
+        "feature": "scoring-preferences-mcp",
+        "goal": "MCP tools for scoring preferences, close the MCP_GAP parity row",
+        "expect": {
+          "passed": 10,
+          "total": 10
+        },
+        "size": "S"
+      }
+    ]
+  },
+  "reEstimates": [],
+  "merges": [],
+  "closedAt": null
+}
