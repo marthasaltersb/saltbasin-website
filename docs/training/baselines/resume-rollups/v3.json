@@ -1,0 +1,538 @@
+{
+  "feature": "resume-rollups",
+  "spec": "docs/training/resume-rollups.md",
+  "version": 3,
+  "frozenAt": "2026-10-10T21:28:08.437Z",
+  "commitAtFreeze": "01ab5d5b2d625f336ce5d816ab89db250f266736",
+  "specSha256": "f183054e731c06bffc5090e86646081271d3117d941ba7d9f7bdc67b038f1296",
+  "amendment": "A4",
+  "previous": 2,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "P.1",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "d076ec0dc7d6f924",
+      "summary": "Sign in as the admin test user. On `/world` a terms screen \"Career Portfolio Terms & Data Conditions\" appears: tick all four checkboxes and click **I Agree — Co"
+    },
+    {
+      "id": "P.2",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "c88f9d8d78598a02",
+      "summary": "Career Master → **Manual Intake**. In each add dialog the fields are labelled as below; click **Save** after each."
+    },
+    {
+      "id": "P.3",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "91b306d186d6e7d8",
+      "summary": "Open the screen (path above) and click **5 · Resume rollups**."
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "692018cb252e5cd7",
+      "summary": "Expect the page text \"These three lists drive the resume's Executive Summary tiles…\" and a **KPI tiles** section with six cards, in this order. Under each card'"
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8deb1b5fbae6bb4b",
+      "summary": "Scroll to **Live preview**. Expect tiles showing `$250M`, `—`, `1`, `2`, `8`, `2` with their labels; under \"Capability Confidence\": `Revenue Operations · 100% ·"
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d539cb5909af01dc",
+      "summary": "In the **Years** card, change the Label to `Years in operations`. Wait about 1 second."
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0a8704397ce8b6d6",
+      "summary": "Click **Save** on that card."
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a48cf0b9c2df82c0",
+      "summary": "Click **+ Add KPI tile**. In the new last card set Label `Certified partners`, Metric `Manual value (user-defined)`, then in the field \"Your value (shown with †"
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1a8d75c530ad2e4c",
+      "summary": "Click **Save** on that card."
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4146d5c82fbe0aeb",
+      "summary": "Click **+ Add KPI tile**. In the new card set Label `Expert skills`, Metric `Skills/tools at or above a proficiency level`. Expect a \"Counts\" selector (Skills /"
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "41c1b71656a09a45",
+      "summary": "Click **Save**. Expect the toast \"Expert skills saved\"."
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7b8960edeae9168f",
+      "summary": "Click **+ Add KPI tile**. Label `Total skill years`, Metric `Aggregate of a Career Master field`, Collection `Skills`, Field `yearsExp`, Aggregation `Sum`."
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "57ab329d6a6e83d1",
+      "summary": "Click **Save**. Expect the toast \"Total skill years saved\"."
+    },
+    {
+      "id": "J6.1",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5021ff4875e03edf",
+      "summary": "In the **ARR Automated** card click the **↑** (Move up) button."
+    },
+    {
+      "id": "J6.2",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a24accaf6881c17c",
+      "summary": "In the **Employers** card untick **Shown**."
+    },
+    {
+      "id": "J6.3",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "67130f7709d9b559",
+      "summary": "Click **Save** on the Employers card. Expect the toast \"Employers saved\"."
+    },
+    {
+      "id": "J7.1",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6f3ef1ef017d99f8",
+      "summary": "In **Industry buckets** click **+ Add industry bucket**. In the new card set Label `Care delivery`, Sub-label `Clinical operations`. In the \"Add keyword, press "
+    },
+    {
+      "id": "J7.2",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "54be09d6a4e90b22",
+      "summary": "Click **Save**. Expect the toast \"Care delivery saved\"."
+    },
+    {
+      "id": "J7.3",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2e9c07405fbf1f97",
+      "summary": "In the same card add keyword `he` (Enter)."
+    },
+    {
+      "id": "J8.1",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "80a210ad71ba7beb",
+      "summary": "In the **Capability groups** section, expect a box \"Your unmapped skill categories\" with `Treasury Ops · 1 skill — not counted in any bar`."
+    },
+    {
+      "id": "J8.2",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c5b9f1e366a7cb92",
+      "summary": "In that row choose **Strategy & Advisory** from the \"Map to group…\" dropdown."
+    },
+    {
+      "id": "J9.1",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "841f05be9641e9f0",
+      "summary": "In **Career Atom rollups** expect three cards: `Skills by category`, `Roles by industry`, `Tools by wheel bucket`."
+    },
+    {
+      "id": "J9.2",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ef2b72bfb53429a1",
+      "summary": "Click **+ Add Career Atom grouping**. Label `Skills by proficiency`, \"Group by\" `tier`, Sort `A to Z`."
+    },
+    {
+      "id": "J9.3",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e25ca851713bd166",
+      "summary": "Click **Save**. Expect the toast \"Skills by proficiency saved\"."
+    },
+    {
+      "id": "J9.4",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "46ef96fbbd60796a",
+      "summary": "In the `Tools by wheel bucket` card untick **Shown** and click **Save**. Expect the toast \"Tools by wheel bucket saved\"."
+    },
+    {
+      "id": "J9.5",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3d0a2757896530cb",
+      "summary": "Reload Proficiency & Rollups and open Career Atom rollups. Expect the `Skills by proficiency` card still present with the computed line 'Advanced (1) · Expert ("
+    },
+    {
+      "id": "J10.1",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0b802ce183241ab6",
+      "summary": "Click **3 · Rules & why**. In **Levels and why**, row **Stakeholder alignment**, choose **Expert** in its override dropdown (last dropdown in the row)."
+    },
+    {
+      "id": "J10.2",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4856259f5dbe4c19",
+      "summary": "Click **5 · Resume rollups**."
+    },
+    {
+      "id": "J11.1",
+      "kind": "step",
+      "journey": "11",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f3e18d75a1eba465",
+      "summary": "Click **+ Add industry bucket** (leave the keywords empty)."
+    },
+    {
+      "id": "J11.2",
+      "kind": "step",
+      "journey": "11",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "efb6c9864486d441",
+      "summary": "Click **Remove** on that unsaved card and confirm the dialog."
+    },
+    {
+      "id": "J12.1",
+      "kind": "step",
+      "journey": "12",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3af199d8679fcc75",
+      "summary": "Open `/output/resume?layout=modern` and wait a few seconds."
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4aa0a5d398aa0c6b",
+      "summary": "Removing a saved row asks \"Remove “<label>”?\" and removes it on confirm; the last saved row of a type cannot be removed — a red toast says to untick **Shown** i"
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9f234202a0a0e91f",
+      "summary": "If the rollups cannot be loaded, the screen shows an amber alert \"Resume rollups could not be loaded… not empty\" with a **Retry** button, and an output shows \"R"
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "484c0ee7c7bae048",
+      "summary": "A member with an empty Career Master sees every tile computed from Career Master as `—` with a reason; a manual (user-defined) tile shows the member's own value"
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "643525a95aeb0c21",
+      "summary": "Expected, non-defect console noise: `404 GET /api/members/me/profile` (admin test user has no member profile) and sandbox certificate errors for external hosts."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "e95ee189c45cc991"
+    },
+    {
+      "title": "Preconditions (fictional data, entered through the UI)",
+      "kind": "precondition",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 1 — The defaults and the live preview",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 2 — Edit a tile and see it before saving",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 3 — A manual (user-defined) tile is marked †",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 4 — A proficiency tile uses the proficiency engine",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 5 — Aggregate any Career Master field",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 6 — Order and visibility",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 7 — Industry buckets",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 8 — Capability groups and unmapped categories",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 9 — Career Atom rollups",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 10 — A hand-set proficiency level flows into the tiles with †",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 11 — A bad draft is explained, not hidden",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 12 — The resume output uses the configuration",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    }
+  ],
+  "comparedWithPrevious": {
+    "same": [
+      "P.1",
+      "P.2",
+      "P.3",
+      "J1.1",
+      "J1.2",
+      "J2.1",
+      "J2.2",
+      "J3.1",
+      "J3.2",
+      "J4.1",
+      "J4.2",
+      "J5.1",
+      "J5.2",
+      "J6.1",
+      "J6.2",
+      "J6.3",
+      "J7.1",
+      "J7.2",
+      "J7.3",
+      "J8.1",
+      "J8.2",
+      "J9.1",
+      "J9.2",
+      "J9.3",
+      "J9.4",
+      "J9.5",
+      "J10.1",
+      "J10.2",
+      "J11.1",
+      "J11.2",
+      "J12.1",
+      "E.1",
+      "E.2",
+      "E.4"
+    ],
+    "changed": [
+      "E.3"
+    ],
+    "added": [],
+    "retired": [],
+    "contextChanged": []
+  }
+}
