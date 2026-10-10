@@ -82,6 +82,7 @@ import genesisRouter from './routes/genesis.js';
 import contentAttachmentsRouter from './routes/contentAttachments.js';
 import contentPublicationsRouter from './routes/contentPublications.js';
 import experienceRouter from './routes/experience.js';
+import portfolioSiteAgentRouter from './routes/portfolioSiteAgent.js';
 import deploymentIntelligenceRouter from './routes/deploymentIntelligence.js';
 import backlogOutputsRouter from './routes/backlogOutputs.js';
 import platformAccessRouter from './routes/platformAccess.js';
@@ -89,6 +90,7 @@ import mcpRouter from './lib/mcpServer.js';
 import { runDueDefinitions } from './lib/agentHubRunner.js';
 import { isCronDue } from './lib/cronMatch.js';
 import cron from 'node-cron';
+import gtmDeliverablesRouter from './routes/gtmDeliverables.js';
 
 // Safety net: an unhandled promise rejection in any async route handler
 // (e.g. a bad column reference in a PATCH) is fatal by default in Node —
@@ -220,12 +222,14 @@ app.use('/api/genesis', genesisRouter);
 app.use('/api/content-attachments', contentAttachmentsRouter);
 app.use('/api/content-publications', contentPublicationsRouter);
 app.use('/api/experience', experienceRouter);
+app.use('/api/site-agent', portfolioSiteAgentRouter);
 app.use('/api/deployment-intelligence', deploymentIntelligenceRouter);
 app.use('/api/backlog-outputs', backlogOutputsRouter);
 app.use('/api/platform', platformAccessRouter);
 
 // Platform MCP server (Streamable HTTP, bearer access tokens - not cookies). Mounted before the SPA fallback.
 app.use('/mcp', mcpRouter);
+app.use('/api/gtm-deliverables', gtmDeliverablesRouter);
 
 // Uploaded files now live on Supabase Storage at <SUPABASE_URL>/storage/v1/object/public/uploads/<file>.
 // The returned URL from POST /api/uploads is already absolute, so the browser

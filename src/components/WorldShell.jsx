@@ -1674,30 +1674,9 @@ function SimpleEmbedView({ componentId, scope, onClear }) {
         <button style={{ ...S.backBtn, minHeight: 44, padding: '0 0.6rem', marginBottom: 0 }} onClick={onClear}>← Back to World</button>
         <div style={S.embedTitle}>{entry.title}</div>
       </div>
-      <div style={S.embedBody}>{entry.light ? <div style={{ background: '#fff', color: '#1b2a3b', borderRadius: 10, minHeight: '100%', boxSizing: 'border-box' }}>{entry.render(scope)}</div> : entry.render(scope)}</div>
-    </div>
-  );
-}
-
-// Career Master's in-world "embed": the camera has already dollied into the
-// Career Master crystal island (the game-like part — CRYSTAL_VARIANTS.founder,
-// same core/island rendering every world object uses). What opens here is
-// the real journey chooser — CareerMasterEntryPoint, unchanged and un-forked
-// — so each journey "variant" (Career Orbit, Upload & Map, Manual Intake,
-// Proficiency & Rollups, BestyStaff Assistant) is guided by the exact same
-// classic AdminShell panels members/admins already use in Classic Tools
-// (CareerMasterPanel, UploadDataScreen, CareerExperienceConfigurator,
-// BoundedCareerAgentPanel), just reached without leaving the world.
-function CareerMasterEmbedView({ scope, onClear }) {
-  return (
-    <div style={S.embedShell}>
-      <div style={S.embedHeader}>
-        <button style={S.backBtn} onClick={onClear}>← Back to World</button>
-        <div style={S.embedTitle}>Career Master — Journey</div>
-      </div>
       <div style={S.embedBody}>
         <Suspense fallback={<div style={S.railEmpty}>Loading…</div>}>
-          <CareerMasterEntryPoint scope={scope} />
+          {entry.light ? <div style={{ background: '#fff', color: '#1b2a3b', borderRadius: 10, minHeight: '100%', boxSizing: 'border-box' }}>{entry.render(scope)}</div> : entry.render(scope)}
         </Suspense>
       </div>
     </div>

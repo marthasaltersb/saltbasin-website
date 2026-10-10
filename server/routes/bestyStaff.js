@@ -26,6 +26,7 @@ import { promoteLeadToOrganizationLead } from '../lib/journeyRods.js';
 import { getOrRefresh, invalidate } from '../lib/contextCache.js';
 import { renderContextCacheKey, resolveAgentContextPolicy } from '../lib/agentContextRegistry.js';
 import { runInteractiveAgentLoop } from '../lib/interactiveAgentLoop.js';
+import { runRequestBetsyTurn } from '../lib/bestyStaffDeterministic.js';
 
 const router = Router();
 
@@ -343,7 +344,7 @@ async function notificationEmailsFor(definition, config) {
 // ── Chat endpoint ──────────────────────────────────────────────────────────
 
 router.post('/', chatLimiter, async (req, res) => {
-  const { message, history = [], sourceOutput, attachmentCount = 0, leadMemory, attribution, agentKey = 'bestystaff' } = req.body || {};
+  const { message, history = [], sourceOutput, attachmentCount = 0, leadMemory, attribution, agentKey = 'bestystaff', flow, state } = req.body || {};
   if (!message || typeof message !== 'string' || message.length > 8000) {
     return res.status(400).json({ error: 'message required (max 8000 chars)' });
   }
@@ -357,6 +358,34 @@ router.post('/', chatLimiter, async (req, res) => {
   const llmPolicy = agentConfig.llm || { required: true, provider: 'anthropic', model: 'claude-opus-4-8', maxOutputTokensPerResponse: 4096, tokenCap: 500000, capPeriod: 'month', maxToolIterations: 5 };
   if (llmPolicy.mode === 'none') return res.json({ offline: true, deterministicOnly: true });
   if (llmPolicy.provider !== 'anthropic') return res.status(503).json({ error: `Configured LLM provider "${llmPolicy.provider}" is not available in this runtime` });
+
+  // request_betsy runs the deterministic step engine (no Anthropic tool
+  // calls at all — see bestyStaffDeterministic.js's header). build_own and
+  // everything else (general chat, credential reset, member conversion,
+  // returning-lead handling) still runs the tool-calling loop below until
+  // it gets the same conversion.
+  if (flow === 'request_betsy') {
+    try {
+      const notificationEmails = await notificationEmailsFor(agentDefinition, agentConfig);
+      const result = await runRequestBetsyTurn({
+        anthropic,
+        model: llmPolicy.model,
+        maxTokens: Math.max(256, Math.min(16384, Number(llmPolicy.maxOutputTokensPerResponse || 4096))),
+        message,
+        state,
+        sourceOutput: typeof sourceOutput === 'string' ? sourceOutput : null,
+        attribution: attribution && typeof attribution === 'object' ? attribution : null,
+        agentDefinition,
+        agentConfig,
+        notificationEmails,
+      });
+      return res.json(result);
+    } catch (e) {
+      console.error('[bestystaff] request_betsy turn failed:', e.status || '', e.message);
+      if (e.status === 429) return res.status(429).json({ error: 'BestyStaff is at capacity — try again in a few seconds.' });
+      return res.status(500).json({ error: 'BestyStaff hit an error — please try again.' });
+    }
+  }
 
   const cleanHistory = (Array.isArray(history) ? history : [])
     .filter((m) => (m?.role === 'user' || m?.role === 'assistant') && typeof m.content === 'string')

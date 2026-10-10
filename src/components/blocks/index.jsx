@@ -34,6 +34,7 @@ const CareerHeroOrbitBlock = lazyNamed(loadCareerProspectBlocks, 'CareerHeroOrbi
 const CareerLensTabsBlock = lazyNamed(loadCareerProspectBlocks, 'CareerLensTabsBlock');
 const CareerRollupShowcaseBlock = lazyNamed(loadCareerProspectBlocks, 'CareerRollupShowcaseBlock');
 const CareerJourneyStepperBlock = lazyNamed(loadCareerProspectBlocks, 'CareerJourneyStepperBlock');
+const FoundationProofLedgerBlock = lazyNamed(loadCareerProspectBlocks, 'FoundationProofLedgerBlock');
 import { fetchCareerMaster, toolWheelBucket } from '../../lib/careerMaster.js';
 import { toast } from '../../lib/toast.js';
 import { BrandIcon } from '../../lib/brandIcons.jsx';
@@ -5760,6 +5761,7 @@ const REGISTRY = {
   evidenceChainDiagram: EvidenceChainDiagramBlock,
   orbitModelDiagram: OrbitModelDiagramBlock,
   maturitySignalsDiagram: MaturitySignalsDiagramBlock,
+  foundationProofLedger: FoundationProofLedgerBlock,
 };
 
 // ── Sub-sections (2026-07-27) ────────────────────────────────────────────────

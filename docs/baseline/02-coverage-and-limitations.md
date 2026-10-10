@@ -1,69 +1,59 @@
 # Coverage, Exclusions, and Open Access Gaps
 
-This document defines what "the inventory is complete" means for the current pass, so completeness claims elsewhere in this documentation area are bounded rather than implied.
+**Current pass:** 2026-10-01, revision `e0ea466` (35 commits after the 2026-09-05 pass at `e8e25e1`). This document bounds every completeness claim made elsewhere in `docs/baseline/`. The 2026-09-05 version is preserved in git history.
 
 ## What this pass covers
 
-- **Repository structure**: full top-level and one/two-level directory listings across the repository (`server/routes`, `server/lib`, `src`, `src/components`, `src/components/admin`, `src/components/blocks`, `docs`, `migrations`, `.github/workflows`, `tests`).
-- **Declared configuration**: full reads of `.env.example`, `package.json`, `jest.config.js`, `render.yaml`, `DEPLOY.md`.
-- **CI/CD behavior**: full reads of all four GitHub Actions workflow files, establishing the actual promotion path from PR to production.
-- **Existing automated test intent**: full reads of all 8 `tests/*.test.js` files (via headers and key assertions), establishing what is and is not currently verified by automation. See `10-test-catalog.md`.
-- **Repository-guidance documents**: `CLAUDE.md` read in full (it is supplied as this session's project instructions and was already in context before this program began).
+| Area | Coverage | How |
+|---|---|---|
+| API endpoints | **All** 592 statically declared Express endpoints | Generated: mount prefix, file:line, guard evidence (`inventory/api*`) |
+| Database schema (declared) | **All** 191 bootstrap tables with columns, constraints and indexes, plus 20 tables declared elsewhere | Repo `bootstrap()` executed on a throwaway local Postgres 16, then read from the catalog (`inventory/db*`) |
+| UI routes | **All** 37 `<Route>`s | Generated |
+| Source modules | **All** 424 first-party files in `src/` and `server/` | Generated, with exports and importer counts |
+| Registries, env names, jobs, tokens, tests, docs | **All** instances in scope | Generated |
+| Module assignment | **All** elements → 27 modules, 0 unassigned | `module-map.json` + `module-coverage.md` |
+| Behavior: specified modules | MOD-01, 02, 03, 06, 09, 13 read in depth. MOD-04, 05, 07, 08, 10, 11 read on key paths | Hand-authored rows with file:line evidence |
+| Behavior: registered modules | MOD-12, 14–27: elements inventoried, documentation claims recorded as *unverified*, a few rows read directly | Hand-authored |
+| Runtime observation | Local boot, build, health, login, lead creation, member gates, member publish, AT-04-001 | [11](./11-verification-and-release-records.md) |
+| Existing tests | All 17 test files executed (individually and via `npm test`) | [10](./10-test-catalog.md) Part A |
 
-## What this pass explicitly does not yet cover (Stage 2 scope)
+## What this pass does not cover
 
-- **Route-by-route and screen-by-screen inventory** of `server/routes/*.js` (53 files) and `src/components/**` (34 top-level + 78 admin + 7 block files) — only directory listings exist so far, not content.
-- **Database schema detail** — `server/db.js`'s 190 `CREATE TABLE` statements and 172 additive-migration statements have been counted, not enumerated. No table/column/key/index/policy register exists yet.
-- **Content review of the repository's own prior specification documents** (`FUNCTIONAL_DESIGN_SPEC.md`, `TECHNICAL_DESIGN_SPEC.md`, `PLATFORM_MERGE_SPEC.md`, `docs/canon/SB-*`, the foundation-source-of-truth files, and the six `HANDOVER_*.md` files) — their existence and location are registered (SRC-DOC-10 through SRC-DOC-17), but their content has not yet been reconciled against the code. Given their volume, this is expected to be one of the largest parts of Stage 2, since the objective explicitly treats prior Claude documentation as a source to verify against code — not as ground truth.
-- **`AGENTS.md`** — existence confirmed, content not yet reconciled against `CLAUDE.md` (they may agree, one may supersede the other, or they may conflict; unknown).
-- Large parts of the repository root not yet inspected at all: `RevenueShieldFoundation/`, `HERQ/`, `context-reconciliation/`, `experience-memory/`, `experience-proof/`, `prototypes/`, `pptx_analysis/`, `output*`/`generated`/`work`/`tmp` directories, and the standalone data-dump JSON/CSV files and one-off scripts at repo root (full list in `01-source-register.md`).
+- **Frontend visible states:** copy, validation messages, empty/loading/error states, focus and keyboard behavior, for every screen. Route-to-component mapping exists, but no screen's UI states are transcribed. Stage 5 scenarios need this.
+- **Per-block field contracts:** the `fields` keys of each of the 67 block types (`blocks/index.jsx`, 5,854 lines).
+- **Behavior of 15 registered modules** (see [03](./03-current-state-specification.md#module-register)), including the 76-endpoint Journey Rod substrate and the 96-endpoint Career module.
+- **Reconciliation of prior documentation against code:** `docs/canon/SB-*`, `FUNCTIONAL_DESIGN_SPEC.md`, `TECHNICAL_DESIGN_SPEC.md`, `FUNCTIONAL_TECHNICAL_MAPPING.md`, `PLATFORM_MERGE_SPEC.md`, foundation source-of-truth files, `HANDOVER_*.md`, and `AGENTS.md`. These are inventoried with last-commit dates in [`inventory/documentation.md`](./inventory/documentation.md). CLAUDE.md alone was checked statement by statement in the areas read (DEC-019).
+- **Accessibility, performance, and security testing** beyond the specific findings logged.
+- **Standalone verification scripts** (`scripts/verify-*.mjs`): not run.
 
 ## Explicit exclusions
 
-- **`node_modules/`, `package-lock.json` contents, and other vendor/generated output** are excluded from inventory as vendor content, per the program's own instruction to exclude generated/vendor content where appropriate. This exclusion is stated, not silent.
-- **Binary/office documents** (`.docx`, `.pdf`, `.pptx`, `.xlsx` files present at repo root and under `pptx_analysis/`, `outputs/`) are catalogued by filename only in this pass, not opened, since their `.md` counterparts appear to hold the same content in several cases (e.g. `FUNCTIONAL_DESIGN_SPEC.md` alongside `FUNCTIONAL_DESIGN_SPEC.docx`) — this assumption is unverified and flagged for Stage 2.
+| Excluded | Reason |
+|---|---|
+| `node_modules/`, `dist/`, `package-lock.json` | Vendor/generated |
+| Binary office/PDF/ZIP files (`*.docx`, `*.pdf`, `*.pptx` content, `AlgebraTriggerNometry*.zip/pdf`) | Not text-inspectable here. `.md` twins exist for the three `*_SPEC.docx` files, and equivalence is unverified |
+| `tmp/`, `work/`, `output/`, `outputs/`, `output versions/`, `generated/` | Working artifacts of prior sessions |
+| Root data dumps and one-off scripts (`backlog-*.json`, `correlation-report.json`, `cost-reconciliation-plan.json`, `turn-classification.json`, `Tempsite.json`, `betsy-hours-recompute.json`, `*.py`, `_verify_*`) | Working artifacts, not product definitions. Whether `Tempsite.json` is a site-state snapshot is unverified |
+| `HERQ/`, `RevenueShieldFoundation/`, `pptx_analysis/`, `brand-assets/` contents | Asset folders. Listed by file type only (DEC-016) |
+| `scripts/` (61 files) beyond the npm-script entry points | Operational/backfill scripts, many named `add-v0xx-backlog-items`. Not product behavior |
 
-## Live environment / database access — explicit statement
+## Access limitations (unchanged unless noted)
 
-**No live Supabase/Postgres connection, and no live Render or Netlify access, exists in this session.** This was confirmed by:
-- `ListConnectors` (Supabase/Postgres/database keywords) returning zero results, and
-- no `DATABASE_URL` or hosting-provider credential being available to this session.
-
-Per the governing instructions, this means:
-- Every statement in this documentation area about the database is derived from `server/db.js`'s declared schema (code), never from a live inspection of Supabase.
-- **Drift between the declared schema and the live database is unverified and unknown** — it is not assumed to be zero, and it is not assumed to exist. It is an open item.
-- If authorized read-only Supabase access becomes available later, live-schema findings will be recorded separately from code-declared findings (per the objective's instruction to keep the two separate and surface drift explicitly, not silently reconcile).
-- No production migration, schema change, or data operation will be run to "complete" this specification, consistent with the objective.
-
-## Coverage-by-area summary table
-
-| Area | Repos/dirs in scope | Inspected this pass | Not yet inspected | Access limitation |
-|---|---|---|---|---|
-| Backend routes | `server/routes/*` (53 files) | Directory listing | File contents | None (read access exists; not yet done — time-boxed to Stage 2) |
-| Backend shared logic | `server/lib/**` (~95 files) | Directory listing | File contents | Same |
-| Database schema | `server/db.js` | Pattern counts | Table/column/policy detail | Same, plus no live DB (see above) |
-| Frontend components | `src/components/**` (~119 files) | Directory listing | File contents | Same |
-| Frontend routing | `src/App.jsx` | Route-tag count | Actual paths/guards | Same |
-| Existing prior specs | `docs/canon/*`, `FUNCTIONAL_*`, `TECHNICAL_*`, `PLATFORM_MERGE_SPEC.md`, foundation-of-truth docs, `HANDOVER_*` | Filenames/location only | Full content reconciliation | None — largest remaining Stage 2 item |
-| CI/CD | `.github/workflows/*` (4 files) | Full content | Live run history, secrets/vars values | No GitHub Actions API access this session |
-| Tests | `tests/*`, `server/lib/**/*.test.js` | `tests/*` full content; Jest suite located, not read | Jest suite content, `scripts/verify-*.mjs` content | None — time-boxed |
-| Live database | Supabase | Not inspected — no access | Everything | No connector/credential authorized |
-| Live hosting | Render, Netlify | Not inspected — no access | Everything | No credential authorized |
+| Access | Status 2026-10-01 | Consequence |
+|---|---|---|
+| Live Supabase / Postgres | **Unavailable.** No connector (`ListConnectors` for supabase/postgres/database → none), no `DATABASE_URL` | Every DB statement is a repository declaration. Live drift, live RLS/policies/grants, row counts, storage buckets, and edge functions are **unverified**. Repo declares 0 RLS policies (DEC-020) |
+| Render, Netlify dashboards, DNS | Unavailable | Live env-var presence (`STRIPE_SECRET_KEY`, `RECAPTCHA_SECRET_KEY`, `PUBLIC_MEMBER_SIGNUP_ENABLED`, `ADMIN_INITIAL_PASSWORD`…), live topology and timezone unverified |
+| GitHub Actions run history, repo variables | Unavailable | Whether scheduled promotion is enabled is unknown |
+| Live application (`saltbasin.net`) | Not accessed. Deliberately not exercised (no authorized test account; production data must not be touched) | All runtime evidence comes from the local scratch environment only |
+| Approved design references | None identified (DEC-016) | Visual acceptance criteria can't be grounded yet |
+| Local scratch environment | **Available (new).** Throwaway Postgres 16 + production build + Chromium/Playwright 1.56 in the session container | Stage 5 can run locally without production. The container is ephemeral, and `inventory/README.md` documents how to recreate it |
 
 ## Blockers to later stages
 
 | Stage | Blocked by | Status |
 |---|---|---|
-| 2 (deep current-state inventory) | Nothing blocking — can proceed incrementally; sized to be large, not blocked | Open, not started |
-| 3 (new-requirement extraction) | **New design documents not yet supplied by user** | Blocked |
-| 4 (target specification) | Depends on 2 and 3 | Blocked |
-| 5 (acceptance scenarios + browser verification) | Depends on 4 for anything beyond cataloguing what already exists; also requires authorized test accounts / controlled fixtures / a reachable running instance (local dev per `CLAUDE.md`, or a to-be-created non-production environment) — none confirmed available yet | Partially blocked; `10-test-catalog.md`'s inventory of *existing* tests does not require this |
-| 6 (ongoing patch-release process) | Depends on 4 and 5 existing first | Blocked |
-
-## Next concrete step
-
-The single highest-leverage next input is **the new design/product/UX documents** referenced in the objective — without them, Stage 3 (requirement extraction) and everything downstream cannot begin, and continuing to deepen Stage 2 alone risks producing a large current-state inventory that has to be re-walked once real requirements arrive. Recommended order:
-
-1. You review `01-source-register.md` and `07-decision-log.md` and resolve or confirm the open items there (in particular DEC-001, DEC-002, DEC-003 below).
-2. You supply the new design documents (or confirm there are none yet and this should proceed as current-state documentation only for now).
-3. In parallel, Stage 2 can continue independently on whichever module cluster you'd like prioritized (e.g., "member public sites," "admin CMS," "career pipeline," "commercial opportunity pipeline") — say which, or none, and general breadth-first coverage will be assumed.
+| 2 (current state) | Nothing. Remaining work is listed above | In progress: first full pass done |
+| 3 (requirement extraction & mapping) | Read-aloud validation of the 2026-09-05 intake package (doc 12) is paused at the user's direction pending the Configuration Module design. No new documents supplied since 2026-09-06 | Blocked on user input |
+| 4 (target spec) | Stage 3, plus decisions in [07](./07-decision-log.md) | Blocked |
+| 5 (acceptance automation) | Target decisions, DEC-006 (framework), DEC-016 (visual references), DEC-003 (environment). The local environment is now proven feasible | Partially unblocked: reproduction scenarios can run |
+| 6 (release process) | Stages 4–5 | Blocked. The tooling exists (generator, checker, record format) |

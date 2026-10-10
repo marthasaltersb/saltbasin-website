@@ -39,6 +39,7 @@ const MemberProductsPanel = lazy(() => import('./MemberProductsPanel.jsx'));
 const FeedbackPanel = lazy(() => import('./FeedbackPanel.jsx'));
 const EidosOperatingModelPanel = lazy(() => import('./EidosOperatingModelPanel.jsx'));
 const WebsiteIntelligencePanel = lazy(() => import('./WebsiteIntelligencePanel.jsx'));
+const PortfolioSiteAgentPanel = lazy(() => import('./PortfolioSiteAgentPanel.jsx'));
 const MetricIntelligencePanel = lazy(() => import('./MetricIntelligencePanel.jsx'));
 const MemberFinancialPanel = lazy(() => import('./MemberFinancialPanel.jsx'));
 const MemberEntitlementsPanel = lazy(() => import('./MemberEntitlementsPanel.jsx'));
@@ -56,6 +57,7 @@ const AgentHubConfigPanel = lazy(() => import('./AgentHubConfigPanel.jsx'));
 const AgentOutputsPanel = lazy(() => import('./AgentOutputsPanel.jsx'));
 const GenesisFoundationPanel = lazy(() => import('./GenesisFoundationPanel.jsx'));
 const WorldVariantStudioPanel = lazy(() => import('./WorldVariantStudioPanel.jsx'));
+const GtmDeliverablesPanel = lazy(() => import('./GtmDeliverablesPanel.jsx'));
 
 // Tab component registry: the one piece that can't be data-driven, because
 // React components have to be referenced by import. The nav structure stored
@@ -93,6 +95,9 @@ const TAB_COMPONENTS = {
   commandCenter:  () => <CommandCenterPanel />,
   eidos:          () => <EidosOperatingModelPanel />,
   websiteIntelligence: () => <WebsiteIntelligencePanel />,
+  // Receives shell bindings (see the registry branch below) because staging
+  // rewrites the server draft the content editor holds in memory.
+  portfolioSiteAgent: (props) => <PortfolioSiteAgentPanel {...props} />,
   metricIntelligence: () => <MetricIntelligencePanel />,
   methodologyConfig: () => <MethodologyConfigPanel />,
   lonetreeMvp:    (props) => <LonetreeMvpPanel {...props} />,
@@ -103,6 +108,7 @@ const TAB_COMPONENTS = {
   genesisFoundation: () => <GenesisFoundationPanel />,
   careerReasoningCompiler: () => <CareerReasoningCompilerPanel />,
   worldVariantStudio: () => <WorldVariantStudioPanel />,
+  gtmDeliverables: () => <GtmDeliverablesPanel />,
   // config: handled inline below (ConfigPanel needs draft + setters from shell)
   // content: handled inline below (Sidebar/EditorPane/PreviewPane composition)
 };
@@ -162,6 +168,7 @@ const FALLBACK_ADMIN_NAV = {
     ]},
     { id: 'website-intelligence', label: 'Website Intelligence', sortOrder: 4.5, tabs: [
       { id: 'website-intelligence', label: 'Public Site Inventory', componentId: 'websiteIntelligence', sortOrder: 0 },
+      { id: 'portfolio-site-agent', label: 'Portfolio-First Site Agent', componentId: 'portfolioSiteAgent', sortOrder: 1 },
     ]},
   ],
 };
@@ -609,6 +616,28 @@ export default function AdminShell({ scope = 'admin', orgId = null, initialTab =
     }
   }
 
+  // Re-reads the server draft after an out-of-band write (the Portfolio-First
+  // Site Agent's stage step), so the content editor never saves a stale
+  // in-memory copy over it.
+  async function reloadDraftsFromServer() {
+    const [site, cfg] = await Promise.all([apis.getSite(), apis.getConfig()]);
+    setSavedSite(site);
+    setDraft(site);
+    setSavedConfig(cfg);
+    setConfigDraft(cfg);
+    if (site?.pages?.home) setCurrentPageKey('home');
+    setCurrentSectionId(null);
+  }
+
+  function openContentEditor() {
+    const owning = adminNav?.views.find((v) => v.tabs.some((t) => t.componentId === 'content'));
+    const contentTab = owning?.tabs.find((t) => t.componentId === 'content');
+    if (owning && contentTab) {
+      setActiveViewId(owning.id);
+      setTab(contentTab.id);
+    }
+  }
+
   function discard() {
     if (!confirm('Discard all unsaved changes since the last save?')) return;
     setDraft(savedSite);
@@ -807,6 +836,17 @@ export default function AdminShell({ scope = 'admin', orgId = null, initialTab =
           // Registry case: simple panels with no shell-state dependency.
           if (!isMember && TAB_COMPONENTS[componentId]) {
             const Entry = TAB_COMPONENTS[componentId];
+            if (componentId === 'portfolioSiteAgent') {
+              return (
+                <Entry
+                  scope="admin"
+                  hasUnsavedEdits={dirty}
+                  onDraftStaged={reloadDraftsFromServer}
+                  onOpenEditor={openContentEditor}
+                  onPublish={publish}
+                />
+              );
+            }
             return <Entry scope="admin" />;
           }
           // Inline 'content' case: the page/section editor composes the
