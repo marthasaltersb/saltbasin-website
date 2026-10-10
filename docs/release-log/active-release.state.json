@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T21:00:38.674Z",
+  "exportedAt": "2026-10-10T21:08:08.932Z",
   "features": {
     "platform-mcp": {
       "status": "validate",
@@ -10,19 +10,19 @@
       "backlog": 3
     },
     "release-intelligence": {
-      "status": "validate",
-      "lastRound": 3,
-      "lastScore": "55/55",
-      "lastReport": "docs/test-results/release-intelligence/round-3.md",
-      "openBugs": 7,
+      "status": "failing",
+      "lastRound": 4,
+      "lastScore": "54/55",
+      "lastReport": "docs/test-results/release-intelligence/round-4.md",
+      "openBugs": 8,
       "backlog": 2
     },
     "in-app-release-loop": {
-      "status": "failing",
+      "status": "scope",
       "lastRound": 4,
       "lastScore": "59/60",
       "lastReport": "docs/test-results/in-app-release-loop/round-4.md",
-      "openBugs": 2,
+      "openBugs": 3,
       "backlog": 1
     },
     "session-mapping": {
@@ -50,19 +50,19 @@
       "backlog": 0
     },
     "owner-error-messages": {
-      "status": "build",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
-      "openBugs": 0,
+      "openBugs": 8,
       "backlog": 0
     },
     "scoring-preferences-mcp": {
-      "status": "build",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
-      "openBugs": 0,
+      "openBugs": 4,
       "backlog": 0
     },
     "proficiency-live-qr": {
@@ -90,10 +90,10 @@
       "backlog": 10
     },
     "release-scope": {
-      "status": "validate",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
+      "status": "failing",
+      "lastRound": 1,
+      "lastScore": "24/25",
+      "lastReport": "docs/test-results/release-scope/round-1.md",
       "openBugs": 0,
       "backlog": 0
     },
@@ -118,6 +118,14 @@
       "lastRound": 1,
       "lastScore": "16/25",
       "lastReport": "docs/test-results/production-smoke-regression/round-1.md",
+      "openBugs": 0,
+      "backlog": 0
+    },
+    "tracker-world-navigation": {
+      "status": "build",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
       "openBugs": 0,
       "backlog": 0
     },
@@ -277,6 +285,312 @@
       ],
       "stepId": "E.3",
       "url": "https://saltbasin.net/mcp"
+    },
+    {
+      "id": "release-intelligence-RI-R1-1",
+      "feature": "release-intelligence",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "node scripts/import-release-logs.mjs run twice against the same database exits 0, prints imported/updated then only unchanged, warns for documents missing a ve…",
+      "rootCause": "importRepository() in server/lib/releaseLogImporter.js (~lines 354-377) walks docs/release-log/ recursively and treats every .md as a relea…",
+      "files": [
+        "server/lib/releaseLogImporter.js",
+        "server/lib/releaseIntelligenceConfig.js",
+        "docs/changes/release-intelligence.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "importRepository() in server/lib/releaseLogImporter.js (~li…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "in-app-release-loop-T4-1",
+      "feature": "in-app-release-loop",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "Layout, both passes: no horizontal scroll and every visible control at least 44px tall",
+      "rootCause": "src/components/WorldBreadcrumbs.jsx: crumbBtn (line 18) has no height, and the only 44px min-height rule (CRUMB_CSS, lines 22-25) is inside…",
+      "files": [
+        "src/components/WorldBreadcrumbs.jsx",
+        "docs/changes/world-shell-layers.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "src/components/WorldBreadcrumbs.jsx: crumbBtn (line 18) has…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "owner-error-messages-B1",
+      "feature": "owner-error-messages",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "build agent walk cleanup",
+      "rootCause": "Pattern matched the agent's own shell",
+      "files": [],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "owner-error-messages-B5",
+      "feature": "owner-error-messages",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Methodology Config phone journey",
+      "rootCause": "Panel is Classic Tools only, so parity requires a phone route or an explicit exclusion",
+      "files": [
+        "src/components/admin/MethodologyConfigPanel.jsx",
+        "docs/changes/owner-error-messages.md",
+        "server/lib/capabilityParity.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "owner-error-messages-B6",
+      "feature": "owner-error-messages",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "LonetreeMvpPanel section-config error",
+      "rootCause": "Single saveState string for both success and failure",
+      "files": [
+        "src/components/admin/LonetreeMvpPanel.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "owner-error-messages-B7",
+      "feature": "owner-error-messages",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Sweep of setError(e.message) sites",
+      "rootCause": "Pass-through of server text",
+      "files": [
+        "src/lib/api.js",
+        "src/lib/friendlyError.js",
+        "server/routes"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "owner-error-messages-B10",
+      "feature": "owner-error-messages",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Remaining raw HTTP messages (missed by build)",
+      "rootCause": "Sweep matched some fetch sites but not these",
+      "files": [
+        "src/components/admin/MyResumePanel.jsx",
+        "src/components/admin/OutputTemplateConfigurator.jsx",
+        "src/components/admin/LeadsPanel.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "owner-error-messages-B11",
+      "feature": "owner-error-messages",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Public-site blocks",
+      "rootCause": "Out of sweep scope",
+      "files": [
+        "src/components/blocks",
+        "src/components/PublicSite.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "owner-error-messages-B12",
+      "feature": "owner-error-messages",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "Integration",
+      "rootCause": "Branch predates integration commits",
+      "files": [
+        "scripts/release-scope.mjs",
+        "server/lib/releaseScope.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "owner-error-messages-B13",
+      "feature": "owner-error-messages",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Spec cross-reference",
+      "rootCause": "Omission in change spec",
+      "files": [
+        "docs/changes/owner-error-messages.md",
+        "docs/training/owner-error-messages.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "scoring-preferences-mcp-B7",
+      "feature": "scoring-preferences-mcp",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "platform-mcp [J2.1]",
+      "rootCause": "Registry exposes 126 tools for career.read+career.write+outputs.approve after this change (123 before), so J2.1 already failed on the integ…",
+      "files": [
+        "docs/training/platform-mcp.md",
+        "docs/training/baselines/platform-mcp/v4.json"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "scoring-preferences-mcp-B8",
+      "feature": "scoring-preferences-mcp",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "all steps (specGovernance)",
+      "rootCause": "docs/training/scoring-preferences-mcp.md exists but docs/training/baselines/scoring-preferences-mcp/v1.json does not; release-spec-baseline…",
+      "files": [
+        "docs/training/baselines/scoring-preferences-mcp/v1.json"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "scoring-preferences-mcp-B9",
+      "feature": "scoring-preferences-mcp",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "build evidence",
+      "rootCause": "No docs/test-results/scoring-preferences-mcp/ or release-log entry; tracker still shows Queued, 0 rounds",
+      "files": [
+        "docs/test-results/scoring-preferences-mcp/"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "scoring-preferences-mcp-B10",
+      "feature": "scoring-preferences-mcp",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "integration",
+      "rootCause": "Older base; diff vs head shows unrelated reverse changes",
+      "files": [
+        "server/data/mcpToolManifest.json",
+        "server/lib/capabilityParity.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
     },
     {
       "id": "qr-gated-outputs-PR1-2",
@@ -6541,35 +6855,6 @@
           "event": "recurred",
           "note": "Agent and package buttons are mounted only in CoverLetterPa…",
           "commit": null
-        }
-      ]
-    },
-    {
-      "id": "release-intelligence-RI-R1-1",
-      "feature": "release-intelligence",
-      "status": "verified",
-      "class": "defect",
-      "attempts": 1,
-      "step": "Importer script exits 0 on second run (E.1)",
-      "rootCause": null,
-      "files": [],
-      "scope": {
-        "scope": "this_feature",
-        "owner": null,
-        "evidence": null
-      },
-      "history": [
-        {
-          "round": 1,
-          "event": "fixed",
-          "note": "Added validated generatedFiles rule (release-tracker.md, up…",
-          "commit": "6fc3bd39ac7a144381e7634383d2f40803a9dee7"
-        },
-        {
-          "round": 2,
-          "event": "verified",
-          "note": "Retest round 2: this bug's step passed (the round had other…",
-          "commit": "0800b1c"
         }
       ]
     },
