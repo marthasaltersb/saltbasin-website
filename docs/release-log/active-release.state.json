@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-10T01:03:46.144Z",
+  "exportedAt": "2026-10-10T01:06:38.135Z",
   "features": {
     "proficiency-live-qr": {
       "status": "validate",
@@ -90,15 +90,15 @@
       "backlog": 8
     },
     "in-app-release-loop": {
-      "status": "validate",
-      "lastRound": 2,
-      "lastScore": "59/60",
-      "lastReport": "docs/test-results/in-app-release-loop/round-2.md",
-      "openBugs": 4,
+      "status": "passed",
+      "lastRound": 3,
+      "lastScore": "60/60",
+      "lastReport": "docs/test-results/in-app-release-loop/round-3.md",
+      "openBugs": 0,
       "backlog": 1
     },
     "session-mapping": {
-      "status": "awaiting_retest",
+      "status": "reconcile",
       "lastRound": 1,
       "lastScore": "56/56",
       "lastReport": "docs/test-results/session-mapping/round-1.md",
@@ -7359,16 +7359,12 @@
     {
       "id": "in-app-release-loop-F1-6",
       "feature": "in-app-release-loop",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "spec governance / documentation",
-      "rootCause": "Fix agent could not edit frozen specs and did not file the amendment documents or correct the (unfrozen) change spec.",
-      "files": [
-        "docs/spec-amendments/in-app-release-loop/",
-        "docs/spec-amendments/release-loop-tooling/",
-        "docs/changes/in-app-release-loop.md"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
@@ -7376,27 +7372,36 @@
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v2",
+          "commit": null
         }
       ]
     },
     {
       "id": "in-app-release-loop-F1-7",
       "feature": "in-app-release-loop",
-      "status": "open",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "editable definition (stage graph)",
-      "rootCause": "Gate logic references stage keys; deferred.",
-      "files": [
-        "src/components/admin/ReleaseLoopPanel.jsx",
-        "server/lib/releaseLoopDefinition.js"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": null,
       "history": [
         {
           "round": 1,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v2",
           "commit": null
         }
       ]
@@ -7433,19 +7438,16 @@
     {
       "id": "in-app-release-loop-T2",
       "feature": "in-app-release-loop",
-      "status": "open",
+      "status": "verified",
       "class": "spec_error",
       "attempts": 0,
       "step": "Run ls server/lib/mcpToolRegistry.js; spec expects it absent",
-      "rootCause": "Step E.8 and change spec line 65 assert the registry does not exist at this commit; after platform-mcp merged (b77049b) the file legitimate…",
-      "files": [
-        "docs/training/in-app-release-loop.md",
-        "docs/training/baselines/in-app-release-loop/v1.json"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "E.8 in the feature's own spec asserts the registry is absent, but it was already present …"
+        "evidence": null
       },
       "history": [
         {
@@ -7453,32 +7455,40 @@
           "event": "found",
           "note": "Step E.8 and change spec line 65 assert the registry does n…",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v2",
+          "commit": null
         }
       ]
     },
     {
       "id": "in-app-release-loop-T2 (round 1)",
       "feature": "in-app-release-loop",
-      "status": "open",
+      "status": "verified",
       "class": "spec_error",
       "attempts": 0,
       "step": "Run ls server/lib/mcpToolRegistry.js; spec expects it absent",
-      "rootCause": "The step hard-codes a point-in-time repo state (file absent 'at this baseline', MCP gap assigned to platform-mcp). platform-mcp added serve…",
-      "files": [
-        "docs/training/in-app-release-loop.md:171",
-        "docs/training/baselines/in-app-release-loop/v1.json:709",
-        "docs/changes/in-app-release-loop.md:65"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Spec step E.8 asserts server/lib/mcpToolRegistry.js is absent. It already existed on the …"
+        "evidence": null
       },
       "history": [
         {
           "round": 2,
           "event": "found",
           "note": "The step hard-codes a point-in-time repo state (file absent…",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "verified",
+          "note": "Retest round 3 passed every step of baseline v2",
           "commit": null
         }
       ]
