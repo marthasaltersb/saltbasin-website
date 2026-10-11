@@ -56,7 +56,9 @@ definitions, render bindings, versioned definitions) before anything new is crea
   Composer (admin, developer, configurator, builder, or tool) defines a Score's rules; an AI tool's
   composition is a proposal until a person approves it. Arrangements are alternative presentations and
   styles of the same Score for different audiences — they never change a Note, rule or calculation, and
-  they never grant access a viewer's entitlements don't already allow.
+  they never grant access a viewer's entitlements don't already allow. A Composer can do everything an
+  Arranger can and more; an Arranger may only create the Arrangements a Score's Composer allows
+  (DEC-SLT-16, Betsy 2026-10-10).
 - **Calculations are reproducible.** Every result records inputs, rule versions, method, temporal context,
   output, validation status and timestamp — reuse `metric_definitions` / `metric_calculations` rather than a
   parallel result store. Weights normalize only across eligible requirements; removing requirements never
