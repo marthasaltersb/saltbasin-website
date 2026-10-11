@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T01:50:42.233Z",
+  "exportedAt": "2026-10-11T02:00:09.607Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -34,11 +34,11 @@
       "backlog": 14
     },
     "release-cut-and-session-plans": {
-      "status": "validate",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
-      "openBugs": 4,
+      "status": "amend",
+      "lastRound": 1,
+      "lastScore": "53/62",
+      "lastReport": "docs/test-results/release-cut-and-session-plans/round-1.md",
+      "openBugs": 14,
       "backlog": 0
     },
     "owner-error-messages": {
@@ -50,11 +50,11 @@
       "backlog": 0
     },
     "scoring-preferences-mcp": {
-      "status": "reconcile",
+      "status": "validate",
       "lastRound": 1,
       "lastScore": "22/29",
       "lastReport": "docs/test-results/scoring-preferences-mcp/round-1.md",
-      "openBugs": 6,
+      "openBugs": 9,
       "backlog": 3
     },
     "resume-rollups": {
@@ -74,11 +74,11 @@
       "backlog": 10
     },
     "release-scope": {
-      "status": "fix",
+      "status": "validate",
       "lastRound": 3,
       "lastScore": "25/25",
       "lastReport": "docs/test-results/release-scope/round-3.md",
-      "openBugs": 7,
+      "openBugs": 12,
       "backlog": 1
     },
     "journey-flow-studio": {
@@ -118,15 +118,15 @@
       "lastRound": 3,
       "lastScore": "18/28",
       "lastReport": "docs/test-results/production-smoke-regression/round-3.md",
-      "openBugs": 6,
-      "backlog": 0
+      "openBugs": 5,
+      "backlog": 6
     },
     "platform-mcp": {
-      "status": "fix",
+      "status": "integrate",
       "lastRound": 5,
       "lastScore": "65/65",
       "lastReport": "docs/test-results/platform-mcp/round-5.md",
-      "openBugs": 19,
+      "openBugs": 24,
       "backlog": 4
     },
     "proficiency-live-qr": {
@@ -826,6 +826,259 @@
       ]
     },
     {
+      "id": "release-cut-and-session-plans-T1-J3.1",
+      "feature": "release-cut-and-session-plans",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "Click Record merge for S-garden-01",
+      "rootCause": "Spec hardcodes the live in-app-release-loop feature as 'frozen at 60/60'. docs/test-results/in-app-release-loop/round-4.md (59/60, baseline…",
+      "files": [
+        "docs/training/release-cut-and-session-plans.md",
+        "server/lib/releaseCut.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The feature's own spec (c9de19c) hardcodes in-app-release-loop as 60/60. Round 4 (cea5b94…"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Spec hardcodes the live in-app-release-loop feature as 'fro…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-cut-and-session-plans-T1-J3.4",
+      "feature": "release-cut-and-session-plans",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "Type Scope changed into Re-estimate reason and click Save estimate",
+      "rootCause": "Same root cause as T1-J3.1: stale 60/60 fixture; re-estimate behavior itself passed.",
+      "files": [
+        "docs/training/release-cut-and-session-plans.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Same stale hardcoded 60/60 fixture in this feature's spec."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Same root cause as T1-J3.1: stale 60/60 fixture; re-estimat…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-cut-and-session-plans-T1-J3.5",
+      "feature": "release-cut-and-session-plans",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "Record S-garden-02 estimate 60/62 and merge",
+      "rootCause": "Same root cause as T1-J3.1: stale actual 60/60.",
+      "files": [
+        "docs/training/release-cut-and-session-plans.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Same stale hardcoded 60/60 fixture in this feature's spec."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Same root cause as T1-J3.1: stale actual 60/60.",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-cut-and-session-plans-T1-J7.8",
+      "feature": "release-cut-and-session-plans",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "POST /api/release-cut/sessions/S-garden-api/merge",
+      "rootCause": "Same root cause as T1-J3.1: spec names round 3 / 60 / report round-3.md; newest is round 4, 59/60.",
+      "files": [
+        "docs/training/release-cut-and-session-plans.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Same stale hardcoded fixture; the spec names round 3 and report round-3.md."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Same root cause as T1-J3.1: spec names round 3 / 60 / repor…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-cut-and-session-plans-T1-J7.9",
+      "feature": "release-cut-and-session-plans",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "GET /api/release-cut/sessions/report",
+      "rootCause": "Same root cause as T1-J3.1: row actual/met reflect the true newest score 59/60.",
+      "files": [
+        "docs/training/release-cut-and-session-plans.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Same stale hardcoded 60/60 fixture in this feature's spec."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Same root cause as T1-J3.1: row actual/met reflect the true…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-cut-and-session-plans-T1-J7.11",
+      "feature": "release-cut-and-session-plans",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "Open Session plans in the browser after the API-written session",
+      "rootCause": "Same root cause as T1-J3.1; UI correctly matches the API record.",
+      "files": [
+        "docs/training/release-cut-and-session-plans.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Same stale hardcoded 60/60 fixture in this feature's spec."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Same root cause as T1-J3.1; UI correctly matches the API re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-cut-and-session-plans-T1-J8.6",
+      "feature": "release-cut-and-session-plans",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "MCP release_cut_record_merge for S-garden-mcp",
+      "rootCause": "Same root cause as T1-J3.1: MCP returns newest round 59/60.",
+      "files": [
+        "docs/training/release-cut-and-session-plans.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Same stale hardcoded 60/60 fixture in this feature's spec."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Same root cause as T1-J3.1: MCP returns newest round 59/60.",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-cut-and-session-plans-T1-J8.7",
+      "feature": "release-cut-and-session-plans",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "MCP release_cut_session_report",
+      "rootCause": "Same root cause as T1-J3.1: row reflects true 59/60, met false.",
+      "files": [
+        "docs/training/release-cut-and-session-plans.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Same stale hardcoded 60/60 fixture in this feature's spec."
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Same root cause as T1-J3.1: row reflects true 59/60, met fa…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-cut-and-session-plans-T2-J6.6",
+      "feature": "release-cut-and-session-plans",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "Run release-cut.mjs --next-version 1.1.0 against the fixture",
+      "rootCause": "The output sentence at scripts/release-cut.mjs line 110 was lengthened by the release-scope feature (planned/backlog/added-after-cut counts…",
+      "files": [
+        "docs/training/release-cut-and-session-plans.md",
+        "scripts/release-cut.mjs"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "scripts/release-cut.mjs output was lengthened in 4841d2a (a wip commit in the release-sco…"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "The output sentence at scripts/release-cut.mjs line 110 was…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-cut-and-session-plans-T3-OBS-alerts",
+      "feature": "release-cut-and-session-plans",
+      "status": "open",
+      "class": "coverage_gap",
+      "attempts": 0,
+      "step": "Observation: stale red alerts accumulate on Session plans; phone banner covers Close session button",
+      "rootCause": "Session plans tab keeps earlier error alerts on screen after later actions and a fixed banner overlaps the card on 390px; no baseline step …",
+      "files": [
+        "docs/training/release-cut-and-session-plans.md",
+        "src/components/admin/"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "ReleaseCutTabs.jsx is this feature's component. Error state is cleared on only some paths…"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Session plans tab keeps earlier error alerts on screen afte…",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "owner-error-messages-B1",
       "feature": "owner-error-messages",
       "status": "open",
@@ -1087,6 +1340,68 @@
       ]
     },
     {
+      "id": "scoring-preferences-mcp-F1-6",
+      "feature": "scoring-preferences-mcp",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "E.4 interface parity count",
+      "rootCause": "Frozen training spec hardcodes a capability count that changes whenever any feature adds a capability; product behavior is correct",
+      "files": [
+        "docs/training/scoring-preferences-mcp.md",
+        "docs/training/baselines/scoring-preferences-mcp/v1.json"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "scoring-preferences-mcp-F1-7",
+      "feature": "scoring-preferences-mcp",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "platform-mcp J2.1 tool set (change spec Known limitations)",
+      "rootCause": "Frozen platform-mcp spec out of date versus append-only registry",
+      "files": [
+        "docs/training/platform-mcp.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "scoring-preferences-mcp-F1-8",
+      "feature": "scoring-preferences-mcp",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Known limitation: other scoring concepts (DEC-006)",
+      "rootCause": "Business definition not yet given by owner",
+      "files": [],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "scoring-preferences-mcp-T1",
       "feature": "scoring-preferences-mcp",
       "status": "reassigned",
@@ -1118,7 +1433,7 @@
     {
       "id": "scoring-preferences-mcp-T2",
       "feature": "scoring-preferences-mcp",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "J2.7 and J3.2: Scoring Weights card stale after MCP save/reset",
@@ -1573,6 +1888,115 @@
       "history": [
         {
           "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (in…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-scope-F3-4",
+      "feature": "release-scope",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Change scope from card/API/MCP on a deployed server",
+      "rootCause": "Writes to ephemeral local file, never committed; card promises it appears after repo sync",
+      "files": [
+        "server/lib/releaseScopeChange.js",
+        "src/components/releaseTracker/ScopeCard.jsx",
+        "docs/changes/release-scope.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-scope-F3-5",
+      "feature": "release-scope",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "Move a feature's scope",
+      "rootCause": "No impact preview or approval step for a change that alters counts, scoring and launch behavior",
+      "files": [
+        "src/components/releaseTracker/ScopeCard.jsx",
+        "server/routes/releaseTracker.js",
+        "server/lib/releaseScopeChange.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (ow…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-scope-F3-6",
+      "feature": "release-scope",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "Docs",
+      "rootCause": "Paragraph not updated after fix r3",
+      "files": [
+        "CLAUDE.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-scope-F3-7",
+      "feature": "release-scope",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "Unknown/duplicate key via API or MCP",
+      "rootCause": "Shared message text written for CLI",
+      "files": [
+        "server/lib/releaseScopeChange.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-scope-F3-8",
+      "feature": "release-scope",
+      "status": "open",
+      "class": "informational",
+      "attempts": 0,
+      "step": "release-tracker-sync snapshot",
+      "rootCause": "stored() ignores split tracker/bugs and bugs-2",
+      "files": [
+        "scripts/release-tracker-sync.mjs"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 3,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (in…",
           "commit": null
@@ -2149,16 +2573,17 @@
     {
       "id": "production-smoke-regression-B6",
       "feature": "production-smoke-regression",
-      "status": "open",
+      "status": "process_note",
       "class": "process",
       "attempts": 0,
       "step": "spec governance",
-      "rootCause": "Builder changed the training spec directly instead of proposing an amendment.",
-      "files": [
-        "docs/training/production-smoke-regression.md",
-        "docs/spec-amendments/production-smoke-regression/"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 0,
@@ -2171,16 +2596,17 @@
     {
       "id": "production-smoke-regression-B7",
       "feature": "production-smoke-regression",
-      "status": "open",
+      "status": "process_note",
       "class": "process",
       "attempts": 0,
       "step": "spec freeze",
-      "rootCause": "Spec v2 never frozen; validators need a pinned baseline.",
-      "files": [
-        "docs/training/production-smoke-regression.md",
-        "docs/training/baselines/"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 0,
@@ -2193,17 +2619,17 @@
     {
       "id": "production-smoke-regression-B8",
       "feature": "production-smoke-regression",
-      "status": "open",
+      "status": "process_note",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "owner decision 2 (workflow on main)",
-      "rootCause": "Builder cannot push main by instruction; branch is based on older integration 1032699.",
-      "files": [
-        ".github/workflows/production-smoke.yml",
-        ".github/workflows/provision-smoke-account.yml",
-        "scripts/production-smoke.mjs"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 0,
@@ -2216,36 +2642,48 @@
     {
       "id": "production-smoke-regression-B9",
       "feature": "production-smoke-regression",
-      "status": "open",
+      "status": "fixed_awaiting_retest",
       "class": "requirement_gap",
-      "attempts": 0,
+      "attempts": 1,
       "step": "known limitation: Netlify deploy wait",
       "rootCause": "Frontend and proxy rules deploy on Netlify, separately from Render.",
       "files": [
         ".github/workflows/production-smoke.yml"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Netlify-vs-Render deploy wait is a limitation of the feature's own production-smoke.yml w…"
+      },
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
+        },
+        {
+          "round": 2,
+          "event": "fixed",
+          "note": "Added a bounded Netlify wait step to the workflow for pushe…",
+          "commit": "fc73e27d461ad254640d580c0d5f6effc8b0a388"
         }
       ]
     },
     {
       "id": "production-smoke-regression-B10",
       "feature": "production-smoke-regression",
-      "status": "open",
+      "status": "process_note",
       "class": "informational",
       "attempts": 0,
       "step": "production proof and secrets",
-      "rootCause": "Production steps run only on GitHub Actions after the main merge and secrets.",
-      "files": [
-        "docs/changes/production-smoke-regression.md"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 0,
@@ -2267,12 +2705,158 @@
         "docs/changes/production-smoke-regression.md",
         "scripts/production-smoke.mjs"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Documented limitations of the feature's own checks (read-only signed-in, R2.3 and S3.3 no…"
+      },
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "not_fixed",
+          "note": "Informational. These are accepted limitations to revisit in…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "production-smoke-regression-T2-1",
+      "feature": "production-smoke-regression",
+      "status": "backlog_pre_existing",
+      "class": "defect",
+      "attempts": 1,
+      "step": "UI_GAP: sign out after signing in as the test account (desktop 1280px)",
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": null
+      },
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "WorldShell.jsx has no sign-out control (api.logout is only …",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "fixed",
+          "note": "Added a Sign out button to the World Shell top bar that cal…",
+          "commit": "fc73e27d461ad254640d580c0d5f6effc8b0a388"
+        }
+      ]
+    },
+    {
+      "id": "production-smoke-regression-T2-2",
+      "feature": "production-smoke-regression",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "UI_GAP/MOBILE_GAP: test account row exists but its role is not member",
+      "rootCause": "Product behaves as specified (smokeAccount.js:80-82 returns 409 smoke_account_not_member). No screen or route changes a user's role, by des…",
+      "files": [
+        "server/lib/smokeAccount.js",
+        "docs/training/production-smoke-regression.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "409 smoke_account_not_member is the feature's own code (smokeAccount.js absent at base); …"
+      },
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Product behaves as specified (smokeAccount.js:80-82 returns…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "production-smoke-regression-T2-3",
+      "feature": "production-smoke-regression",
+      "status": "fixed_awaiting_retest",
+      "class": "defect",
+      "attempts": 1,
+      "step": "Profile address smoke-test-member already belongs to another member: 409 and nothing else changed",
+      "rootCause": "readySmokeAccount (server/lib/smokeAccount.js) inserts the users, user_emails and consent rows (lines 86-107) before it checks the slug (li…",
+      "files": [
+        "server/lib/smokeAccount.js",
+        "src/components/admin/ProductionSmokePanel.jsx"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Defect in the feature's own readySmokeAccount (writes rows before the slug check) and Pro…"
+      },
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "readySmokeAccount (server/lib/smokeAccount.js) inserts the …",
+          "commit": null
+        },
+        {
+          "round": 2,
+          "event": "fixed",
+          "note": "readySmokeAccount now runs the slug-taken refusal before an…",
+          "commit": "fc73e27d461ad254640d580c0d5f6effc8b0a388"
+        }
+      ]
+    },
+    {
+      "id": "production-smoke-regression-T2-4",
+      "feature": "production-smoke-regression",
+      "status": "backlog_pre_existing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "UI_GAP/MOBILE_GAP: administrator used by the provisioning workflow has two-step sign-in",
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": null
+      },
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Product behaves as specified (scripts/provision-smoke-accou…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "production-smoke-regression-C2-1",
+      "feature": "production-smoke-regression",
+      "status": "open",
+      "class": "coverage_gap",
+      "attempts": 0,
+      "step": "Observation: status card is stale after a failed readying (E.2)",
+      "rootCause": "No step checks that the Production smoke screen status card reflects the true account state after a refused POST. The validator found it st…",
+      "files": [
+        "src/components/admin/ProductionSmokePanel.jsx",
+        "docs/training/production-smoke-regression.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Missing coverage of the feature's own status card after a refused POST; second root cause…"
+      },
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "No step checks that the Production smoke screen status card…",
           "commit": null
         }
       ]
@@ -2409,6 +2993,111 @@
       "history": [
         {
           "round": 4,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (in…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-F5-2",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "J1.4",
+      "rootCause": "toast.error is still called alongside the inline role=alert; the toast de-dup only removes an earlier toast with the same text.",
+      "files": [
+        "src/components/admin/ConnectedAgentsPanel.jsx",
+        "src/lib/toast.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 5,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-F5-3",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "J1.4 / J2.1 / J6.2 / J11.2",
+      "rootCause": "A7 pinned scope, tool and parity-row literals at cdf9504. The registry is append-only and grew, so frozen literals go stale. A fix agent ma…",
+      "files": [
+        "docs/spec-amendments/platform-mcp/"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 5,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-F5-4",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "Known limitations",
+      "rootCause": "Known limitations and the overview were not refreshed.",
+      "files": [
+        "docs/changes/platform-mcp.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 5,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-F5-5",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Known limitations",
+      "rootCause": "Some are not JSON-shaped and some are deliberate consent or security decisions, but no owner confirmation is recorded.",
+      "files": [
+        "server/lib/capabilityParity.js",
+        "docs/changes/platform-mcp.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 5,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-F5-6",
+      "feature": "platform-mcp",
+      "status": "open",
+      "class": "informational",
+      "attempts": 0,
+      "step": "J10.4",
+      "rootCause": "The parity data shows 0 gaps, but the Gaps only empty-state screen has not been driven in a browser; carried from r4.",
+      "files": [],
+      "scope": null,
+      "history": [
+        {
+          "round": 5,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (in…",
           "commit": null
