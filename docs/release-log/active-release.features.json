@@ -508,6 +508,31 @@
           "reason": "Owner request 2026-10-10: import process flows for the existing workflows in Salt Basin to show how a published process flow links to the existing working workflows and user experience states today."
         }
       ]
+    },
+    {
+      "key": "single-experience-world-shell",
+      "title": "One experience: retire Classic Tools; every capability is a permission-gated World Shell layer starting from the same view",
+      "trainingSpec": "docs/training/single-experience-world-shell.md",
+      "changeSpec": "docs/changes/single-experience-world-shell.md",
+      "build": "Follow CLAUDE.md 'One experience, no Classic Tools'. (1) Inventory every capability reachable only through the admin shell or Classic Tools: admin_nav views/tabs (server/db.js seed + config_state admin_nav), TAB_COMPONENTS and inline componentIds in src/components/admin/AdminShell.jsx, member tabs (server/data/defaultMemberConfig.js memberTabs), and every 'Classic Tools' reference in src/ (AdminShell.jsx, MyResumePanel.jsx, ReleaseLoopPanel.jsx, ConnectedAgentsPanel.jsx, SessionMappingPanel.jsx, PlanetAtmosphereView.jsx, WorldShell.jsx, App.jsx, worldIslands.js, worldLayers.js). Write the inventory into the change spec (capability -> World Shell layer -> permission). (2) Give each one a World Shell layer (island or deeper layer via useWorldLayers / worldLayers.js — the layer vocabulary is append-only), usable on desktop and at 390px, with visibility decided by the viewer's permission/license/profile through one shared check (reuse existing role/permission data now; express each gate as a named permission so security-provisioning-model can later grant it to any profile; do not invent a parallel permission store). Methodology Config (MethodologyConfigPanel.jsx) must get a phone-usable layer (owner-error-messages B5). (3) Remove the Classic Tools entry and the second-shell navigation; redirect /admin, /admin/* and /member deep links to the matching /world?at=... layer (no dead ends; unknown -> deepest valid layer with a note, per worldLayersResolve). Keep admin_nav readable as layer-definition config (additive-only; never delete keys). (4) capabilityParity.js: every row's ui path becomes a World Shell path; check-interface-parity.mjs must pass. (5) 21 training specs mention Classic Tools (career-bound-outputs, cover-letter-agent, graphify-data-model-map, in-app-release-loop, journey-flow-studio, live-release-tracker, no-silent-failures, output-version-history, owner-error-messages, platform-mcp, production-smoke-regression, proficiency-rules-and-live-qr, qr-gated-outputs, release-intelligence, release-loop-tooling, render-bindings, resume-rollups, scoring-preferences-mcp, session-mapping, world-shell-layers, world-shell-opportunity-outputs): do NOT edit them; write one PROPOSED amendment per affected feature in docs/spec-amendments/<feature>/ (status proposed, exact before/after per step, tracesTo this owner direction) so each feature's reviewer can approve it. (6) Interface parity, fictional data, plain red/amber errors. Write docs/changes/single-experience-world-shell.md and docs/training/single-experience-world-shell.md (journeys: an admin and a member each start at /world and reach every capability in the inventory by tapping; an old /admin link redirects; a capability the viewer lacks permission for is not shown and its deep link explains why in plain words), freeze baseline v1.",
+      "dependsOn": [],
+      "kind": "new",
+      "scope": "planned",
+      "added": {
+        "at": "2026-10-11T01:33:42.331Z",
+        "commit": "c8da5b1",
+        "decidedBy": "owner",
+        "reason": "Owner direction 2026-10-11: there should be no Classic Tools; one user experience whose layers all start from the same view and display dynamically based on the logged-in viewer. Also answers owner-error-messages B5 (Methodology Config gets a World Shell layer with a phone walkthrough, not an exception)."
+      },
+      "scopeHistory": [
+        {
+          "at": "2026-10-11T01:33:42.331Z",
+          "from": null,
+          "to": "planned",
+          "decidedBy": "owner",
+          "reason": "Owner direction 2026-10-11: there should be no Classic Tools; one user experience whose layers all start from the same view and display dynamically based on the logged-in viewer. Also answers owner-error-messages B5 (Methodology Config gets a World Shell layer with a phone walkthrough, not an exception)."
+        }
+      ]
     }
   ],
   "startedAtCommit": "4df3ff7",
