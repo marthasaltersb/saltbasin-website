@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T02:51:18.016Z",
+  "exportedAt": "2026-10-11T02:57:24.146Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -90,12 +90,12 @@
       "backlog": 3
     },
     "journey-flow-experience-mapping": {
-      "status": "validate",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
-      "openBugs": 7,
-      "backlog": 0
+      "status": "fix",
+      "lastRound": 1,
+      "lastScore": "57/58",
+      "lastReport": "docs/test-results/journey-flow-experience-mapping/round-1.md",
+      "openBugs": 6,
+      "backlog": 2
     },
     "journey-flow-import-existing": {
       "status": "failed",
@@ -266,6 +266,14 @@
       "backlog": 0
     },
     "global-change-standard": {
+      "status": "queued",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
+    },
+    "core-platform-definition-studio": {
       "status": "queued",
       "lastRound": 0,
       "lastScore": null,
@@ -2439,16 +2447,17 @@
     {
       "id": "journey-flow-experience-mapping-B7",
       "feature": "journey-flow-experience-mapping",
-      "status": "open",
+      "status": "backlog_pre_existing",
       "class": "process",
       "attempts": 0,
       "step": "J1.4 / J2.1 of platform-mcp",
-      "rootCause": "The platform-mcp spec was frozen before flows.*, agent.runner.*, smoke.* and now flowjourney.* scopes and tools existed.",
-      "files": [
-        "docs/training/platform-mcp.md",
-        "docs/training/baselines/platform-mcp/v5.json"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 0,
@@ -2461,7 +2470,7 @@
     {
       "id": "journey-flow-experience-mapping-B8",
       "feature": "journey-flow-experience-mapping",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Known limitation: rendering of experience",
@@ -2471,7 +2480,11 @@
         "src/components/WorldShell.jsx",
         "src/lib/journeyEngine/genesis.js"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The request says the compiled journey is consumed by SpatialJourneyWorld and World Shell …"
+      },
       "history": [
         {
           "round": 0,
@@ -2484,16 +2497,17 @@
     {
       "id": "journey-flow-experience-mapping-B9",
       "feature": "journey-flow-experience-mapping",
-      "status": "open",
+      "status": "backlog_pre_existing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Known limitation: actors and licences",
-      "rootCause": "No profile registry exists yet; security-provisioning-model owns it.",
-      "files": [
-        "server/lib/flowJourney.js",
-        "server/lib/flowStudioDefinition.js"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 0,
@@ -2506,7 +2520,7 @@
     {
       "id": "journey-flow-experience-mapping-B10",
       "feature": "journey-flow-experience-mapping",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Known limitation: branch conditions",
@@ -2515,7 +2529,11 @@
         "src/lib/flowJourneyCompile.js",
         "src/components/admin/FlowJourneyParts.jsx"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The request lists decision tree branch conditions. The feature's own flowJourneyCompile.j…"
+      },
       "history": [
         {
           "round": 0,
@@ -2528,7 +2546,7 @@
     {
       "id": "journey-flow-experience-mapping-B11",
       "feature": "journey-flow-experience-mapping",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Known limitation: variants",
@@ -2537,7 +2555,11 @@
         "src/lib/flowJourneyCompile.js",
         "server/lib/flowJourney.js"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The request names variant/scenario as a binding. The compiler in this feature (5780411) c…"
+      },
       "history": [
         {
           "round": 0,
@@ -2550,7 +2572,7 @@
     {
       "id": "journey-flow-experience-mapping-B12",
       "feature": "journey-flow-experience-mapping",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Known limitation: requiredActorRoles",
@@ -2558,7 +2580,11 @@
       "files": [
         "server/lib/flowJourney.js"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The engine's actor-role enforcement is pre-existing (scenarioLibraryApply.js at base). Bu…"
+      },
       "history": [
         {
           "round": 0,
@@ -2571,7 +2597,7 @@
     {
       "id": "journey-flow-experience-mapping-B13",
       "feature": "journey-flow-experience-mapping",
-      "status": "open",
+      "status": "fixing",
       "class": "product_defect",
       "attempts": 0,
       "step": "activateJourney idempotence",
@@ -2579,12 +2605,42 @@
       "files": [
         "server/lib/flowJourney.js"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "activateJourney in server/lib/flowJourney.js (5780411) never compares the approval token …"
+      },
       "history": [
         {
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "journey-flow-experience-mapping-T1",
+      "feature": "journey-flow-experience-mapping",
+      "status": "fixing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "Tap Journey. Expect the preview, and the Experience map table scrolling inside its own box, not the page.",
+      "rootCause": "src/components/admin/FlowStudioPanel.jsx line 18: .fs-root has overflow-wrap:anywhere, so table cells have a one-character min-content widt…",
+      "files": [
+        "src/components/admin/FlowStudioPanel.jsx",
+        "src/components/admin/FlowJourneyParts.jsx"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The Experience map table is in FlowJourneyParts.jsx, created by 5780411 (this feature) an…"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "src/components/admin/FlowStudioPanel.jsx line 18: .fs-root …",
           "commit": null
         }
       ]
