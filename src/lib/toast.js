@@ -9,6 +9,12 @@ function ensureHost() {
 }
 
 export function toast(message, ms = 2400, kind = 'success') {
+  // A repeated message replaces its earlier toast instead of stacking another alert.
+  if (host) {
+    for (const old of Array.from(host.children)) {
+      if (old.textContent === message && old.getAttribute('role') === (kind === 'error' ? 'alert' : 'status')) old.remove();
+    }
+  }
   const el = document.createElement('div');
   el.className = kind === 'error' ? 'sb-toast sb-toast-error' : 'sb-toast';
   el.setAttribute('role', kind === 'error' ? 'alert' : 'status');

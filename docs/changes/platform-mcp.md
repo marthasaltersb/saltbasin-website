@@ -56,7 +56,7 @@ An AI agent can now work in Salt Basin as a real platform user through an MCP se
 - `server/lib/mcpServer.js` (new): Express router mounted at `/mcp` (before the SPA fallback). Per request: bearer token -> 401 on failure; low-level SDK `Server` + `StreamableHTTPServerTransport` (stateless, JSON responses); `tools/list` returns the tools the token's scopes include; `tools/call` order is unknown tool (404 `unknown_tool`) -> scope (403 `scope_not_granted`) -> role (403 `forbidden`) -> account gates (428 `password_change_required` / `career_terms_required`, via `getAccountGateBlock`) -> argument schema (400 `invalid_arguments`) -> handler. Handler errors keep the status/code the API route would answer (`FinalizationBlockedError` 409 `tool_category_required` with its `details`; `AgentRequestError` statuses; plain errors 400 `bad_request`). Every failure is an MCP result with `isError: true`, text `Error <status> <code>: <message>` and `structuredContent.error`. GET/DELETE answer 405 (stateless). One tracked interaction is recorded per call, success or failure; if recording itself fails the result carries a "Warning" line.
 - `server/auth.js`: `getAccountGateBlock(user)` extracted from `enforceCurrentCareerTerms` so the API middleware and MCP share one definition of the first-step gates (behaviour of the middleware unchanged).
 - `server/routes/platformAccess.js` (new, mounted `/api/platform`, cookie auth only - a token cannot manage tokens): `GET/POST /tokens`, `DELETE /tokens/:id`, `GET /mcp` (address, scopes, tools), `GET /capabilities` (admin).
-- `server/lib/capabilityParity.js` (new): `CAPABILITIES` (87 rows as of round 3, covering the 167 governed routes), `GOVERNED_ROUTE_FILES`, `evaluateCapabilities`, `summarizeCapabilities`.
+- `server/lib/capabilityParity.js` (new): `CAPABILITIES` (121 rows at the round 4 tested commit, 216 tools registered = manifest 216; 87 rows at round 3), `GOVERNED_ROUTE_FILES`, `evaluateCapabilities`, `summarizeCapabilities`.
 - `scripts/check-interface-parity.mjs` (new): see "Verified". `scripts/mcp-call.mjs` (new): a small MCP client (list / call) used by the training spec and as an example for any MCP client.
 
 ## Client
@@ -83,7 +83,7 @@ An AI agent can now work in Salt Basin as a real platform user through an MCP se
 ## Known limitations
 
 - Render-binding tools (data map, pending changes) are not built because that feature has no code on this branch yet.
-- Parity map as of round 3: 87 of 87 capabilities have a recorded status and `check-interface-parity.mjs --strict` exits 0 (141 tools, 167 governed routes). Capabilities without an MCP tool are recorded as explicit `mcpExclusion` rows, shown on World Shell -> Capabilities, and are waiting for the owner to confirm each one or ask for a tool (they are not claimed as parity):
+- Parity map as of round 4 (tested commit): 121 of 121 capabilities (216 tools); round 3 was 87 of 87 capabilities have a recorded status and `check-interface-parity.mjs --strict` exits 0 (141 tools, 167 governed routes). Capabilities without an MCP tool are recorded as explicit `mcpExclusion` rows, shown on World Shell -> Capabilities, and are waiting for the owner to confirm each one or ask for a tool (they are not claimed as parity):
   - binary downloads (QR image, stamped .docx, PDF from the live QR page): a tool cannot return a file the way the website saves it; the data equivalents exist (`shared_output_live_read`, the approve tool's URL);
   - file uploads (pipeline workbook import, document import into an opportunity, add a resume to a package from a file, intake uploads): MCP arguments are JSON; the agent files content with `application_output_new_draft_version`;
   - accept / reject a cover-letter proposal: a human decision made in the website, by design;
@@ -146,3 +146,22 @@ Branch `release-loop/platform-mcp-fix-r1`. The frozen spec and baselines are unt
 - What changed: the seven admin tools (ingest, list snapshots, pull now, get/save settings, create/revoke token) were already registered and the `release-tracker-admin` parity row already listed them when this round started (commit 9854310, after the triaged run). This round closed the remaining exclusion on that row: `release_tracker_list_ingest_log` (`release.read`) and `release_tracker_webhook_secret` (`release.write`, generate or clear) now call `listIngestLog` / `generateWebhookSecret` / `setWebhookSecret`, the same functions as `GET /ingest-log` and `POST /settings/webhook-secret`, admin permission, errors keep `status`/`code`. Create-token for kind `share` runs `assertReadyToFinalize` first. The row stays one row (121 of 121); its only exclusion is push ingest by bearer ingest token.
 - Files: `server/lib/mcpToolRegistry.js`, `server/lib/capabilityParity.js`, `server/data/mcpToolManifest.json` (two names appended).
 - Checked: `node scripts/check-interface-parity.mjs --strict` exits 0 (121 of 121, MCP gaps 0, 216 tools registered = manifest 216); `--self-test` passes; registry import lists all 11 `release_tracker_*` tools with admin permission; `npm run build` passes. A browser walk of Capabilities > Gaps only was not run in this round; the card count is computed from the same parity data the strict check reads.
+
+## Fix notes — round 5
+
+**Release tracker MCP tools (11), registry names and scopes.** `release_tracker_read` (release.read, admin), `release_tracker_get_state` (release.read, member), `release_tracker_list_snapshots` (release.read, admin), `release_tracker_get_settings` (release.read, admin), `release_tracker_list_ingest_log` (release.read, admin), `release_tracker_ingest_snapshot` (release.write, admin), `release_tracker_pull_now` (release.write, admin), `release_tracker_save_settings` (release.write, admin), `release_tracker_create_token` (release.write, admin), `release_tracker_webhook_secret` (release.write, admin), `release_tracker_revoke_token` (release.write, admin). Counts at the round 4 tested commit: 216 tools, 121 of 121 capabilities. The registry is append-only and has grown since (233 tools, 128 of 128 at this branch head); the baseline pins the tested-commit values.
+
+**platform-mcp-F4-2 - baseline literals stale (J1.4, J2.1, J6.2, J11.2).**
+- What changed: nothing in the product. Amendment A7 (`docs/spec-amendments/platform-mcp/A7.json`) already exists and is approved by a reviewer other than the proposer (baseline v5, values recounted at the tested commit). No new amendment was filed and the frozen spec and baselines are untouched.
+- Files: none.
+- Checked: read A7 and its review block; no change under docs/training or docs/spec-amendments. Note: counts at this head (233 tools, 128 capabilities) already exceed A7's pinned 216/121, so J2.1/J6.2/J11.2 need a further amendment if tested at this head rather than the A7 commit.
+
+**platform-mcp-F4-3 - change-spec text.**
+- What changed: this file's parity-map and registry counts now give 216 tools and 121 of 121 (tested commit), with the 11 `release_tracker_*` tools and scopes listed above. `docs/changes/live-release-tracker.md` MCP paragraph updated the same way.
+- Files: `docs/changes/platform-mcp.md`, `docs/changes/live-release-tracker.md`.
+- Checked: names and scopes read from `MCP_TOOLS` in `server/lib/mcpToolRegistry.js`; `check-interface-parity.mjs --strict` exits 0.
+
+**platform-mcp-F4-4 - stacked alerts on Connected Agents (J1.4).**
+- What changed: the panel already held one inline error string that each attempt replaces, but every failure also raised a new red toast (role="alert"), so repeated attempts stacked alerts. `toast()` now removes an earlier toast with the same message and role before adding the new one; the panel's inline error is replaced per attempt and cleared on success (`create`/`revoke` clear it first, `load` clears it on success).
+- Files: `src/lib/toast.js`, `src/components/admin/ConnectedAgentsPanel.jsx`.
+- Checked: build passes; browser walk result in the final report.
