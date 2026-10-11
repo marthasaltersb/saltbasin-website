@@ -11,7 +11,7 @@ import { getUserFromCookie } from '../auth.js';
 import { assertReadyToFinalize, sendFinalizationError, FinalizationBlockedError } from '../lib/finalizationGates.js';
 import {
   TrackerError, loadSettings, saveSettings, generateWebhookSecret, setWebhookSecret, webhookSecret,
-  ingestSnapshot, getState, listSnapshots, listIngestLog, createToken, listTokens, revokeToken, verifyToken,
+  ingestSnapshot, getState, getWorldObject, listSnapshots, listIngestLog, createToken, listTokens, revokeToken, verifyToken,
   viewerKindForUser, shareTokenAllowed, pullFromRepo, subscribe, streamClientCount,
 } from '../lib/releaseTrackerService.js';
 import { jsonProblemMessage } from '../lib/friendlyErrors.js';
@@ -55,6 +55,11 @@ router.get('/state', wrap(async (req, res) => {
   const v = await requireViewer(req, res); if (!v) return;
   const state = await getState({ releaseKey: req.query.release ? String(req.query.release) : null });
   res.json({ viewer: v.kind, state });
+}));
+
+router.get('/world/object', wrap(async (req, res) => {
+  const v = await requireViewer(req, res); if (!v) return;
+  res.json(await getWorldObject({ releaseKey: req.query.release ? String(req.query.release) : null, object: req.query.object, at: req.query.at ?? null }));
 }));
 
 router.get('/stream', wrap(async (req, res) => {

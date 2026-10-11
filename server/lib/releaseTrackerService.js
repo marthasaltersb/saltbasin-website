@@ -18,6 +18,7 @@
 //  - Labels and counts only: ingest clips every string and drops unknown keys.
 //    Non-admin viewers see exactly what is stored.
 import { annotateFeatures } from './releaseScope.js';
+import { worldObjectData } from '../../src/lib/trackerWorld/trackerWorldEngine.js';
 import crypto from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import { db, getJSON, setJSON } from '../db.js';
@@ -329,6 +330,26 @@ export async function getState({ releaseKey = null } = {}) {
   };
 }
 
+// One object of the World as data: the related objects the world highlights, the journey rows, and what changed since
+// a chosen historic point. The screen (src/lib/trackerWorld) computes the same thing with the same function.
+//   object: a trail token such as feature:<key>, bug:<id>, agent:<id>, round:<key>:<n>, scope:planned|added|backlog
+//   at:     a history point index (Historic) or null / "current" (Current)
+export async function getWorldObject({ releaseKey = null, object = '', at = null } = {}) {
+  const obj = String(object || '').trim();
+  if (!obj) throw new TrackerError('Say which object to open, for example feature:<key>, bug:<id>, agent:<id>, round:<key>:<n> or scope:planned.', 400, 'object_required');
+  let idx = null;
+  if (at !== null && at !== undefined && at !== '' && at !== 'current') {
+    idx = Number(at);
+    if (!Number.isInteger(idx) || idx < 0) throw new TrackerError('The point in time must be a whole number from 0 (the earliest recorded state), or "current".', 400, 'at_invalid');
+  }
+  const state = await getState({ releaseKey });
+  if (!state) throw new TrackerError('No release data has arrived yet, so there is nothing to open.', 404, 'tracker_empty');
+  if (idx != null && idx > state.history.points.length - 1) throw new TrackerError(`This release has ${state.history.points.length} recorded states, so the point in time must be between 0 and ${state.history.points.length - 1}.`, 400, 'at_invalid');
+  const data = worldObjectData({ snap: state.snapshot, hist: state.history, object: obj, at: idx });
+  if (!data) throw new TrackerError(`"${obj}" is not in release ${state.meta.releaseKey}. Check the object name against the list in the World's Objects panel.`, 404, 'object_not_found');
+  return { releaseKey: state.meta.releaseKey, ...data };
+}
+
 export async function listSnapshots(limit = 50) {
   await ensureReleaseIntelligenceSchema();
   const rows = await db.prepare(
@@ -502,6 +523,7 @@ export async function accessChanged() {
 // the same permission the route enforces.
 export const RELEASE_TRACKER_TOOLS = [
   { name: 'release_tracker_get_state', description: 'Latest release tracker snapshot, history points and numbered updates.', viewerKinds: ['admin', 'member'], handler: getState },
+  { name: 'release_tracker_world_object', description: 'One World object as data: related objects, journey rows, what changed since a historic point.', viewerKinds: ['admin', 'member'], handler: getWorldObject },
   { name: 'release_tracker_list_snapshots', description: 'Every recorded snapshot (newest first).', viewerKinds: ['admin'], handler: listSnapshots },
   { name: 'release_tracker_ingest_snapshot', description: 'Store a snapshot, history and updates (append-only).', viewerKinds: ['admin', 'ingest-token'], handler: ingestSnapshot },
   { name: 'release_tracker_pull_now', description: 'Fetch the committed release-log files from the configured repository now.', viewerKinds: ['admin'], handler: pullFromRepo },

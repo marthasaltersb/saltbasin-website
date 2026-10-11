@@ -15,7 +15,7 @@
     ]);
     JSON.parse(snap);
     const theme = q.get('theme');
-    const stub = '<script>window.claude = { use: async (name) => name === "db" ? { doc: () => ({ onSnapshot: (ok) => { ok({ data: () => ({ json: '
+    const stub = '<script>window.claude = { use: async (name) => name === "db" ? { doc: (p) => ({ onSnapshot: (ok) => { ok(/^releases\\//.test(p) ? { data: () => null } : { data: () => ({ json: '
       + JSON.stringify(snap).replace(/</g, '\\u003c') + ' }) }); } }) } : null };<\/script>';
     // The Google Fonts link is dropped so the preview makes no external request; the CSS falls back to system fonts.
     const body = page.replace(/<link[^>]*fonts\.(googleapis|gstatic)[^>]*>/g, '');

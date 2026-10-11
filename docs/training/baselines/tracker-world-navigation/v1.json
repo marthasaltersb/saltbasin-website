@@ -1,0 +1,908 @@
+{
+  "feature": "tracker-world-navigation",
+  "spec": "docs/training/tracker-world-navigation.md",
+  "version": 1,
+  "frozenAt": "2026-10-11T02:39:55.889Z",
+  "commitAtFreeze": "4ee4248c0c3105204dcbc62643f8f3385855aea7",
+  "specSha256": "024e0d151a0d929d1df1e98d64cb07c2c678f3ff9b5d76be3f65b1f25c1131a4",
+  "amendment": null,
+  "previous": null,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "P.1",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "63b1fb1d79607589",
+      "summary": "Boot the platform once against a fresh database and run `npm run seed`, then run `node scripts/create-test-member.mjs` (creates `member@test.local`, password `T"
+    },
+    {
+      "id": "P.2",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "be1e56154d0725f4",
+      "summary": "Start the artifact preview server in the background with `node tools/release-tracker/serve.mjs docs/training/fixtures/tracker-world-navigation/artifact.json <po"
+    },
+    {
+      "id": "P.3",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "257d127eb58ea561",
+      "summary": "In the browser, sign in once as the administrator at `<BASE>/login` and keep that session; sign-in is limited to 10 attempts per 15 minutes. At `<BASE>/world` c"
+    },
+    {
+      "id": "P.4",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "cb8a1140d3986513",
+      "summary": "In **Paste a snapshot**, put the full text of `docs/training/fixtures/tracker-world-navigation/push.json` into the box named **Snapshot JSON** and click **Store"
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "97b3000247cbf609",
+      "summary": "Open `<ART>/preview.html`. Expect the heading **Release tracker**, the **View** group with **Board** pressed, and the Board overview. Click **World** in the **V"
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b5e361fbbf664961",
+      "summary": "Read the stage's `data-world`."
+    },
+    {
+      "id": "J1.3",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "cf55df82d7cabd01",
+      "summary": "Read the labels drawn over the world (elements with class `tw-wl` that are displayed)."
+    },
+    {
+      "id": "J1.4",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8b863dbe43fe3a26",
+      "summary": "Look at the **Legend**."
+    },
+    {
+      "id": "J1.5",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2af49c8d8741bdd5",
+      "summary": "Read the headline chips (on desktop over the world; on a phone they are listed at the top of the panel opened in [J1.6])."
+    },
+    {
+      "id": "J1.6",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "66b84dd8b039e326",
+      "summary": "Click **Objects**."
+    },
+    {
+      "id": "J1.7",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b4091bd55a09f339",
+      "summary": "Click **Close**. Expect the panel gone and the button **Objects** not expanded."
+    },
+    {
+      "id": "J1.8",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d826836ecca1ce9f",
+      "summary": "Read the untested features. In the labels (desktop) and in the **Objects** list find buoy-sync and lighthouse-log."
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "605a71e4bc9610c4",
+      "summary": "Click **Objects**, then click the feature **tide-table** in the list."
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b5249132af1287a3",
+      "summary": "Read the stage's `data-world`."
+    },
+    {
+      "id": "J2.3",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2d949bbb74166b27",
+      "summary": "Read the data view from the top."
+    },
+    {
+      "id": "J2.4",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4a3e8a7f94e2341d",
+      "summary": "In the **RELATED** list click the feature **harbor-chart**."
+    },
+    {
+      "id": "J2.5",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7e7dca05b97695cd",
+      "summary": "Read harbor-chart's `related` in `data-world`."
+    },
+    {
+      "id": "J2.6",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ad2631a4ecfe488c",
+      "summary": "Click the **‹ Back** button in the data view."
+    },
+    {
+      "id": "J2.7",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c91a5ddff4839776",
+      "summary": "Click **‹ Back** again."
+    },
+    {
+      "id": "J2.8",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "db1f67d4b07f8041",
+      "summary": "Click the crystal of **pier-booking** in the 3D scene: read its position from `data-crystals` (the entry with id `feature:pier-booking`), then click (mouse on d"
+    },
+    {
+      "id": "J2.9",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8d746e4d8313fb97",
+      "summary": "Click **‹ Back**."
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "579435639818af1f",
+      "summary": "Click **Objects**, click the bug **tide-table-F1-2** under tide-table."
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "972f964b6a02bb1e",
+      "summary": "Read the RELATED section and `data-world`."
+    },
+    {
+      "id": "J3.3",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "62a1360e755f4a45",
+      "summary": "Click **Objects**, click the bug **net-mender-F2-1** under net-mender."
+    },
+    {
+      "id": "J3.4",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8c24248a64e35694",
+      "summary": "Click **Objects**, click the bug **pier-booking-F1-1**."
+    },
+    {
+      "id": "J3.5",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c46ec0f014f0b682",
+      "summary": "Click **Objects**, click the agent **Validate r2** listed under **tide-table** (not the one under harbor-chart)."
+    },
+    {
+      "id": "J3.6",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8b6bcb78733fbe7d",
+      "summary": "Click **Objects**, click the round **R1 12/16** under tide-table."
+    },
+    {
+      "id": "J3.7",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c4d0eaea33ef7637",
+      "summary": "Click **Objects**, click the district heading **ADDED AFTER THE CUT**."
+    },
+    {
+      "id": "J3.8",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5ab6f9c04c06deff",
+      "summary": "On desktop, wait 2 seconds and click with the mouse at the centre of the district label **BACKLOG 0/1 passed** drawn over the world (the label is part of the sc"
+    },
+    {
+      "id": "J3.9",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1774fb05f81da063",
+      "summary": "Click **Data map** (the button over the world, not in the data view)."
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e08af5ca377b1881",
+      "summary": "With nothing open, click **Historic** in the group \"World state\"."
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8a3e8dd68e44e09d",
+      "summary": "Click **Objects**, click **tide-table**."
+    },
+    {
+      "id": "J4.3",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "299491eca6ec7fa8",
+      "summary": "Drag the slider (or set it) to 0."
+    },
+    {
+      "id": "J4.4",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b1577fe1b22171b3",
+      "summary": "Click the feature **pier-booking** in the **Objects** list while at point 0."
+    },
+    {
+      "id": "J4.5",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5c9f7125c29473dd",
+      "summary": "Click **›** (\"Next update (world)\") once."
+    },
+    {
+      "id": "J4.6",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "252a08bb44b5c4cc",
+      "summary": "Click **Live**."
+    },
+    {
+      "id": "J4.7",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d063c54488699a4a",
+      "summary": "With the feature **pier-booking** still open ([J4.4]), click **Historic**, then **Current**."
+    },
+    {
+      "id": "J4.8",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5bc5cc532c63e456",
+      "summary": "Click **Overview** in the trail, click **Objects**, click the bug **tide-table-F1-1**, click **Historic**, set the slider to 0."
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "564d3a82a0017ab0",
+      "summary": "Click **Objects**, click **tide-table**, click **Objects**, click the bug **tide-table-F1-2**."
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e24b3c70f2177cec",
+      "summary": "Click **Board** in the **View** group."
+    },
+    {
+      "id": "J5.3",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4955bd0c1639599b",
+      "summary": "Click **World** in the **View** group."
+    },
+    {
+      "id": "J5.4",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ce6313adf0e63297",
+      "summary": "Click **‹ Back**, then use the browser's Back."
+    },
+    {
+      "id": "J5.5",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c3688c83929165ff",
+      "summary": "Click the **tide-table** link in the trail."
+    },
+    {
+      "id": "J5.6",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e249f8be3e5f7963",
+      "summary": "Click **Overview** in the trail."
+    },
+    {
+      "id": "J6.1",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "43209f49052652cc",
+      "summary": "In the platform (precondition P.4 done), click **World** in the **View** group."
+    },
+    {
+      "id": "J6.2",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ba9ce50282ac9d8a",
+      "summary": "Click **Objects**, click **tide-table**."
+    },
+    {
+      "id": "J6.3",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d105cd0330ba4ca2",
+      "summary": "Click **‹ Back**, then click the chip \"3 Open bugs (this work)\" (on a phone: open **Objects** and click that chip at the top)."
+    },
+    {
+      "id": "J6.4",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "956131dcbebf367b",
+      "summary": "Click **‹ Back**, click **Historic**."
+    },
+    {
+      "id": "J6.5",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d9ae442af683b376",
+      "summary": "Click **Objects**, click **tide-table**, then click **Board** in the **View** group."
+    },
+    {
+      "id": "J6.6",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "911971a87161b87e",
+      "summary": "Click **Settings** in the group **Screen**, then **Tracker**, then **World** is still the chosen view."
+    },
+    {
+      "id": "J7.1",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "c37086c13dcc7de3",
+      "summary": "Run `curl -s -c jar.txt -H \"content-type: application/json\" -d '{\"email\":\"<ADMIN_EMAIL>\",\"password\":\"<ADMIN_PASSWORD>\"}' <BASE>/api/auth/login`. Expect `\"ok\":tr"
+    },
+    {
+      "id": "J7.2",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "a92b447de311d2cf",
+      "summary": "Run `curl -s -b jar.txt \"<BASE>/api/release-tracker/world/object?object=feature:tide-table\"`. Expect JSON with `releaseKey` \"2030-03-01-demo-harbor\", `kind` \"fe"
+    },
+    {
+      "id": "J7.3",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "869578a62ca257e7",
+      "summary": "Run `curl -s -b jar.txt \"<BASE>/api/release-tracker/world/object?object=bug:net-mender-F2-1\"`. Expect `kind` \"bug\", `status` \"reassigned\", `scope.owner` \"harbor"
+    },
+    {
+      "id": "J7.4",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "09319dcafa04a4bc",
+      "summary": "Run `curl -s -b jar.txt \"<BASE>/api/release-tracker/world/object?object=feature:tide-table&at=3\"`. Expect `mode` \"historic\", `at` 3, `changedSince` exactly `[\"S"
+    },
+    {
+      "id": "J7.5",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "4b412c8b071b7de5",
+      "summary": "Run `curl -s -o /dev/null -w \"%{http_code}\" -b jar.txt \"<BASE>/api/release-tracker/world/object\"`. Expect `400`; and `curl -s -b jar.txt \"<BASE>/api/release-tra"
+    },
+    {
+      "id": "J7.6",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "c9eb77b493900b70",
+      "summary": "Run `curl -s -w \" %{http_code}\" -b jar.txt \"<BASE>/api/release-tracker/world/object?object=bug:nope\"`. Expect status `404`, `code` `object_not_found` and a mess"
+    },
+    {
+      "id": "J7.7",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "9e4446c744a899bf",
+      "summary": "Run `curl -s -o /dev/null -w \"%{http_code}\" \"<BASE>/api/release-tracker/world/object?object=feature:tide-table\"` with no cookie. Expect `401`. Then sign in as `"
+    },
+    {
+      "id": "J7.8",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "60cfe88dde457230",
+      "summary": "In the browser as the administrator open `<BASE>/world`, click **Journeys**, click **Connected Agents**, type **World reader** in **Token name**, tick **release"
+    },
+    {
+      "id": "J7.9",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "e9de0d434b56156e",
+      "summary": "Run `node scripts/mcp-call.mjs --url <BASE>/mcp --token <TOKEN> call release_tracker_world_object '{\"object\":\"feature:tide-table\"}'`. Expect `isError: false` an"
+    },
+    {
+      "id": "J7.10",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "13d33647339a32e4",
+      "summary": "Run `node scripts/mcp-call.mjs --url <BASE>/mcp --token <TOKEN> call release_tracker_world_object '{\"object\":\"bug:nope\"}'`. Expect `isError: true` and a printed"
+    },
+    {
+      "id": "J7.11",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "9d7b6cb19112eedb",
+      "summary": "Run `node scripts/mcp-call.mjs --url <BASE>/mcp --token <TOKEN> list`. Expect a line `release_tracker_world_object` among the tool lines."
+    },
+    {
+      "id": "J8.1",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "dcb90bfd56bf27bd",
+      "summary": "On the artifact page in World, move the keyboard focus to the world stage (press Tab until the focus ring surrounds the stage, whose accessible name starts \"Rel"
+    },
+    {
+      "id": "J8.2",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d440753c105a3836",
+      "summary": "Press **Enter**."
+    },
+    {
+      "id": "J8.3",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0ea4630e4962f722",
+      "summary": "Move the focus back to the stage and press **Escape**."
+    },
+    {
+      "id": "J8.4",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "79717474858eeb99",
+      "summary": "On desktop wait 3 seconds, then click **Pause motion**; on a phone skip to [J8.5]. Read the positions in `data-crystals`, wait 1.2 seconds, read them again."
+    },
+    {
+      "id": "J8.5",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "49b6c077636ead0e",
+      "summary": "Start a new browser context that asks for reduced motion (the \"prefers-reduced-motion: reduce\" setting), open the artifact page, click **World**, wait 4 seconds"
+    },
+    {
+      "id": "J8.6",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fb84a3aab6ed5076",
+      "summary": "On the phone pass, tap the crystal of harbor-chart (its position from `data-crystals`). On desktop, click it."
+    },
+    {
+      "id": "J9.1",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7137d98f4d1c29bf",
+      "summary": "On the artifact page in World, at 390px wide, read the page's scroll width and the heights of the buttons **Current**, **Historic**, **Objects** and **Data map*"
+    },
+    {
+      "id": "J9.2",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ad50bf2b31522d0a",
+      "summary": "Click **Objects**, then click **tide-table**."
+    },
+    {
+      "id": "J9.3",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "bd0a1ff7ff434696",
+      "summary": "On the phone click **Collapse**; on desktop skip this step."
+    },
+    {
+      "id": "J9.4",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "52797c265d9ef87e",
+      "summary": "Read `data-world` and the Objects list on the phone."
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "12f52db9bc44532b",
+      "summary": "Open the artifact page and, with the World showing, paste a link ending `#/bug:does-not-exist` into the address bar and press Enter. Expect the data view to rea"
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "586244fe74774e5b",
+      "summary": "A feature that was never tested is never shown with a score of zero: in the data view of buoy-sync expect \"Latest test Not tested yet\" and the sentence \"No test"
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7daf58658cda31eb",
+      "summary": "The district **Added after the cut** is a separate ring from **This release** even though pier-booking counts toward the release score: `districts` in `data-wor"
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "082eb56237727734",
+      "summary": "In the platform, opening a stale link (`#/rt/agent:does-not-exist`) shows the data view **NOT FOUND**, the trail \"Overview › does-not-exist\" and no page error."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "e0250e082196fe6f"
+    },
+    {
+      "title": "Preconditions",
+      "kind": "precondition",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 1 — The World is the whole view (artifact page)",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 2 — Click an object: its data view opens and what is related lights up",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 3 — Bug, agent, test round and district views",
+      "kind": "journey",
+      "hash": "9ef4c87baf35e32f"
+    },
+    {
+      "title": "Journey 4 — Current versus Historic, and what changed",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 5 — One trail shared with the Board",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 6 — The platform screen uses the same World",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 7 — API and MCP",
+      "kind": "journey",
+      "hash": "c6859979cffcc1b0"
+    },
+    {
+      "title": "Journey 8 — Keyboard, touch, reduced motion, pause",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 9 — Phone layout (390px)",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    }
+  ]
+}

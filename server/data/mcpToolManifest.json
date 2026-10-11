@@ -25,6 +25,7 @@
     "release_tracker_get_scope",
     "release_tracker_set_scope",
     "release_tracker_add_feature_after_cut",
+    "release_tracker_world_object",
     "resume_rollups_read",
     "resume_rollup_preview",
     "career_atom_rollups_read",
