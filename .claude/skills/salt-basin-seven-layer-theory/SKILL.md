@@ -1,6 +1,6 @@
 ---
 name: salt-basin-seven-layer-theory
-description: Repeatable multi-session driver for the "Seven-Layer Theory, Matrix & Journey Engine — Claude Code Implementation Specification v0.1" — seven theory layers (Identity, Relationships, Composition, Time, Business Logic, Measurement, Visual Representation & UX), seven definitions per concept (Mathematical, Musical, Scientific, Business, Computational, Visual, Rest), a 49-family matrix registry with 3D projections, a hypergraph relationship engine, the musical composition model (Note, Chord, Journey Data Rod, Clef, Universal C, Staff, Journey Sheet, Measure, Beat, Rest), a 1–12 interval temporal engine, and integration with the platform's builder. Use when Betsy invokes /seven-layer-theory, references "the seven-layer spec," "the seven definitions," "the matrix registry," "the 49 matrices," "the Rest engine," "Journey Sheet / Staff / Clef / Universal C," or "the twelve-interval engine."
+description: Repeatable multi-session driver for the "Seven-Layer Theory, Matrix & Journey Engine — Claude Code Implementation Specification v0.1" — seven theory layers (Identity, Relationships, Composition, Time, Business Logic, Measurement, Visual Representation & UX), seven definitions per concept (Mathematical, Musical, Scientific, Business, Computational, Visual, Rest), a 49-family matrix registry with 3D projections, a hypergraph relationship engine, the musical composition model (Note, Chord, Journey Data Rod, Clef, Universal C, Staff, Journey Sheet, Measure, Beat, Rest), a 1–12 interval temporal engine, and integration with the platform's builder. Use when Betsy invokes /seven-layer-theory, references "the seven-layer spec," "the seven definitions," "the matrix registry," "the 49 matrices," "the Rest engine," "Journey Sheet / Staff / Clef / Universal C," "instruments / players / parts," or "the twelve-interval engine."
 ---
 
 # Salt Basin Seven-Layer Theory, Matrix & Journey Engine
@@ -48,6 +48,10 @@ definitions, render bindings, versioned definitions) before anything new is crea
 - **A Rod lives on exactly one Staff.** Decided by Betsy 2026-10-10: combining Notes from several Staffs
   creates a new Score whose chords sit on one new Staff; source Staffs are untouched and Notes are
   referenced, never copied.
+- **Instruments deliver, Players play, Notes stay canonical.** Introduced by Betsy 2026-10-10: an
+  Instrument is the delivery of a Note; a Player is the end user who plays it; several Staffs on one Sheet
+  are simultaneous parts. The same Note played by three Players is three participations of one Note,
+  never three copies, and Rest is tracked per part.
 - **Calculations are reproducible.** Every result records inputs, rule versions, method, temporal context,
   output, validation status and timestamp — reuse `metric_definitions` / `metric_calculations` rather than a
   parallel result store. Weights normalize only across eligible requirements; removing requirements never
