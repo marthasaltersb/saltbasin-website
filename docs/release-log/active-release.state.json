@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T02:19:22.333Z",
+  "exportedAt": "2026-10-11T02:22:36.693Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -138,7 +138,7 @@
       "backlog": 4
     },
     "proficiency-live-qr": {
-      "status": "amend",
+      "status": "validate",
       "lastRound": 8,
       "lastScore": "31/32",
       "lastReport": ".claude/worktrees/wf_1486aefc-79d-1/docs/test-results/proficiency-live-qr/round-8.md",
