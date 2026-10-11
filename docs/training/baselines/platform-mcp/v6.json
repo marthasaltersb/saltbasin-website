@@ -1,0 +1,918 @@
+{
+  "feature": "platform-mcp",
+  "spec": "docs/training/platform-mcp.md",
+  "version": 6,
+  "frozenAt": "2026-10-11T02:01:14.612Z",
+  "commitAtFreeze": "330f0146594f2b551ae9e0cc4875908c681fd10c",
+  "specSha256": "4895f6da99c91f2d1dd250a1888ea9cecf20d84a8c93fb56b9cfe97d6ca29548",
+  "amendment": "A8",
+  "previous": 5,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "P.1",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "51554b4180aa8a19",
+      "summary": "A fresh database is booted once and seeded (`npm run seed`); `node scripts/create-test-member.mjs` has run, giving the member `member@test.local` (password `Tes"
+    },
+    {
+      "id": "P.2",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "696f60c1d1b2a56d",
+      "summary": "The API and the web client run, the browser opens the web client, and the viewport is 1280x900 (desktop pass) or 390x844 with touch (phone pass). Browser sessio"
+    },
+    {
+      "id": "P.3",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "16708c8c8d6dddbf",
+      "summary": "Tokens from earlier steps are kept by the tester under the names **TOKEN_A** (Research assistant), **TOKEN_B** (Admin tool probe), **TOKEN_C** (Admin probe). A "
+    },
+    {
+      "id": "P.4",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "da1188889f9bd140",
+      "summary": "Each pass (desktop, phone) starts from its own fresh database; a pass never reuses tokens or data from the other pass."
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "19af526c599e5344",
+      "summary": "Sign in as the member at `/login`, open `/world`, click **Journeys**. Expect a card **Connected Agents** with the subtitle **Tokens for AI agents (MCP)**."
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4ac97b6955740565",
+      "summary": "Click the card **Connected Agents**. Expect a page with **← Back to World**, the heading **Connected Agents**, the sections **How to connect**, **Create an acce"
+    },
+    {
+      "id": "J1.3",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "142fdee31d599415",
+      "summary": "Click **Create token** with the name empty. Expect a red alert reading **Give the token a name so you can recognise it later.**"
+    },
+    {
+      "id": "J1.4",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "659cb9d4373c05b4",
+      "summary": "Type **Research assistant** in **Token name** and click **Create token** with no scope ticked. Expect a red alert reading **Choose at least one scope for the to"
+    },
+    {
+      "id": "J1.8",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e93ab059dff3fd5c",
+      "summary": "With **Research assistant** still in **Token name**, click **Create token** with no scope ticked three times in a row on Connected Agents. Expect exactly one re"
+    },
+    {
+      "id": "J1.5",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b38f442da101b572",
+      "summary": "Tick **career.read**, **career.write** and **outputs.approve** (not release.read), click **Create token**. Expect a box reading **Copy your token now. It will n"
+    },
+    {
+      "id": "J1.6",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a9b741f38e8c9596",
+      "summary": "Click **I have copied it**, reload the page, open **Journeys → Connected Agents** again. Expect the box to be gone, the full token text to appear nowhere on the"
+    },
+    {
+      "id": "J1.7",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "379322fe350b5c00",
+      "summary": "On this page, at the current viewport, expect no horizontal scrolling (the page is not wider than the viewport) and the **Create token** button to be at least 4"
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "98c0de922e33533c",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> list`. Expect exit code 0 and exactly these 126 tool lines in this order, then `126 tools`"
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "8a65456a15a44c72",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp list` (no token). Expect exit code 1 and a line starting `CONNECT FAILED` that contains `Missing or malforme"
+    },
+    {
+      "id": "J2.3",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "43fec0fe295c03e1",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token sbpat_not-a-real-token list`. Expect exit code 1 and a line starting `CONNECT FAILED` that contains "
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "47665e057a47daba",
+      "summary": "In the website open **Journeys → Career Placement Agents**, click **+ Add**, enter Job title **Principal Value Architect** and Company **Northwind Freight**, cl"
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "55d4aa6c6d0f4298",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call career_opportunities_list`. Expect `isError: false` and a result with exactly one opp"
+    },
+    {
+      "id": "J3.3",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "e3968e7b27071005",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call career_opportunity_open '{\"opportunityId\": <OPP_A>}'`. Expect `isError: false`, `oppo"
+    },
+    {
+      "id": "J3.4",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "11d79c1b45f612e5",
+      "summary": "In the website open **Journeys → Career Master → Manual Intake → Tools (0) → + Add**, enter NAME WHEN USED **Ledgerly ERP**, CATEGORY **ERP**, FIRST USED (YEAR)"
+    },
+    {
+      "id": "J3.5",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "66c613cb0f4b98e2",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call career_master_read`. Expect `isError: false`; `tools` has exactly one entry that cont"
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "6b2f88241ed4ccab",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call career_opportunity_create '{\"jobTitle\": \"Staff Revenue Engineer\", \"companyName\": \"Har"
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0dc59e60bbce2b35",
+      "summary": "In the website reload `/world`, open **Journeys**. Expect the card **Career Placement Agents** to read **2 tracked · 7 agents**. Open it: expect **TRACKED (2)**"
+    },
+    {
+      "id": "J4.3",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "94863d7a820ac416",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call application_outputs_list '{\"opportunityId\": <OPP_B>}'`. Expect `isError: false` and e"
+    },
+    {
+      "id": "J4.4",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "796052b938147d99",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call application_output_open '{\"outputId\": <LETTER_B>}'`. Expect `isError: false`, `id` eq"
+    },
+    {
+      "id": "J4.5",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "e44d09c24292f60d",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call application_output_new_draft_version '{\"outputId\": <LETTER_B>, \"content\": {\"format\": "
+    },
+    {
+      "id": "J4.6",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b49320d6b73cf78a",
+      "summary": "In the website click the row **Staff Revenue Engineer**. Expect the cover letter card to read **version 2 of 2**, with in its provenance **Version 2 of 2 (edite"
+    },
+    {
+      "id": "J4.7",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "9840920334e43502",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call application_output_new_draft_version '{\"outputId\": <V2>, \"content\": {\"format\": \"docum"
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "d05bdc5332ccc448",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call application_output_approve_for_qr '{\"outputId\": <V2>}'`. Expect `isError: true` and a"
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "36800fc99b332f58",
+      "summary": "In the website, on the cover letter card of **Staff Revenue Engineer** click **Approve for QR**, then **Confirm approval**. Expect a dialog **Set how each techn"
+    },
+    {
+      "id": "J5.3",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "c78283ae7129ff2e",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call application_output_new_draft_version '{\"outputId\": <V2>, \"content\": {\"format\": \"docum"
+    },
+    {
+      "id": "J5.4",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "3650c300c6c7b529",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call application_output_approve_for_qr '{\"outputId\": <V3>}'`. Expect `isError: false`, `mo"
+    },
+    {
+      "id": "J5.5",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6bc429e7f812edd7",
+      "summary": "In the website reload `/world`, open **Journeys → Career Placement Agents → Staff Revenue Engineer**. Expect **QR link is live on version 3**, the same link add"
+    },
+    {
+      "id": "J6.1",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "00700b5c568e4dce",
+      "summary": "In the website open **Journeys → Connected Agents**, type **Admin tool probe**, tick only **release.read**, click **Create token**. Expect the once-only token b"
+    },
+    {
+      "id": "J6.2",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "7027f8fc09d0c38c",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_B> list`. Expect exactly these 10 tool lines in this order, then `10 tools`: `platform_capabi"
+    },
+    {
+      "id": "J6.3",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "4ab32ed158e41605",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_B> call release_tracker_read`. Expect `isError: true` and an error with `status` 403, `code` "
+    },
+    {
+      "id": "J6.4",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "322ba3abb4df5727",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_B> call career_master_read`. Expect `isError: true` and an error with `status` 403 and `code`"
+    },
+    {
+      "id": "J6.5",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "415e414b89d09baa",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call no_such_tool`. Expect `isError: true` and an error with `status` 404, `code` `unknown"
+    },
+    {
+      "id": "J6.6",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "4708370bc0013f04",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call career_opportunity_open '{\"opportunityId\": \"abc\"}'`. Expect `isError: true` and an er"
+    },
+    {
+      "id": "J6.7",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "076fe4cce7682080",
+      "summary": "Run `node scripts/create-test-member.mjs --email gated@test.local --out <creds file>` (fictional second member, terms accepted). Sign in as gated@test.local in "
+    },
+    {
+      "id": "J6.8",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "3e28c150ee02fcbe",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_D> call career_opportunities_list`. Expect `isError: true` and an error with `status` 428, `c"
+    },
+    {
+      "id": "J6.9",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "53039fedd8bd2aab",
+      "summary": "In the gated member's website session, open `/world`. Expect the Career Portfolio terms page (the member is asked to accept again) instead of the Journeys list;"
+    },
+    {
+      "id": "J7.1",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b5284c3e479b0f08",
+      "summary": "Sign in as the administrator in a second browser session, open `/world`, click **Journeys**. Expect the cards **Connected Agents** (subtitle **Tokens for AI age"
+    },
+    {
+      "id": "J7.2",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "47f63aba93a6ead8",
+      "summary": "Open **Connected Agents**, type **Admin probe**, tick **career.read**, **career.write** and **release.read**, click **Create token**. Expect the once-only token"
+    },
+    {
+      "id": "J7.3",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "1fc88157a705276b",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_C> call release_tracker_read`. Expect `isError: false` and a result whose `releases` is a lis"
+    },
+    {
+      "id": "J7.4",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "266d77575d9fb9e8",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_C> call career_opportunity_create '{\"jobTitle\": \"Admin Probe Role\", \"companyName\": \"Fabrikam "
+    },
+    {
+      "id": "J7.5",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "2be44073a51013e8",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call career_opportunity_open '{\"opportunityId\": <OPP_ADMIN>}'`. Expect `isError: true` and"
+    },
+    {
+      "id": "J7.6",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "75581d5d38aea2ad",
+      "summary": "In the member's browser session open **Journeys**. Expect no card named **Capabilities**."
+    },
+    {
+      "id": "J8.1",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d590c5f45f6360e9",
+      "summary": "In the member's session open **Journeys → Connected Agents**. Expect the entry **Research assistant** to read as many **tool calls** as the number of `call` com"
+    },
+    {
+      "id": "J9.1",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "66c8742353e25e66",
+      "summary": "On the **Research assistant** entry click **Revoke**. Expect the buttons **Confirm revoke** and **Cancel** on that entry."
+    },
+    {
+      "id": "J9.2",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1468c57348be075a",
+      "summary": "Click **Cancel**. Expect the entry still **Active** and no **Confirm revoke** button."
+    },
+    {
+      "id": "J9.3",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6dad7886e320d883",
+      "summary": "Click **Revoke**, then **Confirm revoke**. Expect the pill **Revoked**, a line starting **Revoked** with a date, and no buttons left on that entry."
+    },
+    {
+      "id": "J9.4",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "71cb987dd36351c1",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> list`. Expect exit code 1 and a `CONNECT FAILED` line containing `This access token has be"
+    },
+    {
+      "id": "J9.5",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "3e4e667fa1822432",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call career_opportunities_list`. Expect exit code 1 and `CONNECT FAILED` containing `This "
+    },
+    {
+      "id": "J9.6",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "8bbb6bc6c08146df",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_B> list`. Expect exit code 0 and the line `release_tracker_read` (revoking one token does not"
+    },
+    {
+      "id": "J10.1",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "afc0ac22b2a197b5",
+      "summary": "In the administrator's session open **Journeys → Capabilities**. Expect the heading **Capabilities**, a tile reading `<n> of <m>` with **capabilities work in al"
+    },
+    {
+      "id": "J10.2",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1201d67031c9eafa",
+      "summary": "Count the capability cards with **All capabilities** selected: expect m cards. Click **Gaps only**: expect exactly m minus n cards. Click **All capabilities**."
+    },
+    {
+      "id": "J10.3",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "03fccb15a3baec1f",
+      "summary": "Find the card **Approve an output for its QR link**. Expect its cells to read **Website ready**, **API ready** (showing `POST /api/resume-outputs/:id/share`) an"
+    },
+    {
+      "id": "J10.4",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b5b8372b078c8b30",
+      "summary": "Find the card **Import an application package**. Expect the cells **Website ready** (showing the path ending `My Resume > Import an application package`), **API"
+    },
+    {
+      "id": "J10.5",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8924b258113b9a18",
+      "summary": "Find the card **Create, list and revoke access tokens**. Expect its MCP cell to read **MCP not offered** with the reason **Credentials are managed by a signed-i"
+    },
+    {
+      "id": "J10.6",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d61cd357d7422ea5",
+      "summary": "At the current viewport expect the page to have no horizontal scrolling and each filter button to be at least 44 pixels tall."
+    },
+    {
+      "id": "J11.1",
+      "kind": "step",
+      "journey": "11",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "b26a98fa145785eb",
+      "summary": "Run `node scripts/check-interface-parity.mjs`. Expect exit code 0, a first line starting `Interface parity:`, and the last line `OK: the registry matches the co"
+    },
+    {
+      "id": "J11.2",
+      "kind": "step",
+      "journey": "11",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "541a5d97c026bd0d",
+      "summary": "Run `node scripts/check-interface-parity.mjs --strict`. Expect exit code 0, a first line `Interface parity: 121 of 121 capabilities work in all three interfaces"
+    },
+    {
+      "id": "J11.3",
+      "kind": "step",
+      "journey": "11",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "c0470c7c27cd7453",
+      "summary": "Run `node scripts/check-interface-parity.mjs --self-test`. Expect exit code 0, three lines starting `DETECTED:` (an API route with no capability row, a removed "
+    },
+    {
+      "id": "J11.4",
+      "kind": "step",
+      "journey": "11",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "56a8434ba0dbd6fe",
+      "summary": "Run `node scripts/check-interface-parity.mjs --json`. Expect exit code 0 and JSON whose `problems` is an empty list and whose `summary.total` equals m from J10."
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "41a1025de8bbbc16",
+      "summary": "In **Create an access token**, type a name, tick one scope, type **0** in **Expires in (days, optional)**, click **Create token**. Expect a red alert reading **"
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "857ef3f5b5c8b6af",
+      "summary": "Run `curl -s -o /dev/null -w \"%{http_code}\" -H \"Authorization: Bearer <TOKEN_B>\" <API_BASE>/mcp` (a GET request). Expect `405` (the server is stateless: JSON-RP"
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "6e50f0181695bda4",
+      "summary": "Run `curl -s -o /dev/null -w \"%{http_code}\" <API_BASE>/mcp` (no token). Expect `401`."
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "919db900cfc8d048",
+      "summary": "Run `curl -s -o /dev/null -w \"%{http_code}\" <API_BASE>/api/platform/tokens` (no session cookie). Expect `401`: an access token page and its API need a signed-in"
+    },
+    {
+      "id": "E.5",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6798f165ede9dd8e",
+      "summary": "On **Connected Agents**, **Tools an agent can call** lists all eleven tool names (the ten from J2.1 and `release_tracker_read`), each with its scope."
+    },
+    {
+      "id": "E.6",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b916d1dc9c2cc5fd",
+      "summary": "On **Connected Agents**, at the current viewport, expect each scope checkbox row and each **Revoke** button (on the active **Admin tool probe** entry) to be at "
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "04814fa8b31b8ab5"
+    },
+    {
+      "title": "Preconditions",
+      "kind": "precondition",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 1 — Create an access token in the website",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 2 — Connect an MCP client and list the tools",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 3 — Read through MCP and see the same data in the website",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 4 — Write through MCP and see the change in the website",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 5 — Approve for QR through the finalization gate, from both interfaces",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 6 — Scopes, permissions and errors",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 7 — An administrator, and another person's data",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 8 — Tool calls are counted",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 9 — Revoke a token",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 10 — The Capabilities screen shows parity and gaps",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 11 — The parity check script",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    }
+  ],
+  "comparedWithPrevious": {
+    "same": [
+      "P.1",
+      "P.2",
+      "P.3",
+      "P.4",
+      "J1.1",
+      "J1.2",
+      "J1.3",
+      "J1.4",
+      "J1.5",
+      "J1.6",
+      "J1.7",
+      "J2.1",
+      "J2.2",
+      "J2.3",
+      "J3.1",
+      "J3.2",
+      "J3.3",
+      "J3.4",
+      "J3.5",
+      "J4.1",
+      "J4.2",
+      "J4.3",
+      "J4.4",
+      "J4.5",
+      "J4.6",
+      "J4.7",
+      "J5.1",
+      "J5.2",
+      "J5.3",
+      "J5.4",
+      "J5.5",
+      "J6.1",
+      "J6.2",
+      "J6.3",
+      "J6.4",
+      "J6.5",
+      "J6.6",
+      "J6.7",
+      "J6.8",
+      "J6.9",
+      "J7.1",
+      "J7.2",
+      "J7.3",
+      "J7.4",
+      "J7.5",
+      "J7.6",
+      "J8.1",
+      "J9.1",
+      "J9.2",
+      "J9.3",
+      "J9.4",
+      "J9.5",
+      "J9.6",
+      "J10.1",
+      "J10.2",
+      "J10.3",
+      "J10.4",
+      "J10.5",
+      "J10.6",
+      "J11.1",
+      "J11.2",
+      "J11.3",
+      "J11.4",
+      "E.1",
+      "E.2",
+      "E.3",
+      "E.4",
+      "E.5",
+      "E.6"
+    ],
+    "changed": [],
+    "added": [
+      "J1.8"
+    ],
+    "retired": [],
+    "contextChanged": []
+  }
+}
