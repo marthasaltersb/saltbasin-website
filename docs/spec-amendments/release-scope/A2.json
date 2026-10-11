@@ -1,0 +1,35 @@
+{
+  "id": "A2",
+  "feature": "release-scope",
+  "fromBaseline": 1,
+  "proposedBy": "session:S-0.3.0-02-build (builder; not a reviewer)",
+  "round": 0,
+  "triageItems": [],
+  "reason": "Split from A1 by the reviewer: new step covering the scope summary tiles and Backlog drill-down.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "J5.6",
+      "after": "Under `Release 0.3.0 scope: this release vs backlog`, expect three tiles: `This release: planned work` showing P + C features and `N of P + C passed`; `Added after the cut` showing A with `C counted in this release \u00b7 A \u2212 C in backlog`; `Backlog: not this release` showing B + (A \u2212 C). Each tile also shows its open-bug count. Click the Backlog tile: the page shows `Backlog: not this release: B + (A \u2212 C)`, its feature rows include qr-gated-outputs and global-change-standard, and the trail reads `Overview \u203a Backlog: not this release`.",
+      "tracesTo": "owner feedback 2026-10-10",
+      "whyNeeded": "Covers the new summary and its drill-down."
+    }
+  ],
+  "review": {
+    "status": "rejected",
+    "reviewer": "amend:release-scope:r1",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass",
+      "Retire only duplicates": "pass",
+      "Exact": "fail: 'N of P + C passed' leaves N unstated and 'Each tile also shows its open-bug count' gives no value to compare, so a validator cannot tell a right count from a wrong one",
+      "Reachable": "pass",
+      "Deterministic": "fail: the open-bug counts are not stated or derivable from a command in the step",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass",
+      "Errors plain and coloured": "pass: no error step"
+    },
+    "note": "The step as written cannot be scored exactly. Product must show on the tiles: the planned-work tile with `0 of P + C passed` after the J5.1 snapshot, and an open-bug number per tile that the step names a source for (for example the count of open bugs for that group in `GET /api/release-tracker/state`). Re-propose J5.6 with those exact values; the tile/drill-down behaviour itself is not rejected.",
+    "at": "2026-10-11T00:45:00Z"
+  }
+}
