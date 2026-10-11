@@ -40,6 +40,11 @@ definitions, render bindings, versioned definitions) before anything new is crea
   participation, clef, fund/portfolio membership, or journey. A change in chord membership never creates a
   new Journey Data Rod (spec §6, §7). Never infer a master contract from bilateral contracts; never equate
   a reporting composition with an executed agreement.
+- **`journey_data_rods` holds Journey Staffs, not Journey Data Rods.** Decided by Betsy 2026-10-10: the
+  existing table's rows are sequential processes (Staffs). The spec's Journey Data Rod is a separate,
+  persistent chord identity. The table name is a legacy name and is never renamed; say "Staff" in theory
+  screens, docs and code comments, and never write theory logic that treats a `journey_data_rods` row as a
+  chord.
 - **Calculations are reproducible.** Every result records inputs, rule versions, method, temporal context,
   output, validation status and timestamp — reuse `metric_definitions` / `metric_calculations` rather than a
   parallel result store. Weights normalize only across eligible requirements; removing requirements never
@@ -92,8 +97,9 @@ definitions, render bindings, versioned definitions) before anything new is crea
 | Diagram / process-flow builder | **None exists.** Closest: `MetadataModelDiagramBlock` (static CMS block), `DecisionTreeBlock`, `DefinitionStudioJourney.jsx` (localStorage only), `worldEngine/graphWorld.js` (3D graph renderer, no edges/editing) | Spec's central assumption fails — see DEC-SLT-01. |
 | Canonical entities (V) | `entities`, `persons` (with `merged_into_id` dedup), `journey_rod_entity_links` | Reuse for legal entities / parties. |
 | Relationships (𝓔) | `relationships` (owner→person/entity), `journey_rod_tributary_links` (rod↔rod, bilateral), Tributary kinds hierarchical/peer/reference | Bilateral only — no n-ary, no relationship-of-relationship. Hypergraph is a genuine gap. |
-| Note / Chord | Evidence atoms `journey_rod_evidence` + definitions `journey_metadata_molecules`; Molecules computed by `eidosBonding.js` | Strong structural fit. Chord membership must stay computed/event-sourced, never a static list. |
-| Journey Data Rod | `journey_data_rods` + `journey_rod_events` | Same concept, already persistent identity. |
+| Journey Staff | `journey_data_rods` (today's Channel Rods — sequential processes) + `journey_rod_types` | **Decided by Betsy 2026-10-10.** Never rename the table. |
+| Note | Evidence atoms `journey_rod_evidence` + definitions `journey_metadata_molecules` | Strong fit; recorded on a Staff. |
+| Journey Data Rod / Chord | **New** — persistent chord identity (proposed `theory_relations` row, `relation_kind='journey_data_rod'`, effective-dated Note participants); Chord = members effective at time *t* | **Decided by Betsy 2026-10-10.** Bonding (`eidosBonding.js`) may propose members; membership changes are governed and provenance-carrying, never a static list. |
 | Staff / Measure / Beat / Clef / Universal C / Journey Sheet / Rest | No existing concepts (verified by grep) | New vocabulary — definitions must come from Betsy (DEC-SLT-04). |
 | Time | `effective_from/to` on evidence, metric definitions, scenario versions; `journey_rod_events.created_at` = recorded time; stages in `journeyDefinitions.js`, `journey_current_definitions.port_stages` | Partial. No 1–12 interval cycle model. |
 | Business logic / gates | `journey_stage_gates`, `journey_gate_definitions` (required clusters/molecules, dependency_rules), `maturity.js evaluateGate` (soft), `qualificationGateCheckers.js` | Reuse; extend for eligibility/authorized Rest. |
