@@ -1,0 +1,18 @@
+{
+  "key": "data_model_map_rules",
+  "version": 1,
+  "note": "Default domain grouping for the Data model map. A table belongs to the domain whose `tables` list names it exactly (an exact name always beats a prefix), else the first domain whose `prefixes` match its start; everything else is 'Other'. Editable in World Shell > Data model map > Settings (saved as config_state row data_model_map_rules); the shipped file is only the default.",
+  "domains": [
+    { "key": "career", "label": "Career", "color": "#C4843A", "prefixes": ["career_", "resume_output", "resume_member", "cover_letter_"], "tables": ["output_templates"] },
+    { "key": "journey", "label": "Journey and rods", "color": "#4A7C8E", "prefixes": ["journey_", "genesis_", "scenario_", "divergence_", "historical_", "economic_", "reciprocity_", "tier_"], "tables": ["entities", "persons", "relationships", "checkpoint_presence", "field_lineage", "field_audit_log"] },
+    { "key": "release", "label": "Release and testing", "color": "#8FB8A8", "prefixes": ["release_", "test_", "build_progress_", "backlog_", "session_analyses", "session_mapping", "session_capture"], "tables": [] },
+    { "key": "render", "label": "Render bindings and ports", "color": "#D98CA0", "prefixes": ["data_ports", "port_source_", "data_snapshots", "render_binding"], "tables": [] },
+    { "key": "agents", "label": "Agents", "color": "#B9A0D8", "prefixes": ["agent_", "customer_agent_", "member_agent_", "platform_access_"], "tables": [] },
+    { "key": "members", "label": "Members and identity", "color": "#E0B050", "prefixes": ["member_", "user_", "personal_", "organization_", "org_", "oauth_", "password_", "consent_", "email_delivery_", "entitlement_", "product_licenses", "product_onboarding", "data_entitlements", "platform_applications", "network_requests", "nrm_", "notifications", "portfolio_requests", "resume_temp_access"], "tables": ["users", "sessions"] },
+    { "key": "site", "label": "Site and content", "color": "#7CA0D8", "prefixes": ["site_", "config_", "content_", "unified_", "detail_pages", "landing_", "page_", "temp_attachments", "client_basin_"], "tables": [] },
+    { "key": "growth", "label": "Leads, commerce and proposals", "color": "#C86B6B", "prefixes": ["lead", "commerce_", "gtm_", "proposal_", "services_proposal_", "revenue_", "offering_", "capability_", "feedback_", "product_feedback", "herq_", "jira_", "analytics_", "raw_events", "contribution_"], "tables": [] },
+    { "key": "finance", "label": "Finance and metrics", "color": "#6FBF8F", "prefixes": ["account", "accounting_", "gl_", "journal_", "financial_", "external_financial_", "finbridgeco_", "metric_", "rate_", "deliverable_", "global_standards", "pending_standards", "standard_"], "tables": ["user_tasks"] },
+    { "key": "audit", "label": "Audit and system", "color": "#9AA5AA", "prefixes": ["audit_"], "tables": [] }
+  ],
+  "fallback": { "key": "other", "label": "Other", "color": "#7C8A90" }
+}

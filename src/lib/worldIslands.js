@@ -257,6 +257,13 @@ export const ISLAND_REGISTRY = {
     dataBinding: { store: 'data_ports, journey_rod_evidence, journey_rod_events' },
     permission: { requiredRole: 'member', crud: ['read', 'update', 'approve'], enforced: true },
   },
+  // Data model map (2026-10-10): Graphify knowledge-graph view of the platform's tables (docs/data-model/). Admin
+  // only (it describes the schema); a World Shell entry point (PLATFORM_ISLAND_TABS), no nav row.
+  dataModelMap: {
+    variant: 'rings', kind: 'embed', accent: 'teal',
+    dataBinding: { store: 'docs/data-model/catalog.json (committed Graphify output)' },
+    permission: { requiredRole: 'admin', crud: ['read', 'update'], enforced: true },
+  },
   leads: {
     variant: 'rings', kind: 'embed', accent: 'teal',
     dataBinding: { store: 'leads' },
@@ -310,6 +317,7 @@ export const PLATFORM_ISLAND_TABS = Object.freeze([
   { id: 'capabilities', label: 'Capabilities', componentId: 'capabilities', sortOrder: 31, adminOnly: true },
   { id: 'qualification-rules', label: 'Qualification Rules', componentId: 'qualificationRules', sortOrder: 32, adminOnly: true },
   { id: 'agent-runner', label: 'Agent runner', componentId: 'agentRunner', sortOrder: 33, adminOnly: true },
+  { id: 'data-model-map', label: 'Data model map', componentId: 'dataModelMap', sortOrder: 34, adminOnly: true },
 ]);
 
 /** `tabs` plus the World Shell-only entry points this user may see (a stored tab with the same componentId wins). */

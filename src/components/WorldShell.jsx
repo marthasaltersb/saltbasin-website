@@ -56,6 +56,7 @@ const AgentRunnerPanel = lazy(() => import('./admin/AgentRunnerPanel.jsx'));
 const ReleaseTrackerApp = lazy(() => import('./releaseTracker/ReleaseTrackerApp.jsx'));
 const SessionMappingPanel = lazy(() => import('./admin/SessionMappingPanel.jsx'));
 const RenderBindingsPanel = lazy(() => import('./admin/RenderBindingsPanel.jsx'));
+const DataModelMapPanel = lazy(() => import('./admin/DataModelMapPanel.jsx'));
 
 const SIMPLE_EMBED_COMPONENTS = {
   leads: { title: 'Leads', render: () => <LeadsPanel /> },
@@ -74,6 +75,7 @@ const SIMPLE_EMBED_COMPONENTS = {
   releaseTracker: { title: 'Release tracker', render: () => <ReleaseTrackerApp embedded /> },
   sessionMapping: { title: 'Sessions', render: () => <SessionMappingPanel /> },
   renderBindings: { title: 'Render Bindings', render: () => <RenderBindingsPanel /> },
+  dataModelMap: { title: 'Data model map', render: () => <DataModelMapPanel /> },
 };
 
 const ISLAND_RADIUS = 9;
@@ -917,6 +919,8 @@ function JourneysGrid({ islands, career, commercial, herq, onOpen }) {
               ? 'Open Career Master journey'
               : isl.componentId === 'connectedAgents'
                 ? 'Tokens for AI agents (MCP)'
+                : isl.componentId === 'dataModelMap'
+                  ? 'Tables, relations and usage (Graphify)'
                 : isl.componentId === 'capabilities'
                   ? 'Website, API and MCP parity'
                   : isl.componentId === 'qualificationRules'

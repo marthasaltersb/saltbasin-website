@@ -44,6 +44,14 @@ export const api = {
   listSessionCaptureFailures: () => request('/api/session-mapping/failures'),
   setSessionCaptureFailureDisposition: (id, body) => request(`/api/session-mapping/failures/${id}/disposition`, { method: 'PUT', body: JSON.stringify(body) }),
   // Render bindings: renderings as views over mapped source data (live or approval path), data map, pending queue.
+  // Data model map (admin): Graphify catalog of tables, columns, relations and usage; picker source; grouping rules.
+  dmCatalog: () => request('/api/data-model/catalog'),
+  dmSearch: (q) => request(`/api/data-model/search?q=${encodeURIComponent(q)}`),
+  dmTable: (name) => request(`/api/data-model/tables/${encodeURIComponent(name)}`),
+  dmPicker: (params = {}) => request(`/api/data-model/picker?${new URLSearchParams(params)}`),
+  dmRules: () => request('/api/data-model/rules'),
+  dmSaveRules: (body) => request('/api/data-model/rules', { method: 'PUT', body: JSON.stringify(body) }),
+  dmResetRules: () => request('/api/data-model/rules', { method: 'DELETE' }),
   rbRenderings: () => request('/api/render-bindings/renderings'),
   rbRendering: (key) => request(`/api/render-bindings/renderings/${encodeURIComponent(key)}`),
   rbAddItem: (key, title) => request(`/api/render-bindings/renderings/${encodeURIComponent(key)}/subjects`, { method: 'POST', body: JSON.stringify({ title }) }),
