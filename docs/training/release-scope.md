@@ -62,10 +62,12 @@ commit them.
 1. [J3.1] Run `node scripts/release-loop-resume.mjs --args --scripts $FX/wf`.
    - Expect stderr to contain `Not launched (backlog, not this release's work; --include-backlog to run them):`
      followed by the six backlog features and the three backlog features added after the cut.
-   - Expect no file in `$FX/wf` whose name contains `qr-gated-outputs`, `career-application-journey` or
-     `global-change-standard`, and one whose name contains `release-scope`.
-2. [J3.2] Run it again with `--include-backlog` into `$FX/wf2`. Expect no "Not launched" line and a file whose name
-   contains `qr-gated-outputs`.
+   - Expect no file in `$FX/wf` whose name contains `career-application-journey` or `global-change-standard`, and one
+     whose name contains `release-scope`. A file containing `qr-gated-outputs` exists only if stderr also has
+     `Launched for their production bugs only:` naming qr-gated-outputs (it has open production bugs); any other
+     backlog feature without open production bugs has no file.
+2. [J3.2] Run it again with `--include-backlog` into `$FX/wf2`. Expect no stderr line starting `Not launched (backlog,`
+   and a file whose name contains `qr-gated-outputs`. (A `Not launched locally (validated on production)` line may appear.)
 
 ## Journey 4 - Estimates flag work outside the plan
 
@@ -84,8 +86,10 @@ commit them.
    `Release 0.3.0 scope: this release vs backlog`, and further down, in this order, `Planned at the cut: 0 of P passed`,
    `Added after the cut (A)`, `Backlog: kept on the record, not this release's work (B)` and `Other tracked work (1)`
    (P, A, B as in J1.1). There is no heading that is just `Features`.
-3. [J5.3] In **Added after the cut**, expect four notes, each with `added 2026-10-10`: release-scope says
-   `counted in this release`; the other three say `kept in backlog`. Each note ends with its reason.
+3. [J5.3] In **Added after the cut**, expect one note per `added` entry of `node scripts/release-scope.mjs show --json`
+   (A of them), each with `added 2026-10-10`; a note whose entry has `scope` `planned` says `counted in this release`
+   (C of them), the others say `kept in backlog`. Each note ends with its reason. At 2026-10-10T21:05Z these were 9
+   notes, 6 counted, 3 kept in backlog.
 4. [J5.4] Click the **release-scope** row. Expect its feature page to open (no blank screen); go back.
 5. [J5.5] Open `GET /api/release-tracker/state` in the same signed-in browser. Expect JSON in which the feature
    `release-scope` has `"scope":"planned"` and an `added` object with `decidedBy` `owner`, and `qr-gated-outputs` has

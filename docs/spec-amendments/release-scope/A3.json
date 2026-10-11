@@ -1,0 +1,56 @@
+{
+  "id": "A3",
+  "feature": "release-scope",
+  "fromBaseline": 2,
+  "proposedBy": "triage:release-scope:r2",
+  "round": 2,
+  "triageItems": [
+    "release-scope-T2-1",
+    "release-scope-T2-2",
+    "release-scope-T2-5"
+  ],
+  "reason": "Three spec_error items from round 2: wording stale against the standing launcher rule (production bugs first), an ambiguous 'Not launched' match, and a hardcoded note count that should derive from show --json.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "J3.1",
+      "before": "Expect no file in `$FX/wf` whose name contains `qr-gated-outputs`, `career-application-journey` or `global-change-standard`, and one whose name contains `release-scope`.",
+      "after": "Expect no file in `$FX/wf` whose name contains `career-application-journey` or `global-change-standard`, and one whose name contains `release-scope`. A file containing `qr-gated-outputs` exists only if stderr also has `Launched for their production bugs only:` naming qr-gated-outputs (it has open production bugs); any other backlog feature without open production bugs has no file.",
+      "tracesTo": "HANDOVER-0.3.0 Production bugs section; commit cbba5f7; release-loop-resume.mjs:82-85",
+      "whyNeeded": "The launcher's production-bug exception is a standing owner-approved rule (production bugs first, even for backlog features); the old wording fails whenever a backlog feature has an open production bug."
+    },
+    {
+      "op": "change",
+      "stepId": "J3.2",
+      "before": "Expect no \"Not launched\" line and a file whose name contains `qr-gated-outputs`.",
+      "after": "Expect no stderr line starting `Not launched (backlog,` and a file whose name contains `qr-gated-outputs`. (A `Not launched locally (validated on production)` line may appear.)",
+      "tracesTo": "docs/changes/release-scope.md (resume launcher); round-2 validator observation",
+      "whyNeeded": "Removes the ambiguity with the unrelated production-validated line; the backlog-line check stays exact."
+    },
+    {
+      "op": "change",
+      "stepId": "J5.3",
+      "before": "In **Added after the cut**, expect four notes, each with `added 2026-10-10`: release-scope says `counted in this release`; the other three say `kept in backlog`. Each note ends with its reason.",
+      "after": "In **Added after the cut**, expect one note per `added` entry of `node scripts/release-scope.mjs show --json` (A of them), each with `added 2026-10-10`; a note whose entry has `scope` `planned` says `counted in this release` (C of them), the others say `kept in backlog`. Each note ends with its reason. At 2026-10-10T21:05Z these were 9 notes, 6 counted, 3 kept in backlog.",
+      "tracesTo": "A1 follow-up note; docs/changes/release-scope.md; commit de9b2f5",
+      "whyNeeded": "Counts must derive from the release file because the owner moves scope; fixed 'four' fails whenever scope changes."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:release-scope:r2",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass: J3.1 still forbids the file unless the stated production-bug exception is evidenced on stderr; the old expectation contradicts the owner-approved rule that production bugs are launched first (commit cbba5f7, HANDOVER-0.3.0); J3.2 and J5.3 are equally strict (counts now tied to show --json)",
+      "Retire only duplicates": "pass: no step retired",
+      "Exact": "pass",
+      "Reachable": "pass: cli steps and tracker notes walkable on desktop and 390px",
+      "Deterministic": "pass: conditions are checked against stderr and show --json output; the dated figures are illustrative only",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass",
+      "Errors plain and coloured": "pass: no error step changed"
+    },
+    "note": "Checked against docs/changes/release-scope.md, release-loop-resume.mjs lines 82-85 and the round-2 results; all three are spec errors, product behaviour is correct.",
+    "at": "2026-10-11T01:00:00Z"
+  }
+}

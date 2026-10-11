@@ -1,0 +1,415 @@
+{
+  "feature": "release-scope",
+  "spec": "docs/training/release-scope.md",
+  "version": 3,
+  "frozenAt": "2026-10-11T01:06:40.178Z",
+  "commitAtFreeze": "4748c50ce19d812afde4b156f2345ef7353a6a0f",
+  "specSha256": "3999f1104d81bc23470358f4ad886a5d1e19a746e0e65a26f113162f3083292f",
+  "amendment": "A3",
+  "previous": 2,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "P.1",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "dc4a35c9b6489a83",
+      "summary": "Fresh database per the fixed test constraints: boot the server once against a new empty database, run"
+    },
+    {
+      "id": "P.2",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "017381f8d976a3bd",
+      "summary": "`mkdir -p $FX`. Write the scratch snapshot:"
+    },
+    {
+      "id": "P.3",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "bf529b69b98bcd10",
+      "summary": "Browser viewport 1280x900 for the desktop pass and 390x844 with touch for the phone pass. Sign in at"
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "92a3859407febda8",
+      "summary": "Run `node scripts/release-scope.mjs show`."
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6481ddece2ffc615",
+      "summary": "Under **Added after the cut**, expect one line per `added` entry of `show --json`: guided-training-agent,"
+    },
+    {
+      "id": "J1.3",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7c6de62f1ee992b2",
+      "summary": "Under **Backlog**, expect qr-gated-outputs, release-loop-tooling, release-intelligence and"
+    },
+    {
+      "id": "J1.4",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "c1f12802b8df7505",
+      "summary": "Run `node scripts/release-scope.mjs show --json`. Expect valid JSON with `planned`, `added` and `backlog` arrays whose"
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "989d651ae705f360",
+      "summary": "Run `node scripts/release-scope.mjs set --key release-loop-tooling --scope planned --by tester --reason \"training check\"`."
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "48af2bbb12834ed3",
+      "summary": "Expect release-loop-tooling in `active-release.features.json` to have `\"scope\": \"planned\"` and a"
+    },
+    {
+      "id": "J2.3",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "63282a997ceefb34",
+      "summary": "Run the same command again. Expect exit 1 and exactly `release-loop-tooling is already planned; nothing changed.`"
+    },
+    {
+      "id": "J2.4",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "236faef4a5235414",
+      "summary": "Run `node scripts/release-scope.mjs add --key demo-widget --title \"Demo widget\" --scope backlog --by tester --reason \"training check\"`."
+    },
+    {
+      "id": "J2.5",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8d661e88e687cd6f",
+      "summary": "Undo J2.1–J2.4 now: `git checkout -- docs/release-log/active-release.features.json`. `show` again prints the"
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "2f64e8f2554ae393",
+      "summary": "Run `node scripts/release-loop-resume.mjs --args --scripts $FX/wf`."
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "253d159724912847",
+      "summary": "Run it again with `--include-backlog` into `$FX/wf2`. Expect no stderr line starting `Not launched (backlog,`"
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "c80f9aa9d48bb813",
+      "summary": "Run `node scripts/session-plan.mjs estimate --session T-scope-check --intent \"training\" --item \"feature=global-change-standard;goal=check;expect=1/1;size=S\" --i"
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0b6144bfbeb5d141",
+      "summary": "In `docs/release-log/session-plans/T-scope-check.json` expect the global-change-standard item to carry"
+    },
+    {
+      "id": "J4.3",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9a0a1f739c60fd86",
+      "summary": "Delete `docs/release-log/session-plans/T-scope-check.json`."
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "94488ecd9288a058",
+      "summary": "Open `/world`, then the **Release tracker** island. Click **Open Settings** (or the Settings link). In"
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6834ab2771ed4c6d",
+      "summary": "Go back to the tracker overview. Expect the first section heading to be"
+    },
+    {
+      "id": "J5.3",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5dcdf22806f39a5a",
+      "summary": "In **Added after the cut**, expect one note per `added` entry of `node scripts/release-scope.mjs show --json`"
+    },
+    {
+      "id": "J5.4",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a29ffc0ffc18c49b",
+      "summary": "Click the **release-scope** row. Expect its feature page to open (no blank screen); go back."
+    },
+    {
+      "id": "J5.5",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "56a7b68420e53615",
+      "summary": "Open `GET /api/release-tracker/state` in the same signed-in browser. Expect JSON in which the feature"
+    },
+    {
+      "id": "J6.1",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "907d763632c102e1",
+      "summary": "At 390x844, open the Release tracker overview. Expect the scope summary first (three tiles stacked or wrapped, all"
+    },
+    {
+      "id": "J6.2",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4c20d3ce6f06e43b",
+      "summary": "Expect the notes in **Added after the cut** to wrap within the screen with space between them."
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "a0d10d509fd3036d",
+      "summary": "`node scripts/release-scope.mjs set --key platform-mcp --scope later --by tester --reason x` exits 1 with"
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "e94196ddb81e29a6",
+      "summary": "`node scripts/release-scope.mjs set --key platform-mcp --scope backlog --by tester` (no reason) exits 1 with"
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "42ce8da315e22fad",
+      "summary": "`node scripts/release-scope.mjs add --key platform-mcp --title x --scope planned --by tester --reason x` exits 1"
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "660702f92915881b",
+      "summary": "Clean-up: `git checkout -- docs/release-log/active-release.features.json`, remove `$FX`, stop what you started,"
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "7df462f0d182a5e1"
+    },
+    {
+      "title": "Preconditions",
+      "kind": "precondition",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 1 - The three groups on the command line",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 2 - Changing scope is recorded, never silent",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 3 - Only planned work is launched",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 4 - Estimates flag work outside the plan",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 5 - Platform Release tracker, desktop",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 6 - Platform Release tracker, phone",
+      "kind": "journey",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    }
+  ],
+  "comparedWithPrevious": {
+    "same": [
+      "P.1",
+      "P.2",
+      "P.3",
+      "J1.1",
+      "J1.2",
+      "J1.3",
+      "J1.4",
+      "J2.1",
+      "J2.2",
+      "J2.3",
+      "J2.4",
+      "J2.5",
+      "J4.1",
+      "J4.2",
+      "J4.3",
+      "J5.1",
+      "J5.2",
+      "J5.4",
+      "J5.5",
+      "J6.1",
+      "J6.2",
+      "E.1",
+      "E.2",
+      "E.3",
+      "E.4"
+    ],
+    "changed": [
+      "J3.1",
+      "J3.2",
+      "J5.3"
+    ],
+    "added": [],
+    "retired": [],
+    "contextChanged": []
+  }
+}
