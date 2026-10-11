@@ -1,0 +1,36 @@
+{
+  "id": "A1",
+  "feature": "scoring-preferences-mcp",
+  "fromBaseline": 1,
+  "proposedBy": "triage:scoring-preferences-mcp:r1",
+  "round": 1,
+  "triageItems": ["scoring-preferences-mcp-T5"],
+  "reason": "The step hardcodes the platform-wide capability total (110); it is 128 on the integration branch, so the step fails for a reason unrelated to this feature.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "E.4",
+      "before": "Run `node scripts/check-interface-parity.mjs` exits 0 and prints `Interface parity: 110 of 110 capabilities work in all three interfaces (website UI gaps: 0, MCP gaps: 0, API gaps: 0).`",
+      "after": "Run `node scripts/check-interface-parity.mjs` exits 0 and prints `Interface parity: N of N capabilities work in all three interfaces (website UI gaps: 0, MCP gaps: 0, API gaps: 0).` where both N are the same number (the total grows as features ship).",
+      "tracesTo": "docs/changes/scoring-preferences-mcp.md (parity row career-scoring-preferences has no gap); owner interface-parity rule v3, 2026-10-09",
+      "whyNeeded": "The total is not part of this feature's behaviour; other features add capabilities. Verified: current output is 128 of 128 with 0 gaps."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:scoring-preferences-mcp:r1",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass: still requires exit 0, the exact sentence shape, equal counts and all three gap counts at 0; only the drifting total is generalised",
+      "Retire only duplicates": "pass: nothing retired",
+      "Exact": "pass: exact sentence with N of N stated as equal",
+      "Reachable": "pass: cli step by design",
+      "Deterministic": "pass: result no longer depends on how many other features have shipped",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass: tests the parity check output, not an implementation choice",
+      "Errors are plain and coloured by severity": "pass: step checks no error message"
+    },
+    "note": "Confirmed against the integration head: the checker prints 'Interface parity: 128 of 128 ... gaps: 0'. A genuine spec_error.",
+    "at": "2026-10-11T00:00:00Z"
+  }
+}
