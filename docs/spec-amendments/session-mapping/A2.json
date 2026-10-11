@@ -1,0 +1,37 @@
+{
+  "id": "A2",
+  "feature": "session-mapping",
+  "fromBaseline": 2,
+  "proposedBy": "triage:session-mapping:r6",
+  "round": 6,
+  "triageItems": ["session-mapping-r6-E.1"],
+  "reason": "E.1 expects the bare parser-style message 'The analysis is not valid JSON:', which contradicts the owner direction of 2026-10-10 (first sentence plain, technical detail on its own line, never a bare parser message). The product follows the owner rule; the round 6 validator observed the plain sentence plus a 'Technical detail:' line on desktop and mobile.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "E.1",
+      "before": "Expect a red message starting **The analysis is not valid JSON:** (HTTP 400); nothing is filed.",
+      "after": "Expect a red message starting **The analysis could not be read because part of its text is mistyped or missing.** followed by a second line starting **Technical detail:** (HTTP 400); nothing is filed.",
+      "tracesTo": "Owner direction 2026-10-10 (CLAUDE.md Frontend conventions); docs/changes/owner-error-messages.md; docs/training/owner-error-messages.md line 9",
+      "whyNeeded": "The old text uses a developer term (JSON) as the main message, which the errors checklist rule forbids; without the change a correct product fails the step every round."
+    }
+  ],
+  "status": "approved",
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:session-mapping:r6",
+    "checklist": {
+      "Traced": "pass: names the owner direction of 2026-10-10 and docs/changes/owner-error-messages.md; claimed spec_error verified against both",
+      "Not weaker": "pass: stricter, it now also requires the second line starting 'Technical detail:'; the old expectation contradicts the owner error rule",
+      "Retire only duplicates": "pass: nothing retired",
+      "Exact": "pass: exact checkable prefix, exact second-line prefix, red colour and HTTP 400 unchanged",
+      "Reachable": "pass: Import screen, typed input, walkable on desktop and at 390px (round 6 validated both)",
+      "Deterministic": "pass: the first sentence is fixed text; only the wording after 'Technical detail:' varies and is not checked",
+      "Fictional data only": "pass: input is {not json",
+      "Independent of the fix": "pass: tests the member-visible message required by the owner rule, not the implementation",
+      "Errors are plain and coloured by severity": "pass: plain first sentence, technical detail on its own line, red for a rejected input"
+    },
+    "note": "Approved. The product is right and the frozen text predates the owner direction. Baseline moves to v3 with E.1 changed.",
+    "at": "2026-10-11T00:00:00Z"
+  }
+}
