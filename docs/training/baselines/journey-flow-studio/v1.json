@@ -1,0 +1,1143 @@
+{
+  "feature": "journey-flow-studio",
+  "spec": "docs/training/journey-flow-studio.md",
+  "version": 1,
+  "frozenAt": "2026-10-11T01:26:08.958Z",
+  "commitAtFreeze": "61e7b0f5573aa4987cca951d0e6af1ef68e7a314",
+  "specSha256": "476149497a656457fbeb226f6c5668870706de5396b1276cfac3b12e0efa5a3e",
+  "amendment": null,
+  "previous": null,
+  "retired": [],
+  "constraints": {
+    "database": "fresh database per validator, booted once, then npm run seed; nothing else pre-loaded",
+    "accounts": "scripts/create-test-member.mjs: member@test.local and the admin, platform and career terms accepted (--no-terms only for steps that test terms)",
+    "surfaces": {
+      "desktop": {
+        "viewport": "1280x900",
+        "colorScheme": "light"
+      },
+      "mobile": {
+        "viewport": "390x844",
+        "isMobile": true,
+        "hasTouch": true,
+        "colorScheme": "light"
+      },
+      "cli": "bash in the validator worktree"
+    },
+    "browser": "the pinned Chromium named in the release-loop args; no other browser",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "fixtures": "only the fixtures written in the spec and its appendices, created through the UI unless a precondition says otherwise",
+    "codeUnderTest": "the integration-branch commit named in the report; the only variable between rounds"
+  },
+  "steps": [
+    {
+      "id": "P.1",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "9d7ca14fcb4f8711",
+      "summary": "MEMBER WINDOW: sign in as member@test.local and open `/world`. Expect the World Shell with the top bar tabs **World**, **Journeys**, **Classic Tools**."
+    },
+    {
+      "id": "P.2",
+      "kind": "precondition",
+      "journey": null,
+      "surfaces": [
+        "setup"
+      ],
+      "hash": "b1a6fb651c5aabff",
+      "summary": "MEMBER WINDOW: click **Journeys**, then the card **Journey Flow Studio**. Expect the heading **Journey Flow Studio**, exactly two tabs **Flows** and **Templates"
+    },
+    {
+      "id": "J1.1",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "bd72cfdbdc9f5f86",
+      "summary": "MEMBER WINDOW: type **Seed Shop Orders** in **New flow name**, choose **Order to delivery** in **Start from** (its options are **Blank flow**, **Order to delive"
+    },
+    {
+      "id": "J1.2",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "d2b2a761272202b0",
+      "summary": "Look at the drawing. Expect two swimlane bands named **Customer** and **Operations**, and the card **Check flow** showing the pill `no problems` and the line **"
+    },
+    {
+      "id": "J1.3",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c50f65c766c510e0",
+      "summary": "In **Steps and connectors** tap **Step: Check stock by hand**. Expect the Inspector heading `Step: Check stock by hand` and **Execution** reading **User activit"
+    },
+    {
+      "id": "J1.4",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4bbf9bd7888774ea",
+      "summary": "Open the **Scenario** list. Expect exactly three options in this order: **Base (L2)**, **Rush order**, **Backorder**."
+    },
+    {
+      "id": "J1.5",
+      "kind": "step",
+      "journey": "1",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ac72df023f545f99",
+      "summary": "Click **Future state**. Expect the list **Steps and connectors** now includes a step **Step: Check live stock** and the **Check flow** pill still reads `no prob"
+    },
+    {
+      "id": "J2.1",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "33b87226b1654de0",
+      "summary": "Click **← All flows**. Type **Seed Packet Returns** in **New flow name**, leave **Start from** on **Blank flow**, click **Create flow**. Expect the editor, `Ver"
+    },
+    {
+      "id": "J2.2",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "bc0062296f15307a",
+      "summary": "Click **Add Start / End**; the new step is selected and its panel opens. Replace **Label** with **Return requested**. Then add and name, in this order (each add"
+    },
+    {
+      "id": "J2.3",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "78a067d63cf7ceb3",
+      "summary": "Look at the drawing. Expect round badges **U** (twice), **S** and **H** on the matching steps, a diamond for **Seal intact?**, a diamond for **Close and notify*"
+    },
+    {
+      "id": "J2.4",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "18f028e85c270edf",
+      "summary": "Click **Connect**. Expect the hint **Tap the step the arrow starts from.** In **Steps and connectors** tap **Start / End: Return requested**, then **Step: Inspe"
+    },
+    {
+      "id": "J2.5",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "490a294828a3433d",
+      "summary": "Still in **Connect** mode, connect **Decision: Seal intact?** to **Step: Refund customer** and set **Path label** to **Yes**; connect **Decision: Seal intact?**"
+    },
+    {
+      "id": "J2.6",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3aee166c18cdfce9",
+      "summary": "Connect **Step: Refund customer** → **Parallel gate: Close and notify**, and **Step: Send replacement** → **Parallel gate: Close and notify** (no labels). Then "
+    },
+    {
+      "id": "J2.7",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a2d9c30be90f540b",
+      "summary": "Connect **Step: Re-inspect packet** → **Parallel gate: Close and notify** and set **Path label** to **Clear**. Connect **Parallel gate: Close and notify** → **S"
+    },
+    {
+      "id": "J2.8",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5177b913899f58b0",
+      "summary": "Click **Connect**, connect **Parallel gate: Close and notify** → **Event: Customer emailed**, click **Select**. Expect the **Check flow** pill `no problems`."
+    },
+    {
+      "id": "J2.9",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "47ce9531a372e714",
+      "summary": "Tap **Step: Refund customer**, set **Dependency** to **Parallel**; tap **Step: Send replacement**, set **Dependency** to **Parallel**. Expect a small pill **||*"
+    },
+    {
+      "id": "J2.10",
+      "kind": "step",
+      "journey": "2",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f3e1a7fb0fd7b61f",
+      "summary": "Click **Save draft**. Expect the confirmation line `Draft saved as version 2` and **Save draft** disabled."
+    },
+    {
+      "id": "J3.1",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4fbdbf1c8c4d46df",
+      "summary": "Click **Lanes**. Expect the card **Swimlanes (Current state)** with the fields **Lane 1 name** and **Lane 2 name** reading **Lane 1** and **Lane 2**, and button"
+    },
+    {
+      "id": "J3.2",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "8d42c14b30af05a6",
+      "summary": "Set **Lane 1 name** to **Returns desk** and **Lane 2 name** to **Warehouse**. Expect the band names in the drawing to read **Returns desk** and **Warehouse** im"
+    },
+    {
+      "id": "J3.3",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "eda484515ce80cd7",
+      "summary": "Click **Add lane**, set **Lane 3 name** to **Customer care**. Expect a third band **Customer care**. Click **Lanes** again to close the card."
+    },
+    {
+      "id": "J3.4",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e1a9037a81f11add",
+      "summary": "Tap **Step: Inspect packet**. Fill **Actors involved** with **Returns clerk**, **Inputs** with **Photo of the packet seal**, **System name** with **Returns port"
+    },
+    {
+      "id": "J3.5",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "52d5f1c77c778e79",
+      "summary": "In **Steps and connectors** tap the connector under **Decision: Seal intact?** reading `→ Send replacement (Damaged)`. Fill **Branch parameters** with **Photo s"
+    },
+    {
+      "id": "J3.6",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "086342244f3d504f",
+      "summary": "Click **Save draft**. Expect `Draft saved as version 3`."
+    },
+    {
+      "id": "J3.7",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b590e7b413498469",
+      "summary": "Click **← All flows**. Expect the flow button **Seed Packet Returns** with the line `Version 3 · draft`. Click it, click **Lanes**. Expect **Lane 1 name** **Ret"
+    },
+    {
+      "id": "J3.8",
+      "kind": "step",
+      "journey": "3",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "72a6191ab2ce8bb1",
+      "summary": "Tap **Step: Inspect packet**. Expect **Pain points** **Photos arrive late** and **System name** **Returns portal**. Tap the `→ Send replacement (Damaged)` conne"
+    },
+    {
+      "id": "J4.1",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c055970b49d5a17e",
+      "summary": "Type **Bulk return** in **New scenario name**, click **Add scenario**. Expect the **Scenario** list options **Base (L2)** and **Bulk return**."
+    },
+    {
+      "id": "J4.2",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6dafecf48183446a",
+      "summary": "Tap **Step: Re-inspect packet**, set **Scenario tags** to **Bulk return**. Expect the drawn **Re-inspect packet** step to look faded while **Scenario** is **Bas"
+    },
+    {
+      "id": "J4.3",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c679edf7f5a36c76",
+      "summary": "Tap **Step: Inspect packet**, then choose **Bulk return** in **Scenario**. Expect the blue box **Editing scenario overrides for Bulk return. Empty boxes inherit"
+    },
+    {
+      "id": "J4.4",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "94deced6f1d2c152",
+      "summary": "Type **Returns clerk and warehouse lead** in **Actors involved**. Choose **Base (L2)** in **Scenario**. Expect **Actors involved** to read **Returns clerk** aga"
+    },
+    {
+      "id": "J4.5",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1c35740ba6db2854",
+      "summary": "Choose **Bulk return** again, click **Clear Bulk return overrides**. Expect **Actors involved** empty. Click **Copy base values into Bulk return**. Expect **Act"
+    },
+    {
+      "id": "J4.6",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9c06941c31ae1369",
+      "summary": "With **Bulk return** chosen, tap the `→ Send replacement (Damaged)` connector. Expect the group **Overrides for Bulk return**. Type **Damaged (bulk)** in **Path"
+    },
+    {
+      "id": "J4.7",
+      "kind": "step",
+      "journey": "4",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5de5f0d9df80207d",
+      "summary": "Choose **Base (L2)**. Expect the arrow's pill to read **Damaged** again, and a small blue dot beside it (the connector has scenario overrides). Click **Save dra"
+    },
+    {
+      "id": "J5.1",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f3ba7027b06995ee",
+      "summary": "Click **Future state**. Click **Add Step**, set **Label** to **Photo upload at request**, **Execution** **System automation**. Expect the group **Resolves Curre"
+    },
+    {
+      "id": "J5.2",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a3bb9c18e1e68f48",
+      "summary": "Open **Link a Current-state problem**. Expect exactly two options: **Choose…** and **Inspect packet: Pain point** (only Current-state steps that record a pain p"
+    },
+    {
+      "id": "J5.3",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "862d0dace71f308a",
+      "summary": "Fill **Business goal** with **Cut days to refund**. Expect the group **Future-state tracking** to be present and the group **Current-state diagnostics** (with *"
+    },
+    {
+      "id": "J5.4",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a2a4274f903df942",
+      "summary": "Click **Current state**, tap **Step: Inspect packet**, clear **Pain points** (empty it). Click **Future state**. Expect the **Check flow** pill `1 error(s), 0 w"
+    },
+    {
+      "id": "J5.5",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2b769f3b2538d133",
+      "summary": "Click **Current state**, tap **Step: Inspect packet**, type **Photos arrive late** in **Pain points**. Click **Future state**. Expect the **Check flow** pill `n"
+    },
+    {
+      "id": "J5.6",
+      "kind": "step",
+      "journey": "5",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4f582fe4e25a4440",
+      "summary": "Click **Save draft**. Expect `Draft saved as version 5`."
+    },
+    {
+      "id": "J6.1",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "3b6262f71dd40c8c",
+      "summary": "With **Current state** chosen, click **Delete mode**, tap **Event: Customer emailed** in **Steps and connectors**. Expect it gone from the list. Click **Select*"
+    },
+    {
+      "id": "J6.2",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "06ee66b48a251d1e",
+      "summary": "Click **Undo**. Expect **Event: Customer emailed** back in the list. Click **Redo**: gone again. Click **Undo**: back."
+    },
+    {
+      "id": "J6.3",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ce3b93c40f51f09a",
+      "summary": "Click **Add Step**, set **Label** to **Island step**. Click **Connect**, tap **Step: Island step**, then **Start / End: Return closed**, click **Select**. Expec"
+    },
+    {
+      "id": "J6.4",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "b37f90986b6438bb",
+      "summary": "Click **Publish** without saving. Expect a red message **Save your draft first. Publishing uses the saved draft, not unsaved changes.**"
+    },
+    {
+      "id": "J6.5",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "c45ebb69b5dea346",
+      "summary": "Click **Save draft** (expect `Draft saved as version 6`), then **Publish**. Expect the card **Impact of publishing** containing the line **Blocked: 1 problem(s)"
+    },
+    {
+      "id": "J6.6",
+      "kind": "step",
+      "journey": "6",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0a4cde3fcac394b5",
+      "summary": "Click **Delete mode**, tap **Step: Island step**, click **Select**. Expect **Check flow** `no problems`. Click **Save draft**. Expect `Draft saved as version 7`"
+    },
+    {
+      "id": "J7.1",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2d8ba757ce1e5c5f",
+      "summary": "Click **Publish**. Expect the card **Impact of publishing** with exactly these four lines: **First publish: version 7 becomes the published journey definition.*"
+    },
+    {
+      "id": "J7.2",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7bd2042e249c7610",
+      "summary": "Click **Approve and publish**. Expect `Published version 7` and the line `Version 7 · published`."
+    },
+    {
+      "id": "J7.3",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "69afc1a7a3fe65fe",
+      "summary": "Click **← All flows**. Expect the button **Seed Packet Returns** with `Version 7 · published`. Open it again."
+    },
+    {
+      "id": "J7.4",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f471225bc622ad13",
+      "summary": "Click **Add Data object**, set **Label** to **Return label**. Connect **Start / End: Return requested** → **Data object: Return label**, click **Select**, click"
+    },
+    {
+      "id": "J7.5",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "aee9bf514fa43e7e",
+      "summary": "Click **History**. Expect a list (newest first) in which one row starts `published v8 · source action: publish`, one `version saved v8 · source action: editor`,"
+    },
+    {
+      "id": "J7.6",
+      "kind": "step",
+      "journey": "7",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f59743fedab126d7",
+      "summary": "Click **Restore v5**. Expect `Restored version 5 as version 9`, and the History list gaining a top row `version saved v9 · source action: restore`. Expect the *"
+    },
+    {
+      "id": "J8.1",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "eb969b5ade27177f",
+      "summary": "Click **Export**. Expect exactly three links: **Export JSON**, **Export HTML viewer**, **Export journey definition**, and the line **Saved draft only (version 9"
+    },
+    {
+      "id": "J8.2",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "811e58849053f100",
+      "summary": "Click **Export JSON**. Expect a downloaded `.json` file. Opened in a text editor it starts with `\"format\": \"salt-basin-journey-flow\"` and contains `\"schemaVersi"
+    },
+    {
+      "id": "J8.3",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "78648147cfbe60cc",
+      "summary": "Click **Export HTML viewer**. Expect a downloaded `.html` file starting `<!doctype html>`. Open it in the browser with the network disabled (or simply as a loca"
+    },
+    {
+      "id": "J8.4",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "4734b638abd03d79",
+      "summary": "Click **Export journey definition**. Expect a downloaded `.json` file containing `\"format\": \"salt-basin-journey-definition\"`, `\"state\": \"future\"`, one step labe"
+    },
+    {
+      "id": "J8.5",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1aaa00d543db586f",
+      "summary": "Click **← All flows**. In **Paste flow JSON** type `not a flow` and click **Import flow**. Expect a red box with the text **This file is not a flow export. Choo"
+    },
+    {
+      "id": "J8.6",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "602b6cf5ba5a23d8",
+      "summary": "Replace the pasted text with `{\"format\":\"salt-basin-journey-flow\",\"schemaVersion\":99,\"name\":\"X\"}` and click **Import flow**. Expect a red box whose first line i"
+    },
+    {
+      "id": "J8.7",
+      "kind": "step",
+      "journey": "8",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "09e7db87bf04ee19",
+      "summary": "Paste the whole content of **EXPORT.JSON** and click **Import flow** (on a phone choose **EXPORT.JSON** with **Or choose a .json file** instead). Expect `Import"
+    },
+    {
+      "id": "J9.1",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "1a8ea2115d6312a4",
+      "summary": "Click **← All flows**, open **Seed Packet Returns** (its line reads `Version 9 · published, newer draft`; not the imported **Seed Packet Returns (2)**). Click *"
+    },
+    {
+      "id": "J9.2",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f85d9c3461d0b3ff",
+      "summary": "Click **Save template**. Expect `Template \"Seed Packet Returns template\" saved`."
+    },
+    {
+      "id": "J9.3",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "ab66858a74bd627f",
+      "summary": "Click **← All flows**, then the tab **Templates**. Expect a card **Seed Packet Returns template** with `Template · Only me` and the buttons **Use template**, **"
+    },
+    {
+      "id": "J9.4",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0d9b55c005b7f008",
+      "summary": "On the card **Seed Packet Returns template** click **Use template**. Expect `Flow \"Seed Packet Returns template\" created`, nine steps in **Steps and connectors*"
+    },
+    {
+      "id": "J9.5",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "57c8cce65e527965",
+      "summary": "In this new flow click **Add Step**, set **Label** **Archive the return**, connect **Event: Customer emailed** → **Step: Archive the return**, click **Select**,"
+    },
+    {
+      "id": "J9.6",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "6be71e0f46cf94da",
+      "summary": "Click **Approve and replace**. Expect `Template \"Seed Packet Returns template\" replaced`."
+    },
+    {
+      "id": "J9.7",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "9df1843ea4cbeb0c",
+      "summary": "Click **← All flows**, tab **Templates**, click **Delete template** on **Seed Packet Returns template**. Expect the card **Impact of deleting \"Seed Packet Retur"
+    },
+    {
+      "id": "J9.8",
+      "kind": "step",
+      "journey": "9",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "fa119ca54a9e8b35",
+      "summary": "Click **Approve and delete**. Expect `Template \"Seed Packet Returns template\" deleted` and the card gone from **Templates**. The flows already made from it rema"
+    },
+    {
+      "id": "J10.1",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a0eee719826f346f",
+      "summary": "Click the tab **Flows** and open **Seed Packet Returns** (`Version 9 · published, newer draft`), tap **Step: Inspect packet**, type **Describe who inspects the "
+    },
+    {
+      "id": "J10.2",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "06d31650dc76054e",
+      "summary": "Look at **Actors involved**. Expect it to still read **Returns clerk** (nothing is applied by drafting)."
+    },
+    {
+      "id": "J10.3",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "32e3bc3fd56b950e",
+      "summary": "Click **Apply draft**. Expect `Draft applied. Review it, then save the draft.` and **Actors involved** reading `Fixture draft for actors of \"Inspect packet\"`."
+    },
+    {
+      "id": "J10.4",
+      "kind": "step",
+      "journey": "10",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "da08e1b7cd1f96c8",
+      "summary": "Click **Save draft**. Expect `Draft saved as version 10`."
+    },
+    {
+      "id": "J11.1",
+      "kind": "step",
+      "journey": "11",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "e828b5f31e697aa8",
+      "summary": "ADMIN WINDOW: sign in as the administrator, open **Journeys → Journey Flow Studio**. Expect three tabs: **Flows**, **Templates**, **Settings**."
+    },
+    {
+      "id": "J11.2",
+      "kind": "step",
+      "journey": "11",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "17830620f5c1bd32",
+      "summary": "Click **Settings**. Expect a line beginning **Version 1. Everything here drives the editor** and the cards **Shape types**, **Step fields**, **Checks**, **Who c"
+    },
+    {
+      "id": "J11.3",
+      "kind": "step",
+      "journey": "11",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "18f813ca59063b45",
+      "summary": "In **Shape types** set **Shape 5 label** (the row whose key is `event`) to **Milestone**. In **Checks** set **Check Step with no connectors severity** to **erro"
+    },
+    {
+      "id": "J11.4",
+      "kind": "step",
+      "journey": "11",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "13d73331675448e0",
+      "summary": "Click **Flows**, create a flow named **Pilot Check** (blank). Expect the shapes row to contain **Add Milestone** and no **Add Event**. Click **Add Step** twice."
+    },
+    {
+      "id": "J11.5",
+      "kind": "step",
+      "journey": "11",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0a859559477dbfbd",
+      "summary": "Click **← All flows**, **Settings**. Type **Try removing a shape in use** in **Definition change note**, remove the shape in row 7 (key `terminal`, label **Star"
+    },
+    {
+      "id": "J11.6",
+      "kind": "step",
+      "journey": "11",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "7d47e426e692ce68",
+      "summary": "Click **Reset to platform default**. Expect `Definition saved as version 3`. Open the flow **Pilot Check**. Expect **Add Event** back and no **Add Milestone**."
+    },
+    {
+      "id": "J11.7",
+      "kind": "step",
+      "journey": "11",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "50a33cd324ed8da0",
+      "summary": "ADMIN WINDOW, in **Pilot Check** click **Save as template**. Expect **Who can use it** to offer **Only me**, **My organization**, **Whole platform**. Type **Pil"
+    },
+    {
+      "id": "J11.8",
+      "kind": "step",
+      "journey": "11",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "a6e5b537c664a7dd",
+      "summary": "MEMBER WINDOW: reload the studio (**Journeys → Journey Flow Studio**). Expect **Pilot shared template** among the **Start from** options."
+    },
+    {
+      "id": "J12.1",
+      "kind": "step",
+      "journey": "12",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "2a78c509dec1f205",
+      "summary": "MEMBER WINDOW at 390px wide: open the flow **Seed Packet Returns**. Expect the page not to scroll sideways: dragging sideways on the heading moves nothing; the "
+    },
+    {
+      "id": "J12.2",
+      "kind": "step",
+      "journey": "12",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f163a91d658c325d",
+      "summary": "Expect every button, list and text field in the studio to be at least 44px tall."
+    },
+    {
+      "id": "J12.3",
+      "kind": "step",
+      "journey": "12",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "17e3590c1e793bb1",
+      "summary": "Expect **Steps and connectors** to be reachable by scrolling down past the drawing, and tapping a step there to open its panel below it."
+    },
+    {
+      "id": "J13.1",
+      "kind": "step",
+      "journey": "13",
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "76aff5e3b2a392a2",
+      "summary": "MEMBER WINDOW: **Journeys → Connected Agents**. In **Token name** type `Flow probe`, tick **flows.read** and **flows.write** (nothing else), click **Create toke"
+    },
+    {
+      "id": "J13.2",
+      "kind": "step",
+      "journey": "13",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "e202680924506c29",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> list`. Expect exit code 0, the lines `flow_studio_flows_list`, `flow_studio_flow_read`, `f"
+    },
+    {
+      "id": "J13.3",
+      "kind": "step",
+      "journey": "13",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "5249addcde5a116f",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call flow_studio_flows_list`. Expect `isError: false` and a `result.flows` list that inclu"
+    },
+    {
+      "id": "J13.4",
+      "kind": "step",
+      "journey": "13",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "36b0a240967d525d",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call flow_studio_flow_validate '{\"flowId\": <FLOW_ID>}'`. Expect `isError: false` and `\"fin"
+    },
+    {
+      "id": "J13.5",
+      "kind": "step",
+      "journey": "13",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "a4d0f4a682af9cfd",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call flow_studio_flow_export '{\"flowId\": <FLOW_ID>, \"format\": \"json\"}'`. Expect `isError: "
+    },
+    {
+      "id": "J13.6",
+      "kind": "step",
+      "journey": "13",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "54e73709c93e16c3",
+      "summary": "Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call flow_studio_definition_save '{\"definition\": {}, \"note\": \"probe\"}'`. Expect `isError: "
+    },
+    {
+      "id": "J13.7",
+      "kind": "step",
+      "journey": "13",
+      "surfaces": [
+        "cli"
+      ],
+      "hash": "84b3c0bd87e551ed",
+      "summary": "Run `node scripts/check-interface-parity.mjs`. Expect the output to contain `OK: the registry matches the code.` and no gap line that mentions `flow-studio`."
+    },
+    {
+      "id": "E.1",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "f57a4926ea8519c0",
+      "summary": "MEMBER WINDOW, Flows tab: click **Create flow** with **New flow name** empty and **Blank flow** chosen. Expect `Flow \"Untitled flow\" created` (a flow always has"
+    },
+    {
+      "id": "E.2",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "5d536f496b517513",
+      "summary": "Paste `{\"format\":\"salt-basin-journey-flow\",\"schemaVersion\":1,\"name\":\"Bad shapes\",\"states\":{\"current\":{\"nodes\":[{\"id\":\"n1\",\"type\":\"hexagon\",\"x\":0,\"y\":0,\"label\":\""
+    },
+    {
+      "id": "E.3",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0948a43617cd3e62",
+      "summary": "Two windows on the same flow (run after Journey 10, when **Seed Packet Returns** is at version 10): in MEMBER WINDOW open **Seed Packet Returns**; in a second m"
+    },
+    {
+      "id": "E.4",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "30c63fb08c9b1dfe",
+      "summary": "In the first window, with **Other name** typed and unsaved, click **Save as template**, then **Save template**. Expect the red message **Save your draft first. "
+    },
+    {
+      "id": "E.5",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "17adccf4bcf2433b",
+      "summary": "Open the flow **Edge probe**, tap the connector `→ Inspect packet` under **Start / End: Return requested**, click **Draft with agent**. Expect the note **Offlin"
+    },
+    {
+      "id": "E.6",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "0e4d2351a881d671",
+      "summary": "Member API check: run `curl -s -c jar.txt -H 'Content-Type: application/json' -d '{\"email\":\"member@test.local\",\"password\":\"TestPass!2345\"}' http://127.0.0.1:<AP"
+    },
+    {
+      "id": "E.7",
+      "kind": "edge",
+      "journey": null,
+      "surfaces": [
+        "desktop",
+        "mobile"
+      ],
+      "hash": "51ae709543bd7169",
+      "summary": "Anonymous API check: run `curl -s -i http://127.0.0.1:<API_PORT>/api/flow-studio/flows`. Expect status `401` and the body `{\"error\":\"unauthorized\"}`."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Where things are",
+      "kind": "context",
+      "hash": "5671f6e868fb55d3"
+    },
+    {
+      "title": "Preconditions",
+      "kind": "precondition",
+      "hash": "e3b0c44298fc1c14"
+    },
+    {
+      "title": "Journey 1 — Start from a seed template and read it",
+      "kind": "journey",
+      "hash": "1504b09e262f9a08"
+    },
+    {
+      "title": "Journey 2 — Draw a flow: BPMN shapes, multi-branch decision, self-loop, parallel gate",
+      "kind": "journey",
+      "hash": "5d4b352e65aeb60e"
+    },
+    {
+      "title": "Journey 3 — Step specification, swimlanes that keep their names, saved for good",
+      "kind": "journey",
+      "hash": "cb4aca16f6244907"
+    },
+    {
+      "title": "Journey 4 — Scenarios: shared L2 steps, L3 variants, per-scenario overrides on steps and connectors",
+      "kind": "journey",
+      "hash": "e4876b7fac33bddb"
+    },
+    {
+      "title": "Journey 5 — Current state versus Future state, and the link from a Future step to the problem it resolves",
+      "kind": "journey",
+      "hash": "619f87fa246611d5"
+    },
+    {
+      "title": "Journey 6 — Undo, redo and the structural checks",
+      "kind": "journey",
+      "hash": "23ed7f8c55bcf329"
+    },
+    {
+      "title": "Journey 7 — Publish with an impact preview, history with source actions, restore",
+      "kind": "journey",
+      "hash": "40ff928680796c4c"
+    },
+    {
+      "title": "Journey 8 — Download JSON, a one-file HTML viewer and the journey definition; import back",
+      "kind": "journey",
+      "hash": "ebc646bb36fa94f2"
+    },
+    {
+      "title": "Journey 9 — Templates: save, share rules, use, replace with impact, delete with impact",
+      "kind": "journey",
+      "hash": "19f85a8b878d540d"
+    },
+    {
+      "title": "Journey 10 — Agent draft with the offline test agent",
+      "kind": "journey",
+      "hash": "1b72e351443aa957"
+    },
+    {
+      "title": "Journey 11 — The studio's definition is configuration (administrator)",
+      "kind": "journey",
+      "hash": "e948f6b4f075aa6f"
+    },
+    {
+      "title": "Journey 12 — Phone width",
+      "kind": "journey",
+      "hash": "7b7a703963b8a330"
+    },
+    {
+      "title": "Journey 13 — The same capability by API and MCP",
+      "kind": "journey",
+      "hash": "594b93cb6537fbad"
+    },
+    {
+      "title": "Edge cases",
+      "kind": "edge",
+      "hash": "e3b0c44298fc1c14"
+    }
+  ]
+}
