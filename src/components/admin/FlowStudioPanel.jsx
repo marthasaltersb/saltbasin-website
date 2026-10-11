@@ -52,6 +52,9 @@ textarea.fs-input { min-height:70px; width:100%; }
 .fs-table th, .fs-table td { border-bottom:1px solid var(--fs-line); padding:.3rem .25rem; text-align:left; vertical-align:middle; }
 .fs-table .fs-input { min-height:36px; padding:.2rem .35rem; width:100%; }
 .fs-scroll { overflow-x:auto; max-width:100%; }
+.fs-scroll .fs-table { width:max-content; min-width:100%; overflow-wrap:normal; word-break:normal; }
+.fs-table th, .fs-table td { min-width:5.5rem; }
+.fs-pill { white-space:nowrap; }
 .fs-btn:focus-visible, .fs-btn2:focus-visible, .fs-tab:focus-visible, .fs-input:focus-visible, .fs-item:focus-visible { outline:3px solid var(--fs-accent); outline-offset:2px; }
 @media (max-width:820px) { .fs-edit { grid-template-columns:minmax(0,1fr); } .fs-edit > div { min-width:0; } .fs-side { max-height:none; } .fs-root { padding:.8rem; } .fs-input { font-size:16px; } .fs-row > .fs-btn, .fs-row > .fs-btn2 { flex:1 1 calc(50% - .6rem); } .fs-canvas { max-height:55vh; } }
 `;
