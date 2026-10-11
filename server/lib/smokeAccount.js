@@ -83,6 +83,12 @@ export async function readySmokeAccount({ password, ctx = {} } = {}) {
   if (!user && !havePassword) {
     throw err(400, 'password_required', 'The test account does not exist yet, so a password is needed to create it. Create it from World Shell > Journeys > Production smoke or the provisioning workflow; it cannot be created from an agent session.');
   }
+  // Every refusal is decided here, before the first write, so a refusal really changes nothing.
+  const existingProfile = user ? await db.prepare('SELECT user_id FROM member_profiles WHERE user_id = $1').get(Number(user.id)) : null;
+  if (!existingProfile) {
+    const taken = await db.prepare('SELECT user_id FROM member_profiles WHERE slug = $1').get(SMOKE_ACCOUNT.slug);
+    if (taken) throw err(409, 'smoke_slug_taken', `The profile address "${SMOKE_ACCOUNT.slug}" belongs to another member. Nothing was changed; release that address and run this again.`);
+  }
   if (!user) {
     const hash = await bcrypt.hash(password, 10);
     const r = await db.prepare('INSERT INTO users (email, password_hash, role, display_name, must_change_password) VALUES ($1, $2, $3, $4, false) RETURNING id')
@@ -106,10 +112,7 @@ export async function readySmokeAccount({ password, ctx = {} } = {}) {
     await recordConsent(userId, type, true, { ip: ctx.ip, userAgent: ctx.userAgent, context: { source: 'production_smoke_account', acknowledgementKeys: (def.acknowledgements || []).map((a) => a.key) } });
   }
 
-  const profile = await db.prepare('SELECT user_id FROM member_profiles WHERE user_id = $1').get(userId);
-  if (!profile) {
-    const taken = await db.prepare('SELECT user_id FROM member_profiles WHERE slug = $1').get(SMOKE_ACCOUNT.slug);
-    if (taken) throw err(409, 'smoke_slug_taken', `The profile address "${SMOKE_ACCOUNT.slug}" belongs to another member. Nothing else was changed; release that address and run this again.`);
+  if (!existingProfile) {
     const { defaultMemberProfile } = await import('../data/defaultMemberProfile.js');
     await db.prepare('INSERT INTO member_profiles (user_id, slug, draft, published) VALUES ($1, $2, $3, NULL)')
       .run(userId, SMOKE_ACCOUNT.slug, JSON.stringify(defaultMemberProfile({ displayName: SMOKE_ACCOUNT.displayName, email })));

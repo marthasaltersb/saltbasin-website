@@ -97,3 +97,23 @@ Build agent, production build (`npm run build` passes), fresh database `sb_rl_bl
 ## Fix notes per round (appended by fix agents)
 
 None yet.
+
+## Fix notes — round 2
+
+### production-smoke-regression-T2-1 (J1.8 sign out, desktop 1280px)
+- Changed: World Shell top bar now has a "Sign out" button (`data-testid=world-sign-out`) that calls `api.logout()` and always lands on `/login`, even if the call fails. In Classic Tools the top bar title block can shrink (`min-width:0`), the tab and link group scrolls inside its own container (`.sb-admin-topbar-scroll`), and Logout (`.sb-admin-logout`) sits outside that container so it never leaves the bar.
+- Files: `src/components/WorldShell.jsx`, `src/components/admin/AdminShell.jsx`, `src/brand.css`. (`adminStyles.js` unchanged; the CSS rules carry the fix.)
+- Checked: production build served locally, signed in as the test member at 1280px, clicked Sign out in /world and landed on /login, and reopening /world went back to /login. As the admin in Classic Tools at 1280px, Logout is at x=1175 to 1256 (inside the viewport) and the page has no horizontal scroll (scrollWidth 1280).
+
+### production-smoke-regression-T2-3 (E.2 slug taken)
+- Changed: `readySmokeAccount` now decides every refusal (role, password policy, slug taken for an account with no profile) before the first write, so a 409 really changes nothing. The panel reloads the account status in its failure path so the card shows the true state.
+- Files: `server/lib/smokeAccount.js`, `src/components/admin/ProductionSmokePanel.jsx` (the MCP tool shares the function, so it is fixed too).
+- Checked: gave another member the profile address `smoke-test-member`, called `readySmokeAccount` with a valid password: 409 `smoke_slug_taken`, and zero rows in `users` and `user_emails` for the smoke email.
+
+### production-smoke-regression-B9 (Netlify deploy wait)
+- Changed: new bounded step "Wait for the Netlify frontend" (push to main only) polls the Netlify deploy for the commit for up to 10 minutes using `NETLIFY_AUTH_TOKEN` / `NETLIFY_SITE_ID`. Without those secrets it warns and waits a fixed 3 minutes. It never passes silently: after the wait the suite runs and scores what is live, so real failures stay red.
+- Files: `.github/workflows/production-smoke.yml`.
+- Checked: YAML parses. Not run against Netlify (needs the two secrets in the repository settings, which the owner must add).
+
+### production-smoke-regression-B11 (other known limitations)
+- Not changed. Accepted limitations, to revisit in a later release: signed-in checks prove read paths only, R2.3 is not replayed, the admin account must not use 2FA, the provision script returns 404 on an undeployed site, S3.3 is not_run when no public page links a member site.

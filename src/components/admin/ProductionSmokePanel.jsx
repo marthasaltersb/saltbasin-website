@@ -57,7 +57,7 @@ export default function ProductionSmokePanel() {
       setStatus(out); setPassword('');
       setMessage(out.created ? 'The test account was created and is ready.' : 'The test account is ready.');
       toast.success('The test account is ready.');
-    } catch (e) { fail(e, 'The test account could not be readied.'); }
+    } catch (e) { fail(e, 'The test account could not be readied.'); await load(); }
     setBusy(false);
   }
 

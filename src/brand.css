@@ -618,6 +618,15 @@ option {
 .sb-admin-context-picker { display: grid; gap: .18rem; min-width: 210px; }
 .sb-admin-context-picker span { color: var(--sb-admin-gold-warm); font: 700 .55rem/1 var(--sb-font-label); letter-spacing: .12em; text-transform: uppercase; }
 .sb-admin-context-picker select { min-height: 36px; padding: .35rem 1.8rem .35rem .55rem; border: 1px solid var(--sb-admin-border-strong); border-radius: 7px; background: var(--sb-admin-surface); color: var(--sb-admin-text); font: 600 .68rem/1.2 var(--sb-font-label); }
+.sb-admin-topbar { gap: .75rem; }
+/* Keep Logout always visible: the title can shrink and the tab/links group scrolls, but Logout never leaves the bar.
+   The left padding clears the fixed "Back to World" button that sits over the bar in Classic Tools. */
+.sb-admin-topbar-title { min-width: 0; flex: 0 1 auto; }
+.sb-admin-topbar-title > div { min-width: 0; }
+.sb-admin-topbar-actions { min-width: 0; flex: 1 1 0; justify-content: flex-end; }
+.sb-admin-topbar-scroll { display: flex; gap: .75rem; align-items: center; min-width: 0; overflow-x: auto; scrollbar-width: thin; }
+.sb-admin-topbar-scroll > * { flex-shrink: 0; }
+.sb-admin-logout { flex-shrink: 0; white-space: nowrap; }
 @media (max-width: 900px) {
   .sb-admin-shell { height: 100dvh !important; overflow: hidden; }
   .sb-admin-topbar {
