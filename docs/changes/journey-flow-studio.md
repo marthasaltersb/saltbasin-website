@@ -1,7 +1,7 @@
 # Change spec — Journey flow studio: a metadata-driven, persisted, downloadable process flow builder
 
 Feature key: `journey-flow-studio` · Release: `2026-10-10-production-hardening-resume` · Version 1 (built) · 2026-10-10
-Training spec: `docs/training/journey-flow-studio.md` (version 1, written by the build agent)
+Training spec: `docs/training/journey-flow-studio.md` (version 1, written by the build agent; the integrator freezes it as baseline v1)
 
 ## Owner direction
 
@@ -72,20 +72,38 @@ Source requirements: the owner's prototype and its requirements/coverage spec (`
 ### Interface parity
 Seven parity rows (`flow-studio-*`) in `capabilityParity.js`; 16 MCP tools in `mcpFlowStudioTools.js` (scopes `flows.read`, `flows.write`, `flows.publish`); `node scripts/check-interface-parity.mjs` passes.
 
+
+### Added by the second build agent (2026-10-11)
+- **Steps and connectors** list under the drawing: the whole flow as tappable buttons (one per step, one indented per outgoing connector). It is the phone and keyboard path for selecting, and for drawing (in Connect mode two taps in the list draw an arrow; the same step twice makes a self-loop) and for Delete mode. The drawing remains for desktop pointing and dragging.
+- **Replace an existing template** (R6.3, overwrite and re-save) is now reachable in the Save as template card (**Template to replace** + **Replace template**, impact preview, **Approve and replace**); the server function and MCP tool already existed.
+- Flow names are unique per owner: creating, importing or using a template with a name already in use appends ` (2)`, ` (3)`... so a person (and a test) can always tell two flows apart.
+- Publish impact preview compares the published document with the draft after normalising both, so a flow no longer reports phantom "changed" steps after a reload.
+- Validation messages for gates and missing labels reworded in plain words (a gate needs at least two branches; there is no double-click rename).
+- The agent draft goes through the in-app agent governance (`checkAndRecordRunAllowance`, key lookup). It is not filed through `recordAgentLlmUsage` because the studio has no `agent_definitions` row yet (listed under Known limitations).
+
+### Config audit and reuse audit, after the build
+Converted to configuration: shape types, colours, sizes, exec/concurrency modes, sections, fields, checks (severity, enabled, message), limits, access policy (`config_state` row `flow_studio_definition`). Classified remainder: drawing kinds and rule kinds (INTENTIONAL PLATFORM CONSTANT: renderer/validator primitives); the Settings screen's two role names `admin`/`member` and the four access labels (TEMPORARY PROTOTYPE DEBT: the platform has no role registry to read them from; the security-provisioning-model feature owns it); seed templates (INTENTIONAL PLATFORM CONSTANT, append-only, fictional); the in-builder list of scenario/lane limits live in the definition. No new table was added; the Channel Journey substrate (`journey_data_rods`, `journey_rod_events`, `journey_rod_types`) carries flows, templates and history.
+
 ## Behaviour changes to know
 - Unique-index change on `journey_data_rods` (exclusion list only; existing data untouched).
 - A saved definition with an invalid shape falls back to the platform default and says why (shown on the screen).
 - Publishing replaces the published document in place; history keeps every earlier published version as an event.
 
 ## Verified (initial check)
-See the end of this file after the builder's walk; results are in the release log.
+See the end of this file; the builder's walk of every training journey is summarised there.
 
 ## Known limitations
+- The agent draft call is not yet recorded in `agent_llm_usage` (no `agent_definitions` row for the studio agent); only the run allowance check applies.
 - The Graphify visual of the existing data model was not part of this build's task text and is NOT built; the flow studio can host it later by importing a generated flow document.
 - Roles are `admin` and `member`; per-organization roles and per-flow sharing lists are not modelled (`org` visibility is "members of the same organization").
 - No multi-select or bulk edit; no live collaborative editing (a stale save is refused with a plain message instead).
 - Platform-level `visibility: platform` templates are shared by an administrator only.
 - "Architecture mapping" and "data model requirements" remain free text (no registry reconciliation).
+
+## Initial check results (build agent, 2026-10-11)
+- `npm run build` passes; the server boots on a fresh database; `node scripts/check-interface-parity.mjs` reports no `flow-studio-*` gap (the one listed gap, `release-tracker-admin`, belongs to another feature).
+- Every journey of `docs/training/journey-flow-studio.md` (Journeys 1-12 and edge cases E.1-E.7, Journey 13's MCP and API steps) was walked in Chromium against a fresh database: Journeys 1-12 with an automated walker at 1280x900 and again at 390x844 (touch), Journey 13 and the edge cases once each. All checks passed after these fixes made during the walk: phantom "changed" steps in the publish preview, a canvas that overflowed the viewport on a phone (grid column needed `minmax(0,1fr)`), ambiguous duplicate flow names, gate and label messages, a missing UI path for template replacement, and no list alternative to the drawing.
+- Not verified: the real-model path of the agent draft (tests use the offline fixture by design), and drag-moving a shape with a finger.
 
 ## Fix notes per round (appended by fix agents)
 (none yet)

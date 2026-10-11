@@ -95,9 +95,9 @@ export const DEFAULT_DEFINITION = Object.freeze({
   // Rule `kind` is implemented in flowStudioDoc.js; severity, enabled and the message are configuration.
   validationRules: [
     { key: 'orphan_node', kind: 'orphan_node', label: 'Step with no connectors', severity: 'warning', enabled: true, message: '"{label}" has no connectors. Connect it to the flow or delete it.' },
-    { key: 'single_branch_decision', kind: 'single_branch_decision', label: 'Gate with fewer than two branches', severity: 'error', enabled: true, message: '"{label}" is a {type} but has {count} outgoing branch(es). Add at least one more branch, or change it to a step.' },
+    { key: 'single_branch_decision', kind: 'single_branch_decision', label: 'Gate with fewer than two branches', severity: 'error', enabled: true, message: '"{label}" is a {type} but has {count} outgoing branch(es). A gate needs at least two branches. Add more arrows out of it, or change it to a step.' },
     { key: 'unreachable_step', kind: 'unreachable_step', label: 'Step that cannot be reached', severity: 'error', enabled: true, message: '"{label}" cannot be reached from any start. Connect an arrow into it from the main flow.' },
-    { key: 'missing_label', kind: 'missing_label', label: 'Step with no label', severity: 'warning', enabled: true, message: 'A {type} has no label. Double-click it or use Label in the step panel.' },
+    { key: 'missing_label', kind: 'missing_label', label: 'Step with no label', severity: 'warning', enabled: true, message: 'A {type} has no label. Select it and fill in Label in the step panel.' },
     { key: 'dangling_resolve', kind: 'dangling_resolve', label: 'Future step linked to a missing Current-state problem', severity: 'error', enabled: true, message: '"{label}" says it resolves a {resolveKind} on a Current-state step that has none recorded. Pick another step or record the problem first.' },
   ],
   access: {

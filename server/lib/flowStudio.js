@@ -157,7 +157,9 @@ export async function createFlow(user, { name, templateKey, templateId, doc: giv
     if (t.metadata.kind !== 'template') throw err(400, 'That is a flow, not a template.', 'bad_request');
     doc = normalizeDoc(structuredClone(t.metadata.draft), def); derivedFrom = { type: 'template', id: Number(t.id) }; src = 'template_use';
   } else if (given) { doc = normalizeDoc(given, def); } else { doc = emptyDoc(); }
-  const flowName = String(name || '').trim() || doc.name || 'Untitled flow';
+  const baseName = String(name || '').trim() || doc.name || 'Untitled flow';
+  const taken = new Set((await db.prepare(`SELECT metadata FROM journey_data_rods WHERE rod_type='journey_flow' AND user_id=$1`).all(user.id)).map((r) => parse(r.metadata) || {}).filter((m) => m.kind === 'flow' && !m.archived).map((m) => m.name));
+  let flowName = baseName; for (let n = 2; taken.has(flowName); n += 1) flowName = `${baseName} (${n})`;
   doc.name = flowName;
   const now = Date.now();
   const meta = { kind: 'flow', name: flowName, domain: doc.domain, description: doc.description || '', version: 1, publishedVersion: null, visibility: 'private', draft: doc, published: null, derivedFrom };
@@ -234,7 +236,7 @@ export async function publishPreview(user, id) {
   const doc = normalizeDoc(row.metadata.draft, def);
   const findings = validateFlow(doc, def);
   const errors = findings.filter((f) => f.severity === 'error');
-  const diff = diffDocs(row.metadata.published, doc);
+  const diff = diffDocs(row.metadata.published ? normalizeDoc(structuredClone(row.metadata.published), def) : null, doc);
   const templatesMade = (await derivedFlows(row.id, 'flow')).filter((x) => x.kind === 'template');
   const lines = [];
   lines.push(row.metadata.published ? `Replaces the published version ${row.metadata.publishedVersion} with version ${row.metadata.version}.` : `First publish: version ${row.metadata.version} becomes the published journey definition.`);

@@ -52,7 +52,7 @@ textarea.fs-input { min-height:70px; width:100%; }
 .fs-table .fs-input { min-height:36px; padding:.2rem .35rem; width:100%; }
 .fs-scroll { overflow-x:auto; max-width:100%; }
 .fs-btn:focus-visible, .fs-btn2:focus-visible, .fs-tab:focus-visible, .fs-input:focus-visible, .fs-item:focus-visible { outline:3px solid var(--fs-accent); outline-offset:2px; }
-@media (max-width:820px) { .fs-edit { grid-template-columns:1fr; } .fs-side { max-height:none; } .fs-root { padding:.8rem; } .fs-input { font-size:16px; } .fs-row > .fs-btn, .fs-row > .fs-btn2 { flex:1 1 calc(50% - .6rem); } .fs-canvas { max-height:55vh; } }
+@media (max-width:820px) { .fs-edit { grid-template-columns:minmax(0,1fr); } .fs-edit > div { min-width:0; } .fs-side { max-height:none; } .fs-root { padding:.8rem; } .fs-input { font-size:16px; } .fs-row > .fs-btn, .fs-row > .fs-btn2 { flex:1 1 calc(50% - .6rem); } .fs-canvas { max-height:55vh; } }
 `;
 
 const clone = (v) => JSON.parse(JSON.stringify(v));
@@ -229,6 +229,9 @@ function FlowEditor({ flowId, onBack, m, canShare }) {
   const [hist, setHist] = useState(null);
   const [newScenario, setNewScenario] = useState('');
   const [tpl, setTpl] = useState({ name: '', visibility: 'private' });
+  const [myTemplates, setMyTemplates] = useState([]);
+  const [replaceId, setReplaceId] = useState('');
+  const [replaceImpact, setReplaceImpact] = useState(null);
   const [agent, setAgent] = useState({ prompt: '', draft: null, note: '' });
   const [busy, setBusy] = useState(false);
   const coalesce = useRef({ key: null, at: 0 });
@@ -337,6 +340,13 @@ function FlowEditor({ flowId, onBack, m, canShare }) {
     if (dirty) { m.fail(new Error('Save your draft first. The template is made from the saved draft.')); return; }
     try { const t = await api.fsSaveTemplate(flowId, { name: tpl.name, visibility: tpl.visibility }); setPanel(null); m.say(`Template "${t.name}" saved`); } catch (e) { m.fail(e); }
   };
+  const startReplace = async () => {
+    if (dirty) { m.fail(new Error('Save your draft first. The template is replaced from the saved draft.')); return; }
+    try { setReplaceImpact(await api.fsTemplateImpact(Number(replaceId), 'overwrite')); m.clear(); } catch (e) { m.fail(e); }
+  };
+  const approveReplace = async () => {
+    try { const t = await api.fsOverwriteTemplate(Number(replaceId), { flowId, approved: replaceImpact.token }); setReplaceImpact(null); setReplaceId(''); setPanel(null); m.say(`Template "${t.name}" replaced`); } catch (e) { m.fail(e); }
+  };
   const askAgent = async () => {
     try {
       const body = sel?.kind === 'edge' ? { kind: 'edge', label: edgeSel?.label, prompt: agent.prompt } : { kind: 'node', label: node?.label, type: node?.type, prompt: agent.prompt };
@@ -373,7 +383,7 @@ function FlowEditor({ flowId, onBack, m, canShare }) {
         <button type="button" className="fs-btn2" onClick={openPublish} disabled={!writable}>Publish</button>
         <button type="button" className="fs-btn2" onClick={openHistory}>History</button>
         <button type="button" className="fs-btn2" aria-pressed={panel === 'export'} onClick={() => setPanel(panel === 'export' ? null : 'export')}>Export</button>
-        <button type="button" className="fs-btn2" aria-pressed={panel === 'template'} onClick={() => { setTpl({ name: `${doc.name} template`, visibility: 'private' }); setPanel(panel === 'template' ? null : 'template'); }}>Save as template</button>
+        <button type="button" className="fs-btn2" aria-pressed={panel === 'template'} onClick={() => { setTpl({ name: `${doc.name} template`, visibility: 'private' }); setReplaceId(''); setReplaceImpact(null); api.fsFlows().then((d) => setMyTemplates(d.templates.filter((t) => !t.seed && (t.ownerId === d.meId || d.meRole === 'admin')))).catch((e) => m.fail(e)); setPanel(panel === 'template' ? null : 'template'); }}>Save as template</button>
       </div>
 
       {panel === 'export' ? (
@@ -398,6 +408,15 @@ function FlowEditor({ flowId, onBack, m, canShare }) {
               </select></label>
             <button type="button" className="fs-btn" onClick={saveTemplate}>Save template</button>
           </div>
+          <div className="fs-row">
+            <label className="fs-label">Or replace an existing template with this flow
+              <select className="fs-input" aria-label="Template to replace" value={replaceId} onChange={(e) => { setReplaceId(e.target.value); setReplaceImpact(null); }}>
+                <option value="">Choose a template…</option>
+                {myTemplates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select></label>
+            <button type="button" className="fs-btn2" disabled={!replaceId} onClick={startReplace}>Replace template</button>
+          </div>
+          {replaceImpact ? <ImpactBox title="Impact of replacing the template" impact={replaceImpact} approveLabel="Approve and replace" onApprove={approveReplace} onCancel={() => setReplaceImpact(null)} /> : null}
         </div>
       ) : null}
       {panel === 'publish' && preview ? (
@@ -464,6 +483,26 @@ function FlowEditor({ flowId, onBack, m, canShare }) {
             onMoveEnd={(id) => { setDoc((prev) => { const next = clone(prev); const s = next.states[viewState]; const n = s.nodes.find((q) => q.id === id); n.lane = laneAt(n.y, s.lanes); return next; }); setDirty(true); }}
             onNodeClick={onNodeClick}
             onNudge={(id, dx, dy) => edit((s) => { const n = s.nodes.find((q) => q.id === id); n.x = Math.max(0, n.x + dx); n.y = Math.max(0, n.y + dy); n.lane = laneAt(n.y, s.lanes); }, `nudge:${id}`)} />
+          <div className="fs-card" style={{ marginTop: '.8rem' }} aria-label="Steps and connectors" data-testid="fs-outline">
+            <h3>Steps and connectors</h3>
+            <p className="fs-muted">The same flow as a list. Tap an item to select it, which is easier than the drawing on a phone. In Connect mode, tap two steps here to join them.</p>
+            {st.nodes.length === 0 ? <p className="fs-muted">No steps yet. Use the Add buttons above.</p> : (
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                {st.nodes.map((n) => (
+                  <li key={n.id} style={{ marginBottom: '.3rem' }}>
+                    <button type="button" className="fs-btn2" style={{ width: '100%', justifyContent: 'flex-start', textAlign: 'left' }} aria-pressed={sel?.kind === 'node' && sel.id === n.id} aria-label={`List step: ${n.label || '(no label)'}`} onClick={() => onNodeClick(n.id)}>
+                      {shapeOf(def, n.type).label}: {n.label || '(no label)'}
+                    </button>
+                    {st.edges.filter((e) => e.from === n.id).map((e) => (
+                      <button key={e.id} type="button" className="fs-btn2" style={{ width: 'calc(100% - 1.5rem)', marginLeft: '1.5rem', marginTop: '.2rem', justifyContent: 'flex-start', textAlign: 'left' }} aria-pressed={sel?.kind === 'edge' && sel.id === e.id} aria-label={`List connector: ${n.label || '(no label)'} to ${st.nodes.find((q) => q.id === e.to)?.label || '(no label)'}`} onClick={() => { if (mode === 'delete') removeEdge(e.id); else setSel({ kind: 'edge', id: e.id }); }}>
+                        → {st.nodes.find((q) => q.id === e.to)?.label || '(no label)'}{e.label ? ` (${e.label})` : ''}{e.from === e.to ? ' [loop]' : ''}
+                      </button>
+                    ))}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <div className="fs-card" style={{ marginTop: '.8rem' }} aria-label="Flow check">
             <h3>Check flow <span className={`fs-pill ${errorCount ? 'error' : findings.length ? 'warning' : 'ok'}`} data-testid="fs-check-count">{findings.length === 0 ? 'no problems' : `${errorCount} error(s), ${findings.length - errorCount} warning(s)`}</span></h3>
             {findings.length ? <ul className="fs-find" data-testid="fs-findings">{findings.map((f, i) => (
@@ -528,7 +567,7 @@ function FlowEditor({ flowId, onBack, m, canShare }) {
                   <legend style={{ fontSize: '.78rem', fontWeight: 700 }}>Overrides for {scenario}</legend>
                   {['label', 'params', 'notes'].map((k) => (
                     <label className="fs-label" key={k}>{k === 'label' ? 'Path label' : k === 'params' ? 'Branch parameters' : 'Notes'} in {scenario}
-                      <input className="fs-input" aria-label={`${k} override`} value={edgeSel.overlays?.[scenario]?.[k] ?? ''} placeholder={edgeSel[k]} disabled={!writable} onChange={(e) => setOverlay(k, e.target.value)} /></label>
+                      <input className="fs-input" aria-label={`${k === 'label' ? 'Path label' : k === 'params' ? 'Branch parameters' : 'Notes'} in ${scenario}`} value={edgeSel.overlays?.[scenario]?.[k] ?? ''} placeholder={edgeSel[k]} disabled={!writable} onChange={(e) => setOverlay(k, e.target.value)} /></label>
                   ))}
                 </fieldset>
               ) : null}

@@ -119,11 +119,12 @@ export const fieldsInUse = (doc) => {
 };
 
 /** Counts of what differs between two docs (for the impact preview). */
+const stable = (v) => JSON.stringify(v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map((q) => [q, x[q]])) : x));
 export function diffDocs(a, b) {
   const out = { states: {}, totals: { added: 0, removed: 0, changed: 0 } };
   for (const k of ['current', 'future']) {
-    const A = new Map((a?.states?.[k]?.nodes || []).map((n) => [n.id, JSON.stringify(n)]));
-    const B = new Map((b?.states?.[k]?.nodes || []).map((n) => [n.id, JSON.stringify(n)]));
+    const A = new Map((a?.states?.[k]?.nodes || []).map((n) => [n.id, stable(n)]));
+    const B = new Map((b?.states?.[k]?.nodes || []).map((n) => [n.id, stable(n)]));
     let added = 0; let removed = 0; let changed = 0;
     for (const [id, v] of B) { if (!A.has(id)) added++; else if (A.get(id) !== v) changed++; }
     for (const id of A.keys()) if (!B.has(id)) removed++;
