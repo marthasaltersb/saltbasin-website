@@ -30,15 +30,19 @@ commit them.
 
 1. [J1.1] Run `node scripts/release-scope.mjs show`.
    - Expect the first line to start `Release 0.3.0 — Owner decision 2026-10-10 ("Recommended, minus added")`.
-   - Expect exactly these three headings, in this order: `Planned at the cut (18):`,
-     `Added after the cut (4; 1 counted in this release's planned work):`, `Backlog, not this release's work (6):`.
-2. [J1.2] Under **Added after the cut**, expect four lines: guided-training-agent, security-provisioning-model and
-   global-change-standard each with `scope=backlog` and `0bee332 by owner`, and release-scope with `scope=planned`.
+   - Expect exactly these three headings, in this order: `Planned at the cut (P):`,
+     `Added after the cut (A; C counted in this release's planned work):`, `Backlog, not this release's work (B):`,
+     where P, A and B are the lengths of `planned`, `added` and `backlog` in `node scripts/release-scope.mjs show --json`,
+     and C is the number of `added` entries whose `scope` is `planned`. At 2026-10-10T21:05Z these were 18, 7, 6 and 4.
+2. [J1.2] Under **Added after the cut**, expect one line per `added` entry of `show --json`: guided-training-agent,
+   security-provisioning-model and global-change-standard each with `scope=backlog` and `0bee332 by owner`; release-scope,
+   journey-flow-studio, journey-flow-experience-mapping and graphify-data-model-map each with `scope=planned` and `by owner`.
 3. [J1.3] Under **Backlog**, expect qr-gated-outputs, release-loop-tooling, release-intelligence and
    in-app-release-loop marked `[carried_backlog]`, and career-application-journey and career-master-single-source
    marked `[new] blocked on owner`.
-4. [J1.4] Run `node scripts/release-scope.mjs show --json`. Expect valid JSON whose `planned`, `added`, `backlog`
-   arrays have lengths 18, 4 and 6, and whose `scopeDecision.decidedBy` is `owner`.
+4. [J1.4] Run `node scripts/release-scope.mjs show --json`. Expect valid JSON with `planned`, `added` and `backlog` arrays whose
+   lengths match the J1.1 headings, every feature key of the release file appearing in exactly one array, and
+   `scopeDecision.decidedBy` `owner`.
 
 ## Journey 2 - Changing scope is recorded, never silent
 
@@ -76,9 +80,10 @@ commit them.
 1. [J5.1] Open `/world`, then the **Release tracker** island. Click **Open Settings** (or the Settings link). In
    **Paste a snapshot**, paste the full contents of `$FX/paste.json` into the box labelled **Snapshot JSON** and click
    **Store snapshot**. Expect the confirmation `Snapshot 1 stored` (the number may be higher on a reused database) and no red error.
-2. [J5.2] Go back to the tracker overview. Expect, in this order, the section headings
-   `Planned at the cut: 0 of 18 passed`, `Added after the cut (4)`, `Backlog: kept on the record, not this release's work (6)`
-   and `Other tracked work (1)`. There is no heading that is just `Features`.
+2. [J5.2] Go back to the tracker overview. Expect the first section heading to be
+   `Release 0.3.0 scope: this release vs backlog`, and further down, in this order, `Planned at the cut: 0 of P passed`,
+   `Added after the cut (A)`, `Backlog: kept on the record, not this release's work (B)` and `Other tracked work (1)`
+   (P, A, B as in J1.1). There is no heading that is just `Features`.
 3. [J5.3] In **Added after the cut**, expect four notes, each with `added 2026-10-10`: release-scope says
    `counted in this release`; the other three say `kept in backlog`. Each note ends with its reason.
 4. [J5.4] Click the **release-scope** row. Expect its feature page to open (no blank screen); go back.
@@ -88,8 +93,8 @@ commit them.
 
 ## Journey 6 - Platform Release tracker, phone
 
-1. [J6.1] At 390x844, open the Release tracker overview. Expect the same four headings as [J5.2], every table row
-   readable as stacked label/value cards, and no horizontal page scroll (`document.documentElement.scrollWidth` is 390).
+1. [J6.1] At 390x844, open the Release tracker overview. Expect the scope summary first (three tiles stacked or wrapped, all
+   text readable), the same headings as [J5.2], every table row readable as stacked label/value cards, and no horizontal page scroll (`document.documentElement.scrollWidth` is 390).
 2. [J6.2] Expect the notes in **Added after the cut** to wrap within the screen with space between them.
 
 ## Edge cases

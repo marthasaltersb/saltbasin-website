@@ -5,15 +5,65 @@
   "proposedBy": "session:S-0.3.0-02-build (builder; not a reviewer)",
   "round": 0,
   "triageItems": [],
-  "reason": "Owner direction 2026-10-10: (1) the owner added journey-flow-studio, journey-flow-experience-mapping and graphify-data-model-map after the cut (planned), so the literal group counts in v1 (Added after the cut 4; 1 counted) are now 7; 4 counted. Hard-coded counts break whenever the owner changes scope, which is the feature's purpose. (2) The owner could not find the release vs backlog breakdown: a scope summary (three tiles: This release: planned work, Added after the cut, Backlog: not this release) now sits at the top of the overview on both tracker surfaces, and the backlog tile counts features added after the cut into backlog.",
+  "reason": "Owner direction 2026-10-10: (1) the owner added journey-flow-studio, journey-flow-experience-mapping and graphify-data-model-map after the cut (planned), so the literal group counts in v1 (Added after the cut 4; 1 counted) are now 7; 4 counted. Hard-coded counts break whenever the owner changes scope, which is the feature's purpose. (2) The owner could not find the release vs backlog breakdown: a scope summary (three tiles: This release: planned work, Added after the cut, Backlog: not this release) now sits at the top of the overview on both tracker surfaces, and the backlog tile counts features added after the cut into backlog. (J5.6 split out of this amendment into A2 by the reviewer.)",
   "changes": [
-    { "op": "change", "stepId": "J1.1", "before": "Expect exactly these three headings, in this order: `Planned at the cut (18):`, `Added after the cut (4; 1 counted in this release's planned work):`, `Backlog, not this release's work (6):`.", "after": "Expect exactly these three headings, in this order: `Planned at the cut (P):`, `Added after the cut (A; C counted in this release's planned work):`, `Backlog, not this release's work (B):`, where P, A and B are the lengths of `planned`, `added` and `backlog` in `node scripts/release-scope.mjs show --json`, and C is the number of `added` entries whose `scope` is `planned`. At 2026-10-10T21:05Z these were 18, 7, 6 and 4.", "tracesTo": "docs/release-log/active-release.features.json commit de9b2f5", "whyNeeded": "Counts change whenever the owner moves scope; the check stays exact by tying them to the release file." },
-    { "op": "change", "stepId": "J1.2", "before": "Under **Added after the cut**, expect four lines: guided-training-agent, security-provisioning-model and global-change-standard each with `scope=backlog` and `0bee332 by owner`, and release-scope with `scope=planned`.", "after": "Under **Added after the cut**, expect one line per `added` entry of `show --json`: guided-training-agent, security-provisioning-model and global-change-standard each with `scope=backlog` and `0bee332 by owner`; release-scope, journey-flow-studio, journey-flow-experience-mapping and graphify-data-model-map each with `scope=planned` and `by owner`.", "tracesTo": "commit de9b2f5", "whyNeeded": "Same data change as J1.1." },
-    { "op": "change", "stepId": "J1.4", "before": "Expect valid JSON whose `planned`, `added`, `backlog` arrays have lengths 18, 4 and 6, and whose `scopeDecision.decidedBy` is `owner`.", "after": "Expect valid JSON with `planned`, `added` and `backlog` arrays whose lengths match the J1.1 headings, every feature key of the release file appearing in exactly one array, and `scopeDecision.decidedBy` `owner`.", "tracesTo": "commit de9b2f5", "whyNeeded": "Same data change; the new wording also checks completeness." },
-    { "op": "change", "stepId": "J5.2", "before": "Go back to the tracker overview. Expect, in this order, the section headings `Planned at the cut: 0 of 18 passed`, `Added after the cut (4)`, `Backlog: kept on the record, not this release's work (6)` and `Other tracked work (1)`. There is no heading that is just `Features`.", "after": "Go back to the tracker overview. Expect the first section heading to be `Release 0.3.0 scope: this release vs backlog`, and further down, in this order, `Planned at the cut: 0 of P passed`, `Added after the cut (A)`, `Backlog: kept on the record, not this release's work (B)` and `Other tracked work (1)` (P, A, B as in J1.1). There is no heading that is just `Features`.", "tracesTo": "owner feedback 2026-10-10 (breakdown not findable); TrackerLayers.jsx ScopeSummary", "whyNeeded": "The breakdown moved to the top at the owner's request; counts follow the release file." },
-    { "op": "add", "stepId": "J5.6", "after": "Under `Release 0.3.0 scope: this release vs backlog`, expect three tiles: `This release: planned work` showing P + C features and `N of P + C passed`; `Added after the cut` showing A with `C counted in this release · A − C in backlog`; `Backlog: not this release` showing B + (A − C). Each tile also shows its open-bug count. Click the Backlog tile: the page shows `Backlog: not this release: B + (A − C)`, its feature rows include qr-gated-outputs and global-change-standard, and the trail reads `Overview › Backlog: not this release`.", "tracesTo": "owner feedback 2026-10-10", "whyNeeded": "Covers the new summary and its drill-down." },
-    { "op": "change", "stepId": "J6.1", "before": "At 390x844, open the Release tracker overview. Expect the same four headings as [J5.2], every table row readable as stacked label/value cards, and no horizontal page scroll (`document.documentElement.scrollWidth` is 390).", "after": "At 390x844, open the Release tracker overview. Expect the scope summary first (three tiles stacked or wrapped, all text readable), the same headings as [J5.2], every table row readable as stacked label/value cards, and no horizontal page scroll (`document.documentElement.scrollWidth` is 390).", "tracesTo": "owner feedback 2026-10-10", "whyNeeded": "Phone pass must cover the new summary." }
+    {
+      "op": "change",
+      "stepId": "J1.1",
+      "before": "Expect exactly these three headings, in this order: `Planned at the cut (18):`, `Added after the cut (4; 1 counted in this release's planned work):`, `Backlog, not this release's work (6):`.",
+      "after": "Expect exactly these three headings, in this order: `Planned at the cut (P):`, `Added after the cut (A; C counted in this release's planned work):`, `Backlog, not this release's work (B):`, where P, A and B are the lengths of `planned`, `added` and `backlog` in `node scripts/release-scope.mjs show --json`, and C is the number of `added` entries whose `scope` is `planned`. At 2026-10-10T21:05Z these were 18, 7, 6 and 4.",
+      "tracesTo": "docs/release-log/active-release.features.json commit de9b2f5",
+      "whyNeeded": "Counts change whenever the owner moves scope; the check stays exact by tying them to the release file."
+    },
+    {
+      "op": "change",
+      "stepId": "J1.2",
+      "before": "Under **Added after the cut**, expect four lines: guided-training-agent, security-provisioning-model and global-change-standard each with `scope=backlog` and `0bee332 by owner`, and release-scope with `scope=planned`.",
+      "after": "Under **Added after the cut**, expect one line per `added` entry of `show --json`: guided-training-agent, security-provisioning-model and global-change-standard each with `scope=backlog` and `0bee332 by owner`; release-scope, journey-flow-studio, journey-flow-experience-mapping and graphify-data-model-map each with `scope=planned` and `by owner`.",
+      "tracesTo": "commit de9b2f5",
+      "whyNeeded": "Same data change as J1.1."
+    },
+    {
+      "op": "change",
+      "stepId": "J1.4",
+      "before": "Expect valid JSON whose `planned`, `added`, `backlog` arrays have lengths 18, 4 and 6, and whose `scopeDecision.decidedBy` is `owner`.",
+      "after": "Expect valid JSON with `planned`, `added` and `backlog` arrays whose lengths match the J1.1 headings, every feature key of the release file appearing in exactly one array, and `scopeDecision.decidedBy` `owner`.",
+      "tracesTo": "commit de9b2f5",
+      "whyNeeded": "Same data change; the new wording also checks completeness."
+    },
+    {
+      "op": "change",
+      "stepId": "J5.2",
+      "before": "Go back to the tracker overview. Expect, in this order, the section headings `Planned at the cut: 0 of 18 passed`, `Added after the cut (4)`, `Backlog: kept on the record, not this release's work (6)` and `Other tracked work (1)`. There is no heading that is just `Features`.",
+      "after": "Go back to the tracker overview. Expect the first section heading to be `Release 0.3.0 scope: this release vs backlog`, and further down, in this order, `Planned at the cut: 0 of P passed`, `Added after the cut (A)`, `Backlog: kept on the record, not this release's work (B)` and `Other tracked work (1)` (P, A, B as in J1.1). There is no heading that is just `Features`.",
+      "tracesTo": "owner feedback 2026-10-10 (breakdown not findable); TrackerLayers.jsx ScopeSummary",
+      "whyNeeded": "The breakdown moved to the top at the owner's request; counts follow the release file."
+    },
+    {
+      "op": "change",
+      "stepId": "J6.1",
+      "before": "At 390x844, open the Release tracker overview. Expect the same four headings as [J5.2], every table row readable as stacked label/value cards, and no horizontal page scroll (`document.documentElement.scrollWidth` is 390).",
+      "after": "At 390x844, open the Release tracker overview. Expect the scope summary first (three tiles stacked or wrapped, all text readable), the same headings as [J5.2], every table row readable as stacked label/value cards, and no horizontal page scroll (`document.documentElement.scrollWidth` is 390).",
+      "tracesTo": "owner feedback 2026-10-10",
+      "whyNeeded": "Phone pass must cover the new summary."
+    }
   ],
   "status": "proposed",
-  "review": null
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:release-scope:r1",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass: counts were literal; owner direction 2026-10-10 (scope changes by design) contradicts hard-coded counts, and the new wording still pins P/A/B/C to `show --json` and J1.4 adds a completeness check",
+      "Retire only duplicates": "pass: no step retired",
+      "Exact": "pass",
+      "Reachable": "pass",
+      "Deterministic": "pass",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass",
+      "Errors plain and coloured": "pass: no error step touched"
+    },
+    "note": "Approved J1.1, J1.2, J1.4, J5.2, J6.1. J5.6 was split to A2 (rejected as not exact). Known follow-up, not part of this amendment: J5.3 still says 'four notes ... the other three say kept in backlog' and J6.2 refers to those notes; the release file now has 9 added entries (6 counted), so J5.3 will fail against the pinned baseline until its own amendment is proposed. J1.3 and J3.1 remain valid (backlog still 6; three backlog features added after the cut).",
+    "at": "2026-10-11T00:45:00Z"
+  }
 }
