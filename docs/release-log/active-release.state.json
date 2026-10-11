@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T02:00:09.607Z",
+  "exportedAt": "2026-10-11T02:09:36.784Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -34,7 +34,7 @@
       "backlog": 14
     },
     "release-cut-and-session-plans": {
-      "status": "amend",
+      "status": "validate",
       "lastRound": 1,
       "lastScore": "53/62",
       "lastReport": "docs/test-results/release-cut-and-session-plans/round-1.md",
@@ -82,14 +82,22 @@
       "backlog": 1
     },
     "journey-flow-studio": {
+      "status": "failing",
+      "lastRound": 1,
+      "lastScore": "89/92",
+      "lastReport": "docs/test-results/journey-flow-studio/round-1.md",
+      "openBugs": 5,
+      "backlog": 3
+    },
+    "journey-flow-experience-mapping": {
       "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
-      "openBugs": 5,
+      "openBugs": 7,
       "backlog": 0
     },
-    "journey-flow-experience-mapping": {
+    "journey-flow-import-existing": {
       "status": "build",
       "lastRound": 0,
       "lastScore": null,
@@ -118,11 +126,11 @@
       "lastRound": 3,
       "lastScore": "18/28",
       "lastReport": "docs/test-results/production-smoke-regression/round-3.md",
-      "openBugs": 5,
+      "openBugs": 6,
       "backlog": 6
     },
     "platform-mcp": {
-      "status": "integrate",
+      "status": "validate",
       "lastRound": 5,
       "lastScore": "65/65",
       "lastReport": "docs/test-results/platform-mcp/round-5.md",
@@ -258,14 +266,6 @@
       "backlog": 0
     },
     "global-change-standard": {
-      "status": "queued",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
-      "openBugs": 0,
-      "backlog": 0
-    },
-    "journey-flow-import-existing": {
       "status": "queued",
       "lastRound": 0,
       "lastScore": null,
@@ -2180,13 +2180,17 @@
     {
       "id": "journey-flow-studio-B2",
       "feature": "journey-flow-studio",
-      "status": "open",
+      "status": "process_note",
       "class": "process",
       "attempts": 0,
       "step": "full-walk",
-      "rootCause": "Agent used pkill instead of PID files.",
+      "rootCause": null,
       "files": [],
-      "scope": null,
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 0,
@@ -2207,7 +2211,11 @@
       "files": [
         "src/components/admin/AdminShell.jsx"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Feature commit added the flowStudio Classic Tools nav entry in AdminShell.jsx; not presen…"
+      },
       "history": [
         {
           "round": 0,
@@ -2228,7 +2236,11 @@
       "files": [
         "server/lib/flowStudio.js"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Request requires the existing in-app agent path; agent_definitions roster pattern exists …"
+      },
       "history": [
         {
           "round": 0,
@@ -2241,12 +2253,180 @@
     {
       "id": "journey-flow-studio-B11",
       "feature": "journey-flow-studio",
-      "status": "open",
+      "status": "backlog_pre_existing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "roles",
-      "rootCause": "Platform has no role registry; owned by security-provisioning-model.",
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": null
+      },
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "journey-flow-studio-B13",
+      "feature": "journey-flow-studio",
+      "status": "process_note",
+      "class": "process",
+      "attempts": 0,
+      "step": "records",
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": null
+      },
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "journey-flow-studio-T1",
+      "feature": "journey-flow-studio",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "J2.1 leave Start from on Blank flow",
+      "rootCause": "FlowStudioPanel.jsx create() (line ~689) clears only the name; startFrom state (line 674) keeps the previous choice (Order to delivery from…",
       "files": [
+        "src/components/admin/FlowStudioPanel.jsx",
+        "docs/training/journey-flow-studio.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "FlowStudioPanel.jsx startFrom state and J2.1 spec are the feature's own; panel absent on …"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "FlowStudioPanel.jsx create() (line ~689) clears only the na…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "journey-flow-studio-T2",
+      "feature": "journey-flow-studio",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "J7.5 history rows show Test Member",
+      "rootCause": "server/lib/flowStudio.js line 21 actorOf() uses u.name || u.email, but the session user from getUserFromCookie (server/auth.js 61-74) expos…",
+      "files": [
+        "server/lib/flowStudio.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "flowStudio.js actorOf uses u.name but auth.js getUserFromCookie returns displayName; feat…"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "server/lib/flowStudio.js line 21 actorOf() uses u.name || u…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "journey-flow-studio-T3",
+      "feature": "journey-flow-studio",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "J8.4 journey definition resolves names Inspect packet",
+      "rootCause": "src/lib/flowStudioDoc.js line 164 toJourneyDefinition exports resolves as {step: id, resolves: n.resolves} where entries are only {nodeId, …",
+      "files": [
+        "src/lib/flowStudioDoc.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "flowStudioDoc.js toJourneyDefinition resolves export lacks target label; Future-to-Curren…"
+      },
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "src/lib/flowStudioDoc.js line 164 toJourneyDefinition expor…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "journey-flow-experience-mapping-B7",
+      "feature": "journey-flow-experience-mapping",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "J1.4 / J2.1 of platform-mcp",
+      "rootCause": "The platform-mcp spec was frozen before flows.*, agent.runner.*, smoke.* and now flowjourney.* scopes and tools existed.",
+      "files": [
+        "docs/training/platform-mcp.md",
+        "docs/training/baselines/platform-mcp/v5.json"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "journey-flow-experience-mapping-B8",
+      "feature": "journey-flow-experience-mapping",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Known limitation: rendering of experience",
+      "rootCause": "Only the data pass-through was built; the rendering consumers were deferred.",
+      "files": [
+        "src/components/SpatialJourneyWorld.jsx",
+        "src/components/WorldShell.jsx",
+        "src/lib/journeyEngine/genesis.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "journey-flow-experience-mapping-B9",
+      "feature": "journey-flow-experience-mapping",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Known limitation: actors and licences",
+      "rootCause": "No profile registry exists yet; security-provisioning-model owns it.",
+      "files": [
+        "server/lib/flowJourney.js",
         "server/lib/flowStudioDefinition.js"
       ],
       "scope": null,
@@ -2260,14 +2440,81 @@
       ]
     },
     {
-      "id": "journey-flow-studio-B13",
-      "feature": "journey-flow-studio",
+      "id": "journey-flow-experience-mapping-B10",
+      "feature": "journey-flow-experience-mapping",
       "status": "open",
-      "class": "process",
+      "class": "requirement_gap",
       "attempts": 0,
-      "step": "records",
-      "rootCause": "Walk summarised only in the change spec; freezing is the integrator's step.",
-      "files": [],
+      "step": "Known limitation: branch conditions",
+      "rootCause": "Compound conditions are not modelled.",
+      "files": [
+        "src/lib/flowJourneyCompile.js",
+        "src/components/admin/FlowJourneyParts.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "journey-flow-experience-mapping-B11",
+      "feature": "journey-flow-experience-mapping",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Known limitation: variants",
+      "rootCause": "Compiler compiles one scenario from base meta.",
+      "files": [
+        "src/lib/flowJourneyCompile.js",
+        "server/lib/flowJourney.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "journey-flow-experience-mapping-B12",
+      "feature": "journey-flow-experience-mapping",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Known limitation: requiredActorRoles",
+      "rootCause": "The existing engine enforces actor roles on the rod and the feature does not assign any.",
+      "files": [
+        "server/lib/flowJourney.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "journey-flow-experience-mapping-B13",
+      "feature": "journey-flow-experience-mapping",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "activateJourney idempotence",
+      "rootCause": "No check that journeyActive.token equals the new token, and the token omits running-journey impact.",
+      "files": [
+        "server/lib/flowJourney.js"
+      ],
       "scope": null,
       "history": [
         {
@@ -2642,7 +2889,7 @@
     {
       "id": "production-smoke-regression-B9",
       "feature": "production-smoke-regression",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "requirement_gap",
       "attempts": 1,
       "step": "known limitation: Netlify deploy wait",
@@ -2726,6 +2973,29 @@
       ]
     },
     {
+      "id": "production-smoke-regression-F2-5",
+      "feature": "production-smoke-regression",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "B11 / Known limitations",
+      "rootCause": "Spec Known limitations lists real gaps left unchanged: read-only signed-in checks, R2.3 not replayed on production, 2FA admin restriction, …",
+      "files": [
+        "docs/changes/production-smoke-regression.md",
+        ".github/workflows/production-smoke.yml",
+        "scripts/production-smoke.mjs"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
       "id": "production-smoke-regression-T2-1",
       "feature": "production-smoke-regression",
       "status": "backlog_pre_existing",
@@ -2783,7 +3053,7 @@
     {
       "id": "production-smoke-regression-T2-3",
       "feature": "production-smoke-regression",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "Profile address smoke-test-member already belongs to another member: 409 and nothing else changed",
