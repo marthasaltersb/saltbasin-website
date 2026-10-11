@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T00:44:41.044Z",
+  "exportedAt": "2026-10-11T00:53:59.737Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -19,11 +19,11 @@
     },
     "session-mapping": {
       "status": "validate",
-      "lastRound": 5,
+      "lastRound": 6,
       "lastScore": "55/56",
-      "lastReport": "docs/test-results/session-mapping/round-5.md",
+      "lastReport": "docs/test-results/session-mapping/round-6.md",
       "openBugs": 13,
-      "backlog": 1
+      "backlog": 2
     },
     "chart-gallery": {
       "status": "awaiting_retest",
@@ -106,11 +106,11 @@
       "backlog": 0
     },
     "graphify-data-model-map": {
-      "status": "reconcile",
+      "status": "validate",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
-      "openBugs": 0,
+      "openBugs": 5,
       "backlog": 0
     },
     "tracker-world-navigation": {
@@ -126,7 +126,7 @@
       "lastRound": 2,
       "lastScore": "18/28",
       "lastReport": "docs/test-results/production-smoke-regression/round-2.md",
-      "openBugs": 0,
+      "openBugs": 6,
       "backlog": 0
     },
     "platform-mcp": {
@@ -506,6 +506,29 @@
           "round": 5,
           "event": "found",
           "note": "scanTranscripts() in server/lib/sessionMapping.js lines 339…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "session-mapping-r6-E.1",
+      "feature": "session-mapping",
+      "status": "reassigned",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "Import, Analysis JSON `{not json`, File analysis: expect red message starting 'The analys…",
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "other_feature",
+        "owner": "owner-error-messages",
+        "evidence": null
+      },
+      "history": [
+        {
+          "round": 6,
+          "event": "found",
+          "note": "server/lib/sessionMapping.js:320 builds the message with js…",
           "commit": null
         }
       ]
@@ -1349,6 +1372,245 @@
           "event": "fixed",
           "note": "Registered release_tracker_get_state in mcpToolRegistry.js …",
           "commit": "da35a4081b6594ab585a47499c61454e9ff80294"
+        }
+      ]
+    },
+    {
+      "id": "graphify-data-model-map-B6",
+      "feature": "graphify-data-model-map",
+      "status": "open",
+      "class": "owner_direction_conflict",
+      "attempts": 0,
+      "step": "J6.11/J6.12, island, routes",
+      "rootCause": "Copied render-bindings admin-only pattern instead of permission-based provisioning",
+      "files": [
+        "server/routes/dataModelMap.js",
+        "src/lib/worldIslands.js",
+        "server/lib/mcpToolRegistry.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "graphify-data-model-map-B7",
+      "feature": "graphify-data-model-map",
+      "status": "open",
+      "class": "product_defect",
+      "attempts": 0,
+      "step": "journey-flow picker",
+      "rootCause": "getRules() unconditionally imports db.js; change spec says catalog reading needs no database",
+      "files": [
+        "server/lib/dataModelMap.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "graphify-data-model-map-B8",
+      "feature": "graphify-data-model-map",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "baseline freeze",
+      "rootCause": "Freeze is the integrator's step",
+      "files": [
+        "docs/training/baselines/graphify-data-model-map/v1.json"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "graphify-data-model-map-B9",
+      "feature": "graphify-data-model-map",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "known limitation: code graph",
+      "rootCause": "Scope trimmed to table-level view",
+      "files": [
+        "src/components/admin/DataModelMapPanel.jsx",
+        "server/lib/dataModelMap.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "graphify-data-model-map-B10",
+      "feature": "graphify-data-model-map",
+      "status": "open",
+      "class": "informational",
+      "attempts": 0,
+      "step": "CLAUDE.md note",
+      "rootCause": "CLAUDE.md not updated",
+      "files": [
+        "CLAUDE.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "production-smoke-regression-B6",
+      "feature": "production-smoke-regression",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "spec governance",
+      "rootCause": "Builder changed the training spec directly instead of proposing an amendment.",
+      "files": [
+        "docs/training/production-smoke-regression.md",
+        "docs/spec-amendments/production-smoke-regression/"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "production-smoke-regression-B7",
+      "feature": "production-smoke-regression",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "spec freeze",
+      "rootCause": "Spec v2 never frozen; validators need a pinned baseline.",
+      "files": [
+        "docs/training/production-smoke-regression.md",
+        "docs/training/baselines/"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "production-smoke-regression-B8",
+      "feature": "production-smoke-regression",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "owner decision 2 (workflow on main)",
+      "rootCause": "Builder cannot push main by instruction; branch is based on older integration 1032699.",
+      "files": [
+        ".github/workflows/production-smoke.yml",
+        ".github/workflows/provision-smoke-account.yml",
+        "scripts/production-smoke.mjs"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "production-smoke-regression-B9",
+      "feature": "production-smoke-regression",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "known limitation: Netlify deploy wait",
+      "rootCause": "Frontend and proxy rules deploy on Netlify, separately from Render.",
+      "files": [
+        ".github/workflows/production-smoke.yml"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "production-smoke-regression-B10",
+      "feature": "production-smoke-regression",
+      "status": "open",
+      "class": "informational",
+      "attempts": 0,
+      "step": "production proof and secrets",
+      "rootCause": "Production steps run only on GitHub Actions after the main merge and secrets.",
+      "files": [
+        "docs/changes/production-smoke-regression.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "production-smoke-regression-B11",
+      "feature": "production-smoke-regression",
+      "status": "open",
+      "class": "informational",
+      "attempts": 0,
+      "step": "other known limitations",
+      "rootCause": "Change spec Known limitations section, matches scripts/production-smoke.mjs (R2.3 and S3.3 not_run).",
+      "files": [
+        "docs/changes/production-smoke-regression.md",
+        "scripts/production-smoke.mjs"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 0,
+          "event": "found",
+          "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
         }
       ]
     },
