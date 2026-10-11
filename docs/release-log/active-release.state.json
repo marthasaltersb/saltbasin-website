@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T01:47:30.847Z",
+  "exportedAt": "2026-10-11T01:50:42.233Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -122,12 +122,12 @@
       "backlog": 0
     },
     "platform-mcp": {
-      "status": "scope",
+      "status": "fix",
       "lastRound": 5,
       "lastScore": "65/65",
       "lastReport": "docs/test-results/platform-mcp/round-5.md",
-      "openBugs": 20,
-      "backlog": 3
+      "openBugs": 19,
+      "backlog": 4
     },
     "proficiency-live-qr": {
       "status": "validate",
@@ -2327,7 +2327,11 @@
       "files": [
         "docs/spec-amendments/platform-mcp/"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The MCP registry, scope list and parity map are this feature's own append-only artifacts,…"
+      },
       "history": [
         {
           "round": 4,
@@ -2349,7 +2353,11 @@
         "docs/changes/platform-mcp.md",
         "docs/changes/live-release-tracker.md"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "docs/changes/platform-mcp.md still says 141 tools and 87 of 87 capabilities. docs/changes…"
+      },
       "history": [
         {
           "round": 4,
@@ -2370,7 +2378,11 @@
       "files": [
         "src/components/admin/ConnectedAgentsPanel.jsx"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "ConnectedAgentsPanel.jsx is new with this feature. At head the inline `error` state is re…"
+      },
       "history": [
         {
           "round": 4,
@@ -2383,13 +2395,17 @@
     {
       "id": "platform-mcp-F4-5",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "process_note",
       "class": "informational",
       "attempts": 0,
       "step": "J10.4 (browser walk)",
-      "rootCause": "The data shows 0 gaps. The message was added in round 2 and was not walked in Chromium at 1280 or 390 px.",
+      "rootCause": null,
       "files": [],
-      "scope": null,
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 4,
