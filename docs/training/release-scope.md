@@ -13,7 +13,7 @@ commit them.
   `scripts/release-loop-resume.mjs`, `scripts/session-plan.mjs`, `scripts/release-cut.mjs`.
 - Platform screen: World Shell → **Release tracker** island (also `/release-tracker`), admin; its **Settings** has
   **Paste a snapshot**. API: `GET /api/release-tracker/state`.
-- Changing a scope is repository tooling only (no platform screen or MCP tool; see the change spec's parity note).
+- Changing a scope works three ways through one function. Screen: World Shell > Release tracker > Settings > Release scope. API: `POST /api/release-tracker/scope`. MCP: `release_tracker_set_scope`.
 
 ## Preconditions
 
@@ -56,6 +56,15 @@ commit them.
      **Added after the cut** with `scope=backlog` and `by tester: training check`.
 5. [J2.5] Undo J2.1–J2.4 now: `git checkout -- docs/release-log/active-release.features.json`. `show` again prints the
    J1.1 headings exactly.
+6. [J2.6] As admin, open the Release tracker **Settings** tab and find the **Release scope** card. Choose `release-loop-tooling (backlog)` in **Feature** (**New scope** then shows `planned` and the button reads **Move to planned**). Leave **Decided by** empty and click **Move to planned**.
+   - Expect a red alert reading `Give who decided.` and no change to `active-release.features.json`.
+   - Fill **Decided by** with `tester` and **Reason** with `training check`, then click **Move to planned**. Expect the status line to begin `release-loop-tooling: backlog -> planned.`, and the file's `release-loop-tooling` last `scopeHistory` entry to have `from` `backlog`, `to` `planned`, `decidedBy` `tester`, `reason` `training check`.
+   - Undo: `git checkout -- docs/release-log/active-release.features.json`.
+7. [J2.7] Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_A> call release_tracker_set_scope '{"key": "release-loop-tooling", "scope": "planned", "decidedBy": "tester", "reason": "training check"}'`, where TOKEN_A is an access token the admin created on World Shell > Journeys > Connected Agents with the `release.read` scope ticked, and TOKEN_B the same for member@test.local.
+   - Expect `isError: false` and a result with `key` `release-loop-tooling`, `from` `backlog`, `to` `planned` and `message` `release-loop-tooling: backlog -> planned.`
+   - Run the same command again. Expect `isError: true` with `status` 409, `code` `no_change` and `message` `release-loop-tooling is already planned; nothing changed.`
+   - Run it with `--token <TOKEN_B>`. Expect `isError: true` with `status` 403, `code` `forbidden` and `message` `release_tracker_set_scope is for administrators only. You are signed in as a member.`, and no change to the file beyond the first call.
+   - Undo: `git checkout -- docs/release-log/active-release.features.json`.
 
 ## Journey 3 - Only planned work is launched
 
