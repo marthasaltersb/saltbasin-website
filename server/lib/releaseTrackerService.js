@@ -498,9 +498,7 @@ export async function accessChanged() {
 }
 
 // ── MCP tool descriptors ────────────────────────────────────────────────────
-// server/lib/mcpToolRegistry.js registers release_tracker_get_state (same getState and viewer check as
-// GET /api/release-tracker/state). The other descriptors below are not registered yet (parity gap row
-// 'release-tracker-admin'). Each `handler` is the same function the REST route calls, and `viewerKinds` is
+// server/lib/mcpToolRegistry.js registers all of these as MCP tools (parity row 'release-tracker-admin'). Each `handler` is the same function the REST route calls, and `viewerKinds` is
 // the same permission the route enforces.
 export const RELEASE_TRACKER_TOOLS = [
   { name: 'release_tracker_get_state', description: 'Latest release tracker snapshot, history points and numbered updates.', viewerKinds: ['admin', 'member'], handler: getState },

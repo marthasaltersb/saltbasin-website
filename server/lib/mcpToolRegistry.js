@@ -885,6 +885,54 @@ const CORE_TOOLS = [
       return { viewer, state: await getState({ releaseKey: args.release ? String(args.release) : null }) };
     },
   },
+  ...(() => {
+    const rt = async () => import('./releaseTrackerService.js');
+    const jsonish = (d) => ({ type: ['object', 'array', 'string'], description: d });
+    const parse = async (v, what) => {
+      if (typeof v !== 'string') return v;
+      try { return JSON.parse(v); } catch (e) {
+        const { jsonProblemMessage } = await import('./friendlyErrors.js');
+        const { TrackerError } = await rt();
+        throw new TrackerError(jsonProblemMessage(what, e), 400, 'json_invalid');
+      }
+    };
+    const adm = (name, title, description, props, required, api, handler, scope = RI) => ({
+      name, title, description: `Administrators only. ${description}`, inputSchema: schema(props, required), scope, permission: 'admin', api, handler,
+    });
+    return [
+      adm('release_tracker_ingest_snapshot', 'Store a release tracker snapshot', 'Stores a snapshot, history and numbered updates (append-only), as when an admin pastes a snapshot on the tracker Settings tab. Each of snapshot, history and updates may be an object/array or a JSON string. Same as POST /api/release-tracker/snapshots.',
+        { snapshot: jsonish('The snapshot (object or JSON string).'), history: jsonish('Optional history points.'), updates: jsonish('Optional numbered updates.'), releaseKey: str('Optional release key.', { maxLength: 120 }), commit: str('Optional commit sha.', { maxLength: 60 }) }, ['snapshot'],
+        'POST /api/release-tracker/snapshots',
+        async (args, { user }) => {
+          const { ingestSnapshot } = await rt();
+          const snapshot = await parse(args.snapshot, 'snapshot');
+          const history = await parse(args.history, 'history');
+          const updates = await parse(args.updates, 'updates');
+          return ingestSnapshot({ source: 'manual', sourceRef: `admin ${user.email || user.id}`, snapshot, history: history ?? null, updates: updates ?? null, tokenReleaseKey: null, releaseKey: args.releaseKey || null, commit: args.commit || null });
+        }),
+      adm('release_tracker_list_snapshots', 'List release tracker snapshots', 'Every recorded snapshot, newest first. Same as GET /api/release-tracker/snapshots.',
+        { limit: { type: 'integer', minimum: 1, maximum: 200, description: 'Optional maximum.' } }, [], 'GET /api/release-tracker/snapshots',
+        async (args) => ({ snapshots: await (await rt()).listSnapshots(args.limit) }), 'release.read'),
+      adm('release_tracker_pull_now', 'Pull release logs now', 'Fetches the committed release-log files from the configured repository now. Same as POST /api/release-tracker/pull.',
+        {}, [], 'POST /api/release-tracker/pull', async () => (await rt()).pullFromRepo({ source: 'pull' })),
+      adm('release_tracker_get_settings', 'Read release tracker settings', 'Repository, branch, interval and access settings. Same as GET /api/release-tracker/settings.',
+        {}, [], 'GET /api/release-tracker/settings',
+        async () => { const m = await rt(); return { settings: await m.loadSettings(), liveViewers: m.streamClientCount() }; }, 'release.read'),
+      adm('release_tracker_save_settings', 'Save release tracker settings', 'Edits repository, branch, interval, member access and the share-link switch. Same as PUT /api/release-tracker/settings.',
+        { settings: rlObj('The settings object the Settings tab sends.') }, ['settings'], 'PUT /api/release-tracker/settings',
+        async (args) => ({ settings: await (await rt()).saveSettings(args.settings) })),
+      adm('release_tracker_create_token', 'Create a tracker token', 'Creates an ingest or share token (plaintext returned once). A share token publishes the tracker to anyone with the link, so it runs the finalization gate first. Same as POST /api/release-tracker/tokens.',
+        { kind: { type: 'string', enum: ['ingest', 'share'], description: 'Token kind.' }, releaseKey: str('Release key (required for an ingest token).', { maxLength: 120 }), label: str('Optional label.', { maxLength: 120 }) }, ['kind'],
+        'POST /api/release-tracker/tokens',
+        async (args, { user }) => {
+          if (args.kind === 'share') { const { assertReadyToFinalize } = await import('./finalizationGates.js'); await assertReadyToFinalize(user.id); }
+          return (await rt()).createToken({ kind: args.kind, releaseKey: args.releaseKey, label: args.label, actor: user });
+        }),
+      adm('release_tracker_revoke_token', 'Revoke a tracker token', 'Revokes an ingest or share token. Same as DELETE /api/release-tracker/tokens/:id.',
+        { tokenId: id('The token id.') }, ['tokenId'], 'DELETE /api/release-tracker/tokens/:id',
+        async (args, { user }) => (await rt()).revokeToken(Number(args.tokenId), user)),
+    ];
+  })(),
   riTool('release_create', 'Create a release record', 'Creates a release record. Same body as POST /api/release-intelligence/releases.',
     schema({ release: rlObj('The release fields the Release Intelligence screen sends.') }, ['release']), RI, 'POST /api/release-intelligence/releases',
     async (args, { user }) => (await riLib()).createRelease(args.release || {}, rlActor(user))),

@@ -107,3 +107,15 @@ horizontal scroll and no page errors. A release cut on a throwaway copy froze 0/
 - Files: `server/lib/mcpToolRegistry.js`, `server/data/mcpToolManifest.json`, `server/lib/capabilityParity.js`,
   `server/lib/releaseTrackerService.js`, `docs/changes/release-scope.md`.
 - Checked: `node scripts/check-interface-parity.mjs` reports the registry matches the code and `--self-test` detects all 3 injected problems; the only gap left is the new honest row `release-tracker-admin` (admin routes without MCP tools, owned by live-release-tracker), so `--strict` still fails on it. On a fresh database with the test admin, a `release.read` token lists `release_tracker_get_state`, its result equals `GET /api/release-tracker/state` byte for byte (viewer admin), and the ungranted test member gets 403 `tracker_access_denied` on both the tool and the API. `npm run build` exits 0. Note: the local snapshot is empty, so feature scope fields were compared as identical empty state, not exercised with data.
+
+## Fix notes — round 2
+
+### release-scope-T2-3 (J4.1: estimate note lacks "(added after the cut)")
+- What changed: `parseItem` in `server/lib/releaseCut.js` now also records an additive `addedAfterCut: true` next to `outOfScope` when the feature's definition has an `added` block (`isAddedAfterCut`). `scripts/session-plan.mjs` prints `(added after the cut)` in the stderr note when that flag is set; features that are backlog but not added keep the old text. Stdout is unchanged.
+- Files: `scripts/session-plan.mjs`, `server/lib/releaseCut.js`.
+- Checked: ran the J4.1 command; stderr and stdout matched the spec text exactly; J4.2 JSON has `outOfScope: true` for global-change-standard and no `outOfScope` key for platform-mcp; session file deleted afterwards (J4.3).
+
+### release-scope-T2-4 (J5.1: MCP_GAP, snapshot paste has no MCP tool)
+- What changed: registered admin-only MCP tools `release_tracker_ingest_snapshot` (snapshot/history/updates as object or JSON string, same friendly `json_invalid` error, `source: 'manual'`), `release_tracker_list_snapshots`, `release_tracker_pull_now`, `release_tracker_get_settings`, `release_tracker_save_settings`, `release_tracker_create_token` (share tokens run `assertReadyToFinalize` first, like the route) and `release_tracker_revoke_token`. Each calls the same service function as its route. Names appended to the manifest; the `release-tracker-admin` parity row now lists them and its gap is removed (webhook-secret, ingest log and bearer-token push are recorded as an explicit exclusion).
+- Files: `server/lib/mcpToolRegistry.js`, `server/lib/releaseTrackerService.js` (comment), `server/lib/capabilityParity.js`, `server/data/mcpToolManifest.json`.
+- Checked: `check-interface-parity.mjs`, `--strict` and `--self-test` all pass (121/121, 214 tools); called the ingest/list handlers through the registry against a fresh database (stored, list returned it, malformed JSON gave the friendly 400); `npm run build` passes. The paste UI in J5.1 was not re-walked in a browser: the UI and route were unchanged and the step failed only on parity.

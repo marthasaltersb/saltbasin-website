@@ -126,7 +126,7 @@ export function parseItem(it) {
   // Scope (server/lib/releaseScope.js): an item outside the release's planned work is recorded as outOfScope, not refused.
   const def = defs.features.find((f) => f.key === feature);
   const outOfScope = !!def && scopeOf(def) !== 'planned';
-  return { feature, goal: it.goal ? String(it.goal) : null, expect, size, ...(outOfScope ? { outOfScope: true } : {}) };
+  return { feature, goal: it.goal ? String(it.goal) : null, expect, size, ...(outOfScope ? { outOfScope: true } : {}), ...(outOfScope && isAddedAfterCut(def) ? { addedAfterCut: true } : {}) };
 }
 
 function assertSession(s) {
