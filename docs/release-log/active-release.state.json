@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T01:03:23.690Z",
+  "exportedAt": "2026-10-11T01:06:40.113Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -74,11 +74,11 @@
       "backlog": 10
     },
     "release-scope": {
-      "status": "reconcile",
+      "status": "amend",
       "lastRound": 2,
       "lastScore": "20/25",
       "lastReport": "docs/test-results/release-scope/round-2.md",
-      "openBugs": 9,
+      "openBugs": 12,
       "backlog": 1
     },
     "journey-flow-experience-mapping": {
@@ -122,10 +122,10 @@
       "backlog": 0
     },
     "platform-mcp": {
-      "status": "validate",
-      "lastRound": 3,
-      "lastScore": "65/65",
-      "lastReport": "docs/test-results/platform-mcp/round-3.md",
+      "status": "triage",
+      "lastRound": 4,
+      "lastScore": "60/65",
+      "lastReport": "docs/test-results/platform-mcp/round-4.md",
       "openBugs": 16,
       "backlog": 3
     },
@@ -1342,6 +1342,70 @@
       "history": [
         {
           "round": 1,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (in…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-scope-F2-3",
+      "feature": "release-scope",
+      "status": "open",
+      "class": "requirement_gap",
+      "attempts": 0,
+      "step": "Interface parity (spec)",
+      "rootCause": "Scope changes only exist as scripts/release-scope.mjs",
+      "files": [
+        "scripts/release-scope.mjs",
+        "server/lib/capabilityParity.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (re…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-scope-F2-4",
+      "feature": "release-scope",
+      "status": "open",
+      "class": "process",
+      "attempts": 0,
+      "step": "Docs",
+      "rootCause": "Round 2 did not update the spec's Interface parity paragraph",
+      "files": [
+        "docs/changes/release-scope.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
+          "event": "found",
+          "note": "Reported by the fix agent, unresolved on reconciliation (pr…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-scope-F2-5",
+      "feature": "release-scope",
+      "status": "open",
+      "class": "informational",
+      "attempts": 0,
+      "step": "Known limitation",
+      "rootCause": "scripts/release-tracker-sync.mjs stored() ignores the bugs/bugs-2 split",
+      "files": [
+        "scripts/release-tracker-sync.mjs"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 2,
           "event": "found",
           "note": "Reported by the fix agent, unresolved on reconciliation (in…",
           "commit": null
