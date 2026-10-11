@@ -1,0 +1,36 @@
+{
+  "id": "A2",
+  "feature": "scoring-preferences-mcp",
+  "fromBaseline": 1,
+  "proposedBy": "fix:scoring-preferences-mcp:r1",
+  "round": 1,
+  "triageItems": ["scoring-preferences-mcp-T3"],
+  "reason": "The fix agent asks to reword J0.1's phone expectation from name and role visible to avatar plus truncated name and role.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "J0.1",
+      "before": "Expect the World Shell with **Test Member** and **Member** in the top bar and no password or consent page.",
+      "after": "At 390px, the top bar shows an avatar plus a truncated (ellipsis) name and role. The avg-score stat stays hidden, and the chip may share a row with the other stats.",
+      "tracesTo": "J0.1",
+      "whyNeeded": "Fixer's layout keeps the chip inside the wrapped stats group with ellipsis truncation."
+    }
+  ],
+  "review": {
+    "status": "rejected",
+    "reviewer": "amend:scoring-preferences-mcp:r1",
+    "checklist": {
+      "Traced": "fail: tracesTo names only the step itself, no change-spec requirement or owner direction",
+      "Not weaker": "fail: replaces the exact visible text Test Member and Member with 'truncated' text, which a validator could pass on an ellipsis alone; nothing in the change spec or owner direction says the name may be cut",
+      "Retire only duplicates": "pass: nothing retired",
+      "Exact": "fail: 'truncated' and 'may share a row' are not exact expected results",
+      "Reachable": "pass",
+      "Deterministic": "fail: depends on the fix's layout",
+      "Fictional data only": "pass",
+      "Independent of the fix": "fail: the new wording describes the fixer's implementation (ellipsis, wrapped stats group)",
+      "Errors are plain and coloured by severity": "pass: step checks no error message"
+    },
+    "note": "The step as written is right and matches the change spec (T3: phone top bar must show the profile text). Round 1 failed J0.1 on mobile because only the avatar showed. The product must show the text Test Member and Member in full at 390px for the fixture member (11 and 6 characters; the 7.5rem cap with ellipsis must not clip them). Goes back to the fix loop as a defect; the step stays unchanged.",
+    "at": "2026-10-11T00:00:00Z"
+  }
+}
