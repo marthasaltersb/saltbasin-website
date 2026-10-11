@@ -1,0 +1,46 @@
+{
+  "id": "A2",
+  "feature": "graphify-data-model-map",
+  "fromBaseline": 1,
+  "proposedBy": "fix:graphify-data-model-map:r1",
+  "round": 1,
+  "triageItems": [],
+  "reason": "The map is now gated by the datamodel.read / datamodel.write permissions (owner direction 2026-10-10, universal functionality provisioned), so the MCP refusal must name the missing permission and a grant must be proven to work.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "J6.11",
+      "before": "Expect `isError: true` and an error with `status` 403, `code` `forbidden` and `message` `data_model_catalog_read is for administrators only. You are signed in as a member.`",
+      "after": "Expect `isError: true` and an error with `status` 403, `code` `forbidden` and `message` `data_model_catalog_read needs the datamodel.read permission. Ask an administrator to grant it to you.`",
+      "tracesTo": "CLAUDE.md 'Universal functionality, provisioned' (owner direction 2026-10-10); docs/changes/graphify-data-model-map.md B6; the API already refuses with 'This needs the datamodel.read permission. Ask an administrator to grant it to you.'",
+      "whyNeeded": "The old message says access is for administrators only, which is untrue once the permission can be granted to any role; the product must be changed to state the actual cause.",
+      "reviewerNote": "Proposal said 'for example'; reviewer fixed one exact message (the API wording with the tool name) so the step is exact. The product must produce it (a defect to fix: mcpServer.js currently still returns the administrators-only text for permission-gated tools)."
+    },
+    {
+      "op": "add",
+      "stepId": "J6.15",
+      "before": null,
+      "after": "[J6.15] Grant datamodel.read to the member role by the command shown in the spec; then the member gets 200 on GET /api/data-model/catalog, 403 on DELETE /api/data-model/rules, and isError false from data_model_catalog_read; after removing the grant the refusals return.",
+      "tracesTo": "CLAUDE.md 'Universal functionality, provisioned'; docs/changes/graphify-data-model-map.md B6 (permission_grants row, requirePermission)",
+      "whyNeeded": "Proves access is a permission grantable to any profile, not the admin role, and that write is separate from read.",
+      "reviewerNote": "Proposed ids J6.13 (already used by the capability-cards step) and a second step inside J6.11 were merged into one new step with the next unused id J6.15. There is no screen, API or MCP tool to grant a permission, so it is a command step with exact SQL; this is flagged as an open parity gap for the owner (security-provisioning-model), not a blocker."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:graphify-data-model-map:r1",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass (status, code and isError unchanged; message now states the real cause, which the old one contradicts under owner direction)",
+      "Retire only duplicates": "pass (no step retired)",
+      "Exact": "pass",
+      "Reachable": "pass (cli step by design; no grant screen exists, noted)",
+      "Deterministic": "pass",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass (tests permission behaviour; the config_state row name is documented in the change spec and is the only grant mechanism)",
+      "Errors are plain and coloured by severity": "pass (message states the problem and the remedy in plain words)"
+    },
+    "note": "Approved with id and wording corrections. Verified in server/lib/permissions.js that grants are read per call (no restart needed). The MCP message is a defect to fix in the product (mcpServer.js lines 87/90 still return the administrators-only text).",
+    "at": "2026-10-11T02:00:00Z"
+  }
+}

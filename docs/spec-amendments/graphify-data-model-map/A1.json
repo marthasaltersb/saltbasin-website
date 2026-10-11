@@ -1,0 +1,39 @@
+{
+  "id": "A1",
+  "feature": "graphify-data-model-map",
+  "fromBaseline": 1,
+  "proposedBy": "triage:graphify-data-model-map:r1",
+  "round": 1,
+  "triageItems": [
+    "graphify-data-model-map-r1-1"
+  ],
+  "reason": "J1.1 expects the full three-crumb breadcrumb on a phone; the shared World Shell collapses it at 390px.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "J1.1",
+      "before": "Expect the panel heading **Data model map**, the breadcrumb **Sun › Journeys › Data model map**, the tabs **Map** (selected) and **Settings**, and a red-free page (no alert box).",
+      "after": "Expect the panel heading **Data model map**, the tabs **Map** (selected), **Code** and **Settings**, and a red-free page (no alert box). On desktop the breadcrumb reads **Sun › Journeys › Data model map**. On a phone (390px) it reads **… › Data model map**, and tapping **…** (label \"Show full trail\") shows Sun, Journeys, Data model map in that order.",
+      "tracesTo": "docs/training/world-shell-layers.md (phone breadcrumb collapse and Show full trail list); header comment of src/components/WorldBreadcrumbs.jsx; docs/changes/graphify-data-model-map.md B9 (Code tab)",
+      "whyNeeded": "The old expectation contradicts the shared, documented phone behaviour; the Data model map panel reuses that breadcrumb unchanged.",
+      "reviewerNote": "Reviewer also named the third tab, Code (added by B9 and present in DataModelMapPanel.jsx), so the tab list is exact; this is stricter, not weaker."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:graphify-data-model-map:r1",
+    "checklist": {
+      "Traced": "pass",
+      "Not weaker": "pass (desktop expectation kept verbatim; phone expectation is the documented shared behaviour, which the old text contradicted; Code tab named)",
+      "Retire only duplicates": "pass (no step retired)",
+      "Exact": "pass",
+      "Reachable": "pass (walkable at 1280px and 390px)",
+      "Deterministic": "pass",
+      "Fictional data only": "pass",
+      "Independent of the fix": "pass",
+      "Errors are plain and coloured by severity": "pass"
+    },
+    "note": "Verified in WorldBreadcrumbs.jsx header and world-shell-layers.md: trails of more than two crumbs collapse on phones. Spec error confirmed; product is correct.",
+    "at": "2026-10-11T02:00:00Z"
+  }
+}
