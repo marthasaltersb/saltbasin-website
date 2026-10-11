@@ -53,7 +53,6 @@ export default function ReleaseTrackerApp({ embedded = false, shareToken = null 
   const [mode, setMode] = useState(() => (store.get('rt-mode', 'board') === 'world' ? 'world' : 'board'));
   const [theme, setTheme] = useState(() => store.get('rt-theme', 'auto'));
   const [dark, setDark] = useState(() => { try { return window.matchMedia('(prefers-color-scheme: dark)').matches; } catch { return false; } });
-  const [worldAt, setWorldAt] = useState(null);
   const seq = useRef(0); const releaseRef = useRef(null); releaseRef.current = release;
 
   const refetch = useCallback(async () => {
@@ -171,7 +170,7 @@ export default function ReleaseTrackerApp({ embedded = false, shareToken = null 
         </div>
       );
     }
-    if (mode === 'world') return <TrackerWorld ctx={ctx} layer={layer} rootRef={rootRef} themeKey={effTheme} worldAt={worldAt} setWorldAt={setWorldAt} />;
+    if (mode === 'world') return <TrackerWorld ctx={ctx} layer={layer} rootRef={rootRef} themeKey={effTheme} />;
     return <div className="rt-layer" key={ctx.path.join('/')}>{layer.node}</div>;
   })();
 
@@ -198,7 +197,7 @@ export default function ReleaseTrackerApp({ embedded = false, shareToken = null 
               </div>
             ) : null}
             {data && (data.state?.releases || []).length > 1 ? (
-              <select className="rt-btn" aria-label="Release" value={release || state?.meta.releaseKey || ''} onChange={(e) => { setRelease(e.target.value); setWorldAt(null); }}>
+              <select className="rt-btn" aria-label="Release" value={release || state?.meta.releaseKey || ''} onChange={(e) => { setRelease(e.target.value); }}>
                 {state.releases.map((r) => <option key={r.releaseKey} value={r.releaseKey}>{r.releaseKey}</option>)}
               </select>
             ) : null}

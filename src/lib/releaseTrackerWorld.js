@@ -61,7 +61,7 @@ export function dataMapFor(snap, feature) {
   return trackerBindings.dataMap(feature, ctx);
 }
 
-function contextFor(snap, f, h, maxSteps) {
+export function contextFor(snap, f, h, maxSteps) {
   const total = h ? h[3] : f.lastResult?.stepsTotal;
   const passed = h ? h[2] : f.lastResult?.stepsPassed;
   return { snap, status: h ? h[0] : f.status, total, passed, maxSteps: maxSteps || Math.max(1, total || 1), historic: !!h };
@@ -134,4 +134,17 @@ export function worldFocusId(path, snap, splitTok) {
     if (type === 'agent') return (snap.agents || []).find((x) => x.id === a)?.feature || null;
   }
   return null;
+}
+
+/**
+ * Resolver the shared world engine (src/lib/trackerWorld/trackerWorldEngine.js) calls for every mapped channel:
+ * the value when the channel is bound, undefined for "not mapped" (the engine then draws the neutral fallback).
+ */
+export function makeTrackerBind(snap) {
+  return (id, entity, hctx) => {
+    const f = snap.features.find((x) => x.key === (entity.key ?? entity.feature));
+    if (!f) return undefined;
+    const v = trackerBindings.resolve(id, entity, contextFor(snap, f, hctx.hist, hctx.maxSteps));
+    return isMapped(v) ? v : undefined;
+  };
 }
