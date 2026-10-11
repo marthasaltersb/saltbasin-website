@@ -50,6 +50,7 @@ import releaseTrackerRouter, { githubWebhookHandler as releaseTrackerWebhook } f
 import { startReleaseTrackerPoller } from './lib/releaseTrackerService.js';
 import sessionMappingRouter from './routes/sessionMapping.js';
 import renderBindingsRouter from './routes/renderBindings.js';
+import dataModelMapRouter from './routes/dataModelMap.js';
 import worldVariantStudioRouter from './routes/worldVariantStudio.js';
 import l2rDiagnosticsRouter from './routes/l2rDiagnostics.js';
 import publicationPipelinesRouter from './routes/publicationPipelines.js';
@@ -202,6 +203,7 @@ app.use('/api/agent-runner', agentRunnerRouter);
 app.use('/api/release-tracker', releaseTrackerRouter);
 app.use('/api/session-mapping', sessionMappingRouter);
 app.use('/api/render-bindings', renderBindingsRouter);
+app.use('/api/data-model', dataModelMapRouter);
 app.use('/api/admin/world-variant-studio', worldVariantStudioRouter);
 app.use('/api/l2r-diagnostics', l2rDiagnosticsRouter);
 app.use('/api/publication-pipelines', publicationPipelinesRouter);

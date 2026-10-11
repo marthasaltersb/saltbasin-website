@@ -33,3 +33,7 @@ server/data/applicationPackages/*
 
 # Session-mapping hook failures awaiting filing (scripts/analyze-session.mjs --hook)
 server/data/sessionMapping/
+
+# Graphify data model map: local venv and raw (symbol-level) graphify output stay out of git; docs/data-model/ is the committed output.
+/graphify-out/
+/.graphify-venv/

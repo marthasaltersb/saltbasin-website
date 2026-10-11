@@ -28,6 +28,7 @@ export const GOVERNED_ROUTE_FILES = Object.freeze({
   'server/routes/careerBound.js': '/api/career-bound',
   'server/routes/outputTemplates.js': '/api/output-templates',
   'server/routes/agentRunner.js': '/api/agent-runner',
+  'server/routes/dataModelMap.js': '/api/data-model',
 });
 
 /** For files governed only in part: file -> pattern a route (`METHOD /full/path`) must match to be governed.
@@ -42,6 +43,7 @@ const CR = '/api/career-reconciliation';
 const CB = '/api/career-bound';
 const OT = '/api/output-templates';
 const RBA = '/api/render-bindings';
+const DMA = '/api/data-model';
 const RR = `World Shell > Journeys > Career Master > Resume rollups`;
 const WS = 'World Shell';
 const PROF = `${WS} > Journeys > Career Master > Proficiency & Rollups > 3 · Rules & why`;
@@ -180,6 +182,9 @@ export const CAPABILITIES = Object.freeze([
   { key: 'access-tokens', title: 'Create, list and revoke access tokens', group: 'Platform access', ui: `${WS} > Journeys > Connected Agents`, api: ['GET /api/platform/tokens', 'POST /api/platform/tokens', 'DELETE /api/platform/tokens/:id'], mcp: null, mcpExclusion: 'Credentials are managed by a signed-in person in the website; a token can never mint or revoke tokens.' },
   { key: 'mcp-connection-info', title: 'Show the MCP address and the tools a token gets', group: 'Platform access', ui: `${WS} > Journeys > Connected Agents`, api: ['GET /api/platform/mcp'], mcp: ['platform_mcp_info'] },
   { key: 'capabilities-map', title: 'Show this parity map (admin)', group: 'Platform access', ui: `${WS} > Journeys > Capabilities`, api: ['GET /api/platform/capabilities'], mcp: ['platform_capabilities_map'] },
+  { key: 'data-model-map-view', title: 'Open the data model map: domains, tables, search, one table with its columns, relations and routes', group: 'Data model map', ui: `${WS} > Data model map (administrators)`, api: [`GET ${DMA}/catalog`, `GET ${DMA}/search`, `GET ${DMA}/tables/:name`], mcp: ['data_model_catalog_read', 'data_model_search', 'data_model_table_read'] },
+  { key: 'data-model-map-picker', title: 'Data-object and field picker source for flow builders', group: 'Data model map', ui: `${WS} > Data model map > (a table) > Use as a data object`, api: [`GET ${DMA}/picker`], mcp: ['data_model_picker'] },
+  { key: 'data-model-map-rules', title: 'Edit the domain grouping rules (admin)', group: 'Data model map', ui: `${WS} > Data model map > Settings`, api: [`GET ${DMA}/rules`, `PUT ${DMA}/rules`, `DELETE ${DMA}/rules`], mcp: ['data_model_rules_read', 'data_model_rules_save'] },
 ]);
 
 /** Computes per-capability status (the Capabilities screen and the check script share this). */

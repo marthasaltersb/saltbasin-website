@@ -28,6 +28,8 @@ export const MCP_SCOPES = Object.freeze({
   'renderings.read': 'Read renderings, their data map, history and pending changes',
   'renderings.write': 'Propose or make a change to a mapped source value (live or for approval, by the binding policy)',
   'renderings.approve': 'Approve or reject a pending data change; settings (administrators only; runs the finalization gate)',
+  'datamodel.read': 'Read the data model map: tables, columns, relations, which routes and modules use them, and the data-object picker (administrators only)',
+  'datamodel.write': 'Change the data model map domain grouping rules (administrators only)',
   'agent.runner.read': 'Read agent runner settings, the agent roster, runs, outputs, test plans and backlog seeds (administrators only)',
   'agent.runner.write': 'Prompt agents, stop runs, decide scope requests and proposals, change runner settings and move backlog seeds (administrators only)',
 });
@@ -128,6 +130,29 @@ const RB_TOOLS = [
       if (!Object.keys(out).length) { const e = new Error('Nothing to change: pass overrides, fieldRoles or step'); e.status = 400; e.code = 'bad_request'; throw e; }
       return out;
     }),
+];
+
+/** Data model map tools: same functions (and error statuses) as server/routes/dataModelMap.js; admin check is the registry's permission. */
+const dmLib = () => import('./dataModelMap.js');
+const DM_TOOLS = [
+  rbTool('data_model_catalog_read', 'Read the data model map', 'Administrators only. Returns the stamped data model catalog summary: Graphify version and source commit, counts, domains, every table with its domain, and the foreign-key links between tables.',
+    schema({}), 'datamodel.read', 'admin', 'GET /api/data-model/catalog',
+    async () => (await dmLib()).catalogSummary()),
+  rbTool('data_model_table_read', 'Read one table of the data model map', 'Administrators only. Returns one table: columns (type, nullable, primary key, references), tables it references and that reference it, and the routes and modules that use it.',
+    schema({ table: str('Table name, for example career_jobs.', { maxLength: 120 }) }, ['table']), 'datamodel.read', 'admin', 'GET /api/data-model/tables/:name',
+    async (args) => ({ table: await (await dmLib()).tableDetail(args.table) })),
+  rbTool('data_model_search', 'Search the data model map', 'Administrators only. Case-insensitive search over table names, column names and route files or mount paths (at most 60 hits).',
+    schema({ query: str('Part of a table, column or route name.', { maxLength: 120 }) }, ['query']), 'datamodel.read', 'admin', 'GET /api/data-model/search',
+    async (args) => (await dmLib()).searchCatalog(args.query)),
+  rbTool('data_model_picker', 'Data-object and field picker source', 'Administrators only. Without `object` lists the data objects (tables), optionally filtered by `domain` and `query`; with `object` lists that object\'s fields. Each entry has a stable key ("table" or "table.column") a flow definition can store.',
+    schema({ domain: str('Domain key, for example career.', { maxLength: 60 }), query: str('Filter text.', { maxLength: 120 }), object: str('Table name to list fields for.', { maxLength: 120 }) }), 'datamodel.read', 'admin', 'GET /api/data-model/picker',
+    async (args) => (await dmLib()).dataObjectPicker({ domain: args.domain, q: args.query, object: args.object })),
+  rbTool('data_model_rules_read', 'Read the data model domain rules', 'Administrators only. Returns the domain grouping rules in force (saved, or the shipped default).',
+    schema({}), 'datamodel.read', 'admin', 'GET /api/data-model/rules',
+    async () => (await dmLib()).getRules()),
+  rbTool('data_model_rules_save', 'Change the data model domain rules', 'Administrators only. Replaces the domain grouping rules (domains with label, colour, prefixes and tables) or, with reset true, returns to the shipped default.',
+    schema({ domains: { type: 'array', description: 'Domains: [{ label, color: "#RRGGBB", prefixes: [], tables: [] }].', items: { type: 'object', additionalProperties: true } }, note: str('Why the rules changed.', { maxLength: 300 }), reset: { type: 'boolean', description: 'Return to the shipped default.' } }), 'datamodel.write', 'admin', 'PUT /api/data-model/rules',
+    async (args, { user }) => { const M = await dmLib(); return args.reset ? M.resetRules() : M.saveRules(user, { domains: args.domains, note: args.note }); }),
 ];
 
 const CORE_TOOLS = [
@@ -1084,7 +1109,7 @@ const CORE_TOOLS = [
 
 // Tools that run an existing website route's own handler in-process (see mcpRouteTools.js), appended after the
 // core tools. Append-only like everything above.
-export const MCP_TOOLS = Object.freeze([...CORE_TOOLS, ...ROUTE_TOOLS, ...RB_TOOLS]);
+export const MCP_TOOLS = Object.freeze([...CORE_TOOLS, ...ROUTE_TOOLS, ...RB_TOOLS, ...DM_TOOLS]);
 
 export const MCP_TOOL_NAMES = Object.freeze(MCP_TOOLS.map((t) => t.name));
 
