@@ -281,6 +281,10 @@ Key shape, per the supplied spec: a Career Master Foundation of user-attested ca
 
 Explicitly out of scope for this subsystem, tracked separately per DEC-007/008/009: the free-trial gating model, an external-agent (Claude/Codex/ChatGPT) login-and-API spec for Salt Basin, Betsy's own request for temporary in-platform Claude Code access to build/test without leaving Salt Basin, and the "no recurring LLM cost once context/memory is cached" architecture goal. These are real, explicitly stated product asks, just not resume-product UX — don't fold them into this subsystem's build.
 
+### Seven-Layer Theory, Matrix & Journey Engine (design-stage — not yet implemented)
+
+Spec v0.1 supplied 2026-10-10, preserved verbatim at `.claude/skills/salt-basin-seven-layer-theory/reference/master-build-prompt.md`; driven by `/seven-layer-theory` (skill `salt-basin-seven-layer-theory`), state in `docs/salt-basin-seven-layer-theory-progress.md`. Seven theory layers, seven definitions per concept (the seventh is always Rest), a 49-family matrix registry, a hypergraph relationship engine, and a musical journey vocabulary (Note, Chord, Journey Data Rod, Clef, Universal C, Staff, Journey Sheet, Measure, Beat, Rest). Phase 1 discovery is done; the Phase 2 architecture is **awaiting Betsy's review** and Phase 3+ must not start until it is approved. The design maps Note → evidence atom, Chord → computed Molecule, Rod → `journey_data_rods`, interval cycles → a `cycleModel` Current, calculation lineage → `metric_calculations`, builder edits → the render-bindings proposal path; only six new `theory_*` tables are proposed (49 matrix families are registry rows, not tables). The spec assumes an existing diagram builder and Supabase RLS — neither exists in this repo (DEC-SLT-01, DEC-SLT-02). **No schema, route, or UI code has been changed for this yet.**
+
 ### React rules of hooks
 
 All hooks (`useState`, `useMemo`, `useEffect`) must be declared **before** any conditional early return. This caused a blank-screen bug in `EditorPane.jsx` — be vigilant when adding hooks to components that have early null-guards.
