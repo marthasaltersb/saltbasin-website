@@ -32,6 +32,7 @@ Interface parity, per journey (UI path -> API route -> MCP tool). All routes nee
 4. [P.4] Phone passes use a viewport 390px wide and 844px tall and the same steps. Desktop passes use 1280px wide. Run each pass on its own freshly seeded database.
 5. [P.5] Expected noise: console errors for blocked web fonts or certificates (`net::ERR_CERT_AUTHORITY_INVALID`, `ERR_TUNNEL_CONNECTION_FAILED`) are environment noise. The only application requests allowed to fail are the refusals this spec names (HTTP 400, 404 or 409), each at the step that causes it. No page error is allowed.
 6. [P.6] Command fixture (used only by Journey 6): make an empty folder, called `<FIX>` below (for example `/tmp/garden-cut`, outside any git repository), then create these three files in it exactly (fictional data). `<FIX>/docs/release-log/active-release.features.json`: `{"release":"2030-04-01-garden-gate","version":"1.0.0","title":"Garden gate release","features":[{"key":"seed-catalog","title":"Seed catalog","kind":"new"},{"key":"watering-plan","title":"Watering plan","kind":"new"}]}`. `<FIX>/docs/release-log/active-release.state.json`: `{"features":{"seed-catalog":{"status":"passed","lastRound":2,"lastScore":"12/12"},"watering-plan":{"status":"validate","lastRound":1,"lastScore":"5/8"}},"bugs":[{"feature":"watering-plan","status":"open"}]}`. `<FIX>/docs/test-results/seed-catalog/round-2.md`, whose text is a line `# round 2` followed by a fenced json block holding `{ "feature": "seed-catalog", "baseline": 1, "total": 12, "passed": 12 }`.
+7. [P.7] Score fixture (read once, before Journey 3, from the worktree under test): open the highest-numbered `docs/test-results/in-app-release-loop/round-<N>.md`; its fenced json block holds `passed`, `total` and `baseline`. Write `<IARL_ROUND>` for N, `<IARL_PASSED>`, `<IARL_TOTAL>` and `<IARL_BASELINE>` for those three values, and `<IARL_REPORT>` for the path `docs/test-results/in-app-release-loop/round-<N>.md`. The platform must show exactly these values. Where a step says a **Met** label, it is **Met** only when `<IARL_TOTAL>` is 60 and `<IARL_PASSED>` is at least 60 (the estimate is 60/60), otherwise the label is a red **Missed**.
 
 ## Journey 1 — Every release, frozen ones exactly as cut
 
@@ -69,18 +70,18 @@ UI path: Session plans tab -> Record an estimate. API: `POST /api/release-cut/se
 
 ## Journey 3 — Record a merge: the score is read, never typed
 
-UI path: session card -> Record merge for S-garden-01. API: `POST /api/release-cut/sessions/:session/merge`. MCP: `release_cut_record_merge`. The platform reads each feature's newest `docs/test-results/<feature>/round-N.md` score block; `in-app-release-loop` is frozen at 60 of 60 on baseline v2, and `guided-training-agent` has no validated round.
+UI path: session card -> Record merge for S-garden-01. API: `POST /api/release-cut/sessions/:session/merge`. MCP: `release_cut_record_merge`. The platform reads each feature's newest `docs/test-results/<feature>/round-N.md` score block; `in-app-release-loop` shows the score of its newest validated round (the values written in P.7), and `guided-training-agent` has no validated round.
 
 1. [J3.1] Click **Record merge for S-garden-01**.
-   - Expect the line **1 merge recorded**, the item line **in-app-release-loop · size S · expected 60/60 · actual 60/60** followed by a green label **Met**, and the item line **guided-training-agent · size M · expected 5/5 · actual not validated** with no **Met** or **Missed** label and the number 0 nowhere in its actual score.
+   - Expect the line **1 merge recorded**, the item line **in-app-release-loop · size S · expected 60/60 · actual <IARL_PASSED>/<IARL_TOTAL>** (from P.7) followed by the label **Met** in green when `<IARL_TOTAL>` is 60 and `<IARL_PASSED>` is at least 60, otherwise **Missed** in red, and the item line **guided-training-agent · size M · expected 5/5 · actual not validated** with no **Met** or **Missed** label and the number 0 nowhere in its actual score.
 2. [J3.2] Look for any field that accepts a score on the session card.
    - Expect none: the card has only the button **Record merge for S-garden-01**, the field **Closing note for S-garden-01** and the button **Close session S-garden-01**.
 3. [J3.3] In **Record an estimate** type `S-garden-01` into **Session id**, choose `in-app-release-loop` in **Feature 1**, type `59/60` into **Expected score 1** and click **Save estimate**.
    - Expect a red alert **Session S-garden-01 already recorded a merge, so its estimate is fixed. To change it, give a reason for the re-estimate; the original is kept beside it.** (HTTP 409).
 4. [J3.4] Type `Scope changed` into **Re-estimate reason** and click **Save estimate**.
-   - Expect on card **S-garden-01** the text **1 re-estimate (original kept)** and the item line still reading **in-app-release-loop · size S · expected 60/60 · actual 60/60** (the original estimate is unchanged).
+   - Expect on card **S-garden-01** the text **1 re-estimate (original kept)** and the item line still reading **in-app-release-loop · size S · expected 60/60 · actual <IARL_PASSED>/<IARL_TOTAL>** (the original estimate is unchanged).
 5. [J3.5] Type `S-garden-02` into **Session id**, choose `in-app-release-loop` in **Feature 1**, type `60/62` into **Expected score 1**, click **Save estimate**, then click **Record merge for S-garden-02**.
-   - Expect the card **S-garden-02** with the item line **in-app-release-loop · size - · expected 60/62 · actual 60/60** followed by a red label **Missed**.
+   - Expect the card **S-garden-02** with the item line **in-app-release-loop · size - · expected 60/62 · actual <IARL_PASSED>/<IARL_TOTAL>** followed by a red label **Missed**.
 
 ## Journey 4 — Close a session
 
@@ -119,7 +120,7 @@ Commands run in a shell in the worktree root, against the fixture `<FIX>` from P
 5. [J6.5] Run `node scripts/session-plan.mjs estimate --root <FIX> --session S-garden-cli --item "feature=seed-catalog;expect=11/12"`.
    - Expect exit code 2 and the message `Session S-garden-cli already recorded a merge, so its estimate is fixed. To change it, give a reason for the re-estimate; the original is kept beside it.`
 6. [J6.6] Run `node scripts/release-cut.mjs --root <FIX> --next-version 1.1.0 --next-release 2030-05-01-garden-path --next-title "Garden path release"`.
-   - Expect exit code 0 and the output `Froze 1.0.0 at <HEAD7>: 1/2 delivered, 1 carried. Opened 1.1.0 with 1 features (1 carried, 0 new).`
+   - Expect exit code 0 and the output `Froze 1.0.0 at <HEAD7>: 1/2 planned delivered, 1 carried, 0 in backlog, 0 added after the cut. Opened 1.1.0 with 1 features (1 carried, 0 new).`
 7. [J6.7] Run `node -e "const s=require('<FIX>/docs/release-log/releases/1.0.0/summary.json');console.log(s.counts.planned,s.counts.delivered,s.counts.carried,s.features.map(f=>f.key+':'+f.delivered+':'+f.lastScore).join(','),s.sessions.length)"`.
    - Expect exactly `2 1 1 seed-catalog:true:12/12,watering-plan:false:5/8 1`.
 8. [J6.8] Run `node -e "const n=require('<FIX>/docs/release-log/active-release.features.json');console.log(n.version,n.features.map(f=>f.key+':'+f.kind).join(','))"`.
@@ -148,9 +149,9 @@ Commands run in a shell in the worktree root, against the fixture `<FIX>` from P
 7. [J7.7] Run `curl -s -w " %{http_code}" -b admin.jar -H "Content-Type: application/json" -d '{"session":"S-garden-api","items":[{"feature":"nope"}]}' <API_BASE>/api/release-cut/sessions/estimate`.
    - Expect `{"error":"\"nope\" is not a feature of the open release (0.3.0). Check the spelling against the feature list.","code":"bad_request"} 400`.
 8. [J7.8] Run `curl -s -b admin.jar -H "Content-Type: application/json" -d '{}' <API_BASE>/api/release-cut/sessions/S-garden-api/merge`.
-   - Expect JSON with `"recorded":true` and a result `{"feature":"in-app-release-loop","round":3,"passed":60,"total":60,"baseline":2,"report":"docs/test-results/in-app-release-loop/round-3.md"}`.
+   - Expect JSON with `"recorded":true` and a result `{"feature":"in-app-release-loop","round":<IARL_ROUND>,"passed":<IARL_PASSED>,"total":<IARL_TOTAL>,"baseline":<IARL_BASELINE>,"report":"<IARL_REPORT>"}`.
 9. [J7.9] Run `curl -s -b admin.jar <API_BASE>/api/release-cut/sessions/report`.
-   - Expect JSON whose `rows` holds an entry with `"session":"S-garden-api"`, `"expected":"60/60"`, `"actual":"60/60"` and `"met":true`.
+   - Expect JSON whose `rows` holds an entry with `"session":"S-garden-api"`, `"expected":"60/60"`, `"actual":"<IARL_PASSED>/<IARL_TOTAL>"` and `"met"` true only when `<IARL_TOTAL>` is 60 and `<IARL_PASSED>` is at least 60 (otherwise false).
 10. [J7.10] Run `curl -s -w " %{http_code}" -b admin.jar -H "Content-Type: application/json" -d '{"note":"done"}' <API_BASE>/api/release-cut/sessions/S-garden-api/close`.
    - Expect the output to end `"closeNote":"done"}} 200`.
 11. [J7.11] In the browser open **Session plans** (leave and re-enter the **Release loop** screen so it reloads).
@@ -171,9 +172,9 @@ The MCP client is `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN
 5. [J8.5] Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_C> call release_cut_record_estimate '{"session":"S-garden-mcp","intent":"MCP walk","items":[{"feature":"in-app-release-loop","expect":"60/60","size":"S"}]}'`.
    - Expect `isError: false` and a result whose `session.session` is `S-garden-mcp` with `reEstimated` false.
 6. [J8.6] Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_C> call release_cut_record_merge '{"session":"S-garden-mcp"}'`.
-   - Expect `isError: false`, `recorded` true and a result for `in-app-release-loop` with `passed` 60, `total` 60 and `baseline` 2.
+   - Expect `isError: false`, `recorded` true and a result for `in-app-release-loop` with `passed` <IARL_PASSED>, `total` <IARL_TOTAL> and `baseline` <IARL_BASELINE>.
 7. [J8.7] Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_C> call release_cut_session_report`.
-   - Expect `isError: false` and a `rows` entry with `session` `S-garden-mcp`, `expected` `60/60`, `actual` `60/60` and `met` true.
+   - Expect `isError: false` and a `rows` entry with `session` `S-garden-mcp`, `expected` `60/60`, `actual` `<IARL_PASSED>/<IARL_TOTAL>` and `met` true only when `<IARL_TOTAL>` is 60 and `<IARL_PASSED>` is at least 60 (otherwise false).
 8. [J8.8] Run `node scripts/mcp-call.mjs --url <API_BASE>/mcp --token <TOKEN_C> call release_cut_close_session '{"session":"S-garden-mcp","note":"mcp done"}'`.
    - Expect `isError: false` and a result with `closeNote` `mcp done`.
 9. [J8.9] In a second browser session sign in as the member `member@test.local` (password `TestPass!2345`) at `/login`, open `/world`, click **Journeys**.
