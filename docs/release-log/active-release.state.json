@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T02:12:52.975Z",
+  "exportedAt": "2026-10-11T02:16:08.404Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -138,10 +138,10 @@
       "backlog": 4
     },
     "proficiency-live-qr": {
-      "status": "validate",
-      "lastRound": 7,
-      "lastScore": "30/32",
-      "lastReport": "docs/test-results/proficiency-live-qr/round-7.md",
+      "status": "triage",
+      "lastRound": 8,
+      "lastScore": "31/32",
+      "lastReport": ".claude/worktrees/wf_1486aefc-79d-1/docs/test-results/proficiency-live-qr/round-8.md",
       "openBugs": 18,
       "backlog": 6
     },
