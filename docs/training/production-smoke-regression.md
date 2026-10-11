@@ -118,10 +118,10 @@ The steps below are the suite's own, in the order `scripts/production-smoke.mjs`
 
 ## Edge cases
 
-- [E.1] The test account row exists but its role is not `member`: `POST /api/production-smoke/account` returns HTTP 409 `smoke_account_not_member` with "exists but is not a plain member, so it cannot be used as the test account. Nothing was changed.", and the screen shows that sentence in the red box.
+- [E.1] Precondition (validator's own throwaway test database only, never production): after creating the account, run `UPDATE users SET role='admin' WHERE email='smoke-member@test.saltbasin.invalid'` with psql. Then `POST /api/production-smoke/account` returns HTTP 409 `smoke_account_not_member` with "exists but is not a plain member, so it cannot be used as the test account. Nothing was changed.", and the screen shows that sentence in the red box.
 - [E.2] The profile address `smoke-test-member` already belongs to another member: the POST returns HTTP 409 `smoke_slug_taken` and changes nothing else.
 - [E.3] `POST /api/production-smoke/account` with no password while the account does not exist returns HTTP 400 `password_required` (this is what `production_smoke_account_ready` returns on a fresh database), and no account is created.
-- [E.4] The administrator used by the provisioning workflow has two-step sign-in: `scripts/provision-smoke-account.mjs` exits 2 and prints "The administrator account asks for an authenticator code, which this workflow cannot enter."
+- [E.4] Precondition (test database only): as that administrator, `POST /api/auth/totp/setup`, then `POST /api/auth/totp/enable` with the 6-digit code computed from the returned secret by `totpCode()` in `server/lib/totp.js`. Then `scripts/provision-smoke-account.mjs` exits 2 and prints "The administrator account asks for an authenticator code, which this workflow cannot enter."
 - [E.5] The site has not deployed this release yet: `scripts/provision-smoke-account.mjs` exits 1 and prints "This site does not have the production smoke account route yet (HTTP 404)."
 - [E.6] Production is unreachable: S1.1 fails and every other step, including `R2.1`, `R2.2` and `R2.3`, is `blocked` with the network error; the score counts none of them as passed.
 - [E.7] The suite never prints, stores in `report.json`, or commits `SMOKE_MEMBER_PASSWORD`, `SMOKE_ADMIN_PASSWORD` or the session cookie value: after Journey 5 step 1, `grep -c "Zk7!rivers" <OUT>/report.json` prints 0.

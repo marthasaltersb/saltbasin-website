@@ -1,0 +1,47 @@
+{
+  "id": "A1",
+  "feature": "production-smoke-regression",
+  "fromBaseline": 1,
+  "proposedBy": "triage:production-smoke-regression:r2",
+  "round": 2,
+  "triageItems": [
+    "production-smoke-regression-T2-2",
+    "production-smoke-regression-T2-4"
+  ],
+  "reason": "E.1 and E.4 name states (a non-member role on the smoke row; an administrator with two-step sign-in) that no interface creates, so a literal validator was blocked. The actions and expected results are reachable and correct; only the fixture instruction is missing.",
+  "changes": [
+    {
+      "op": "change",
+      "stepId": "E.1",
+      "before": "The test account row exists but its role is not `member`: `POST /api/production-smoke/account` returns HTTP 409 ...",
+      "after": "Precondition (validator's own throwaway test database only, never production): after creating the account, run `UPDATE users SET role='admin' WHERE email='smoke-member@test.saltbasin.invalid'` with psql. Then `POST /api/production-smoke/account` returns HTTP 409 ... (rest unchanged; screen checks at 1280px and 390px).",
+      "tracesTo": "Change spec: the route refuses (409) when the row is not a plain member; server/lib/smokeAccount.js readySmokeAccount.",
+      "whyNeeded": "The role fixture is only reachable through the database by design (nothing in the platform changes a role); the spec did not say how to build it."
+    },
+    {
+      "op": "change",
+      "stepId": "E.4",
+      "before": "The administrator used by the provisioning workflow has two-step sign-in: scripts/provision-smoke-account.mjs exits 2 and prints ...",
+      "after": "Precondition (test database only): as that administrator, POST /api/auth/totp/setup, then POST /api/auth/totp/enable with the 6-digit code computed from the returned secret by totpCode() in server/lib/totp.js. Then scripts/provision-smoke-account.mjs exits 2 and prints ... (rest unchanged).",
+      "tracesTo": "Change spec exit-code table for the provisioning script; server/routes/auth.js totp routes (lines 127, 134).",
+      "whyNeeded": "The state is reachable through the documented API; the spec did not say how. The missing enrollment screen is a separate pre-existing gap outside this feature."
+    }
+  ],
+  "review": {
+    "status": "approved",
+    "reviewer": "amend:production-smoke-regression:r2",
+    "checklist": {
+      "Traced: every added or changed step names the change-spec requirement or owner direction it proves (tracesTo).": "pass",
+      "Not weaker: a changed expected result is at least as strict as before, unless the evidence shows the old expectation contradicts the change spec or owner direction (then say which).": "pass: expected results are unchanged; only a precondition is added",
+      "Retire only duplicates: removing a step is approved only when another step tests the same thing (name it); any other removal is needs_owner.": "pass: nothing retired",
+      "Exact: action plus exact expected result (labels, text, values, counts); no 'should look right', no 'roughly'.": "pass: exact commands, role value, endpoints and helper named",
+      "Reachable: the step is walkable by point-and-click on desktop and at 390px (interfaceParity), or is a cli step by design.": "pass: both are cli/API steps by design (psql, curl, node); the E.1 screen check is unchanged and walkable at both widths",
+      "Deterministic: same result every run against the fixed constraints (no dependence on wall-clock time, random data, earlier failed steps, or leftovers from another test); timing tolerances are stated.": "pass: the fixture is fixed by the spec and does not depend on time or leftovers",
+      "Fictional data only; fixtures written in the spec, never fetched.": "pass: fictional email on the reserved .invalid domain, throwaway database only",
+      "Independent of the fix: the step tests behaviour, not the implementation the fixer chose.": "pass: tests the route's and the script's reaction to a state, not the implementation",
+      "Errors are plain and coloured by severity: any step that checks an error or warning requires the message to state the actual problem in plain words a member understands (no developer terms such as JSON, 500, null as the main message; technical detail may follow on its own line), and the colour that fits: red for a failure or a rejected input; amber only for a caution where nothing failed (owner direction 2026-10-10).": "pass: expected messages and the red box are unchanged"
+    },
+    "note": "Verified against server/lib/smokeAccount.js (409 smoke_account_not_member for any role other than member) and scripts/provision-smoke-account.mjs (exit 2 on challengeRequired). Both product behaviours are right as written; the round-2 failures for these steps were unbuildable preconditions. Observation only: the baseline lists these cli-style edge steps with surface desktop+mobile; that is existing and untouched here.",
+    "at": "2026-10-11T01:00:00.000Z"
+  }
+}

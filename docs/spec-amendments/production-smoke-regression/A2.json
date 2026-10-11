@@ -1,0 +1,38 @@
+{
+  "id": "A2",
+  "feature": "production-smoke-regression",
+  "fromBaseline": 1,
+  "proposedBy": "triage:production-smoke-regression:r2",
+  "round": 2,
+  "triageItems": [
+    "production-smoke-regression-C2-1"
+  ],
+  "reason": "Proposed new step E.2b: after the E.2 refusal the status card shows Not ready, not Not created, without a manual reload.",
+  "changes": [
+    {
+      "op": "add",
+      "stepId": "E.2b",
+      "before": "",
+      "after": "After the E.2 refusal, the screen's status card shows Not ready (not Not created) without a manual reload.",
+      "tracesTo": "Change spec: the status card reflects the account's real state.",
+      "whyNeeded": "The validator observed a stale card after a failed POST and no step covered it."
+    }
+  ],
+  "review": {
+    "status": "rejected",
+    "reviewer": "amend:production-smoke-regression:r2",
+    "checklist": {
+      "Traced: every added or changed step names the change-spec requirement or owner direction it proves (tracesTo).": "pass: traces to the change spec's rule that the card reflects real state",
+      "Not weaker: a changed expected result is at least as strict as before, unless the evidence shows the old expectation contradicts the change spec or owner direction (then say which).": "fail: expects Not ready, which contradicts the change spec; the fixed readySmokeAccount decides the slug refusal before any write (change spec lines 109 and 111), so on a fresh database the account does not exist after E.2 and the true state is Not created",
+      "Retire only duplicates: removing a step is approved only when another step tests the same thing (name it); any other removal is needs_owner.": "pass: nothing removed",
+      "Exact: action plus exact expected result (labels, text, values, counts); no 'should look right', no 'roughly'.": "fail: the fixture and ordering are unstated; the card text depends on whether the account row existed before E.2",
+      "Reachable: the step is walkable by point-and-click on desktop and at 390px (interfaceParity), or is a cli step by design.": "pass: the screen check is walkable at both widths",
+      "Deterministic: same result every run against the fixed constraints (no dependence on wall-clock time, random data, earlier failed steps, or leftovers from another test); timing tolerances are stated.": "fail: the result differs depending on whether the account already existed, a leftover from earlier steps",
+      "Fictional data only; fixtures written in the spec, never fetched.": "pass",
+      "Independent of the fix: the step tests behaviour, not the implementation the fixer chose.": "fail: the expected value came from the pre-fix behaviour the validator observed (defect T2-3), not from the requirement",
+      "Errors are plain and coloured by severity: any step that checks an error or warning requires the message to state the actual problem in plain words a member understands (no developer terms such as JSON, 500, null as the main message; technical detail may follow on its own line), and the colour that fits: red for a failure or a rejected input; amber only for a caution where nothing failed (owner direction 2026-10-10).": "pass: no error text is checked"
+    },
+    "note": "Rejected, not weakened. The requirement (the card shows the account's real state after a refusal, without a manual reload) is already implemented: the failure path in ProductionSmokePanel.jsx calls load(). The step as written would assert the buggy pre-fix outcome. The slug-taken defect itself is T2-3 and goes to the fix loop; E.2 as written already covers 'changes nothing else'. If stale-card behaviour should be covered, a new proposal must state the fixture and the true state it expects (Not created when no row exists; Not ready when a row exists with a problem).",
+    "at": "2026-10-11T01:00:00.000Z"
+  }
+}
