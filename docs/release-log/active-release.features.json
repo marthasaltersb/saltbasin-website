@@ -518,7 +518,8 @@
           "decidedBy": "owner",
           "reason": "Owner request 2026-10-10: import process flows for the existing workflows in Salt Basin to show how a published process flow links to the existing working workflows and user experience states today."
         }
-      ]
+      ],
+      "salvage": "branch release-loop/journey-flow-import-existing-build (commit 2670621, 12 files of partial importer work). Merge it into your worktree first, then finish and initial-check."
     },
     {
       "key": "single-experience-world-shell",
@@ -543,7 +544,8 @@
           "decidedBy": "owner",
           "reason": "Owner direction 2026-10-11: there should be no Classic Tools; one user experience whose layers all start from the same view and display dynamically based on the logged-in viewer. Also answers owner-error-messages B5 (Methodology Config gets a World Shell layer with a phone walkthrough, not an exception)."
         }
-      ]
+      ],
+      "salvage": "branch release-loop/single-experience-world-shell-build (commit 60f456f, 61 files of partial work: inventory and layers in progress). Merge it into your worktree first, then finish and initial-check."
     },
     {
       "key": "core-platform-definition-studio",
