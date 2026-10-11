@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T01:19:10.075Z",
+  "exportedAt": "2026-10-11T01:22:15.986Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -98,7 +98,7 @@
       "backlog": 0
     },
     "graphify-data-model-map": {
-      "status": "fix",
+      "status": "reconcile",
       "lastRound": 1,
       "lastScore": "59/60",
       "lastReport": "docs/test-results/graphify-data-model-map/round-1.md",
@@ -1582,9 +1582,9 @@
     {
       "id": "graphify-data-model-map-B6",
       "feature": "graphify-data-model-map",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "owner_direction_conflict",
-      "attempts": 0,
+      "attempts": 1,
       "step": "J6.11/J6.12, island, routes",
       "rootCause": "Copied render-bindings admin-only pattern instead of permission-based provisioning",
       "files": [
@@ -1603,15 +1603,21 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Gated the map by datamodel.read/write permissions (admins h…",
+          "commit": "edca3104519700c0b204d0d462cffbd712b1887b"
         }
       ]
     },
     {
       "id": "graphify-data-model-map-B7",
       "feature": "graphify-data-model-map",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "product_defect",
-      "attempts": 0,
+      "attempts": 1,
       "step": "journey-flow picker",
       "rootCause": "getRules() unconditionally imports db.js; change spec says catalog reading needs no database",
       "files": [
@@ -1628,13 +1634,19 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "getRules() catches DB unavailability and falls back to ship…",
+          "commit": "edca3104519700c0b204d0d462cffbd712b1887b"
         }
       ]
     },
     {
       "id": "graphify-data-model-map-B8",
       "feature": "graphify-data-model-map",
-      "status": "fixing",
+      "status": "open",
       "class": "process",
       "attempts": 0,
       "step": "baseline freeze",
@@ -1653,15 +1665,21 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "not_fixed",
+          "note": "Baseline freeze is the integrator's step (merge, release-sp…",
+          "commit": null
         }
       ]
     },
     {
       "id": "graphify-data-model-map-B9",
       "feature": "graphify-data-model-map",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "requirement_gap",
-      "attempts": 0,
+      "attempts": 1,
       "step": "known limitation: code graph",
       "rootCause": "Scope trimmed to table-level view",
       "files": [
@@ -1679,15 +1697,21 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "Added code-module view: codeModules() from graph.json, GET …",
+          "commit": "edca3104519700c0b204d0d462cffbd712b1887b"
         }
       ]
     },
     {
       "id": "graphify-data-model-map-B10",
       "feature": "graphify-data-model-map",
-      "status": "fixing",
+      "status": "fixed_awaiting_retest",
       "class": "informational",
-      "attempts": 0,
+      "attempts": 1,
       "step": "CLAUDE.md note",
       "rootCause": "CLAUDE.md not updated",
       "files": [
@@ -1704,13 +1728,19 @@
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
           "commit": null
+        },
+        {
+          "round": 1,
+          "event": "fixed",
+          "note": "CLAUDE.md organization_profiles ordering note now says it n…",
+          "commit": "edca3104519700c0b204d0d462cffbd712b1887b"
         }
       ]
     },
     {
       "id": "graphify-data-model-map-r1-1",
       "feature": "graphify-data-model-map",
-      "status": "fixing",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "AMBIGUOUS: spec says the breadcrumb reads 'Sun › Journeys › Data model map' at both widths, but at 390px the shared World Shell breadcrumb collapses to '… › Da…",
