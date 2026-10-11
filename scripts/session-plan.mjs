@@ -42,7 +42,7 @@ try {
     const s = opt('--session') || fail('--session is required');
     const out = rc.recordEstimate({ session: s, intent: opt('--intent'), items: opts('--item').map(parseItem), reestimate: opt('--reestimate') });
     const items = out.reEstimated ? out.session.reEstimates[out.session.reEstimates.length - 1].items : out.session.estimate.items;
-    for (const it of items.filter((x) => x.outOfScope)) console.error(`Note: ${it.feature} is in the backlog of release ${out.session.release}, not its planned work; recorded as outOfScope.`);
+    for (const it of items.filter((x) => x.outOfScope)) console.error(`Note: ${it.feature} is in the backlog of release ${out.session.release}${it.addedAfterCut ? ' (added after the cut)' : ''}, not its planned work; recorded as outOfScope.`);
     console.log(out.reEstimated ? `Re-estimate recorded for ${s} (original kept).` : `Estimate recorded for ${s}: ${out.session.estimate.items.length} item(s) in release ${out.session.release}.`);
   } else if (cmd === 'merge') {
     const s = opt('--session') || fail('--session is required');
