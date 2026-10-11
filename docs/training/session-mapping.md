@@ -111,7 +111,7 @@ Run the whole spec once per surface. Before the phone run, reset to a fresh data
 
 Run these in order, after Journey 10, in the same browser session.
 
-- [E.1] **Import** -> in **Analysis JSON** type `{not json` and click **File analysis**. Expect a red message starting **The analysis is not valid JSON:** (HTTP 400); nothing is filed.
+- [E.1] **Import** -> in **Analysis JSON** type `{not json` and click **File analysis**. Expect a red message starting **The analysis could not be read because part of its text is mistyped or missing.** followed by a second line starting **Technical detail:** (HTTP 400); nothing is filed.
 - [E.2] In **Analysis JSON** type `{"sourceKey":"claude_code:x"}` and click **File analysis**. Expect the red message **The analysis needs a "tokens" object with input, cacheWrite, cacheRead and output** (HTTP 400).
 - [E.3] In **Paste a transcript** type `bad-lines` in **Session name** and `not json` in **Main session transcript**, click **Analyze and file**. Expect the red message **No assistant messages with token usage were found (1 line could not be read as JSON)** (HTTP 400).
 - [E.4] Clear **Session name** and click **Analyze and file**. Expect the red message **Give a session id (any short name, for example the transcript file name)** (HTTP 400).
