@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T02:29:07.135Z",
+  "exportedAt": "2026-10-11T02:32:24.019Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -74,12 +74,12 @@
       "backlog": 10
     },
     "release-scope": {
-      "status": "scope",
+      "status": "fix",
       "lastRound": 4,
       "lastScore": "25/27",
       "lastReport": "docs/test-results/release-scope/round-4.md",
-      "openBugs": 16,
-      "backlog": 1
+      "openBugs": 15,
+      "backlog": 2
     },
     "journey-flow-studio": {
       "status": "failing",
@@ -1716,7 +1716,7 @@
     {
       "id": "release-scope-F1-3",
       "feature": "release-scope",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "J5.5 / interface parity",
@@ -1739,7 +1739,7 @@
     {
       "id": "release-scope-F1-4",
       "feature": "release-scope",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Interface parity",
@@ -1762,7 +1762,7 @@
     {
       "id": "release-scope-F1-5",
       "feature": "release-scope",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "integrate",
@@ -1783,7 +1783,7 @@
     {
       "id": "release-scope-F1-6",
       "feature": "release-scope",
-      "status": "open",
+      "status": "fixing",
       "class": "informational",
       "attempts": 0,
       "step": "sync",
@@ -1804,7 +1804,7 @@
     {
       "id": "release-scope-F1-7",
       "feature": "release-scope",
-      "status": "open",
+      "status": "fixing",
       "class": "informational",
       "attempts": 0,
       "step": "J5.5",
@@ -1823,7 +1823,7 @@
     {
       "id": "release-scope-F2-3",
       "feature": "release-scope",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Interface parity (spec)",
@@ -1849,7 +1849,7 @@
     {
       "id": "release-scope-F2-4",
       "feature": "release-scope",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "Docs",
@@ -1897,7 +1897,7 @@
     {
       "id": "release-scope-F3-4",
       "feature": "release-scope",
-      "status": "open",
+      "status": "fixing",
       "class": "requirement_gap",
       "attempts": 0,
       "step": "Change scope from card/API/MCP on a deployed server",
@@ -1907,7 +1907,11 @@
         "src/components/releaseTracker/ScopeCard.jsx",
         "docs/changes/release-scope.md"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "releaseScopeChange.js and ScopeCard.jsx were created by 8d80080 (release-scope fix r3) an…"
+      },
       "history": [
         {
           "round": 3,
@@ -1920,7 +1924,7 @@
     {
       "id": "release-scope-F3-5",
       "feature": "release-scope",
-      "status": "open",
+      "status": "fixing",
       "class": "owner_direction_conflict",
       "attempts": 0,
       "step": "Move a feature's scope",
@@ -1930,7 +1934,11 @@
         "server/routes/releaseTracker.js",
         "server/lib/releaseScopeChange.js"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The scope-change surface was added by 8d80080 with no impact preview or approval step, wh…"
+      },
       "history": [
         {
           "round": 3,
@@ -1943,7 +1951,7 @@
     {
       "id": "release-scope-F3-6",
       "feature": "release-scope",
-      "status": "open",
+      "status": "fixing",
       "class": "process",
       "attempts": 0,
       "step": "Docs",
@@ -1951,7 +1959,11 @@
       "files": [
         "CLAUDE.md"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The CLAUDE.md release-scope paragraph still says scope has no screen or MCP tool, which s…"
+      },
       "history": [
         {
           "round": 3,
@@ -1964,7 +1976,7 @@
     {
       "id": "release-scope-F3-7",
       "feature": "release-scope",
-      "status": "open",
+      "status": "fixing",
       "class": "product_defect",
       "attempts": 0,
       "step": "Unknown/duplicate key via API or MCP",
@@ -1972,7 +1984,11 @@
       "files": [
         "server/lib/releaseScopeChange.js"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The shared messages in releaseScopeChange.js were written for the CLI in 8d80080 and are …"
+      },
       "history": [
         {
           "round": 3,
@@ -1985,15 +2001,17 @@
     {
       "id": "release-scope-F3-8",
       "feature": "release-scope",
-      "status": "open",
+      "status": "backlog_pre_existing",
       "class": "informational",
       "attempts": 0,
       "step": "release-tracker-sync snapshot",
-      "rootCause": "stored() ignores split tracker/bugs and bugs-2",
-      "files": [
-        "scripts/release-tracker-sync.mjs"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 3,
@@ -2035,7 +2053,7 @@
     {
       "id": "release-scope-T2-1",
       "feature": "release-scope",
-      "status": "open",
+      "status": "fixing",
       "class": "spec_error",
       "attempts": 0,
       "step": "J3.1 no qr-gated-outputs file",
@@ -2060,7 +2078,7 @@
     {
       "id": "release-scope-T2-2",
       "feature": "release-scope",
-      "status": "open",
+      "status": "fixing",
       "class": "spec_error",
       "attempts": 0,
       "step": "J3.2 no 'Not launched' line (ambiguous)",
@@ -2143,7 +2161,7 @@
     {
       "id": "release-scope-T2-5",
       "feature": "release-scope",
-      "status": "recurred",
+      "status": "fixing",
       "class": "spec_error",
       "attempts": 0,
       "step": "J5.3 Added-after-the-cut notes date",
@@ -2155,7 +2173,7 @@
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "TrackerLayers.jsx correctly renders one note per added entry (9 now: 6 counted, 3 backlog…"
+        "evidence": "TrackerLayers.jsx correctly shows each entry's own added.at date; J5.3 hardcodes 'added 2…"
       },
       "history": [
         {
@@ -2175,7 +2193,7 @@
     {
       "id": "release-scope-R4-1",
       "feature": "release-scope",
-      "status": "open",
+      "status": "fixing",
       "class": "spec_error",
       "attempts": 0,
       "step": "J2.7 MCP set_scope with TOKEN_A",
@@ -2185,7 +2203,11 @@
         "server/lib/mcpServer.js",
         "docs/training/release-scope.md"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "release_tracker_set_scope was added by fix r3 (8d80080) and correctly requires release.wr…"
+      },
       "history": [
         {
           "round": 4,
