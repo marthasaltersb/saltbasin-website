@@ -1,0 +1,13 @@
+# Reconciliation: release-scope, fix round 2 (branch release-loop/release-scope-fix-r2, head 9854310)
+
+1. J5.1 not re-walked in a browser (informational, resolved for the parity fix; browser walk still owed by the validator).
+   Checked: `git diff` against integration shows no change to the paste UI or `server/routes/releaseTracker.js`. `node scripts/check-interface-parity.mjs` and `--strict` both report 121 of 121, 0 UI/MCP/API gaps, 214 tools registered = 214 in the manifest. The seven admin tools (`release_tracker_ingest_snapshot`, `_list_snapshots`, `_pull_now`, `_get_settings`, `_save_settings`, `_create_token`, `_revoke_token`) are in `mcpToolRegistry.js` (lines ~903-931) and the manifest. The next validation round must still execute J5.1 in the browser.
+2. Fake release key made reconciliation print "needs a date" (informational, resolved). Source: `server/lib/releaseLogImporter.js:43` rejects a key without a leading YYYY-MM-DD. This was an input artifact of the check, not a defect. Snapshot was stored; DB dropped.
+
+Gaps missed by the reported failures:
+- Change spec "Interface parity" gap: no platform screen or MCP tool changes a feature's scope (only `scripts/release-scope.mjs`). The spec calls it a gap for the owner. requirement_gap, unresolved (carried from round 1). Files: `scripts/release-scope.mjs`, `server/lib/capabilityParity.js`. Proposed fix: owner decides; either build an admin action under World Shell > Release tracker plus API route plus MCP tool calling one shared function that appends `scopeHistory` (needs decider and reason), or record an explicit `uiExclusion`/`mcpExclusion` on a parity row. Do not add admin-navigation entry points.
+- Change spec text is stale (process, unresolved): `docs/changes/release-scope.md` "Interface parity" still says the other tracker tools "remain unregistered (parity gap row release-tracker-admin)", but round 2 registered them and removed that gap. Fix: a docs-only correction (docs/changes is not a frozen training spec).
+- Known limitation: `stored()` budget check in `scripts/release-tracker-sync.mjs` measures all bugs as one document although split across `tracker/bugs` and `bugs-2`. Pre-existing, unchanged: informational (requirement_gap only if the owner wants it fixed).
+- Branch divergence: integration is not an ancestor of the branch, but `git merge-tree --write-tree` against `claude/zealous-meitner-5tuft5` merges cleanly (no conflicts). Re-run parity after merge. Informational, resolved.
+- J5.5 was verified only against an empty local snapshot in round 1 and J5.1/J5.5 with data not re-run in round 2: informational; validator should run with the seeded fixture.
+- Owner-direction check: no admin-navigation entry points or admin-only journeys added; no conflict.
