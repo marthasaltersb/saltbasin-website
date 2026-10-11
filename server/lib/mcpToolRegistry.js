@@ -928,6 +928,12 @@ const CORE_TOOLS = [
           if (args.kind === 'share') { const { assertReadyToFinalize } = await import('./finalizationGates.js'); await assertReadyToFinalize(user.id); }
           return (await rt()).createToken({ kind: args.kind, releaseKey: args.releaseKey, label: args.label, actor: user });
         }),
+      adm('release_tracker_list_ingest_log', 'Read the release tracker ingest log', 'Recent ingest attempts (stored, duplicate, refused), newest first. Same as GET /api/release-tracker/ingest-log.',
+        { limit: { type: 'integer', minimum: 1, maximum: 200, description: 'Optional maximum.' } }, [], 'GET /api/release-tracker/ingest-log',
+        async (args) => ({ log: await (await rt()).listIngestLog(args.limit) }), 'release.read'),
+      adm('release_tracker_webhook_secret', 'Generate or clear the tracker webhook secret', 'Generates a new repository webhook secret (returned once) or, with clear true, removes it. Same as POST /api/release-tracker/settings/webhook-secret.',
+        { clear: { type: 'boolean', description: 'True to remove the secret instead of generating one.' } }, [], 'POST /api/release-tracker/settings/webhook-secret',
+        async (args) => { const m = await rt(); if (args.clear) { await m.setWebhookSecret(null); return { cleared: true }; } return { secret: await m.generateWebhookSecret() }; }),
       adm('release_tracker_revoke_token', 'Revoke a tracker token', 'Revokes an ingest or share token. Same as DELETE /api/release-tracker/tokens/:id.',
         { tokenId: id('The token id.') }, ['tokenId'], 'DELETE /api/release-tracker/tokens/:id',
         async (args, { user }) => (await rt()).revokeToken(Number(args.tokenId), user)),

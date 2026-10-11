@@ -20,6 +20,8 @@
     "release_tracker_save_settings",
     "release_tracker_create_token",
     "release_tracker_revoke_token",
+    "release_tracker_list_ingest_log",
+    "release_tracker_webhook_secret",
     "resume_rollups_read",
     "resume_rollup_preview",
     "career_atom_rollups_read",
