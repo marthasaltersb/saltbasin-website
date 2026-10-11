@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T01:34:49.526Z",
+  "exportedAt": "2026-10-11T01:37:57.703Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -58,12 +58,12 @@
       "backlog": 0
     },
     "resume-rollups": {
-      "status": "validate",
-      "lastRound": 4,
-      "lastScore": "30/32",
-      "lastReport": "docs/test-results/resume-rollups/round-4.md",
-      "openBugs": 21,
-      "backlog": 6
+      "status": "passed",
+      "lastRound": 5,
+      "lastScore": "32/32",
+      "lastReport": "docs/test-results/resume-rollups/round-5.md",
+      "openBugs": 19,
+      "backlog": 5
     },
     "cover-letter-agent": {
       "status": "failed",
@@ -1198,7 +1198,7 @@
     {
       "id": "resume-rollups-B11",
       "feature": "resume-rollups",
-      "status": "backlog_pre_existing",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
       "step": "MOBILE_GAP: output tile grid unreadable at 390px",
@@ -1212,39 +1212,43 @@
       "history": [
         {
           "round": 4,
-          "event": "found",
-          "note": "The Executive Summary tile grid hardcodes six columns with …",
-          "commit": null
-        },
-        {
-          "round": 4,
           "event": "fixed",
           "note": "Replaced the hardcoded six-column tile grid with repeat(aut…",
           "commit": "0ab0050d03eb1748a6defd88cfc4cdcab63af6a6"
+        },
+        {
+          "round": 5,
+          "event": "verified",
+          "note": "Retest round 5 passed every step",
+          "commit": "70535bf"
         }
       ]
     },
     {
       "id": "resume-rollups-RR2-2",
       "feature": "resume-rollups",
-      "status": "open",
+      "status": "verified",
       "class": "spec_error",
       "attempts": 0,
       "step": "AMBIGUOUS: empty Career Master shows every tile as — with a reason",
-      "rootCause": "Product behaviour matches the change spec. server/lib/resumeRollups.js (header lines 16-19 and case 'manual' at lines 317-320) returns the …",
-      "files": [
-        "docs/training/resume-rollups.md"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Spec step E.3 in this feature's own training spec contradicts its documented manual-metri…"
+        "evidence": null
       },
       "history": [
         {
           "round": 4,
           "event": "found",
           "note": "Product behaviour matches the change spec. server/lib/resum…",
+          "commit": null
+        },
+        {
+          "round": 5,
+          "event": "verified",
+          "note": "Retest round 5 passed every step of baseline v3, including …",
           "commit": null
         }
       ]
@@ -8892,24 +8896,28 @@
     {
       "id": "resume-rollups-RR1-2",
       "feature": "resume-rollups",
-      "status": "open",
+      "status": "verified",
       "class": "spec_error",
       "attempts": 0,
       "step": "Open /api/career/atom-rollups?owner=me in the browser",
-      "rootCause": "Product behaviour is correct (careerMaster.js:730 returns tools_by_wheel_bucket [] and the new grouping). The step itself is a typed API UR…",
-      "files": [
-        "docs/training/resume-rollups.md"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "Step is in docs/training/resume-rollups.md, added by 4f35fd4; spec error needing an amend…"
+        "evidence": null
       },
       "history": [
         {
           "round": 1,
           "event": "found",
           "note": "Product behaviour is correct (careerMaster.js:730 returns t…",
+          "commit": null
+        },
+        {
+          "round": 5,
+          "event": "verified",
+          "note": "Retest round 5 passed every step of baseline v3, including …",
           "commit": null
         }
       ]
