@@ -28,6 +28,14 @@ export const api = {
   getPlatformCapabilities: () => request('/api/platform/capabilities'),
   // After-session mapping + token/spend/time trends (admin): Sessions screen.
   getSessionMappingConfig: () => request('/api/session-mapping/config'),
+  // Definition Studio (2026-10-10) — the Composer interface; see server/routes/definitionStudio.js.
+  getDefinitionStudioWorkspaces: () => request('/api/definition-studio/workspaces'),
+  createDefinitionStudioProduct: (body) => request('/api/definition-studio/products', { method: 'POST', body: JSON.stringify(body) }),
+  getDefinitionStudioConfig: () => request('/api/definition-studio/config'),
+  saveDefinitionStudioConfig: (config, note) => request('/api/definition-studio/config', { method: 'PUT', body: JSON.stringify({ config, note }) }),
+  getDefinitionStudioDocuments: (workspace) => request(`/api/definition-studio/documents?workspace=${encodeURIComponent(workspace)}`),
+  getDefinitionStudioVersions: (workspace, key) => request(`/api/definition-studio/document/versions?workspace=${encodeURIComponent(workspace)}&key=${encodeURIComponent(key)}`),
+  restoreDefinitionStudioVersion: (workspace, key, version) => request('/api/definition-studio/document/restore', { method: 'POST', body: JSON.stringify({ workspace, key, version }) }),
   saveSessionMappingConfig: (rules) => request('/api/session-mapping/config', { method: 'PUT', body: JSON.stringify({ rules }) }),
   resetSessionMappingConfig: () => request('/api/session-mapping/config', { method: 'DELETE' }),
   listSessionAnalyses: () => request('/api/session-mapping/sessions'),

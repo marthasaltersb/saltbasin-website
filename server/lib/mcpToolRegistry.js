@@ -30,6 +30,8 @@ export const MCP_SCOPES = Object.freeze({
   'renderings.approve': 'Approve or reject a pending data change; settings (administrators only; runs the finalization gate)',
   'agent.runner.read': 'Read agent runner settings, the agent roster, runs, outputs, test plans and backlog seeds (administrators only)',
   'agent.runner.write': 'Prompt agents, stop runs, decide scope requests and proposals, change runner settings and move backlog seeds (administrators only)',
+  'definitions.read': 'Read Definition Studio workspaces, settings, saved documents and their versions (administrators only)',
+  'definitions.write': 'Create products, change Definition Studio settings, and save, remove or restore Studio documents (administrators only)',
 });
 
 const id = (description) => ({ type: 'integer', minimum: 1, description });
@@ -1084,7 +1086,50 @@ const CORE_TOOLS = [
 
 // Tools that run an existing website route's own handler in-process (see mcpRouteTools.js), appended after the
 // core tools. Append-only like everything above.
-export const MCP_TOOLS = Object.freeze([...CORE_TOOLS, ...ROUTE_TOOLS, ...RB_TOOLS]);
+/** Definition Studio tools (2026-10-10): same functions, validation, audit and error statuses as server/routes/definitionStudio.js; the admin check is the registry's permission. */
+const dsLib = () => import('./definitionStudio.js');
+const dsActor = (user) => ({ id: user.id, email: user.email, name: user.name, role: user.role });
+const dsWs = str('Workspace: "module:<moduleKey>" (e.g. module:resume_career) or "product:<apiName>". List them with definition_studio_workspaces.', { maxLength: 120 });
+const dsKey = str('Document key as the canvas stores it, e.g. flow:default or template:custom:my-flow-123.', { maxLength: 200 });
+const DS_TOOLS = [
+  rlTool('definition_studio_workspaces', 'List Definition Studio workspaces', 'Lists every Salt Basin module and every product composed in the Studio, each with its workspace key, id and API name.',
+    schema({}), 'definitions.read', 'GET /api/definition-studio/workspaces',
+    async () => ({ workspaces: await (await dsLib()).listWorkspaces() })),
+  rlTool('definition_studio_product_create', 'Create a product in the Definition Studio', 'Creates a new product (own L-number id, API name and workspace). It is not grantable to customers until added to the module list separately.',
+    schema({ name: str('Product name, under 80 characters.', { maxLength: 80 }), description: str('What the product is for (optional).', { maxLength: 500 }) }, ['name']),
+    'definitions.write', 'POST /api/definition-studio/products',
+    async (a, { user }) => ({ product: await (await dsLib()).createProduct(a, dsActor(user)) })),
+  rlTool('definition_studio_config', 'Read the Definition Studio settings', 'Returns the Studio settings (levels, shapes, step fields, option lists, geometry sizes), their version and history.',
+    schema({}), 'definitions.read', 'GET /api/definition-studio/config',
+    async () => (await dsLib()).getStudioConfig()),
+  rlTool('definition_studio_config_save', 'Save the Definition Studio settings', 'Saves a full settings object as the next version. Ids and API names are fixed; items can be switched off but not removed. A change note is required.',
+    schema({ config: rlObj('The complete settings object, as returned by definition_studio_config.'), note: str('What changed and why.', { maxLength: 500 }) }, ['config', 'note']),
+    'definitions.write', 'PUT /api/definition-studio/config',
+    async (a, { user }) => (await dsLib()).saveStudioConfig(a.config, a.note, dsActor(user))),
+  rlTool('definition_studio_documents_list', 'List saved Studio documents', 'Lists the documents saved in a workspace (working canvas, templates, clients, goals, vocabulary) with their current version.',
+    schema({ workspace: dsWs }, ['workspace']), 'definitions.read', 'GET /api/definition-studio/documents',
+    async (a) => ({ documents: await (await dsLib()).listDocuments(a.workspace) })),
+  rlTool('definition_studio_document_read', 'Read a Studio document', 'Returns one document\'s content (the canvas JSON as text), current or a given version.',
+    schema({ workspace: dsWs, key: dsKey, version: id('Version to read; omit for the current one.') }, ['workspace', 'key']),
+    'definitions.read', 'GET /api/definition-studio/document',
+    async (a) => ({ document: await (await dsLib()).readDocument(a.workspace, a.key, { version: a.version || null }) })),
+  rlTool('definition_studio_document_save', 'Save a Studio document', 'Saves document content (text, usually JSON in the canvas format). A note starts a new named version; without one, quick successive saves fold into one draft version.',
+    schema({ workspace: dsWs, key: dsKey, value: str('Document content as text (under 3.5 MB).'), note: str('Optional note marking a save point.', { maxLength: 500 }) }, ['workspace', 'key', 'value']),
+    'definitions.write', 'PUT /api/definition-studio/document',
+    async (a, { user }) => (await dsLib()).saveDocument(a.workspace, a.key, a.value, dsActor(user), { note: a.note || null })),
+  rlTool('definition_studio_document_delete', 'Remove a Studio document', 'Removes a document from the Studio. Every version is kept for audit and the document can be saved again.',
+    schema({ workspace: dsWs, key: dsKey }, ['workspace', 'key']), 'definitions.write', 'DELETE /api/definition-studio/document',
+    async (a, { user }) => (await dsLib()).deleteDocument(a.workspace, a.key, dsActor(user))),
+  rlTool('definition_studio_document_versions', 'List a Studio document\'s versions', 'Lists every version of a document, newest first, with notes, authors and dates.',
+    schema({ workspace: dsWs, key: dsKey }, ['workspace', 'key']), 'definitions.read', 'GET /api/definition-studio/document/versions',
+    async (a) => ({ versions: await (await dsLib()).listDocumentVersions(a.workspace, a.key) })),
+  rlTool('definition_studio_document_restore', 'Restore a Studio document version', 'Restores an earlier version by saving it as a new version with a note; history is never rewritten.',
+    schema({ workspace: dsWs, key: dsKey, version: id('Version to restore.') }, ['workspace', 'key', 'version']),
+    'definitions.write', 'POST /api/definition-studio/document/restore',
+    async (a, { user }) => (await dsLib()).restoreDocumentVersion(a.workspace, a.key, a.version, dsActor(user))),
+];
+
+export const MCP_TOOLS = Object.freeze([...CORE_TOOLS, ...ROUTE_TOOLS, ...RB_TOOLS, ...DS_TOOLS]);
 
 export const MCP_TOOL_NAMES = Object.freeze(MCP_TOOLS.map((t) => t.name));
 

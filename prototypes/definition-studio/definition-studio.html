@@ -1,0 +1,3476 @@
+<!DOCTYPE html>
+<!--
+  Salt Basin Definition Studio — canvas page.
+  Ported 2026-10-10 from Betsy's process flow builder prototype
+  (verbatim original: docs/baseline/intake/2026-10-10-process-flow-builder/process-flow-builder.html).
+  Served only through GET /api/definition-studio/canvas (admin-gated), which injects the Studio
+  configuration and workspace at the STUDIO_BOOT marker. Changes from the prototype are marked
+  "Definition Studio port". Opened as a plain file it falls back to the prototype's built-in defaults.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Salt Basin — Definition Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Jost:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#F8F4EC;
+    --parchment:#F1EBDD;
+    --parchment-deep:#ECE3D0;
+    --ink:#2B2A28;
+    --ink-soft:rgba(43,42,40,0.65);
+    --teal:#4A7C8E;
+    --teal-deep:#345A68;
+    --teal-tint:#DCE9EC;
+    --gold:#C4843A;
+    --gold-tint:#F3E3CE;
+    --pink:#D98CA0;
+    --pink-tint:#F7E4E9;
+    --line: rgba(43,42,40,0.1);
+    --lane-line: rgba(43,42,40,0.32);  /* deliberately distinct from teal/gold connector colors */
+    --r-sm:10px; --r-md:16px; --r-lg:24px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--cream); color:var(--ink);
+    font-family:'Jost', sans-serif; font-weight:300; line-height:1.5;
+  }
+  h1{font-family:'Fraunces', serif; font-weight:600;}
+  .mono{font-family:'JetBrains Mono', monospace;}
+  .eyebrow{
+    font-family:'Jost'; text-transform:uppercase; letter-spacing:0.22em;
+    font-size:0.66rem; color:var(--teal-deep); font-weight:500;
+  }
+
+  header.top{
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem;
+    padding:1.2rem 3vw; border-bottom:1px solid var(--line);
+    background:rgba(248,244,236,0.92); backdrop-filter:blur(10px);
+    position:sticky; top:0; z-index:30;
+  }
+  .mark{font-family:'Fraunces'; font-weight:600; font-size:1.05rem; display:flex; align-items:center; gap:0.5rem;}
+  .mark em{font-style:italic; color:var(--gold);}
+  .mark .star{color:var(--pink); font-size:0.68rem;}
+  .titleblock{text-align:center;}
+  .titleblock h1{font-size:clamp(1.15rem,2.2vw,1.5rem);}
+  .titleblock p{margin-top:0.2rem;}
+
+  /* ---------- VIEW BAR (Current State vs Future State) ---------- */
+  .view-bar{
+    display:flex; align-items:center; gap:0.9rem; flex-wrap:wrap;
+    padding:0.8rem 3vw; background:var(--ink); border-bottom:1px solid rgba(255,255,255,0.08);
+  }
+  .view-btn{
+    font-family:'Jost'; text-align:left; cursor:pointer; border-radius:12px; padding:0.55rem 1.1rem;
+    border:1.5px solid rgba(245,240,232,0.18); background:transparent; color:rgba(245,240,232,0.6);
+    display:flex; flex-direction:column; gap:0.1rem; transition:all .2s ease;
+  }
+  .view-btn-label{ font-family:'Fraunces'; font-weight:600; font-size:0.9rem; }
+  .view-btn-sub{ font-family:'JetBrains Mono'; font-size:0.6rem; letter-spacing:0.04em; opacity:0.85; }
+  .view-btn:hover{ border-color:rgba(245,240,232,0.4); color:var(--cream); }
+  .view-btn.active[data-view="current"]{ background:var(--teal-deep); border-color:var(--teal-deep); color:var(--cream); }
+  .view-btn.active[data-view="future"]{ background:var(--gold); border-color:var(--gold); color:var(--ink); }
+  .view-hint{ color:rgba(245,240,232,0.55); font-size:0.68rem; }
+
+  /* ---------- TOOLBAR ---------- */
+  .toolbar{
+    display:flex; gap:1.2rem; align-items:center; flex-wrap:wrap;
+    padding:0.9rem 3vw; border-bottom:1px solid var(--line); background:var(--parchment);
+  }
+  .shape-bar{
+    display:flex; gap:1.2rem; align-items:center; flex-wrap:wrap;
+    padding:0.7rem 3vw; border-bottom:1px solid rgba(196,132,58,0.3);
+    background:var(--gold-tint);
+    position:sticky; top:62px; z-index:25;
+  }
+  .tool-group{display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap;}
+  .tool-group .g-label{font-size:0.62rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--ink-soft); margin-right:0.2rem;}
+  .tool-btn{
+    font-family:'Jost'; font-size:0.74rem; padding:0.46rem 0.9rem; border-radius:20px;
+    border:1px solid var(--line); background:var(--cream); cursor:pointer; transition:all .2s;
+    display:flex; align-items:center; gap:0.4rem; color:var(--ink);
+  }
+  .tool-btn:hover{border-color:var(--gold);}
+  .tool-btn.active{background:var(--teal-deep); color:var(--cream); border-color:var(--teal-deep);}
+  .tool-btn.danger.active{background:#a15571; border-color:#a15571;}
+  .swatch-dot{width:9px; height:9px; border-radius:50%; display:inline-block;}
+  .swatch-diamond{width:8px; height:8px; display:inline-block; transform:rotate(45deg);}
+  .divider{width:1px; height:26px; background:var(--line);}
+  .status{font-size:0.7rem; color:var(--ink-soft); margin-left:auto;}
+  .status.ok{color:var(--teal-deep);}
+  select.tool-select{
+    font-family:'Jost'; font-size:0.74rem; padding:0.46rem 0.7rem; border-radius:20px;
+    border:1px solid var(--line); background:var(--cream); color:var(--ink); cursor:pointer;
+  }
+
+  /* ---------- CANVAS ---------- */
+  .canvas-wrap{ padding:1.6rem 3vw 3rem; }
+  .scenario-banner{
+    display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;
+    font-size:0.76rem; color:var(--teal-deep); background:var(--teal-tint);
+    border:1px solid rgba(74,124,142,0.35); border-radius:12px;
+    padding:0.55rem 0.9rem; margin-bottom:0.9rem;
+  }
+  .scenario-banner .count{
+    font-weight:600; background:var(--teal-deep); color:var(--cream);
+    border-radius:10px; padding:0.1rem 0.55rem; font-size:0.68rem;
+  }
+  .canvas{
+    position:relative; width:100%; height:66vh; min-height:460px;
+    background:
+      linear-gradient(var(--line) 1px, transparent 1px) 0 0/28px 28px,
+      linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0/28px 28px,
+      var(--cream);
+    border:1px solid var(--line); border-radius:var(--r-lg);
+    overflow:auto; cursor:crosshair;
+  }
+  .canvas.mode-select{cursor:default;}
+  .canvas-inner{ position:relative; min-width:100%; min-height:100%; }
+
+  .lane-h{
+    position:absolute; left:0; right:0; height:140px;
+    border-top:1.5px solid var(--lane-line); z-index:0;
+  }
+  .lane-h:first-child{border-top:none;}
+  .lane-label{
+    position:absolute; left:0; top:0; bottom:0; width:34px;
+    background:var(--teal-deep); color:var(--cream);
+    writing-mode:vertical-rl; transform:rotate(180deg);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Jost'; font-size:0.66rem; letter-spacing:0.05em; font-weight:500;
+    cursor:text; z-index:1; border-radius:0 8px 8px 0;
+  }
+  .lane-v{
+    position:absolute; top:0; bottom:0; width:220px;
+    border-left:1.5px solid var(--lane-line); z-index:0;
+  }
+  .lane-v:first-child{border-left:none;}
+  .lane-label-v{
+    position:absolute; top:0; left:0; right:0; height:26px;
+    background:var(--teal-deep); color:var(--cream);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Jost'; font-size:0.66rem; letter-spacing:0.05em; font-weight:500;
+    cursor:text; z-index:1; border-radius:0 0 8px 8px;
+  }
+  .lane-lock{
+    position:absolute; width:16px; height:16px; border-radius:50%;
+    background:var(--cream); display:flex; align-items:center; justify-content:center;
+    font-size:9px; cursor:pointer; z-index:2; box-shadow:0 1px 3px rgba(43,42,40,.4);
+  }
+
+  /* ---------- NODES (3D / extruded shape system) ---------- */
+  .node{
+    position:absolute; user-select:none; display:flex; align-items:center; justify-content:center;
+    text-align:center; font-family:'Jost'; font-size:0.78rem; font-weight:500; color:var(--ink);
+    cursor:grab; padding:0.35rem 0.55rem; line-height:1.22; z-index:2;
+  }
+  .node:active{cursor:grabbing;}
+
+  .node.step{
+    background:linear-gradient(160deg,#FFFDF9,var(--cream)); border-radius:12px; width:150px; height:64px;
+    box-shadow: 0 3px 0 #C7BC9E, 0 5px 0 #C7BC9E, 0 12px 18px -8px rgba(43,42,40,.38);
+    border:1px solid rgba(43,42,40,.08);
+  }
+  .node.step.exec-manual{
+    background:linear-gradient(160deg,#EAF2F4,var(--teal-tint)); border:2px solid var(--teal);
+    box-shadow: 0 3px 0 #274652, 0 5px 0 #274652, 0 12px 18px -8px rgba(52,90,104,.4);
+  }
+  .node.step.exec-automated{
+    background:linear-gradient(160deg,#FBEEDA,var(--gold-tint)); border:2px solid var(--gold);
+    box-shadow: 0 3px 0 #A06B2E, 0 5px 0 #A06B2E, 0 12px 18px -8px rgba(160,107,46,.4);
+  }
+  .node.step.exec-hybrid{
+    background:linear-gradient(90deg, var(--teal-tint) 0%, var(--teal-tint) 50%, var(--gold-tint) 50%, var(--gold-tint) 100%);
+    border:2px solid var(--ink);
+    box-shadow: 0 3px 0 #7a6a4a, 0 5px 0 #7a6a4a, 0 12px 18px -8px rgba(80,70,50,.4);
+  }
+  .node.step.exec-hybrid::before{
+    content:''; position:absolute; top:6px; bottom:6px; left:50%; width:1.5px;
+    background:rgba(43,42,40,0.28); transform:translateX(-50%); z-index:1;
+  }
+  .node.subprocess{
+    background:linear-gradient(160deg,#EAF2F4,var(--teal-tint)); border-radius:12px; width:172px; height:72px;
+    box-shadow: 0 3px 0 #9CB9C2, 0 5px 0 #9CB9C2, 0 12px 18px -8px rgba(52,90,104,.42);
+    border:2px solid var(--teal);
+  }
+  .node.subprocess::after{
+    content:'+'; position:absolute; bottom:5px; left:50%; transform:translateX(-50%);
+    width:16px; height:16px; border:1.4px solid var(--teal-deep); border-radius:4px;
+    display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--teal-deep); background:var(--cream);
+  }
+  .node.decision{
+    background:linear-gradient(160deg,#FBEEDA,var(--gold-tint)); width:118px; height:118px; border-radius:16px;
+    transform:rotate(45deg);
+    box-shadow: 0 3px 0 #A06B2E, 0 5px 0 #A06B2E, 0 12px 18px -8px rgba(160,107,46,.4);
+    border:2px solid var(--gold);
+  }
+  .node.decision .lbl{ transform:rotate(-45deg); width:84px; }
+  .node.parallel{
+    background:linear-gradient(160deg,#E1EEF0,var(--teal-tint)); width:110px; height:110px; border-radius:14px;
+    transform:rotate(45deg);
+    box-shadow: 0 3px 0 #274652, 0 5px 0 #274652, 0 12px 18px -8px rgba(39,70,82,.4);
+    border:2px solid var(--teal-deep);
+  }
+  .node.parallel .lbl{ transform:rotate(-45deg); width:80px; }
+  .node.parallel .lbl::before{ content:'+ '; font-weight:700; color:var(--teal-deep); }
+  .node.event{
+    background:radial-gradient(circle at 35% 30%, #FBE9EE, var(--pink-tint)); width:62px; height:62px; border-radius:50%;
+    box-shadow: 0 3px 0 #A15571, 0 5px 0 #A15571, 0 10px 16px -8px rgba(161,85,113,.42);
+    border:2px solid var(--pink); font-size:0.66rem;
+  }
+  .node.event.exec-manual{
+    background:radial-gradient(circle at 35% 30%, #EAF2F4, var(--teal-tint)); border:2px solid var(--teal);
+    box-shadow: 0 3px 0 #274652, 0 5px 0 #274652, 0 10px 16px -8px rgba(52,90,104,.4);
+  }
+  .node.event.exec-automated{
+    background:radial-gradient(circle at 35% 30%, #FBEEDA, var(--gold-tint)); border:2px solid var(--gold);
+    box-shadow: 0 3px 0 #A06B2E, 0 5px 0 #A06B2E, 0 10px 16px -8px rgba(160,107,46,.4);
+  }
+  .node.event.exec-hybrid{
+    background:linear-gradient(90deg, var(--teal-tint) 0%, var(--teal-tint) 50%, var(--gold-tint) 50%, var(--gold-tint) 100%);
+    border:2px solid var(--ink);
+    box-shadow: 0 3px 0 #7a6a4a, 0 5px 0 #7a6a4a, 0 10px 16px -8px rgba(80,70,50,.4);
+  }
+  .event-icon{
+    position:absolute; top:7px; left:50%; transform:translateX(-50%);
+    font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--ink); z-index:2; pointer-events:none; line-height:1;
+  }
+  .node.data{
+    background:linear-gradient(160deg,#FBEEDA,var(--gold-tint)); width:120px; height:56px;
+    clip-path: polygon(0 0, 82% 0, 100% 30%, 100% 100%, 0 100%);
+    box-shadow: 0 3px 0 #A06B2E, 0 5px 0 #A06B2E, 0 10px 16px -8px rgba(160,107,46,.36);
+    font-size:0.7rem;
+  }
+  .node.terminal{
+    background:linear-gradient(160deg,#3E6577,var(--teal-deep)); color:var(--cream); border-radius:999px; width:128px; height:52px;
+    box-shadow: 0 3px 0 #1E2F3B, 0 5px 0 #1E2F3B, 0 12px 18px -8px rgba(27,42,59,.5);
+  }
+  .node.selected{ outline:2px solid var(--gold); outline-offset:3px; }
+  .node.pending{ outline:2px dashed var(--teal); outline-offset:3px; }
+  .node.configurable{ cursor:pointer; }
+  .node.dimmed{ opacity:0.28; }
+  .node.l2-inherited{ outline:2px dashed var(--teal-deep); outline-offset:4px; }
+  .edge-line.dimmed, .edge-label-bg.dimmed, .edge-label-text.dimmed{ opacity:0.22; }
+  .scenario-chip{
+    position:absolute; top:-4px; left:-4px; width:12px; height:12px; border-radius:50%;
+    background:var(--pink); border:2px solid var(--cream); z-index:3;
+    box-shadow:0 2px 4px rgba(43,42,40,.3);
+  }
+  .node .lbl{ outline:none; }
+  .node .lbl:focus{ background:rgba(255,255,255,0.55); border-radius:4px; }
+  .meta-dot{
+    position:absolute; top:-4px; right:-4px; width:12px; height:12px; border-radius:50%;
+    background:var(--gold); border:2px solid var(--cream); z-index:3;
+    box-shadow:0 2px 4px rgba(43,42,40,.3);
+  }
+  .meta-dot.pain{ background:#a15571; }
+  .badge-auto{
+    position:absolute; bottom:-4px; left:-4px; width:13px; height:13px; border-radius:3px;
+    border:2px solid var(--cream); z-index:3; box-shadow:0 2px 4px rgba(43,42,40,.3);
+  }
+  .badge-auto.manual{ background:var(--teal); }
+  .badge-auto.automated{ background:var(--gold); }
+  .badge-auto.hybrid{ background:linear-gradient(90deg, var(--teal) 50%, var(--gold) 50%); }
+  .badge-parallel{
+    position:absolute; bottom:-6px; right:-4px; width:0; height:0;
+    border-left:6px solid transparent; border-right:6px solid transparent; border-bottom:11px solid var(--pink);
+    z-index:3; filter:drop-shadow(0 2px 3px rgba(43,42,40,.35));
+  }
+  .gap-badge{
+    position:absolute; top:-9px; left:50%; transform:translateX(-50%);
+    background:#a15571; color:var(--cream); font-family:'JetBrains Mono',monospace;
+    font-size:8px; font-weight:600; letter-spacing:0.06em; padding:2px 7px; border-radius:8px;
+    white-space:nowrap; z-index:4; box-shadow:0 2px 5px rgba(43,42,40,.35);
+  }
+  .step-number{
+    position:absolute; left:-14px; top:50%; transform:translateY(-50%);
+    width:22px; height:22px; border-radius:50%; background:var(--ink); color:var(--cream);
+    display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace;
+    font-size:10px; font-weight:600; z-index:4; box-shadow:0 2px 5px rgba(43,42,40,.35);
+  }
+  .step-number-parallel{ background:var(--teal-deep); width:auto; min-width:22px; padding:0 4px; border-radius:11px; }
+
+  /* ---------- INSPECTOR PANEL ---------- */
+  .inspector-backdrop{
+    position:fixed; inset:0; background:rgba(43,42,40,0.28); z-index:98;
+    opacity:0; pointer-events:none; transition:opacity .25s ease;
+  }
+  .inspector-backdrop.open{ opacity:1; pointer-events:auto; }
+
+  /* ---------- MODAL (confirm / prompt replacement) ---------- */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(43,42,40,0.4); z-index:198;
+    opacity:0; pointer-events:none; transition:opacity .2s ease;
+  }
+  .modal-backdrop.open{ opacity:1; pointer-events:auto; }
+  .modal-box{
+    position:fixed; top:50%; left:50%; transform:translate(-50%,-46%);
+    width:min(420px, 88vw); background:var(--cream); border-radius:var(--r-lg);
+    box-shadow:0 24px 60px -20px rgba(43,42,40,.5); padding:1.5rem;
+    z-index:199; opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease;
+  }
+  .modal-box.open{ opacity:1; pointer-events:auto; transform:translate(-50%,-50%); }
+  .modal-message{ font-size:0.88rem; line-height:1.5; margin-bottom:1rem; }
+  #modalInput{
+    width:100%; font-family:'Jost'; font-size:0.85rem; border:1px solid var(--line);
+    border-radius:10px; padding:0.6rem 0.7rem; margin-bottom:1rem;
+  }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:0.6rem; }
+
+  /* ---------- INDUSTRY MAP OVERLAY ---------- */
+  .map-overlay{
+    position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:min(920px, 92vw); height:min(640px, 84vh);
+    background:var(--cream); border-radius:var(--r-lg);
+    box-shadow:0 24px 70px -20px rgba(43,42,40,.55);
+    z-index:199; opacity:0; pointer-events:none; transition:opacity .2s ease;
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .map-overlay.open{ opacity:1; pointer-events:auto; }
+  .map-head{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:1rem 1.4rem; border-bottom:1px solid var(--line);
+  }
+  .map-head h3{ font-family:'Fraunces'; font-size:1.1rem; }
+  .map-body{ flex:1; overflow:auto; background:
+      linear-gradient(var(--line) 1px, transparent 1px) 0 0/28px 28px,
+      linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0/28px 28px, var(--cream); }
+  .modal-choices{ display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1rem; }
+  .modal-choice-btn{
+    width:100%; text-align:left; font-family:'Jost'; font-size:0.82rem; color:var(--ink);
+    background:var(--parchment); border:1px solid var(--line); border-radius:12px;
+    padding:0.65rem 0.9rem; cursor:pointer; transition:all .15s ease;
+  }
+  .modal-choice-btn:hover{ border-color:var(--teal-deep); background:var(--teal-tint); }
+  .modal-choice-btn .sub{ display:block; font-size:0.68rem; color:var(--ink-soft); margin-top:0.15rem; }
+
+  .inspector{
+    position:fixed; top:0; right:0; bottom:0; width:min(440px, 92vw);
+    background:var(--cream); border-left:1px solid var(--line);
+    box-shadow:-16px 0 40px -20px rgba(43,42,40,.4);
+    z-index:99; transform:translateX(100%); transition:transform .28s ease;
+    display:flex; flex-direction:column;
+  }
+  .inspector.open{ transform:translateX(0); }
+  .inspector-head{
+    display:flex; justify-content:space-between; align-items:flex-start; gap:0.6rem;
+    padding:1.3rem 1.4rem 1rem; border-bottom:1px solid var(--line);
+  }
+  .inspector-scenario-banner{
+    font-size:0.68rem; padding:0.55rem 1.4rem; background:var(--gold-tint); color:#8a5a26;
+    border-bottom:1px solid var(--line); display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;
+  }
+  .inspector-scenario-banner button{
+    font-family:'Jost'; font-size:0.66rem; padding:0.2rem 0.6rem; border-radius:10px; border:1px solid #8a5a26;
+    background:transparent; color:#8a5a26; cursor:pointer;
+  }
+  .inspector-head h3{ font-family:'Fraunces'; font-size:1.2rem; margin-top:0.15rem; }
+  .inspector-body{ flex:1; overflow-y:auto; padding:1rem 1.4rem 1.4rem; }
+  .field{ margin-bottom:1rem; }
+  .field label{
+    display:block; font-size:0.66rem; text-transform:uppercase; letter-spacing:0.08em;
+    color:var(--teal-deep); font-weight:500; margin-bottom:0.3rem;
+  }
+  .field .hint-sm{ font-size:0.68rem; color:var(--ink-soft); font-weight:400; text-transform:none; letter-spacing:0; display:block; margin-top:0.15rem; }
+  .field input, .field textarea, .field select{
+    width:100%; font-family:'Jost', sans-serif; font-size:0.82rem; color:var(--ink);
+    background:var(--paper,#FFFDF8); border:1px solid var(--line); border-radius:10px;
+    padding:0.6rem 0.7rem; resize:vertical;
+  }
+  .field textarea{ min-height:56px; }
+  .field-section{
+    font-family:'JetBrains Mono'; font-size:0.66rem; letter-spacing:0.12em; text-transform:uppercase;
+    color:var(--gold); margin:1.3rem 0 0.6rem; padding-top:0.9rem; border-top:1px solid var(--line);
+  }
+  .field-section:first-child{ margin-top:0; padding-top:0; border-top:none; }
+  .inspector-foot{
+    display:flex; align-items:center; gap:0.7rem; flex-wrap:wrap;
+    padding:0.9rem 1.4rem; border-top:1px solid var(--line); background:var(--parchment);
+  }
+
+  svg.edges{ position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; }
+  .edge-hit{ pointer-events:stroke; cursor:pointer; }
+
+  .hint{ margin:0.9rem 3vw 0; font-size:0.76rem; color:var(--ink-soft); }
+
+  footer{
+    text-align:center; padding:1.4rem 3vw 2.4rem; font-size:0.7rem; color:var(--ink-soft);
+    border-top:1px solid var(--line);
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!--STUDIO_BOOT-->
+<script>
+/* Definition Studio port: platform bridge. Every save goes to the Salt Basin database as a versioned
+   document in this workspace (module or product); nothing is kept only in this browser. */
+(function(){
+  const BOOT = window.__STUDIO_BOOT__ || null;
+  window.STUDIO = { boot: BOOT, api: BOOT ? BOOT.apiBase : null, workspace: BOOT ? BOOT.workspace : null, config: BOOT ? BOOT.config : null };
+  if(!BOOT) return;
+  const ws = BOOT.workspace.workspaceKey;
+  const enc = encodeURIComponent;
+  let pill = null, pendingPill = null;
+  function show(text, kind){
+    if(!pill){ pendingPill = [text, kind]; return; }
+    pill.textContent = text;
+    pill.className = 'studio-save-state ' + kind;
+    pill.setAttribute('role', kind === 'error' ? 'alert' : 'status');
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    pill = document.createElement('div');
+    pill.id = 'studioSaveState';
+    document.body.appendChild(pill);
+    if(pendingPill) show(pendingPill[0], pendingPill[1]); else show('Connected to Salt Basin · ' + BOOT.workspace.name, 'ok');
+  });
+  function friendly(status, message){
+    if(status === 401) return 'Your session has ended. Sign in again, then reopen the Definition Studio.';
+    if(status === 403) return 'Only administrators can compose in the Definition Studio.';
+    return message || 'The platform could not be reached.';
+  }
+  async function call(url, opts){
+    let r;
+    try { r = await fetch(url, Object.assign({ credentials:'same-origin' }, opts || {})); }
+    catch(e){ const err = new Error('The platform could not be reached. Check your connection and try again.'); err.status = 0; throw err; }
+    let j = null; try { j = await r.json(); } catch(e){}
+    if(!r.ok){ const err = new Error(friendly(r.status, j && j.error)); err.status = r.status; throw err; }
+    return j;
+  }
+  window.STUDIO.call = call;
+  window.storage = {
+    async get(key){
+      const j = await call(BOOT.apiBase + '/document?workspace=' + enc(ws) + '&key=' + enc(key));
+      return j && j.document ? { key: key, value: j.document.value } : null;
+    },
+    async set(key, value){
+      show('Saving…', 'busy');
+      try {
+        const j = await call(BOOT.apiBase + '/document', { method:'PUT', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ workspace: ws, key: key, value: value }) });
+        show('Saved to Salt Basin · version ' + j.version, 'ok');
+        return { key: key, value: value };
+      } catch(e) {
+        show('Not saved — ' + e.message + ' Your change is still on the canvas; try again.', 'error');
+        throw e;
+      }
+    },
+    async delete(key){
+      await call(BOOT.apiBase + '/document?workspace=' + enc(ws) + '&key=' + enc(key), { method:'DELETE' });
+      return { key: key, deleted: true };
+    }
+  };
+})();
+</script>
+<style>
+  /* Definition Studio port: save state + configured-shape tag */
+  /* Bottom-left and click-through, so it never covers a button (round 1: it covered "Save specification"). */
+  .studio-save-state{ position:fixed; left:12px; bottom:12px; z-index:9999; pointer-events:none; max-width:min(92vw,520px); padding:6px 12px; border-radius:999px; font:500 12px/1.35 'JetBrains Mono', monospace; box-shadow:0 2px 10px rgba(0,0,0,.12); }
+  .studio-save-state.ok{ background:#DCE9EC; color:#1F3D48; }
+  .studio-save-state.busy{ background:#F8F4EC; color:#345A68; }
+  .studio-save-state.error{ background:#FBE3E3; color:#8A1C1C; border:1px solid #D9534F; border-radius:10px; }
+  .node .shape-tag{ position:absolute; left:6px; bottom:-18px; font:600 9px/1 'JetBrains Mono', monospace; letter-spacing:.04em; text-transform:uppercase; padding:3px 6px; border-radius:6px; color:#fff; white-space:nowrap; pointer-events:none; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="mark"><span class="star">✦</span> SALT <em>BASIN</em></div>
+  <div class="titleblock">
+    <h1 id="studioTitle">Definition Studio</h1>
+    <p class="eyebrow" id="studioEyebrow">Process Flow Builder · Live Canvas</p>
+  </div>
+  <div class="eyebrow mono">Strategic Operator</div>
+</header>
+
+<div class="view-bar">
+  <button class="view-btn active" id="viewCurrentBtn" data-view="current">
+    <span class="view-btn-label">Current State</span>
+    <span class="view-btn-sub">Process inventory · pain, friction &amp; leakage</span>
+  </button>
+  <button class="view-btn" id="viewFutureBtn" data-view="future">
+    <span class="view-btn-label">Future State</span>
+    <span class="view-btn-sub">Target mapping · linked to today &amp; to business goals</span>
+  </button>
+  <span class="view-hint mono" id="viewHint">Editing the Current State inventory. Each view is a separate canvas with its own steps, scenarios, and specs.</span>
+</div>
+
+<div class="toolbar">
+  <div class="tool-group">
+    <span class="g-label">Template</span>
+    <select class="tool-select" id="presetSelect">
+      <option value="">Choose a template…</option>
+      <optgroup label="Seed templates (L2, built-in)" id="seedGroup"></optgroup>
+      <optgroup label="My templates" id="customGroup"></optgroup>
+    </select>
+    <button class="tool-btn" id="loadPresetBtn">Load</button>
+    <button class="tool-btn" id="saveTemplateBtn">💾 Save as template…</button>
+    <button class="tool-btn danger" id="deleteTemplateBtn">Delete template</button>
+    <button class="tool-btn" id="importSpreadsheetBtn">📥 Import from spreadsheet</button>
+    <input type="file" id="importSpreadsheetInput" accept=".xlsx,.xls,.csv" style="display:none;">
+  </div>
+  <div class="divider"></div>
+  <div class="tool-group">
+    <button class="tool-btn" id="clientsBtn" style="background:var(--pink); color:var(--ink); border-color:var(--pink);">👥 Clients</button>
+    <span class="status mono" id="activeInstanceLabel"></span>
+  </div>
+  <div class="divider"></div>
+  <div class="tool-group">
+    <button class="tool-btn" id="goalsBtn" style="background:var(--gold); color:var(--ink); border-color:var(--gold);">🎯 Business Goals</button>
+  </div>
+  <div class="divider"></div>
+  <div class="tool-group">
+    <button class="tool-btn" id="l1AdminBtn" style="background:var(--teal-deep); color:var(--cream); border-color:var(--teal-deep);">🏛 L1 Industries</button>
+    <span class="g-label">Use for new L2</span>
+    <select class="tool-select" id="domainSelect"></select>
+  </div>
+  <div class="divider"></div>
+  <div class="tool-group">
+    <span class="g-label">Scenario</span>
+    <select class="tool-select" id="scenarioSelect">
+      <option value="base">Base (L2 — consistent for every scenario)</option>
+    </select>
+    <button class="tool-btn" id="addScenarioBtn">+ Scenario</button>
+  </div>
+  <div class="divider"></div>
+  <div class="tool-group">
+    <button class="tool-btn" id="addHLaneBtn">+ Horizontal lane</button>
+    <button class="tool-btn" id="addVLaneBtn">+ Vertical lane</button>
+    <button class="tool-btn" id="clearBtn">Clear canvas</button>
+  </div>
+  <div class="divider"></div>
+  <div class="tool-group">
+    <button class="tool-btn" id="saveBtn">Quick save</button>
+    <button class="tool-btn" id="loadBtn">Quick load</button>
+    <button class="tool-btn" id="exportBtn">Export SVG</button>
+    <button class="tool-btn" id="exportJsonBtn">Export spec (JSON)</button>
+  </div>
+  <div class="status mono" id="statusEl">Pick a template to load first, or start from scratch using the shape bar below.</div>
+</div>
+
+<div class="shape-bar">
+  <div class="tool-group">
+    <span class="g-label">Add</span>
+    <span id="shapeBar" style="display:contents">
+    <button class="tool-btn" data-mode="add-step"><span class="swatch-dot" style="background:var(--teal)"></span>Step</button>
+    <button class="tool-btn" data-mode="add-subprocess"><span class="swatch-dot" style="background:var(--teal-deep)"></span>Sub-process</button>
+    <button class="tool-btn" data-mode="add-decision"><span class="swatch-diamond" style="background:var(--gold)"></span>Decision</button>
+    <button class="tool-btn" data-mode="add-parallel"><span class="swatch-diamond" style="background:var(--teal-deep)"></span>Parallel gate</button>
+    <button class="tool-btn" data-mode="add-event"><span class="swatch-dot" style="background:var(--pink)"></span>Event</button>
+    <button class="tool-btn" data-mode="add-data"><span class="swatch-dot" style="background:var(--gold)"></span>Data object</button>
+    <button class="tool-btn" data-mode="add-start"><span class="swatch-dot" style="background:var(--teal-deep)"></span>Start / End</button>
+    </span>
+  </div>
+  <div class="divider"></div>
+  <div class="tool-group">
+    <span class="g-label">Do</span>
+    <button class="tool-btn" data-mode="select">Select / Move</button>
+    <button class="tool-btn" data-mode="connect">Connect</button>
+    <button class="tool-btn" data-mode="configure">⚙ Configure</button>
+    <button class="tool-btn danger" data-mode="delete">Delete</button>
+  </div>
+</div>
+
+<div class="canvas-wrap">
+  <div class="scenario-banner mono" id="scenarioBanner"></div>
+  <div class="canvas" id="canvas">
+    <div class="canvas-inner" id="canvasInner">
+      <svg class="edges" id="edgesSvg">
+        <defs>
+          <marker id="arrowGold" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6 Z" fill="#C4843A"></path>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+  </div>
+  <p class="hint">This flow is the <strong>end-to-end L2</strong> — the high-level steps consistent for this domain/channel. Use the <strong>Scenario</strong> selector to model variation: pick "Base (L2)" to build the shared skeleton, or "+ Scenario" to add a named scenario, then tag any step or connector as scenario-specific in "Configure" — those steps (including sub-process loops, via a self-connect) only appear for scenarios that need them, and each step's inputs/outputs/etc. can be overridden per scenario without touching the base. A pink dot marks a scenario-specific step; a gold dot means a specification is saved. In <strong>Current State</strong>, "Configure" lets you add any number of pain points per step, each attributed to a root cause — Process, System, Policy, or People — and linked to the reporting KPI(s) and value driver(s) it impacts; a red dot flags any step with pain documented. In <strong>Future State</strong>, "Configure" lets you check off which Current State step(s) a step relates to and set the business goal/outcome it's tracking toward — leave every box unchecked and the step gets a red <strong>GAP</strong> tag automatically, meaning that capability doesn't exist today. "Export spec (JSON)" includes a full pain/gap analysis summary for whichever view you're in. <strong>+ Horizontal lane</strong> and <strong>+ Vertical lane</strong> can both be used at once to form a real grid — the grid lines are a muted neutral tone, deliberately distinct from the teal/gold connector lines so they never get confused for process flow. Every connector's weight, dash pattern, and routing (straight, curved, or right-angle "orthogonal") is set per-connector in "Configure" — curved and orthogonal routing are the cleanest way to cross between lanes. When a step has two or more outgoing branches, they now share one trunk line out of the shape before forking to their targets. Save your work as a reusable template from the <strong>Template</strong> group — seed templates are built-in references, "My templates" are yours to edit, save, and delete.</p>
+</div>
+
+<div class="inspector-backdrop" id="inspectorBackdrop"></div>
+<aside class="inspector" id="inspector">
+  <div class="inspector-head">
+    <div>
+      <p class="eyebrow" id="inspTypeLabel">Step</p>
+      <h3 id="inspTitle">Configure step</h3>
+    </div>
+    <button class="tool-btn" id="inspClose">Close ✕</button>
+  </div>
+  <div class="inspector-scenario-banner mono" id="inspScenarioBanner"></div>
+  <div class="inspector-body" id="inspectorBody"></div>
+  <div class="inspector-body" id="inspectorBodyEdge" style="display:none;">
+    <div class="field-section" style="margin-top:0; padding-top:0; border-top:none;">Decision branch</div>
+    <div class="field">
+      <label>Path label<span class="hint-sm">How this branch reads on the diagram — e.g. Approved, Rejected, Escalate, Timeout. Not limited to Yes/No.</span></label>
+      <input type="text" id="edge_label" placeholder="e.g. Approved">
+    </div>
+    <div class="field">
+      <label>Decision parameters for this branch<span class="hint-sm">The specific condition that routes down this path</span></label>
+      <textarea id="edge_params" placeholder="e.g. credit_score >= 680 AND flagged_review = false"></textarea>
+    </div>
+    <div class="field">
+      <label>Notes<span class="hint-sm">Owner, SLA, exception handling for this branch</span></label>
+      <textarea id="edge_notes"></textarea>
+    </div>
+    <div class="field-section">Line style</div>
+    <div class="field">
+      <label>Weight</label>
+      <select id="edge_weight">
+        <option value="thin">Thin</option>
+        <option value="regular" selected>Regular</option>
+        <option value="bold">Bold</option>
+        <option value="heavy">Heavy</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Dash pattern</label>
+      <select id="edge_dash">
+        <option value="solid" selected>Solid</option>
+        <option value="dashed">Dashed</option>
+        <option value="dotted">Dotted</option>
+        <option value="dashdot">Dash-dot</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Routing<span class="hint-sm">"Curved" and "Orthogonal" help a line cross between lanes cleanly instead of cutting straight through other steps.</span></label>
+      <select id="edge_routing">
+        <option value="straight" selected>Straight</option>
+        <option value="curved">Curved</option>
+        <option value="orthogonal">Orthogonal (turns at right angles)</option>
+      </select>
+    </div>
+    <div class="field-section">Scenario applicability</div>
+    <div class="field">
+      <label>Scenario-specific branch<span class="hint-sm">Leave blank if this connector is part of the base L2 flow for every scenario. Comma-separate scenario names to make it appear only for those (e.g. a retry loop that only fires for "Enterprise Renewal").</span></label>
+      <input type="text" id="edge_scenarios" placeholder="e.g. Enterprise Renewal, Partner Channel">
+    </div>
+  </div>
+  <div class="inspector-foot">
+    <button class="tool-btn" id="inspAgentBtn">✦ Ask agent to draft</button>
+    <span class="status mono" id="inspStatus"></span>
+    <button class="tool-btn" id="inspSaveBtn" style="margin-left:auto; background:var(--teal-deep); color:var(--cream); border-color:var(--teal-deep);">Save specification</button>
+  </div>
+</aside>
+
+<div class="inspector-backdrop" id="clientsBackdrop"></div>
+<aside class="inspector" id="clientsPanel">
+  <div class="inspector-head">
+    <div>
+      <p class="eyebrow">Each client picks one L1 industry, then instances templates</p>
+      <h3>Clients</h3>
+    </div>
+    <button class="tool-btn" id="clientsClose">Close ✕</button>
+  </div>
+  <div class="inspector-body" id="clientsBody"></div>
+  <div class="inspector-foot">
+    <button class="tool-btn" id="addClientBtn" style="background:var(--teal-deep); color:var(--cream); border-color:var(--teal-deep);">+ Add client</button>
+  </div>
+</aside>
+
+<div class="inspector-backdrop" id="mapBackdrop"></div>
+<div class="map-overlay" id="mapOverlay">
+  <div class="map-head">
+    <h3 id="mapTitle">Industry map</h3>
+    <button class="tool-btn" id="mapClose">Close ✕</button>
+  </div>
+  <div class="map-body">
+    <svg id="mapSvg" width="100%" height="100%"></svg>
+  </div>
+</div>
+
+<div class="inspector-backdrop" id="l1Backdrop"></div>
+<aside class="inspector" id="l1Panel">
+  <div class="inspector-head">
+    <div>
+      <p class="eyebrow">Admin inputs vs. business definitions</p>
+      <h3 id="l1ModalTitle">L1 Industries</h3>
+    </div>
+    <button class="tool-btn" id="l1Close">Close ✕</button>
+  </div>
+  <div class="inspector-body" id="l1Body"></div>
+</aside>
+
+<div class="inspector-backdrop" id="goalsBackdrop"></div>
+<aside class="inspector" id="goalsPanel">
+  <div class="inspector-head">
+    <div>
+      <p class="eyebrow">Independent of Current/Future State, L1, L2, and L3</p>
+      <h3>Business Goals</h3>
+    </div>
+    <button class="tool-btn" id="goalsClose">Close ✕</button>
+  </div>
+  <div class="inspector-body" id="goalsBody"></div>
+  <div class="inspector-foot">
+    <button class="tool-btn" id="addGoalBtn" style="background:var(--teal-deep); color:var(--cream); border-color:var(--teal-deep);">+ Add goal</button>
+  </div>
+</aside>
+
+<!-- Custom confirm/prompt modal — artifact previews run in a sandboxed iframe where the native
+     window.confirm()/prompt() are typically blocked and resolve instantly to false/null, which
+     silently breaks any flow that depends on them. This replaces both with real in-page UI. -->
+<div class="modal-backdrop" id="modalBackdrop"></div>
+<div class="modal-box" id="modalBox">
+  <p class="modal-message" id="modalMessage"></p>
+  <input type="text" id="modalInput" style="display:none;">
+  <div class="modal-choices" id="modalChoices" style="display:none;"></div>
+  <div class="modal-actions" id="modalActions">
+    <button class="tool-btn" id="modalCancel">Cancel</button>
+    <button class="tool-btn" id="modalOk" style="background:var(--teal-deep); color:var(--cream); border-color:var(--teal-deep);">OK</button>
+  </div>
+</div>
+
+<footer>SaltTide™ Process Flow Builder · Salt Basin Net Works — flows are stored locally to your browser session unless saved.</footer>
+
+<script>
+const canvas = document.getElementById('canvas');
+const canvasInner = document.getElementById('canvasInner');
+const edgesSvg = document.getElementById('edgesSvg');
+const statusEl = document.getElementById('statusEl');
+const DEFAULT_H_LANE_SIZE = 200;   // taller than the old fixed 140 — decision/parallel gates are
+const DEFAULT_V_LANE_SIZE = 220;   // 45°-rotated squares, so their real footprint is bigger than
+const LANE_PADDING = 40;           // their w/h alone suggests. Declared early for the same reason as above.
+let autoSaveTimer = null;
+let startupLoadComplete = false; // guards against an early render() autosaving an empty canvas
+                                  // over real saved data before the startup restore has finished — same reasoning as above, declared early since render() runs at load time via setMode()
+let laneAutoSizePromptShown = false; // one-time-per-session prompt asking whether to lock lane sizes
+const EVENT_ICONS = {
+  email:               { glyph:'✉', label:'Email' },
+  itemCreation:        { glyph:'⊕', label:'Item creation' },
+  itemUpdate:          { glyph:'✎', label:'Item update' },
+  systemNotification:  { glyph:'⚑', label:'System notification' },
+  integrationMessage:  { glyph:'⇄', label:'Integration message' },
+  offlineEvent:        { glyph:'◐', label:'Offline event' }
+};
+
+/* ======================= MODAL (replaces window.confirm / window.prompt) ======================= */
+let modalResolve = null;
+let modalOkHandler = null; // tracks a one-off listener attached to modalOk by showMultiChoice, cleaned up on every close
+function showModalRaw(message, isPrompt, defaultValue){
+  return new Promise(resolve=>{
+    modalResolve = resolve;
+    document.getElementById('modalMessage').textContent = message;
+    document.getElementById('modalChoices').style.display = 'none';
+    document.getElementById('modalActions').style.display = '';
+    const input = document.getElementById('modalInput');
+    if(isPrompt){
+      input.style.display = '';
+      input.value = defaultValue || '';
+      setTimeout(()=>{ input.focus(); input.select(); }, 50);
+    } else {
+      input.style.display = 'none';
+    }
+    document.getElementById('modalBackdrop').classList.add('open');
+    document.getElementById('modalBox').classList.add('open');
+  });
+}
+function closeModal(result){
+  document.getElementById('modalBackdrop').classList.remove('open');
+  document.getElementById('modalBox').classList.remove('open');
+  if(modalOkHandler){ document.getElementById('modalOk').removeEventListener('click', modalOkHandler); modalOkHandler = null; }
+  if(modalResolve){ modalResolve(result); modalResolve = null; }
+}
+document.getElementById('modalCancel').addEventListener('click', ()=> closeModal(null));
+document.getElementById('modalBackdrop').addEventListener('click', ()=> closeModal(null));
+document.getElementById('modalOk').addEventListener('click', ()=>{
+  if(modalOkHandler) return; // showMultiChoice owns this click while its handler is registered
+  const input = document.getElementById('modalInput');
+  closeModal(input.style.display !== 'none' ? input.value : true);
+});
+document.getElementById('modalInput').addEventListener('keydown', e=>{
+  if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('modalOk').click(); }
+  if(e.key === 'Escape'){ closeModal(null); }
+});
+async function showConfirm(message){
+  return (await showModalRaw(message, false)) === true;
+}
+async function showPrompt(message, defaultValue){
+  return await showModalRaw(message, true, defaultValue);
+}
+// options: [{label, sub, value}]. Returns the chosen value, or null if cancelled.
+function showChoice(message, options){
+  return new Promise(resolve=>{
+    modalResolve = resolve;
+    document.getElementById('modalMessage').textContent = message;
+    document.getElementById('modalInput').style.display = 'none';
+    document.getElementById('modalActions').style.display = 'none';
+    const choices = document.getElementById('modalChoices');
+    choices.innerHTML = '';
+    choices.style.display = '';
+    options.forEach(opt=>{
+      const btn = document.createElement('button');
+      btn.className = 'modal-choice-btn';
+      btn.innerHTML = opt.label + (opt.sub ? `<span class="sub">${opt.sub}</span>` : '');
+      btn.addEventListener('click', ()=> closeModal(opt.value));
+      choices.appendChild(btn);
+    });
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'modal-choice-btn';
+    cancelBtn.style.textAlign = 'center';
+    cancelBtn.style.color = 'var(--ink-soft)';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', ()=> closeModal(null));
+    choices.appendChild(cancelBtn);
+    document.getElementById('modalBackdrop').classList.add('open');
+    document.getElementById('modalBox').classList.add('open');
+  });
+}
+// options: [{label, value}]. Returns an array of selected values, or null if cancelled.
+function showMultiChoice(message, options){
+  return new Promise(resolve=>{
+    modalResolve = resolve;
+    document.getElementById('modalMessage').textContent = message;
+    document.getElementById('modalInput').style.display = 'none';
+    document.getElementById('modalActions').style.display = '';
+    const choices = document.getElementById('modalChoices');
+    choices.innerHTML = '';
+    choices.style.display = '';
+    options.forEach(opt=>{
+      const row = document.createElement('label');
+      row.className = 'modal-choice-btn';
+      row.style.cssText += 'display:flex; align-items:center; gap:0.5rem; cursor:pointer;';
+      row.innerHTML = `<input type="checkbox" value="${opt.value}" style="width:auto;"> ${opt.label}`;
+      choices.appendChild(row);
+    });
+    const okBtn = document.getElementById('modalOk');
+    const onOk = () => {
+      const selected = Array.from(choices.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.value);
+      closeModal(selected);
+    };
+    modalOkHandler = onOk;
+    okBtn.addEventListener('click', onOk);
+    document.getElementById('modalBackdrop').classList.add('open');
+    document.getElementById('modalBox').classList.add('open');
+  });
+}
+
+let nodes = [];   // {id, type, x, y, label, scenarioTags:[], metaByScenario:{base:{...}}, execMode:'', concurrency:'sequential'}
+let edges = [];   // {id, from, to, label, params, notes, scenarioTags:[], weight:'regular', dash:'solid', routing:'straight'}
+let hLanes = [];   // [{name, size, locked}] top → bottom — size is the lane's height in px
+let vLanes = [];   // [{name, size, locked}] left → right — size is the lane's width in px
+let scenarios = [];        // flow-level scenarios, scoped to the active view: [{name, type:'L2'|'L3', basedOn:string|null}]
+let activeScenario = 'base';
+let mode = 'add-step';
+let nextId = 1;
+let pendingFrom = null;
+let dragState = null;
+
+// Current State vs Future State: two independent canvases. `nodes`/`edges`/`hLanes`/`vLanes`/`scenarios`
+// above always reflect whichever view is active; flowStates holds the inactive view's data.
+let flowStates = {
+  current: { nodes:[], edges:[], hLanes:[], vLanes:[], scenarios:[] },
+  future:  { nodes:[], edges:[], hLanes:[], vLanes:[], scenarios:[] }
+};
+let activeView = 'current';
+
+// L1: industries applicable to this workspace, independent of Current/Future State and of any
+// one template. Every L2 belongs to exactly one L1 industry. Modeled as a graph: admin-defined
+// inputs (Classification Types, Role Types) are reusable vocabulary; an Industry is a business
+// definition that instances that vocabulary as a set of (Classification Type -> Role Type) pairs.
+// Persisted separately (window.storage) so all three survive Clear/template loads.
+let classificationTypes = []; // [{id, name}]  e.g. "Private Equity", "Software & Service Provider"
+let roleTypes = [];           // [{id, name}]  e.g. "General Partner", "Portfolio Company"
+let l1Domains = [];           // [{id, name, pairs:[{classificationTypeId, roleTypeId}], entities:[], relationships:[]}]
+
+// Domains: a separate, global, reusable list of functional business domains (e.g. "Sales",
+// "Finance", "Legal", "Operations") — distinct from L1 Industries (l1Domains) above. Every L2
+// and L3 step can map to one, which is where "industry translation" happens: the same step
+// vocabulary is located within a business function regardless of which L1 industry/L2 it's under.
+let domains = []; // [{id, name}]
+
+// Independent of Current/Future State and of L1/L2/L3: goals the business is tracking,
+// each assigned to a quarter, each mapped to its own value drivers and KPIs.
+let businessGoals = []; // [{id, name, quarter, valueDrivers:[string], kpis:[string]}]
+
+// A Client is a real customer/account — picks one L1 industry, then gets its own instanced
+// copies of templates (seed or custom) to build out and edit without touching the shared
+// template library. Each instance is a full snapshot ({flowStates}), same shape templates use.
+let clients = []; // [{id, name, industryId}]
+let clientInstances = {}; // clientId -> [{id, name, templateKeyOrigin, content:{flowStates}}]
+let activeClientInstance = null; // {clientId, instanceId} — set when a client's instance is loaded into the canvas
+
+const SIZES = {
+  step: {w:150, h:64},
+  subprocess: {w:172, h:72},
+  decision: {w:118, h:118},
+  parallel: {w:110, h:110},
+  event: {w:62, h:62},
+  data: {w:120, h:56},
+  terminal: {w:128, h:52}
+};
+// Definition Studio port: geometry sizes come from the Studio settings when configured.
+(function applyStudioGeometry(){
+  const g = window.STUDIO && window.STUDIO.config && window.STUDIO.config.geometrySizes;
+  if(!g) return;
+  Object.keys(SIZES).forEach(t => { if(g[t] && g[t].width && g[t].height) SIZES[t] = { w: g[t].width, h: g[t].height }; });
+})();
+const DEFAULT_LABEL = {
+  step:'New step', subprocess:'Sub-process', decision:'Decision?', parallel:'Parallel',
+  event:'Event', data:'Data', terminal:'Start'
+};
+// Decision and parallel gates are squares rotated 45° — their on-screen footprint is their
+// diagonal, not their raw w/h, so lane auto-sizing has to account for that or they'll always
+// look cramped against a lane sized off the unrotated dimensions.
+function effectiveShapeHeight(type){
+  const s = SIZES[type];
+  if(type === 'decision' || type === 'parallel') return Math.round(Math.sqrt(s.w*s.w + s.h*s.h));
+  return s.h;
+}
+function effectiveShapeWidth(type){
+  const s = SIZES[type];
+  if(type === 'decision' || type === 'parallel') return Math.round(Math.sqrt(s.w*s.w + s.h*s.h));
+  return s.w;
+}
+
+// ─── Definition Studio port: configuration-driven shapes and level names ───────────────────────
+const STUDIO_CFG = (window.STUDIO && window.STUDIO.config) || null;
+const STUDIO_SHAPES = STUDIO_CFG ? STUDIO_CFG.shapes.filter(s => s.enabled !== false) : [];
+const STUDIO_ALL_SHAPES = STUDIO_CFG ? STUDIO_CFG.shapes : [];
+const LEVEL_NAMES = { 1:'Industry', 2:'Flow', 3:'Scenario' };
+if(STUDIO_CFG){ STUDIO_CFG.levels.forEach(l => { LEVEL_NAMES[l.level] = l.name; }); }
+// Identifier rule: always show the L-number with the plain name.
+function lvl(n){ return 'L' + n + ' · ' + LEVEL_NAMES[n]; }
+function shapeByApiName(apiName){ return STUDIO_ALL_SHAPES.find(s => s.apiName === apiName) || null; }
+function studioEscape(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+(function buildStudioChrome(){
+  if(!STUDIO_CFG) return;
+  const ws = window.STUDIO.workspace;
+  document.getElementById('studioTitle').textContent = ws.name;
+  document.getElementById('studioEyebrow').textContent = 'Definition Studio · ' + (ws.kind === 'product' ? 'Product ' + (ws.id || '') : 'Module') + ' · ' + ws.apiName;
+  const bar = document.getElementById('shapeBar');
+  bar.innerHTML = STUDIO_SHAPES.map(s => {
+    const diamond = (s.geometry === 'decision' || s.geometry === 'parallel');
+    return '<button class="tool-btn" data-mode="add-shape:' + studioEscape(s.apiName) + '" title="' + studioEscape(s.name + ' · ' + s.id) + '">' +
+      '<span class="' + (diamond ? 'swatch-diamond' : 'swatch-dot') + '" style="background:' + studioEscape(s.color || '#4A7C8E') + '"></span>' + studioEscape(s.name) + '</button>';
+  }).join('');
+  const l1Btn = document.getElementById('l1AdminBtn');
+  if(l1Btn){
+    l1Btn.textContent = '🏛 ' + lvl(1);
+    const hint = l1Btn.nextElementSibling;
+    if(hint && hint.classList.contains('g-label')) hint.textContent = 'Use for new ' + lvl(2);
+  }
+  const l1Title = document.getElementById('l1ModalTitle');
+  if(l1Title) l1Title.textContent = lvl(1) + ' definitions';
+  const baseOpt = document.querySelector('#scenarioSelect option[value="base"]');
+  if(baseOpt) baseOpt.textContent = 'Base (' + lvl(2) + ' — consistent for every scenario)';
+  const seedGroup = document.getElementById('seedGroup');
+  if(seedGroup) seedGroup.label = 'Seed templates (' + lvl(2) + ', built-in)';
+})();
+function shapeModeHint(m){
+  if(!m || !m.startsWith('add-shape:')) return '';
+  const s = shapeByApiName(m.slice('add-shape:'.length));
+  return s ? (s.hint || ('Click the canvas to place: ' + s.name + '.')) : '';
+}
+function firstShapeMode(){ return STUDIO_SHAPES.length ? 'add-shape:' + STUDIO_SHAPES[0].apiName : 'add-step'; }
+
+function setMode(m){
+  mode = m;
+  pendingFrom = null;
+  document.querySelectorAll('.tool-btn[data-mode]').forEach(b=>{
+    b.classList.toggle('active', b.dataset.mode === m);
+  });
+  canvas.classList.toggle('mode-select', m === 'select');
+  render();
+  const msgs = {
+    'add-step':'Click the canvas to place a step.',
+    'add-subprocess':'Click the canvas to place a sub-process.',
+    'add-decision':'Click the canvas to place a decision (XOR) gate.',
+    'add-parallel':'Click the canvas to place a parallel (AND) gate.',
+    'add-event':'Click the canvas to place an event.',
+    'add-data':'Click the canvas to place a data object.',
+    'add-start':'Click the canvas to place a start/end node.',
+    'select':'Drag nodes to reposition. Double-click to rename.',
+    'connect':'Click a node, then click another node to connect them — or click the same node twice to add a self-loop.',
+    'configure':'Click a node to open its full specification panel.',
+    'delete':'Click a node or a connector to remove it.'
+  };
+  setStatus(msgs[m] || shapeModeHint(m) || '');
+}
+document.querySelectorAll('.tool-btn[data-mode]').forEach(b=>{
+  b.addEventListener('click', ()=> setMode(b.dataset.mode));
+});
+setMode(firstShapeMode());
+
+function setStatus(msg, cls){
+  statusEl.textContent = msg;
+  statusEl.className = 'status mono' + (cls ? ' '+cls : '');
+}
+
+const ADD_TYPE = {
+  'add-step':'step', 'add-subprocess':'subprocess', 'add-decision':'decision',
+  'add-parallel':'parallel', 'add-event':'event', 'add-data':'data', 'add-start':'terminal'
+};
+
+function addNode(type, x, y, label){
+  const size = SIZES[type];
+  // A step created while a named scenario is active is scoped to that scenario by default —
+  // otherwise every new step would silently fall back into Base regardless of what you're viewing.
+  const scenarioTags = activeScenario !== 'base' ? [activeScenario] : [];
+  const n = { id:'n'+(nextId++), type, x: x - size.w/2, y: y - size.h/2, label: label || DEFAULT_LABEL[type], scenarioTags, metaByScenario:{base:{}}, execMode:'', concurrency:'sequential', linkedCurrentIds:[], painPointEntries:[], domainId:null, eventSubtype:null, startType:null, priorStepRef:'' };
+  nodes.push(n);
+  return n;
+}
+
+// The step label is treated as shared "vocabulary" owned by an L2 — an L3's copy of that
+// step is a variant configuration of the same vocabulary, not a redefinition of it. So a
+// label edit on either the L2 source or any L3 copy propagates to the whole family: the
+// source plus every L3 copy derived from it (found via l2SourceId).
+function propagateL2Label(n, newLabel){
+  const rootId = n.isL2Inherited && n.l2SourceId ? n.l2SourceId : n.id;
+  nodes.forEach(x=>{
+    if(x.id === rootId || x.l2SourceId === rootId){ x.label = newLabel; }
+  });
+}
+
+canvas.addEventListener('click', (e)=>{
+  if(e.target.closest('.node') || e.target.closest('.lane-label')) return;
+  const rect = canvasInner.getBoundingClientRect();
+  const x = e.clientX - rect.left, y = e.clientY - rect.top;
+  const addType = ADD_TYPE[mode];
+  if(addType){ addNode(addType, x, y); render(); }
+  else if(mode && mode.startsWith('add-shape:')){
+    // Definition Studio port: a configured shape draws with its geometry and remembers its own API name.
+    const cfgShape = shapeByApiName(mode.slice('add-shape:'.length));
+    if(cfgShape){ const n = addNode(cfgShape.geometry, x, y, cfgShape.defaultLabel); n.shapeKey = cfgShape.apiName; render(); }
+  }
+  else if(mode === 'connect'){ pendingFrom = null; render(); }
+});
+
+function nodeCenter(n){
+  const s = SIZES[n.type];
+  return { x: n.x + s.w/2, y: n.y + s.h/2 };
+}
+
+function edgeEndpoints(from, to){
+  const a = nodeCenter(from), b = nodeCenter(to);
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const dist = Math.sqrt(dx*dx+dy*dy) || 1;
+  const ux = dx/dist, uy = dy/dist;
+  const ra = Math.max(SIZES[from.type].w, SIZES[from.type].h)/2 * 0.72;
+  const rb = Math.max(SIZES[to.type].w, SIZES[to.type].h)/2 * 0.72;
+  return { x1: a.x + ux*ra, y1: a.y + uy*ra, x2: b.x - ux*rb, y2: b.y - uy*rb };
+}
+
+// Clip an arbitrary start point against a target node's boundary — used both for normal
+// edges and for edges leaving a shared branch stub (where the start point isn't a node center).
+function clipToTarget(x1, y1, to){
+  const b = nodeCenter(to);
+  const dx = b.x - x1, dy = b.y - y1;
+  const dist = Math.sqrt(dx*dx+dy*dy) || 1;
+  const ux = dx/dist, uy = dy/dist;
+  const rb = Math.max(SIZES[to.type].w, SIZES[to.type].h)/2 * 0.72;
+  return { x2: b.x - ux*rb, y2: b.y - uy*rb };
+}
+
+const WEIGHT_PX = { thin:1, regular:1.6, bold:2.6, heavy:4 };
+const DASH_PATTERN = { solid:'none', dashed:'8,5', dotted:'2,4', dashdot:'9,4,2,4' };
+
+// Builds an SVG path `d` string plus a label anchor point for a connector, given its routing style.
+function buildEdgePath(x1,y1,x2,y2, routing){
+  if(routing === 'curved'){
+    const mx = (x1+x2)/2, my = (y1+y2)/2;
+    const dx = x2-x1, dy = y2-y1;
+    const len = Math.sqrt(dx*dx+dy*dy) || 1;
+    const nx = -dy/len, ny = dx/len;              // unit perpendicular
+    const offset = Math.min(60, Math.max(24, len*0.22));
+    const cx = mx + nx*offset, cy = my + ny*offset;
+    return { d: `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`, labelX: 0.25*x1+0.5*cx+0.25*x2, labelY: 0.25*y1+0.5*cy+0.25*y2 };
+  }
+  if(routing === 'orthogonal'){
+    const midX = (x1+x2)/2;
+    return { d: `M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}`, labelX: midX, labelY: (y1+y2)/2 };
+  }
+  return { d: `M ${x1} ${y1} L ${x2} ${y2}`, labelX: (x1+x2)/2, labelY: (y1+y2)/2 };
+}
+
+function ensureCanvasSize(){
+  const hTotal = hLanes.reduce((sum,l)=>sum+l.size, 0);
+  const vTotal = vLanes.reduce((sum,l)=>sum+l.size, 0);
+  let maxX = 900, maxY = Math.max(460, hTotal);
+  maxX = Math.max(maxX, vTotal + (hLanes.length ? 34 : 0));
+  nodes.forEach(n=>{
+    const s = SIZES[n.type];
+    maxX = Math.max(maxX, n.x + s.w + 60);
+    maxY = Math.max(maxY, n.y + s.h + 60);
+  });
+  canvasInner.style.width = maxX + 'px';
+  canvasInner.style.height = maxY + 'px';
+}
+
+// Computes each visible step's position in the end-to-end flow order for the active scenario,
+// via breadth-first traversal from root (no-incoming-edge) steps. Disconnected steps are
+// appended afterward in reading order so every visible step still gets a number.
+function computeStepNumbers(){
+  const visible = nodes.filter(n=>!isDimmed(n.scenarioTags, n.isL2Inherited));
+  const visibleIds = new Set(visible.map(n=>n.id));
+  const visibleEdges = edges.filter(e=> visibleIds.has(e.from) && visibleIds.has(e.to) && e.from!==e.to && !isDimmed(e.scenarioTags));
+  const outgoing = {}, incomingCount = {};
+  visible.forEach(n=>{ outgoing[n.id] = []; incomingCount[n.id] = 0; });
+  visibleEdges.forEach(e=>{ outgoing[e.from].push(e.to); incomingCount[e.to] = (incomingCount[e.to]||0) + 1; });
+  let roots = visible.filter(n => (incomingCount[n.id]||0) === 0);
+  if(!roots.length && visible.length){ roots = [visible.slice().sort((a,b)=>(a.y-b.y)||(a.x-b.x))[0]]; }
+  const order = [], seen = new Set(), queue = roots.slice().sort((a,b)=>(a.y-b.y)||(a.x-b.x));
+  while(queue.length){
+    const n = queue.shift();
+    if(seen.has(n.id)) continue;
+    seen.add(n.id); order.push(n);
+    (outgoing[n.id]||[]).map(id=>visible.find(x=>x.id===id)).filter(Boolean)
+      .sort((a,b)=>(a.y-b.y)||(a.x-b.x))
+      .forEach(next=>{ if(!seen.has(next.id)) queue.push(next); });
+  }
+  visible.filter(n=>!seen.has(n.id)).sort((a,b)=>(a.y-b.y)||(a.x-b.x)).forEach(n=>{ order.push(n); seen.add(n.id); });
+
+  // Parallel-concurrency steps stay in the same traversal — they still merge with the main
+  // flow via their connectors — but get their own independent "P" counter instead of
+  // consuming a number from the main sequential count.
+  const labelMap = {};
+  let mainCounter = 0, parallelCounter = 0;
+  order.forEach(n=>{
+    if(n.concurrency === 'parallel'){
+      parallelCounter++;
+      labelMap[n.id] = 'P' + parallelCounter;
+    } else {
+      mainCounter++;
+      labelMap[n.id] = String(mainCounter);
+    }
+  });
+  return labelMap;
+}
+
+function updateScenarioBanner(){
+  const el = document.getElementById('scenarioBanner');
+  if(!el) return;
+  const l2Count = scenarios.filter(s=>s.type==='L2').length;
+  const l3Count = scenarios.filter(s=>s.type==='L3').length;
+  const variantsOf = (l2Name) => scenarios.filter(s=>s.type==='L3' && s.basedOn===l2Name).map(s=>s.name);
+  if(activeScenario === 'base'){
+    const variantCount = nodes.filter(n=>(n.scenarioTags||[]).length).length + edges.filter(e=>(e.scenarioTags||[]).length).length;
+    const baseVariants = variantsOf('base');
+    el.innerHTML = `Viewing <strong>Base (${lvl(2)})</strong> — the shared skeleton for every scenario.` +
+      (l2Count ? ` <span class="count">${l2Count} more L2${l2Count===1?'':'s'}</span>` : '') +
+      (l3Count ? ` <span class="count">${l3Count} L3 scenario${l3Count===1?'':'s'} total</span>` : (l2Count ? '' : ' No scenarios defined yet — use "+ Scenario" above to add one.')) +
+      (variantCount ? ` <span class="count">${variantCount} scenario-specific item${variantCount===1?'':'s'} dimmed</span>` : '') +
+      (baseVariants.length ? `<br><span style="display:block; margin-top:0.3rem;">${lvl(3)} variants of Base: <strong>${baseVariants.join(', ')}</strong></span>` : '');
+  } else {
+    const entry = scenarios.find(s=>s.name===activeScenario);
+    const taggedNodes = nodes.filter(n=>(n.scenarioTags||[]).includes(activeScenario)).length;
+    const taggedEdges = edges.filter(e=>(e.scenarioTags||[]).includes(activeScenario)).length;
+    const typeLabel = entry ? (entry.type==='L2' ? lvl(2) + ' base flow' : `${lvl(3)}, based on ${entry.basedOn==='base'?'Base':entry.basedOn}`) : '';
+    const myVariants = entry && entry.type==='L2' ? variantsOf(activeScenario) : [];
+    el.innerHTML = `Viewing <strong>${activeScenario}</strong>${typeLabel ? ` <span class="count">${typeLabel}</span>` : ''} — base steps plus anything tagged for it.` +
+      ` <span class="count">${taggedNodes} step${taggedNodes===1?'':'s'} tagged</span>` +
+      ` <span class="count">${taggedEdges} branch${taggedEdges===1?'':'es'} tagged</span>` +
+      (taggedNodes+taggedEdges === 0 ? ` — nothing tagged yet, so this looks identical to Base. Steps you add now are automatically scoped to this scenario.` : '') +
+      (myVariants.length ? `<br><span style="display:block; margin-top:0.3rem;">${lvl(3)} variants of this ${lvl(2)}: <strong>${myVariants.join(', ')}</strong></span>`
+        : (entry && entry.type==='L2' ? `<br><span style="display:block; margin-top:0.3rem;">No L3 variants yet — build out this L2's steps, then use "+ Scenario" → New L3 to branch a variant off it.</span>` : ''));
+  }
+}
+
+function render(){
+  ensureCanvasSize();
+  updateScenarioBanner();
+
+  // lanes — horizontal rows and vertical columns can coexist to form a grid;
+  // grid lines use --lane-line, always a distinct color from connector lines (teal/gold)
+  canvasInner.querySelectorAll('.lane-h, .lane-v, .lane-label-v, .lane-lock').forEach(l=>l.remove());
+  const hOffset = vLanes.length ? 26 : 0;   // leave room for the vertical-lane header row
+  const vOffset = hLanes.length ? 34 : 0;   // leave room for the horizontal-lane label tab
+
+  // Bounds computed from each lane's CURRENT stored size, before this pass's auto-resize —
+  // membership uses last render's boundaries, so a size change takes one extra render to
+  // fully settle. render() runs often enough that this is invisible in practice.
+  let hCursor = hOffset;
+  const hBounds = hLanes.map(l=>{ const top = hCursor; hCursor += l.size; return {top, bottom: hCursor}; });
+  let vCursor = vOffset;
+  const vBounds = vLanes.map(l=>{ const left = vCursor; vCursor += l.size; return {left, right: vCursor}; });
+
+  let laneSizeChanged = false;
+  hLanes.forEach((lane, i)=>{
+    if(lane.locked) return;
+    const b = hBounds[i];
+    const members = nodes.filter(n=>{ const cy = n.y + SIZES[n.type].h/2; return cy >= b.top && cy < b.bottom; });
+    const maxH = members.reduce((m,n)=>Math.max(m, effectiveShapeHeight(n.type)), 0);
+    const needed = Math.max(DEFAULT_H_LANE_SIZE, maxH + LANE_PADDING);
+    if(needed !== lane.size){ lane.size = needed; laneSizeChanged = true; }
+  });
+  vLanes.forEach((lane, i)=>{
+    if(lane.locked) return;
+    const b = vBounds[i];
+    const members = nodes.filter(n=>{ const cx = n.x + SIZES[n.type].w/2; return cx >= b.left && cx < b.right; });
+    const maxW = members.reduce((m,n)=>Math.max(m, effectiveShapeWidth(n.type)), 0);
+    const needed = Math.max(DEFAULT_V_LANE_SIZE, maxW + LANE_PADDING);
+    if(needed !== lane.size){ lane.size = needed; laneSizeChanged = true; }
+  });
+  if(laneSizeChanged && !laneAutoSizePromptShown && (hLanes.length || vLanes.length) && !modalResolve){
+    laneAutoSizePromptShown = true;
+    setTimeout(async ()=>{
+      const lockNow = await showConfirm('Lanes were auto-sized to fit your steps and shapes. Lock all lane sizes now so they stop changing automatically? You can unlock any lane later from its 🔒 icon.');
+      if(lockNow){ hLanes.forEach(l=>l.locked=true); vLanes.forEach(l=>l.locked=true); render(); }
+    }, 60);
+  }
+
+  hLanes.forEach((lane, i)=>{
+    const b = hBounds[i];
+    const el = document.createElement('div');
+    el.className = 'lane-h';
+    el.style.top = b.top + 'px';
+    el.style.height = lane.size + 'px';
+    canvasInner.insertBefore(el, edgesSvg);
+    const label = document.createElement('div');
+    label.className = 'lane-label';
+    label.style.top = b.top + 'px';
+    label.style.height = lane.size + 'px';
+    label.contentEditable = 'true';
+    label.textContent = lane.name;
+    label.addEventListener('click', e=> e.stopPropagation());
+    label.addEventListener('blur', ()=>{ lane.name = label.textContent.trim() || ('Lane '+(i+1)); });
+    canvasInner.insertBefore(label, edgesSvg);
+    const lock = document.createElement('div');
+    lock.className = 'lane-lock';
+    lock.style.top = (b.top + 3) + 'px';
+    lock.style.left = '2px';
+    lock.textContent = lane.locked ? '🔒' : '🔓';
+    lock.title = lane.locked ? 'Locked — click to unlock and let this lane auto-size again' : 'Unlocked — auto-sizes to fit its steps. Click to lock at its current size.';
+    lock.addEventListener('click', e=>{ e.stopPropagation(); lane.locked = !lane.locked; render(); });
+    canvasInner.insertBefore(lock, edgesSvg);
+  });
+  vLanes.forEach((lane, i)=>{
+    const b = vBounds[i];
+    const el = document.createElement('div');
+    el.className = 'lane-v';
+    el.style.left = b.left + 'px';
+    el.style.width = lane.size + 'px';
+    canvasInner.insertBefore(el, edgesSvg);
+    const label = document.createElement('div');
+    label.className = 'lane-label-v';
+    label.style.left = b.left + 'px';
+    label.style.width = lane.size + 'px';
+    label.contentEditable = 'true';
+    label.textContent = lane.name;
+    label.addEventListener('click', e=> e.stopPropagation());
+    label.addEventListener('blur', ()=>{ lane.name = label.textContent.trim() || ('Lane '+(i+1)); });
+    canvasInner.insertBefore(label, edgesSvg);
+    const lock = document.createElement('div');
+    lock.className = 'lane-lock';
+    lock.style.top = '2px';
+    lock.style.left = (b.left + 3) + 'px';
+    lock.textContent = lane.locked ? '🔒' : '🔓';
+    lock.title = lane.locked ? 'Locked — click to unlock and let this lane auto-size again' : 'Unlocked — auto-sizes to fit its steps. Click to lock at its current size.';
+    lock.addEventListener('click', e=>{ e.stopPropagation(); lane.locked = !lane.locked; render(); });
+    canvasInner.insertBefore(lock, edgesSvg);
+  });
+
+  // nodes
+  canvasInner.querySelectorAll('.node').forEach(n=>n.remove());
+  const stepNumbers = computeStepNumbers();
+  nodes.forEach(n=>{
+    n.scenarioTags = n.scenarioTags || [];
+    n.metaByScenario = n.metaByScenario || {base:{}};
+    n.execMode = n.execMode || '';
+    n.concurrency = n.concurrency || 'sequential';
+    n.linkedCurrentIds = n.linkedCurrentIds || [];
+    n.painPointEntries = n.painPointEntries || [];
+    n.goalMappings = n.goalMappings || [];
+    const el = document.createElement('div');
+    el.className = 'node ' + n.type;
+    if((n.type === 'step' || n.type === 'event') && n.execMode){
+      el.classList.add('exec-' + n.execMode);
+    }
+    if(pendingFrom === n.id) el.classList.add('pending');
+    if(mode === 'configure') el.classList.add('configurable');
+    if(isDimmed(n.scenarioTags, n.isL2Inherited)) el.classList.add('dimmed');
+    if(n.isL2Inherited) el.classList.add('l2-inherited');
+    el.style.left = n.x + 'px';
+    el.style.top = n.y + 'px';
+    if(n.type === 'event' && n.eventSubtype && EVENT_ICONS[n.eventSubtype]){
+      const icon = document.createElement('div');
+      icon.className = 'event-icon';
+      icon.textContent = EVENT_ICONS[n.eventSubtype].glyph;
+      icon.title = EVENT_ICONS[n.eventSubtype].label;
+      el.appendChild(icon);
+    }
+    if(stepNumbers[n.id]){
+      const numBadge = document.createElement('div');
+      const isParallel = n.concurrency === 'parallel';
+      numBadge.className = 'step-number' + (isParallel ? ' step-number-parallel' : '');
+      numBadge.textContent = stepNumbers[n.id];
+      numBadge.title = isParallel
+        ? 'Parallel step ' + stepNumbers[n.id] + ' — numbered independently of the main sequence, still merges into the flow via its connectors'
+        : 'Step ' + stepNumbers[n.id] + ' in this scenario\'s main sequence';
+      el.appendChild(numBadge);
+    }
+    if(n.shapeKey){
+      const cfgShape = shapeByApiName(n.shapeKey);
+      const isGeometryDefault = cfgShape && STUDIO_ALL_SHAPES.find(s => s.geometry === cfgShape.geometry) === cfgShape;
+      if(cfgShape && !isGeometryDefault){
+        const tag = document.createElement('div');
+        tag.className = 'shape-tag';
+        tag.textContent = cfgShape.name;
+        tag.style.background = cfgShape.color || '#345A68';
+        tag.title = cfgShape.name + ' · ' + cfgShape.id;
+        el.appendChild(tag);
+      }
+    }
+    const lbl = document.createElement('div');
+    lbl.className = 'lbl';
+    lbl.textContent = n.label;
+    lbl.contentEditable = 'false';
+    el.appendChild(lbl);
+    if(hasMeta(n)){
+      const dot = document.createElement('div');
+      const painFlag = activeView === 'current' && hasPainFlags(n);
+      dot.className = 'meta-dot' + (painFlag ? ' pain' : '');
+      dot.title = painFlag ? 'Pain points / gaps documented' : ('Specification saved for ' + scenarioDisplayName(activeScenario));
+      el.appendChild(dot);
+    }
+    if(n.scenarioTags.length){
+      const chip = document.createElement('div');
+      chip.className = 'scenario-chip';
+      chip.title = 'Scenario-specific step: ' + n.scenarioTags.join(', ');
+      el.appendChild(chip);
+    }
+    if(n.execMode){
+      const ab = document.createElement('div');
+      ab.className = 'badge-auto ' + n.execMode;
+      ab.title = n.execMode==='automated' ? 'System automation' : n.execMode==='manual' ? 'Manual / user activity' : 'Hybrid: system + user';
+      el.appendChild(ab);
+    }
+    if(n.concurrency === 'parallel'){
+      const pb = document.createElement('div');
+      pb.className = 'badge-parallel';
+      pb.title = 'Runs in parallel — not sequentially dependent on the step before it';
+      el.appendChild(pb);
+    }
+    if(activeView === 'future' && n.linkedCurrentIds.length === 0){
+      const gb = document.createElement('div');
+      gb.className = 'gap-badge';
+      gb.textContent = 'GAP';
+      gb.title = 'No linked Current State step — this capability doesn\'t exist today (gap analysis result)';
+      el.appendChild(gb);
+    }
+    if(activeView === 'current' && hasPainFlags(n) && !(n.goalMappings||[]).length){
+      const gb = document.createElement('div');
+      gb.className = 'gap-badge';
+      gb.textContent = 'GAP';
+      gb.title = 'This step has a pain point but isn\'t mapped to any value driver or KPI — current state gap';
+      el.appendChild(gb);
+    }
+    el.dataset.id = n.id;
+
+    el.addEventListener('mousedown', (e)=>{
+      if(mode !== 'select') return;
+      e.stopPropagation();
+      const rect = canvasInner.getBoundingClientRect();
+      dragState = { id:n.id, offX: e.clientX - rect.left - n.x, offY: e.clientY - rect.top - n.y };
+    });
+
+    el.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      if(mode === 'connect'){
+        if(!pendingFrom){ pendingFrom = n.id; render(); }
+        else if(pendingFrom === n.id){
+          edges.push({ id:'e'+(nextId++), from: pendingFrom, to: n.id, scenarioTags:[], weight:'regular', dash:'solid', routing:'straight' });
+          pendingFrom = null;
+          render();
+          setStatus('Self-loop added — configure it to describe what triggers the repeat.', 'ok');
+        } else {
+          edges.push({ id:'e'+(nextId++), from: pendingFrom, to: n.id, scenarioTags:[], weight:'regular', dash:'solid', routing:'straight' });
+          pendingFrom = null;
+          render();
+          setStatus('Connected. Click another node to start a new link.', 'ok');
+        }
+      } else if(mode === 'delete'){
+        nodes = nodes.filter(x=>x.id !== n.id);
+        edges = edges.filter(ed=>ed.from !== n.id && ed.to !== n.id);
+        render();
+      } else if(mode === 'configure'){
+        openInspector(n.id);
+      }
+    });
+
+    lbl.addEventListener('dblclick', (e)=>{
+      if(mode !== 'select') return;
+      e.stopPropagation();
+      lbl.contentEditable = 'true';
+      lbl.focus();
+      document.execCommand('selectAll', false, null);
+    });
+    lbl.addEventListener('blur', ()=>{
+      lbl.contentEditable = 'false';
+      const newLabel = lbl.textContent.trim() || n.label;
+      if(newLabel !== n.label){ propagateL2Label(n, newLabel); render(); }
+    });
+    lbl.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter'){ e.preventDefault(); lbl.blur(); }
+    });
+
+    canvasInner.appendChild(el);
+  });
+
+  // edges
+  edgesSvg.querySelectorAll('.edge-line, .edge-hit, .edge-label-bg, .edge-label-text, .edge-stub').forEach(x=>x.remove());
+
+  // Group outgoing edges per source node so 2+ branches leaving the same step share one
+  // trunk line out of the shape before forking — a visual "branch more than one arrow
+  // from the same entry line."
+  const outgoingByFrom = {};
+  edges.forEach(ed=>{ if(ed.from !== ed.to){ (outgoingByFrom[ed.from] = outgoingByFrom[ed.from] || []).push(ed); } });
+  const stubDrawn = new Set();
+  const STUB_LEN = 28;
+
+  function stubStart(from, siblingEdges){
+    const a = nodeCenter(from);
+    let sumX=0, sumY=0, count=0;
+    siblingEdges.forEach(e=>{
+      const to = nodes.find(n=>n.id===e.to);
+      if(to){ const b = nodeCenter(to); sumX+=b.x; sumY+=b.y; count++; }
+    });
+    if(!count) return null;
+    const avgX = sumX/count, avgY = sumY/count;
+    const dx = avgX-a.x, dy = avgY-a.y;
+    const dist = Math.sqrt(dx*dx+dy*dy) || 1;
+    const ux = dx/dist, uy = dy/dist;
+    const ra = Math.max(SIZES[from.type].w, SIZES[from.type].h)/2 * 0.72;
+    return { boundaryX: a.x+ux*ra, boundaryY: a.y+uy*ra, stubX: a.x+ux*(ra+STUB_LEN), stubY: a.y+uy*(ra+STUB_LEN) };
+  }
+
+  edges.forEach(ed=>{
+    ed.scenarioTags = ed.scenarioTags || [];
+    ed.weight = ed.weight || 'regular';
+    ed.dash = ed.dash || 'solid';
+    ed.routing = ed.routing || 'straight';
+    const from = nodes.find(n=>n.id===ed.from), to = nodes.find(n=>n.id===ed.to);
+    if(!from || !to) return;
+    const isBranch = from.type === 'decision' || from.type === 'parallel';
+    const dimmed = isDimmed(ed.scenarioTags);
+    const isLoop = ed.from === ed.to;
+    const strokeColor = isBranch ? '#C4843A' : '#345A68';
+    const strokeWidth = WEIGHT_PX[ed.weight];
+    const dashArray = DASH_PATTERN[ed.dash];
+    let labelX, labelY, hitD;
+
+    if(isLoop){
+      const s = SIZES[from.type];
+      const x1 = from.x + s.w*0.68, y1 = from.y + 2;
+      const x2 = from.x + s.w*0.32, y2 = from.y + 2;
+      const cx1 = x1 + 46, cy1 = y1 - 70, cx2 = x2 - 46, cy2 = y2 - 70;
+      const d = `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`;
+      drawPath(d, strokeColor, strokeWidth, dashArray, dimmed);
+      labelX = (x1+x2)/2; labelY = y1 - 78;
+      hitD = d;
+    } else {
+      const siblings = outgoingByFrom[ed.from];
+      let x1, y1;
+      if(siblings && siblings.length >= 2){
+        const stub = stubStart(from, siblings);
+        if(stub){
+          if(!stubDrawn.has(ed.from)){
+            drawPath(`M ${stub.boundaryX} ${stub.boundaryY} L ${stub.stubX} ${stub.stubY}`, strokeColor, strokeWidth, 'none', dimmed, 'edge-stub');
+            stubDrawn.add(ed.from);
+          }
+          x1 = stub.stubX; y1 = stub.stubY;
+        } else { const ep = edgeEndpoints(from, to); x1 = ep.x1; y1 = ep.y1; }
+      } else {
+        const ep = edgeEndpoints(from, to); x1 = ep.x1; y1 = ep.y1;
+      }
+      const { x2, y2 } = clipToTarget(x1, y1, to);
+      const { d, labelX: lx, labelY: ly } = buildEdgePath(x1, y1, x2, y2, ed.routing);
+      drawPath(d, strokeColor, strokeWidth, dashArray, dimmed);
+      labelX = lx; labelY = ly;
+      hitD = d;
+    }
+
+    const displayLabel = ed.label ? (isLoop ? '↻ ' + ed.label : ed.label) : (isLoop ? '↻ loop' : '');
+    if(displayLabel){
+      const w = Math.max(38, displayLabel.length*6.4 + 16);
+      const bg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      bg.setAttribute('x', labelX - w/2); bg.setAttribute('y', labelY - 11);
+      bg.setAttribute('width', w); bg.setAttribute('height', 22); bg.setAttribute('rx', 11);
+      bg.setAttribute('fill', '#F8F4EC'); bg.setAttribute('stroke', '#C4843A'); bg.setAttribute('stroke-width','1.2');
+      bg.classList.add('edge-label-bg');
+      if(dimmed) bg.classList.add('dimmed');
+      edgesSvg.appendChild(bg);
+      const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+      txt.setAttribute('x', labelX); txt.setAttribute('y', labelY + 4);
+      txt.setAttribute('text-anchor','middle');
+      txt.setAttribute('font-family',"'JetBrains Mono', monospace");
+      txt.setAttribute('font-size','10');
+      txt.setAttribute('fill','#345A68');
+      txt.textContent = displayLabel;
+      txt.classList.add('edge-label-text');
+      if(dimmed) txt.classList.add('dimmed');
+      edgesSvg.appendChild(txt);
+    }
+
+    const hitEl = document.createElementNS('http://www.w3.org/2000/svg','path');
+    hitEl.setAttribute('d', hitD);
+    hitEl.setAttribute('fill','none');
+    hitEl.setAttribute('stroke','transparent');
+    hitEl.setAttribute('stroke-width','14');
+    hitEl.classList.add('edge-hit');
+    hitEl.style.pointerEvents = 'stroke';
+    hitEl.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      if(mode === 'delete'){
+        edges = edges.filter(x=>x.id !== ed.id);
+        render();
+      } else if(mode === 'configure'){
+        openEdgeInspector(ed.id);
+      }
+    });
+    hitEl.addEventListener('dblclick', (e)=>{
+      e.stopPropagation();
+      openEdgeInspector(ed.id);
+    });
+    edgesSvg.appendChild(hitEl);
+  });
+  scheduleAutoSave();
+}
+
+function drawPath(d, color, width, dashArray, dimmed, extraClass){
+  const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+  path.setAttribute('d', d);
+  path.setAttribute('fill','none');
+  path.setAttribute('stroke', color);
+  path.setAttribute('stroke-width', width);
+  if(dashArray && dashArray !== 'none') path.setAttribute('stroke-dasharray', dashArray);
+  path.setAttribute('marker-end','url(#arrowGold)');
+  path.classList.add('edge-line');
+  if(extraClass) path.classList.add(extraClass);
+  if(dimmed) path.classList.add('dimmed');
+  edgesSvg.appendChild(path);
+  return path;
+}
+
+canvas.addEventListener('mousemove', (e)=>{
+  if(!dragState) return;
+  const rect = canvasInner.getBoundingClientRect();
+  const n = nodes.find(x=>x.id===dragState.id);
+  if(!n) return;
+  n.x = Math.max(0, e.clientX - rect.left - dragState.offX);
+  n.y = Math.max(0, e.clientY - rect.top - dragState.offY);
+  render();
+});
+window.addEventListener('mouseup', ()=>{ dragState = null; });
+
+document.getElementById('addHLaneBtn').addEventListener('click', ()=>{
+  hLanes.push({ name:'Lane ' + (hLanes.length+1), size:DEFAULT_H_LANE_SIZE, locked:false });
+  render();
+});
+document.getElementById('addVLaneBtn').addEventListener('click', ()=>{
+  vLanes.push({ name:'Lane ' + (vLanes.length+1), size:DEFAULT_V_LANE_SIZE, locked:false });
+  render();
+});
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  nodes = []; edges = []; hLanes = []; vLanes = []; pendingFrom = null; scenarios = []; activeScenario = 'base';
+  activeClientInstance = null; updateActiveInstanceLabel();
+  renderScenarioOptions();
+  render();
+  setStatus((activeView==='current'?'Current State':'Future State') + ' canvas cleared (the other view is untouched).');
+});
+
+/* ======================= PRESET PROCESSES (from the Salt Basin data model) ======================= */
+function chain(items, opts){
+  opts = opts || {};
+  const perRow = opts.perRow || items.length;
+  const gapX = opts.gapX || 190;
+  const rowH = opts.rowH || 150;
+  const startX = opts.startX || 60;
+  const startY = opts.startY || 60;
+  const list = items.map((it, i)=>{
+    const row = Math.floor(i/perRow), col = i%perRow;
+    return { type: it.type || 'step', label: it.label, x: startX + col*gapX, y: startY + row*rowH };
+  });
+  const edgePairs = [];
+  for(let i=0;i<list.length-1;i++) edgePairs.push([i,i+1]);
+  return { list, edgePairs };
+}
+
+function stack(rows, opts){
+  opts = opts || {};
+  const gapX = opts.gapX || 190;
+  const rowGap = opts.rowGap || 160;
+  const startX = opts.startX || 60;
+  let y = opts.startY || 60;
+  let list = [], edgePairs = [];
+  rows.forEach(items=>{
+    const base = list.length;
+    items.forEach((it,i)=> list.push({ type: it.type || 'step', label: it.label, x: startX + i*gapX, y }));
+    for(let i=0;i<items.length-1;i++) edgePairs.push([base+i, base+i+1]);
+    y += rowGap;
+  });
+  return { list, edgePairs };
+}
+
+// Seed templates were cleared to build industry-specific presets from scratch. Add new ones
+// here as `key: ()=> chain([...], opts)` or `key: ()=> stack([[...],[...]], opts)`, then add a
+// matching display name to PRESET_NAMES and an <option> in the #seedGroup optgroup in the HTML.
+const PRESETS = {};
+const PRESET_NAMES = {};
+
+// Builds a seed template's {flowStates} snapshot without touching any live global state —
+// used for client instancing, where a template needs to be copied "offline" while the
+// canvas may currently hold something else entirely.
+function buildPresetFlowStateOffline(key){
+  const { list, edgePairs } = PRESETS[key]();
+  let idCounter = 1;
+  const built = list.map(item => {
+    const size = SIZES[item.type];
+    return { id:'n'+(idCounter++), type:item.type, x:item.x, y:item.y, label:item.label,
+      scenarioTags:[], metaByScenario:{base:{}}, execMode:'', concurrency:'sequential',
+      linkedCurrentIds:[], painPointEntries:[], goalMappings:[] };
+  });
+  const edges = edgePairs.map(([a,b]) => ({ id:'e'+(idCounter++), from:built[a].id, to:built[b].id,
+    scenarioTags:[], weight:'regular', dash:'solid', routing:'straight' }));
+  const emptyView = { nodes:[], edges:[], hLanes:[], vLanes:[], scenarios:[] };
+  return { flowStates: { current: { nodes:built, edges, hLanes:[], vLanes:[], scenarios:[] }, future: emptyView } };
+}
+
+document.getElementById('loadPresetBtn').addEventListener('click', async ()=>{
+  const key = document.getElementById('presetSelect').value;
+  if(!key) { setStatus('Choose a template from the dropdown first.'); return; }
+  const displayName = PRESET_NAMES[key] || document.getElementById('presetSelect').selectedOptions[0]?.textContent || key;
+  if(nodes.length && !(await showConfirm('Load "'+displayName+'"? This replaces the ' + (activeView==='current'?'Current State':'Future State') + ' canvas (the other view is untouched).'))) return;
+
+  if(key.startsWith('custom:')){
+    try{
+      if(!window.storage) throw new Error('no storage');
+      const result = await window.storage.get('template:'+key, false);
+      if(!result || !result.value) throw new Error('not found');
+      applyFlowData(JSON.parse(result.value));
+      activeClientInstance = null; updateActiveInstanceLabel();
+      render();
+      setStatus('Loaded "'+displayName+'".', 'ok');
+      openLastStepInFlow();
+    }catch(err){
+      setStatus('Could not load that template.');
+    }
+    return;
+  }
+
+  const { list, edgePairs } = PRESETS[key]();
+  nodes = []; edges = []; hLanes = []; vLanes = []; pendingFrom = null; scenarios = []; activeScenario = 'base';
+  activeClientInstance = null; updateActiveInstanceLabel();
+  renderScenarioOptions();
+  const built = list.map(item => addNode(item.type, item.x + SIZES[item.type].w/2, item.y + SIZES[item.type].h/2, item.label));
+  edgePairs.forEach(([a,b])=>{
+    edges.push({ id:'e'+(nextId++), from: built[a].id, to: built[b].id, scenarioTags:[], weight:'regular', dash:'solid', routing:'straight' });
+  });
+  render();
+  setStatus('Loaded "'+displayName+'".', 'ok');
+  openLastStepInFlow();
+});
+
+// Opens the Configure panel on the last step in end-to-end flow order (per computeStepNumbers),
+// so loading a template drops you straight into reviewing/finishing its final step.
+function openLastStepInFlow(){
+  if(!nodes.length) return;
+  const numbers = computeStepNumbers();
+  let lastId = null, maxNum = -1;
+  Object.entries(numbers).forEach(([id, num])=>{ if(num > maxNum){ maxNum = num; lastId = id; } });
+  if(!lastId) return;
+  setMode('configure');
+  openInspector(lastId);
+}
+
+/* ======================= TEMPLATE LIBRARY (custom, persisted) ======================= */
+const customGroupEl = document.getElementById('customGroup');
+let customTemplateIndex = []; // [{key, name}]
+
+async function loadTemplateIndex(){
+  try{
+    if(!window.storage) return;
+    const result = await window.storage.get('templates:index', false);
+    customTemplateIndex = result && result.value ? JSON.parse(result.value) : [];
+  }catch(err){ customTemplateIndex = []; }
+  refreshCustomGroup();
+}
+function refreshCustomGroup(){
+  customGroupEl.innerHTML = customTemplateIndex.length
+    ? customTemplateIndex.map(t=>`<option value="${t.key}">${t.name}</option>`).join('')
+    : '';
+}
+async function saveTemplateIndex(){
+  if(!window.storage) return;
+  await window.storage.set('templates:index', JSON.stringify(customTemplateIndex), false);
+}
+
+/* ======================= IMPORT TEMPLATES FROM SPREADSHEET ======================= */
+// Column order matches process-flow-template-definitions.xlsx exactly:
+// Template Key | Template Name | Step Order | Step Label | Shape Type | Execution Mode |
+// Event Subtype | Domain | Connects To | Branch Label
+const VALID_SHAPES = new Set(['step','subprocess','decision','parallel','event','data','terminal']);
+const VALID_EXEC = new Set(['manual','automated','hybrid']);
+const VALID_EVENT_SUBTYPES = new Set(Object.keys(EVENT_ICONS));
+
+document.getElementById('importSpreadsheetBtn').addEventListener('click', ()=>{
+  document.getElementById('importSpreadsheetInput').click();
+});
+document.getElementById('importSpreadsheetInput').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  e.target.value = ''; // allow re-selecting the same file later
+  if(!file) return;
+  if(typeof XLSX === 'undefined'){ setStatus('Spreadsheet library failed to load — check your connection and try again.'); return; }
+  setStatus('Reading ' + file.name + '…');
+  try{
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type:'array' });
+    const sheetName = wb.SheetNames.includes('Templates') ? 'Templates' : wb.SheetNames[0];
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header:1, defval:'' });
+    const dataRows = rows.slice(1).filter(r => r[0] && String(r[0]).trim()); // skip header, drop blank Template Key rows
+
+    const byTemplate = {};
+    dataRows.forEach(r=>{
+      const key = String(r[0]).trim();
+      (byTemplate[key] = byTemplate[key] || []).push({
+        templateName: String(r[1]||key).trim(),
+        stepOrder: Number(r[2]) || 0,
+        label: String(r[3]||'Step').trim(),
+        shape: VALID_SHAPES.has(String(r[4]||'').trim()) ? String(r[4]).trim() : 'step',
+        execMode: VALID_EXEC.has(String(r[5]||'').trim()) ? String(r[5]).trim() : '',
+        eventSubtype: VALID_EVENT_SUBTYPES.has(String(r[6]||'').trim()) ? String(r[6]).trim() : null,
+        domainName: String(r[7]||'').trim(),
+        connectsTo: String(r[8]||'').trim(),
+        branchLabel: String(r[9]||'').trim()
+      });
+    });
+
+    const templateKeys = Object.keys(byTemplate);
+    if(!templateKeys.length){ setStatus('No rows found — check the file has a Template Key in column A for each step.'); return; }
+
+    let importedCount = 0;
+    for(const tKey of templateKeys){
+      const stepRows = byTemplate[tKey].sort((a,b)=>a.stepOrder-b.stepOrder);
+      const perRow = 5, gapX = 190, rowH = 150;
+      const idByOrder = {};
+      const impNodes = stepRows.map((sr, i)=>{
+        const size = SIZES[sr.shape];
+        const row = Math.floor(i/perRow), col = i%perRow;
+        let domainId = null;
+        if(sr.domainName){
+          let dom = domains.find(d=>d.name.toLowerCase()===sr.domainName.toLowerCase());
+          if(!dom){ dom = {id:'dm'+Date.now().toString(36)+i, name:sr.domainName}; domains.push(dom); }
+          domainId = dom.id;
+        }
+        const n = {
+          id:'n'+(i+1), type:sr.shape, x:60+col*gapX, y:60+row*rowH, label:sr.label,
+          scenarioTags:[], metaByScenario:{base:{}}, execMode:sr.execMode, concurrency:'sequential',
+          linkedCurrentIds:[], painPointEntries:[], goalMappings:[], domainId,
+          eventSubtype: sr.shape==='event' ? sr.eventSubtype : null
+        };
+        idByOrder[sr.stepOrder] = n.id;
+        return n;
+      });
+      const impEdges = [];
+      let edgeIdCounter = 1;
+      stepRows.forEach((sr, i)=>{
+        let targets = [];
+        if(sr.connectsTo){
+          targets = sr.connectsTo.split(',').map(s=>Number(s.trim())).filter(n=>!isNaN(n) && idByOrder[n]);
+        } else if(sr.shape !== 'terminal' && i < stepRows.length-1){
+          // terminal steps are logical endpoints — don't auto-chain them forward into
+          // whatever the next row happens to be, since that's often an unrelated branch
+          targets = [stepRows[i+1].stepOrder];
+        }
+        targets.forEach(t=>{
+          impEdges.push({
+            id:'ei'+(edgeIdCounter++), from:idByOrder[sr.stepOrder], to:idByOrder[t],
+            label: sr.branchLabel || '', params:'', notes:'', scenarioTags:[],
+            weight:'regular', dash:'solid', routing:'straight'
+          });
+        });
+      });
+
+      const content = { flowStates: {
+        current: { nodes:impNodes, edges:impEdges, hLanes:[], vLanes:[], scenarios:[] },
+        future:  { nodes:[], edges:[], hLanes:[], vLanes:[], scenarios:[] }
+      }};
+      const templateName = stepRows[0].templateName || tKey;
+      const storageKey = 'custom:' + tKey.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') + '-' + Date.now().toString(36) + '-' + importedCount;
+      if(window.storage){
+        await window.storage.set('template:'+storageKey, JSON.stringify(content), false);
+        customTemplateIndex.push({ key: storageKey, name: templateName });
+      }
+      importedCount++;
+    }
+    await saveDomains();
+    await saveTemplateIndex();
+    refreshCustomGroup();
+    setStatus('Imported ' + importedCount + ' template' + (importedCount===1?'':'s') + ' from ' + file.name + ' — find them under "My templates."', 'ok');
+  }catch(err){
+    setStatus('Could not read that file — confirm it matches the column layout from the downloadable template.');
+  }
+});
+
+document.getElementById('saveTemplateBtn').addEventListener('click', async ()=>{
+  if(!nodes.length){ setStatus('Nothing to save yet — build or load a flow first.'); return; }
+  if(!window.storage){ setStatus('Storage unavailable in this view.'); return; }
+  const currentKey = document.getElementById('presetSelect').value;
+  const existing = customTemplateIndex.find(t=>t.key===currentKey);
+  const defaultName = existing ? existing.name : '';
+  const name = await showPrompt('Save this flow as a template. Name it:', defaultName);
+  if(!name || !name.trim()) return;
+  const clean = name.trim();
+  let key = existing && existing.name === clean ? existing.key : 'custom:' + clean.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') + '-' + Date.now().toString(36);
+  const dup = customTemplateIndex.find(t=>t.name === clean && t.key !== key);
+  if(dup && !(await showConfirm('A template named "'+clean+'" already exists. Overwrite it?'))) return;
+  if(dup) key = dup.key;
+
+  syncGlobalsToStore();
+  const content = { flowStates };
+  try{
+    await window.storage.set('template:'+key, JSON.stringify(content), false);
+    if(!customTemplateIndex.find(t=>t.key===key)) customTemplateIndex.push({key, name: clean});
+    else customTemplateIndex = customTemplateIndex.map(t=> t.key===key ? {key, name: clean} : t);
+    await saveTemplateIndex();
+    refreshCustomGroup();
+    document.getElementById('presetSelect').value = key;
+    setStatus('Saved template "'+clean+'".', 'ok');
+  }catch(err){
+    setStatus('Save failed.');
+  }
+});
+
+document.getElementById('deleteTemplateBtn').addEventListener('click', async ()=>{
+  const key = document.getElementById('presetSelect').value;
+  if(!key){ setStatus('Choose a template to delete first.'); return; }
+  if(!key.startsWith('custom:')){ setStatus('Seed templates are built-in and can\'t be deleted — save your edits as a new template instead.'); return; }
+  const entry = customTemplateIndex.find(t=>t.key===key);
+  if(!entry) return;
+  if(!(await showConfirm('Delete template "'+entry.name+'"? This cannot be undone.'))) return;
+  try{
+    if(window.storage){
+      const cur = await window.storage.get('template:'+key, false).catch(()=>null);
+      if(cur) await window.storage.delete('template:'+key, false);
+    }
+    customTemplateIndex = customTemplateIndex.filter(t=>t.key!==key);
+    await saveTemplateIndex();
+    refreshCustomGroup();
+    document.getElementById('presetSelect').value = '';
+    setStatus('Deleted template "'+entry.name+'".', 'ok');
+  }catch(err){
+    setStatus('Delete failed.');
+  }
+});
+
+loadTemplateIndex();
+loadClassificationTypes();
+loadRoleTypes();
+loadDomains();
+loadL1Domains();
+loadBusinessGoals();
+loadClients();
+
+/* ======================= EXPORT ======================= */
+function shapeSvg(n){
+  const s = SIZES[n.type];
+  const cx = n.x + s.w/2, cy = n.y + s.h/2;
+  const label = n.label.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  let shape = '', textColor = '#2B2A28', fontSize = 12;
+  if(n.type === 'step'){
+    shape = `<rect x="${n.x}" y="${n.y}" width="${s.w}" height="${s.h}" rx="12" fill="#F8F4EC" stroke="#C7BC9E" stroke-width="1"/>`;
+  } else if(n.type === 'subprocess'){
+    shape = `<rect x="${n.x}" y="${n.y}" width="${s.w}" height="${s.h}" rx="12" fill="#DCE9EC" stroke="#4A7C8E" stroke-width="2.5"/>`;
+  } else if(n.type === 'decision'){
+    shape = `<rect x="${n.x}" y="${n.y}" width="${s.w}" height="${s.h}" rx="14" fill="#F3E3CE" stroke="#C4843A" stroke-width="2.5" transform="rotate(45 ${cx} ${cy})"/>`;
+  } else if(n.type === 'parallel'){
+    shape = `<rect x="${n.x}" y="${n.y}" width="${s.w}" height="${s.h}" rx="14" fill="#DCE9EC" stroke="#345A68" stroke-width="2.5" transform="rotate(45 ${cx} ${cy})"/>`;
+  } else if(n.type === 'event'){
+    shape = `<circle cx="${cx}" cy="${cy}" r="${s.w/2}" fill="#F7E4E9" stroke="#D98CA0" stroke-width="2.5"/>`;
+    fontSize = 10;
+  } else if(n.type === 'data'){
+    const x=n.x,y=n.y,w=s.w,h=s.h,cut=w*0.18;
+    shape = `<polygon points="${x},${y} ${x+w-cut},${y} ${x+w},${y+h*0.3} ${x+w},${y+h} ${x},${y+h}" fill="#F3E3CE" stroke="#C4843A" stroke-width="2"/>`;
+  } else {
+    shape = `<rect x="${n.x}" y="${n.y}" width="${s.w}" height="${s.h}" rx="${s.h/2}" fill="#345A68"/>`;
+    textColor = '#F8F4EC';
+  }
+  return shape + `<text x="${cx}" y="${cy+4}" text-anchor="middle" font-family="Jost, sans-serif" font-size="${fontSize}" fill="${textColor}">${label}</text>`;
+}
+
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  const w = parseInt(canvasInner.style.width) || 900;
+  const h = parseInt(canvasInner.style.height) || 460;
+  const nodeSvgParts = nodes.map(shapeSvg).join('');
+  const edgeSvgParts = edges.map(ed=>{
+    const from = nodes.find(n=>n.id===ed.from), to = nodes.find(n=>n.id===ed.to);
+    if(!from || !to || ed.from===ed.to) return ''; // self-loops omitted from the static export for simplicity
+    const {x1,y1,x2,y2} = edgeEndpoints(from, to);
+    const isBranch = from.type === 'decision' || from.type === 'parallel';
+    const { d, labelX: mx, labelY: my } = buildEdgePath(x1,y1,x2,y2, ed.routing||'straight');
+    const dash = DASH_PATTERN[ed.dash||'solid'];
+    const dashAttr = dash && dash !== 'none' ? ` stroke-dasharray="${dash}"` : '';
+    let out = `<path d="${d}" fill="none" stroke="${isBranch?'#C4843A':'#345A68'}" stroke-width="${WEIGHT_PX[ed.weight||'regular']}"${dashAttr} marker-end="url(#arrow)"/>`;
+    if(ed.label){
+      const lw = Math.max(34, ed.label.length*6.4+16);
+      const safeLabel = ed.label.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+      out += `<rect x="${mx-lw/2}" y="${my-11}" width="${lw}" height="22" rx="11" fill="#F8F4EC" stroke="#C4843A" stroke-width="1.2"/>` +
+             `<text x="${mx}" y="${my+4}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#345A68">${safeLabel}</text>`;
+    }
+    return out;
+  }).join('');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#C4843A"/></marker></defs>
+<rect width="100%" height="100%" fill="#F8F4EC"/>
+${edgeSvgParts}${nodeSvgParts}
+</svg>`;
+  const blob = new Blob([svg], {type:'image/svg+xml'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'process-flow.svg';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  setStatus('Exported process-flow.svg', 'ok');
+});
+
+document.getElementById('saveBtn').addEventListener('click', async ()=>{
+  try{
+    if(!window.storage){ setStatus('Storage unavailable in this view.'); return; }
+    syncGlobalsToStore();
+    await window.storage.set('flow:default', JSON.stringify({flowStates}), false);
+    setStatus('Saved (both Current State and Future State).', 'ok');
+  }catch(err){ setStatus('Save failed.'); }
+});
+document.getElementById('loadBtn').addEventListener('click', async ()=>{
+  try{
+    if(!window.storage){ setStatus('Storage unavailable in this view.'); return; }
+    const result = await window.storage.get('flow:default', false);
+    if(result && result.value){
+      const data = JSON.parse(result.value);
+      applyFlowData(data);
+      render();
+      setStatus('Flow loaded.', 'ok');
+    } else {
+      setStatus('No saved flow found.');
+    }
+  }catch(err){ setStatus('No saved flow found.'); }
+});
+
+function normalizeView(d){
+  d = d || {};
+  return {
+    nodes: (d.nodes || []).map(n=>({ scenarioTags:[], metaByScenario:{base:{}}, execMode:'', concurrency:'sequential', linkedCurrentIds:[], painPointEntries:[], goalMappings:[], domainId:null, eventSubtype:null, startType:null, priorStepRef:'', ...n })),
+    edges: (d.edges || []).map(e=>({ scenarioTags:[], weight:'regular', dash:'solid', routing:'straight', ...e })),
+    hLanes: (d.hLanes || (d.laneCount ? Array.from({length:d.laneCount}, (_,i)=>'Lane '+(i+1)) : []))
+      .map(l => typeof l === 'string' ? { name:l, size:DEFAULT_H_LANE_SIZE, locked:false } : { size:DEFAULT_H_LANE_SIZE, locked:false, ...l }),
+    vLanes: (d.vLanes || [])
+      .map(l => typeof l === 'string' ? { name:l, size:DEFAULT_V_LANE_SIZE, locked:false } : { size:DEFAULT_V_LANE_SIZE, locked:false, ...l }),
+    // legacy saves stored scenarios as plain strings with no L2/L3 type — treat those as L3s of unknown origin
+    scenarios: (d.scenarios || []).map(s => typeof s === 'string' ? {name:s, type:'L3', basedOn:null} : s)
+  };
+}
+function syncGlobalsToStore(){
+  flowStates[activeView] = { nodes, edges, hLanes, vLanes, scenarios };
+}
+// Debounced so a drag or a burst of edits doesn't hammer storage with a write per frame —
+// waits until things go quiet for a moment, then persists the whole working canvas.
+function scheduleAutoSave(){
+  if(!window.storage || !startupLoadComplete) return;
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(async ()=>{
+    try{
+      syncGlobalsToStore();
+      await window.storage.set('flow:default', JSON.stringify({flowStates}), false);
+    }catch(err){ /* best-effort — a failed autosave shouldn't interrupt anything */ }
+  }, 900);
+}
+function loadStoreIntoGlobals(view){
+  const d = normalizeView(flowStates[view]);
+  nodes = d.nodes; edges = d.edges; hLanes = d.hLanes; vLanes = d.vLanes; scenarios = d.scenarios;
+  activeScenario = 'base'; pendingFrom = null;
+  nextId = 1 + nodes.reduce((m,n)=>Math.max(m, parseInt((n.id||'n0').slice(1))||0), 0);
+  renderScenarioOptions();
+}
+function applyFlowData(data){
+  if(data.flowStates){
+    flowStates = { current: normalizeView(data.flowStates.current), future: normalizeView(data.flowStates.future) };
+  } else {
+    // legacy single-view payload (pre-Current/Future State)
+    flowStates = { current: normalizeView(data), future: { nodes:[], edges:[], hLanes:[], vLanes:[], scenarios:[] } };
+  }
+  activeView = 'current';
+  loadStoreIntoGlobals('current');
+  updateViewToggleUI();
+}
+
+// A plain L3-only step should dim when it doesn't apply to the active scenario. But an
+// L2-inherited copy represents shared L2 vocabulary living inside an L3 lane for reference —
+// it should read as "applicable" on Base and on its own L3, not grey out just because you're
+// looking at Base. isL2Inherited is optional (edges don't have it) and simply has no effect there.
+function isDimmed(tags, isL2Inherited){
+  if(!tags || !tags.length) return false;
+  if(isL2Inherited && activeScenario === 'base') return false;
+  if(activeScenario === 'base') return true;
+  return !tags.includes(activeScenario);
+}
+function scenarioDisplayName(s){ return s === 'base' ? 'Base (' + lvl(2) + ')' : s; }
+
+/* ======================= L1 INDUSTRIES (graph model: admin inputs vs. business definitions) ======================= */
+async function loadClassificationTypes(){
+  try{
+    if(!window.storage) return;
+    const result = await window.storage.get('classificationtypes', false);
+    classificationTypes = result && result.value ? JSON.parse(result.value) : [];
+  }catch(err){ classificationTypes = []; }
+}
+async function saveClassificationTypes(){
+  if(!window.storage) return;
+  try{ await window.storage.set('classificationtypes', JSON.stringify(classificationTypes), false); }catch(err){}
+}
+async function loadRoleTypes(){
+  try{
+    if(!window.storage) return;
+    const result = await window.storage.get('roletypes', false);
+    roleTypes = result && result.value ? JSON.parse(result.value) : [];
+  }catch(err){ roleTypes = []; }
+}
+async function saveRoleTypes(){
+  if(!window.storage) return;
+  try{ await window.storage.set('roletypes', JSON.stringify(roleTypes), false); }catch(err){}
+}
+async function loadDomains(){
+  try{
+    if(!window.storage) return;
+    const result = await window.storage.get('domains', false);
+    domains = result && result.value ? JSON.parse(result.value) : [];
+  }catch(err){ domains = []; }
+}
+async function saveDomains(){
+  if(!window.storage) return;
+  try{ await window.storage.set('domains', JSON.stringify(domains), false); }catch(err){}
+}
+async function loadL1Domains(){
+  try{
+    if(!window.storage) return;
+    const result = await window.storage.get('l1domains', false);
+    const raw = result && result.value ? JSON.parse(result.value) : [];
+    // migrate forward: backfill pair ids for entries saved before entities/relationships existed
+    l1Domains = raw.map(d => ({
+      id:d.id, name:d.name,
+      pairs: (d.pairs || []).map((p,i) => ({ id: p.id || ('p'+i+'-'+d.id), ...p })),
+      entities: d.entities || [],
+      relationships: d.relationships || []
+    }));
+  }catch(err){ l1Domains = []; }
+  renderDomainOptions();
+}
+async function saveL1Domains(){
+  if(!window.storage) return;
+  try{ await window.storage.set('l1domains', JSON.stringify(l1Domains), false); }catch(err){}
+}
+function renderDomainOptions(){
+  const sel = document.getElementById('domainSelect');
+  const current = sel.value;
+  sel.innerHTML = l1Domains.length
+    ? l1Domains.map(d=>`<option value="${d.id}">${d.name}</option>`).join('')
+    : '<option value="">No ' + lvl(1) + ' definitions yet — click "🏛 ' + lvl(1) + '"</option>';
+  if(l1Domains.some(d=>d.id===current)) sel.value = current;
+}
+
+// Renders entities as nodes arranged in a circle and relationships as labeled edges between
+// them — a straightforward, always-legible layout that needs no physics simulation, since
+// industry graphs here are small enough (a handful of entities) that positioning doesn't
+// need to be automatic/force-directed to stay readable.
+function showIndustryMap(ind){
+  document.getElementById('mapTitle').textContent = ind.name + ' — entity relationship map';
+  const svg = document.getElementById('mapSvg');
+  svg.innerHTML = `<defs><marker id="mapArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#345A68"/></marker></defs>`;
+  const W = 860, H = 560, cx = W/2, cy = H/2, R = Math.min(W,H)/2 - 90;
+  const n = ind.entities.length;
+  const pos = {};
+  ind.entities.forEach((e,i)=>{
+    const angle = (i/n)*Math.PI*2 - Math.PI/2;
+    pos[e.id] = { x: cx + R*Math.cos(angle), y: cy + R*Math.sin(angle) };
+  });
+  const pairLabel = (pairId) => {
+    const p = ind.pairs.find(x=>x.id===pairId);
+    if(!p) return '?';
+    const ctName = classificationTypes.find(c=>c.id===p.classificationTypeId)?.name || '?';
+    const rtName = roleTypes.find(r=>r.id===p.roleTypeId)?.name || '?';
+    return ctName + ' → ' + rtName;
+  };
+
+  let svgContent = '';
+  ind.relationships.forEach(rel=>{
+    const a = pos[rel.fromEntityId], b = pos[rel.toEntityId];
+    if(!a || !b) return;
+    const dx = b.x-a.x, dy = b.y-a.y, dist = Math.sqrt(dx*dx+dy*dy)||1;
+    const ux = dx/dist, uy = dy/dist;
+    const x1 = a.x + ux*46, y1 = a.y + uy*46, x2 = b.x - ux*46, y2 = b.y - uy*46;
+    const mx = (x1+x2)/2, my = (y1+y2)/2;
+    svgContent += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#345A68" stroke-width="1.6" marker-end="url(#mapArrow)"/>`;
+    svgContent += `<rect x="${mx-70}" y="${my-11}" width="140" height="22" rx="11" fill="#F8F4EC" stroke="#C4843A" stroke-width="1.2"/>`;
+    svgContent += `<text x="${mx}" y="${my+4}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#345A68">${rel.label}</text>`;
+    // small face labels near each endpoint
+    svgContent += `<text x="${x1 + ux*18}" y="${y1 + uy*18}" text-anchor="middle" font-family="Jost, sans-serif" font-size="9" fill="#8a5a26">${pairLabel(rel.fromPairId)}</text>`;
+    svgContent += `<text x="${x2 - ux*18}" y="${y2 - uy*18}" text-anchor="middle" font-family="Jost, sans-serif" font-size="9" fill="#8a5a26">${pairLabel(rel.toPairId)}</text>`;
+  });
+  ind.entities.forEach(e=>{
+    const p = pos[e.id];
+    svgContent += `<circle cx="${p.x}" cy="${p.y}" r="42" fill="#DCE9EC" stroke="#345A68" stroke-width="2.5"/>`;
+    svgContent += `<text x="${p.x}" y="${p.y+4}" text-anchor="middle" font-family="Fraunces, serif" font-weight="600" font-size="12" fill="#2B2A28">${e.name}</text>`;
+  });
+  svg.innerHTML += svgContent;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  document.getElementById('mapOverlay').classList.add('open');
+  document.getElementById('mapBackdrop').classList.add('open');
+}
+document.getElementById('mapClose').addEventListener('click', ()=>{
+  document.getElementById('mapOverlay').classList.remove('open');
+  document.getElementById('mapBackdrop').classList.remove('open');
+});
+document.getElementById('mapBackdrop').addEventListener('click', ()=>{
+  document.getElementById('mapOverlay').classList.remove('open');
+  document.getElementById('mapBackdrop').classList.remove('open');
+});
+
+function renderL1Panel(){
+  const body = document.getElementById('l1Body');
+  body.innerHTML = '';
+
+  // --- Admin inputs: Classification Types ---
+  const ctSection = document.createElement('div');
+  ctSection.className = 'field';
+  ctSection.innerHTML = `<label>Classification types <span class="hint-sm">Admin-defined vocabulary, e.g. "Private Equity", "Software &amp; Service Provider", "Investor" — reusable across every industry below.</span></label>`;
+  const ctList = document.createElement('div');
+  ctList.style.cssText = 'display:flex; flex-wrap:wrap; gap:0.4rem; margin:0.4rem 0;';
+  classificationTypes.forEach(ct=>{
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.style.cssText = 'display:inline-flex; align-items:center; gap:0.4rem; cursor:default;';
+    chip.innerHTML = `${ct.name} <button data-del-ct="${ct.id}" style="border:none; background:none; color:#a15571; cursor:pointer; font-size:0.8rem;">✕</button>`;
+    ctList.appendChild(chip);
+  });
+  ctSection.appendChild(ctList);
+  const addCtBtn = document.createElement('button');
+  addCtBtn.className = 'tool-btn'; addCtBtn.textContent = '+ Classification type';
+  addCtBtn.addEventListener('click', async ()=>{
+    const name = await showPrompt('New classification type (e.g. "Private Equity", "Investor"):');
+    if(!name || !name.trim()) return;
+    const clean = name.trim();
+    if(classificationTypes.some(c=>c.name===clean)){ setStatus('That classification type already exists.'); return; }
+    classificationTypes.push({id:'ct'+Date.now().toString(36), name:clean});
+    await saveClassificationTypes();
+    renderL1Panel();
+  });
+  ctSection.appendChild(addCtBtn);
+  body.appendChild(ctSection);
+
+  // --- Admin inputs: Role Types ---
+  const rtSection = document.createElement('div');
+  rtSection.className = 'field';
+  rtSection.innerHTML = `<label>Role types <span class="hint-sm">Admin-defined vocabulary, e.g. "General Partner", "Limited Partner", "Portfolio Company", "Selling Entity" — also reusable across every industry.</span></label>`;
+  const rtList = document.createElement('div');
+  rtList.style.cssText = 'display:flex; flex-wrap:wrap; gap:0.4rem; margin:0.4rem 0;';
+  roleTypes.forEach(rt=>{
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.style.cssText = 'display:inline-flex; align-items:center; gap:0.4rem; cursor:default;';
+    chip.innerHTML = `${rt.name} <button data-del-rt="${rt.id}" style="border:none; background:none; color:#a15571; cursor:pointer; font-size:0.8rem;">✕</button>`;
+    rtList.appendChild(chip);
+  });
+  rtSection.appendChild(rtList);
+  const addRtBtn = document.createElement('button');
+  addRtBtn.className = 'tool-btn'; addRtBtn.textContent = '+ Role type';
+  addRtBtn.addEventListener('click', async ()=>{
+    const name = await showPrompt('New role type (e.g. "General Partner", "Portfolio Company"):');
+    if(!name || !name.trim()) return;
+    const clean = name.trim();
+    if(roleTypes.some(r=>r.name===clean)){ setStatus('That role type already exists.'); return; }
+    roleTypes.push({id:'rt'+Date.now().toString(36), name:clean});
+    await saveRoleTypes();
+    renderL1Panel();
+  });
+  rtSection.appendChild(addRtBtn);
+  body.appendChild(rtSection);
+
+  // --- Admin inputs: Domains (functional business domains, not L1 industries) ---
+  const domSection = document.createElement('div');
+  domSection.className = 'field';
+  domSection.innerHTML = `<label>Domains <span class="hint-sm">Functional business domains, e.g. "Sales," "Finance," "Legal," "Operations" — global and reusable across every industry. Every L2 and L3 step maps to one; this is where industry translation happens (L1 industry + domain + L2/L3 step).</span></label>`;
+  const domList = document.createElement('div');
+  domList.style.cssText = 'display:flex; flex-wrap:wrap; gap:0.4rem; margin:0.4rem 0;';
+  domains.forEach(dm=>{
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.style.cssText = 'display:inline-flex; align-items:center; gap:0.4rem; cursor:default;';
+    chip.innerHTML = `${dm.name} <button data-del-dom="${dm.id}" style="border:none; background:none; color:#a15571; cursor:pointer; font-size:0.8rem;">✕</button>`;
+    domList.appendChild(chip);
+  });
+  domSection.appendChild(domList);
+  const addDomBtn = document.createElement('button');
+  addDomBtn.className = 'tool-btn'; addDomBtn.textContent = '+ Domain';
+  addDomBtn.addEventListener('click', async ()=>{
+    const name = await showPrompt('New domain (e.g. "Sales", "Finance", "Legal", "Operations"):');
+    if(!name || !name.trim()) return;
+    const clean = name.trim();
+    if(domains.some(d=>d.name===clean)){ setStatus('That domain already exists.'); return; }
+    domains.push({id:'dm'+Date.now().toString(36), name:clean});
+    await saveDomains();
+    renderL1Panel();
+  });
+  domSection.appendChild(addDomBtn);
+  body.appendChild(domSection);
+
+  // --- Business definitions: Industries, each instancing (Classification Type -> Role Type) pairs ---
+  const indSection = document.createElement('div');
+  indSection.className = 'field-section';
+  indSection.textContent = 'Industries (L1) — business definitions built from the inputs above';
+  body.appendChild(indSection);
+
+  if(!l1Domains.length){
+    const none = document.createElement('p');
+    none.className = 'hint-sm'; none.style.display = 'block';
+    none.textContent = 'No industries defined yet.';
+    body.appendChild(none);
+  }
+  l1Domains.forEach(ind=>{
+    const card = document.createElement('div');
+    card.className = 'field';
+    card.style.cssText = 'border:1px solid var(--line); border-radius:12px; padding:0.8rem;';
+    const head = document.createElement('div');
+    head.style.cssText = 'display:flex; justify-content:space-between; align-items:center;';
+    head.innerHTML = `<strong style="font-family:'Fraunces'; font-size:0.95rem;">${ind.name}</strong>`;
+    const delBtn = document.createElement('button');
+    delBtn.className = 'tool-btn danger'; delBtn.textContent = 'Delete industry';
+    delBtn.style.cssText = 'font-size:0.66rem; padding:0.3rem 0.6rem;';
+    delBtn.addEventListener('click', async ()=>{
+      if(!(await showConfirm('Delete industry "'+ind.name+'"? L2s already assigned to it will keep the reference but it will no longer appear as a choosable domain.'))) return;
+      l1Domains = l1Domains.filter(x=>x.id!==ind.id);
+      await saveL1Domains();
+      renderL1Panel(); renderDomainOptions();
+    });
+    head.appendChild(delBtn);
+    card.appendChild(head);
+
+    const pairsList = document.createElement('div');
+    pairsList.style.cssText = 'margin-top:0.5rem; display:flex; flex-direction:column; gap:0.3rem;';
+    if(!ind.pairs.length){
+      const p = document.createElement('div');
+      p.className = 'hint-sm'; p.textContent = 'No classification/role pairs yet.';
+      pairsList.appendChild(p);
+    }
+    ind.pairs.forEach((pair, i)=>{
+      const ctName = classificationTypes.find(c=>c.id===pair.classificationTypeId)?.name || '(deleted)';
+      const rtName = roleTypes.find(r=>r.id===pair.roleTypeId)?.name || '(deleted)';
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; background:var(--parchment); border-radius:8px; padding:0.4rem 0.6rem;';
+      row.innerHTML = `<span><strong>${ctName}</strong> → ${rtName}</span>`;
+      const rm = document.createElement('button');
+      rm.textContent = '✕'; rm.style.cssText = 'border:none; background:none; color:#a15571; cursor:pointer;';
+      rm.addEventListener('click', async ()=>{
+        ind.pairs.splice(i, 1);
+        await saveL1Domains();
+        renderL1Panel();
+      });
+      row.appendChild(rm);
+      pairsList.appendChild(row);
+    });
+    card.appendChild(pairsList);
+
+    const addPairBtn = document.createElement('button');
+    addPairBtn.className = 'tool-btn'; addPairBtn.textContent = '+ Add classification/role pair';
+    addPairBtn.style.cssText = 'margin-top:0.5rem; font-size:0.7rem;';
+    addPairBtn.addEventListener('click', async ()=>{
+      if(!classificationTypes.length || !roleTypes.length){
+        setStatus('Add at least one classification type and one role type first.');
+        return;
+      }
+      const ctId = await showChoice('Which classification type?', classificationTypes.map(c=>({label:c.name, value:c.id})));
+      if(!ctId) return;
+      const rtId = await showChoice('Which role type does it play in "'+ind.name+'"?', roleTypes.map(r=>({label:r.name, value:r.id})));
+      if(!rtId) return;
+      ind.pairs.push({id:'p'+Date.now().toString(36), classificationTypeId:ctId, roleTypeId:rtId});
+      await saveL1Domains();
+      renderL1Panel();
+    });
+    card.appendChild(addPairBtn);
+
+    // --- Entities: named things that can wear more than one classification/role face ---
+    ind.entities = ind.entities || [];
+    ind.relationships = ind.relationships || [];
+    const entWrap = document.createElement('div');
+    entWrap.style.cssText = 'margin-top:0.7rem; padding-top:0.6rem; border-top:1px dashed var(--line);';
+    entWrap.innerHTML = `<span class="hint-sm" style="display:block; margin-bottom:0.3rem;">Entities — a real thing (e.g. "SaaS Company") that can present a different classification/role face depending on who it's relating to</span>`;
+    const entList = document.createElement('div');
+    entList.style.cssText = 'display:flex; flex-direction:column; gap:0.3rem;';
+    const pairLabel = (pairId) => {
+      const p = ind.pairs.find(x=>x.id===pairId);
+      if(!p) return '(deleted pair)';
+      const ctName = classificationTypes.find(c=>c.id===p.classificationTypeId)?.name || '?';
+      const rtName = roleTypes.find(r=>r.id===p.roleTypeId)?.name || '?';
+      return `${ctName} → ${rtName}`;
+    };
+    ind.entities.forEach((ent,i)=>{
+      const row = document.createElement('div');
+      row.style.cssText = 'font-size:0.78rem; background:var(--parchment); border-radius:8px; padding:0.4rem 0.6rem; display:flex; justify-content:space-between; align-items:center;';
+      row.innerHTML = `<span><strong>${ent.name}</strong> — ${(ent.pairIds||[]).map(pairLabel).join(' · ') || 'no faces yet'}</span>`;
+      const rm = document.createElement('button');
+      rm.textContent = '✕'; rm.style.cssText = 'border:none; background:none; color:#a15571; cursor:pointer;';
+      rm.addEventListener('click', async ()=>{
+        ind.entities.splice(i,1);
+        ind.relationships = ind.relationships.filter(r=>r.fromEntityId!==ent.id && r.toEntityId!==ent.id);
+        await saveL1Domains(); renderL1Panel();
+      });
+      row.appendChild(rm);
+      entList.appendChild(row);
+    });
+    entWrap.appendChild(entList);
+    const addEntBtn = document.createElement('button');
+    addEntBtn.className = 'tool-btn'; addEntBtn.style.cssText = 'margin-top:0.4rem; font-size:0.7rem;';
+    addEntBtn.textContent = '+ Add entity';
+    addEntBtn.addEventListener('click', async ()=>{
+      if(!ind.pairs.length){ setStatus('Add at least one classification/role pair to "'+ind.name+'" first.'); return; }
+      const name = await showPrompt('Entity name (e.g. "SaaS Company", "PE Firm", "LP Investor"):');
+      if(!name || !name.trim()) return;
+      const faces = await showMultiChoice('Which classification/role face(s) does "'+name.trim()+'" wear? (its primary selling motion, plus any others it presents when relating to different roles)',
+        ind.pairs.map(p=>({label: pairLabel(p.id), value: p.id})));
+      if(!faces || !faces.length) return;
+      ind.entities.push({ id:'e'+Date.now().toString(36), name:name.trim(), pairIds:faces });
+      await saveL1Domains(); renderL1Panel();
+    });
+    entWrap.appendChild(addEntBtn);
+    card.appendChild(entWrap);
+
+    // --- Relationships: connect two entities, using a specific face on each side ---
+    const relWrap = document.createElement('div');
+    relWrap.style.cssText = 'margin-top:0.7rem; padding-top:0.6rem; border-top:1px dashed var(--line);';
+    relWrap.innerHTML = `<span class="hint-sm" style="display:block; margin-bottom:0.3rem;">Relationships — how entities relate, using the specific face active in that relationship</span>`;
+    const relList = document.createElement('div');
+    relList.style.cssText = 'display:flex; flex-direction:column; gap:0.3rem;';
+    const entName = (id) => ind.entities.find(e=>e.id===id)?.name || '(deleted)';
+    ind.relationships.forEach((rel,i)=>{
+      const row = document.createElement('div');
+      row.style.cssText = 'font-size:0.76rem; background:var(--parchment); border-radius:8px; padding:0.4rem 0.6rem; display:flex; justify-content:space-between; align-items:center;';
+      row.innerHTML = `<span><strong>${entName(rel.fromEntityId)}</strong> (${pairLabel(rel.fromPairId)}) — <em>${rel.label}</em> → <strong>${entName(rel.toEntityId)}</strong> (${pairLabel(rel.toPairId)})</span>`;
+      const rm = document.createElement('button');
+      rm.textContent = '✕'; rm.style.cssText = 'border:none; background:none; color:#a15571; cursor:pointer;';
+      rm.addEventListener('click', async ()=>{
+        ind.relationships.splice(i,1);
+        await saveL1Domains(); renderL1Panel();
+      });
+      row.appendChild(rm);
+      relList.appendChild(row);
+    });
+    relWrap.appendChild(relList);
+    const addRelBtn = document.createElement('button');
+    addRelBtn.className = 'tool-btn'; addRelBtn.style.cssText = 'margin-top:0.4rem; font-size:0.7rem;';
+    addRelBtn.textContent = '+ Add relationship';
+    addRelBtn.addEventListener('click', async ()=>{
+      if(ind.entities.length < 2){ setStatus('Add at least two entities to "'+ind.name+'" first.'); return; }
+      const fromEntityId = await showChoice('From which entity?', ind.entities.map(e=>({label:e.name, value:e.id})));
+      if(!fromEntityId) return;
+      const fromEnt = ind.entities.find(e=>e.id===fromEntityId);
+      const fromPairId = await showChoice('Which face of "'+fromEnt.name+'" applies in this relationship?', (fromEnt.pairIds||[]).map(pid=>({label:pairLabel(pid), value:pid})));
+      if(!fromPairId) return;
+      const label = await showPrompt('Relationship label (e.g. "invests in", "sells to", "reports to"):');
+      if(!label || !label.trim()) return;
+      const toEntityId = await showChoice('To which entity?', ind.entities.filter(e=>e.id!==fromEntityId).map(e=>({label:e.name, value:e.id})));
+      if(!toEntityId) return;
+      const toEnt = ind.entities.find(e=>e.id===toEntityId);
+      const toPairId = await showChoice('Which face of "'+toEnt.name+'" applies in this relationship?', (toEnt.pairIds||[]).map(pid=>({label:pairLabel(pid), value:pid})));
+      if(!toPairId) return;
+      ind.relationships.push({ id:'r'+Date.now().toString(36), fromEntityId, fromPairId, label:label.trim(), toEntityId, toPairId });
+      await saveL1Domains(); renderL1Panel();
+    });
+    relWrap.appendChild(addRelBtn);
+    card.appendChild(relWrap);
+
+    if(ind.entities.length){
+      const mapBtn = document.createElement('button');
+      mapBtn.className = 'tool-btn';
+      mapBtn.style.cssText = 'margin-top:0.7rem; background:var(--gold); color:var(--ink); border-color:var(--gold);';
+      mapBtn.textContent = '🗺 View map';
+      mapBtn.addEventListener('click', ()=> showIndustryMap(ind));
+      card.appendChild(mapBtn);
+    }
+
+    body.appendChild(card);
+  });
+
+  const addIndBtn = document.createElement('button');
+  addIndBtn.className = 'tool-btn';
+  addIndBtn.style.cssText = 'margin-top:0.6rem; background:var(--teal-deep); color:var(--cream); border-color:var(--teal-deep);';
+  addIndBtn.textContent = '+ Add industry';
+  addIndBtn.addEventListener('click', async ()=>{
+    const name = await showPrompt('Industry name (e.g. "Private Markets", "High Tech / SaaS", "Financial Services"):');
+    if(!name || !name.trim()) return;
+    const clean = name.trim();
+    const domain = { id:'d'+Date.now().toString(36), name:clean, pairs:[], entities:[], relationships:[] };
+    l1Domains.push(domain);
+    await saveL1Domains();
+    renderDomainOptions();
+    renderL1Panel();
+    setStatus('Industry "'+clean+'" added. Give it classification/role pairs, then it is selectable for new L2s.', 'ok');
+  });
+  body.appendChild(addIndBtn);
+
+  body.querySelectorAll('[data-del-ct]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      classificationTypes = classificationTypes.filter(c=>c.id!==btn.dataset.delCt);
+      await saveClassificationTypes();
+      renderL1Panel();
+    });
+  });
+  body.querySelectorAll('[data-del-rt]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      roleTypes = roleTypes.filter(r=>r.id!==btn.dataset.delRt);
+      await saveRoleTypes();
+      renderL1Panel();
+    });
+  });
+  body.querySelectorAll('[data-del-dom]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      domains = domains.filter(d=>d.id!==btn.dataset.delDom);
+      await saveDomains();
+      renderL1Panel();
+    });
+  });
+}
+document.getElementById('l1AdminBtn').addEventListener('click', ()=>{
+  renderL1Panel();
+  document.getElementById('l1Panel').classList.add('open');
+  document.getElementById('l1Backdrop').classList.add('open');
+});
+document.getElementById('l1Close').addEventListener('click', ()=>{
+  document.getElementById('l1Panel').classList.remove('open');
+  document.getElementById('l1Backdrop').classList.remove('open');
+});
+document.getElementById('l1Backdrop').addEventListener('click', ()=>{
+  document.getElementById('l1Panel').classList.remove('open');
+  document.getElementById('l1Backdrop').classList.remove('open');
+});
+
+/* ======================= CLIENTS (instances real customers build from templates) ======================= */
+async function loadClients(){
+  try{
+    if(!window.storage) return;
+    const result = await window.storage.get('clients', false);
+    clients = result && result.value ? JSON.parse(result.value) : [];
+    const instResult = await window.storage.get('clientinstances', false);
+    clientInstances = instResult && instResult.value ? JSON.parse(instResult.value) : {};
+  }catch(err){ clients = clients.length ? clients : []; clientInstances = clientInstances || {}; }
+}
+async function saveClients(){
+  if(!window.storage) return;
+  try{ await window.storage.set('clients', JSON.stringify(clients), false); }catch(err){}
+}
+async function saveClientInstances(){
+  if(!window.storage) return;
+  try{ await window.storage.set('clientinstances', JSON.stringify(clientInstances), false); }catch(err){}
+}
+function updateActiveInstanceLabel(){
+  const el = document.getElementById('activeInstanceLabel');
+  if(!el) return;
+  if(!activeClientInstance){ el.textContent = ''; return; }
+  const client = clients.find(c=>c.id===activeClientInstance.clientId);
+  const inst = (clientInstances[activeClientInstance.clientId]||[]).find(i=>i.id===activeClientInstance.instanceId);
+  el.innerHTML = client && inst ? `Editing: <strong>${client.name}</strong> / ${inst.name} <button class="tool-btn" id="saveToInstanceBtn" style="font-size:0.64rem; padding:0.25rem 0.6rem; margin-left:0.4rem;">💾 Save to instance</button>` : '';
+  const saveBtn = document.getElementById('saveToInstanceBtn');
+  if(saveBtn) saveBtn.addEventListener('click', async ()=>{
+    syncGlobalsToStore();
+    const list = clientInstances[activeClientInstance.clientId] || [];
+    const inst2 = list.find(i=>i.id===activeClientInstance.instanceId);
+    if(inst2){
+      inst2.content = { flowStates };
+      await saveClientInstances();
+      setStatus('Saved to "'+inst2.name+'".', 'ok');
+    }
+  });
+}
+
+function renderClientsPanel(){
+  const body = document.getElementById('clientsBody');
+  body.innerHTML = '';
+  if(!clients.length){
+    body.innerHTML = `<p class="hint-sm" style="display:block;">No clients yet. A client picks one L1 industry, then instances any of your templates into their own editable copy — separate from the shared template library.</p>`;
+    return;
+  }
+  clients.forEach(client=>{
+    const card = document.createElement('div');
+    card.className = 'field';
+    card.style.cssText = 'border:1px solid var(--line); border-radius:12px; padding:0.8rem;';
+    const industryName = l1Domains.find(d=>d.id===client.industryId)?.name || '(no industry)';
+    const head = document.createElement('div');
+    head.style.cssText = 'display:flex; justify-content:space-between; align-items:center;';
+    head.innerHTML = `<div><strong style="font-family:'Fraunces'; font-size:0.95rem;">${client.name}</strong><div class="hint-sm" style="display:block; margin-top:0.1rem;">${industryName}</div></div>`;
+    const delBtn = document.createElement('button');
+    delBtn.className = 'tool-btn danger'; delBtn.textContent = 'Delete client';
+    delBtn.style.cssText = 'font-size:0.66rem; padding:0.3rem 0.6rem;';
+    delBtn.addEventListener('click', async ()=>{
+      if(!(await showConfirm('Delete client "'+client.name+'" and all their instanced flows? This cannot be undone.'))) return;
+      clients = clients.filter(c=>c.id!==client.id);
+      delete clientInstances[client.id];
+      await saveClients(); await saveClientInstances();
+      renderClientsPanel();
+    });
+    head.appendChild(delBtn);
+    card.appendChild(head);
+
+    const instances = clientInstances[client.id] || [];
+    const instList = document.createElement('div');
+    instList.style.cssText = 'margin-top:0.5rem; display:flex; flex-direction:column; gap:0.3rem;';
+    if(!instances.length){
+      const p = document.createElement('div'); p.className = 'hint-sm'; p.textContent = 'No instanced flows yet.';
+      instList.appendChild(p);
+    }
+    instances.forEach(inst=>{
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; background:var(--parchment); border-radius:8px; padding:0.4rem 0.6rem;';
+      row.innerHTML = `<span><strong>${inst.name}</strong> <span class="hint-sm">from ${inst.templateKeyOrigin}</span></span>`;
+      const btnWrap = document.createElement('span');
+      const loadBtn = document.createElement('button');
+      loadBtn.textContent = 'Load'; loadBtn.className = 'tool-btn'; loadBtn.style.cssText = 'font-size:0.64rem; padding:0.25rem 0.6rem; margin-right:0.3rem;';
+      loadBtn.addEventListener('click', async ()=>{
+        if(nodes.length && !(await showConfirm('Load "'+inst.name+'" for '+client.name+'? This replaces the current canvas.'))) return;
+        applyFlowData(inst.content);
+        activeClientInstance = { clientId: client.id, instanceId: inst.id };
+        updateActiveInstanceLabel();
+        render();
+        document.getElementById('clientsPanel').classList.remove('open');
+        document.getElementById('clientsBackdrop').classList.remove('open');
+        setStatus('Loaded "'+inst.name+'" for '+client.name+'.', 'ok');
+      });
+      const delInstBtn = document.createElement('button');
+      delInstBtn.textContent = '✕'; delInstBtn.style.cssText = 'border:none; background:none; color:#a15571; cursor:pointer;';
+      delInstBtn.addEventListener('click', async ()=>{
+        clientInstances[client.id] = (clientInstances[client.id]||[]).filter(i=>i.id!==inst.id);
+        await saveClientInstances();
+        if(activeClientInstance && activeClientInstance.instanceId===inst.id) activeClientInstance = null;
+        updateActiveInstanceLabel();
+        renderClientsPanel();
+      });
+      btnWrap.appendChild(loadBtn); btnWrap.appendChild(delInstBtn);
+      row.appendChild(btnWrap);
+      instList.appendChild(row);
+    });
+    card.appendChild(instList);
+
+    const addInstBtn = document.createElement('button');
+    addInstBtn.className = 'tool-btn'; addInstBtn.style.cssText = 'margin-top:0.5rem; font-size:0.7rem;';
+    addInstBtn.textContent = '+ New instance from template';
+    addInstBtn.addEventListener('click', async ()=>{
+      const seedOptions = Object.entries(PRESET_NAMES).map(([k,v])=>({label:v+' (seed)', value:'seed::'+k}));
+      const customOptions = customTemplateIndex.map(t=>({label:t.name+' (custom)', value:'custom::'+t.key}));
+      const picked = await showChoice('Instance which template for '+client.name+'?', [...seedOptions, ...customOptions]);
+      if(!picked) return;
+      const [kind, key] = picked.split('::');
+      const instName = await showPrompt('Name this instance (e.g. "'+client.name+' — Renewal Flow"):', client.name+' — '+(PRESET_NAMES[key]||key));
+      if(!instName || !instName.trim()) return;
+      let content;
+      if(kind === 'seed'){
+        content = buildPresetFlowStateOffline(key);
+      } else {
+        try{
+          if(!window.storage) throw new Error('no storage');
+          const result = await window.storage.get('template:'+key, false);
+          content = JSON.parse(result.value);
+        }catch(e){
+          setStatus('Could not load that custom template.');
+          return;
+        }
+      }
+      clientInstances[client.id] = clientInstances[client.id] || [];
+      clientInstances[client.id].push({ id:'ci'+Date.now().toString(36), name:instName.trim(), templateKeyOrigin: PRESET_NAMES[key]||key, content });
+      await saveClientInstances();
+      renderClientsPanel();
+      setStatus('Instance "'+instName.trim()+'" created for '+client.name+'.', 'ok');
+    });
+    card.appendChild(addInstBtn);
+    body.appendChild(card);
+  });
+}
+document.getElementById('clientsBtn').addEventListener('click', ()=>{
+  renderClientsPanel();
+  document.getElementById('clientsPanel').classList.add('open');
+  document.getElementById('clientsBackdrop').classList.add('open');
+});
+document.getElementById('clientsClose').addEventListener('click', ()=>{
+  document.getElementById('clientsPanel').classList.remove('open');
+  document.getElementById('clientsBackdrop').classList.remove('open');
+});
+document.getElementById('clientsBackdrop').addEventListener('click', ()=>{
+  document.getElementById('clientsPanel').classList.remove('open');
+  document.getElementById('clientsBackdrop').classList.remove('open');
+});
+document.getElementById('addClientBtn').addEventListener('click', async ()=>{
+  if(!l1Domains.length){
+    const openL1 = await showConfirm('A client needs to pick an L1 industry, and none exist yet. Open "L1 Industries" now to add one?');
+    if(openL1){
+      document.getElementById('clientsPanel').classList.remove('open');
+      document.getElementById('clientsBackdrop').classList.remove('open');
+      document.getElementById('l1AdminBtn').click();
+    }
+    return;
+  }
+  const name = await showPrompt('Client name:');
+  if(!name || !name.trim()) return;
+  const industryId = await showChoice('Which L1 industry is '+name.trim()+' in?', l1Domains.map(d=>({label:d.name, value:d.id})));
+  if(!industryId) return;
+  clients.push({ id:'cl'+Date.now().toString(36), name:name.trim(), industryId });
+  await saveClients();
+  renderClientsPanel();
+  setStatus('Client "'+name.trim()+'" added.', 'ok');
+});
+
+/* ======================= BUSINESS GOALS (global, independent of everything else) ======================= */
+async function loadBusinessGoals(){
+  try{
+    if(!window.storage) return;
+    const result = await window.storage.get('businessgoals', false);
+    businessGoals = result && result.value ? JSON.parse(result.value) : [];
+  }catch(err){ businessGoals = []; }
+}
+async function saveBusinessGoals(){
+  if(!window.storage) return;
+  try{ await window.storage.set('businessgoals', JSON.stringify(businessGoals), false); }catch(err){}
+}
+function renderGoalsPanel(){
+  const body = document.getElementById('goalsBody');
+  if(!businessGoals.length){
+    body.innerHTML = `<p class="hint-sm" style="display:block;">No business goals defined yet. Goals live independently of Current State, Future State, and the L1/L2/L3 hierarchy — add one below, then map Current State steps to its value drivers and KPIs from that step's "Configure" panel.</p>`;
+    return;
+  }
+  body.innerHTML = businessGoals.map(g=>`
+    <div class="field" style="border:1px solid var(--line); border-radius:12px; padding:0.8rem;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.5rem;">
+        <div>
+          <strong style="font-family:'Fraunces'; font-size:0.95rem;">${g.name}</strong>
+          <div class="hint-sm" style="display:block; margin-top:0.15rem;">${g.quarter || 'No quarter set'}</div>
+        </div>
+        <button class="tool-btn danger" data-del-goal="${g.id}" style="font-size:0.66rem; padding:0.3rem 0.6rem;">Delete</button>
+      </div>
+      <div style="margin-top:0.5rem; font-size:0.78rem;">
+        <div><span class="hint-sm">Value drivers</span> ${(g.valueDrivers||[]).join(', ') || '—'}</div>
+        <div style="margin-top:0.25rem;"><span class="hint-sm">KPIs</span> ${(g.kpis||[]).join(', ') || '—'}</div>
+      </div>
+    </div>
+  `).join('');
+  body.querySelectorAll('[data-del-goal]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const id = btn.dataset.delGoal;
+      const g = businessGoals.find(x=>x.id===id);
+      if(!g) return;
+      if(!(await showConfirm('Delete goal "'+g.name+'"? Steps mapped to its value drivers/KPIs will keep the text reference but it will no longer appear here.'))) return;
+      businessGoals = businessGoals.filter(x=>x.id!==id);
+      await saveBusinessGoals();
+      renderGoalsPanel();
+      render();
+    });
+  });
+}
+document.getElementById('goalsBtn').addEventListener('click', ()=>{
+  renderGoalsPanel();
+  document.getElementById('goalsPanel').classList.add('open');
+  document.getElementById('goalsBackdrop').classList.add('open');
+});
+document.getElementById('goalsClose').addEventListener('click', ()=>{
+  document.getElementById('goalsPanel').classList.remove('open');
+  document.getElementById('goalsBackdrop').classList.remove('open');
+});
+document.getElementById('goalsBackdrop').addEventListener('click', ()=>{
+  document.getElementById('goalsPanel').classList.remove('open');
+  document.getElementById('goalsBackdrop').classList.remove('open');
+});
+document.getElementById('addGoalBtn').addEventListener('click', async ()=>{
+  const name = await showPrompt('Business goal name (e.g. "Cut renewal cycle time"):');
+  if(!name || !name.trim()) return;
+  const quarter = await showChoice('Which quarter is this goal assigned to?', [
+    {label:'Q1', value:'Q1'}, {label:'Q2', value:'Q2'}, {label:'Q3', value:'Q3'}, {label:'Q4', value:'Q4'}
+  ]);
+  if(!quarter) return;
+  const year = await showPrompt('Year (e.g. 2026):', String(new Date().getFullYear()));
+  if(!year || !year.trim()) return;
+  const vdText = await showPrompt('Value drivers this goal maps to (comma-separated, e.g. "Gross margin, Retention"):');
+  const kpiText = await showPrompt('KPIs this goal maps to (comma-separated, e.g. "Time-to-close, NRR"):');
+  const goal = {
+    id: 'g'+Date.now().toString(36),
+    name: name.trim(),
+    quarter: quarter + ' ' + year.trim(),
+    valueDrivers: parseTags(vdText || ''),
+    kpis: parseTags(kpiText || '')
+  };
+  businessGoals.push(goal);
+  await saveBusinessGoals();
+  renderGoalsPanel();
+  render();
+  setStatus('Goal "'+goal.name+'" added for '+goal.quarter+'.', 'ok');
+});
+
+function renderScenarioOptions(){
+  const sel = document.getElementById('scenarioSelect');
+  const current = sel.value || 'base';
+  const l2s = scenarios.filter(s=>s.type==='L2');
+  const l3s = scenarios.filter(s=>s.type==='L3');
+  let html = '<option value="base">Base (' + lvl(2) + ' — consistent for every scenario)</option>';
+  if(l2s.length){
+    html += '<optgroup label="' + lvl(2) + ' — additional base flows">' + l2s.map(s=>{
+      const domainName = l1Domains.find(d=>d.id===s.domain)?.name;
+      return `<option value="${s.name.replace(/"/g,'&quot;')}">${s.name}${domainName?' ['+domainName+']':''}</option>`;
+    }).join('') + '</optgroup>';
+  }
+  if(l3s.length){
+    html += '<optgroup label="' + lvl(3) + ' — scenario variants">' + l3s.map(s=>`<option value="${s.name.replace(/"/g,'&quot;')}">${s.name} (from ${s.basedOn==='base'?'Base':s.basedOn})</option>`).join('') + '</optgroup>';
+  }
+  sel.innerHTML = html;
+  const names = scenarios.map(s=>s.name);
+  sel.value = names.includes(current) || current==='base' ? current : 'base';
+  activeScenario = sel.value;
+}
+document.getElementById('scenarioSelect').addEventListener('change', (e)=>{
+  activeScenario = e.target.value;
+  closeInspector();
+  render();
+  setStatus('Viewing: ' + scenarioDisplayName(activeScenario) + '. Base steps always show; scenario-tagged steps and branches are dimmed unless tagged for this scenario.', 'ok');
+});
+
+document.getElementById('addScenarioBtn').addEventListener('click', async ()=>{
+  const l2Options = [{name:'base', label:'Base (' + lvl(2) + ')'}, ...scenarios.filter(s=>s.type==='L2').map(s=>({name:s.name, label:s.name}))];
+
+  const kind = await showChoice('Add a new ' + lvl(2) + ' or ' + lvl(3) + '?', [
+    { label:'New ' + lvl(2), sub:'A foundational base flow — consistent steps for a domain/channel, like Base is today.', value:'L2' },
+    { label:'New ' + lvl(3), sub:'A specific scenario variant, built on top of an existing L2.', value:'L3' }
+  ]);
+  if(!kind) return;
+
+  if(kind === 'L2'){
+    let domainId = document.getElementById('domainSelect').value;
+    if(!l1Domains.length){
+      setStatus('No L1 domains exist yet — add one first (top toolbar, "+ Domain") so this L2 has an industry/business area to belong to.');
+      return;
+    }
+    if(!domainId){
+      const chosen = await showChoice('Which L1 domain does this L2 belong to?', l1Domains.map(d=>({label:d.name, value:d.id})));
+      if(!chosen) return;
+      domainId = chosen;
+    }
+    const name = await showPrompt('Name this L2 base flow — the base industry scenario or sub-type within its domain (e.g. "Renewal L2", "Onboarding L2"):');
+    if(!name || !name.trim()) return;
+    const clean = name.trim();
+    if(clean.toLowerCase()==='base' || scenarios.some(s=>s.name===clean)){ setStatus('That name is already in use — pick another.'); return; }
+    scenarios.push({ name:clean, type:'L2', basedOn:null, domain:domainId });
+    renderScenarioOptions();
+    document.getElementById('scenarioSelect').value = clean;
+    activeScenario = clean;
+    render();
+    const domainName = l1Domains.find(d=>d.id===domainId)?.name || '(domain)';
+    setStatus('L2 "'+clean+'" added under L1 domain "'+domainName+'". Anything you add now on the shape bar is scoped to it — build out its steps, then add an L3 based on it.', 'ok');
+    return;
+  }
+
+  // L3: must pick which L2 it's based on
+  const basedOn = await showChoice('Which L2 is this L3 scenario based on?', l2Options.map(o=>({label:o.label, value:o.name})));
+  if(!basedOn) return;
+
+  const name = await showPrompt('Name this L3 scenario (e.g. "Enterprise Renewal", "SMB Self-Serve"):');
+  if(!name || !name.trim()) return;
+  const clean = name.trim();
+  if(clean.toLowerCase()==='base' || scenarios.some(s=>s.name===clean)){ setStatus('That name is already in use — pick another.'); return; }
+  scenarios.push({ name:clean, type:'L3', basedOn });
+
+  // Auto-import: copy the referenced L2's current steps into a new lane, so the L3 starts
+  // from the L2's most recently updated configuration rather than an empty canvas.
+  const l2Steps = basedOn === 'base'
+    ? nodes.filter(n => (n.scenarioTags||[]).length === 0)
+    : nodes.filter(n => (n.scenarioTags||[]).includes(basedOn));
+
+  if(l2Steps.length){
+    const laneLabel = (basedOn==='base' ? 'Base' : basedOn) + ' (' + lvl(2) + ')';
+    hLanes.push({ name:laneLabel, size:DEFAULT_H_LANE_SIZE, locked:false });
+    const laneIdx = hLanes.length - 1;
+    const priorHeight = hLanes.slice(0, laneIdx).reduce((sum,l)=>sum+l.size, 0);
+    const laneTop = (vLanes.length ? 26 : 0) + priorHeight + DEFAULT_H_LANE_SIZE/2;
+    const ordered = l2Steps.slice().sort((a,b)=>(a.x-b.x)||(a.y-b.y));
+    const idMap = {};
+    ordered.forEach((orig, i)=>{
+      const size = SIZES[orig.type];
+      const copy = addNode(orig.type, 90 + i*190 + size.w/2, laneTop, orig.label);
+      copy.isL2Inherited = true;
+      copy.l2SourceId = orig.id;
+      copy.scenarioTags = [clean];
+      copy.execMode = orig.execMode; copy.concurrency = orig.concurrency;
+      copy.metaByScenario = JSON.parse(JSON.stringify(orig.metaByScenario || {base:{}}));
+      idMap[orig.id] = copy.id;
+    });
+    edges.filter(e => idMap[e.from] && idMap[e.to]).forEach(e=>{
+      edges.push({ ...e, id:'e'+(nextId++), from:idMap[e.from], to:idMap[e.to], scenarioTags:[clean] });
+    });
+  }
+
+  renderScenarioOptions();
+  document.getElementById('scenarioSelect').value = clean;
+  activeScenario = clean;
+  render();
+  setStatus(l2Steps.length
+    ? 'L3 "'+clean+'" created from '+(basedOn==='base'?'Base':basedOn)+' — '+l2Steps.length+' step(s) copied into a new lane (teal dashed outline = inherited from L2). Extend it with scenario-specific steps.'
+    : 'L3 "'+clean+'" created from '+(basedOn==='base'?'Base':basedOn)+', which has no steps yet — nothing to import. Build out that L2 first for a running start next time.', 'ok');
+});
+
+/* ======================= CURRENT STATE / FUTURE STATE VIEW TOGGLE ======================= */
+function updateViewToggleUI(){
+  document.getElementById('viewCurrentBtn').classList.toggle('active', activeView==='current');
+  document.getElementById('viewFutureBtn').classList.toggle('active', activeView==='future');
+  document.getElementById('viewHint').textContent = activeView==='current'
+    ? 'Editing the Current State inventory. Each view is a separate canvas with its own steps, scenarios, and specs.'
+    : 'Editing the Future State target mapping. Each view is a separate canvas with its own steps, scenarios, and specs.';
+}
+function switchView(view){
+  if(view === activeView) return;
+  syncGlobalsToStore();
+  activeView = view;
+  loadStoreIntoGlobals(view);
+  closeInspector();
+  buildInspectorForm();
+  updateViewToggleUI();
+  render();
+  setStatus('Switched to ' + (view==='current' ? 'Current State' : 'Future State') + '.', 'ok');
+}
+document.getElementById('viewCurrentBtn').addEventListener('click', ()=> switchView('current'));
+document.getElementById('viewFutureBtn').addEventListener('click', ()=> switchView('future'));
+
+/* ======================= STEP SPECIFICATION (metadata / agent / inspector) ======================= */
+const FIELD_DEFS = [
+  { section:'Identity & hierarchy' },
+  { key:'hierarchy', label:'Hierarchy / parent path', type:'text', hint:'e.g. Revenue Rod → Billing Stage → this step' },
+  { key:'properties', label:'Properties', type:'textarea', hint:'Bounded definition, attributes, state values' },
+  { key:'product', label:'Product / journey', type:'text', hint:'Which product or user journey this step belongs to' },
+  { key:'translations', label:'Label translations', type:'textarea', hint:'One per line, e.g. es: Configurar' },
+
+  { section:'Actors & data flow' },
+  { key:'actors', label:'Actors involved', type:'text', hint:'Roles, agents, systems that act on this step' },
+  { key:'inputs', label:'Inputs', type:'textarea' },
+  { key:'outputs', label:'Outputs', type:'textarea' },
+  { key:'decisionParams', label:'Decision parameters', type:'textarea', hint:'Branching logic / gate conditions, if applicable' },
+  { key:'relTriggers', label:'Relationship creation triggers', type:'textarea', hint:'What this step creates or links downstream' },
+
+  { section:'Architecture & data' },
+  { key:'archMapping', label:'Related architecture components', type:'textarea' },
+  { key:'dataModel', label:'Data model requirements', type:'textarea' },
+  { key:'automation', label:'Automation requirements', type:'textarea' },
+
+  { section:'Experience' },
+  { key:'functionality', label:'Expected functionality', type:'textarea' },
+  { key:'interaction', label:'Expected user interaction', type:'textarea' },
+  { key:'visualLayout', label:'Visual layout & components', type:'textarea', hint:'Screen, component, or UI pattern for this step' },
+
+  { section:'Current-state diagnostics', viewOnly:'current' },
+  { key:'frictionOpportunity', label:'Friction & opportunity (quantified)', type:'textarea', viewOnly:'current', hint:'e.g. 3.5 days average delay; ~$40K/mo recoverable if resolved' },
+  { key:'dataSources', label:'Data sources available today', type:'textarea', viewOnly:'current', hint:'Systems/tables/feeds that exist today to quantify this step' },
+  { key:'dataAttributes', label:'Data attributes captured', type:'textarea', viewOnly:'current', hint:'Specific fields available for measurement' },
+  { key:'handoverGap', label:'Handover gap', type:'textarea', viewOnly:'current', hint:'Where ownership, data, or context is lost moving to the next step — blank if none' },
+  { key:'leakageScenario', label:'Leakage scenario', type:'textarea', viewOnly:'current', hint:'How value, revenue, or data leaks at this step — blank if none' },
+
+  { section:'Future-state tracking', viewOnly:'future' },
+  { key:'businessGoal', label:'Business goal', type:'text', viewOnly:'future', hint:'The future-state goal this step exists to serve' },
+  { key:'businessOutcome', label:'Business outcome being tracked', type:'textarea', viewOnly:'future', hint:'The metric or result this step is accountable for moving' }
+];
+// Definition Studio port: when configured, the step specification fields come from the Studio settings.
+if(STUDIO_CFG){
+  FIELD_DEFS.length = 0;
+  STUDIO_CFG.fieldSections.filter(sec => sec.enabled !== false).forEach(sec => {
+    const fields = (sec.fields || []).filter(f => f.enabled !== false);
+    if(!fields.length) return;
+    FIELD_DEFS.push(sec.viewOnly ? { section: sec.name, viewOnly: sec.viewOnly } : { section: sec.name });
+    fields.forEach(f => FIELD_DEFS.push(Object.assign({ key: f.key, label: f.name, type: f.type, hint: f.hint || '' }, sec.viewOnly ? { viewOnly: sec.viewOnly } : {})));
+  });
+}
+const META_KEYS = FIELD_DEFS.filter(f=>f.key).map(f=>f.key);
+const PAIN_ROOT_CAUSES = STUDIO_CFG ? STUDIO_CFG.painRootCauses.filter(o => o.enabled !== false).map(o => o.name) : ['Process','System','Policy','People'];
+
+function hasMeta(n){
+  if(!n.metaByScenario) return false;
+  const effective = { ...(n.metaByScenario.base||{}), ...(n.metaByScenario[activeScenario]||{}) };
+  return META_KEYS.some(k => effective[k] && effective[k].trim());
+}
+function hasPainFlags(n){
+  if((n.painPointEntries||[]).length) return true;
+  if(!n.metaByScenario) return false;
+  const effective = { ...(n.metaByScenario.base||{}), ...(n.metaByScenario[activeScenario]||{}) };
+  return !!((effective.handoverGap && effective.handoverGap.trim()) || (effective.leakageScenario && effective.leakageScenario.trim()));
+}
+
+const inspector = document.getElementById('inspector');
+const inspectorBackdrop = document.getElementById('inspectorBackdrop');
+const inspectorBody = document.getElementById('inspectorBody');
+const inspectorBodyEdge = document.getElementById('inspectorBodyEdge');
+const inspFoot = document.querySelector('.inspector-foot');
+let inspectingId = null;
+let inspectingKind = null; // 'node' | 'edge'
+
+function buildPainRow(entry){
+  const row = document.createElement('div');
+  row.className = 'pain-row';
+  row.style.cssText = 'border:1px solid var(--line); border-radius:10px; padding:0.6rem 0.7rem; margin-bottom:0.6rem; background:var(--paper,#FFFDF8);';
+  row.innerHTML = `
+    <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:0.4rem;">
+      <select class="pain-rootcause" style="flex:0 0 130px; font-family:'Jost'; font-size:0.76rem; border:1px solid var(--line); border-radius:8px; padding:0.35rem;">
+        ${PAIN_ROOT_CAUSES.map(rc=>`<option value="${rc}">${rc}</option>`).join('')}
+      </select>
+      <button type="button" class="pain-remove" style="margin-left:auto; background:transparent; border:none; color:#a15571; cursor:pointer; font-size:0.72rem; font-family:'JetBrains Mono',monospace;">✕ Remove</button>
+    </div>
+    <textarea class="pain-desc" placeholder="Describe the pain point" style="width:100%; min-height:44px; margin-bottom:0.4rem; font-family:'Jost'; font-size:0.8rem; border:1px solid var(--line); border-radius:8px; padding:0.4rem; resize:vertical;"></textarea>
+    <input type="text" class="pain-kpis" placeholder="Impacted reporting KPI(s) — e.g. time-to-close, NRR" style="width:100%; margin-bottom:0.4rem; font-family:'Jost'; font-size:0.76rem; border:1px solid var(--line); border-radius:8px; padding:0.4rem;">
+    <input type="text" class="pain-valuedrivers" placeholder="Impacted value driver(s) — e.g. gross margin, retention" style="width:100%; font-family:'Jost'; font-size:0.76rem; border:1px solid var(--line); border-radius:8px; padding:0.4rem;">
+  `;
+  row.querySelector('.pain-rootcause').value = (entry && entry.rootCause) || 'Process';
+  row.querySelector('.pain-desc').value = (entry && entry.description) || '';
+  row.querySelector('.pain-kpis').value = (entry && entry.kpis) || '';
+  row.querySelector('.pain-valuedrivers').value = (entry && entry.valueDrivers) || '';
+  row.querySelector('.pain-remove').addEventListener('click', ()=> row.remove());
+  return row;
+}
+
+function buildInspectorForm(){
+  inspectorBody.innerHTML = '';
+
+  const labelWrap = document.createElement('div');
+  labelWrap.className = 'field';
+  labelWrap.innerHTML = `<label>Step label<span class="hint-sm">This is the same text shown on the shape itself — editing it here or double-clicking the shape on canvas both update the one label, live.</span></label>
+    <input type="text" id="node_label">`;
+  inspectorBody.appendChild(labelWrap);
+  labelWrap.querySelector('#node_label').addEventListener('input', (e)=>{
+    if(inspectingKind !== 'node') return;
+    const n = nodes.find(x=>x.id===inspectingId);
+    if(!n) return;
+    propagateL2Label(n, e.target.value);
+    document.getElementById('inspTitle').textContent = n.label || '(untitled)';
+    render();
+  });
+
+  const execWrap = document.createElement('div');
+  execWrap.className = 'field';
+  execWrap.innerHTML = `<label>Execution type<span class="hint-sm">How this step actually gets done</span></label>
+    <select id="node_execmode">
+      <option value="">Not yet classified</option>
+      ${STUDIO_CFG ? STUDIO_CFG.executionTypes.filter(o => o.enabled !== false).map(o => '<option value="' + studioEscape(o.apiName) + '">' + studioEscape(o.name) + '</option>').join('') : `<option value="manual">Manual / user activity</option>
+      <option value="automated">System automation</option>
+      <option value="hybrid">Hybrid (system + user)</option>`}
+    </select>`;
+  inspectorBody.appendChild(execWrap);
+
+  const concWrap = document.createElement('div');
+  concWrap.className = 'field';
+  concWrap.innerHTML = `<label>Concurrency<span class="hint-sm">Whether this step must wait on the one before it</span></label>
+    <select id="node_concurrency">
+      <option value="sequential">Sequential (depends on the prior step)</option>
+      <option value="parallel">Parallel (runs concurrently, not dependent)</option>
+    </select>`;
+  inspectorBody.appendChild(concWrap);
+
+  const domWrap = document.createElement('div');
+  domWrap.className = 'field';
+  domWrap.innerHTML = `<label>Domain <span class="hint-sm">The functional business domain this step belongs to (e.g. Sales, Finance, Legal, Operations) — how L2 and L3 step vocabulary translates across L1 industries. Manage the list from "🏛 L1 Industries."</span></label>
+    <select id="node_domain">
+      <option value="">Not yet mapped</option>
+      ${domains.map(d=>`<option value="${d.id}">${d.name}</option>`).join('')}
+    </select>`;
+  inspectorBody.appendChild(domWrap);
+
+  const evWrap = document.createElement('div');
+  evWrap.className = 'field';
+  evWrap.id = 'node_eventsubtype_wrap';
+  evWrap.innerHTML = `<label>Event type <span class="hint-sm">Only applies to the Event shape — shown as an icon on the node</span></label>
+    <select id="node_eventsubtype">
+      <option value="">Not yet classified</option>
+      ${Object.entries(EVENT_ICONS).map(([k,v])=>`<option value="${k}">${v.glyph} ${v.label}</option>`).join('')}
+    </select>`;
+  inspectorBody.appendChild(evWrap);
+
+  const startWrap = document.createElement('div');
+  startWrap.className = 'field';
+  startWrap.id = 'node_starttype_wrap';
+  startWrap.innerHTML = `<label>Start type <span class="hint-sm">Only relevant if this is the flow's starting step — start is always first. A beginning starts fresh; a continuance picks up from a prior step elsewhere.</span></label>
+    <select id="node_starttype">
+      <option value="">Not applicable / not the start</option>
+      <option value="beginning">Beginning — starts fresh</option>
+      <option value="continuance">Continuance — picks up from a prior step</option>
+    </select>
+    <input type="text" id="node_priorref" placeholder="Which prior step this continues from (e.g. &quot;Onboarding L2 → Adopt&quot;)" style="margin-top:0.5rem; display:none;">`;
+  inspectorBody.appendChild(startWrap);
+  startWrap.querySelector('#node_starttype').addEventListener('change', (e)=>{
+    startWrap.querySelector('#node_priorref').style.display = e.target.value === 'continuance' ? '' : 'none';
+  });
+
+  const priorWrap = document.createElement('div');
+  priorWrap.className = 'field';
+  priorWrap.innerHTML = `<label>Prior step(s) in this flow <span class="hint-sm">Read-only — every step but the start depends on whatever connects into it. Computed from the diagram's connectors, not set here.</span></label>
+    <div id="node_priorsteps" style="font-size:0.8rem; padding:0.5rem 0.7rem; background:var(--paper,#FFFDF8); border:1px solid var(--line); border-radius:8px;"></div>`;
+  inspectorBody.appendChild(priorWrap);
+
+  const scenarioWrap = document.createElement('div');
+  scenarioWrap.className = 'field';
+  scenarioWrap.innerHTML = `<label>Scenario applicability<span class="hint-sm">Leave blank if this step is part of the base L2 flow for every scenario. Comma-separate scenario names to mark it as only appearing for those (e.g. an extra review step that only applies to "Enterprise Renewal").</span></label>
+    <input type="text" id="node_scenarios" placeholder="e.g. Enterprise Renewal, Partner Channel">`;
+  inspectorBody.appendChild(scenarioWrap);
+
+  if(activeView === 'future'){
+    const linkWrap = document.createElement('div');
+    linkWrap.className = 'field';
+    const currentSteps = (flowStates.current.nodes || []);
+    const label = document.createElement('label');
+    label.innerHTML = `Current State linkage<span class="hint-sm">Which existing step(s) this future step relates to or replaces. Leave everything unchecked if this capability doesn't exist today — that absence is itself a gap analysis result and is flagged automatically.</span>`;
+    linkWrap.appendChild(label);
+    if(!currentSteps.length){
+      const none = document.createElement('div');
+      none.className = 'hint-sm';
+      none.style.cssText = 'display:block; padding:0.4rem 0;';
+      none.textContent = 'No Current State steps exist yet — everything here will show as a gap until Current State is built out.';
+      linkWrap.appendChild(none);
+    } else {
+      const list = document.createElement('div');
+      list.id = 'node_currentlinks';
+      list.style.cssText = 'display:flex; flex-direction:column; gap:0.35rem; max-height:160px; overflow-y:auto; border:1px solid var(--line); border-radius:10px; padding:0.5rem 0.7rem; background:var(--paper,#FFFDF8);';
+      currentSteps.forEach(cs=>{
+        const row = document.createElement('label');
+        row.style.cssText = 'display:flex; align-items:center; gap:0.5rem; font-size:0.78rem; font-weight:400; text-transform:none; letter-spacing:0; color:var(--ink); cursor:pointer;';
+        row.innerHTML = `<input type="checkbox" value="${cs.id}" style="width:auto;"> ${cs.label} <span class="hint-sm" style="margin:0;">(${cs.type})</span>`;
+        list.appendChild(row);
+      });
+      linkWrap.appendChild(list);
+    }
+    inspectorBody.appendChild(linkWrap);
+  }
+
+  if(activeView === 'current'){
+    const painWrap = document.createElement('div');
+    painWrap.className = 'field';
+    const painLabel = document.createElement('label');
+    painLabel.innerHTML = `Pain points — mapped &amp; linked<span class="hint-sm">Each pain point is attributed to a root cause (process, system, policy, or people) and linked to the reporting KPI(s) and value driver(s) it impacts.</span>`;
+    painWrap.appendChild(painLabel);
+    const rowsContainer = document.createElement('div');
+    rowsContainer.id = 'pain_rows';
+    painWrap.appendChild(rowsContainer);
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'tool-btn';
+    addBtn.style.cssText = 'margin-top:0.2rem;';
+    addBtn.textContent = '+ Add pain point';
+    addBtn.addEventListener('click', ()=> rowsContainer.appendChild(buildPainRow()));
+    painWrap.appendChild(addBtn);
+    inspectorBody.appendChild(painWrap);
+
+    const mapWrap = document.createElement('div');
+    mapWrap.className = 'field';
+    const mapLabel = document.createElement('label');
+    mapLabel.innerHTML = `Value driver / KPI mapping<span class="hint-sm">Every current-state step — automated or manual, especially one with a pain point — should map to at least one value driver or KPI from a defined business goal. Nothing checked here is what turns into a Current State Gap badge.</span>`;
+    mapWrap.appendChild(mapLabel);
+    if(!businessGoals.length){
+      const none = document.createElement('div');
+      none.className = 'hint-sm';
+      none.style.cssText = 'display:block; padding:0.4rem 0;';
+      none.textContent = 'No business goals defined yet — use "🎯 Business Goals" in the toolbar to add one, then come back here to map this step to it.';
+      mapWrap.appendChild(none);
+    } else {
+      const list = document.createElement('div');
+      list.id = 'node_goalmap';
+      list.style.cssText = 'display:flex; flex-direction:column; gap:0.5rem; max-height:200px; overflow-y:auto; border:1px solid var(--line); border-radius:10px; padding:0.5rem 0.7rem; background:var(--paper,#FFFDF8);';
+      businessGoals.forEach(g=>{
+        [...(g.valueDrivers||[]).map(v=>({type:'valueDriver', label:v})), ...(g.kpis||[]).map(k=>({type:'kpi', label:k}))].forEach(item=>{
+          const val = g.id + '::' + item.type + '::' + item.label;
+          const row = document.createElement('label');
+          row.style.cssText = 'display:flex; align-items:center; gap:0.5rem; font-size:0.76rem; font-weight:400; text-transform:none; letter-spacing:0; color:var(--ink); cursor:pointer;';
+          row.innerHTML = `<input type="checkbox" value="${val}" style="width:auto;"> ${item.label} <span class="hint-sm" style="margin:0;">(${item.type==='kpi'?'KPI':'value driver'} · ${g.name}, ${g.quarter})</span>`;
+          list.appendChild(row);
+        });
+      });
+      mapWrap.appendChild(list);
+    }
+    inspectorBody.appendChild(mapWrap);
+  }
+
+  FIELD_DEFS.forEach(f=>{
+    if(f.viewOnly && f.viewOnly !== activeView) return;
+    if(f.section){
+      const h = document.createElement('div');
+      h.className = 'field-section';
+      h.textContent = f.section;
+      inspectorBody.appendChild(h);
+      return;
+    }
+    const wrap = document.createElement('div');
+    wrap.className = 'field';
+    const label = document.createElement('label');
+    label.textContent = f.label;
+    if(f.hint){ const s = document.createElement('span'); s.className='hint-sm'; s.textContent = f.hint; label.appendChild(s); }
+    wrap.appendChild(label);
+    const input = f.type === 'textarea' ? document.createElement('textarea') : document.createElement('input');
+    if(f.type !== 'textarea') input.type = 'text';
+    input.dataset.key = f.key;
+    input.id = 'insp_' + f.key;
+    wrap.appendChild(input);
+    inspectorBody.appendChild(wrap);
+  });
+}
+buildInspectorForm();
+
+function parseTags(str){ return str.split(',').map(s=>s.trim()).filter(Boolean); }
+
+function renderScenarioBanner(n){
+  const banner = document.getElementById('inspScenarioBanner');
+  const l2Note = n.isL2Inherited
+    ? `<br><span style="display:block; margin-top:0.35rem;">This step's <strong>label is shared vocabulary</strong> from its L2 source — renaming it here updates that L2 step and every other L3 built from it. Everything else below (inputs, outputs, decision parameters, etc.) is configured independently for this variant.</span>`
+    : '';
+  if(activeScenario === 'base'){
+    banner.innerHTML = `Editing content for <strong>Base (${lvl(2)})</strong> — shared across every scenario.${l2Note}`;
+    return;
+  }
+  const hasOverride = n.metaByScenario[activeScenario] && Object.values(n.metaByScenario[activeScenario]).some(v=>v && v.trim());
+  banner.innerHTML = `Editing content for <strong>${activeScenario}</strong>${hasOverride ? ' (has overrides)' : ' (currently inheriting Base)'}. ${l2Note}`;
+  const copyBtn = document.createElement('button');
+  copyBtn.textContent = 'Copy Base → ' + activeScenario;
+  copyBtn.addEventListener('click', ()=>{
+    n.metaByScenario[activeScenario] = { ...(n.metaByScenario.base||{}) };
+    META_KEYS.forEach(k=>{ const el = document.getElementById('insp_'+k); if(el) el.value = n.metaByScenario[activeScenario][k] || ''; });
+    renderScenarioBanner(n);
+  });
+  banner.appendChild(copyBtn);
+  if(hasOverride){
+    const clearBtn = document.createElement('button');
+    clearBtn.textContent = 'Clear override';
+    clearBtn.addEventListener('click', ()=>{
+      n.metaByScenario[activeScenario] = {};
+      META_KEYS.forEach(k=>{ const el = document.getElementById('insp_'+k); if(el) el.value = (n.metaByScenario.base||{})[k] || ''; });
+      render();
+      renderScenarioBanner(n);
+    });
+    banner.appendChild(clearBtn);
+  }
+}
+
+function openInspector(nodeId){
+  const n = nodes.find(x=>x.id===nodeId);
+  if(!n) return;
+  // Rebuild the form fresh every open — not just on view switches — so dynamic sections
+  // (Current State linkage list, value driver/KPI checklist) reflect goals/steps added
+  // since the form was last built, instead of showing whatever existed at page load.
+  buildInspectorForm();
+  n.scenarioTags = n.scenarioTags || [];
+  n.metaByScenario = n.metaByScenario || {base:{}};
+  n.metaByScenario.base = n.metaByScenario.base || {};
+  n.execMode = n.execMode || '';
+  n.concurrency = n.concurrency || 'sequential';
+  n.linkedCurrentIds = n.linkedCurrentIds || [];
+  n.painPointEntries = n.painPointEntries || [];
+  n.goalMappings = n.goalMappings || [];
+  inspectingId = nodeId;
+  inspectingKind = 'node';
+  inspectorBody.style.display = '';
+  inspectorBodyEdge.style.display = 'none';
+  document.getElementById('inspTypeLabel').textContent = n.type;
+  document.getElementById('inspTitle').textContent = n.label;
+  document.getElementById('inspStatus').textContent = '';
+  document.getElementById('node_label').value = n.label;
+  document.getElementById('node_execmode').value = n.execMode;
+  document.getElementById('node_concurrency').value = n.concurrency;
+  document.getElementById('node_domain').value = n.domainId || '';
+  const evWrap = document.getElementById('node_eventsubtype_wrap');
+  if(evWrap){
+    evWrap.style.display = n.type === 'event' ? '' : 'none';
+    if(n.type === 'event') document.getElementById('node_eventsubtype').value = n.eventSubtype || '';
+  }
+  const startWrap = document.getElementById('node_starttype_wrap');
+  if(startWrap){
+    startWrap.style.display = n.type === 'terminal' ? '' : 'none';
+    if(n.type === 'terminal'){
+      document.getElementById('node_starttype').value = n.startType || '';
+      const priorRefInput = document.getElementById('node_priorref');
+      priorRefInput.value = n.priorStepRef || '';
+      priorRefInput.style.display = n.startType === 'continuance' ? '' : 'none';
+    }
+  }
+  const priorList = edges.filter(e=>e.to===n.id && e.from!==n.id).map(e=> nodes.find(x=>x.id===e.from)?.label).filter(Boolean);
+  document.getElementById('node_priorsteps').textContent = priorList.length ? priorList.join(', ') : '(none — this is a start of the flow)';
+  document.getElementById('node_scenarios').value = n.scenarioTags.join(', ');
+  const linkList = document.getElementById('node_currentlinks');
+  if(linkList){
+    linkList.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+      cb.checked = n.linkedCurrentIds.includes(cb.value);
+    });
+  }
+  const painRows = document.getElementById('pain_rows');
+  if(painRows){
+    painRows.innerHTML = '';
+    n.painPointEntries.forEach(entry => painRows.appendChild(buildPainRow(entry)));
+  }
+  const goalMapList = document.getElementById('node_goalmap');
+  if(goalMapList){
+    const selected = (n.goalMappings||[]).map(m=> m.goalId+'::'+m.metricType+'::'+m.metric);
+    goalMapList.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+      cb.checked = selected.includes(cb.value);
+    });
+  }
+  const effective = activeScenario === 'base' ? n.metaByScenario.base : { ...n.metaByScenario.base, ...(n.metaByScenario[activeScenario]||{}) };
+  META_KEYS.forEach(k=>{
+    const el = document.getElementById('insp_'+k);
+    if(el) el.value = effective[k] || '';
+  });
+  renderScenarioBanner(n);
+  inspector.classList.add('open');
+  inspectorBackdrop.classList.add('open');
+}
+
+function openEdgeInspector(edgeId){
+  const ed = edges.find(x=>x.id===edgeId);
+  if(!ed) return;
+  ed.scenarioTags = ed.scenarioTags || [];
+  const from = nodes.find(n=>n.id===ed.from), to = nodes.find(n=>n.id===ed.to);
+  inspectingId = edgeId;
+  inspectingKind = 'edge';
+  inspectorBody.style.display = 'none';
+  inspectorBodyEdge.style.display = '';
+  document.getElementById('inspTypeLabel').textContent = (from && (from.type==='decision'||from.type==='parallel')) ? from.type + ' branch' : (ed.from===ed.to ? 'loop' : 'connector');
+  document.getElementById('inspTitle').textContent = ed.from===ed.to ? (from?from.label:'?') + ' → (loops to self)' : (from?from.label:'?') + ' → ' + (to?to.label:'?');
+  document.getElementById('inspStatus').textContent = '';
+  document.getElementById('inspScenarioBanner').innerHTML = 'Editing a connector — scenario tagging controls whether this path shows for the selected scenario below.';
+  document.getElementById('edge_label').value = ed.label || '';
+  document.getElementById('edge_params').value = ed.params || '';
+  document.getElementById('edge_notes').value = ed.notes || '';
+  document.getElementById('edge_weight').value = ed.weight || 'regular';
+  document.getElementById('edge_dash').value = ed.dash || 'solid';
+  document.getElementById('edge_routing').value = ed.routing || 'straight';
+  document.getElementById('edge_scenarios').value = ed.scenarioTags.join(', ');
+  inspector.classList.add('open');
+  inspectorBackdrop.classList.add('open');
+}
+
+function closeInspector(){
+  inspector.classList.remove('open');
+  inspectorBackdrop.classList.remove('open');
+  inspectingId = null;
+  inspectingKind = null;
+}
+document.getElementById('inspClose').addEventListener('click', closeInspector);
+inspectorBackdrop.addEventListener('click', closeInspector);
+
+document.getElementById('inspSaveBtn').addEventListener('click', ()=>{
+  if(inspectingKind === 'node'){
+    const n = nodes.find(x=>x.id===inspectingId);
+    if(!n) return;
+    propagateL2Label(n, document.getElementById('node_label').value.trim() || n.label);
+    n.domainId = document.getElementById('node_domain').value || null;
+    if(n.type === 'event'){
+      n.eventSubtype = document.getElementById('node_eventsubtype').value || null;
+    }
+    if(n.type === 'terminal'){
+      n.startType = document.getElementById('node_starttype').value || null;
+      n.priorStepRef = n.startType === 'continuance' ? document.getElementById('node_priorref').value.trim() : '';
+    }
+    n.scenarioTags = parseTags(document.getElementById('node_scenarios').value);
+    n.execMode = document.getElementById('node_execmode').value;
+    n.concurrency = document.getElementById('node_concurrency').value;
+    const linkList = document.getElementById('node_currentlinks');
+    if(linkList){
+      n.linkedCurrentIds = Array.from(linkList.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.value);
+    }
+    const painRows = document.getElementById('pain_rows');
+    if(painRows){
+      n.painPointEntries = Array.from(painRows.querySelectorAll('.pain-row')).map(row=>({
+        rootCause: row.querySelector('.pain-rootcause').value,
+        description: row.querySelector('.pain-desc').value,
+        kpis: row.querySelector('.pain-kpis').value,
+        valueDrivers: row.querySelector('.pain-valuedrivers').value
+      })).filter(e => e.description.trim() || e.kpis.trim() || e.valueDrivers.trim());
+    }
+    const goalMapList = document.getElementById('node_goalmap');
+    if(goalMapList){
+      n.goalMappings = Array.from(goalMapList.querySelectorAll('input[type=checkbox]:checked')).map(cb=>{
+        const [goalId, metricType, ...rest] = cb.value.split('::');
+        return { goalId, metricType, metric: rest.join('::') };
+      });
+    }
+    n.metaByScenario = n.metaByScenario || {base:{}};
+    const target = activeScenario === 'base' ? (n.metaByScenario.base = n.metaByScenario.base || {}) : (n.metaByScenario[activeScenario] = n.metaByScenario[activeScenario] || {});
+    META_KEYS.forEach(k=>{
+      const el = document.getElementById('insp_'+k);
+      if(el) target[k] = el.value;
+    });
+  } else if(inspectingKind === 'edge'){
+    const ed = edges.find(x=>x.id===inspectingId);
+    if(!ed) return;
+    ed.label = document.getElementById('edge_label').value.trim();
+    ed.params = document.getElementById('edge_params').value;
+    ed.notes = document.getElementById('edge_notes').value;
+    ed.weight = document.getElementById('edge_weight').value;
+    ed.dash = document.getElementById('edge_dash').value;
+    ed.routing = document.getElementById('edge_routing').value;
+    ed.scenarioTags = parseTags(document.getElementById('edge_scenarios').value);
+  }
+  render();
+  document.getElementById('inspStatus').textContent = 'Saved.';
+  document.getElementById('inspStatus').className = 'status mono ok';
+});
+
+document.getElementById('inspAgentBtn').addEventListener('click', async ()=>{
+  const statusSpan = document.getElementById('inspStatus');
+  if(inspectingKind === 'edge'){
+    const ed = edges.find(x=>x.id===inspectingId);
+    if(!ed) return;
+    const from = nodes.find(n=>n.id===ed.from), to = nodes.find(n=>n.id===ed.to);
+    const siblingLabels = edges.filter(e=>e.from===ed.from && e.id!==ed.id).map(e=>e.label).filter(Boolean);
+    statusSpan.textContent = 'Agent drafting…';
+    statusSpan.className = 'status mono';
+    const sys = `You are labeling one branch of a decision/gateway in a process flow diagram.
+Gateway step: "${from?from.label:'?'}" (type: ${from?from.type:'?'}). This branch leads to: "${to?to.label:'?'}".
+Other branches already leaving this same gateway are labeled: ${siblingLabels.length ? siblingLabels.join(', ') : 'none yet'}.
+Suggest a short, distinct path label (2-3 words, e.g. "Approved", "Needs review", "Timeout") that does not duplicate the existing sibling labels, plus the specific decision condition that would route down this branch, plus a one-line note on ownership/SLA/exception handling.
+Respond with ONLY minified JSON: {"label":"...","params":"...","notes":"..."}, no prose, no markdown fences.`;
+    try{
+      const resp = await fetch((window.STUDIO && window.STUDIO.api ? window.STUDIO.api + '/agent-draft' : 'https://api.anthropic.com/v1/messages'), {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:400, system: sys,
+          messages:[{role:'user', content:'Draft this branch.'}] })
+      });
+      const data = await resp.json();
+      if(!resp.ok){ const e = new Error('draft failed'); e.studioMessage = data && data.error; throw e; }
+      const textBlock = (data.content||[]).find(b=>b.type==='text');
+      if(!textBlock) throw new Error('no response');
+      const clean = textBlock.text.replace(/```json|```/g,'').trim();
+      const parsed = JSON.parse(clean);
+      if(parsed.label) document.getElementById('edge_label').value = parsed.label;
+      if(parsed.params) document.getElementById('edge_params').value = parsed.params;
+      if(parsed.notes) document.getElementById('edge_notes').value = parsed.notes;
+      statusSpan.textContent = 'Draft ready — review, then Save.';
+      statusSpan.className = 'status mono ok';
+    }catch(err){
+      statusSpan.textContent = (err && err.studioMessage) || 'The agent could not draft this — fill it in by hand.';
+      statusSpan.className = 'status mono';
+    }
+    return;
+  }
+
+  const n = nodes.find(x=>x.id===inspectingId);
+  if(!n) return;
+  statusSpan.textContent = 'Agent drafting…';
+  statusSpan.className = 'status mono';
+
+  const incoming = edges.filter(e=>e.to===n.id).map(e=> nodes.find(x=>x.id===e.from)).filter(Boolean).map(x=>x.label);
+  const outgoing = edges.filter(e=>e.from===n.id).map(e=> nodes.find(x=>x.id===e.to)).filter(Boolean).map(x=>x.label);
+  const fieldList = META_KEYS.map(k=>{
+    const def = FIELD_DEFS.find(f=>f.key===k);
+    return `"${k}" (${def.label})`;
+  }).join(', ');
+
+  const sys = `You are a business-process and solution-architecture analyst helping fill out a specification for one step in a process flow diagram.
+Step label: "${n.label}". Step shape type: "${n.type}" (step=task, subprocess=sub-process, decision=exclusive gate, parallel=parallel/AND gate, event=event, data=data object, terminal=start/end).
+Steps immediately before this one: ${incoming.length ? incoming.join(', ') : 'none (this is a start)'}.
+Steps immediately after this one: ${outgoing.length ? outgoing.join(', ') : 'none (this is an end)'}.
+Write a concise, concrete draft (1-3 sentences or a short list per field, plain text, no markdown) for each of these fields: ${fieldList}.
+If a field is not applicable to this step (e.g. decision parameters for a plain task), return an empty string for it rather than inventing content.
+Respond with ONLY minified JSON mapping each field key to its string value, no prose, no markdown fences.`;
+
+  try{
+    const resp = await fetch((window.STUDIO && window.STUDIO.api ? window.STUDIO.api + '/agent-draft' : 'https://api.anthropic.com/v1/messages'), {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:1200,
+        system: sys,
+        messages:[{role:'user', content:'Draft the specification fields for this step.'}]
+      })
+    });
+    const data = await resp.json();
+    if(!resp.ok){ const e = new Error('draft failed'); e.studioMessage = data && data.error; throw e; }
+    const textBlock = (data.content||[]).find(b=>b.type==='text');
+    if(!textBlock) throw new Error('no response');
+    const clean = textBlock.text.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(clean);
+    META_KEYS.forEach(k=>{
+      const el = document.getElementById('insp_'+k);
+      if(el && parsed[k]) el.value = parsed[k];
+    });
+    statusSpan.textContent = 'Draft ready — review, then Save.';
+    statusSpan.className = 'status mono ok';
+  }catch(err){
+    statusSpan.textContent = (err && err.studioMessage) || 'The agent could not draft this — fill it in by hand.';
+    statusSpan.className = 'status mono';
+  }
+});
+
+document.getElementById('exportJsonBtn').addEventListener('click', ()=>{
+  const resolveGoalMapping = (m) => {
+    const g = businessGoals.find(x=>x.id===m.goalId);
+    return { goal: g ? g.name : '(deleted goal)', quarter: g ? g.quarter : '', metricType: m.metricType, metric: m.metric };
+  };
+  const spec = {
+    process: document.getElementById('presetSelect').selectedOptions[0]?.textContent || 'Custom flow',
+    view: activeView === 'current' ? 'Current State' : 'Future State',
+    l1Domains: l1Domains,
+    scenarios: scenarios.map(s => ({ ...s, domainName: s.domain ? (l1Domains.find(d=>d.id===s.domain)?.name || null) : null })),
+    steps: nodes.map(n=>({
+      id:n.id, label:n.label, shapeType:n.type, x:n.x, y:n.y,
+      executionType: n.execMode || '',
+      concurrency: n.concurrency || 'sequential',
+      scenarioSpecific: (n.scenarioTags||[]),
+      ...(activeView === 'current' ? {
+        painPoints: (n.painPointEntries||[]),
+        goalMappings: (n.goalMappings||[]).map(resolveGoalMapping),
+        isCurrentStateGap: hasPainFlags(n) && !(n.goalMappings||[]).length
+      } : {}),
+      ...(activeView === 'future' ? {
+        linkedCurrentStateSteps: (n.linkedCurrentIds||[]).map(id => {
+          const cs = flowStates.current.nodes.find(x=>x.id===id);
+          return cs ? { id: cs.id, label: cs.label } : { id, label: '(deleted from Current State)' };
+        }),
+        isGap: (n.linkedCurrentIds||[]).length === 0
+      } : {}),
+      isL2Inherited: !!n.isL2Inherited,
+      ...(n.type === 'terminal' ? { startType: n.startType || null, priorStepRef: n.priorStepRef || '' } : {}),
+      priorSteps: edges.filter(e=>e.to===n.id && e.from!==n.id).map(e=>nodes.find(x=>x.id===e.from)?.label).filter(Boolean),
+      specificationBase: Object.fromEntries(META_KEYS.map(k=>[k, (n.metaByScenario && n.metaByScenario.base && n.metaByScenario.base[k]) || ''])),
+      specificationByScenario: Object.fromEntries((scenarios||[]).map(s=>[s.name, Object.fromEntries(META_KEYS.map(k=>[k, (n.metaByScenario && n.metaByScenario[s.name] && n.metaByScenario[s.name][k]) || '']))]))
+    })),
+    connections: edges.map(e=>({
+      from: nodes.find(n=>n.id===e.from)?.label, to: nodes.find(n=>n.id===e.to)?.label, fromId:e.from, toId:e.to,
+      isLoop: e.from===e.to, pathLabel: e.label||'', decisionParams: e.params||'', notes: e.notes||'', scenarioSpecific: (e.scenarioTags||[])
+    })),
+    ...(activeView === 'current' ? {
+      painAnalysis: {
+        totalPainPoints: nodes.reduce((sum,n)=>sum+(n.painPointEntries||[]).length, 0),
+        byRootCause: Object.fromEntries(PAIN_ROOT_CAUSES.map(rc=>[rc, nodes.reduce((sum,n)=>sum+(n.painPointEntries||[]).filter(e=>e.rootCause===rc).length, 0)])),
+        entries: nodes.flatMap(n => (n.painPointEntries||[]).map(e => ({ step: n.label, ...e })))
+      },
+      goalMappingGaps: {
+        note: 'Steps with a pain point documented but no value driver/KPI mapping — Current State Gaps.',
+        steps: nodes.filter(n=>hasPainFlags(n) && !(n.goalMappings||[]).length).map(n=>n.label)
+      }
+    } : {}),
+    ...(activeView === 'future' ? {
+      gapAnalysis: {
+        gapsIdentified: nodes.filter(n=>(n.linkedCurrentIds||[]).length===0).map(n=>({
+          step: n.label,
+          businessGoal: (n.metaByScenario?.base?.businessGoal)||'',
+          businessOutcome: (n.metaByScenario?.base?.businessOutcome)||''
+        })),
+        currentStepsWithNoFutureCoverage: flowStates.current.nodes
+          .filter(cs => !nodes.some(n => (n.linkedCurrentIds||[]).includes(cs.id)))
+          .map(cs=>cs.label)
+      }
+    } : {}),
+    businessGoals: businessGoals
+  };
+  const blob = new Blob([JSON.stringify(spec, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'process-flow-spec-' + activeView + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  setStatus('Exported process-flow-spec-'+activeView+'.json ('+(activeView==='current'?'Current State':'Future State')+' only — switch views to export the other).', 'ok');
+});
+
+(async function autoLoadOnStartup(){
+  try{
+    if(window.storage){
+      const result = await window.storage.get('flow:default', false);
+      if(result && result.value){
+        applyFlowData(JSON.parse(result.value));
+        setStatus('Restored your last session automatically.', 'ok');
+      }
+    }
+  }catch(err){ /* no prior autosave — start from an empty canvas */ }
+  startupLoadComplete = true;
+  updateViewToggleUI();
+  render();
+})();
+</script>
+
+</body>
+</html>

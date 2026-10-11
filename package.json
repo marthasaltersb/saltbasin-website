@@ -27,6 +27,7 @@
     "scenarios:fixture": "node scripts/generate-scenario-fixture.mjs",
     "test:scenarios": "node --test tests/scenarios.test.js",
     "test:bestystaff": "node --test tests/bestystaff-auth-proposal.test.js",
+    "test:definition-studio": "node --test tests/definitionStudio.test.js",
     "verify:bestystaff": "node scripts/verify-besty-auth-proposal.mjs",
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js"
   },

@@ -188,6 +188,16 @@
     "agent_runner_decide_output",
     "agent_runner_test_plan",
     "agent_runner_baselines",
-    "agent_runner_seeds"
+    "agent_runner_seeds",
+    "definition_studio_workspaces",
+    "definition_studio_product_create",
+    "definition_studio_config",
+    "definition_studio_config_save",
+    "definition_studio_documents_list",
+    "definition_studio_document_read",
+    "definition_studio_document_save",
+    "definition_studio_document_delete",
+    "definition_studio_document_versions",
+    "definition_studio_document_restore"
   ]
 }

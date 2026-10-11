@@ -28,6 +28,7 @@ export const GOVERNED_ROUTE_FILES = Object.freeze({
   'server/routes/careerBound.js': '/api/career-bound',
   'server/routes/outputTemplates.js': '/api/output-templates',
   'server/routes/agentRunner.js': '/api/agent-runner',
+  'server/routes/definitionStudio.js': '/api/definition-studio',
 });
 
 /** For files governed only in part: file -> pattern a route (`METHOD /full/path`) must match to be governed.
@@ -180,6 +181,13 @@ export const CAPABILITIES = Object.freeze([
   { key: 'access-tokens', title: 'Create, list and revoke access tokens', group: 'Platform access', ui: `${WS} > Journeys > Connected Agents`, api: ['GET /api/platform/tokens', 'POST /api/platform/tokens', 'DELETE /api/platform/tokens/:id'], mcp: null, mcpExclusion: 'Credentials are managed by a signed-in person in the website; a token can never mint or revoke tokens.' },
   { key: 'mcp-connection-info', title: 'Show the MCP address and the tools a token gets', group: 'Platform access', ui: `${WS} > Journeys > Connected Agents`, api: ['GET /api/platform/mcp'], mcp: ['platform_mcp_info'] },
   { key: 'capabilities-map', title: 'Show this parity map (admin)', group: 'Platform access', ui: `${WS} > Journeys > Capabilities`, api: ['GET /api/platform/capabilities'], mcp: ['platform_capabilities_map'] },
+  // ── Definition Studio (2026-10-10, admin): the Composer interface ─────────
+  { key: 'definition-studio-canvas', title: 'Compose on the Definition Studio canvas (admin)', group: 'Definition Studio', ui: `${WS} > Journeys > Definition Studio > Canvas`, api: ['GET /api/definition-studio/canvas'], mcp: null, mcpExclusion: 'An interactive page, not data; an agent reads and saves the same canvas documents with definition_studio_document_read / _save.' },
+  { key: 'definition-studio-workspaces', title: 'Choose a module or product, create a new product (admin)', group: 'Definition Studio', ui: `${WS} > Journeys > Definition Studio`, api: ['GET /api/definition-studio/workspaces', 'POST /api/definition-studio/products'], mcp: ['definition_studio_workspaces', 'definition_studio_product_create'] },
+  { key: 'definition-studio-config', title: 'Read and save the Studio settings (admin)', group: 'Definition Studio', ui: `${WS} > Journeys > Definition Studio > Studio settings`, api: ['GET /api/definition-studio/config', 'PUT /api/definition-studio/config'], mcp: ['definition_studio_config', 'definition_studio_config_save'] },
+  { key: 'definition-studio-documents', title: 'Read, save and remove Studio documents (admin)', group: 'Definition Studio', ui: `${WS} > Journeys > Definition Studio > Canvas`, api: ['GET /api/definition-studio/documents', 'GET /api/definition-studio/document', 'PUT /api/definition-studio/document', 'DELETE /api/definition-studio/document'], mcp: ['definition_studio_documents_list', 'definition_studio_document_read', 'definition_studio_document_save', 'definition_studio_document_delete'] },
+  { key: 'definition-studio-versions', title: 'See and restore document versions (admin)', group: 'Definition Studio', ui: `${WS} > Journeys > Definition Studio > History`, api: ['GET /api/definition-studio/document/versions', 'POST /api/definition-studio/document/restore'], mcp: ['definition_studio_document_versions', 'definition_studio_document_restore'] },
+  { key: 'definition-studio-agent-draft', title: 'Ask the agent to draft a step or branch (admin)', group: 'Definition Studio', ui: `${WS} > Journeys > Definition Studio > Canvas > ⚙ Configure > Agent draft`, api: ['POST /api/definition-studio/agent-draft'], mcp: null, mcpExclusion: 'An agent connected over MCP drafts the fields itself and saves them with definition_studio_document_save; routing one agent through another adds nothing.' },
 ]);
 
 /** Computes per-capability status (the Capabilities screen and the check script share this). */

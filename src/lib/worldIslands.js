@@ -236,6 +236,13 @@ export const ISLAND_REGISTRY = {
     dataBinding: { store: 'agent_runner_runs' },
     permission: { requiredRole: 'admin', crud: ['read', 'update', 'approve'], enforced: true },
   },
+  // Definition Studio (2026-10-10): the Composer interface — Betsy's process flow builder ported into the
+  // platform, one workspace per module or composed product. Admin only; World Shell entry point, no nav row.
+  definitionStudio: {
+    variant: 'rings', kind: 'embed', accent: 'gold',
+    dataBinding: { store: 'definition_studio_documents' },
+    permission: { requiredRole: 'admin', crud: ['create', 'read', 'update'], enforced: true },
+  },
   // Live release tracker (2026-10-09): admins always, members the admin lists by
   // email. Read by /api/release-tracker/* (see docs/changes/live-release-tracker.md).
   releaseTracker: {
@@ -310,6 +317,7 @@ export const PLATFORM_ISLAND_TABS = Object.freeze([
   { id: 'capabilities', label: 'Capabilities', componentId: 'capabilities', sortOrder: 31, adminOnly: true },
   { id: 'qualification-rules', label: 'Qualification Rules', componentId: 'qualificationRules', sortOrder: 32, adminOnly: true },
   { id: 'agent-runner', label: 'Agent runner', componentId: 'agentRunner', sortOrder: 33, adminOnly: true },
+  { id: 'definition-studio', label: 'Definition Studio', componentId: 'definitionStudio', sortOrder: 34, adminOnly: true },
 ]);
 
 /** `tabs` plus the World Shell-only entry points this user may see (a stored tab with the same componentId wins). */

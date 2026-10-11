@@ -259,6 +259,15 @@
       "blockedOn": "owner",
       "dependsOn": [],
       "kind": "new"
+    },
+    {
+      "key": "definition-studio",
+      "title": "Definition Studio: compose modules and products on a configurable process canvas",
+      "trainingSpec": "docs/training/definition-studio.md",
+      "changeSpec": "docs/changes/definition-studio.md",
+      "build": "Port Betsy's process flow builder prototype into the platform as the Definition Studio (World Shell > Journeys, admin): one workspace per SALT_BASIN_MODULES module or composed product, versioned documents in the database, configurable shapes/fields/options/levels with name + L-number id + API name, server-side drafting, MCP parity.",
+      "dependsOn": [],
+      "kind": "new"
     }
   ],
   "startedAtCommit": "4df3ff7",

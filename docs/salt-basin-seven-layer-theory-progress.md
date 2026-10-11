@@ -14,7 +14,7 @@ Phase definitions: `.claude/skills/salt-basin-seven-layer-theory/reference/phase
 | 4 | Theory Registry & Seven Definitions | not started | Also needs DEC-SLT-04 for musical concept seeds. |
 | 5 | Matrix & Hypergraph Engine (5a / 5b) | not started | |
 | 6 | Temporal, Calculation & Rest Engine (6a / 6b) | not started | |
-| 7 | Builder Integration → **Definition Studio** | not started | DEC-SLT-01 answered 2026-10-10: the builder is Betsy's process flow builder prototype (`docs/baseline/intake/2026-10-10-process-flow-builder/`), ported into the platform as the Composer's interface. Proposed to move earlier — DEC-SLT-22. |
+| 7 | Builder Integration → **Definition Studio** | **in progress** (first slice built 2026-10-10) | DEC-SLT-01 answered 2026-10-10: the builder is Betsy's process flow builder prototype (`docs/baseline/intake/2026-10-10-process-flow-builder/`), ported into the platform as the Composer's interface. Proposed to move earlier — DEC-SLT-22. |
 | 8 | Validation & Regression | not started | |
 
 ---
@@ -246,6 +246,8 @@ Blocking decisions must be answered before the phase they gate. Answer with
 ---
 
 ## Changelog
+
+- **2026-10-10 (Definition Studio built — first slice)** — Built ahead of Phases 3–6 at Betsy's direction ("login … use the definition studio to define everything needed to build out the career module … the process builder prototype needs to be configurable"); DEC-SLT-22's "Studio early" ordering in practice. Admin-only Studio in World Shell; one workspace per module (Career first) or composed product; versioned documents; configurable canvas (levels, shapes, fields, options, sizes) with name + L-number id + API name; server-side drafting; MCP parity. Validated: round 1 33/37 pass (+2 with notes), round 2 all fixes pass. Took recommended defaults on DEC-SLT-02 (application-level access checks) pending Betsy. Not yet: projection of composed flows into Notes/Currents/gates, Arranger/end-user permissions, the theory registry, matrices, hypergraph, temporal engine. Change spec `docs/changes/definition-studio.md`.
 
 - **2026-10-10 (identifiers)** — Betsy: anything with a name needs a unique identifier — plain name + L-number. Recorded as hierarchy-qualified ids (`THEORY-L3`, `BDT-L2`, `FLOW-L2`) plus an immutable snake_case API name, stored as `{ id, hierarchy, level, name, apiName }`; ids and API names are never reused, and renaming changes only the plain name. DEC-SLT-03 answered; DEC-SLT-23's identifier part answered, hierarchy reconciliation left open and non-blocking. Pilot module DEC-SLT-24 answered: Career (`resume_career`).
 
