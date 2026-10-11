@@ -72,6 +72,12 @@ definitions, render bindings, versioned definitions) before anything new is crea
   (Betsy 2026-10-10): Implement opens a client's instance (their Staff) with narrower rights. One Studio,
   never two editors; a composed product becomes a grantable module only
   through a separate governed step.
+- **Every named thing has a plain name, a unique L-number id, and an API name.** Decided by Betsy
+  2026-10-10. Qualify the L-number by its hierarchy so ids never collide (`THEORY-L3` "Composition",
+  `BDT-L2` "Scenario", `FLOW-L2` "Flow"); the API name is lowercase snake_case, unique within its
+  hierarchy, used by code, API and MCP. Store `{ id, hierarchy, level, name, apiName }`; `id` and
+  `apiName` never change or get reused — a rename changes only `name`. This
+  applies to everything configurable in the Definition Studio too (shapes, fields, levels, vocabulary).
 - **Calculations are reproducible.** Every result records inputs, rule versions, method, temporal context,
   output, validation status and timestamp — reuse `metric_definitions` / `metric_calculations` rather than a
   parallel result store. Weights normalize only across eligible requirements; removing requirements never
