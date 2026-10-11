@@ -42,6 +42,8 @@ export const api = {
   scanSessionTranscripts: () => request('/api/session-mapping/import/scan', { method: 'POST', body: '{}' }),
   listSessionCaptureFailures: () => request('/api/session-mapping/failures'),
   setSessionCaptureFailureDisposition: (id, body) => request(`/api/session-mapping/failures/${id}/disposition`, { method: 'PUT', body: JSON.stringify(body) }),
+  getSmokeAccount: () => request('/api/production-smoke/account'),
+  readySmokeAccount: (password) => request('/api/production-smoke/account', { method: 'POST', body: JSON.stringify({ password }) }),
   // Render bindings: renderings as views over mapped source data (live or approval path), data map, pending queue.
   rbRenderings: () => request('/api/render-bindings/renderings'),
   rbRendering: (key) => request(`/api/render-bindings/renderings/${encodeURIComponent(key)}`),

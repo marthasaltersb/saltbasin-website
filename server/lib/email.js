@@ -14,6 +14,7 @@
 // reasonable hardcoded default).
 
 import { db } from '../db.js';
+import { isReservedTestAddress } from './smokeAccount.js';
 
 const BREVO_API = 'https://api.brevo.com/v3/smtp/email';
 
@@ -76,6 +77,12 @@ async function emailAuthorized(authorization) {
 }
 
 async function dispatch({ leadId, to, subject, html, text, attachments = [], authorization }) {
+  // Reserved test addresses (.invalid, e.g. the production smoke account) never receive mail, not even stubbed,
+  // so a fictional account can never trigger an email (feature production-smoke-regression).
+  if (isReservedTestAddress(to)) {
+    console.warn(`[email] not sent: ${to} is a reserved test address (.invalid): ${subject}`);
+    return { ok: true, skipped: 'reserved_test_address' };
+  }
   if (!(await emailAuthorized(authorization))) {
     console.warn(`[email] blocked pending recipient confirmation: ${subject}`);
     return { ok: false, skipped: 'recipient_confirmation_required' };

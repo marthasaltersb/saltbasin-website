@@ -53,6 +53,7 @@ const QualificationRulesPanel = lazy(() => import('./admin/QualificationRulesPan
 const CapabilitiesPanel = lazy(() => import('./admin/CapabilitiesPanel.jsx'));
 const ReleaseLoopPanel = lazy(() => import('./admin/ReleaseLoopPanel.jsx'));
 const AgentRunnerPanel = lazy(() => import('./admin/AgentRunnerPanel.jsx'));
+const ProductionSmokePanel = lazy(() => import('./admin/ProductionSmokePanel.jsx'));
 const ReleaseTrackerApp = lazy(() => import('./releaseTracker/ReleaseTrackerApp.jsx'));
 const SessionMappingPanel = lazy(() => import('./admin/SessionMappingPanel.jsx'));
 const RenderBindingsPanel = lazy(() => import('./admin/RenderBindingsPanel.jsx'));
@@ -71,6 +72,7 @@ const SIMPLE_EMBED_COMPONENTS = {
   qualificationRules: { title: 'Qualification Rules', render: () => <QualificationRulesPanel /> },
   releaseLoop: { title: 'Release loop', render: () => <ReleaseLoopPanel /> },
   agentRunner: { title: 'Agent runner', render: () => <AgentRunnerPanel /> },
+  productionSmoke: { title: 'Production smoke', render: () => <ProductionSmokePanel /> },
   releaseTracker: { title: 'Release tracker', render: () => <ReleaseTrackerApp embedded /> },
   sessionMapping: { title: 'Sessions', render: () => <SessionMappingPanel /> },
   renderBindings: { title: 'Render Bindings', render: () => <RenderBindingsPanel /> },
@@ -919,6 +921,8 @@ function JourneysGrid({ islands, career, commercial, herq, onOpen }) {
                 ? 'Tokens for AI agents (MCP)'
                 : isl.componentId === 'capabilities'
                   ? 'Website, API and MCP parity'
+                  : isl.componentId === 'productionSmoke'
+                    ? 'Fictional test account for the production suite'
                   : isl.componentId === 'qualificationRules'
                     ? 'Edit the career qualification gates'
               : isl.kind === 'embed'

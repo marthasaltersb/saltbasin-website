@@ -188,6 +188,8 @@
     "agent_runner_decide_output",
     "agent_runner_test_plan",
     "agent_runner_baselines",
-    "agent_runner_seeds"
+    "agent_runner_seeds",
+    "production_smoke_account_status",
+    "production_smoke_account_ready"
   ]
 }
