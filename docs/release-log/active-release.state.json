@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T01:31:41.047Z",
+  "exportedAt": "2026-10-11T01:34:43.492Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -115,9 +115,9 @@
     },
     "production-smoke-regression": {
       "status": "failing",
-      "lastRound": 2,
+      "lastRound": 3,
       "lastScore": "18/28",
-      "lastReport": "docs/test-results/production-smoke-regression/round-2.md",
+      "lastReport": "docs/test-results/production-smoke-regression/round-3.md",
       "openBugs": 6,
       "backlog": 0
     },
@@ -136,6 +136,14 @@
       "lastReport": "docs/test-results/proficiency-live-qr/round-7.md",
       "openBugs": 18,
       "backlog": 6
+    },
+    "single-experience-world-shell": {
+      "status": "build",
+      "lastRound": 0,
+      "lastScore": null,
+      "lastReport": null,
+      "openBugs": 0,
+      "backlog": 0
     },
     "qr-gated-outputs": {
       "status": "passed",
@@ -2127,6 +2135,12 @@
           "event": "still_failing_in_production",
           "note": "Production round 2: S4.1 still failing",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "still_failing_in_production",
+          "note": "Production round 3: S4.1 still failing",
+          "commit": null
         }
       ],
       "verifyBy": "production",
@@ -2380,6 +2394,12 @@
           "event": "still_failing_in_production",
           "note": "Production round 2: S3.4, S3.6, R1.1, R1.2 still failing",
           "commit": null
+        },
+        {
+          "round": 3,
+          "event": "still_failing_in_production",
+          "note": "Production round 3: S3.4, S3.6, R1.1, R1.2 still failing",
+          "commit": null
         }
       ],
       "verifyBy": "production",
@@ -2415,6 +2435,12 @@
           "round": 2,
           "event": "still_failing_in_production",
           "note": "Production round 2: S3.5 still failing",
+          "commit": null
+        },
+        {
+          "round": 3,
+          "event": "still_failing_in_production",
+          "note": "Production round 3: S3.5 still failing",
           "commit": null
         }
       ],
