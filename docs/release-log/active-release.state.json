@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T02:38:54.862Z",
+  "exportedAt": "2026-10-11T02:42:03.873Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -74,7 +74,7 @@
       "backlog": 10
     },
     "release-scope": {
-      "status": "reconcile",
+      "status": "awaiting_retest",
       "lastRound": 4,
       "lastScore": "25/27",
       "lastReport": "docs/test-results/release-scope/round-4.md",
@@ -82,7 +82,7 @@
       "backlog": 2
     },
     "journey-flow-studio": {
-      "status": "failing",
+      "status": "awaiting_retest",
       "lastRound": 1,
       "lastScore": "89/92",
       "lastReport": "docs/test-results/journey-flow-studio/round-1.md",
@@ -98,7 +98,7 @@
       "backlog": 0
     },
     "journey-flow-import-existing": {
-      "status": "build",
+      "status": "failed",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -106,7 +106,7 @@
       "backlog": 0
     },
     "graphify-data-model-map": {
-      "status": "validate",
+      "status": "awaiting_retest",
       "lastRound": 1,
       "lastScore": "59/60",
       "lastReport": "docs/test-results/graphify-data-model-map/round-1.md",
@@ -114,7 +114,7 @@
       "backlog": 0
     },
     "tracker-world-navigation": {
-      "status": "build",
+      "status": "failed",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -130,7 +130,7 @@
       "backlog": 6
     },
     "platform-mcp": {
-      "status": "validate",
+      "status": "awaiting_retest",
       "lastRound": 5,
       "lastScore": "65/65",
       "lastReport": "docs/test-results/platform-mcp/round-5.md",
@@ -146,7 +146,7 @@
       "backlog": 7
     },
     "single-experience-world-shell": {
-      "status": "build",
+      "status": "failed",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
@@ -2592,7 +2592,7 @@
     {
       "id": "graphify-data-model-map-B6",
       "feature": "graphify-data-model-map",
-      "status": "retesting",
+      "status": "fixed_awaiting_retest",
       "class": "owner_direction_conflict",
       "attempts": 1,
       "step": "J6.11/J6.12, island, routes",
@@ -2625,7 +2625,7 @@
     {
       "id": "graphify-data-model-map-B7",
       "feature": "graphify-data-model-map",
-      "status": "retesting",
+      "status": "fixed_awaiting_retest",
       "class": "product_defect",
       "attempts": 1,
       "step": "journey-flow picker",
@@ -2687,7 +2687,7 @@
     {
       "id": "graphify-data-model-map-B9",
       "feature": "graphify-data-model-map",
-      "status": "retesting",
+      "status": "fixed_awaiting_retest",
       "class": "requirement_gap",
       "attempts": 1,
       "step": "known limitation: code graph",
@@ -2719,7 +2719,7 @@
     {
       "id": "graphify-data-model-map-B10",
       "feature": "graphify-data-model-map",
-      "status": "retesting",
+      "status": "fixed_awaiting_retest",
       "class": "informational",
       "attempts": 1,
       "step": "CLAUDE.md note",
@@ -2953,7 +2953,7 @@
     {
       "id": "production-smoke-regression-B9",
       "feature": "production-smoke-regression",
-      "status": "retesting",
+      "status": "fixed_awaiting_retest",
       "class": "requirement_gap",
       "attempts": 1,
       "step": "known limitation: Netlify deploy wait",
@@ -3117,7 +3117,7 @@
     {
       "id": "production-smoke-regression-T2-3",
       "feature": "production-smoke-regression",
-      "status": "retesting",
+      "status": "fixed_awaiting_retest",
       "class": "defect",
       "attempts": 1,
       "step": "Profile address smoke-test-member already belongs to another member: 409 and nothing else changed",
