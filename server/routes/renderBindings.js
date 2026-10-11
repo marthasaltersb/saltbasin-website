@@ -54,10 +54,10 @@ router.get('/settings', adminOnly, wrap(async (req, res) => {
   const catalog = await RB.loadCatalog();
   const { bindings, overrideError } = await RB.loadBindings();
   res.json({
-    ports: catalog.map((p) => ({ portKey: p.port_key, name: p.name, portType: p.port_type, viewRoles: p.policy.viewRoles || [], note: p.policy.note || null,
+    ports: catalog.filter((p) => !p.internal).map((p) => ({ portKey: p.port_key, name: p.name, portType: p.port_type, viewRoles: p.policy.viewRoles || [], note: p.policy.note || null,
       fields: p.objects.flatMap((o) => o.fields.map((f) => ({ objectKey: o.object_key, fieldKey: f.field_key, kind: f.kind, derived: !!f.derived, editableRoles: f.editable_roles, definition: f.business_definition }))) })),
-    bindings: bindings.map((b) => ({ id: b.id, rendering: b.rendering, channel: b.channel, source: b.source, legend: b.legend, changePolicy: b.change_policy, defaultPolicy: Reg.DEFAULT_BINDINGS.find((d) => d.id === b.id)?.change_policy || 'live', enabled: b.enabled, custom: !!b.custom })),
-    renderings: Reg.RENDERINGS.map((r) => ({ key: r.key, label: r.label, channels: r.channels })),
+    bindings: bindings.filter((b) => !Reg.findRendering(b.rendering)?.internal).map((b) => ({ id: b.id, rendering: b.rendering, channel: b.channel, source: b.source, legend: b.legend, changePolicy: b.change_policy, defaultPolicy: Reg.DEFAULT_BINDINGS.find((d) => d.id === b.id)?.change_policy || 'live', enabled: b.enabled, custom: !!b.custom })),
+    renderings: Reg.RENDERINGS.filter((r) => !r.internal).map((r) => ({ key: r.key, label: r.label, channels: r.channels })),
     steps: await RB.listWorkflowSteps(), roles: Reg.ROLES, overrideError,
   });
 }));

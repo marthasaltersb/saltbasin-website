@@ -99,6 +99,9 @@ router.get('/me/world', requireUser, async (req, res) => {
         reached: currentIndex >= 0 && index <= currentIndex,
         current: index === currentIndex,
         atoms: keys.map(atomFor),
+        // Additive (journey-flow-experience-mapping): the experience, branch conditions and bindings a journey generated from a
+        // Journey Flow Studio flow carries for this gate. null for every other scenario.
+        flowJourney: (typeof scenario.metadata === 'object' && scenario.metadata?.flowJourney?.stages?.[gate.stage_key]) || null,
       };
     });
     // Evidence captured against molecules no gate asks for still belongs to

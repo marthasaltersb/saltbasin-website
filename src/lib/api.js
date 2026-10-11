@@ -63,6 +63,15 @@ export const api = {
   fsTemplateImpact: (id, op) => request(`/api/flow-studio/templates/${id}/impact?op=${op}`),
   fsOverwriteTemplate: (id, body) => request(`/api/flow-studio/templates/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   fsDeleteTemplate: (id, approved) => request(`/api/flow-studio/templates/${id}`, { method: 'DELETE', body: JSON.stringify({ approved }) }),
+  fsCatalogs: () => request('/api/flow-studio/catalogs'),
+  fsDataObjects: (q) => request(`/api/flow-studio/catalogs/data-objects?q=${encodeURIComponent(q || '')}`),
+  fsDataFields: (object) => request(`/api/flow-studio/catalogs/data-fields?object=${encodeURIComponent(object)}`),
+  fsExperienceChannels: () => request('/api/flow-studio/experience-channels'),
+  fsSaveExperienceChannels: (body) => request('/api/flow-studio/experience-channels', { method: 'PUT', body: JSON.stringify(body) }),
+  fsJourneyPreview: (id, source) => request(`/api/flow-studio/flows/${id}/journey-preview?source=${source || 'published'}`),
+  fsJourney: (id) => request(`/api/flow-studio/flows/${id}/journey`),
+  fsJourneyActivate: (id, approved, note) => request(`/api/flow-studio/flows/${id}/journey/activate`, { method: 'POST', body: JSON.stringify({ approved, note }) }),
+  fsJourneyTestRun: (id) => request(`/api/flow-studio/flows/${id}/journey/test-run`, { method: 'POST', body: '{}' }),
   fsAgentDraft: (id, body) => request(`/api/flow-studio/flows/${id}/agent-draft`, { method: 'POST', body: JSON.stringify(body) }),
   // Render bindings: renderings as views over mapped source data (live or approval path), data map, pending queue.
   // Data model map (admin): Graphify catalog of tables, columns, relations and usage; picker source; grouping rules.

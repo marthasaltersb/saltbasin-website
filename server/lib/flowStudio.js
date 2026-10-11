@@ -15,7 +15,7 @@ import { SEED_TEMPLATES, seedTemplateDoc } from './flowStudioSeedTemplates.js';
 import { emptyDoc, normalizeDoc, validateFlow, parseImport, diffDocs, shapesInUse, fieldsInUse, toJourneyDefinition, exportJson, exportHtml } from '../../src/lib/flowStudioDoc.js';
 
 export const ROD_TYPE = 'journey_flow';
-export const SOURCE_ACTIONS = ['editor', 'import', 'template_use', 'restore', 'publish', 'agent', 'api', 'mcp', 'create'];
+export const SOURCE_ACTIONS = ['editor', 'import', 'template_use', 'restore', 'publish', 'agent', 'api', 'mcp', 'create', 'journey_publish', 'settings'];
 const err = (status, message, code, extra = {}) => Object.assign(new Error(message), { status, code, ...extra });
 
 const actorOf = (u) => ({ id: u.id, label: u.name || u.email || `user ${u.id}` });
@@ -173,7 +173,7 @@ export async function getFlow(user, id) {
   const row = await load(user, id);
   const def = await loadDefinition();
   const doc = normalizeDoc(row.metadata.draft, def.definition);
-  return { ...summarize(row), doc, definition: def.definition, findings: validateFlow(doc, def.definition), canWrite: canWrite(user, row) };
+  return { ...summarize(row), doc, definition: def.definition, findings: validateFlow(doc, def.definition), canWrite: canWrite(user, row), journey: row.metadata.journeyActive || null, canActivateJourney: can(def.definition, user, 'activateJourney') };
 }
 
 export async function validateOnly(user, id, docIn) {
@@ -381,3 +381,6 @@ export async function agentDraft(user, { kind, label, type, prompt, fields } = {
   }
   return { draft, provider, note: provider === 'fixture' ? 'Offline test draft, not a real model. Nothing has been applied: review it, then apply.' : 'Drafted by the model from what you wrote. Review it, then apply.' };
 }
+
+// Shared with flowJourney.js (journey-flow-experience-mapping): the same load / permission / history helpers, not copies.
+export const _shared = { load, requireCan, can, logEvent, saveMeta, actorOf, parse, orgIdOf };

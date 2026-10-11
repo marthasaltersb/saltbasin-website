@@ -5,6 +5,7 @@
 // Append-only in spirit: a shape key / field key that flows already use is never removed (saveDefinition refuses).
 import { getJSON, setJSON } from '../db.js';
 
+export const ADDED_BY = 'journey-flow-experience-mapping';
 export const DEFINITION_ROW = 'flow_studio_definition';
 export const FLOW_FORMAT = 'salt-basin-journey-flow';
 export const FLOW_SCHEMA_VERSION = 1;
@@ -18,7 +19,7 @@ export const DEFAULT_DEFINITION = Object.freeze({
     { key: 'step', label: 'Step', kind: 'rect', w: 150, h: 64, fill: '#F8F4EC', stroke: '#C7BC9E', text: '#2B2A28', shadow: '#C7BC9E', defaultLabel: 'New step', branching: false, startCapable: false },
     { key: 'subprocess', label: 'Sub-process', kind: 'rect', w: 172, h: 72, fill: '#DCE9EC', stroke: '#4A7C8E', text: '#2B2A28', shadow: '#4A7C8E', defaultLabel: 'Sub-process', branching: false, startCapable: false },
     { key: 'decision', label: 'Decision', kind: 'diamond', w: 118, h: 118, fill: '#F3E3CE', stroke: '#C4843A', text: '#2B2A28', shadow: '#C4843A', defaultLabel: 'Decision?', branching: true, startCapable: false },
-    { key: 'parallel', label: 'Parallel gate', kind: 'diamond', w: 110, h: 110, fill: '#DCE9EC', stroke: '#345A68', text: '#2B2A28', shadow: '#345A68', defaultLabel: 'Parallel', branching: true, startCapable: false },
+    { key: 'parallel', label: 'Parallel gate', kind: 'diamond', w: 110, h: 110, fill: '#DCE9EC', stroke: '#345A68', text: '#2B2A28', shadow: '#345A68', defaultLabel: 'Parallel', branching: true, fanout: true, startCapable: false },
     { key: 'event', label: 'Event', kind: 'circle', w: 62, h: 62, fill: '#F7E4E9', stroke: '#D98CA0', text: '#2B2A28', shadow: '#D98CA0', defaultLabel: 'Event', branching: false, startCapable: true },
     { key: 'data', label: 'Data object', kind: 'flag', w: 120, h: 56, fill: '#F3E3CE', stroke: '#C4843A', text: '#2B2A28', shadow: '#C4843A', defaultLabel: 'Data', branching: false, startCapable: false },
     { key: 'terminal', label: 'Start / End', kind: 'pill', w: 128, h: 52, fill: '#345A68', stroke: '#345A68', text: '#F8F4EC', shadow: '#1d3a45', defaultLabel: 'Start', branching: false, startCapable: true },
@@ -49,6 +50,8 @@ export const DEFAULT_DEFINITION = Object.freeze({
     { key: 'architecture', label: 'Architecture & data' },
     { key: 'experience', label: 'Experience' },
     { key: 'binding', label: 'Experience binding' },
+    { key: 'structured', label: 'Structured bindings', addedBy: ADDED_BY },
+    { key: 'extension', label: 'Extension fields', addedBy: ADDED_BY },
     { key: 'diagnostics', label: 'Current-state diagnostics', viewOnly: 'current' },
     { key: 'tracking', label: 'Future-state tracking', viewOnly: 'future' },
   ],
@@ -77,6 +80,16 @@ export const DEFAULT_DEFINITION = Object.freeze({
     { key: 'sceneAsset', section: 'binding', label: 'Scene or static asset', type: 'text', hint: 'Scene key or asset path shown for this step' },
     { key: 'animation', section: 'binding', label: 'Animation or interaction', type: 'text', hint: 'Animation or interaction played for this step' },
     { key: 'destinationLink', section: 'binding', label: 'Destination link', type: 'text', hint: 'Where the step sends the person (path or URL)' },
+    { key: 'worldLayer', section: 'binding', label: 'World Shell layer', type: 'pick', source: 'worldLayers', hint: 'The layer of the World Shell this step opens', addedBy: ADDED_BY },
+    { key: 'crystalVariant', section: 'binding', label: 'Crystal variant', type: 'pick', source: 'crystalVariants', hint: 'The crystal this step is drawn as', addedBy: ADDED_BY },
+    { key: 'interactionKind', section: 'binding', label: 'Interaction kind', type: 'pick', source: 'interactions', hint: 'How the person interacts with this step', addedBy: ADDED_BY },
+    { key: 'bindVariants', section: 'structured', label: 'Variants this step belongs to', type: 'multipick', source: 'variants', hint: 'Scenarios of this flow', addedBy: ADDED_BY },
+    { key: 'bindActors', section: 'structured', label: 'Actors (roles or profiles)', type: 'multipick', source: 'actors', hint: 'Who acts on this step', addedBy: ADDED_BY },
+    { key: 'bindCapabilities', section: 'structured', label: 'Platform capabilities', type: 'multipick', source: 'capabilities', hint: 'Capabilities from the capability map', addedBy: ADDED_BY },
+    { key: 'bindSystemOfRecord', section: 'structured', label: 'System of record (data port)', type: 'pick', source: 'ports', hint: 'The system that holds the data this step works on', addedBy: ADDED_BY },
+    { key: 'bindActionAuthority', section: 'structured', label: 'Action authority (permission or licence)', type: 'multipick', source: 'authorities', hint: 'What may perform this step', addedBy: ADDED_BY },
+    { key: 'bindReads', section: 'structured', label: 'Data this step reads', type: 'multipick', source: 'dataFields', hint: 'Fields from the data model', addedBy: ADDED_BY },
+    { key: 'bindWrites', section: 'structured', label: 'Data this step writes', type: 'multipick', source: 'dataFields', hint: 'Fields from the data model', addedBy: ADDED_BY },
     { key: 'painPoints', section: 'diagnostics', label: 'Pain points', type: 'textarea', viewOnly: 'current', hint: 'What hurts at this step today' },
     { key: 'frictionOpportunity', section: 'diagnostics', label: 'Friction & opportunity (quantified)', type: 'textarea', viewOnly: 'current', hint: 'e.g. 3.5 days average delay' },
     { key: 'dataSources', section: 'diagnostics', label: 'Data sources available today', type: 'textarea', viewOnly: 'current' },
@@ -100,7 +113,23 @@ export const DEFAULT_DEFINITION = Object.freeze({
     { key: 'missing_label', kind: 'missing_label', label: 'Step with no label', severity: 'warning', enabled: true, message: 'A {type} has no label. Select it and fill in Label in the step panel.' },
     { key: 'dangling_resolve', kind: 'dangling_resolve', label: 'Future step linked to a missing Current-state problem', severity: 'error', enabled: true, message: '"{label}" says it resolves a {resolveKind} on a Current-state step that has none recorded. Pick another step or record the problem first.' },
   ],
+  // Option lists the structured pickers read (edited on the Settings screen). Platform-derived lists (capabilities,
+  // permissions, data ports, World Shell layers, crystal variants, data fields) are read live from their registries.
+  lists: {
+    actors: [
+      { key: 'member', label: 'Member' }, { key: 'admin', label: 'Administrator' }, { key: 'agent', label: 'Platform agent' },
+      { key: 'customer', label: 'Customer' }, { key: 'reviewer', label: 'Reviewer' },
+    ],
+    licences: [
+      { key: 'licence_finbridgeco', label: 'FinBridgeCo licence' }, { key: 'licence_handoveros', label: 'HandoverOS licence' },
+    ],
+    interactions: [
+      { key: 'tap_to_open', label: 'Tap to open' }, { key: 'choose_branch', label: 'Choose a branch' }, { key: 'form_entry', label: 'Fill in a form' },
+      { key: 'confirm_dialog', label: 'Confirm in a dialog' }, { key: 'watch_only', label: 'Watch only' },
+    ],
+  },
   access: {
+    activateJourney: ['admin'],
     create: ['admin', 'member'],
     publish: ['admin', 'member'],
     shareTemplate: ['admin'],
@@ -110,6 +139,7 @@ export const DEFAULT_DEFINITION = Object.freeze({
 });
 
 const ROLES = ['admin', 'member'];
+export const PICK_SOURCES = ['variants', 'actors', 'capabilities', 'ports', 'authorities', 'dataFields', 'worldLayers', 'crystalVariants', 'interactions'];
 const str = (v) => (typeof v === 'string' ? v : '');
 const KEY = /^[a-zA-Z][a-zA-Z0-9_]*$/;
 
@@ -145,7 +175,8 @@ export function validateDefinition(input) {
   for (const f of fields) {
     if (!f || !f.key) continue;
     if (!secKeys.has(f.section)) errors.push(`Field "${f.key}" is in the section "${f.section}", which does not exist.`);
-    if (!['text', 'textarea'].includes(f.type)) errors.push(`Field "${f.key}" has the type "${f.type}". Use text or textarea.`);
+    if (!['text', 'textarea', 'pick', 'multipick'].includes(f.type)) errors.push(`Field "${f.key}" has the type "${f.type}". Use text, textarea, pick or multipick.`);
+    if ((f.type === 'pick' || f.type === 'multipick') && !PICK_SOURCES.includes(f.source)) errors.push(`Field "${f.key}" is a ${f.type} list but its source "${f.source}" is not known. Choose one of: ${PICK_SOURCES.join(', ')}.`);
     if (!str(f.label).trim()) errors.push(`Field "${f.key}" needs a label.`);
   }
   uniq(Array.isArray(d.execModes) ? d.execModes : [], 'execution mode');
@@ -159,10 +190,21 @@ export function validateDefinition(input) {
     if (!['error', 'warning'].includes(r.severity)) errors.push(`Validation rule "${r.key}" needs a severity of error or warning.`);
   }
   const a = d.access || {};
-  for (const k of ['create', 'publish', 'shareTemplate', 'editDefinition']) {
+  for (const k of ['create', 'publish', 'shareTemplate', 'editDefinition', 'activateJourney']) {
+    if (k === 'activateJourney' && a[k] === undefined) continue;
     if (!Array.isArray(a[k]) || a[k].some((r) => !ROLES.includes(r))) errors.push(`Access "${k}" must be a list of roles (${ROLES.join(', ')}).`);
   }
   if (Array.isArray(a.editDefinition) && !a.editDefinition.includes('admin')) errors.push('Administrators must always be able to edit the definition, otherwise nobody could fix it.');
+  const lists = d.lists === undefined ? undefined : d.lists;
+  if (lists !== undefined) {
+    if (!lists || typeof lists !== 'object') errors.push('The option lists must be an object with actors, licences and interactions.');
+    else for (const name of ['actors', 'licences', 'interactions']) {
+      if (lists[name] === undefined) continue;
+      if (!Array.isArray(lists[name])) { errors.push(`The ${name} list must be a list of key and label pairs.`); continue; }
+      uniq(lists[name], `${name} option`);
+      for (const it of lists[name]) if (it && !str(it.label).trim()) errors.push(`Every ${name} option needs a label (the one with key "${it.key}" has none).`);
+    }
+  }
   if (errors.length) return { definition: null, errors };
   const base = JSON.parse(JSON.stringify(DEFAULT_DEFINITION));
   const definition = {
@@ -170,9 +212,28 @@ export function validateDefinition(input) {
     execModes: d.execModes, concurrencyModes: d.concurrencyModes,
     resolveKinds: Array.isArray(d.resolveKinds) ? d.resolveKinds : base.resolveKinds,
     scenarioLevels: base.scenarioLevels, states: base.states,
-    access: { ...base.access, ...a }, limits: { ...base.limits, ...(d.limits || {}) },
+    lists: { ...base.lists, ...(lists || {}) }, access: { ...base.access, ...a }, limits: { ...base.limits, ...(d.limits || {}) },
   };
   return { definition, errors: [] };
+}
+
+/**
+ * Read-time, additive only: a definition saved before journey-flow-experience-mapping gets that feature's sections and
+ * fields appended (by key, never overwriting). Once an administrator saves the definition the merged result is stored
+ * (`bindingsMerged`), so a field they later remove stays removed. Nothing is written here.
+ */
+function additiveDefaults(def) {
+  if (def.bindingsMerged) return def;
+  const out = { ...def, sections: [...def.sections], fields: [...def.fields] };
+  const secKeys = new Set(out.sections.map((x) => x.key)); const fieldKeys = new Set(out.fields.map((x) => x.key));
+  const at = out.sections.findIndex((x) => x.key === 'binding');
+  const addS = DEFAULT_DEFINITION.sections.filter((x) => x.addedBy === ADDED_BY && !secKeys.has(x.key));
+  out.sections.splice(at >= 0 ? at + 1 : out.sections.length, 0, ...addS.map((x) => ({ ...x })));
+  for (const f of DEFAULT_DEFINITION.fields) if (f.addedBy === ADDED_BY && !fieldKeys.has(f.key)) out.fields.push({ ...f });
+  out.access = { ...DEFAULT_DEFINITION.access, ...out.access };
+  out.lists = { ...DEFAULT_DEFINITION.lists, ...(out.lists || {}) };
+  out.shapeTypes = out.shapeTypes.map((s) => (s.key === 'parallel' && s.fanout === undefined ? { ...s, fanout: true } : s));
+  return out;
 }
 
 /** The effective definition: the saved row when valid, else the platform default (reason reported, never silent). */
@@ -182,12 +243,12 @@ export async function loadDefinition() {
     if (!stored) return { definition: structuredClone(DEFAULT_DEFINITION), saved: false, error: null, history: [] };
     const { definition, errors } = validateDefinition(stored.definition || stored);
     if (errors.length) return { definition: structuredClone(DEFAULT_DEFINITION), saved: false, error: `The saved definition is invalid, so the platform default is in use: ${errors.join(' ')}`, history: stored.history || [] };
-    return { definition: { ...definition, version: stored.version || definition.version }, saved: true, error: null, history: stored.history || [] };
+    return { definition: { ...additiveDefaults(definition), version: stored.version || definition.version }, saved: true, error: null, history: stored.history || [] };
   } catch (e) {
     return { definition: structuredClone(DEFAULT_DEFINITION), saved: false, error: `The saved definition could not be read (${e.message}), so the platform default is in use.`, history: [] };
   }
 }
 
 export async function writeDefinition(definition, version, history) {
-  await setJSON('config_state', DEFINITION_ROW, { version, definition, history });
+  await setJSON('config_state', DEFINITION_ROW, { version, definition: { ...definition, bindingsMerged: true }, history });
 }

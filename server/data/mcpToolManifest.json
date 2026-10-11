@@ -236,6 +236,13 @@
     "flow_studio_flow_import",
     "flow_studio_template_save",
     "flow_studio_template_change",
-    "flow_studio_agent_draft"
+    "flow_studio_agent_draft",
+    "flow_journey_catalogs_read",
+    "flow_journey_preview",
+    "flow_journey_active_read",
+    "flow_journey_activate",
+    "flow_journey_test_start",
+    "flow_experience_channels_read",
+    "flow_experience_channels_save"
   ]
 }

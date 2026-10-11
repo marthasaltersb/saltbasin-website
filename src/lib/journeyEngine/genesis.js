@@ -262,6 +262,8 @@ export function journeyDefinitionFromPersistedRod(journey) {
       title: stage.title && stage.title !== stage.key ? stage.title : humanizeKey(stage.key),
       short: stage.current ? 'Current stage' : stage.reached ? 'Reached' : 'Ahead',
       description: stage.description || '',
+      experience: stage.flowJourney?.experience || null,
+      flowJourney: stage.flowJourney || null,
       source: stage.reached ? 'live' : 'template',
       metrics: [],
       fields: (stage.atoms || []).map((atom) => ({

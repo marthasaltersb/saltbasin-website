@@ -11,6 +11,7 @@ import { toast } from '../../lib/toast.js';
 import { useToolCategoryGate } from './ToolCategoryGate.jsx';
 import { LANE_H, shapeOf, edgePath, shapePrims, hasField } from '../../lib/flowGeometry.js';
 import { validateFlow } from '../../lib/flowStudioDoc.js';
+import { PickField, ConditionEditor, JourneyPanel, ExperienceChannelsCard, OptionListsCard } from './FlowJourneyParts.jsx';
 
 const CSS = `
 .fs-root { --fs-ink:#1b2a3b; --fs-sec:#536173; --fs-line:#e5ded3; --fs-soft:#f6f2ea; --fs-bg:#ffffff; --fs-accent:#c4843a; --fs-teal:#2e7f9c; --fs-bad:#a5391f; --fs-ok:#2f7d4f; --fs-alert:#fbeae5; --fs-note:#eef5f8; --fs-canvas:#F8F4EC;
@@ -135,7 +136,7 @@ function Canvas({ def, st, scenario, selection, mode, connectFrom, onSelect, onM
           const meta = metaOf(n, scenario);
           const sel = selection?.kind === 'node' && selection.id === n.id;
           const pain = def.resolveKinds.some((k) => hasField(meta, k.field));
-          const hasMeta = Object.values(meta).some((v) => typeof v === 'string' && v.trim());
+          const hasMeta = Object.values(meta).some((v) => (typeof v === 'string' && v.trim()) || (Array.isArray(v) && v.length));
           const resolves = n.resolves.length > 0;
           const prim = (p, props) => (p.t === 'rect' ? <rect x={p.x} y={p.y} width={p.w} height={p.h} rx={p.rx} {...props} /> : p.t === 'circle' ? <circle cx={p.cx} cy={p.cy} r={p.r} {...props} /> : <polygon points={p.pts} {...props} />);
           const lines = wrapLabel(n.label, s.kind === 'diamond' ? s.w * 0.7 : s.w - 16);
@@ -180,7 +181,7 @@ function Canvas({ def, st, scenario, selection, mode, connectFrom, onSelect, onM
 }
 
 // ── Field editor for a step in the active scenario ─────────────────────────
-function FieldEditor({ def, node, viewState, scenario, onField, onCopyBase, onClear }) {
+function FieldEditor({ def, node, viewState, scenario, onField, onCopyBase, onClear, catalogs, scenarios, dataObjects, disabled }) {
   const over = scenario !== 'base' ? (node.meta?.[scenario] || {}) : null;
   return (
     <div>
@@ -192,10 +193,13 @@ function FieldEditor({ def, node, viewState, scenario, onField, onCopyBase, onCl
           </div>
         </div>
       ) : null}
-      {def.sections.filter((s) => !s.viewOnly || s.viewOnly === viewState).map((sec) => (
+      {def.sections.filter((s) => (!s.viewOnly || s.viewOnly === viewState) && def.fields.some((f) => f.section === s.key)).map((sec) => (
         <fieldset key={sec.key} style={{ border: '1px solid var(--fs-line)', borderRadius: 8, margin: '0 0 .6rem', padding: '.5rem .6rem' }}>
           <legend style={{ fontSize: '.78rem', fontWeight: 700 }}>{sec.label}</legend>
           {def.fields.filter((f) => f.section === sec.key).map((f) => {
+            if (f.type === 'pick' || f.type === 'multipick') {
+              return <PickField key={f.key} field={f} value={scenario === 'base' ? node.meta?.base?.[f.key] : over?.[f.key]} baseValue={node.meta?.base?.[f.key]} scenarioMode={scenario !== 'base'} catalogs={catalogs} scenarios={scenarios || []} dataObjects={dataObjects} disabled={disabled} onChange={(v) => onField(f.key, v)} />;
+            }
             const base = node.meta?.base?.[f.key] || '';
             const value = scenario === 'base' ? base : (over?.[f.key] ?? '');
             const props = { id: `fs-f-${f.key}`, className: 'fs-input', value, placeholder: scenario !== 'base' ? base : (f.hint || ''), 'aria-label': f.label, onChange: (e) => onField(f.key, e.target.value) };
@@ -234,6 +238,8 @@ function FlowEditor({ flowId, onBack, m, canShare }) {
   const [replaceImpact, setReplaceImpact] = useState(null);
   const [agent, setAgent] = useState({ prompt: '', draft: null, note: '' });
   const [busy, setBusy] = useState(false);
+  const [catalogs, setCatalogs] = useState(null);
+  const [dataObjects, setDataObjects] = useState([]);
   const coalesce = useRef({ key: null, at: 0 });
   const def = flow?.definition;
 
@@ -242,6 +248,12 @@ function FlowEditor({ flowId, onBack, m, canShare }) {
     api.fsFlow(flowId).then((f) => { if (!live) return; setFlow(f); setDoc(f.doc); }).catch((e) => m.fail(e));
     return () => { live = false; };
   }, [flowId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    let live = true;
+    Promise.all([api.fsCatalogs(), api.fsDataObjects('')]).then(([c, o]) => { if (live) { setCatalogs(c); setDataObjects(o.objects); } }).catch((e) => m.fail(e));
+    return () => { live = false; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const st = doc?.states[viewState];
   const findings = useMemo(() => (doc && def ? validateFlow(doc, def) : []), [doc, def]);
@@ -312,7 +324,7 @@ function FlowEditor({ flowId, onBack, m, canShare }) {
   const setField = (k, v) => edit((s) => {
     const n = s.nodes.find((x) => x.id === sel.id); n.meta = n.meta || { base: {} };
     const slot = scenario === 'base' ? 'base' : scenario; n.meta[slot] = { ...(n.meta[slot] || {}) };
-    if (scenario !== 'base' && v === '') delete n.meta[slot][k]; else n.meta[slot][k] = v;
+    if (scenario !== 'base' && (v === '' || (Array.isArray(v) && !v.length))) delete n.meta[slot][k]; else n.meta[slot][k] = v;
   }, `f:${sel.id}:${scenario}:${k}`);
   const setOverlay = (k, v) => edit((s) => {
     const e = s.edges.find((x) => x.id === sel.id); e.overlays = { ...(e.overlays || {}) }; e.overlays[scenario] = { ...(e.overlays[scenario] || {}) };
@@ -381,11 +393,15 @@ function FlowEditor({ flowId, onBack, m, canShare }) {
         <button type="button" className="fs-btn2" onClick={doUndo} disabled={!undo.length}>Undo</button>
         <button type="button" className="fs-btn2" onClick={doRedo} disabled={!redo.length}>Redo</button>
         <button type="button" className="fs-btn2" onClick={openPublish} disabled={!writable}>Publish</button>
+        <button type="button" className="fs-btn2" aria-pressed={panel === 'journey'} onClick={() => { setPanel(panel === 'journey' ? null : 'journey'); m.clear(); }}>Journey</button>
         <button type="button" className="fs-btn2" onClick={openHistory}>History</button>
         <button type="button" className="fs-btn2" aria-pressed={panel === 'export'} onClick={() => setPanel(panel === 'export' ? null : 'export')}>Export</button>
         <button type="button" className="fs-btn2" aria-pressed={panel === 'template'} onClick={() => { setTpl({ name: `${doc.name} template`, visibility: 'private' }); setReplaceId(''); setReplaceImpact(null); api.fsFlows().then((d) => setMyTemplates(d.templates.filter((t) => !t.seed && (t.ownerId === d.meId || d.meRole === 'admin')))).catch((e) => m.fail(e)); setPanel(panel === 'template' ? null : 'template'); }}>Save as template</button>
       </div>
 
+      {panel === 'journey' ? (
+        <JourneyPanel flowId={flowId} flow={flow} dirty={dirty} m={m} gate={gate} onFlowChanged={async () => { try { const f = await api.fsFlow(flowId); setFlow((prev) => ({ ...prev, journey: f.journey, status: f.status, publishedVersion: f.publishedVersion })); } catch (e) { m.fail(e); } }} />
+      ) : null}
       {panel === 'export' ? (
         <div className="fs-card" aria-label="Export"><h3>Export</h3>
           <div className="fs-row">
@@ -541,7 +557,7 @@ function FlowEditor({ flowId, onBack, m, canShare }) {
                   )}
                 </fieldset>
               ) : null}
-              <FieldEditor def={def} node={node} viewState={viewState} scenario={scenario} onField={writable ? setField : () => {}}
+              <FieldEditor def={def} node={node} viewState={viewState} scenario={scenario} onField={writable ? setField : () => {}} catalogs={catalogs} scenarios={scenarios} dataObjects={dataObjects} disabled={!writable}
                 onCopyBase={() => edit((s) => { const n = s.nodes.find((x) => x.id === sel.id); n.meta[scenario] = { ...(n.meta.base || {}) }; })}
                 onClear={() => edit((s) => { const n = s.nodes.find((x) => x.id === sel.id); delete n.meta[scenario]; })} />
               <fieldset style={{ border: '1px solid var(--fs-line)', borderRadius: 8, margin: '.5rem 0', padding: '.5rem .6rem' }}>
@@ -560,6 +576,7 @@ function FlowEditor({ flowId, onBack, m, canShare }) {
               {edgeSel.from === edgeSel.to ? <p className="fs-muted">This connector is a self-loop (a repeating sub-process).</p> : null}
               <label className="fs-label">Path label<input className="fs-input" aria-label="Path label" value={edgeSel.label} disabled={!writable} onChange={(e) => setEdge({ label: e.target.value }, 'elabel')} /></label>
               <label className="fs-label">Branch parameters<textarea className="fs-input" aria-label="Branch parameters" value={edgeSel.params} disabled={!writable} onChange={(e) => setEdge({ params: e.target.value }, 'eparams')} /></label>
+              <ConditionEditor edge={edgeSel} dataObjects={dataObjects} disabled={!writable} onChange={(c) => setEdge({ bind: { ...(edgeSel.bind || {}), condition: c || undefined } }, 'econd')} />
               <label className="fs-label">Owner, SLA or exception notes<textarea className="fs-input" aria-label="Branch notes" value={edgeSel.notes} disabled={!writable} onChange={(e) => setEdge({ notes: e.target.value }, 'enotes')} /></label>
               <label className="fs-label">Scenario tags (comma separated)<input className="fs-input" aria-label="Connector scenario tags" value={edgeSel.scenarioTags.join(', ')} disabled={!writable} onChange={(e) => setEdge({ scenarioTags: parseTags(e.target.value) }, 'etags')} /></label>
               {scenario !== 'base' ? (
@@ -603,7 +620,7 @@ function Settings({ m, definition, onSaved }) {
   const reset = async () => { try { const r = await api.fsResetDefinition('Reset to the platform default'); onSaved(r.definition); m.say(`Definition saved as version ${r.version}`); } catch (e) { m.fail(e); } };
   const inp = (v, on, label, type = 'text') => <input className="fs-input" type={type} aria-label={label} value={v} onChange={(e) => on(e.target.value)} />;
   const roles = ['admin', 'member'];
-  const accessLabels = { create: 'Create, edit and save flows', publish: 'Publish flows', shareTemplate: 'Share templates with an organization or the platform', editDefinition: 'Change this definition' };
+  const accessLabels = { create: 'Create, edit and save flows', publish: 'Publish flows', activateJourney: 'Activate a published flow as a journey the platform runs', shareTemplate: 'Share templates with an organization or the platform', editDefinition: 'Change this definition' };
   return (
     <div data-testid="fs-settings">
       <p className="fs-sub">Version {definition.version}. Everything here drives the editor: the shape buttons, colours, step fields, checks and who may do what. Saving makes version {definition.version + 1}.</p>
@@ -631,7 +648,8 @@ function Settings({ m, definition, onSaved }) {
               <td>{inp(f.key, (v) => upd(0, (n) => { n.fields[i].key = v; }), `Field ${i + 1} key`)}</td>
               <td>{inp(f.label, (v) => upd(0, (n) => { n.fields[i].label = v; }), `Field ${f.key} label`)}</td>
               <td><select className="fs-input" aria-label={`Field ${f.key} section`} value={f.section} onChange={(e) => upd(0, (n) => { n.fields[i].section = e.target.value; })}>{d.sections.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}</select></td>
-              <td><select className="fs-input" aria-label={`Field ${f.key} type`} value={f.type} onChange={(e) => upd(0, (n) => { n.fields[i].type = e.target.value; })}><option>text</option><option>textarea</option></select></td>
+              <td><select className="fs-input" aria-label={`Field ${f.key} type`} value={f.type} onChange={(e) => upd(0, (n) => { n.fields[i].type = e.target.value; if ((e.target.value === 'pick' || e.target.value === 'multipick') && !n.fields[i].source) n.fields[i].source = 'actors'; })}><option>text</option><option>textarea</option><option>pick</option><option>multipick</option></select>
+                {f.type === 'pick' || f.type === 'multipick' ? <select className="fs-input" aria-label={`Field ${f.key} list source`} value={f.source || 'actors'} onChange={(e) => upd(0, (n) => { n.fields[i].source = e.target.value; })}>{['variants', 'actors', 'capabilities', 'ports', 'authorities', 'dataFields', 'worldLayers', 'crystalVariants', 'interactions'].map((k) => <option key={k}>{k}</option>)}</select> : null}</td>
               <td><button type="button" className="fs-btn2" onClick={() => upd(0, (n) => { n.fields.splice(i, 1); })}>Remove</button></td>
             </tr>))}</tbody></table></div>
         <div className="fs-row" style={{ marginTop: '.5rem' }}><button type="button" className="fs-btn2" onClick={() => upd(0, (n) => { n.fields.push({ key: `field${n.fields.length + 1}`, section: n.sections[0].key, label: 'New field', type: 'text' }); })}>Add field</button></div>
@@ -644,11 +662,13 @@ function Settings({ m, definition, onSaved }) {
             <label className="fs-label" style={{ flex: '1 1 300px' }}>Message{inp(r.message, (v) => upd(0, (n) => { n.validationRules[i].message = v; }), `Check ${r.label} message`)}</label>
           </div>))}
       </div>
+      <OptionListsCard d={d} upd={upd} />
+      <ExperienceChannelsCard m={m} canEdit />
       <div className="fs-card"><h3>Who can do what</h3>
         {Object.keys(accessLabels).map((k) => (
           <div className="fs-row" key={k}><span style={{ flex: '1 1 260px' }}>{accessLabels[k]}</span>
             {roles.map((r) => (<label key={r} className="fs-label" style={{ flexDirection: 'row', alignItems: 'center', gap: '.4rem' }}>
-              <input type="checkbox" style={{ width: 24, height: 24 }} aria-label={`${r} can ${accessLabels[k].toLowerCase()}`} checked={d.access[k].includes(r)} onChange={(e) => upd(0, (n) => { const s = new Set(n.access[k]); if (e.target.checked) s.add(r); else s.delete(r); n.access[k] = [...s]; })} />{r}</label>))}
+              <input type="checkbox" style={{ width: 24, height: 24 }} aria-label={`${r} can ${accessLabels[k].toLowerCase()}`} checked={(d.access[k] || []).includes(r)} onChange={(e) => upd(0, (n) => { const s = new Set(n.access[k] || []); if (e.target.checked) s.add(r); else s.delete(r); n.access[k] = [...s]; })} />{r}</label>))}
           </div>))}
       </div>
       <div className="fs-card"><h3>Save</h3>

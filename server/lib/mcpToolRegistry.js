@@ -33,6 +33,9 @@ export const MCP_SCOPES = Object.freeze({
   'flows.read': 'Read journey flows, templates, history and the studio definition',
   'flows.write': 'Create, save, import, restore and template journey flows; change the studio definition (the studio access policy still applies)',
   'flows.publish': 'Publish a journey flow as the journey definition (runs the finalization gate, same as the website)',
+  'flowjourney.read': 'Read the pick lists behind journey bindings, preview the journey a flow generates, and read the journey a flow is running as',
+  'flowjourney.write': 'Start a test run of an activated journey and map or unmap experience channels (the studio access policy still applies)',
+  'flowjourney.publish': 'Activate a published flow as a journey the platform runs (runs the finalization gate, same as the website)',
   'agent.runner.read': 'Read agent runner settings, the agent roster, runs, outputs, test plans and backlog seeds (administrators only)',
   'agent.runner.write': 'Prompt agents, stop runs, decide scope requests and proposals, change runner settings and move backlog seeds (administrators only)',
   'smoke.read': 'Read the status of the fictional production smoke test account (administrators only)',
@@ -124,8 +127,8 @@ const RB_TOOLS = [
     async () => {
       const RB = await rbLib(); const Reg = await import('./renderBindingRegistry.js');
       const catalog = await RB.loadCatalog(); const { bindings, overrideError } = await RB.loadBindings();
-      return { ports: catalog.map((p) => ({ portKey: p.port_key, name: p.name, portType: p.port_type, fields: p.objects.flatMap((o) => o.fields.map((f) => ({ objectKey: o.object_key, fieldKey: f.field_key, editableRoles: f.editable_roles, derived: !!f.derived }))) })),
-        bindings: bindings.map((b) => ({ id: b.id, rendering: b.rendering, channel: b.channel, changePolicy: b.change_policy, enabled: b.enabled })), steps: await RB.listWorkflowSteps(), roles: Reg.ROLES, overrideError };
+      return { ports: catalog.filter((p) => !p.internal).map((p) => ({ portKey: p.port_key, name: p.name, portType: p.port_type, fields: p.objects.flatMap((o) => o.fields.map((f) => ({ objectKey: o.object_key, fieldKey: f.field_key, editableRoles: f.editable_roles, derived: !!f.derived }))) })),
+        bindings: bindings.filter((b) => !Reg.findRendering(b.rendering)?.internal).map((b) => ({ id: b.id, rendering: b.rendering, channel: b.channel, changePolicy: b.change_policy, enabled: b.enabled })), steps: await RB.listWorkflowSteps(), roles: Reg.ROLES, overrideError };
     }),
   rbTool('render_binding_settings_save', 'Change render binding settings', 'Administrators only. One of: overrides (binding on/off or change policy), fieldRoles (a field\'s editable roles), step (an approval step).',
     schema({ overrides: rlObj('Same body as PUT /api/render-bindings/settings/bindings.'), fieldRoles: rlObj('{ portKey, objectKey, fieldKey, editableRoles: [] }'), step: rlObj('{ id, name, roleLabel, active }') }),
