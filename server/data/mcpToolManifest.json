@@ -205,6 +205,8 @@
     "data_model_search",
     "data_model_picker",
     "data_model_rules_read",
-    "data_model_rules_save"
+    "data_model_rules_save",
+    "production_smoke_account_status",
+    "production_smoke_account_ready"
   ]
 }

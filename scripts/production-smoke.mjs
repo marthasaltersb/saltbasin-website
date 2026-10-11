@@ -16,10 +16,16 @@
 //   - every non-GET request a page makes to the production origin (page-view tracking and similar) is
 //     answered in the browser with a stub and listed in the report under suppressedWrites; it never
 //     reaches the server.
-// Steps that need a signed-in account are reported not_run (no fictional production test account exists).
+// Signed-in steps (R2.x) use ONE dedicated fictional test account (smoke-member@test.saltbasin.invalid, owner
+// decision 2026-10-10). Its password comes only from the SMOKE_MEMBER_PASSWORD environment variable (a GitHub
+// Actions secret); without it those steps are reported not_run, never guessed. The account is created and
+// readied by the "Provision smoke test account" workflow (scripts/provision-smoke-account.mjs). Signed in, the
+// suite still only READS: its two direct non-GET requests are the sign-in and the sign-out.
 import fs from 'node:fs';
 import path from 'node:path';
-import { chromium } from 'playwright';
+// Playwright is installed with --no-save on the runner. For a local rehearsal in a sandbox, PLAYWRIGHT_MODULE may
+// name its entry file and SMOKE_CHROMIUM_PATH an existing Chromium binary.
+const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ? new URL(`file://${process.env.PLAYWRIGHT_MODULE}`).href : 'playwright');
 
 const argv = process.argv.slice(2);
 const opt = (k, d) => { const i = argv.indexOf(k); return i >= 0 ? argv[i + 1] : d; };
@@ -32,6 +38,9 @@ const ORIGIN = new URL(BASE).origin;
 const BACKEND = String(opt('--backend', process.env.SMOKE_BACKEND_URL ?? 'https://saltbasin-website.onrender.com')).replace(/\/$/, '');
 // Local rehearsal only (a sandbox whose proxy blocks CDNs): drop load failures of OTHER hosts that the
 // proxy refused. Never set on the GitHub runner, where every console error counts.
+const SMOKE_EMAIL = process.env.SMOKE_MEMBER_EMAIL || 'smoke-member@test.saltbasin.invalid';
+const SMOKE_PASSWORD = process.env.SMOKE_MEMBER_PASSWORD || '';
+const SMOKE_SLUG = 'smoke-test-member';
 const IGNORE_BLOCKED_EXTERNAL = argv.includes('--ignore-blocked-external');
 const SHOTS = path.join(OUT, 'screens');
 fs.mkdirSync(SHOTS, { recursive: true });
@@ -64,8 +73,9 @@ async function http(url, init = {}) {
 }
 
 // One browser page visit with error capture. Returns what a step needs to judge.
-async function visit(browser, surface, pathname, { shot } = {}) {
+async function visit(browser, surface, pathname, { shot, cookie } = {}) {
   const ctx = await browser.newContext({ ...VIEWPORTS[surface], colorScheme: 'light', locale: 'en-US', timezoneId: 'UTC' });
+  if (cookie) await ctx.addCookies([{ name: cookie.name, value: cookie.value, url: ORIGIN }]);
   const page = await ctx.newPage();
   const log = { pageErrors: [], consoleErrors: [], resource4xx: [], http5xx: [], requestFailed: [] };
   await page.route('**/*', (route) => {
@@ -164,7 +174,7 @@ async function main() {
   });
   if (health.status === 0) {
     // Nothing else can be judged; report honestly rather than a cascade of failures.
-    for (const id of ['S2.1', 'S2.2', 'S2.3', 'S2.4', 'S3.1', 'S3.2', 'S3.3', 'S3.4', 'S3.5', 'S3.6', 'S4.1', 'S5.1', 'S5.2', 'S5.3', 'S5.4', 'S5.5', 'S5.6', 'S5.7', 'S5.8', 'S6.1', 'S6.2', 'S6.3', 'R1.1', 'R1.2', 'R1.3']) {
+    for (const id of ['S2.1', 'S2.2', 'S2.3', 'S2.4', 'S3.1', 'S3.2', 'S3.3', 'S3.4', 'S3.5', 'S3.6', 'S4.1', 'S5.1', 'S5.2', 'S5.3', 'S5.4', 'S5.5', 'S5.6', 'S5.7', 'S5.8', 'S6.1', 'S6.2', 'S6.3', 'R1.1', 'R1.2', 'R1.3', 'R2.1', 'R2.2', 'R2.3']) {
       record(id, 'production unreachable', 'blocked', { actual: health.error });
     }
     return finish(startedAt, null);
@@ -184,7 +194,7 @@ async function main() {
     });
   }
 
-  const browser = await chromium.launch();
+  const browser = await chromium.launch(process.env.SMOKE_CHROMIUM_PATH ? { executablePath: process.env.SMOKE_CHROMIUM_PATH } : {});
   const pageResults = [];
   const memberLinks = new Set();
   for (const p of pagePaths) {
@@ -331,8 +341,78 @@ async function main() {
   record('R1.3', 'in-app-release-loop v2 [E.6]: GET /api/release-loop/runs with no cookie is 401', rl.status === 401 ? 'pass' : 'fail', {
     baseline: 'in-app-release-loop v2 E.6', url: `${BASE}/api/release-loop/runs`, expected: 'HTTP 401', actual: rl.error || `HTTP ${rl.status} ${rl.text?.slice(0, 160)}`,
   });
+  await runSignedIn(browser);
   await browser.close();
   return finish(startedAt, { gate: gate.json || null, pages: pageResults, memberLinks: [...memberLinks] });
+}
+
+// ---- R2 signed-in, read-only replays with the fictional test account --------------------------------
+// R2.1 sign in; R2.2 read-only replays as that member; R2.3 the frozen smoke suites (admin + writes + a
+// fixture worker never enabled on Render) stay not_run by design. Signs out at the end.
+async function runSignedIn(browser) {
+  const smokeSteps = (() => { try { return JSON.parse(fs.readFileSync(path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', 'docs/training/baselines/platform-agent-runner/smoke.json'), 'utf8')).steps.length; } catch { return 0; } })();
+  record('R2.3', 'Frozen smoke suites (docs/training/baselines/*/smoke.json) replayed', 'not_run', {
+    expected: 'each smoke step passes against production',
+    actual: `${smokeSteps} smoke step(s) need an administrator sign-in, write data and run the agent runner's fixture worker, which is never enabled on Render. The test account is a plain member, so they are not replayed (by design, C.2)`,
+  });
+  if (!SMOKE_PASSWORD) {
+    const why = 'SMOKE_MEMBER_PASSWORD is not set, so the test account cannot sign in. Add it as a repository Actions secret and run "Provision smoke test account" (World Shell > Journeys > Production smoke lists the names)';
+    record('R2.1', 'Sign in as the fictional smoke test account', 'not_run', { expected: `HTTP 200 for ${SMOKE_EMAIL}`, actual: why });
+    record('R2.2', 'Signed-in read-only replays as the test account', 'not_run', { expected: 'every check passes', actual: why });
+    return;
+  }
+  const login = await http(`${BASE}/api/auth/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: SMOKE_EMAIL, password: SMOKE_PASSWORD }) });
+  const setCookie = login.headers?.['set-cookie'] || '';
+  const m = /(?:^|[,\s])sb_admin=([^;]+)/.exec(setCookie);
+  const cookie = m ? { name: 'sb_admin', value: m[1] } : null;
+  const user = login.json?.user;
+  const signedIn = login.status === 200 && cookie && user?.role === 'member' && user.mustChangePassword === false;
+  const loginActual = login.error || (login.status === 200
+    ? (cookie ? `HTTP 200, role ${user?.role}, mustChangePassword ${user?.mustChangePassword}` : 'HTTP 200 but no sb_admin cookie was set')
+    : `HTTP ${login.status} ${String(login.text || '').slice(0, 160)}${login.status === 401 ? ' (the test account does not exist or its password differs from SMOKE_MEMBER_PASSWORD: run "Provision smoke test account")' : ''}`);
+  record('R2.1', 'Sign in as the fictional smoke test account', signedIn ? 'pass' : 'fail', {
+    url: `${BASE}/api/auth/login`, expected: `HTTP 200, role member, mustChangePassword false for ${SMOKE_EMAIL}`, actual: loginActual,
+  });
+  if (!signedIn) { record('R2.2', 'Signed-in read-only replays as the test account', 'blocked', { actual: 'R2.1 failed, so nobody is signed in' }); return; }
+
+  const auth = { headers: { cookie: `sb_admin=${cookie.value}` } };
+  const checks = [];
+  const check = (name, ok, actual) => checks.push({ name, ok: !!ok, actual });
+  const me = await http(`${BASE}/api/auth/me`, auth);
+  check('GET /api/auth/me is the test account', me.status === 200 && me.json?.user?.email === SMOKE_EMAIL, `HTTP ${me.status} ${me.json?.user?.email || me.error || ''}`);
+  const consent = await http(`${BASE}/api/career/consent-status`, auth);
+  check('GET /api/career/consent-status: Career Portfolio terms current (no 428 gate)', consent.status === 200 && consent.json?.granted === true, `HTTP ${consent.status} granted=${consent.json?.granted}`);
+  const prof = await http(`${BASE}/api/members/me/profile`, auth);
+  check(`GET /api/members/me/profile answers 200 with slug ${SMOKE_SLUG}`, prof.status === 200 && JSON.stringify(prof.json || {}).includes(SMOKE_SLUG), `HTTP ${prof.status}`);
+  const outs = await http(`${BASE}/api/resume-outputs`, auth);
+  check('GET /api/resume-outputs answers 200 with a projections list (qr-gated-outputs read path)', outs.status === 200 && Array.isArray(outs.json?.projections), `HTTP ${outs.status}`);
+  const opps = await http(`${BASE}/api/career-agents/opportunities`, auth);
+  check('GET /api/career-agents/opportunities answers 200 (career placement read path)', opps.status === 200, `HTTP ${opps.status}`);
+  const rlm = await http(`${BASE}/api/release-loop/runs`, auth);
+  check('in-app-release-loop [E.6] member side: GET /api/release-loop/runs is 403 for a member', rlm.status === 403, `HTTP ${rlm.status}`);
+  const adm = await http(`${BASE}/api/production-smoke/account`, auth);
+  check('GET /api/production-smoke/account is 403 for a member', adm.status === 403, `HTTP ${adm.status}`);
+
+  const shots = [];
+  for (const [surface, p, tag] of [['desktop', '/world', 'world'], ['phone', '/world', 'world'], ['desktop', '/member', 'member']]) {
+    const v = await visit(browser, surface, p, { shot: `signedin-${tag}`, cookie });
+    const text = await v.page.evaluate(() => document.body?.innerText || '').catch(() => '');
+    const gated = /password_change_required|Career Portfolio terms|Please sign in|Sign in to/i.test(text) && text.trim().length < 400;
+    const errs = appErrors(v.log);
+    check(`${p} signed in at ${surface}: loads HTTP < 400, shows content, no sign-in prompt, no terms gate, no page or console error, no 5xx`,
+      !v.navError && v.mainStatus > 0 && v.mainStatus < 400 && text.trim().length >= 40 && !gated && !errs.length && !v.log.http5xx.length,
+      v.navError || `HTTP ${v.mainStatus}, ${text.trim().length} chars${gated ? ', looks gated: ' + text.trim().slice(0, 120).replace(/\s+/g, ' ') : ''}${errs.length ? '; ' + errs.join('; ') : ''}${v.log.http5xx.length ? '; ' + v.log.http5xx.join('; ') : ''}`);
+    shots.push(v.shot);
+    await v.ctx.close();
+  }
+  const bad = checks.filter((c) => !c.ok);
+  record('R2.2', 'Signed-in read-only replays as the test account', bad.length ? 'fail' : 'pass', {
+    url: BASE, expected: `all ${checks.length} checks pass`,
+    actual: bad.length ? bad.map((c) => `${c.name}: ${c.actual}`).join(' | ') : `${checks.length} checks passed`, checks, evidence: shots,
+  });
+  // Sign out: the session row is the only thing the sign-in created.
+  const out = await http(`${BASE}/api/auth/logout`, { method: 'POST', headers: { cookie: `sb_admin=${cookie.value}`, 'content-type': 'application/json' }, body: '{}' });
+  if (out.status !== 200) console.warn(`sign-out answered HTTP ${out.status}; the test account's session expires on its own`);
 }
 
 // Every other step of the frozen suites, mapped honestly. Nothing here is guessed as passed.
@@ -353,7 +433,7 @@ function baselineMapping() {
         ? 'local_only: repository tooling and fixtures (CLI, tracker preview), not a production surface'
         : (s.surfaces || []).includes('cli') && /psql|ls server|check-interface-parity|import-release-logs/.test(s.summary)
           ? 'local_only: needs the repository or the database directly'
-          : 'needs_test_account: needs a signed-in account and/or writes data; no fictional production test account exists';
+          : 'not_replayed: needs an administrator sign-in and/or writes data, or is not mapped to a read-only member check (R2.2 lists the checks it does run)';
       out.push({ feature, baseline: v, step: s.id, status: 'not_run', reason });
     }
   }
@@ -361,20 +441,19 @@ function baselineMapping() {
   for (const f of fs.existsSync(smokeDir) ? fs.readdirSync(smokeDir) : []) {
     const sm = read(`docs/training/baselines/${f}/smoke.json`);
     for (const id of sm?.steps || []) {
-      out.push({ feature: f, baseline: sm.baselineVersion, step: id, suite: 'smoke', status: 'not_run', reason: 'needs_test_account: admin sign-in and writes; the agent runner fixture worker is never enabled on Render' });
+      out.push({ feature: f, baseline: sm.baselineVersion, step: id, suite: 'smoke', status: 'not_run', reason: 'not_replayed: admin sign-in and writes; the agent runner fixture worker is never enabled on Render (R2.3)' });
     }
   }
   return out;
 }
 
 function finish(startedAt, context) {
+  const key = (id) => { const m = /^([A-Z])(\d+)\.(\d+)$/.exec(id); return m ? [m[1], Number(m[2]), Number(m[3])] : [id, 0, 0]; };
+  steps.sort((a, b) => { const x = key(a.id); const y = key(b.id); return x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : x[1] - y[1] || x[2] - y[2]; });
   const mapping = baselineMapping();
-  record('R2.1', 'Frozen smoke suites (docs/training/baselines/*/smoke.json) replayed', 'not_run', {
-    expected: 'each smoke step passes against production', actual: `${mapping.filter((m) => m.suite === 'smoke').length} smoke step(s) need an admin sign-in and writes; no fictional production test account exists`,
-  });
-  record('R2.2', 'Signed-in read-only steps of the delivered baselines replayed', 'not_run', {
-    expected: 'each step passes against production', actual: `${mapping.filter((m) => !m.suite && m.status === 'not_run' && /needs_test_account/.test(m.reason)).length} baseline step(s) need a signed-in account; no fictional production test account exists`,
-  });
+  // Journey 6 of the training spec lists these steps in this order; the baseline id of production step X is J6.<position>.
+  const ORDER = ['S1.1', 'S2.1', 'S2.2', 'S2.3', 'S2.4', 'S3.1', 'S3.2', 'S3.3', 'S3.4', 'S3.5', 'S3.6', 'S4.1', 'S5.1', 'S5.2', 'S5.3', 'S5.4', 'S5.5', 'S5.6', 'S5.7', 'S5.8', 'S6.1', 'S6.2', 'S6.3', 'R1.1', 'R1.2', 'R1.3', 'R2.1', 'R2.2', 'R2.3'];
+  for (const st of steps) if (ORDER.includes(st.id)) st.baselineStep = `J6.${ORDER.indexOf(st.id) + 1}`;
   const scored = steps.filter((s) => /^[SR]\d/.test(s.id));
   const score = {
     feature: 'production-smoke-regression', baseline: null, target: BASE, round: ROUND,

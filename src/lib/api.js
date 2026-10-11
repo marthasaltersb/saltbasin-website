@@ -43,6 +43,8 @@ export const api = {
   scanSessionTranscripts: () => request('/api/session-mapping/import/scan', { method: 'POST', body: '{}' }),
   listSessionCaptureFailures: () => request('/api/session-mapping/failures'),
   setSessionCaptureFailureDisposition: (id, body) => request(`/api/session-mapping/failures/${id}/disposition`, { method: 'PUT', body: JSON.stringify(body) }),
+  getSmokeAccount: () => request('/api/production-smoke/account'),
+  readySmokeAccount: (password) => request('/api/production-smoke/account', { method: 'POST', body: JSON.stringify({ password }) }),
   // Render bindings: renderings as views over mapped source data (live or approval path), data map, pending queue.
   // Data model map (admin): Graphify catalog of tables, columns, relations and usage; picker source; grouping rules.
   dmCatalog: () => request('/api/data-model/catalog'),

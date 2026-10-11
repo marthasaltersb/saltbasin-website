@@ -2,8 +2,10 @@ name: Production smoke and regression
 
 # Read-only smoke + regression against https://saltbasin.net (feature production-smoke-regression,
 # spec docs/training/production-smoke-regression.md). Runs here because the Claude cloud sandbox
-# cannot reach production. Never signs in and never writes production data: scripts/production-smoke.mjs
-# stubs every non-GET request a page makes in the browser.
+# cannot reach production. Never writes production data: scripts/production-smoke.mjs stubs every non-GET
+# request a page makes in the browser. Its only direct non-GET requests are the unauthenticated POST /mcp, and,
+# when SMOKE_MEMBER_PASSWORD is set, the fictional test account's sign-in and sign-out.
+# The run is red whenever a step fails. Failures are fixed, not silenced: no step is allowed to fail quietly.
 #
 # Triggers:
 #   - push to main: waits for Render to report this commit live (RENDER_API_KEY / RENDER_SERVICE_ID,
@@ -80,7 +82,13 @@ jobs:
         env:
           SMOKE_BASE_URL: ${{ inputs.base_url || 'https://saltbasin.net' }}
           SMOKE_ROUND: ${{ inputs.round }}
-        run: node scripts/production-smoke.mjs --out smoke-out
+          # The fictional test account's password (see "Provision smoke test account"). Unset: R2.1-R2.2 are not_run.
+          SMOKE_MEMBER_PASSWORD: ${{ secrets.SMOKE_MEMBER_PASSWORD }}
+        run: |
+          if [ -z "$SMOKE_MEMBER_PASSWORD" ]; then
+            echo "::warning title=Signed-in steps not run::SMOKE_MEMBER_PASSWORD is not set, so R2.1 and R2.2 are not_run. Add the secret, then run 'Provision smoke test account'."
+          fi
+          node scripts/production-smoke.mjs --out smoke-out
 
       - name: Summary
         if: always()

@@ -31,6 +31,7 @@ export const GOVERNED_ROUTE_FILES = Object.freeze({
   'server/routes/releaseCut.js': '/api/release-cut',
   'server/routes/releaseTracker.js': '/api/release-tracker',
   'server/routes/dataModelMap.js': '/api/data-model',
+  'server/routes/productionSmoke.js': '/api/production-smoke',
 });
 
 /** For files governed only in part: file -> pattern a route (`METHOD /full/path`) must match to be governed.
@@ -165,6 +166,7 @@ export const CAPABILITIES = Object.freeze([
   { key: 'agent-runner-test-plan', title: 'Smoke suites, baselines and the smoke-vs-regression test plan (admin)', group: 'Agent runner', ui: `${WS} > Journeys > Agent runner > Test plan`, api: ['GET /api/agent-runner/baselines', 'POST /api/agent-runner/test-plan'], mcp: ['agent_runner_baselines', 'agent_runner_test_plan'] },
   { key: 'agent-runner-seeds', title: 'Backlog seeds: seed, shaped, ready, promoted, with history (admin)', group: 'Agent runner', ui: `${WS} > Journeys > Agent runner > Backlog seeds`, api: ['GET /api/agent-runner/seeds', 'POST /api/agent-runner/seeds', 'GET /api/agent-runner/seeds/:id', 'POST /api/agent-runner/seeds/:id/answer', 'POST /api/agent-runner/seeds/:id/move'], mcp: ['agent_runner_seeds'] },
   { key: 'agent-runner-worker', title: 'Worker protocol: heartbeat, claim, progress, scope request, complete, git credential (worker token)', group: 'Agent runner', ui: null, uiExclusion: 'Machine-to-machine: called by scripts/agent-worker.mjs with a worker token; a person sees its effect on the Overview and Runs screens.', api: ['POST /api/agent-runner/worker/heartbeat', 'POST /api/agent-runner/worker/claim', 'POST /api/agent-runner/worker/runs/:id/events', 'POST /api/agent-runner/worker/runs/:id/scope-request', 'POST /api/agent-runner/worker/runs/:id/complete', 'GET /api/agent-runner/worker/runs/:id/git-credential'], mcp: null, mcpExclusion: 'The worker is a program, not an agent session; its calls need the worker token and run no user-facing action.' },
+  { key: 'production-smoke-account', title: 'See the fictional production smoke test account and ready it (create it with a password, or re-ready it); lists the GitHub secret names to add (admin)', group: 'Production smoke', ui: `${WS} > Journeys > Production smoke`, api: ['GET /api/production-smoke/account', 'POST /api/production-smoke/account'], mcp: ['production_smoke_account_status', 'production_smoke_account_ready'] },
   // ── Release tracker ───────────────────────────────────────────────────────
   // Live release tracker (docs/changes/live-release-tracker.md, release-scope.md)
   { key: 'release-tracker-state', title: 'Read the release tracker (features with planned / backlog / added scope)', group: 'Release tracker', ui: `${WS} > Release tracker`, api: ['GET /api/release-tracker/access', 'GET /api/release-tracker/state'], mcp: ['release_tracker_get_state'] },
