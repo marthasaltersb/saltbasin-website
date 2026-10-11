@@ -1,0 +1,44 @@
+name: Provision smoke test account
+
+# Creates or readies the ONE fictional production test account (smoke-member@test.saltbasin.invalid) through the
+# platform's own admin API (feature production-smoke-regression). Manual only. Credentials come from repository
+# Actions secrets and are never committed or printed; the job never touches the production database.
+#
+# Secrets to add (Settings > Secrets and variables > Actions):
+#   SMOKE_ADMIN_EMAIL      an administrator without two-step sign-in, used for this one call and then signed out
+#   SMOKE_ADMIN_PASSWORD   that administrator's password
+#   SMOKE_MEMBER_PASSWORD  the password the test account is given; the same secret the "Production smoke and
+#                          regression" workflow signs in with
+# The same action is available on the website: World Shell > Journeys > Production smoke.
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: Site to provision
+        default: https://saltbasin.net
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: provision-smoke-account
+  cancel-in-progress: false
+
+jobs:
+  provision:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Create or ready the test account
+        env:
+          SMOKE_BASE_URL: ${{ inputs.base_url || 'https://saltbasin.net' }}
+          SMOKE_ADMIN_EMAIL: ${{ secrets.SMOKE_ADMIN_EMAIL }}
+          SMOKE_ADMIN_PASSWORD: ${{ secrets.SMOKE_ADMIN_PASSWORD }}
+          SMOKE_MEMBER_PASSWORD: ${{ secrets.SMOKE_MEMBER_PASSWORD }}
+        run: node scripts/provision-smoke-account.mjs

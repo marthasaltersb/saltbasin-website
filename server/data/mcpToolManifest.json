@@ -199,6 +199,8 @@
     "release_cut_session_report",
     "release_cut_record_estimate",
     "release_cut_record_merge",
-    "release_cut_close_session"
+    "release_cut_close_session",
+    "production_smoke_account_status",
+    "production_smoke_account_ready"
   ]
 }

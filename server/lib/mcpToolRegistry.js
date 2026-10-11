@@ -30,6 +30,8 @@ export const MCP_SCOPES = Object.freeze({
   'renderings.approve': 'Approve or reject a pending data change; settings (administrators only; runs the finalization gate)',
   'agent.runner.read': 'Read agent runner settings, the agent roster, runs, outputs, test plans and backlog seeds (administrators only)',
   'agent.runner.write': 'Prompt agents, stop runs, decide scope requests and proposals, change runner settings and move backlog seeds (administrators only)',
+  'smoke.read': 'Read the status of the fictional production smoke test account (administrators only)',
+  'smoke.write': 'Ready the fictional production smoke test account without changing its password (administrators only)',
 });
 
 const id = (description) => ({ type: 'integer', minimum: 1, description });
@@ -1131,9 +1133,20 @@ const CORE_TOOLS = [
     }),
 ];
 
+/** Production smoke account tools: same functions and error statuses as server/routes/productionSmoke.js. No password passes through an agent session. */
+const psLib = () => import('./smokeAccount.js');
+const PS_TOOLS = [
+  rlTool('production_smoke_account_status', 'Production smoke test account status', 'Reports whether the fictional production smoke test account exists and is ready (terms current, no forced password change, starter profile), plus the GitHub secret names the owner must add. Never returns a password.',
+    schema({}), 'smoke.read', 'GET /api/production-smoke/account',
+    async () => (await psLib()).getSmokeAccountStatus()),
+  rlTool('production_smoke_account_ready', 'Ready the production smoke test account', 'Re-readies the EXISTING fictional smoke test account (clears a forced password change, records current platform and Career Portfolio terms, restores the starter profile). It does not set or change a password and cannot create the account: creation needs a password, which is entered on the website or by the provisioning workflow, never passed through an agent session.',
+    schema({}), 'smoke.write', 'POST /api/production-smoke/account',
+    async () => (await psLib()).readySmokeAccount({})),
+];
+
 // Tools that run an existing website route's own handler in-process (see mcpRouteTools.js), appended after the
 // core tools. Append-only like everything above.
-export const MCP_TOOLS = Object.freeze([...CORE_TOOLS, ...ROUTE_TOOLS, ...RB_TOOLS]);
+export const MCP_TOOLS = Object.freeze([...CORE_TOOLS, ...ROUTE_TOOLS, ...RB_TOOLS, ...PS_TOOLS]);
 
 export const MCP_TOOL_NAMES = Object.freeze(MCP_TOOLS.map((t) => t.name));
 

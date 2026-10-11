@@ -1,79 +1,136 @@
 # Training spec — production smoke and regression
 
-Version 1 · 2026-10-10 · covers `docs/changes/production-smoke-regression.md` v1 · feature key `production-smoke-regression` · release 0.3.0. Audience: the automated suite `scripts/production-smoke.mjs` (run by `.github/workflows/production-smoke.yml`) and any person or agent re-checking its result by hand. Follow literally. Step ids are stable: never renumbered or reused; a retired step keeps its id.
+Version 2 · 2026-10-10 · covers `docs/changes/production-smoke-regression.md` v2 · feature key `production-smoke-regression` · release 0.3.0. Audience: a person or agent following it literally in a browser and a terminal, and the automated suite `scripts/production-smoke.mjs` (run by `.github/workflows/production-smoke.yml`), whose steps are Journey 6. Step ids are stable: never renumbered or reused; a retired step keeps its id. All data below is fictional.
 
 ## Where things are
 
-- Target: `<BASE>` = `https://saltbasin.net`. It is a Netlify site (`netlify.toml`): Netlify serves the frontend bundle and proxies only `/api/*` to the Render service that runs the server. Anything the server does outside `/api/*` must also be configured in `netlify.toml` to exist on production. The suite also accepts any other base for a local rehearsal (`--base http://127.0.0.1:<port>`).
-- The Claude cloud sandbox cannot reach `<BASE>` (proxy CONNECT 403), so the suite runs on a GitHub-hosted runner: on every push to `main` (after Render reports the commit live), on demand (Actions -> **Production smoke and regression** -> **Run workflow**), and on pushes to `claude/prod-smoke-regression-0.3.0`.
-- Output: the run's artifact `production-smoke-<run id>` holds `report.json` (score block, every step with URL / expected / actual / evidence, the frozen-baseline mapping, the list of suppressed writes) and `screens/*.png`. The run summary repeats the score block and a step table.
+- Website (World Shell, admin): `/world` -> **Journeys** grid -> the **Production smoke** card (subtitle "Fictional test account for the production suite"). Deep link: `/world?at=island:production-smoke`. It shows the card **Test account** (email, display name, status, terms, the password form) and the card **GitHub Actions secrets to add**. Works at 390px wide (one column, buttons at least 44px tall, no horizontal scroll).
+- API (admin only; anonymous 401, a member 403): `GET /api/production-smoke/account` (status) and `POST /api/production-smoke/account` with `{"password": "..."}` (create or ready). The password is hashed, never returned, never logged.
+- MCP (`/mcp`, personal access token from **Connected Agents**): `production_smoke_account_status` (scope `smoke.read`) and `production_smoke_account_ready` (scope `smoke.write`). They call the same functions as the API. `production_smoke_account_ready` readies an EXISTING account and never takes or changes a password; creating the account needs a password, so it is done on the website or by the workflow, never through an agent session.
+- Provisioning workflow: Actions -> **Provision smoke test account** -> **Run workflow** (manual only). It runs `scripts/provision-smoke-account.mjs`, which signs in as an administrator through the API with repository secrets, calls `POST /api/production-smoke/account`, verifies the account is ready and signs out.
+- Suite: Actions -> **Production smoke and regression**, on every push to `main` (after Render reports the commit live), on demand, and on pushes to `claude/prod-smoke-regression-0.3.0`. Output: artifact `production-smoke-<run id>` with `report.json` and `screens/*.png`; the run summary repeats the score block. The run is red whenever a step fails.
+- The test account (fixed, fictional): email `smoke-member@test.saltbasin.invalid`, display name **Smoke Test Member**, profile address `smoke-test-member` (unpublished), role member. The reserved `.invalid` address can never receive mail, and the server refuses to send to it.
+- GitHub Actions secrets the owner adds (Settings -> Secrets and variables -> Actions): `SMOKE_ADMIN_EMAIL`, `SMOKE_ADMIN_PASSWORD` (an administrator without two-step sign-in; used only by the provisioning workflow), `SMOKE_MEMBER_PASSWORD` (the password given to the test account; also used by every signed-in run). Optional: `SMOKE_BASE_URL` (default `https://saltbasin.net`). Existing, reused for the deploy wait: `RENDER_API_KEY`, `RENDER_SERVICE_ID`.
+- Production is a Netlify site (`netlify.toml`): Netlify serves the frontend and proxies `/api/*` and `/mcp` to the Render service; `/r/*` and `/release-tracker/*` get their privacy headers from Netlify. Anything the server does outside those paths must also be configured in `netlify.toml`.
+- The Claude cloud sandbox cannot reach `saltbasin.net` (proxy CONNECT 403), so Journey 6 runs on a GitHub-hosted runner, or locally against a production build (`node scripts/production-smoke.mjs --base http://127.0.0.1:<port>`, add `--ignore-blocked-external` only when the sandbox proxy blocks CDNs).
 
 ## Test constraints (fixed)
 
-1. [C.1] **Read-only.** The suite never signs in, never submits a form and never changes production data. Every non-GET request a page sends to `<BASE>` (page-view tracking, for example) is answered inside the browser with `{"ok":true,"stub":"production-smoke"}` and listed under `suppressedWrites`; it never reaches the server. The only request the suite sends itself that is not a GET is the unauthenticated `POST /mcp` in S4.1, which the server refuses before running anything.
-2. [C.2] **No real accounts.** Steps that need a signed-in user run only with a dedicated, fictional production test account. None exists; those steps are `not_run`, never guessed.
-3. [C.3] **No email, no Anthropic API.** Nothing in the suite can trigger either.
-4. [C.4] Surfaces: desktop 1280x900; phone 390x844 (isMobile, touch, scale 2). Chromium, light scheme, en-US, UTC. Each page visit uses a fresh browser context (no cookies).
+1. [C.1] **Read-only.** The suite never submits a form and never changes production data. Every non-GET request a page sends to `<BASE>` (page-view tracking, for example) is answered inside the browser with `{"ok":true,"stub":"production-smoke"}` and listed under `suppressedWrites`. The only requests the suite sends itself that are not GET: the unauthenticated `POST /mcp` in S4.1 (refused at authentication), and, only when `SMOKE_MEMBER_PASSWORD` is set, the test account's `POST /api/auth/login` and `POST /api/auth/logout` (R2.1).
+2. [C.2] **One fictional account, no real accounts.** Signed-in steps use only `smoke-member@test.saltbasin.invalid`, a plain member. They never use an administrator or a real person's account. Steps that need an administrator or write data (the frozen smoke suites, R2.3) are `not_run` by design, never guessed.
+3. [C.3] **No email, no Anthropic API.** Nothing in the suite can trigger either; the test account's address is `.invalid` and the server never sends to it.
+4. [C.4] Surfaces: desktop 1280x900; phone 390x844 (isMobile, touch, scale 2). Chromium, light scheme, en-US, UTC. Each page visit uses a fresh browser context; the signed-in visits carry only the test account's session cookie.
 5. [C.5] What counts as an error: an uncaught page error, or a `console.error` other than the browser's own "Failed to load resource ... status of 4xx/5xx" line (responses are judged by status instead: any 5xx fails; 4xx are recorded as `resource4xx` because an anonymous visitor legitimately gets 401 from `/api/auth/me`). A cold Render container may take 30 seconds or more to wake: navigation waits up to 90 seconds.
 6. [C.6] Status values: `pass`, `fail`, `blocked` (could not be judged because something before it failed, for example production unreachable or the prelaunch landing gate on), `not_run` (deliberately not run, with the reason).
+7. [C.7] **Failures are fixed, not silenced.** The workflow stays red on any failed step. A missing `SMOKE_MEMBER_PASSWORD` is not a failure but is announced as a warning annotation and as `not_run` with the reason, never as passed.
+8. [C.8] Journeys 1-5 run against a LOCAL server on a fresh database (production build, `npm start` or `node server/index.js`), signed in as the local administrator who has accepted the Career Portfolio terms. They never touch production.
 
-## Smoke
+## Preconditions
 
-1. [S1.1] `GET <BASE>/api/health`.
-   - Expect HTTP 200 and JSON with `"ok": true` and `"db": "ok"`. If production cannot be reached at all, every later step is `blocked` with the network error.
-2. [S2.1] `GET <BASE>/api/site/published`.
-   - Expect HTTP 200 with at least one page in `pages` (a keyed object; read it with `Object.values`). The public pages are `/` plus `/<slug>` of every page whose `status` is not `draft`. If the prelaunch landing gate is on (`GET /api/auth/landing-gate/status` says `enabled: true`) the response is 403 and S2.1 is `blocked`.
-3. [S2.2] Open every public page from S2.1 on desktop.
-   - Expect each document to load with HTTP below 400, not to show the **Not Found** / "That page doesn't exist (yet)." page, and to show at least 40 characters of visible text. Screenshot `screens/page-<slug>-desktop.png`.
-4. [S2.3] On those same visits, expect no page error and no console error (C.5).
-5. [S2.4] On those same visits, expect no request answered with HTTP 5xx.
-6. [S3.1] Open `<BASE>/world`.
-   - Expect HTTP 200, visible text, no page or console error, no 5xx. (An anonymous visitor sees the sign-in prompt; that is the expected page.)
-7. [S3.2] Open `<BASE>/login`.
-   - Expect HTTP 200 and a form with one email field and one password field; no page or console error, no 5xx. Nothing is typed.
-8. [S3.3] Take the first `/u/<slug>` link found on any public page in S2.2 and open it.
-   - Expect HTTP 200, more than 40 characters of visible text, no "not found", no page or console error, no 5xx. If no public page links to a member site the step is `not_run` ("no slug was guessed").
-9. [S3.4] Open `<BASE>/r/AAAAAAAAAAAAAAAAAAAAAAAA` (24 characters, never issued).
-   - Expect the heading **This link isn't available**, no page or console error, no 5xx; `GET /api/shared-outputs/<that token>` answers 404.
-10. [S3.5] On the same page expect the response header `X-Robots-Tag` to contain `noindex`, the element `meta[name=robots]` to read `noindex, nofollow, noarchive`, and the API response in S3.4 to carry `X-Robots-Tag` with `noindex`. (`Referrer-Policy` is recorded; it should read `no-referrer`.)
-11. [S3.6] Open `<BASE>/r/short`. Expect the same page and the same API status as S3.4.
-12. [S4.1] `POST <BASE>/mcp` with JSON-RPC `tools/list` and no `Authorization` header.
-   - Expect HTTP 401, a JSON body with an `error` (the server sends `{"jsonrpc":"2.0","error":{"code":-32001,...},"id":null}`) and `WWW-Authenticate: Bearer ...`.
-13. [S5.1] Home page `/` at desktop: `document.documentElement.scrollWidth` equals `clientWidth` (no horizontal scroll).
-14. [S5.2] Home page `/` at desktop: no two visible text or control boxes overlap. Checked boxes: `a, button, input, select, textarea, label, h1-h4, p, li` that are visible, at least 4x4px, carry text (or are a control), and are not inside a fixed or sticky layer, an `aria-hidden` subtree, a canvas or an SVG. A pair overlaps when the shared area is more than 4px each way and more than 20% of the smaller box; ancestor/descendant pairs are skipped. Screenshots `screens/layout-home-desktop.png` and `...-full.png`.
-15. [S5.3] Home page at phone 390x844: as S5.1.
-16. [S5.4] Home page at phone 390x844: as S5.2.
-17. [S5.5] `/login` at desktop: as S5.1.
-18. [S5.6] `/login` at desktop: as S5.2.
-19. [S5.7] `/login` at phone: as S5.1.
-20. [S5.8] `/login` at phone: as S5.2.
+1. A fresh local Postgres database is created and the production build (`npm run build`) is served by `node server/index.js` on a free port `<PORT>`, with `SESSION_SECRET`, `TOKEN_ENCRYPTION_KEY`, `ADMIN_EMAIL` and `ADMIN_INITIAL_PASSWORD` set. `GET http://127.0.0.1:<PORT>/api/health` answers `{"ok":true,...,"db":"ok"}`.
+2. In a browser, sign in at `/login` with the local administrator (`ADMIN_EMAIL` / `ADMIN_INITIAL_PASSWORD`). If the **Career Portfolio Terms & Data Conditions** page appears, tick every acknowledgement and agree; the World Shell then opens. The test account does not exist yet: no member with the email `smoke-member@test.saltbasin.invalid` is present.
+3. The fictional test-account password used throughout is `Zk7!rivers-fictional-Q2x` (12+ characters, a capital, a number and a special character; local only).
+4. A terminal in the repository root with `curl` and `node` is available. For API steps keep the administrator's session cookie in `admin.jar` (`curl -s -c admin.jar -H 'content-type: application/json' -d '{"email":"<ADMIN_EMAIL>","password":"<ADMIN_INITIAL_PASSWORD>"}' http://127.0.0.1:<PORT>/api/auth/login`).
 
-## Public site vs the server behind it
+## Journey 1 — Create and ready the test account on the website
 
-`<SERVER>` = `https://saltbasin-website.onrender.com` (option `--backend`; with no separate server these three steps are `not_run`). They tell a stale Netlify frontend or a missing Netlify rule apart from a server defect.
+1. Open `/world` as the administrator and click **Journeys** in the top bar. The **Journeys** grid contains a card titled **Production smoke** with the subtitle "Fictional test account for the production suite". Click it. The heading **Production smoke** appears with the card **Test account** and the card **GitHub Actions secrets to add**.
+2. Read the **Test account** card. It shows Email `smoke-member@test.saltbasin.invalid`, Display name `Smoke Test Member`, Status **Not created**, Email delivery `Excluded (reserved .invalid address)`; the button **Create or ready the test account** is disabled while the field **Password for the test account** is empty.
+3. Type `short` into **Password for the test account** and click **Create or ready the test account**. A red box (`role="alert"`) reads "The test account could not be readied. That password does not meet the password policy. Choose a stronger password and try again. Use at least 12 characters. Include at least one capital letter. Include at least one number. Include at least one special character." and Status still reads **Not created**.
+4. Replace the field with `Zk7!rivers-fictional-Q2x` and click **Create or ready the test account**. A note reads "The test account was created and is ready."; Status reads **Ready**; Platform terms `Current`; Career Portfolio terms `Current`; Forced password change `None`; the password field is empty again.
+5. Type `Zk7!rivers-fictional-Q2x` again and click **Create or ready the test account**. The note reads "The test account is ready." and Status still reads **Ready** (nothing was duplicated).
+6. Scroll to **GitHub Actions secrets to add**. It lists `SMOKE_ADMIN_EMAIL`, `SMOKE_ADMIN_PASSWORD`, `SMOKE_MEMBER_PASSWORD` and `SMOKE_BASE_URL` (the last described as optional, defaulting to https://saltbasin.net).
+7. Check the layout of the page you are on: `document.documentElement.scrollWidth` equals `clientWidth` (390 and 390 at phone width, 1280 and 1280 at desktop width), and the button **Create or ready the test account** is at least 44px tall.
+8. Open a new private window, go to `/login` and sign in with `smoke-member@test.saltbasin.invalid` and `Zk7!rivers-fictional-Q2x`. The member's World opens at `/world` (the top bar shows World, Journeys and Classic Tools and the Sun menu is listed); no password-change page and no **Career Portfolio Terms & Data Conditions** page appears. Sign out.
 
-20a. [S6.1] `GET <BASE>/` and `GET <SERVER>/`. Expect both pages to load the same `/assets/index-<hash>.js`. A different hash means the public site serves an older (or newer) frontend build than the server runs. `blocked` when the server page cannot be read.
-20b. [S6.2] `POST <SERVER>/mcp` with no token. Expect HTTP 401 with a JSON body: the target of the public site's `/mcp` proxy rule works.
-20c. [S6.3] `GET <SERVER>/r/AAAAAAAAAAAAAAAAAAAAAAAA`. Expect `X-Robots-Tag` containing `noindex` and `Referrer-Policy: no-referrer`.
+## Journey 2 — The same through the API
 
-## Regression
+1. `curl -s -i http://127.0.0.1:<PORT>/api/production-smoke/account` (no cookie) returns HTTP 401 with the body `{"error":"unauthorized"}`.
+2. `curl -s -b admin.jar http://127.0.0.1:<PORT>/api/production-smoke/account` returns HTTP 200 JSON with `account.email` `smoke-member@test.saltbasin.invalid`, `emailExcluded` true, `secrets.account` equal to `["SMOKE_MEMBER_PASSWORD"]`, and no field that holds a password or a hash.
+3. `curl -s -b admin.jar -X POST -H 'content-type: application/json' -d '{"password":"short"}' http://127.0.0.1:<PORT>/api/production-smoke/account` returns HTTP 400 with `"code":"password_policy_failed"` and four `details` sentences (length, capital letter, number, special character).
+4. `curl -s -b admin.jar -X POST -H 'content-type: application/json' -d '{"password":"Zk7!rivers-fictional-Q2x"}' http://127.0.0.1:<PORT>/api/production-smoke/account` returns HTTP 200 JSON with `"ready":true`, `"role":"member"`, `"platformTermsCurrent":true`, `"careerTermsCurrent":true`, `"mustChangePassword":false`, `"profilePublished":false`, and the response contains neither the password nor a hash.
+5. The same POST as step 4, sent again, returns HTTP 200 with `"created":false` and `"ready":true`.
+6. Sign in as the test account (`curl -s -c member.jar -H 'content-type: application/json' -d '{"email":"smoke-member@test.saltbasin.invalid","password":"Zk7!rivers-fictional-Q2x"}' http://127.0.0.1:<PORT>/api/auth/login` returns HTTP 200 with `"role":"member"` and `"mustChangePassword":false`); then `curl -s -b member.jar http://127.0.0.1:<PORT>/api/production-smoke/account` returns HTTP 403, and the same path sent with POST also returns HTTP 403.
+7. `node -e "import('./server/lib/email.js').then(async (m) => { console.log(JSON.stringify(await m.dispatchRaw({ to: 'smoke-member@test.saltbasin.invalid', subject: 'x', text: 'y', authorization: { mode: 'admin_confirmed' } }))); process.exit(0); })"` prints, as its last output line, `{"ok":true,"skipped":"reserved_test_address"}` (run with `DATABASE_URL` set to the local database; database notices may print before it) and no email is stubbed or sent.
 
-Anonymous, read-only steps of the delivered features' frozen baselines, replayed against production under their own ids:
+## Journey 3 — The same through MCP
 
-21. [R1.1] = qr-gated-outputs baseline v2 `[J10.1]`: `<BASE>/r/AAAAAAAAAAAAAAAAAAAAAAAA` shows **This link isn't available**, with no hint whether the slug ever existed.
-22. [R1.2] = qr-gated-outputs baseline v2 `[J10.2]`: `<BASE>/r/short` shows the same page (same API status as R1.1).
-23. [R1.3] = in-app-release-loop baseline v2 `[E.6]`: `GET <BASE>/api/release-loop/runs` with no cookie answers 401.
+1. In the browser as the administrator open `/world?at=island:connected-agents` (**Connected Agents**). Type `smoke-walk` into **Token name**, tick the scopes **smoke.read** ("Read the status of the fictional production smoke test account (administrators only)") and **smoke.write** ("Ready the fictional production smoke test account without changing its password (administrators only)"), and click **Create token**. The token is shown once; copy it as `<TOKEN>`.
+2. `curl -s -X POST -H 'authorization: Bearer <TOKEN>' -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' http://127.0.0.1:<PORT>/mcp` returns a tool list that contains `production_smoke_account_status` and `production_smoke_account_ready`.
+3. The same call with `"method":"tools/call","params":{"name":"production_smoke_account_status","arguments":{}}` returns a result whose text is the same JSON as Journey 2 step 2, with `"exists":true` and `"ready":true`.
+4. The same call with `"params":{"name":"production_smoke_account_ready","arguments":{}}` returns a result whose text contains `"created":false` and `"ready":true`; it never asked for or returned a password.
+5. Create a second token named `smoke-read-only` with only the scope **smoke.read**. `curl` the `production_smoke_account_ready` call with it: the result is an error reading `Error 403 scope_not_granted: This access token does not include the "smoke.write" scope needed for production_smoke_account_ready. Create a token with that scope in Connected Agents.`
+6. Open `/world?at=island:capabilities` (**Capabilities**) as the administrator and find the row titled "See the fictional production smoke test account and ready it (create it with a password, or re-ready it); lists the GitHub secret names to add (admin)" under the group **Production smoke**; it names the UI path, both API routes and both MCP tools, with no gap.
 
-Steps that need an account (C.2):
+## Journey 4 — The provisioning workflow's script
 
-24. [R2.1] Replay every frozen smoke suite (`docs/training/baselines/*/smoke.json`; today only platform-agent-runner v1: J1.1, J1.7, J2.4, J4.4, J10.1, J10.9, J13.2, E.1). Every step needs an admin sign-in and writes, and that suite runs the agent runner's fixture worker, which is never enabled on Render. `not_run` until a fictional production test account exists and the owner decides how agent-runner steps may run in production.
-25. [R2.2] Replay the signed-in, read-only steps of qr-gated-outputs v2, release-loop-tooling v3, release-intelligence v3 and in-app-release-loop v2. `not_run` until a fictional production test account exists. `report.json` -> `baselineMapping` lists every step of those four baselines with `ran` (and the R id it ran as) or `not_run` with one of these reasons: `needs_test_account`, `local_only` (release-loop-tooling's steps are repository tooling and fixtures, and a few command steps need the repository or the database directly; none is a production surface).
+Sign-ins are rate-limited to 10 attempts per 15 minutes per address (in-process, reset by restarting the local server). Restart the local server before this journey and again before Journey 5. A refused sign-in because of the limit prints "The site is rate-limiting sign-ins from this address (HTTP 429, 10 attempts per 15 minutes). Wait 15 minutes and run this workflow again." and exits 2.
+
+1. `node scripts/provision-smoke-account.mjs` with none of `SMOKE_ADMIN_EMAIL`, `SMOKE_ADMIN_PASSWORD`, `SMOKE_MEMBER_PASSWORD` set exits 2 and prints "FAILED: These repository Actions secrets are not set: SMOKE_ADMIN_EMAIL, SMOKE_ADMIN_PASSWORD, SMOKE_MEMBER_PASSWORD. Add them under Settings, Secrets and variables, Actions, then run this workflow again."
+2. `SMOKE_BASE_URL=http://127.0.0.1:<PORT> SMOKE_ADMIN_EMAIL=<ADMIN_EMAIL> SMOKE_ADMIN_PASSWORD=wrong-Password-1! SMOKE_MEMBER_PASSWORD='Zk7!rivers-fictional-Q2x' node scripts/provision-smoke-account.mjs` exits 2 and prints a line starting "FAILED: The administrator sign-in was refused (HTTP 401".
+3. `SMOKE_BASE_URL=http://127.0.0.1:<PORT> SMOKE_ADMIN_EMAIL=<ADMIN_EMAIL> SMOKE_ADMIN_PASSWORD=<ADMIN_INITIAL_PASSWORD> SMOKE_MEMBER_PASSWORD='Zk7!rivers-fictional-Q2x' node scripts/provision-smoke-account.mjs` exits 0 and prints "After: created=<true on a fresh database, false when Journeys 1 or 2 already created it> exists=true ready=true role=member platformTerms=true careerTerms=true mustChangePassword=false emailExcluded=true" followed by "OK: smoke-member@test.saltbasin.invalid is ready." and no line contains either password.
+4. `SMOKE_BASE_URL=http://127.0.0.1:<PORT> SMOKE_ADMIN_EMAIL=<ADMIN_EMAIL> SMOKE_ADMIN_PASSWORD=<ADMIN_INITIAL_PASSWORD> SMOKE_MEMBER_PASSWORD=short node scripts/provision-smoke-account.mjs` exits 1 and prints "FAILED: The platform refused to ready the test account (HTTP 400, password_policy_failed)" followed by the four policy sentences.
+5. `grep -n "continue-on-error" .github/workflows/production-smoke.yml .github/workflows/provision-smoke-account.yml` prints nothing (exit 1), and `grep -n "SMOKE_MEMBER_PASSWORD" .github/workflows/production-smoke.yml` prints the line that passes the secret into the suite step and the line that warns when it is empty.
+
+## Journey 5 — The suite, locally, with and without the account
+
+Restart the local server first (sign-in rate limit, see Journey 4). Journey 5 steps 1, 3 and 4 each sign in once; step 1 needs the account to exist (Journeys 1, 2 or 4 created it).
+
+1. `SMOKE_BASE_URL=http://127.0.0.1:<PORT> SMOKE_BACKEND_URL= SMOKE_MEMBER_PASSWORD='Zk7!rivers-fictional-Q2x' node scripts/production-smoke.mjs --out <OUT> --ignore-blocked-external` exits 0 and prints a `SCORE` line with `"total":29`, `"failed":[]`, `"blocked":[]` and `notRun` containing exactly `R2.3`, `S3.3`, `S6.1`, `S6.2` and `S6.3` (S6 needs a separate server, so it is `not_run` with `SMOKE_BACKEND_URL` empty; the sandbox needs `PLAYWRIGHT_MODULE` and `SMOKE_CHROMIUM_PATH` when Playwright is not installed in the repository).
+2. `<OUT>/report.json` holds `R2.1` with status `pass` and actual "HTTP 200, role member, mustChangePassword false", `R2.2` with status `pass` and actual "10 checks passed", and every step has a `baselineStep` equal to `J6.` plus its position in Journey 6 (S1.1 is `J6.1`, R2.3 is `J6.29`).
+3. The same command without `SMOKE_MEMBER_PASSWORD` exits 0, `R2.1` and `R2.2` are `not_run` with actual starting "SMOKE_MEMBER_PASSWORD is not set, so the test account cannot sign in", and the score's `notRun` is `R2.1`, `R2.2`, `R2.3`, `S3.3`, `S6.1`, `S6.2`, `S6.3`.
+4. The same command (with `SMOKE_BACKEND_URL=` empty) with `SMOKE_MEMBER_PASSWORD='Wrong-Password-9!'` exits 1, `R2.1` is `fail` with actual starting "HTTP 401" and ending "run \"Provision smoke test account\")", and `R2.2` is `blocked` with actual "R2.1 failed, so nobody is signed in".
+5. After step 1, `report.json` -> `suppressedWrites` is an array (possibly empty) and the server log shows no `POST` other than `/api/auth/login`, `/api/auth/logout`, `/mcp` and the page-view calls the browser stubbed (none reached the server).
+
+## Journey 6 — The production suite (runs against `https://saltbasin.net` on GitHub Actions)
+
+The steps below are the suite's own, in the order `scripts/production-smoke.mjs` records them. Each carries its stable production id in bold; `report.json` names its baseline step (`J6.<position>`).
+
+1. **S1.1** `GET <BASE>/api/health` returns HTTP 200 and JSON with `"ok": true` and `"db": "ok"`. If production cannot be reached at all, every later step is `blocked` with the network error.
+2. **S2.1** `GET <BASE>/api/site/published` returns HTTP 200 with at least one page in `pages` (a keyed object; read it with `Object.values`). The public pages are `/` plus `/<slug>` of every page whose `status` is not `draft`. If the prelaunch landing gate is on (`GET /api/auth/landing-gate/status` says `enabled: true`) the response is 403 and S2.1 is `blocked`.
+3. **S2.2** Open every public page from S2.1 on desktop. Each document loads with HTTP below 400, does not show the **Not Found** / "That page doesn't exist (yet)." page, and shows at least 40 characters of visible text. Screenshot `screens/page-<slug>-desktop.png`.
+4. **S2.3** On those same visits there is no page error and no console error (C.5).
+5. **S2.4** On those same visits no request is answered with HTTP 5xx.
+6. **S3.1** Open `<BASE>/world`: HTTP 200, visible text, no page or console error, no 5xx. (An anonymous visitor sees the sign-in prompt; that is the expected page.)
+7. **S3.2** Open `<BASE>/login`: HTTP 200 and a form with one email field and one password field; no page or console error, no 5xx. Nothing is typed.
+8. **S3.3** Take the first `/u/<slug>` link found on any public page in S2.2 and open it: HTTP 200, more than 40 characters of visible text, no "not found", no page or console error, no 5xx. If no public page links to a member site the step is `not_run` ("no slug was guessed"; the test account's profile is deliberately unpublished).
+9. **S3.4** Open `<BASE>/r/AAAAAAAAAAAAAAAAAAAAAAAA` (24 characters, never issued): the heading **This link isn't available** appears, no page or console error, no 5xx; `GET /api/shared-outputs/<that token>` answers 404.
+10. **S3.5** On the same page the response header `X-Robots-Tag` contains `noindex`, the element `meta[name=robots]` reads `noindex, nofollow, noarchive`, and the API response in S3.4 carries `X-Robots-Tag` with `noindex`. (`Referrer-Policy` is recorded; it reads `no-referrer`.)
+11. **S3.6** Open `<BASE>/r/short`: the same page and the same API status as S3.4.
+12. **S4.1** `POST <BASE>/mcp` with JSON-RPC `tools/list` and no `Authorization` header returns HTTP 401, a JSON body with an `error` (the server sends `{"jsonrpc":"2.0","error":{"code":-32001,...},"id":null}`) and `WWW-Authenticate: Bearer ...`.
+13. **S5.1** Home page `/` at desktop: `document.documentElement.scrollWidth` equals `clientWidth` (no horizontal scroll).
+14. **S5.2** Home page `/` at desktop: no two visible text or control boxes overlap. Checked boxes: `a, button, input, select, textarea, label, h1-h4, p, li` that are visible, at least 4x4px, carry text (or are a control), and are not inside a fixed or sticky layer, an `aria-hidden` subtree, a canvas or an SVG. A pair overlaps when the shared area is more than 4px each way and more than 20% of the smaller box; ancestor/descendant pairs are skipped. Screenshots `screens/layout-home-desktop.png` and `...-full.png`.
+15. **S5.3** Home page at phone 390x844: as S5.1.
+16. **S5.4** Home page at phone 390x844: as S5.2.
+17. **S5.5** `/login` at desktop: as S5.1.
+18. **S5.6** `/login` at desktop: as S5.2.
+19. **S5.7** `/login` at phone: as S5.1.
+20. **S5.8** `/login` at phone: as S5.2.
+21. **S6.1** (public site vs the server behind it; `<SERVER>` = `https://saltbasin-website.onrender.com`, option `--backend`; with no separate server S6.1-S6.3 are `not_run`) `GET <BASE>/` and `GET <SERVER>/` load the same `/assets/index-<hash>.js`. A different hash means the public site serves an older or newer frontend build than the server runs. `blocked` when the server page cannot be read.
+22. **S6.2** `POST <SERVER>/mcp` with no token returns HTTP 401 with a JSON body: the target of the public site's `/mcp` proxy rule works.
+23. **S6.3** `GET <SERVER>/r/AAAAAAAAAAAAAAAAAAAAAAAA` returns `X-Robots-Tag` containing `noindex` and `Referrer-Policy: no-referrer`.
+24. **R1.1** (= qr-gated-outputs baseline v2 `[J10.1]`) `<BASE>/r/AAAAAAAAAAAAAAAAAAAAAAAA` shows **This link isn't available**, with no hint whether the slug ever existed.
+25. **R1.2** (= qr-gated-outputs baseline v2 `[J10.2]`) `<BASE>/r/short` shows the same page (same API status as R1.1).
+26. **R1.3** (= in-app-release-loop baseline v2 `[E.6]`) `GET <BASE>/api/release-loop/runs` with no cookie answers 401.
+27. **R2.1** Sign in as the fictional test account: `POST <BASE>/api/auth/login` with `smoke-member@test.saltbasin.invalid` and `SMOKE_MEMBER_PASSWORD` returns HTTP 200, `user.role` `member`, `user.mustChangePassword` false, and sets the `sb_admin` cookie. Without `SMOKE_MEMBER_PASSWORD` the step is `not_run` (C.7). A 401 fails the step and the message says to run "Provision smoke test account".
+28. **R2.2** Signed-in read-only replays as the test account; every check must pass (10 at v2): `GET /api/auth/me` is the test account; `GET /api/career/consent-status` returns 200 with `granted` true (no 428 gate); `GET /api/members/me/profile` returns 200 with the slug `smoke-test-member`; `GET /api/resume-outputs` returns 200 with a `projections` list (qr-gated-outputs read path); `GET /api/career-agents/opportunities` returns 200 (career placement read path); `GET /api/release-loop/runs` is 403 for a member (in-app-release-loop `[E.6]`, member side); `GET /api/production-smoke/account` is 403 for a member; and `/world` at desktop, `/world` at phone and `/member` at desktop each load with HTTP below 400 and at least 40 characters of text, with no sign-in prompt, no terms or password gate, no page or console error and no 5xx. The step ends by signing out (`POST /api/auth/logout`).
+29. **R2.3** The frozen smoke suites (`docs/training/baselines/*/smoke.json`, today platform-agent-runner v1: J1.1, J1.7, J2.4, J4.4, J10.1, J10.9, J13.2, E.1) need an administrator sign-in, write data and run the agent runner's fixture worker, which is never enabled on Render. They are `not_run` by design (C.2), listed in `report.json` -> `baselineMapping` with the reason.
+
+## Edge cases
+
+- The test account row exists but its role is not `member`: `POST /api/production-smoke/account` returns HTTP 409 `smoke_account_not_member` with "exists but is not a plain member, so it cannot be used as the test account. Nothing was changed.", and the screen shows that sentence in the red box.
+- The profile address `smoke-test-member` already belongs to another member: the POST returns HTTP 409 `smoke_slug_taken` and changes nothing else.
+- `POST /api/production-smoke/account` with no password while the account does not exist returns HTTP 400 `password_required` (this is what `production_smoke_account_ready` returns on a fresh database), and no account is created.
+- The administrator used by the provisioning workflow has two-step sign-in: `scripts/provision-smoke-account.mjs` exits 2 and prints "The administrator account asks for an authenticator code, which this workflow cannot enter."
+- The site has not deployed this release yet: `scripts/provision-smoke-account.mjs` exits 1 and prints "This site does not have the production smoke account route yet (HTTP 404)."
+- Production is unreachable: S1.1 fails and every other step, including `R2.1`, `R2.2` and `R2.3`, is `blocked` with the network error; the score counts none of them as passed.
+- The suite never prints, stores in `report.json`, or commits `SMOKE_MEMBER_PASSWORD`, `SMOKE_ADMIN_PASSWORD` or the session cookie value: after Journey 5 step 1, `grep -c "Zk7!rivers" <OUT>/report.json` prints 0.
 
 ## Scoring
 
-- The score block is `report.json` -> `score`: `total` counts S and R steps (28 at v1: 25 plus S6.1-S6.3, added after round 1 and before the suite is frozen), `passed`, and the ids under `failed`, `blocked` and `notRun`. A `not_run` or `blocked` step is never counted as passed and never as 0 of anything.
-- The workflow run is red when any step failed; `not_run` and `blocked` alone do not make it red.
+- The score block is `report.json` -> `score`: `total` counts S and R steps (29 at v2), `passed`, and the ids under `failed`, `blocked` and `notRun`. A `not_run` or `blocked` step is never counted as passed and never as 0 of anything.
+- The workflow run is red when any step failed; `not_run` and `blocked` alone do not make it red (a missing secret additionally raises a warning annotation).
 
 ## Filing a failure
 
-Each failed step becomes a bug in the release ledger with: the URL, the step id, the expected result, the actual result (copied from `report.json`), the evidence path (`production-smoke-<run id>/screens/...`) and the run URL. A failure that belongs to another feature names that feature and its baseline step id (for R1.x, the id in brackets above). A failure that stops members from signing in or using their site goes to the owner at once in plain language.
+Each failed step becomes a bug in the release ledger with: the URL, the step id, the expected result, the actual result (copied from `report.json`), the evidence path (`production-smoke-<run id>/screens/...`) and the run URL. A failure that belongs to another feature names that feature and its baseline step id (for R1.x, the id in brackets above). A failure that stops members from signing in or using their site goes to the owner at once in plain language. The next production run after the Netlify fix (`bd6a576`) must re-test S3.4, S3.5, S3.6, S4.1, R1.1 and R1.2: the open production bugs `platform-mcp-PR1-1`, `qr-gated-outputs-PR1-2` and `qr-gated-outputs-PR1-3` close only when that run passes them.
