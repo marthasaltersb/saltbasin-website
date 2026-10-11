@@ -1198,6 +1198,124 @@
           "report": null
         }
       ]
+    },
+    {
+      "at": "2026-10-11T01:09:50.068Z",
+      "commit": "c603390",
+      "results": [
+        {
+          "feature": "production-smoke-regression",
+          "round": 2,
+          "passed": 18,
+          "total": 28,
+          "baseline": null,
+          "report": "docs/test-results/production-smoke-regression/round-2.md"
+        },
+        {
+          "feature": "platform-mcp",
+          "round": 4,
+          "passed": 60,
+          "total": 65,
+          "baseline": 4,
+          "report": "docs/test-results/platform-mcp/round-4.md"
+        },
+        {
+          "feature": "session-mapping",
+          "round": 7,
+          "passed": 56,
+          "total": 56,
+          "baseline": 3,
+          "report": "docs/test-results/session-mapping/round-7.md"
+        },
+        {
+          "feature": "chart-gallery",
+          "round": 6,
+          "passed": 18,
+          "total": 20,
+          "baseline": 3,
+          "report": "docs/test-results/chart-gallery/round-6.md"
+        },
+        {
+          "feature": "proficiency-live-qr",
+          "round": 8,
+          "passed": null,
+          "total": null,
+          "baseline": null,
+          "report": "docs/test-results/proficiency-live-qr/round-8.md"
+        },
+        {
+          "feature": "resume-rollups",
+          "round": 4,
+          "passed": 30,
+          "total": 32,
+          "baseline": 2,
+          "report": "docs/test-results/resume-rollups/round-4.md"
+        },
+        {
+          "feature": "cover-letter-agent",
+          "round": 2,
+          "passed": 45,
+          "total": 48,
+          "baseline": 2,
+          "report": "docs/test-results/cover-letter-agent/round-2.md"
+        },
+        {
+          "feature": "release-cut-and-session-plans",
+          "round": 1,
+          "passed": 53,
+          "total": 62,
+          "baseline": 1,
+          "report": "docs/test-results/release-cut-and-session-plans/round-1.md"
+        },
+        {
+          "feature": "owner-error-messages",
+          "round": 1,
+          "passed": 25,
+          "total": 25,
+          "baseline": 1,
+          "report": "docs/test-results/owner-error-messages/round-1.md"
+        },
+        {
+          "feature": "scoring-preferences-mcp",
+          "round": null,
+          "passed": null,
+          "total": null,
+          "baseline": null,
+          "report": null
+        },
+        {
+          "feature": "release-scope",
+          "round": 2,
+          "passed": 20,
+          "total": 25,
+          "baseline": 2,
+          "report": "docs/test-results/release-scope/round-2.md"
+        },
+        {
+          "feature": "journey-flow-studio",
+          "round": null,
+          "passed": null,
+          "total": null,
+          "baseline": null,
+          "report": null
+        },
+        {
+          "feature": "journey-flow-experience-mapping",
+          "round": null,
+          "passed": null,
+          "total": null,
+          "baseline": null,
+          "report": null
+        },
+        {
+          "feature": "graphify-data-model-map",
+          "round": null,
+          "passed": null,
+          "total": null,
+          "baseline": null,
+          "report": null
+        }
+      ]
     }
   ],
   "closedAt": null

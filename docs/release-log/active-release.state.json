@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T01:06:40.113Z",
+  "exportedAt": "2026-10-11T01:09:50.298Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -74,7 +74,7 @@
       "backlog": 10
     },
     "release-scope": {
-      "status": "amend",
+      "status": "validate",
       "lastRound": 2,
       "lastScore": "20/25",
       "lastReport": "docs/test-results/release-scope/round-2.md",
@@ -122,11 +122,11 @@
       "backlog": 0
     },
     "platform-mcp": {
-      "status": "triage",
+      "status": "fix",
       "lastRound": 4,
       "lastScore": "60/65",
       "lastReport": "docs/test-results/platform-mcp/round-4.md",
-      "openBugs": 16,
+      "openBugs": 21,
       "backlog": 3
     },
     "proficiency-live-qr": {
@@ -1494,7 +1494,7 @@
     {
       "id": "release-scope-T2-3",
       "feature": "release-scope",
-      "status": "fixed_awaiting_retest",
+      "status": "retesting",
       "class": "defect",
       "attempts": 1,
       "step": "J4.1 estimate note lacks '(added after the cut)'",
@@ -1821,7 +1821,7 @@
     {
       "id": "platform-mcp-PR1-1",
       "feature": "platform-mcp",
-      "status": "open",
+      "status": "fixing",
       "class": "product_defect",
       "attempts": 0,
       "step": "platform-mcp v4 E.3 (also J2.2)",
@@ -1850,6 +1850,137 @@
       ],
       "stepId": "E.3",
       "url": "https://saltbasin.net/mcp"
+    },
+    {
+      "id": "platform-mcp-r4-T1",
+      "feature": "platform-mcp",
+      "status": "fixing",
+      "class": "defect",
+      "attempts": 0,
+      "step": "Import an application package card has no gap; Gaps only shows zero cards (also the exit code of --strict in J11.2)",
+      "rootCause": "The live release tracker admin routes (POST /snapshots, POST /pull, GET/PUT /settings, POST /settings/webhook-secret, GET/POST /tokens, DEL…",
+      "files": [
+        "server/lib/mcpToolRegistry.js",
+        "server/lib/capabilityParity.js",
+        "server/lib/releaseTrackerService.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The request is every capability via MCP. The release tracker admin routes had no tools at…"
+      },
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "The live release tracker admin routes (POST /snapshots, POS…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-r4-T2",
+      "feature": "platform-mcp",
+      "status": "fixing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "Create token with no scope ticked; expect red alert and exactly six scope checkboxes",
+      "rootCause": "Step is stale, product correct. MCP_SCOPES is append-only and later features appended scopes (14 at tested commit 1032699, 18 at head 367dd…",
+      "files": [
+        "server/lib/mcpToolRegistry.js",
+        "server/routes/platformAccess.js",
+        "src/components/admin/ConnectedAgentsPanel.jsx"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The step is stale, not the product. The scope count is pinned in this feature's own spec …"
+      },
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Step is stale, product correct. MCP_SCOPES is append-only a…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-r4-T3",
+      "feature": "platform-mcp",
+      "status": "fixing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "List tools with TOKEN_A; expect exactly 96 tool lines then '96 tools'",
+      "rootCause": "Step is stale, product correct. All 96 pinned names remain in the same relative order; 30 career-scope tools were added by later features: …",
+      "files": [
+        "server/lib/mcpToolRegistry.js",
+        "server/data/mcpToolManifest.json"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The step is stale, not the product. The 96-tool count is pinned in this feature's spec, a…"
+      },
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Step is stale, product correct. All 96 pinned names remain …",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-r4-T4",
+      "feature": "platform-mcp",
+      "status": "fixing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "List tools with the release.read-only TOKEN_B; expect exactly release_tracker_read and '1 tools'",
+      "rootCause": "Step is stale, product correct. release.read now carries 7 tools (platform_capabilities_map, release_tracker_read, release_tracker_get_stat…",
+      "files": [
+        "server/lib/mcpToolRegistry.js"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The step is stale, not the product. release.read carries more tools than the pinned one, …"
+      },
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Step is stale, product correct. release.read now carries 7 …",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "platform-mcp-r4-T5",
+      "feature": "platform-mcp",
+      "status": "fixing",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "check-interface-parity --strict; expect exit 0 and '72 of 72' summary with no Gaps line",
+      "rootCause": "Two layers: exit 1 and the Gaps line come from the release-tracker-admin MCP gap (T1, defect). Even after T1 the first line cannot read 72 …",
+      "files": [
+        "server/lib/capabilityParity.js",
+        "scripts/check-interface-parity.mjs"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The exit 1 and the Gaps line are T1, already fixed: strict exits 0 at head. The '72 of 72…"
+      },
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "Two layers: exit 1 and the Gaps line come from the release-…",
+          "commit": null
+        }
+      ]
     },
     {
       "id": "qr-gated-outputs-PR1-2",
