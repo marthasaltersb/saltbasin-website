@@ -35,8 +35,11 @@ export function defaultRules() {
 
 /** Stored rules (config_state, TEXT column -> getJSON) or the shipped default. */
 export async function getRules() {
-  const { getJSON } = await import('../db.js');
-  const stored = await getJSON('config_state', RULES_ROW_ID);
+  let stored = null;
+  try {
+    const { getJSON } = await import('../db.js');
+    stored = await getJSON('config_state', RULES_ROW_ID);
+  } catch { stored = null; } // reading the catalog needs no database: no saved rules means the shipped default
   if (stored && Array.isArray(stored.domains) && stored.domains.length) return { ...stored, source: 'saved' };
   return { ...defaultRules(), source: 'default' };
 }
@@ -162,4 +165,57 @@ export async function dataObjectPicker({ domain, q, object, limit = 200 } = {}) 
     .slice(0, Math.max(1, Math.min(Number(limit) || 200, 500)))
     .map(({ t, d }) => ({ key: t.name, label: t.name, kind: t.kind, domain: d.key, domainLabel: d.label, fieldCount: t.columns.length }));
   return { objects };
+}
+
+let cachedGraph = { mtimeMs: 0, graph: null };
+function loadGraph() {
+  const file = path.resolve(path.dirname(CATALOG_PATH), 'graph.json');
+  let st;
+  try { st = fs.statSync(file); } catch {
+    throw bad('The code graph has not been generated yet. An administrator can generate it with "node scripts/graphify-data-model.mjs"; the committed output lives in docs/data-model/.', 404, 'not_generated');
+  }
+  if (cachedGraph.graph && cachedGraph.mtimeMs === st.mtimeMs) return cachedGraph.graph;
+  cachedGraph = { mtimeMs: st.mtimeMs, graph: JSON.parse(fs.readFileSync(file, 'utf8')) };
+  return cachedGraph.graph;
+}
+
+/**
+ * Code-module view (the "code" half of the map). Source: the committed Graphify graph (docs/data-model/graph.json),
+ * file nodes grouped by Graphify community, `imports` edges between files and `uses_table` edges to tables.
+ * Without `file`: communities, each with its modules. With `file`: that module's imports, importers and tables.
+ */
+export async function codeModules({ file } = {}) {
+  const g = loadGraph();
+  const files = g.nodes.filter((n) => n.kind === 'file');
+  const edges = g.edges;
+  if (file) {
+    const id = `file:${String(file)}`;
+    const n = files.find((x) => x.id === id);
+    if (!n) throw bad(`There is no code module called "${file}" in the map. Pick one from the list of modules.`, 404, 'not_found');
+    const strip = (s) => s.replace(/^(file|table):/, '');
+    return {
+      file: n.label, area: n.area, symbols: n.symbols, community: n.community,
+      imports: edges.filter((e) => e.relation === 'imports' && e.source === id).map((e) => strip(e.target)).sort(),
+      importedBy: edges.filter((e) => e.relation === 'imports' && e.target === id).map((e) => strip(e.source)).sort(),
+      tables: edges.filter((e) => e.relation === 'uses_table' && e.source === id).map((e) => strip(e.target)).sort(),
+    };
+  }
+  const byC = new Map();
+  for (const n of files) {
+    if (!byC.has(n.community)) byC.set(n.community, []);
+    byC.get(n.community).push({ file: n.label, area: n.area, symbols: n.symbols });
+  }
+  const communityOf = new Map(files.map((n) => [n.id, n.community]));
+  const links = new Map();
+  for (const e of edges) {
+    if (e.relation !== 'imports') continue;
+    const a = communityOf.get(e.source); const b = communityOf.get(e.target);
+    if (a == null || b == null || a === b) continue;
+    const k = `${a}>${b}`; links.set(k, (links.get(k) || 0) + 1);
+  }
+  return {
+    counts: { modules: files.length, importLinks: edges.filter((e) => e.relation === 'imports').length, tableLinks: edges.filter((e) => e.relation === 'uses_table').length },
+    communities: [...byC.entries()].sort((a, b) => b[1].length - a[1].length).map(([community, mods]) => ({ community, moduleCount: mods.length, modules: mods.sort((x, y) => x.file.localeCompare(y.file)) })),
+    communityLinks: [...links.entries()].map(([k, n]) => { const [from, to] = k.split('>').map(Number); return { from, to, imports: n }; }),
+  };
 }

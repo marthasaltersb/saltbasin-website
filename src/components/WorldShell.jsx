@@ -190,7 +190,7 @@ function WorldShellInner() {
     }
   }, [user]);
 
-  const islands = useMemo(() => resolveWorldIslands(tabsConfig ? withPlatformIslandTabs(tabsConfig, user?.role) : []), [tabsConfig, user]);
+  const islands = useMemo(() => resolveWorldIslands(tabsConfig ? withPlatformIslandTabs(tabsConfig, user?.role, user?.permissions || []) : []), [tabsConfig, user]);
   const hasCareerIsland = islands.some((i) => i.componentId === 'careerPlacementAgents');
   const hasCommercialIsland = islands.some((i) => i.componentId === 'commercialOpportunities');
   const hasHerqIsland = islands.some((i) => i.componentId === 'herqPublications');

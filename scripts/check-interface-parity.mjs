@@ -95,7 +95,7 @@ function runChecks(inject = {}) {
   for (const t of MCP_TOOLS) {
     if (!usedTools.has(t.name)) problem(`MCP tool ${t.name} is not listed by any capability.`);
     if (!MCP_SCOPES[t.scope]) problem(`MCP tool ${t.name} names an unknown scope "${t.scope}".`);
-    if (!['user', 'admin'].includes(t.permission)) problem(`MCP tool ${t.name} has no valid permission.`);
+    if (!['user', 'admin', 'permission'].includes(t.permission)) problem(`MCP tool ${t.name} has no valid permission.`);
     if (typeof t.handler !== 'function' || !t.inputSchema || !t.description) problem(`MCP tool ${t.name} is missing a handler, inputSchema or description.`);
   }
 

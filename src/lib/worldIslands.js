@@ -324,14 +324,14 @@ export const PLATFORM_ISLAND_TABS = Object.freeze([
   { id: 'capabilities', label: 'Capabilities', componentId: 'capabilities', sortOrder: 31, adminOnly: true },
   { id: 'qualification-rules', label: 'Qualification Rules', componentId: 'qualificationRules', sortOrder: 32, adminOnly: true },
   { id: 'agent-runner', label: 'Agent runner', componentId: 'agentRunner', sortOrder: 33, adminOnly: true },
-  { id: 'data-model-map', label: 'Data model map', componentId: 'dataModelMap', sortOrder: 34, adminOnly: true },
+  { id: 'data-model-map', label: 'Data model map', componentId: 'dataModelMap', sortOrder: 34, permission: 'datamodel.read' },
   { id: 'production-smoke', label: 'Production smoke', componentId: 'productionSmoke', sortOrder: 35, adminOnly: true },
 ]);
 
 /** `tabs` plus the World Shell-only entry points this user may see (a stored tab with the same componentId wins). */
-export function withPlatformIslandTabs(tabs = [], role = 'member') {
+export function withPlatformIslandTabs(tabs = [], role = 'member', permissions = []) {
   const have = new Set(tabs.map((t) => t.componentId));
-  return [...tabs, ...PLATFORM_ISLAND_TABS.filter((t) => !have.has(t.componentId) && (!t.adminOnly || role === 'admin'))];
+  return [...tabs, ...PLATFORM_ISLAND_TABS.filter((t) => !have.has(t.componentId) && (t.permission ? permissions.includes(t.permission) : (!t.adminOnly || role === 'admin')))];
 }
 
 export function resolveWorldIslands(tabs = []) {
