@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T02:16:08.404Z",
+  "exportedAt": "2026-10-11T02:19:22.333Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -138,12 +138,12 @@
       "backlog": 4
     },
     "proficiency-live-qr": {
-      "status": "triage",
+      "status": "amend",
       "lastRound": 8,
       "lastScore": "31/32",
       "lastReport": ".claude/worktrees/wf_1486aefc-79d-1/docs/test-results/proficiency-live-qr/round-8.md",
-      "openBugs": 18,
-      "backlog": 6
+      "openBugs": 19,
+      "backlog": 7
     },
     "single-experience-world-shell": {
       "status": "build",
@@ -3515,6 +3515,79 @@
           "round": 5,
           "event": "verified",
           "note": "Retest round 5 passed every step of baseline v5, including …",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "proficiency-live-qr-T6-3",
+      "feature": "proficiency-live-qr",
+      "status": "needs_business_definition",
+      "class": "needs_business_definition",
+      "attempts": 0,
+      "step": "At 390px wide, tab row wraps, Rules & why reachable, editor stacks, no sideways panning inside the page or its scroller",
+      "rootCause": "Recurred a third time (ledger bug F6-7 is the same root cause). The Levels and why table in ProficiencyRulesPanel.jsx (section 4, about lin…",
+      "files": [
+        "src/components/admin/ProficiencyRulesPanel.jsx"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "ProficiencyRulesPanel.jsx is this feature's own panel (first appears in merge e28d2e1), s…"
+      },
+      "history": [
+        {
+          "round": 8,
+          "event": "found",
+          "note": "Recurred a third time (ledger bug F6-7 is the same root cau…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "proficiency-live-qr-T8-1",
+      "feature": "proficiency-live-qr",
+      "status": "open",
+      "class": "coverage_gap",
+      "attempts": 0,
+      "step": "Click Cancel instead (repeat with another uncategorised tool)",
+      "rootCause": "Step order conflict: the repeat clause adds an uncategorised tool after J6.4 approved the output, so the live QR page lists 'Added: <tool>'…",
+      "files": [
+        "docs/training/proficiency-rules-and-live-qr.md"
+      ],
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "The step-order conflict is inside this feature's own spec, docs/training/proficiency-rule…"
+      },
+      "history": [
+        {
+          "round": 8,
+          "event": "found",
+          "note": "Step order conflict: the repeat clause adds an uncategorise…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "proficiency-live-qr-T8-2",
+      "feature": "proficiency-live-qr",
+      "status": "backlog_pre_existing",
+      "class": "needs_business_definition",
+      "attempts": 0,
+      "step": "Member home to World Shell navigation",
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "pre_existing",
+        "owner": null,
+        "evidence": null
+      },
+      "history": [
+        {
+          "round": 8,
+          "event": "found",
+          "note": "With a session open, 'Enter my member world' goes to /membe…",
           "commit": null
         }
       ]
@@ -10205,38 +10278,6 @@
           "event": "verified",
           "note": "Retest round 7: this bug's step passed (the round had other…",
           "commit": "0800b1c"
-        }
-      ]
-    },
-    {
-      "id": "proficiency-live-qr-T6-3",
-      "feature": "proficiency-live-qr",
-      "status": "needs_business_definition",
-      "class": "needs_business_definition",
-      "attempts": 0,
-      "step": "At 390px wide: tab row wraps, Rules & why reachable, editor stacks in one column, no sideways panning inside the page or its scroller",
-      "rootCause": "src/components/admin/ProficiencyRulesPanel.jsx:409-410: the Levels and why table is in an overflow-x:scroll wrapper with minWidth 940 and a…",
-      "files": [
-        "src/components/admin/ProficiencyRulesPanel.jsx",
-        "docs/training/proficiency-rules-and-live-qr.md"
-      ],
-      "scope": {
-        "scope": "this_feature",
-        "owner": null,
-        "evidence": "ProficiencyRulesPanel.jsx was created by f1ad622 in this feature, so it cannot exist on t…"
-      },
-      "history": [
-        {
-          "round": 6,
-          "event": "found",
-          "note": "ProficiencyRulesPanel.jsx lines 358-361: overflowX:scroll s…",
-          "commit": null
-        },
-        {
-          "round": 7,
-          "event": "recurred",
-          "note": "src/components/admin/ProficiencyRulesPanel.jsx:409-410: the…",
-          "commit": null
         }
       ]
     },
