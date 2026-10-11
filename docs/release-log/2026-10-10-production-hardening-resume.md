@@ -2,7 +2,7 @@
 
 Integration branch: `claude/zealous-meitner-5tuft5`. Process definition: `server/data/releaseLoop/definition.json`. Recorded 2026-10-11 by the release recorder. Nothing pushed.
 
-This log covers two resume runs of the loop. Run 1 covered **session-mapping**, picking up at round 6. Run 2 covered **owner-error-messages**, round 1. No sweep was run in either (`sweep: null`).
+This log covers three resume runs of the loop. Run 1 covered **session-mapping**, picking up at round 6. Run 2 covered **owner-error-messages**, round 1. Run 3 covered **resume-rollups**, round 5. No sweep was run in any of them (`sweep: null`).
 
 ## Final results
 
@@ -10,8 +10,9 @@ This log covers two resume runs of the loop. Run 1 covered **session-mapping**, 
 |---|---|---|---|---|---|---|---|
 | session-mapping | 1 | **passed** | 7 | 56 / 56 | v3 | `aca458d` | none |
 | owner-error-messages | 2 | **passed** | 1 | 25 / 25 | v1 | `1032699` | none (8 open bugs, none mapped to a baseline step; see that section) |
+| resume-rollups | 3 | **passed** | 5 | 32 / 32 | v3 | `70535bf` | none on a scored step (open spec gaps and 2 owner questions with no scored step; see that section) |
 
-**Features that did NOT pass in these runs: none.** Only session-mapping and owner-error-messages were in scope. Every other feature in `active-release.features.json` is outside this log; their state is in `docs/release-log/active-release.state.json` and the tracker, and this log makes no claim about them.
+**Features that did NOT pass in these runs: none.** Only session-mapping, owner-error-messages and resume-rollups were in scope. resume-rollups was recorded as NOT PASSED in `2026-10-02-application-packages-resume.md` (round 2, 30/32 on v2); round 5 here supersedes that verdict. Every other feature in `active-release.features.json` is outside this log; their state is in `docs/release-log/active-release.state.json` and the tracker, and this log makes no claim about them.
 
 ---
 
@@ -199,7 +200,160 @@ None (`needsHuman: []`). Every open bug has 0 fix attempts.
 
 ---
 
+## resume-rollups
+
+Title: Configurable resume rollups: KPI tiles, industry buckets, skill category groups, Career Atom rollups.
+Status: **passed** (round 5, 32/32 on baseline v3). Change spec: `docs/changes/resume-rollups.md`. Training spec: `docs/training/resume-rollups.md`, baseline `docs/training/baselines/resume-rollups/v3.json`. At recording time `sha256sum docs/training/resume-rollups.md` = `f183054e731c06bffc5090e86646081271d3117d941ba7d9f7bdc67b038f1296` (same as the round-5 report) and `release-spec-baseline.mjs check --all` printed `resume-rollups v3` and exited 0.
+
+### Rounds
+
+Run 3 handed over round 5 only. Earlier rounds are listed for history, from their own reports. Rounds 1 to 2 were first recorded in `2026-10-02-application-packages-resume.md`.
+
+| Round | Baseline | Commit tested | Steps passed / total | Failed | Result | Report | Triage |
+|---|---|---|---|---|---|---|---|
+| 1 | v1 at test time, rescored on v2 | `c3a71b4` | see report | see report | failed | [round-1.md](../test-results/resume-rollups/round-1.md) | [round-1](../triage/resume-rollups-round-1.md), [fix-r1 reconciliation](../triage/resume-rollups-fix-r1-reconciliation.md) |
+| 2 | v2 | `0800b1c` | 30 / 32 | J12.1, E.4 | failed | [round-2.md](../test-results/resume-rollups/round-2.md) | [round-2](../triage/resume-rollups-round-2.md), [scope](../triage/resume-rollups-round-2-scope.md) |
+| 3 | v2 | `47ee197` | 30 / 32 | J12.1, E.4 | failed | [round-3.md](../test-results/resume-rollups/round-3.md) | [round-3](../triage/resume-rollups-round-3.md), [scope](../triage/resume-rollups-round-3-scope.md), [fix-r3 reconciliation](../triage/resume-rollups-fix-r3-reconciliation.md) |
+| 4 | v2 | `79ca5ac` | 30 / 32 | J12.1 (mobile), E.3 | failed | [round-4.md](../test-results/resume-rollups/round-4.md) | [round-4](../triage/resume-rollups-round-4.md), [scope](../triage/resume-rollups-round-4-scope.md), [fix-r4 reconciliation](../triage/resume-rollups-fix-r4-reconciliation.md) |
+| **5** | **v3** | `70535bf` | **32 / 32** | none | **passed** | [round-5.md](../test-results/resume-rollups/round-5.md) | none (no failures) |
+
+Score comparison across versions: rounds 2 to 4 ran on v2 and round 5 on v3. The only change between v2 and v3 is amendment **A4**: step E.3 changed wording. No step was added or retired, and there are 34 comparable ids. So rounds 2 to 4 (30/32) and round 5 (32/32) compare like for like on every step except E.3. E.3 passing in round 5 is a pass under the v3 wording. It is not evidence that the v2 wording would pass. Round 1 is not compared, because v1 had a different J9.5 (amendment A1).
+
+#### Round 5 (baseline v3) — 32 / 32
+
+No failures, nothing blocked, nothing not run, no precondition failed. Validator val-15400-1. Production build on port 15402. Fresh database `sb_rl_val_15400_1` + `npm run seed` + `scripts/create-test-member.mjs`. The database was dropped and recreated between the desktop and phone passes, because the journeys build on each other and E.3 is destructive. Chromium, desktop 1280x900 and phone 390x844 touch. Run as member@test.local through the World Shell.
+
+Fixed since round 4, by baseline step:
+
+- **[J12.1] mobile:** the Executive Summary tiles now lay out in 2 readable columns at 390px. Page scrollWidth 390 = clientWidth 390, so the 1px overflow (F4-4) is gone. The header wraps and the Print button no longer cuts it (F3-7). Fix: `0ab0050` (B11).
+- **[E.3]:** passes under the v3 wording on both surfaces. Every tile computed from Career Master shows `—` with a reason. The manual tile Certified partners shows `5†`. The empty-state texts are correct.
+- [E.4] stayed passing. The only noise was the expected 400 on an empty-keyword bucket preview, the forced 500s in E.2 and a cdnjs request blocked by the sandbox.
+
+How two steps were judged:
+
+- **[J4.1]** (desktop and mobile): the "At or above level" selector has a leading placeholder "Choose a level…" before the five listed levels. It was judged a pass, because the five levels are listed in order and the computed line is correct. This is the same wording point as open bug F4-8, and an amendment is still to be proposed (see below).
+- **[E.2]:** the failure was forced by browser request interception, not by a typed URL or API call.
+
+Interface parity: a token created in World Shell -> Journeys -> Connected Agents (career.read, career.write) listed 124 MCP tools. These include `resume_rollups_read`, `resume_rollup_preview`, `career_atom_rollups_read`, `career_experience_definitions_*`, `career_proficiency_override_*`, `proficiency_rules_read`, `career_rollups_read`, `career_rollup_preview_read` and `career_record_list/create/update/delete`. The values matched the UI on both surfaces. **No MCP_GAP, UI_GAP or MOBILE_GAP.**
+
+Observations (not scored):
+
+1. The site editor Career Rollup block picker (B5 / RR1-6 / F4-5 / F3-4) has no baseline step and was not browser-tested.
+2. In the mobile "Levels and why" table, "Level shown" (`Expert †`) is visible only after a sideways swipe.
+3. Connected Agents shows the MCP address `http://localhost:5173/mcp` whatever the real origin is. `/mcp` worked on the served origin.
+4. Career Master dialog labels are not bound to their inputs.
+5. The output footer of a member's resume still names the platform owner as author and says "Edit this in your admin dashboard". This is pre-existing (see the round-5 report for the exact text).
+6. `round-5/steps.raw.jsonl` also holds lines from an earlier, aborted round-5 attempt (2026-10-10 21:37-21:44, port 5614). They were excluded from the scored `steps.jsonl`.
+7. The first mobile E.1/E.2 attempts ran on the wrong screen because of driver navigation. They were re-run after the validator confirmed no data had changed.
+8. Cleanup reported: server and drivers killed, database `sb_rl_val_15400_1` dropped.
+
+Evidence: `/var/tmp/sbpg/release-loop/resume-rollups/round-5/steps.jsonl` and screenshots in the same folder (outside the repo).
+
+### Triage
+
+Round 5 had no failures, so it has no triage. The triage that led to round 5 is round 4 ([resume-rollups-round-4.md](../triage/resume-rollups-round-4.md), [scope](../triage/resume-rollups-round-4-scope.md)):
+
+| Item | Step | Class | Root cause | Resolution |
+|---|---|---|---|---|
+| B11 | [J12.1] mobile | defect (scoped pre_existing; it still failed a frozen step, so it was fixed here) | `src/components/Output.jsx:523` `gridTemplateColumns: 'repeat(6, minmax(0, 1fr))'` and `src/lib/outputBlocks.js:535` `repeat(6,1fr)` have no narrow-width case. At 390px each column is about 34px wide. | Fixed by `0ab0050`, verified in round 5 |
+| RR2-2 (recurred) | [E.3] | spec_error | Product matches the change spec. `server/lib/resumeRollups.js` `case 'manual'` returns the member's own value flagged `userDefined`, and `docs/changes/resume-rollups.md:23` defines it. The step said "every tile". | Amendment A4 (v2 -> v3), passes in round 5 |
+
+### Fixes
+
+| Commit | Round | What | Files |
+|---|---|---|---|
+| `0ab0050` | fix r4 | Responsive tile grid, `repeat(auto-fit, minmax(7.5rem, 1fr))`, so tiles do not clip at 390px (B11) | `src/components/Output.jsx`, `src/lib/outputBlocks.js`, `docs/changes/resume-rollups.md` |
+
+Fix-r4 reconciliation ([file](../triage/resume-rollups-fix-r4-reconciliation.md)): 9 items. Resolved: worktree-guard refusals (process), NODE_ENV for dist (environment), B11 present, limitations documented. Unresolved at that time: 1px overflow (fixed by round 5), the site editor picker coverage gap, the configurable column count, the Expert-count owner question, and the wording amendments.
+
+Earlier fix rounds (r1 to r3) are in their reconciliation files linked in the Rounds table and in `2026-10-02-application-packages-resume.md`.
+
+### Spec amendments
+
+| Id | Status | Round | Baseline | What changed | Proposer | Reviewer |
+|---|---|---|---|---|---|---|
+| A1 | approved | 1 | v1 -> v2 | [J9.5]: the typed API URL is replaced by "Reload Proficiency & Rollups and open Career Atom rollups", which expects the `Skills by proficiency` card with the computed line and `Tools by wheel bucket` with Shown unticked | triage:resume-rollups:r1 | amend:resume-rollups:r1 (2026-10-09) |
+| A2 | **rejected** | 1 | none | Proposed new [J9.6] (site editor Career Rollup block picker). Rejected as not exact, not reachable and not deterministic. The coverage gap is real; it should be re-proposed with an exact click path walked in a browser first. | triage:resume-rollups:r1 | amend:resume-rollups:r1 |
+| A3 | **needs_owner** | 1 | none | Proposed new [J12.2] (Capability Confidence column count). The requirement is undefined. The question is below. | triage:resume-rollups:r1 | amend:resume-rollups:r1 |
+| A4 | approved | 4 | v2 -> v3 | [E.3]: "every tile computed from Career Master as `—` with a reason; a manual (user-defined) tile shows the member's own value marked †; no figure is ever invented" (was: "every tile as `—`") | triage:resume-rollups:r4 | amend:resume-rollups:r4 (2026-10-10T21:40Z) |
+
+Files: [A1.json](../spec-amendments/resume-rollups/A1.json), [A2.json](../spec-amendments/resume-rollups/A2.json), [A3.json](../spec-amendments/resume-rollups/A3.json), [A4.json](../spec-amendments/resume-rollups/A4.json). For each, the reviewer is a different role from the proposer.
+
+**Proposed amendments, not yet raised (no file exists):**
+- [P.1] says "admin test user", but it should say "member test user" (F3-6 / F4-8).
+- [J4.1] should mention the leading "Choose a level…" placeholder (F4-8).
+- [J9.6] should be re-proposed from A2 with an exact route.
+
+None blocks, because every step was scored as written.
+
+### Validator drift
+
+None found. Round 5 scored against pinned v3, with a passing baseline check and the spec sha recorded and re-verified by the recorder. J4.1 was judged against its literal text (the five levels in order), and the extra placeholder was reported as a wording point, not silently reinterpreted. The aborted earlier attempt was excluded from the scored log and disclosed.
+
+### Integration commits
+
+| Commit | What |
+|---|---|
+| `0ab0050` | Fix r4: responsive tile grid (B11) |
+| `257d8d6` | `--no-ff` merge of `release-loop/resume-rollups-fix-r4` |
+| `5e2241f` | Spec amendment A4: A4.json, baseline v3.json, 1-line change to `docs/training/resume-rollups.md` |
+| `40ddd3b` | Merge of the spec amendment after round 4 |
+| `b249b49` | "Release loop logs: resume-rollups". It actually contains only chart-gallery and session-mapping reconciliation files and no resume-rollups file (see the failed/refused list below) |
+| `70535bf` | Integration head tested in round 5 (release log commit for run 2) |
+
+### Backlog (NOT blocking this feature)
+
+These come from the continuous bug ledger (`docs/release-log/bug-ledger.json`). None maps to a failing step in round 5.
+
+| Bug | Kind | Evidence | Owner |
+|---|---|---|---|
+| B4 | other_feature | Per-type seeding re-seeds an empty type. `PER_TYPE_SEEDED_DEFINITION_TYPES` was introduced by `a0ff84a` for proficiency_formula. resume-rollups only added its types. | proficiency-live-qr |
+| B9 | other_feature | Hero and teaser wording in `Output.jsx` (hero line added by `d78bcda`) not wired to rollups | qr-gated-outputs |
+| B11 | pre_existing (fixed) | `repeat(6, …)` already at base `c2ccaa3^1`. Fixed by `0ab0050` and verified in round 5. | resume-rollups (done) |
+| RR1-3 | pre_existing (fixed r3) | The member's output link lacked `owner=me`; reproduced at base `2477b4a`. J12.1 passes since round 4 on desktop. | resume-rollups (done) |
+| RR1-4 | pre_existing (fixed r3) | Synthetic `preset-default` id gives a 404; reproduced at base `2477b4a`. E.4 passes since round 4. | resume-rollups (done) |
+| B14 | process_note | Branch not rebased before integration | release-loop process |
+
+Observations from round 5, not filed as bugs: the mobile "Levels and why" sideways swipe (resume-rollups, cosmetic), the Connected Agents localhost MCP address (platform-mcp), unbound Career Master dialog labels (Career Master UI, accessibility), and the output footer author text (pre-existing, `Output.jsx`).
+
+**Open ledger items for this feature with no failing scored step.** A tracker sync ran while this log was being recorded (`1d9da5a`, `active-release.state.json` exported 2026-10-11T01:37Z). It now shows resume-rollups as passed, lastRound 5, 32/32, 19 open, 5 backlog. The per-bug statuses below were taken from the 01:34Z ledger and may have moved since. The recorder's reading of round 5's evidence is below; triage or a tracker sync should confirm it before any status changes.
+- **Round 5 suggests these are resolved:** F4-4 and F3-7 (J12.1 mobile fixed), RR2-2 (A4), B3 (J7.3 passes), B8 (run as member@test.local in the World Shell), RR1-2 (A1, J9.5 passes), F1-2 and RR2-4 (`career_record_*` and the read tools exist, no MCP_GAP), B13 (E.1 to E.4 pass).
+- **Still open:**
+  - B5, RR1-6, F3-4, F4-5: picker coverage, which needs a re-proposed J9.6.
+  - F4-6 / A3: column count, an owner question.
+  - B10, F3-5, F4-7: the Expert-count owner question.
+  - B12: equal keyword hits across buckets, an undefined business rule.
+  - F1-3: change-spec known limitations.
+  - F3-6, F4-8: wording amendments.
+
+### Escalated for a business definition
+
+None escalated by this run (`escalated: []`). Two owner questions are still open in the files and have no scored step, so they do not block:
+
+1. A3 / F4-6 (from `A3.json`): "Is the number of columns in the resume output's Capability Confidence block meant to be a member-configurable setting? If yes: where does the member set it (screen and control), what values are allowed, what is the default, and how many columns should the modern resume show for the J1.2 fixture (3 capability groups)? If no: should B11 be dropped from the coverage list?"
+2. B10 / F3-5 / F4-7 (from the fix-r4 reconciliation): "On the Capability Confidence bars, should a skill whose proficiency tier was set by hand to Expert count toward the 'N Expert' figure, or only skills whose tier is computed by the methodology?" Round 5 still shows Strategy & Advisory `0 Expert · 2 skills` with a hand-set Expert, which is what the spec currently says.
+
+B12 also has an undefined rule (whether equal keyword hits count in several industry buckets). No question has been raised for it yet.
+
+### Bugs at the per-bug fix-attempt limit (needsHuman)
+
+None (`needsHuman: []`).
+
+---
+
 ## Failed / refused commands and gaps reported
+
+### Run 3 (resume-rollups)
+
+- No command failed or was refused during round 5 validation, according to the report. The validator logged and re-ran its own driver navigation slips (the first mobile E.1/E.2 attempts) after confirming no data had changed.
+- **Aborted earlier round-5 attempt:** on 2026-10-10 from 21:37 to 21:44, on port 5614. Its lines remain in `round-5/steps.raw.jsonl` (outside the repo) and are excluded from the scored `steps.jsonl`. State left: raw log kept; the report does not say whether that attempt's server or database was cleaned up.
+- **Fix r4 (from reconciliation):**
+  - The worktree guard refused compound `source`/heredoc commands. The fix agent re-ran them separately, with no partial state.
+  - The first server start without `NODE_ENV=production` returned 404 for dist. This is by design, and the agent restarted.
+  - State left: branch clean, server killed, database dropped (as reported).
+- **Mislabelled log commit:** `b249b49` "Release loop logs: resume-rollups" contains no resume-rollups file. State left: as committed. The round-5 report was committed by tracker sync `1d9da5a`, not by a log commit.
+- **Tracker:** a concurrent tracker sync `1d9da5a` (01:37Z) committed `round-5.md` and set resume-rollups to passed, lastRound 5, 32/32, 19 open, 5 backlog. The recorder did not run a sync itself.
+- **Recorder:** `release-spec-baseline.mjs check resume-rollups` was rejected with "check needs --feature <key> or --all", a usage error by the recorder. It was re-run as `check --all`: exit 0, `resume-rollups v3` matches. Nothing changed.
 
 ### Run 2 (owner-error-messages)
 
