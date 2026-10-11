@@ -15,7 +15,7 @@ import {
   viewerKindForUser, shareTokenAllowed, pullFromRepo, subscribe, streamClientCount,
 } from '../lib/releaseTrackerService.js';
 import { jsonProblemMessage } from '../lib/friendlyErrors.js';
-import { showScope, setFeatureScope, addFeatureAfterCut } from '../lib/releaseScopeChange.js';
+import { showScope, setFeatureScope, addFeatureAfterCut, previewScopeMove } from '../lib/releaseScopeChange.js';
 
 const router = Router();
 const fail = (res, e) => {
@@ -173,17 +173,22 @@ router.delete('/tokens/:id', wrap(async (req, res) => {
 // ── Release scope (admin): the same functions scripts/release-scope.mjs and the MCP tools call ──
 router.get('/scope', wrap(async (req, res) => {
   if (!(await requireAdmin(req, res))) return;
-  res.json(showScope());
+  res.json(await showScope());
+}));
+router.post('/scope/preview', wrap(async (req, res) => {
+  if (!(await requireAdmin(req, res))) return;
+  const b = req.body || {};
+  res.json(await previewScopeMove({ key: b.key, scope: b.scope }));
 }));
 router.post('/scope', wrap(async (req, res) => {
-  if (!(await requireAdmin(req, res))) return;
+  const admin = await requireAdmin(req, res); if (!admin) return;
   const b = req.body || {};
-  res.json(setFeatureScope({ key: b.key, scope: b.scope, decidedBy: b.decidedBy, reason: b.reason }));
+  res.json(await setFeatureScope({ key: b.key, scope: b.scope, decidedBy: b.decidedBy, reason: b.reason }, {}, { surface: b.via === 'card' ? 'card' : 'api', by: admin.email || null }));
 }));
 router.post('/scope/add', wrap(async (req, res) => {
-  if (!(await requireAdmin(req, res))) return;
+  const admin = await requireAdmin(req, res); if (!admin) return;
   const b = req.body || {};
-  res.status(201).json(addFeatureAfterCut({ key: b.key, title: b.title, scope: b.scope, decidedBy: b.decidedBy, reason: b.reason, training: b.training, change: b.change, build: b.build }));
+  res.status(201).json(await addFeatureAfterCut({ key: b.key, title: b.title, scope: b.scope, decidedBy: b.decidedBy, reason: b.reason, training: b.training, change: b.change, build: b.build }, {}, { surface: b.via === 'card' ? 'card' : 'api', by: admin.email || null }));
 }));
 
 router.get('/snapshots', wrap(async (req, res) => {

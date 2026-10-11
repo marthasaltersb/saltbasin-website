@@ -107,6 +107,7 @@ export const api = {
   releaseTrackerPull: () => request('/api/release-tracker/pull', { method: 'POST', body: '{}' }),
   releaseTrackerWebhookSecret: (clear = false) => request('/api/release-tracker/settings/webhook-secret', { method: 'POST', body: JSON.stringify({ clear }) }),
   releaseTrackerScope: () => request('/api/release-tracker/scope'),
+  previewReleaseTrackerScope: (body) => request('/api/release-tracker/scope/preview', { method: 'POST', body: JSON.stringify(body) }),
   setReleaseTrackerScope: (body) => request('/api/release-tracker/scope', { method: 'POST', body: JSON.stringify(body) }),
   addReleaseTrackerFeature: (body) => request('/api/release-tracker/scope/add', { method: 'POST', body: JSON.stringify(body) }),
   releaseTrackerTokens: () => request('/api/release-tracker/tokens'),

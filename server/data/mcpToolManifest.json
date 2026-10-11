@@ -244,6 +244,7 @@
     "flow_journey_activate",
     "flow_journey_test_start",
     "flow_experience_channels_read",
-    "flow_experience_channels_save"
+    "flow_experience_channels_save",
+    "release_tracker_preview_scope"
   ]
 }
