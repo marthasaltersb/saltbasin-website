@@ -136,3 +136,12 @@ horizontal scroll and no page errors. A release cut on a throwaway copy froze 0/
 - What changed: rewrote the Interface parity paragraph above to state the seven admin tracker tools are registered, the `release-tracker-admin` gap is closed, and scope changes now have a screen, API and MCP tools.
 - Files: `docs/changes/release-scope.md`.
 - Checked: read back against `capabilityParity.js` and the registry.
+
+## Fix notes — round 4
+
+- **release-scope-F3-4** (scope change lost on a deployed server). `releaseScopeChange.js` now keeps changes in the `config_state` row `release_scope_overrides` when deployed (`RENDER` set or `SB_SCOPE_STORE=db`) and in the committed release file otherwise (CLI/checkout, unchanged behaviour). `showScope` and the tracker pull (`releaseTrackerService.js pullFromRepo`) merge the saved changes over the repository file (an override wins only when its history is longer). The functions are now async; the route, MCP handlers and `scripts/release-scope.mjs` await them. The card's status line states where the change was kept. Checked: with `SB_SCOPE_STORE=db` a move via the API appears in `GET /scope` and the file is untouched; without it the file gains the history entry.
+- **release-scope-F3-5** (no impact preview or approval record). New `previewScopeMove` plus `POST /api/release-tracker/scope/preview`, MCP tool `release_tracker_preview_scope` (manifest appended, parity row updated), and a live preview on the card (counts before/after, scores, launch behaviour) shown before the button; clicking the button is the one approval. Set and add responses carry the same `impact`. Each `scopeHistory` entry now also records `via`, `requestedBy`, `approvedBy`, `approvedAt`. Checked: parity check passes; card shows preview and history entries carry the fields.
+- **release-scope-F3-6** (docs). The CLAUDE.md release-scope paragraph now names `releaseScopeChange.js`, the routes, the 4 MCP tools, the Settings card and the storage rule.
+- **release-scope-F3-7** (CLI wording over API/MCP). Messages in `releaseScopeChange.js` no longer mention "add"/"set" commands; they say "Add it as a new feature instead" / "Change its scope instead". Flag names appear only when the CLI passes them.
+
+Proposed amendment steps (for the reviewer): see the round 4 fix output (preview shown before approval; deployed-server persistence; history records surface/requester/approver).

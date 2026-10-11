@@ -24,6 +24,7 @@ import { db, getJSON, setJSON } from '../db.js';
 import { ensureReleaseIntelligenceSchema } from './releaseIntelligenceSchema.js';
 import { importSnapshot } from './releaseLogImporter.js';
 import { encrypt, decrypt } from './crypto.js';
+import { withScopeOverrides } from './releaseScopeChange.js';
 
 export const SETTINGS_ROW_ID = 'release_tracker_settings';
 export const BACKLOG_STATUSES = ['backlog_pre_existing', 'reassigned', 'process_note'];
@@ -424,6 +425,7 @@ export async function pullFromRepo({ source = 'pull', commit = null } = {}) {
     for (const [k, t] of Object.entries(texts)) {
       try { parsed[k] = JSON.parse(t); } catch (e) { throw new TrackerError(`The ${k} file in the repository could not be read, so nothing was pulled. Fix that file in the repository, then pull again.\nTechnical detail: ${e.message}`, 502, 'pull_bad_json'); }
     }
+    if (parsed.features) parsed.features = await withScopeOverrides(parsed.features);
     const { snapshot, history } = normalizeCommitted(parsed);
     const res = await ingestSnapshot({
       source, sourceRef: `${s.repo}@${s.branch}`, releaseKey: s.releaseKey || null, snapshot, history, commit,
