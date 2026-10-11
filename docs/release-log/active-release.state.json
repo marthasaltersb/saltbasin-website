@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T03:06:37.033Z",
+  "exportedAt": "2026-10-11T03:09:41.364Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -90,12 +90,12 @@
       "backlog": 3
     },
     "journey-flow-experience-mapping": {
-      "status": "scope",
+      "status": "fix",
       "lastRound": 2,
       "lastScore": "58/58",
       "lastReport": "docs/test-results/journey-flow-experience-mapping/round-2.md",
-      "openBugs": 9,
-      "backlog": 2
+      "openBugs": 7,
+      "backlog": 4
     },
     "journey-flow-import-existing": {
       "status": "failed",
@@ -2648,16 +2648,17 @@
     {
       "id": "journey-flow-experience-mapping-F1-1",
       "feature": "journey-flow-experience-mapping",
-      "status": "open",
+      "status": "process_note",
       "class": "process",
       "attempts": 0,
       "step": "fix report: no browser walk",
-      "rootCause": "Fix pass did not run the failed journey steps.",
-      "files": [
-        "server/lib/flowJourney.js",
-        "src/components/admin/FlowStudioPanel.jsx"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 1,
@@ -2680,7 +2681,11 @@
         "src/components/SpatialJourneyWorld.jsx",
         "src/lib/useWorldLayers.jsx"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Same as round-1 B8. The request asks for experience rendering and for World Shell layers …"
+      },
       "history": [
         {
           "round": 1,
@@ -2702,7 +2707,11 @@
         "server/lib/flowJourney.js",
         "src/components/admin/FlowStudioPanel.jsx"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Same as round-1 B10. Decision-tree branch conditions are in the request. A connector hold…"
+      },
       "history": [
         {
           "round": 1,
@@ -2723,7 +2732,11 @@
       "files": [
         "server/lib/flowJourney.js"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "Same as round-1 B11. Variant/scenario is a requested binding. Per-scenario overrides do n…"
+      },
       "history": [
         {
           "round": 1,
@@ -2736,16 +2749,17 @@
     {
       "id": "journey-flow-experience-mapping-F1-6",
       "feature": "journey-flow-experience-mapping",
-      "status": "open",
+      "status": "process_note",
       "class": "informational",
       "attempts": 0,
       "step": "T1, B12, B13 code fixes",
-      "rootCause": "Awaiting browser/API validation.",
-      "files": [
-        "server/lib/flowJourney.js",
-        "src/components/admin/FlowStudioPanel.jsx"
-      ],
-      "scope": null,
+      "rootCause": null,
+      "files": [],
+      "scope": {
+        "scope": "process_note",
+        "owner": null,
+        "evidence": null
+      },
       "history": [
         {
           "round": 1,
@@ -2767,7 +2781,11 @@
         "src/components/WorldShell.jsx",
         "server/lib/flowJourney.js"
       ],
-      "scope": null,
+      "scope": {
+        "scope": "this_feature",
+        "owner": null,
+        "evidence": "These are the change spec's own Known limitations (World Shell and crystal rendering, sin…"
+      },
       "history": [
         {
           "round": 1,
