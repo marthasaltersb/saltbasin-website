@@ -68,8 +68,9 @@ definitions, render bindings, versioned definitions) before anything new is crea
 - **The Definition Studio ships with every module and has two modes.** Owner direction 2026-10-10:
   **Compose** (Composers create new products, apps and features, including each module's implementation
   Score) and **Implement** (users are guided through setting up a module as one Staff, start to finish,
-  self-assisted). Modules stay in `SALT_BASIN_MODULES`; the existing `DefinitionStudioJourney.jsx` becomes
-  the Implement view. One Studio, never two editors; a composed product becomes a grantable module only
+  self-assisted). Modules stay in `SALT_BASIN_MODULES`. Both modes use the same process flow builder canvas
+  (Betsy 2026-10-10): Implement opens a client's instance (their Staff) with narrower rights. One Studio,
+  never two editors; a composed product becomes a grantable module only
   through a separate governed step.
 - **Calculations are reproducible.** Every result records inputs, rule versions, method, temporal context,
   output, validation status and timestamp — reuse `metric_definitions` / `metric_calculations` rather than a

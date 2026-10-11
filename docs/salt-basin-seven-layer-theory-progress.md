@@ -129,7 +129,7 @@ delivered at scale and self-assisted:
 | Mode | Who | What it produces | Built from |
 |---|---|---|---|
 | **Compose** — create a brand-new product, app or feature | Composers (Betsy first) | A new Score: flows, steps, decisions, rules, the seven layers and seven definitions, template Arrangements — and the module's own **implementation Score** (how a customer gets set up). | The process flow builder prototype (canvas, scenarios, current/future state, step specs). |
-| **Implement** — guide a user through setting up a Salt Basin capability module | End users / client teams, with Arrangers approving ad hoc changes | One **Staff** running that module's implementation Score from start to finish (DEC-SLT-20's transaction): each step asks its questions, an agent drafts answers as proposals, the user confirms, and the confirmed answers configure the module for that user or organization. | The existing `DefinitionStudioJourney.jsx` guided gate experience (semantic → rules → agent → evidence → approval), which becomes the *player's view* of an implementation Score instead of five hardcoded gates in browser storage. |
+| **Implement** — guide a user through setting up a Salt Basin capability module | End users / client teams, with Arrangers approving ad hoc changes | One **Staff** running that module's implementation Score from start to finish (DEC-SLT-20's transaction): each step asks its questions, an agent drafts answers as proposals, the user confirms, and the confirmed answers configure the module for that user or organization. | **The same process flow builder canvas** (Betsy, 2026-10-10). The prototype's Clients feature — a client gets an instanced copy of a template to build out — *is* Implement mode: the instance is the client's Staff. Implement opens it on the same canvas with narrower rights: fill in step details, see progress per step, tailor only within the Arranger's allowance (ad hoc Arrangement). The existing `DefinitionStudioJourney.jsx` (5 hardcoded gates in browser storage) is not the Implement view; its step-by-step guidance can become an optional "guide me" walkthrough on the canvas (DEC-SLT-25). |
 
 How it attaches to modules, reusing what exists:
 
@@ -139,8 +139,9 @@ How it attaches to modules, reusing what exists:
 - **Starting an implementation = existing provisioning.** A Member Entitlement rod (`member_entitlement`,
   `memberProvisioning.js`) already marks a module as granted; the implementation Staff hangs off it via a
   hierarchical Tributary, so onboarding progress is a normal Staff with stages, gates, evidence and Rest.
-- **One Studio, two views.** Compose = the builder canvas; Implement = the guided journey. Same Scores, same
-  storage, same approval paths — never two editors.
+- **One Studio, one canvas, two modes.** Compose edits the Score (template); Implement opens a client's
+  instance (their Staff) of that Score on the same canvas. Mode decides what the user may change, not which
+  screen they see. Same storage, same approval paths — never two editors.
 - **Composing a new product does not by itself make a live module.** An approved Score is a definition;
   turning it into a module a customer can be granted is a separate, governed step (append to
   `SALT_BASIN_MODULES`, with its tracked interactions and parity rows), so nothing ships to customers
@@ -218,6 +219,7 @@ Blocking decisions must be answered before the phase they gate. Answer with
 |---|---|---|---|---|
 | **DEC-SLT-01** | Where is the builder? | — | **Answered 2026-10-10 (Betsy):** the process flow builder prototype + spec, preserved at `docs/baseline/intake/2026-10-10-process-flow-builder/`. Partly carried into design, not yet in the platform. It becomes the **Definition Studio** — the interface a Composer uses to compose a product and its layers. Mapping below. | — |
 | **DEC-SLT-22** | Build order. The spec puts builder integration 7th, after all engines. Since the Definition Studio is how Composers will define everything, should it move up so it lands right after the registries (persisted Studio first, then each engine appears in it as it ships)? | Keep spec order / Studio early. | Studio early: Phase 3 storage → Phase 4 Definition Studio (port the prototype, server-persisted) + theory registry → engines plug into the Studio as they land. | Phase 4 |
+| DEC-SLT-25 | Keep a "guide me" walkthrough on the Implement canvas — it highlights one step at a time, asks that step's questions, and lets the agent draft answers (the idea behind `DefinitionStudioJourney.jsx`) — for users who'd rather not read a whole flow? Or retire that component? | Keep as walkthrough / retire. | Keep as an optional walkthrough on the canvas; retire the separate 3D gate screen. | Phase 4 (non-blocking) |
 | **DEC-SLT-24** | Which module goes through the Definition Studio first, end to end (compose its implementation Score, then onboard a fictional test member through it)? Existing modules: Personal Brand Website, Resume Output Creator (Career Master). Or a product you want to compose new — e.g. a HOS module. | Personal Brand Website / Resume Career / a new product (name it). | Resume Career — it has the most real substrate (Career Channel Rod, Atoms, outputs) and you're actively using it. | Phase 4 |
 | **DEC-SLT-23** | Level names. Three schemes now overlap: the builder's L1 Industry / L2 Flow / L3 Scenario; the Business Definition Tool's L0 Domain … L2 **Scenario** … L7 Data Element; and the spec's theory layers L1–L7. "L2" means a flow in one and a scenario in another. | (a) Stop using bare L-numbers in data — store words (`industry`, `flow`, `scenario`, `stage`, `gate`…) with a crosswalk, and show whichever labels you prefer per screen. (b) Pick one numbering as canonical and renumber the others. | (a), and adopt the Business Definition Tool chain (Journey → Scenario → Stage → Gate → Metadata Mutation → Rule → Data Element) as the canonical process vocabulary, since the builder's levels fit inside it. | Phase 3 |
 | **DEC-SLT-02** | The spec says "preserve Supabase RLS," but no table uses RLS — isolation is in application code. | (a) Keep app-level isolation like every other table. (b) Introduce RLS for the new theory tables only. (c) Platform-wide RLS as a separate project. | (a). (b) would be the only RLS tables and the server connects with full privilege, so it would protect nothing without a role change. | Phase 3 |
@@ -244,6 +246,8 @@ Blocking decisions must be answered before the phase they gate. Answer with
 ---
 
 ## Changelog
+
+- **2026-10-10 (Implement = builder)** — Betsy: the Implement view is the process flow builder too. One canvas for both modes: Compose edits the Score; Implement opens a client's instance (the prototype's Clients feature = their Staff) with narrower rights. `DefinitionStudioJourney.jsx` is no longer the Implement view; DEC-SLT-25 asks whether its guidance survives as an optional walkthrough.
 
 - **2026-10-10 (Definition Studio)** — Owner direction: the Composer interface is the **Definition Studio**, shipped with every module, with two modes — Compose (new products, apps, features, and each module's implementation Score) and Implement (guided, self-assisted setup of a module as one Staff start to finish). Renamed "Composer Studio" throughout. Mapped onto `SALT_BASIN_MODULES` (additive `definitionStudio` entry), Member Entitlement provisioning, and the existing `DefinitionStudioJourney.jsx` as the Implement view. Added DEC-SLT-24 (pilot module).
 
