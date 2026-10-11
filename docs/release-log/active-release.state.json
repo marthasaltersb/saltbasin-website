@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T02:45:08.737Z",
+  "exportedAt": "2026-10-11T02:48:13.297Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -34,7 +34,7 @@
       "backlog": 14
     },
     "release-cut-and-session-plans": {
-      "status": "validate",
+      "status": "failing",
       "lastRound": 1,
       "lastScore": "53/62",
       "lastReport": "docs/test-results/release-cut-and-session-plans/round-1.md",
