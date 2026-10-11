@@ -14,7 +14,7 @@ Phase definitions: `.claude/skills/salt-basin-seven-layer-theory/reference/phase
 | 4 | Theory Registry & Seven Definitions | not started | Also needs DEC-SLT-04 for musical concept seeds. |
 | 5 | Matrix & Hypergraph Engine (5a / 5b) | not started | |
 | 6 | Temporal, Calculation & Rest Engine (6a / 6b) | not started | |
-| 7 | Builder Integration | **blocked** | DEC-SLT-01 — no diagram or process-flow builder exists in the repo. |
+| 7 | Builder Integration → **Definition Studio** | not started | DEC-SLT-01 answered 2026-10-10: the builder is Betsy's process flow builder prototype (`docs/baseline/intake/2026-10-10-process-flow-builder/`), ported into the platform as the Composer's interface. Proposed to move earlier — DEC-SLT-22. |
 | 8 | Validation & Regression | not started | |
 
 ---
@@ -113,6 +113,102 @@ Deferred until DEC-SLT-01: `theory_diagram_bindings` (builder node/edge ↔ matr
 
 ---
 
+## Definition Studio — the process flow builder inside the platform (proposed, 2026-10-10)
+
+Source: `docs/baseline/intake/2026-10-10-process-flow-builder/`. Owner direction: this is the interface a
+Composer uses to compose a product and its layers, and the whole system is connected end to end — from
+normal language to raw inputs and parsed text, to connected, repeatable, variable, dynamically
+configurable personal and enterprise operating systems.
+
+### What the Definition Studio is (owner direction, 2026-10-10)
+
+The Definition Studio is the Composer interface, and **it ships with every Salt Basin module**. It has two
+jobs, so Betsy can build her own products *and* their implementation/onboarding on her own platform,
+delivered at scale and self-assisted:
+
+| Mode | Who | What it produces | Built from |
+|---|---|---|---|
+| **Compose** — create a brand-new product, app or feature | Composers (Betsy first) | A new Score: flows, steps, decisions, rules, the seven layers and seven definitions, template Arrangements — and the module's own **implementation Score** (how a customer gets set up). | The process flow builder prototype (canvas, scenarios, current/future state, step specs). |
+| **Implement** — guide a user through setting up a Salt Basin capability module | End users / client teams, with Arrangers approving ad hoc changes | One **Staff** running that module's implementation Score from start to finish (DEC-SLT-20's transaction): each step asks its questions, an agent drafts answers as proposals, the user confirms, and the confirmed answers configure the module for that user or organization. | The existing `DefinitionStudioJourney.jsx` guided gate experience (semantic → rules → agent → evidence → approval), which becomes the *player's view* of an implementation Score instead of five hardcoded gates in browser storage. |
+
+How it attaches to modules, reusing what exists:
+
+- **Module registry stays `SALT_BASIN_MODULES`** (`server/lib/provisioningPolicyRegistry.js`, today
+  `personal_brand_website` and `resume_career`). Each module gains an additive `definitionStudio` entry
+  naming its compose Score(s) and its implementation Score. No new module table.
+- **Starting an implementation = existing provisioning.** A Member Entitlement rod (`member_entitlement`,
+  `memberProvisioning.js`) already marks a module as granted; the implementation Staff hangs off it via a
+  hierarchical Tributary, so onboarding progress is a normal Staff with stages, gates, evidence and Rest.
+- **One Studio, two views.** Compose = the builder canvas; Implement = the guided journey. Same Scores, same
+  storage, same approval paths — never two editors.
+- **Composing a new product does not by itself make a live module.** An approved Score is a definition;
+  turning it into a module a customer can be granted is a separate, governed step (append to
+  `SALT_BASIN_MODULES`, with its tracked interactions and parity rows), so nothing ships to customers
+  just because it was drafted.
+- **Dogfooding is the point.** Salt Basin's own products are composed in the Studio, and the
+  implementation Scores Betsy composes are exactly what customers run to onboard — self-assisted delivery
+  at scale.
+
+### The language-to-operating-system chain
+
+Every stage below already has a home or a proposed one; the Studio is where a Composer sees and shapes
+the middle of the chain.
+
+| # | Stage | What happens | Where it lives |
+|---|---|---|---|
+| 1 | **Normal language** | Someone says or writes what they want (spoken intent, a brief, a spec like this one). | Chat, BestyStaff, brain dumps, uploaded documents. |
+| 2 | **Raw inputs** | The source material is captured as-is with its origin. | Uploads (Supabase Storage), L1 Ports (`data_ports` / `port_source_*`), Connected Apps. |
+| 3 | **Parsed text** | Inputs are broken into candidate elements. | `documentAtomSync.js` (`structure_parsed` / `structure_validated` events), server-side agent drafting. Everything parsed is **proposed / inferred — needs confirmation**, never a confirmed fact by default. |
+| 4 | **Notes** | Confirmed elements become canonical data elements with provenance. | `journey_metadata_molecules` + `journey_rod_evidence`. |
+| 5 | **Composition** | Composers define Scores: flows, steps, decisions, rules, layers and seven definitions. | **Definition Studio** → Currents, gate definitions, scenarios, theory definitions. |
+| 6 | **Variation** | The same Score repeats with variables: scenarios, current vs future state, client instances. | `journey_scenarios`, versioned definitions, Staffs (`journey_data_rods`). |
+| 7 | **Arrangement** | Audience-specific presentations. | `theory_arrangements`, World Variants, themes. |
+| 8 | **Delivery** | Instruments deliver Notes to Players. | `instrumentRegistry.js`, interface parity (UI / mobile / API / MCP), email, documents. |
+| 9 | **Measurement** | Goals, KPIs, pain, leakage and progression feed back into composition. | `metric_definitions` / `metric_calculations`, rod mathematics, RLMM leakage scenarios. |
+
+**Personal vs enterprise operating system** is the same substrate at a different scope: a Member's
+Riverbed (`user_id`) or a Member Organization's (`org_id`) — never a separate system.
+
+### Prototype → theory → platform mapping
+
+| Prototype concept | Theory concept | Platform home |
+|---|---|---|
+| Template (seed or custom) — an end-to-end flow | **Score** (template Arrangement for its default layout) | Score rule record (Current with `cycleModel`) + `theory_arrangements` (`kind='template'`). Seed templates = platform rows (`org_id` NULL), read-only. |
+| L2 base steps (untagged nodes) | Measures / stages of the Score | `journey_gate_definitions` + stage list on the Current |
+| L3 scenario (tagged nodes/edges, `metaByScenario` overlay) | Score variation — **rules**, so Composer-owned (not an Arrangement) | `journey_scenarios` + sparse override records |
+| Current State vs Future State canvases | Two versions of the same Score (as-is / to-be), linked step to step | Versioned definitions with a `state` field; adds the missing "which future step resolves which current pain" link the prototype spec lists as a gap |
+| Node (step) | Measure / stage gate | `journey_gate_definitions` |
+| Step fields — actors | Players and roles | `org_memberships` roles, `persons`, Role Types |
+| Step fields — inputs / outputs | Notes (data elements) | `journey_metadata_molecules` (definitions), evidence instances at run time |
+| Step fields — decision params, relationship triggers | Business Logic layer rules | gate definitions, `transition_rules`, `theory_relations` triggers |
+| Step fields — architecture mapping, data model, automation | Computational definition (D5) | `theory_concept_definition_versions` — and, unlike the prototype's free text, linked to real registries (L1 Ports, render bindings) |
+| Step fields — functionality, interaction, visual layout | Visual definition (D6) + Arrangement | definitions + `theory_arrangements` |
+| Step fields — translations | Content source locale + translations | the i18n `fieldMeta` `{ locale, translations }` shape already designed in CLAUDE.md |
+| `execMode` manual / automated / hybrid | Who plays: a human Player or a system Instrument | Instrument + Player on the part |
+| `concurrency` parallel | Parts playing at the same time on one Sheet | Staffs on a Journey Sheet |
+| Edge with label / params / notes, multi-branch decisions, self-loops | Transitions between measures; repeats | `transition_rules` on the Current |
+| Lanes | Parts / Players on a Sheet | Staffs on the Sheet (fixes the prototype bug where lane names were never saved) |
+| Pain points, friction, data sources, handover gaps, leakage | Measurement layer + current-state diagnostics | Measurement definitions, `metric_definitions`, RLMM leakage scenarios |
+| L1 Industry = Classification Type × Role Type pairs, entities, relationships | Identity + Relationships layers | vocabulary registries (`theory_concepts`), `entities`, `theory_relations` |
+| Domains (Sales, Finance, Legal…) | Classification | `theory_concepts` classification vocabulary |
+| Business Goals (quarter, value drivers, KPIs) | Measurement layer | `metric_definitions` |
+| Client + instanced template copy | A client's Staff running the Score | `journey_data_rods` row (Staff) for that client; edits that change presentation = ad hoc Arrangement on that Staff, start to finish (DEC-SLT-20) |
+| Agent draft of a step's fields | Parsed text → proposed definitions | **Server-side** agent path, output stored as `proposed`, a person confirms |
+| Spreadsheet template import | Raw inputs → parsed text | Uploads + parsing into proposed Score drafts |
+| JSON export | Same server function as API + MCP | interface parity |
+
+### Rules for the port (non-negotiable)
+
+- **No browser-side API calls.** The prototype calls `api.anthropic.com` from the page; the platform version
+  uses the server agent path with usage recorded (`recordAgentLlmUsage`), and no key ever reaches a browser.
+- **No browser-only persistence.** `window.storage` becomes database records, shared by scope (platform /
+  organization / member), versioned and audited.
+- **One editor.** The Studio is the platform's process editor; it reuses World Shell layers
+  (`useWorldLayers`) and the existing approval paths rather than a parallel navigation or approval system.
+- **Interface parity.** Every Studio action ships with its API route and MCP tool.
+- **Validation the prototype lacks** (its own gap list): orphaned steps, single-branch decisions,
+  unreachable steps, undo/redo — become Studio checks before a Score can be approved.
+
 ## Decision log
 
 Blocking decisions must be answered before the phase they gate. Answer with
@@ -120,7 +216,10 @@ Blocking decisions must be answered before the phase they gate. Answer with
 
 | ID | Question for Betsy | Options | Recommendation | Blocks |
 |---|---|---|---|---|
-| **DEC-SLT-01** | The spec says to extend "the existing process-flow and diagram builder," but the repo has none. Where is it? | (a) It lives somewhere else — another repo, an HTML artifact, or an external tool (Lucid, Miro, Figma, Whimsical) — point me to it. (b) Build the platform's first builder inside World Shell: 2D authoring with a library such as `@xyflow/react`, 3D projection via `graphWorld.js` + crystal design system. (c) Extend the CMS `MetadataModelDiagramBlock` editor (weak — static, admin-only). | (a) if it exists; otherwise (b), scoped as its own feature. | Phase 7 (blocking); informs Phase 2 bindings. |
+| **DEC-SLT-01** | Where is the builder? | — | **Answered 2026-10-10 (Betsy):** the process flow builder prototype + spec, preserved at `docs/baseline/intake/2026-10-10-process-flow-builder/`. Partly carried into design, not yet in the platform. It becomes the **Definition Studio** — the interface a Composer uses to compose a product and its layers. Mapping below. | — |
+| **DEC-SLT-22** | Build order. The spec puts builder integration 7th, after all engines. Since the Definition Studio is how Composers will define everything, should it move up so it lands right after the registries (persisted Studio first, then each engine appears in it as it ships)? | Keep spec order / Studio early. | Studio early: Phase 3 storage → Phase 4 Definition Studio (port the prototype, server-persisted) + theory registry → engines plug into the Studio as they land. | Phase 4 |
+| **DEC-SLT-24** | Which module goes through the Definition Studio first, end to end (compose its implementation Score, then onboard a fictional test member through it)? Existing modules: Personal Brand Website, Resume Output Creator (Career Master). Or a product you want to compose new — e.g. a HOS module. | Personal Brand Website / Resume Career / a new product (name it). | Resume Career — it has the most real substrate (Career Channel Rod, Atoms, outputs) and you're actively using it. | Phase 4 |
+| **DEC-SLT-23** | Level names. Three schemes now overlap: the builder's L1 Industry / L2 Flow / L3 Scenario; the Business Definition Tool's L0 Domain … L2 **Scenario** … L7 Data Element; and the spec's theory layers L1–L7. "L2" means a flow in one and a scenario in another. | (a) Stop using bare L-numbers in data — store words (`industry`, `flow`, `scenario`, `stage`, `gate`…) with a crosswalk, and show whichever labels you prefer per screen. (b) Pick one numbering as canonical and renumber the others. | (a), and adopt the Business Definition Tool chain (Journey → Scenario → Stage → Gate → Metadata Mutation → Rule → Data Element) as the canonical process vocabulary, since the builder's levels fit inside it. | Phase 3 |
 | **DEC-SLT-02** | The spec says "preserve Supabase RLS," but no table uses RLS — isolation is in application code. | (a) Keep app-level isolation like every other table. (b) Introduce RLS for the new theory tables only. (c) Platform-wide RLS as a separate project. | (a). (b) would be the only RLS tables and the server connects with full privilege, so it would protect nothing without a role change. | Phase 3 |
 | **DEC-SLT-03** | The spec's L1–L7 collides with the existing architecture layers 0–10 and the Business Definition Tool's L0–L7. | (a) Store as `theory_*` keys, display as "TL1–TL7". (b) Store as `theory_*` keys, display as "L1–L7" only inside the Theory screens. (c) Merge into the existing 0–10 registry. | (b) — keeps your vocabulary in the UI, no collision in data. | Phase 3 |
 | **DEC-SLT-04** | Confirm the musical mappings. | — | **Partly answered 2026-10-10 (Betsy):** existing Channel Rods (`journey_data_rods`, sequential processes) = **Journey Staffs**; **Journey Data Rods** = data combinations, i.e. persistent chords. **Still to confirm:** Note = evidence atom; Clef = a party's role-context in a bilateral relation; Universal C = the canonical relation definition; Journey Sheet = parent over several Staffs; Measure = interval; Beat = sub-interval; Musical section = stage (may overlap measures); default equivalence class = design analogy. | Phase 4 seeds |
@@ -145,6 +244,10 @@ Blocking decisions must be answered before the phase they gate. Answer with
 ---
 
 ## Changelog
+
+- **2026-10-10 (Definition Studio)** — Owner direction: the Composer interface is the **Definition Studio**, shipped with every module, with two modes — Compose (new products, apps, features, and each module's implementation Score) and Implement (guided, self-assisted setup of a module as one Staff start to finish). Renamed "Composer Studio" throughout. Mapped onto `SALT_BASIN_MODULES` (additive `definitionStudio` entry), Member Entitlement provisioning, and the existing `DefinitionStudioJourney.jsx` as the Implement view. Added DEC-SLT-24 (pilot module).
+
+- **2026-10-10 (Definition Studio)** — DEC-SLT-01 answered: Betsy's process flow builder prototype + spec (preserved verbatim at `docs/baseline/intake/2026-10-10-process-flow-builder/`) becomes the Definition Studio. Added the language-to-operating-system chain, a full prototype → theory → platform mapping, and port rules (no browser API calls, no browser-only storage, parity, validation). Found the prototype has grown past its spec (Industries, Domains, Business Goals, Clients) and that its L1–L3 collide with the Business Definition Tool's L0–L7. Added DEC-SLT-22 (build order) and DEC-SLT-23 (level vocabulary). Phase 7 unblocked.
 
 - **2026-10-10 (transaction)** — DEC-SLT-20 answered: an ad hoc Arrangement's transaction is one Journey Sheet Staff from start to finish. Template promotion split out as DEC-SLT-21 (non-blocking, default: allowed).
 

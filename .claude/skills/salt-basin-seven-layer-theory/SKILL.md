@@ -60,6 +60,17 @@ definitions, render bindings, versioned definitions) before anything new is crea
   Betsy 2026-10-10): **Composers** are Arrangers plus business policy owners (they write the rules and
   the arranging allowance); **Arrangers** create template Arrangements and approve ad hoc ones; **end
   users** may arrange or request an ad hoc Arrangement for one transaction, which waits for an Arranger.
+- **One connected chain, language to operating system.** Owner direction 2026-10-10: everything connects
+  from normal language → raw inputs → parsed text → Notes → composition → variation → arrangement →
+  delivery → measurement, for personal (Member) and enterprise (Organization) scopes on the same
+  substrate. Parsed or AI-drafted content is always `proposed` until a person confirms it. The tracker's
+  "Definition Studio" section holds the stage-by-stage map — place every new feature on it.
+- **The Definition Studio ships with every module and has two modes.** Owner direction 2026-10-10:
+  **Compose** (Composers create new products, apps and features, including each module's implementation
+  Score) and **Implement** (users are guided through setting up a module as one Staff, start to finish,
+  self-assisted). Modules stay in `SALT_BASIN_MODULES`; the existing `DefinitionStudioJourney.jsx` becomes
+  the Implement view. One Studio, never two editors; a composed product becomes a grantable module only
+  through a separate governed step.
 - **Calculations are reproducible.** Every result records inputs, rule versions, method, temporal context,
   output, validation status and timestamp — reuse `metric_definitions` / `metric_calculations` rather than a
   parallel result store. Weights normalize only across eligible requirements; removing requirements never
@@ -109,7 +120,7 @@ definitions, render bindings, versioned definitions) before anything new is crea
 |---|---|---|
 | Database | Supabase Postgres via `postgres` driver, `server/db.js`; schema via idempotent `bootstrap()` DDL; `migrations/*.sql` is never applied by code | Reuse. No migration runner exists. |
 | RLS / tenant isolation | **No RLS anywhere.** App-level: `requireAdmin`/`requireUser` (`server/auth.js`), `org_memberships` lookups, `req.user.id` scoping | Spec assumes RLS — see decision DEC-SLT-02. |
-| Diagram / process-flow builder | **None exists.** Closest: `MetadataModelDiagramBlock` (static CMS block), `DecisionTreeBlock`, `DefinitionStudioJourney.jsx` (localStorage only), `worldEngine/graphWorld.js` (3D graph renderer, no edges/editing) | Spec's central assumption fails — see DEC-SLT-01. |
+| Diagram / process-flow builder | **Not in the platform.** Betsy's standalone prototype is the builder (DEC-SLT-01, 2026-10-10): `docs/baseline/intake/2026-10-10-process-flow-builder/` — becomes the **Definition Studio**. In-repo reusables: `worldEngine/graphWorld.js` (3D renderer), crystal design system, World Shell layers. | Port it — never build a second editor. Its browser API calls and `window.storage` do not carry over. |
 | Canonical entities (V) | `entities`, `persons` (with `merged_into_id` dedup), `journey_rod_entity_links` | Reuse for legal entities / parties. |
 | Relationships (𝓔) | `relationships` (owner→person/entity), `journey_rod_tributary_links` (rod↔rod, bilateral), Tributary kinds hierarchical/peer/reference | Bilateral only — no n-ary, no relationship-of-relationship. Hypergraph is a genuine gap. |
 | Journey Staff | `journey_data_rods` (today's Channel Rods — sequential processes) + `journey_rod_types` | **Decided by Betsy 2026-10-10.** Never rename the table. |
