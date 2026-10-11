@@ -62,6 +62,7 @@ export function defaultMemberConfig({ displayName, email }) {
         { id: 'careerReconciliation', label: 'Career Sources to Review', componentId: 'careerReconciliation', sortOrder: 11 },
         { id: 'resume', label: 'My Resume', componentId: 'resume', sortOrder: 12 },
         { id: 'render-bindings', label: 'Render Bindings', componentId: 'renderBindings', sortOrder: 25 },
+        { id: 'journey-flow-studio', label: 'Journey Flow Studio', componentId: 'flowStudio', sortOrder: 26 },
         { id: 'outputTemplates', label: 'Output Templates', componentId: 'outputTemplates', sortOrder: 20 },
         { id: 'config', label: 'Site Configuration', componentId: 'config', sortOrder: 15 },
         // Re-added 2026-09-06 alongside the visibility_mode/marketplace-search

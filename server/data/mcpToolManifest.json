@@ -199,6 +199,22 @@
     "release_cut_session_report",
     "release_cut_record_estimate",
     "release_cut_record_merge",
-    "release_cut_close_session"
+    "release_cut_close_session",
+    "flow_studio_definition_read",
+    "flow_studio_definition_save",
+    "flow_studio_flows_list",
+    "flow_studio_flow_create",
+    "flow_studio_flow_read",
+    "flow_studio_flow_save",
+    "flow_studio_flow_validate",
+    "flow_studio_flow_history",
+    "flow_studio_flow_restore",
+    "flow_studio_publish_preview",
+    "flow_studio_flow_publish",
+    "flow_studio_flow_export",
+    "flow_studio_flow_import",
+    "flow_studio_template_save",
+    "flow_studio_template_change",
+    "flow_studio_agent_draft"
   ]
 }

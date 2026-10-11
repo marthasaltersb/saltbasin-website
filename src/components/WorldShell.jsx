@@ -56,6 +56,7 @@ const AgentRunnerPanel = lazy(() => import('./admin/AgentRunnerPanel.jsx'));
 const ReleaseTrackerApp = lazy(() => import('./releaseTracker/ReleaseTrackerApp.jsx'));
 const SessionMappingPanel = lazy(() => import('./admin/SessionMappingPanel.jsx'));
 const RenderBindingsPanel = lazy(() => import('./admin/RenderBindingsPanel.jsx'));
+const FlowStudioPanel = lazy(() => import('./admin/FlowStudioPanel.jsx'));
 
 const SIMPLE_EMBED_COMPONENTS = {
   leads: { title: 'Leads', render: () => <LeadsPanel /> },
@@ -74,6 +75,7 @@ const SIMPLE_EMBED_COMPONENTS = {
   releaseTracker: { title: 'Release tracker', render: () => <ReleaseTrackerApp embedded /> },
   sessionMapping: { title: 'Sessions', render: () => <SessionMappingPanel /> },
   renderBindings: { title: 'Render Bindings', render: () => <RenderBindingsPanel /> },
+  flowStudio: { title: 'Journey Flow Studio', render: () => <FlowStudioPanel /> },
 };
 
 const ISLAND_RADIUS = 9;
