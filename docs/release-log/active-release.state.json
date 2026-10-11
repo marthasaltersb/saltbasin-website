@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T03:03:32.898Z",
+  "exportedAt": "2026-10-11T03:06:37.033Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -90,11 +90,11 @@
       "backlog": 3
     },
     "journey-flow-experience-mapping": {
-      "status": "validate",
-      "lastRound": 1,
-      "lastScore": "57/58",
-      "lastReport": "docs/test-results/journey-flow-experience-mapping/round-1.md",
-      "openBugs": 12,
+      "status": "scope",
+      "lastRound": 2,
+      "lastScore": "58/58",
+      "lastReport": "docs/test-results/journey-flow-experience-mapping/round-2.md",
+      "openBugs": 9,
       "backlog": 2
     },
     "journey-flow-import-existing": {
@@ -2590,62 +2590,58 @@
     {
       "id": "journey-flow-experience-mapping-B12",
       "feature": "journey-flow-experience-mapping",
-      "status": "retesting",
+      "status": "verified",
       "class": "requirement_gap",
       "attempts": 1,
       "step": "Known limitation: requiredActorRoles",
-      "rootCause": "The existing engine enforces actor roles on the rod and the feature does not assign any.",
-      "files": [
-        "server/lib/flowJourney.js"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "The engine's actor-role enforcement is pre-existing (scenarioLibraryApply.js at base). Bu…"
+        "evidence": null
       },
       "history": [
-        {
-          "round": 0,
-          "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (…",
-          "commit": null
-        },
         {
           "round": 1,
           "event": "fixed",
           "note": "startTestJourney records the starter as every actor role of…",
           "commit": "4bd714989abdfe267505824fb8691d5680a927b6"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step",
+          "commit": "be2b5032f9c8dbd83692849b1c0d2122a31fb124"
         }
       ]
     },
     {
       "id": "journey-flow-experience-mapping-B13",
       "feature": "journey-flow-experience-mapping",
-      "status": "retesting",
+      "status": "verified",
       "class": "product_defect",
       "attempts": 1,
       "step": "activateJourney idempotence",
-      "rootCause": "No check that journeyActive.token equals the new token, and the token omits running-journey impact.",
-      "files": [
-        "server/lib/flowJourney.js"
-      ],
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "activateJourney in server/lib/flowJourney.js (5780411) never compares the approval token …"
+        "evidence": null
       },
       "history": [
-        {
-          "round": 0,
-          "event": "found",
-          "note": "Reported by the build agent, unresolved on reconciliation (…",
-          "commit": null
-        },
         {
           "round": 1,
           "event": "fixed",
           "note": "Activation token now hashes runningJourneys and atRemovedGa…",
           "commit": "4bd714989abdfe267505824fb8691d5680a927b6"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step",
+          "commit": "be2b5032f9c8dbd83692849b1c0d2122a31fb124"
         }
       ]
     },
@@ -2784,32 +2780,29 @@
     {
       "id": "journey-flow-experience-mapping-T1",
       "feature": "journey-flow-experience-mapping",
-      "status": "retesting",
+      "status": "verified",
       "class": "defect",
       "attempts": 1,
-      "step": "Tap Journey. Expect the preview, and the Experience map table scrolling inside its own box, not the page.",
-      "rootCause": "src/components/admin/FlowStudioPanel.jsx line 18: .fs-root has overflow-wrap:anywhere, so table cells have a one-character min-content widt…",
-      "files": [
-        "src/components/admin/FlowStudioPanel.jsx",
-        "src/components/admin/FlowJourneyParts.jsx"
-      ],
+      "step": "Tap Journey. Expect the preview, and the Experience map table scrolling inside its own bo…",
+      "rootCause": null,
+      "files": [],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": "The Experience map table is in FlowJourneyParts.jsx, created by 5780411 (this feature) an…"
+        "evidence": null
       },
       "history": [
-        {
-          "round": 1,
-          "event": "found",
-          "note": "src/components/admin/FlowStudioPanel.jsx line 18: .fs-root …",
-          "commit": null
-        },
         {
           "round": 1,
           "event": "fixed",
           "note": "CSS only: .fs-scroll .fs-table width:max-content, min-width…",
           "commit": "4bd714989abdfe267505824fb8691d5680a927b6"
+        },
+        {
+          "round": 2,
+          "event": "verified",
+          "note": "Retest round 2 passed every step",
+          "commit": "be2b5032f9c8dbd83692849b1c0d2122a31fb124"
         }
       ]
     },
