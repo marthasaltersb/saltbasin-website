@@ -8,6 +8,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { api } from '../../lib/api.js';
 import { toast } from '../../lib/toast.js';
 import { useToolCategoryGate } from '../admin/ToolCategoryGate.jsx';
+import ScopeCard from './ScopeCard.jsx';
 import { jsonProblem, headlineOf } from '../../lib/friendlyError.js';
 
 const when = (ms) => (ms ? new Date(ms).toISOString().replace('T', ' ').slice(0, 19) + ' UTC' : '—');
@@ -125,6 +126,8 @@ export default function TrackerSettings({ currentRelease }) {
         {newToken?.kind === 'share' ? <div className="rt-secret" role="status" data-testid="rt-new-share-link">New share link (shown once): {origin}/release-tracker/shared/{newToken.token}</div> : null}
         <TokenTable rows={shareTokens} share onRevoke={async (id) => { await shr.run(() => api.revokeReleaseTrackerToken(id), 'Share link revoked'); load(); }} />
       </section>
+
+      <ScopeCard />
 
       <section className="rt-card" aria-labelledby="rt-set-paste">
         <h3 id="rt-set-paste">Paste a snapshot</h3>

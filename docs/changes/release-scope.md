@@ -76,11 +76,16 @@ groups features through it, so the scripts, the artifact page and the platform s
 
 - Reading scope: platform UI (desktop and 390px), `GET /api/release-tracker/state` (features carry `scope` /
   `added`), the tracker artifact.
-- Changing scope: repository tooling (`scripts/release-scope.mjs`), like `release-cut.mjs` and `session-plan.mjs`,
-  because the scope lives in the committed release file that the platform pulls. **Gap, for the owner:** there is
-  no platform screen or MCP tool to change a feature's scope. Reading scope over MCP is
-  `release_tracker_get_state` (registered in round 1 fix, see Fix notes). The other `RELEASE_TRACKER_TOOLS`
-  descriptors remain unregistered (parity gap row `release-tracker-admin`).
+- Changing scope: one function (`server/lib/releaseScopeChange.js`: `showScope`, `setFeatureScope`,
+  `addFeatureAfterCut`) behind all three interfaces. Website: World Shell -> Release tracker -> Settings -> **Release
+  scope** card (admin; decider and reason required; no admin-nav entry). API: `GET /api/release-tracker/scope`,
+  `POST /api/release-tracker/scope`, `POST /api/release-tracker/scope/add` (admin). MCP: `release_tracker_get_scope`,
+  `release_tracker_set_scope`, `release_tracker_add_feature_after_cut`. The CLI `scripts/release-scope.mjs` calls the
+  same functions, so error text and `scopeHistory` entries are identical. The change is written to the release file;
+  the tracker shows it after its next sync from the repository.
+- Reading scope over MCP is `release_tracker_get_state` (round 1). The seven admin tracker tools
+  (`release_tracker_ingest_snapshot`, `_list_snapshots`, `_pull_now`, `_get_settings`, `_save_settings`,
+  `_create_token`, `_revoke_token`) are registered (round 2), so the `release-tracker-admin` gap is closed.
 
 ## Verified (initial check)
 
@@ -119,3 +124,15 @@ horizontal scroll and no page errors. A release cut on a throwaway copy froze 0/
 - What changed: registered admin-only MCP tools `release_tracker_ingest_snapshot` (snapshot/history/updates as object or JSON string, same friendly `json_invalid` error, `source: 'manual'`), `release_tracker_list_snapshots`, `release_tracker_pull_now`, `release_tracker_get_settings`, `release_tracker_save_settings`, `release_tracker_create_token` (share tokens run `assertReadyToFinalize` first, like the route) and `release_tracker_revoke_token`. Each calls the same service function as its route. Names appended to the manifest; the `release-tracker-admin` parity row now lists them and its gap is removed (webhook-secret, ingest log and bearer-token push are recorded as an explicit exclusion).
 - Files: `server/lib/mcpToolRegistry.js`, `server/lib/releaseTrackerService.js` (comment), `server/lib/capabilityParity.js`, `server/data/mcpToolManifest.json`.
 - Checked: `check-interface-parity.mjs`, `--strict` and `--self-test` all pass (121/121, 214 tools); called the ingest/list handlers through the registry against a fresh database (stored, list returned it, malformed JSON gave the friendly 400); `npm run build` passes. The paste UI in J5.1 was not re-walked in a browser: the UI and route were unchanged and the step failed only on parity.
+
+## Fix notes — round 3
+
+### release-scope-F2-3 (Interface parity: scope changes only existed as a script)
+- What changed: moved the scope-change logic out of `scripts/release-scope.mjs` into `server/lib/releaseScopeChange.js` and made the script call it (messages unchanged). Added admin routes `GET/POST /api/release-tracker/scope` and `POST /api/release-tracker/scope/add`, three MCP tools (`release_tracker_get_scope`, `release_tracker_set_scope`, `release_tracker_add_feature_after_cut`, appended to the manifest), a **Release scope** card (`ScopeCard.jsx`) on the tracker Settings tab, `api.js` methods, and parity row `release-tracker-scope`.
+- Files: `server/lib/releaseScopeChange.js`, `scripts/release-scope.mjs`, `server/routes/releaseTracker.js`, `server/lib/mcpToolRegistry.js`, `server/data/mcpToolManifest.json`, `server/lib/capabilityParity.js`, `src/lib/api.js`, `src/components/releaseTracker/ScopeCard.jsx`, `src/components/releaseTracker/TrackerSettings.jsx`.
+- Checked: `check-interface-parity.mjs` (129/129, 236 tools), `--strict` and `--self-test` pass; `npm run build` passes. E.1-E.3 CLI commands still exit 1 with the same messages. In a browser as admin on a fresh database (release folder pointed at a throwaway copy with SB_RELEASE_ROOT): the card loads counts, a missing decider shows "Give who decided." in red, a valid move writes `scope` and a `scopeHistory` entry (`planned` to `backlog`, `tester`, `training check`), no horizontal scroll at 390px, no page errors; a member gets 403 on GET and POST. The MCP tools were not called over HTTP; they call the same functions and are covered by the parity check.
+
+### release-scope-F2-4 (docs: stale Interface parity paragraph)
+- What changed: rewrote the Interface parity paragraph above to state the seven admin tracker tools are registered, the `release-tracker-admin` gap is closed, and scope changes now have a screen, API and MCP tools.
+- Files: `docs/changes/release-scope.md`.
+- Checked: read back against `capabilityParity.js` and the registry.
