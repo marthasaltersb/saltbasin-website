@@ -334,7 +334,7 @@
       "build": "Generalize the render-bindings impact/approval path into one shared change service used by every settings API, MCP tool and agent; audit existing settings screens for changes with downstream effects that skip the preview; every change history row carries its source action. Owner direction 2026-10-10 (CLAUDE.md).",
       "dependsOn": [],
       "kind": "new",
-      "scope": "backlog",
+      "scope": "planned",
       "added": {
         "at": "2026-10-10T20:23:42Z",
         "commit": "0bee332",
@@ -348,6 +348,17 @@
           "to": "backlog",
           "decidedBy": "owner",
           "reason": "Added after the cut; kept in backlog for 0.3.0 (owner chose \"Recommended, minus added\")."
+        },
+        {
+          "at": "2026-10-11T02:55:08.386Z",
+          "from": "backlog",
+          "to": "planned",
+          "decidedBy": "owner",
+          "reason": "Owner 2026-10-11: the Definition Studio compiles a preview prototype that is then extended or applied to the entire product; applying needs the global change standard (impact preview, one approval, automatic apply, source action on history).",
+          "via": "cli",
+          "requestedBy": "owner",
+          "approvedBy": "owner",
+          "approvedAt": "2026-10-11T02:55:08.386Z"
         }
       ]
     },
@@ -531,6 +542,39 @@
           "to": "planned",
           "decidedBy": "owner",
           "reason": "Owner direction 2026-10-11: there should be no Classic Tools; one user experience whose layers all start from the same view and display dynamically based on the logged-in viewer. Also answers owner-error-messages B5 (Methodology Config gets a World Shell layer with a phone walkthrough, not an exception)."
+        }
+      ]
+    },
+    {
+      "key": "core-platform-definition-studio",
+      "title": "Definition Studio for the Salt Basin core platform: minimum product baseline definition, compile to a live preview, prototype engine, apply to the product",
+      "trainingSpec": "docs/training/core-platform-definition-studio.md",
+      "changeSpec": "docs/changes/core-platform-definition-studio.md",
+      "build": "Depends on journey-flow-studio + journey-flow-experience-mapping (both integrated), journey-flow-import-existing, single-experience-world-shell and global-change-standard (build on what is on the integration branch; where a dependency is not there yet, build against its change spec and record the gap). The Definition Studio is the World Shell layer where the platform's own product is defined (one experience, permission-gated, desktop + 390px). (1) CORE PLATFORM PRODUCT DEFINITION: the first product in the studio is 'Salt Basin core platform' (the career module is a separate extension product, linked but not part of core). Seed its definition from the platform's real registries via the importer (sign-in and first steps, World Shell layers and the Sun menu, permissions/licenses/profiles, the release loop, MCP access, render bindings, change history), every element carrying provenance. (2) MINIMUM PRODUCT BASELINE DEFINITION (MPBD): a configurable checklist (config, editable in the studio's Settings) of what a product definition must contain before it can compile (e.g. at least one actor/profile, an entry layer, every layer reachable, every step with an actor, action authority and system of record, every decision with all branches labelled, every experience step mapped to a screen/asset or explicitly 'not mapped'). The studio shows completeness against the MPBD with plain-language gaps, and refuses to compile until it is met. (3) COMPILE TO PREVIEW: compiling a definition version produces a live, clickable preview of the product (the World Shell layers, screens and journeys it defines, running the real components in a preview mode on fictional sample data, never on real member data), side by side with the current live platform, showing what is new/changed/removed. (4) PROTOTYPE ENGINE: generates the visual prototype for elements that have no implementation yet (layer layout, screen skeleton, crystal/scene variant from src/lib/crystalGeometry.js, labels, empty states) from the definition's metadata, so the preview is complete; generated pieces are clearly marked 'prototype' and become work-order proposals (agentWorkOrder.js / platform agent runner) when a real implementation is needed — code is never changed directly. Use deterministic generation from metadata; any LLM help goes through the in-app agent path with the fixture adapter in tests (never the real Anthropic API in tests). (5) APPLY: applying a compiled version to the live product (configuration it can change: layer labels/order/visibility permissions, gates, terms, field definitions, render bindings, copy) follows the global change standard: impact preview of everything downstream, one approval, automatic apply, source action on every history row, rollback to the previous version. Configuration only; anything needing code becomes a work order. (6) The owner signs in on the platform and does all of this in the browser; API + MCP tools for every step (capabilityParity rows). Fictional data only. Write docs/changes/core-platform-definition-studio.md and docs/training/core-platform-definition-studio.md (journeys: open Definition Studio from /world, see the core platform definition, see MPBD gaps, fix one, compile, open the preview and click through it, see a prototype-marked layer, apply a configuration change with the impact preview and approval, see it live and in history, roll it back), freeze baseline v1.",
+      "dependsOn": [
+        "journey-flow-import-existing",
+        "single-experience-world-shell",
+        "global-change-standard"
+      ],
+      "kind": "new",
+      "scope": "planned",
+      "added": {
+        "at": "2026-10-11T02:55:08.438Z",
+        "commit": "6fc398d",
+        "decidedBy": "owner",
+        "reason": "Owner request 2026-10-11: create a Definition Studio journey for the Salt Basin core platform product (before the career module extension) that the owner can log in to on the platform and change directly; it needs a minimum product baseline definition to compile the first preview of the product, and a prototype engine that generates the visual prototype to extend or apply to the entire product."
+      },
+      "scopeHistory": [
+        {
+          "at": "2026-10-11T02:55:08.438Z",
+          "from": null,
+          "to": "planned",
+          "decidedBy": "owner",
+          "reason": "Owner request 2026-10-11: create a Definition Studio journey for the Salt Basin core platform product (before the career module extension) that the owner can log in to on the platform and change directly; it needs a minimum product baseline definition to compile the first preview of the product, and a prototype engine that generates the visual prototype to extend or apply to the entire product.",
+          "via": "cli",
+          "requestedBy": "owner",
+          "approvedBy": "owner",
+          "approvedAt": "2026-10-11T02:55:08.438Z"
         }
       ]
     }
