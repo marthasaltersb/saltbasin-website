@@ -51,7 +51,7 @@ export default function ConnectedAgentsPanel() {
 
   const fail = useCallback((e, what) => {
     const msg = `${what}: ${e.message}`;
-    setError(msg);
+    setError(msg); // replaces any earlier message; cleared on the next attempt or success
     toast.error(msg);
   }, []);
 

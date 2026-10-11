@@ -64,6 +64,7 @@ Branch: `release-loop/live-release-tracker-build-2` (the name `release-loop/live
 ## Known limitations
 
 - MCP: `server/lib/mcpToolRegistry.js` does not exist on this branch. Each capability is exposed as a descriptor in `RELEASE_TRACKER_TOOLS` calling the same service function; registration is MCP_GAP assigned to `platform-mcp`.
+- MCP (updated round 5): `server/lib/mcpToolRegistry.js` now exists and registers 11 `release_tracker_*` tools (216 tools and 121 of 121 parity capabilities at the platform-mcp round 4 tested commit). release.read: `release_tracker_read`, `_get_state` (member), `_list_snapshots`, `_get_settings`, `_list_ingest_log`. release.write: `_ingest_snapshot`, `_pull_now`, `_save_settings`, `_create_token`, `_webhook_secret`, `_revoke_token`. All admin except `_get_state`. Push ingest by bearer ingest token stays an exclusion.
 - Render bindings are local (see Traces to). The "pending ghost" is derived from bug status (`fixed_awaiting_retest`, `retesting`); there is no approver workflow beyond the next re-test, as in the prototype.
 - The stream drop fallback (polling every 10 s) cannot be forced from the UI; it is covered by an edge case that uses the browser's offline switch, not a numbered journey step.
 - Mid-snapshot history points created from pushed snapshots without history are derived from the snapshot's bugs and features, so earlier states recorded by the sync script (with `history.json`) are preferred whenever supplied.
