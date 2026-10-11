@@ -199,6 +199,12 @@
     "release_cut_session_report",
     "release_cut_record_estimate",
     "release_cut_record_merge",
-    "release_cut_close_session"
+    "release_cut_close_session",
+    "data_model_catalog_read",
+    "data_model_table_read",
+    "data_model_search",
+    "data_model_picker",
+    "data_model_rules_read",
+    "data_model_rules_save"
   ]
 }
