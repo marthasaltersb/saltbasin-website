@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T02:25:50.002Z",
+  "exportedAt": "2026-10-11T02:29:07.135Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -74,11 +74,11 @@
       "backlog": 10
     },
     "release-scope": {
-      "status": "validate",
-      "lastRound": 3,
-      "lastScore": "25/25",
-      "lastReport": "docs/test-results/release-scope/round-3.md",
-      "openBugs": 12,
+      "status": "scope",
+      "lastRound": 4,
+      "lastScore": "25/27",
+      "lastReport": "docs/test-results/release-scope/round-4.md",
+      "openBugs": 16,
       "backlog": 1
     },
     "journey-flow-studio": {
@@ -2035,16 +2035,18 @@
     {
       "id": "release-scope-T2-1",
       "feature": "release-scope",
-      "status": "verified",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "J3.1 no qr-gated-outputs file",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "scripts/release-loop-resume.mjs:82-85 deliberately launches a backlog feature that owns an open production bug (HANDOVER: production bugs f…",
+      "files": [
+        "scripts/release-loop-resume.mjs"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "Spec step J3.1 forbids any qr-gated-outputs file, but the standing production-bugs-first …"
       },
       "history": [
         {
@@ -2052,40 +2054,30 @@
           "event": "found",
           "note": "scripts/release-loop-resume.mjs:82-85 deliberately launches…",
           "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v3, including …",
-          "commit": null
         }
       ]
     },
     {
       "id": "release-scope-T2-2",
       "feature": "release-scope",
-      "status": "verified",
+      "status": "open",
       "class": "spec_error",
       "attempts": 0,
       "step": "J3.2 no 'Not launched' line (ambiguous)",
-      "rootCause": null,
-      "files": [],
+      "rootCause": "The phrase 'Not launched' also matches the unrelated 'Not launched locally (validated on production)' line at release-loop-resume.mjs:81. P…",
+      "files": [
+        "scripts/release-loop-resume.mjs"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "The 'Not launched' text in J3.2 also matches the unrelated 'Not launched locally' line at…"
       },
       "history": [
         {
           "round": 2,
           "event": "found",
           "note": "The phrase 'Not launched' also matches the unrelated 'Not l…",
-          "commit": null
-        },
-        {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v3, including …",
           "commit": null
         }
       ]
@@ -2151,16 +2143,19 @@
     {
       "id": "release-scope-T2-5",
       "feature": "release-scope",
-      "status": "verified",
+      "status": "recurred",
       "class": "spec_error",
       "attempts": 0,
-      "step": "J5.3 Added after the cut notes (four)",
-      "rootCause": null,
-      "files": [],
+      "step": "J5.3 Added-after-the-cut notes date",
+      "rootCause": "TrackerLayers.jsx:39-40 renders 'added <added.at first 10 chars>' per entry, correct. single-experience-world-shell has added.at 2026-10-11…",
+      "files": [
+        "src/components/releaseTracker/TrackerLayers.jsx",
+        "docs/training/release-scope.md"
+      ],
       "scope": {
         "scope": "this_feature",
         "owner": null,
-        "evidence": null
+        "evidence": "TrackerLayers.jsx correctly renders one note per added entry (9 now: 6 counted, 3 backlog…"
       },
       "history": [
         {
@@ -2170,9 +2165,32 @@
           "commit": null
         },
         {
-          "round": 3,
-          "event": "verified",
-          "note": "Retest round 3 passed every step of baseline v3, including …",
+          "round": 4,
+          "event": "recurred",
+          "note": "TrackerLayers.jsx:39-40 renders 'added <added.at first 10 c…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "release-scope-R4-1",
+      "feature": "release-scope",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "J2.7 MCP set_scope with TOKEN_A",
+      "rootCause": "release_tracker_set_scope uses the adm() default scope release.write (mcpToolRegistry.js:78, 909, ~950); mcpServer.js:84 correctly returns …",
+      "files": [
+        "server/lib/mcpToolRegistry.js",
+        "server/lib/mcpServer.js",
+        "docs/training/release-scope.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 4,
+          "event": "found",
+          "note": "release_tracker_set_scope uses the adm() default scope rele…",
           "commit": null
         }
       ]
