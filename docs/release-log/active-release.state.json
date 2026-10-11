@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T01:37:57.703Z",
+  "exportedAt": "2026-10-11T01:41:08.579Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -50,11 +50,11 @@
       "backlog": 0
     },
     "scoring-preferences-mcp": {
-      "status": "validate",
-      "lastRound": 0,
-      "lastScore": null,
-      "lastReport": null,
-      "openBugs": 4,
+      "status": "scope",
+      "lastRound": 1,
+      "lastScore": "22/29",
+      "lastReport": "docs/test-results/scoring-preferences-mcp/round-1.md",
+      "openBugs": 9,
       "backlog": 0
     },
     "resume-rollups": {
@@ -1082,6 +1082,112 @@
           "round": 0,
           "event": "found",
           "note": "Reported by the build agent, unresolved on reconciliation (…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "scoring-preferences-mcp-T1",
+      "feature": "scoring-preferences-mcp",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "J2.1/J3.2/J5.1 desktop: Back to World covered by breadcrumb bar",
+      "rootCause": "S.rail is position:absolute top:5.2rem (WorldShell.jsx:1785). Commit 65e2179 gave crumb buttons minHeight:44, so the breadcrumb bar (zIndex…",
+      "files": [
+        "src/components/WorldShell.jsx",
+        "src/components/WorldBreadcrumbs.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "S.rail is position:absolute top:5.2rem (WorldShell.jsx:1785…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "scoring-preferences-mcp-T2",
+      "feature": "scoring-preferences-mcp",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "J2.7 and J3.2: Scoring Weights card stale after MCP save/reset",
+      "rootCause": "Weights are fetched only when none are cached: WorldShell.jsx:1333 (!scoringPreferences) and CareerPlacementAgentsPanel.jsx:63. Hook state …",
+      "files": [
+        "src/components/WorldShell.jsx",
+        "src/components/admin/CareerPlacementAgentsPanel.jsx",
+        "src/lib/hooks/useCareerPlacementAgents.js"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Weights are fetched only when none are cached: WorldShell.j…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "scoring-preferences-mcp-T3",
+      "feature": "scoring-preferences-mcp",
+      "status": "open",
+      "class": "defect",
+      "attempts": 0,
+      "step": "J0.1 mobile: top bar shows only avatar",
+      "rootCause": "MOBILE_CSS at WorldShell.jsx:149 hides .sb-world-profile-text at 700px or narrower, so the name and role the step expects are not visible a…",
+      "files": [
+        "src/components/WorldShell.jsx"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "MOBILE_CSS at WorldShell.jsx:149 hides .sb-world-profile-te…",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "scoring-preferences-mcp-T4",
+      "feature": "scoring-preferences-mcp",
+      "status": "open",
+      "class": "environment",
+      "attempts": 0,
+      "step": "J4.2 mobile: Reset toast read too early",
+      "rootCause": "Validator harness read the page before the toast rendered. Its own recheck passed with every expectation met. Product behaviour is correct.",
+      "files": [],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "Validator harness read the page before the toast rendered. …",
+          "commit": null
+        }
+      ]
+    },
+    {
+      "id": "scoring-preferences-mcp-T5",
+      "feature": "scoring-preferences-mcp",
+      "status": "open",
+      "class": "spec_error",
+      "attempts": 0,
+      "step": "E.4: hardcoded parity count 110 of 110",
+      "rootCause": "The step hardcodes the total, but the registry grows with every feature. HEAD be73344 prints 128 of 128 with 0 gaps, and the scoring-prefer…",
+      "files": [
+        "docs/training/scoring-preferences-mcp.md"
+      ],
+      "scope": null,
+      "history": [
+        {
+          "round": 1,
+          "event": "found",
+          "note": "The step hardcodes the total, but the registry grows with e…",
           "commit": null
         }
       ]
