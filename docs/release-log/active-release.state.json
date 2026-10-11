@@ -1,5 +1,5 @@
 {
-  "exportedAt": "2026-10-11T01:28:31.582Z",
+  "exportedAt": "2026-10-11T01:31:41.047Z",
   "features": {
     "release-intelligence": {
       "status": "awaiting_retest",
@@ -106,7 +106,7 @@
       "backlog": 0
     },
     "tracker-world-navigation": {
-      "status": "build",
+      "status": "stalled",
       "lastRound": 0,
       "lastScore": null,
       "lastReport": null,
